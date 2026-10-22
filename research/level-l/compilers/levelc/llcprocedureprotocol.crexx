@@ -61,6 +61,10 @@ checked: class
   _tableslots = .int[]
   _tableconstants = .int[]
   _entrytestids = .stem
+  _groupentries = .int[]
+  _dynamicfunctions = .int[]
+  _expansions = .int[]
+  _previous = .int[]
   *: factory
     arg graph = reference .llir..module, bytes = 67108864, work = 1000000
     _graph = graph; _limit = bytes; _budget = work
@@ -154,6 +158,18 @@ checked: class
   hasprocedure: method = .int
     arg fn = .int
     call run(); return _hasprocedure[fn]
+  dynamic: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _dynamicfunctions[fn]
+  isgroup: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _groupentries[fn] > 0
+  expansion: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _expansions[opid]
   group: method = .int
     arg opid = .int
     call run(); return _groups[opid]
@@ -252,7 +268,7 @@ checked: class
         if programorigin(terminal,op.origin().id()) = 0 then return
         _programneutral[opid] = opid; _programneutral[terminal] = opid; _programterminals[terminal] = opid
       end
-      if name <> 'crexx.c.call' & name <> 'crexx.c.call.external' & name <> 'crexx.c.clause.complete' then iterate
+      if wordpos(name,'crexx.c.call crexx.c.call.external crexx.c.clause.complete crexx.c.dynamic.call.owner crexx.c.dynamic.call.resolve') = 0 then iterate
       /* Only Classic external continuations require this proof. Selection
        * later accepts a direct same-result return as its alternative tail.
        * Typed/process calls may use their result without a program query. */
@@ -512,7 +528,7 @@ checked: class
     do opid = 1 to store.count(3)
       if charge() = 0 then return
       op = graph.operation(opid)
-      if op.name() <> 'crexx.c.call.external' then iterate
+      if wordpos(op.name(),'crexx.c.call.external crexx.c.dynamic.call.owner crexx.c.dynamic.call.resolve') = 0 then iterate
       call argumentseed(op.input(1).id(),opid)
       if _error <> '' then return
     end
@@ -566,6 +582,134 @@ checked: class
       if (right <idiv> bit) % 2 & (left <idiv> bit) % 2 = 0 then total = total + bit
     end
     return total
+  /** Clause helpers reconstruct an exact origin for the same authored span.
+   * Equivalence is used only by adjacent INTERPRET clock/checkpoint pairing;
+   * generated transport keeps programproof's exact parent identity. */
+  sameclause: method = .int
+    arg op = .llir..opview, anchor = .int
+    origin = op.origin()
+    if origin.belongs(_store) = 0 | origin.kind() <> 'exact' then return 0
+    store = dereference _store; candidate = origin.id()
+    do field = 1 to 3
+      if store.get(9,candidate,field) <> store.get(9,anchor,field) then return 0
+    end
+    return 1
+  /** One explicit source-expression region may retain executed eligibility.
+   * Its only split is an already checked invocation EXIT guard: the false
+   * continuation reaches INTERPRET, the true continuation ends the invocation.
+   * Source spans alone never license statement, loop or mutation instructions. */
+  expansionproof: method = .void
+    graph = dereference _graph; store = dereference _store
+    begin = .int; id = .int; current = .int; anchor = .int; fn = .int; branch = .int; terminal = .int
+    suffix = .int; checkpoint = .int
+    op = .llir..opview; preceding = .llir..opview; following = .llir..opview
+    name = .string; allowed = .int; at = .int; source = .int; first = .int; last = .int
+    do begin = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(begin)
+      if op.name() <> 'crexx.c.dynamic.expansion.begin' then iterate
+      call exact(op); if _error <> '' then return
+      anchor = op.origin().id(); source = store.get(9,anchor,1); first = store.get(9,anchor,2); last = store.get(9,anchor,3)
+      fn = store.get(2,op.blockid(),1)
+      if programcontext(op.input(1),fn,begin) = 0 then return
+      _expansions[begin] = begin; id = store.get(3,begin,3)
+      /* Clause-clock administration may precede expansion without consuming
+       * Fresh. License only this same-origin immediate prefix and its canonical
+       * context transport; an unrelated begin gains no eligibility privilege. */
+      prefix = _previous[begin]
+      do while prefix > 0
+        preceding = graph.operation(prefix)
+        if preceding.name() <> 'core.load' then leave
+        if store.get(3,prefix,12) <> _contextslots[fn] then leave
+        at = store.get(3,prefix,11)
+        if store.get(9,at,1) <> source | store.get(9,at,2) < first | store.get(9,at,3) > last then leave
+        _expansions[prefix] = begin; prefix = _previous[prefix]
+      end
+      if prefix > 0 then do
+        preceding = graph.operation(prefix)
+        if preceding.name() = 'crexx.c.clause.begin' & sameclause(preceding,anchor) then do
+          if programcontext(preceding.input(1),fn,prefix) = 0 then return
+          _expansions[prefix] = begin; producer = store.get(4,preceding.input(1).id(),1)
+          _expansions[producer] = begin
+        end
+      end
+      do forever
+        if charge() = 0 then return
+        if id = 0 then do; call fail('LOWERING: expansion region lacks its matching INTERPRET',begin); return; end
+        if _expansions[id] <> 0 then do; call fail('LOWERING: expansion regions overlap or cycle',id); return; end
+        op = graph.operation(id); name = op.name(); at = store.get(3,id,11)
+        if store.get(9,at,1) <> source | store.get(9,at,2) < first | store.get(9,at,3) > last | store.get(9,at,4) = 5 then do
+          call fail('LOWERING: expansion expression escapes its authored source region',id); return
+        end
+        if name = 'crexx.c.dynamic.interpret' then do
+          if at <> anchor then do; call fail('LOWERING: INTERPRET substitutes its expansion origin',id); return; end
+          if programcontext(op.input(2),fn,id) = 0 then return
+          _expansions[id] = begin
+          /* INTERPRET can leave Fresh unchanged. Its authored completion
+           * checkpoint is administrative too, but only when immediately
+           * adjacent and paired to this exact origin by programproof. An
+           * arbitrary checkpoint elsewhere never gains this permission. */
+          suffix = store.get(3,id,3); checkpoint = 0
+          if suffix > 0 then checkpoint = _programneutral[suffix]
+          if checkpoint > 0 then do
+            following = graph.operation(checkpoint)
+            if following.name() = 'crexx.c.clause.complete' & sameclause(following,anchor) then do
+              do forever
+                if charge() = 0 then return
+                if suffix = 0 then do; call fail('LOWERING: expansion checkpoint lacks its checked branch',id); return; end
+                if _programneutral[suffix] <> checkpoint | _expansions[suffix] <> 0 then do
+                  call fail('LOWERING: expansion checkpoint escapes its checked owner',suffix); return
+                end
+                _expansions[suffix] = begin; following = graph.operation(suffix)
+                if following.name() = 'core.branch' then do
+                  current = store.get(2,store.successor(suffix,1),2); terminal = 0
+                  do while terminal = 0
+                    if charge() = 0 then return
+                    if current = 0 then do; call fail('LOWERING: expansion checkpoint has no EXIT terminal',suffix); return; end
+                    if _programneutral[current] <> checkpoint | _expansions[current] <> 0 then do
+                      call fail('LOWERING: expansion checkpoint EXIT transport escapes its checked owner',current); return
+                    end
+                    _expansions[current] = begin
+                    if _programterminals[current] then terminal = 1
+                    else if graph.operation(current).name() = 'core.jump' then current = store.get(2,store.successor(current,1),2)
+                    else current = store.get(3,current,3)
+                  end
+                  leave
+                end
+                suffix = store.get(3,suffix,3)
+              end
+            end
+          end
+          leave
+        end
+        allowed = wordpos(name,'core.constant core.load core.store crexx.c.load crexx.c.digits crexx.c.arguments.empty crexx.c.arguments.append crexx.c.arguments.count crexx.c.arguments.exists crexx.c.requirevalue crexx.c.bif crexx.c.length crexx.c.call crexx.c.call.external crexx.c.call.missing crexx.c.dynamic.call.owner crexx.c.dynamic.call.resolve') > 0
+        if wordpos(name,'crexx.c.add crexx.c.sub crexx.c.mul crexx.c.div crexx.c.pow crexx.c.idiv crexx.c.rem crexx.c.eq crexx.c.ne crexx.c.lt crexx.c.le crexx.c.gt crexx.c.ge crexx.c.strict crexx.c.strictne crexx.c.strictlt crexx.c.strictgt crexx.c.strictle crexx.c.strictge crexx.c.concat crexx.c.blank crexx.c.abut crexx.c.and crexx.c.or crexx.c.xor crexx.c.positive crexx.c.negative crexx.c.not') > 0 then allowed = 1
+        if _programneutral[id] > 0 then allowed = 1
+        if allowed = 0 then do; call fail('LOWERING: expansion region contains non-expression semantic work',id); return; end
+        _expansions[id] = begin
+        if name = 'core.branch' then do
+          callid = _programneutral[id]
+          if callid = 0 | _falseblocks[store.successor(id,2)] <> callid then do; call fail('LOWERING: expansion expression contains an unproved branch',id); return; end
+          /* programproof has already established a private, finite true path. */
+          current = store.get(2,store.successor(id,1),2); terminal = 0
+          do while terminal = 0
+            if charge() = 0 then return
+            if current = 0 | _programneutral[current] <> callid | _expansions[current] <> 0 then do; call fail('LOWERING: expansion EXIT transport escapes its checked owner',id); return; end
+            _expansions[current] = begin
+            if _programterminals[current] then terminal = 1
+            else if graph.operation(current).name() = 'core.jump' then current = store.get(2,store.successor(current,1),2)
+            else current = store.get(3,current,3)
+          end
+          id = store.get(2,store.successor(id,2),2)
+        end
+        else id = store.get(3,id,3)
+      end
+    end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      if graph.operation(id).name() = 'crexx.c.dynamic.interpret' & _expansions[id] = 0 then do; call fail('LOWERING: INTERPRET lacks its explicit expansion region',id); return; end
+    end
+    return
   run: method = .void
     contextinput = .int; producer = .int
     if _ready then return
@@ -582,8 +726,8 @@ checked: class
     target = .int; state = .int; ignored = .int; terminal = .int; allowed = .int; selectedslot = .int
     /* Arrays and the at-most-three-changes-per-block queue are checked before
      * allocation. All record/name/edge traversal spends the existing budget. */
-    if reserve(store.count(1),40) = 0 | reserve(store.count(2),80) = 0 then return
-    if reserve(store.count(3),72) = 0 | reserve(store.count(4),16) = 0 | reserve(store.count(5),48) = 0 then return
+    if reserve(store.count(1),56) = 0 | reserve(store.count(2),80) = 0 then return
+    if reserve(store.count(3),88) = 0 | reserve(store.count(4),16) = 0 | reserve(store.count(5),48) = 0 then return
     do fn = 1 to store.count(1)
       if charge() = 0 then return
       name = store.text(store.get(1,fn,1)); if reserve(<blen>(name as .binary) + 64,1) = 0 | charge(<blen>(name as .binary) + 1) = 0 then return
@@ -592,7 +736,14 @@ checked: class
     do opid = 1 to store.count(3)
       if charge() = 0 then return
       op = graph.operation(opid); name = op.name(); b = op.blockid(); fn = store.get(2,b,1)
-      if name = 'crexx.c.call.external' then _hasexternal = 1
+      nextop = store.get(3,opid,3)
+      if nextop > 0 then _previous[nextop] = opid
+      if wordpos(name,'crexx.c.call.external crexx.c.dynamic.call.owner crexx.c.dynamic.call.resolve') > 0 then _hasexternal = 1
+      if left(name,16) = 'crexx.c.dynamic.' then _dynamicfunctions[fn] = 1
+      if name = 'crexx.c.dynamic.group.entry' then do
+        if _groupentries[fn] > 0 | b <> store.get(1,fn,3) then do; call fail('LOWERING: group entry must be unique in canonical setup',opid); return; end
+        _groupentries[fn] = opid
+      end
       do i = 1 to op.inputs()
         if charge() = 0 then return
         value = op.input(i).id(); _uses[value] = _uses[value] + 1; _consumers[value] = opid
@@ -628,6 +779,18 @@ checked: class
         if name = 'crexx.c.return.empty' | name = 'crexx.c.bif' | name = 'crexx.c.call.missing' | name = 'crexx.c.call.external' | name = 'crexx.c.push' | name = 'crexx.c.queue' | name = 'crexx.c.numeric.digits' | name = 'crexx.c.numeric.fuzz' | name = 'crexx.c.numeric.form' | name = 'crexx.c.trace' then do
           contextinput = 2; if name = 'crexx.c.return.empty' then contextinput = 1
           ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if left(name,16) = 'crexx.c.dynamic.' then do
+          contextinput = 2
+          if wordpos(name,'crexx.c.dynamic.group.entry crexx.c.dynamic.expansion.begin') > 0 then contextinput = 1
+          ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
+          if wordpos(name,'crexx.c.dynamic.group.entry crexx.c.dynamic.expansion.begin crexx.c.dynamic.interpret crexx.c.dynamic.owner.return crexx.c.dynamic.owner.signal crexx.c.dynamic.call.owner crexx.c.dynamic.call.resolve') = 0 then do; call fail('LOWERING: unknown dynamic execution operation',opid); return; end
+          if name = 'crexx.c.dynamic.call.owner' then do
+            id = integer(op,'entry')
+            if _error <> '' then return
+            if id < 1 then do; call fail('LOWERING: owner call requires a positive lexical entry',opid); return; end
+          end
+          if name = 'crexx.c.dynamic.owner.return' | name = 'crexx.c.dynamic.owner.signal' then do; call exact(op); if _error <> '' then return; end
         end
         if left(name,16) = 'crexx.c.address.' | left(name,16) = 'crexx.c.command.' then do
           contextinput = 1
@@ -681,6 +844,7 @@ checked: class
          * admission independently owns payload and physical provenance; this
          * structural allowance cannot replace or move any entry guard. */
         if name = 'crexx.c.source.map' then allowed = opid = store.get(2,b,2)
+        if name = 'crexx.c.dynamic.group.entry' then allowed = _groupentries[fn] = opid
         if name = 'core.argument' then allowed = store.get(3,opid,12) = 1 | store.get(3,opid,12) = 2
         /* Structural allowance only. Mandatory signal admission later owns
          * the exact payload, unique setup/store and complete all-record uses. */
@@ -764,7 +928,8 @@ checked: class
         if store.operand(branch,1) <> value | _uses[value] <> 1 then do; call fail('LOWERING: entry test requires one direct branch use',test); return; end
         target = store.successor(branch,1)
         if store.get(2,target,1) <> fn then do; call fail('LOWERING: foreign entry target',test); return; end
-        state = 1; if id = 0 then state = 2
+        state = 1
+        if id = 0 then do; state = 2; if _groupentries[fn] > 0 then state = 7; end
         _before[target] = union(_before[target],state); _tests[test] = 1
         key = fn || ':' || id
         if reserve(length(key) + 64,1) = 0 | charge(length(key) + 1) = 0 then return
@@ -805,6 +970,7 @@ checked: class
      * closure without introducing a reverse dependency into this proof. */
     call programproof(); if _error <> '' then return
     call argumentproof(); if _error <> '' then return
+    call expansionproof(); if _error <> '' then return
     /* At most three new state bits can schedule each block. */
     head = 1; tail = 0
     do b = 1 to store.count(2)
@@ -818,6 +984,8 @@ checked: class
         if charge() = 0 then return
         op = graph.operation(opid); name = op.name()
         select
+          when name = 'crexx.c.dynamic.expansion.begin' then nop
+          when name = 'crexx.c.dynamic.interpret' then state = 7
           when name = 'crexx.c.procedure.consume' then do
             nextstate = 0; if state % 4 > 0 then nextstate = 2
             if state >= 4 then nextstate = nextstate + 4
@@ -836,8 +1004,8 @@ checked: class
           end
           otherwise do
             if state % 2 then do
-              allowed = name = 'core.jump'
-              if name = 'core.load' then allowed = store.get(3,opid,12) = _contextslots[store.get(2,b,1)]
+              allowed = name = 'core.jump' | _expansions[opid] > 0
+              if name = 'core.load' & _expansions[opid] = 0 then allowed = store.get(3,opid,12) = _contextslots[store.get(2,b,1)]
               if name = 'crexx.c.return.absent' then do
                 terminal = store.get(3,opid,3)
                 if terminal = store.get(2,b,3) & graph.operation(terminal).name() = 'core.return' then do
@@ -848,9 +1016,11 @@ checked: class
                   end
                 end
               end
-              if allowed = 0 then do; call fail('LOWERING: fresh entry requires consume or PROCEDURE before semantic work',opid); return; end
+              if allowed = 0 then do
+                call fail('LOWERING: fresh entry requires consume or PROCEDURE before semantic work (' || name || ', operation ' || opid || ')',opid); return
+              end
             end
-            if name = 'core.return' | name = 'crexx.c.exit' then do; divergent = 1; leave; end
+            if wordpos(name,'core.return crexx.c.exit crexx.c.dynamic.owner.return crexx.c.dynamic.owner.signal') > 0 then do; divergent = 1; leave; end
           end
         end
         opid = store.get(3,opid,3)

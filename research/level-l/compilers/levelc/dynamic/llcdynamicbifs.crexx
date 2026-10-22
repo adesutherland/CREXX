@@ -1,0 +1,193 @@
+/* cREXX License (MIT). C IR adapters for the existing shared BIF entries.
+ * Dispatch names are those owned by llcbifs; this file contains no BIF algorithm.
+ */
+options levelb numeric_classic
+namespace llcdynamicbifs expose invoke
+import rexxclassiccontext
+import rexxactivation
+import rexxvalue
+import rexxclassicbifs
+import rexxclassicconditionevent
+import rexxclassicbifabbrev
+import rexxclassicbifabs
+import rexxclassicbifaddress
+import rexxclassicbifarg
+import rexxclassicbifb2x
+import rexxclassicbifc2d
+import rexxclassicbifc2x
+import rexxclassicbifcenter
+import rexxclassicbifchangestr
+import rexxclassicbifcompare
+import rexxclassicbifcondition
+import rexxclassicbifcopies
+import rexxclassicbifcountstr
+import rexxclassicbifd2c
+import rexxclassicbifd2x
+import rexxclassicbifdatatype
+import rexxclassicbifdate
+import rexxclassicbifdelstr
+import rexxclassicbifdelword
+import rexxclassicbiferrortext
+import rexxclassicbifformat
+import rexxclassicbifinsert
+import rexxclassicbiflastpos
+import rexxclassicbifleft
+import rexxclassicbiflength
+import rexxclassicbifmax
+import rexxclassicbifmin
+import rexxclassicbifnumeric
+import rexxclassicbifoverlay
+import rexxclassicbifpos
+import rexxclassicbifqueued
+import rexxclassicbifrandom
+import rexxclassicbifreverse
+import rexxclassicbifright
+import rexxclassicbifsign
+import rexxclassicbifsourceline
+import rexxclassicbifspace
+import rexxclassicbifstream
+import rexxclassicbifstrip
+import rexxclassicbifsubstr
+import rexxclassicbifsubword
+import rexxclassicbifsymbol
+import rexxclassicbiftime
+import rexxclassicbiftrace
+import rexxclassicbiftranslate
+import rexxclassicbiftrunc
+import rexxclassicbifunicode
+import rexxclassicbifvalue
+import rexxclassicbifverify
+import rexxclassicbifword
+import rexxclassicbifwordindex
+import rexxclassicbifwordlength
+import rexxclassicbifwordpos
+import rexxclassicbifwords
+import rexxclassicbifx2b
+import rexxclassicbifx2c
+import rexxclassicbifx2d
+import rexxclassicbifxrange
+
+invoke: procedure = .rexxvalue..RexxValue
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg name = .string, context = reference .rexxclassiccontext..RexxClassicContext, values = .rexxvalue..RexxValue[], presence = .int[], line = 0
+  bundle = dereference context
+  config = dereference bundle.config(); call config.bindHostContext(bundle as .object)
+  callstate = .rexxclassicbifs..RexxBifCallContext.expression(name)
+  call callstate.setConfig(bundle.config())
+  call callstate.setCallerPool(bundle.pool())
+  call callstate.setCallerActivation(bundle.activation())
+  call callstate.setArguments(values,presence)
+  result = .rexxvalue..RexxValue
+  select name
+    when 'ABBREV' then result = rexxclassicbifabbrev..rexxclassicbif_abbrev(reference callstate)
+    when 'ABS' then result = rexxclassicbifabs..rexxclassicbif_abs(reference callstate)
+    when 'ADDRESS' then result = rexxclassicbifaddress..rexxclassicbif_address_frame(reference callstate,bundle.activation())
+    when 'ARG' then result = rexxclassicbifarg..rexxclassicbif_arg(reference callstate,bundle.activation())
+    when 'B2X' then result = rexxclassicbifb2x..rexxclassicbif_b2x(reference callstate)
+    when 'BITAND' then result = rexxclassicbifs..rexxclassicbif_bitand(reference callstate)
+    when 'BITOR' then result = rexxclassicbifs..rexxclassicbif_bitor(reference callstate)
+    when 'BITXOR' then result = rexxclassicbifs..rexxclassicbif_bitxor(reference callstate)
+    when 'C2D' then result = rexxclassicbifc2d..rexxclassicbif_c2d(reference callstate)
+    when 'C2X' then result = rexxclassicbifc2x..rexxclassicbif_c2x(reference callstate)
+    when 'CENTER' then result = rexxclassicbifcenter..rexxclassicbif_center(reference callstate)
+    when 'CENTRE' then result = rexxclassicbifcenter..rexxclassicbif_centre(reference callstate)
+    when 'CHANGESTR' then result = rexxclassicbifchangestr..rexxclassicbif_changestr(reference callstate)
+    when 'COMPARE' then result = rexxclassicbifcompare..rexxclassicbif_compare(reference callstate)
+    when 'CONDITION' then result = rexxclassicbifcondition..rexxclassicbif_condition(reference callstate,bundle.activation())
+    when 'COPIES' then result = rexxclassicbifcopies..rexxclassicbif_copies(reference callstate)
+    when 'COUNTSTR' then result = rexxclassicbifcountstr..rexxclassicbif_countstr(reference callstate)
+    when 'D2C' then result = rexxclassicbifd2c..rexxclassicbif_d2c(reference callstate)
+    when 'D2X' then result = rexxclassicbifd2x..rexxclassicbif_d2x(reference callstate)
+    when 'DATATYPE' then result = rexxclassicbifdatatype..rexxclassicbif_datatype(reference callstate)
+    when 'DATE' then result = rexxclassicbifdate..rexxclassicbif_date(reference callstate)
+    when 'DELSTR' then result = rexxclassicbifdelstr..rexxclassicbif_delstr(reference callstate)
+    when 'DELWORD' then result = rexxclassicbifdelword..rexxclassicbif_delword(reference callstate)
+    when 'DIGITS' then result = rexxclassicbifnumeric..rexxclassicbif_digits(reference callstate)
+    when 'ERRORTEXT' then result = rexxclassicbiferrortext..rexxclassicbif_errortext(reference callstate)
+    when 'FORM' then result = rexxclassicbifnumeric..rexxclassicbif_form(reference callstate)
+    when 'FORMAT' then result = rexxclassicbifformat..rexxclassicbif_format(reference callstate)
+    when 'FUZZ' then result = rexxclassicbifnumeric..rexxclassicbif_fuzz(reference callstate)
+    when 'INSERT' then result = rexxclassicbifinsert..rexxclassicbif_insert(reference callstate)
+    when 'LASTPOS' then result = rexxclassicbiflastpos..rexxclassicbif_lastpos(reference callstate)
+    when 'LEFT' then result = rexxclassicbifleft..rexxclassicbif_left(reference callstate)
+    when 'LENGTH' then result = rexxclassicbiflength..rexxclassicbif_length(reference callstate)
+    when 'LOWER' then result = rexxclassicbifs..rexxclassicbif_lower(reference callstate)
+    when 'MAX' then result = rexxclassicbifmax..rexxclassicbif_max(reference callstate)
+    when 'MIN' then result = rexxclassicbifmin..rexxclassicbif_min(reference callstate)
+    when 'OVERLAY' then result = rexxclassicbifoverlay..rexxclassicbif_overlay(reference callstate)
+    when 'POS' then result = rexxclassicbifpos..rexxclassicbif_pos(reference callstate)
+    when 'QUEUED' then result = rexxclassicbifqueued..rexxclassicbif_queued(reference callstate)
+    when 'RANDOM' then result = rexxclassicbifrandom..rexxclassicbif_random(reference callstate)
+    when 'REVERSE' then result = rexxclassicbifreverse..rexxclassicbif_reverse(reference callstate)
+    when 'RIGHT' then result = rexxclassicbifright..rexxclassicbif_right(reference callstate)
+    when 'SIGN' then result = rexxclassicbifsign..rexxclassicbif_sign(reference callstate)
+    when 'SOURCELINE' then result = rexxclassicbifsourceline..rexxclassicbif_sourceline(reference callstate)
+    when 'SPACE' then result = rexxclassicbifspace..rexxclassicbif_space(reference callstate)
+    when 'STRIP' then result = rexxclassicbifstrip..rexxclassicbif_strip(reference callstate)
+    when 'SUBSTR' then result = rexxclassicbifsubstr..rexxclassicbif_substr(reference callstate)
+    when 'SUBWORD' then result = rexxclassicbifsubword..rexxclassicbif_subword(reference callstate)
+    when 'SYMBOL' then result = rexxclassicbifsymbol..rexxclassicbif_symbol(reference callstate)
+    when 'TIME' then result = rexxclassicbiftime..rexxclassicbif_time(reference callstate)
+    when 'TRACE' then result = rexxclassicbiftrace..rexxclassicbif_trace_frame(reference callstate,bundle.activation())
+    when 'TRANSLATE' then result = rexxclassicbiftranslate..rexxclassicbif_translate(reference callstate)
+    when 'TRUNC' then result = rexxclassicbiftrunc..rexxclassicbif_trunc(reference callstate)
+    when 'UPPER' then result = rexxclassicbifs..rexxclassicbif_upper(reference callstate)
+    when 'VALUE' then result = rexxclassicbifvalue..rexxclassicbif_value(reference callstate)
+    when 'VERIFY' then result = rexxclassicbifverify..rexxclassicbif_verify(reference callstate)
+    when 'WORD' then result = rexxclassicbifword..rexxclassicbif_word(reference callstate)
+    when 'WORDINDEX' then result = rexxclassicbifwordindex..rexxclassicbif_wordindex(reference callstate)
+    when 'WORDLENGTH' then result = rexxclassicbifwordlength..rexxclassicbif_wordlength(reference callstate)
+    when 'WORDPOS' then result = rexxclassicbifwordpos..rexxclassicbif_wordpos(reference callstate)
+    when 'WORDS' then result = rexxclassicbifwords..rexxclassicbif_words(reference callstate)
+    when 'X2B' then result = rexxclassicbifx2b..rexxclassicbif_x2b(reference callstate)
+    when 'X2C' then result = rexxclassicbifx2c..rexxclassicbif_x2c(reference callstate)
+    when 'X2D' then result = rexxclassicbifx2d..rexxclassicbif_x2d(reference callstate)
+    when 'XRANGE' then result = rexxclassicbifxrange..rexxclassicbif_xrange(reference callstate)
+    when 'CHARIN' then result = rexxclassicbifstream..rexxclassicbif_charin(reference callstate)
+    when 'CHAROUT' then result = rexxclassicbifstream..rexxclassicbif_charout(reference callstate)
+    when 'CHARS' then result = rexxclassicbifstream..rexxclassicbif_chars(reference callstate)
+    when 'LINEIN' then result = rexxclassicbifstream..rexxclassicbif_linein(reference callstate)
+    when 'LINEOUT' then result = rexxclassicbifstream..rexxclassicbif_lineout(reference callstate)
+    when 'LINES' then result = rexxclassicbifstream..rexxclassicbif_lines(reference callstate)
+    when 'QUALIFY' then result = rexxclassicbifstream..rexxclassicbif_qualify(reference callstate)
+    when 'STREAM' then result = rexxclassicbifstream..rexxclassicbif_stream(reference callstate)
+    when 'UNICODEVERSION' then result = rexxclassicbifunicode..rexxclassicbif_unicodeversion(reference callstate)
+    when 'TONFD' then result = rexxclassicbifunicode..rexxclassicbif_tonfd(reference callstate)
+    when 'TONFC' then result = rexxclassicbifunicode..rexxclassicbif_tonfc(reference callstate)
+    when 'TONFKD' then result = rexxclassicbifunicode..rexxclassicbif_tonfkd(reference callstate)
+    when 'TONFKC' then result = rexxclassicbifunicode..rexxclassicbif_tonfkc(reference callstate)
+    when 'ISNFD' then result = rexxclassicbifunicode..rexxclassicbif_isnfd(reference callstate)
+    when 'ISNFC' then result = rexxclassicbifunicode..rexxclassicbif_isnfc(reference callstate)
+    when 'ISNFKD' then result = rexxclassicbifunicode..rexxclassicbif_isnfkd(reference callstate)
+    when 'ISNFKC' then result = rexxclassicbifunicode..rexxclassicbif_isnfkc(reference callstate)
+    when 'TOUPPERCASE' then result = rexxclassicbifunicode..rexxclassicbif_touppercase(reference callstate)
+    when 'TOLOWERCASE' then result = rexxclassicbifunicode..rexxclassicbif_tolowercase(reference callstate)
+    when 'TOCASEFOLD' then result = rexxclassicbifunicode..rexxclassicbif_tocasefold(reference callstate)
+    when 'TOSIMPLECASEFOLD' then result = rexxclassicbifunicode..rexxclassicbif_tosimplecasefold(reference callstate)
+    when 'TOTURKICCASEFOLD' then result = rexxclassicbifunicode..rexxclassicbif_toturkiccasefold(reference callstate)
+    when 'TOTURKICSIMPLECASEFOLD' then result = rexxclassicbifunicode..rexxclassicbif_toturkicsimplecasefold(reference callstate)
+    when 'GRAPHEMECOUNT' then result = rexxclassicbifunicode..rexxclassicbif_graphemecount(reference callstate)
+    when 'GRAPHEMEREVERSE' then result = rexxclassicbifunicode..rexxclassicbif_graphemereverse(reference callstate)
+    when 'GRAPHEMESUBSTR' then result = rexxclassicbifunicode..rexxclassicbif_graphemesubstr(reference callstate)
+    when 'GRAPHEMEPOS' then result = rexxclassicbifunicode..rexxclassicbif_graphemepos(reference callstate)
+    when 'ENCODE' then result = rexxclassicbifunicode..rexxclassicbif_encode(reference callstate)
+    when 'DECODE' then result = rexxclassicbifunicode..rexxclassicbif_decode(reference callstate)
+    when 'ISDECODABLE' then result = rexxclassicbifunicode..rexxclassicbif_isdecodable(reference callstate)
+    when 'ISENCODINGSUPPORTED' then result = rexxclassicbifunicode..rexxclassicbif_isencodingsupported(reference callstate)
+    otherwise do
+      assembler signal 'INVALID_ARGUMENTS','Unknown admitted Classic BIF'
+      return .rexxvalue..RexxValue('')
+    end
+  end
+  result = rexxclassicbifs..rexxclassicbif_checked(reference callstate,result)
+  if callstate.conditionId() > 0 then do
+    activation = dereference bundle.activation()
+    queued = activation.queueCallCondition(callstate.conditionId(),callstate.conditionDescription(),line)
+    if activation.signalPolicy(callstate.conditionId()) > 0 then do
+      event = .rexxclassicconditionevent..RexxClassicConditionEvent(callstate.conditionId(),callstate.conditionDescription())
+      assembler signal 'CLASSIC_CONDITION',event
+    end
+  end
+  return result

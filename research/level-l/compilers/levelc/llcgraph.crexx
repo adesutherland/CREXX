@@ -1,0 +1,95 @@
+/* cREXX License (MIT). Frontend-only source request; no RXAS/backend imports. */
+options levelb
+namespace llcgraph expose request
+import llcfrontend
+import llcbindings
+import llir
+import llcdiagnostics
+
+/** Checked immutable-source preparation for static and dynamic consumers.
+ * @param source exact UTF-8 source bytes, including embedded NUL
+ * @param mode program or interpret-group
+ * @param names immutable containing-program lexical names
+ * @param entries corresponding callable positive identities or known label zero
+ * @param fingerprint containing-program definition identity, never a live scope
+ * @param filename stable logical source identity
+ * @param budget source/preparation work allowance
+ */
+request: class
+  _front = .llcfrontend..request
+  _snapshot = .llcbindings..prepared
+  _definitions = .llcbindings..definition[]
+  _source = .binary
+  _mode = .string
+  _names = .string[]
+  _entries = .int[]
+  _fingerprint = .string
+  _filename = .string
+  _budget = .int
+  _metadatabytes = .int
+  _ready = .int
+  _sourceonly = .int
+  *: factory
+    arg source = .binary, mode = .string, names = .string[], entries = .int[], fingerprint = .string, filename = '<source>', budget = 1000000
+    _front = .llcfrontend..request(source,'',filename,budget)
+    call _front.execution(mode,names,entries,fingerprint)
+    _ready = 1; _sourceonly = 0
+    return
+  /** Bind an already prepared provider snapshot, without source/loader search. */
+  bound: factory
+    arg source = .binary, mode = .string, names = .string[], entries = .int[], fingerprint = .string, providers = reference .llcbindings..prepared, filename = '<source>', budget = 1000000
+    _front = .llcfrontend..request.bound(source,providers,filename,budget)
+    call _front.execution(mode,names,entries,fingerprint)
+    _ready = 1; _sourceonly = 0
+    return
+  /** Own pure prepared-binding definitions for the entire frontend request.
+   * Binding starts on the original request storage at first query, so a factory
+   * temporary is never the retained reference owner. No artifact is acquired.
+   * @param definitions immutable selected aliases/calling contracts
+   * @param bytes logical retained binding metadata allowance
+   */
+  snapshot: factory
+    arg source = .binary, mode = .string, names = .string[], entries = .int[], fingerprint = .string, definitions = .llcbindings..definition[], filename = '<source>', budget = 1000000, bytes = 67108864
+    _source = source; _mode = mode; _names = names; _entries = entries; _fingerprint = fingerprint
+    _definitions = definitions; _filename = filename; _budget = budget; _metadatabytes = bytes
+    _ready = 0; _sourceonly = 1
+    return
+  prepare: method = .void
+    if _ready then return
+    _ready = 1
+    _snapshot = .llcbindings..prepared.snapshot(_definitions,_metadatabytes,_budget)
+    _front = .llcfrontend..request.bound(_source,reference _snapshot,_filename,_budget)
+    call _front.execution(_mode,_names,_entries,_fingerprint)
+    return
+  bindingbytes: method = .int
+    call prepare()
+    if _sourceonly = 0 then return 0
+    return _snapshot.usedbytes()
+  bindingwork: method = .int
+    call prepare()
+    if _sourceonly = 0 then return 0
+    return _snapshot.workused()
+  status: method = .int
+    call prepare()
+    return _front.status()
+  error: method = .string
+    call prepare()
+    return _front.error()
+  offset: method = .int
+    call prepare()
+    return _front.offset()
+  graph: method = .llir..module
+    call prepare()
+    return _front.graph()
+  names: method = .string[]
+    call prepare()
+    return _front.lexicalnames()
+  entries: method = .int[]
+    call prepare()
+    return _front.lexicalentries()
+  fingerprint: method = .string
+    call prepare()
+    return _front.fingerprint()
+  warnings: method = .llcdiagnostics..warning[]
+    call prepare()
+    return _front.warnings()

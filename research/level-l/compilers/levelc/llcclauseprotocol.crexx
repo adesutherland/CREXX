@@ -398,6 +398,7 @@ checked: class
         when 'crexx.c.signal.mark' then classid = 14
         when 'crexx.c.entry.test' then classid = 15
         when 'crexx.c.entry.invalid' then classid = 15
+        when 'crexx.c.dynamic.group.entry' then classid = 15
         when 'core.protect' then classid = 16
         when 'crexx.c.signal.capture' then classid = 16
         when 'crexx.c.signal.select' then classid = 16

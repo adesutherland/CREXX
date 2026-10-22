@@ -94,6 +94,8 @@ RexxActivationArguments: class
   zz_zz_host_zcompletion_root = reference .RexxActivationArguments
   zz_zz_host_zcompletion_signal = .runtime_signal
 
+  zz_zz_zdynamic_policy = .object[]
+
   *: factory
     slot_count = 0
     supplied_count = 0
@@ -140,6 +142,8 @@ RexxActivationArguments: class
     zz_zz_host_zcompletion_signal = absent_completion_signal
     do index = 1 to 7
       signal_policy[index] = 0
+      absent_dynamic_policy = .object
+      zz_zz_zdynamic_policy[index] = absent_dynamic_policy
     end
     return
 
@@ -167,6 +171,7 @@ RexxActivationArguments: class
     end
     do index = 1 to 7
       signal_policy[index] = parent.signalPolicy(index)
+      zz_zz_zdynamic_policy[index] = parent.dynamicPolicy(index)
     end
     current_condition = parent.currentConditionId()
     condition_description = parent.currentConditionDescription()
@@ -501,7 +506,12 @@ RexxActivationArguments: class
     zz_zz_host_zcompletion_live = 1
     return
 
-  /** Idempotently revoke this root; retained children cannot regain access. */
+  /** Idempotently revoke this root; retained children cannot regain access.
+   * On a fresh activation with only an inherited completion association, this
+   * clears that association without revoking its parent. A source coordinator
+   * uses this preparation before the child's distinct HostScope enters; Scope
+   * remains the owner of live completion binding and revocation.
+   */
   endHostCompletion: method = .void
     zz_zz_host_zcompletion_live = 0
     zz_zz_host_zcompletion_pending = 0
@@ -600,8 +610,10 @@ RexxActivationArguments: class
        zz_entry_condition = current_condition & zz_entry_condition = delayed_condition &,
        condition_instruction == "CALL" then delivery = zz_entry_condition
     zz_entry_condition = 0
+    absent_dynamic_policy = .object
     do index = 1 to 7
       signal_policy[index] = 0
+      zz_zz_zdynamic_policy[index] = absent_dynamic_policy
     end
     pending_condition = 0
     pending_description = ""
@@ -748,6 +760,8 @@ RexxActivationArguments: class
   setSignalPolicy: method = .void
     arg condition = .int, handler = .int
     if condition < 1 | condition > 7 then return
+    absent_dynamic_policy = .object
+    zz_zz_zdynamic_policy[condition] = absent_dynamic_policy
     signal_policy[condition] = handler
     if delayed_condition = condition then delayed_condition = 0
     if zz_entry_condition = condition then zz_entry_condition = 0
@@ -758,11 +772,59 @@ RexxActivationArguments: class
   setCallPolicy: method = .void
     arg condition = .int, handler = .int
     if condition < 2 | condition > 5 | handler < 1 then return
+    absent_dynamic_policy = .object
+    zz_zz_zdynamic_policy[condition] = absent_dynamic_policy
     signal_policy[condition] = -handler
     if delayed_condition = condition then delayed_condition = 0
     if zz_entry_condition = condition then zz_entry_condition = 0
     if zz_suppression_condition = condition then zz_suppression_condition = 0
     return
+
+  /** Install a checked persistent definition before changing the policy word.
+   * The reserved ordinal is meaningful only with this sidecar. Static ON/OFF
+   * setters release it; the immutable definition can outlive its group plan.
+   * @param condition one-based Classic condition identity
+   * @param definition immutable RexxClassicHandlerDefinition object
+   * @signal INVALID_ARGUMENTS invalid type, mode or condition
+   */
+  setDynamicPolicy: method = .void
+    arg condition = .int, definition = .object
+    if condition < 1 | condition > 7 | \(definition is .RexxClassicHandlerDefinition) then do
+      assembler signal "INVALID_ARGUMENTS","Invalid Classic dynamic handler policy"
+      return
+    end
+    policy = definition as .RexxClassicHandlerDefinition
+    if \policy.valid() | (policy.kind() = 'CALL' & (condition < 2 | condition > 5)) then do
+      assembler signal "INVALID_ARGUMENTS","Invalid Classic dynamic handler policy mode"
+      return
+    end
+    zz_zz_zdynamic_policy[condition] = definition
+    signal_policy[condition] = 2147483647
+    if policy.kind() = 'CALL' then signal_policy[condition] = -2147483647
+    if delayed_condition = condition then delayed_condition = 0
+    if zz_entry_condition = condition then zz_entry_condition = 0
+    if zz_suppression_condition = condition then zz_suppression_condition = 0
+    return
+
+  /** Return an immutable checked definition or typed absence. A reserved policy
+   * without its definition is always malformed rather than a static ordinal.
+   */
+  dynamicPolicy: method = .object
+    arg condition = .int
+    absent = .object
+    if condition < 1 | condition > 7 then return absent
+    definition = zz_zz_zdynamic_policy[condition]
+    if signal_policy[condition] <> 2147483647 & signal_policy[condition] <> -2147483647 then return absent
+    if \(definition is .RexxClassicHandlerDefinition) then do
+      assembler signal "INVALID_ARGUMENTS","Classic dynamic handler sentinel has no checked definition"
+      return absent
+    end
+    policy = definition as .RexxClassicHandlerDefinition
+    if \policy.valid() then do
+      assembler signal "INVALID_ARGUMENTS","Classic dynamic handler definition is invalid"
+      return absent
+    end
+    return definition
 
   /** @return the selected CALL handler identity, or zero in another mode */
   callPolicy: method = .int
@@ -813,6 +875,13 @@ RexxActivationArguments: class
   /** @return true when a deferred event remains after a handler returns */
   hasPendingCallCondition: method = .boolean
     return pending_condition <> 0
+
+  /** Inspect pending identity without consuming its shared dispatch packet.
+   * Dynamic-aware compiled callers use this to retain the existing static
+   * handler path when no persistent dynamic definition is selected.
+   */
+  pendingConditionId: method = .int
+    return pending_condition
 
   /**
    * Move a queued event into stable dispatch fields at a clause boundary.

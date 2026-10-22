@@ -53,8 +53,33 @@ checks during development does not remove later milestone obligations.
 | **WP-08 C target quality** | Assigned C selector and `compilers/common` target utility paths; optional `lib/rxfnsl/rxas` package | Target records, liveness-driven register reuse, call windows, ABI cleanup and C-OPT01–05. Explain legality and compare actual caller plus helper RXAS. | CFC-AC06/07/11; STEP09 incrementally. WP-02 generic facts; no target policy in SDK core. The optional target package has explicit ownership. No broad performance work for research. |
 | **WP-09 RXAS/VM primitive** | Precisely assigned assembler/binutils/interpreter/disassembler/linker paths and direct tests | One reproduced cost or missing execution capability; compare existing sequence, library/selector fix and primitive. Propose exact operands/effects/alias/errors/source/encoding/platform contract before code. | CFC-AC10/11; STEP09 or final STEP11b. Explicit native/ABI gate; mandatory first Release verdict for production optimisation. No language parser/BIF dispatch in VM. |
 | **WP-10 Delivery and independent QA** | Assigned CLI/build/test/packaging files; assigned worker owns shared root integration | Retain delivery/closure duties. Approved LRUSE-STEP03/04 owns CLI transport, output-derived REUSE_LEXER persistence/lock/checksum/publication, stamp build injection/dependencies/cleanup and initial research-C-only opt-in. Independently qualify non-C/G first, then focused C cold/warm and unchanged G controls; coordinate stamp manifest with WP-02. | CFC-AC08/11/12; STEP10/11d and [LRUSE](../../PLAN.md#current-action-lexer-reuse). Select development versus milestone checks under AGENTS; retain reuse/closure boundaries and no free shared cache path. |
-| **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
+| **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-02 execution and WP-09 call/resource ownership. | CFC-AC05/11; STEP11 after static functionality and detailed implementation approval. No source compiler/evaluator fallback and no premature dynamic implementation. |
 | **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Start at the early stable code/first-RXAS checkpoint: check contract/test traceability and effect/lifetime assumptions. Final inspection covers scope, preservation and changed material deltas. Findings name mechanism, affected criterion and reproducer. | Early in every increment; complete delivery review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. No automatic whole-cycle restart. |
+
+## STEP11 dynamic IR ownership
+
+The [detailed STEP11 plan](../PLAN.md#dynamic-execution-plan) owns the selected
+IR route, criteria, dependencies and todo/done status. The
+[architecture](architecture.md#dynamic-execution-strategy) defines the concrete
+control/call/resource/search contracts approved for this increment. Implementation
+is locally qualified under the selected component profile. These assignments do not authorize
+another QA campaign or close the formal compiler/platform/delivery gates.
+
+| Owner | Dynamic increment responsibility |
+|---|---|
+| WP-01 / coordinator | Freeze reviewed interfaces, source-search policy, independent expectations and public/native gates before implementation. One integrator owns the optional C schema/profile, plans and shared frontend/selector files. |
+| WP-02 | Precisely assigned `lib/rxfnsl/execute`, generic IR/analysis and neutral fixtures: manifests/protection/ports, conditional cells, binding leases, frame cleanup and protected abort. No Classic names/pool/search policy. |
+| WP-03 / WP-07 | Shared B activation/pool/condition/BIF/host owners, compatible dynamic policy sidecars, invocation private-pool commit/restoration and numeric/observation integration. A group cannot own a committed PROCEDURE pool. |
+| WP-05 / WP-08 / WP-11 | Frontend-only result/package split, program/group modes, immutable lexical snapshots, optional dynamic family, inline compiled-owner dispatcher and C runtime registry over existing shared services. Preserve static C24/body ABI. |
+| WP-09 | Narrow checked native invocation boundary, owned windows/result completion and RET/unwind hooks, plus generic host-context/regular-source acquisition interfaces under their existing VM/fs owners. No new opcode, source frontend, BIF semantics or native C feature. Assign these native mechanisms separately from source-only work. |
+| WP-10 | Optional dynamic build/install closure, prepared grammar/provider retention, driver/resource-view configuration and focused linked/relocated consumers. Centralize shared build/test preparation. |
+| WP-12 | Review the hand-prepared IR/first emitted bridge early, verify parent/child control and persistent policies/private pools, then review affected material fixes and whole-feature criteria. Reuse maintained sources/checked expectations; formal CFC/platform QA remains later. |
+
+The first proof needs only minimum port/abort and selector/native-call support;
+full generic/C registration and parser integration follow it. Grant disjoint
+named paths before writes and serialize shared integration. Native ownership
+changes receive focused normal/affected-engine/maintained-sanitizer qualification;
+unchanged native tools do not trigger a new sanitizer campaign for C/L edits.
 
 ## Group 2 ownership
 

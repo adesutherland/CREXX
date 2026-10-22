@@ -1,0 +1,142 @@
+/* Exact scalar capsules, all return forms and rejected sealed requests. */
+options levelb
+namespace invokevalues expose integer floating text novalue textid binaryid decimalid booleanid
+import rxinvoke
+
+main: procedure = .int
+  arg argv = .string[]
+  names = .string[]; types = .string[]
+  signatures = .string[]; providers = .string[]
+  names[1] = 'invokevalues.integer'; types[1] = '.int'; signatures[1] = ''
+  names[2] = 'invokevalues.floating'; types[2] = '.float'; signatures[2] = ''
+  names[3] = 'invokevalues.text'; types[3] = '.string'; signatures[3] = ''
+  names[4] = 'invokevalues.novalue'; types[4] = '.void'; signatures[4] = ''
+  names[5] = 'invokevalues.textid'; types[5] = '.string'; signatures[5] = 'value=.string'
+  names[6] = 'invokevalues.binaryid'; types[6] = '.binary'; signatures[6] = 'value=.binary'
+  names[7] = 'invokevalues.decimalid'; types[7] = '.decimal'; signatures[7] = 'value=.decimal'
+  names[8] = 'invokevalues.booleanid'; types[8] = '.boolean'; signatures[8] = 'value=.boolean'
+  do i = 1 to 8
+    providers[i] = ''
+  end
+  catalogue = .rxinvoke..catalogue(names,types,signatures,providers)
+  cells = .rxinvoke..scalar[]; presence = .int[]
+  binding = .rxinvoke..binding(catalogue,1)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asint() <> 42 | request.extent() <> 0 then return 1
+  binding = .rxinvoke..binding(catalogue,2)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asfloat() <> 1.25 then return 2
+  binding = .rxinvoke..binding(catalogue,3)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.astext() <> 'literal' then return 3
+  refused = 0
+  do
+    call result.asint()
+  on signal invalid_arguments
+    refused = 1
+  end
+  if refused <> 1 | result.astext() <> 'literal' then return 4
+  binding = .rxinvoke..binding(catalogue,4)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  if request.kind() <> 'void' | request.state() <> 'complete' then return 5
+  binding = .rxinvoke..binding(catalogue,5)
+  exact = 'λ' || ('00'x as .string) || 'z'
+  cells[1] = rxinvoke..text(exact); presence[1] = 1
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.astext() <> exact | request.extent() <> 1 | \request.present(1) then return 6
+  cells[1] = rxinvoke..text('')
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.astext() <> '' then return 7
+  binding = .rxinvoke..binding(catalogue,6)
+  bytes = '00FF00'x as .binary
+  cells[1] = rxinvoke..binary(bytes)
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asbinary() <> bytes then return 8
+  binding = .rxinvoke..binding(catalogue,7)
+  decimal = 1.25 as .decimal
+  cells[1] = rxinvoke..decimal(decimal)
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asdecimal() <> decimal then return 9
+  binding = .rxinvoke..binding(catalogue,8)
+  cells[1] = rxinvoke..boolean(1 = 1)
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if \result.asboolean() then return 10
+  call request.discard()
+  if request.state() <> 'complete' then return 11
+  refused = 0
+  cells[1] = rxinvoke..integer(1)
+  do
+    request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  on signal invalid_arguments
+    refused = 1
+  end
+  if refused <> 1 then return 12
+  cells[1] = rxinvoke..boolean(1 = 1); presence[1] = 2
+  refused = 0
+  do
+    request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  on signal invalid_arguments
+    refused = 1
+  end
+  if refused <> 1 then return 13
+  presence[1] = 1; refused = 0
+  do
+    request = rxinvoke..prepare(binding,cells,presence,1,1)
+  on signal failure
+    refused = 1
+  end
+  if refused <> 1 then return 14
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call request.discard()
+  if request.state() <> 'discarded' then return 15
+  refused = 0
+  do
+    call rxinvoke..invoke(request)
+  on signal invalid_arguments
+    refused = 1
+  end
+  if refused <> 1 | request.state() <> 'discarded' then return 16
+  if argv[0] > 1000 then do
+    call integer(); call floating(); call text(); call novalue()
+    call textid(''); call binaryid(bytes); call decimalid(decimal); call booleanid(1 = 1)
+  end
+  say 'CHECKED_INVOCATION_VALUES_PASS'
+  return 0
+
+integer: procedure = .int
+  return 42
+floating: procedure = .float
+  return 1.25
+text: procedure = .string
+  return 'literal'
+novalue: procedure = .void
+  return
+textid: procedure = .string
+  arg value = .string
+  return value
+binaryid: procedure = .binary
+  arg value = .binary
+  return value
+decimalid: procedure = .decimal
+  arg value = .decimal
+  return value
+booleanid: procedure = .boolean
+  arg value = .boolean
+  return value

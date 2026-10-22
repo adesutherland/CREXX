@@ -189,6 +189,7 @@ static int rxvm_execute_initializer(struct rxvm_context *ctx,
     value **saved_args;
     value *saved_ret;
     value *ret;
+    proc_runtime *saved_fault_entry;
     int rc;
 
     saved_proc = ctx->ext_proc;
@@ -207,7 +208,19 @@ static int rxvm_execute_initializer(struct rxvm_context *ctx,
     ctx->ext_argc = 0;
     ctx->ext_args = 0;
     ctx->ext_ret = ret;
+    saved_fault_entry = ctx->active.invocation_fault_entry;
+    if (ctx->active.invocation_fault_sink)
+        ctx->active.invocation_fault_entry = procedure;
     rc = run(ctx, 0, 0);
+    /* SILENT_HALT normally returns zero. A captured initializer cancellation
+     * still failed its initialization and must not publish READY state. */
+    if (!rc && ctx->active.invocation_fault_sink &&
+        ctx->active.invocation_fault_entry == procedure &&
+        ctx->active.invocation_fault_sink->num_attributes) {
+        value *raw = ctx->active.invocation_fault_sink->attributes[4];
+        rc = (int)raw->attributes[0]->int_value;
+    }
+    ctx->active.invocation_fault_entry = saved_fault_entry;
     ctx->ext_proc = saved_proc;
     ctx->ext_argc = saved_argc;
     ctx->ext_args = saved_args;

@@ -37,6 +37,7 @@
 #include "crexxpa.h"
 
 #include "rxfs_ops.h"
+#include "rxfs_source.h"
 
 #define RXFS_PATH_CAPACITY 4096
 
@@ -313,6 +314,14 @@ PROCEDURE(append_file)
 }
 
 LOADFUNCS
+    ADDPROC(context_cwd, "rxfs.contextcwd", "b", ".string", "");
+    ADDPROC(locator_equal, "rxfs.locatorequal", "b", ".int", "left=.string,right=.string");
+    ADDPROC(host_windows, "rxfs.windows", "b", ".int", "");
+    ADDCLASS("rxfs.source");
+    ADDFACTORYPROC(make_source, "rxfs.source", ".rxfs..source", "path=.string,bytebudget=.int");
+    ADDMETHODPROC(source_status, "rxfs.source", "status", ".int", "");
+    ADDMETHODPROC(source_error, "rxfs.source", "errorcode", ".int", "");
+    ADDMETHODPROC(source_bytes, "rxfs.source", "bytes", ".binary", "");
     ADDPROC(path_kind, "rxfs.pathkind", "b", ".int", "path = .string");
     ADDPROC(absolute_path, "rxfs.abspath", "b", ".string", "path = .string");
     ADDPROC(copy_file, "rxfs.copy", "b", ".int", "source = .string,target = .string");

@@ -1,0 +1,64 @@
+/* Independent deterministic source-policy and bounded-reader expectations. */
+options levelb
+import rxfnsb
+import llcsource
+import rxfs
+
+main: procedure
+  arg argv = .string[]
+  scratch = argv[1]
+  roots = .string[]; roots[1] = '/extra'; roots[2] = '/work'; roots[3] = '/extra'
+  context = .llcsource..view('/work','/program',roots,7,0)
+  paths = .llcsource..candidates(context,'FOO','FOO',0)
+  call check(paths.error() = '' & paths.size() = 6,'deduplicated ordered roots')
+  call check(paths.at(1) == '/program/foo.rexx' & paths.at(2) == '/program/foo','directory-major default suffixes')
+  call check(paths.at(3) == '/work/foo.rexx' & paths.at(4) == '/work/foo','context cwd precedes explicit roots')
+  call check(paths.at(5) == '/extra/foo.rexx' & paths.at(6) == '/extra/foo','explicit ordered roots')
+  paths = .llcsource..candidates(context,'MiXeD','MiXeD',1)
+  call check(paths.at(1) == '/program/MiXeD.rexx','quoted exact case')
+  paths = .llcsource..candidates(context,'FOO.CREXX','FOO.CREXX',0)
+  call check(paths.size() = 3 & paths.at(1) == '/program/foo.crexx','explicit source extension')
+  paths = .llcsource..candidates(context,'foo.','foo.',1)
+  call check(paths.size() = 3 & paths.at(1) == '/program/foo.','trailing dot exact extension')
+  paths = .llcsource..candidates(context,'.helper','.helper',1)
+  call check(paths.size() = 6 & paths.at(1) == '/program/.helper.rexx','leading dot remains stem')
+  paths = .llcsource..candidates(context,'./foo','./foo',1)
+  call check(paths.size() = 1 & paths.at(1) == '/work/./foo','explicit relative path has no suffix search')
+  paths = .llcsource..candidates(context,'/exact/Foo','/exact/Foo',1)
+  call check(paths.size() = 1 & paths.at(1) == '/exact/Foo','absolute exact locator')
+  paths = .llcsource..candidates(context,'','',1)
+  call check(paths.size() = 0,'empty name has no filesystem candidates')
+  paths = .llcsource..candidates(context,'410042'x as .string,'410042'x as .string,1)
+  call check(paths.size() = 0,'NUL name never enters C path API')
+  paths = .llcsource..candidates(context,' foo ',' foo ',1)
+  call check(paths.at(1) == '/program/ foo .rexx','source names are not trimmed')
+  windows = .llcsource..view('C:/work','',roots,1,1)
+  paths = .llcsource..candidates(windows,'C:foo','C:foo',1)
+  call check(paths.error() <> '', 'drive-relative requires explicit base')
+  paths = .llcsource..candidates(windows,'\foo','\foo',1)
+  call check(paths.error() <> '', 'drive-rooted requires explicit base')
+  paths = .llcsource..candidates(windows,'C:\exact\foo','C:\exact\foo',1)
+  call check(paths.size() = 1 & paths.at(1) == 'C:\exact\foo','absolute Windows path is exact')
+  paths = .llcsource..candidates(context,'foo','foo',1,1)
+  call check(paths.error() <> '', 'candidate bound enforced before append')
+  path = scratch || '/source-policy-test.rexx'
+  ignored = charout(path,'4100420A'x as .string); ignored = charout(path)
+  found = .rxfs..source(path,4)
+  call check(found.status() = 1 & bin2x(found.bytes()) == '4100420A','bounded reader preserves exact NUL source')
+  limited = .rxfs..source(path,3)
+  call check(limited.status() = -2,'oversized found resource is terminal limit')
+  ignored = rxfs..delete(path)
+  absent = .rxfs..source(path,4)
+  call check(absent.status() = 0,'only genuine resource absence declines')
+  directory = .rxfs..source(scratch,64)
+  call check(directory.status() = -1,'nonregular source is terminal error')
+  say 'PASS: Classic dynamic source contracts'
+  return
+
+check: procedure
+  arg accepted = .int, message = .string
+  if accepted = 0 then do
+    say 'FAIL: ' || message
+    assembler signal 'ERROR',message
+  end
+  return

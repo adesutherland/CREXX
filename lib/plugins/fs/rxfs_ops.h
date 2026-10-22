@@ -168,7 +168,9 @@ static int rxfs_enter(void *session, uint32_t caps, void **previous) {
 }
 static void rxfs_leave(void *previous) { rxfs_current = (rxfs_session *)previous; }
 static uint32_t rxfs_caps(const char *name) {
-    return name && strstr(name, "rxfs.fileguard") ? RXPA_PROCEDURE_CAP_SESSION_AFFINE : RXPA_PROCEDURE_CAP_PROCESS_REENTRANT;
+    return name && (strstr(name, "rxfs.fileguard") || strstr(name, "rxfs.source") ||
+                    strstr(name, "rxfs.contextcwd") || strstr(name, "rxfs.locatorequal"))
+        ? RXPA_PROCEDURE_CAP_SESSION_AFFINE : RXPA_PROCEDURE_CAP_PROCESS_REENTRANT;
 }
 RXPA_PLUGIN_SESSION_WITH_HOST(rxfs_old_create, rxfs_destroy, rxfs_enter, rxfs_leave, rxfs_caps, rxfs_create)
 static void rxfs_guard_copy(void *destination, void *source);

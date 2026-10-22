@@ -37,6 +37,7 @@
 #include "rxsignal.h"
 #include "rxsignature.h"
 #include "rxvminstrument.h"
+#include "rxvminvoke.h"
 #include "crexx_version.h"
 #include <assert.h>
 #include <signal.h>
@@ -256,6 +257,7 @@ typedef struct rxvm_interface_method_entry {
 } rxvm_interface_method_entry;
 
 struct stack_frame {
+    rxvm_invocation *invocation; /* Owned checked-call pin, never caller storage. */
     stack_frame *prev_free;
     stack_frame *parent;
     proc_runtime *procedure;
@@ -573,6 +575,9 @@ typedef struct rxvm_active_state {
     sig_atomic_t (*external_mailbox_claim)(void *owner);
     /* Optional synchronous callback outcome, scoped by run_with_signal(). */
     int *callback_signal;
+    rxvm_invocation_boundary *invocation_boundary; /* Stack-scoped native entry. */
+    value *invocation_fault_sink; /* Scoped checked-entry initializer failure. */
+    proc_runtime *invocation_fault_entry; /* Exact initializer run owner. */
 } rxvm_active_state;
 
 /* Runtime context */

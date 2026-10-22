@@ -86,6 +86,8 @@ const char *rxcrexxcmd_active_getenv(const char *name);
 const char *rxcrexxcmd_active_working_directory(void);
 int rxcrexxcmd_active_process_snapshot(char **working_directory,
                                        char ***environment);
+/* Owned context cwd snapshot; caller frees with free(). No ambient fallback. */
+int rxcrexxcmd_active_resource_snapshot(char **working_directory);
 void rxcrexxcmd_process_snapshot_free(char *working_directory,
                                       char **environment);
 

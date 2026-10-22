@@ -12,6 +12,18 @@ records the shared `rxfnsc` runtime boundary. Both products use its
 The legacy evaluator converts results to strings; modern execution retains
 typed values. Their sandbox and host policies are documented separately below.
 
+The product direction is an **untyped, simplified Level G syntax/operator
+profile with simplified classes**, retaining shared Classic BIFs. The current
+implementations supply reusable services and consumer/migration evidence; their
+organic dialect details are not the future language specification. The
+[owning roadmap](../../research/level-l/PLAN.md#accepted-first-product-direction--rexxscript-10-october)
+retains the selected scalar baseline and the open class/host/migration contracts.
+The [shared semantic-IR execution route](../../research/level-l/compilers/doc/architecture.md#dynamic-execution-strategy)
+is approved as the direction; detailed integration contracts precede implementation
+and neither interpreter has been replaced. G operators,
+Classic-compatible BIF contracts, host capabilities and intentional Unicode
+policy differences remain separate adapter decisions over shared algorithms.
+
 ## Modern Level L implementation (local review)
 
 The [Level L user guide](../../langtools/doc/user-guide.md) explains grammar

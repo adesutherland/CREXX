@@ -1,0 +1,74 @@
+/* cREXX License (MIT). Stable invocation-owned Classic private-pool binding. */
+options levelb numeric_classic
+namespace rexxclassicinvocation expose RexxClassicInvocation
+import rexxclassiccontext
+import rexxactivation
+import rexxpool
+
+/** The caller anchors this owner for the entire Classic invocation. Entering
+ * an INTERPRET group does not consume PROCEDURE eligibility or own its pool.
+ * Normal group completion and same-invocation SIGNAL never close this owner.
+ */
+RexxClassicInvocation: class
+  invocation_context = reference .rexxclassiccontext..RexxClassicContext
+  invocation_saved = reference .rexxpool..RexxVariablePool
+  invocation_private = .rexxpool..RexxVariablePool
+  invocation_committed = .boolean
+  invocation_closed = .boolean
+  *: factory
+    arg context = reference .rexxclassiccontext..RexxClassicContext
+    if <refvalid>(context) = 0 then assembler signal 'REFERENCE_INVALID','Classic invocation Context is expired'
+    invocation_context = context
+    bundle = dereference context
+    invocation_saved = bundle.pool()
+    absent_private = .rexxpool..RexxVariablePool
+    invocation_private = absent_private
+    invocation_committed = 0; invocation_closed = 0
+    return
+  context: method = reference .rexxclassiccontext..RexxClassicContext
+    if invocation_closed | <refvalid>(invocation_context) = 0 then assembler signal 'REFERENCE_INVALID','Classic invocation owner is closed'
+    return invocation_context
+  consume: method = .void
+    bundle = dereference context()
+    activation = dereference bundle.activation()
+    call activation.consumeFirstInstruction()
+    return
+  enterProcedure: method = .void
+    bundle = dereference context()
+    activation = dereference bundle.activation()
+    /* Shared activation owns the language check and consumes the insertion right.
+     * Construct before publication; commit immediately after checked rebinding. */
+    call activation.enterProcedure()
+    invocation_private = .rexxpool..RexxVariablePool(1)
+    call invocation_private.inheritCommandStatus(invocation_saved)
+    call bundle.bindPool(reference invocation_private)
+    invocation_committed = 1
+    return
+  expose: method = .void
+    arg name = .string, indirect = .int
+    bundle = dereference context()
+    if committed() = 0 then assembler signal 'INVALID_ARGUMENTS','Classic EXPOSE has no invocation private pool'
+    if indirect then call invocation_private.exposeIndirect(name,invocation_saved,bundle.config())
+    else call invocation_private.exposeSymbol(name,invocation_saved)
+    return
+  committed: method = .boolean
+    if invocation_closed then return 0
+    if invocation_committed then return 1
+    if <refvalid>(invocation_context) = 0 then return 0
+    bundle = dereference invocation_context
+    current = bundle.pool(); private_owner = reference invocation_private
+    /* Publication precedes the normal flag store. Exact binding identity also
+     * detects a CANCEL delivered between bindPool's return and that store. */
+    return current <refsame> private_owner
+  close: method = .void
+    if invocation_closed then return
+    /* Restore while both referenced owners are live, then release private cells. */
+    if <refvalid>(invocation_context) then do
+      bundle = dereference invocation_context
+      current = bundle.pool(); private_owner = reference invocation_private
+      if invocation_committed | (current <refsame> private_owner) then call bundle.bindPool(invocation_saved)
+    end
+    invocation_closed = 1; invocation_committed = 0
+    absent_private = .rexxpool..RexxVariablePool
+    invocation_private = absent_private
+    return

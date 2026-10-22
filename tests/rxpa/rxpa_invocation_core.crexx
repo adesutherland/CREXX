@@ -1,0 +1,116 @@
+/* Ordinary checked calls keep their B coordinator and owned result cells. */
+options levelb
+namespace invokefixture expose echo optional varargs mutate fail cancel
+import rxinvoke
+import rxfnsb
+
+main: procedure = .int
+  arg argv = .string[]
+  names = .string[]
+  types = .string[]
+  signatures = .string[]
+  providers = .string[]
+  names[1] = 'invokefixture.echo'; types[1] = '.int'
+  signatures[1] = 'value=.int'; providers[1] = ''
+  names[2] = 'invokefixture.optional'; types[2] = '.int'
+  signatures[2] = '?value=.int'; providers[2] = ''
+  names[3] = 'invokefixture.varargs'; types[3] = '.int'
+  signatures[3] = 'base=.int,...=.int'; providers[3] = ''
+  names[4] = 'invokefixture.mutate'; types[4] = '.int'
+  signatures[4] = 'expose value=.int'; providers[4] = ''
+  names[5] = 'invokefixture.fail'; types[5] = '.int'
+  signatures[5] = ''; providers[5] = ''
+  names[6] = 'invokefixture.cancel'; types[6] = '.int'
+  signatures[6] = ''; providers[6] = ''
+  catalogue = .rxinvoke..catalogue(names,types,signatures,providers)
+  cells = .rxinvoke..scalar[]
+  presence = .int[]
+  cells[1] = rxinvoke..integer(35); presence[1] = 1
+  binding = .rxinvoke..binding(catalogue,1)
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  if request.state() <> 'sealed' then return 1
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if request.state() <> 'complete' | result.asint() <> 42 then return 2
+  replay = 0
+  do
+    call rxinvoke..invoke(request)
+  on signal invalid_arguments
+    replay = 1
+  end
+  if replay <> 1 | result.asint() <> 42 then return 3
+  clear cells; clear presence
+  binding = .rxinvoke..binding(catalogue,2)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asint() <> 42 then return 4
+  binding = .rxinvoke..binding(catalogue,3)
+  cells[1] = rxinvoke..integer(10); presence[1] = 1
+  cells[2] = rxinvoke..integer(20); presence[2] = 1
+  cells[3] = rxinvoke..integer(30); presence[3] = 1
+  request = rxinvoke..prepare(binding,cells,presence,3,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asint() <> 62 then return 5
+  clear cells; clear presence
+  binding = .rxinvoke..binding(catalogue,4)
+  original = rxinvoke..integer(8)
+  cells[1] = original; presence[1] = 1
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asint() <> 9 | original.asint() <> 8 then return 6
+  clear cells; clear presence
+  binding = .rxinvoke..binding(catalogue,5)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  trapped = 0
+  do
+    call rxinvoke..invoke(request)
+  on signal division_by_zero as problem
+    trapped = problem.code()
+  end
+  if trapped <> 5 | request.state() <> 'failed' then return 7
+  event = request.event() as .rxfnsb..runtime_signal
+  if event.code() <> 5 | event.message() <> 'owned bytecode invocation event' then return 8
+  binding = .rxinvoke..binding(catalogue,6)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  trapped = 0
+  do
+    call rxinvoke..invoke(request)
+  on signal cancel as problem
+    trapped = problem.code()
+  end
+  if trapped <> 18 | request.state() <> 'failed' then return 9
+  binding = .rxinvoke..binding(catalogue,2)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asint() <> 42 then return 10
+  /* Actual static roots accompany the catalogue, including linked images. */
+  if argv[0] > 1000 then do
+    call echo(0); call optional(); call varargs(0,0,0)
+    root = 0; call mutate(root); call fail(); call cancel()
+  end
+  say 'CHECKED_INVOCATION_CORE_PASS'
+  return 0
+
+echo: procedure = .int
+  arg value = .int
+  return value + 7
+optional: procedure = .int
+  arg ?value = 40
+  return value + 2
+varargs: procedure = .int
+  arg base = .int, ... = .int
+  return base + arg[] + arg[1] + arg[2]
+mutate: procedure = .int
+  arg expose value = .int
+  value = value + 1
+  return value
+fail: procedure = .int
+  assembler signal "DIVISION_BY_ZERO","owned bytecode invocation event"
+  return 0
+cancel: procedure = .int
+  assembler signal "CANCEL","owned cancellation invocation event"
+  return 0

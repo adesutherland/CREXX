@@ -136,7 +136,7 @@ analysis: class
  * the ring queue retains at most one pending entry per block. No inference about
  * language truth or mutable external state is made. */
 analyse: procedure = .llirservices..analysis
-  arg owner = reference .llir..module, budget = 1000000
+  arg owner = reference .llir..module, budget = 1000000, ?admittedControl = .int[]
   graph = dereference owner; facts = .llirservices..facts(owner)
   if graph.error() <> '' then return .llirservices..analysis('invalid',graph.error(),facts)
   if budget < 1 then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work must be positive',facts)
@@ -148,7 +148,18 @@ analyse: procedure = .llirservices..analysis
     work = work + 1
     opcode = store.get(3,op,1)
     if opcode > 16 then do
-      if schema.effectvalue(opcode - 16,3) <> 'returns' then return .llirservices..analysis('unsupported','LL_IR_CONTROL: incomplete continuation contract for ' || store.opname(opcode),facts)
+      termination = schema.effectvalue(opcode - 16,3)
+      if termination <> 'returns' then do
+        admitted = 0
+        if ?admittedControl & (termination = 'transfer' | termination = 'diverges') then do
+          do control = 1 to admittedControl[0]
+            if work >= budget then return .llirservices..analysis('limit','LL_RESOURCE_LIMIT: ir.analysis.work budget exhausted',facts)
+            work = work + 1
+            if admittedControl[control] = op then do; admitted = 1; leave; end
+          end
+        end
+        if admitted = 0 then return .llirservices..analysis('unsupported','LL_IR_CONTROL: incomplete continuation contract for ' || store.opname(opcode),facts)
+      end
       if schema.effectvalue(opcode - 16,1) = 'unknown' then return .llirservices..analysis('unsupported','LL_IR_EFFECT: unknown state effects for ' || store.opname(opcode),facts)
     end
   end

@@ -57,6 +57,53 @@ plugin packaging. Extend the ISA only when instruction-level execution or
 operand integration is justified. Each new capability still requires its own
 scope and exact-contract approval; this principle authorizes no unrelated work.
 
+### Checked ordinary invocation
+
+The built-in `rxinvoke` service supports a checked ordinary procedure call from
+an interpreter or another runtime adapter. A catalogue seals exact loaded
+callable names, complete result/argument metadata and native provider identities;
+it does not search source files or invent language conversions. A binding is
+valid only for its owning execution and module generation. Methods, factories,
+tasks and true reference arguments need their owning explicit adapters.
+
+`prepare(binding, scalarCells, presence, extent, bytebudget)` validates the
+complete request before entry and owns its argument/return window. Presence and
+the original extent survive independently of optional defaults, which remain
+callee-owned. Exposed scalar cells are disposable copies. Scalar capsules retain
+exact strings/binary bytes, numeric types and checked nominal values.
+The physical window contains `max(originalExtent,fixedFormalCount)` cells;
+the fixed count excludes a trailing vararg marker. Omitted cells retain absence,
+and exposed scalar cells use private storage, with no copyback to the adapter.
+
+`invoke(request)` submits the request through the ordinary native-call epilogue.
+The VM enters a real child frame after the callback returns; it does not recurse
+into a VM worker. All ordinary/fused call forms, RET forms, unwind and terminal
+cleanup share this boundary. The request owns its target result separately from
+the service's void return cell, and retains the original fault/CANCEL event.
+Interrupted service windows use the existing caller argument mapping restoration.
+Requests are sealed and single-use; teardown releases their frame/window owners.
+Failed and void completions release private raw target result storage before
+resumption, while a failure retains its first owned original event. Direct
+native, CALLMETHOD or embedding entry without the scoped service boundary
+cannot consume a sealed request.
+The Classic adapter owns RexxValue conversions and source/control semantics.
+
+For a built-in provider without a plugin file, the existing metadata service
+accepts the explicit locator `provider:<id>` (for example `provider:rxinvoke`).
+It inspects already loaded native declarations through the same bounded
+function/member/provider reader and full contract check. It never loads a
+library on this route. `rxcontract.acquire` and its existing projection adapter
+remain the single metadata path for compiler clients, including factories.
+
+The optional RXPA host `resource_view` tail returns the active execution
+context's working directory into an owned value. Its size/ABI guard is mandatory;
+unavailable views fail rather than falling back to the process working directory.
+The filesystem provider's exact bounded regular-source reader supplies bytes and
+typed found/absent/error/limit outcomes; language search order remains outside it.
+Acquisition closes its descriptor before publishing owned bytes. The source,
+context-cwd and locator-comparison services enter the provider session to access
+the correct execution host.
+
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `interpreter/rxvml/rxvm.h`):

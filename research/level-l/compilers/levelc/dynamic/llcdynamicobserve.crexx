@@ -1,0 +1,161 @@
+/* cREXX License (MIT). Immutable authored-observation projections for C IR.
+ * The existing llcsrcmap decoder and llsource index own source algorithms.
+ */
+options levelb
+namespace llcdynamicobserve expose prepared
+import rxfnsb
+import llir
+import llcsrcmap
+import llsource
+import llcompilercontracts
+import rexxclassicconfig
+
+prepared: class
+  _graph = reference .llir..module
+  _budget = .int
+  _bytes = .int
+  _ready = .int
+  _error = .string
+  _mapped = .int[]
+  _maps = .llcsrcmap..prepared[]
+  _rawmaps = .binary[]
+  _sources = .binary[]
+  _indexes = .llsource..index[]
+  _seen = .int[]
+  _origins = .int[]
+  _lines = .int[]
+  _columns = .int[]
+  _files = .string[]
+  _texts = .string[]
+  _authored = .int[]
+  _inventorysource = .int
+  *: factory
+    arg graph = reference .llir..module, bytes = 67108864
+    _graph = graph; _budget = bytes; _bytes = 0; _ready = 0; _error = ''; _inventorysource = 0
+    return
+  reserve: method = .int
+    arg bytes = .int
+    if bytes < 0 | bytes > _budget - _bytes then do; _error = 'LL_RESOURCE_LIMIT: authored observation workspace'; return 0; end
+    _bytes = _bytes + bytes; return 1
+  run: method = .void
+    if _ready then return
+    source = .int; fn = .int; i = .int; index = .int
+    op = .llir..opview; origin = .llir..origin
+    _ready = 1; graph = dereference _graph; store = dereference graph.storage()
+    if reserve(graph.operations() * 128 + store.count(10) * 128 + store.count(1) * 8) = 0 then return
+    declarations = .int[]
+    do source = 1 to store.count(10)
+      _seen[source] = 0; _mapped[source] = 0
+    end
+    do fn = 1 to store.count(1); declarations[fn] = 0; end
+    do i = 1 to graph.operations()
+      op = graph.operation(i); origin = op.origin(); id = origin.id(); source = store.get(9,id,1)
+      _origins[i] = id; _authored[i] = origin.kind() <> 'synthetic'
+      if source > 0 & _seen[source] = 0 then do
+        bytes = origin.sourcebytes()
+        if reserve(<blen>(bytes) * 18 + 64) = 0 then return
+        _sources[source] = bytes; _indexes[source] = .llsource..index(bytes)
+        if _indexes[source].error() <> '' then do; _error = _indexes[source].error(); return; end
+        _seen[source] = 1; _mapped[source] = 0
+        if _inventorysource = 0 & _authored[i] then _inventorysource = source
+      end
+      if op.name() <> 'crexx.c.source.map' then iterate
+      block = op.blockid(); fn = store.get(2,block,1); declarations[fn] = declarations[fn] + 1
+      if declarations[fn] > 1 | block <> store.get(1,fn,3) | i <> store.get(2,block,2) | origin.kind() = 'synthetic' then do
+        _error = 'LL_COMPILER_SOURCE: source.map must be the first owned entry declaration'; return
+      end
+      original = op.attribute('original'); filename = op.attribute('filename') as .string
+      if filename \== llcompilercontracts..sourcename(origin.filename()) then do
+        _error = 'LL_COMPILER_SOURCE: source.map filename differs from source identity'; return
+      end
+      if _mapped[source] then do
+        if original \= _rawmaps[source] then do
+          _error = 'LL_COMPILER_SOURCE: conflicting source.map declarations'; return
+        end
+        iterate
+      end
+      if reserve(<blen>(original) * 64 + 64) = 0 then return
+      _maps[source] = .llcsrcmap..prepared(original,1,filename,max(1,_budget <idiv> 64))
+      if _maps[source].status() then do; _error = _maps[source].error(); return; end
+      if _maps[source].bytes() \= _sources[source] then do
+        _error = 'LL_COMPILER_SOURCE: source.map cleaned bytes differ from source'; return
+      end
+      _mapped[source] = 1; _rawmaps[source] = original
+    end
+    linekeys = .stem(); linetexts = .string[]
+    do i = 1 to graph.operations()
+      op = graph.operation(i); origin = op.origin(); source = store.get(9,origin.id(),1)
+      _files[i] = origin.filename(); _lines[i] = 0; _columns[i] = 0; _texts[i] = ''
+      if source < 1 then iterate
+      mapped = .llcsrcmap..location()
+      if _mapped[source] then mapped = _maps[source].location(origin.first(),origin.last())
+      if mapped.valid() then do
+        _files[i] = mapped.filename(); _lines[i] = mapped.line(); _columns[i] = mapped.column()
+        if mapped.hastext() then _texts[i] = mapped.text()
+      end
+      else do
+        position = _indexes[source].position(origin.first())
+        _lines[i] = position.line(); _columns[i] = position.column()
+        key = source || ':' || position.line(); known = linekeys.get(key)
+        if known = '' then do
+          index = linetexts[0] + 1
+          linetexts[index] = binsubstr(_sources[source],position.first() + 1,position.last() - position.first()) as .string
+          call linekeys.set(key,index as .string)
+        end
+        else index = known as .int
+        _texts[i] = linetexts[index]
+      end
+      if _mapped[source] then do
+        if _maps[source].status() then do; _error = _maps[source].error(); return; end
+      end
+      if reserve(<blen>(_files[i] as .binary) + <blen>(_texts[i] as .binary)) = 0 then return
+    end
+    return
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  bytes: method = .int
+    call run(); return _bytes
+  line: method = .int
+    arg op = .int
+    return _lines[op]
+  lineOrigin: method = .int
+    arg origin = .int
+    do i = 1 to _origins[0]; if _origins[i] = origin then return _lines[i]; end
+    return 0
+  column: method = .int
+    arg op = .int
+    return _columns[op]
+  filename: method = .string
+    arg op = .int
+    return _files[op]
+  text: method = .string
+    arg op = .int
+    return _texts[op]
+  authored: method = .int
+    arg op = .int
+    return _authored[op]
+  /** Only a fresh full-program configuration receives an inventory. Group
+   * execution retains the containing program; mapped generated input has none.
+   */
+  installInventory: method = .void
+    arg config_ref = reference .rexxclassicconfig..RexxClassicConfig
+    config = dereference config_ref; call config.clearSourceLines()
+    source = _inventorysource
+    if source < 1 then return
+    if _mapped[source] then return
+    cursor = 0; bytes = _sources[source]; extent = <blen>(bytes)
+    do while cursor < extent
+      position = _indexes[source].position(cursor)
+      text = binsubstr(bytes,position.first() + 1,position.last() - position.first()) as .string
+      call config.appendSourceLine(text)
+      cursor = position.last()
+      if cursor < extent then do
+        byte = <at..u8>(cursor) bytes; cursor = cursor + 1
+        if byte = 13 & cursor < extent then do
+          if (<at..u8>(cursor) bytes) = 10 then cursor = cursor + 1
+        end
+      end
+    end
+    return

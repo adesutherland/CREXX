@@ -71,7 +71,7 @@ RXVM_HANDLER(CALL_FUNC,
                     current_module->module_number, VM_CANONICAL_INDEX(pc),
                     0, 0);
             RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
-            rxvm_call_native_procedure(called_function, 0, NULL, NULL,
+            RXVM_SCOPED_NATIVE_CALL(called_function, 0, NULL, NULL,
                                        signal_value);
             RXVM_INSTRUMENTATION_NATIVE_END();
             INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
@@ -124,7 +124,8 @@ RXVM_HANDLER(RET_INT,
             unsigned char is_interrupt = current_frame->is_interrupt;
             if (current_frame->return_reg)
                 current_frame->return_reg->int_value = op1I;
-            temp_frame = current_frame;
+            if (current_frame->invocation) rxvm_invoke_complete(current_frame->invocation, 1);
+                temp_frame = current_frame;
             VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent,
                                       RXVM_TRANSITION_RETURN);
             if (!current_frame) {

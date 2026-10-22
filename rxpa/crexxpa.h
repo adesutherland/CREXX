@@ -145,6 +145,10 @@ typedef int (*rxpa_native_declaration_query_v1)(const char *artifact,
         const char *callable, size_t bytes, size_t work,
         rxpa_native_declaration_v1 *declaration, const char **error_out,
         size_t *used_bytes, size_t *used_work);
+/* Copy the active execution context's current resource directory into VM text.
+ * No process-wide cwd fallback. Returns -1 when the execution context or its
+ * resource view is unavailable, without changing the destination. */
+typedef int (*rxpa_resource_view_v1)(rxpa_attribute_value working_directory);
 typedef struct rxpa_host_services_v1 {
     size_t struct_size;
     uint32_t abi_version;
@@ -152,7 +156,13 @@ typedef struct rxpa_host_services_v1 {
     rxpa_object_set_type_v1 object_set_type; /* Optional complete sized tail. */
     rxpa_string_set_v1 string_set; /* Optional complete sized tail. */
     rxpa_native_declaration_query_v1 native_declaration; /* Optional sized tail. */
+    rxpa_resource_view_v1 resource_view; /* Optional complete sized tail. */
 } rxpa_host_services_v1;
+static inline int rxpa_host_has_resource_view(const rxpa_host_services_v1 *host) {
+    return host && host->struct_size >=
+            offsetof(rxpa_host_services_v1, resource_view) + sizeof(host->resource_view) &&
+            host->abi_version == RXPA_HOST_SERVICES_ABI_V1 && host->resource_view;
+}
 static inline int rxpa_host_has_native_declaration(const rxpa_host_services_v1 *host) {
     return host && host->struct_size >=
             offsetof(rxpa_host_services_v1, native_declaration) + sizeof(host->native_declaration) &&

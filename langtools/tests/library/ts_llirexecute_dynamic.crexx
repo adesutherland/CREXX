@@ -1,0 +1,359 @@
+/* cREXX License (MIT). Neutral executable-manifest and lifetime controls. */
+options levelb
+import rxfnsb
+import llir
+import llireffects
+import llirexecute
+
+main: procedure = .int
+  contract = makeschema(); graph = makegraph(contract)
+  failures = check(graph.error() = '', 'neutral dynamic graph verifies: ' || graph.error())
+  if graph.error() <> '' then return failures
+  execution = makemetadata(reference graph)
+  registry = makeregistry(contract)
+  plan = .llirexecute..plan(reference graph,registry,1000000,67108864,execution)
+  failures = failures + check(plan.valid(), 'checked executable manifest: ' || plan.message())
+  if plan.valid() = 0 then return failures
+  args = .object[]; present = .int[]
+  run = .llirexecute..session(plan); answer = run.start(1,args,present)
+  failures = failures + integer(answer,17,'protected native fault enters only declared exceptional edge')
+  service = run.service('neutral') as .neutral
+  failures = failures + check(service.events() = 'enter.1|raised|recover|leave.1.return|cleanup.done', 'frame return then terminal cleanup order')
+  failures = failures + check(service.raw(), 'protected event retains raw native payload and origin')
+  do f = 2 to 3
+    run = .llirexecute..session(plan); answer = run.start(f,args,present)
+    expected = 9
+    if f = 3 then expected = 42
+    failures = failures + integer(answer,expected,'conditional absence/presence with independent branch ' || f)
+  end
+  run = .llirexecute..session(plan); answer = run.start(4,args,present)
+  failures = failures + integer(answer,23,'mapped local call omits first formal and preserves later present input')
+  service = run.service('neutral') as .neutral
+  failures = failures + check(service.events() = 'enter.4|enter.5|leave.5.return|leave.4.return|cleanup.done', 'nested frame hooks have actual invocation lifetime')
+  attempted = .llir..opview; i = .int
+  yieldop = 0; yieldorigin = 0; fuelop = 0; fuelorigin = 0; raisedorigin = 0; constants = 0
+  store = dereference graph.storage()
+  do i = 1 to graph.operations()
+    attempted = graph.operation(i)
+    if attempted.name() = 'neutral.yield' then do
+      yieldop = i; yieldorigin = attempted.origin().id()
+    end
+    if attempted.name() = 'neutral.raised' then raisedorigin = attempted.origin().id()
+    if store.get(2,attempted.blockid(),1) = 4 & attempted.name() = 'core.constant' then do
+      constants = constants + 1
+      if constants = 2 then do; fuelop = i; fuelorigin = attempted.origin().id(); end
+    end
+  end
+  run = .llirexecute..session(plan,100000,64,100000,plan.usedbytes() + 512)
+  reserved = run.start(8,args,present)
+  run = .llirexecute..session(plan,1); fuel = run.start(4,args,present)
+  failures = failures + check(yieldop > 0 & fuelop > 0 & reserved.status() = 'limit' & reserved.operation() = yieldop & reserved.origin() = yieldorigin & fuel.status() = 'limit' & fuel.operation() = fuelop & fuel.origin() = fuelorigin,'resource and fuel limits retain the currently attempted operation and owned origin')
+  zeroregistry = makeregistry(contract,1)
+  zeroplan = .llirexecute..plan(reference graph,zeroregistry,1000000,67108864,execution)
+  run = .llirexecute..session(zeroplan); answer = run.start(1,args,present)
+  service = run.service('neutral') as .neutral
+  failures = failures + check(answer.status() = 'done' & service.faultorigin() = raisedorigin & service.raw() & service.ownedpacket(),'zero-origin protected failure acquires its dispatched origin without changing event or payload')
+  run = .llirexecute..session(plan)
+  live = 30; binding = .neutralbinding(reference live)
+  args[1] = run.bind('neutral.binding',binding as .object) as .object; present[1] = 1
+  answer = run.start(6,args,present)
+  failures = failures + integer(answer,31,'dispatch resolves authoritative binding and mutates its owner')
+  failures = failures + check(live = 31, 'lease resolution preserves reference owner')
+  service = run.service('neutral') as .neutral; request = service.retained(); rejected = 0
+  do
+    ignored = request.resolve(1)
+  on signal
+    rejected = 1
+  end
+  failures = failures + check(rejected,'retained request cannot resolve after synchronous dispatch')
+  other = .llirexecute..session(plan); answer = other.start(6,args,present)
+  failures = failures + check(answer.status() = 'rejected','foreign and completed-session leases fail before entry')
+  assembler setattrs args,0
+  assembler setattrs present,0
+  run = .llirexecute..session(plan); answer = run.start(7,args,present)
+  if answer.status() <> 'transferred' then say answer.status() answer.code() answer.message()
+  failures = failures + check(answer.status() = 'transferred' & answer.code() = 'NEUTRAL.TRANSFER' & bin2x(answer.payload()) = '00FF' & answer.hasevent(), 'declared transfer owns exact boundary event')
+  if answer.status() = 'transferred' then failures = failures + controlnumber(answer,71)
+  run = .llirexecute..session(plan); answer = run.start(8,args,present)
+  if answer.status() <> 'suspended' then say answer.status() answer.code() answer.message()
+  failures = failures + check(answer.status() = 'suspended' & answer.operation() > 0 & answer.code() = 'NEUTRAL.INVOKE' & bin2x(answer.payload()) = 'FF00', 'invocation suspension retains operation and exact packet')
+  if answer.status() <> 'suspended' then do
+    failures = failures + preflight(contract,reference graph,execution)
+    say 'failures=' || failures
+    return failures
+  end
+  failures = failures + controlnumber(answer,72)
+  token = answer.token()
+  failure = .llirexecute..outcome('failure','NEUTRAL.ABORT','abort','AB00'x as .binary,answer.origin())
+  call failure.setevent(.runtime_signal('CANCEL','native cancel') as .object)
+  answer = run.abort(failure); again = run.abort(failure)
+  completion = .llirexecute..outcome(); rejectedanswer = run.resume(token,completion)
+  failures = failures + check(answer.status() = 'failure' & answer.code() = 'NEUTRAL.ABORT' & answer.hasevent() & again.code() = answer.code() & rejectedanswer.status() = 'rejected','abort is terminal, idempotent and revokes continuation')
+  service = run.service('neutral') as .neutral
+  failures = failures + check(service.events() = 'enter.8|yield|leave.8.failure|cleanup.failure','abort performs frame and terminal cleanup exactly once')
+  sessions = .llirexecute..session[]; sessions[1] = .llirexecute..session(plan)
+  answer = sessions[1].start(8,args,present); completion = .llirexecute..outcome()
+  if answer.status() = 'suspended' then do
+    token = answer.token(); answer = sessions[1].resume(token,completion)
+  end
+  failures = failures + check(answer.status() = 'done','array-owned session preserves exact continuation storage')
+  failures = failures + preflight(contract,reference graph,execution)
+  say 'failures=' || failures
+  return failures
+
+preflight: procedure = .int
+  arg contract = .llir..contract, owner = reference .llir..module, execution = .llirexecute..manifest
+  graph = dereference owner; registry = makeregistry(contract)
+  missing = .llirexecute..plan(owner,registry)
+  failures = check(missing.valid() = 0,'raw graph cannot supply protection or execution ports')
+  foreign = llir..loadbinary(contract,graph.binary())
+  mismatched = .llirexecute..plan(reference foreign,registry,1000000,67108864,execution)
+  failures = failures + check(mismatched.valid() = 0,'equal saved bytes cannot substitute foreign manifest ownership')
+  unguarded = makegraph(contract,1); meta = makemetadata(reference unguarded)
+  invalid = .llirexecute..plan(reference unguarded,registry,1000000,67108864,meta)
+  failures = failures + check(unguarded.error() = '' & invalid.valid() = 0,'absent-edge load is refused during whole-module admission')
+  return failures
+
+makeschema: procedure = .llir..contract
+  schema = .llir..schema(); family = schema.family('neutral',1)
+  number = family.type('integer',.llir..intcodec() as .object)
+  binding = family.type('binding',.llir..bytescodec() as .object)
+  names = 'raised recover absent present guardfalse guardtrue mapped read transfer yield'
+  do i = 1 to words(names)
+    name = word(names,i); op = family.operation(name)
+    if name = 'mapped' then do
+      call op.input('first',number); call op.input('second',number); call op.input('hasfirst',schema.boolean())
+    end
+    if name = 'read' then call op.input('binding',binding)
+    if wordpos(name,'recover absent present mapped read') > 0 then call op.output('value',number)
+    if name = 'guardfalse' | name = 'guardtrue' then call op.output('value',schema.boolean())
+    call op.state('neutral.state'); call op.failure('neutral.failure')
+    termination = 'returns'
+    if name = 'transfer' then termination = 'transfer'
+    call op.termination(termination)
+  end
+  return schema.finish()
+
+makeregistry: procedure = .llirexecute..registry
+  arg contract = .llir..contract, zeroorigin = 0
+  j = .int
+  registry = .llirexecute..registry(contract)
+  call registry.type('neutral.integer',.llirexecute..encodedtype(.llir..intcodec()) as .object)
+  call registry.lease('neutral.binding')
+  call registry.handler('neutral',.neutral(zeroorigin) as .object)
+  call registry.lifecycle('neutral')
+  names = 'raised recover absent present guardfalse guardtrue mapped read transfer yield'
+  do i = 1 to words(names)
+    name = word(names,i); inputs = 0; results = 0
+    if name = 'mapped' then inputs = 3
+    if name = 'read' then inputs = 1
+    if wordpos(name,'recover absent present guardfalse guardtrue mapped read') > 0 then results = 1
+    summary = .llireffects..summary(inputs,results)
+    do j = 1 to inputs
+      mode = 'value'
+      if name = 'read' then mode = 'borrow'
+      call summary.operand(j,mode)
+    end
+    do j = 1 to results
+      availability = 'normal'
+      if name = 'absent' | name = 'present' then availability = 'conditional'
+      call summary.result(j,availability)
+    end
+    transfer = 'none'; resume = 'none'
+    if name = 'transfer' then transfer = 'possible'
+    if name = 'yield' then resume = 'possible'
+    call summary.control('possible',transfer,resume); call summary.write('neutral.owner'); sealed = summary.seal()
+    if name = 'mapped' then call registry.call('neutral.' || name,5,summary)
+    else call registry.operation('neutral.' || name,'neutral',summary,1024)
+    if name = 'transfer' then call registry.port('neutral.' || name,'transfer')
+    if name = 'yield' then call registry.port('neutral.' || name,'invoke')
+  end
+  return registry
+
+makegraph: procedure = .llir..module
+  arg contract = .llir..contract, invalid = 0
+  name = .string; value = .llir..valuehandle
+  draft = .llir..builder(contract); at = draft.synthetic('neutral execution contracts')
+  number = contract.type('neutral.integer'); binding = contract.type('neutral.binding')
+  fn = draft.function('protected',number); entry = fn.block('setup'); normal = fn.block('body'); exceptional = fn.block('catch')
+  saved = fn.slot('saved',number); seventeen = entry.constant(number,'17',at); call entry.store(saved,seventeen,at)
+  call entry.protect(normal,exceptional,at)
+  op = normal.operation(contract.operation('neutral.raised'),at); ignored = op.finish()
+  twenty = normal.constant(number,'20',at); call normal.returnvalue(twenty,at)
+  op = exceptional.operation(contract.operation('neutral.recover'),at); recovered = op.finish()
+  savedvalue = exceptional.load(saved,at); call exceptional.returnvalue(savedvalue,at)
+  do f = 1 to 2
+    name = word('absent present',f); fn = draft.function(name,number)
+    entry = fn.block('entry'); yes = fn.block('yes'); no = fn.block('no'); result = fn.slot('result',number)
+    op = entry.operation(contract.operation('neutral.' || name),at); produced = op.finish(); value = produced.result(1)
+    call entry.store(result,value,at)
+    guardname = word('guardfalse guardtrue',f); op = entry.operation(contract.operation('neutral.' || guardname),at)
+    checked = op.finish(); guard = checked.result(1); call entry.branch(guard,yes,no,at)
+    loaded = yes.load(result,at); call yes.returnvalue(loaded,at)
+    if invalid & f = 1 then loaded = no.load(result,at)
+    else loaded = no.constant(number,'9',at)
+    call no.returnvalue(loaded,at)
+  end
+  fn = draft.function('mappedcaller',number); entry = fn.block('entry')
+  first = entry.constant(number,'1',at); second = entry.constant(number,'23',at); absent = entry.constantbytes(contract.boolean(),'00'x as .binary,at)
+  op = entry.operation(contract.operation('neutral.mapped'),at)
+  call op.input('first',first); call op.input('second',second); call op.input('hasfirst',absent)
+  called = op.finish(); value = called.result(1); call entry.returnvalue(value,at)
+  fn = draft.function('mappedchild',number); formal = fn.argument(number,1); formal = fn.argument(number)
+  entry = fn.block('entry'); value = entry.readarg(2,at); call entry.returnvalue(value,at)
+  fn = draft.function('binding',number); formal = fn.argument(binding)
+  entry = fn.block('entry'); value = entry.readarg(1,at)
+  op = entry.operation(contract.operation('neutral.read'),at); call op.input('binding',value)
+  read = op.finish(); value = read.result(1); call entry.returnvalue(value,at)
+  do i = 1 to 2
+    name = word('transfer yield',i); fn = draft.function(name,contract.voidtype()); entry = fn.block('entry')
+    op = entry.operation(contract.operation('neutral.' || name),at); ignored = op.finish(); call entry.returnvoid(at)
+  end
+  return draft.finish()
+
+makemetadata: procedure = .llirexecute..manifest
+  arg owner = reference .llir..module
+  value = .llir..valuehandle
+  graph = dereference owner; metadata = .llirexecute..manifest(owner)
+  previous = 0; guard = 0
+  do id = 1 to graph.operations()
+    op = graph.operation(id); name = op.name()
+    if name = 'core.protect' then call metadata.protect(id)
+    if name = 'neutral.transfer' then call metadata.port(id,'transfer')
+    if name = 'neutral.yield' then call metadata.port(id,'invoke')
+    if name = 'neutral.absent' | name = 'neutral.present' then do; value = op.result(1); previous = value.id(); end
+    if name = 'neutral.guardfalse' | name = 'neutral.guardtrue' then do; value = op.result(1); guard = value.id(); end
+    if name = 'core.branch' & previous > 0 then do
+      call metadata.gate(previous,guard,id); previous = 0
+    end
+    if name = 'neutral.mapped' then do
+      call metadata.callmap(id,1,1,3); call metadata.callmap(id,2,2)
+    end
+  end
+  return metadata
+
+neutralbinding: class
+  _owner = reference .int
+  *: factory
+    arg owner = reference .int
+    _owner = owner
+    return
+  advance: method = .int
+    value = dereference _owner; value = value + 1
+    return value
+
+neutral: class implements .llirexecute..handler .llirexecute..lifecycle
+  _events = .string
+  _raw = .int
+  _zeroorigin = .int
+  _faultorigin = .int
+  _ownedpacket = .int
+  _retained = .llirexecute..request
+  *: factory
+    arg zeroorigin = 0
+    _events = ''; _raw = 0; _zeroorigin = zeroorigin; _faultorigin = 0; _ownedpacket = 0
+    return
+  record: method = .void
+    arg event = .string
+    if _events <> '' then _events = _events || '|'
+    _events = _events || event
+    return
+  frameenter: method = .void
+    arg functionId = .int, depth = .int
+    call record('enter.' || functionId)
+    return
+  frameleave: method = .void
+    arg functionId = .int, depth = .int, reason = .string
+    call record('leave.' || functionId || '.' || reason)
+    return
+  cleanup: method = .void
+    arg reason = .string
+    call record('cleanup.' || reason)
+    return
+  execute: method = .llirexecute..outcome
+    arg request = .llirexecute..request
+    operation = request.operation(); name = operation.name(); answer = .llirexecute..outcome()
+    call record(substr(name,length('neutral.') + 1))
+    if name = 'neutral.raised' then do
+      message = 'neutral raw' || ('00'x as .string) || 'event'
+      if _zeroorigin then do
+        do
+          assembler signal 'ERROR',message
+        on signal error as problem
+          original = problem as .runtime_signal
+          answer = .llirexecute..outcome('failure','ERROR',message,'FE00'x as .binary)
+          call answer.setevent(original as .object)
+        end
+        return answer
+      end
+      assembler signal 'ERROR',message
+    end
+    if name = 'neutral.recover' then do
+      if request.hasfault() then do
+        fault = request.fault()
+        _faultorigin = fault.origin()
+        _ownedpacket = fault.code() = 'ERROR' & fault.message() == 'neutral raw' || ('00'x as .string) || 'event' & bin2x(fault.payload()) = 'FE00'
+        if fault.hasevent() then do
+          event = fault.event()
+          if event is .runtime_signal then do
+            raw = event as .runtime_signal
+            _raw = raw.name() = 'ERROR' & raw.message() == 'neutral raw' || ('00'x as .string) || 'event' & raw.module() > 0 & raw.address() > 0
+          end
+        end
+      end
+      call answer.add(intvalue(17))
+    end
+    if name = 'neutral.absent' then call answer.addabsent()
+    if name = 'neutral.present' then call answer.add(intvalue(42))
+    if name = 'neutral.guardfalse' then call answer.add(.llirexecute..value('core.boolean','00'x as .binary))
+    if name = 'neutral.guardtrue' then call answer.add(.llirexecute..value('core.boolean','01'x as .binary))
+    if name = 'neutral.read' then do
+      binding = request.resolve(1) as .neutralbinding; _retained = request
+      call answer.add(intvalue(binding.advance()))
+    end
+    if name = 'neutral.transfer' then do
+      answer = .llirexecute..outcome('transfer','NEUTRAL.TRANSFER','transfer','00FF'x as .binary,request.origin())
+      call answer.setevent(.runtime_signal('ERROR','transfer event') as .object)
+      call answer.addcontrol(intvalue(71))
+    end
+    if name = 'neutral.yield' then do
+      answer = .llirexecute..outcome('suspend','NEUTRAL.INVOKE','invoke','FF00'x as .binary,request.origin())
+      call answer.addcontrol(intvalue(72))
+    end
+    return answer
+  retained: method = .llirexecute..request
+    return _retained
+  raw: method = .int
+    return _raw
+  faultorigin: method = .int
+    return _faultorigin
+  ownedpacket: method = .int
+    return _ownedpacket
+  events: method = .string
+    return _events
+
+intvalue: procedure = .llirexecute..value
+  arg number = .int
+  codec = .llir..intcodec()
+  return .llirexecute..value('neutral.integer',codec.parse(number as .string))
+
+integer: procedure = .int
+  arg answer = .llirexecute..result, expected = .int, message = .string
+  if answer.status() <> 'done' | answer.size() <> 1 then do
+    say answer.status() answer.code() answer.message()
+    return check(0,message)
+  end
+  item = answer.at(1); bits = item.bits()
+  return check(answer.present(1) & <at..i64>(0) bits = expected,message)
+
+controlnumber: procedure = .int
+  arg answer = .llirexecute..result, expected = .int
+  if answer.controls() <> 1 then return check(0,'boundary controls remain separate from result cells')
+  item = answer.controlat(1); bits = item.bits()
+  return check(answer.size() = 0 & answer.controlpresent(1) & item.type() = 'neutral.integer' & <at..i64>(0) bits = expected,'checked boundary control keeps its ordinary type and value')
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1

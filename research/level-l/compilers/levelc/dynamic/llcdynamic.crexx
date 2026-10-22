@@ -1,0 +1,2086 @@
+/* cREXX License (MIT). Optional Classic dynamic execution coordinator.
+ * C policy adapts the admitted semantic graph to existing shared B owners.
+ * It contains no AST evaluator, assembler, bytecode interpreter or BIF body.
+ */
+options levelb numeric_classic
+namespace llcdynamic expose scope contextbinding boundary interpret resolve resume condition checkpoint policy rootcompletion process linkchild unlinkchild registry owned packet boolean integer
+import rxfnsb
+import rxjson
+import _rxsysb
+import llir
+import llireffects
+import llirexecute
+import llceffects
+import llcgraph
+import llcbifs
+import llcbindings
+import rxinvoke
+import llcompilercontracts
+import llcsignalprotocol
+import llcprocedureprotocol
+import llctarget
+import llcdynamicbifs
+import llcdynamicobserve
+import llcdynamicbudget
+import llcsource
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassiccontext
+import rexxclassicinvocation
+import rexxclassichost
+import rexxclassicconfig
+import rexxclassicstate
+import rexxclassicbifs
+import rexxclassicparse
+import rexxclassicaddress
+import rexxclassicconditionevent
+import rexxclassicunicodeproperties
+import rexxdostate
+
+boot: initialiser expose serial children
+  serial = 0; children = .object[]
+  return
+nextidentity: procedure = .int expose serial
+  if serial = 9223372036854775807 then assembler signal 'OUT_OF_RANGE','Classic dynamic identities exhausted'
+  serial = serial + 1
+  return serial
+
+childlink: class
+  _child = reference .rexxactivation..RexxActivationArguments
+  _parent = reference .llcdynamic..scope
+  _ticket = .int
+  *: factory
+    arg child = reference .rexxactivation..RexxActivationArguments, parent = reference .llcdynamic..scope, ticket = .int
+    _child = child; _parent = parent; _ticket = ticket
+    return
+  matches: method = .int
+    arg child = reference .rexxactivation..RexxActivationArguments
+    return <refvalid>(_child) & (_child <refsame> child)
+  parent: method = reference .llcdynamic..scope
+    return _parent
+  ticket: method = .int
+    return _ticket
+linkchild: procedure = .int expose children
+  arg child = reference .rexxactivation..RexxActivationArguments, parent = reference .llcdynamic..scope
+  if <refvalid>(child) = 0 | <refvalid>(parent) = 0 then assembler signal 'REFERENCE_INVALID','Classic child relation owner is expired'
+  ticket = nextidentity(); call objectarrayappend children,.childlink(child,parent,ticket) as .object
+  return ticket
+unlinkchild: procedure = .void expose children
+  arg ticket = .int
+  do i = children[0] to 1 by -1
+    item = children[i] as .childlink
+    if item.ticket() = ticket then do; call objectarraydelete children,i,1; return; end
+  end
+  return
+parentfor: procedure = reference .llcdynamic..scope expose children
+  arg child = reference .rexxactivation..RexxActivationArguments
+  absent = reference .llcdynamic..scope
+  do i = children[0] to 1 by -1
+    item = children[i] as .childlink
+    if item.matches(child) then do
+      result = item.parent(); call objectarraydelete children,i,1; return result
+    end
+  end
+  return absent
+
+/** Stable owner anchored in the compiled caller's frame. Session cleanup owns
+ * group state only; close() is reserved for the actual Classic invocation exit.
+ */
+scope: class
+  _context = reference .rexxclassiccontext..RexxClassicContext
+  _invocation = .rexxclassicinvocation..RexxClassicInvocation
+  _identity = .int
+  _generation = .int
+  _closed = .int
+  _fingerprint = .string
+  _names = .string[]
+  _entries = .int[]
+  _source = .string
+  _base = .string
+  _roots = .string[]
+  _budget = .llcdynamicbudget..ledger
+  _budgetref = reference .llcdynamicbudget..ledger
+  _sharedbudget = .int
+  _cache = .llcdynamicbudget..cache
+  _cacheready = .int
+  _cacheref = reference .llcdynamicbudget..cache
+  _cachepins = .int[]
+  _graphs = .llir..module[]
+  _entryproofs = .llcprocedureprotocol..checked[]
+  _signalproofs = .llcsignalprotocol..checked[]
+  _observations = .llcdynamicobserve..prepared[]
+  _entrytickets = .int[]
+  _signaltickets = .int[]
+  _observationtickets = .int[]
+  _sessions = .llirexecute..session[]
+  _tickets = .int[]
+  _graphtickets = .int[]
+  _pending = .llirexecute..result[]
+  _groups = .int
+  _bindingnames = .string[]
+  _bindings = .object[]
+  _bindingids = .int[]
+  _definitions = .llcbindings..definition[]
+  _bindingtickets = .int[]
+  _configgeneration = .int
+  _sourceenabled = .int
+  _isIR = .int
+  _programgraph = .llir..module
+  _signalentry = .int
+  _sourceactive = .int
+  _sourceexternal = .int
+  _conditionline = .int
+  _checkpointwaiting = .int
+  _checkpointid = .int
+  _checkpointline = .int
+  _policytickets = .int[]
+  _sourceactivation = .rexxactivation..RexxActivationArguments[]
+  _sourcepool = .rexxpool..RexxVariablePool[]
+  _sourceconfig = .rexxclassicconfig..RexxClassicConfig[]
+  _sourcecontext = .rexxclassiccontext..RexxClassicContext[]
+  _sourcescope = .llcdynamic..scope[]
+  _sourcehost = .rexxclassichost..RexxClassicHostScope[]
+  *: factory
+    arg context = reference .rexxclassiccontext..RexxClassicContext, fingerprint = .string, names = .string[], entries = .int[], sourceIdentity = '', resourceBase = ''
+    _context = context; _fingerprint = fingerprint; _names = names; _entries = entries
+    _source = sourceIdentity; _base = resourceBase; _identity = nextidentity(); _generation = 1; _closed = 0; _groups = 0
+    _configgeneration = 1; _sourceenabled = 1; _sharedbudget = 0; _isIR = 0; _signalentry = -1; _sourceactive = 0; _cacheready = 0; _conditionline = 0; _checkpointwaiting = 0
+    if <refvalid>(context) = 0 | names[0] <> entries[0] | fingerprint = '' then assembler signal 'INVALID_ARGUMENTS','Invalid Classic dynamic invocation catalogue'
+    _invocation = .rexxclassicinvocation..RexxClassicInvocation(context)
+    do condition = 1 to 7; _policytickets[condition] = 0; end
+    _budget = .llcdynamicbudget..ledger(67108864)
+    absent_value_20 = .llcdynamicbudget..cache; _cache = absent_value_20
+    bundle = dereference context; parent_ref = parentfor(bundle.activation())
+    if <refvalid>(parent_ref) then do
+      parent = dereference parent_ref; _budgetref = parent.budget(); _cacheref = parent.cacheowner(); _sharedbudget = 1
+      if parent.fingerprint() == _fingerprint then do
+        _bindingnames = parent.bindingnames(); _bindings = parent.bindings(); _bindingids = parent.bindingids(); _definitions = parent.definitions()
+        do binding = 1 to _bindingnames[0]; _bindingtickets[binding] = 0; end
+      end
+      _roots = parent.sourceRoots(); _sourceenabled = parent.sourceEnabled(); _configgeneration = parent.sourceGeneration()
+    end
+    return
+  child: factory
+    arg context = reference .rexxclassiccontext..RexxClassicContext, fingerprint = .string, names = .string[], entries = .int[], parent = reference .llcdynamic..scope, sourceIdentity = '', resourceBase = ''
+    _context = context; _fingerprint = fingerprint; _names = names; _entries = entries
+    _source = sourceIdentity; _base = resourceBase; _identity = nextidentity(); _generation = 1; _closed = 0; _groups = 0
+    _configgeneration = 1; _sourceenabled = 1; _sharedbudget = 1; _isIR = 0; _signalentry = -1; _sourceactive = 0; _cacheready = 0; _conditionline = 0; _checkpointwaiting = 0
+    if <refvalid>(context) = 0 | <refvalid>(parent) = 0 | names[0] <> entries[0] | fingerprint = '' then assembler signal 'INVALID_ARGUMENTS','Invalid Classic dynamic child catalogue'
+    _invocation = .rexxclassicinvocation..RexxClassicInvocation(context)
+    do condition = 1 to 7; _policytickets[condition] = 0; end
+    parent_owner = dereference parent; _budgetref = parent_owner.budget(); _cacheref = parent_owner.cacheowner()
+    _bindingnames = parent_owner.bindingnames(); _bindings = parent_owner.bindings(); _bindingids = parent_owner.bindingids(); _definitions = parent_owner.definitions()
+    do binding = 1 to _bindingnames[0]; _bindingtickets[binding] = 0; end
+    _roots = parent_owner.sourceRoots(); _sourceenabled = parent_owner.sourceEnabled(); _configgeneration = parent_owner.sourceGeneration()
+    return
+  check: method = .void
+    arg generation = .int
+    if _closed | generation <> _generation | <refvalid>(_context) = 0 then assembler signal 'REFERENCE_INVALID','Classic dynamic owner is stale or closed'
+    return
+  context: method = reference .rexxclassiccontext..RexxClassicContext
+    call check(_generation)
+    return _context
+  identity: method = .int
+    return _identity
+  generation: method = .int
+    return _generation
+  fingerprint: method = .string
+    return _fingerprint
+  names: method = .string[]
+    return _names
+  entries: method = .int[]
+    return _entries
+  source: method = .string
+    return _source
+  resourceBase: method = .string
+    return _base
+  sourceRoots: method = .string[]
+    return _roots
+  bind: method = .void
+    arg name = .string, capability = .rxinvoke..binding, signature = .llcompilercontracts..signature
+    if signature.error() <> '' then do
+      detail = signature.error()
+      assembler signal 'INVALID_ARGUMENTS',detail
+    end
+    key = rexxclassicunicodeproperties..rexxclassic_unicode_upper(name)
+    if key = '' | findbinding(key) > 0 then assembler signal 'INVALID_ARGUMENTS','Duplicate or empty Classic prepared binding'
+    definition = .llcbindings..definition(key,signature.name(),'typed',signature)
+    budget_owner = dereference budget(); ticket = budget_owner.reserve(definition.bytes(),'binding.definition')
+    if ticket = 0 then assembler signal 'OUT_OF_RANGE','Classic prepared binding aggregate budget exhausted'
+    index = _bindingnames[0] + 1; _bindingnames[index] = key; _definitions[index] = definition; _bindingtickets[index] = ticket
+    _bindings[index] = .bindingrecord(capability,signature) as .object; _bindingids[index] = nextidentity()
+    return
+  route: method = .void
+    arg name = .string, target = .string, kind = 'classic', ?signature = .llcompilercontracts..signature
+    key = rexxclassicunicodeproperties..rexxclassic_unicode_upper(name)
+    if key = '' | target = '' | findbinding(key) > 0 then assembler signal 'INVALID_ARGUMENTS','Invalid Classic prepared route definition'
+    definition = .llcbindings..definition
+    if ?signature then definition = .llcbindings..definition(key,target,kind,signature)
+    else definition = .llcbindings..definition(key,target,kind)
+    budget_owner = dereference budget(); ticket = budget_owner.reserve(definition.bytes(),'binding.definition')
+    if ticket = 0 then assembler signal 'OUT_OF_RANGE','Classic prepared route aggregate budget exhausted'
+    index = _bindingnames[0] + 1; _bindingnames[index] = key; _definitions[index] = definition; _bindingtickets[index] = ticket
+    if ?signature then _bindings[index] = .routebox(target,kind,signature) as .object
+    else _bindings[index] = .routebox(target,kind) as .object
+    _bindingids[index] = nextidentity()
+    return
+  bindingnames: method = .string[]
+    return _bindingnames
+  bindings: method = .object[]
+    return _bindings
+  bindingids: method = .int[]
+    return _bindingids
+  definitions: method = .llcbindings..definition[]
+    return _definitions
+  definitionbytes: method = .int
+    amount = 64
+    do i = 1 to _definitions[0]
+      bytes = _definitions[i].bytes()
+      if bytes > 67108864 - amount then return 67108865
+      amount = amount + bytes
+    end
+    return amount
+  bindingfingerprint: method = .string
+    result = ''
+    do i = 1 to _bindings[0]
+      object = _bindings[i]
+      result = result || ':binding:' || _bindingids[i] || ':'
+      if object is .routebox then do
+        route = object as .routebox; target = route.target()
+        result = result || length(_bindingnames[i]) || ':' || _bindingnames[i] || ':route:' || length(target) || ':' || target
+        iterate
+      end
+      record = object as .bindingrecord; signature = record.signature()
+      result = result || length(_bindingnames[i]) || ':' || _bindingnames[i] || ':' || signature.result()
+      do j = 1 to signature.arguments()
+        type = signature.type(j)
+        result = result || ':' || length(type) || ':' || type || ':' || signature.optional(j) || signature.exposed(j) || signature.vararg(j)
+      end
+    end
+    return result
+  findbinding: method = .int
+    arg name = .string
+    key = rexxclassicunicodeproperties..rexxclassic_unicode_upper(name)
+    do i = 1 to _bindingnames[0]; if _bindingnames[i] == key then return i; end
+    return 0
+  targetbinding: method = .int
+    arg target = .string
+    do i = 1 to _bindings[0]
+      retained = _bindings[i]
+      if retained is .routebox then do
+        route = retained as .routebox
+        if route.target() == target then return i
+      end
+      else do
+        record = retained as .bindingrecord; signature = record.signature()
+        if signature.name() == target then return i
+      end
+    end
+    return 0
+  binding: method = .object
+    arg index = .int
+    return _bindings[index]
+  configureSource: method = .void
+    arg enabled = .int, roots = .string[]
+    if _configgeneration = 9223372036854775807 then assembler signal 'OUT_OF_RANGE','Classic source configuration generation exhausted'
+    _configgeneration = _configgeneration + 1; _sourceenabled = enabled; _roots = roots
+    return
+  sourceGeneration: method = .int
+    return _configgeneration
+  sourceEnabled: method = .int
+    return _sourceenabled
+  entry: method = .int
+    arg name = .string
+    do i = 1 to _names[0]; if _names[i] == name then return _entries[i]; end
+    return -1
+  budget: method = reference .llcdynamicbudget..ledger
+    call check(_generation)
+    return budgetraw()
+  budgetraw: method = reference .llcdynamicbudget..ledger
+    if _sharedbudget then return _budgetref
+    return reference _budget
+  cacheowner: method = reference .llcdynamicbudget..cache
+    if _sharedbudget then return _cacheref
+    if _cacheready = 0 then do
+      _cache = .llcdynamicbudget..cache(budget(),16777216); _cacheready = 1
+    end
+    return reference _cache
+  pinplan: method = .void
+    arg group = .int, ticket = .int
+    _cachepins[group] = ticket
+    return
+  consume: method = .void
+    call _invocation.consume()
+    return
+  enterProcedure: method = .void
+    call _invocation.enterProcedure()
+    return
+  expose: method = .void
+    arg name = .string, indirect = .int
+    call _invocation.expose(name,indirect)
+    return
+  committed: method = .boolean
+    return _invocation.committed()
+  installpolicy: method = .void
+    arg condition = .int, definition = .rexxclassicstate..RexxClassicHandlerDefinition
+    if condition < 1 | condition > 7 then assembler signal 'INVALID_ARGUMENTS','Invalid Classic policy condition'
+    budget_owner = dereference budget()
+    bytes = 128 + <blen>(definition.name() as .binary) + <blen>(definition.source() as .binary) + <blen>(definition.fingerprint() as .binary)
+    ticket = budget_owner.reserve(bytes,'condition.definition')
+    if ticket = 0 then assembler signal 'OUT_OF_RANGE','Classic condition definition aggregate budget exhausted'
+    bundle = dereference context(); activation = dereference bundle.activation()
+    do
+      call activation.setDynamicPolicy(condition,definition as .object)
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+      original = problem as .runtime_signal; call budget_owner.release(ticket); call rxfnsb..signalrelay(original)
+      return
+    end
+    if _policytickets[condition] > 0 then call budget_owner.release(_policytickets[condition])
+    _policytickets[condition] = ticket
+    return
+  clearpolicy: method = .void
+    arg condition = .int
+    if condition < 1 | condition > 7 then assembler signal 'INVALID_ARGUMENTS','Invalid Classic policy condition'
+    bundle = dereference context(); activation = dereference bundle.activation()
+    call activation.setSignalPolicy(condition,0)
+    if _policytickets[condition] > 0 then do
+      budget_owner = dereference budget(); call budget_owner.release(_policytickets[condition]); _policytickets[condition] = 0
+    end
+    return
+  addgraph: method = .int
+    arg graph = .llir..module, cacheTicket = 0
+    detail = .string
+    if _groups >= 64 then assembler signal 'OUT_OF_RANGE','Classic dynamic nesting budget exhausted'
+    budget_owner = dereference budget()
+    if graph.bytes() > budget_owner.available() then assembler signal 'OUT_OF_RANGE','Classic graph aggregate budget exhausted'
+    _groups = _groups + 1; _graphs[_groups] = graph
+    _tickets[_groups] = 0
+    absent_session = .llirexecute..session; _sessions[_groups] = absent_session
+    absent_result = .llirexecute..result; _pending[_groups] = absent_result
+    _graphtickets[_groups] = budget_owner.reserve(graph.bytes(),'source.graph'); _cachepins[_groups] = cacheTicket
+    _entrytickets[_groups] = 0; _signaltickets[_groups] = 0; _observationtickets[_groups] = 0
+    _entryproofs[_groups] = .llcprocedureprotocol..checked(reference _graphs[_groups],budget_owner.available())
+    if _entryproofs[_groups].status() then do
+      detail = _entryproofs[_groups].error()
+      assembler signal 'INVALID_ARGUMENTS',detail
+    end
+    _entrytickets[_groups] = budget_owner.reserve(_entryproofs[_groups].bytesused(),'entry.proof')
+    _signalproofs[_groups] = .llcsignalprotocol..checked(reference _graphs[_groups],reference _entryproofs[_groups],budget_owner.available())
+    if _signalproofs[_groups].status() then do
+      detail = _signalproofs[_groups].error()
+      assembler signal 'INVALID_ARGUMENTS',detail
+    end
+    _signaltickets[_groups] = budget_owner.reserve(_signalproofs[_groups].bytesused(),'condition.proof')
+    _observations[_groups] = .llcdynamicobserve..prepared(reference _graphs[_groups],budget_owner.available())
+    if _observations[_groups].status() then do
+      detail = _observations[_groups].error()
+      assembler signal 'INVALID_ARGUMENTS',detail
+    end
+    _observationtickets[_groups] = budget_owner.reserve(_observations[_groups].bytes(),'authored.observations')
+    return _groups
+  graph: method = reference .llir..module
+    arg group = .int
+    return reference _graphs[group]
+  observations: method = reference .llcdynamicobserve..prepared
+    arg group = .int
+    return reference _observations[group]
+  authoredline: method = .int
+    arg group = .int, op = .int
+    return _observations[group].line(op)
+  installInventory: method = .void
+    arg group = .int
+    bundle = dereference context(); call _observations[group].installInventory(bundle.config())
+    return
+  signalproof: method = reference .llcsignalprotocol..checked
+    arg group = .int
+    return reference _signalproofs[group]
+  start: method = .llirexecute..result
+    arg owner = reference .llcdynamic..scope, group = .int, plan = .llirexecute..plan, entry = 0
+    budget_owner = dereference budget(); amount = plan.usedbytes()
+    if amount > budget_owner.available() then assembler signal 'OUT_OF_RANGE','Classic dynamic aggregate plan budget exhausted'
+    _tickets[group] = budget_owner.reserve(amount,'dynamic.session')
+    _sessions[group] = .llirexecute..session(plan,1000000,64,100000,budget_owner.available() + amount)
+    binding = .contextbinding(owner)
+    values = .object[]; presence = .int[]
+    values[1] = _sessions[group].bind('crexx.c.context',binding as .object) as .object; presence[1] = 1
+    values[2] = integer(entry) as .object; presence[2] = 1
+    _pending[group] = _sessions[group].start(1,values,presence)
+    call syncgroup(group)
+    return _pending[group]
+  continue: method = .llirexecute..result
+    arg completion = .llirexecute..outcome
+    if _groups < 1 then assembler signal 'INVALID_ARGUMENTS','Classic dynamic invocation has no waiting group'
+    previous = _pending[_groups]
+    _pending[_groups] = _sessions[_groups].resume(previous.token(),completion)
+    call syncgroup(_groups)
+    return _pending[_groups]
+  syncgroup: method = .void
+    arg group = .int
+    budget_owner = dereference budget()
+    if _tickets[group] > 0 then call budget_owner.release(_tickets[group])
+    _tickets[group] = budget_owner.reserve(_pending[group].usedbytes(),'dynamic.session')
+    if _tickets[group] = 0 then assembler signal 'OUT_OF_RANGE','Classic aggregate suspended state exceeds budget'
+    return
+  finishgroup: method = .void
+    if _groups < 1 then return
+    budget_owner = dereference budgetraw()
+    if _tickets[_groups] > 0 then call budget_owner.release(_tickets[_groups])
+    _tickets[_groups] = 0
+    if _graphtickets[_groups] > 0 then call budget_owner.release(_graphtickets[_groups])
+    _graphtickets[_groups] = 0
+    if _entrytickets[_groups] > 0 then call budget_owner.release(_entrytickets[_groups])
+    if _signaltickets[_groups] > 0 then call budget_owner.release(_signaltickets[_groups])
+    if _observationtickets[_groups] > 0 then call budget_owner.release(_observationtickets[_groups])
+    _entrytickets[_groups] = 0; _signaltickets[_groups] = 0; _observationtickets[_groups] = 0
+    absent_observations = .llcdynamicobserve..prepared; _observations[_groups] = absent_observations
+    if _cachepins[_groups] > 0 then do
+      cache_owner = dereference cacheowner(); call cache_owner.unpin(_cachepins[_groups]); _cachepins[_groups] = 0
+    end
+    absent_value_21 = .llcprocedureprotocol..checked; _entryproofs[_groups] = absent_value_21; absent_value_22 = .llcsignalprotocol..checked; _signalproofs[_groups] = absent_value_22
+    absent_value_23 = .llir..module; _graphs[_groups] = absent_value_23; absent_value_24 = .llirexecute..session; _sessions[_groups] = absent_value_24; absent_value_25 = .llirexecute..result; _pending[_groups] = absent_value_25
+    _groups = _groups - 1
+    return
+  group: method = .int
+    return _groups
+  pending: method = .llirexecute..result
+    return _pending[_groups]
+  isIR: method = .int
+    return _isIR
+  setIR: method = .void
+    arg graph = .llir..module
+    _programgraph = graph; _isIR = 1
+    return
+  signalEntry: method = .int
+    return _signalentry
+  conditionline: method = .void
+    arg line = .int
+    _conditionline = line
+    return
+  takeconditionline: method = .int
+    line = _conditionline; _conditionline = 0
+    return line
+  waitcheckpoint: method = .void
+    arg id = .int, line = .int
+    _checkpointwaiting = 1; _checkpointid = id; _checkpointline = line
+    return
+  checkpointwaiting: method = .int
+    return _checkpointwaiting
+  checkpointid: method = .int
+    return _checkpointid
+  checkpointline: method = .int
+    return _checkpointline
+  clearcheckpoint: method = .void
+    _checkpointwaiting = 0
+    return
+  signalstart: method = .llcdynamic..boundary
+    arg owner_ref = reference .llcdynamic..scope, entry = .int
+    if entry = 0 then assembler signal 'CLASSIC_SYNTAX','RXC-LC-16.2: SIGNAL handler is inside a DO or SELECT group'
+    if entry < 0 then assembler signal 'CLASSIC_SYNTAX','RXC-LC-16.1: Label not found'
+    do while _groups > 0
+      call _sessions[_groups].cancel(); call finishgroup()
+    end
+    _signalentry = entry
+    group = addgraph(_programgraph); graph_ref = graph(group)
+    services = registry(graph_ref,owner_ref,group); manifest = executionmanifest(graph_ref)
+    budget_owner = dereference budget(); plan = .llirexecute..plan(graph_ref,services,1000000,budget_owner.available(),manifest)
+    return advance(owner_ref,start(owner_ref,group,plan,entry))
+  sourceChild: method = reference .llcdynamic..scope
+    absent = reference .llcdynamic..scope
+    if _sourceactive = 0 then return absent
+    return reference _sourcescope[1]
+  sourceprogram: method = .llcdynamic..boundary
+    arg source = .llcsource..resolution, arguments = .rexxactivation..RexxActivationArguments, owner_ref = reference .llcdynamic..scope, function = .int
+    names = .string[]; entries = .int[]; program = .llir..module; fingerprint = .string
+    front = .llcgraph..request; absent_front = .llcgraph..request
+    budget_owner = dereference budget(); metadata = definitionbytes()
+    ticket = budget_owner.reserve(metadata,'source.binding.snapshot')
+    if ticket = 0 then assembler signal 'OUT_OF_RANGE','Classic source metadata aggregate budget exhausted'
+    do
+      front = .llcgraph..request.snapshot(source.bytes(),'program',names,entries,'',definitions(),source.path(),1000000,metadata)
+      if front.status() then do
+        detail = front.error()
+        assembler signal 'CLASSIC_SYNTAX',detail
+      end
+      program = front.graph(); names = front.names(); entries = front.entries(); fingerprint = front.fingerprint()
+      front = absent_front
+      call budget_owner.release(ticket); ticket = 0
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+      original = problem as .runtime_signal
+      if ticket > 0 then call budget_owner.release(ticket)
+      call rxfnsb..signalrelay(original)
+      return .boundary('failure')
+    end
+    return startchild(program,names,entries,fingerprint,source.path(),source.base(),arguments,owner_ref,function,0,1)
+  internalprogram: method = .llcdynamic..boundary
+    arg arguments = .rexxactivation..RexxActivationArguments, owner_ref = reference .llcdynamic..scope, entry = .int, function = .int
+    return startchild(_programgraph,_names,_entries,_fingerprint,_source,_base,arguments,owner_ref,function,entry,0)
+  startchild: method = .llcdynamic..boundary
+    arg program = .llir..module, names = .string[], entries = .int[], fingerprint = .string, source = .string, base = .string, arguments = .rexxactivation..RexxActivationArguments, owner_ref = reference .llcdynamic..scope, function = .int, entry = .int, external = .int
+    if _sourceactive then assembler signal 'INVALID_ARGUMENTS','Classic source invocation is already waiting'
+    bundle = dereference context(); activation_ref = bundle.activation()
+    delivered = arguments.currentConditionId(); delivered_description = arguments.currentConditionDescription()
+    if arguments.currentConditionInstruction() <> 'CALL' | arguments.delayedConditionId() <> delivered then delivered = 0
+    _sourceactivation[1] = arguments
+    call _sourceactivation[1].inheritSignalPolicy(activation_ref)
+    if delivered > 0 then call _sourceactivation[1].beginCallTrap(delivered,delivered_description)
+    if function then call _sourceactivation[1].beginInternalFunction()
+    else call _sourceactivation[1].beginInternalCall()
+    if external then do
+      call _sourceactivation[1].captureCallerPool(bundle.pool())
+      call _sourceactivation[1].beginExternalProgram(); call _sourceactivation[1].beginExternalConditionScope()
+      /* This fresh source root will own a distinct HostScope. Detach its
+       * inherited completion association without revoking the live parent. */
+      call _sourceactivation[1].endHostCompletion()
+      call _sourceactivation[1].consumeFirstInstruction()
+      _sourcepool[1] = .rexxpool..RexxVariablePool(1)
+      parent_config = dereference bundle.config(); _sourceconfig[1] = parent_config
+      call _sourceconfig[1].clearHostAccess(); call _sourceconfig[1].resetHostOwnership(); call _sourceconfig[1].setHostSource(source)
+      call _sourceconfig[1].setProfile('UTF8')
+      _sourcecontext[1] = .rexxclassiccontext..RexxClassicContext(reference _sourceactivation[1],reference _sourcepool[1],reference _sourceconfig[1])
+    end
+    else _sourcecontext[1] = .rexxclassiccontext..RexxClassicContext(reference _sourceactivation[1],bundle.pool(),bundle.config())
+    _sourcescope[1] = .llcdynamic..scope.child(reference _sourcecontext[1],fingerprint,names,entries,owner_ref,source,base)
+    call _sourcecontext[1].enableParseObservations(1)
+    call _sourcescope[1].setIR(program)
+    absent_host = .rexxclassichost..RexxClassicHostScope; _sourcehost[1] = absent_host
+    _sourceactive = 1; _sourceexternal = external
+    _conditionline = 0
+    if external then do
+      mode = 'SUBROUTINE'; if function then mode = 'FUNCTION'
+      request = .rexxclassichost..RexxClassicHostRequest(mode,source)
+      call request.setQueue(rxqueue('QUERY'))
+      _sourcehost[1] = .rexxclassichost..RexxClassicHostScope(reference _sourcecontext[1],request)
+    end
+    child_ref = reference _sourcescope[1]
+    group = _sourcescope[1].addgraph(program); graph_ref = _sourcescope[1].graph(group)
+    if external then do
+      call _sourcescope[1].installInventory(group)
+      call _sourcehost[1].enter()
+    end
+    services = registry(graph_ref,child_ref,group); manifest = executionmanifest(graph_ref)
+    budget_owner = dereference budget(); plan = .llirexecute..plan(graph_ref,services,1000000,budget_owner.available(),manifest)
+    answer = advance(child_ref,_sourcescope[1].start(child_ref,group,plan,entry))
+    return sourcecompletion(owner_ref,answer)
+  sourcecompletion: method = .llcdynamic..boundary
+    arg owner_ref = reference .llcdynamic..scope, answer = .llcdynamic..boundary
+    if answer.kind() = 'signal' then do
+      child_ref = reference _sourcescope[1]
+      return sourcecompletion(owner_ref,_sourcescope[1].signalstart(child_ref,answer.entry()))
+    end
+    if wordpos(answer.kind(),'normal return exit failure') = 0 then return answer
+    completion = answer.result()
+    if answer.kind() = 'exit' then call _sourceactivation[1].requestProgramExit(completion.returnValue(),completion.hasReturnValue())
+    failed = answer.kind() = 'failure'; original = .runtime_signal
+    if failed then original = answer.event() as .runtime_signal
+    if _sourceexternal & initialized(_sourcehost[1]) then do
+      do
+        if failed then host_result = _sourcehost[1].failed(original)
+        else host_result = _sourcehost[1].finish(completion)
+        if host_result.hasCondition() & failed = 0 then do
+          original = host_result.condition(); failed = 1
+        end
+      on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+        if failed = 0 then original = cleanup_problem as .runtime_signal
+        failed = 1
+      end
+      do
+        call _sourcehost[1].close()
+      on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+        if failed = 0 then original = cleanup_problem as .runtime_signal
+        failed = 1
+      end
+    end
+    do
+      if failed then call _sourcescope[1].close(original as .object)
+      else call _sourcescope[1].close()
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+      if failed = 0 then original = cleanup_problem as .runtime_signal
+      failed = 1
+    end
+    _sourceactive = 0
+    absent_host = .rexxclassichost..RexxClassicHostScope; _sourcehost[1] = absent_host
+    absent_value_26 = .llcdynamic..scope; _sourcescope[1] = absent_value_26; absent_value_27 = .rexxclassiccontext..RexxClassicContext; _sourcecontext[1] = absent_value_27
+    absent_value_28 = .rexxactivation..RexxActivationArguments; _sourceactivation[1] = absent_value_28; absent_value_29 = .rexxpool..RexxVariablePool; _sourcepool[1] = absent_value_29; absent_value_30 = .rexxclassicconfig..RexxClassicConfig; _sourceconfig[1] = absent_value_30
+    if _groups > 0 then do
+      if failed then do
+        call conditionline(answer.line())
+        return resume(owner_ref,completion,original as .object)
+      end
+      return resume(owner_ref,completion)
+    end
+    if failed then return .boundary('failure','',0,.rexxactivation..RexxActivationArguments(),completion,original as .object,0,'',answer.line())
+    return .boundary('normal','',0,.rexxactivation..RexxActivationArguments(),completion)
+  discardgroup: method = .void
+    arg primary = .object
+    if _groups < 1 then return
+    do
+      if initialized(_sessions[_groups]) then call _sessions[_groups].cancel()
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other
+      nop
+    end
+    call finishgroup()
+    return
+  unwindGroups: method = .void
+    _checkpointwaiting = 0
+    primary = .object; failed = 0
+    do while _groups > 0
+      do
+        call _sessions[_groups].cancel()
+      on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+        if failed = 0 then primary = cleanup_problem as .object
+        failed = 1
+      end
+      call finishgroup()
+    end
+    if failed then call rxfnsb..signalrelay(primary as .runtime_signal)
+    return
+  close: method = .void
+    arg ?primary = .object
+    if _closed then return
+    /* Revoke all new lease entry before any fallible cleanup. Preserve an
+     * existing outward event while still releasing every crossed owner. */
+    _closed = 1; _generation = _generation + 1
+    failed = 0; problem = .object
+    if _sourceactive then do
+      if _sourceexternal & initialized(_sourcehost[1]) then do
+        if ?primary then do
+          do
+            host_result = _sourcehost[1].failed(primary as .runtime_signal)
+          on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as host_problem
+            problem = host_problem as .object; failed = 1
+          end
+        end
+        do
+          call _sourcehost[1].close()
+        on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as host_problem
+          if failed = 0 then problem = host_problem as .object
+          failed = 1
+        end
+      end
+      do
+        if ?primary then call _sourcescope[1].close(primary)
+        else call _sourcescope[1].close()
+      on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+        if failed = 0 then problem = cleanup_problem as .object
+        failed = 1
+      end
+      _sourceactive = 0
+    end
+    do
+      call unwindGroups()
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+      if failed = 0 then problem = cleanup_problem as .object
+      failed = 1
+    end
+    do
+      call _invocation.close()
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+      if failed = 0 then problem = cleanup_problem as .object
+      failed = 1
+    end
+    budget_owner = dereference budgetraw()
+    do condition = 1 to 7
+      if _policytickets[condition] > 0 then call budget_owner.release(_policytickets[condition])
+      _policytickets[condition] = 0
+    end
+    do binding = 1 to _bindingtickets[0]
+      if _bindingtickets[binding] > 0 then call budget_owner.release(_bindingtickets[binding])
+      _bindingtickets[binding] = 0
+    end
+    if _sharedbudget = 0 & _cacheready then ignored = _cache.close()
+    if failed & ?primary = 0 then call rxfnsb..signalrelay(problem as .runtime_signal)
+    return
+
+/** The executor lease retains this reference-owning binding only. Copies of a
+ * replaceable RexxClassicContext value are never the authoritative context. */
+contextbinding: class
+  _owner = reference .llcdynamic..scope
+  _identity = .int
+  _generation = .int
+  *: factory
+    arg owner = reference .llcdynamic..scope
+    _owner = owner; state = dereference owner
+    _identity = state.identity(); _generation = state.generation()
+    return
+  owner: method = reference .llcdynamic..scope
+    state = dereference _owner; call state.check(_generation)
+    if state.identity() <> _identity then assembler signal 'REFERENCE_INVALID','Classic context lease owner was replaced'
+    return _owner
+  context: method = reference .rexxclassiccontext..RexxClassicContext
+    state = dereference owner()
+    return state.context()
+
+/** Ordinary Classic packets never carry boundary control tags. */
+boundary: class
+  _kind = .string
+  _target = .string
+  _entry = .int
+  _arguments = .rexxactivation..RexxActivationArguments
+  _result = .rexxactivation..RexxActivationArguments
+  _event = .object
+  _origin = .int
+  _message = .string
+  _line = .int
+  *: factory
+    arg kind = 'normal', target = '', entry = 0, arguments = .rexxactivation..RexxActivationArguments(), result = .rexxactivation..RexxActivationArguments(), ?event = .object, origin = 0, message = '', line = 0
+    _kind = kind; _target = target; _entry = entry; _arguments = arguments; _result = result
+    _event = event; _origin = origin; _message = message; _line = line
+    return
+  kind: method = .string
+    return _kind
+  target: method = .string
+    return _target
+  entry: method = .int
+    return _entry
+  arguments: method = .rexxactivation..RexxActivationArguments
+    return _arguments
+  result: method = .rexxactivation..RexxActivationArguments
+    return _result
+  event: method = .object
+    return _event
+  origin: method = .int
+    return _origin
+  message: method = .string
+    return _message
+  line: method = .int
+    return _line
+
+valuebox: class
+  _value = .object
+  _type = .string
+  *: factory
+    arg type = .string, value = .object
+    _type = type; _value = value
+    return
+  value: method = .object
+    return _value
+  type: method = .string
+    return _type
+valuetype: class implements .llirexecute..typehandler
+  *: factory
+    return
+  materialize: method = .llirexecute..value
+    arg type = .string, bits = .binary
+    if type = 'crexx.c.value' then do
+      item = .rexxvalue..RexxValue.fromBinaryText(bits)
+      return .llirexecute..value(type,bits,.valuebox(type,item as .object) as .object)
+    end
+    return .llirexecute..value(type,bits)
+  check: method = .string
+    arg item = .llirexecute..value
+    if item.haspayload() = 0 then return 'Classic runtime carrier lacks owned value'
+    payload = item.payload()
+    if \(payload is .valuebox) then return 'Classic runtime carrier has foreign payload'
+    box = payload as .valuebox
+    if box.type() <> item.type() then return 'Classic runtime carrier type and payload disagree'
+    object = box.value()
+    select item.type()
+      when 'crexx.c.value' then do; if \(object is .rexxvalue..RexxValue) then return 'Classic value has wrong payload type'; end
+      when 'crexx.c.arguments' then do; if \(object is .rexxactivation..RexxActivationArguments) then return 'Classic arguments have wrong payload type'; end
+      when 'crexx.c.result' then do; if \(object is .rexxactivation..RexxActivationArguments) then return 'Classic result has wrong payload type'; end
+      otherwise return 'Unknown Classic owned carrier type'
+    end
+    return ''
+  bytes: method = .int
+    arg item = .llirexecute..value
+    bytes = 256 + 2 * <blen>(item.bits())
+    if item.type() = 'crexx.c.arguments' | item.type() = 'crexx.c.result' then do
+      box = item.payload() as .valuebox; packet = box.value() as .rexxactivation..RexxActivationArguments
+      bytes = bytes + packet.rawArgumentCount() * 64
+    end
+    return bytes
+owned: procedure = .llirexecute..value
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg value = .rexxvalue..RexxValue
+  bits = .binary
+  if value.hasBinary() & value.hasText() = 0 then bits = value.asBinary()
+  else bits = value.asString(1) as .binary
+  return .llirexecute..value('crexx.c.value',bits,.valuebox('crexx.c.value',value as .object) as .object)
+packet: procedure = .llirexecute..value
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg value = .rexxactivation..RexxActivationArguments, type = 'crexx.c.result'
+  bits = ''x as .binary; chunk = .binary
+  do i = 1 to value.rawArgumentCount()
+    if value.argumentExists(i) then do
+      chunk = owned(value.argument(i)).bits()
+      assembler bappend bits,chunk
+    end
+  end
+  if value.hasReturnValue() then do
+    chunk = owned(value.returnValue()).bits()
+    assembler bappend bits,chunk
+  end
+  return .llirexecute..value(type,bits,.valuebox(type,value as .object) as .object)
+boolean: procedure = .llirexecute..value
+  arg value = .int
+  bits = '00'x as .binary; <at..u8>(0) bits = value
+  return .llirexecute..value('core.boolean',bits)
+integer: procedure = .llirexecute..value
+  arg value = .int
+  bits = .binary; call binresize bits,8; <at..i64>(0) bits = value
+  return .llirexecute..value('crexx.g.int64',bits)
+unboxvalue: procedure = .rexxvalue..RexxValue
+  arg value = .llirexecute..value
+  box = value.payload() as .valuebox
+  return box.value() as .rexxvalue..RexxValue
+unboxpacket: procedure = .rexxactivation..RexxActivationArguments
+  arg value = .llirexecute..value
+  box = value.payload() as .valuebox
+  return box.value() as .rexxactivation..RexxActivationArguments
+attrint: procedure = .int
+  arg operation = .llir..opview, name = .string
+  bits = operation.attribute(name)
+  return <at..i64>(0) bits
+attrbool: procedure = .int
+  arg operation = .llir..opview, name = .string
+  bits = operation.attribute(name)
+  return <at..u8>(0) bits
+/** One session service; references the stable invocation rather than owning a
+ * group-local pool. Frame keys include depth, so recursively reused plans cannot
+ * alias loop/command/capture storage. Shared B services own all language rules.
+ */
+runtime: class implements .llirexecute..handler .llirexecute..lifecycle
+  _owner = reference .llcdynamic..scope
+  _depth = .int
+  _signalproof = reference .llcsignalprotocol..checked
+  _observations = reference .llcdynamicobserve..prepared
+  _groupmode = .int
+  _loops = .rexxdostate..RexxDoState[]
+  _loopkeys = .string[]
+  _commands = .rexxclassicaddress..RexxClassicAddressCommand[]
+  _commandkeys = .string[]
+  _captured = .object[]
+  _capturelines = .int[]
+  _parse = .rexxclassicbifs..RexxBifCallContext
+  _pendingarguments = .rexxactivation..RexxActivationArguments
+  _cleaned = .int
+  *: factory
+    arg owner = reference .llcdynamic..scope, signalproof = reference .llcsignalprotocol..checked, observations = reference .llcdynamicobserve..prepared, groupmode = 0
+    _owner = owner; _signalproof = signalproof; _observations = observations; _groupmode = groupmode; _depth = 0; _cleaned = 0
+    absent_value_48 = .rexxclassicbifs..RexxBifCallContext; _parse = absent_value_48
+    _pendingarguments = .rexxactivation..RexxActivationArguments()
+    return
+  frameenter: method = .void
+    arg functionId = .int, depth = .int
+    _depth = depth
+    absent_event = .object; _captured[depth] = absent_event; _capturelines[depth] = 0
+    return
+  frameleave: method = .void
+    arg functionId = .int, depth = .int, reason = .string
+    i = .int
+    prefix = depth || ':'
+    do i = 1 to _loopkeys[0]
+      if left(_loopkeys[i],length(prefix)) = prefix then do
+        absent_value_49 = .rexxdostate..RexxDoState; _loops[i] = absent_value_49; _loopkeys[i] = ''
+      end
+    end
+    do i = 1 to _commandkeys[0]
+      if left(_commandkeys[i],length(prefix)) = prefix then do
+        absent_value_50 = .rexxclassicaddress..RexxClassicAddressCommand; _commands[i] = absent_value_50; _commandkeys[i] = ''
+      end
+    end
+    absent_value_51 = .object; _captured[depth] = absent_value_51; _capturelines[depth] = 0; _depth = depth - 1
+    return
+  cleartransient: method = .void
+    i = .int
+    prefix = _depth || ':'
+    do i = 1 to _loopkeys[0]
+      if left(_loopkeys[i],length(prefix)) = prefix then do
+        absent_value_52 = .rexxdostate..RexxDoState; _loops[i] = absent_value_52; _loopkeys[i] = ''
+      end
+    end
+    do i = 1 to _commandkeys[0]
+      if left(_commandkeys[i],length(prefix)) = prefix then do
+        absent_value_53 = .rexxclassicaddress..RexxClassicAddressCommand; _commands[i] = absent_value_53; _commandkeys[i] = ''
+      end
+    end
+    return
+  cleanup: method = .void
+    arg reason = .string
+    i = .int
+    if _cleaned then return
+    _cleaned = 1
+    do i = 1 to _loops[0]; absent_value_54 = .rexxdostate..RexxDoState; _loops[i] = absent_value_54; end
+    do i = 1 to _commands[0]; absent_value_55 = .rexxclassicaddress..RexxClassicAddressCommand; _commands[i] = absent_value_55; end
+    call arraydrop _loopkeys; call arraydrop _commandkeys; call objectarraydrop _captured
+    _pendingarguments = .rexxactivation..RexxActivationArguments()
+    return
+  loopindex: method = .int
+    arg key = .string, create = 0
+    i = .int
+    lookup = _depth || ':' || key
+    do i = 1 to _loopkeys[0]; if _loopkeys[i] == lookup then return i; end
+    if create then do
+      do i = 1 to _loopkeys[0]; if _loopkeys[i] = '' then do; _loopkeys[i] = lookup; return i; end; end
+      i = _loopkeys[0] + 1; _loopkeys[i] = lookup; return i
+    end
+    assembler signal 'INVALID_ARGUMENTS','Classic dynamic loop key is not live'
+    return 0
+  commandindex: method = .int
+    arg key = .string, create = 0
+    i = .int
+    lookup = _depth || ':' || key
+    do i = 1 to _commandkeys[0]; if _commandkeys[i] == lookup then return i; end
+    if create then do
+      do i = 1 to _commandkeys[0]; if _commandkeys[i] = '' then do; _commandkeys[i] = lookup; return i; end; end
+      i = _commandkeys[0] + 1; _commandkeys[i] = lookup; return i
+    end
+    assembler signal 'INVALID_ARGUMENTS','Classic dynamic command key is not live'
+    return 0
+  mappedline: method = .int
+    arg op = .int
+    observations = dereference _observations
+    return observations.line(op)
+  execute: method = .llirexecute..outcome
+    arg request = .llirexecute..request
+    result = .llirexecute..outcome
+    do
+      result = dispatch(request)
+      if result.status() = 'normal' then call observe(request,result)
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+      original = problem as .runtime_signal
+      result = .llirexecute..outcome('failure',problem.name(),problem.message(),''x as .binary,request.origin())
+      call result.setevent(original as .object)
+    end
+    return result
+  /** Observations describe the admitted authored operation. The shared writers
+   * own formatting and output; no coordinator VM address enters these records.
+   * Literal-only core.constant values have no C handler and are not observed.
+   */
+  observe: method = .void
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg request = .llirexecute..request, result = .llirexecute..outcome
+    text = .string; record = .string
+    op = request.operation(); observations = dereference _observations
+    if observations.authored(op.id()) = 0 then return
+    owner = dereference _owner; bundle = dereference owner.context(); activation = dereference bundle.activation()
+    mode = _trace_mode_from_option(activation.traceSetting())
+    if mode = 'OFF' | mode = 'N' then return
+    name = substr(op.name(),9); prefix = ''; selected = .rexxvalue..RexxValue
+    clause = name = 'clause.begin'
+    label = 0
+    if name = 'entry.test' & result.size() = 1 then do
+      bits = result.at(1).bits()
+      label = attrint(op,'id') > 0 & (<at..u8>(0) bits) <> 0
+    end
+    if clause | label then do
+      if wordpos(mode,'A I R REXX ASM LLM') > 0 | (mode = 'L' & label) then do
+        line = observations.line(op.id()); text = observations.text(op.id())
+        if mode = 'LLM' then do
+          record = '{"event":"clause","engine":"classic-ir","file":' || rxjson..jsonquote(observations.filename(op.id()))
+          record = record || ',"line":' || line || ',"column":' || observations.column(op.id()) || ',"source":' || rxjson..jsonquote(text) || '}'
+          call _trace_write_line(record)
+        end
+        else do
+          if mode = 'ASM' then text = 'IR ' || op.name() || ' ' || text
+          call _trace_write_line(right(line as .string,6) || ' *-* ' || _trace_escape_text(text))
+        end
+      end
+    end
+    if op.origin().kind() <> 'exact' then return
+    if name = 'store' then do
+      prefix = '>=>'; selected = unboxvalue(request.at(2))
+    end
+    else if name = 'load' then do
+      if result.size() > 0 then do; prefix = '>V>'; selected = unboxvalue(result.at(1)); end
+    end
+    else if wordpos(name,'add sub mul div pow idiv rem eq ne lt le gt ge strict strictne strictlt strictle strictgt strictge concat blank abut and or xor positive negative not bif requirevalue length digits arguments.count arguments.exists') > 0 then do
+      if result.size() > 0 then do
+        prefix = '>O>'; if wordpos(name,'positive negative not') > 0 then prefix = '>P>'
+        if wordpos(name,'bif requirevalue length digits arguments.count arguments.exists') > 0 then prefix = '>F>'
+        selected = unboxvalue(result.at(1))
+      end
+    end
+    if prefix = '' then return
+    if wordpos(mode,'A I LLM') = 0 & \(mode = 'R' & (name = 'store' | name = 'load')) then return
+    digits = activation.numericDigits(); fuzz = activation.numericFuzz(); form = activation.numericForm()
+    assembler setnumfuz 0
+    assembler setnumdgts digits
+    assembler setnumfuz fuzz
+    assembler setnumfrm form
+    text = selected.asString(1)
+    if mode = 'LLM' then do
+      record = '{"event":"value","engine":"classic-ir","file":' || rxjson..jsonquote(observations.filename(op.id()))
+      record = record || ',"line":' || observations.line(op.id()) || ',"column":' || observations.column(op.id())
+      record = record || ',"kind":' || rxjson..jsonquote(prefix) || ',"value":' || rxjson..jsonquote(text) || '}'
+      call _trace_write_line(record)
+    end
+    else call _trace_write_value(prefix,text)
+    return
+  dispatch: method = .llirexecute..outcome
+    numeric digits inherited
+    numeric fuzz inherited
+    numeric form inherited
+    arg request = .llirexecute..request
+    i = .int; detail = .string; condition = .int; bits = .binary
+    event = .rexxclassicconditionevent..RexxClassicConditionEvent
+    op = request.operation(); name = substr(op.name(),9)
+    owner = dereference _owner; context = owner.context(); bundle = dereference context
+    /* Resolve every declared live context lease and verify exact invocation.
+     * The executor supplies resolution only inside this dispatch epoch. */
+    do i = 1 to request.size()
+      if request.at(i).type() = 'crexx.c.context' then do
+        binding = request.resolve(i) as .contextbinding
+        resolved = binding.owner()
+        if (resolved <refsame> _owner) = 0 then assembler signal 'REFERENCE_INVALID','Classic operation received a foreign invocation lease'
+      end
+    end
+    activation = dereference bundle.activation(); pool = dereference bundle.pool(); config = dereference bundle.config()
+    digits = activation.numericDigits(); fuzz = activation.numericFuzz(); form = activation.numericForm()
+    assembler setnumfuz 0
+    assembler setnumdgts digits
+    assembler setnumfuz fuzz
+    assembler setnumfrm form
+    /* PARSE and command observations use the same controller, with VM source
+     * breakpoints disabled while the neutral runner executes this graph. */
+    assembler bpoff
+    trace_mode = _trace_mode_from_option(activation.traceSetting())
+    if trace_mode <> _trace_current_mode() then call _trace_set(trace_mode)
+    result = .llirexecute..outcome()
+    computed = .rexxvalue..RexxValue
+    carrier = .llirexecute..value
+    arguments = .rexxactivation..RexxActivationArguments
+    text = .string; flag = .int; index = .int
+    if wordpos(name,'add sub mul div pow idiv rem eq ne lt le gt ge strict strictne strictlt strictle strictgt strictge concat blank abut and or xor') > 0 then do
+      computed = llctarget..binaryop(name,unboxvalue(request.at(1)),unboxvalue(request.at(2)),context)
+      call result.add(owned(computed)); return result
+    end
+    if wordpos(name,'positive negative not') > 0 then do
+      computed = llctarget..unaryop(name,unboxvalue(request.at(1)),context)
+      call result.add(owned(computed)); return result
+    end
+    if name = 'dynamic.expansion.begin' | name = 'dynamic.group.entry' then return result
+    if wordpos(name,'call call.external call.missing dynamic.call.owner dynamic.call.resolve dynamic.interpret dynamic.owner.return dynamic.owner.signal exit') > 0 then do
+      status = 'suspend'
+      if wordpos(name,'dynamic.owner.return dynamic.owner.signal exit') > 0 then status = 'transfer'
+      result = .llirexecute..outcome(status,name,'Classic checked boundary',''x as .binary,request.origin())
+      do i = 1 to request.size()
+        if request.at(i).type() <> 'crexx.c.context' then call result.addcontrol(request.at(i),request.present(i))
+      end
+      return result
+    end
+    select name
+      when 'load' then call result.add(owned(bundle.readSymbol(op.attribute('name') as .string)))
+      when 'store' then call pool.setSymbolValue(op.attribute('name') as .string,unboxvalue(request.at(2)))
+      when 'drop' then do
+        text = op.attribute('name') as .string
+        if attrbool(op,'indirect') then call pool.dropIndirectList(pool.symbolValue(text).asString(1),bundle.config())
+        else call pool.dropSymbol(text)
+      end
+      when 'say' then call llctarget..sayconfigured(context,unboxvalue(request.at(1)))
+      when 'truth' then call result.add(boolean(llctarget..truth(unboxvalue(request.at(1)),context)))
+      when 'when.truth' then call result.add(boolean(llctarget..whentruth(unboxvalue(request.at(1)),context)))
+      when 'while.truth' then call result.add(boolean(llctarget..whiletruth(unboxvalue(request.at(1)),context)))
+      when 'until.truth' then call result.add(boolean(llctarget..untiltruth(unboxvalue(request.at(1)),context)))
+      when 'numeric.digits' then call llctarget..setting('digits',context,unboxvalue(request.at(1)))
+      when 'numeric.fuzz' then call llctarget..setting('fuzz',context,unboxvalue(request.at(1)))
+      when 'numeric.form' then call llctarget..setting('form',context,unboxvalue(request.at(1)))
+      when 'digits' then call result.add(owned(llctarget..digits(context)))
+      when 'arguments.empty' then call result.add(packet(.rexxactivation..RexxActivationArguments(),'crexx.c.arguments'))
+      when 'arguments.append' then do
+        arguments = unboxpacket(request.at(1)); bits = request.at(3).bits()
+        call arguments.append(unboxvalue(request.at(2)),<at..u8>(0) bits as .boolean)
+        call result.add(packet(arguments,'crexx.c.arguments'))
+      end
+      when 'arguments.count' then call result.add(owned(llctarget..countargs(context)))
+      when 'arguments.exists' then call result.add(owned(llctarget..existsarg(context,unboxvalue(request.at(2)),unboxvalue(request.at(3)))))
+      when 'return.present' then call result.add(packet(llctarget..present(unboxvalue(request.at(1)))))
+      when 'return.absent' then call result.add(packet(llctarget..absent()))
+      when 'return.empty' then call result.add(packet(llctarget..emptyreturn(context)))
+      when 'requirevalue' then call result.add(owned(llctarget..requirevalue(unboxpacket(request.at(1)),op.attribute('name') as .string)))
+      when 'setresult' then call llctarget..setresult(bundle.pool(),unboxpacket(request.at(2)))
+      when 'length' then call result.add(owned(llctarget..lengthvalue(unboxvalue(request.at(1)),context)))
+      when 'bif' then do
+        arguments = unboxpacket(request.at(1)); values = .rexxvalue..RexxValue[]; presence = .int[]
+        do i = 1 to arguments.rawArgumentCount()
+          values[i] = arguments.argument(i); presence[i] = arguments.argumentExists(i) as .int
+        end
+        computed = llcdynamicbifs..invoke(op.attribute('name') as .string,context,values,presence,mappedline(op.id()))
+        call result.add(owned(computed))
+      end
+      when 'select.missing' then call llctarget..selectmissing(mappedline(op.id()) as .string)
+      when 'transfer.invalid' then call llctarget..invalidtransfer(op.attribute('code') as .string,op.attribute('name') as .string)
+      when 'do.new' then do
+        index = loopindex(op.attribute('key') as .string,1)
+        _loops[index] = llctarget..donew(context,op.attribute('name') as .string)
+      end
+      when 'do.capture' then do
+        index = loopindex(op.attribute('key') as .string)
+        call llctarget..docapture(reference _loops[index],op.attribute('part') as .string,unboxvalue(request.at(1)))
+      end
+      when 'do.start' then do
+        index = loopindex(op.attribute('key') as .string); call llctarget..dostart(reference _loops[index])
+      end
+      when 'do.entry' then do
+        index = loopindex(op.attribute('key') as .string); call result.add(boolean(llctarget..doentry(reference _loops[index])))
+      end
+      when 'do.advance' then do
+        index = loopindex(op.attribute('key') as .string); call llctarget..doadvance(reference _loops[index])
+      end
+      when 'do.close' then do
+        index = loopindex(op.attribute('key') as .string); absent_value_56 = .rexxdostate..RexxDoState; _loops[index] = absent_value_56; _loopkeys[index] = ''
+      end
+      when 'parse.source' then do
+        sourcekind = op.attribute('kind') as .string; caller_info = ''
+        if sourcekind = 'SOURCE' then caller_info = word(rxfnsb..sourceinfo(),1) || ' COMMAND ' || owner.source()
+        computed = llctarget..parsesource(context,sourcekind,attrint(op,'ordinal'),caller_info,reference _parse)
+        if _parse.hasError() then do
+          detail = _parse.errorDetail()
+          assembler signal 'CLASSIC_SYNTAX',detail
+        end
+        if _parse.conditionId() > 0 then do
+          queued = activation.queueCallCondition(_parse.conditionId(),_parse.conditionDescription(),mappedline(op.id()))
+          if activation.signalPolicy(_parse.conditionId()) > 0 then do
+            event = .rexxclassicconditionevent..RexxClassicConditionEvent(_parse.conditionId(),_parse.conditionDescription())
+            assembler signal 'CLASSIC_CONDITION',event
+          end
+        end
+        call result.add(owned(computed))
+      end
+      when 'parse.execute' then call rexxclassicparse..execute(context,unboxvalue(request.at(2)),op.attribute('program'))
+      when 'entry.test' then do
+        bits = request.at(2).bits(); actual = <at..i64>(0) bits; expected = attrint(op,'id')
+        flag = 0
+        if actual = expected then do
+          if (_groupmode = 0 | expected <> 0) & owner.signalEntry() <> actual & activation.procedureEligible() <> (expected > 0) then assembler signal 'INVALID_ARGUMENTS','LLC-ENTRY: activation does not match entry kind'
+          flag = 1
+        end
+        call result.add(boolean(flag))
+      end
+      when 'entry.invalid' then assembler signal 'INVALID_ARGUMENTS','LLC-ENTRY: entry ordinal is not admitted'
+      when 'procedure.consume' then call owner.consume()
+      when 'procedure.enter' then call owner.enterProcedure()
+      when 'procedure.expose' then call owner.expose(op.attribute('name') as .string,attrbool(op,'indirect'))
+      when 'program.exiting' then call result.add(boolean(activation.programExitRequested() as .int))
+      when 'push' then call config.pushText(unboxvalue(request.at(1)).asString(1))
+      when 'queue' then call config.queueText(unboxvalue(request.at(1)).asString(1))
+      when 'address.swap' then call activation.swapAddressEnvironment()
+      when 'address.select' then call activation.setAddressEnvironment(unboxvalue(request.at(1)).asString(1))
+      when 'address.connection' then call activation.setAddressConnection(op.attribute('option') as .string,op.attribute('position') as .string,op.attribute('kind') as .string,op.attribute('resource') as .string)
+      when 'command.new' then do
+        index = commandindex(op.attribute('key') as .string,1)
+        _commands[index] = .rexxclassicaddress..RexxClassicAddressCommand(bundle.pool(),bundle.activation(),op.attribute('environment') as .string,unboxvalue(request.at(1)).asString(1))
+        call _commands[index].bindHostConfig(bundle.config())
+      end
+      when 'command.active' then do
+        index = commandindex(op.attribute('key') as .string,1)
+        _commands[index] = .rexxclassicaddress..RexxClassicAddressCommand(bundle.pool(),bundle.activation(),activation.addressEnvironment(),unboxvalue(request.at(1)).asString(1))
+        call _commands[index].bindHostConfig(bundle.config()); call _commands[index].useActiveConnections()
+      end
+      when 'command.connection' then do
+        index = commandindex(op.attribute('key') as .string)
+        call _commands[index].withConnection(op.attribute('option') as .string,op.attribute('position') as .string,op.attribute('kind') as .string,op.attribute('resource') as .string)
+      end
+      when 'command.binding' then do
+        index = commandindex(op.attribute('key') as .string)
+        call _commands[index].withBinding(op.attribute('kind') as .string,op.attribute('name') as .string)
+      end
+      when 'command.run' then do
+        index = commandindex(op.attribute('key') as .string); response = _commands[index].run()
+        if _commands[index].syntaxError() <> '' then do
+          detail = _commands[index].syntaxError()
+          assembler signal 'CLASSIC_SYNTAX',detail
+        end
+        condition = _commands[index].conditionId()
+        if condition > 0 then do
+          if activation.queueCallCondition(condition,_commands[index].conditionDescription(),mappedline(op.id())) = 0 then do
+            if activation.signalPolicy(condition) > 0 then do
+              event = .rexxclassicconditionevent..RexxClassicConditionEvent(condition,_commands[index].conditionDescription())
+              assembler signal 'CLASSIC_CONDITION',event
+            end
+          end
+        end
+        absent_value_57 = .rexxclassicaddress..RexxClassicAddressCommand; _commands[index] = absent_value_57; _commandkeys[index] = ''
+      end
+      when 'clause.begin' then call activation.beginClauseTime()
+      when 'trace' then do
+        if activation.setTraceOption(unboxvalue(request.at(1)).asString(1)) = 0 then assembler signal 'CLASSIC_SYNTAX','RXC-LC-24.1: Invalid TRACE option'
+        trace_mode = _trace_mode_from_option(activation.traceSetting()); call _trace_set(trace_mode)
+      end
+      when 'source.map' then nop
+      otherwise return conditionoperation(request,result)
+    end
+    return result
+  conditionoperation: method = .llirexecute..outcome
+    arg request = .llirexecute..request, result = .llirexecute..outcome
+    condition = .int; handler = .int; original = .object; bits = .binary
+    facts = dereference _signalproof; target = .string; target_ref = reference .string
+    op = request.operation(); name = substr(op.name(),9)
+    owner = dereference _owner; context = owner.context(); bundle = dereference context
+    activation = dereference bundle.activation(); pool = dereference bundle.pool()
+    if name = 'signal.policy' | name = 'call.policy' then do
+      condition = attrint(op,'condition'); handler = attrint(op,'handler')
+      kind = 'SIGNAL'; if name = 'call.policy' then kind = 'CALL'
+      call policy(_owner,kind,condition,handler,op.attribute('name') as .string,op.origin().filename(),mappedline(op.id()))
+      return result
+    end
+    if name = 'signal.capture' then do
+      if request.hasfault() = 0 then assembler signal 'INVALID_ARGUMENTS','Classic condition capture has no protected event'
+      fault = request.fault()
+      if fault.hasevent() = 0 then return fault
+      original = fault.event(); _captured[_depth] = original; _capturelines[_depth] = 0
+      if fault.code() = 'CLASSIC_CHILD' then _capturelines[_depth] = owner.takeconditionline()
+      if fault.origin() > 0 & fault.code() <> 'CLASSIC_CHILD' then do
+        observations = dereference _observations; _capturelines[_depth] = observations.lineOrigin(fault.origin())
+      end
+      problem = original as .runtime_signal
+      condition = 0
+      if problem.name() = 'CLASSIC_SYNTAX' then condition = 1
+      else if problem.name() = 'CLASSIC_CONDITION' | problem.name() = 'POSIX_INT' then condition = rexxclassicbifs..rexxclassic_signal_event_id(problem)
+      call result.add(integer(condition)); return result
+    end
+    if name = 'signal.select' then do
+      bits = request.at(1).bits(); condition = <at..i64>(0) bits
+      selected = activation.signalPolicy(condition)
+      if selected = 2147483647 then do
+        original = _captured[_depth]
+        call owner.conditionline(_capturelines[_depth])
+        result = .llirexecute..outcome('suspend','dynamic.condition','Persistent Classic SIGNAL boundary',''x as .binary,request.origin())
+        call result.setevent(original); return result
+      end
+      call result.add(integer(selected)); return result
+    end
+    if name = 'signal.selected' then do
+      bits = request.at(1).bits(); call result.add(boolean((<at..i64>(0) bits) = attrint(op,'handler'))); return result
+    end
+    if name = 'signal.deliver' then do
+      condition = attrint(op,'condition'); call activation.setSignalPolicy(condition,0)
+      signal_event = _captured[_depth] as .runtime_signal
+      call rexxclassicbifs..rexxclassic_signal_record_at_line(bundle.pool(),bundle.activation(),signal_event,_capturelines[_depth])
+      call cleartransient()
+      return result
+    end
+    if name = 'signal.name' then do
+      text = rexxclassicunicodeproperties..rexxclassic_unicode_upper(unboxvalue(request.at(1)).asString(1))
+      call result.add(.llirexecute..value('crexx.g.text',text as .binary)); return result
+    end
+    if name = 'signal.mark' then do; call pool.setSignalLine(mappedline(op.id())); call cleartransient(); return result; end
+    if name = 'signal.test' then do
+      row_ref = facts.rowname(op.id()); row = dereference row_ref
+      target = request.at(2).bits() as .string
+      call result.add(boolean(target == row)); return result
+    end
+    if name = 'signal.invalid' | name = 'signal.handler.invalid' then do
+      if name = 'signal.invalid' then target = request.at(1).bits() as .string
+      else do
+        target_ref = facts.handlername(op.id()); handler_target = dereference target_ref; target = handler_target
+      end
+      message = 'RXC-LC-' || (op.attribute('code') as .string) || ': Label not found: ' || _trace_escape_text(target)
+      assembler signal 'CLASSIC_SYNTAX',message
+      return result
+    end
+    if name = 'signal.relay' then do
+      original = _captured[_depth]
+      call owner.conditionline(_capturelines[_depth])
+      result = .llirexecute..outcome('failure','CLASSIC_RELAY','Uncaught Classic event',''x as .binary,request.origin())
+      call result.setevent(original); return result
+    end
+    if name = 'clause.complete' then do
+      if activation.hasPendingCallCondition() then do
+        handler = activation.takeCallCondition()
+        result = .llirexecute..outcome('suspend','clause.complete','Classic delayed condition boundary',''x as .binary,request.origin())
+        call result.addcontrol(integer(handler)); return result
+      end
+      /* Conditional absence is transported without manufacturing a result. */
+      call result.addabsent(); return result
+    end
+    return .llirexecute..outcome('failure','LL_CLASSIC_OPERATION','Unknown admitted Classic runtime operation ' || name,''x as .binary,request.origin())
+
+/** Trusted registry registration covers each selected C operation and its exact
+ * effect premises. Unknown operations remain preflight failures. Context is an
+ * executor-minted invocation lease and can never be constructed as a constant.
+ */
+classicports: procedure = .string
+  arg summary = .llireffects..summary
+  ports = ''
+  if summary.resume() = 'possible' then ports = 'invoke'
+  if summary.transfer() = 'possible' then ports = strip(ports || ' transfer')
+  return ports
+
+registry: procedure = .llirexecute..registry
+  arg graph_ref = reference .llir..module, owner_ref = reference .llcdynamic..scope, group = .int
+  i = .int; detail = .string
+  graph = dereference graph_ref; store = dereference graph.storage(); contract = dereference store.contract(); data = dereference contract.data()
+  owner = dereference owner_ref
+  result = .llirexecute..registry(contract)
+  groupmode = 0
+  do i = 1 to graph.operations(); if graph.operation(i).name() = 'crexx.c.dynamic.group.entry' then groupmode = 1; end
+  service = .runtime(owner_ref,owner.signalproof(group),owner.observations(group),groupmode)
+  call result.handler('classic',service as .object); call result.lifecycle('classic')
+  call result.lease('crexx.c.context')
+  do i = 1 to data.types()
+    type = data.typename(i)
+    if type = 'core.void' | type = 'crexx.c.context' then iterate
+    if type = 'crexx.c.value' | type = 'crexx.c.arguments' | type = 'crexx.c.result' then call result.type(type,.valuetype() as .object)
+    else call result.type(type,.llirexecute..encodedtype(data.codec(i) as .llir..typecodec) as .object)
+  end
+  effects = llceffects..model(graph_ref)
+  if effects.valid() = 0 then do
+    detail = effects.error()
+    assembler signal 'INVALID_ARGUMENTS',detail
+  end
+  do i = 1 to graph.operations()
+    operation = graph.operation(i); name = operation.name()
+    if left(name,8) <> 'crexx.c.' then iterate
+    if result.opindex(name) > 0 then iterate
+    summary = effects.at(i)
+    call result.operation(name,'classic',summary,1048576)
+    ports = classicports(summary)
+    if ports <> '' then call result.port(name,ports)
+  end
+  ignored = result.seal()
+  if result.error() <> '' then do
+    detail = result.error()
+    assembler signal 'INVALID_ARGUMENTS',detail
+  end
+  return result
+
+executionmanifest: procedure = .llirexecute..manifest
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref; result = .llirexecute..manifest(graph_ref)
+  effects = llceffects..model(graph_ref)
+  if effects.valid() = 0 then do
+    detail = effects.error()
+    assembler signal 'INVALID_ARGUMENTS',detail
+  end
+  do i = 1 to graph.operations()
+    operation = graph.operation(i); name = operation.name()
+    if name = 'core.protect' then call result.protect(i)
+    if left(name,8) <> 'crexx.c.' then iterate
+    ports = classicports(effects.at(i))
+    if ports <> '' then call result.port(i,ports)
+    if name = 'crexx.c.clause.complete' then do
+      guard = 0; branch = 0
+      do j = i + 1 to graph.operations()
+        sibling = graph.operation(j)
+        if sibling.blockid() <> operation.blockid() then iterate
+        if sibling.name() = 'crexx.c.program.exiting' then guard = sibling.result().id()
+        if sibling.name() = 'core.branch' & guard > 0 then do; branch = j; leave; end
+      end
+      if branch = 0 then assembler signal 'INVALID_ARGUMENTS','Classic conditional completion lacks its admitted branch'
+      call result.gate(operation.result().id(),guard,branch,1)
+    end
+  end
+  call result.seal()
+  return result
+
+/** Cached state is immutable semantic data only. The runtime registry/session
+ * and authoritative Context binding are constructed afresh for every run. */
+preparedgraph: class
+  _graph = .llir..module
+  *: factory
+    arg graph = .llir..module
+    _graph = graph
+    return
+  graph: method = .llir..module
+    return _graph
+
+/** One preparation entry, shared by top-level and nested expansion. All source
+ * bytes are preserved and language admission belongs to the C frontend. */
+preparegroup: procedure = .llirexecute..result
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg source = .rexxvalue..RexxValue, owner_ref = reference .llcdynamic..scope
+  graph = .llir..module; cached = .preparedgraph; front = .llcgraph..request; absent_front = .llcgraph..request
+  owner = dereference owner_ref; budget_owner = dereference owner.budget()
+  bundle = dereference owner.context(); activation = dereference bundle.activation()
+  active_digits = activation.numericDigits(); active_fuzz = activation.numericFuzz(); active_form = activation.numericForm()
+  assembler setnumfuz 0
+  assembler setnumdgts active_digits
+  assembler setnumfuz active_fuzz
+  assembler setnumfrm active_form
+  bytes = source.asString(1) as .binary; size = <blen>(bytes)
+  metadata = owner.definitionbytes()
+  if metadata > budget_owner.available() then assembler signal 'OUT_OF_RANGE','Classic binding snapshot preparation budget exhausted'
+  if size > (budget_owner.available() - metadata) <idiv> 4 then assembler signal 'OUT_OF_RANGE','Classic source preparation budget exhausted'
+  reservation = budget_owner.reserve(size * 4 + metadata,'source.preparation')
+  priorgroups = owner.group(); cachedid = 0; pinned = 0; entry_line = 0
+  do
+  cache_owner = dereference owner.cacheowner()
+  identity = owner.source() || ':INTERPRET'
+  key = 'CLC-DYN1/C24/Lexec1/BIF1/interpret-group/' || length(identity) || ':' || identity || length(owner.resourceBase()) || ':' || owner.resourceBase() || length(owner.fingerprint()) || ':' || owner.fingerprint() || ':' || owner.sourceGeneration() || ':' || owner.bindingfingerprint()
+  cachedid = cache_owner.find(key,bytes)
+  if cachedid > 0 then do
+    cached = cache_owner.pin(cachedid) as .preparedgraph; pinned = 1
+    graph = cached.graph()
+  end
+  else do
+    front = .llcgraph..request.snapshot(bytes,'interpret-group',owner.names(),owner.entries(),owner.fingerprint(),owner.definitions(),identity,1000000,metadata)
+    if front.status() then do
+      call budget_owner.release(reservation); reservation = 0
+      message = 'RXC-LC-40.1: INTERPRET source at offset ' || front.offset() || ': ' || front.error()
+      assembler signal 'CLASSIC_SYNTAX',message
+      return .llirexecute..result('failure',message,'CLASSIC_SYNTAX')
+    end
+    graph = front.graph()
+    front = absent_front
+    cachedid = cache_owner.put(key,bytes,.preparedgraph(graph) as .object,graph.bytes())
+    if cachedid = 0 then do
+      call budget_owner.release(reservation); reservation = 0
+      assembler signal 'OUT_OF_RANGE','Classic dynamic cache quota is exhausted by pinned owners'
+    end
+    cached = cache_owner.pin(cachedid) as .preparedgraph; pinned = 1
+  end
+  group = owner.addgraph(graph,cachedid); graph_ref = owner.graph(group)
+  services = registry(graph_ref,owner_ref,group)
+  manifest = executionmanifest(graph_ref)
+  plan = .llirexecute..plan(graph_ref,services,1000000,budget_owner.available(),manifest)
+  call budget_owner.release(reservation); reservation = 0
+  if plan.valid() = 0 then do
+    detail = plan.message()
+    assembler signal 'INVALID_ARGUMENTS',detail
+  end
+  entry_line = owner.takeconditionline()
+  started = owner.start(owner_ref,group,plan)
+  entry_line = 0
+  return started
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+    original = problem as .runtime_signal
+    if entry_line > 0 then do
+      current_line = owner.takeconditionline()
+      if current_line = 0 then current_line = entry_line
+      call owner.conditionline(current_line)
+    end
+    if reservation > 0 then call budget_owner.release(reservation)
+    if owner.group() > priorgroups then call owner.discardgroup(original as .object)
+    else if pinned then call cache_owner.unpin(cachedid)
+    call rxfnsb..signalrelay(original)
+  end
+  return .llirexecute..result('failure','Classic source preparation failed','CLASSIC_SYNTAX')
+
+interpret: procedure = .llcdynamic..boundary
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg source = .rexxvalue..RexxValue, owner_ref = reference .llcdynamic..scope
+  outcome = .llirexecute..result
+  do
+    outcome = preparegroup(source,owner_ref)
+    return advance(owner_ref,outcome)
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+    original = problem as .runtime_signal
+    return failureboundary(owner_ref,original)
+  end
+  return .boundary('failure')
+
+resume: procedure = .llcdynamic..boundary
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg owner_ref = reference .llcdynamic..scope, returned = .rexxactivation..RexxActivationArguments, ?event = .object
+  owner = dereference owner_ref
+  bundle = dereference owner.context()
+  if ?event = 0 then call owner.conditionline(0)
+  child_ref = owner.sourceChild()
+  if <refvalid>(child_ref) then do
+    if ?event then answer = resume(child_ref,returned,event)
+    else answer = resume(child_ref,returned)
+    return owner.sourcecompletion(owner_ref,answer)
+  end
+  if ?event then call owner.clearcheckpoint()
+  else if owner.checkpointwaiting() then do
+    clauseid = owner.checkpointid(); clauseline = owner.checkpointline()
+    call owner.clearcheckpoint()
+    waiting_activation = dereference bundle.activation()
+    if waiting_activation.programExitRequested() = 0 then do while waiting_activation.hasPendingCallCondition()
+      if waiting_activation.callPolicy(waiting_activation.pendingConditionId()) > 0 then return checkpoint(owner_ref,clauseid,clauseline)
+      ignored = waiting_activation.takeCallCondition()
+    end
+  end
+  if owner.group() = 0 then do
+    if ?event then return .boundary('failure','',0,.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),event,0,'',owner.takeconditionline())
+    return .boundary('normal','',0,.rexxactivation..RexxActivationArguments(),rootcompletion(owner_ref))
+  end
+  pending = owner.pending()
+  graph = dereference owner.graph(owner.group()); op = graph.operation(pending.operation())
+  completion = .llirexecute..outcome()
+  if ?event then do
+    completion = .llirexecute..outcome('failure','CLASSIC_CHILD','Child invocation failed')
+    call completion.setevent(event)
+  end
+  else if op.results() > 0 then do
+    if op.name() = 'crexx.c.clause.complete' then do
+      activation = dereference bundle.activation()
+      if activation.programExitRequested() then call completion.add(packet(rootcompletion(owner_ref)))
+      else call completion.addabsent()
+    end
+    else call completion.add(packet(returned))
+  end
+  return advance(owner_ref,owner.continue(completion))
+
+/** Generic resource/protocol outcomes need a real owned VM signal before an
+ * ordinary compiled protection can relay them. Authored location stays in the
+ * boundary projection rather than being inferred from this helper's frame. */
+materializefailure: procedure = .runtime_signal
+  arg answer = .llirexecute..result
+  original = .runtime_signal
+  detail = answer.code()
+  if detail <> '' then detail = detail || ': '
+  detail = detail || answer.message()
+  do
+    if answer.status() = 'limit' then assembler signal 'OUT_OF_RANGE',detail
+    else assembler signal 'ERROR',detail
+  on signal out_of_range,error as problem
+    original = problem as .runtime_signal
+  end
+  return original
+
+advance: procedure = .llcdynamic..boundary
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg owner_ref = reference .llcdynamic..scope, answer = .llirexecute..result
+  target = .string
+  arguments = .rexxactivation..RexxActivationArguments
+  owner = dereference owner_ref
+  bundle = dereference owner.context()
+  absent_event = .object
+  do forever
+    if answer.status() = 'done' then do
+      completion = .rexxactivation..RexxActivationArguments()
+      if answer.size() > 0 then completion = unboxpacket(answer.at(1))
+      call owner.finishgroup()
+      if owner.group() = 0 then return .boundary('normal','',0,.rexxactivation..RexxActivationArguments(),completion)
+      empty = .llirexecute..outcome(); answer = owner.continue(empty)
+      iterate
+    end
+    if answer.status() <> 'suspended' & answer.status() <> 'transferred' then do
+      call owner.clearcheckpoint()
+      event = .object
+      if answer.hasevent() then event = answer.event()
+      line = owner.takeconditionline()
+      if line = 0 then do
+        locations = dereference owner.observations(owner.group())
+        line = locations.lineOrigin(answer.origin())
+      end
+      if answer.hasevent() = 0 then do
+        event = materializefailure(answer) as .object
+      end
+      call owner.finishgroup()
+      return .boundary('failure','',0,.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),event,answer.origin(),answer.message(),line)
+    end
+    graph = dereference owner.graph(owner.group()); operation = graph.operation(answer.operation()); name = operation.name()
+    if wordpos(name,'crexx.c.call crexx.c.call.external crexx.c.call.missing crexx.c.dynamic.call.owner crexx.c.dynamic.call.resolve') > 0 then do
+      caller_pool = dereference bundle.pool()
+      call caller_pool.setCallTrapSIGL(owner.authoredline(owner.group(),operation.id()))
+    end
+    if name = 'crexx.c.signal.select' then return condition(owner_ref,answer.event() as .runtime_signal)
+    if name = 'crexx.c.clause.complete' then do
+      activation = dereference bundle.activation()
+      id = activation.dispatchedConditionId(); definition = activation.dynamicPolicy(id)
+      if definition is .rexxclassicstate..RexxClassicHandlerDefinition then do
+        policy = definition as .rexxclassicstate..RexxClassicHandlerDefinition
+        if policy.fingerprint() <> owner.fingerprint() | policy.generation() <> owner.generation() | policy.kind() <> 'CALL' then assembler signal 'REFERENCE_INVALID','Classic dynamic CALL definition belongs to a foreign catalogue generation'
+        if policy.entry() = 0 then assembler signal 'CLASSIC_SYNTAX','RXC-LC-16.2: CALL handler is inside a DO or SELECT group'
+        call owner.waitcheckpoint(attrint(operation,'id'),owner.authoredline(owner.group(),operation.id()))
+        arguments = .rexxactivation..RexxActivationArguments()
+        call arguments.inheritSignalPolicy(bundle.activation()); call arguments.beginInternalCall()
+        call arguments.beginCallTrap(id,activation.dispatchedConditionDescription())
+        condition_pool = dereference bundle.pool()
+        call condition_pool.setCallTrapSIGL(activation.dispatchedConditionLine())
+        if policy.entry() < 0 then return resolve(arguments,owner_ref,policy.name(),policy.name(),0,0)
+        if owner.isIR() then return owner.internalprogram(arguments,owner_ref,policy.entry(),0)
+        return .boundary('invoke',policy.name(),policy.entry(),arguments)
+      end
+      return .boundary('static','',0)
+    end
+    if name = 'crexx.c.dynamic.interpret' then do
+      answer = preparegroup(unboxvalue(answer.controlat(1)),owner_ref); iterate
+    end
+    if name = 'crexx.c.dynamic.owner.return' | name = 'crexx.c.exit' then do
+      kind = 'return'; if name = 'crexx.c.exit' then kind = 'exit'
+      return .boundary(kind,'',0,.rexxactivation..RexxActivationArguments(),unboxpacket(answer.controlat(1)),absent_event,answer.origin())
+    end
+    if name = 'crexx.c.dynamic.owner.signal' then do
+      target = answer.controlat(1).bits() as .string
+      call owner.unwindGroups()
+      return .boundary('signal',target,owner.entry(target),.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),absent_event,answer.origin())
+    end
+    if name = 'crexx.c.dynamic.call.resolve' then return resolve(unboxpacket(answer.controlat(1)),owner_ref,operation.attribute('name') as .string,operation.attribute('sourceKey') as .string,attrbool(operation,'quoted'),attrbool(operation,'function'))
+    if name = 'crexx.c.call.missing' then return resolve(unboxpacket(answer.controlat(1)),owner_ref,operation.attribute('name') as .string,operation.attribute('name') as .string,0,attrbool(operation,'function'))
+    if name = 'crexx.c.call.external' then do
+      target = operation.attribute('target') as .string; selected = owner.targetbinding(target)
+      if selected = 0 then assembler signal 'INVALID_ARGUMENTS','Selected Classic binding is unavailable in the current invocation catalogue'
+      arguments = unboxpacket(answer.controlat(1)); retained = owner.binding(selected)
+      if retained is .routebox then do
+        route = retained as .routebox
+        return .boundary('invoke',route.target(),0,externalarguments(arguments,owner_ref,attrbool(operation,'function')))
+      end
+      completed = invokebinding(retained as .bindingrecord,arguments,owner_ref,attrbool(operation,'function'))
+      return resume(owner_ref,completed)
+    end
+    if name = 'crexx.c.dynamic.call.owner' | name = 'crexx.c.call' | name = 'crexx.c.call.external' then do
+      target = ''; entry = 0
+      if name <> 'crexx.c.dynamic.call.owner' then target = operation.attribute('target') as .string
+      if name <> 'crexx.c.call.external' then entry = attrint(operation,'entry')
+      arguments = unboxpacket(answer.controlat(1))
+      call arguments.inheritSignalPolicy(bundle.activation())
+      if attrbool(operation,'function') then call arguments.beginInternalFunction()
+      else call arguments.beginInternalCall()
+      pool = dereference bundle.pool(); call pool.setCallTrapSIGL(owner.authoredline(owner.group(),operation.id()))
+      if owner.isIR() & name <> 'crexx.c.call.external' then return owner.internalprogram(arguments,owner_ref,entry,attrbool(operation,'function'))
+      return .boundary('invoke',target,entry,arguments,.rexxactivation..RexxActivationArguments(),absent_event,answer.origin())
+    end
+    return .boundary('failure','',0,.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),absent_event,answer.origin(),'Unhandled Classic dynamic boundary ' || name)
+  end
+
+resolve: procedure = .llcdynamic..boundary
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg arguments = .rexxactivation..RexxActivationArguments, owner_ref = reference .llcdynamic..scope, name = .string, sourceKey = .string, quoted = .int, function = .int
+  owner = dereference owner_ref; bundle = dereference owner.context(); config = dereference bundle.config()
+  activation = dereference bundle.activation()
+  active_digits = activation.numericDigits(); active_fuzz = activation.numericFuzz(); active_form = activation.numericForm()
+  assembler setnumfuz 0
+  assembler setnumdgts active_digits
+  assembler setnumfuz active_fuzz
+  assembler setnumfrm active_form
+  values = .rexxvalue..RexxValue[]; presence = .int[]
+  do i = 1 to arguments.rawArgumentCount()
+    values[i] = arguments.argument(i); presence[i] = arguments.argumentExists(i) as .int
+  end
+  do
+  if quoted = 0 then do
+    lexical = owner.entry(name)
+    if lexical = 0 then assembler signal 'CLASSIC_SYNTAX','RXC-LC-16.3: CALL target is inside a DO or SELECT group'
+    if lexical > 0 then do
+      prepared_arguments = internalarguments(arguments,owner_ref,function)
+      if owner.isIR() then return owner.internalprogram(prepared_arguments,owner_ref,lexical,function)
+      call owner.conditionline(0)
+      return .boundary('invoke',name,lexical,prepared_arguments)
+    end
+    if llcbifs..entry(name) <> '' then do
+      value = .rexxvalue..RexxValue
+      delivered = arguments.currentConditionId()
+      if delivered > 0 & arguments.currentConditionInstruction() = 'CALL' & arguments.delayedConditionId() = delivered then do
+        handler_context = .rexxclassiccontext..RexxClassicContext(reference arguments,bundle.pool(),bundle.config())
+        value = llcdynamicbifs..invoke(name,reference handler_context,values,presence,activation.dispatchedConditionLine())
+        /* The delivered child suppresses its own ERROR/FAILURE/NOTREADY and
+         * buffers HALT through the existing parent link. Other queued events
+         * belong to the interrupted caller, as in the static BIF dispatcher. */
+        if arguments.hasPendingCallCondition() then do
+          ignored_handler = arguments.takeCallCondition()
+          forwarded = activation.queueCallCondition(arguments.dispatchedConditionId(),arguments.dispatchedConditionDescription(),arguments.dispatchedConditionLine())
+        end
+      end
+      else value = llcdynamicbifs..invoke(name,owner.context(),values,presence)
+      completion = llctarget..present(value)
+      call owner.conditionline(0)
+      if owner.group() > 0 then return resume(owner_ref,completion)
+      return .boundary('normal','',0,.rexxactivation..RexxActivationArguments(),completion)
+    end
+  end
+  selected = owner.findbinding(name)
+  if selected > 0 then do
+    selected_record = owner.binding(selected)
+    if selected_record is .routebox then do
+      route = selected_record as .routebox
+      child_arguments = externalarguments(arguments,owner_ref,function)
+      call owner.conditionline(0)
+      return .boundary('invoke',route.target(),0,child_arguments)
+    end
+    retained = selected_record as .bindingrecord
+    completion = invokebinding(retained,arguments,owner_ref,function)
+    if owner.group() > 0 then return resume(owner_ref,completion)
+    return .boundary('normal','',0,.rexxactivation..RexxActivationArguments(),completion)
+  end
+  call config.bindHostContext(bundle as .object)
+  response = config.externalRoutine(name,function as .boolean,values,presence)
+  if response.handled() then do
+    completion = .rexxactivation..RexxActivationArguments()
+    if response.hasValue() then call completion.setReturnValue(response.value())
+    call owner.conditionline(0)
+    if owner.group() > 0 then return resume(owner_ref,completion)
+    return .boundary('normal','',0,.rexxactivation..RexxActivationArguments(),completion)
+  end
+  if owner.sourceEnabled() then do
+    view = llcsource..resourceview(owner.resourceBase(),owner.sourceRoots(),owner.sourceGeneration())
+    budget_owner = dereference owner.budget()
+    acquisitionLimit = min(16777216,budget_owner.available() <idiv> 4)
+    acquisition = budget_owner.reserve(acquisitionLimit * 2,'source.acquisition')
+    if acquisition = 0 then assembler signal 'OUT_OF_RANGE','Classic aggregate source acquisition budget exhausted'
+    do
+      source = llcsource..resolve(view,name,sourceKey,quoted,acquisitionLimit)
+      if source.status() = 1 then do
+        /* Drop unused acquisition headroom before frontend preparation while
+         * retaining the actual immutable bytes until graph publication. */
+        call budget_owner.release(acquisition)
+        acquisition = budget_owner.reserve(<blen>(source.bytes()) * 2,'source.acquisition')
+        answer = sourceprogram(source,arguments,owner_ref,function)
+        call budget_owner.release(acquisition); acquisition = 0
+        return answer
+      end
+      call budget_owner.release(acquisition); acquisition = 0
+      if source.status() <> 0 then do
+        message = source.message() || ': ' || source.path() || ' (' || source.errorcode() || ')'
+        assembler signal 'FAILURE',message
+      end
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+      original = problem as .runtime_signal
+      if acquisition > 0 then call budget_owner.release(acquisition)
+      call rxfnsb..signalrelay(original)
+    end
+  end
+  completion = llctarget..missing(name)
+  return .boundary('normal','',0,.rexxactivation..RexxActivationArguments(),completion)
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+    original = problem as .runtime_signal
+    return failureboundary(owner_ref,original)
+  end
+  return .boundary('failure')
+
+sourceprogram: procedure = .llcdynamic..boundary
+  arg source = .llcsource..resolution, arguments = .rexxactivation..RexxActivationArguments, parent_ref = reference .llcdynamic..scope, function = .int
+  /* Source-program storage is attached to the parent before any execution;
+   * no suspended request can retain this procedure's temporary stack cells. */
+  parent = dereference parent_ref
+  return parent.sourceprogram(source,arguments,parent_ref,function)
+
+/** Checked dynamic fallback for a compiled invocation's ordinary fault path.
+ * A static policy returns `static` so the existing finite ordinal dispatcher
+ * remains its owner. The original native event is retained on every boundary.
+ */
+condition: procedure = .llcdynamic..boundary
+  arg owner_ref = reference .llcdynamic..scope, original = .runtime_signal
+  owner = dereference owner_ref; bundle = dereference owner.context(); activation = dereference bundle.activation()
+  id = rexxclassicbifs..rexxclassic_signal_event_id(original)
+  if original.name() = 'CLASSIC_SYNTAX' then id = 1
+  if id < 1 then return .boundary('static','',0,.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),original as .object)
+  definition = activation.dynamicPolicy(id)
+  if \(definition is .rexxclassicstate..RexxClassicHandlerDefinition) then return .boundary('static','',activation.signalPolicy(id),.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),original as .object)
+  policy = definition as .rexxclassicstate..RexxClassicHandlerDefinition
+  if policy.fingerprint() <> owner.fingerprint() | policy.generation() <> owner.generation() then assembler signal 'REFERENCE_INVALID','Classic dynamic condition definition belongs to a foreign catalogue generation'
+  if policy.kind() <> 'SIGNAL' then return .boundary('static','',0,.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),original as .object)
+  call owner.clearpolicy(id)
+  line = owner.takeconditionline()
+  if line > 0 then call rexxclassicbifs..rexxclassic_signal_record_at_line(bundle.pool(),bundle.activation(),original,line)
+  else call rexxclassicbifs..rexxclassic_signal_record(bundle.pool(),bundle.activation(),original)
+  call owner.unwindGroups()
+  return .boundary('signal',policy.name(),policy.entry(),.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),original as .object)
+
+/** Clause dispatch shares activation pending/DELAY/CONDITION algorithms. Handler
+ * return data is ignored by the caller; a child-local transfer completes that
+ * child and permits the interrupted invocation to resume exactly once.
+ */
+checkpoint: procedure = .llcdynamic..boundary
+  arg owner_ref = reference .llcdynamic..scope, clauseid = .int, line = .int
+  owner = dereference owner_ref; bundle = dereference owner.context(); activation = dereference bundle.activation()
+  pool = dereference bundle.pool()
+  do forever
+  if activation.programExitRequested() then return .boundary('normal','',0,.rexxactivation..RexxActivationArguments(),rootcompletion(owner_ref))
+  if activation.hasPendingCallCondition() = 0 then return .boundary()
+  id = activation.pendingConditionId(); selected = activation.callPolicy(id)
+  if selected = 0 then do
+    ignored = activation.takeCallCondition(); iterate
+  end
+  definition = activation.dynamicPolicy(id)
+  if \(definition is .rexxclassicstate..RexxClassicHandlerDefinition) then return .boundary('static','',selected)
+  selected = activation.takeCallCondition()
+  policy = definition as .rexxclassicstate..RexxClassicHandlerDefinition
+  if policy.fingerprint() <> owner.fingerprint() | policy.generation() <> owner.generation() | policy.kind() <> 'CALL' then assembler signal 'REFERENCE_INVALID','Classic dynamic CALL definition belongs to a foreign catalogue generation'
+  if policy.entry() = 0 then assembler signal 'CLASSIC_SYNTAX','RXC-LC-16.2: CALL handler is inside a DO or SELECT group'
+  call owner.waitcheckpoint(clauseid,line)
+  arguments = .rexxactivation..RexxActivationArguments()
+  call arguments.inheritSignalPolicy(bundle.activation())
+  call arguments.beginInternalCall()
+  call arguments.beginCallTrap(id,activation.dispatchedConditionDescription())
+  call pool.setCallTrapSIGL(activation.dispatchedConditionLine())
+  if policy.entry() < 0 then do
+    answer = resolve(arguments,owner_ref,policy.name(),policy.name(),0,0)
+    if answer.kind() = 'normal' & owner.checkpointwaiting() then do
+      call owner.clearcheckpoint(); iterate
+    end
+    return answer
+  end
+  if owner.isIR() then return owner.internalprogram(arguments,owner_ref,policy.entry(),0)
+  return .boundary('invoke',policy.name(),policy.entry(),arguments)
+  end
+
+/** A retained checked native capability and existing immutable metadata record.
+ * Textual names never become pointers and do not keep stripped symbols alive.
+ */
+routebox: class
+  _target = .string
+  _kind = .string
+  _signature = .llcompilercontracts..signature
+  *: factory
+    arg target = .string, kind = .string, ?signature = .llcompilercontracts..signature
+    if kind <> 'classic' & kind <> 'process' then assembler signal 'INVALID_ARGUMENTS','Invalid Classic prepared route kind'
+    _target = target; _kind = kind
+    absent_signature = .llcompilercontracts..signature; _signature = absent_signature
+    if ?signature then _signature = signature
+    return
+  target: method = .string
+    return _target
+  kind: method = .string
+    return _kind
+  signature: method = .llcompilercontracts..signature
+    return _signature
+
+bindingrecord: class
+  _capability = .rxinvoke..binding
+  _signature = .llcompilercontracts..signature
+  *: factory
+    arg capability = .rxinvoke..binding, signature = .llcompilercontracts..signature
+    _capability = capability; _signature = signature
+    return
+  capability: method = .rxinvoke..binding
+    return _capability
+  signature: method = .llcompilercontracts..signature
+    return _signature
+
+invokebinding: procedure = .rexxactivation..RexxActivationArguments
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg binding = .bindingrecord, arguments = .rexxactivation..RexxActivationArguments, owner_ref = reference .llcdynamic..scope, function = .int
+  owner = dereference owner_ref; bundle = dereference owner.context()
+  activation = dereference bundle.activation()
+  active_digits = activation.numericDigits(); active_fuzz = activation.numericFuzz(); active_form = activation.numericForm()
+  assembler setnumfuz 0
+  assembler setnumdgts active_digits
+  assembler setnumfuz active_fuzz
+  assembler setnumfrm active_form
+  signature = binding.signature(); fixed = signature.arguments(); variable = 0
+  if fixed > 0 then variable = signature.vararg(fixed)
+  fixed = fixed - variable; extent = arguments.rawArgumentCount()
+  budget_owner = dereference owner.budget()
+  /* The native owner checks its window, payload and completion against this
+   * held cap. Separate conservative input/vector storage leaves the remaining
+   * tree budget available to callbacks while this ordinary call is active. */
+  allowance = 1048576; available = budget_owner.available()
+  cells = max(extent,signature.arguments())
+  if allowance > available | cells > (available - allowance) <idiv> 256 then assembler signal 'OUT_OF_RANGE','Classic typed invocation aggregate budget exhausted'
+  vectorbytes = 256 + cells * 256
+  carrier = packet(arguments,'crexx.c.arguments'); valueowner = .valuetype()
+  inputbytes = valueowner.bytes(carrier)
+  absent_carrier = .llirexecute..value; carrier = absent_carrier
+  if vectorbytes > available - allowance | inputbytes > available - allowance - vectorbytes then assembler signal 'OUT_OF_RANGE','Classic typed invocation input budget exhausted'
+  ticket = 0
+  values = .rxinvoke..scalar[]; presence = .int[]
+  invocation = .rxinvoke..invocation; absent_invocation = .rxinvoke..invocation
+  returned = .rxinvoke..scalar; absent_scalar = .rxinvoke..scalar
+  completion = .rexxactivation..RexxActivationArguments
+  failed = 0; original = .runtime_signal; result_is_packet = 0
+  do
+  ticket = budget_owner.reserve(allowance + vectorbytes + inputbytes,'typed.invocation')
+  if ticket = 0 then assembler signal 'OUT_OF_RANGE','Classic typed invocation aggregate budget exhausted'
+  completion = .rexxactivation..RexxActivationArguments()
+  classic = 0
+  if signature.arguments() = 1 then classic = signature.type(1) = '.rexxactivation..rexxactivationarguments' | signature.type(1) = '.rexxactivationarguments'
+  if classic then do
+    delivered = arguments.currentConditionId(); delivered_description = arguments.currentConditionDescription()
+    if arguments.currentConditionInstruction() <> 'CALL' | arguments.delayedConditionId() <> delivered then delivered = 0
+    child = arguments
+    call child.inheritSignalPolicy(bundle.activation()); call child.captureCallerPool(bundle.pool())
+    if delivered > 0 then call child.beginCallTrap(delivered,delivered_description)
+    call child.beginExternalProgram(); call child.beginExternalConditionScope()
+    if function then call child.beginInternalFunction()
+    call child.consumeFirstInstruction()
+    values[1] = rxinvoke..nominal(child as .object,'.rexxactivation..rexxactivationarguments'); presence[1] = 1; extent = 1
+  end
+  else do i = 1 to extent
+    present = arguments.argumentExists(i) as .int; presence[i] = present
+    if present = 0 then values[i] = rxinvoke..absent()
+    else do
+      formal = i
+      if variable & formal > fixed then formal = signature.arguments()
+      if formal > signature.arguments() then assembler signal 'INVALID_ARGUMENTS','Too many arguments for selected Classic binding'
+      type = signature.type(formal); value = arguments.argument(i)
+      select type
+        when '.int' then values[i] = rxinvoke..integer(value.asInt(1))
+        when '.boolean' then do
+          integer = value.asInt(1)
+          if integer <> 0 & integer <> 1 then assembler signal 'INVALID_ARGUMENTS','Selected binding expects boolean zero or one'
+          values[i] = rxinvoke..boolean(integer as .boolean)
+        end
+        when '.float' then values[i] = rxinvoke..floating(value.asFloat(1))
+        when '.decimal' then values[i] = rxinvoke..decimal(value.asDecimal(1))
+        when '.binary' then values[i] = rxinvoke..binary(value.asBinary())
+        when '.string' then values[i] = rxinvoke..text(value.asString(1))
+        when '.rexxvalue' then values[i] = rxinvoke..nominal(value as .object,'.rexxvalue..rexxvalue')
+        when '.rexxvalue..rexxvalue' then values[i] = rxinvoke..nominal(value as .object,'.rexxvalue..rexxvalue')
+        otherwise assembler signal 'INVALID_ARGUMENTS','Selected binding has an unsupported Classic scalar contract'
+      end
+    end
+  end
+  invocation = rxinvoke..prepare(binding.capability(),values,presence,extent,allowance)
+  call owner.conditionline(0)
+  call rxinvoke..invoke(invocation)
+  if invocation.state() = 'failed' then do
+    original = invocation.event() as .runtime_signal; failed = 1
+  end
+  if failed = 0 then do
+  if invocation.state() <> 'complete' then assembler signal 'INVALID_ARGUMENTS','Selected binding did not complete'
+  if invocation.kind() <> 'void' then do
+  returned = invocation.result()
+  value = .rexxvalue..RexxValue
+  select returned.kind()
+    when 'int' then value = .rexxvalue..RexxValue.fromInt(returned.asint())
+    when 'boolean' then value = .rexxvalue..RexxValue.fromInt(returned.asboolean() as .int)
+    when 'float' then value = .rexxvalue..RexxValue.fromFloat(returned.asfloat())
+    when 'decimal' then value = .rexxvalue..RexxValue.fromDecimal(returned.asdecimal())
+    when 'string' then value = .rexxvalue..RexxValue(returned.astext())
+    when 'binary' then value = .rexxvalue..RexxValue.fromBinary(returned.asbinary())
+    when 'nominal' then do
+      object = returned.asnominal()
+      if object is .rexxactivation..RexxActivationArguments then do
+        completion = object as .rexxactivation..RexxActivationArguments
+        result_is_packet = 1
+      end
+      else do
+        if \(object is .rexxvalue..RexxValue) then assembler signal 'INVALID_ARGUMENTS','Selected binding returned an unsupported Classic nominal value'
+        value = object as .rexxvalue..RexxValue
+      end
+    end
+    otherwise assembler signal 'INVALID_ARGUMENTS','Selected binding returned an invalid scalar kind'
+  end
+  if result_is_packet = 0 then call completion.setReturnValue(value)
+  end
+  end
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+    original = problem as .runtime_signal; failed = 1
+  end
+  do
+    if initialized(invocation) then call invocation.discard()
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+    if failed = 0 then original = cleanup_problem as .runtime_signal
+    failed = 1
+  end
+  invocation = absent_invocation; returned = absent_scalar
+  assembler setattrs values,0
+  assembler setattrs presence,0
+  do
+    if ticket > 0 then call budget_owner.release(ticket)
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+    if failed = 0 then original = cleanup_problem as .runtime_signal
+    failed = 1
+  end
+  if failed then call rxfnsb..signalrelay(original)
+  return completion
+
+/** Compiled and IR ON/OFF statements share the same persistent sidecar owner.
+ * The ordinal is retained only for the compatible OFF/ON source interface;
+ * executable delivery binds the immutable definition to the current invocation.
+ */
+policy: procedure = .void
+  arg owner_ref = reference .llcdynamic..scope, kind = .string, condition = .int, ordinal = .int, name = .string, source = '', line = 0
+  owner = dereference owner_ref
+  if ordinal = 0 then do; call owner.clearpolicy(condition); return; end
+  if source = '' then source = owner.source()
+  definition = .rexxclassicstate..RexxClassicHandlerDefinition(kind,name,owner.entry(name),owner.fingerprint(),owner.generation(),source,line)
+  call owner.installpolicy(condition,definition)
+  return
+
+/** Detached result of the actual shared Classic program root. Conditional
+ * clause callers read it only after the existing programExitRequested gate.
+ */
+rootcompletion: procedure = .rexxactivation..RexxActivationArguments
+  arg owner_ref = reference .llcdynamic..scope
+  owner = dereference owner_ref; bundle = dereference owner.context(); activation = dereference bundle.activation()
+  completion = .rexxactivation..RexxActivationArguments()
+  if activation.programExitRequested() then do
+    root = dereference activation.programRoot()
+    if root.hasReturnValue() then call completion.setReturnValue(root.returnValue())
+  end
+  return completion
+
+/** A process binding keeps argv, execution-owned streams and exit-status ABI.
+ * No source suffix, shebang, PATH or executable bit can select this adapter.
+ */
+process: procedure = .rexxactivation..RexxActivationArguments
+  numeric digits inherited
+  numeric fuzz inherited
+  numeric form inherited
+  arg arguments = .rexxactivation..RexxActivationArguments, path = .string, owner_ref = reference .llcdynamic..scope
+  i = .int; rc = .int
+  owner = dereference owner_ref; bundle = dereference owner.context(); activation = dereference bundle.activation(); config = dereference bundle.config()
+  active_digits = activation.numericDigits(); active_fuzz = activation.numericFuzz(); active_form = activation.numericForm()
+  assembler setnumfuz 0
+  assembler setnumdgts active_digits
+  assembler setnumfuz active_fuzz
+  assembler setnumfrm active_form
+  vector = .string[]; tickets = .int[]; budget_owner = dereference owner.budget()
+  do i = 1 to arguments.rawArgumentCount()
+    if arguments.argumentExists(i) = 0 then assembler signal 'INVALID_ARGUMENTS','Process binding arguments cannot be omitted'
+  end
+  do
+    do i = 1 to arguments.rawArgumentCount()
+      text = arguments.argument(i).asString(1)
+      if pos('00'x as .string,text) > 0 then assembler signal 'INVALID_ARGUMENTS','Process arguments cannot contain NUL'
+      ticket = budget_owner.reserve(<blen>(text as .binary) + 32,'process.argv')
+      if ticket = 0 then assembler signal 'OUT_OF_RANGE','Classic process argv aggregate budget exhausted'
+      tickets[i] = ticket; vector[i] = text
+    end
+    rc = _rxsysb..processrun(path,vector,config.processEndpoint(1),config.processEndpoint(2),config.processEndpoint(3))
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+    original = problem as .runtime_signal
+    do i = 1 to tickets[0]; call budget_owner.release(tickets[i]); end
+    call rxfnsb..signalrelay(original)
+    return .rexxactivation..RexxActivationArguments()
+  end
+  do i = 1 to tickets[0]; call budget_owner.release(tickets[i]); end
+  return llctarget..present(.rexxvalue..RexxValue.fromInt(rc))
+
+/** Restore an owned native event into the correct waiting IR invocation, or
+ * return it to the compiled owner when no IR protection can receive it. */
+failureboundary: procedure = .llcdynamic..boundary
+  arg owner_ref = reference .llcdynamic..scope, original = .runtime_signal
+  failure = .llcdynamic..boundary
+  owner = dereference owner_ref
+  call owner.clearcheckpoint()
+  child = owner.sourceChild()
+  if <refvalid>(child) then do
+    failure = .boundary('failure','',0,.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),original as .object)
+    return owner.sourcecompletion(owner_ref,failure)
+  end
+  if owner.group() > 0 then do
+    pending = owner.pending()
+    if initialized(pending) then do
+      if pending.status() = 'suspended' then do
+        fault = .llirexecute..outcome('failure',original.name(),original.message(),''x as .binary,pending.origin())
+        call fault.setevent(original as .object)
+        return advance(owner_ref,owner.continue(fault))
+      end
+    end
+  end
+  return .boundary('failure','',0,.rexxactivation..RexxActivationArguments(),.rexxactivation..RexxActivationArguments(),original as .object,0,'',owner.takeconditionline())
+
+/** Existing signed Classic provider entry preparation, with a delivered CALL
+ * marker installed after inheritance so foreign-scope normalization retains it.
+ * Process adapters ignore this activation metadata and consume unchanged argv.
+ */
+internalarguments: procedure = .rexxactivation..RexxActivationArguments
+  arg arguments = .rexxactivation..RexxActivationArguments, owner_ref = reference .llcdynamic..scope, function = .int
+  owner = dereference owner_ref; bundle = dereference owner.context()
+  delivered = arguments.currentConditionId(); description = arguments.currentConditionDescription()
+  if arguments.currentConditionInstruction() <> 'CALL' | arguments.delayedConditionId() <> delivered then delivered = 0
+  child = arguments
+  call child.inheritSignalPolicy(bundle.activation())
+  if function then call child.beginInternalFunction()
+  else call child.beginInternalCall()
+  if delivered > 0 then call child.beginCallTrap(delivered,description)
+  return child
+
+externalarguments: procedure = .rexxactivation..RexxActivationArguments
+  arg arguments = .rexxactivation..RexxActivationArguments, owner_ref = reference .llcdynamic..scope, function = .int
+  owner = dereference owner_ref; bundle = dereference owner.context()
+  delivered = arguments.currentConditionId(); description = arguments.currentConditionDescription()
+  if arguments.currentConditionInstruction() <> 'CALL' | arguments.delayedConditionId() <> delivered then delivered = 0
+  child = arguments
+  call child.inheritSignalPolicy(bundle.activation())
+  call child.captureCallerPool(bundle.pool()); call child.beginExternalProgram()
+  if function then do
+    call child.beginInternalFunction(); call child.consumeFirstInstruction()
+  end
+  if delivered > 0 then call child.beginCallTrap(delivered,description)
+  return child

@@ -27,10 +27,12 @@ p.add_argument('--do-metadata', action='store_true',
                help='run only the focused DO target metadata controls (requires --c-only)')
 p.add_argument('--select-metadata', action='store_true',
                help='run only the focused SELECT target metadata controls (requires --c-only)')
+p.add_argument('--bif-metadata', action='store_true',
+               help='run only generic BIF target metadata controls (requires --c-only)')
 a = p.parse_args()
-if sum((a.leave_metadata, a.do_metadata, a.select_metadata)) > 1:
+if sum((a.leave_metadata, a.do_metadata, a.select_metadata, a.bif_metadata)) > 1:
     p.error('choose at most one focused metadata selection')
-if (a.leave_metadata or a.do_metadata or a.select_metadata) and not a.c_only:
+if (a.leave_metadata or a.do_metadata or a.select_metadata or a.bif_metadata) and not a.c_only:
     p.error('focused metadata selection requires --c-only')
 if a.c_only and (a.installed or a.native_controls):
     p.error('--c-only uses build-linked compiler images; installed/native controls remain mixed-mode checks')
@@ -72,7 +74,10 @@ def stage_vm(directory, providers):
     provider_directory.mkdir()
     for provider in providers:
         name = provider+'.rxplugin'
-        shutil.copy2(bin_dir/name, provider_directory/name)
+        source = bin_dir/name
+        if not source.exists():
+            source = bin_dir/'providers'/name
+        shutil.copy2(source, provider_directory/name)
     assert {path.name for path in provider_directory.iterdir()} == {
         provider+'.rxplugin' for provider in providers}
     return directory/(a.vm+suffix)
@@ -84,7 +89,7 @@ if a.c_only:
     (work/'empty-path').mkdir()
     env.pop('CREXX_PROVIDER_PATH', None)
     compiler_directory = work/'compiler host'
-    compiler_vm = stage_vm(compiler_directory, ['rxfs'])
+    compiler_vm = stage_vm(compiler_directory, ['rxfs', 'rxcontract'])
     compiler_image = compiler_directory/compiler_image.name
     shutil.copyfile(backend/compiler_image.name, compiler_image)
     assert {path.name for path in compiler_directory.iterdir()} == {
@@ -163,7 +168,7 @@ def metadata_image(directory, signature, *, exported=True, duplicate=False):
     run(directory.name+'-assemble', [tool('rxas'), '-n', asm])
 
 
-def classic_metadata(select_only=False, do_only=False, leave_only=False):
+def classic_metadata(select_only=False, do_only=False, leave_only=False, bif_only=False):
     """Selected ABI mutations are assembled for import only, never executed.
 
     A valid authored class catalog is admitted first. Each negative changes
@@ -185,6 +190,7 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False):
         c+'.pool': ('reference '+pt, ''),
         c+'.config': ('reference '+ft, ''),
         c+'.bindpool': ('.void', 'pool=reference '+pt),
+        c+'.readsymbol': ('.rexxvalue..rexxvalue', 'name=.string'),
         config+'.§factory': (ft, '?profile=.string'),
         a+'.numericdigits': ('.int', ''), a+'.numericfuzz': ('.int', ''),
         a+'.numericform': ('.int', ''),
@@ -192,15 +198,34 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False):
         a+'.begininternalfunction': ('.void', ''),
         a+'.begininternalcall': ('.void', ''), a+'.enterprocedure': ('.void', ''),
         a+'.procedureeligible': ('.boolean', ''), a+'.consumefirstinstruction': ('.void', ''),
+        a+'.requestprogramfailure': ('.boolean', 'problem=.rxfnsb..runtime_signal'),
+        a+'.returnvalue': ('.rexxvalue..rexxvalue', ''),
+        a+'.hasreturnvalue': ('.boolean', ''),
+        a+'.requestprogramexit': ('.void', 'value=.rexxvalue..rexxvalue,present=.boolean'),
+        a+'.programexitrequested': ('.boolean', ''),
+        a+'.queuecallcondition': ('.boolean', 'condition=.int,description=.string,line=.int'),
+        a+'.signalpolicy': ('.int', 'condition=.int'),
+        'rexxclassicconditionevent.rexxclassicconditionevent.§factory':
+            ('.rexxclassicconditionevent..rexxclassicconditionevent', 'condition=.int,description=.string'),
         pool+'.inheritcommandstatus': ('.void', 'caller=reference '+pt),
         'rexxclassicbifnumeric.rexxclassicbif_digits':
             ('.rexxvalue..rexxvalue', 'context=reference .rexxbifcallcontext'),
+        'rexxclassicbifabs.rexxclassicbif_abs':
+            ('.rexxvalue..rexxvalue', 'context=reference .rexxbifcallcontext'),
+        'rexxclassicbifs.rexxbifcallcontext.haserror': ('.boolean', ''),
+        'rexxclassicbifs.rexxbifcallcontext.errordetail': ('.string', ''),
+        'rexxclassicbifs.rexxbifcallcontext.conditionid': ('.int', ''),
+        'rexxclassicbifs.rexxbifcallcontext.conditiondescription': ('.string', ''),
     }
     lines = ['.globals=0']
-    for owner in (c, a, pool, config):
+    for owner in (c, a, pool, config, 'rexxclassicconditionevent.rexxclassicconditionevent'):
         lines.append(f'.meta "{owner}"="b" ".unknown" .class')
     lines += ['.meta "rexxclassicbifs.rexxbifcallcontext"="b" ".unknown" .class',
-              '.meta "rexxclassicbifs.rexxbifcallcontext.bif_arg_count"="b" ".int" .attr 1']
+              '.meta "rexxclassicbifs.rexxbifcallcontext.bif_arg_count"="b" ".int" .attr 1',
+              f'.meta "{a}.values"="b" ".rexxvalue[*]" .attr 1',
+              f'.meta "{a}.presence"="b" ".int[*]" .attr 2',
+              f'.meta "{a}.slot_count"="b" ".int" .attr 3',
+              f'.meta "{a}.supplied_count"="b" ".int" .attr 4']
     for name, (result, arguments) in declarations.items():
         lines += [f'§{name}() .locals=1 .expose={name}', 'ret r0',
                   f'.meta "{name}"="b" "{result}" §{name}() "{arguments}"']
@@ -212,6 +237,8 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False):
     do_source.write_text('options levelc; do i=1 to 2 by 1 for 1 while flag; nop; end; do until flag; nop; end; exit 0\n')
     leave_source = work/'leave-metadata.crexx'
     leave_source.write_text('options levelc strictc; leave MiXeD; exit 0\n')
+    bif_source = work/'bif-metadata.crexx'
+    bif_source.write_text('options levelc\nsay abs(-1)\nexit 0\n')
 
     def fixture(label, package, text):
         directory = work/label
@@ -225,10 +252,10 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False):
         return directory
 
     directory = fixture('c-valid-catalog', 'rxfnsc', valid)
-    for ir in (['on'] if select_only or do_only or leave_only else ['off', 'on']):
-        compile_source('c', leave_source if leave_only else do_source if do_only else select_source if select_only else source, work/('c-valid-catalog-'+ir+'.rxas'), ir,
+    for ir in (['on'] if select_only or do_only or leave_only or bif_only else ['off', 'on']):
+        compile_source('c', bif_source if bif_only else leave_source if leave_only else do_source if do_only else select_source if select_only else source, work/('c-valid-catalog-'+ir+'.rxas'), ir,
                        label='c-valid-catalog-'+ir, imports=directory)
-    if not select_only and not do_only and not leave_only:
+    if not select_only and not do_only and not leave_only and not bif_only:
         compile_source('c', select_source, work/'c-select-valid-catalog.rxas',
                        label='c-select-valid-catalog', imports=directory)
         compile_source('c', do_source, work/'c-do-valid-catalog.rxas',
@@ -253,9 +280,9 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False):
         ('c-config-required', 'rxfnsc', '?profile=.string', 'profile=.string', config+'.§factory'),
         ('c-member-identity', 'rxfnsc', '"'+c+'.pool"', '"'+c+'.wrongpool"', c+'.pool'),
         ('c-bif-optional', 'rxfnsc', 'context=reference .rexxbifcallcontext',
-         '?context=reference .rexxbifcallcontext', 'rexxclassicbifnumeric.rexxclassicbif_digits'),
+         '?context=reference .rexxbifcallcontext', 'rexxclassicbifabs.rexxclassicbif_abs'),
         ('c-bif-context', 'rxfnsc', 'context=reference .rexxbifcallcontext',
-         'context=reference .wrong', 'rexxclassicbifnumeric.rexxclassicbif_digits'),
+         'context=reference .wrong', 'rexxclassicbifabs.rexxclassicbif_abs'),
         ('c-bif-layout', 'rxfnsc', '".int"', '".string"',
          'rexxclassicbifs.rexxbifcallcontext.bif_arg_count'),
         ('c-select-truth-result', 'llctarget', '".int"', '".string"',
@@ -284,7 +311,8 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False):
         is_select = label.startswith('c-select-')
         is_do = label.startswith('c-do-')
         is_leave = label.startswith('c-leave-')
-        if (select_only and not is_select) or (do_only and not is_do) or (leave_only and not is_leave):
+        is_bif = label.startswith('c-bif-')
+        if (select_only and not is_select) or (do_only and not is_do) or (leave_only and not is_leave) or (bif_only and not is_bif):
             continue
         text = target if package == 'llctarget' else valid
         pattern = re.compile(r'(^\s*\.meta "'+re.escape(name)+r'"="b"[^\n]*$)', re.M)
@@ -293,11 +321,11 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False):
         replacement = matches[0].group().replace(before, after, 1)
         text = text[:matches[0].start()]+replacement+text[matches[0].end():]
         directory = fixture(label, package, text)
-        for ir in (['on'] if is_select or is_do or is_leave else ['off', 'on']):
+        for ir in (['on'] if is_select or is_do or is_leave or bif_only else ['off', 'on']):
             # Identity mutations deliberately exercise selected-call lookup;
             # all other cases reach a concrete signature or class refusal.
             message = b'not found' if label == 'c-member-identity' else b'incompatible'
-            reject(leave_source if is_leave else do_source if is_do else select_source if is_select else source, message, label+'-'+ir, 'c', directory, ir=ir)
+            reject(bif_source if is_bif else leave_source if is_leave else do_source if is_do else select_source if is_select else source, message, label+'-'+ir, 'c', directory, ir=ir)
 
 
 def classic_construction(text, name):
@@ -440,6 +468,10 @@ def classic_shape(text, name):
 
 
 try:
+    if a.bif_metadata:
+        classic_metadata(bif_only=True)
+        print(f'BIF_METADATA|commands={len(records)}|failures=0')
+        raise SystemExit(0)
     if a.leave_metadata:
         classic_metadata(leave_only=True)
         print(f'LEAVE_METADATA|commands={len(records)}|failures=0')

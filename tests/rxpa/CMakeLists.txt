@@ -183,6 +183,43 @@ function(localize_test_plugin_output target)
     )
 endfunction()
 
+# One normal producer per checked-call fixture. Extra engine coverage is for
+# the changed native frame/window mechanism, not a compiler-mode matrix.
+add_dynamic_plugin_target(_rxpa_invoke_native PROVIDER_ID rxinvoketest rxpa_invocation_native.c)
+add_static_plugin_target(_rxpa_invoke_native PROVIDER_ID rxinvoketest rxpa_invocation_native.c)
+localize_test_plugin_output(_rxpa_invoke_native)
+add_rxpa_provider_package(_rxpa_invoke_native
+        PROVIDER_ID rxinvoketest
+        OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/providers")
+foreach(_invoke_case core native values)
+    set(_invoke_program "${CMAKE_CURRENT_BINARY_DIR}/rxpa_invocation_${_invoke_case}")
+    add_custom_command(OUTPUT "${_invoke_program}-linked.rxbin"
+        BYPRODUCTS "${_invoke_program}.rxas" "${_invoke_program}.rxbin"
+        COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+            -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/bin/providers;${CMAKE_CURRENT_BINARY_DIR}/providers"
+            -o "${_invoke_program}" "${CMAKE_CURRENT_SOURCE_DIR}/rxpa_invocation_${_invoke_case}.crexx"
+        COMMAND $<TARGET_FILE:rxas> "${_invoke_program}"
+        COMMAND $<TARGET_FILE:rxlink> -s -o "${_invoke_program}-linked" "${_invoke_program}"
+            "${CMAKE_BINARY_DIR}/bin/library"
+        DEPENDS rxc rxas rxlink library compiler_exit_bin _rxpa_invoke_native llcontract
+            "${CMAKE_CURRENT_SOURCE_DIR}/rxpa_invocation_${_invoke_case}.crexx"
+        VERBATIM)
+    add_custom_target(rxpa_invocation_${_invoke_case}_artifact
+        DEPENDS "${_invoke_program}-linked.rxbin")
+    foreach(_invoke_engine rxbvm rxtvm)
+        if(TARGET ${_invoke_engine})
+            add_test(NAME rxpa_invocation_${_invoke_case}_${_invoke_engine}
+                COMMAND $<TARGET_FILE:${_invoke_engine}> "${_invoke_program}-linked")
+            set_tests_properties(rxpa_invocation_${_invoke_case}_${_invoke_engine} PROPERTIES
+                ENVIRONMENT "CREXX_PROVIDER_PATH=${CMAKE_CURRENT_BINARY_DIR}/providers"
+                PASS_REGULAR_EXPRESSION "CHECKED_INVOCATION_.*_PASS" TIMEOUT 90
+                LABELS "rxpa;core;ownership;component")
+            crexx_register_test_prep_targets(TESTS rxpa_invocation_${_invoke_case}_${_invoke_engine}
+                TARGETS rxpa_invocation_${_invoke_case}_artifact ${_invoke_engine})
+        endif()
+    endforeach()
+endforeach()
+
 function(enable_rxpa_test_vm_platform target)
     # These static-plugin harness VMs need the core socket symbols, but they
     # intentionally keep the historical no-TLS test configuration.

@@ -1,8 +1,9 @@
 # Experimental Level C conformance profile
 
 This compiler implements Classic Level C in B using Level L parsing, IR and
-emission. It is an experimental, incomplete implementation of the agreed cREXX
-profile, not a claim of full reference conformance or production replacement.
+emission. It is an experimental implementation of the agreed cREXX profile;
+full reference conformance, delivery qualification and production replacement
+remain open.
 The [requirements ledger](levelc-requirements.md) owns detailed obligations,
 [PLAN](../PLAN.md) owns delivery status and acceptance, and
 [architecture](architecture.md) owns exact contracts. Existing native C is a
@@ -25,6 +26,24 @@ and a private observer over existing B services. Group 3 extends the C23
 baseline to C24 with 97 operations, five C types and 38 target exports;
 its static profile is locally qualified. These instructions include
 their required helpers and dependencies; complete C remains open.
+
+The approved [semantic IR route](architecture.md#dynamic-execution-strategy) is
+implemented and locally qualified under STEP11. It adds same-frontend INTERPRET groups, a checked
+compiled-owner bridge, persistent conditions, invocation-owned PROCEDURE pools,
+ordinary checked bytecode/RXPA calls and deterministic Classic source lookup.
+The seven optional dynamic operations preserve C24 identities and static-only
+closure. The selected component and end-to-end checks qualify this local
+increment; complete LC-87/CFC and installed/platform proof remain open under PLAN.
+
+The current dynamic observer uses shared source-map/index and TRACE writers for
+authored clauses and actual assignment/load/operator/BIF values. Literal-only
+`core.constant` intermediate events are omitted as an accepted minor presentation
+deviation; full expression-event coverage is not claimed. ASM observations name
+IR operations and LLM records carry logical source locations, with no coordinator
+VM addresses. `scope.configureSource(enabled,roots)` is the runtime policy
+boundary: standalone dynamic scopes enable the approved source policy by default,
+while embedding policy integration and capability proof remain open. A cwd
+snapshot alone does not establish an embedded filesystem permission policy.
 
 The Group 2 real HALT ingress uses the existing execution-owner pending
 POSIX_INT word and the same Classic delivery/buffering owner. Foreign/inactive
@@ -58,7 +77,8 @@ into separate prerequisite or partial-profile deliveries.
   are explicit, signed and prepared by their owning B/G/C pipeline. External
   function expressions, ordinary scalar typed/native procedures and configured
   callbacks use the approved Group 2 extension below. Automatic late provider
-  loading and Classic source execution remain with INTERPRET.
+  loading and Classic source execution use the optional INTERPRET profile,
+  locally qualified under STEP11; full delivery/platform qualification remains open.
 - PARSE EXTERNAL and PARSE NUMERIC remain outside the current agreed source
   scope; their final Release 1 disposition remains explicit in LC-GAP-05.
 - ADDRESS retains authored raw resource symbols. The shared 54.1 message prints
@@ -90,7 +110,8 @@ process/byte-channel capabilities. He approved exit status as the routine result
 with stdout/stderr inheriting host streams, including host/OS redirection, and
 no new CALL redirection syntax. Explicit process bindings preserve static presence checks and shared provider
 failures; ordinary non-REXX typed/RXPA routines use their declared interfaces. Automatic
-Classic source invocation remains deferred to final INTERPRET. Current UTC-based
+Classic source invocation is supplied by the separate optional INTERPRET profile;
+locally qualified under STEP11. Full delivery/platform qualification remains open. Current UTC-based
 TIME(E/R) is preserved. Any required new public API/ISA/platform disposition
 retains its exact approval gate. Formal compiler/platform/delivery QA remains
 open under [PLAN](../PLAN.md#group2-calls-host-plan).
@@ -135,7 +156,8 @@ configured-context, ordinal/casing and source-map boundaries in `tests/group3`.
 These are qualification inputs, not inherited native passes. One prepared
 normal Debug C-opt/IR-on/rxbvm lane qualifies this local increment; full BIF-CHECK,
 CFC, platform/delivery and formal compiler acceptance remain open.
-INTERPRET and new automatic Rexx-program invocation remain excluded and last.
+STEP11 locally qualifies INTERPRET and automatic Rexx-program invocation after
+that static profile; full LC-87 and formal compiler qualification remain open.
 
 <a id="practical-trace-target"></a>
 
@@ -233,26 +255,24 @@ argument presence, recursion and numeric failure semantics remain binding.
 This is a compiler infrastructure increment, with no new source feature, native
 C frontend change or performance/replacement claim.
 
-Group 4 STEP07 adds the separate neutral
-[`rxfnsl-execute` prototype](../../../../langtools/doc/execute-design.md),
-with trusted schema/version admission, owned frames and local calls,
-argument presence, bounded handler results and linear suspended continuations.
-Its small Classic fixture reuses the actual shared VALUE, LENGTH and numeric
-bodies; it does not execute the complete C22 family. In particular, neutral
-`protect`, borrowed/escaping values and conditional extension results are
-rejected before effects. An owned standalone fixture pool does not establish
-live compiled-caller activation, labels, condition handling or source lifetime.
-The C compiler continues to emit RXAS, modern RexxScript keeps its current tree
-executor, and the existing compiled-image INTERPRET design remains authoritative.
-The [execution assessment](architecture.md#group4-execution-assessment) owns the
-remaining route decision and required bridges; INTERPRET is still last.
+The separate neutral
+[`rxfnsl-execute` service](../../../../langtools/doc/execute-design.md) supports
+checked manifests, owned frames/local calls, argument presence and conditional
+absence, protection/declared ports, session leases and lifecycle cleanup.
+Classic values, pools, conditions and BIF behavior remain in their adapters and
+shared B owners. STEP11 supplies the live compiled-caller and full source-program
+boundaries; standalone generic fixtures do not establish those language contracts.
+The C compiler continues to emit RXAS, while runtime Classic source executes IR
+through the [selected bridge](architecture.md#dynamic-execution-strategy).
+Modern RexxScript retains its current executor pending its separate G-derived
+language and consumer migration; it does not define Classic semantics.
 
 STEP08 integrates the four-image SDK delivery stage and explicit product
 inventories. Actual package/import controls keep core/bootstrap, optional
 analysis/RXAS/execution, C/G hosts and static C runtime separated. Independent
 public clients select exact image roots; the RXAS guide's producer emits a
 checked four-cell program that runs with the VM alone. C integration retains
-the indexed graph/effects/target pipeline and its C23 ABI; no source-language
+the indexed graph/effects/target pipeline and stable C body ABI; no source-language
 feature or native frontend changes follow from package closure. The owning
 [contract](architecture.md#group4-package-closure-contract) distinguishes this
 focused development closure from installed/platform and formal acceptance.
@@ -270,5 +290,6 @@ retain full-ledger, BIF-CHECK, host/lifecycle, formal compiler, delivery and
 declared-platform acceptance. Group 2 supplies execution-local
 real HALT ingress; declared platform proof and general outward raw-provider event
 resumption remain open.
-INTERPRET remains required and last. Accepted profile choices do not close these
-obligations or establish full conformance.
+STEP11 supplies the final language increment, including INTERPRET and Rexx
+source-program calls. Its local qualification does not close full LC-87 or these
+obligations, and accepted profile choices do not establish full conformance.

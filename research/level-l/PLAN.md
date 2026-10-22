@@ -1219,8 +1219,17 @@ Adrian clarified on 21 October that optional Level L packages may supply
 cREXX semantic IR and RXAS/instruction/register tooling alongside this neutral
 core. The [compiler Group 4 plan](compilers/PLAN.md#group4-infrastructure-plan)
 and its [architecture](compilers/doc/architecture.md#group4-infrastructure-proposal)
-own the approved STEP01–06 enabling sequence; IR-execution feasibility remains
-separate later work. This
+own the enabling sequence and approved
+[STEP11 dynamic integration](compilers/PLAN.md#dynamic-execution-plan).
+The optional neutral executor now implements graph-bound protection/ports,
+conditional cells, checked leases, owned events/control carriers, mapped calls
+and frame cleanup/protected abort. Its independent non-cREXX fixture qualifies
+that component profile. The [execution contract](../../langtools/doc/execute-design.md)
+owns exact APIs and conservative storage/resource limits. Classic compilation,
+prepared lexical/binding snapshots, live invocation state and source lookup stay
+with C-owned adapters; generic L gains no source-language or host-search policy.
+STEP11's Classic implementation is locally qualified; complete LC-87,
+installed/platform proof and formal compiler QA remain open. This
 clarifies package boundaries; it does not commission new B/G/O language coverage,
 assembler replacement or RexxScript migration, or close this programme's criteria.
 
@@ -1253,10 +1262,13 @@ frontends and final adoption of new language syntax require a later decision.
 
 Adrian selects RexxScript as the first product consumer. It is an embedded
 external-rules/configuration language serving Level G applications: a reduced,
-modernized Level G surface, initially without script-defined classes. RexxValue
-remains the value substrate. Included expressions should follow Level G rules;
-the current RexxScript evaluator is historical evidence, not the new language
-specification. Simple classes may be considered later. Level L remains general
+untyped Level G syntax/operator surface with simplified class semantics in the
+product vision. The initial scalar implementation below has no script-defined
+classes; their syntax, identity/value ownership and host/migration contracts need
+a concrete design. RexxValue remains the shared scalar/BIF substrate, not an
+already complete object carrier. Included expressions should follow Level G
+rules; the current organically developed RexxScript evaluator is reuse and
+migration evidence, not the new language specification. Level L remains general
 language-engineering infrastructure, independent of this consumer.
 
 Adrian subsequently accepts the recommended initial direction with these
@@ -1265,7 +1277,18 @@ INTERPRET are unavailable; host integration is to be confirmed later; use
 the Level C BIFs through RexxScript's existing rxfnsc linkage. Adrian explicitly
 corrected the earlier Level B reference to Level C and confirmed the existing
 connection. This is reuse of the current shared BIF service, not selection or
-implementation of a new function library. His item7 refers to
+implementation of a new function library. Preserve that sharing as the frontend
+and execution backend evolve. Where B/G equivalents have materially diverged,
+prefer investigated convergence toward Classic BIF contracts, with typed ABI
+adapters and explicit language-policy exceptions rather than redefining C around
+typed helpers. B/G's proper Unicode casing and C/O's Latin-compatible casing stay
+distinct; future script casing needs an explicit profile choice. Shared bodies
+also do not automatically grant script access to host facilities. The
+[dynamic execution design](compilers/doc/architecture.md#dynamic-execution-strategy)
+selects the approved neutral L IR route with separate C and G-derived script
+adapters. The detailed C bridge/resource/search implementation is active under
+STEP11; the neutral component's local qualification does not establish complete
+C delivery or change the existing RexxScript evaluator. His item7 refers to
 the user-facing host-integration decision, not RS-D07's internal numbering.
 All other recommended starting points are accepted as the initial baseline.
 No variable/type declaration syntax is introduced: assignment establishes a

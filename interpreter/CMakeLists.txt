@@ -75,6 +75,8 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvmparse.h
         rxvmparse_cursor.c
         rxvmparse_bindings.h
+        rxvminvoke.c
+        rxvminvoke.h
         rxvmhandlerpolicy.h
         rxvmhandlers_core.inc
         rxvmhandlers_control.inc

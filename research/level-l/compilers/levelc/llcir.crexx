@@ -8,7 +8,7 @@ import llscalar
 /** Register this frontend's operations. Shared scalar types carry typed ABI
  * attributes; no other language's operations or frontend are loaded. */
 registerfamilies: procedure = .void
-  arg registry = reference .llir..schema
+  arg registry = reference .llir..schema, dynamic = 0
   schema = dereference registry
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
@@ -113,4 +113,14 @@ registerfamilies: procedure = .void
     call llscalar..declare(c,name,types,'left:6 right:6 context:7',6,'','context','condition')
   end
   call llscalar..declare(c,'source.map',types,'',0,'original:2 filename:2','source.observation','none')
+  if dynamic then do
+    d = schema.family('crexx.c.dynamic',1)
+    call llscalar..declare(d,'group.entry',types,'context:7',0,'','context','none')
+    call llscalar..declare(d,'expansion.begin',types,'context:7',0,'','context.observation','condition.resource')
+    call llscalar..declare(d,'interpret',types,'source:6 context:7',0,'','context.input.output.observation','condition.resource')
+    call llscalar..declare(d,'owner.return',types,'result:10 context:7',0,'','context','condition.resource','transfer')
+    call llscalar..declare(d,'owner.signal',types,'name:2 context:7',0,'','context','condition.resource','transfer')
+    call llscalar..declare(d,'call.owner',types,'arguments:9 context:7',10,'entry:1 function:11','context.input.output.observation','condition.resource')
+    call llscalar..declare(d,'call.resolve',types,'arguments:9 context:7',10,'name:2 sourceKey:2 quoted:11 function:11','context.input.output.observation','condition.resource')
+  end
   return

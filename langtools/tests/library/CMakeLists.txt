@@ -104,15 +104,15 @@ crexx_register_test_prep_targets(TESTS levell_borrowed_rxas TARGETS rxfnsl)
 
 # Optional IR analyses, execution and RXAS constraints use one focused normal lane. These
 # packages are deliberately absent from the generic AST/bootstrap import root.
-foreach(_test llirgraph llrxas llirexecute)
+foreach(_test llirgraph llrxas llirexecute llirexecute_dynamic)
   set(_name "ts_${_test}_opt")
   set(_images "${CMAKE_BINARY_DIR}/bin/library.rxbin")
   set(_producers library)
-  if(_test STREQUAL "llirgraph" OR _test STREQUAL "llirexecute")
+  if(_test STREQUAL "llirgraph" OR _test MATCHES "^llirexecute")
     list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
       "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin")
     list(APPEND _producers rxfnsl rxfnsl_analysis)
-    if(_test STREQUAL "llirexecute")
+    if(_test MATCHES "^llirexecute")
       list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin")
       list(APPEND _producers rxfnsl_execute)
     endif()

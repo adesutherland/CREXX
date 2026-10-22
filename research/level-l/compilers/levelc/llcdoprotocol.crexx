@@ -229,6 +229,9 @@ checked: class
     do opid = 1 to store.count(3)
       if charge() = 0 then return
       op = graph.operation(opid); name = op.name()
+      if left(name,16) = 'crexx.c.dynamic.' & _programbound = 0 then do
+        call fail('LOWERING: dynamic execution requires completed source-unit admission',opid); return
+      end
       if name = 'core.protect' | wordpos(name,'crexx.c.signal.capture crexx.c.signal.select crexx.c.signal.selected crexx.c.signal.deliver crexx.c.signal.handler.invalid crexx.c.signal.relay') > 0 then do
         if conditionoperation(op) = 0 then do
           call fail('LOWERING: protected condition control requires its completed SIGNAL proof',opid); return
@@ -405,6 +408,14 @@ checked: class
               if state <> 0 then do; call fail('LOWERING: DO state remains active at return or EXIT',opid); return; end
               divergent = 1; leave
             end
+          end
+          when name = 'crexx.c.dynamic.owner.return' | name = 'crexx.c.dynamic.owner.signal' then do
+            if pending <> 0 | (state <> 0 & phase <> 3) then do
+              call fail('LOWERING: dynamic owner transfer crosses incomplete DO setup',opid); return
+            end
+            /* The checked terminal port closes crossed runtime frame owners;
+             * no later IR edge may inherit this invocation's loop stack. */
+            divergent = 1; leave
           end
           when name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' | name = 'crexx.c.entry.invalid' | name = 'crexx.c.signal.invalid' then do
             divergent = 1; leave

@@ -1,0 +1,170 @@
+/* cREXX License (MIT). Aggregate owner ledger for nested dynamic execution. */
+options levelb
+namespace llcdynamicbudget expose ledger reservation cache
+import rxfnsb
+
+boot: initialiser expose ticket_serial
+  ticket_serial = 0
+  return
+nextticket: procedure = .int expose ticket_serial
+  if ticket_serial = 9223372036854775807 then do
+    assembler signal 'OUT_OF_RANGE','Dynamic owner identities exhausted'
+    return 0
+  end
+  ticket_serial = ticket_serial + 1
+  return ticket_serial
+
+/** One strongly owned ledger spans parent, child, source acquisition and cache.
+ * It is a logical retained-allocation budget, never an RSS/host-work promise.
+ */
+ledger: class
+  _cap = .int
+  _used = .int
+  _peak = .int
+  _amount = .int[]
+  _ids = .int[]
+  _kinds = .string[]
+  *: factory
+    arg cap = .int
+    _cap = cap; _used = 0; _peak = 0
+    if cap < 0 then assembler signal 'INVALID_ARGUMENTS','Dynamic ledger capacity is negative'
+    return
+  reserve: method = .int
+    arg bytes = .int, kind = .string
+    if bytes < 0 | bytes > _cap - _used then return 0
+    slot = 0
+    do i = 1 to _ids[0]; if _ids[i] = 0 then do; slot = i; leave; end; end
+    if slot = 0 then do
+      if _ids[0] >= max(1,_cap <idiv> 16) then return 0
+      slot = _ids[0] + 1
+    end
+    ticket = nextticket(); if ticket = 0 then return 0
+    _ids[slot] = ticket; _amount[slot] = bytes; _kinds[slot] = kind
+    _used = _used + bytes; _peak = max(_peak,_used)
+    return ticket
+  release: method = .void
+    arg id = .int
+    slot = 0
+    do i = 1 to _ids[0]; if _ids[i] = id then do; slot = i; leave; end; end
+    if slot = 0 | id < 1 then do
+      assembler signal 'INVALID_ARGUMENTS','Foreign, stale or released dynamic reservation'
+      return
+    end
+    _ids[slot] = 0; _used = _used - _amount[slot]; _amount[slot] = 0; _kinds[slot] = ''
+    return
+  available: method = .int
+    return _cap - _used
+  used: method = .int
+    return _used
+  peak: method = .int
+    return _peak
+
+/** Idempotent cleanup wrapper binds a reservation to its exact ledger owner. */
+reservation: class
+  _owner = reference .ledger
+  _id = .int
+  *: factory
+    arg owner = reference .ledger, bytes = .int, kind = .string
+    _owner = owner; state = dereference owner; _id = state.reserve(bytes,kind)
+    return
+  valid: method = .int
+    return _id > 0 & <refvalid>(_owner)
+  close: method = .void
+    if _id = 0 then return
+    state = dereference _owner; call state.release(_id); _id = 0
+    return
+
+/** Exact-source cache. Keys include mode/options/ABIs/catalogue/source identity
+ * and captured trusted base/config generation, supplied by the preparation owner.
+ * Entries contain immutable prepared plans only, never sessions/results/leases.
+ * Each put reserves before publication. Pinned entries are never evicted.
+ */
+cache: class
+  _ledger = reference .ledger
+  _limit = .int
+  _used = .int
+  _keys = .string[]
+  _sources = .binary[]
+  _plans = .object[]
+  _sizes = .int[]
+  _tickets = .int[]
+  _pins = .int[]
+  _live = .int[]
+  *: factory
+    arg owner = reference .ledger, cap = .int
+    _ledger = owner; _limit = cap; _used = 0
+    if cap < 0 then assembler signal 'INVALID_ARGUMENTS','Dynamic cache quota is negative'
+    return
+  find: method = .int
+    arg key = .string, source = .binary
+    do i = 1 to _keys[0]
+      if _live[i] & _keys[i] == key then do
+        if samebytes(_sources[i],source) then return _tickets[i]
+      end
+    end
+    return 0
+  samebytes: method = .int
+    arg left = .binary, right = .binary
+    if <blen>(left) <> <blen>(right) then return 0
+    do byte = 0 to <blen>(left) - 1
+      if (<at..u8>(byte) left) <> (<at..u8>(byte) right) then return 0
+    end
+    return 1
+  ticketindex: method = .int
+    arg ticket = .int
+    do i = 1 to _live[0]; if _live[i] & _tickets[i] = ticket then return i; end
+    assembler signal 'INVALID_ARGUMENTS','Foreign, stale or evicted cache entry'
+    return 0
+  pin: method = .object
+    arg ticket = .int
+    id = ticketindex(ticket)
+    absent = .object
+    if id = 0 then return absent
+    if _pins[id] = 9223372036854775807 then assembler signal 'INVALID_ARGUMENTS','Invalid cache pin'
+    _pins[id] = _pins[id] + 1
+    return _plans[id]
+  unpin: method = .void
+    arg ticket = .int
+    id = ticketindex(ticket)
+    if id = 0 then return
+    if _pins[id] < 1 then assembler signal 'INVALID_ARGUMENTS','Invalid cache unpin'
+    _pins[id] = _pins[id] - 1
+    return
+  evict: method = .int
+    arg bytes = .int
+    owner = dereference _ledger
+    do i = 1 to _live[0]
+      if bytes <= _limit - _used & bytes <= owner.available() then return 1
+      if _live[i] & _pins[i] = 0 then do
+        call owner.release(_tickets[i]); _used = _used - _sizes[i]
+        _live[i] = 0; _keys[i] = ''; _sources[i] = ''x as .binary; absent_value_7 = .object; _plans[i] = absent_value_7
+      end
+    end
+    return bytes <= _limit - _used & bytes <= owner.available()
+  put: method = .int
+    arg key = .string, source = .binary, plan = .object, planBytes = .int
+    bytes = <blen>(key as .binary) + <blen>(source) + 128
+    if planBytes < 0 | bytes > _limit | planBytes > _limit - bytes then return 0
+    bytes = bytes + planBytes
+    if evict(bytes) = 0 then return 0
+    owner = dereference _ledger; ticket = owner.reserve(bytes,'cached.plan')
+    if ticket = 0 then return 0
+    id = 0
+    do i = 1 to _live[0]; if _live[i] = 0 then do; id = i; leave; end; end
+    if id = 0 then id = _live[0] + 1
+    _keys[id] = key; _sources[id] = source; _plans[id] = plan; _sizes[id] = bytes
+    _tickets[id] = ticket; _pins[id] = 0; _live[id] = 1; _used = _used + bytes
+    return ticket
+  close: method = .int
+    i = .int
+    do i = 1 to _live[0]; if _live[i] & _pins[i] > 0 then return 0; end
+    owner = dereference _ledger
+    do i = 1 to _live[0]
+      if _live[i] then do; call owner.release(_tickets[i]); _live[i] = 0; end
+      _sources[i] = ''x as .binary; _tickets[i] = 0; _sizes[i] = 0; _pins[i] = 0
+    end
+    call arraydrop _keys; call objectarraydrop _plans
+    _used = 0
+    return 1
+  used: method = .int
+    return _used

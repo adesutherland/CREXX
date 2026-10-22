@@ -1,0 +1,196 @@
+/* Independent live-state and continuation controls for the complete C adapter. */
+options levelb
+namespace dynamiccoordinator expose typedprobe typedcalls
+import rxfnsb
+import llcdynamic
+import llcdynamicbudget
+import llcompilercontracts
+import rxinvoke
+import rxcontract
+import rexxactivation
+import rexxpool
+import rexxclassiccontext
+import rexxclassicconfig
+import rexxvalue
+
+boot: initialiser expose target_entries
+  target_entries = 0
+  return
+
+main: procedure = .int
+  arg argv = .string[]
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.beginInternalCall()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  names = .string[]; entries = .int[]
+  names[1] = 'COMPILED'; entries[1] = 1
+  owner = .llcdynamic..scope(reference context,'coordinator-contract',names,entries,'coordinator-contract')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue('x=40; x=x+2'),reference owner)
+  call check(answer.kind() == 'normal','ordinary group completes')
+  call check(pool.symbolValue('X').asString() == '42','IR uses live caller pool')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue('parse source platform mode resource; parse version implementation'),reference owner)
+  expected_platform = word(sourceinfo(),1)
+  call check(answer.kind() == 'normal' & pool.symbolValue('PLATFORM').asString() == expected_platform & pool.symbolValue('MODE').asString() == 'COMMAND' & pool.symbolValue('RESOURCE').asString() == 'coordinator-contract','PARSE SOURCE uses caller identity and shared mode normalization')
+  call check(pool.symbolValue('IMPLEMENTATION').asString() == config.versionText(),'PARSE VERSION forwards no caller-source operand')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue("call compiled 'actual'; x=result"),reference owner)
+  call check(answer.kind() == 'invoke' & answer.entry() = 1,'lexical call yields checked compiled port')
+  actuals = answer.arguments()
+  call check(actuals.rawArgumentCount() = 1 & actuals.argument(1).asString() == 'actual','actual evaluated once and retained')
+  returned = .rexxactivation..RexxActivationArguments()
+  call returned.setReturnValue(.rexxvalue..RexxValue('completed'))
+  answer = llcdynamic..resume(reference owner,returned)
+  call check(answer.kind() == 'normal' & pool.symbolValue('X').asString() == 'completed','compiled completion resumes one continuation')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue("interpret 'x=7'; x=x+1"),reference owner)
+  call check(answer.kind() == 'normal' & pool.symbolValue('X').asString() == '8','nested group resumes outer group')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue('return 9'),reference owner)
+  returned = answer.result()
+  call check(answer.kind() == 'return' & returned.hasReturnValue() & returned.returnValue().asString() == '9','RETURN reaches logical invocation owner')
+  call owner.close()
+  /* First generated PROCEDURE remains eligible through empty expansion. */
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.beginInternalCall()
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  owner = .llcdynamic..scope(reference context,'procedure-contract',names,entries,'procedure-contract')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue("interpret ''; procedure expose x; local='private'; x='shared'"),reference owner)
+  call check(answer.kind() == 'normal' & owner.committed(),'generated PROCEDURE commits invocation-owned pool')
+  private = dereference context.pool()
+  call check(private.symbolValue('LOCAL').asString() == 'private' & pool.symbolValue('X').asString() == 'shared','private pool and EXPOSE share existing owners')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue("local=local||'!'; signal compiled"),reference owner)
+  call check(answer.kind() == 'signal' & answer.entry() = 1,'SIGNAL names containing-program label')
+  private = dereference context.pool()
+  call check(private.symbolValue('LOCAL').asString() == 'private!','same-owner transfer retains committed private pool')
+  call owner.close()
+  actual = context.pool(); expected = reference pool
+  call check(actual <refsame> expected,'actual invocation exit restores caller binding')
+  /* Shared HALT ingress buffers one event on the interrupted activation. It
+   * must drain at this same checkpoint before another authored clause runs. */
+  owner = .llcdynamic..scope(reference context,'halt-contract',names,entries,'halt-contract')
+  call llcdynamic..policy(reference owner,'CALL',4,1,'COMPILED')
+  queued = activation.queueCallCondition(4,'first',7)
+  answer = llcdynamic..checkpoint(reference owner,1,7)
+  call check(queued & answer.kind() == 'invoke','compiled checkpoint delivers first HALT')
+  handler = answer.arguments()
+  queued = handler.queueCallCondition(4,'buffered',8)
+  returned = .rexxactivation..RexxActivationArguments()
+  answer = llcdynamic..resume(reference owner,returned)
+  call check(queued & answer.kind() == 'invoke' & activation.hasPendingCallCondition() = 0 & pool.symbolValue('SIGL').asString() == '8','compiled checkpoint drains buffered HALT before resumption')
+  answer = llcdynamic..resume(reference owner,returned)
+  call check(answer.kind() == 'normal','compiled checkpoint resumes once after final handler')
+  queued = activation.queueCallCondition(4,'IR first',11)
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue("nop; marker='completed'"),reference owner)
+  call check(queued & answer.kind() == 'invoke','IR checkpoint delivers first HALT')
+  handler = answer.arguments(); queued = handler.queueCallCondition(4,'IR buffered',12)
+  answer = llcdynamic..resume(reference owner,returned)
+  call check(queued & answer.kind() == 'invoke' & pool.symbolValue('MARKER').asString() == 'MARKER','IR checkpoint drains buffered HALT while original session remains suspended')
+  answer = llcdynamic..resume(reference owner,returned)
+  call check(answer.kind() == 'normal' & pool.symbolValue('MARKER').asString() == 'completed' & pool.symbolValue('SIGL').asString() == '12','IR checkpoint resumes original continuation once')
+  call owner.close()
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.beginInternalCall()
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  call activation.append(.rexxvalue..RexxValue('parent actual'),1)
+  owner = .llcdynamic..scope(reference context,'bif-handler-contract',names,entries,'bif-handler-contract')
+  call llcdynamic..policy(reference owner,'CALL',5,1,'COMPILED')
+  ordinary_arguments = .rexxactivation..RexxActivationArguments()
+  answer = llcdynamic..resolve(ordinary_arguments,reference owner,'ARG','ARG',0,1)
+  bif_result = answer.result()
+  call check(answer.kind() == 'normal' & bif_result.returnValue().asString() == '1','ordinary BIF ARG keeps caller activation')
+  marked_arguments = .rexxactivation..RexxActivationArguments()
+  call marked_arguments.inheritSignalPolicy(reference activation)
+  call marked_arguments.beginInternalCall(); call marked_arguments.beginCallTrap(4,'delivered HALT')
+  answer = llcdynamic..resolve(marked_arguments,reference owner,'ARG','ARG',0,0)
+  bif_result = answer.result()
+  call check(answer.kind() == 'normal' & bif_result.returnValue().asString() == '0','delivered BIF handler ARG uses empty child actuals')
+  answer = llcdynamic..resolve(marked_arguments,reference owner,'CONDITION','CONDITION',0,0)
+  bif_result = answer.result()
+  call check(answer.kind() == 'normal' & bif_result.returnValue().asString() == 'CALL','delivered BIF handler sees child CONDITION instruction')
+  queued = marked_arguments.queueCallCondition(5,'different buffered event',13)
+  answer = llcdynamic..resolve(marked_arguments,reference owner,'ARG','ARG',0,0)
+  call check(queued & answer.kind() == 'normal' & activation.pendingConditionId() = 5,'different BIF handler event belongs to interrupted caller')
+  ignored_condition = activation.takeCallCondition()
+  call owner.close()
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.beginInternalCall()
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  /* Retain the actual B symbol and independently establish its optional/default
+   * and exposed behavior through an ordinary direct call. */
+  direct_temporary = 5
+  direct_result = typedprobe(2,direct_temporary)
+  call check(direct_result = 114 & direct_temporary = 105,'ordinary typed target control')
+  baseline = typedcalls()
+  signature_text = 'value=.int,expose temporary=.int,?increment=.int'
+  fields = rxcontract..project('dynamiccoordinator.typedprobe','.int',signature_text,'b',0,0,65536,65536)
+  signature = .llcompilercontracts..signature.projected(fields)
+  call check(signature.error() = '', 'typed fixture metadata has one owning projection')
+  target_names = .string[]; target_results = .string[]; target_arguments = .string[]; target_providers = .string[]
+  target_names[1] = 'dynamiccoordinator.typedprobe'; target_results[1] = '.int'
+  target_arguments[1] = signature_text; target_providers[1] = ''
+  catalogue = .rxinvoke..catalogue(target_names,target_results,target_arguments,target_providers)
+  capability = .rxinvoke..binding(catalogue,1)
+  owner = .llcdynamic..scope(reference context,'typed-contract',names,entries,'typed-contract')
+  call owner.bind('typedprobe',capability,signature)
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue('temporary=5; x=typedprobe(2,temporary)'),reference owner)
+  call check(answer.kind() == 'normal' & pool.symbolValue('X').asString() == '114','interpreted expression uses optional callee default')
+  call check(pool.symbolValue('TEMPORARY').asString() == '5','typed exposed argument updates stay in owned temporary cells')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue('call typedprobe 3,temporary,10; x=result'),reference owner)
+  call check(answer.kind() == 'normal' & pool.symbolValue('X').asString() == '118' & pool.symbolValue('TEMPORARY').asString() == '5' & typedcalls() = baseline + 2,'interpreted statement returns checked typed scalar without exposed copyback')
+  budget = dereference owner.budget(); prior_used = budget.used()
+  typed_arguments = .rexxactivation..RexxActivationArguments()
+  call typed_arguments.append(.rexxvalue..RexxValue('2'),1)
+  call typed_arguments.append(.rexxvalue..RexxValue('5'),1)
+  held = budget.reserve(budget.available() - 1048575,'fixture.headroom')
+  call check(held > 0,'fixture holds bounded invocation headroom')
+  answer = llcdynamic..resolve(typed_arguments,reference owner,'typedprobe','typedprobe',0,1)
+  call budget.release(held)
+  call check(answer.kind() == 'failure','typed window resource refusal returns an owned failure')
+  limited = answer.event() as .runtime_signal
+  call check(answer.kind() == 'failure' & limited.name() == 'OUT_OF_RANGE' & pos('typed invocation',limited.message()) > 0 & typedcalls() = baseline + 2,'typed window allowance refuses before target entry')
+  call check(budget.used() = prior_used,'resource refusal releases group ownership')
+  answer = llcdynamic..resolve(typed_arguments,reference owner,'typedprobe','typedprobe',0,1)
+  call check(answer.kind() == 'normal' & typedcalls() = baseline + 3,'same invocation recovers after resource refusal')
+  held = budget.reserve(budget.available() - 1048575,'fixture.ir.headroom')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue('temporary=5; x=typedprobe(2,temporary)'),reference owner)
+  call budget.release(held)
+  call check(answer.kind() == 'failure','IR resource refusal returns a failure boundary')
+  limited = answer.event() as .runtime_signal
+  call check(limited.name() == 'OUT_OF_RANGE' & pos('LL_RESOURCE_LIMIT',limited.message()) > 0 & answer.line() = 1,'eventless IR limit becomes an owned authored error')
+  relayed_ok = 0
+  do
+    call rxfnsb..signalrelay(limited)
+  on signal out_of_range as relayed_problem
+    relayed = relayed_problem as .runtime_signal
+    relayed_ok = relayed.name() == limited.name() & relayed.message() == limited.message() & relayed.module() = limited.module() & relayed.address() = limited.address()
+  end
+  call check(relayed_ok,'materialized IR limit relays its owned raw event')
+  call check(typedcalls() = baseline + 3 & budget.used() = prior_used,'IR refusal cannot enter target or retain active group ownership')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue('temporary=5; x=typedprobe(2,temporary)'),reference owner)
+  call check(answer.kind() == 'normal' & typedcalls() = baseline + 4,'same invocation recovers after generic IR refusal')
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue("x='before'; x=typedprobe('bad',temporary)"),reference owner)
+  call check(answer.kind() == 'failure' & pool.symbolValue('X').asString() == 'before' & typedcalls() = baseline + 4,'failed runtime conversion cannot enter the typed target')
+  original = answer.event() as .runtime_signal
+  call check(original.name() == 'CONVERSION_ERROR','typed conversion retains the native owned event')
+  prior_used = budget.used()
+  answer = llcdynamic..interpret(.rexxvalue..RexxValue("x='before'; x=typedprobe('bad',temporary)"),reference owner)
+  call check(answer.kind() == 'failure' & typedcalls() = baseline + 4 & budget.used() = prior_used,'cached conversion failure releases held invocation charge')
+  call owner.close(original as .object)
+  say 'PASS: Classic dynamic coordinator contracts'
+  return 0
+
+typedprobe: procedure = .int expose target_entries
+  arg value = .int, expose temporary = .int, ?increment = 7
+  target_entries = target_entries + 1
+  temporary = temporary + 100
+  return value + temporary + increment
+
+typedcalls: procedure = .int expose target_entries
+  return target_entries
+
+check: procedure = .void
+  arg accepted = .int, message = .string
+  if accepted = 0 then do
+    say 'FAIL: ' || message
+    assembler signal 'ERROR',message
+  end
+  return

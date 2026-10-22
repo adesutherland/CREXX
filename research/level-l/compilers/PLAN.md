@@ -12,7 +12,9 @@ helpers/dependencies, are complete for their agreed contracts with the named
 cross-cutting qualifications. Group 1 is locally complete: delayed CALL,
 authored clause completion and shared field/drop observations under that scope.
 Group 2 static calls/host integration and Group 3 static language functionality
-are locally complete; broader delivery/platform acceptance remains open. Formal QA follows compiler feature completion; INTERPRET remains last.** PARSE was
+are locally complete. The final language increment, STEP11 INTERPRET and Rexx
+source calls, is locally complete; broader delivery/platform acceptance remains
+open. Formal QA follows this feature implementation.** PARSE was
 delivered ahead of its queue position as the shared executor prerequisite for
 ARG; this does not skip PROCEDURE or close PARSE.
 
@@ -61,7 +63,7 @@ to interactive debugging, numeric suppression or complete expression events.
 | **LC-I-22 NUMERIC / CLC-STEP07** | Default/fixed/dynamic forms, once-only shared validation, frame installation and call restoration locally qualified; NUM-C-AC01–06. | NUM-C-AC07: broader diagnostics/host/platform scope and numeric fact invalidation; STEP02/04/08. Conditions/LOSTDIGITS/TRACE use CCOND. |
 | **LC-I-23 SIGNAL / CLC-STEP07** | **Complete:** all transfers, seven-condition ON/OFF, actual producers, same-frame cleanup and typed relay; CSIGNAL-AC01–07. | Group 1 integrates delayed CALL; Group 2 supplies real host HALT ingress. Broader host/platform acceptance and INTERPRET retain their named qualifications. |
 | **LC-I-24 TRACE / CLC-STEP07** | **Complete:** agreed practical options/query, command inhibition/reporting, source/live-value observations and observer restoration; CTRACE-AC01–07. | Accepted practical/presentation limitations remain explicit; formal whole-compiler/platform/delivery acceptance stays open. |
-| **LC-I-25 INTERPRET / CLC-STEP11 — last** | Not implemented; required after static acceptance. | Same compiler/group mode, live continuations/state, CALL resumption/SIGNAL discard, bounded resident ownership and every LC-87/platform gate. |
+| **LC-I-25 INTERPRET / CLC-STEP11 — last** | Locally qualified through the same C frontend and neutral L IR executor. | Live caller state, CALL resumption/SIGNAL discard, source-program roots and bounded ownership use shared runtime services. Formal LC-87/CFC/platform/delivery gates remain open. |
 
 ## Delivered conditions and observations: CLC-STEP07
 
@@ -77,7 +79,8 @@ Debug opt compiler, IR-on, assembler-opt rxbvm checks qualify this local
 feature. C21 introduced `trace(value,context)`; shared B retains option/command
 semantics and the private generated handler reuses its trace services. Formal
 compiler QA follows feature completion; all CFC criteria remain open.
-INTERPRET remains last and outside the standing implementation authority.
+INTERPRET is the final language increment; its explicit STEP11 approval below
+extends the earlier standing authority.
 
 Adrian authorized the remaining agreed C instructions/features stepwise, with
 internal contract review and a local commit after each, stopping before
@@ -159,7 +162,7 @@ Conditions owns when handlers transfer or resume execution; compiler work owns
 the supporting emitted ownership/cleanup mechanisms. Each mechanism retains one
 owner, and locally qualified recursion/PROCEDURE/EXPOSE is not reopened.
 
-### Current status: Group 3 static language functionality locally complete
+### Static language baseline: Group 3 locally complete
 
 Groups 1 and 2 and Group 4 STEP01–08 are locally delivered for their recorded
 profiles. Group 3's static source/expression, retained-source/SRCMAP and BF01–09
@@ -170,9 +173,9 @@ Shared B owns values, pools, Unicode and BIF algorithms; C owns source policy an
 integration. Native fixture sources and
 checked expectations supply independent controls, without native C frontend edits.
 
-INTERPRET and automatic Rexx source/program invocation are excluded from this
-increment and remain STEP11, last, with their existing continuation/code-owner
-approval gate. Existing signed/prepared Classic and generic external calls stay
+INTERPRET and automatic Rexx source/program invocation were excluded from Group 3
+and are now locally delivered in STEP11 below under its explicit approval.
+Existing signed/prepared Classic and generic external calls stay
 with Group 2. Full CFC/formal/platform/delivery acceptance remains open; the
 separate DFA construction backlog is not a prerequisite.
 
@@ -181,6 +184,49 @@ Formal whole-compiler QA follows feature completion. STEP10 delivery checks
 (CLI/service, installation, cold/incremental/relocated builds and declared
 platform proof), the complete ledger crosswalk and CFC-AC01–12 remain explicit
 acceptance work across these groups; they are not additional language features.
+
+<a id="dynamic-execution-plan"></a>
+
+### Current action: STEP11 dynamic execution implementation
+
+**IR route implemented and locally qualified.** The
+[architecture](doc/architecture.md#dynamic-execution-strategy) selects the neutral
+L executor, shared Classic services, an inline compiled-owner dispatcher and a
+checked VM invocation service. Runtime source requests use no assembler or native
+source compiler. Static compilation retains RXAS; the Rexx assembler is separate
+programme work. Preserve LC-87 and CFC-AC05/10/11/12. Implementation uses early coherent source/RXAS review and focused component
+checks. The selected component profile is complete; the wider registered
+inventory and formal compiler QA remain the later named gate.
+
+The detailed STEP11a–d sequence below replaces the earlier assembly/image-group
+implementation proposal. Approval covers its native invocation/resource contracts
+and concrete source-search policy. Begin with the minimal mechanism proof before
+full integration, preserve unrelated work and commit locally without pushing.
+Formal compiler/platform/delivery criteria remain open.
+
+The selector's ordinary helper-call windows reserve every fixed formal ABI slot,
+including implicit receivers and omitted optional arguments. Missing optionals
+are cleared with the native B absent-argument flags; physical counts and window
+sizing include them. This repairs the reproduced `scope.close()` teardown fault
+and the same `resume()` boundary without changing the native VM or source frontend.
+
+Empty `Sequence` bootstrap operations derive their provenance from the complete
+owned frontend input, including comments and whitespace. This preserves strict
+SIGNAL admission without manufacturing authored clauses. The dynamic PARSE
+adapter passes caller metadata only for SOURCE, in SOURCEINFO form, leaving
+source mode/path normalization with the shared configuration owner. A fresh
+external source child detaches its inherited host-completion association before
+its own host Scope enters; the parent remains live and Scope retains ownership
+of live bindings. These narrow integration repairs reuse the prepared applications
+and receive affected runtime checks only.
+
+RexxScript is the other intended execution consumer: an untyped, simplified G
+syntax/operator profile with simplified classes in its vision, retaining shared
+Classic BIFs. Its language/class/consumer migration design belongs to the
+[Level L/RexxScript roadmap](../PLAN.md#accepted-first-product-direction--rexxscript-10-october).
+It is not a second Classic evaluator or a prerequisite to implementing every
+Classic instruction. Existing implementations are reuse and migration evidence;
+their organic language details do not define the new product.
 
 <a id="group3-static-language-plan"></a>
 
@@ -312,7 +358,7 @@ gates. This does not approve new opcodes, wire formats or INTERPRET implementati
 | **G4-AC05 — open** | Deterministic allocation reuses dead temporary and eligible slot storage while preserving aliases, storage-cell lifetime, argument presence, numeric state, conditional results and cleanup. Independent interference/assignment checks and representative RXAS show frame demand follows live constraints; budget failure preserves prior output. |
 | **G4-AC06 — open** | C-OPT-01–06 have explicit ownership and closure checks. Remove direct construction defects with optimisation off; use proved effects/availability for optional rewrites. C retains language premises; optional RXAS owns machine legality; unchanged runtime algorithms remain single-owned. |
 | **G4-AC07 — complete for the bounded prototype** | A bounded optional IR runner executes admitted core/registered operations through trusted runtime handlers, with exact values/presence, calls, failures, observations, cancellation and owned suspended continuations. Unsupported capabilities fail before effects. An independent non-cREXX case and a small effectful/resumable case establish feasibility; constant-fold callbacks are not used as a runtime evaluator. |
-| **G4-AC08 — complete; current product routes retained** | The execution feasibility decision explicitly chooses, retains or rejects IR execution for modern RexxScript and final Classic INTERPRET, considering semantic coverage, live compiled callers, resource ownership and observed implementation cost. All LC-87/CFC-AC05 outcomes remain binding; existing compiled-image design stays authoritative until an alternative is approved. |
+| **G4-AC08 — prototype decision complete; IR direction now approved** | The bounded feasibility assessment remains qualified for its recorded profile. Adrian selects semantic IR for final Classic INTERPRET and as the reusable engine direction for future G-derived RexxScript. Detailed integration/mechanism proof remains STEP11 below; current products are not yet replaced and all LC-87/CFC-AC05 outcomes remain binding. |
 | **G4-AC09 — open** | C consumes the shared pipeline with early source/representative target review and proportionate component checks. Reuse native source/fixtures and independent L expectations; preserve Group 1 conditions/observations and an affected existing typed consumer. No new B/G/O coverage, assembler replacement or native C frontend edit is claimed. |
 | **G4-AC10 — open** | Enduring API/architecture/build guidance, simple status and capability boundaries match delivered products. Static targets contain no compiler, allocator or IR runner unless selected. Full compiler/platform/delivery QA and all CFC criteria stay open for their agreed milestones. |
 
@@ -364,7 +410,7 @@ stages retain full shared acceptance; they do not replace the ordered queue.
 | **CLC-STEP08** | Group 2 static host implementation is locally delivered: exact-length invocation/completion, callback pools, queues/streams, clocks/HALT and lifecycle. Group 3 supplies static source inventory/BIF integration; declared platform, delivery and formal acceptance proof stay open. New host API/platform exceptions retain their gates. |
 | **CLC-STEP09** | Open throughout: C-OPT-01–06 and actual caller/helper RXAS review, truthful source/TRACE, bounded registers/call windows and cleanup. Fix construction defects; document necessary costs. Needed ISA/storage contracts receive internal review under standing authority; production performance edits retain their qualification gate. |
 | <a id="step07a-validation"></a>**CLC-STEP10** | Not started: complete static ledger and CLI/service/install/cold/incremental/relocated/platform delivery, independent walkthrough/review. Static acceptance is not complete C. |
-| **CLC-STEP11** | Last: same-compiler INTERPRET after static acceptance and approval of exact continuation/code-owner contracts; close every CFC criterion. |
+| **CLC-STEP11** | Last language increment: same-frontend IR INTERPRET and Classic source calls after static functionality, with detailed design approval and early bridge proof. Formal STEP10/CFC/platform/delivery QA follows feature completion; a local increment does not close those criteria. |
 
 **L-VIEW-01 — locally qualified, CLC-STEP09:** the
 [retained operation-view contract](doc/architecture.md#retained-c-operation-views)
@@ -379,12 +425,56 @@ Unchanged generic view controls are reused. Generic accessor
 internals remain with CLC-STEP02; no generic L/native/API/cache change or full
 source matrix is commissioned. This does not establish replacement readiness.
 
-**CLC-STEP11a–d:** 11a: nested execution, SYNTAX, CALL resumption/SIGNAL, live
-continuations and cleanup/limits. 11b: ephemeral ownership, pins/reclamation,
-stale handles, all-pinned exhaustion, rollback and both VMs. 11c: group compiler,
-assembly/load, live pools/arguments/config, caller dispatch/spills. 11d: every
-LC-87 obligation, PROCEDURE/outer-loop rules, RETURN/EXIT/SIGNAL, delayed
-handlers, source/TRACE, resources and installed/platform delivery.
+### STEP11: same-frontend dynamic IR execution
+
+**Implemented and locally qualified as the final language increment.**
+The [architecture](doc/architecture.md#dynamic-execution-strategy) is the single
+contract owner. This replaces the earlier assembly/load/ephemeral-image mechanism,
+not the LC-87 outcomes. Local component and boundary checks qualify this increment;
+they do not close formal whole-compiler, installed or platform acceptance.
+Existing Group 1–4 local results are reused where unchanged.
+
+| Stable criterion | Observable pass condition / selected proof |
+|---|---|
+| **DYN-AC01** | A frontend-only checked result prepares complete `program` or label-free `interpret-group` IR through the same C grammar/lowering and shared preparation. Source is evaluated once, exact Unicode/NUL and implied delimiter rules are enforced, empty/nested/complete groups work, malformed/dead source is diagnosed before effects of the newly compiled source. Prior source-expression/actual effects are preserved. Raw/loaded/rewritten execution manifests are checked; no native source/assembler fallback. |
+| **DYN-AC02** | Groups borrow the authoritative context/ARG/pool binding. First generated PROCEDURE, empty/nested eligibility and existing placement/errors have independent controls. Its committed private pool is invocation-owned and survives group completion/SIGNAL, then restores on actual invocation exit. EXPOSE aliases and failed setup leave no dangling bindings. |
+| **DYN-AC03** | Existing compiled body ABI and static-only profile remain valid. Inline owner dispatch executes local/compiled/IR calls and handlers, preserves omissions/results and resumes once. RETURN/EXIT/SIGNAL reach the correct owner; child SIGNAL leaves the parent group suspended, outer loops are inactive, nested requests and recursion retain actual invocation identity. |
+| **DYN-AC04** | Dynamic ON/OFF policies survive group completion, plan eviction and internal inheritance into later static clauses. Protection/checkpoints exist without authored static handlers; delayed CALL preserves captures/RESULT/CONDITION/clocks. SIGNAL discards only crossed owners. Native faults/CANCEL preserve raw payload/origin and release sessions/windows before relay and same-context reuse. |
+| **DYN-AC05** | Neutral L protection, declared ports, conditional absence/gates, owned faults, leases, per-frame cleanup and aggregate admission have an independent non-C consumer. Stale/foreign/consumed handles, malformed completion, unsupported effects and absent loads fail without partial publication. No C policy enters generic L. |
+| **DYN-AC06** | Checked bytecode/RXPA invocation preserves full metadata/provider identity, original presence, callee defaults/checks, scalar conversions and owned vararg windows. Exposed temporary writes are discarded; true references/objects/tasks/global access remain behind explicit adapters. Pre-entry failure changes no target counter; nonzero numeric data and void are distinct from failure. Shared BIF numeric/context/value behavior remains single-owned. |
+| **DYN-AC07** | Local/BIF/prepared binding/hook/source/43.1 order and quotation are verified for CALL and expressions. Directory-major trusted-base/context-cwd/configured-root policy, suffixes, exact paths/case, duplicate roots and found-invalid stop rules match the detailed contract. No implicit PATH, executable/shebang dispatch or native frontend rescue. |
+| **DYN-AC08** | Source acquisition has exact bounded reads, typed absence/error/limit outcomes, regular-file/symlink and close semantics. Context cwd/environment changes and resource views remain isolated. Full-program source calls own fresh roots/pools/configurations, approved inheritance, child-local EXIT, result presence and restored caller resources. |
+| **DYN-AC09** | One aggregate ledger covers acquisition/preparation/cache/IR/source/frame/value/policy/reader/call-window owners across nested/concurrent work. Cache keys contain exact source, logical identity/mapping, captured resource base/configuration, immutable lexical/binding definitions and ABI/dependency identity; same-path/same-mtime changes and created-after-miss files are visible. All-pinned exhaustion preserves outer runs; stale handles, rollback, cancellation and teardown release ownership. |
+| **DYN-AC10** | Numeric state reaches actual operation/call frames and the resumed caller. Authored source, SIGL/CONDITION, retained SOURCELINE, practical TRACE/value events and raw faults remain truthful across compiled/IR boundaries. Coordinator locations never replace interpreted origins. |
+| **DYN-AC11** | Static applications without dynamic capability have no compiler/L-executor dependency. Optional installed dynamic closure contains no RXAS selector/assembler/linker/native source frontend; linked/relocated provider retention includes real symbols, full contracts and native identities. Existing B/G/Classic consumers remain regressions; script language/classes and assembler work remain separate. |
+| **DYN-AC12** | Early coherent source/representative RXAS and bridge review, batched material repairs and proportionate component qualification establish the whole local feature. Changed native call/frame ownership receives focused normal checks, a representative affected second-engine check and the matching maintained sanitizer check at mechanism qualification. Full compiler/mode/platform/install/sanitizer assurance remains the later named CFC/STEP10 gate, not a default per-step campaign. |
+
+| Stable step / status | Work and dependency / owner |
+|---|---|
+| **CLC-STEP11a.1 — done** | Detailed packets, profiles/ABI, persistent policy/private-pool ownership, invocation/resource service and source-search contracts are recorded, internally reviewed and approved for implementation. Serves AC01–12; WP-01/03/09/11/12. Mechanism and whole-feature proof remain below. |
+| **CLC-STEP11a.2 — done locally** | Build the smallest maintained call/control mechanism: hand-prepared IR and minimal selector-generated inline dispatcher, owned bytecode/RXPA windows, VM boundary/RET/unwind hooks, exact event transport and minimal abort/port support. Prove live-pool mutation, compiled call/resume, owner RETURN/SIGNAL, child isolation, native error/CANCEL and same-context reuse before registering the full C inventory. Qualify changed native frame/window ownership with focused normal, representative second-engine and matching maintained sanitizer checks. Depends on 11a.1; WP-09/11 with one integrator for minimal L/selector edits. |
+| **CLC-STEP11a.3 — done locally** | Extend that mechanism proof to nested groups, persistent dynamic policies/checkpoints, interpreted PROCEDURE eligibility and invocation-owned private pool, numeric/TRACE synchronization, aggregate all-pinned failure and retained/relocated binding metadata. Inspect simple and effectful RXAS; batch material fixes. Depends on 11a.2; WP-03/08/11/12. |
+| **CLC-STEP11b.1 — done locally** | Complete generic executable manifests, protection/ports, lease checks, conditional cell states, frame lifecycle, event/abort and resource contracts with an independent non-C consumer. Finish the minimal mechanisms proven in 11a without adding C algorithms to L. Depends on 11a.2; WP-02. |
+| **CLC-STEP11b.2 — done locally** | Complete shared C preparation and all admitted C runtime handlers over existing B owners, including persistent policy/private-pool sidecars, numeric/observation adapters and aggregate resident accounting/cache. Preserve C24/static-only ABI. Depends on 11a.3/11b.1; WP-03/07/08/11. |
+| **CLC-STEP11b.3 — done locally** | Add the narrow context resource-view and exact bounded regular-source reader under existing host/fs owners, with typed failures and cleanup. No search policy in generic/native code. Depends on 11a.1; may proceed alongside disjoint L/runtime work, centrally scheduled; WP-09/10. |
+| **CLC-STEP11c.1 — done locally** | Split frontend-only request/package closure, integrate group mode/optional dynamic IR family, exact quote/source keys, invocation catalogue and inline dispatcher into the C frontend/selector. Admit all INTERPRET expressions/instructions and empty/nested/control cases; no lexer regeneration until coherent source is reviewed. Depends on 11b.1/11b.2 and bridge proof; WP-05/08/11. |
+| **CLC-STEP11c.2 — done locally** | Integrate the specified source resolver after an unhandled hook; full-program root/results/host guards, trusted locators/context snapshots, deterministic candidate order and no negative-cache staleness. Depends on 11b.3/11c.1; WP-07/10/11. |
+| **CLC-STEP11d.1 — selected local qualification done** | Qualify complete LC-87/DYN-AC01–12 local behavior with maintained fixture sources/checked expectations first, independent dynamic controls and meaningful negative/state/cleanup/limits. Adapt harness boundaries, not whole labelled fixtures into illegal groups; native C does not implement INTERPRET and is not its execution oracle. Depends on 11c.1/11c.2; WP-12 with centrally owned preparation. Full LC-87 coverage and wider registered inventory retain 11d.3. |
+| **CLC-STEP11d.2 — done locally** | Update enduring architecture/conformance/ledger and simple status, remove scratch, preserve unrelated work and commit authorized implementation paths locally without pushing. This closes only the selected increment. Depends on 11d.1; integrator. |
+| **CLC-STEP11d.3 — later formal gate** | Complete STEP10 and every LC-87/CFC/declared platform/delivery criterion under separately selected formal QA after feature completion. Both-engine/platform/installed evidence and actual native sanitizer findings retain their owning requirements. No automatic broad campaign is commissioned by the design or local commit. |
+
+Development starts with one prepared normal Debug configuration and rxbvm; reuse
+valid producers and fixtures. The new shared native call/frame ownership mechanism
+also needs a focused second-engine control and maintained native sanitizer check
+after the normal check, because that mechanism changes, not because B/L executes
+on native tools. Source-only stages do not trigger another native campaign.
+Register wider regressions for later QA without running a compiler matrix at
+every step. Native resource I/O receives its own affected ownership/error checks.
+
+RexxScript sharing is proved at the service/IR boundary with selected G-style
+scalar operations and Classic BIF presence/context/value controls. A full new
+script parser/class product and B/G-wide compatibility changes are not silently
+added to STEP11. Their owning roadmap retains exact language/migration decisions.
 
 ## C-first delivery milestone
 
@@ -401,7 +491,7 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
 | **CFC-AC02** | Expressions, numeric/string/Unicode values, symbols/stems/pools/EXPOSE, PARSE/ARG, control and calls implement the agreed contract. Test state, order, errors and limits, including defects exposed by native comparisons; each instruction has its own disposition. |
 | **CFC-AC03** | Activation/labels, SIGNAL/CALL conditions, RETURN/EXIT, clause clocks, source/TRACE and diagnostic origins survive normal/abrupt/nested paths, Unicode/CRLF/NUL and optimisation. Prior output survives failed compilation. Source identities are logical and stable. |
 | **CFC-AC04** | Host invocation/completion, callback-window pool access, ADDRESS/commands, streams/queues, clocks/HALT and signed external calls have positive/error/ownership proof on their declared platforms. Configuration and missing host facilities stay open unless explicitly excluded. |
-| **CFC-AC05** | INTERPRET satisfies LC-87-01–05 using the same B/L compiler, live caller state, real resumption/transfers, nested groups and bounded resident-code reclamation. Tests include trapped failures, all-pinned exhaustion, stale handles and teardown; no native/RexxScript fallback. |
+| **CFC-AC05** | INTERPRET satisfies LC-87-01–05 using the same B/L compiler, live caller state, real resumption/transfers, nested groups and bounded resident IR/source/frame ownership and reclamation. Tests include trapped failures, all-pinned exhaustion, stale handles and teardown; no native/RexxScript fallback. |
 | **CFC-AC06** | Representative full RXAS and helper paths have checked structural expectations for simple expressions, loops, calls, errors and dynamic execution. Compiler/RXAS modes are distinct. Direct defects are fixed; necessary cost and later opportunities have owners. Preserve ABI, source, TRACE and numeric observations; static counts are not speed claims. |
 | **CFC-AC07** | Generic L services have independent non-C/G consumers, checked structure/effects/facts, bounded failure and documented algorithms. C/BIF/ISA policy stays in owning extensions; source/import/install audits prove no native or typed frontend in the C host closure. |
 | **CFC-AC08** | Every required C row closes on qualified inputs, with CLI/service/installed/platform proof, documentation and runnable walkthroughs. Distinguish local, hosted, guest/SDK, sanitizer and release results. Complete C is separate from default replacement and B/G delivery. |
@@ -429,8 +519,18 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
   remain open. Linux LSan and real 31-bit/CMS/TSO/Windows runtime need their
   declared qualification; Apple LeakSanitizer is unavailable. Local static/NUTF8
   simulations and synthetic errors do not establish those platform capabilities.
-- **Dynamic execution:** approve exact continuation/code-owner/pinning/reclamation
-  contracts before STEP11; preserve every LC-87 obligation and INTERPRET-last.
+- **Dynamic execution:** IR implementation is present; finish the selected local
+  qualification under the
+  [detailed STEP11 contract](doc/architecture.md#dynamic-execution-strategy) and
+  implement the approved concrete call/resource/search interfaces.
+  Preserve every LC-87 obligation and INTERPRET-last; bounded IR/source/frame
+  ownership replaces generated-image ownership without waiving mixed-frame proof.
+- **C-DYNAMIC-DISPATCH-SIZE — open:** the selector emits a finite inline boundary
+  loop at each resumable site, repeating cold call/transfer/failure arms. Owner:
+  C selector/RXAS lowering. A later sharing transformation must retain exact
+  successors, once-only calls, source/TRACE locations and cleanup; close with
+  structural sharing assertions and representative code-size/resource checks.
+  This accepted conservative emission cost makes no performance claim.
 - **B-SEED-ALIAS — open:** native B noopt can overwrite a live array receiver
   while evaluating a nested method-call index. The C ADDRESS selector uses
   sequential scalar indices. Native seed register allocation owns a later

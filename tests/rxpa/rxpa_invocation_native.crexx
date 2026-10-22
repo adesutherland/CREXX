@@ -1,0 +1,99 @@
+/* RXPA completion uses the request return cell and separate signal channel. */
+options levelb
+import rxinvoke
+import rxinvoketest
+import rxfnsb
+import rxcontract
+
+main: procedure = .int
+  arg argv = .string[]
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,1000000)
+  if declaration[0] <> 13 | declaration[1] <> 'rxnative1' | declaration[2] <> 'ok' then return 20
+  if declaration[6] <> 'rxinvoke' | declaration[7] <> 'rxinvoke.prepare' | declaration[8] <> '0' | declaration[9] <> '' then return 21
+  if declaration[10] <> '.rxinvoke..invocation' | declaration[11] <> 'binding=.rxinvoke..binding,cells=.rxinvoke..scalar[],presence=.int[],extent=.int,bytebudget=.int' then return 22
+  if declaration[12] <> 'b' | declaration[13] <> '0' then return 23
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.catalogue.§factory',65536,1000000)
+  if declaration[2] <> 'ok' | declaration[8] <> '2' | declaration[9] <> 'rxinvoke.catalogue' then return 24
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.invocation.result',65536,1000000)
+  if declaration[2] <> 'ok' | declaration[8] <> '1' | declaration[9] <> 'rxinvoke.invocation' then return 25
+  declaration = rxcontract..acquire('provider:rxinvoke.missing','rxinvoke.prepare',65536,1000000)
+  if declaration[2] <> 'invalid' | declaration[6] <> '' then return 26
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.missing',65536,1000000)
+  if declaration[2] <> 'invalid' | declaration[6] <> '' then return 27
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,64)
+  if declaration[2] <> 'limit' | declaration[6] <> '' then return 28
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',1,1000000)
+  if declaration[2] <> 'limit' | declaration[6] <> '' then return 29
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,1000000)
+  if declaration[2] <> 'ok' then return 30
+  names = .string[]; types = .string[]
+  signatures = .string[]; providers = .string[]
+  names[1] = 'rxinvoketest.integer'; types[1] = '.int'; signatures[1] = 'value=.int'
+  names[2] = 'rxinvoketest.text'; types[2] = '.string'; signatures[2] = ''
+  names[3] = 'rxinvoketest.failure'; types[3] = '.int'; signatures[3] = ''
+  names[4] = 'rxinvoketest.boolean'; types[4] = '.boolean'; signatures[4] = ''
+  names[5] = 'rxinvoketest.namedfailure'; types[5] = '.int'; signatures[5] = ''
+  names[6] = 'rxinvoketest.novalue'; types[6] = '.void'; signatures[6] = ''
+  do i = 1 to 6
+    providers[i] = 'rxinvoketest'
+  end
+  catalogue = .rxinvoke..catalogue(names,types,signatures,providers)
+  cells = .rxinvoke..scalar[]; presence = .int[]
+  cells[1] = rxinvoke..integer(35); presence[1] = 1
+  binding = .rxinvoke..binding(catalogue,1)
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if request.state() <> 'complete' | result.asint() <> 42 then return 1
+  clear cells; clear presence
+  binding = .rxinvoke..binding(catalogue,2)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if request.kind() <> 'string' | result.astext() <> 'native text' then return 2
+  binding = .rxinvoke..binding(catalogue,3)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  trapped = 0
+  do
+    call rxinvoke..invoke(request)
+  on signal division_by_zero as problem
+    trapped = problem.code()
+  end
+  if trapped <> 5 | request.state() <> 'failed' then return 3
+  event = request.event() as .rxfnsb..runtime_signal
+  if event.code() <> 5 | event.message() <> 'owned native invocation event' then return 4
+  if rxinvoketest..retained() <> 0 then return 31
+  binding = .rxinvoke..binding(catalogue,5)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  trapped = 0
+  do
+    call rxinvoke..invoke(request)
+  on signal division_by_zero as problem
+    trapped = problem.code()
+  end
+  if trapped <> 5 | request.state() <> 'failed' then return 7
+  event = request.event() as .rxfnsb..runtime_signal
+  if event.code() <> 5 then return 8
+  if rxinvoketest..retained() <> 0 then return 32
+  binding = .rxinvoke..binding(catalogue,4)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  if request.state() <> 'failed' then return 5
+  if rxinvoketest..retained() <> 0 then return 33
+  binding = .rxinvoke..binding(catalogue,6)
+  request = rxinvoke..prepare(binding,cells,presence,0,32768)
+  call rxinvoke..invoke(request)
+  if request.state() <> 'complete' | request.kind() <> 'void' | rxinvoketest..retained() <> 0 then return 34
+  binding = .rxinvoke..binding(catalogue,1)
+  cells[1] = rxinvoke..integer(1); presence[1] = 1
+  request = rxinvoke..prepare(binding,cells,presence,1,32768)
+  call rxinvoke..invoke(request)
+  result = request.result()
+  if result.asint() <> 8 then return 6
+  if argv[0] > 1000 then do
+    call rxinvoketest..integer(0); call rxinvoketest..text()
+    call rxinvoketest..failure(); call rxinvoketest..boolean(); call rxinvoketest..namedfailure()
+    call rxinvoketest..novalue()
+  end
+  say 'CHECKED_INVOCATION_NATIVE_PASS'
+  return 0

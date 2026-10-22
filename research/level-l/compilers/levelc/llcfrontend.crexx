@@ -56,12 +56,17 @@ routine: class
  * Imports are read from an explicit artifact directory; no tool is spawned. */
 request: class
   _source = .binary
+  _mode = .string
+  _dynamic = .int
+  _dynamicenabled = .int
+  _lexicalnames = .string[]
+  _lexicalentries = .int[]
+  _fingerprint = .string
   _originalsource = .binary
   _mapping = .llcsrcmap..prepared
   _providers = reference .llcbindings..prepared
   _bound = .int
   _filename = .string
-  _rootpath = .string
   _nesting = .int
   _budget = .int
   _bytebudget = .int
@@ -83,11 +88,6 @@ request: class
   _contract = .llir..contract
   _builder = .llir..builder
   _file = .llir..sourcefile
-  _library = .llcompilercontracts..catalog
-  _classic = .llcompilercontracts..catalog
-  _hasclassic = .int
-  _haslibrary = .int
-  _importb = .int
   _namespace = .string
   _importnames = .string[]
   _importcatalogs = .object[]
@@ -162,10 +162,10 @@ request: class
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     empty_mapping = .llcsrcmap..prepared; _mapping = empty_mapping
-    _source = source; _originalsource = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
-    _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
+    _source = source; _originalsource = source; _filename = llcompilercontracts..sourcename(filename)
+    _budget = budget; _work = 0; _error = ''; _offset = 0
     _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
-    _parsepositionsready = 0
+    _parsepositionsready = 0; _mode = 'program'; _dynamic = 0; _dynamicenabled = 1
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
     if budget < 1 | budget > (9223372036854775807 <idiv> 64) then do
       _error = 'LL_COMPILER_LIMIT: frontend byte budget is not representable'; _ready = 1; return
@@ -176,16 +176,68 @@ request: class
   bound: factory
     arg source = .binary, providers = reference .llcbindings..prepared, filename = '<source>', budget = 1000000, nesting = 512
     empty_mapping = .llcsrcmap..prepared; _mapping = empty_mapping
-    _source = source; _originalsource = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = ''; _providers = providers; _bound = 1
-    _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
+    _source = source; _originalsource = source; _filename = llcompilercontracts..sourcename(filename); _providers = providers; _bound = 1
+    _budget = budget; _work = 0; _error = ''; _offset = 0
     _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
-    _parsepositionsready = 0
+    _parsepositionsready = 0; _mode = 'program'; _dynamic = 0; _dynamicenabled = 1
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
     if budget < 1 | budget > (9223372036854775807 <idiv> 64) then do
       _error = 'LL_COMPILER_LIMIT: frontend byte budget is not representable'; _ready = 1; return
     end
     _bytebudget = budget * 64
     return
+  /** Configure before execution; immutable lexical definitions contain no live
+   * activation, pool, callback window or runtime dispatcher pointer. */
+  execution: method = .void
+    arg mode = .string, names = .string[], entries = .int[], fingerprint = '', enabled = 1
+    if _ready then assembler signal 'INVALID_ARGUMENTS','Cannot change a completed C source request'
+    if mode <> 'program' & mode <> 'interpret-group' then do
+      _error = 'LL_COMPILER_PROFILE: unknown C source execution mode'; _ready = 1; return
+    end
+    if names[0] <> entries[0] | names[0] > _budget then do
+      _error = 'LL_COMPILER_LIMIT: lexical catalogue shape'; _ready = 1; return
+    end
+    do i = 1 to names[0]
+      if entries[i] < 0 then do
+        _error = 'LL_COMPILER_PROFILE: lexical entry must be positive or trace-only'; _ready = 1; return
+      end
+    end
+    _mode = mode; _lexicalnames = names; _lexicalentries = entries
+    _fingerprint = fingerprint; _dynamicenabled = enabled
+    _dynamic = mode = 'interpret-group'
+    return
+  isdynamic: method = .int
+    call run(); return _dynamic
+  mode: method = .string
+    return _mode
+  lexicalnames: method = .string[]
+    call run(); names = .string[]; i = .int
+    do i = 2 to _routines[0]
+      item = _routines[i] as .routine; names[names[0] + 1] = item.name()
+    end
+    do i = 1 to _signalnames[0]
+      if _signalids[i] = 0 then names[names[0] + 1] = _signalnames[i]
+    end
+    return names
+  lexicalentries: method = .int[]
+    call run(); entries = .int[]; i = .int
+    do i = 2 to _routines[0]
+      entries[entries[0] + 1] = i - 1
+    end
+    do i = 1 to _signalnames[0]
+      if _signalids[i] = 0 then entries[entries[0] + 1] = 0
+    end
+    return entries
+  fingerprint: method = .string
+    call run()
+    if _fingerprint <> '' then return _fingerprint
+    return <blen>(_filename as .binary) || ':' || _filename || ':' || bin2x(_originalsource)
+  lexicalentry: method = .int
+    arg name = .string
+    do i = 1 to _lexicalnames[0]
+      if _lexicalnames[i] == name then return _lexicalentries[i]
+    end
+    return -1
   run: method = .void
     if _ready then return
     _ready = 1
@@ -195,10 +247,9 @@ request: class
         providers = dereference _providers
         if initialized(providers) = 0 then do; _error = 'LL_COMPILER_IMPORT: provider owner is not initialized'; return; end
         if providers.status() then do; _error = providers.error(); return; end
-        _rootpath = providers.root()
       end
       _originalsource = _source
-      parsed = .llcparse..parsed(_source,_budget,_filename)
+      parsed = .llcparse..parsed(_source,_budget,_filename,_mode)
       _source = parsed.bytes(); _mapping = parsed.mapping()
       if parsed.status() <> 0 then do
         _error = parsed.error(); _offset = parsed.offset(); return
@@ -213,6 +264,10 @@ request: class
         if walk.depth() > _nesting then do
           call fail(walk.node(),'LIMIT: AST nesting budget exceeded'); return
         end
+        if walk.node().kind() = 'CInterpret' then do; _dynamic = 1; _hassignal = 1; end
+        if _mode = 'interpret-group' & walk.node().kind() = 'CLabel' then do
+          call fail(walk.node(),'SYNTAX: RXC-LC-13.1: labels are forbidden in INTERPRET source'); return
+        end
         if walk.node().kind() = 'CCommand' then hascommands = 1
         if wordpos(walk.node().kind(),'CSignal CSignalValue CSignalOn CSignalOff CCallOn CCallOff') > 0 then _hassignal = 1
       end
@@ -221,9 +276,12 @@ request: class
       if _error <> '' then return
       call addressplans(reference parsed)
       if _error <> '' then return
-      _registry = .llir..schema(); call llcir..registerfamilies(reference _registry)
       call inventory()
       if _error <> '' then return
+      call dynamicinventory()
+      if _dynamic & _hassignal = 0 then call dynamicsignals()
+      if _dynamic then _hassignal = 1
+      _registry = .llir..schema(); call llcir..registerfamilies(reference _registry,_dynamic)
       _contract = _registry.finish()
       if _contract.error() <> '' then do
         _error = _contract.error(); return
@@ -438,6 +496,45 @@ request: class
       call _routineids.set(name,entry as .string)
     end
     return
+  dynamicinventory: method = .void
+    if _dynamicenabled = 0 then return
+    if _mode = 'interpret-group' then _dynamic = 1
+    walk = _tree.walk('parents first')
+    do while walk.next()
+      node = walk.node(); kind = node.kind()
+      if wordpos(kind,'Call CallQuoted Invoke InvokeQuoted') = 0 then iterate
+      name = node.text('name'); quoted = kind = 'CallQuoted' | kind = 'InvokeQuoted'
+      if quoted then name = decodestring(node,name)
+      else name = rexxclassic_unicode_upper(name)
+      if quoted = 0 then do
+        if findroutine(name) <> 0 | lexicalentry(name) >= 0 then iterate
+      end
+      if llcbifs..entry(name) <> '' then iterate
+      if _bound then do
+        providers = dereference _providers
+        if providers.find(name) <> 0 then iterate
+      end
+      _dynamic = 1
+    end
+    return
+  /** Unknown external calls can select the optional profile after the local
+   * inventory. Retain its lexical SIGNAL catalogue without repeating traversal. */
+  dynamicsignals: method = .void
+    i = .int; row = .int
+    do i = 1 to _labelnodes[0] while _error = ''
+      node = _labelnodes[i] as .llast..node
+      name = rexxclassic_unicode_upper(node.text('name'))
+      if _signalrows.get(name) <> '' then iterate
+      if entryspace(128,1,'dynamic SIGNAL label') = 0 then return
+      if entryspace(<blen>(name as .binary),2,'dynamic SIGNAL label') = 0 then return
+      row = _signalnames[0] + 1
+      _signalnames[row] = name; _signalnodes[row] = node
+      _signalids[row] = 0
+      entry = _sourceentries[node.id()]
+      if entry > 0 then _signalids[row] = entry - 1
+      call _signalrows.set(name,row as .string)
+    end
+    return
   /** One source-order declaration, retained independently of a pruned setter. */
   inventoryhandler: method = .void
     arg node = .llast..node
@@ -487,7 +584,12 @@ request: class
     ignored = _fn.argument(type('context')); ignored = _fn.argument(type('int64'))
     _functions[1] = _fn as .object
     _blocknumber = 0; _tempnumber = 0; _loops = 0; _donumber = 0; _commandnumber = 0; _terminated = 0; _alive = 1
-    body = _current.body(); origin = at(body).derive()
+    body = _current.body(); bootstrap = at(body)
+    if body.kind() = 'Sequence' & body.count('items') = 0 then do
+      length = <blen>(_source); bodyorigin = body.origin()
+      bootstrap = _file.origin(0,length,bodyorigin)
+    end
+    origin = bootstrap.derive()
     _block = newblock('entry')
     if _mapping.active() then do
       op = _block.operation(_contract.operation('crexx.c.source.map'),origin)
@@ -498,6 +600,10 @@ request: class
     _entryslot = _fn.slot('$entry',type('int64'))
     call _block.store(_contextslot,_block.readarg(1,origin),origin)
     call _block.store(_entryslot,_block.readarg(2,origin),origin)
+    if _mode = 'interpret-group' then do
+      op = _block.operation(_contract.operation('crexx.c.dynamic.group.entry'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+    end
     if _hassignal then do
       _signalslot = _fn.slot('$signal.table',type('text'))
       tablebytes = signaltable()
@@ -505,7 +611,7 @@ request: class
       call _block.store(_signalslot,_block.constantbytes(type('text'),tablebytes,origin),origin)
     end
     dispatch = newblock('entry.dispatch')
-    if _signalhandlers > 0 then do
+    if _signalhandlers > 0 | _dynamic then do
       _conditionblock = newblock('signal.exception')
       call _block.protect(dispatch,_conditionblock,origin)
     end
@@ -527,8 +633,8 @@ request: class
       if i > 1 then do
         name = item.name(); labelid = item.first(); target = _sourceblocks[labelid] as .llir..block
         first = item.body(); j = first.id()
-        if first.kind() <> 'CLabel' then do
-          if first.kind() <> 'CProcedure' then do
+        if _dynamic = 0 & first.kind() <> 'CLabel' then do
+          if first.kind() <> 'CProcedure' & first.kind() <> 'CInterpret' then do
             if j <> landingposition then do
               landing = newblock('entry.consume'); _block = landing; consumeorigin = at(first)
               op = _block.operation(_contract.operation('crexx.c.procedure.consume'),consumeorigin)
@@ -557,7 +663,7 @@ request: class
       op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
       call _block.returnvalue(built.result(),origin)
     end
-    if _signalhandlers > 0 & _error = '' then call conditiondispatch(origin)
+    if (_signalhandlers > 0 | _dynamic) & _error = '' then call conditiondispatch(origin)
     return
   /** Length framing writes bytes once into the owned table; no source/table
    * is copied per semantic SIGNAL or per label lookup. */
@@ -725,6 +831,29 @@ request: class
     labelnode = .llast..node; destination = .llir..block; yes = .llir..block; no = .llir..block
     target = .llast..node; value = .llir..valuehandle; named = .llir..valuehandle
     op = .llir..opdraft; built = .llir..opview; nameslot = .llir..slot
+    if _mode = 'interpret-group' then do
+      if node.kind() = 'CSignal' then do
+        target = node.child('target')
+        if target.kind() = 'String' then name = stringliteral(target)
+        else name = target.text('spelling')
+        name = rexxclassic_unicode_upper(name)
+        named = _block.constantbytes(type('text'),name as .binary,origin)
+      end
+      else do
+        value = expression(node.child('value')); if _error <> '' then return
+        op = _block.operation(_contract.operation('crexx.c.signal.name'),origin)
+        call op.input('value',value); call op.input('context',_block.load(_contextslot,origin))
+        built = op.finish(); named = built.result()
+      end
+      op = _block.operation(_contract.operation('crexx.c.dynamic.owner.signal'),origin)
+      call op.input('name',named); call op.input('context',_block.load(_contextslot,origin))
+      built = op.finish()
+      generated = origin.derive('synthetic')
+      op = _block.operation(_contract.operation('crexx.c.return.absent'),generated); built = op.finish()
+      call _block.returnvalue(built.result(),generated)
+      _signalbuilding = 0; _terminated = 1; _alive = 0
+      return
+    end
     if node.kind() = 'CSignal' then do
       target = node.child('target')
       if target.kind() = 'String' then name = stringliteral(target)
@@ -946,7 +1075,7 @@ request: class
    * continuation never reads that carrier or allocates an absent packet. */
   clausecomplete: method = .void
     arg node = .llast..node, first = -1, last = -1
-    if _callhandlers = 0 | _error <> '' then return
+    if (_callhandlers = 0 & _dynamic = 0) | _error <> '' then return
     if first < 0 then first = node.start()
     if last < 0 then last = node.finish()
     if signalwork(node,32) = 0 then return
@@ -968,7 +1097,7 @@ request: class
    * This temporary carries the original value, never the conditional carrier. */
   checkpointvalue: method = .llir..valuehandle
     arg node = .llast..node, value = .llir..valuehandle, first = -1, last = -1
-    if _callhandlers = 0 then return value
+    if _callhandlers = 0 & _dynamic = 0 then return value
     origin = at(node).derive('synthetic'); saved = temporary(value.type())
     call _block.store(saved,value,origin)
     call clausecomplete(node,first,last)
@@ -995,9 +1124,15 @@ request: class
         if templates.child('items',i).count('items') > 0 then nonemitting = 0
       end
     end
-    if _callhandlers > 0 & wordpos(kind,'Nop COptions CArg') > 0 then nonemitting = 0
+    if (_callhandlers > 0 | _dynamic) & wordpos(kind,'Nop COptions CArg') > 0 then nonemitting = 0
     if _terminated & nonemitting = 0 then do
       _block = newblock('unreachable'); _terminated = 0; _alive = 0
+    end
+    if _terminated = 0 & _dynamic then do
+      if wordpos(kind,'Sequence Block CLabel CLabelled CProcedure CInterpret') = 0 then do
+        op = _block.operation(_contract.operation('crexx.c.procedure.consume'),origin)
+        call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+      end
     end
     observes = nonemitting = 0 | wordpos(kind,'Nop COptions CArg CSelect') > 0
     if _terminated = 0 & observes & kind <> 'CProcedure' & kind <> 'CDo' then do
@@ -1057,6 +1192,14 @@ request: class
             call op.attribute('name',node.text('name') as .binary); built = op.finish()
           end
         end
+      end
+      when kind = 'CInterpret' then do
+        op = _block.operation(_contract.operation('crexx.c.dynamic.expansion.begin'),origin)
+        call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+        value = expression(node.child('value'))
+        if _error <> '' then return
+        op = _block.operation(_contract.operation('crexx.c.dynamic.interpret'),origin)
+        call op.input('source',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
       end
       when kind = 'Say' then do
         if node.count('value') then value = expression(node.child('value'))
@@ -1122,6 +1265,10 @@ request: class
           built = op.finish(); value = built.result()
           value = checkpointvalue(node,value)
           call closeactive(origin)
+          if _mode = 'interpret-group' then do
+            op = _block.operation(_contract.operation('crexx.c.dynamic.owner.return'),origin)
+            call op.input('result',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+          end
           call _block.returnvalue(value,origin)
         end
         _terminated = 1; _alive = 0
@@ -2044,7 +2191,7 @@ request: class
     built = op.finish(); return built.result()
   invocation: method = .llir..valuehandle
     arg node = .llast..node, expressioncall = .int
-    i = .int
+    i = .int; integer = .llir..intcodec()
     boolean = .llir..boolcodec()
     invalid = .llir..valuehandle; origin = at(node); name = node.text('name')
     if node.kind() = 'Call' & right(name,1) = '.' then do
@@ -2057,6 +2204,7 @@ request: class
       name = rexxclassic_unicode_upper(name)
     end
     if _error <> '' then return invalid
+    sourcekey = name
     arguments = node.child('arguments'); count = arguments.count('items')
     if count = 1 & arguments.child('items',1).count('value') = 0 then count = 0
     target = 0
@@ -2065,9 +2213,14 @@ request: class
     if target < 0 then do
       call fail(node,'SYNTAX: RXC-LC-16.3: local target is a trace-only group label ' || name); return invalid
     end
-    bif = ''; if target = 0 then bif = llcbifs..entry(name)
+    lexical = -1
+    if target = 0 & quoted = 0 then lexical = lexicalentry(name)
+    if lexical = 0 then do
+      call fail(node,'SYNTAX: RXC-LC-16.3: local target is a trace-only group label ' || name); return invalid
+    end
+    bif = ''; if target = 0 & lexical < 0 then bif = llcbifs..entry(name)
     provider = 0; externalname = .string; externalclassic = 0
-    if target = 0 & bif = '' & _bound then do
+    if target = 0 & lexical < 0 & bif = '' & _bound then do
       if <refvalid>(_providers) = 0 then do; call fail(node,'IMPORT: provider owner is not live'); return invalid; end
       providers = dereference _providers
       if initialized(providers) = 0 then do; call fail(node,'IMPORT: provider owner is not initialized'); return invalid; end
@@ -2095,8 +2248,6 @@ request: class
     op = .llir..opdraft; built = .llir..opview; slot = .llir..slot
     result = .llir..valuehandle; specialized = 0
     if bif <> '' then do
-      call classiccontract(node,name)
-      if _error <> '' then return invalid
       specialized = (name = 'LENGTH' & count = 1) | (name = 'DIGITS' & count = 0) | (name = 'ARG' & (count = 0 | count = 2))
       do i = 1 to count
         if arguments.child('items',i).count('value') = 0 then specialized = 0
@@ -2153,9 +2304,16 @@ request: class
         if bif <> '' then operation = 'bif'
         else if provider > 0 then operation = 'call.external'
       end
-      op = _block.operation(_contract.operation('crexx.c.' || operation),origin)
+      family = 'crexx.c.'
+      if lexical > 0 then do; family = 'crexx.c.dynamic.'; operation = 'call.owner'; end
+      else if operation = 'call.missing' & _dynamic then do; family = 'crexx.c.dynamic.'; operation = 'call.resolve'; end
+      op = _block.operation(_contract.operation(family || operation),origin)
       call op.input('arguments',_block.load(packet,origin)); call op.input('context',_block.load(_contextslot,origin))
-      if target > 0 then do
+      if lexical > 0 then do
+        integer = .llir..intcodec(); call op.attribute('entry',integer.parse(lexical as .string))
+        call op.attribute('function',boolean.parse(expressioncall as .string))
+      end
+      else if target > 0 then do
         call op.attribute('target','$MAIN' as .binary)
         integer = .llir..intcodec(); call op.attribute('entry',integer.parse((target - 1) as .string))
         call op.attribute('function',boolean.parse(expressioncall as .string))
@@ -2166,7 +2324,11 @@ request: class
       end
       else do
         call op.attribute('name',name as .binary)
-        if operation = 'call.missing' then do
+        if operation = 'call.resolve' then do
+          call op.attribute('sourceKey',sourcekey as .binary)
+          call op.attribute('quoted',boolean.parse(quoted as .string))
+        end
+        if operation = 'call.missing' | operation = 'call.resolve' then do
           call op.attribute('function',boolean.parse(expressioncall as .string))
         end
       end
@@ -2174,7 +2336,7 @@ request: class
       if bif <> '' then value = built.result()
       else do
         result = built.result()
-        if target > 0 | externalclassic then result = programguard(result,origin)
+        if target > 0 | lexical > 0 | externalclassic | operation = 'call.resolve' then result = programguard(result,origin)
       end
     end
     if bif <> '' then do
@@ -2204,33 +2366,5 @@ request: class
     call _block.returnvalue(_block.load(carrier,generated),generated)
     _block = continuation
     return _block.load(carrier,generated)
-  classiccontract: method = .void
-    arg node = .llast..node, name = .string
-    if _rootpath = '' then do
-      call fail(node,'IMPORT: Classic BIF requires the rxfnsc artifact contract'); return
-    end
-    if _hasclassic = 0 then do
-      do
-        image = readbinary(_rootpath || '/rxfnsc.rxbin')
-        _classic = .llcompilercontracts..catalog(image,67108864)
-      on signal
-        call fail(node,'IMPORT: cannot read rxfnsc.rxbin'); return
-      end
-      if _classic.error() <> '' then do
-        call fail(node,'IMPORT: ' || _classic.error()); return
-      end
-      if _classic.field(11,'rexxclassicbifs.rexxbifcallcontext','',2) <> 'b' | _classic.field(12,'rexxclassicbifs.rexxbifcallcontext.bif_arg_count','',3) <> '.int' then do
-        call fail(node,'IMPORT: incompatible Classic BIF context layout'); return
-      end
-      _hasclassic = 1
-    end
-    symbol = llcbifs..entry(name); count = 1 + llcbifs..activation(name)
-    signature = _classic.lookup(symbol)
-    if signature.error() <> '' then call fail(node,'IMPORT: ' || signature.error())
-    else if signature.result() <> '.rexxvalue..rexxvalue' | signature.arguments() <> count then call fail(node,'IMPORT: incompatible Classic ' || name || ' contract')
-    else if signature.type(1) <> 'reference .rexxbifcallcontext' then call fail(node,'IMPORT: incompatible Classic BIF context')
-    else if signature.optional(1) | signature.exposed(1) then call fail(node,'IMPORT: optional or exposed Classic context is incompatible')
-    else if count = 2 then do
-      if signature.type(2) <> 'reference .rexxactivationarguments' | signature.optional(2) | signature.exposed(2) then call fail(node,'IMPORT: incompatible Classic activation contract')
-    end
-    return
+  /* Target BIF ABI/layout validation belongs to the RXAS selector or the
+   * checked runtime adapter. This frontend produces portable semantic IR. */

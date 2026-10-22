@@ -2300,7 +2300,7 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
                             current_module->module_number, VM_CANONICAL_INDEX(pc),
                             0, 0);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
-                    rxvm_call_native_procedure(called_function, 0, NULL,
+                    RXVM_SCOPED_NATIVE_CALL(called_function, 0, NULL,
                                                op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
@@ -2372,7 +2372,7 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
                         current_module->module_number, VM_CANONICAL_INDEX(pc),  \
                         mapped_arg_base__, 1);                                  \
                 RXVM_INSTRUMENTATION_NATIVE_BEGIN(mapped_called__);             \
-                rxvm_call_native_procedure(mapped_called__,                    \
+                RXVM_SCOPED_NATIVE_CALL(mapped_called__,                    \
                               mapped_arg_count__, mapped_args__,                \
                               mapped_result__, signal_value);                   \
                 RXVM_INSTRUMENTATION_NATIVE_END();                              \
@@ -2451,7 +2451,7 @@ RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
                             current_module->module_number, VM_CANONICAL_INDEX(pc),
                             REG_IDX(3) + 1, 1);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
-                    rxvm_call_native_procedure(called_function,
+                    RXVM_SCOPED_NATIVE_CALL(called_function,
                                                op3R->int_value, (&(op3R)) + 1,
                                                op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
@@ -2546,7 +2546,7 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
                             current_module->module_number, VM_CANONICAL_INDEX(pc),
                             REG_IDX(3) + 1, 1);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
-                    rxvm_call_native_procedure(called_function,
+                    RXVM_SCOPED_NATIVE_CALL(called_function,
                                                op3R->int_value, (&(op3R)) + 1,
                                                op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
@@ -2618,6 +2618,7 @@ RXVM_HANDLER(RET,
                 next_pc = current_frame->return_pc;
                 unsigned char is_interrupt = current_frame->is_interrupt;
                 /* back to the parent's stack frame */
+                if (current_frame->invocation) rxvm_invoke_complete(current_frame->invocation, 0);
                 temp_frame = current_frame;
                 VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
@@ -2693,6 +2694,7 @@ RXVM_HANDLER(RET_REG,
                                    op1R); /* ... the faster move deletes the source which is ok for locals going out of scope */
                 }
                 /* back to the parents stack frame */
+                if (current_frame->invocation) rxvm_invoke_complete(current_frame->invocation, 1);
                 temp_frame = current_frame;
                 VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
@@ -2762,6 +2764,7 @@ RXVM_HANDLER(RET_FLOAT,
                 if (current_frame->return_reg)
                     current_frame->return_reg->float_value = op1F;
                 /* back to the parents stack frame */
+                if (current_frame->invocation) rxvm_invoke_complete(current_frame->invocation, 1);
                 temp_frame = current_frame;
                 VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
@@ -2830,6 +2833,7 @@ RXVM_HANDLER(RET_STRING,
                 if (current_frame->return_reg)
                     set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
                 /* back to the parents stack frame */
+                if (current_frame->invocation) rxvm_invoke_complete(current_frame->invocation, 1);
                 temp_frame = current_frame;
                 VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {

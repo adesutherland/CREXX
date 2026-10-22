@@ -2917,7 +2917,7 @@ before dereferencing them. Nested calls restore their previous binding; teardown
 detaches the Context and closes scope-owned streams/queues once.
 
 The stable host-root activation owns terminal failure independently of each
-Classic program root. Scope alone calls `beginHostCompletion()` and idempotent
+Classic program root. Scope owns live `beginHostCompletion()` and idempotent
 `endHostCompletion()`; begin resets pending failure/result/EXIT and refuses a
 second live binding. `hostCompletionRoot()->reference RexxActivationArguments`
 returns a checked live owner or an empty reference. Each inherited reference
@@ -2927,6 +2927,10 @@ Internal/external activation inheritance carries that association; external
 program initialization resets its
 own result/EXIT while retaining the host association. New fields follow existing
 fields so their public ordinals remain stable.
+Before a fresh source child enters its distinct HostScope, the coordinator uses
+`endHostCompletion()` to clear only that child's inherited association. This
+preparation leaves the live parent binding intact; ordinary precompiled external
+calls retain their existing inherited failure owner.
 
 `requestProgramFailure(problem:runtime_signal)->boolean` accepts only a live
 owner, retains the first exact owned event and clears result presence. With no
@@ -4946,10 +4950,10 @@ That migration needs its own scope/parity decision; it does not migrate legacy
 RexxScript or equate RexxScript, G and Classic language semantics.
 
 For Classic INTERPRET, the same C frontend must compile interpreted-group source
-to the same C semantic IR and retain every LC-87 obligation. Two implementation
-routes then deserve comparison: IR execution with the C runtime handlers, or
-RXAS compilation/assembly with owned ephemeral image groups. IR execution could
-avoid native generated-code unloading, but still needs bounded resident plans,
+to the same C semantic IR and retain every LC-87 obligation. The
+[selected route](#dynamic-execution-strategy) executes IR with C runtime services;
+RXAS/ephemeral-image execution remains the compared alternative. IR avoids
+native generated-code unloading, but still needs bounded resident plans,
 pins, live caller/label/pool integration, CALL resumption, SIGNAL discard and
 RETURN/EXIT ownership across compiled/interpreted frames. It is not a shortcut
 around those contracts and is not a RexxScript evaluator fallback.
@@ -5034,16 +5038,18 @@ increment. Whole-compiler, platform and formal acceptance QA stay open.
 
 #### STEP07 suitability decision
 
-Retain compiled RXAS for static applications and retain the modern RexxScript
-tree executor. The bounded runner is a feasible optional execution substrate;
-adoption as either product backend needs a further scoped integration decision.
-This prototype does not justify replacing either current route.
+The delivered STEP07 decision retains compiled RXAS for static applications and
+the modern RexxScript tree executor. The bounded runner is a feasible optional
+execution substrate; adoption as either product backend needs a further scoped
+integration decision. The [selected dynamic IR design](#dynamic-execution-strategy)
+below supersedes the earlier compiled-image direction, without claiming an
+already implemented replacement.
 
 | Consumer | Decision and remaining proof |
 |---|---|
 | Independent Level L clients | The admitted profile can execute without a Rexx frontend/runtime or RXAS package. Trusted schema/type/operation services, own frames and explicit suspension form a reusable boundary. Unsupported capabilities fail preflight rather than falling back to another interpreter. |
-| Modern RexxScript | Keep `RexxScriptExecution`. A selected AST-to-IR lowering and runtime profile must preserve its short-circuit/control behavior, NUMERIC_COMMON precedence, diagnostic/source origins, BIF omission/context and explicit capability allowlist, plus output/value/fuel/cancellation limits. Merely registering a Classic BIF must not grant an RS_CAPABILITY facility. Legacy RexxScript remains separate. |
-| Classic INTERPRET | Keep the compiled-image design below authoritative. The IR route is plausible for owning dynamic plans/frames without generated-code unloading, but currently cannot execute unchanged C22 graphs. It needs complete runtime/control handling, conditional-result and `protect` semantics, same-C-frontend group lowering and the real mixed compiled/interpreted continuation bridge. |
+| Modern RexxScript | Keep `RexxScriptExecution` until a selected replacement has its own profile and migration proof. The intended product is untyped G syntax/operators with simplified classes and shared Classic BIFs, not a freeze of the current organic dialect. Preserve selected source/diagnostic, omission/context, capability and execution-limit contracts through that migration; classify intended changes explicitly. Merely registering a Classic BIF must not grant a host facility. Legacy consumers need a separate transition decision. |
+| Classic INTERPRET | Adrian has selected semantic IR execution; the earlier compiled-image proposal is superseded. The detailed contracts below still need implementation authorization. Semantic IR avoids generated-code unloading but cannot execute the complete current C24 contract. It needs runtime/control handling, conditional-result and `protect` semantics, same-C-frontend group lowering and a real mixed compiled/interpreted continuation bridge. |
 
 The Classic bridge must preserve live activation/pool rebinding and label/routine
 owners, delayed CALL resumption versus SIGNAL discard, RETURN/EXIT ownership,
@@ -5070,8 +5076,8 @@ acts at owned boundaries and never preempts callback code.
 
 STEP08 completes package/C integration under the recorded conservative profiles.
 Any RexxScript migration needs
-its own parity proof; final STEP11 retains the complete LC-87/CFC-AC05 bridge,
-resource, source and platform obligations before choosing an alternative.
+its own conformance and classified consumer-compatibility proof; final STEP11
+retains the complete LC-87/CFC-AC05 bridge, resource, source and platform obligations.
 There is no formal research benchmark gate and no performance/replacement claim.
 
 ### Delivery order and verification boundary
@@ -5142,65 +5148,662 @@ first Release verdict/approval in `performance/AGENTS.md`. Static counts alone
 make no speed claim. The performance roadmap records these candidates without
 creating a competing delivery plan.
 
-## INTERPRET — final implementation stage
+<a id="dynamic-execution-strategy"></a>
 
-Use the same C service in interpreted-group mode, with no native compiler or
-RexxScript fallback. Evaluate the source once; validate exact text with implied
-final delimiter, complete groups and no label clauses. The LC-87 obligations,
-[IBM INTERPRET reference](https://www.ibm.com/docs/en/cics-ts/6.x?topic=instructions-interpret)
-and [condition rules](https://www.ibm.com/docs/en/cics-ts/6.x?topic=reference-conditions-condition-traps)
-require caller context and CALL-handler resumption versus SIGNAL termination.
-Repository Unicode extensions and existing exceptions remain explicit.
+## Dynamic execution — selected IR route and implementation contract
 
-### Proposed control protocol
+Adrian approved the semantic IR route and the concrete STEP11 service/search
+contracts below. The implementation and maintained fixtures are present; final
+local qualification, installed and declared platform proof remain open under
+STEP11. Static C continues to emit RXAS. Dynamic source
+uses the same C frontend and neutral Level L semantic IR execution, with Classic
+services supplied by the existing B runtime. The
+G-derived untyped RexxScript profile is a separate language consumer of those
+generic facilities. Native B/RXAS/RXLINK may still prepare the installed tools
+at build time; a runtime source request must not invoke the native assembler or
+a native source compiler. A Rexx assembler remains programme work rather than
+an assumed prerequisite to INTERPRET.
 
-1. Compile/assemble into a private image, verify imports/runtime ABI and publish
-   a generation-checked code handle.
-2. Enter with the **live** borrowed activation and an owned continuation, not a
-   fresh ordinary private Classic invocation.
-3. Run local operations as compiled code. At transfers crossing code owners,
-   return a checked outcome: normal, call request, RETURN, EXIT, SIGNAL or
-   condition. Spill only values live across a resumable boundary and record a
-   verified continuation entry.
-4. The C runtime dispatcher resolves outer routine/label identities. CALL creates
-   a child activation; CALL ON runs its handler and resumes the saved fragment;
-   SIGNAL discards crossed loops/continuations; RETURN/EXIT propagate to their
-   defined owner. A completion tag without actual dispatch/resumption is not
-   an implementation. Outer loops are inactive for interpreted LEAVE/ITERATE.
-5. Unwind pins, values and resources on every path. Nested INTERPRET uses a
-   bounded continuation stack and the replaceable live pool binding. Independent
-   host contexts share no mutable activation state.
+### Facts which determine the choice
 
-This is compiled control flow, not AST interpretation. Compiler owns entry/spill
-layout, runtime owns Classic dispatch, VM owns code storage/safe entry. Ordinary
-static bodies retain direct branches/calls where no cross-owner continuation is
-needed. Final mechanism proof must demonstrate semantic equivalence of these
-routes before full integration. No INTERPRET implementation precedes that stage.
+| Owner | Current contract | Boundary |
+|---|---|---|
+| `levelc/llcgraph`, `llcfrontend`, `llcir` | Pure checked program/group requests, immutable lexical/provider definitions and an optional seven-operation dynamic family beside unchanged C24. | Status/graph/diagnostic queries do not import or invoke the RXAS selector. Runtime grammar/frontend preparation remains subject to STEP11 qualification. |
+| `lib/rxfnsl/execute/llirexecute.crexx` | Owned values/frames, protection, declared invoke/transfer ports, session leases, conditional absence/gates, owned events and frame/terminal cleanup. | Generic execution owns these mechanisms. Classic event matching, pools, routines and source policy stay outside L. |
+| `levelc/llcrxas.crexx`, `llccallemit`, `llctraceemit` | The existing body ABI plus a stable scope and inline finite boundary dispatcher for dynamic-capable bodies. | VM register transport and actual compiled label destinations remain selector-owned; the runtime coordinator does not select a VM PC. |
+| `lib/rxfnsc`, `levelc/dynamic` | Shared Classic values/pools/activation, invocation-owned private pools, immutable dynamic policies, BIF bodies and host adapters; C IR adapters call those owners. | No second AST evaluator, pool algorithm or BIF implementation. Future script classes still need their separate object/value contract. |
+| `lib/rxfnsl/rxas/llrxas.crexx` | Checked instruction records, allocation and RXAS text rendering, using the generated canonical opcode catalogue. | No RXBIN writer or complete typed module/declaration/metadata representation. `llir` binary serialization is semantic IR, not executable RXBIN. |
+| VM calls/loader | `rxinvoke` retains checked callable bindings and immutable scalar/presence windows, then enters the ordinary bytecode/RXPA call boundary. | No raw descriptor is accepted from a routine name, and no ephemeral VM image or detached continuation is needed. |
+| Current RexxScript and L typed frontend | Useful G-shaped scalar parser/operator, source/AST and runtime pieces. | Neither is the intended complete new language. The L G frontend is a statically typed scalar/control/call subset without class grammar; the script class/value contract and migration policy remain to be designed. |
 
-### Proposed code ownership
+### Options
 
-Prefer restricted **ephemeral image groups** over arbitrary existing-module
-unload. Lifecycle: private → verified → published → pinned/running → retired →
-reclaimed. Handles carry owner/generation. Frames, suspended continuations,
-bound entries and diagnostic/source readers pin their group. Retirement prevents
-new entries; reclamation waits for zero pins. Resolver indexes, shared constant
-pools, dispatch tables and source metadata must be reclaimed together. Ephemeral
-pointers cannot escape into permanent imports/caches; stable dependencies can be
-borrowed with explicit lifetimes.
+| Route | Reuse and remaining work | Assessment |
+|---|---|---|
+| **Semantic IR executor with language adapters** | Reuse L source/IR/analysis and execution machinery, plus shared Classic runtime. Complete exceptional/resumable execution and the compiled-caller bridge. Bound IR/source/frame owners instead of generating disposable VM modules. G-derived scripts can use the same neutral engine with their own operators/classes. | **Selected.** Best fit to the requested reusable L boundary and runtime independence from assembly. It is substantial control/runtime work, not merely registering the C24 names. No throughput advantage is established. |
+| **Typed target records → B assembler v1 → existing VM** | Reuse current selector and VM execution/object machinery. Complete typed module/import/export/global/frame/constants/source/contract records, labels/relocations, opcode operands and RXBIN007 publication, then dynamic loading, bridge and bounded image ownership. | Viable alternative and useful future assembler work. Moving it first adds encoding/metadata/image-lifetime work to this delivery. A restricted record consumer can omit textual RXAS parsing and optimizer parity initially; that is still more than an instruction encoder. |
+| **Execute target/RXAS records directly** | Reuse instruction selection but build a new register/reference/call/numeric/interrupt executor. Current L RXAS package does not execute records. | Poor reuse boundary: it duplicates VM responsibilities and couples the shared interpreter to cREXX target mechanics. |
+| **Current native assembler, in-process or subprocess** | Mature encoding/metadata path, still requiring control and image-lifetime work. | Conflicts with the requested runtime independence; retain it as a build-time tool and comparison control. |
+| **Reuse current RexxScript tree execution as Classic INTERPRET** | Reuse an existing evaluator but replace its language/control semantics or add another full Classic execution route. | Does not satisfy the same-C-frontend/full-Classic contract. It also freezes the wrong future RexxScript language. |
 
-Bound resident generated bytes as well as lookup-cache size. Cache identity
-includes source, compiler/runtime/IR ABI versions, imports, options and relevant
-lexical/source environment. Borrow mutable activation state at execution; never
-capture an expired caller in cached code. Cache-free operation is acceptable;
-loading every image forever is not. All capacity pinned means a defined resource
-failure, not eviction of running code. Test nested/concurrent misses, failed
-publication, stale handles, source readers and context teardown.
+A future B assembler may consume complete typed target records and reuse a
+checked native RXBIN format-builder service, or own the full writer in B.
+Neither interface exists today. Choose one format algorithm owner and its
+API/delivery contract when that work is scheduled; do not silently reparse
+rendered assembly as a substitute for missing typed records.
 
-The current public loader has no image-group API. Compare this design with
-context-lifetime retention (insufficient for bounded long-lived use) and child
-contexts (do not inherently share pools/handlers). Exact assembler/VM APIs and
-continuation ABI need approval before coding. Their absence remains an open
-criterion, not a reason to silently weaken INTERPRET.
+### Ownership, profiles and package boundaries
+
+The names below specify logical interfaces; new exported spellings and metadata
+are recorded with the implementation contract before code changes. No opcode,
+RXBIN change, detached VM continuation or recursive VM worker is proposed.
+
+| Owner / proposed interface | Contract |
+|---|---|
+| Neutral `rxfnsl-execute` | Checked plans, opaque binding leases, exact values/presence, IR frames, protection/ports, continuation tokens, conditional-result state and lifecycle hooks. No C instruction names, BIF registry, source search or class semantics. |
+| Frontend-only C request/result | Explicit `program` or `interpret-group` mode returns owned graph/diagnostics and lexical name/entry/fingerprint records. Existing protocol owners prepare entry/condition facts; runtime preparation constructs the graph-bound execution manifest. Group preparation receives the containing program's immutable lexical/binding definitions. `llcgraph` imports no RXAS selector and performs no backend work in result/status/diagnostic accessors. |
+| Shared C execution preparation | One verifier/preparation owner produces invocation, condition, cleanup and observation records consumed by both `llcrxas` and the C IR adapter. Register the complete admitted operation/effect inventory; the fixture adapter is not promoted as a second runtime. |
+| Shared B Classic runtime | Existing values, pool/alias binding, activation/PROCEDURE, numeric, DO, PARSE, conditions, BIFs, host windows, streams/queues and process algorithms. Add checked dynamic policy identities beside compatible static policy handling; no dependency on L or the compiler. |
+| Optional C dynamic coordinator | Owns source requests, runtime registry, sessions, owner/catalogue records and aggregate ledger; invokes shared B services. Its binding leases resolve only to the exact authoritative `reference RexxClassicContext`, never a copied replaceable pool binding. |
+| VM checked invocation service | Owns checked callable capabilities, typed argument cells and ordinary bytecode/RXPA call entry/completion. No RexxValue conversion, Classic condition matching or source lookup. |
+| Host source/resource adapter | Supplies execution-context resource views, deterministic candidates, bounded exact reads and typed failures. C owns the search policy; generic filesystem/VM services supply capabilities. |
+| G-derived RexxScript | Separate untyped G syntax/operator and simplified-class profile using the neutral engine and shared BIFs. Its full language/object/migration work is separate from Classic closure. |
+
+### Implementation interfaces and limits
+
+`levelc/dynamic/llcdynamic` is the C registry and coordinator. Its stable
+`scope(reference Context, fingerprint, names[], entries[], sourceIdentity,
+resourceBase)` retains the authoritative Context reference. Catalogue entries
+are positive callable ordinals, zero for a known label inside a group, and -1
+for absence. `interpret`, `resolve`, `resume`, `condition` and `checkpoint` return
+an owned `boundary`: normal completion, compiled invocation request, owner
+RETURN/SIGNAL/EXIT, original-event failure, or the compatible static-handler
+fallback. The selector owns the finite destination loop. `linkchild`/`unlinkchild`
+bind an ordinary compiled child activation to its parent scope without changing
+the body ABI; internal children share the immutable program catalogue, while an
+independently compiled external program installs its own selected bindings.
+Failure boundaries retain the original owned event and its authored line. The
+compiled dispatcher seeds that line before relaying the event through its
+existing protection, so a source child's fault cannot acquire the caller's
+location. A caller line used for source preparation or pre-entry resolution is
+consumed before successful group or child execution and on normal resumption.
+Registry and manifest ports are derived from the same owning C effect
+summary; terminal diagnostics retain their declared transfer port even when
+their handler delivers an owned failure.
+An eventless neutral limit/protocol failure is materialized through a protected
+raise/catch before ordinary signal relay; its authored line remains a separate
+boundary projection. Existing native events are retained unchanged. Delayed CALL
+completion rechecks the shared activation queue at the same checkpoint before
+releasing either a compiled caller or a suspended IR clause. A buffered HALT
+therefore runs before the next authored clause, while EXIT/failure/SIGNAL stops
+that drain through the existing owner paths.
+Ordinary BIF calls retain the caller activation. A delivered CALL-handler marker
+selects a disposable child Context for ARG/CONDITION/delay semantics, with the
+same live pool/configuration and existing BIF bodies. Different queued CALL
+events are forwarded through the shared activation owner to the interrupted
+caller; same-event suppression and HALT buffering remain that owner's policy.
+
+The IR PARSE adapter supplies caller metadata only for SOURCE, in SOURCEINFO
+form with the current platform and logical source identity. Shared Config and
+activation owners still normalize the program mode and host source path.
+Other PARSE sources receive the required empty metadata argument. An empty AST
+sequence gives generated bootstrap operations the complete owned input span,
+including comments/whitespace; it introduces no authored clause observations
+and does not relax SIGNAL admission.
+
+`scope.bind(name, rxinvoke.binding, signature)` and
+`scope.route(name, target, kind, optionalSignature)` retain already selected
+typed/native and Classic/process definitions. They create no imports from
+runtime strings. `llcbindings.definition` owns the pure metadata projection and
+its conservative byte charge. `llcgraph.request.snapshot` uses those definitions
+for frontend arity/presence admission before new effects; it performs no provider
+artifact acquisition. Actual callable/import roots remain in emitted code.
+Classic/process requests use the existing finite ordinary adapters. Typed calls
+use `rxinvoke` scalar conversion, exact extent/presence and its checked ordinary
+VM invocation boundary. Each typed invocation holds a 1 MiB logical native
+window/payload/completion allowance in the aggregate ledger, plus the existing
+Classic carrier's input charge and a conservative scalar-vector charge.
+Reservation precedes capsule creation; capsules and the held charge are released
+before normal return or relay of the original event. Insufficient headroom
+refuses the call before target entry. This conservative per-call allowance
+preserves the remaining tree budget for nested work; it is a resource policy
+rather than measured RSS.
+
+`RexxClassicInvocation` is shared B storage for PROCEDURE's saved and private
+pools. Both static dynamic-profile instructions and IR operations use it;
+finishing a group never restores a committed pool. Cleanup recognizes exact
+private-pool publication even when CANCEL arrives before the normal commit flag
+store. `RexxClassicHandlerDefinition` retains immutable target/provenance beside
+the existing activation policies. Reserved signed ordinal 2147483647 is accepted
+only with its checked definition; static setters and OFF clear the sidecar.
+Replacement reserves before publication, and ordinary child inheritance retains
+the definition without a parent executable destination token.
+
+`llcdynamicobserve` prepares authored operation locations through the existing
+`llcsrcmap` and `llsource` owners before execution. Full source programs install
+their physical source inventory before INITIALIZE; INTERPRET retains the containing
+program inventory. Shared TRACE writers receive actual assignment, load,
+operator and BIF values and authored clauses. LLM records use shared JSON
+quoting and logical file/line/column; ASM observations identify IR operations,
+never coordinator addresses. A literal-only `core.constant` intermediate has no
+C handler and currently emits no dynamic value observation. This is the accepted
+minor presentation deviation; it is not full expression-event coverage.
+
+The implementation defaults to a 64 MiB logical ledger per invocation tree,
+a 16 MiB immutable group-plan cache, at most 16 MiB per source acquisition,
+64 nested groups per invocation, 64 IR frames per session, 100,000 live IR cells
+and 1,000,000 session dispatches.
+The trusted C registry advertises a 1 MiB output allowance per operation. Source
+policy admits at most 1,024 roots/candidates and 64 configured suffixes.
+Preparation, immutable binding/policy definitions, active graph/session state,
+cache entries and source/snapshot reservations share the tree ledger. Cache
+handles are fresh ledger identities; only unpinned plans are evicted. Caches
+retain graphs, never activations, leases or results. Source-program requests
+currently re-read and prepare each reached resource; group cache keys include
+exact source, mode/ABI, logical identity, lexical and selected capability
+identity, trusted base and configuration generation. These are logical bounds,
+not RSS or uncooperative-host-work guarantees.
+
+`scope.configureSource(enabled, roots)` is the explicit runtime policy switch.
+The compiled standalone dynamic scope starts enabled with no extra roots.
+An embedding must arrange its source policy through this scope boundary or its
+compiler/profile configuration; the native cwd snapshot alone is not a host
+allow/deny configuration API. Wider embedded-host policy and platform/delivery
+qualification remain open rather than granting an ambient-host capability claim.
+
+A dynamic-capable compiled body keeps its current
+`(reference Context, entryOrdinal) -> RexxActivationArguments` ABI. It adds an
+invocation-owned dynamic scope and inline boundary loop, not whole-body CPS or
+control tags hidden inside ordinary result packets. Static C24 graphs/targets
+and existing signed providers remain valid. A versioned optional
+`crexx.c.dynamic` family/profile adds:
+
+| Operation | Semantics |
+|---|---|
+| `group.entry(context:C) -> void` | Marks the generated entry whose initial eligibility is inherited from its containing invocation. Ordinary program-entry checks remain unchanged. |
+| `expansion.begin(context:C) -> void` | Explicitly preserves the PROCEDURE insertion window while evaluating the INTERPRET source expression. |
+| `interpret(source:V, context:C) -> void` | Evaluate the source operand once, prepare group IR, execute synchronously; normal group completion continues after the operation. Declared control ports admit owner transfer or failure. |
+| `owner.return(result:R, context:C) -> void` | Terminal transfer to the owning Classic invocation, using existing return validation/packet constructors. |
+| `owner.signal(name:T, context:C) -> void` | Terminal transfer to a checked label port of the current invocation's program source owner. |
+| `call.owner(arguments:A, context:C){entry:I, function:B} -> R` | Invoke an admitted lexical entry from the immutable containing-program snapshot. Bind its port to the current invocation owner only at execution; compiled targets use inline dispatch, IR targets use ordinary child IR entry. |
+| `call.resolve(arguments:A, context:C){name:T, sourceKey:T, quoted:B, function:B} -> R` | External phase after local/BIF/selected binding resolution, retaining quotation and source spelling. Current `call.missing` cannot distinguish quoted `FOO` from canonical unquoted `foo`. |
+
+These extend the schema explicitly; do not mutate C24 identities, guess quotation
+from case, reinterpret old packets or weaken canonical admission. EXIT retains
+its existing program-root operation, serviced through the admitted transfer
+port. A group's logical normal completion is void; its current canonical C
+transport may return an ordinary absent packet. Authored RETURN always lowers
+to `owner.return`, so transport never identifies owner transfer.
+A full program retains ordinary return packets. Do not infer these differences
+from origins or source text.
+
+Label-free groups resolve unquoted locals before BIFs against the supplied
+immutable lexical snapshot, not their empty label list. Its definition fingerprint
+is a plan dependency; it contains no live owner, pool, dispatch pointer or lease.
+Local matches lower to `call.owner`, while BIF/selected-binding resolution uses
+the same compiler validation as static calls. At session binding, verify the
+current owner's program definition and admitted port against that snapshot.
+Unknown external calls lower to `call.resolve`. Thus group LENGTH cannot silently
+bypass a containing-program label, and cached plans do not capture a live
+catalogue. An embedding supplies this snapshot or explicitly declares an empty
+lexical catalogue; no implicit global routine lookup is added.
+
+Select the dynamic body profile for INTERPRET or enabled automatic-source call
+sites; the standalone C driver provides this capability for unresolved external
+calls. A static-only embedding/profile may disable automatic source lookup and
+continues to use its configured hook/43.1 behavior. Static applications with no
+dynamic capability retain runtime-only closure. Dynamic-aware internal entries
+share their program catalogue; old external Classic providers use the existing
+fresh-root/foreign-policy normalization boundary.
+
+Runtime dynamic closure contains prepared grammar, frontend/source/diagnostics,
+IR/analysis/execution, C adaptation, shared Classic runtime and selected generic
+host services. It excludes `llcrxas`, assembler, linker and native source
+frontends. Native B/RXAS/RXLINK remain build-time seeds only. Explicit binding
+catalogues must retain actual symbol/import roots, required contract metadata
+and native provider identities through static linking; names in strings are not
+link roots. Unselected static applications acquire none of this compiler closure.
+
+### Generic executable contract
+
+A versioned execution manifest is bound to the exact admitted graph/schema,
+operation and origin identities. It declares protection extent, allowed
+invocation/transfer ports, conditional-result gates, setup storage, binding
+leases and frame cleanup services. Verify it after load/rewrite and before
+any effect; stale manifests and arbitrary callback-selected PCs are refused.
+This is optional execution metadata, not a new core wire format by default.
+
+Execute `core.protect` as its existing protected remainder of the invocation,
+with an exceptional entry initialized only by the declaration's admitted setup.
+The language service owns matching and the event; L owns the checked exceptional
+edge. A resumable port is a separately declared suspension site, not permission
+to retry every failing operation. Unknown operations/effects fail preflight;
+recognized host operations with unavailable facilities retain the language's
+reached-error policy rather than being mistaken for unimplemented opcodes.
+
+Keep three storage states: never assigned, present, conditional absent.
+`core.store` may propagate conditional absence without reading a payload;
+loading an absent cell fails. Require the neutral result-gate proof derived from
+the existing C condition/branch contract. In particular, `clause.complete`
+produces R only on the EXIT path; do not manufacture an ordinary absent packet
+on its normal path. Call argument presence remains a separate property.
+
+Runtime faults carry an owned opaque event capsule as well as code, exact payload
+and logical origin; the C capsule preserves the original `runtime_signal`.
+Reducing it to a formatted error string or empty binary payload is insufficient.
+The trusted registry supplies type/event services; saved graphs cannot install
+host callbacks. Context leases carry owner/session/generation identity, resolve
+only during synchronous dispatch and cannot escape into caches/results or a
+foreign execution. Constants cannot manufacture a live lease from bytes.
+
+Add frame enter/return/unwind cleanup hooks alongside once-only terminal handler
+cleanup. C attaches owners at their actual lifetime: invocation/private-pool,
+group/loop, PARSE, command and callback window. L releases frame cells,
+continuations and reservations. Group completion must not release a committed
+invocation private pool. Roll back
+prepared child state if subsequent frame admission fails. Whole-function slot/SSA
+retention is acceptable initially and remains accounted; liveness reclamation is
+not required to make this feature correct.
+
+### Compiled-call bridge and state machine
+
+A compiled invocation owns a stable dynamic scope while its body remains on the
+VM stack. An owner token contains execution identity, invocation identity and
+generation. Its catalogue holds admitted routine/label entries, prepared binding
+capabilities, program resource/source identity and retained handler-policy
+records. Tokens expose neither VM PCs nor pointers. An IR invocation has the
+same logical owner contract with its own frame. Cached plans never own these
+mutable scopes or borrowed bundles.
+
+Boundary records are separate from ordinary Classic results:
+
+| Record | Required owned fields |
+|---|---|
+| Request | Session/generation/request identity, originating owner, operation/origin, admitted target/port, invocation kind, ordered values plus presence, single-use continuation where resumable. |
+| Completion | Normal values/presence, owned fault, or cancellation; original event and logical origin survive. |
+| Owner transfer | RETURN/EXIT/SIGNAL kind, destination owner/generation, checked SIGNAL entry where applicable, owned Classic result/presence and originating clause. |
+
+Owner state is `created -> bound -> running <-> waiting -> closing -> closed`.
+Session state is `ready -> running <-> suspended -> completed/failed/transferred/cancelled`.
+Closing revokes entry rights/generations before cleanup. Resume validates the
+entire completion before consuming its token; malformed user completion leaves
+an otherwise valid suspension available, while a malformed trusted handler
+terminalizes the run. Nested execution suspends the parent and creates an
+admitted child, never reenters the same busy session.
+
+The compiler emits a boundary loop at each dynamic site inside its ordinary body.
+
+Each loop has a distinct successor/source observation. Its cold dispatch arms
+currently repeat at those sites; this is a conservative emitted-size cost owned
+by `C-DYNAMIC-DISPATCH-SIZE` in the plan. Sharing them must preserve those
+continuations and cleanup. Ordinary helper calls use the checked full fixed ABI
+window, including absent optional slots with presence cleared, beside the
+implicit method receiver. Omission shortens neither the physical window nor its
+declared lifetime.
+
+1. Construct the checked group/source request and advance the coordinator.
+2. On normal completion release request state, reinstall numeric/observer state
+   and continue at the site's existing successor.
+3. On a compiled routine/handler request suspend IR, call the finite admitted
+   entry using existing local/provider/BIF call sequences, then resume with its
+   ordinary result or owned event. All child cleanup precedes resume.
+4. On owner transfer discard only crossed IR/group owners, then use the existing
+   compiled body's RETURN, program-root EXIT propagation or same-frame SIGNAL
+   cleanup/branch. The executor never jumps into another VM frame.
+5. On escaping fault/cancellation terminate affected IR owners before the existing
+   condition/relay path. An absent result after terminal host failure must not
+   become 44.1 or allow a later expression operand to execute.
+
+Natural group end resumes INTERPRET. RETURN targets its containing invocation.
+SIGNAL targets that invocation's admitted source label and closes its crossed
+loops/groups. SIGNAL in a called routine or CALL handler acts in that child;
+it must leave the suspended parent group intact. EXIT targets programRoot;
+an external source program has a separate root, so its EXIT completes that
+program and its caller resumes. No public suspended borrow outlives a waiting
+compiled owner.
+
+Group lowering begins with an empty lexical loop stack, so outer LEAVE/ITERATE
+is invalid. Runtime loop keys include invocation/frame identity, avoiding
+collisions when a plan recurses. PROCEDURE uses the existing eligibility and
+EXPOSE/private-pool owners. INTERPRET must preserve the insertion semantics of a
+first generated PROCEDURE in an eligible called invocation, not consume that
+right merely by entering the coordinator or create a new right for a later
+instruction. Empty and nested groups preserve this distinction. Restore the
+original bundle binding before releasing any private owner on actual invocation
+exit. A successful interpreted PROCEDURE commits its pool to that invocation;
+normal group completion, trapped group failure or same-invocation SIGNAL must
+retain it for later compiled clauses. Dynamic-capable bodies therefore prepare
+one saved-entry/private-pool/commit owner even without a static PROCEDURE, shared
+by static and interpreted entries.
+
+Specifically exempt INTERPRET expansion from the current entry landing's eager
+eligibility consumption. The C eligibility proof admits an explicit source
+acquisition/expansion region, not arbitrary semantic work while fresh. Group
+mode admits the initial generated PROCEDURE insertion window without labels;
+ordinary static misplaced-PROCEDURE diagnostics remain unchanged. Empty/null/
+comment-only groups and nested wrappers preserve the current eligibility;
+the first generated NOP/IF/DO or other ordinary instruction consumes it. Main,
+already-consumed and second-PROCEDURE cases retain their existing errors.
+
+### Persistent dynamic conditions and observations
+
+An ON declaration executed in a group can remain active after that group ends.
+Do not leave a group-local static ordinal in the activation. An additive checked
+handler reference identifies owner/catalogue generation, policy kind, admitted
+target and required source provenance. Preserve compatible static ordinal
+adapters; internal inheritance retains valid policy records, while external
+program entry keeps the existing foreign-policy clearing rules. Reserve a new
+record before changing policy; retained source records need not pin a whole IR
+plan.
+
+An internal child inherits the immutable target definition/provenance and binds
+delivery to its own invocation owner; it must not inherit a parent invocation's
+executable destination token. Replacement/OFF releases the previous policy
+record when no child/delivery/source reader pins it. Repeated ON execution must
+not append permanently retained records. The invocation's private-pool binding
+likewise lives in stable invocation-owned storage, never a temporary group or
+copied handler object.
+
+Dynamic-capable compiled bodies therefore require invocation protection even
+without static SIGNAL ON, authored clause checkpoints even without static CALL
+ON, and checked catalogue fallback in both condition paths. Static-only bodies
+retain current elision. Keep the existing pending-condition, DELAY/suppression,
+CONDITION, HALT buffering and clause-clock algorithms. Capture truth, arguments
+and intermediate completion before delayed handler dispatch; ignore handler
+return values and resume once after child cleanup. Only a transfer crossing the
+interrupted invocation or ending its program root forbids resume; child-local
+SIGNAL and an external child-root EXIT retain ordinary child completion behavior.
+Policies installed by a group must work in later static code and inherited
+internal calls, including after the group plan has been evicted.
+
+Install active numeric settings in the VM frame actually executing each runtime
+operation/call, and reinstall changes in the waiting compiled frame on resume.
+Changing the activation or a helper's numeric frame alone is insufficient.
+Suspend the implementation-level compiled TRACE observer during IR execution;
+produce authored IR source/clause/value events through shared observation and
+formatting services. Restore the appropriate observer for compiled children and
+the parent on resume. Coordinator addresses never represent interpreted source.
+
+Protected dispatch must capture original native events and clear executor busy
+state before aborting. Current outer `cancel()` cannot repair a handler that
+escaped while `_busy=1`. Abort revokes tokens, runs frame and terminal cleanup,
+releases reservations/pins, then uses existing signal relay with original payload
+and origin. Ordinary VM frame recycling is not session cleanup. Maskable CANCEL
+is covered; strong KILL/shutdown retain native terminal teardown, without a
+promise of general finally semantics.
+
+### Checked ordinary bytecode/RXPA invocation
+
+Use a generic built-in RXPA service, with new internal VM boundary hooks. Finite
+AOT wrappers remain controls, not the final mechanism: scalar varargs must be
+bounded by advertised resources rather than preinstalled wrapper arity. The
+service admits the existing Group 2 procedure shapes, never arbitrary objects,
+true reference values, tasks or B/G global variables.
+
+| Logical service | Exact obligation |
+|---|---|
+| Resolve capability | Accept an explicit retained binding, canonical callable, full expected contract and native provider identity. Reuse rxcontract and loaded-program/provider owners. Return an opaque VM/registry/generation-bound capability; reject stale, foreign, conflicting or unavailable targets before dereferencing. No raw DCALL pointer is exposed. |
+| Build invocation | Owned native-backed request with typed setters/getters, original argument extent and a 0/1 presence vector. C uses existing RexxValue conversions; VM stores already converted scalar/nominally admitted values. Preserve middle/trailing omissions, zero actuals, empty/NUL data. Validate required/fixed/vararg rules and integer arithmetic before allocation/effects. |
+| Seal | Finish every conversion and reservation before callee entry. Use existing flags: disposable present temporary 768, exposed private present cell 256, omitted 0. Callee owns default evaluation and ordinary formal checks. Exposed updates are discarded; true references require explicit adapters. |
+| Invoke once | `building -> sealed -> running -> complete/failed/discarded`. A nonzero integer result is ordinary data. Void/absence and failure are distinct; result ownership transfers before temporary cells are released. |
+
+The selected logical API is:
+
+```text
+resolve(retainedBinding, expectedContract) -> CallableCapability
+prepare(capability, scalarCapsules[], presence[], originalExtent, budgetLease)
+    -> Invocation
+invoke(invocation) -> void
+completion(invocation) -> OwnedCompletion
+discard(invocation) -> void
+```
+
+Capsules are immutable native-backed owned values, not pointer encodings in a
+binary string. Canonical input tags are absent, int, boolean, float, decimal,
+string, binary and nominal. Boolean arguments/results use the existing checked
+0/1 semantics. Typed factories/setters receive the matching B/VM primitive;
+length-bearing string/binary values retain exact empty/NUL bytes. Decimal/float
+values use existing VM numeric storage, not another parser/codec. Both vectors
+have exactly originalExtent entries; presence 0 requires absent with no payload,
+and presence 1 requires the contract's admitted value kind. Nominal values need
+a checked type capability and owned object; the C adapter admits only its already
+approved RexxValue/Classic packet shapes, not arbitrary script classes. Capsules
+never confer reference/global access. Void is a completion kind, not an actual.
+
+Original logical extent remains separate from physical ABI count: normalize the
+window to `max(originalExtent,fixedFormalCount)`, adding absent fixed cells while
+retaining the original vector for Classic bookkeeping. Callee ARGS/default/check
+behavior remains the existing Group 2 padded ordinary-call contract. Conversion
+of present values, bounds and omitted-variadic validation precede sealing.
+fixedFormalCount excludes the trailing vararg formal marker. `prepare` builds
+and seals atomically; partially built invocations are never published.
+
+The invocation owns its raw target return cell. `invoke` is declared void;
+the target cannot write an arbitrary scalar into the service's declared result
+cell. On normal target return copy/type-check that value into owned completion,
+mark complete, then release target/window owners. Completion getters expose its
+exact kind and typed value or owned original event; replay and incompatible
+getters fail without changing the completed record.
+
+The ordinary native-call handler opens a private, generation-checked boundary
+for this designated service. Its callback submits one owned target/window and
+returns from C. The native-call epilogue consumes that request and enters a
+bytecode target through ordinary child-frame initialization with the live B
+coordinator as parent. RET completes the request and continues after the service
+call. RXPA targets reuse the existing load-selected native invoker. No recursive
+`run()`, `ext_proc`/parentless embedding entry, global pending queue or fabricated
+caller register base is used.
+
+Every admitted native-call form, including compiler-fused forms, must establish
+the same scoped boundary. Direct native/CALLMETHOD/embedding entry without one
+fails before consuming the sealed invocation. The service submits only on its
+own boundary; nested callbacks/initializers cannot consume its request/result.
+
+The owned argument window is pinned by the target frame. RET, signal unwind,
+failed entry and teardown complete/discard it exactly once, releasing reference
+owners before cells. Nested native calls/initializers cannot consume another
+boundary's request. Full contract/provider identities and retained link roots
+prevent a runtime name from selecting an incompatible or stripped target. This
+is additive internal VM/service work; a new public C embedding API is not part
+of the proposal. No-child RXPA success/failure, failed initialization/frame entry,
+all RET variants, signal-return/unwind and terminal teardown each complete or
+discard exactly once, preserving the primary event if cleanup also fails.
+Its exact declaration/lifetime contract is included in detailed
+design approval, with no ISA/RXBIN expansion.
+
+### Shared BIF direction
+
+Adrian confirms **one shared Classic-compatible BIF family for C and future
+RexxScript**, independent of their different expression/operator rules. Where
+B/G equivalents have materially diverged, investigate convergence toward Classic
+argument/default/value/error behavior rather than redefining C to match typed
+helpers. This is a contract/adapter audit, not a blanket B/G API rewrite. Typed
+result representations and necessary language policies remain explicit. For
+example, typed LENGTH returns an integer while the shared Classic wrapper returns
+a RexxValue; operator interaction must be defined rather than inferred from
+matching printed output. Existing numeric helpers already share many Classic
+rounding/context contracts, so presumed disagreement is not evidence of a defect.
+
+Keep one implementation/data owner for each algorithm. Preserve actual argument
+presence, numeric context, located errors and the visible pool/configuration
+through each adapter. Host BIF availability remains an explicit script capability:
+sharing DATE/STREAM/VALUE bodies must not automatically grant ambient clock,
+filesystem or external-pool access. Audit the complete selected BIF manifest;
+current RexxScript's smaller allowlist is implementation evidence, not the new
+product's final library definition.
+
+The approved C/O Latin-range casing rule remains a **language compatibility
+policy**, not a new generic Unicode algorithm. B/G retains proper Unicode
+casing. Current shared Classic UPPER/LOWER entries select the C mapping, so the
+future script casing profile needs an explicit adapter/policy choice. Sharing
+BIF implementations must not propagate the C-only mapping into B/G accidentally.
+
+<a id="interpret--final-implementation-stage"></a>
+
+### Source modes and Rexx program search order
+
+INTERPRET evaluates its expression once and validates the original exact Unicode
+source without NUL truncation. The same lexer admits NUL in comments/literals
+and rejects it as a standalone source token; no blanket pre-parser ban changes
+that existing contract. Implied
+final delimiter insertion has a synthetic mapped origin. Accept complete groups
+and nested INTERPRET, reject label clauses and incomplete DO/SELECT, and retain
+the caller's live ARG, pool binding, numeric/ADDRESS/TRACE/condition and host state.
+Empty input is a successful no-op. Compilation failures become located Classic
+SYNTAX events at the authored INTERPRET boundary with retained generated-source
+detail; they do not publish a partially executable plan. NUL data in ordinary
+arguments/results remains supported.
+
+A source routine uses full-program mode: labels are legal; it owns a fresh
+external root, pool, UTF8 configuration and source inventory. Preserve Group 2's
+approved numeric/ADDRESS/TRACE inheritance and normalized external condition
+scope, rather than substituting another implementation's external defaults.
+FUNCTION/SUBROUTINE entry preserves actual extent/presence. Bare function RETURN
+retains child 45.1; EOF/bare EXIT without data yields absent completion, producing
+caller 44.1 for a function or dropping RESULT/.RESULT for CALL. Present empty is
+present. Child EXIT ends only its own root. A process binding, including one to
+a Rexx executable/driver, remains argv + inherited streams + exit-status result.
+Source suffixes, shebangs and execute bits never select that ABI.
+
+The language order is **internal -> BIF -> external**. Quoted names bypass local
+labels; quoted uppercase `LENGTH` still selects the BIF, while quoted lowercase
+`length` does not. Preserve existing prepared-alias matching and once-only ordered
+actual evaluation. IBM documents the language order and system-dependent external
+interfaces ([CALL](https://www.ibm.com/docs/en/zvm/7.2?topic=instructions-call),
+[external search](https://www.ibm.com/docs/en/zos/3.1.0?topic=subroutines-search-order)).
+The filesystem sequence below is the approved cREXX host policy, not a universal
+ANSI directory rule.
+
+| Phase, in order | Continue only when |
+|---|---|
+| Unquoted internal entry | No local match; selected targets execute with existing child-activation rules. |
+| Exact canonical BIF | No BIF match; BIF failure never falls through. |
+| Explicit prepared binding | No binding. Selected Classic/typed/RXPA/process loading, contract or conversion failure is terminal. |
+| Configured EXTERNALROUTINE hook | Explicitly unhandled. Handled absence is terminal, with normal CALL/function result rules; hook failure is terminal. |
+| Configured Classic source resolver | Every eligible candidate is genuinely absent. Missing resolver also declines. |
+| Missing routine | Raise existing 43.1 at the reached call. |
+
+Default standalone source policy:
+
+1. Enter the source phase only after actual evaluation and an unhandled hook.
+   Then freeze one owned resource-view snapshot for all candidate probes: trusted caller program
+   resource directory, execution-context cwd, then explicit `sourceRoots` in
+   configured order. Remove duplicate roots while preserving the first and
+   normal host filesystem comparison rules. Never infer a physical base from
+   PARSE SOURCE, a logical name, debug metadata or a build checkout path.
+2. For an unqualified basename without an explicit extension, try `.rexx` then
+   the exact extensionless name **inside each directory**: `A/foo.rexx`, `A/foo`,
+   `B/foo.rexx`, `B/foo`. Quoted spelling/case is exact; unquoted source stems use
+   shared Classic lowercase of the canonical routine name. Do not lowercase
+   directories, normalize Unicode or scan for alternative capitalizations.
+3. An explicitly supplied extension means one exact filename in each root.
+   `.crexx` is supported when explicitly named or configured as a suffix, not
+   searched by default. All selected source uses C admission; a B/G header is
+   terminal error, never a native frontend fallback.
+4. A target containing a path bypasses directory/suffix search. An absolute path
+   is exact; an explicit relative path anchors only to execution-context cwd.
+   Thus `"./foo"` is exact, while `"foo"` uses the basename suffix policy.
+5. No implicit OS PATH, REXXPATH, provider/import roots or new environment variable.
+   Hosts may explicitly derive roots from a chosen environment with defined
+   separators, empty-item handling, relative base and configuration generation.
+   Embedded hosts grant no ambient filesystem access unless configured.
+
+Names are not trimmed. Empty names or names containing U+0000 have no eligible
+filesystem candidates after the hook; they reach 43.1 without entering a C-string
+path API. A nonleading basename dot marks an explicit extension, including a
+trailing dot; a leading dot alone does not. Thus `.helper` is a stem and `foo.`
+is exact. `.`/`..` and any platform path-separator form are explicit locators.
+The platform locator owns separators, drives and UNC syntax: POSIX `/`, and
+Windows slash/backslash/drive/UNC forms are recognized. Absolute drive/UNC paths
+are exact. Drive-relative or drive-rooted forms require their explicit base in
+the execution resource snapshot; absent that capability, report a typed path
+failure rather than consulting process-global per-drive cwd. Normal relative
+paths use context cwd. Locator classification/normalization does not invent case
+alternatives or alter the quoted routine key.
+
+A file-backed child establishes its own trusted resource base for nested calls;
+INTERPRET inherits the containing program's base. A compiled initial program
+without a source locator omits that root unless its host supplies an application
+resource base. The resource view must use the execution-context owner used by
+ADDRESS/process services. Current GETENV/rxfs.cwd/abspath read process-wide state
+and are not a substitute for this isolated snapshot.
+
+### Bounded acquisition, failures and resident ownership
+
+Define a generic `readSourceResource(locator, byteBudget)` service with owned
+`FOUND(bytes, logicalIdentity, resourceBase, revision)`, `NOT_FOUND`,
+`ERROR(originalEvent)` and `LIMIT` results. Only genuine absence permits the
+next candidate. Open one resource, establish regular-file/type policy on that
+handle, read bounded chunks before append and close on every path. Follow normal
+host symlink/reparse behavior under the configured resource capability; do not
+silently adopt current pathkind's no-final-symlink restriction. Use a narrow
+filesystem-owned open/status/bounded-read adapter where current APIs cannot
+preserve these outcomes. Reuse native I/O mechanisms, not a second platform
+path/stream implementation or a new ISA operation.
+
+The adapter is `rxfs.contextcwd` plus immutable `rxfs.source(path,budget)`.
+The former obtains the ADDRESS/process execution owner's owned resource view;
+the latter returns found/absent/error/limit status, exact binary bytes and native
+error classification. Both source resources and host-dependent locator/cwd
+queries run session-affine. The source handle is checked for regular-file type,
+read in bounded chunks with an exact-bound EOF probe, and closed on every path.
+`llcsource.resourceview` freezes the roots/cwd/base policy for one resolution;
+it never substitutes `rxfs.cwd`, PATH or an executable launch. File children
+copy explicit host streams/providers into an owned Config, clear inherited host
+access/ownership, then set the existing UTF8 profile and establish their own host
+scope and source inventory.
+
+Current pathkind conflates inaccessible/unsupported/symlink cases, FOPEN failure
+loses classification, and readbinary accumulates without a caller bound. Those
+are identified interface gaps, not proof of the proposed reader. Do not pass all
+roots to an opener that collapses failures and keeps searching. A found but
+unreadable/invalid/denied source, bad encoding/header/syntax, unavailable runtime
+facility or execution failure is terminal. Preserve the owning event and origin;
+use existing resource/unavailable classification, never rewrite every failure
+as 43.1 or try another file/executable/shell.
+
+An immutable source-resolution context owns roots/suffix/case policy, trusted
+base/cwd/resource view, configuration generation, prepared-binding fingerprint
+and candidate/source/work/nesting budgets. Reserve acquisition, implied delimiter,
+source maps and preparation scratch before construction/publication. Parse once
+into an immutable prepared plan; run with fresh execution state.
+
+One aggregate owner ledger accounts source, graph/constants, preparation scratch,
+registry/dependency snapshots, cached plans, active/suspended frames, values,
+pending events/results, dynamic policy/source readers and VM invocation windows.
+Nested INTERPRET and source calls do not reset that ledger. Shared caches have a
+runtime-wide cap plus per-context quotas. Charge an owner once and account actual
+copies separately. Logical accounting is not an RSS guarantee or a bound on
+uncooperative host work.
+
+Cache exact source bytes plus program/group/profile/options, compiler/L/runtime/
+BIF/service ABIs, immutable lexical/binding definition fingerprints and dependency
+identities. Include logical source identity, authored mapping and any captured
+trusted resource base/configuration generation: equal bytes at different program
+locations must retain different diagnostics/PARSE SOURCE/nested lookup. Runtime
+cwd and other per-call resource view fields are freshly bound, never captured.
+Never cache activations,
+leases, host windows or results. Ordinary filesystem calls re-resolve/re-read
+before cache reuse; path/mtime is insufficient and misses are not persistently
+cached. An immutable host revision may provide a stronger explicit contract.
+Pin active/nested/suspended owners and readers. Evict only unpinned entries;
+all-pinned exhaustion fails the new reservation without damaging existing runs.
+Owner/generation validation rejects stale/foreign handles. Failure, transfer,
+cancellation and teardown release every affected run-owned pin/window/value.
+
+### Delivery and approval boundary
+
+The [detailed STEP11 plan](../PLAN.md#dynamic-execution-plan) owns stable acceptance,
+dependencies, mechanism proof and implementation status. The IR route, concrete
+search policy and additive invocation/resource interfaces above are approved.
+The implementation is locally qualified with maintained focused fixtures.
+Selected component and end-to-end checks cover the neutral executor, invocation
+bridge, dynamic runtime and source-program integration. The wider registered
+inventory remains available for later QA. Formal
+compiler/platform/delivery QA follows feature completion; all LC-87/CFC criteria
+remain open. RexxScript consumes the reusable engine under its separately defined
+G-derived profile; neither its full class implementation nor the Rexx assembler
+is a prerequisite to Classic INTERPRET.
 
 <a id="clause-clock-contract"></a>
 

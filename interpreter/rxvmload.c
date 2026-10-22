@@ -40,6 +40,7 @@
 #define RXPA_CATALOGUE_UNLOCK() ((void)pthread_mutex_unlock(&rxpa_catalogue_lock))
 #endif
 #include "rxvmintp.h"
+#include "rxvmlinkindex.h"
 #include "rxvmchannel.h"
 #include "rxastree.h"
 #include "rxvmvars.h"
@@ -47,6 +48,7 @@
 #include "rxpa.h"
 #include "rxcrexxcmd.h"
 #include "rxvmparse_bindings.h"
+#include "rxvminvoke.h"
 
 // RXPA (Plugin Architecture) Support declarations  for this file
 
@@ -62,9 +64,16 @@ int rxvm_object_set_type(rxpa_attribute_value destination, const char *class_nam
 int rxvm_string_set(rxpa_attribute_value destination, const char *data, size_t length);
 static int rxvm_native_declaration(const char *, const char *, size_t, size_t,
         rxpa_native_declaration_v1 *, const char **, size_t *, size_t *);
+static int rxvm_resource_view(rxpa_attribute_value destination) {
+    char *directory = NULL;
+    int status = rxcrexxcmd_active_resource_snapshot(&directory);
+    if (!status) status = rxvm_string_set(destination, directory, strlen(directory));
+    free(directory);
+    return status;
+}
 static const rxpa_host_services_v1 rxpa_host_services = {
     sizeof(rxpa_host_services_v1), RXPA_HOST_SERVICES_ABI_V1, rxvm_string_view,
-    rxvm_object_set_type, rxvm_string_set, rxvm_native_declaration
+    rxvm_object_set_type, rxvm_string_set, rxvm_native_declaration, rxvm_resource_view
 };
 void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
@@ -384,6 +393,7 @@ static int rxinimod_common(rxvm_context *context,
                            unsigned char owns_runtime) {
     if (!context || !runtime) return 0;
     rxvm_parse_cursor_init();
+    rxvm_invoke_init();
 #if defined(CREXX_VM_CLASSIC_PROVIDERS) && defined(CREXX_VM_SINGLE_THREADED)
     { extern void crexx_cstream_init(void); extern void crexx_mainframe_fs_init(void);
       crexx_cstream_init(); crexx_mainframe_fs_init(); }
@@ -451,6 +461,9 @@ static int rxinimod_common(rxvm_context *context,
     context->active.compatibility_interrupts = 0;
     context->active.external_mailbox_owner = 0;
     context->active.external_mailbox_claim = 0;
+    context->active.invocation_boundary = 0;
+    context->active.invocation_fault_sink = 0;
+    context->active.invocation_fault_entry = 0;
     rxvmplugin_instance_set_init(&context->plugin_instances);
     context->rxpa_libraries = 0;
     context->rxpa_sessions = 0;
@@ -1533,9 +1546,10 @@ static int provider_signature_text_equal(const char *left,
     return equal;
 }
 
-static int provider_module_declares(const module *mod,
+static int provider_module_declares_bounded(const module *mod,
                                     const char *provider_id,
-                                    const char *symbol) {
+                                    const char *symbol,
+                                    size_t work, size_t *effort) {
     int offset;
     size_t visited = 0u;
 
@@ -1548,6 +1562,12 @@ static int provider_module_declares(const module *mod,
             return 0;
         }
         entry = (const meta_entry *)(mod->segment.const_pool + (size_t)offset);
+        if (entry->base.size_in_pool < sizeof(meta_entry) ||
+            entry->base.size_in_pool > mod->segment.const_size - (size_t)offset) return 0;
+        if (effort) {
+            if (entry->base.size_in_pool > work - *effort) return -1;
+            *effort += entry->base.size_in_pool;
+        }
         if (entry->base.type == META_PROVIDER &&
             entry->base.size_in_pool >= sizeof(meta_provider_constant)) {
             const meta_provider_constant *provider =
@@ -1565,6 +1585,90 @@ static int provider_module_declares(const module *mod,
         offset = entry->next;
     }
     return 0;
+}
+
+static int provider_module_declares(const module *mod,
+                                    const char *provider_id,
+                                    const char *symbol) {
+    return provider_module_declares_bounded(mod,provider_id,symbol,0u,NULL);
+}
+
+/* The loader owns the mapping from member metadata to callable ABI kind. */
+static unsigned int provider_member_callable_kind(const module *owner,
+                                                const meta_member_constant *member,
+                                                const char *callable) {
+    const char *name=provider_module_string(owner,member->owner);
+    const char *kind=provider_module_string(owner,member->kind);
+    const char *part=provider_module_string(owner,member->member);
+    size_t name_length;
+    if (!name || !kind || !part || !callable) return 0;
+    name_length=strlen(name);
+    if (strncmp(callable,name,name_length) || callable[name_length]!='.') return 0;
+    {
+        const char *suffix=callable+name_length+1;
+        if (!strcmp(kind,"factory")) {
+            static const char prefix[]="\xc2\xa7" "factory";
+            size_t length=sizeof(prefix)-1;
+            return !strncmp(suffix,prefix,length) &&
+                (!strcmp(part,"*") ? !suffix[length] : suffix[length]=='.' && !strcmp(suffix+length+1,part)) ? 2u : 0u;
+        }
+        return !strcmp(suffix,part) ? 1u : 0u;
+    }
+}
+
+/* The checked ordinary-call service shares the loader's metadata/provenance
+ * validation rather than maintaining another native-provider resolver. */
+static int provider_callable_loaded(rxvm_context *, const char *, const char *,
+                                    const module *, const meta_func_constant *,
+                                    const proc_runtime *);
+const char *rxvm_invoke_metadata_string(module *mod, size_t offset) {
+    return provider_module_string(mod, offset);
+}
+int rxvm_invoke_provider_matches(module *mod, const char *name, const char *provider) {
+    rxvm_context *context = rxvm_active_context_current();
+    proc_runtime *selected;
+    const meta_func_constant *required;
+    int offset;
+    size_t visited=0;
+    if (!context || !mod || !name || !provider) return 0;
+    selected=rxvm_link_index_resolve_procedure(context,NULL,name,strlen(name));
+    /* Linked imports retain their importing module's metadata, while the
+     * loader patches their runtime entry to the actual bytecode/native target. */
+    if (!selected || (!!*provider != !selected->binarySpace)) return 0;
+    offset=mod->meta_head;
+    while (offset!=-1 && visited++<=mod->segment.const_size/8u+1u) {
+        const meta_entry *entry;
+        if (offset<0 || (size_t)offset>mod->segment.const_size ||
+            mod->segment.const_size-(size_t)offset<sizeof(*entry)) return 0;
+        entry=(const meta_entry *)(mod->segment.const_pool+(size_t)offset);
+        if (entry->base.type==META_MEMBER && entry->base.size_in_pool>=sizeof(meta_member_constant) &&
+            provider_member_callable_kind(mod,(const meta_member_constant *)entry,name)) return 0;
+        offset=entry->next;
+    }
+    if (offset!=-1) return 0;
+    if (!*provider) return 1;
+    required=provider_module_function(mod,name);
+    return required && provider_callable_loaded(context,provider,name,mod,
+                                                required,selected)==1;
+}
+int rxvm_invoke_is_task(module *mod, const char *name) {
+    int offset;
+    size_t visited=0;
+    if (!mod || !name) return 1;
+    offset=mod->meta_head;
+    while (offset!=-1 && visited++<=mod->segment.const_size/8u+1u) {
+        const meta_entry *entry;
+        if (offset<0 || (size_t)offset>mod->segment.const_size ||
+            mod->segment.const_size-(size_t)offset<sizeof(*entry)) return 1;
+        entry=(const meta_entry *)(mod->segment.const_pool+(size_t)offset);
+        if (entry->base.type==META_TASK_TARGET && entry->base.size_in_pool>=sizeof(meta_task_target_constant)) {
+            const meta_task_target_constant *task=(const meta_task_target_constant *)entry;
+            const char *symbol=provider_module_string(mod,task->symbol);
+            if (symbol && !strcmp(symbol,name)) return 1;
+        }
+        offset=entry->next;
+    }
+    return offset!=-1;
 }
 
 static int provider_signature_matches(const module *required_module,
@@ -1597,7 +1701,8 @@ static int provider_callable_loaded(rxvm_context *context,
                                     const char *provider_id,
                                     const char *symbol,
                                     const module *required_module,
-                                    const meta_func_constant *required) {
+                                    const meta_func_constant *required,
+                                    const proc_runtime *selected) {
     size_t index;
     int provider_seen = 0;
 
@@ -1611,6 +1716,15 @@ static int provider_callable_loaded(rxvm_context *context,
         if (!native) return -1;
         if (!provider_signature_matches(required_module, required,
                                         candidate, native)) return -1;
+        if (selected) {
+            const proc_runtime *actual = rxvm_get_module_runtime_procedure(
+                    (module *)candidate, native->func);
+            if (!actual || selected->binarySpace != actual->binarySpace ||
+                selected->start != actual->start ||
+                selected->native_capabilities != actual->native_capabilities ||
+                (selected->native_invoker == rxvm_callfunc_session) !=
+                        (actual->native_invoker == rxvm_callfunc_session)) return -1;
+        }
         return 1;
     }
     return provider_seen ? -1 : 0;
@@ -1657,6 +1771,8 @@ static int rxvm_native_declaration(const char *artifact, const char *callable,
     const module *owner = NULL;
     const char *message = "Native declaration is unavailable";
     const char *provider = NULL;
+    const char *requested_provider = NULL;
+    const char *loaded_provider = NULL;
     size_t payload = 0u, effort = 0u, index, extent;
     int result = 1, opened = 0, found = 0;
 
@@ -1671,10 +1787,13 @@ static int rxvm_native_declaration(const char *artifact, const char *callable,
             if (error_out) *error_out = "Nested native declaration query";
             return 1;
         }
+    if (artifact && strncmp(artifact,"provider:",9u)==0)
+        loaded_provider=artifact+9u;
     if (!artifact || !callable || !*callable ||
         (extent = strlen(artifact)) < 9u ||
-        strcmp(artifact + extent - 9u, ".rxplugin") != 0) {
-        if (error_out) *error_out = "Native declaration requires an explicit .rxplugin artifact";
+        (loaded_provider ? !provider_id_valid(loaded_provider) :
+         strcmp(artifact + extent - 9u, ".rxplugin") != 0)) {
+        if (error_out) *error_out = "Native declaration requires an explicit .rxplugin artifact or provider:<id>";
         return 1;
     }
     if (!native_query_charge(extent, bytes, &payload) ||
@@ -1685,29 +1804,49 @@ static int rxvm_native_declaration(const char *artifact, const char *callable,
     guard.context = context; guard.previous = native_declaration_queries;
     native_declaration_queries = &guard;
     memset(&manifest, 0, sizeof(manifest));
-    if (rxpa_open_plugin(NULL, (char *)artifact, &manifest)) {
-        message = "Cannot open native declaration artifact"; goto guarded_done;
-    }
-    opened = 1;
-    if (!provider_id_valid(manifest.plugin_id)) {
-        message = "Native declaration requires a manifest provider identity";
-        goto guarded_done;
-    }
-    for (index = 0u; index < context->num_modules; ++index) {
-        const module *candidate = context->modules[index];
-        if (!native_query_charge(1u, work, &effort)) {
-            result = 2; message = "Native declaration module budget"; goto guarded_done;
+    if (loaded_provider) {
+        /* This locator grants only a view of a provider already owned by this
+         * context. It never probes a path, opens a library or creates a session. */
+        requested_provider=loaded_provider;
+        for (index=0u; index<context->num_modules; ++index) {
+            int declared;
+            if (!native_query_charge(1u,work,&effort)) {
+                result=2; message="Native declaration module budget"; goto guarded_done;
+            }
+            declared=provider_module_declares_bounded(context->modules[index],
+                    loaded_provider,callable,work,&effort);
+            if (declared<0) {
+                result=2; message="Native declaration metadata budget"; goto guarded_done;
+            }
+            if (declared) { owner=context->modules[index]; break; }
         }
-        if (candidate->native && strcmp(candidate->name, artifact) == 0) {
-            owner = candidate; break;
+        if (!owner) { message="Loaded native provider callable is unavailable"; goto guarded_done; }
+    } else {
+        if (rxpa_open_plugin(NULL, (char *)artifact, &manifest)) {
+            message = "Cannot open native declaration artifact"; goto guarded_done;
         }
-    }
-    if (!owner) {
-        int loaded = rxldmod_provider(context, (char *)artifact, manifest.plugin_id);
-        if (loaded <= 0 || (size_t)loaded > context->num_modules) {
-            message = "Cannot load native declaration artifact"; goto guarded_done;
+        opened = 1;
+        if (!provider_id_valid(manifest.plugin_id)) {
+            message = "Native declaration requires a manifest provider identity";
+            goto guarded_done;
         }
-        owner = context->modules[(size_t)loaded - 1u];
+        requested_provider=manifest.plugin_id;
+        for (index = 0u; index < context->num_modules; ++index) {
+            const module *candidate = context->modules[index];
+            if (!native_query_charge(1u, work, &effort)) {
+                result = 2; message = "Native declaration module budget"; goto guarded_done;
+            }
+            if (candidate->native && strcmp(candidate->name, artifact) == 0) {
+                owner = candidate; break;
+            }
+        }
+        if (!owner) {
+            int loaded = rxldmod_provider(context, (char *)artifact, manifest.plugin_id);
+            if (loaded <= 0 || (size_t)loaded > context->num_modules) {
+                message = "Cannot load native declaration artifact"; goto guarded_done;
+            }
+            owner = context->modules[(size_t)loaded - 1u];
+        }
     }
     memset(&selected, 0, sizeof(selected)); selected.struct_size = sizeof(selected);
     selected.owner = "";
@@ -1745,29 +1884,10 @@ static int rxvm_native_declaration(const char *artifact, const char *callable,
                     provider = provider_module_string(owner, record->provider);
             } else if (entry->base.type == META_MEMBER && entry->base.size_in_pool >= sizeof(meta_member_constant)) {
                 const meta_member_constant *member = (const meta_member_constant *)entry;
-                const char *name = provider_module_string(owner, member->owner);
-                const char *kind = provider_module_string(owner, member->kind);
-                const char *part = provider_module_string(owner, member->member);
-                if (name && kind && part) {
-                    static const char factory_prefix[] = "\xc2\xa7" "factory";
-                    size_t name_length = strlen(name);
-                    if (strncmp(callable, name, name_length) == 0 && callable[name_length] == '.') {
-                        const char *suffix = callable + name_length + 1u;
-                        int factory = strcmp(kind, "factory") == 0;
-                        int matches = strcmp(suffix, part) == 0;
-                        if (factory) {
-                            size_t prefix_length = sizeof(factory_prefix) - 1u;
-                            matches = strncmp(suffix, factory_prefix, prefix_length) == 0 &&
-                                (strcmp(part, "*") == 0
-                                    ? suffix[prefix_length] == 0
-                                    : suffix[prefix_length] == '.' &&
-                                      strcmp(suffix + prefix_length + 1u, part) == 0);
-                        }
-                        if (matches) {
-                            selected.owner = name;
-                            selected.kind = factory ? 2u : 1u;
-                        }
-                    }
+                unsigned int kind=provider_member_callable_kind(owner,member,callable);
+                if (kind) {
+                    selected.owner=provider_module_string(owner,member->owner);
+                    selected.kind=kind;
                 }
             } else if (entry->base.type == META_TASK_TARGET && entry->base.size_in_pool >= sizeof(meta_task_target_constant)) {
                 const meta_task_target_constant *task = (const meta_task_target_constant *)entry;
@@ -1779,7 +1899,9 @@ static int rxvm_native_declaration(const char *artifact, const char *callable,
         if (offset != -1) { message = "Cyclic native declaration metadata"; goto guarded_done; }
     }
     if (!found || !selected.name || !selected.flags || !selected.result || !selected.arguments ||
-        !provider || strcmp(provider, manifest.plugin_id) != 0) {
+        !provider || strcmp(provider, requested_provider) != 0 ||
+        provider_callable_loaded(context,provider,callable,owner,
+                                 provider_module_function(owner,callable),NULL)!=1) {
         message = "Native callable or provider declaration is missing"; goto guarded_done;
     }
     selected.provider_id = provider;
@@ -1893,7 +2015,7 @@ int rxvm_resolve_provider_dependencies(rxvm_context *context) {
                     !required) return -1;
                 resolved = provider_callable_loaded(
                         context, provider_id, symbol,
-                        required_module, required);
+                        required_module, required, NULL);
                 if (resolved < 0) {
                     fprintf(stderr,
                             "ERROR: RXPA provider %s does not supply compatible callable %s required by %s\n",
@@ -1903,7 +2025,7 @@ int rxvm_resolve_provider_dependencies(rxvm_context *context) {
                 if (!resolved && load_declared_provider(context, provider_id)) {
                     resolved = provider_callable_loaded(
                             context, provider_id, symbol,
-                            required_module, required);
+                            required_module, required, NULL);
                 }
                 if (resolved != 1 &&
                     (provider->flags & RXBIN_PROVIDER_REQUIRED)) {

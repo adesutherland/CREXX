@@ -2540,6 +2540,16 @@ static char *snapshot_strdup(const char *text) {
     return copy;
 }
 
+int rxcrexxcmd_active_resource_snapshot(char **working_directory) {
+    rxcrexxcmd_state *state;
+    if (!working_directory) return -1;
+    *working_directory = NULL;
+    state = active_state(1);
+    if (!state || !state->current_directory) return -1;
+    *working_directory = snapshot_strdup(state->current_directory);
+    return *working_directory ? 0 : -1;
+}
+
 static int snapshot_append(char ***items, size_t *count, const char *text) {
     char **resized;
     char *copy = snapshot_strdup(text);

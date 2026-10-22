@@ -113,7 +113,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs bindings srcmap diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend traceemit callemit effects rxas)
+      set(_parts ir language symbols bifs bindings srcmap diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend graph traceemit callemit effects rxas)
     endif()
     foreach(_part IN LISTS _parts)
       # Parsing/frontend modules keep their core-only closure. Target/proof
@@ -123,12 +123,17 @@ foreach(_mode opt noopt)
       endif()
       set(_module "${_prefix}${_part}")
       set(_native_imports)
-      if(_language STREQUAL "c" AND _part STREQUAL "bindings")
+      if(_language STREQUAL "c" AND (_part STREQUAL "bindings" OR _part STREQUAL "rxas"))
         # Compiler-host metadata only: never a bootstrap or application input.
         set(_native_imports "${CMAKE_BINARY_DIR}/bin/providers/rxcontract.rxplugin")
       endif()
       ll_compile(${_module} "${CMAKE_CURRENT_SOURCE_DIR}/${_owner}/${_module}.crexx" "${_langdir}" ${_base} ${_host} ${_native_imports})
       list(APPEND _host "${_langdir}/${_module}.rxbin")
+      if(_language STREQUAL "c" AND _part STREQUAL "graph")
+        # Optional execution reuses this frontend-only closure. RXAS selection
+        # and compiler CLI services enter strictly downstream.
+        set(_c_frontend_host ${_host})
+      endif()
     endforeach()
     set(_service "ll${_language}compiler")
     ll_compile(${_service} "${CMAKE_CURRENT_SOURCE_DIR}/level${_language}/${_service}.crexx" "${_langdir}" ${_base} ${_host})
@@ -180,6 +185,117 @@ foreach(_mode opt noopt)
     ll_compile(llctarget "${CMAKE_CURRENT_SOURCE_DIR}/levelc/runtime/llctarget.crexx" "${_dir}"
       "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
     add_custom_target(llcompiler_target_${_mode} ALL DEPENDS "${_dir}/llctarget.rxbin")
+
+    set(_dynamic_dir "${CMAKE_CURRENT_BINARY_DIR}/dynamic/${_mode}")
+    set(_dynamic_inputs ${_base} ${_c_frontend_host}
+      "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+      "${_dir}/llctarget.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llceffects.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/providers/rxcontract.rxplugin"
+      "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin")
+    # The consolidated Classic runtime already owns this generated property
+    # member. Retaining its standalone compiler-host image duplicates symbols.
+    list(REMOVE_ITEM _dynamic_inputs "${_classic_names}")
+    foreach(_part llcsource llcdynamicbudget llcdynamicbifs llcdynamicobserve llcdynamic)
+      set(_part_inputs ${_dynamic_inputs})
+      if(_part STREQUAL "llcsource")
+        set(_part_inputs "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${_classic_names}"
+          "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin")
+      elseif(_part STREQUAL "llcdynamicbudget")
+        set(_part_inputs "${CMAKE_BINARY_DIR}/bin/library.rxbin")
+      endif()
+      ll_compile(${_part} "${CMAKE_CURRENT_SOURCE_DIR}/levelc/dynamic/${_part}.crexx"
+        "${_dynamic_dir}" ${_part_inputs})
+      list(APPEND _dynamic_inputs "${_dynamic_dir}/${_part}.rxbin")
+    endforeach()
+    set(_dynamic_runtime ${_dynamic_inputs}
+      "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin")
+    list(FILTER _dynamic_runtime INCLUDE REGEX "\\.rxbin$")
+    list(REMOVE_DUPLICATES _dynamic_runtime)
+    if(_mode STREQUAL "opt")
+      set(_dynamic_control "")
+      foreach(_file IN LISTS _dynamic_inputs)
+        if(_file MATCHES "rxplugin$")
+          continue()
+        endif()
+        get_filename_component(_name "${_file}" NAME_WE)
+        if(_name STREQUAL "library" OR _name STREQUAL "rxfnsc" OR _name STREQUAL "llctarget")
+          # Existing shared application images remain external dependencies.
+          # INPUT would resolve and embed their bodies, creating duplicate
+          # providers when a caller links its ordinary Classic runtime.
+          continue()
+        endif()
+        string(APPEND _dynamic_control "INPUT ${_file}\n")
+        set(_selectors "${_name}")
+        if(_name STREQUAL "rxfnsl-analysis")
+          get_property(_selectors GLOBAL PROPERTY RXFNSL_ANALYSIS_SELECTORS)
+        elseif(_name STREQUAL "rxfnsl-execute")
+          get_property(_selectors GLOBAL PROPERTY RXFNSL_EXECUTE_SELECTORS)
+        elseif(_name STREQUAL "rxfnsl")
+          # Core members are selected transitively; this is an artifact stem.
+          continue()
+        endif()
+        foreach(_selector IN LISTS _selectors)
+          string(APPEND _dynamic_control "INCLUDE ${_selector}\n")
+        endforeach()
+      endforeach()
+      string(APPEND _dynamic_control "PRESERVE INLINE\nOUTPUT ${_products}/llcdynamic\n")
+      file(GENERATE OUTPUT "${_dynamic_dir}/dynamic.ctl" CONTENT "${_dynamic_control}")
+      add_custom_command(OUTPUT "${_products}/llcdynamic.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -c "${_dynamic_dir}/dynamic.ctl"
+        DEPENDS rxlink ${_dynamic_inputs} "${_dynamic_dir}/dynamic.ctl" VERBATIM)
+      add_custom_target(llcdynamic ALL DEPENDS "${_products}/llcdynamic.rxbin")
+      install(FILES "${_products}/llcdynamic.rxbin" DESTINATION bin
+        COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+    endif()
+    add_custom_target(llcompiler_dynamic_${_mode}
+      DEPENDS "${_dynamic_dir}/llcdynamic.rxbin")
+    foreach(_case source runtime coordinator binding-snapshot)
+      set(_case_inputs ${_dynamic_inputs})
+      set(_case_runtime ${_dynamic_runtime})
+      set(_case_link_targets classlib rxunicode_core)
+      if(_case STREQUAL "source")
+        set(_case_inputs "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${_classic_names}"
+          "${_dynamic_dir}/llcsource.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin")
+        set(_case_runtime "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${_classic_names}"
+          "${_dynamic_dir}/llcsource.rxbin")
+        set(_case_link_targets)
+      elseif(_case STREQUAL "runtime")
+        set(_case_inputs "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+          "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${_dynamic_dir}/llcdynamicbudget.rxbin")
+        set(_case_runtime ${_case_inputs} "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+          "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin")
+      endif()
+      ll_compile(dynamic-${_case}-contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/dynamic/${_case}-contracts.crexx"
+        "${_dynamic_dir}" ${_case_inputs})
+      add_custom_command(OUTPUT "${_dynamic_dir}/dynamic-${_case}-contracts-linked.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s
+          -o "${_dynamic_dir}/dynamic-${_case}-contracts-linked"
+          "${_dynamic_dir}/dynamic-${_case}-contracts.rxbin" ${_case_runtime}
+        DEPENDS rxlink ${_case_link_targets}
+          "${_dynamic_dir}/dynamic-${_case}-contracts.rxbin" ${_case_runtime}
+        VERBATIM)
+      add_custom_target(llcompiler_dynamic_${_case}_${_mode}
+        DEPENDS "${_dynamic_dir}/dynamic-${_case}-contracts-linked.rxbin")
+      if(_mode STREQUAL "opt" AND TARGET rxbvm)
+        set(_test "llcompiler_dynamic_${_case}_opt_rxbvm")
+        add_test(NAME ${_test} COMMAND $<TARGET_FILE:rxbvm>
+          "${_dynamic_dir}/dynamic-${_case}-contracts-linked.rxbin" -a "${_dynamic_dir}")
+        set(_dynamic_pass "PASS: Classic dynamic")
+        if(_case STREQUAL "binding-snapshot")
+          set(_dynamic_pass "failures=0")
+        endif()
+        set_tests_properties(${_test} PROPERTIES
+          PASS_REGULAR_EXPRESSION "${_dynamic_pass}" TIMEOUT 300
+          LABELS "level-l;levelc;compiler;component")
+        crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+          llcompiler_dynamic_${_case}_${_mode} rxbvm fs)
+      endif()
+    endforeach()
 
     set(_c_contract_inputs ${_base} ${_infrastructure} ${_shared}
       "${_front}/llcgrammar.rxbin"
@@ -1191,6 +1307,20 @@ if("c" IN_LIST _languages AND "g" IN_LIST _languages)
 endif()
 
 if("c" IN_LIST _languages AND TARGET rxbvm)
+  # One warm compiler and one VM cover the wider registered dynamic inventory.
+  # Focused Debug preparation is costly; allow a generous full-inventory guard
+  # and serialize it. Registration does not commission this full run or matrices.
+  add_test(NAME llcompiler_c_dynamic_opt_rxbvm COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/dynamic/check-dynamic.py"
+    --build "${CMAKE_BINARY_DIR}"
+    --work "${CMAKE_CURRENT_BINARY_DIR}/checks/llcompiler_c_dynamic_opt_rxbvm")
+  set_tests_properties(llcompiler_c_dynamic_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "DYNAMIC_C[|]checks=[0-9]+[|]PASS"
+    TIMEOUT 18000 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+    LABELS "level-l;levelc;compiler;component")
+  crexx_register_test_prep_targets(TESTS llcompiler_c_dynamic_opt_rxbvm TARGETS
+    llcompiler_llrxc-c_opt llcompiler_target_opt llcdynamic
+    library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink rxbvm)
   add_test(NAME llcompiler_c_infrastructure_contracts_opt_rxbvm
     COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/backend/opt/infrastructure-contracts-linked.rxbin")
   set_tests_properties(llcompiler_c_infrastructure_contracts_opt_rxbvm PROPERTIES

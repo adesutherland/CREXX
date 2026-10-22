@@ -128,6 +128,7 @@ set(RXCP_BACKEND_SOURCES
     ../third_party/utf8/utf.h
     rxcpfunc.c
     rxcp_parse_cursor_decl.c
+    rxcp_invoke_decl.c
     rxcp_import_report.c
     rxcp_import_report.h
     rxcp_project_dependencies.c

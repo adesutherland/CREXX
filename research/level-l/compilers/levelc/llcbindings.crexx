@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Explicit static provider selections, owned by C. */
 options levelb
-namespace llcbindings expose binding prepared
+namespace llcbindings expose binding definition prepared
 import rxfnsb
 import llbinmeta
 import llcompilercontracts
@@ -31,6 +31,56 @@ binding: class
   callable: method = .string
     return _callable
 
+/** Owned metadata projection retained for checked dynamic-call catalogues. */
+projectionrecord: class
+  _fields = .string[]
+  *: factory
+    arg fields = .string[]
+    _fields = fields
+    return
+  fields: method = .string[]
+    return _fields
+
+/** One immutable source-preparation definition. Its alias and canonical target
+ * contain no live callable capability, artifact reader or activation owner.
+ * @param name already selected full or basename alias
+ * @param callable exact canonical target key
+ * @param kind typed, classic or process
+ * @param signature existing checked metadata for typed/Classic procedures
+ */
+definition: class
+  _name = .string
+  _callable = .string
+  _kind = .string
+  _signature = .llcompilercontracts..signature
+  _hassignature = .int
+  *: factory
+    arg name = .string, callable = .string, kind = .string, ?signature = .llcompilercontracts..signature
+    _name = name; _callable = callable; _kind = kind; _hassignature = ?signature
+    if ?signature then _signature = signature
+    return
+  name: method = .string
+    return _name
+  callable: method = .string
+    return _callable
+  kind: method = .string
+    return _kind
+  hassignature: method = .int
+    return _hassignature
+  signature: method = .llcompilercontracts..signature
+    return _signature
+  /** Conservative definition/vector/map/snapshot bound, computed from the
+   * existing owned fields before a consumer copies a definition vector. */
+  bytes: method = .int
+    amount = 512 + 4 * (<blen>(_name as .binary) + <blen>(_callable as .binary) + <blen>(_kind as .binary))
+    if _hassignature = 0 then return amount
+    signature = _signature
+    amount = amount + 512 + 4 * (<blen>(signature.name() as .binary) + <blen>(signature.result() as .binary) + <blen>(signature.flags_text() as .binary))
+    do i = 1 to signature.arguments()
+      amount = amount + 256 + 4 * (<blen>(signature.paramname(i) as .binary) + <blen>(signature.type(i) as .binary) + <blen>(signature.defaultkind(i) as .binary) + <blen>(signature.defaultliteral(i) as .binary))
+    end
+    return amount
+
 /** Immutable prepared selections. Images/readers exist only while their group
  * is selected; later queries own small checked records, never image snapshots.
  * @param root explicit artifact directory
@@ -44,6 +94,8 @@ prepared: class
   _artifacts = .string[]
   _callables = .string[]
   _signatures = .llcompilercontracts..signature[]
+  _projections = .projectionrecord[]
+  _rawarguments = .string[]
   _sizes = .int[]
   _kinds = .string[]
   _acquisitions = .string[]
@@ -55,9 +107,12 @@ prepared: class
   _work = .int
   _ready = .int
   _error = .string
+  _count = .int
+  _snapshot = .int
+  _definitions = .llcbindings..definition[]
   *: factory
     arg root = .string, bindings = .binding[], bytes = .int, work = .int
-    _bytecap = bytes; _workcap = work
+    _bytecap = bytes; _workcap = work; _count = bindings[0]; _snapshot = 0
     if bytes < 0 | work < 0 then do
       _error = 'LL_RESOURCE_LIMIT: provider allowance is negative'; _ready = 1; return
     end
@@ -91,6 +146,66 @@ prepared: class
       _work = _work + extent * 4
     end
     _input = bindings
+    return
+  /** Prepare retained definitions only. Reuse the checked signature and C
+   * calling-contract owners; no image/plugin acquisition or signature parsing
+   * occurs. This snapshot supplies frontend admission, not backend link roots.
+   * @param definitions immutable already selected aliases and target records
+   * @param bytes logical retained metadata allowance
+   * @param work logical copy/query allowance
+   */
+  snapshot: factory
+    arg definitions = .llcbindings..definition[], bytes = 67108864, work = 1000000
+    _bytecap = bytes; _workcap = work; _bytes = 0; _work = 0
+    _ready = 0; _error = ''; _root = ''; _snapshot = 1; _count = definitions[0]; _definitions = definitions
+    return
+  preparesnapshot: method = .void
+    _aliases = .stem()
+    if _bytecap < 0 | _workcap < 0 then do; _error = 'LL_RESOURCE_LIMIT: provider allowance is negative'; return; end
+    if reserve(64,1) = 0 then return
+    if _count > (_bytecap - _bytes) <idiv> 64 | _count > (_workcap - _work) <idiv> 8 then do
+      _error = 'LL_RESOURCE_LIMIT: provider snapshot vector'; return
+    end
+    if reserve(_count * 64,_count * 8) = 0 then return
+    item = .llcbindings..definition; signature = .llcompilercontracts..signature
+    name = .string; callable = .string; kind = .string; key = .string; route = .string
+    amount = .int; extent = .int; i = .int; j = .int
+    do i = 1 to _count
+      item = _definitions[i]; name = item.name(); callable = item.callable(); kind = item.kind()
+      extent = <blen>(name as .binary) + <blen>(callable as .binary)
+      if reserve(extent,extent) = 0 then return
+      if llbinmeta..validname(name) = 0 | llbinmeta..validname(callable) = 0 | wordpos(kind,'typed classic process') = 0 then do
+        call fail('invalid retained provider definition'); return
+      end
+      if kind <> 'process' & pos('.',callable) = 0 then do; call fail('retained provider target must be qualified'); return; end
+      key = rexxclassic_unicode_upper(name)
+      if _aliases.get(key) <> '' then do; call fail('duplicate retained provider alias ' || name); return; end
+      amount = 128 + extent
+      if item.hassignature() then do
+        signature = item.signature(); route = admitted(signature)
+        if _error <> '' then return
+        if kind = 'process' | route <> kind | signature.name() \== callable then do; call fail('retained provider signature differs from its target or route'); return; end
+        if reserve(128,1) = 0 then return
+        amount = amount + 128
+        extent = <blen>((signature.result() || signature.flags_text()) as .binary)
+        if reserve(extent,extent) = 0 then return
+        amount = amount + extent
+        do j = 1 to signature.arguments()
+          extent = <blen>((signature.paramname(j) || signature.type(j) || signature.defaultkind(j) || signature.defaultliteral(j)) as .binary)
+          if reserve(64 + extent,8 + extent) = 0 then return
+          amount = amount + 64 + extent
+        end
+        _signatures[i] = signature
+      end
+      else do
+        if kind = 'typed' then do; call fail('retained typed provider lacks checked metadata'); return; end
+        _signatures[i] = .llcompilercontracts..signature.failed('LL_COMPILER_IMPORT: retained route has no procedure metadata')
+      end
+      call remember(reference _aliases,key,i as .string)
+      if _error <> '' then return
+      _callables[i] = callable; _kinds[i] = kind; _sizes[i] = amount
+      _artifacts[i] = ''; _providerids[i] = ''; _rawarguments[i] = ''
+    end
     return
   reserve: method = .int
     arg bytes = .int, work = .int
@@ -147,9 +262,22 @@ prepared: class
     map = dereference map_ref
     call map.set(key,value)
     return
+  /** Retain the metadata owner's exact projection; no second signature parser. */
+  retainprojection: method = .int
+    arg index = .int, fields = .string[], arguments = .string
+    amount = 16 + fields[0] * 8 + <blen>(arguments as .binary)
+    do i = 1 to fields[0]
+      extent = <blen>(fields[i] as .binary)
+      if extent > _bytecap - amount then do; ignored = reserve(-1,0); return 0; end
+      amount = amount + extent
+    end
+    if reserve(amount,amount) = 0 then return 0
+    _projections[index] = .projectionrecord(fields); _rawarguments[index] = arguments
+    return amount
   run: method = .void
     if _ready then return
     _ready = 1
+    if _snapshot then do; call preparesnapshot(); return; end
     if _input[0] = 0 then return
     groups = .stem(); tails = .stem(); targets = .stem(); _aliases = .stem()
     next = .int[]; groupnames = .string[]; selected = .llbinmeta..callable[]
@@ -157,7 +285,7 @@ prepared: class
     known = .string; i = .int; n = .int; first = .int; tail = .int; group = .int
     image = .binary; reader = .llbinmeta..catalog; raw = .llbinmeta..callable
     signature = .llcompilercontracts..signature; extent = .int; ignored = .int
-    fields = .string[]; projection = .string[]; route = .string; sourcekind = .string
+    fields = .string[]; projection = .string[]; route = .string; sourcekind = .string; retained = .int
     emptyreader = .llbinmeta..catalog
     do
       do i = 1 to _input[0]
@@ -217,6 +345,8 @@ prepared: class
             extent = <blen>((fields[6] || fields[7] || fields[10] || fields[11] || fields[12]) as .binary)
             if reserve(128 + extent * 4,16 + extent * 4) = 0 then return
             _callables[n] = fields[7]; _providerids[n] = fields[6]; _kinds[n] = route; _sizes[n] = 128 + extent * 4
+            retained = retainprojection(n,projection,fields[11]); if _error <> '' then return
+            _sizes[n] = _sizes[n] + retained
             assembler move _signatures[n],signature
             assembler null signature
             n = next[n]
@@ -262,6 +392,8 @@ prepared: class
           if route = '' then return
           _kinds[n] = route; _providerids[n] = ''
           _callables[n] = held.name(); _sizes[n] = extent * 4 + 128
+          retained = retainprojection(n,projection,arguments); if _error <> '' then return
+          _sizes[n] = _sizes[n] + retained
           assembler move _signatures[n],signature
           assembler null signature
           n = next[n]
@@ -360,10 +492,35 @@ prepared: class
     extent = <blen>(_root as .binary)
     if reserve(extent,extent) = 0 then return ''
     return _root
+  /** Number of explicitly selected immutable bindings. */
+  count: method = .int
+    call run(); if _error <> '' then return 0
+    return _count
+  sourceonly: method = .int
+    return _snapshot
+  usedbytes: method = .int
+    call run()
+    return _bytes
+  workused: method = .int
+    call run()
+    return _work
+  /** Exact owner-validated projection; process routes have no callable metadata. */
+  projection: method = .string[]
+    arg index = .int
+    call run(); absent = .string[]
+    if _error <> '' | _snapshot | index < 1 | index > _count then return absent
+    if _kinds[index] = 'process' then return absent
+    return _projections[index].fields()
+  /** Original complete argument metadata, including default literals. */
+  rawarguments: method = .string
+    arg index = .int
+    call run()
+    if _error <> '' | index < 1 | index > _count then return ''
+    return _rawarguments[index]
   find: method = .int
     arg name = .string
     call run()
-    if _error <> '' | _input[0] = 0 then return 0
+    if _error <> '' | _count = 0 then return 0
     extent = <blen>(name as .binary)
     if extent > 2147483647 <idiv> 4 then do; ignored = reserve(-1,0); return 0; end
     if reserve(0,extent * 4 + 4) = 0 then return 0

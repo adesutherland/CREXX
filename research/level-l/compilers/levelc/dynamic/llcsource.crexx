@@ -1,0 +1,182 @@
+/* cREXX License (MIT). Classic source policy over exact host resources. */
+options levelb
+namespace llcsource expose view candidates resolution resourceview resolve
+import rxfnsb
+import rxfs
+import rexxclassicunicodeproperties
+
+/** Immutable lookup snapshot. Callers provide only a trusted physical resource
+ * base, never PARSE SOURCE/debug metadata. Cwd is the execution owner snapshot.
+ * All suffixes are explicit host policy; default standalone is .rexx then empty.
+ */
+view: class
+  _cwd = .string
+  _base = .string
+  _roots = .string[]
+  _suffixes = .string[]
+  _generation = .int
+  _windows = .int
+  *: factory
+    arg cwd = .string, base = .string, roots = .string[], generation = .int, windows = 0
+    _cwd = cwd; _base = base; _generation = generation; _windows = windows
+    _roots = roots
+    if roots[0] > 1024 then assembler signal 'OUT_OF_RANGE','Classic source root limit exceeded'
+    _suffixes[1] = '.rexx'; _suffixes[2] = ''
+    return
+  configured: factory
+    arg cwd = .string, base = .string, roots = .string[], generation = .int, windows = .int, suffixes = .string[]
+    _cwd = cwd; _base = base; _roots = roots; _generation = generation; _windows = windows; _suffixes = suffixes
+    if roots[0] > 1024 | suffixes[0] > 64 then assembler signal 'OUT_OF_RANGE','Classic source root/suffix limit exceeded'
+    return
+  cwd: method = .string
+    return _cwd
+  base: method = .string
+    return _base
+  generation: method = .int
+    return _generation
+  windows: method = .int
+    return _windows
+  roots: method = .string[]
+    return _roots
+  suffixes: method = .string[]
+    return _suffixes
+
+resourceview: procedure = .llcsource..view
+  arg base = '', ?roots = .string[], generation = 1
+  return .llcsource..view(rxfs..contextcwd(),base,roots,generation,rxfs..windows())
+
+/** Host locator rules do not alter the exact quoted lookup key. Drive-relative
+ * and drive-rooted forms require absent per-drive capabilities and fail typed.
+ */
+locator: procedure = .int
+  arg name = .string, windows = .int
+  if name = '.' | name = '..' | pos('/',name) > 0 then return 1
+  if windows then do
+    if pos('\',name) > 0 | (length(name) >= 2 & substr(name,2,1) = ':') then return 1
+  end
+  return 0
+absolute: procedure = .int
+  arg name = .string, windows = .int
+  if windows = 0 & left(name,1) = '/' then return 1
+  if windows then do
+    if left(name,2) = '//' then return 1
+    if left(name,2) = '\\' then return 1
+    if length(name) >= 3 & substr(name,2,1) = ':' then return pos(substr(name,3,1),'/\') > 0
+  end
+  return 0
+join: procedure = .string
+  arg root = .string, name = .string, windows = .int
+  if right(root,1) = '/' | (windows & right(root,1) = '\') then return root || name
+  return root || '/' || name
+
+candidates: class
+  _items = .string[]
+  _error = .string
+  *: factory
+    arg context = .llcsource..view, name = .string, sourceKey = .string, quoted = .int, limit = 1024
+    i = .int; k = .int
+    _error = ''
+    if name = '' | pos('00'x as .string,name) > 0 then return
+    stem = sourceKey
+    if quoted = 0 then stem = rexxclassicunicodeproperties..rexxclassic_unicode_lower(name)
+    if stem = '' | pos('00'x as .string,stem) > 0 then return
+    windows = context.windows(); cwd = context.cwd()
+    if locator(stem,windows) then do
+      if windows & absolute(stem,windows) = 0 then do
+        if left(stem,1) = '\' | left(stem,1) = '/' | (length(stem) >= 2 & substr(stem,2,1) = ':') then do
+          _error = 'LL_SOURCE_PATH: drive-relative locator has no explicit drive base'; return
+        end
+      end
+      if absolute(stem,windows) then _items[1] = stem
+      else if cwd <> '' then _items[1] = join(cwd,stem,windows)
+      else _error = 'LL_SOURCE_PATH: relative locator has no execution cwd'
+      return
+    end
+    ordered = .string[]; keys = .string[]; roots = context.roots()
+    if context.base() <> '' then call arrayappend ordered,context.base()
+    if cwd <> '' then call arrayappend ordered,cwd
+    do i = 1 to roots[0]; call arrayappend ordered,roots[i]; end
+    suffixes = context.suffixes()
+    explicit = pos('.',stem,2) > 0
+    do i = 1 to ordered[0]
+      root = ordered[i]
+      if root = '' | pos('00'x as .string,root) > 0 then do
+        _error = 'LL_SOURCE_PATH: source root is empty or contains NUL'; return
+      end
+      if absolute(root,windows) = 0 then do
+        if windows & (left(root,1) = '/' | left(root,1) = '\' | (length(root) >= 2 & substr(root,2,1) = ':')) then do
+          _error = 'LL_SOURCE_PATH: source root requires an explicit drive base'; return
+        end
+        if cwd = '' then do; _error = 'LL_SOURCE_PATH: source root has no execution cwd'; return; end
+        root = join(cwd,root,windows)
+      end
+      key = root; duplicate = 0
+      do k = 1 to keys[0]; if rxfs..locatorequal(keys[k],key) then duplicate = 1; end
+      if duplicate then iterate
+      call arrayappend keys,key
+      if explicit then do
+        if _items[0] >= limit then do; _error = 'LL_SOURCE_LIMIT: candidate budget exceeded'; return; end
+        call arrayappend _items,join(root,stem,windows)
+      end
+      else do k = 1 to suffixes[0]
+        if _items[0] >= limit then do; _error = 'LL_SOURCE_LIMIT: candidate budget exceeded'; return; end
+        call arrayappend _items,join(root,stem || suffixes[k],windows)
+      end
+    end
+    return
+  size: method = .int
+    return _items[0]
+  at: method = .string
+    arg ordinal = .int
+    return _items[ordinal]
+  error: method = .string
+    return _error
+
+/** Owned outcome; only status zero permits another resource candidate. Source
+ * content is untouched binary, including NUL. The frontend owns UTF8/C admission.
+ */
+resolution: class
+  _status = .int
+  _error = .int
+  _message = .string
+  _path = .string
+  _base = .string
+  _bytes = .binary
+  *: factory
+    arg status = .int, path = '', bytes = ''x as .binary, error = 0, message = '', windows = 0
+    _status = status; _path = path; _bytes = bytes; _error = error; _message = message; _base = ''
+    do i = length(path) to 1 by -1
+      if substr(path,i,1) = '/' | (windows & substr(path,i,1) = '\') then do; _base = left(path,i); leave; end
+    end
+    return
+  status: method = .int
+    return _status
+  bytes: method = .binary
+    return _bytes
+  path: method = .string
+    return _path
+  base: method = .string
+    return _base
+  errorcode: method = .int
+    return _error
+  message: method = .string
+    return _message
+
+resolve: procedure = .llcsource..resolution
+  arg context = .llcsource..view, name = .string, sourceKey = .string, quoted = .int, byteBudget = .int, candidateBudget = 1024
+  status = .int
+  paths = .llcsource..candidates(context,name,sourceKey,quoted,candidateBudget)
+  if paths.error() <> '' then do
+    status = -1; if left(paths.error(),15) = 'LL_SOURCE_LIMIT' then status = -2
+    return .llcsource..resolution(status,'',''x as .binary,0,paths.error())
+  end
+  if candidateBudget < 0 | paths.size() > candidateBudget then return .llcsource..resolution(-2,'',''x as .binary,0,'LL_SOURCE_LIMIT: candidate budget exceeded')
+  resource = .rxfs..source
+  do i = 1 to paths.size()
+    path = paths.at(i); resource = .rxfs..source(path,byteBudget)
+    status = resource.status()
+    if status = 0 then iterate
+    if status = 1 then return .llcsource..resolution(1,path,resource.bytes(),0,'',context.windows())
+    return .llcsource..resolution(status,path,''x as .binary,resource.errorcode(),'LL_SOURCE_RESOURCE: cannot acquire exact source resource')
+  end
+  return .llcsource..resolution(0)

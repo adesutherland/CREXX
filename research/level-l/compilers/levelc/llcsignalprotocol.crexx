@@ -170,6 +170,22 @@ checked: class
     call run(); if _error <> '' then return 0
     row = _handlerrows[opid]; if row = 0 then return 0
     return _handlerlandings[row]
+  labels: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _rowcount[fn]
+  labelname: method = .string
+    arg fn = .int, ordinal = .int
+    call run(); if _error <> '' | ordinal < 1 | ordinal > _rowcount[fn] then return ''
+    return _rownames[_firstrow[fn] + ordinal - 1]
+  labelentry: method = .int
+    arg fn = .int, ordinal = .int
+    call run(); if _error <> '' | ordinal < 1 | ordinal > _rowcount[fn] then return -1
+    return _rowentries[_firstrow[fn] + ordinal - 1]
+  labellanding: method = .int
+    arg fn = .int, ordinal = .int
+    call run(); if _error <> '' | ordinal < 1 | ordinal > _rowcount[fn] then return 0
+    return _landings[_firstrow[fn] + ordinal - 1]
   handlercode: method = .int
     arg opid = .int
     call run(); if _error <> '' then return 0
@@ -249,9 +265,12 @@ checked: class
   /** The decoded source is cached once. Endpoint checks borrow that one cell;
    * no label, mark or candidate makes another full source projection. */
   range: method = .int
-    arg sourceid = .int, first = .int, last = .int, opid = 0
+    arg sourceid = .int, first = .int, last = .int, opid = 0, emptygroup = 0
     store = dereference _store; extent = .int; byte = .int
-    if sourceid < 1 | sourceid > store.count(10) | first < 0 | first >= last then do
+    if sourceid < 1 | sourceid > store.count(10) | first < 0 | first > last then do
+      call fail('LOWERING: SIGNAL requires an owned nonempty source range',opid); return 0
+    end
+    if first = last & emptygroup = 0 then do
       call fail('LOWERING: SIGNAL requires an owned nonempty source range',opid); return 0
     end
     if _sourceready[sourceid] = 0 then do
@@ -266,6 +285,9 @@ checked: class
     bytes_ref = reference _sourcebytes[sourceid]; source = dereference bytes_ref
     extent = <blen>(source)
     if last > extent then do; call fail('LOWERING: SIGNAL source range exceeds its owner',opid); return 0; end
+    if first = last & (first <> 0 | extent <> 0) then do
+      call fail('LOWERING: empty SIGNAL setup requires its complete empty group source',opid); return 0
+    end
     if charge(3) = 0 then return 0
     boundary = 1
     if first < extent then do; byte = <at..u8>(first) source; boundary = byte < 128 | byte >= 192; end
@@ -702,7 +724,7 @@ checked: class
     store = dereference _store; program = dereference _program; op = .llir..opview(_store,opid)
     fn = store.get(2,op.blockid(),1)
     if authored(opid) = 0 then return
-    if _tablevalues[store.operand(opid,1)] <> fn | _callcount[fn] = 0 then do
+    if _tablevalues[store.operand(opid,1)] <> fn | (_callcount[fn] = 0 & program.dynamic(fn) = 0) then do
       call fail('LOWERING: clause completion lacks its source-owned CALL inventory',opid); return
     end
     identity = integer(op,'id'); at = store.get(3,opid,11)
@@ -807,7 +829,11 @@ checked: class
     end
     if setupgenerated(protectid) = 0 | setupgenerated(captureid) = 0 then return
     at = store.get(3,captureid,11)
-    if range(store.get(9,at,1),store.get(9,at,2),store.get(9,at,3),captureid) = 0 then return
+    /* An empty group still owns canonical protection and event relay. Only
+     * that proved generated dispatcher may use the complete empty source;
+     * authored SIGNAL clauses and serialized inventory rows remain nonempty. */
+    emptygroup = program.isgroup(fn)
+    if range(store.get(9,at,1),store.get(9,at,2),store.get(9,at,3),captureid,emptygroup) = 0 then return
     if privateblock(root,protectid,captureid) = 0 then return
     id = coldloads(store.get(2,root,2),captureid,0,1)
     if _error <> '' then return
@@ -886,6 +912,7 @@ checked: class
     do fn = 1 to store.count(1)
       if charge() = 0 then return
       if program.tableconstant(fn) > 0 then found = 1
+      if program.dynamic(fn) then found = 1
     end
     do id = 1 to store.count(3)
       if charge() = 0 then return
@@ -1000,6 +1027,7 @@ checked: class
     do fn = 1 to store.count(1)
       if charge() = 0 then return
       if _signalcount[fn] > 0 & _protections[fn] = 0 then do; call fail('LOWERING: SIGNAL handler declarations lack protected entry'); return; end
+      if program.dynamic(fn) & (_protections[fn] = 0 | _captures[fn] = 0) then do; call fail('LOWERING: dynamic execution requires invocation protection and event capture'); return; end
       if _protections[fn] > 0 | _captures[fn] > 0 then do
         call dispatcher(fn); if _error <> '' then return
       end

@@ -25,7 +25,7 @@ parsed: class
   _source = .binary
   _mapping = .llcsrcmap..prepared
   *: factory
-    arg source = .binary, limit = 1000000, filename = '<source>'
+    arg source = .binary, limit = 1000000, filename = '<source>', mode = 'program'
     _source = source; empty_mapping = .llcsrcmap..prepared; _mapping = empty_mapping
     _error = ''; _offset = 0; _status = 0; _strictc = 0
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
@@ -125,7 +125,7 @@ parsed: class
     addressmode = ''; addressseen = 0; commandseen = 0; addressdirection = ''
     arm = 0; operandmode = ''; signalmode = ''; callmode = ''; tracemode = ''; ownedelse = .int
     doheader = 0; dofirst = 0; docondition = 0
-    parsemode = ''; proceduretail = 0; procedureallowed = 0
+    parsemode = ''; proceduretail = 0; procedureallowed = mode = 'interpret-group'
     owners = .string[]; ownercontrols = .string[]; ownercount = 0; endcontrol = ''
     previous = -1; term = 0; namespaceclause = 0; exports = 0
     do i = 0 to layout.size() - 1
@@ -371,10 +371,10 @@ parsed: class
               if owners[ownercount] = 'if' then word = 'ELSE'
             end
           end
-          else if clause & next <> equals & wordpos(spelling,'INTERPRET EXPOSE') > 0 then do
+          else if clause & next <> equals & spelling = 'EXPOSE' then do
             _status = 1; _offset = first; _error = 'LL_COMPILER_PROFILE: ' || spelling || ' is outside this frontend profile'; return
           end
-          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY PUSH QUEUE ADDRESS SIGNAL TRACE CALL NOP OPTIONS IMPORT PROCEDURE ARG PULL NUMERIC DROP SELECT WHEN OTHERWISE PARSE') > 0 then word = spelling
+          else if clause & next <> equals & wordpos(spelling,'IF DO END LEAVE ITERATE RETURN EXIT SAY PUSH QUEUE ADDRESS SIGNAL TRACE CALL NOP OPTIONS IMPORT PROCEDURE ARG PULL NUMERIC DROP SELECT WHEN OTHERWISE PARSE INTERPRET') > 0 then word = spelling
         end
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
@@ -420,7 +420,7 @@ parsed: class
         if word = 'PROCEDURE' & procedureallowed = 0 then do
           _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-17.1: misplaced PROCEDURE'; return
         end
-        procedureallowed = 0
+        if mode <> 'interpret-group' | word <> 'INTERPRET' then procedureallowed = 0
       end
       if kind = colon then procedureallowed = 1
       if word = 'PROCEDURE' then proceduretail = 1

@@ -158,7 +158,12 @@ The default state, failure and termination summaries are `unknown`.
 `failure('none')` means no language failure; other named failure summaries retain
 that possibility. `termination('returns')` means ordinary continuation, including
 propagation of a declared failure out of the function. `diverges` and `transfer`
-identify other outcomes; the initial flow analyser refuses those continuations.
+identify other outcomes. Ordinary flow analysis refuses these incomplete
+continuations. `llirservices.analyse(owner,budget,?admittedControl)` permits a
+trusted consumer's explicit operation IDs after it has checked their terminal
+control contract. The executor derives this list from checked graph-bound ports
+and structured summaries. This reuses the existing definite-assignment lattice;
+it neither changes graph edges nor authorizes execution or optimiser rewrites.
 
 State and failure names are compiler-owned contract identifiers. Level L does
 not infer aliasing, effects or mathematical properties from a name. Complete
@@ -297,6 +302,9 @@ payload transport and cleanup; Level L supplies no condition names or policies.
 An interpreter or backend without exceptional execution support must reject
 `core.protect` explicitly rather than silently follow only its normal edge.
 Constant evaluation retains it with `keep` and does not execute either edge.
+The optional [executor](execute-design.md) implements protection only with a
+matching executable-manifest declaration. It retains the owned fault outcome,
+unwinds crossed frames and disables that protection before exceptional entry.
 
 Reachability and transformations preserve both edges. Definite assignment at
 the exceptional entry starts from the setup preceding the declaration; later

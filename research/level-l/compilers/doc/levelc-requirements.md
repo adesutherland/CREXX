@@ -48,7 +48,9 @@ from the declared platform/delivery and complete-C acceptance under PLAN.
   locals and still admit correctly spelled BIFs. One configured external-routine
   callback may handle an otherwise missing name. Callees own their ABI/defaults;
   C cannot access B/G globals, and true references/aggregates require adapters.
-  Automatic source search/loading remains with final INTERPRET.
+  Automatic source search/loading is implemented with final INTERPRET under the
+  [approved dynamic contract](architecture.md#dynamic-execution-strategy);
+  the selected local profile is qualified, with full delivery/platform proof open.
 - PARSE EXTERNAL/NUMERIC remain excluded from Adrian's current C scope;
   their final Release 1 disposition is still an explicit decision (LC-GAP-05).
   TRACE targets only the native Level C practical scope approved 2026-10-06 in
@@ -64,9 +66,14 @@ from the declared platform/delivery and complete-C acceptance under PLAN.
 - Host ADDRESS NUL transport, full host/source/configuration APIs and real HALT
   are separate tracked obligations. Their prior deferral is not full-C closure.
   The selected NUL rejection/transport policy must be explicit at the adapter.
-- INTERPRET is required, last. The source-group, activation, transfer/resumption
+- INTERPRET is required and is the final locally qualified language increment. The source-group, activation, transfer/resumption
   and resident-code lifetime contract is LC-87-01–05. No label clauses inside
   generated text; caller labels/routines remain reachable under that contract.
+  Its IR implementation reuses shared B runtime owners and a pure C
+  frontend request. Literal-only dynamic `core.constant` TRACE events are the
+  accepted minor omission; authored clauses and actual values remain material.
+  `scope.configureSource` supplies the runtime source-policy boundary; standalone
+  defaults do not close embedded host-policy or declared-platform proof.
 
 No new syntax, normalization default, arithmetic representation, reference
 exception or platform exclusion is approved by writing this design.
@@ -187,7 +194,7 @@ without closing their wider instruction, source/expression or host criteria.
 | LC-I-22 NUMERIC / STEP07 | Partial: source-integration profile locally qualified, NUM-C-AC01–06 | DIGITS/FORM/FUZZ default/value forms, once-only shared validation, local inheritance/restoration and representative BIF/display/arithmetic effects use the [NUMERIC contract](architecture.md#numeric-c-contract). No per-operator rebuilding of unchanged configuration. CCOND preserves actual configured conditions/LOSTDIGITS and practical TRACE. NUM-C-AC07 retains wider numeric/expression, host/platform scope and fact invalidation. | [LC-84-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-23 SIGNAL / STEP07 | **Complete: agreed whole instruction, CSIGNAL-AC01–07** | The [complete contract](architecture.md#signal-complete-contract) includes direct/quoted/VALUE transfers, seven-condition ON/OFF, actual SYNTAX/NOVALUE/LOSTDIGITS/ADDRESS producers, same-frame handler cleanup and typed payload/origin preservation with all required helpers/dependencies. Preserve first-label order, strict canonical text, SIGL/.SIGL, activation/private state and causing-event errors. CCOND adds delayed CALL composition. [Conformance qualifications](levelc-conformance.md) retain approved TRACE limitations, real host HALT, broader host/platform acceptance and INTERPRET; these are not unfinished SIGNAL subdeliveries. | [LC-AC-76](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-85-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 | LC-I-24 TRACE / STEP07 | Complete for the agreed practical contract | [CTRACE-AC01–07](architecture.md#trace-complete-contract): shared activation options/query, command inhibition/reporting, retained truthful scalar/source events, restoration/errors and disabled-cost controls. Accepted practical/presentation limitations are in the conformance profile; whole-compiler/platform/delivery QA remains open. | [LC-AC-77](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#acceptance-criteria); [LC-86-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
-| LC-I-25 INTERPRET / STEP11 | Not implemented | Same compiler in group mode, live caller state, source-once semantics, complete/no-label groups, nested compile/execute, CALL-handler resumption versus SIGNAL discard, caller routines, RETURN/EXIT and bounded resident ownership. Include all LC-87 proof cases and installed/platform lifecycle; no second evaluator. | [LC-87-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
+| LC-I-25 INTERPRET / STEP11 | IR route locally qualified; full acceptance open | Same frontend in group mode, live caller state, source-once semantics, complete/no-label groups, nested IR execution, persistent policies, invocation-owned private pools, CALL-handler resumption versus SIGNAL discard, caller routines, RETURN/EXIT and bounded resident ownership. Include all LC-87 proof cases and installed/platform lifecycle; no second evaluator. The [implementation contract](architecture.md#dynamic-execution-strategy) records exact interfaces, default resource bounds, source policy and accepted TRACE omission; [DYN criteria/steps](../PLAN.md#dynamic-execution-plan) retain unverified coverage. | [LC-87-01–05](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#implementation-steps) |
 
 The approved PARSE contract preserves complete LC-I-19 as the outcome. The committed
 generic engine retains **PARSE-ENGINE-AC01–06** and its open platform boundary;
@@ -627,7 +634,7 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-059 | CALL ON/OFF delayed condition handlers | Four-condition native profile implemented by CCOND; whole CALL open | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | [CCOND-AC01–08](architecture.md#conditions-observations-complete-contract) own ERROR/FAILURE/HALT/NOTREADY policy replacement, delayed delivery, suppression, resumption and cleanup. Retain source-owned policy-domain refusal and wider host/platform qualifications. |
 | LC-REF-060 | DROP direct and parenthesized variable lists | Partial: ordered v3 forms locally qualified; CCOND observations integrated | C-POOL / STEP03/05/06; STEP08 external API | Retain ordered/captured-list/Unicode/static-alias and CCOND clause/condition/practical TRACE contracts; close full diagnostics and host/dynamic dependencies. |
 | LC-REF-061 | EXIT value, fallthrough and finalization | Local/external EXIT and Group 2 host finalization implemented | C-ACT and LC-I-13–15 / STEP06; STEP07/08 | Retain external EXIT locality, shared terminal failure, resource teardown and recovery; dynamic source/platform proof remains. |
-| LC-REF-062 | INTERPRET source, HALT, syntax and label restrictions | Not implemented | LC-I-25 / STEP11; LC-87-01–05 | Close LC-87-01–05 through same compiler with live caller and bounded code. |
+| LC-REF-062 | INTERPRET source, HALT, syntax and label restrictions | IR route locally qualified; full acceptance open | LC-I-25 / STEP11; LC-87-01–05 | Close LC-87-01–05 through same compiler with live caller and bounded code. |
 | LC-REF-063 | NUMERIC DIGITS/FORM/FUZZ validation and defaults | Partial: NUMERIC subset | C-EXPR / STEP04; STEP05/07 contexts | Validate all NUMERIC forms/defaults atomically and install in owning C frame. |
 | LC-REF-064 | OPTIONS word handling and unknown-option policy | Static header/runtime OPTIONS profile locally qualified | LC-I-05 / STEP05 | Retain header/source-map policy, zero-word specialization and once-only nontrivial operands/errors; full shared host/delivery/platform obligations remain. |
 | LC-REF-065 | PROCEDURE pool creation and EXPOSE aliases | Static PROCEDURE/EXPOSE and Group 2 live callback pools implemented | C-POOL / STEP03/05/06; STEP08 external API | Retain source-order aliases and private-pool callback/cleanup controls; dynamic eligibility and wider source/platform proof remain. |
@@ -669,7 +676,7 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-DROP` | Partial: direct/indirect forms locally qualified | LC-I-02 / STEP05 | CCOND integrates admitted condition/clause/practical TRACE paths; full LC-I-02 closure retains diagnostics and host/dynamic dependencies. |
 | `SYN-CLASSIC-EXIT` | Partial | LC-I-15 / STEP06 | Full LC-I-15 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-IF` | Admitted static forms/diagnostics locally qualified | LC-I-06 / STEP05 | Retain nearest ELSE, captured truth and CCOND observations; full LC-I-06 dynamic/host/platform acceptance remains open. |
-| `SYN-CLASSIC-INTERPRET` | Not implemented | LC-I-25 / STEP11 | Full LC-I-25 check in the instruction ledger; shared dependencies remain open. |
+| `SYN-CLASSIC-INTERPRET` | IR route locally qualified; full acceptance open | LC-I-25 / STEP11 | Full LC-I-25 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-ITERATE` | Partial | LC-I-10 / STEP05 | Full LC-I-10 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-LEAVE` | Partial | LC-I-09 / STEP05 | Full LC-I-09 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-NOP` | Static childless forms/exact 21.1 locally qualified | LC-I-04 / STEP05 | Retain CCOND clause/condition/practical TRACE integration; full LC-I-04 dynamic/host/platform acceptance remains open. |
@@ -716,7 +723,7 @@ not instructions to redo unchanged B library algorithms or copy native status.
 
 | Source gap | New owner / remaining action and closure check |
 |---|---|
-| LC-GAP-01 | STEP11 / LC-I-25 / CFC-AC05: implement required INTERPRET last and prove LC-87-01–05; native parked status is not a new-C exclusion. |
+| LC-GAP-01 | STEP11 / LC-I-25 / CFC-AC05: qualify the required INTERPRET implementation and prove LC-87-01–05; native parked status is not a new-C exclusion. |
 | LC-GAP-02 | BF01–09 / STEP04/06–08/10: reuse all implemented B entries, integrate and independently qualify every new-C name, including resource/host/error cases. |
 | LC-GAP-03 | C-HOST / STEP08 and LC-I-13/16–21: complete configured command, queue, input, stream and static signed-provider adapters with resource/condition/result proof. |
 | LC-GAP-04 | C-ACT / STEP03 and C-HOST / STEP08: qualify invocation modes, exact-length NUL arguments, caller traps/completions, enabled pool-access windows and real host HALT. |

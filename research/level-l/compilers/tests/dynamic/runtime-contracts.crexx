@@ -1,0 +1,93 @@
+/* Independent stable invocation, policy and aggregate ledger contracts. */
+options levelb
+import rxfnsb
+import llcdynamicbudget
+import rexxclassicinvocation
+import rexxclassiccontext
+import rexxclassicconfig
+import rexxclassicstate
+import rexxactivation
+import rexxpool
+import rexxvalue
+
+main: procedure
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.beginInternalCall()
+  pool = .rexxpool..RexxVariablePool(1); config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  call pool.setSymbolValue('VISIBLE',.rexxvalue..RexxValue('caller'))
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  invocation = .rexxclassicinvocation..RexxClassicInvocation(reference context)
+  call check(activation.procedureEligible(),'coordinator entry preserves insertion eligibility')
+  call invocation.enterProcedure()
+  private = dereference context.pool()
+  call private.setSymbolValue('LOCAL',.rexxvalue..RexxValue('private'))
+  call invocation.expose('VISIBLE',0)
+  call private.setSymbolValue('VISIBLE',.rexxvalue..RexxValue('exposed'))
+  call check(pool.symbolValue('VISIBLE').asString() == 'exposed','shared EXPOSE owner')
+  call check(invocation.committed() & private.symbolValue('LOCAL').asString() == 'private','private pool persists across group boundary')
+  call invocation.close(); call invocation.close()
+  restored = context.pool(); expected = reference pool
+  call check(restored <refsame> expected,'actual invocation exit restores original bundle binding')
+  definition = .rexxclassicstate..RexxClassicHandlerDefinition('CALL','HANDLER',2,'program-definition',1,'generated-source',3)
+  call activation.setDynamicPolicy(3,definition as .object)
+  call check(activation.callPolicy(3) = 2147483647,'dynamic CALL ordinal adapter')
+  child = .rexxactivation..RexxActivationArguments(); call child.inheritSignalPolicy(reference activation)
+  copied = child.dynamicPolicy(3) as .rexxclassicstate..RexxClassicHandlerDefinition
+  call check(copied.name() == 'HANDLER' & copied.fingerprint() == 'program-definition','internal child inherits immutable handler definition')
+  call activation.setSignalPolicy(3,0)
+  call check(activation.signalPolicy(3) = 0 & child.callPolicy(3) = 2147483647,'OFF releases only current policy')
+  call child.beginExternalConditionScope()
+  call check(child.callPolicy(3) = 0,'external program clears foreign dynamic policy')
+  call activation.setSignalPolicy(3,2147483647)
+  refused = 0
+  do
+    ignored_policy = activation.dynamicPolicy(3)
+  on signal invalid_arguments
+    refused = 1
+  end
+  call check(refused,'reserved sentinel without checked definition is refused')
+  call activation.setSignalPolicy(3,0)
+  ledger = .llcdynamicbudget..ledger(512)
+  first = ledger.reserve(300,'parent'); second = ledger.reserve(200,'child')
+  call check(first > 0 & second > 0 & ledger.reserve(13,'overflow') = 0,'nested owners share aggregate bound')
+  call ledger.release(first); third = ledger.reserve(300,'replacement')
+  call check(third > first & ledger.used() = 500,'reused ledger slots retain fresh identities')
+  call ledger.release(second); call ledger.release(third)
+  call check(ledger.used() = 0,'cleanup releases every reservation')
+  other = .llcdynamicbudget..ledger(512); foreign = other.reserve(1,'foreign')
+  refused = 0
+  do
+    call ledger.release(foreign)
+  on signal invalid_arguments
+    refused = 1
+  end
+  call check(refused & other.used() = 1 & ledger.used() = 0,'foreign ledger ticket cannot release another owner')
+  call other.release(foreign)
+  cache = .llcdynamicbudget..cache(reference ledger,400)
+  a = cache.put('group|source-A','410042'x as .binary,.rexxvalue..RexxValue('immutable') as .object,0)
+  held = cache.pin(a)
+  b = cache.put('group|source-B','43'x as .binary,.rexxvalue..RexxValue('other') as .object,200)
+  call check(a > 0 & b = 0,'all-pinned cache exhaustion leaves active owner intact')
+  call check(cache.find('group|source-A','410042'x as .binary) = a & cache.find('group|source-A','41'x as .binary) = 0,'cache uses exact source bytes')
+  call cache.unpin(a)
+  b = cache.put('group|source-B','43'x as .binary,.rexxvalue..RexxValue('other') as .object,200)
+  call check(b > 0 & cache.find('group|source-A','410042'x as .binary) = 0,'unpinned immutable plan can be evicted')
+  refused = 0
+  do
+    ignored_plan = cache.pin(a)
+  on signal invalid_arguments
+    refused = 1
+  end
+  call check(refused,'evicted cache ticket is stale')
+  ignored = cache.close()
+  call check(cache.close() = 1 & ledger.used() = 0,'idempotent cache teardown releases aggregate ownership')
+  say 'PASS: Classic dynamic runtime contracts'
+  return
+
+check: procedure
+  arg accepted = .int, message = .string
+  if accepted = 0 then do
+    say 'FAIL: ' || message
+    assembler signal 'ERROR',message
+  end
+  return

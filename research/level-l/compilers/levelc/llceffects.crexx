@@ -49,7 +49,11 @@ model: procedure = .llireffects..model
     if pos('observation',schema.effectvalue(descriptor,1)) > 0 then call summary.observe('crexx.c.observation')
     if pos('resource',schema.effectvalue(descriptor,2)) > 0 then call summary.allocate('crexx.c.owner')
     if name = 'crexx.c.do.close' then call summary.release('crexx.c.loop')
-    if name = 'crexx.c.call' | name = 'crexx.c.call.external' | name = 'crexx.c.call.missing' | name = 'crexx.c.bif' | name = 'crexx.c.clause.complete' then do
+    if name = 'crexx.c.call' | name = 'crexx.c.call.external' | name = 'crexx.c.call.missing' | name = 'crexx.c.bif' | name = 'crexx.c.clause.complete' | name = 'crexx.c.signal.select' then do
+      transfer = 'possible'; resume = 'possible'
+      call summary.write('crexx.c.callback'); call summary.observe('crexx.c.observation')
+    end
+    if wordpos(name,'crexx.c.dynamic.interpret crexx.c.dynamic.call.owner crexx.c.dynamic.call.resolve') > 0 then do
       transfer = 'possible'; resume = 'possible'
       call summary.write('crexx.c.callback'); call summary.observe('crexx.c.observation')
     end

@@ -1,0 +1,60 @@
+/* cREXX License (MIT). Pure retained-binding source admission controls. */
+options levelb
+import rxfnsb
+import llcbindings
+import llcompilercontracts
+import llcgraph
+import rxcontract
+
+main: procedure = .int
+  failures = 0
+  fields = rxcontract..project('ordinary.target','.int','first=7,required=.int','b',0,0,65536,65536)
+  signature = .llcompilercontracts..signature.projected(fields)
+  failures = failures + check(signature.error() = '', 'owning metadata projection accepts fixture contract')
+  if signature.error() <> '' then return failures
+  definitions = .llcbindings..definition[]
+  definitions[1] = .llcbindings..definition('ordinary.target','ordinary.target','typed',signature)
+  definitions[2] = .llcbindings..definition('known','ordinary.target','typed',signature)
+  definitions[3] = .llcbindings..definition('classic','ordinary.classic','classic')
+  definitions[4] = .llcbindings..definition('process','ordinary.process','process')
+  allowance = 64
+  do i = 1 to definitions[0]; allowance = allowance + definitions[i].bytes(); end
+  selectedowner = .llcbindings..prepared.snapshot(definitions,allowance,1000000)
+  failures = failures + check(selectedowner.status() = 0 & selectedowner.sourceonly(), 'pure snapshot admits retained definitions: ' || selectedowner.error())
+  if selectedowner.status() then return failures
+  selected = selectedowner.find('KNOWN')
+  failures = failures + check(selected = 2 & selectedowner.find('target') = 0, 'snapshot preserves only explicitly selected aliases')
+  failures = failures + check(selectedowner.accept(selected,'01') = '', 'middle omission retains callee default presence')
+  failures = failures + check(pos('required provider argument',selectedowner.accept(selected,'10')) > 0, 'missing required formal is refused')
+  failures = failures + check(pos('too many',selectedowner.accept(selected,'111')) > 0, 'excess known actuals are refused')
+  retained = selectedowner.signature(selected)
+  failures = failures + check(retained.defaultkind(1) = signature.defaultkind(1) & retained.defaultliteral(1) = signature.defaultliteral(1) & retained.defaultliteral(1) = '7', 'snapshot retains owning exact default metadata')
+  failures = failures + check(selectedowner.accept(3,'010') = '' & selectedowner.accept(4,'11') = '' & selectedowner.accept(4,'10') <> '', 'Classic packets and process omission policy retain their routes')
+  failures = failures + check(selectedowner.usedbytes() <= allowance & selectedowner.workused() <= 1000000, 'metadata bound covers retained records and queries')
+  limited = .llcbindings..prepared.snapshot(definitions,1,1000000)
+  failures = failures + check(limited.status() <> 0 & limited.count() = 0, 'snapshot limit publishes no usable definitions')
+  invalid = .llcbindings..definition[]
+  invalid[1] = .llcbindings..definition('known','ordinary.target','typed')
+  rejected = .llcbindings..prepared.snapshot(invalid)
+  failures = failures + check(rejected.status() <> 0, 'typed selection requires checked metadata')
+  invalid[1] = .llcbindings..definition('known','ordinary.target','classic',signature)
+  rejected = .llcbindings..prepared.snapshot(invalid)
+  failures = failures + check(rejected.status() <> 0, 'retained route cannot substitute a different signature kind')
+  invalid[1] = definitions[2]; invalid[2] = .llcbindings..definition('KNOWN','ordinary.target','typed',signature)
+  rejected = .llcbindings..prepared.snapshot(invalid)
+  failures = failures + check(rejected.status() <> 0, 'duplicate canonical aliases are refused')
+  names = .string[]; entries = .int[]
+  front = .llcgraph..request.snapshot("say 'not reached'; call known 1,2,3" as .binary,'interpret-group',names,entries,'fixture',definitions)
+  failures = failures + check(front.status() <> 0 & pos('too many',front.error()) > 0, 'source preparation rejects known excess arguments before generated effects')
+  front = .llcgraph..request.snapshot('call known ,23' as .binary,'interpret-group',names,entries,'fixture',definitions)
+  failures = failures + check(front.status() = 0, 'source preparation uses retained alias and optional-middle contract: ' || front.error())
+  front = .llcgraph..request.snapshot('call process ,23' as .binary,'interpret-group',names,entries,'fixture',definitions)
+  failures = failures + check(front.status() <> 0 & pos('cannot be omitted',front.error()) > 0, 'source preparation preserves selected process admission')
+  say 'failures=' || failures
+  return failures
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1

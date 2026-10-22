@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicstate expose RexxAddressState RexxTraceState RexxDateTimeState
+namespace rexxclassicstate expose RexxAddressState RexxTraceState RexxDateTimeState RexxClassicHandlerDefinition
 import rxfnsb
 
 /**
@@ -503,3 +503,39 @@ RexxDateTimeState: class
     elapsed = now - elapsed_start_microseconds
     if reset then elapsed_start_microseconds = now
     return elapsed
+
+/** Immutable dynamic condition target. It retains source definition/provenance,
+ * never a live destination owner, executable pointer or group plan. Internal
+ * children bind this same definition to their own current invocation owner.
+ */
+RexxClassicHandlerDefinition: class
+  handler_kind = .string
+  handler_name = .string
+  handler_entry = .int
+  handler_fingerprint = .string
+  handler_generation = .int
+  handler_source = .string
+  handler_line = .int
+  *: factory
+    arg kind = .string, name = .string, entry = .int, fingerprint = .string, generation = .int, source = .string, line = .int
+    handler_kind = kind; handler_name = name; handler_entry = entry
+    handler_fingerprint = fingerprint; handler_generation = generation
+    handler_source = source; handler_line = line
+    if (kind <> 'SIGNAL' & kind <> 'CALL') | name = '' | entry < -1 | fingerprint = '' | generation < 1 | line < 0 then assembler signal "INVALID_ARGUMENTS","Invalid Classic dynamic handler definition"
+    return
+  valid: method = .boolean
+    return (handler_kind = 'SIGNAL' | handler_kind = 'CALL') & handler_name <> '' & handler_entry >= -1 & handler_fingerprint <> '' & handler_generation > 0 & handler_line >= 0
+  kind: method = .string
+    return handler_kind
+  name: method = .string
+    return handler_name
+  entry: method = .int
+    return handler_entry
+  fingerprint: method = .string
+    return handler_fingerprint
+  generation: method = .int
+    return handler_generation
+  source: method = .string
+    return handler_source
+  line: method = .int
+    return handler_line
