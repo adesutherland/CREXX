@@ -612,6 +612,11 @@ the `DO` block. `ON SIGNAL` with no names catches all maskable signals.
 `AS name` binds the current `.signal` object; if `AS` is omitted, no signal
 object is available to that handler.
 
+The existing VM `CANCEL` event (code 18) is catchable for cleanup and relay,
+including by a catch-all block. Strong `KILL` remains uncatchable and uses native
+execution teardown. Catching cancellation does not provide general finally
+semantics for terminal execution or process destruction.
+
 Only a simple `DO ... END` group can carry `ON SIGNAL` clauses. Counted,
 conditional, forever, and expression-form `DO` loops do not carry handlers
 directly. To protect code inside a loop, put a simple signal-handling

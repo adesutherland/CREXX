@@ -50,7 +50,7 @@ main: procedure = .int
     call operation.input('context',context); call operation.attribute('name','x' as .binary)
     loaded = operation.finish()
     operation = block.operation(contract.operation('crexx.c.say'),origin)
-    call operation.input('value',loaded.result()); said = operation.finish()
+    call operation.input('value',loaded.result()); call operation.input('context',context); said = operation.finish()
   end
   operation = block.operation(contract.operation('crexx.c.return.absent'),origin)
   absent = operation.finish(); call block.returnvalue(absent.result(),origin)

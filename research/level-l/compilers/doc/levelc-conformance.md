@@ -20,13 +20,18 @@ retained direct/quoted/VALUE transfers, seven-condition ON/OFF, producers,
 cleanup and typed payload/origin transport as one complete instruction.
 The [whole practical TRACE contract](architecture.md#trace-complete-contract)
 adds source forms, shared activation options/query state, command inhibition
-and a private observer over existing B services. The current C22 family has
-88 operations, five C types and 36 target exports. These instructions include
+and a private observer over existing B services. The current C23 family has
+88 operations, five C types and 38 target exports. These instructions include
 their required helpers and dependencies; complete C remains open.
 
-Controlled typed HALT exercises condition delivery, not real host/asynchronous
-HALT. Default unhandled C events are nonresumable HALT with their original tag,
-payload and origin; broader outward host resumption remains open. Internal
+The Group 2 real HALT ingress uses the existing execution-owner pending
+POSIX_INT word and the same Classic delivery/buffering owner. Foreign/inactive
+embedding requests fail without touching another execution. Without a live host
+completion boundary, default unhandled C events are nonresumable HALT with their
+original tag, payload and origin. An explicit host boundary retains the first
+escaping event as an owned terminal completion and unwinds internal/external
+Classic calls before result use. General outward raw-provider resumption remains
+open. Internal
 helper raw-location presentation may differ while required SIGL, condition
 state and error behavior remain material. A dropped DO control read on advance
 is attributed to END in this compiler; the native helper uses the DO header.
@@ -45,9 +50,9 @@ into separate prerequisite or partial-profile deliveries.
   the [SAY ledger row](levelc-requirements.md#whole-instruction-work-units).
 - [Static statement providers](architecture.md#call3-static-provider-contract)
   are explicit, signed and prepared by their owning B/G/C pipeline. External
-  function expressions, late provider search/loading and general callback
-  integration are not implemented by that profile. The proposed Group 2
-  extension below requires approval before expanding it.
+  function expressions, ordinary scalar typed/native procedures and configured
+  callbacks use the approved Group 2 extension below. Automatic late provider
+  loading and Classic source execution remain with INTERPRET.
 - PARSE EXTERNAL and PARSE NUMERIC remain outside the current agreed source
   scope; their final Release 1 disposition remains explicit in LC-GAP-05.
 - ADDRESS retains authored raw resource symbols. The shared 54.1 message prints
@@ -60,25 +65,25 @@ into separate prerequisite or partial-profile deliveries.
   [language guide](../../../../docs/books/crexx_language_reference/statements.md#level-c-classic-signal)
   and [whole SIGNAL contract](architecture.md#signal-complete-contract).
 
-## Proposed calls and host extension
+## Calls and host integration
 
-[Group 2](architecture.md#group2-calls-host-proposal) is documented for approval;
-it is not implemented or qualified. It proposes metadata-guided ordinary scalar
+[Group 2](architecture.md#group2-calls-host-proposal) is approved and implemented;
+focused component qualification is complete for the selected local Debug/rxbvm
+profile. It supplies metadata-guided ordinary scalar
 B/G/RXPA calls and external expressions, callee-owned defaults/ABI, runtime
 RexxValue conversion and exposed scalar temporaries whose updates are discarded.
 Adrian confirmed that B/G exposed globals are invisible/inaccessible to Level C
 callers and true reference values require explicit adapters. Arrays, arbitrary
 objects, methods/factories and task capabilities have no implicit scalar mapping.
 
-The complete proposed increment retains host invocation modes, exact argument
+The increment supplies host invocation modes, exact argument
 presence and completion, live callback pool windows, configuration hooks,
 queue/stream/ADDRESS transport, real clock/HALT producers and context lifecycle.
 Adrian requires executable CALL to share exactly ADDRESS's low-level
 process/byte-channel capabilities. He approved exit status as the routine result,
 with stdout/stderr inheriting host streams, including host/OS redirection, and
-no new CALL redirection syntax. Explicit process bindings and argument/failure
-rules remain proposed, while
-ordinary non-REXX typed/RXPA routines use their declared interfaces. Automatic
+no new CALL redirection syntax. Explicit process bindings preserve static presence checks and shared provider
+failures; ordinary non-REXX typed/RXPA routines use their declared interfaces. Automatic
 Classic source invocation remains deferred to final INTERPRET. Current UTC-based
 TIME(E/R) is preserved. Any required new public API/ISA/platform disposition
 retains its exact approval gate. Formal compiler/platform/delivery QA remains
@@ -123,7 +128,7 @@ or broken state, ownership, error and resource semantics remain material defects
 Focused development qualification uses the Debug optimized compiler with IR
 transformation and assembler optimization on rxbvm. It covers instruction/BIF
 state, internal/provider restoration, owned EXIT and fatal cleanup, actual
-Unicode/NUL values, command statuses/inhibition, source/errors and raw C22
+Unicode/NUL values, command statuses/inhibition, source/errors and raw C23
 contracts. It does not establish full compiler, platform or delivery acceptance;
 formal QA follows feature completion.
 
@@ -151,7 +156,7 @@ Qualification starts with maintained native fixture sources and checked expected
 outputs, running the sources unchanged through B/L. Only harness/compiler and
 controlled queue-injection boundaries adapt. Multi-error diagnostic fixtures
 isolate each unchanged checked row at its original line/column for fail-first
-parsing. C22 admission and new PARSE
+parsing. C23 admission and new PARSE
 observations have independent supplements. One normal Debug opt/IR-on/rxbvm
 component lane establishes this local increment. Full compiler, delivery,
 platform and formal QA criteria remain open.
@@ -167,7 +172,7 @@ Group 4 STEP01–06 uses the public, optional Level L
 and [`rxfnsl-rxas`](../../../../langtools/doc/rxas-design.md) packages. They supply
 generic graph/effect/proof services and canonical instruction records with
 checked whole-cell assignment. They can be used without a Classic frontend or
-runtime. The C22 adapter owns context identity, pool/handler/callback premises
+runtime. The C23 adapter owns context identity, pool/handler/callback premises
 and conditional results; shared B remains the runtime algorithm owner.
 
 The backend coalesces proved immutable context aliases, reuses eligible plain
@@ -199,7 +204,7 @@ inventories. Actual package/import controls keep core/bootstrap, optional
 analysis/RXAS/execution, C/G hosts and static C runtime separated. Independent
 public clients select exact image roots; the RXAS guide's producer emits a
 checked four-cell program that runs with the VM alone. C integration retains
-the indexed graph/effects/target pipeline and its C22 ABI; no source-language
+the indexed graph/effects/target pipeline and its C23 ABI; no source-language
 feature or native frontend changes follow from package closure. The owning
 [contract](architecture.md#group4-package-closure-contract) distinguishes this
 focused development closure from installed/platform and formal acceptance.
@@ -212,7 +217,8 @@ with CLC-STEP04. Negated strict equality `\(a == b)` is currently admitted.
 The [plan](../PLAN.md#remaining-actions) and
 [ledger](levelc-requirements.md#shared-requirements-before-instruction-closure)
 retain remaining expression/BIF/host/lifecycle contracts, exact diagnostic
-completion, delivery and declared platforms. Real asynchronous HALT and outward
-raw-provider event resumption remain host integration work.
+completion, delivery and declared platforms. Group 2 supplies execution-local
+real HALT ingress; declared platform proof and general outward raw-provider event
+resumption remain open.
 INTERPRET remains required and last. Accepted profile choices do not close these
 obligations or establish full conformance.

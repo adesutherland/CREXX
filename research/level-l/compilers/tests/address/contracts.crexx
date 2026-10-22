@@ -73,7 +73,7 @@ schema: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then count = count + 1
   end
-  call check(version = 22 & count = 5 & data.ops() = 88,'exact C22/five types/88 operations')
+  call check(version = 23 & count = 5 & data.ops() = 88,'exact C22/five types/88 operations')
   names = 'address.swap address.select address.connection command.new command.connection command.binding command.run'
   do i = 1 to 7
     id = 65 + i

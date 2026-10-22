@@ -11,7 +11,8 @@ Existing RXAS/RXLINK, VM and native host transport remain dependencies.
 helpers/dependencies, are complete for their agreed contracts with the named
 cross-cutting qualifications. Group 1 is locally complete: delayed CALL,
 authored clause completion and shared field/drop observations under that scope.
-Formal QA follows compiler feature completion; INTERPRET remains last.** PARSE was
+Group 2 static calls and host integration are locally complete; broader
+delivery/platform acceptance remains open. Formal QA follows compiler feature completion; INTERPRET remains last.** PARSE was
 delivered ahead of its queue position as the shared executor prerequisite for
 ARG; this does not skip PROCEDURE or close PARSE.
 
@@ -48,9 +49,9 @@ to interactive debugging, numeric suppression or complete expression events.
 | <a id="current-action-iterate"></a><a id="current-iterate-proof"></a>**LC-I-10 ITERATE / CLC-STEP05** | Nearest/named targets and selected UNTIL/advance/entry continuation locally delivered. | Same observation/dynamic owners as LEAVE; preserve final FOR advance and selected owner. |
 | <a id="current-action-arg"></a>**LC-I-11 ARG / CLC-STEP06** | Complete-template `PARSE UPPER ARG` with raw presence and live shared/private pool composition locally qualified. | ARG-AC05: wider source/host/delivery/platform closure remains; CCOND supplies errors/resumption/clause/TRACE. |
 | <a id="current-action-procedure"></a>**LC-I-12 PROCEDURE / CLC-STEP06** | Static shared entries, executed eligibility, ordered EXPOSE and normal/fatal restoration locally qualified; CPROC-AC01–06. | CPROC-AC07: remaining source forms, callbacks/dynamic eligibility and host/delivery/platforms; CCOND supplies admitted handler observations. Whole LC-I-12 remains open. |
-| <a id="current-action-call"></a>**LC-I-13 CALL / CLC-STEP06** | Ordinary local/direct-BIF/missing and static signed statement calls, omissions/results and SIGL locally qualified; CALL4 adds delayed handlers under CCOND. | Complete external-function/host/platform and whole CALL remain open. |
-| <a id="current-action-return"></a>**LC-I-14 RETURN / CLC-STEP06** | Linear continuation, contextual35.1, owned result presence and existing cleanup/status locally qualified; RRET-AC01–05. | Full traceback/source catalog, broader host completion and platforms: STEP04/08; whole LC-I-14 remains open. |
-| <a id="current-action-exit"></a>**LC-I-15 EXIT / CLC-STEP06** | Owned optional result, visible program-root propagation and forced cleanup locally qualified; CEXIT-AC01–05. | CEXIT-AC06: broader provider/callback lifecycle, host completion and platforms; CCOND supplies delayed-handler EXIT. Whole LC-I-15 remains open. |
+| <a id="current-action-call"></a>**LC-I-13 CALL / CLC-STEP06** | Local/BIF/Classic-provider, ordinary scalar B/G/RXPA and explicit process statement/expression calls are locally qualified with Group 2; CCOND owns delayed handlers. | Wider source/diagnostics, dynamic source loading and declared platform/delivery acceptance remain open. |
+| <a id="current-action-return"></a>**LC-I-14 RETURN / CLC-STEP06** | Linear continuation, contextual35.1, owned result presence and existing cleanup/status locally qualified; RRET-AC01–05. | Group 2 supplies host completion; full traceback/source catalog and declared platform/delivery proof remain STEP04/10; whole LC-I-14 remains open. |
+| <a id="current-action-exit"></a>**LC-I-15 EXIT / CLC-STEP06** | Owned optional result, visible program-root propagation and forced cleanup locally qualified; CEXIT-AC01–05. | Group 2 supplies static provider/callback/host completion; CEXIT-AC06 retains declared platform/delivery and dynamic proof; CCOND supplies delayed-handler EXIT. Whole LC-I-15 remains open. |
 | **LC-I-16 PULL / CLC-STEP06** | Shared acquisition/UPPER templates, bare consumption and live/private queue composition locally qualified; PULL-AC01–04. | PULL-AC05: wider configured host behavior and declared platforms; STEP08. CCOND supplies condition/TRACE integration. |
 | **LC-I-17 PUSH / CLC-STEP06** | Optional/bare values, front insertion and operand EXIT/private restoration locally qualified; PUSH-AC01–04. | PUSH-AC05: wider host failures, selection/isolation and declared platforms; STEP08. CCOND supplies condition/TRACE integration. |
 | **LC-I-18 QUEUE / CLC-STEP06** | Tail/FIFO insertion, consumed-slot/mixed-order and operand EXIT/private restoration locally qualified; QUEUE-AC01–04. | QUEUE-AC05: wider host failures/queue isolation and declared platforms; STEP08. CCOND supplies condition/TRACE integration. |
@@ -58,7 +59,7 @@ to interactive debugging, numeric suppression or complete expression events.
 | **LC-I-20 ADDRESS / CLC-STEP07** | Explicit selection/swap, transient commands/WITH, lexical anchors and owned command lifecycle locally qualified; CADDR-AC01–05/07 explicit profile. | CADDR-AC08: native host/NUL transport and declared platforms remain; CCOND supplies conditions/resumption/TRACE. Whole LC-I-20 stays open. |
 | **LC-I-21 implicit command / CLC-STEP07** | Active-ADDRESS commands, lasting connections and owned source warnings locally qualified; CADDR-AC01–07 local profile. | Host/NUL transport and declared platforms: CADDR-AC08 / STEP08. Conditions/resumption/TRACE use CCOND. |
 | **LC-I-22 NUMERIC / CLC-STEP07** | Default/fixed/dynamic forms, once-only shared validation, frame installation and call restoration locally qualified; NUM-C-AC01–06. | NUM-C-AC07: broader diagnostics/host/platform scope and numeric fact invalidation; STEP02/04/08. Conditions/LOSTDIGITS/TRACE use CCOND. |
-| **LC-I-23 SIGNAL / CLC-STEP07** | **Complete:** all transfers, seven-condition ON/OFF, actual producers, same-frame cleanup and typed relay; CSIGNAL-AC01–07. | Group 1 integrates delayed CALL; real host HALT, broader host/platform acceptance and INTERPRET retain their named qualifications. |
+| **LC-I-23 SIGNAL / CLC-STEP07** | **Complete:** all transfers, seven-condition ON/OFF, actual producers, same-frame cleanup and typed relay; CSIGNAL-AC01–07. | Group 1 integrates delayed CALL; Group 2 supplies real host HALT ingress. Broader host/platform acceptance and INTERPRET retain their named qualifications. |
 | **LC-I-24 TRACE / CLC-STEP07** | **Complete:** agreed practical options/query, command inhibition/reporting, source/live-value observations and observer restoration; CTRACE-AC01–07. | Accepted practical/presentation limitations remain explicit; formal whole-compiler/platform/delivery acceptance stays open. |
 | **LC-I-25 INTERPRET / CLC-STEP11 — last** | Not implemented; required after static acceptance. | Same compiler/group mode, live continuations/state, CALL resumption/SIGNAL discard, bounded resident ownership and every LC-87/platform gate. |
 
@@ -88,7 +89,7 @@ PROCEDURE1–4 remain complete for CPROC-AC01–06; CPROC-AC07 stays open.
 |---|---|
 | **CLC-STEP06.CALL1** | Complete contract review. |
 | **CLC-STEP06.CALL2** | Locally qualified ordinary profile, CCALL-AC01–04/07; whole CALL stays open. |
-| **CLC-STEP06.CALL3** | Locally qualified [CEXT-AC01–05 / STEP01–03](doc/architecture.md#call3-static-provider-contract), with the generic classifier prerequisite. Fresh pool/config, inherited activation state; external expressions/late loading/native callbacks remain deferred. |
+| **CLC-STEP06.CALL3** | Locally qualified [CEXT-AC01–05 / STEP01–03](doc/architecture.md#call3-static-provider-contract), with the generic classifier prerequisite. Fresh pool/config and inherited activation state. Group 2 extends packet calls to expressions, scalar typed/native providers and configured callbacks; Classic source loading remains with INTERPRET. |
 | **CLC-STEP06.CALL4** | Delivered with CCOND: shared policy/checkpoints, local/BIF/signed handler lifecycle and delayed resumption. Wider CCALL-AC07 host/platform scope remains open. |
 | **PULL-STEP01–03** | Locally qualified shared-parser profile, PULL-AC01–04, with CCOND condition/observation integration; AC05 retains wider host/platform work. |
 | **PUSH-STEP01–03** | [Selected-queue profile](doc/architecture.md#push-contract) locally qualified for AC01–04; AC05 stays shared scope. |
@@ -148,7 +149,7 @@ remains read-only, no push is authorized, and INTERPRET stays last.
 | Group | Status / remaining work | Existing owners |
 |---|---|---|
 | **Conditions and observations** | **Complete local increment:** CALL ON/OFF, delayed delivery/resumption and buffered HALT; configured conditions, SIGL/CONDITION/origins, authored clause/clocks and field/drop observations, including handler pool/resource restoration. Wider host producers/platforms and dynamic execution retain the groups below. | CCOND-AC01–08 / STEP01–03; CALL4; C-OBS; condition portions of STEP03/07 and instruction criteria. |
-| **Calls and host integration** | **Design proposed, awaiting approval:** [Group 2 contract](doc/architecture.md#group2-calls-host-proposal) and [steps](#group2-calls-host-plan). Complete remaining internal/external call and activation semantics: arguments/omissions, RESULT and RETURN/EXIT completion, PROCEDURE/private/shared pools and EXPOSE aliases, inherited/restored numeric/ADDRESS/TRACE state, provider/callback entry and teardown. Preserve already-qualified ordinary recursion and call behavior. Add metadata-guided ordinary scalar B/G/RXPA calls; B/G exposed globals remain inaccessible to C, true reference values require explicit adapters. Complete COMMAND/FUNCTION/SUBROUTINE host invocation with exact-length/empty/NUL arguments/results, live pool access windows, initial ADDRESS/stream/queue selection, I/O adapters and NUL transport, real clock/HALT producers, resource failures, concurrent-context isolation and declared platform adapters. CALL ON/OFF and event delivery remain with conditions. | C-ACT/C-HOST; call portions of C-POOL; STEP03/06/08; CPROC/CCALL/CEXT/RRET/CEXIT and host portions of queue/stream/ADDRESS criteria; BF05/06/08/09 integration dependencies. |
+| **Calls and host integration** | **Complete local increment:** [Group 2 contract](doc/architecture.md#group2-calls-host-proposal) and [steps](#group2-calls-host-plan). Delivered static internal/external call and activation semantics: arguments/omissions, RESULT and RETURN/EXIT completion, PROCEDURE/private/shared pools and EXPOSE aliases, inherited/restored numeric/ADDRESS/TRACE state, provider/callback entry and teardown. Preserve already-qualified ordinary recursion and call behavior. Metadata-guided ordinary scalar B/G/RXPA calls are delivered; B/G exposed globals remain inaccessible to C, true reference values require explicit adapters. COMMAND/FUNCTION/SUBROUTINE host invocation supplies exact-length/empty/NUL arguments/results, live pool access windows, initial ADDRESS/stream/queue selection, I/O adapters and NUL transport, real clock/HALT producers, resource failures and concurrent-context isolation. Declared platform/delivery proof remains open. CALL ON/OFF and event delivery remain with conditions. | C-ACT/C-HOST; call portions of C-POOL; STEP03/06/08; CPROC/CCALL/CEXT/RRET/CEXIT and host portions of queue/stream/ADDRESS criteria; BF05/06/08/09 integration dependencies. |
 | **Language functionality: source, expressions and BIFs** | Remaining syntax/header controls, Unicode names/source inventory, operators/numeric semantics, exact diagnostics and dead-source validation; outstanding variable/stem and instruction semantics outside the condition/call/host groups; complete C context and behavior contracts for the 95 already-bound BIF names, reusing the shared B bodies. INTERPRET is the last feature in this group, with call/lifecycle integration and compiler support supplied by their owners. | C-SRC/C-EXPR/C-NUM/C-POOL/C-UNI; STEP04–06; BF01–09 language contracts; STEP11 last. |
 | **Compiler and emitter** | **Group 4 STEP01–08 locally delivered for their recorded profiles:** optional neutral L analyses/proofs, RXAS records/allocation and bounded IR execution, with C integration and four-image package closure. The [architecture](doc/architecture.md#group4-infrastructure-proposal) owns conservative lifetime/control limits. Full G4/CFC acceptance remains open; further C-OPT opportunities and both native B seed defects retain their owners. | G4-AC01–10 / STEP01–08; STEP01/02/09; C-ABI; C-OPT-01–06; CFC-AC07/10–12; B-SEED-ALIAS; B-SEED-INLINE-RECEIVER. |
 
@@ -168,14 +169,14 @@ acceptance work across these groups; they are not additional language features.
 
 ### Group 2: calls and host integration
 
-**Design recorded; product implementation awaits Adrian's approval.** The
-[architecture proposal](doc/architecture.md#group2-calls-host-proposal) separates
+**Locally complete as one static calls/host increment, including expression calls.** The
+[architecture contract](doc/architecture.md#group2-calls-host-proposal) separates
 callee-owned ABI/behavior, C value adaptation, shared Classic runtime and
 generic metadata/VM/platform capabilities. It deliberately extends the current
 statement-only signed activation-provider profile to ordinary scalar typed and
 RXPA procedures and external expressions. B/G exposed globals are inaccessible
 to C; true reference values use explicit adapters, as confirmed by Adrian.
-Executable CALL is proposed through explicit process bindings. Adrian approved
+Executable CALL uses approved explicit process bindings. Adrian approved
 exit status as the result, with stdout/stderr inheriting the current host streams
 and no new CALL redirection syntax. He requires exactly the same low-level
 process/byte-channel capabilities as ADDRESS; no second launcher. Automatic
@@ -186,8 +187,13 @@ unspecified native API/ISA or platform exclusion is implicitly approved.
 The outcome is one complete static calls/host increment, preserving qualified
 recursion and CCOND while completing invocation, callback pools and configured
 host services. These subcriteria route existing C-ACT/C-HOST/C-POOL and
-CFC-AC03/04/09–12 obligations; all are open. A local development qualification
-does not close full compiler, delivery or platform acceptance.
+CFC-AC03/04/09–12 obligations. The selected development profile is qualified;
+full criteria retain their wider compiler, delivery and declared-platform proof.
+Coherent source and representative RXAS review, metadata/ABI and native span/clock/
+interrupt controls, maintained native call fixtures and focused host/process
+consumers qualify one prepared normal Debug, C opt/rxbvm lane. Relevant valid
+results were reused; affected fixes received only their own checks. Formal QA
+remains open, with no mode matrix, sanitizer campaign or publication.
 
 | Criterion / status | Observable pass condition and proof |
 |---|---|
@@ -204,13 +210,13 @@ does not close full compiler, delivery or platform acceptance.
 
 | Step / status | Scope, dependency and decision gate |
 |---|---|
-| **G2-STEP01 — proposed** | Approve complete architecture, scalar/void/default/vararg rules, explicit process-binding/argument/failure policy and exact new-interface gates; retain approved executable exit-status result/inherited streams. Independent coordinator review before product edits. AC01–10. |
-| **G2-STEP02 — todo** | Implement bounded generic metadata/manifest projection, explicit process binding admission and ordinary scalar typed/RXPA CALL/expression adaptation, reusing native ABI/runtime services; AC01/02. Exact B-facing projection/binding contract first. |
-| **G2-STEP03 — todo** | Complete activation and runtime-owned host request/result/export entry, modes/presence/completion and inherited/restored state; AC03/04/08. Prefer existing checked RXVML calls; demonstrate any missing outcome transport before new API approval. |
-| **G2-STEP04 — todo** | Integrate live callback pool windows and configured hook/trap/resource selection over existing owners; AC05/07/08. Exact window/reentry/expiry contract first. |
-| **G2-STEP05 — todo** | Complete shared I/O/queue/stream/ADDRESS adapters, current channel condition mapping, real clock/HALT ingress and context isolation; AC06–08/10. Public span/interrupt/clock interfaces retain exact approval gates if required. |
-| **G2-STEP06 — todo** | Integrate all routes, review coherent source and first representative RXAS early, batch material fixes, then freeze the increment. AC01–09. Preserve CCOND and existing ordinary/private recursion rather than reopening their whole suites. |
-| **G2-STEP07 — todo** | Run selected component and boundary checks once using prepared Debug/rxbvm products, review affected fixes only, update enduring contracts/simple status and commit authorized paths locally. AC09/10; no push. Formal compiler/platform/delivery QA remains later; INTERPRET stays last. |
+| **G2-STEP01 — complete** | Approved complete architecture, scalar/void/default/vararg rules and explicit process-binding/argument/failure policy, including expression calls and executable exit-status result/inherited streams. Record/review exact component interfaces before product edits; new native API/ISA gates retain their contract scope. AC01–10. |
+| **G2-STEP02 — complete locally** | Implement bounded generic metadata/manifest projection, explicit process binding admission and ordinary scalar typed/RXPA CALL/expression adaptation, reusing native ABI/runtime services; AC01/02. Exact B-facing projection/binding contract first. |
+| **G2-STEP03 — complete locally** | Complete activation and runtime-owned host request/result/export entry, modes/presence/completion and inherited/restored state; AC03/04/08. Prefer existing checked RXVML calls; demonstrate any missing outcome transport before new API approval. |
+| **G2-STEP04 — complete locally** | Integrate live callback pool windows and configured hook/trap/resource selection over existing owners; AC05/07/08. Exact window/reentry/expiry contract first. |
+| **G2-STEP05 — complete locally** | Complete shared I/O/queue/stream/ADDRESS adapters, current channel condition mapping, real clock/HALT ingress and context isolation; AC06–08/10. Public span/interrupt/clock interfaces retain exact approval gates if required. |
+| **G2-STEP06 — complete locally** | Integrate all routes, review coherent source and first representative RXAS early, batch material fixes, then freeze the increment. AC01–09. Preserve CCOND and existing ordinary/private recursion rather than reopening their whole suites. |
+| **G2-STEP07 — complete locally** | Run selected component and boundary checks once using prepared Debug/rxbvm products, review affected fixes only, update enduring contracts/simple status and commit authorized paths locally. AC09/10; no push. Formal compiler/platform/delivery QA remains later; INTERPRET stays last. |
 
 <a id="group4-infrastructure-plan"></a>
 
@@ -352,6 +358,14 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
 
 ## Outstanding decisions and dependencies
 
+- **B-SEED-CANCEL — locally complete; required Group 2 dependency:** typed B
+  admission, catch-all emission and the shared signal mapping now admit the
+  existing maskable VM CANCEL tag. Shared process/host cleanup selectors release
+  resources before relaying it with the original payload and origin.
+  Native Classic parsing/lowering, ISA and public host interfaces stay unchanged.
+  Focused typed-handler and real process/host cancellation controls qualify
+  resources/windows released before same-context reuse.
+  Strong KILL/shutdown retain terminal native teardown; no general finally claim.
 - **Shared observations:** CCOND supplies configured errors/NOVALUE/LOSTDIGITS,
   typed conditions, resumed handlers and authored clause/field/drop observations
   for the admitted static profile. ARG-AC05/CPARSE-AC07 retain their wider source,
@@ -376,5 +390,19 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
   affected optimizer-mode checks and the retained neutral runner slot/control
   consumer. This is distinct from the indexed-receiver issue above and does
   not authorize native frontend edits in this increment.
+- **B-SEED-CLASSIC-CATCHALL — open:** the typed B catch-all emission list omits
+  already-admitted CLASSIC_SYNTAX/CLASSIC_CONDITION. Group 2 cleanup names these
+  tags explicitly; the required CANCEL repair does not reconcile this separate
+  omission. Owner: typed B signal emission, with explicit/catch-all Classic-tag
+  and original-payload/origin regression before later B/host closure.
+- **VM-REF-OWNER-COST — open:** generic VM reference lifetime marking searches
+  frame-local value trees for storage ownership. Large Level L target-record
+  owners can make repeated reference acquisition expensive during construction.
+  Owner: VM reference/lifetime service, with Level L construction callers.
+  A later bounded increment must isolate a growing-object/reference reproducer,
+  preserve lifetime/foreign/expired-reference checks and compare representative
+  C construction using the same source/IR/RXAS contracts. Review any provenance
+  index or caller borrow reduction before editing; do not duplicate ownership
+  algorithms in L or launch a production performance campaign from this finding.
 - **Scope:** language/API/ISA/platform exceptions, default switching, native-C
   retirement and release/publication remain explicit maintainer decisions.

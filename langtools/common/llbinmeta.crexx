@@ -44,6 +44,7 @@ catalog: class
   _consumed = .int
   _work = .int
   _indexed = .int
+  _taskerror = .string
   _indexkeys = .string[]
   _indexrows = .int[]
   _indexsizes = .int[]
@@ -492,19 +493,30 @@ catalog: class
   /** A partial ownership key is retained even when its other fields are bad. */
   prepareindex: method = .void
     if _indexed | _error <> '' then return
+    _taskerror = ''
     row = .int; at = .int; pool = .int
     name = .string; owner = .string; member = .string; kind = .string; prefix = .string
     do row = _constantcount + 1 to _keys[0] while _error = ''
       if reservework(1) = 0 then return
-      if _kind[row] <> 7 & _kind[row] <> 11 & _kind[row] <> 13 & _kind[row] <> 15 then iterate
-      if _length[row] < 20 then iterate
+      if _kind[row] <> 7 & _kind[row] <> 11 & _kind[row] <> 13 & _kind[row] <> 15 & _kind[row] <> 19 then iterate
+      if _length[row] < 20 then do
+        if _kind[row] = 19 then _taskerror = 'truncated task-target identity'
+        iterate
+      end
       at = _start[row]; pool = _pool[row]
       name = peek(pool,<at..u32>(at + 16) _metadata)
-      if _peekerror <> '' then iterate
-      if validname(name) = 0 then iterate
+      if _peekerror <> '' then do
+        if _kind[row] = 19 then _taskerror = 'unreadable task-target identity'
+        iterate
+      end
+      if validname(name) = 0 then do
+        if _kind[row] = 19 then _taskerror = 'invalid task-target identity'
+        iterate
+      end
       name = fold(name)
       if _kind[row] = 7 then do; call locator('F:' || name,row); iterate; end
       prefix = pool || ':'
+      if _kind[row] = 19 then do; call locator('T:' || prefix || name,row); iterate; end
       if _kind[row] = 11 | _kind[row] = 13 then do; call locator('H:' || prefix || name,row); iterate; end
       owner = name
       if _length[row] < 28 then do; call locator('B:' || prefix || owner,row); iterate; end
@@ -593,6 +605,22 @@ catalog: class
     ownerrow = 0; owner = .string; ownerkey = .string; expectedmember = .string
     at = .int; position = .int; headers = 0; members = 0; factory_kind = 0
     key = .string; reason = .string; suffix = .string; marker = '.§FACTORY' as .binary
+    if _taskerror <> '' then return .callable.failed(_taskerror)
+    taskkey = 'T:' || prefix || canonical; taskposition = findkey(taskkey); task = 0
+    do while samekey(taskposition,taskkey)
+      task = task + 1
+      if task > 1 then return .callable.failed('ambiguous task-target metadata: ' || raw.name())
+      taskrow = _indexrows[_order[taskposition]]
+      if _length[taskrow] <> 28 then return .callable.failed('invalid task-target record size: ' || raw.name())
+      taskat = _start[taskrow]; taskkind = <at..u32>(taskat + 24) _metadata
+      if taskkind < 1 | taskkind > 3 then return .callable.failed('invalid task-target kind: ' || raw.name())
+      bindingid = <at..u32>(taskat + 20) _metadata
+      if bindingid > 1000000 then return .callable.failed('task-target binding outside its pool: ' || raw.name())
+      bindingrow = search(pool * 1000001 + bindingid,1,_constantcount)
+      if bindingrow = 0 then return .callable.failed('missing task-target binding: ' || raw.name())
+      if _kind[bindingrow] <> 1 then return .callable.failed('task-target binding is not binary: ' || raw.name())
+      taskposition = taskposition + 1
+    end
     if reservework(<blen>(names)) = 0 then return .callable.failed(_error)
     do at = 1 to <blen>(names) - 1
       if <at..u8>(at) names <> 46 then iterate
@@ -618,7 +646,7 @@ catalog: class
     if headers = 0 then do
       if factory_kind then return .callable.failed('factory owner is missing: ' || raw.name())
       if position > 0 then return .callable.failed('member owner is missing: ' || raw.name())
-      return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'procedure','')
+      return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'procedure','',task)
     end
     reason = headererror(ownerrow)
     if reason <> '' then return .callable.failed(reason || ': ' || raw.name())
@@ -644,14 +672,14 @@ catalog: class
     end
     if _error <> '' then return .callable.failed(_error)
     if _kind[ownerrow] = 13 & members <> 1 then return .callable.failed('interface implementation member is missing: ' || raw.name())
-    if factory_kind then return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'factory',owner)
-    return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'method',owner)
+    if factory_kind then return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'factory',owner,task)
+    return .callable.classified(raw.name(),raw.result(),raw.arguments(),raw.flags(),'method',owner,task)
   /** Reserve one owned projection. Fixed resource diagnostics remain available. */
   reserveitem: method = .int
     arg item_ref = reference .llbinmeta..callable
     if _bounded = 0 then return 0
     item = dereference item_ref
-    amount = 56; text = .string
+    amount = 64; text = .string
     if reservebytes(amount) = 0 then return -1
     do ordinal = 1 to 7
       select ordinal
@@ -815,6 +843,7 @@ callable: class
   _error = .string
   _kind = .string
   _owner = .string
+  _task = .int
   *: factory
     arg name = .string, result = .string, arguments = .string, flags = .string
     _name = name; _result = result; _arguments = arguments; _flags = flags; _error = ''
@@ -829,9 +858,9 @@ callable: class
    * @param owner qualified owner, empty for a procedure
    */
   classified: factory
-    arg name = .string, result = .string, arguments = .string, flags = .string, kind = .string, owner = .string
+    arg name = .string, result = .string, arguments = .string, flags = .string, kind = .string, owner = .string, task = 0
     _name = name; _result = result; _arguments = arguments; _flags = flags
-    _error = ''; _kind = kind; _owner = owner
+    _error = ''; _kind = kind; _owner = owner; _task = task
     return
   failed: factory
     arg reason = .string
@@ -851,3 +880,5 @@ callable: class
     return _kind
   owner: method = .string
     return _owner
+  task: method = .int
+    return _task

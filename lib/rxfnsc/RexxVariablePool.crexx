@@ -915,5 +915,63 @@ RexxVariablePool: class
     end
     return kinds[slot] = RVP_BINDING_DROPPED
 
+  /**
+   * Snapshot visible assigned names in insertion order. Stem defaults and
+   * concrete tails are separate entries; exposed aliases use this pool's
+   * visible name and the existing shared alias/value owners. Dropped and
+   * implicit names are omitted. A consumer may recheck values after mutation.
+   */
+  visibleNames: method = .string[]
+    result = .string[]
+    index = .int
+    name = .string
+    ignored = .int
+    seen = .StringHashMap()
+    keys = slots.keyArray()
+    count = 0
+    item_stem = .RexxStem
+    alias = .RexxPoolAlias
+    do index = 1 to keys[0]
+      name = keys[index]
+      slot = slotFor(name)
+      kind = kinds[slot]
+      if kind = RVP_BINDING_STEM | kind = RVP_BINDING_ALIAS_STEM then do
+        if kind = RVP_BINDING_STEM then item_stem = stems[slot]
+        else do
+          alias = aliases[slot]
+          item_stem = alias.stem()
+        end
+        if item_stem.hasDefault() then do
+          count = count + 1
+          result[count] = name
+          ignored = seen.put(name,"1")
+        end
+        tails = item_stem.tailNames()
+        do tail_index = 1 to tails[0]
+          resolved = name || tails[tail_index]
+          if resolvedHasValue(resolved) & \seen.containsKey(resolved) then do
+            count = count + 1
+            result[count] = resolved
+            ignored = seen.put(resolved,"1")
+          end
+        end
+      end
+      else if resolvedHasValue(name) & \seen.containsKey(name) then do
+        count = count + 1
+        result[count] = name
+        ignored = seen.put(name,"1")
+      end
+    end
+    keys = compound_alias_slots.keyArray()
+    do index = 1 to keys[0]
+      name = keys[index]
+      if resolvedHasValue(name) & \seen.containsKey(name) then do
+        count = count + 1
+        result[count] = name
+        ignored = seen.put(name,"1")
+      end
+    end
+    return result
+
   free: method = .int
     return slots.free()

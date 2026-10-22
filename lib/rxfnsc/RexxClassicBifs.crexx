@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifs expose RexxBifCallContext rexxclassic_expression_binary rexxclassic_expression_unary rexxclassicbif_checked rexxclassic_signal_record rexxclassic_signal_record_at_line rexxclassic_signal_event_id rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_bitand rexxclassicbif_bitor rexxclassicbif_bitxor bitand bitor bitxor rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
+namespace rexxclassicbifs expose RexxBifCallContext rexxclassic_expression_binary rexxclassic_expression_unary rexxclassicbif_checked rexxclassic_signal_record rexxclassic_signal_record_at_line rexxclassic_signal_event_id rexxclassic_signal_syntax_code rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_bitand rexxclassicbif_bitor rexxclassicbif_bitxor bitand bitor bitxor rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_subword rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
 import rexxclassicunicodeproperties
 import rexxvalue
 import rexxpool
@@ -36,6 +36,7 @@ import rexxclassicconditionevent
 import rexxclassicdiagnostic
 import rexxactivation
 import rxfnsb
+import rexxclassichostprotocol
 
 /**
  * Direct Classic-compatible BIF functions and shared call support.
@@ -248,6 +249,13 @@ RexxBifCallContext: class
 
   configReference: method = reference .RexxClassicConfig
     return config_ref
+
+  /** Validated host BIFs delegate replacement through the configuration owner. */
+  invokeHost: method = .RexxClassicHostHookResult
+    config = dereference config_ref
+    response = config.invokeHost(bif_name,bif_args,bif_exists)
+    call config.checkHostResponse(response)
+    return response
 
   /** Record NOTREADY for source-anchored SIGNAL/CALL delivery by the lowerer. */
   streamNotReady: method = .void
@@ -539,7 +547,7 @@ rexxclassic_signal_record_at_line: procedure = .void
   if condition.name() = "CLASSIC_SYNTAX" then do
     detail = condition.message()
     number = "0"
-    code = ""
+    code = rexxclassic_signal_syntax_code(condition)
     description = _classic_syntax_description(detail)
     if left(detail, 7) = "RXC-LC-" then do
       tail = substr(detail, 8)
@@ -548,14 +556,12 @@ rexxclassic_signal_record_at_line: procedure = .void
       separator = space_pos
       if separator = 0 | (colon > 0 & colon < separator) then separator = colon
       if separator > 1 then do
-        code = substr(tail, 1, separator - 1)
         remainder = strip(substr(tail, separator + 1))
         if description = detail then do
           description = "Error " || code
           if remainder <> "" then description = description || ": " || remainder
         end
       end
-      else code = tail
       point = pos(".", code)
       if point > 1 then number = substr(code, 1, point - 1)
       else if datatype(code,"W") then number = code
@@ -571,7 +577,22 @@ rexxclassic_signal_record_at_line: procedure = .void
       call activation.recordCondition(event.conditionId(), event.description(), "", "SIGNAL")
     end
   end
+  else if condition.name() = "POSIX_INT" then
+    call activation.recordCondition(4,condition.message(),"","SIGNAL")
   return
+
+/** Decode only the established typed Classic SYNTAX diagnostic identity. */
+rexxclassic_signal_syntax_code: procedure = .string
+  arg condition = .runtime_signal
+  if condition.name() <> "CLASSIC_SYNTAX" then return ""
+  detail = condition.message()
+  if left(detail,7) <> "RXC-LC-" then return ""
+  tail = substr(detail,8)
+  separator = pos(" ",tail)
+  colon = pos(":",tail)
+  if separator = 0 | (colon > 0 & colon < separator) then separator = colon
+  if separator = 0 then return tail
+  return left(tail,separator - 1)
 
 /**
  * Render a Classic SYNTAX event from the installed standard message catalog.
@@ -670,6 +691,7 @@ _classic_named_insert: procedure = .string
  */
 rexxclassic_signal_event_id: procedure = .int
   arg condition = .runtime_signal
+  if condition.name() = "POSIX_INT" then return 4
   if condition.name() \= "CLASSIC_CONDITION" then return 0
   payload = condition.payload()
   if \(payload is .RexxClassicConditionEvent) then return 0

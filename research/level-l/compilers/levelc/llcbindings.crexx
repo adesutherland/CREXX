@@ -5,15 +5,27 @@ import rxfnsb
 import llbinmeta
 import llcompilercontracts
 import rexxclassicunicodeproperties
+import rxcontract
 
 /** One explicit artifact stem and fully qualified callable identity. */
 binding: class
   _artifact = .string
   _callable = .string
+  _sourcekind = .string
   *: factory
     arg artifact = .string, callable = .string
-    _artifact = artifact; _callable = callable
+    _artifact = artifact; _callable = callable; _sourcekind = 'rxbin'
     return
+  native: factory
+    arg artifact = .string, callable = .string
+    _artifact = artifact; _callable = callable; _sourcekind = 'native'
+    return
+  process: factory
+    arg alias = .string, executable = .string
+    _artifact = executable; _callable = alias; _sourcekind = 'process'
+    return
+  sourcekind: method = .string
+    return _sourcekind
   artifact: method = .string
     return _artifact
   callable: method = .string
@@ -33,6 +45,9 @@ prepared: class
   _callables = .string[]
   _signatures = .llcompilercontracts..signature[]
   _sizes = .int[]
+  _kinds = .string[]
+  _acquisitions = .string[]
+  _providerids = .string[]
   _aliases = .stem
   _bytecap = .int
   _workcap = .int
@@ -142,32 +157,39 @@ prepared: class
     known = .string; i = .int; n = .int; first = .int; tail = .int; group = .int
     image = .binary; reader = .llbinmeta..catalog; raw = .llbinmeta..callable
     signature = .llcompilercontracts..signature; extent = .int; ignored = .int
+    fields = .string[]; projection = .string[]; route = .string; sourcekind = .string
     emptyreader = .llbinmeta..catalog
     do
       do i = 1 to _input[0]
         item = _input[i]
         if initialized(item) = 0 then do; call fail('uninitialized provider binding'); return; end
-        stem = item.artifact(); name = item.callable()
+        stem = item.artifact(); name = item.callable(); sourcekind = item.sourcekind()
         extent = <blen>(stem as .binary) + <blen>(name as .binary)
         if extent > 2147483647 <idiv> 4 then do; ignored = reserve(-1,0); return; end
         if reserve(64 + extent,16 + extent * 4) = 0 then return
-        if stem = '' | stem == '.' | stem == '..' | pos('00'x as .string,stem) > 0 | pos('/',stem) > 0 | pos('\',stem) > 0 | pos(':',stem) > 0 then do
+        if wordpos(sourcekind,'rxbin native process') = 0 then do; call fail('unknown binding acquisition kind'); return; end
+        if sourcekind = 'process' then do
+          if stem = '' | pos('00'x as .string,stem) > 0 then do; call fail('executable path must be nonempty and NUL-free'); return; end
+        end
+        else if stem = '' | stem == '.' | stem == '..' | pos('00'x as .string,stem) > 0 | pos('/',stem) > 0 | pos('\',stem) > 0 | pos(':',stem) > 0 then do
           call fail('provider artifact must be a nonempty stem'); return
         end
-        if llbinmeta..validname(name) = 0 | pos('.',name) = 0 then do
+        if llbinmeta..validname(name) = 0 | (sourcekind <> 'process' & pos('.',name) = 0) then do
           call fail('provider callable must be a qualified metadata identity'); return
         end
         canonical = upper(name)
         if targets.get(canonical) <> '' then do; call fail('duplicate provider callable ' || name); return; end
         call remember(reference targets,canonical,i as .string)
-        _artifacts[i] = stem; _callables[i] = name; next[i] = 0
-        key = stem; known = groups.get(key)
+        _artifacts[i] = stem; _callables[i] = name; next[i] = 0; _acquisitions[i] = sourcekind
+        if sourcekind = 'process' then _kinds[i] = 'process'
+        key = sourcekind || ':' || stem; known = groups.get(key)
+        if sourcekind = 'process' then known = 'process'
         if known = '' then do
           call remember(reference groups,key,i as .string); call remember(reference tails,key,i as .string)
           if reserve(8 + <blen>(key as .binary),<blen>(key as .binary)) = 0 then return
           groupnames[groupnames[0] + 1] = key
         end
-        else do
+        else if sourcekind <> 'process' then do
           tail = tails.get(key) as .int; next[tail] = i
           call remember(reference tails,key,i as .string)
         end
@@ -178,6 +200,29 @@ prepared: class
       end
       do group = 1 to groupnames[0]
         first = groups.get(groupnames[group]) as .int
+        if _acquisitions[first] = 'native' then do
+          n = first
+          do while n > 0
+            fields = rxcontract..acquire(_root || '/' || _artifacts[n] || '.rxplugin',_callables[n],_bytecap - _bytes,_workcap - _work)
+            if fields[0] <> 13 then do; call fail('incomplete native metadata acquisition'); return; end
+            if fields[1] \== 'rxnative1' then do; call fail('unknown native metadata acquisition'); return; end
+            if reserve(fields[4] as .int,fields[5] as .int) = 0 then return
+            if fields[2] \== 'ok' then do; call fail('native provider ' || fields[2] || ': ' || fields[3]); return; end
+            if fields[6] = '' | fields[8] \== '0' | fields[9] <> '' then do; call fail('native binding requires an identified ordinary procedure'); return; end
+            projection = rxcontract..project(fields[7],fields[10],fields[11],fields[12],fields[8] as .int,fields[13] as .int,_bytecap - _bytes,_workcap - _work)
+            signature = project(projection)
+            if _error <> '' then return
+            route = admitted(signature)
+            if route = '' then return
+            extent = <blen>((fields[6] || fields[7] || fields[10] || fields[11] || fields[12]) as .binary)
+            if reserve(128 + extent * 4,16 + extent * 4) = 0 then return
+            _callables[n] = fields[7]; _providerids[n] = fields[6]; _kinds[n] = route; _sizes[n] = 128 + extent * 4
+            assembler move _signatures[n],signature
+            assembler null signature
+            n = next[n]
+          end
+          iterate
+        end
         image = readimage(_artifacts[first])
         if _error <> '' then return
         reader = .llbinmeta..catalog.bounded(reference image,_bytecap - _bytes,_workcap - _work)
@@ -203,32 +248,19 @@ prepared: class
           held_ref = reference selected[n]
           held = dereference held_ref
           if held.kind() \== 'procedure' then do; call fail('provider is not an ordinary procedure: ' || _callables[n]); return; end
-          /* The selected ABI has one nominal formal. Reject incompatible
-           * multi-formal/type text before the general signature parser's
-           * duplicate/type walks; the parser still validates the accepted name. */
           arguments = held.arguments(); declared = held.result()
           extent = <blen>((arguments || declared) as .binary)
           if extent > 2147483647 <idiv> 16 then do; ignored = reserve(-1,0); return; end
           if reserve(0,extent * 16) = 0 then return
-          split = pos('=',arguments)
-          if pos(',',arguments) > 0 | split = 0 then do
-            call fail('provider requires one required by-value activation: ' || _callables[n]); return
-          end
-          formaltype = lower(strip(substr(arguments,split + 1)))
-          if lower(strip(declared)) \== '.void' | (formaltype \== '.rexxactivationarguments' & formaltype \== '.rexxactivation..rexxactivationarguments') then do
-            call fail('provider requires void and one by-value activation: ' || _callables[n]); return
-          end
           extent = <blen>((held.name() || held.result() || held.arguments() || held.flags()) as .binary)
           if extent > 2147483647 <idiv> 4 then do; ignored = reserve(-1,0); return; end
           if reserve(128 + extent * 4,16 + extent * 4) = 0 then return
-          signature = .llcompilercontracts..signature(held.name(),declared,arguments,held.flags())
-          if signature.error() <> '' then do; call fail('provider signature: ' || signature.error()); return; end
-          if signature.flags_text() \== 'b' | signature.result() \== '.void' | signature.arguments() <> 1 then do
-            call fail('provider requires void and one by-value activation: ' || _callables[n]); return
-          end
-          if signature.optional(1) | signature.exposed(1) | (signature.type(1) \== '.rexxactivationarguments' & signature.type(1) \== '.rexxactivation..rexxactivationarguments') then do
-            call fail('provider requires one required by-value activation: ' || _callables[n]); return
-          end
+          projection = rxcontract..project(held.name(),declared,arguments,held.flags(),0,held.task(),_bytecap - _bytes,_workcap - _work)
+          signature = project(projection)
+          if _error <> '' then return
+          route = admitted(signature)
+          if route = '' then return
+          _kinds[n] = route; _providerids[n] = ''
           _callables[n] = held.name(); _sizes[n] = extent * 4 + 128
           assembler move _signatures[n],signature
           assembler null signature
@@ -245,6 +277,67 @@ prepared: class
       call fail('provider preparation: ' || problem.name() || ': ' || problem.message())
     end
     return
+  /** Native projection owns grammar; C owns the admitted calling contract. */
+  project: method = .llcompilercontracts..signature
+    arg fields = .string[]
+    if fields[0] < 13 then do; call fail('incomplete metadata projection'); return .llcompilercontracts..signature.failed(_error); end
+    if fields[1] \== 'rxcontract1' then do; call fail('unknown metadata projection'); return .llcompilercontracts..signature.failed(_error); end
+    usedbytes = fields[6] as .int; usedwork = fields[7] as .int
+    if reserve(usedbytes,usedwork) = 0 then return .llcompilercontracts..signature.failed(_error)
+    if fields[2] \== 'ok' then do; call fail('provider signature ' || fields[2] || ': ' || fields[3] || ': ' || fields[4]); return .llcompilercontracts..signature.failed(_error); end
+    result = .llcompilercontracts..signature.projected(fields)
+    if result.error() <> '' then call fail('provider signature: ' || result.error())
+    return result
+  admitted: method = .string
+    arg signature = .llcompilercontracts..signature
+    if signature.error() <> '' | signature.kind() <> 0 | signature.task() | signature.flags_text() \== 'b' then do
+      call fail('provider requires an ordinary typed procedure'); return ''
+    end
+    if signature.result() == '.void' & signature.arguments() = 1 then do
+      formal = signature.type(1)
+      if (formal == '.rexxactivationarguments' | formal == '.rexxactivation..rexxactivationarguments') &,
+         signature.optional(1) = 0 & signature.exposed(1) = 0 & signature.vararg(1) = 0 then return 'classic'
+    end
+    if signature.result() \== '.void' & scalar(signature.result()) = 0 then do; call fail('unsupported provider result type ' || signature.result()); return ''; end
+    do j = 1 to signature.arguments()
+      if scalar(signature.type(j)) = 0 then do; call fail('unsupported provider argument type ' || signature.type(j)); return ''; end
+    end
+    return 'typed'
+  /** Positional source presence, including trailing holes, is known statically. */
+  accept: method = .string
+    arg index = .int, presence = .string
+    j = .int
+    call run()
+    if _error <> '' then return _error
+    if index < 1 | index > _kinds[0] then return 'invalid selected binding'
+    if reserve(0,length(presence) + 1) = 0 then return _error
+    if _kinds[index] = 'classic' then return ''
+    if verify(presence,'01') <> 0 then return 'selected call requires statically known argument presence'
+    if _kinds[index] = 'process' then do
+      if pos('0',presence) > 0 then return 'executable arguments cannot be omitted'
+      return ''
+    end
+    signature = _signatures[index]; count = signature.arguments(); fixed = count; variable = 0
+    if count > 0 then variable = signature.vararg(count)
+    if variable then fixed = fixed - 1
+    if variable = 0 & length(presence) > fixed then return 'too many arguments for selected provider'
+    do j = 1 to fixed
+      if (j > length(presence) | substr(presence,j,1) = '0') & signature.optional(j) = 0 then return 'required provider argument is omitted at position ' || j
+    end
+    do j = fixed + 1 to length(presence)
+      if substr(presence,j,1) \== '1' then return 'variadic provider arguments cannot be omitted'
+    end
+    return ''
+  kind: method = .string
+    arg index = .int
+    call run()
+    if _error <> '' | index < 1 | index > _kinds[0] then return ''
+    return _kinds[index]
+  provider: method = .string
+    arg index = .int
+    call run()
+    if _error <> '' | index < 1 | index > _providerids[0] then return ''
+    return _providerids[index]
   alias: method = .void
     arg key = .string, index = .int
     extent = <blen>(key as .binary)
@@ -296,3 +389,7 @@ prepared: class
     if index < 1 | index > _signatures[0] then return .llcompilercontracts..signature.failed('LL_COMPILER_IMPORT: invalid provider index')
     if reserve(_sizes[index],_sizes[index]) = 0 then return .llcompilercontracts..signature.failed(_error)
     return _signatures[index]
+
+scalar: procedure = .int
+  arg type = .string
+  return wordpos(type,'.string .binary .int .float .decimal .boolean .rexxvalue .rexxvalue..rexxvalue') > 0

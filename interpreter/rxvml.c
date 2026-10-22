@@ -47,6 +47,8 @@ typedef struct rxvml_address_callback_entry {
     char instance_id[256];
     rxvml_address_callback callback;
     rxvml_address_function_callback function_callback;
+    rxvml_address_callback_spans callback_spans;
+    rxvml_address_function_callback_spans function_callback_spans;
     void* userdata;
 } rxvml_address_callback_entry;
 
@@ -84,7 +86,9 @@ enum {
     RXVML_ADDRESS_FUNCTION_RESPONSE_DIAGNOSTICS = 2,
     RXVML_ADDRESS_FUNCTION_RESPONSE_RC = 3,
     RXVML_ADDRESS_FUNCTION_RESPONSE_RESULT = 4,
-    RXVML_ADDRESS_FUNCTION_RESPONSE_ATTR_COUNT = 5
+    RXVML_ADDRESS_FUNCTION_RESPONSE_LEGACY_ATTR_COUNT = 5,
+    RXVML_ADDRESS_FUNCTION_RESPONSE_HAS_RESULT = 5,
+    RXVML_ADDRESS_FUNCTION_RESPONSE_ATTR_COUNT = 6
 };
 
 enum {
@@ -1246,7 +1250,9 @@ static rxvml_address_callback_entry* rxvml_get_address_callback(
 
     if (!ctx || handle <= 0 || handle > (int)ctx->address_callback_size) return NULL;
     if (!ctx->address_callbacks[handle - 1].callback &&
-        !ctx->address_callbacks[handle - 1].function_callback) return NULL;
+        !ctx->address_callbacks[handle - 1].function_callback &&
+        !ctx->address_callbacks[handle - 1].callback_spans &&
+        !ctx->address_callbacks[handle - 1].function_callback_spans) return NULL;
     return &ctx->address_callbacks[handle - 1];
 }
 
@@ -1266,7 +1272,9 @@ static rxvml_address_callback_entry* rxvml_get_address_callback_by_name(
 
     for (i = 0; i < ctx->address_callback_size; i++) {
         if ((ctx->address_callbacks[i].callback ||
-             ctx->address_callbacks[i].function_callback) &&
+             ctx->address_callbacks[i].function_callback ||
+             ctx->address_callbacks[i].callback_spans ||
+             ctx->address_callbacks[i].function_callback_spans) &&
             strcmp(ctx->address_callbacks[i].env_name, normalized) == 0) {
             if (out_handle) *out_handle = (int)i + 1;
             return &ctx->address_callbacks[i];
@@ -1283,6 +1291,8 @@ static void rxvml_free_address_callback_handle(rxvml_context* ctx, int handle) {
     entry->instance_id[0] = 0;
     entry->callback = NULL;
     entry->function_callback = NULL;
+    entry->callback_spans = NULL;
+    entry->function_callback_spans = NULL;
     entry->userdata = NULL;
 }
 
@@ -1292,13 +1302,15 @@ static int rxvml_alloc_address_callback_handle(
     const char* instance_id,
     rxvml_address_callback callback,
     rxvml_address_function_callback function_callback,
+    rxvml_address_callback_spans callback_spans,
+    rxvml_address_function_callback_spans function_callback_spans,
     void* userdata) {
 
     char normalized[256];
     int existing_handle = 0;
     size_t i;
 
-    if (!ctx || !env_name || (!callback && !function_callback)) return 0;
+    if (!ctx || !env_name || (!callback && !function_callback && !callback_spans && !function_callback_spans)) return 0;
 
     rxvml_normalize_address_name(env_name, normalized, sizeof(normalized));
     if (normalized[0] == 0) return 0;
@@ -1313,12 +1325,15 @@ static int rxvml_alloc_address_callback_handle(
         }
         ctx->address_callbacks[existing_handle - 1].callback = callback;
         ctx->address_callbacks[existing_handle - 1].function_callback = function_callback;
+        ctx->address_callbacks[existing_handle - 1].callback_spans = callback_spans;
+        ctx->address_callbacks[existing_handle - 1].function_callback_spans = function_callback_spans;
         ctx->address_callbacks[existing_handle - 1].userdata = userdata;
         return existing_handle;
     }
 
     for (i = 0; i < ctx->address_callback_size; i++) {
-        if (!ctx->address_callbacks[i].callback && !ctx->address_callbacks[i].function_callback) {
+        if (!ctx->address_callbacks[i].callback && !ctx->address_callbacks[i].function_callback &&
+            !ctx->address_callbacks[i].callback_spans && !ctx->address_callbacks[i].function_callback_spans) {
             strncpy(ctx->address_callbacks[i].env_name, normalized, sizeof(ctx->address_callbacks[i].env_name) - 1);
             ctx->address_callbacks[i].env_name[sizeof(ctx->address_callbacks[i].env_name) - 1] = 0;
             if (instance_id) {
@@ -1329,6 +1344,8 @@ static int rxvml_alloc_address_callback_handle(
             }
             ctx->address_callbacks[i].callback = callback;
             ctx->address_callbacks[i].function_callback = function_callback;
+            ctx->address_callbacks[i].callback_spans = callback_spans;
+            ctx->address_callbacks[i].function_callback_spans = function_callback_spans;
             ctx->address_callbacks[i].userdata = userdata;
             return (int)i + 1;
         }
@@ -1350,6 +1367,8 @@ static int rxvml_alloc_address_callback_handle(
             ctx->address_callbacks[i].instance_id[0] = 0;
             ctx->address_callbacks[i].callback = NULL;
             ctx->address_callbacks[i].function_callback = NULL;
+            ctx->address_callbacks[i].callback_spans = NULL;
+            ctx->address_callbacks[i].function_callback_spans = NULL;
             ctx->address_callbacks[i].userdata = NULL;
         }
 
@@ -1361,10 +1380,215 @@ static int rxvml_alloc_address_callback_handle(
         }
         ctx->address_callbacks[old_size].callback = callback;
         ctx->address_callbacks[old_size].function_callback = function_callback;
+        ctx->address_callbacks[old_size].callback_spans = callback_spans;
+        ctx->address_callbacks[old_size].function_callback_spans = function_callback_spans;
         ctx->address_callbacks[old_size].userdata = userdata;
         ctx->address_callback_size = new_size;
         return (int)old_size + 1;
     }
+}
+
+static int rxvml_copy_address_function_response(value *, const rxvml_address_function_response *);
+/* Existing counted RXPA value view includes the valid empty/NULL buffer. */
+int rxvm_string_view(rxpa_attribute_value, const char **, size_t *);
+
+static int rxvml_span_charge(size_t amount, size_t *used) {
+    if (amount > RXVML_ADDRESS_SPAN_MAX_BYTES - *used) return -1;
+    *used += amount; return 0;
+}
+static int rxvml_span_valid(rxvml_text_span span, size_t *used) {
+    if ((!span.data && span.length) || rxvml_span_charge(span.length, used)) return -1;
+#ifndef NUTF8
+    if (span.length && validate_utf8_bytes(span.data, span.length, NULL)) return -1;
+#endif
+    return 0;
+}
+static int rxvml_span_label(const char *text, size_t *used) {
+    size_t length = 0u;
+    if (!text) return 0;
+    while (length <= RXVML_ADDRESS_SPAN_MAX_BYTES - *used && text[length]) ++length;
+    if (rxvml_span_charge(length, used)) return -1;
+#ifndef NUTF8
+    if (length && validate_utf8_bytes(text, length, NULL)) return -1;
+#endif
+    return 0;
+}
+static int rxvml_span_snapshot(rxvml_context *ctx, value *source,
+        rxvml_text_span *span, size_t *used, int label) {
+    const char *data;
+    size_t length;
+    char *copy;
+    (void)ctx;
+    if (rxvm_string_view((rxpa_attribute_value)source, &data, &length) ||
+        length >= RXVML_ADDRESS_SPAN_MAX_BYTES ||
+        (label && length && memchr(data, 0, length)) ||
+        rxvml_span_charge(length + 1u, used)) return -1;
+    copy = malloc(length + 1u);
+    if (!copy) return -1;
+    if (length) memcpy(copy, data, length);
+    copy[length] = 0; span->data = copy; span->length = length;
+    return 0;
+}
+static void rxvml_span_binding_free(rxvml_address_binding_spans *binding) {
+    free((void *)binding->kind); free((void *)binding->internal_name);
+    free((void *)binding->external_alias); free((void *)binding->flags);
+    free((void *)binding->value.data);
+}
+static int rxvml_span_binding_snapshot(rxvml_context *ctx, value *source,
+        rxvml_address_binding_spans *binding, size_t *used) {
+    rxvml_text_span text = {0};
+    if (!source || source->num_attributes < RXVML_ADDRESS_BINDING_ATTR_COUNT) return -1;
+#define RXVML_SNAPSHOT_LABEL(member, ordinal) \
+    if (rxvml_span_snapshot(ctx, source->attributes[(ordinal)], &text, used, 1)) return -1; \
+    binding->member = text.data
+    RXVML_SNAPSHOT_LABEL(kind, RXVML_ADDRESS_BINDING_KIND);
+    RXVML_SNAPSHOT_LABEL(internal_name, RXVML_ADDRESS_BINDING_INTERNAL_NAME);
+    RXVML_SNAPSHOT_LABEL(external_alias, RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS);
+    RXVML_SNAPSHOT_LABEL(flags, RXVML_ADDRESS_BINDING_FLAGS);
+#undef RXVML_SNAPSHOT_LABEL
+    if (rxvml_span_snapshot(ctx, source->attributes[RXVML_ADDRESS_BINDING_VALUE], &binding->value, used, 0)) return -1;
+    binding->value_object = (rxvml_value *)source->attributes[RXVML_ADDRESS_BINDING_VALUE_OBJECT];
+    return 0;
+}
+static int rxvml_copy_address_response_spans(value *destination,
+        const rxvml_address_response_spans *response) {
+    rxvml_address_response legacy;
+    rxvml_address_binding *bindings = NULL;
+    size_t index, used = 0u;
+    int result = -1;
+    if (response->struct_size < sizeof(*response) ||
+        rxvml_span_label(response->condition_name, &used) ||
+        rxvml_span_valid(response->diagnostic, &used) ||
+        response->updated_binding_count > RXVML_ADDRESS_SPAN_MAX_BYTES / sizeof(*bindings) ||
+        (response->updated_binding_count && !response->updated_bindings)) return -1;
+    if (rxvml_span_charge(response->updated_binding_count * sizeof(*bindings), &used)) return -1;
+    if (response->updated_binding_count) {
+        bindings = calloc(response->updated_binding_count, sizeof(*bindings));
+        if (!bindings) return -1;
+    }
+    for (index = 0u; index < response->updated_binding_count; ++index) {
+        const rxvml_address_binding_spans *source = &response->updated_bindings[index];
+        if (rxvml_span_label(source->kind, &used) || rxvml_span_label(source->internal_name, &used) ||
+            rxvml_span_label(source->external_alias, &used) || rxvml_span_label(source->flags, &used) ||
+            rxvml_span_valid(source->value, &used)) goto done;
+        bindings[index].kind = source->kind; bindings[index].internal_name = source->internal_name;
+        bindings[index].external_alias = source->external_alias; bindings[index].flags = source->flags;
+        bindings[index].value = ""; bindings[index].value_object = source->value_object;
+    }
+    /* Existing response construction remains the sole physical protocol owner.
+     * Exact spans replace placeholders before any Rexx observation can occur. */
+    memset(&legacy, 0, sizeof(legacy)); legacy.rc = response->rc;
+    legacy.condition_name = response->condition_name;
+    legacy.diagnostic = response->diagnostic.data ? "" : NULL;
+    legacy.updated_binding_count = response->updated_binding_count; legacy.updated_bindings = bindings;
+    if (rxvml_copy_address_response(destination, &legacy)) goto done;
+    if (response->diagnostic.data && rxvml_set_str((rxvml_value *)
+            destination->attributes[RXVML_ADDRESS_RESPONSE_DIAGNOSTICS]->attributes[0],
+            response->diagnostic.data, response->diagnostic.length)) goto done;
+    for (index = 0u; index < response->updated_binding_count; ++index) {
+        value *binding = destination->attributes[RXVML_ADDRESS_RESPONSE_UPDATED_BINDINGS]->attributes[index];
+        const rxvml_text_span text = response->updated_bindings[index].value;
+        if (rxvml_set_str((rxvml_value *)binding->attributes[RXVML_ADDRESS_BINDING_VALUE], text.data, text.length)) goto done;
+    }
+    result = 0;
+done:
+    free(bindings); return result;
+}
+static int rxvml_copy_address_function_response_spans(value *destination,
+        const rxvml_address_function_response_spans *response) {
+    rxvml_address_function_response legacy;
+    size_t used = 0u;
+    if (!destination || destination->num_attributes < RXVML_ADDRESS_FUNCTION_RESPONSE_ATTR_COUNT ||
+        response->struct_size < sizeof(*response) ||
+        (response->has_result != 0 && response->has_result != 1) ||
+        rxvml_span_label(response->condition_name, &used) ||
+        rxvml_span_valid(response->diagnostic, &used) ||
+        rxvml_span_valid(response->result, &used)) return -1;
+    memset(&legacy, 0, sizeof(legacy)); legacy.rc = response->rc;
+    legacy.condition_name = response->condition_name; legacy.result = "";
+    legacy.diagnostic = response->diagnostic.data ? "" : NULL;
+    if (rxvml_copy_address_function_response(destination, &legacy)) return -1;
+    if (response->has_result && rxvml_set_str((rxvml_value *)destination->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_RESULT],
+            response->result.data, response->result.length)) return -1;
+    set_int(destination->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_HAS_RESULT], response->has_result);
+    if (response->diagnostic.data && rxvml_set_str((rxvml_value *)
+            destination->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_DIAGNOSTICS]->attributes[0],
+            response->diagnostic.data, response->diagnostic.length)) return -1;
+    return 0;
+}
+static void rxvml_native_address_execute_spans(rxvml_context *ctx,
+        const rxvml_address_callback_entry *entry, value *source, value *destination,
+        rxpa_attribute_value ret, rxpa_attribute_value signal) {
+    rxvml_address_request_spans request;
+    rxvml_address_response_spans response;
+    rxvml_address_binding_spans *bindings = NULL;
+    rxvml_text_span environment = {0};
+    value *array;
+    size_t index, used = 0u, count = 0u;
+    int callback_result, result = -1;
+    memset(&request, 0, sizeof(request)); memset(&response, 0, sizeof(response));
+    request.struct_size = sizeof(request); response.struct_size = sizeof(response);
+    if (!source || source->num_attributes < RXVML_ADDRESS_REQUEST_ATTR_COUNT ||
+        source->attributes[RXVML_ADDRESS_REQUEST_BINDING_COUNT]->int_value < 0) goto done;
+    count = (size_t)source->attributes[RXVML_ADDRESS_REQUEST_BINDING_COUNT]->int_value;
+    array = source->attributes[RXVML_ADDRESS_REQUEST_BINDINGS];
+    if ((!array && count) || (array && count > array->num_attributes) ||
+        count > RXVML_ADDRESS_SPAN_MAX_BYTES / sizeof(*bindings) ||
+        rxvml_span_charge(count * sizeof(*bindings), &used)) goto done;
+    if (count) { bindings = calloc(count, sizeof(*bindings)); if (!bindings) goto done; }
+    for (index = 0u; index < count; ++index)
+        if (rxvml_span_binding_snapshot(ctx, array->attributes[index], &bindings[index], &used)) goto done;
+    if (rxvml_span_snapshot(ctx, source->attributes[RXVML_ADDRESS_REQUEST_COMMAND], &request.command, &used, 0) ||
+        rxvml_span_snapshot(ctx, source->attributes[RXVML_ADDRESS_REQUEST_ENVIRONMENT_NAME], &environment, &used, 1)) goto done;
+    request.environment_name = environment.data; request.binding_count = count; request.bindings = bindings;
+    request.stdin_endpoint = (rxvml_value *)source->attributes[RXVML_ADDRESS_REQUEST_STDIN_ENDPOINT];
+    request.stdout_endpoint = (rxvml_value *)source->attributes[RXVML_ADDRESS_REQUEST_STDOUT_ENDPOINT];
+    request.stderr_endpoint = (rxvml_value *)source->attributes[RXVML_ADDRESS_REQUEST_STDERR_ENDPOINT];
+    request.sandbox = (rxvml_value *)source->attributes[RXVML_ADDRESS_REQUEST_SANDBOX];
+    callback_result = entry->callback_spans(ctx, &request, &response, entry->userdata);
+    if (callback_result && !response.rc) response.rc = callback_result;
+    result = rxvml_copy_address_response_spans(destination, &response);
+    if (!result && ret) set_int((value *)ret, response.rc);
+    if (response.release) response.release(response.release_userdata);
+done:
+    if (bindings) for (index = 0u; index < count; ++index) rxvml_span_binding_free(&bindings[index]);
+    free(bindings); free((void *)request.command.data); free((void *)environment.data);
+    if (result) rxvml_set_native_failure(signal, SIGNAL_FAILURE, "Invalid or unavailable native ADDRESS span response");
+}
+static void rxvml_native_address_invoke_spans(rxvml_context *ctx,
+        const rxvml_address_callback_entry *entry, value *source, value *destination,
+        rxpa_attribute_value ret, rxpa_attribute_value signal) {
+    rxvml_address_function_request_spans request;
+    rxvml_address_function_response_spans response;
+    rxvml_text_span environment = {0}, function = {0}, flags = {0}, *arguments = NULL;
+    value *array;
+    size_t index, count = 0u, used = 0u;
+    int callback_result, result = -1;
+    memset(&request, 0, sizeof(request)); memset(&response, 0, sizeof(response));
+    request.struct_size = sizeof(request); response.struct_size = sizeof(response);
+    if (!source || source->num_attributes < RXVML_ADDRESS_FUNCTION_REQUEST_ATTR_COUNT) goto done;
+    array = source->attributes[RXVML_ADDRESS_FUNCTION_REQUEST_ARGUMENTS];
+    if (array) count = array->num_attributes;
+    if (count > RXVML_ADDRESS_SPAN_MAX_BYTES / sizeof(*arguments) ||
+        rxvml_span_charge(count * sizeof(*arguments), &used)) goto done;
+    if (count) { arguments = calloc(count, sizeof(*arguments)); if (!arguments) goto done; }
+    for (index = 0u; index < count; ++index)
+        if (rxvml_span_snapshot(ctx, array->attributes[index], &arguments[index], &used, 0)) goto done;
+    if (rxvml_span_snapshot(ctx, source->attributes[RXVML_ADDRESS_FUNCTION_REQUEST_ENVIRONMENT_NAME], &environment, &used, 1) ||
+        rxvml_span_snapshot(ctx, source->attributes[RXVML_ADDRESS_FUNCTION_REQUEST_FUNCTION_NAME], &function, &used, 1) ||
+        rxvml_span_snapshot(ctx, source->attributes[RXVML_ADDRESS_FUNCTION_REQUEST_FLAGS], &flags, &used, 1)) goto done;
+    request.environment_name = environment.data; request.function_name = function.data;
+    request.flags = flags.data; request.argc = count; request.args = arguments;
+    request.sandbox = (rxvml_value *)source->attributes[RXVML_ADDRESS_FUNCTION_REQUEST_SANDBOX];
+    callback_result = entry->function_callback_spans(ctx, &request, &response, entry->userdata);
+    if (callback_result && !response.rc) response.rc = callback_result;
+    result = rxvml_copy_address_function_response_spans(destination, &response);
+    if (!result && ret) set_int((value *)ret, response.rc);
+    if (response.release) response.release(response.release_userdata);
+done:
+    if (arguments) for (index = 0u; index < count; ++index) free((void *)arguments[index].data);
+    free(arguments); free((void *)environment.data); free((void *)function.data); free((void *)flags.data);
+    if (result) rxvml_set_native_failure(signal, SIGNAL_FAILURE, "Invalid or unavailable native ADDRESS function span response");
 }
 
 static void rxvml_native_address_execute(
@@ -1403,6 +1627,11 @@ static void rxvml_native_address_execute(
     entry = rxvml_get_address_callback(ctx, handle);
     if (!entry) {
         rxvml_set_native_failure(signal, SIGNAL_FAILURE, "native ADDRESS callback handle is not registered");
+        return;
+    }
+    if (entry->callback_spans) {
+        rxvml_address_callback_entry selected = *entry;
+        rxvml_native_address_execute_spans(ctx, &selected, (value *)args[1], (value *)args[2], ret, signal);
         return;
     }
     if (!entry->callback) {
@@ -1495,7 +1724,7 @@ static int rxvml_copy_address_function_response(
     value* diagnostics;
 
     if (!response_value || !response ||
-        response_value->num_attributes < RXVML_ADDRESS_FUNCTION_RESPONSE_ATTR_COUNT) return -1;
+        response_value->num_attributes < RXVML_ADDRESS_FUNCTION_RESPONSE_LEGACY_ATTR_COUNT) return -1;
 
     if (rxvml_set_value_cstr(
             response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_CONDITION_NAME],
@@ -1505,6 +1734,8 @@ static int rxvml_copy_address_function_response(
     if (rxvml_set_value_cstr(
             response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_RESULT],
             response->result ? response->result : "") != 0) return -1;
+    if (response_value->num_attributes > RXVML_ADDRESS_FUNCTION_RESPONSE_HAS_RESULT)
+        set_int(response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_HAS_RESULT], 1);
 
     diagnostics = response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_DIAGNOSTICS];
     if (response->diagnostic && diagnostics) {
@@ -1555,6 +1786,11 @@ static void rxvml_native_address_invoke(
     entry = rxvml_get_address_callback(ctx, handle);
     if (!entry) {
         rxvml_set_native_failure(signal, SIGNAL_FAILURE, "native ADDRESS callback handle is not registered");
+        return;
+    }
+    if (entry->function_callback_spans) {
+        rxvml_address_callback_entry selected = *entry;
+        rxvml_native_address_invoke_spans(ctx, &selected, (value *)args[1], (value *)args[2], ret, signal);
         return;
     }
     if (!entry->function_callback) {
@@ -2290,12 +2526,14 @@ int rxvml_address_register_environment(
     return rc_value;
 }
 
-int rxvml_address_register_callback_environment(
+static int rxvml_address_register_callbacks(
     rxvml_context* ctx,
     const char* env_name,
     const char* instance_id,
     rxvml_address_callback callback,
     rxvml_address_function_callback function_callback,
+    rxvml_address_callback_spans callback_spans,
+    rxvml_address_function_callback_spans function_callback_spans,
     void* userdata) {
 
     rxvml_value* env_obj = NULL;
@@ -2303,13 +2541,14 @@ int rxvml_address_register_callback_environment(
     int enable_rc = 0;
     int register_rc;
 
-    if (!ctx || !env_name || (!callback && !function_callback)) {
+    if (!ctx || !env_name || (!callback && !function_callback && !callback_spans && !function_callback_spans)) {
         if (ctx) ctx->last_error = "Invalid native address callback registration arguments";
         return -1;
     }
 
     handle = rxvml_alloc_address_callback_handle(
-        ctx, env_name, instance_id, callback, function_callback, userdata);
+        ctx, env_name, instance_id, callback, function_callback,
+        callback_spans, function_callback_spans, userdata);
     if (handle == 0) {
         ctx->last_error = "Failed to allocate native address callback handle";
         return -1;
@@ -2341,6 +2580,30 @@ int rxvml_address_register_callback_environment(
     }
 
     return register_rc;
+}
+
+int rxvml_address_register_callback_environment(
+    rxvml_context *ctx, const char *env_name, const char *instance_id,
+    rxvml_address_callback callback, rxvml_address_function_callback function_callback,
+    void *userdata) {
+    return rxvml_address_register_callbacks(ctx, env_name, instance_id,
+            callback, function_callback, NULL, NULL, userdata);
+}
+
+int rxvml_address_register_callback_environment_spans(
+    rxvml_context *ctx, const char *env_name, const char *instance_id,
+    rxvml_address_callback_spans callback,
+    rxvml_address_function_callback_spans function_callback, void *userdata) {
+    return rxvml_address_register_callbacks(ctx, env_name, instance_id,
+            NULL, NULL, callback, function_callback, userdata);
+}
+
+int rxvml_request_interrupt(rxvml_context *ctx) {
+    /* The TLS active owner check precedes any context-state dereference. In an
+     * owner-thread OS callback the direct pending word is signal-safe storage. */
+    if (!ctx || rxvml_current_context() != ctx || !ctx->vm.active.pending_interrupts) return -1;
+    rxvm_signal_pending_or(ctx->vm.active.pending_interrupts, rxsignal_mask(RXSIGNAL_POSIX_INT));
+    return 0;
 }
 
 int rxvml_address_create_environment(

@@ -1,0 +1,802 @@
+/* cREXX License (MIT). Classic invocation and enabled callback ownership. */
+options levelb comments_dash numeric_classic
+namespace rexxclassichost expose RexxClassicHostRequest RexxClassicHostResult RexxClassicHostScope
+import rxfnsb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import rexxclassichostprotocol
+import rexxclassicstate
+import rexxclassicdatatype
+import rexxclassicbifs
+
+/* VM module overlays own these private slots. A borrowed sentinel is checked
+ * against the current overlay before any invocation reference is followed. */
+hostInitialise: initialiser expose host_sentinel host_sequence host_active
+  host_sentinel = 1
+  host_sequence = 0
+  host_active = reference .HostAccessState
+  return
+
+hostSentinel: procedure = reference .int expose host_sentinel
+  return reference host_sentinel
+
+hostSequence: procedure = .int expose host_sequence
+  host_sequence = host_sequence + 1
+  return host_sequence
+
+hostActive: procedure = reference .HostAccessState expose host_active
+  return host_active
+
+hostSelect: procedure = .void expose host_active
+  arg state = reference .HostAccessState
+  host_active = state
+  return
+
+/**
+ * Owned reusable host request for a generated ordinary typed host export.
+ *
+ * Factory(mode,source) admits COMMAND, FUNCTION or SUBROUTINE. append preserves
+ * every positional omission separately from exact empty/NUL Unicode text.
+ * Request getters create independent activation/pool/configuration values;
+ * generated wrappers anchor them before creating Context and Scope borrows.
+ * Limits bound argument UTF8 bytes, positional slots and nested callback depth,
+ * not native RSS. Configured services and clocks keep their own service limits.
+ * Ordinary typed callees acquire no pool capability from this request.
+ */
+RexxClassicHostRequest: class
+  request_mode = .string
+  request_source = .string
+  request_values = .RexxValue[]
+  request_presence = .int[]
+  request_count = .int
+  request_bytes = .int
+  request_config = .RexxClassicConfig
+  request_environment = .string
+  request_trace = .string
+  request_digits = .int
+  request_fuzz = .int
+  request_form = .int
+  request_queue = .string
+  request_stream_directions = .int[]
+  request_stream_names = .string[]
+  request_stream_encodings = .string[]
+  request_stream_replacing = .int[]
+  request_stream_count = .int
+  request_clock = .RexxClassicHostClock
+  request_clock_trap = .RexxClassicHostClock
+  request_byte_limit = .int
+  request_position_limit = .int
+  request_callback_limit = .int
+
+  *: factory
+    arg mode = .string, source = ""
+    request_mode = upper(mode)
+    if request_mode <> "COMMAND" & request_mode <> "FUNCTION" & request_mode <> "SUBROUTINE" then
+      assembler signal "INVALID_ARGUMENTS","Classic invocation mode must be COMMAND, FUNCTION or SUBROUTINE"
+    request_source = source
+    request_count = 0
+    request_bytes = 0
+    request_config = .RexxClassicConfig("UTF8")
+    request_environment = "CREXX"
+    request_trace = "N"
+    request_digits = 9
+    request_fuzz = 0
+    request_form = 1
+    request_queue = ""
+    request_stream_count = 0
+    absent_clock = .RexxClassicHostClock
+    request_clock = absent_clock
+    request_clock_trap = absent_clock
+    request_byte_limit = 67108864
+    request_position_limit = 65536
+    request_callback_limit = 512
+    return
+
+  append: method = .void
+    arg value = .RexxValue, supplied = 1
+    if request_count >= request_position_limit then do
+      assembler signal "CLASSIC_SYNTAX","RXC-LC-5.1: Classic host argument-position limit exceeded"
+      return
+    end
+    text_bytes = .binary
+    amount = 0
+    if supplied then do
+      text_bytes = value.asString() as .binary
+      assembler blen amount,text_bytes
+    end
+    if amount > request_byte_limit - request_bytes then do
+      assembler signal "CLASSIC_SYNTAX","RXC-LC-5.1: Classic host argument-byte limit exceeded"
+      return
+    end
+    request_count = request_count + 1
+    request_values[request_count] = value
+    request_presence[request_count] = supplied <> 0
+    request_bytes = request_bytes + amount
+    return
+
+  appendText: method = .void
+    arg text = .string, supplied = 1
+    call append(.RexxValue(text),supplied)
+    return
+
+  setLimits: method = .void
+    arg argument_bytes = .int, positions = .int, callback_depth = .int
+    if argument_bytes < request_bytes | positions < request_count | callback_depth < 1 then do
+      assembler signal "INVALID_ARGUMENTS","Classic host limits are below live request requirements"
+      return
+    end
+    request_byte_limit = argument_bytes
+    request_position_limit = positions
+    request_callback_limit = callback_depth
+    return
+
+  setConfiguration: method = .void
+    arg config = .RexxClassicConfig
+    request_config = config
+    return
+  setSource: method = .void
+    arg source = .string
+    request_source = source
+    return
+  setEnvironment: method = .void
+    arg environment = .string
+    if environment = "" then do
+      assembler signal "INVALID_ARGUMENTS","Classic initial ADDRESS environment must not be empty"
+      return
+    end
+    request_environment = environment
+    return
+  setTrace: method = .void
+    arg setting = .string
+    state = .rexxclassicstate..RexxTraceState()
+    if \state.apply(setting) then do
+      assembler signal "INVALID_ARGUMENTS","Classic initial TRACE setting is invalid"
+      return
+    end
+    request_trace = setting
+    return
+  setNumeric: method = .void
+    arg digits = .int, fuzz = .int, form = .int
+    if digits < 1 | fuzz < 0 | fuzz >= digits | (form <> 1 & form <> 2) then do
+      assembler signal "INVALID_ARGUMENTS","Classic initial numeric settings are invalid"
+      return
+    end
+    request_digits = digits
+    request_fuzz = fuzz
+    request_form = form
+    return
+  setQueue: method = .void
+    arg name = .string
+    request_queue = name
+    return
+  setClock: method = .void
+    arg clock = .RexxClassicHostClock, trap = 0
+    if trap then request_clock_trap = clock
+    else request_clock = clock
+    return
+  setDefaultStream: method = .void
+    arg direction = .int, name = .string, encoding = "UTF8", replacing = 0
+    if direction < 1 | direction > 3 then do
+      assembler signal "INVALID_ARGUMENTS","Classic stream direction must be 1 input, 2 output or 3 error"
+      return
+    end
+    slot = 0
+    do index = 1 to request_stream_count
+      if request_stream_directions[index] = direction then slot = index
+    end
+    if slot = 0 then do
+      request_stream_count = request_stream_count + 1
+      slot = request_stream_count
+    end
+    request_stream_directions[slot] = direction
+    request_stream_names[slot] = name
+    request_stream_encodings[slot] = encoding
+    request_stream_replacing[slot] = replacing <> 0
+    return
+
+  mode: method = .string
+    return request_mode
+  source: method = .string
+    return request_source
+  queue: method = .string
+    return request_queue
+  callbackLimit: method = .int
+    return request_callback_limit
+  configuration: method = .RexxClassicConfig
+    config = request_config
+    call config.clearHostAccess()
+    call config.resetHostOwnership()
+    call config.setHostSource(request_source)
+    return config
+  /** Open selected resources only inside Scope's protected invocation lifetime. */
+  configureResources: method = .void
+    arg config_ref = reference .RexxClassicConfig
+    config = dereference config_ref
+    do index = 1 to request_stream_count
+      call config.configureDefaultStream(request_stream_directions[index],request_stream_names[index],request_stream_encodings[index],request_stream_replacing[index])
+    end
+    return
+  pool: method = .RexxVariablePool
+    return .RexxVariablePool(1)
+  activation: method = .RexxActivationArguments
+    activation = .RexxActivationArguments()
+    call activation.beginHostProgram(request_mode)
+    call activation.setAddressEnvironment(request_environment)
+    accepted = activation.setTraceOption(request_trace)
+    error = activation.setNumericDigits(.RexxValue.fromInt(request_digits),reference request_config)
+    if error <> "" then assembler signal "CLASSIC_SYNTAX",error
+    error = activation.setNumericFuzz(.RexxValue.fromInt(request_fuzz),reference request_config)
+    if error <> "" then assembler signal "CLASSIC_SYNTAX",error
+    form_text = "SCIENTIFIC"
+    if request_form = 2 then form_text = "ENGINEERING"
+    error = activation.setNumericForm(.RexxValue(form_text))
+    if error <> "" then assembler signal "CLASSIC_SYNTAX",error
+    if initialized(request_clock) then call activation.setClock(request_clock)
+    if initialized(request_clock_trap) then call activation.setClock(request_clock_trap,1)
+    do index = 1 to request_count
+      call activation.append(request_values[index],request_presence[index] <> 0)
+    end
+    return activation
+
+/**
+ * Detached host completion. indicator is N/R/E/X/S; outcome is descriptive.
+ * A present value remains exact after Scope.close and activation teardown.
+ * Condition retains the typed runtime_signal, payload and original provenance.
+ * commandStatus is the existing integer compatibility view, never the result ABI.
+ */
+RexxClassicHostResult: class
+  result_indicator = .string
+  result_source = .string
+  result_present = .boolean
+  result_value = .RexxValue
+  result_condition = .runtime_signal
+  result_failed = .boolean
+  result_status = .int
+  result_cleanup_failed = .boolean
+  result_cleanup_condition = .runtime_signal
+  *: factory
+    arg completion = .RexxActivationArguments, source = .string
+    result_source = source
+    result_present = completion.hasReturnValue()
+    result_value = completion.returnValue()
+    result_status = completion.programReturnCode()
+    result_failed = 0
+    result_cleanup_failed = 0
+    result_indicator = "N"
+    if result_present then result_indicator = "R"
+    return
+  failed: factory
+    arg problem = .runtime_signal, source = .string
+    result_source = source
+    result_present = 0
+    result_value = .RexxValue("")
+    result_status = 0
+    result_failed = 1
+    result_cleanup_failed = 0
+    result_condition = problem
+    result_indicator = "E"
+    code = rexxclassic_signal_syntax_code(problem)
+    if code == "5.1" then result_indicator = "X"
+    if code == "48.1" | problem.name() = "NOT_IMPLEMENTED" then result_indicator = "S"
+    return
+  indicator: method = .string
+    return result_indicator
+  outcome: method = .string
+    select
+      when result_indicator = "N" then return "ABSENT"
+      when result_indicator = "R" then return "RESULT"
+      when result_indicator = "X" then return "RESOURCE"
+      when result_indicator = "S" then return "UNABLE"
+      otherwise return "CONDITION"
+    end
+    return "CONDITION"
+  hasValue: method = .boolean
+    return result_present
+  value: method = .RexxValue
+    return result_value
+  hasCondition: method = .boolean
+    return result_failed
+  condition: method = .runtime_signal
+    return result_condition
+  source: method = .string
+    return result_source
+  commandStatus: method = .int
+    return result_status
+  /** A teardown failure cannot erase an earlier primary condition. */
+  recordCleanupCondition: method = .void
+    arg problem = .runtime_signal
+    result_cleanup_failed = 1
+    result_cleanup_condition = problem
+    return
+  hasCleanupCondition: method = .boolean
+    return result_cleanup_failed
+  cleanupCondition: method = .runtime_signal
+    return result_cleanup_condition
+
+/**
+ * Wrapper-local invocation owner. Construct only after anchoring Context's
+ * activation/pool/config targets. enter binds services; finish consumes the
+ * detached source-body completion packet; failed snapshots an escaping signal.
+ * close is idempotent and revokes windows before restoring external resources.
+ */
+RexxClassicHostScope: class
+  scope_context = reference .RexxClassicContext
+  scope_request = .RexxClassicHostRequest
+  scope_access = .HostAccessState
+  scope_entered = .boolean
+  scope_closed = .boolean
+  scope_queue = .string
+  scope_previous_queue = .string
+  scope_owns_queue = .boolean
+  scope_terminated = .boolean
+  scope_has_outcome = .boolean
+  scope_completion_started = .boolean
+  scope_previous_active = reference .HostAccessState
+  scope_published = .boolean
+  scope_outcome = .RexxClassicHostResult
+  *: factory
+    arg context = reference .RexxClassicContext, request = .RexxClassicHostRequest
+    if <refvalid>(context) = 0 then assembler signal "REFERENCE_INVALID","Classic host Context is expired"
+    scope_context = context
+    scope_request = request
+    absent_access = .HostAccessState
+    scope_access = absent_access
+    scope_entered = 0
+    scope_closed = 0
+    scope_owns_queue = 0
+    scope_terminated = 0
+    scope_has_outcome = 0
+    scope_completion_started = 0
+    scope_published = 0
+    return
+  enter: method = .void
+    result = .string
+    if scope_entered | scope_closed then do
+      assembler signal "REFERENCE_INVALID","Classic host scope cannot be entered twice"
+      return
+    end
+    context_ref = scope_context
+    context = dereference context_ref
+    config_ref = context.config()
+    config = dereference config_ref
+    sentinel = hostSentinel()
+    source = scope_request.source()
+    limit = scope_request.callbackLimit()
+    scope_access = .HostAccessState(scope_context,sentinel,source,limit)
+    scope_previous_active = hostActive()
+    call hostSelect(reference scope_access)
+    scope_published = 1
+    access = .HostAccess(reference scope_access)
+    call config.bindHostAccess(access)
+    call config.bindHostContext(context as .object)
+    activation_ref = context.activation()
+    activation = dereference activation_ref
+    call activation.beginHostCompletion()
+    scope_completion_started = 1
+    call scope_request.configureResources(config_ref)
+    scope_previous_queue = rxqueue("QUERY")
+    scope_queue = scope_request.queue()
+    if length(scope_queue) = 0 then do
+      /* Every nonempty repository name contributes at least one character.
+       * Probe through the existing owner without changing its selection. */
+      attempts = length(rxqueue("LIST")) + 1
+      do attempt = 1 to attempts
+        candidate = "_CREXX_HOST_" || hostSequence()
+        if rxqueue("INFO",candidate) == "" then do
+          scope_queue = candidate
+          leave
+        end
+      end
+      if scope_queue == "" then do
+        assembler signal "CLASSIC_SYNTAX","RXC-LC-5.1: Classic host private queue candidates are exhausted"
+        return
+      end
+      result = rxqueue("CREATE",scope_queue)
+      if result <> "0" then do
+        assembler signal "CLASSIC_SYNTAX","RXC-LC-5.1: Classic host queue could not be created"
+        return
+      end
+      scope_owns_queue = 1
+    end
+    result = rxqueue("SET",scope_queue)
+    if result <> "0" then do
+      assembler signal "CLASSIC_SYNTAX","RXC-LC-48.1: Classic host queue is unavailable"
+      return
+    end
+    call config.bindHostQueue(scope_queue)
+    scope_entered = 1
+    values = .RexxValue[]
+    presence = .int[]
+    response = config.invokeHost("INITIALIZE",values,presence)
+    call config.checkHostResponse(response)
+    return
+  finish: method = .RexxClassicHostResult
+    arg completion = .RexxActivationArguments
+    if scope_closed | \scope_entered then do
+      assembler signal "REFERENCE_INVALID","Classic host scope is not active"
+      return .RexxClassicHostResult(completion,scope_request.source())
+    end
+    context_ref = scope_context
+    context = dereference context_ref
+    activation_ref = context.activation()
+    activation = dereference activation_ref
+    if activation.hostFailurePending() then do
+      problem = activation.hostFailure()
+      return failed(problem)
+    end
+    scope_outcome = .RexxClassicHostResult(completion,scope_request.source())
+    scope_has_outcome = 1
+    call terminate(scope_outcome)
+    return scope_outcome
+  failed: method = .RexxClassicHostResult
+    arg problem = .runtime_signal
+    if scope_has_outcome then do
+      if scope_outcome.hasCondition() then call scope_outcome.recordCleanupCondition(problem)
+      else scope_outcome = .RexxClassicHostResult.failed(problem,scope_request.source())
+    end
+    else scope_outcome = .RexxClassicHostResult.failed(problem,scope_request.source())
+    scope_has_outcome = 1
+    if scope_entered & \scope_terminated then do
+      do
+        call terminate(scope_outcome)
+      on signal failure,error,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
+        captured_problem = cleanup_problem as .runtime_signal
+        call scope_outcome.recordCleanupCondition(captured_problem)
+      end
+    end
+    if initialized(scope_access) then call scope_access.invalidate()
+    return scope_outcome
+  /** TERMINATE receives indicator, optional value, optional tag and message. */
+  terminate: method = .void
+    arg outcome = .RexxClassicHostResult
+    if scope_terminated then return
+    scope_terminated = 1
+    context_ref = scope_context
+    context = dereference context_ref
+    config_ref = context.config()
+    config = dereference config_ref
+    call config.bindHostContext(context as .object)
+    values = .RexxValue[]
+    presence = .int[]
+    values[1] = .RexxValue(outcome.indicator())
+    presence[1] = 1
+    values[2] = outcome.value()
+    presence[2] = outcome.hasValue() as .int
+    values[3] = .RexxValue("")
+    values[4] = .RexxValue("")
+    presence[3] = 0
+    presence[4] = 0
+    if outcome.hasCondition() then do
+      problem = outcome.condition()
+      values[3] = .RexxValue(problem.name())
+      values[4] = .RexxValue(problem.message())
+      presence[3] = 1
+      presence[4] = 1
+    end
+    response = config.invokeHost("TERMINATE",values,presence)
+    call config.checkHostResponse(response)
+    return
+  close: method = .void
+    if scope_closed then return
+    if scope_published then do
+      active = hostActive()
+      own = reference scope_access
+      if \(active <refsame> own) then do
+        assembler signal "REFERENCE_INVALID","Classic host scopes must close from the innermost invocation"
+        return
+      end
+    end
+    scope_closed = 1
+    if scope_completion_started then do
+      completion_context_ref = scope_context
+      completion_context = dereference completion_context_ref
+      completion_activation_ref = completion_context.activation()
+      completion_activation = dereference completion_activation_ref
+      call completion_activation.endHostCompletion()
+      scope_completion_started = 0
+    end
+    if initialized(scope_access) then call scope_access.invalidate()
+    if scope_published then do
+      call hostSelect(scope_previous_active)
+      scope_published = 0
+    end
+    stream_error = 0
+    if <refvalid>(scope_context) then do
+      context_ref = scope_context
+      context = dereference context_ref
+      config_ref = context.config()
+      config = dereference config_ref
+      call config.clearHostAccess()
+      stream_error = config.closeHostStreams()
+    end
+    if length(scope_previous_queue) > 0 then result = rxqueue("SET",scope_previous_queue)
+    if scope_owns_queue then result = rxqueue("DELETE",scope_queue)
+    if stream_error <> 0 then assembler signal "NOTREADY","Classic host stream close failed"
+    return
+
+/* Private state is anchored by Scope before HostAccess borrows it. */
+HostAccessState: class
+  access_context = reference .RexxClassicContext
+  access_sentinel = reference .int
+  access_source = .string
+  access_alive = .boolean
+  access_token = .int
+  access_sequence = .int
+  access_depth = .int
+  access_limit = .int
+  access_previous = .int[]
+  *: factory
+    arg context = reference .RexxClassicContext, sentinel = reference .int, source = .string, limit = .int
+    access_context = context
+    access_sentinel = sentinel
+    access_source = source
+    access_alive = 1
+    access_token = 0
+    access_sequence = 0
+    access_depth = 0
+    access_limit = limit
+    return
+  valid: method = .boolean
+    arg token = .int
+    if \access_alive | <refvalid>(access_sentinel) = 0 | <refvalid>(access_context) = 0 then return 0
+    current = hostSentinel()
+    if \(access_sentinel <refsame> current) then return 0
+    active = hostActive()
+    own = reference self
+    if \(active <refsame> own) then return 0
+    return token > 0 & token = access_token
+  open: method = .int
+    call check()
+    if access_depth >= access_limit then do
+      assembler signal "CLASSIC_SYNTAX","RXC-LC-5.1: Classic callback nesting limit exceeded"
+      return 0
+    end
+    access_depth = access_depth + 1
+    access_previous[access_depth] = access_token
+    access_sequence = access_sequence + 1
+    access_token = access_sequence
+    return access_token
+  check: method = .void
+    if \access_alive | <refvalid>(access_context) = 0 then do
+      assembler signal "REFERENCE_INVALID","Classic callback scope is expired"
+      return
+    end
+    current = hostSentinel()
+    if \(access_sentinel <refsame> current) then do
+      assembler signal "REFERENCE_INVALID","Classic callback scope belongs to another execution"
+      return
+    end
+    active = hostActive()
+    own = reference self
+    if \(active <refsame> own) then do
+      assembler signal "REFERENCE_INVALID","Classic callback scope is suspended by another invocation"
+      return
+    end
+    return
+  close: method = .void
+    arg token = .int
+    if \valid(token) then do
+      assembler signal "REFERENCE_INVALID","Classic callback window is not the active window"
+      return
+    end
+    access_token = access_previous[access_depth]
+    access_previous[access_depth] = 0
+    access_depth = access_depth - 1
+    return
+  invalidate: method = .void
+    access_alive = 0
+    access_token = 0
+    access_depth = 0
+    return
+  context: method = reference .RexxClassicContext
+    return access_context
+  source: method = .string
+    return access_source
+
+HostAccess: class implements .RexxClassicHostAccess
+  access_state = reference .HostAccessState
+  *: factory
+    arg state = reference .HostAccessState
+    access_state = state
+    return
+  contextSnapshot: method = .object
+    arg current = .object
+    state_ref = access_state
+    state = dereference state_ref
+    call state.check()
+    if \(current is .RexxClassicContext) then do
+      assembler signal "INVALID_ARGUMENTS","Classic host binding requires a RexxClassicContext"
+      empty = .object
+      return empty
+    end
+    context = current as .RexxClassicContext
+    bundle = .RexxClassicContext(context.activation(),context.pool(),context.config())
+    return bundle as .object
+  open: method = .RexxClassicHostPool
+    arg operation = "", routine = "", function = 0, ?current = .object
+    state_ref = access_state
+    state = dereference state_ref
+    call state.check()
+    if initialized(current) then context = contextSnapshot(current) as .RexxClassicContext
+    else do
+      context_ref = state.context()
+      context = snapshot context_ref
+    end
+    token = state.open()
+    return .HostWindow(access_state,token,operation,routine,function,context)
+  close: method = .void
+    arg window = .RexxClassicHostPool
+    state_ref = access_state
+    state = dereference state_ref
+    call state.close(window.token())
+    return
+
+HostWindow: class implements .RexxClassicHostPool
+  window_state = reference .HostAccessState
+  window_token = .int
+  window_names = .string[]
+  window_cursor = .int
+  window_operation = .string
+  window_routine = .string
+  window_function = .boolean
+  window_context = .RexxClassicContext
+  *: factory
+    arg state = reference .HostAccessState, token = .int, operation = .string, routine = .string, function = .int, context = .RexxClassicContext
+    window_state = state
+    window_token = token
+    window_cursor = 0
+    window_operation = operation
+    window_routine = routine
+    window_function = function <> 0
+    window_context = context
+    return
+  valid: method = .boolean
+    if <refvalid>(window_state) = 0 then return 0
+    state_ref = window_state
+    state = dereference state_ref
+    return state.valid(window_token)
+  token: method = .int
+    return window_token
+  checked: method = reference .RexxClassicContext
+    if \valid() then do
+      assembler signal "REFERENCE_INVALID","Classic callback window is disabled, suspended, expired or foreign"
+      empty_context = reference .RexxClassicContext
+      return empty_context
+    end
+    return reference window_context
+  /** Validate with the existing Classic classifier, never with a second lexer. */
+  validateName: method = .void
+    arg name = .string, direct = 0
+    context_ref = checked()
+    context = dereference context_ref
+    config_ref = context.config()
+    config = dereference config_ref
+    checked_name = name
+    if direct then do
+      stop = pos(".",name)
+      if stop > 1 then checked_name = left(name,stop)
+      pool_ref = context.pool()
+      pool = dereference pool_ref
+      if pool.normalizeName(checked_name) <> checked_name then do
+        assembler signal "INVALID_ARGUMENTS","A direct Classic API name requires an already-resolved uppercase head"
+        return
+      end
+    end
+    if rexxclassic_datatype_symbol_kind(.RexxValue(checked_name),config) <> 1 then
+      assembler signal "INVALID_ARGUMENTS","Invalid Classic API variable symbol"
+    return
+  set: method = .void
+    arg name = .string, value = .RexxValue
+    call validateName(name)
+    context_ref = checked()
+    context = dereference context_ref
+    pool_ref = context.pool()
+    pool = dereference pool_ref
+    call pool.setSymbolValue(name,value)
+    return
+  value: method = .RexxClassicHostValue
+    arg name = .string
+    call validateName(name)
+    context_ref = checked()
+    context = dereference context_ref
+    pool_ref = context.pool()
+    pool = dereference pool_ref
+    return .RexxClassicHostValue(pool.symbolHasValue(name),pool.symbolValue(name))
+  drop: method = .void
+    arg name = .string
+    call validateName(name)
+    context_ref = checked()
+    context = dereference context_ref
+    pool_ref = context.pool()
+    pool = dereference pool_ref
+    call pool.dropSymbol(name)
+    return
+  setDirect: method = .void
+    arg name = .string, value = .RexxValue
+    call validateName(name,1)
+    context_ref = checked()
+    context = dereference context_ref
+    pool_ref = context.pool()
+    pool = dereference pool_ref
+    call pool.resolvedSetValue(name,value)
+    return
+  valueDirect: method = .RexxClassicHostValue
+    arg name = .string
+    call validateName(name,1)
+    context_ref = checked()
+    context = dereference context_ref
+    pool_ref = context.pool()
+    pool = dereference pool_ref
+    return .RexxClassicHostValue(pool.resolvedHasValue(name),pool.resolvedValue(name))
+  dropDirect: method = .void
+    arg name = .string
+    call validateName(name,1)
+    context_ref = checked()
+    context = dereference context_ref
+    pool_ref = context.pool()
+    pool = dereference pool_ref
+    call pool.resolvedDrop(name)
+    return
+  valueOther: method = .RexxClassicHostValue
+    arg subject = .string, index = 0
+    context_ref = checked()
+    context = dereference context_ref
+    activation_ref = context.activation()
+    activation = dereference activation_ref
+    config_ref = context.config()
+    config = dereference config_ref
+    subject = upper(subject)
+    select
+      when subject = "ARG" then return .RexxClassicHostValue(activation.argumentExists(index),activation.argument(index))
+      when subject = "ARGCOUNT" then return .RexxClassicHostValue(1,.RexxValue.fromInt(activation.argumentCount()))
+      when subject = "MODE" then return .RexxClassicHostValue(1,.RexxValue(activation.programSourceMode()))
+      when subject = "SOURCE" then do
+        state_ref = window_state
+        state = dereference state_ref
+        return .RexxClassicHostValue(1,.RexxValue(state.source()))
+      end
+      when subject = "SOURCELINE" then return .RexxClassicHostValue(index > 0 & index <= config.sourceLineCount(),.RexxValue(config.sourceLine(index)))
+      when subject = "SOURCELINES" then return .RexxClassicHostValue(1,.RexxValue.fromInt(config.sourceLineCount()))
+      when subject = "ADDRESS" then return .RexxClassicHostValue(1,.RexxValue(activation.addressEnvironment()))
+      when subject = "ROUTINE" then return .RexxClassicHostValue(window_operation = "EXTERNALROUTINE",.RexxValue(window_routine))
+      when subject = "INVOCATION" then do
+        mode = "SUBROUTINE"
+        if window_function then mode = "FUNCTION"
+        return .RexxClassicHostValue(window_operation = "EXTERNALROUTINE",.RexxValue(mode))
+      end
+      otherwise return .RexxClassicHostValue(0,.RexxValue(""))
+    end
+    return .RexxClassicHostValue(0,.RexxValue(""))
+  valuePool: method = .RexxClassicHostValue
+    arg pool_name = .string, subject = .string
+    context_ref = checked()
+    context = dereference context_ref
+    config_ref = context.config()
+    config = dereference config_ref
+    found = config.externalValueGet(pool_name,subject)
+    return .RexxClassicHostValue(found.found(),found.value())
+  reset: method = .void
+    context_ref = checked()
+    context = dereference context_ref
+    pool_ref = context.pool()
+    pool = dereference pool_ref
+    window_names = pool.visibleNames()
+    window_cursor = 0
+    return
+  next: method = .string
+    item = nextVariable()
+    return item.name()
+  nextVariable: method = .RexxClassicHostVariable
+    context_ref = checked()
+    context = dereference context_ref
+    pool_ref = context.pool()
+    pool = dereference pool_ref
+    do while window_cursor < window_names[0]
+      window_cursor = window_cursor + 1
+      name = window_names[window_cursor]
+      if pool.resolvedHasValue(name) then return .RexxClassicHostVariable(name,pool.resolvedValue(name))
+    end
+    return .RexxClassicHostVariable("",.RexxValue(""))

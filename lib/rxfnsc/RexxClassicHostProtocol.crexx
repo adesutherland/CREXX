@@ -1,0 +1,262 @@
+/* cREXX License (MIT). Shared Classic host service contracts. */
+options levelb comments_dash numeric_classic
+namespace rexxclassichostprotocol expose RexxClassicHostValue RexxClassicHostVariable RexxClassicHostPool RexxClassicHostAccess RexxClassicHostHook RexxClassicHostHookResult RexxClassicHostClock RexxClassicHostClockSample RexxClassicHostDisabledPool RexxClassicHostAddressSandbox
+import rexxvalue
+import rxfnsb
+import _rxsysb
+
+/** A lookup result. Missing and present empty values have distinct presence. */
+RexxClassicHostValue: class
+  found_value = .boolean
+  scalar_value = .RexxValue
+  *: factory
+    arg found = .boolean, value = .RexxValue
+    found_value = found
+    scalar_value = value
+    return
+  found: method = .boolean
+    return found_value
+  value: method = .RexxValue
+    return scalar_value
+
+/** One owned visible-variable observation; an empty name marks iterator end. */
+RexxClassicHostVariable: class
+  variable_name = .string
+  variable_value = .RexxValue
+  *: factory
+    arg name = .string, value = .RexxValue
+    variable_name = name
+    variable_value = value
+    return
+  name: method = .string
+    return variable_name
+  value: method = .RexxValue
+    return variable_value
+
+/**
+ * Explicit synchronous callback capability, never an ordinary typed-call grant.
+ * Substituted operations use Classic symbol resolution. Direct operations take
+ * an already-resolved uppercase head and exact compound tail, without further
+ * casing or substitution. Iteration snapshots names on reset, observes current
+ * values, skips subsequently dropped names, and admits new names after reset.
+ * Disabled, suspended, expired and foreign capabilities raise REFERENCE_INVALID.
+ */
+RexxClassicHostPool: interface
+  valid: method = .boolean
+  token: method = .int
+  set: method = .void
+    arg name = .string, value = .RexxValue
+  value: method = .RexxClassicHostValue
+    arg name = .string
+  drop: method = .void
+    arg name = .string
+  setDirect: method = .void
+    arg name = .string, value = .RexxValue
+  valueDirect: method = .RexxClassicHostValue
+    arg name = .string
+  dropDirect: method = .void
+    arg name = .string
+  valueOther: method = .RexxClassicHostValue
+    arg subject = .string, index = 0
+  valuePool: method = .RexxClassicHostValue
+    arg pool_name = .string, subject = .string
+  reset: method = .void
+  next: method = .string
+  nextVariable: method = .RexxClassicHostVariable
+
+/** Private execution-owned window supplier used by configuration dispatch. */
+RexxClassicHostAccess: interface
+  /** Validate a concrete current Context and retain only its live owner refs. */
+  contextSnapshot: method = .object
+    arg current = .object
+  open: method = .RexxClassicHostPool
+    arg operation = "", routine = "", function = 0, ?current = .object
+  close: method = .void
+    arg window = .RexxClassicHostPool
+
+/**
+ * Hook response. Fallthrough, an absent replacement and present empty text are
+ * separate. A trap's empty-string replacement falls through by Classic policy;
+ * a configuration hook's present empty value remains a replacement.
+ */
+RexxClassicHostHookResult: class
+  result_handled = .boolean
+  result_present = .boolean
+  result_value = .RexxValue
+  result_failed = .boolean
+  result_condition = .runtime_signal
+  result_address = .addressresponse
+  result_has_address = .boolean
+  *: factory
+    result_handled = 0
+    result_present = 0
+    result_failed = 0
+    result_has_address = 0
+    result_value = .RexxValue("")
+    return
+  returning: factory
+    arg value = .RexxValue
+    result_handled = 1
+    result_present = 1
+    result_failed = 0
+    result_has_address = 0
+    result_value = value
+    return
+  absent: factory
+    result_handled = 1
+    result_present = 0
+    result_failed = 0
+    result_has_address = 0
+    result_value = .RexxValue("")
+    return
+  failed: factory
+    arg problem = .runtime_signal
+    result_handled = 1
+    result_present = 0
+    result_failed = 1
+    result_has_address = 0
+    result_value = .RexxValue("")
+    result_condition = problem
+    return
+  /** COMMAND hooks preserve the existing rc/condition/diagnostic response. */
+  command: factory
+    arg response = .addressresponse
+    result_handled = 1
+    result_present = 0
+    result_failed = 0
+    result_has_address = 1
+    result_value = .RexxValue("")
+    result_address = response
+    return
+  handled: method = .boolean
+    return result_handled
+  hasValue: method = .boolean
+    return result_present
+  value: method = .RexxValue
+    return result_value
+  hasCondition: method = .boolean
+    return result_failed
+  condition: method = .runtime_signal
+    return result_condition
+  hasCommand: method = .boolean
+    return result_has_address
+  commandResponse: method = .addressresponse
+    return result_address
+
+/** Host configuration/trap ABI; all arguments are owned synchronous values. */
+RexxClassicHostHook: interface
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+
+/** One coherent wall-clock sample; this contract does not introduce monotonic time. */
+RexxClassicHostClockSample: class
+  sample_present = .boolean
+  sample_day = .int
+  sample_local = .int
+  sample_utc = .int
+  sample_offset = .int
+  *: factory
+    arg base_day = .int, local_microseconds = .int, utc_microseconds = .int, offset_microseconds = .int
+    sample_present = 1
+    sample_day = base_day
+    sample_local = local_microseconds
+    sample_utc = utc_microseconds
+    sample_offset = offset_microseconds
+    return
+  fallthrough: factory
+    sample_present = 0
+    return
+  present: method = .boolean
+    return sample_present
+  baseDay: method = .int
+    return sample_day
+  localMicroseconds: method = .int
+    return sample_local
+  utcMicroseconds: method = .int
+    return sample_utc
+  offsetMicroseconds: method = .int
+    return sample_offset
+
+/** Optional configured sample producer. Failure uses ordinary typed signals. */
+RexxClassicHostClock: interface
+  sample: method = .RexxClassicHostClockSample
+
+/** A hook can run without a pool grant; every attempted access is refused. */
+RexxClassicHostDisabledPool: class implements .RexxClassicHostPool
+  *: factory
+    return
+  valid: method = .boolean
+    return 0
+  token: method = .int
+    return 0
+  set: method = .void
+    arg name = .string, value = .RexxValue
+    assembler signal "REFERENCE_INVALID","Classic callback pool access is disabled"
+    return
+  value: method = .RexxClassicHostValue
+    arg name = .string
+    assembler signal "REFERENCE_INVALID","Classic callback pool access is disabled"
+    return .RexxClassicHostValue(0,.RexxValue(""))
+  drop: method = .void
+    arg name = .string
+    assembler signal "REFERENCE_INVALID","Classic callback pool access is disabled"
+    return
+  setDirect: method = .void
+    arg name = .string, value = .RexxValue
+    call set(name,value)
+    return
+  valueDirect: method = .RexxClassicHostValue
+    arg name = .string
+    return value(name)
+  dropDirect: method = .void
+    arg name = .string
+    call drop(name)
+    return
+  valueOther: method = .RexxClassicHostValue
+    arg subject = .string, index = 0
+    return value(subject)
+  valuePool: method = .RexxClassicHostValue
+    arg pool_name = .string, subject = .string
+    return value(subject)
+  reset: method = .void
+    assembler signal "REFERENCE_INVALID","Classic callback pool access is disabled"
+    return
+  next: method = .string
+    call reset()
+    return ""
+  nextVariable: method = .RexxClassicHostVariable
+    call reset()
+    return .RexxClassicHostVariable("",.RexxValue(""))
+
+/** Existing ADDRESS sandbox protocol over an explicitly enabled pool window. */
+RexxClassicHostAddressSandbox: class implements .addresssandbox
+  pool_window = .RexxClassicHostPool
+  *: factory
+    arg window = .RexxClassicHostPool
+    pool_window = window
+    return
+  get: method = .string
+    arg name = .string
+    item = pool_window.value(name)
+    return item.value().asString()
+  set: method = .void
+    arg name = .string, value = .string
+    call pool_window.set(name,.RexxValue(value))
+    return
+  drop: method = .void
+    arg name = .string
+    call pool_window.drop(name)
+    return
+  exists: method = .int
+    arg name = .string
+    item = pool_window.value(name)
+    return item.found() as .int
+  next: method = .string
+    arg cursor = .int
+    call pool_window.reset()
+    name = .string
+    do index = 1 to cursor + 1
+      name = pool_window.next()
+      if name = "" then return ""
+    end
+    return name

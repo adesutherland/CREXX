@@ -703,8 +703,10 @@ RXVM_HANDLER(TIME_REG, VM_ADVANCE(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
             {
                 rxvm_timeval tv;
-                rxvm_get_timeval(&tv);
-                REG_RETURN_INT(tv.tv_sec - rxvm_timezone_seconds())
+                long timezone_seconds;
+                if (rxvm_get_timeval(&tv) || rxvm_timezone_seconds(&timezone_seconds)) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Clock service failed");
+                } else { REG_RETURN_INT(tv.tv_sec - timezone_seconds) }
             }
             DISPATCH;
 /* ------------------------------------------------------------------------------------
@@ -725,13 +727,27 @@ RXVM_HANDLER(XTIME_REG_STRING, VM_ADVANCE(2);
         DEBUG("TRACE - XTIME R%d,\"%s\"\n", (int)REG_IDX(1),(CONSTSTRING_OP(2))->string);
 
             switch ((CONSTSTRING_OP(2))->string[0]) {
-                case 'Z':
-                    op1R->int_value = rxvm_timezone_seconds();
+                case 'Z': {
+                    long timezone_seconds;
+                    if (rxvm_timezone_seconds(&timezone_seconds)) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Timezone service failed");
+                    } else op1R->int_value = timezone_seconds;
                     break;
-                case 'T':  op1R->int_value  = (rxinteger)clock(); break;
+                }
+                case 'T': {
+                    clock_t ticks = clock();
+                    if (ticks == (clock_t)-1) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Processor clock service failed");
+                    } else op1R->int_value = (rxinteger)ticks;
+                    break;
+                }
                 case 'C':  op1R->int_value  = CLOCKS_PER_SEC; break;
                 case 'N':  {
-                     (void) rxvm_timezone_seconds();
+                     long timezone_seconds;
+                     if (rxvm_timezone_seconds(&timezone_seconds) || !RXVM_TZNAME[0] || !RXVM_TZNAME[1]) {
+                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Timezone service failed");
+                         break;
+                     }
                      prep_string_buffer(op1R,2*SMALLEST_STRING_BUFFER_LENGTH); // Large enough for both time zone names
                      snprintf(op1R->string_value,2*SMALLEST_STRING_BUFFER_LENGTH,
                               "%s;%s", RXVM_TZNAME[0], RXVM_TZNAME[1]);
@@ -742,12 +758,19 @@ RXVM_HANDLER(XTIME_REG_STRING, VM_ADVANCE(2);
                      time_t ctime;
                      rxinteger tm;
                      rxvm_timeval tv;
-                     struct tm *tmdata;
-                     rxvm_get_timeval(&tv);
+                     struct tm tmdata;
+                     long timezone_seconds;
+                     if (rxvm_get_timeval(&tv) || rxvm_timezone_seconds(&timezone_seconds)) {
+                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Clock service failed");
+                         break;
+                     }
                      ctime = tv.tv_sec;
-                     tmdata = localtime(&ctime);
-                     tm = ((tmdata->tm_hour * 3600) + (tmdata->tm_min * 60) +
-                           tmdata->tm_sec) + rxvm_timezone_seconds();
+                     if (rxvm_localtime(&ctime, &tmdata)) {
+                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Local time conversion failed");
+                         break;
+                     }
+                     tm = ((tmdata.tm_hour * 3600) + (tmdata.tm_min * 60) +
+                           tmdata.tm_sec) + timezone_seconds;
                      op1R->int_value = tm*1000000+tv.tv_usec;
                      break;  // UTC Time
                 }
@@ -774,15 +797,19 @@ RXVM_HANDLER(MTIME_REG, VM_ADVANCE(1);
                 rxinteger tm;
                 rxvm_timeval tv;
                 time_t	ctime;
-                struct tm *tmdata;
+                struct tm tmdata;
 
-                rxvm_get_timeval(&tv);
-                ctime = tv.tv_sec;
-                tmdata = localtime(&ctime);
-                tm =
-                        ((tmdata->tm_hour * 3600) + (tmdata->tm_min * 60) +
-                        (tmdata->tm_sec));
-                REG_RETURN_INT(tm * 1000000 + tv.tv_usec)
+                if (rxvm_get_timeval(&tv)) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Clock service failed");
+                } else {
+                    ctime = tv.tv_sec;
+                    if (rxvm_localtime(&ctime, &tmdata)) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Local time conversion failed");
+                    } else {
+                        tm = ((tmdata.tm_hour * 3600) + (tmdata.tm_min * 60) + tmdata.tm_sec);
+                        REG_RETURN_INT(tm * 1000000 + tv.tv_usec)
+                    }
+                }
             }
             DISPATCH;
 

@@ -137,7 +137,7 @@ provider: procedure = .void expose artifacts
   markerat = builder.synthetic('test-only root execution marker')
   marker = block.constantbytes(contract.type('crexx.c.value'),'DROP_PROVIDER' as .binary,markerat)
   draft = block.operation(contract.operation('crexx.c.say'),markerat)
-  call draft.input('value',marker); operation = draft.finish()
+  call draft.input('value',marker); call draft.input('context',context); operation = draft.finish()
   boolean = .llir..boolcodec()
   do i = 1 to 2
     at = file.origin(5,11); name = 'items.'; indirect = '0'

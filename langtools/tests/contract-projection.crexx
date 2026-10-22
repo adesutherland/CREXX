@@ -1,0 +1,59 @@
+/* Independent public contract projection checks; metadata is never executed. */
+options levelb
+namespace contractprojection expose main
+import rxcontract
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0
+  fields = rxcontract..project('sample.run','.string','expose value=.int, ?suffix=''x'', ...=.decimal','b',0,0,65536,65536)
+  call check(fields[0] = 34 & fields[1] == 'rxcontract1' & fields[2] == 'ok','complete owned projection')
+  call check(fields[8] == 'sample.run' & fields[11] == '.string' & fields[12] == 'b' & fields[13] == '3','identity/result/flags/count')
+  call check(fields[14] == 'value' & fields[15] == '.int' & fields[16] == '1' & fields[17] == '0','exposed required formal')
+  call check(fields[21] == 'suffix' & fields[22] == '.string' & fields[24] == '1' & fields[26] == 'string' & fields[27] == "'x'",'callee default retained, never evaluated')
+  call check(fields[28] == '...' & fields[29] == '.decimal' & fields[32] == '1','scalar vararg retained')
+  complex = rxcontract..project('sample.method','reference .sample..item[*]','data=.int[-2 to 4,*]','g',1,1,65536,65536)
+  call check(complex[2] == 'ok' & complex[9] == '1' & complex[10] == '1','kind and task retained without C admission')
+  call check(complex[11] == 'reference .sample..item[*]' & complex[15] == '.int[-2 to 4,*]','complete native type grammar')
+  invalid = rxcontract..project('sample.run','.string','bad=reference .void','b',0,0,65536,65536)
+  call check(invalid[0] = 13 & invalid[2] == 'invalid' & invalid[13] == '0','invalid contract has no partial declaration')
+  invalid = rxcontract..project('sample.run','.int','','b',4294967296,0,65536,65536)
+  call check(invalid[2] == 'invalid','kind range is checked before native narrowing')
+  invalid = rxcontract..project('sample.run','.int','','b',0,4294967296,65536,65536)
+  call check(invalid[2] == 'invalid','task range is checked before native narrowing')
+  nul = 'sample' || ('00'x as .string) || '.run'
+  invalid = rxcontract..project(nul,'.string','','b',0,0,65536,65536)
+  call check(invalid[0] = 13 & invalid[2] == 'invalid','embedded NUL cannot hide suffix')
+  limited = rxcontract..project('sample.run','.string','value=.int','b',0,0,2,65536)
+  call check(limited[0] = 13 & limited[2] == 'limit','input limit is atomic')
+  limited = rxcontract..project('sample.run','.string','value=.int','b',0,0,65536,2)
+  call check(limited[0] = 13 & limited[2] == 'limit','work limit is atomic')
+  fields = rxcontract..project('again','.int','','b',0,0,65536,65536)
+  call check(fields[2] == 'ok' & fields[13] == '0','failure does not poison later request')
+  if argv[0] <> 2 then return 2
+  native = rxcontract..acquire(argv[1],'rxcontract.project',65536,65536)
+  call check(native[0] = 13 & native[1] == 'rxnative1' & native[2] == 'ok','ordinary loader declaration acquisition')
+  call check(native[6] == 'rxcontract' & native[7] == 'rxcontract.project' & native[8] == '0' & native[9] == '','manifest identity and ordinary kind')
+  call check(native[10] == '.string[]' & native[12] == 'b','raw native result/flags retained')
+  repeated = rxcontract..acquire(argv[1],'rxcontract.project',65536,65536)
+  call check(repeated[2] == 'ok' & repeated[11] == native[11],'loaded native declaration is reusable')
+  missing = rxcontract..acquire(argv[1],'rxcontract.missing',65536,65536)
+  call check(missing[2] == 'invalid' & missing[6] == '','missing native export has no partial declaration')
+  limited = rxcontract..acquire(argv[1],'rxcontract.project',1,65536)
+  call check(limited[2] == 'limit' & limited[6] == '','native query limit is atomic')
+  named_factory = rxcontract..acquire(argv[2],'rxpa_objects.box.§factory.from',65536,65536)
+  call check(named_factory[2] == 'ok' & named_factory[8] == '2' & named_factory[9] == 'rxpa_objects.box','named native factory keeps kind and owner')
+  default_factory = rxcontract..acquire(argv[2],'rxpa_objects.box.§factory',65536,65536)
+  call check(default_factory[2] == 'ok' & default_factory[8] == '2' & default_factory[9] == named_factory[9],'default native factory keeps kind and owner')
+  method_declaration = rxcontract..acquire(argv[2],'rxpa_objects.box.read',65536,65536)
+  call check(method_declaration[2] == 'ok' & method_declaration[8] == '1' & method_declaration[9] == named_factory[9],'native method remains distinct from factory')
+  say 'CONTRACT_PROJECT|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1
+  say 'FAIL|' || label
+  return

@@ -27,6 +27,8 @@ namespace rexxclassicconfig expose RexxClassicConfig RexxExternalValuePool RexxE
 import rxfnsb
 import rexxvalue
 import rexxclassicstream
+import rexxclassichostprotocol
+import _rxsysb
 
 /** Result of one external VALUE pool lookup. */
 RexxExternalValueResult: class
@@ -131,6 +133,16 @@ RexxClassicConfig: class
   streams = .RexxClassicStream[]
   stream_count = .int
   default_stream_direction = .int
+  zz_host_names = .string[]
+  zz_host_hooks = .RexxClassicHostHook[]
+  zz_host_traps = .RexxClassicHostHook[]
+  zz_host_count = .int
+  zz_host_access = .RexxClassicHostAccess
+  zz_host_context = .object
+  zz_host_queue = .string
+  zz_host_owned_streams = .RexxClassicStream[]
+  zz_host_owned_count = .int
+  zz_host_source = .string
 
   *: factory
     arg requested_profile = "BYTE"
@@ -149,9 +161,241 @@ RexxClassicConfig: class
     source_line_count = 0
     stream_count = 0
     default_stream_direction = 1
+    zz_host_count = 0
+    zz_host_queue = ""
+    zz_host_owned_count = 0
+    zz_host_source = ""
+    disabled_access = .RexxClassicHostAccess
+    zz_host_access = disabled_access
+    empty_context = .object
+    zz_host_context = empty_context
     if requested_profile == "BYTE" | requested_profile == "UTF8" then
       profile_name = requested_profile
     else assembler signal "INVALID_ARGUMENTS", "Character profile must be BYTE or UTF8"
+    return
+
+  /** Register/replace an execution-owned configuration hook or its trap.
+   * An uninitialized hook removes the selected registration. Traps run first;
+   * absent/empty trap results fall through, configuration empty results do not.
+   * @param operation stable uppercase service identity such as SAY or LINEIN
+   * @param hook explicit host provider, with no implicit typed-call pool grant
+   * @param trap true selects the override registration
+   */
+  registerHostHook: method = .void
+    arg operation = .string, hook = .RexxClassicHostHook, trap = 0
+    disabled_hook = .RexxClassicHostHook
+    operation = upper(operation)
+    if operation = "" then do
+      assembler signal "INVALID_ARGUMENTS","Classic host hook identity is empty"
+      return
+    end
+    slot = hostHookSlot(operation)
+    if slot = 0 then do
+      zz_host_count = zz_host_count + 1
+      slot = zz_host_count
+      zz_host_names[slot] = operation
+      zz_host_traps[slot] = disabled_hook
+      zz_host_hooks[slot] = disabled_hook
+    end
+    if trap then zz_host_traps[slot] = hook
+    else zz_host_hooks[slot] = hook
+    return
+
+  hostHookSlot: method = .int
+    arg operation = .string
+    do index = 1 to zz_host_count
+      if zz_host_names[index] == operation then return index
+    end
+    return 0
+
+  /** Internal invocation binding. The provider borrows a wrapper-owned scope. */
+  bindHostAccess: method = .void
+    arg access = .RexxClassicHostAccess
+    zz_host_access = access
+    return
+
+  clearHostAccess: method = .void
+    disabled = .RexxClassicHostAccess
+    zz_host_access = disabled
+    current = .object
+    zz_host_context = current
+    return
+
+  /** Refresh the canonical caller after PROCEDURE without granting capability. */
+  bindHostContext: method = .void
+    arg current = .object
+    if initialized(zz_host_access) then zz_host_context = zz_host_access.contextSnapshot(current)
+    return
+
+  openHostCallback: method = .RexxClassicHostPool
+    arg operation = "", routine = "", function = 0
+    if initialized(zz_host_access) then do
+      if initialized(zz_host_context) then return zz_host_access.open(operation,routine,function,zz_host_context)
+      return zz_host_access.open(operation,routine,function)
+    end
+    return .RexxClassicHostDisabledPool()
+
+  closeHostCallback: method = .void
+    arg window = .RexxClassicHostPool
+    if window.token() = 0 then return
+    if initialized(zz_host_access) then call zz_host_access.close(window)
+    return
+
+  /** One dispatcher owns trap/config replacement and exact callback lifetime. */
+  invokeHost: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], routine = "", function = 0
+    operation = upper(operation)
+    slot = hostHookSlot(operation)
+    response = .RexxClassicHostHookResult()
+    if slot = 0 then return response
+    previous_context = zz_host_context
+    window = openHostCallback(operation,routine,function)
+    hook = .RexxClassicHostHook
+    selected = 0
+    do
+      if slot <= zz_host_traps[0] then do
+        assembler linkattr1 hook,zz_host_traps,slot
+        if initialized(hook) then do
+          response = hook.invoke(operation,values,presence,window)
+          if response.hasCondition() | response.hasCommand() then selected = 1
+          if response.handled() & response.hasValue() then do
+            returned = response.value()
+            if length(returned.asString()) > 0 then selected = 1
+          end
+        end
+        assembler unlink hook
+      end
+      if \selected then do
+        response = .RexxClassicHostHookResult()
+        if slot <= zz_host_hooks[0] then do
+          assembler linkattr1 hook,zz_host_hooks,slot
+          if initialized(hook) then response = hook.invoke(operation,values,presence,window)
+          assembler unlink hook
+        end
+      end
+    on signal failure,error,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+      zz_host_context = previous_context
+      call closeHostCallback(window)
+      call rxfnsb..signalrelay(problem)
+      return .RexxClassicHostHookResult()
+    end
+    zz_host_context = previous_context
+    call closeHostCallback(window)
+    return response
+
+  /**
+   * Explicit configured fallback after compiler local/BIF/selected-provider
+   * resolution. Actual arrays remain unchanged; ROUTINE and INVOCATION facts
+   * belong to the temporary window. No source, PATH or loader search occurs.
+   * A handled absent result differs from an unhandled lookup. Typed hook
+   * failures are relayed with their original payload and origin.
+   */
+  externalRoutine: method = .RexxClassicHostHookResult
+    arg name = .string, function = .boolean, values = .RexxValue[], presence = .int[]
+    response = invokeHost("EXTERNALROUTINE",values,presence,name,function as .int)
+    call checkHostResponse(response)
+    if response.hasCommand() then
+      assembler signal "INVALID_ARGUMENTS","An external routine hook cannot return a command response"
+    return response
+
+  checkHostResponse: method = .void
+    arg response = .RexxClassicHostHookResult
+    if response.hasCondition() then call rxfnsb..signalrelay(response.condition())
+    return
+
+  bindHostQueue: method = .void
+    arg name = .string
+    zz_host_queue = name
+    return
+
+  setHostSource: method = .void
+    arg source = .string
+    zz_host_source = source
+    return
+
+  /** Select the configured queue only for the duration of one shared operation. */
+  hostQueueEnter: method = .string
+    previous = ""
+    if length(zz_host_queue) > 0 then do
+      previous = rxqueue("QUERY")
+      result = rxqueue("SET",zz_host_queue)
+      if result <> "0" then assembler signal "CLASSIC_SYNTAX","RXC-LC-48.1: Configured Classic queue is unavailable"
+    end
+    return previous
+
+  hostQueueLeave: method = .void
+    arg previous = .string
+    if length(previous) > 0 then result = rxqueue("SET",previous)
+    return
+
+  /** Open a host-selected default stream through the existing codec/transport. */
+  configureDefaultStream: method = .void
+    arg direction = .int, name = .string, encoding = .string, replacing = .int
+    if direction < 1 | direction > 3 then do
+      assembler signal "INVALID_ARGUMENTS","Invalid Classic default stream direction"
+      return
+    end
+    /* An empty error name means the inherited stderr path. The existing
+     * empty-name transport selects only stdin/stdout; never alias it to stderr. */
+    if direction = 3 & length(name) = 0 then return
+    if length(encoding) > 0 then do
+      encoding = rexxclassic_stream_encoding(encoding)
+      if encoding = "UNSUPPORTED" then do
+        assembler signal "INVALID_ARGUMENTS","Unsupported Classic default stream encoding"
+        return
+      end
+    end
+    mode = "WRITE"
+    if direction = 1 then mode = "READ"
+    stream = .RexxClassicStream(name,mode,encoding,replacing)
+    if \stream.ready() then do
+      assembler signal "NOTREADY","Configured Classic default stream is unavailable"
+      return
+    end
+    call storeStream("",direction,stream)
+    zz_host_owned_count = zz_host_owned_count + 1
+    zz_host_owned_streams[zz_host_owned_count] = stream
+    return
+
+  /** A supplied configuration lends its existing handles to a fresh root. */
+  resetHostOwnership: method = .void
+    zz_host_owned_count = 0
+    return
+
+  closeHostStreams: method = .int
+    failed = 0
+    do index = 1 to zz_host_owned_count
+      stream = .RexxClassicStream
+      assembler linkattr1 stream,zz_host_owned_streams,index
+      if \stream.closed() then do
+        status = stream.close()
+        if status <> 0 then failed = 1
+      end
+      assembler unlink stream
+    end
+    zz_host_owned_count = 0
+    return failed
+
+  /** SAY remains text with exactly one newline, through the selected output. */
+  sayText: method = .void
+    arg text = .string
+    values = .RexxValue[]
+    presence = .int[]
+    values[1] = .RexxValue(text)
+    presence[1] = 1
+    response = invokeHost("SAY",values,presence)
+    call checkHostResponse(response)
+    if response.handled() then return
+    slot = streamSlot("",2)
+    if slot > 0 then do
+      stream = .RexxClassicStream
+      assembler linkattr1 stream,streams,slot
+      status = stream.writeLine(text,-1)
+      if status <> 0 then assembler signal "NOTREADY","Classic configured output failed"
+      assembler unlink stream
+      return
+    end
+    say text
     return
 
   /** Locate execution-owned stream state. Empty input/output are independent. */
@@ -166,6 +410,28 @@ RexxClassicConfig: class
   stream: method = .RexxClassicStream
     arg slot = .int
     return streams[slot]
+
+  /** Borrow a configured default as raw process bytes; absent means inherited. */
+  processEndpoint: method = .addressredirect
+    arg direction = .int
+    slot = streamSlot("",direction)
+    if slot = 0 then return .addressredirect.none()
+    provider = .ClassicProcessBytes(reference self,slot)
+    if direction = 1 then return .addressredirect.input_stream(provider)
+    return .addressredirect.output_stream(provider)
+
+  processInput: method = .binary
+    arg slot = .int
+    stream = .RexxClassicStream
+    assembler linkattr1 stream,streams,slot
+    return stream.processInput()
+
+  processOutput: method = .void
+    arg slot = .int, bytes = .binary
+    stream = .RexxClassicStream
+    assembler linkattr1 stream,streams,slot
+    call stream.processOutput(bytes)
+    return
 
   /** STREAM on the empty name addresses the last explicitly opened direction. */
   streamCommandDirection: method = .int
@@ -228,10 +494,36 @@ RexxClassicConfig: class
 
   /** Consume one text value from the selected data queue or default input. */
   pullText: method = .string
-    return pull()
+    values = .RexxValue[]
+    presence = .int[]
+    response = invokeHost("PULL",values,presence)
+    call checkHostResponse(response)
+    if response.handled() then return response.value().asString()
+    previous = hostQueueEnter()
+    count = queued()
+    text = ""
+    if count > 0 then text = pull()
+    call hostQueueLeave(previous)
+    if count > 0 then return text
+    return lineinText()
 
   /** Read one line directly from default input, bypassing queued entries. */
   lineinText: method = .string
+    values = .RexxValue[]
+    presence = .int[]
+    response = invokeHost("LINEIN",values,presence)
+    call checkHostResponse(response)
+    if response.handled() then return response.value().asString()
+    slot = streamSlot("",1)
+    if slot > 0 then do
+      stream = .RexxClassicStream
+      assembler linkattr1 stream,streams,slot
+      text = stream.readLine(-1,1)
+      error = stream.error()
+      assembler unlink stream
+      if error <> "" then assembler signal "NOTREADY",error
+      return text
+    end
     return linein()
 
   /** Retain one original source line supplied by the compiler, without its EOL. */
@@ -266,23 +558,50 @@ RexxClassicConfig: class
     system_name = word(info, 1)
     /* SOURCEINFO emits "SYSTEM COMMAND filename"; preserve filename blanks. */
     source_name = substr(info, length(system_name) + 10)
+    if length(zz_host_source) > 0 then source_name = zz_host_source
     return system_name || " " || mode || " " || source_name
 
   /** Insert one text value at the front of the selected data queue. */
   pushText: method = .void
     arg text = .string
+    values = .RexxValue[]
+    presence = .int[]
+    values[1] = .RexxValue(text)
+    presence[1] = 1
+    response = invokeHost("PUSH",values,presence)
+    call checkHostResponse(response)
+    if response.handled() then return
+    previous = hostQueueEnter()
     call push text
+    call hostQueueLeave(previous)
     return
 
   /** Append one text value to the selected data queue. */
   queueText: method = .void
     arg text = .string
+    values = .RexxValue[]
+    presence = .int[]
+    values[1] = .RexxValue(text)
+    presence[1] = 1
+    response = invokeHost("QUEUE",values,presence)
+    call checkHostResponse(response)
+    if response.handled() then return
+    previous = hostQueueEnter()
     call queue text
+    call hostQueueLeave(previous)
     return
 
   /** Count entries in the selected execution-local queue without consuming input. */
   queuedCount: method = .int
-    return queued()
+    values = .RexxValue[]
+    presence = .int[]
+    response = invokeHost("QUEUED",values,presence)
+    call checkHostResponse(response)
+    if response.handled() then return response.value().asInt()
+    previous = hostQueueEnter()
+    count = queued()
+    call hostQueueLeave(previous)
+    return count
 
   isByteProfile: method = .boolean
     return profile_name == "BYTE"
@@ -387,12 +706,30 @@ RexxClassicConfig: class
   /** Reset the configuration-scoped RANDOM service. */
   seedRandom: method = .void
     arg seed = .int
+    values = .RexxValue[]
+    presence = .int[]
+    values[1] = .RexxValue.fromInt(seed)
+    presence[1] = 1
+    response = invokeHost("RANDOMSEED",values,presence)
+    call checkHostResponse(response)
+    if response.handled() then return
     call random_state.seed(seed)
     return
 
   /** Return an unbiased configuration-scoped value from 0 through span-1. */
   nextRandom: method = .int
     arg span = .int
+    values = .RexxValue[]
+    presence = .int[]
+    values[1] = .RexxValue.fromInt(span)
+    presence[1] = 1
+    response = invokeHost("RANDOM",values,presence)
+    call checkHostResponse(response)
+    if response.handled() then do
+      value = response.value().asInt()
+      if value < 0 | value >= span then assembler signal "INVALID_ARGUMENTS","Configured Classic random result is outside its bound"
+      return value
+    end
     return random_state.bounded(span)
 
   /** Register or replace one case-insensitive external VALUE pool name. */
@@ -454,3 +791,26 @@ RexxClassicConfig: class
       if external_pool_names[i] == normalized then return i
     end
     return 0
+
+/** Synchronous raw endpoint; the execution configuration retains stream owners. */
+ClassicProcessBytes: class implements .addressbytestream
+  process_config = reference .RexxClassicConfig
+  process_slot = .int
+  *: factory
+    arg config = reference .RexxClassicConfig, slot = .int
+    process_config = config
+    process_slot = slot
+    return
+  input_snapshot: method = .binary
+    config_ref = process_config
+    config = dereference config_ref
+    return config.processInput(process_slot)
+  append_bytes: method = .void
+    arg bytes = .binary
+    config_ref = process_config
+    config = dereference config_ref
+    call config.processOutput(process_slot,bytes)
+    return
+  finish: method = .void
+    /* transport.write flushes; Scope alone closes its owned handles. */
+    return

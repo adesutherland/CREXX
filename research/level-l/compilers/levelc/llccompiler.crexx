@@ -20,6 +20,7 @@ request: class
   _frontready = .int
   _nesting = .int
   _routine = .string
+  _host = .string
   _bound = .int
   _backend = .llcrxas..compilation
   _source = .binary
@@ -34,18 +35,19 @@ request: class
   _error = .string
   _offset = .int
   *: factory
-    arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512, bytes = 67108864, registers = 65536, optimise = 1, ?providers = .llcbindings..binding[], routine_export = ''
+    arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512, bytes = 67108864, registers = 65536, optimise = 1, ?providers = .llcbindings..binding[], routine_export = '', host_export = ''
     _source = source; _filename = llcompilercontracts..sourcename(filename); _path = artifacts
     _bytes = bytes; _registers = registers; _ready = 0; _error = ''; _offset = 0
     _budget = budget; _optimise = optimise; _nesting = nesting
-    _providers = providers; _routine = routine_export
+    _providers = providers; _routine = routine_export; _host = host_export
     return
   /** Both graph-only and full compilation prepare children only after this
    * request owns a stable snapshot field. No factory-self borrow can escape. */
   prepare: method = .void
     if _frontready then return
     _frontready = 1
-    _bound = _providers[0] > 0 | _routine <> ''
+    if _routine <> '' & _host <> '' then do; _error = 'LL_COMPILER_IMPORT: routine and host exports are mutually exclusive'; return; end
+    _bound = _providers[0] > 0 | _routine <> '' | _host <> ''
     if _bound then do
       _snapshot = .llcbindings..prepared(_path,_providers,_bytes,_bytes)
       if _snapshot.status() then do; _error = _snapshot.error(); return; end
@@ -73,11 +75,11 @@ request: class
     if _emission.identity() = sourceidentity then do
       entries = _frontend.entryproof(); signals = _frontend.signalproof()
       loops = _frontend.loopproof(); clauses = _frontend.clauseproof()
-      if _bound then _backend = .llcrxas..compilation.boundprecheckedclauses(_emission,entries,signals,loops,clauses,reference _snapshot,_bytes,_registers,_routine)
+      if _bound then _backend = .llcrxas..compilation.boundprecheckedclauses(_emission,entries,signals,loops,clauses,reference _snapshot,_bytes,_registers,_routine,_host)
       else _backend = .llcrxas..compilation.precheckedclauses(_emission,entries,signals,loops,clauses,_path,_bytes,_registers)
     end
     else do
-      if _bound then _backend = .llcrxas..compilation.bound(_emission,reference _snapshot,_bytes,_registers,_routine)
+      if _bound then _backend = .llcrxas..compilation.bound(_emission,reference _snapshot,_bytes,_registers,_routine,_host)
       else _backend = .llcrxas..compilation(_emission,_path,_bytes,_registers)
     end
     if _backend.status() <> 0 then do

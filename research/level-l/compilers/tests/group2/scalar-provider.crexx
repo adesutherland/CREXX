@@ -1,0 +1,60 @@
+/* Independent scalar ABI consumer; private module state is callable-only. */
+options levelb
+namespace g2scalar expose twice real decimal bytes flag value optional tail mutate touch observe noresult count length handler
+import rexxvalue
+
+boot: initialiser expose observed
+  observed = 0
+  return
+twice: procedure = .int
+  arg number = .int
+  return number * 2
+real: procedure = .float
+  arg number = .float
+  return number + 1.0
+decimal: procedure = .decimal
+  arg left = .decimal, right = .decimal
+  return left + right
+bytes: procedure = .binary
+  arg value = .binary
+  return value
+flag: procedure = .boolean
+  arg value = .boolean
+  return value
+value: procedure = .rexxvalue..RexxValue
+  arg value = .rexxvalue..RexxValue
+  return value
+optional: procedure = .string
+  arg left = .string, ?right = 'DEFAULT'
+  return left || '/' || right || '/' || (?right as .string)
+tail: procedure = .string
+  arg prefix = .string, ... = .string
+  result = prefix || '/' || (arg[] as .string)
+  do i = 1 to arg[]
+    result = result || '/' || arg[i]
+  end
+  return result
+mutate: procedure = .int
+  arg expose number = .int
+  number = number + 7
+  return number
+touch: procedure = .string expose observed
+  arg text = .string
+  observed = observed + 1
+  return text
+observe: procedure = .string
+  arg text = .string
+  say 'actual:' || text
+  return text
+count: procedure = .int expose observed
+  return observed
+noresult: procedure = .void expose observed
+  observed = observed + 1
+  return
+length: procedure = .string
+  return 'EXTERNAL-LENGTH'
+handler: procedure = .void expose observed
+  arg ?value = 'DEFAULT-HANDLER'
+  if value <> 'DEFAULT-HANDLER' then return
+  observed = observed + 1
+  return

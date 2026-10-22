@@ -30,6 +30,7 @@ import rexxclassicdatatype
 import rexxclassicconfig
 import rexxpool
 import rxfnsb
+import rexxclassichostprotocol
 
 /**
  * Positional arguments and optional result state for one Classic activation.
@@ -83,6 +84,15 @@ RexxActivationArguments: class
    * existing ordinals. Appending declarations alone does not preserve layout. */
   zz_entry_condition = .int
   zz_suppression_condition = .int
+  zz_zz_host_mode = .string
+  zz_zz_host_clock = .RexxClassicHostClock
+  zz_zz_host_clock_trap = .RexxClassicHostClock
+  zz_zz_host_zcompletion_generation = .int
+  zz_zz_host_zcompletion_live = .boolean
+  zz_zz_host_zcompletion_parent_generation = .int
+  zz_zz_host_zcompletion_pending = .boolean
+  zz_zz_host_zcompletion_root = reference .RexxActivationArguments
+  zz_zz_host_zcompletion_signal = .runtime_signal
 
   *: factory
     slot_count = 0
@@ -116,6 +126,18 @@ RexxActivationArguments: class
     condition_instruction = ""
     zz_entry_condition = 0
     zz_suppression_condition = 0
+    zz_zz_host_mode = ""
+    absent_clock = .RexxClassicHostClock
+    zz_zz_host_clock = absent_clock
+    zz_zz_host_clock_trap = absent_clock
+    zz_zz_host_zcompletion_generation = 0
+    zz_zz_host_zcompletion_live = 0
+    zz_zz_host_zcompletion_parent_generation = 0
+    zz_zz_host_zcompletion_pending = 0
+    absent_completion_root = reference .RexxActivationArguments
+    zz_zz_host_zcompletion_root = absent_completion_root
+    absent_completion_signal = .runtime_signal
+    zz_zz_host_zcompletion_signal = absent_completion_signal
     do index = 1 to 7
       signal_policy[index] = 0
     end
@@ -135,6 +157,14 @@ RexxActivationArguments: class
     has_parent_activation = 1
     program_root_ref = parent.programRoot()
     has_program_root = 1
+    completion_root = parent.hostCompletionRoot()
+    zz_zz_host_zcompletion_root = completion_root
+    zz_zz_host_zcompletion_parent_generation = 0
+    if <refvalid>(completion_root) then do
+      completion = dereference completion_root
+      completion_generation = completion.hostCompletionGeneration()
+      zz_zz_host_zcompletion_parent_generation = completion_generation
+    end
     do index = 1 to 7
       signal_policy[index] = parent.signalPolicy(index)
     end
@@ -155,6 +185,37 @@ RexxActivationArguments: class
     numeric_form = parent.numericForm()
     return
 
+  /** Configure a host-owned root without borrowing a foreign handler table. */
+  beginHostProgram: method = .void
+    arg mode = .string
+    if mode <> "COMMAND" & mode <> "FUNCTION" & mode <> "SUBROUTINE" then do
+      assembler signal "INVALID_ARGUMENTS","Invalid Classic host invocation mode"
+      return
+    end
+    zz_zz_host_mode = mode
+    function_call = mode = "FUNCTION"
+    procedure_eligible = 0
+    return
+
+  /** Optional coherent wall-clock source; absence retains the VM producers. */
+  setClock: method = .void
+    arg provider = .RexxClassicHostClock, trap = 0
+    if trap then zz_zz_host_clock_trap = provider
+    else zz_zz_host_clock = provider
+    return
+
+  clock: method = .RexxClassicHostClock
+    return zz_zz_host_clock
+
+  /** Internal activations use the root's single configured producer owner. */
+  sampleHostClock: method = .RexxClassicHostClockSample
+    if initialized(zz_zz_host_clock_trap) then do
+      sample = zz_zz_host_clock_trap.sample()
+      if sample.present() then return sample
+    end
+    if initialized(zz_zz_host_clock) then return zz_zz_host_clock.sample()
+    return .RexxClassicHostClockSample.fallthrough()
+
   /** Begin a clause lazily; ordinary clauses need no platform clock calls. */
   beginClauseTime: method = .void
     date_time_ready = 0
@@ -165,7 +226,14 @@ RexxActivationArguments: class
     if \date_time_ready then do
       state = .RexxDateTimeState
       assembler link state,date_time_state
-      call state.beginClause()
+      sampled = 0
+      root = dereference programRoot()
+      sample = root.sampleHostClock()
+      if sample.present() then do
+        call state.injectClause(sample.baseDay(),sample.localMicroseconds(),sample.utcMicroseconds(),sample.offsetMicroseconds())
+        sampled = 1
+      end
+      if \sampled then call state.beginClause()
       date_time_ready = 1
     end
     return
@@ -406,6 +474,107 @@ RexxActivationArguments: class
     if has_program_root then return program_root_ref
     return reference self
 
+  /** Bind one explicitly Scope-owned terminal-failure boundary on this root.
+   * A finite generation prevents an old child from acquiring a later binding.
+   * @signal REFERENCE_INVALID A live boundary already owns this activation.
+   * @signal CLASSIC_SYNTAX Resource error 5.1 if its generation is exhausted.
+   */
+  beginHostCompletion: method = .void
+    current = hostCompletionRoot()
+    if <refvalid>(current) then do
+      assembler signal "REFERENCE_INVALID","Classic host completion is already bound"
+      return
+    end
+    if zz_zz_host_zcompletion_generation >= 9223372036854775807 then do
+      assembler signal "CLASSIC_SYNTAX","RXC-LC-5.1: Classic host completion generation is exhausted"
+      return
+    end
+    zz_zz_host_zcompletion_generation = zz_zz_host_zcompletion_generation + 1
+    absent_root = reference .RexxActivationArguments
+    zz_zz_host_zcompletion_root = absent_root
+    zz_zz_host_zcompletion_parent_generation = 0
+    absent_signal = .runtime_signal
+    zz_zz_host_zcompletion_signal = absent_signal
+    zz_zz_host_zcompletion_pending = 0
+    program_exit_requested = 0
+    call clearReturnValue()
+    zz_zz_host_zcompletion_live = 1
+    return
+
+  /** Idempotently revoke this root; retained children cannot regain access. */
+  endHostCompletion: method = .void
+    zz_zz_host_zcompletion_live = 0
+    zz_zz_host_zcompletion_pending = 0
+    absent_root = reference .RexxActivationArguments
+    zz_zz_host_zcompletion_root = absent_root
+    zz_zz_host_zcompletion_parent_generation = 0
+    absent_signal = .runtime_signal
+    zz_zz_host_zcompletion_signal = absent_signal
+    return
+
+  /** Internal generation witness; zero means this receiver is not a live owner. */
+  hostCompletionGeneration: method = .int
+    if zz_zz_host_zcompletion_live then return zz_zz_host_zcompletion_generation
+    return 0
+
+  /** @return the checked direct live host owner, or an empty reference. */
+  hostCompletionRoot: method = reference .RexxActivationArguments
+    if zz_zz_host_zcompletion_live then return reference self
+    owner_ref = zz_zz_host_zcompletion_root
+    if <refvalid>(owner_ref) then do
+      owner = dereference owner_ref
+      generation = owner.hostCompletionGeneration()
+      if generation > 0 & generation = zz_zz_host_zcompletion_parent_generation then return owner_ref
+    end
+    absent_root = reference .RexxActivationArguments
+    return absent_root
+
+  /**
+   * Retain the first exact escaping event at the live explicit host boundary.
+   * @param problem Original typed event, including its payload and origin.
+   * @return true when accepted, including an already-pending first failure;
+   * false without a live boundary, leaving the caller's HALT policy unchanged.
+   */
+  requestProgramFailure: method = .boolean
+    arg problem = .runtime_signal
+    if zz_zz_host_zcompletion_live then do
+      if \zz_zz_host_zcompletion_pending then do
+        zz_zz_host_zcompletion_signal = problem
+        zz_zz_host_zcompletion_pending = 1
+        call clearReturnValue()
+      end
+      return 1
+    end
+    owner_ref = hostCompletionRoot()
+    if <refvalid>(owner_ref) = 0 then return 0
+    owner = dereference owner_ref
+    return owner.requestProgramFailure(problem)
+
+  /** @return true only while this activation's checked owner retains a failure. */
+  hostFailurePending: method = .boolean
+    if zz_zz_host_zcompletion_live then return zz_zz_host_zcompletion_pending
+    owner_ref = hostCompletionRoot()
+    if <refvalid>(owner_ref) = 0 then return 0
+    owner = dereference owner_ref
+    return owner.hostFailurePending()
+
+  /** @return an owned copy of the original event from the live boundary.
+   * @signal REFERENCE_INVALID No matching live owner has a pending failure.
+   */
+  hostFailure: method = .runtime_signal
+    if zz_zz_host_zcompletion_live & zz_zz_host_zcompletion_pending then return zz_zz_host_zcompletion_signal
+    owner_ref = hostCompletionRoot()
+    if <refvalid>(owner_ref) then do
+      own_ref = reference self
+      if \(owner_ref <refsame> own_ref) then do
+        owner = dereference owner_ref
+        return owner.hostFailure()
+      end
+    end
+    assembler signal "REFERENCE_INVALID","Classic host completion has no live failure"
+    absent_signal = .runtime_signal
+    return absent_signal
+
   /**
    * Start a separate external Level C program on this fresh activation.
    * New delayed suppression does not cross an ordinary external boundary.
@@ -415,6 +584,7 @@ RexxActivationArguments: class
     has_program_root = 0
     program_exit_requested = 0
     zz_suppression_condition = 0
+    call clearReturnValue()
     return
 
   /**
@@ -457,11 +627,16 @@ RexxActivationArguments: class
    */
   programSourceMode: method = .string
     root = dereference programRoot()
+    if root.hostMode() <> "" then return root.hostMode()
     if root.hasProgramCaller() then do
       if root.isFunctionCall() then return "FUNCTION"
       return "SUBROUTINE"
     end
     return "COMMAND"
+
+  /** Explicit root mode supplied by the host request, empty for legacy roots. */
+  hostMode: method = .string
+    return zz_zz_host_mode
 
   /** @return true when this activation was created by a caller */
   hasProgramCaller: method = .boolean
@@ -478,11 +653,16 @@ RexxActivationArguments: class
     call root.recordProgramExit(value, present)
     return
 
-  /** @return whether this program has requested EXIT from any internal frame */
+  /** @return whether normal EXIT or this activation's checked host failure requests unwinding */
   programExitRequested: method = .boolean
+    if hostFailurePending() then return 1
+    return ordinaryProgramExitRequested()
+
+  /** Internal normal-EXIT traversal; never refreshes a host generation witness. */
+  ordinaryProgramExitRequested: method = .boolean
     if has_program_root then do
       root = dereference program_root_ref
-      return root.programExitRequested()
+      return root.ordinaryProgramExitRequested()
     end
     return program_exit_requested
 
@@ -711,6 +891,10 @@ RexxActivationArguments: class
   /** @return highest explicitly supplied position, excluding trailing omissions */
   argumentCount: method = .int
     return supplied_count
+
+  /** Raw positional extent, including trailing omissions, for host transport. */
+  rawArgumentCount: method = .int
+    return slot_count
 
   /**
    * Test whether a positional slot was explicitly supplied.

@@ -1,0 +1,35 @@
+/* Independently specified host root, private callback pool and completion. */
+options levelc
+if arg(1) = 'bare' then return
+if arg(1) = 'exit' then exit 'exit-result'
+if arg(1) = 'absent' then exit
+if arg(1) = 'function' then return external_function('data',,' ')
+if arg(1) = 'absent-function' then return absent_function()
+if arg(1) = 'nested-bare' then do
+  signal on syntax name WRONG_PARENT
+  ANSWER = PRIVATE_FAILURE()
+  say 'G2_HOST_UNREACHABLE'
+  return ANSWER
+end
+if arg(1) = 'packet-bare' then return g2packet.run('bare')
+if arg(1) = 'packet-exit' then return g2packet.run('exit') || '|continued'
+SHARED = 'root'
+parse source SYSTEM MODE NAME
+call PRIVATE 'inner'
+ANSWER = RESULT
+return arg(1) || '|' || ANSWER || '|' || SHARED || '|' || arg(2,'O') || '|' || arg(3,'E') || '|' || MODE || '|' || NAME
+PRIVATE:
+procedure expose SHARED
+LOCAL = 'private'
+say 'probe'
+call external_alias 'x',,' '
+return LOCAL || '|' || RESULT
+PRIVATE_FAILURE:
+procedure
+signal off syntax
+return BARE_FAILURE()
+BARE_FAILURE:
+return
+WRONG_PARENT:
+say 'G2_HOST_PARENT_TRAP'
+return 'parent trap resumed'

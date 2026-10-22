@@ -45,6 +45,11 @@ signature: class
   _names = .string[]
   _optional = .int[]
   _exposed = .int[]
+  _vararg = .int[]
+  _defaultkinds = .string[]
+  _defaults = .string[]
+  _kind = .int
+  _task = .int
   _error = .string
   _options = .string
   *: factory
@@ -95,6 +100,53 @@ signature: class
     end
     if depth <> 0 then _error = 'unbalanced argument type'
     return
+  /** Adapt the owned rxcontract1 projection without parsing signature text.
+   * The acquiring consumer proves provenance and debits the native counters;
+   * this adapter keeps common/bootstrap consumers free of native imports.
+   * @param fields Complete successful projection from the metadata owner.
+   * @return Owned signature fields, or an ordinary failed signature.
+   */
+  projected: factory
+    arg fields = .string[]
+    count = .int; bytes = .binary
+    _error = 'invalid metadata projection'
+    if fields[0] < 13 then return
+    if fields[1] \== 'rxcontract1' | fields[2] \== 'ok' then return
+    do
+      codec = .llir..intcodec()
+      bytes = codec.parse(fields[9]); _kind = <at..i64>(0) bytes
+      bytes = codec.parse(fields[10]); _task = <at..i64>(0) bytes
+      bytes = codec.parse(fields[13]); count = <at..i64>(0) bytes
+    on signal
+      return
+    end
+    if _kind < 0 | _kind > 2 | _task < 0 | _task > 1 | count < 0 then return
+    if count > (fields[0] - 13) <idiv> 7 | fields[0] <> 13 + count * 7 then return
+    if llbinmeta..validname(fields[8]) = 0 | fields[11] = '' then return
+    _name = fields[8]; _result = lower(fields[11]); _options = fields[12]
+    do i = 1 to count
+      at = 14 + (i - 1) * 7
+      name = fields[at]; type = lower(fields[at + 1])
+      if type = '' | pos('00'x as .string,type) > 0 then return
+      if fields[at + 2] \== '0' & fields[at + 2] \== '1' then return
+      if fields[at + 3] \== '0' & fields[at + 3] \== '1' then return
+      if fields[at + 4] \== '0' & fields[at + 4] \== '1' then return
+      variable = fields[at + 4] == '1'
+      if variable then do
+        if name \== '...' | i <> count | fields[at + 3] \== '0' then return
+      end
+      else if llbinmeta..validname(name) = 0 then return
+      do j = 1 to i - 1
+        if upper(_names[j]) == upper(name) then do; _error = 'duplicate formal name'; return; end
+      end
+      defaultkind = fields[at + 5]
+      if wordpos(defaultkind,'none integer float string') = 0 then return
+      _names[i] = name; _types[i] = type
+      _exposed[i] = fields[at + 2] == '1'; _optional[i] = fields[at + 3] == '1'
+      _vararg[i] = variable; _defaultkinds[i] = defaultkind; _defaults[i] = fields[at + 6]
+    end
+    _error = ''
+    return
   failed: factory
     arg reason = .string
     _error = reason; _name = ''; _result = ''; _options = ''
@@ -119,6 +171,22 @@ signature: class
   exposed: method = .int
     arg ordinal = .int
     return _exposed[ordinal]
+  vararg: method = .int
+    arg ordinal = .int
+    if ordinal < 1 | ordinal > _vararg[0] then return 0
+    return _vararg[ordinal]
+  defaultkind: method = .string
+    arg ordinal = .int
+    if ordinal < 1 | ordinal > _defaultkinds[0] then return 'none'
+    return _defaultkinds[ordinal]
+  defaultliteral: method = .string
+    arg ordinal = .int
+    if ordinal < 1 | ordinal > _defaults[0] then return ''
+    return _defaults[ordinal]
+  kind: method = .int
+    return _kind
+  task: method = .int
+    return _task
   flags_text: method = .string
     return _options
 

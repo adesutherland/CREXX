@@ -1,0 +1,46 @@
+/* Public shared B consumer; the harness checks inherited child streams. */
+options levelb
+import rxfnsb
+import _rxsysb
+
+main: procedure = .int
+  arg paths = .string[]
+  fixture = paths[1]
+  argv_fixture = paths[2]
+  arguments = .string[]
+  if _rxsysb..processrun(fixture,arguments) <> 0 then return 1
+
+  arguments[1] = '--status'; arguments[2] = '7'
+  if _rxsysb..processrun(fixture,arguments) <> 7 then return 2
+  call arraydrop arguments
+  arguments[1] = '--streams'
+  if _rxsysb..processrun(fixture,arguments) <> 7 then return 3
+
+  call arraydrop arguments
+  arguments[1] = 'alpha beta'; arguments[2] = ''
+  arguments[3] = 'Gràdh 中 😀'
+  arguments[4] = '; && | $(touch NEVER) * ? [x] {y}'
+  if _rxsysb..processrun(argv_fixture,arguments) <> 0 then return 4
+
+  /* Each refusal is followed by another launch in the same execution. */
+  failures = 0
+  do kind = 1 to 3
+    rejected = 0
+    call arraydrop arguments
+    target = fixture
+    if kind = 1 then arguments[1] = 'a' || ('00'x as .string) || 'b'
+    if kind = 2 then target = fixture || '.not-found'
+    if kind = 3 then target = ''
+    do
+      unexpected = _rxsysb..processrun(target,arguments)
+    on signal channel_error
+      rejected = 1
+    end
+    if rejected = 0 then failures = failures + 1
+    call arraydrop arguments
+    arguments[1] = '--status'; arguments[2] = '0'
+    if _rxsysb..processrun(fixture,arguments) <> 0 then failures = failures + 1
+  end
+  if failures <> 0 then return 5
+  say 'PASS: shared process services'
+  return 0

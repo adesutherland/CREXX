@@ -1,0 +1,62 @@
+/* CANCEL must close/reap a live child before this same VM calls again. */
+options levelb
+import rxfnsb
+import _rxsysb
+
+main: procedure = .int
+  arg paths = .string[]
+  state = .CancelState()
+  output = .addressredirect.output_stream(.CancelOutput(reference state))
+  arguments = .string[]
+  arguments[1] = '--wait'
+  caught = 0
+  do
+    ignored = processrun(paths[1],arguments,,output)
+  on signal cancel as problem
+    if problem.name() \== 'CANCEL' | problem.code() <> 18 then return 1
+    if problem.message() \== 'cancel process output' then return 2
+    caught = 1
+  end
+  if caught = 0 | state.pid() <= 0 then return 3
+  arguments[1] = '--expect-dead'; arguments[2] = state.pid() as .string
+  if processrun(paths[1],arguments) <> 0 then return 4
+  arguments[1] = '--status'; arguments[2] = '7'
+  if processrun(paths[1],arguments) <> 7 then return 5
+  say 'G2_CANCEL_PROCESS_OK'
+  return 0
+
+CancelState: class
+  process_pid = .int
+  *: factory
+    process_pid = 0
+    return
+  setPid: method = .void
+    arg pid = .int
+    process_pid = pid
+    return
+  pid: method = .int
+    return process_pid
+
+CancelOutput: class implements .addressbytestream
+  state_ref = reference .CancelState
+  pending = .binary
+  *: factory
+    arg state = reference .CancelState
+    state_ref = state
+    return
+  input_snapshot: method = .binary
+    empty = .binary
+    return empty
+  append_bytes: method = .void
+    arg bytes = .binary
+    assembler bappend pending,bytes
+    text = pending as .string
+    newline = pos('0A'x as .string,text)
+    if newline = 0 then return
+    current = state_ref
+    state = dereference current
+    call state.setPid(left(text,newline - 1) as .int)
+    assembler signal 'CANCEL','cancel process output'
+    return
+  finish: method = .void
+    return

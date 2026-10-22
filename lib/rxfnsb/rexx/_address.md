@@ -37,6 +37,33 @@ The request/response, binding, standard sandbox, and standard stem class
 attribute order is part of the native VM bridge ABI in `interpreter/rxvml.c`.
 Do not reorder or insert attributes without changing and testing that bridge.
 
+## Direct processes and borrowed byte streams
+
+`processrun(executable, arguments, ?stdin, ?stdout, ?stderr) -> .int` submits
+an exact argv vector through ADDRESS's existing child-process and byte-channel
+provider. An empty vector has no arguments; it does not reparse the executable
+as command text. Normal completion returns the child exit status, including
+nonzero status. Omitted redirect objects inherit OS streams. Paths/argv cannot
+contain NUL; the shared provider refuses them before launch. Launch, resource,
+cancel and channel failures raise CHANNEL_ERROR after controller cleanup.
+No shell parsing or routine-result stdout capture is introduced.
+
+`addressbytestream` implements `input_snapshot() -> .binary`,
+`append_bytes(bytes: .binary)` and `finish()`. The factories
+`addressredirect.input_stream(provider)` and `.output_stream(provider)` bridge
+borrowed services to the same bounded input snapshot and byte drains. Output
+chunks retain all bytes. Providers own complete writes/EOF/error/flush behavior;
+finish must not close a caller-owned stream. `active()` distinguishes a real
+endpoint from `.none()`; source-level explicit NORMAL provenance belongs to
+the caller's command state. Existing output string/array adapters retain their
+accumulation and finish behavior.
+
+Function responses now expose `has_result()` and `clear_result()` separately
+from `get_result()`. Their factory and `set_result()` mark a present result,
+including empty text. The late presence field preserves the prior five physical
+attributes. Legacy native callbacks keep always-present semantics; the additive
+length-bearing native callback API preserves actual result presence and NUL.
+
 ## Errors
 
 Invalid programmer arguments are reported with the `INVALID_ARGUMENTS`

@@ -1,0 +1,8 @@
+/* The source mode and result-presence oracle are independent of typed ABI. */
+options levelc
+parse arg MODE
+if MODE = 'empty' then return ''
+if MODE = 'bare' then return
+if MODE = 'exit' then exit 'CHILD-EXIT'
+parse source SYSTEM KIND FILE
+return KIND || '|' || arg(1) || '|' || arg(2,'E') || '|' || arg(3,'E') || '|' || arg(3)

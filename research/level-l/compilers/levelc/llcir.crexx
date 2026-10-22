@@ -13,7 +13,7 @@ registerfamilies: procedure = .void
   g = schema.family('crexx.g',1)
   integer = g.type('int64',.llir..intcodec() as .object)
   text = g.type('text',.llscalar..textcodec() as .object)
-  c = schema.family('crexx.c',22)
+  c = schema.family('crexx.c',23)
   value = c.type('value',.llir..bytescodec() as .object)
   context = c.type('context',.llir..bytescodec() as .object)
   op = c.operation('add')
@@ -23,8 +23,8 @@ registerfamilies: procedure = .void
   /* No Classic evaluator is registered until its exact contextual operation
    * contract is implemented. A cached host numeric setting is never a fact. */
   op = c.operation('say')
-  call op.input('value',value)
-  call op.state('output'); call op.failure('conversion.io'); call op.termination('returns')
+  call op.input('value',value); call op.input('context',context)
+  call op.state('context.output'); call op.failure('conversion.io'); call op.termination('returns')
   types = .object[]
   types[1] = integer as .object; types[2] = text as .object
   types[6] = value as .object; types[7] = context as .object
@@ -79,9 +79,9 @@ registerfamilies: procedure = .void
   call llscalar..declare(c,'procedure.expose',types,'context:7',0,'name:2 indirect:11','context','condition.resource')
   call llscalar..declare(c,'return.empty',types,'context:7',10,'','context','condition.resource')
   call llscalar..declare(c,'bif',types,'arguments:9 context:7',6,'name:2','context.input.output.observation','condition.resource')
-  call llscalar..declare(c,'call.missing',types,'arguments:9 context:7',10,'name:2','context','condition')
+  call llscalar..declare(c,'call.missing',types,'arguments:9 context:7',10,'name:2 function:11','context.input.output.observation','condition.resource')
   call llscalar..declare(c,'program.exiting',types,'context:7',11,'','context','condition')
-  call llscalar..declare(c,'call.external',types,'arguments:9 context:7',10,'target:2','context.input.output.observation','condition.resource')
+  call llscalar..declare(c,'call.external',types,'arguments:9 context:7',10,'target:2 function:11','context.input.output.observation','condition.resource')
   call llscalar..declare(c,'push',types,'value:6 context:7',0,'','context.output','condition.resource')
   call llscalar..declare(c,'queue',types,'value:6 context:7',0,'','context.output','condition.resource')
   call llscalar..declare(c,'address.swap',types,'context:7',0,'','context','condition.resource')

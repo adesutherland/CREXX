@@ -1,0 +1,15 @@
+/* Configured defaults reach the same process-byte owner as ADDRESS. */
+options levelc
+if arg(1) = 'NORMAL' then do
+  address SYSTEM arg(2) with output normal error normal
+  return rc
+end
+if arg(1) <> 'INVALID' then say 'before'
+if arg(1) = 'ADDRESS' then address SYSTEM arg(2)
+else do
+  call child '--echo'
+  rc = result
+end
+answer = rc
+say 'after'
+return answer

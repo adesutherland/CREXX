@@ -15,6 +15,9 @@ list(REMOVE_DUPLICATES _languages)
 if(NOT _languages)
   message(FATAL_ERROR "Select at least one research compiler")
 endif()
+if("c" IN_LIST _languages)
+  add_executable(g2_process_fixture tests/group2/process-fixture.c)
+endif()
 function(ll_compile NAME SOURCE DIRECTORY)
   set(_files ${ARGN})
   # Cross-directory generated imports need their producer target as well as
@@ -43,6 +46,8 @@ function(ll_compile NAME SOURCE DIRECTORY)
       list(APPEND _producers llfileoutput)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin")
       list(APPEND _producers fs)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/providers/rxcontract.rxplugin")
+      list(APPEND _producers llcontract)
     endif()
   endforeach()
   list(REMOVE_DUPLICATES _producers)
@@ -117,7 +122,12 @@ foreach(_mode opt noopt)
         list(APPEND _host ${_infrastructure})
       endif()
       set(_module "${_prefix}${_part}")
-      ll_compile(${_module} "${CMAKE_CURRENT_SOURCE_DIR}/${_owner}/${_module}.crexx" "${_langdir}" ${_base} ${_host})
+      set(_native_imports)
+      if(_language STREQUAL "c" AND _part STREQUAL "bindings")
+        # Compiler-host metadata only: never a bootstrap or application input.
+        set(_native_imports "${CMAKE_BINARY_DIR}/bin/providers/rxcontract.rxplugin")
+      endif()
+      ll_compile(${_module} "${CMAKE_CURRENT_SOURCE_DIR}/${_owner}/${_module}.crexx" "${_langdir}" ${_base} ${_host} ${_native_imports})
       list(APPEND _host "${_langdir}/${_module}.rxbin")
     endforeach()
     set(_service "ll${_language}compiler")
@@ -158,6 +168,9 @@ foreach(_mode opt noopt)
       add_executable(${_cli} "${_dir}/${_cli}-launcher.c")
       set_target_properties(${_cli} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${_products}")
       configure_linker_for_static_lib(${_cli} fs)
+      if(_language STREQUAL "c")
+        configure_linker_for_static_lib(${_cli} llcontract PROVIDER_ID rxcontract)
+      endif()
       target_link_libraries(${_cli} rxvml rxpashim)
       install(TARGETS ${_cli} RUNTIME DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
     endif()
@@ -1001,6 +1014,23 @@ if("c" IN_LIST _languages)
   endforeach()
   # Conditions/observations is one complete development increment. Reuse one
   # prepared compiler, native fixtures and immutable expected outputs, on one VM.
+  # Group 2 qualifies one prepared normal lane; full compiler QA stays later.
+  set(_test "llcompiler_c_group2_opt_rxbvm")
+  add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/group2/check-group2.py"
+    --build "${CMAKE_BINARY_DIR}"
+    --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
+    --process-fixture $<TARGET_FILE:g2_process_fixture>
+    --argv-fixture $<TARGET_FILE:address_argv_fixture>
+    --spans-fixture $<TARGET_FILE:test_rxvml_spans>)
+  set_tests_properties(${_test} PROPERTIES
+    PASS_REGULAR_EXPRESSION "GROUP2_CHECK[|]PASS[|]cases=[0-9]+"
+    TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+    LABELS "library;level-l;levelc;compiler-backend")
+  crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+    llcompiler_llrxc-c_opt llcompiler_target_opt llcompiler_call_external_contracts_opt
+    library classlib rxfnsc rxunicode_core fs cstream llcontract _hash
+    g2_process_fixture address_argv_fixture test_rxvml_spans rxc rxas rxlink rxbvm)
   set(_test "llcompiler_c_conditions_observations_opt_on_rxbvm")
   add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/conditions-observations/check-conditions.py"

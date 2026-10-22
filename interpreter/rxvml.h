@@ -91,6 +91,62 @@ typedef int (*rxvml_address_function_callback)(
     rxvml_address_function_response* response,
     void* userdata);
 
+/* Additive length-bearing ADDRESS callbacks. Content is UTF-8, including NUL;
+ * protocol names/flags remain NUL-free. Request snapshots are read-only and
+ * live through the callback, including nested VM calls. Response buffers live
+ * until release(release_userdata), called once after copying even on refusal.
+ * A NULL release permits static/caller-owned response buffers. VM value handles
+ * remain borrowed from this context and may not outlive the callback. Each response
+ * copy admits at most this many logical payload/auxiliary bytes. */
+#define RXVML_ADDRESS_SPAN_MAX_BYTES (64u * 1024u * 1024u)
+typedef struct rxvml_text_span { const char *data; size_t length; } rxvml_text_span;
+typedef struct rxvml_address_binding_spans {
+    const char *kind, *internal_name, *external_alias;
+    rxvml_text_span value;
+    rxvml_value *value_object;
+    const char *flags;
+} rxvml_address_binding_spans;
+typedef struct rxvml_address_request_spans {
+    size_t struct_size;
+    const char *environment_name;
+    rxvml_text_span command;
+    rxvml_value *stdin_endpoint, *stdout_endpoint, *stderr_endpoint;
+    size_t binding_count;
+    const rxvml_address_binding_spans *bindings;
+    rxvml_value *sandbox;
+} rxvml_address_request_spans;
+typedef struct rxvml_address_response_spans {
+    size_t struct_size;
+    int rc;
+    const char *condition_name;
+    rxvml_text_span diagnostic;
+    size_t updated_binding_count;
+    const rxvml_address_binding_spans *updated_bindings;
+    void (*release)(void *);
+    void *release_userdata;
+} rxvml_address_response_spans;
+typedef struct rxvml_address_function_request_spans {
+    size_t struct_size;
+    const char *environment_name, *function_name;
+    size_t argc;
+    const rxvml_text_span *args;
+    rxvml_value *sandbox;
+    const char *flags;
+} rxvml_address_function_request_spans;
+typedef struct rxvml_address_function_response_spans {
+    size_t struct_size;
+    int rc, has_result;
+    rxvml_text_span result;
+    const char *condition_name;
+    rxvml_text_span diagnostic;
+    void (*release)(void *);
+    void *release_userdata;
+} rxvml_address_function_response_spans;
+typedef int (*rxvml_address_callback_spans)(rxvml_context *,
+    const rxvml_address_request_spans *, rxvml_address_response_spans *, void *);
+typedef int (*rxvml_address_function_callback_spans)(rxvml_context *,
+    const rxvml_address_function_request_spans *, rxvml_address_function_response_spans *, void *);
+
 /* Context lifecycle */
 rxvml_context* rxvml_create(const char* location, unsigned flags);
 void           rxvml_destroy(rxvml_context* ctx);
@@ -166,6 +222,17 @@ int rxvml_address_register_callback_environment(
     rxvml_address_callback callback,
     rxvml_address_function_callback function_callback,
     void* userdata);
+
+int rxvml_address_register_callback_environment_spans(
+    rxvml_context *ctx, const char *env_name, const char *instance_id,
+    rxvml_address_callback_spans callback,
+    rxvml_address_function_callback_spans function_callback, void *userdata);
+
+/* Queue POSIX_INT in this context's existing active execution word. Only the
+ * current execution owner may call, including its native/OS-signal callback.
+ * Foreign/inactive contexts return -1 without changing any pending word.
+ * The caller keeps ctx live; this is not a cross-thread entry or queue. */
+int rxvml_request_interrupt(rxvml_context *ctx);
 
 int rxvml_address_create_environment(
     rxvml_context* ctx,

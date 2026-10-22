@@ -30,6 +30,8 @@ import rexxclassicstate
 import rexxactivation
 import rexxpool
 import rexxvalue
+import rexxclassicconfig
+import rexxclassichostprotocol
 
 /**
  * One Classic command. An explicit ADDRESS command starts with NORMAL
@@ -50,6 +52,8 @@ RexxClassicAddressCommand: class
   binding_count = .int
   binding_kinds = .string[]
   binding_names = .string[]
+  zz_host_config_ref = reference .RexxClassicConfig
+  zz_host_configured = .boolean
 
   *: factory
     arg pool_ref = reference .RexxVariablePool, frame_ref = reference .RexxActivationArguments, environment = .string, command = .string
@@ -63,6 +67,18 @@ RexxClassicAddressCommand: class
     last_condition_description = command
     stream_read_error = ""
     binding_count = 0
+    zz_host_configured = 0
+    return
+
+  /** Bind optional execution-owned host hooks without changing the old factory. */
+  bindHostConfig: method = .void
+    arg config = reference .RexxClassicConfig
+    if <refvalid>(config) = 0 then do
+      assembler signal "REFERENCE_INVALID","Classic ADDRESS host configuration is expired"
+      return
+    end
+    zz_host_config_ref = config
+    zz_host_configured = 1
     return
 
   conditionId: method = .int
@@ -111,6 +127,9 @@ RexxClassicAddressCommand: class
 
   /** Run the exact command text through the registered environment object. */
   run: method = .addressresponse
+    host_config = .RexxClassicConfig
+    host_config_ref = zz_host_config_ref
+    if zz_host_configured then host_config = dereference host_config_ref
     state = .RexxAddressState
     assembler link state,selected_state
     pool = dereference caller_pool_ref
@@ -236,7 +255,43 @@ RexxClassicAddressCommand: class
     if builtin_process & words(command_text) = 0 then
       response = .addressresponse(0)
     else do
-      response = _address_dispatch_request(request)
+      host_window = .RexxClassicHostPool
+      replaced = 0
+      if zz_host_configured then do
+        if \state.explicitConnection("I") & \input_endpoint.active() then call request.set_stdin_endpoint(host_config.processEndpoint(1))
+        if \state.explicitConnection("O") & \output_endpoint.active() then call request.set_stdout_endpoint(host_config.processEndpoint(2))
+        if \state.explicitConnection("E") & \error_endpoint.active() then call request.set_stderr_endpoint(host_config.processEndpoint(3))
+        host_values = .RexxValue[]
+        host_presence = .int[]
+        host_values[1] = .RexxValue(target_environment)
+        host_values[2] = .RexxValue(command_text)
+        host_presence[1] = 1
+        host_presence[2] = 1
+        replacement = host_config.invokeHost("COMMAND",host_values,host_presence)
+        call host_config.checkHostResponse(replacement)
+        if replacement.handled() then do
+          if replacement.hasCommand() then response = replacement.commandResponse()
+          else response = .addressresponse(replacement.value().asInt())
+          replaced = 1
+        end
+      end
+      if \replaced then do
+        if zz_host_configured then do
+          host_window = host_config.openHostCallback()
+          if host_window.valid() then call request.set_sandbox(.RexxClassicHostAddressSandbox(host_window))
+        end
+        do
+          response = _address_dispatch_request(request)
+        on signal channel_error as problem
+          response = .addressresponse(-3,"FAILURE")
+          call response.add_diagnostic(problem.message())
+        on signal failure,error,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+          if zz_host_configured then call host_config.closeHostCallback(host_window)
+          call rxfnsb..signalrelay(problem)
+          return .addressresponse(-3,"FAILURE")
+        end
+        if zz_host_configured then call host_config.closeHostCallback(host_window)
+      end
     end
     if response.get_rc() = -3 & response.get_condition_name() = "FAILURE" &,
        response.get_diagnostic_count() > 0 &,

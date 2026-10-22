@@ -71,7 +71,7 @@ reached. Seven-condition ON/OFF uses shared activation policy and condition
 recording, same-frame handlers and typed payload/origin transport. Actual
 NOVALUE reads, LOSTDIGITS checks and shared BIF/PARSE/ADDRESS producers use
 the [whole SIGNAL contract](doc/architecture.md#signal-complete-contract).
-Real host HALT, broader host/platform acceptance and INTERPRET
+Real host HALT now uses Group 2 ingress; broader host/platform acceptance and INTERPRET
 retain their explicit [conformance qualifications](doc/levelc-conformance.md).
 
 **TRACE is complete for the agreed practical scope.** Bare/static/VALUE forms
@@ -91,8 +91,8 @@ B services own policy replacement, delayed delivery, suppression and buffered
 HALT. One finite source dispatcher preserves captured operands/control and
 handler RETURN/EXIT cleanup; idle completion allocates no result packet, and
 source without CALL ON declarations omits completion guards. The native practical
-scope remains the ceiling: real asynchronous HALT, arbitrary raw-provider
-resumption and wider host/platform proof remain open. Cross-function internal IR
+scope remains the ceiling. Group 2 adds execution-local real HALT ingress;
+arbitrary raw-provider resumption and wider host/platform proof remain open. Cross-function internal IR
 calls from a function with immutable CALL ON declarations are refused because
 handler ordinals belong to that source function; ordinary source uses one shared
 body, and existing multi-function IR without CALL declarations remains admitted. Component
@@ -156,16 +156,37 @@ restore the caller frame. CCOND preserves the existing configured
 SYNTAX/NOVALUE/LOSTDIGITS and practical TRACE paths. The [NUMERIC contract](doc/architecture.md#numeric-c-contract)
 retains wider numeric/expression and host/platform scope.
 
-Ordinary CALL accepts symbol/decoded quoted targets, source-ordered presence
-packets and local-before-BIF resolution; quoted targets skip locals. Missing
-routines fail43.1 when reached. Bare function RETURN45.1 and EOF44.1 retain
-their separate source locations. Static signed statement providers use explicit
-prebuilt metadata bindings and a void/frame routine wrapper. `--provider <artifact-stem> <qualified-callable>`
-is repeatable under `-i`; `--routine <qualified-export>` produces a provider.
-Selected images must be linked into the application; source providers are built
-first by their owning compiler. CCOND adds delayed local/BIF/signed-provider
-handlers using the same resolution owners. External function expressions and
-wider provider/host/platform proof retain their named open boundaries.
+CALL and function expressions resolve internal labels, BIFs, then explicitly
+selected external bindings. Quoted targets skip internal labels and still admit
+correctly spelled BIFs. A configured EXTERNALROUTINE hook can handle a reached
+missing name; otherwise it fails43.1. Bare function RETURN45.1 and EOF44.1 keep
+their separate source locations.
+
+| CLI option | Binding / output |
+|---|---|
+| `--provider artifact-stem qualified-callable` | Explicit RXBIN Classic packet or ordinary typed scalar export under `-i`. |
+| `--native artifact-stem qualified-callable` | Explicit RXPA declaration/identity from the owning native loader; ordinary typed CALL dispatch. |
+| `--executable alias path` | Direct argv process binding; normal exit status is the result, stdout/stderr remain inherited/configured streams. |
+| `--routine qualified-export` | Signed Classic activation-packet provider. |
+| `--host qualified-export` | Ordinary typed host request/result export using the [shared host facade](../../../lib/rxfnsc/RexxClassicHost.md). |
+
+Bindings are repeatable and share one external alias namespace using the
+existing callable-identifier grammar, including qualified names. Quoting changes
+lookup precedence; an executable path is separate from its alias. Selected
+bytecode providers must be linked into the application; native provider
+requirements retain their actual manifest identities. Ordinary scalar calls
+convert RexxValues at runtime, check arity/presence at compile time and leave
+defaults to the callee. Exposed scalar arguments use discarded temporary cells;
+true references, aggregates, objects, methods/factories and tasks require
+explicit adapters. B/G globals remain inaccessible to Classic callers. Delayed
+handlers reuse the same resolved routes and zero-argument admission.
+
+The optional compiler-only `rxcontract` provider projects through binutils'
+existing metadata owner. Static C applications do not contain this decoder or a
+source compiler. Process bindings use exactly ADDRESS's existing child and
+byte-channel services, with no argv flattening or implicit shell. No automatic
+PATH/source lookup is added; Classic source loading remains with final INTERPRET.
+Formal compiler/platform/delivery qualification remains open in PLAN.
 
 RETURN preserves present empty text separately from an absent result and uses
 the existing full signed64 main-status boundary. Physical comma continuations

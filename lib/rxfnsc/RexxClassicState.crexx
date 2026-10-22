@@ -55,6 +55,12 @@ RexxAddressState: class
   alternate_error_position = .string
   alternate_error_type = .string
   alternate_error_resource = .string
+  zz_input_explicit = .boolean
+  zz_output_explicit = .boolean
+  zz_error_explicit = .boolean
+  zz_alternate_input_explicit = .boolean
+  zz_alternate_output_explicit = .boolean
+  zz_alternate_error_explicit = .boolean
 
   *: factory
     environment_name = "CREXX"
@@ -77,6 +83,12 @@ RexxAddressState: class
     alternate_error_position = error_position
     alternate_error_type = error_type
     alternate_error_resource = error_resource
+    zz_input_explicit = 0
+    zz_output_explicit = 0
+    zz_error_explicit = 0
+    zz_alternate_input_explicit = 0
+    zz_alternate_output_explicit = 0
+    zz_alternate_error_explicit = 0
     return
 
   /** Copy both saved ADDRESS settings into a child Classic invocation. */
@@ -102,6 +114,12 @@ RexxAddressState: class
     alternate_error_position = parent.alternatePosition("E")
     alternate_error_type = parent.alternateType("E")
     alternate_error_resource = parent.alternateResource("E")
+    zz_input_explicit = parent.explicitConnection("I")
+    zz_output_explicit = parent.explicitConnection("O")
+    zz_error_explicit = parent.explicitConnection("E")
+    zz_alternate_input_explicit = parent.alternateExplicitConnection("I")
+    zz_alternate_output_explicit = parent.alternateExplicitConnection("O")
+    zz_alternate_error_explicit = parent.alternateExplicitConnection("E")
     return
 
   /** A lasting selection saves the old setting and starts normal connections. */
@@ -117,6 +135,9 @@ RexxAddressState: class
     alternate_error_position = error_position
     alternate_error_type = error_type
     alternate_error_resource = error_resource
+    zz_alternate_input_explicit = zz_input_explicit
+    zz_alternate_output_explicit = zz_output_explicit
+    zz_alternate_error_explicit = zz_error_explicit
     environment_name = upper(strip(name))
     input_position = "INPUT"
     input_type = "NORMAL"
@@ -127,6 +148,9 @@ RexxAddressState: class
     error_position = "REPLACE"
     error_type = "NORMAL"
     error_resource = ""
+    zz_input_explicit = 0
+    zz_output_explicit = 0
+    zz_error_explicit = 0
     return
 
   /** Bare ADDRESS exchanges the current and previously selected settings. */
@@ -153,6 +177,12 @@ RexxAddressState: class
     alternate_error_position = held.position("E")
     alternate_error_type = held.type("E")
     alternate_error_resource = held.resource("E")
+    zz_input_explicit = held.alternateExplicitConnection("I")
+    zz_output_explicit = held.alternateExplicitConnection("O")
+    zz_error_explicit = held.alternateExplicitConnection("E")
+    zz_alternate_input_explicit = held.explicitConnection("I")
+    zz_alternate_output_explicit = held.explicitConnection("O")
+    zz_alternate_error_explicit = held.explicitConnection("E")
     return
 
   environment: method = .string
@@ -167,16 +197,19 @@ RexxAddressState: class
 
     select
       when selector = "I" then do
+        zz_input_explicit = 1
         input_position = position
         input_type = type
         input_resource = resource
       end
       when selector = "O" then do
+        zz_output_explicit = 1
         output_position = position
         output_type = type
         output_resource = resource
       end
       when selector = "E" then do
+        zz_error_explicit = 1
         error_position = position
         error_type = type
         error_resource = resource
@@ -184,6 +217,23 @@ RexxAddressState: class
       otherwise return
     end
     return
+
+  /** Authored NORMAL remains distinguishable from the initial inherited route. */
+  explicitConnection: method = .boolean
+    arg option = .string
+    selector = upper(left(strip(option),1))
+    if selector = "I" then return zz_input_explicit
+    if selector = "O" then return zz_output_explicit
+    if selector = "E" then return zz_error_explicit
+    return 0
+
+  alternateExplicitConnection: method = .boolean
+    arg option = .string
+    selector = upper(left(strip(option),1))
+    if selector = "I" then return zz_alternate_input_explicit
+    if selector = "O" then return zz_alternate_output_explicit
+    if selector = "E" then return zz_alternate_error_explicit
+    return 0
 
   connection: method = .string
     arg option = .string

@@ -11,6 +11,7 @@ set(REXXBINS
   testRexxValue
   testRexxActivationArguments
   testRexxClassicContext
+  testRexxClassicHost
   testRexxClassicParse
   testRexxClassicAddressCommand
   testRexxClassicConditionEvent
@@ -102,7 +103,7 @@ foreach(_binfile ${REXXBINS})
     if(_basename STREQUAL "testRexxClassicConditionEvent")
         set(_pass_test_name_argument PASS_TEST_NAME_ARGUMENT)
     endif()
-    if(_basename STREQUAL "testRexxClassicContext" OR _basename STREQUAL "testRexxClassicParse")
+    if(_basename STREQUAL "testRexxClassicContext" OR _basename STREQUAL "testRexxClassicParse" OR _basename STREQUAL "testRexxClassicHost")
         # Explicit handler-skip recovery is part of the borrowed-reference
         # contract; this fixture therefore uses the certified SIGNAL exit.
         set(_rxc_flags)

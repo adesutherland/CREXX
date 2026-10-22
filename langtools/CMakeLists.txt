@@ -1,4 +1,47 @@
 cmake_minimum_required(VERSION 3.24)
+if(CREXX_BUILD_RESEARCH_COMPILERS)
+  # Selected compiler-host service only: no SDK/bootstrap/runtime dependency.
+  include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
+  add_dynamic_plugin_target(llcontract native/rxcontract.c PROVIDER_ID rxcontract)
+  add_static_plugin_target(llcontract native/rxcontract.c PROVIDER_ID rxcontract)
+  foreach(_ll_contract_target llcontract llcontract_static)
+    target_include_directories(${_ll_contract_target} PRIVATE ${CMAKE_SOURCE_DIR}/binutils/include)
+    target_link_libraries(${_ll_contract_target} PRIVATE rxbin)
+  endforeach()
+  set_target_properties(llcontract PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/providers
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/providers)
+  add_rxpa_provider_package(llcontract PROVIDER_ID rxcontract LINK_TARGETS rxbin)
+  install(FILES $<TARGET_FILE:llcontract> $<TARGET_FILE:llcontract_static>
+    DESTINATION bin/providers COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+  install(FILES $<TARGET_FILE:llcontract_static> DESTINATION bin/providers
+    RENAME rxcontract${CMAKE_STATIC_LIBRARY_SUFFIX} COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+  install(FILES ${CMAKE_BINARY_DIR}/bin/providers/rxcontract.native.json
+    $<TARGET_LINKER_FILE:rxbin> DESTINATION bin/providers
+    COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+  if(BUILD_TESTING)
+    set(_ll_contract_test ${CMAKE_CURRENT_BINARY_DIR}/native-contract/projection)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/native-contract)
+    crexx_add_fixture_command(OUTPUT ${_ll_contract_test}.rxbin
+      COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+        -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/bin/providers"
+        -o ${_ll_contract_test} ${CMAKE_CURRENT_SOURCE_DIR}/tests/contract-projection.crexx
+      COMMAND $<TARGET_FILE:rxas> ${_ll_contract_test}
+      DEPENDS rxc rxas library llcontract ${CMAKE_CURRENT_SOURCE_DIR}/tests/contract-projection.crexx
+      VERBATIM)
+    add_custom_target(llcontract_test DEPENDS ${_ll_contract_test}.rxbin)
+    # Reuse the maintained C-only object provider; no object consumer matrix.
+    add_dependencies(llcontract_test _rxpa_objects)
+    add_test(NAME llcontract_projection
+      COMMAND $<TARGET_FILE:rxbvm> ${_ll_contract_test}.rxbin
+        ${CMAKE_BINARY_DIR}/bin/library.rxbin $<TARGET_FILE:llcontract>
+        -a $<TARGET_FILE:llcontract> $<TARGET_FILE:_rxpa_objects>)
+    set_tests_properties(llcontract_projection PROPERTIES
+      PASS_REGULAR_EXPRESSION "CONTRACT_PROJECT[|]checks=[0-9]+[|]failures=0"
+      FAIL_REGULAR_EXPRESSION "FAIL[|]|PANIC:" LABELS "level-l;metadata;rxpa" TIMEOUT 60
+      CREXX_PREP_TARGETS llcontract_test)
+  endif()
+endif()
 set(_ll_flags)
 if(CREXX_LEVEL_L_NOOPT)
   list(APPEND _ll_flags -n)

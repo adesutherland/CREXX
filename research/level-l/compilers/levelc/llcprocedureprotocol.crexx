@@ -55,6 +55,7 @@ checked: class
   _argumentprior = .int[]
   _argumentstate = .int[]
   _argumentdependency = .int[]
+  _argumentcounts = .int[]
   _argumentends = .stem
   _argumentboundaries = .stem
   _tableslots = .int[]
@@ -108,6 +109,37 @@ checked: class
   tableconstant: method = .int
     arg fn = .int
     call run(); return _tableconstants[fn]
+  /** Project admitted empty/append/load closure, never a caller-supplied arity.
+   * Unknown presence remains '?' and is refused by typed/process consumers.
+   */
+  argumentpresence: method = .string
+    arg callid = .int
+    call run()
+    if _error <> '' then return ''
+    graph = dereference _graph; store = dereference _store
+    op = graph.operation(callid)
+    if op.name() <> 'crexx.c.call.external' then do; call fail('LOWERING: argument shape needs an external call',callid); return ''; end
+    value = op.input(1).id(); count = _argumentcounts[value]
+    if reserve(count,1) = 0 | charge(count + 1) = 0 then return ''
+    result = .binary; call binresize result,count
+    do while value > 0
+      if charge() = 0 then return ''
+      producer = store.get(4,value,1); op = graph.operation(producer)
+      if op.name() = 'crexx.c.arguments.append' then do
+        ordinal = _argumentcounts[value]; flag = 63
+        presence = op.input(3)
+        if presence.isconstant() then do
+          codec = .llir..boolcodec(); bytes = presence.bytes()
+          if codec.check(bytes) = '' then do
+            flag = 48
+            if <at..u8>(0) bytes <> 0 then flag = 49
+          end
+        end
+        <at..u8>(ordinal - 1) result = flag
+      end
+      value = _argumentdependency[value]
+    end
+    return result as .string
   contextslot: method = .int
     arg fn = .int
     call run(); return _contextslots[fn]
@@ -198,7 +230,7 @@ checked: class
   programproof: method = .void
     graph = dereference _graph; store = dereference _store
     opid = .int; next = .int; id = .int; slotid = .int; b = .int; previous = .int
-    anchor = .int; fn = .int; target = .int; terminal = .int
+    anchor = .int; fn = .int; target = .int; terminal = .int; candidate = .int
     op = .llir..opview; following = .llir..opview; name = .string; finished = .int
     do opid = 1 to store.count(3)
       if charge() = 0 then return
@@ -220,7 +252,23 @@ checked: class
         if programorigin(terminal,op.origin().id()) = 0 then return
         _programneutral[opid] = opid; _programneutral[terminal] = opid; _programterminals[terminal] = opid
       end
-      if name <> 'crexx.c.call' & name <> 'crexx.c.clause.complete' then iterate
+      if name <> 'crexx.c.call' & name <> 'crexx.c.call.external' & name <> 'crexx.c.clause.complete' then iterate
+      /* Only Classic external continuations require this proof. Selection
+       * later accepts a direct same-result return as its alternative tail.
+       * Typed/process calls may use their result without a program query. */
+      if name = 'crexx.c.call.external' then do
+        candidate = store.get(3,opid,3)
+        if candidate = 0 then iterate
+        following = graph.operation(candidate)
+        if following.name() <> 'core.store' then iterate
+        candidate = store.get(3,candidate,3)
+        if candidate > 0 then do
+          following = graph.operation(candidate)
+          if following.name() = 'core.load' then candidate = store.get(3,candidate,3)
+        end
+        if candidate = 0 then iterate
+        if graph.operation(candidate).name() <> 'crexx.c.program.exiting' then iterate
+      end
       checkpoint = name = 'crexx.c.clause.complete'
       if checkpoint then do
         if op.origin().kind() <> 'exact' then do; call fail('LOWERING: clause completion requires an authored origin',opid); return; end
@@ -327,7 +375,7 @@ checked: class
       if charge() = 0 then return
       op = graph.operation(opid); name = op.name()
       if name = 'crexx.c.program.exiting' & _querycalls[opid] = 0 then do
-        call fail('LOWERING: program-exit query has no paired internal call',opid); return
+        call fail('LOWERING: program-exit query has no paired call',opid); return
       end
       if name <> 'core.load' then iterate
       slotid = store.get(3,opid,12); id = _carriercalls[slotid]
@@ -410,9 +458,13 @@ checked: class
       end
       dependency = _argumentdependency[value]
       if dependency = 0 then do
+        _argumentcounts[value] = 0
         _argumentstate[value] = 2; top = top - 1
       end
       else if _argumentstate[dependency] = 2 then do
+        _argumentcounts[value] = _argumentcounts[dependency]
+        producer = store.get(4,value,1)
+        if graph.operation(producer).name() = 'crexx.c.arguments.append' then _argumentcounts[value] = _argumentcounts[value] + 1
         _argumentstate[value] = 2; top = top - 1
       end
       else if _argumentstate[dependency] = 1 then do
@@ -429,7 +481,7 @@ checked: class
     if _hasexternal = 0 then return
     graph = dereference _graph; store = dereference _store
     contract = dereference store.contract(); _argumenttype = contract.type('crexx.c.arguments').id()
-    if reserve(store.count(3),8) = 0 | reserve(store.count(4),24) = 0 then return
+    if reserve(store.count(3),8) = 0 | reserve(store.count(4),32) = 0 then return
     _argumentends = .stem(); _argumentboundaries = .stem()
     b = .int; opid = .int; slotid = .int; key = .string; known = .string
     op = .llir..opview; name = .string

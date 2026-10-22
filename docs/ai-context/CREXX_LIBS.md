@@ -1500,6 +1500,32 @@ ADDPROC(make_env, "demo.make", "b", ".demo..environment", "");
 ENDLOADFUNCS
 ```
 
+### Optional native declaration view
+
+`rxpa_host_services_v1.native_declaration` is an optional size-checked tail;
+use `rxpa_host_has_native_declaration(host)` before calling it. It accepts an
+explicit `.rxplugin` artifact, exact canonical callable name, logical byte/work
+allowances and a sized `rxpa_native_declaration_v1` output record. The record
+contains the real manifest provider identity, canonical name, flags, result and
+argument text, owner, kind (0 procedure, 1 method, 2 factory) and task flag.
+Returned strings are borrowed only for the current synchronous native call.
+
+The existing native loader owns initialization, provider sessions and retained
+declarations. The view queries the immutable manifest and uses that loader's
+metadata; it installs no second `LOADFUNCS` scanner and reads no sidecar.
+Same-context reentrant queries are refused; calls require the active owning
+worker. Return codes are 0 success, 1 invalid/missing, 2 allowance exhausted,
+3 allocation failure and 4 unavailable. Failure publishes no partial record;
+diagnostic strings have static lifetime. Optional used-byte/work outputs count
+logical input, metadata scan and selected output work. These allowances do not
+bound trusted provider initialization or claim CPU/RSS limits.
+
+The optional research compiler-host `rxcontract` provider projects these fields
+through the existing binutils decoder. Its versioned owned-vector layouts and
+packaging boundary are documented in [langtools](../../langtools/README.md#compiler-host-contract-projection).
+No native C frontend, Level L bootstrap or ordinary application gains this
+dependency merely by using metadata adapters.
+
 ### Native payload ownership
 
 When a native implementation needs to hide a C-side handle inside a Rexx object,

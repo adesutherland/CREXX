@@ -1,0 +1,44 @@
+options levelb
+namespace rxvml_spans expose command function identity interrupt clocks
+
+command: procedure = ._rxsysb..addressresponse
+  arg text = .string, binding = .string
+  env = ._rxsysb..addressenvironment
+  request = ._rxsysb..addressrequest
+  env = _rxsysb..addressenv("SPANS")
+  request = ._rxsysb..addressrequest("SPANS", text, ._rxsysb..addressredirect.none(), ._rxsysb..addressredirect.none(), ._rxsysb..addressredirect.none())
+  call request.add_binding("var", "buffer", "alias", binding, "")
+  return env.execute(request)
+
+function: procedure = ._rxsysb..addressfunctionresponse
+  arg name = .string, text = .string
+  arguments = .string[]
+  arguments[1] = text
+  return _rxsysb.._address_function("SPANS", name, arguments)
+
+identity: procedure = .string
+  arg text = .string
+  return text
+
+interrupt: procedure = .int
+  arg name = .string
+  do
+    response = ._rxsysb..addressfunctionresponse
+    response = function(name, "")
+    return 0
+  on signal posix_int
+    return 71
+  end
+  return 0
+
+clocks: procedure = .int
+  seconds = .int
+  local = .int
+  utc = .int
+  assembler time seconds
+  assembler mtime local
+  assembler xtime utc, "U"
+  if seconds < 0 then return 1
+  if local < 0 | local >= 86401000000 then return 2
+  if utc < -86400000000 | utc >= 172801000000 then return 3
+  return 0

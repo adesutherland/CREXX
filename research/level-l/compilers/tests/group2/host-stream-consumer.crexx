@@ -1,0 +1,125 @@
+/* Exact raw process bytes, text continuation, explicit NORMAL and recovery. */
+options levelb comments_dash numeric_classic
+import rxfnsb
+import g2hoststream
+import rexxclassichost
+import rexxvalue
+import rexxclassicstream
+import rxfs
+
+main: procedure = .int
+  arg paths = .string[]
+  errors = 0
+  ignored = .int
+  empty = .binary
+  expected = .binary
+  after = .binary
+  input = paths[2]
+  output = paths[3]
+  error = paths[4]
+  payload = ("é雪" || ('00'x as .string) || "tail") as .binary
+  expected_error = "4500FF0A"x as .binary
+  do attempt = 1 to 4
+    ignored = writebinary(input,payload)
+    ignored = writebinary(output,empty)
+    ignored = writebinary(error,empty)
+    request = .RexxClassicHostRequest("FUNCTION","configured process streams")
+    call request.setTrace("O")
+    mode = "CALL"
+    if attempt = 2 then mode = "ADDRESS"
+    if attempt = 3 then mode = "INVALID"
+    if attempt = 3 then ignored = writebinary(input,"00FF41"x as .binary)
+    call request.appendText(mode)
+    call request.appendText('"' || paths[1] || '" --echo')
+    call request.setDefaultStream(1,input,"UTF8")
+    call request.setDefaultStream(2,output,"UTF8")
+    call request.setDefaultStream(3,error,"UTF8")
+    outcome = g2hoststream..run(request)
+    actual = readbinary(output)
+    if attempt = 3 then do
+      errors = errors + check(outcome.indicator() = "E" & outcome.hasCondition(),"future text output reports invalid encoded raw data")
+      errors = errors + check(bincompare(actual,"00FF41"x as .binary) = 0,"failed codec continuation preserves original raw bytes")
+    end
+    else do
+      expected = "6265666F72650A"x as .binary
+      assembler bappend expected,payload
+      after = "61667465720A"x as .binary
+      assembler bappend expected,after
+      errors = errors + check(outcome.indicator() = "R" & outcome.value().asString() = "7","process status remains separate from output")
+      errors = errors + check(bincompare(actual,expected) = 0,"CALL ADDRESS and recovered text preserve exact UTF8 NUL stream")
+    end
+    errors = errors + check(bincompare(readbinary(error),expected_error) = 0,"stderr preserves arbitrary byte ordinals")
+  end
+  empty = .binary
+  ignored = writebinary(output,empty)
+  ignored = writebinary(error,empty)
+  normal = .RexxClassicHostRequest("FUNCTION","explicit normal streams")
+  call normal.setTrace("O")
+  call normal.appendText("NORMAL")
+  call normal.appendText('"' || paths[1] || '" --streams')
+  call normal.setDefaultStream(2,output,"UTF8")
+  call normal.setDefaultStream(3,error,"UTF8")
+  normal_result = g2hoststream..run(normal)
+  errors = errors + check(normal_result.indicator() = "R" & normal_result.value().asString() = "7","explicit NORMAL preserves inherited process stream control")
+  errors = errors + check(binlength(readbinary(output)) = 0 & binlength(readbinary(error)) = 0,"explicit NORMAL bypasses configured defaults")
+  positioned = .RexxClassicStream(output,"REPLACE","UTF-8")
+  call positioned.processOutput("414243"x as .binary)
+  ignored = positioned.positionOutput(1,0)
+  ignored = positioned.writeCharacters("Z",-1)
+  ignored = positioned.close()
+  errors = errors + check(bincompare(readbinary(output),"415A43"x as .binary) = 0,"explicit text position overrides a prior raw append position")
+  ignored = writebinary(input,payload)
+  read_stream = .RexxClassicStream(input,"READ","UTF-8")
+  first = read_stream.readCharacters(-1,1)
+  remaining = read_stream.processInput()
+  expected_remaining = ("雪" || ('00'x as .string) || "tail") as .binary
+  errors = errors + check(first = "é" & bincompare(remaining,expected_remaining) = 0,"prior logical input locates exact remaining process bytes")
+  errors = errors + check(read_stream.characters() = 0 & read_stream.readCharacters(-1,1) = "","raw snapshot leaves EOF")
+  errors = errors + check(read_stream.readCharacters(0,1) = "é","explicit text input position restores reading after raw EOF")
+  ignored = read_stream.close()
+  ignored = writebinary(input,"FF41"x as .binary)
+  replaced = .RexxClassicStream(input,"READ","UTF-8",1)
+  first = replaced.readCharacters(-1,1)
+  rejected = 0
+  do
+    ignored_bytes = replaced.processInput()
+  on signal notready
+    rejected = 1
+  end
+  errors = errors + check(rejected & replaced.readPosition() = 2 & replaced.readCharacters(-1,1) = "A","non-reversible decoded prefix refusal preserves logical input")
+  ignored = replaced.close()
+  ignored = writebinary(input,payload)
+  ignored = writebinary(output,empty)
+  ignored = writebinary(error,empty)
+  partial = .RexxClassicHostRequest("FUNCTION","partial stream initialization")
+  call partial.setTrace("O")
+  call partial.appendText("CALL")
+  call partial.setDefaultStream(2,output,"UTF8")
+  call partial.setDefaultStream(1,input || ".missing-directory/input","UTF8")
+  call partial.setDefaultStream(3,error,"UTF8")
+  partial_result = g2hoststream..run(partial)
+  errors = errors + check(partial_result.indicator() = "E" & partial_result.hasCondition(),"initial stream failure stays inside structured host completion")
+  if partial_result.hasCondition() then do
+    condition = partial_result.condition()
+    errors = errors + check(condition.name() = "NOTREADY","initial stream failure retains original typed condition")
+  end
+  errors = errors + check(rxfs..delete(output) = 0,"partly initialized output resource is closed")
+  ignored = writebinary(output,empty)
+  call partial.setDefaultStream(1,input,"UTF8")
+  partial_recovered = g2hoststream..run(partial)
+  expected = "6265666F72650A"x as .binary
+  assembler bappend expected,payload
+  after = "61667465720A"x as .binary
+  assembler bappend expected,after
+  errors = errors + check(partial_recovered.indicator() = "R" & bincompare(readbinary(output),expected) = 0,"same request recovers after partial resource initialization failure")
+  ignored = rxfs..delete(input)
+  ignored = rxfs..delete(output)
+  ignored = rxfs..delete(error)
+  if errors = 0 then say "G2_HOST_STREAMS_OK"
+  return errors
+
+check: procedure = .int
+  arg ok = .boolean, detail = .string
+  if ok then return 0
+  say "G2_HOST_STREAMS_FAIL" detail
+  return 1

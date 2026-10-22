@@ -948,7 +948,7 @@ static rxvm_channel_status child_channel_start(
         !child_record_field(&record, "stdin", &stdin_node) ||
         !child_record_field(&record, "stdout", &stdout_node) ||
         !child_record_field(&record, "workingDirectory", &working_node) ||
-        !child_node_integer(&mode_node, &mode) || mode < 0 || mode > 3) {
+        !child_node_integer(&mode_node, &mode) || mode < 0 || mode > 4) {
         return RXVM_CHANNEL_INVALID_CONFIGURATION;
     }
     executable = child_node_string_copy(&executable_node);
@@ -962,7 +962,10 @@ static rxvm_channel_status child_channel_start(
         return RXVM_CHANNEL_RESOURCE_EXHAUSTED;
     }
     request->owner = channel;
-    request->mode = (int)mode;
+    /* Mode 4 is the same direct-process owner as PATH, with an explicit
+     * argv vector even when it has zero arguments. Legacy PATH mode 0
+     * retains its empty-vector command-line convention. */
+    request->mode = mode == 4 ? SHELLSPAWN_MODE_PATH : (int)mode;
     request->wait_microseconds = wait_microseconds;
     atomic_init(&request->cancelled, 0u);
     atomic_init(&request->input_stopped, 0u);
@@ -971,11 +974,11 @@ static rxvm_channel_status child_channel_start(
             &bindings_node, &request->bindings,
             &request->binding_count)) goto invalid;
     if (mode != SHELLSPAWN_MODE_CREXX && request->binding_count) goto invalid;
-    if (mode == SHELLSPAWN_MODE_PATH) {
+    if (mode == SHELLSPAWN_MODE_PATH || mode == 4) {
         uint64_t argument_count = arguments_node.tag == 8u &&
                                   arguments_node.payload_length >= 8u
                 ? child_u64(arguments_node.payload) : UINT64_MAX;
-        if (argument_count == 0u) {
+        if (argument_count == 0u && mode != 4) {
             request->command = child_strdup(executable);
             if (!request->command) goto resource;
             request->path_command_line = 1u;

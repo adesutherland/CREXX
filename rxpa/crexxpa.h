@@ -127,13 +127,37 @@ typedef int (*rxpa_object_set_type_v1)(rxpa_attribute_value value,
  * string views, including a view of the destination itself, may be supplied. */
 typedef int (*rxpa_string_set_v1)(rxpa_attribute_value value,
                                  const char *data, size_t byte_length);
+/* Synchronous declaration view of an explicitly selected native provider.
+ * Strings borrow the current VM's loaded module and must be copied before the
+ * enclosing native call returns. No source compiler or declaration parser is
+ * invoked. kind is 0 procedure, 1 method or 2 factory. Logical query budgets do
+ * not bound trusted provider initialization work or its own allocations. */
+typedef struct rxpa_native_declaration_v1 {
+    size_t struct_size;
+    const char *provider_id, *name, *flags, *result, *arguments, *owner;
+    uint32_t kind, task;
+} rxpa_native_declaration_v1;
+/* 0 success, 1 invalid/missing declaration, 2 logical limit, 3 allocation,
+ * 4 unavailable. error_out is a static diagnostic. A failed query publishes no
+ * declaration; used counters include reserved failed work. Same-context nested
+ * acquisition is refused. Existing loaded providers retain their normal owner. */
+typedef int (*rxpa_native_declaration_query_v1)(const char *artifact,
+        const char *callable, size_t bytes, size_t work,
+        rxpa_native_declaration_v1 *declaration, const char **error_out,
+        size_t *used_bytes, size_t *used_work);
 typedef struct rxpa_host_services_v1 {
     size_t struct_size;
     uint32_t abi_version;
     rxpa_string_view_v1 string_view;
     rxpa_object_set_type_v1 object_set_type; /* Optional complete sized tail. */
     rxpa_string_set_v1 string_set; /* Optional complete sized tail. */
+    rxpa_native_declaration_query_v1 native_declaration; /* Optional sized tail. */
 } rxpa_host_services_v1;
+static inline int rxpa_host_has_native_declaration(const rxpa_host_services_v1 *host) {
+    return host && host->struct_size >=
+            offsetof(rxpa_host_services_v1, native_declaration) + sizeof(host->native_declaration) &&
+            host->abi_version == RXPA_HOST_SERVICES_ABI_V1 && host->native_declaration;
+}
 static inline int rxpa_host_has_string_view(const rxpa_host_services_v1 *host) {
     return host && host->struct_size >=
             offsetof(rxpa_host_services_v1, string_view) + sizeof(host->string_view) &&

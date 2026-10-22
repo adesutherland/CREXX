@@ -1,0 +1,9 @@
+/* The native spans callback requests a real VM interrupt while ADDRESS runs. */
+options levelc
+signal on halt name stopped
+address SPANS 'halt'
+exit 99
+stopped:
+if condition('C') <> 'HALT' then exit 72
+if sigl <> 4 then exit 73
+exit 71

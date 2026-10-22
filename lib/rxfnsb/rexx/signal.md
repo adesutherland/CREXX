@@ -13,6 +13,9 @@ to `INVALID_SIGNAL_CODE` (code 13). Raising an unknown dynamic name causes the
 VM to deliver `INVALID_SIGNAL_CODE`. The concurrency runtime uses
 `CHANNEL_ERROR` (code 26) for catchable channel/class lifecycle failures and
 `TASK_FAILURE` (code 27) for typed task-result demand failures.
+`CANCEL` (code 18) is the existing catchable task-cancellation event. Typed
+named and catch-all handlers can clean up then relay it; strong `KILL` remains
+uncatchable and relies on native terminal teardown.
 The compiled Classic runtime reserves `CLASSIC_SYNTAX` (code 28) and
 `CLASSIC_CONDITION` (code 29). The latter carries a typed condition payload;
 neither name changes Level B's `SYNTAX` alias for `ERROR` (code 3).
@@ -59,6 +62,20 @@ return .signalaction.fail()
 `kind()` returns `skip` or `fail`. Skip resumes after the faulting instruction
 and fail propagates the condition. Instruction-level retry is deliberately not
 provided; use an explicit source-level loop for retryable work.
+
+## Typed relay after cleanup
+
+`rxfnsb.signalrelay(problem: .signal)` re-emits a bound VM condition with its
+original typed payload and source origin through SIGNALORIGIN. It centralizes
+the literal-tag dispatch for runtime cleanup adapters. A constructed message-only
+signal cannot fabricate that origin and is refused by the VM. If an enclosing
+handler skips the relayed event, the cleanup adapter must return.
+
+Cleanup selectors should preserve normally ignored notifications such as
+POSIX_CHLD. This helper adds no general finally/resume semantics to arbitrary
+outer handlers for ignored OS events. Shared process/host cleanup selectors
+and generated Classic RXAS include CANCEL; this does not add finally semantics
+for KILL, VM destruction or external process termination.
 
 ## Coverage and performance
 

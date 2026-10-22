@@ -241,3 +241,54 @@ CREXX_BIN_DIR="$PWD/cmake-build-debug/bin" langtools/bootstrap/build-local.sh no
 Each invocation cleans its temporary build and logs. L1/L2 generated grammar
 agreement is a build prerequisite. The Make scheduling regression also checks
 missing L2 recovery and no-op/changed-input behaviour.
+
+## Compiler-host contract projection
+
+With `CREXX_BUILD_RESEARCH_COMPILERS`, `llcontract` builds the optional RXPA
+provider `bin/providers/rxcontract.rxplugin`; `llcontract_static` supplies its
+static counterpart. Both and their native-package dependencies belong only to
+`ResearchCompilers`. The compiler-host binding imports/links the provider
+explicitly. It is outside the default SDK, Level L bootstrap and emitted
+application/runtime closure. `llcontract_projection` is the focused rxbvm
+fixture, prepared by `llcontract_test`.
+
+`rxcontract.project(name, result, args, flags, kind, task, bytes, work)` returns
+an owned `.string[]`. It decodes the complete callable grammar through
+binutils `rxcontract`, including recursive references/arrays and authored
+defaults. It does not implement a second parser or admit a source-language ABI.
+`kind` is 0 procedure, 1 method or 2 factory; `task` is 0/1. C scalar/reference
+admission remains the C consumer's policy.
+
+The one-based `rxcontract1` vector has 13 header fields followed by seven fields
+per argument:
+
+| Fields | Meaning |
+| --- | --- |
+| 1–7 | version, status, error field, error message, error byte offset, reserved bytes, reserved work |
+| 8–13 | canonical name, kind, task, normalized full result type, raw flags, argument count |
+| 14 + 7(n−1), through +6 | argument name, full type, exposed 0/1, optional 0/1, vararg 0/1, default kind, authored default literal |
+
+Default kinds are `none`, `integer`, `float` and `string`. Status is `ok`,
+`invalid`, `limit` or `allocation`. Failure contains the 13-field header and no
+partial declaration. Decimal counters/flags are textual fields. Byte/work
+allowances charge input, reserve repeated decoder scans before parsing, and
+charge output projection. They measure logical work/payload, not elapsed time
+or native allocation RSS. Embedded NUL metadata and nonrepresentable allowances
+are refused.
+
+`rxcontract.acquire(artifact, callable, bytes, work)` selects a real native
+provider declaration through the optional owning loader service. `artifact` is
+an explicitly selected `.rxplugin` file; no source, PATH or package-name sweep
+occurs. Its owned 13-field `rxnative1` vector is: version, status, diagnostic,
+used bytes, used work, actual provider id, canonical callable name, kind, owner,
+raw result, raw arguments, raw flags, task. The status family additionally
+includes `unavailable`. Failure retains only the version/status/diagnostic and
+counters. The caller then projects the raw callable fields with `project` and
+applies its language admission policy. A native manifest/provider identity is
+not inferred from RXBIN prototype declarations.
+
+The loader owns provider initialization/session lifetime and refuses a nested
+same-context declaration query. Logical acquisition allowances do not bound
+trusted initializer execution. Legacy prefix-only RXPA hosts safely report the
+optional service unavailable. The pure B `signature.projected` consumer in the
+research compiler accepts the checked vector without importing native code.

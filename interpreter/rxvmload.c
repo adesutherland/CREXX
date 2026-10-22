@@ -60,9 +60,11 @@ char* rxvm_getstring(rxpa_attribute_value attributeValue);
 int rxvm_string_view(rxpa_attribute_value attribute, const char **data, size_t *length);
 int rxvm_object_set_type(rxpa_attribute_value destination, const char *class_name);
 int rxvm_string_set(rxpa_attribute_value destination, const char *data, size_t length);
+static int rxvm_native_declaration(const char *, const char *, size_t, size_t,
+        rxpa_native_declaration_v1 *, const char **, size_t *, size_t *);
 static const rxpa_host_services_v1 rxpa_host_services = {
     sizeof(rxpa_host_services_v1), RXPA_HOST_SERVICES_ABI_V1, rxvm_string_view,
-    rxvm_object_set_type, rxvm_string_set
+    rxvm_object_set_type, rxvm_string_set, rxvm_native_declaration
 };
 void rxvm_setstring(rxpa_attribute_value attributeValue, const char* string);
 void rxvm_setint(rxpa_attribute_value attributeValue, rxinteger int_value);
@@ -1629,6 +1631,178 @@ static int provider_id_valid(const char *provider_id) {
         cursor++;
     }
     return 1;
+}
+
+typedef struct native_declaration_query {
+    rxvm_context *context;
+    struct native_declaration_query *previous;
+} native_declaration_query;
+static RXPA_LOADER_THREAD_LOCAL native_declaration_query *native_declaration_queries;
+
+static int native_query_charge(size_t amount, size_t limit, size_t *used) {
+    if (amount > limit - *used) return 0;
+    *used += amount;
+    return 1;
+}
+
+/* The ordinary loader owns initialization, sessions and immutable declaration
+ * strings. This view never installs a second LOADFUNCS callback table. */
+static int rxvm_native_declaration(const char *artifact, const char *callable,
+        size_t bytes, size_t work, rxpa_native_declaration_v1 *out,
+        const char **error_out, size_t *used_bytes, size_t *used_work) {
+    rxvm_context *context = rxvm_active_context_current();
+    native_declaration_query guard, *active;
+    rxpa_loaded_plugin manifest;
+    rxpa_native_declaration_v1 selected;
+    const module *owner = NULL;
+    const char *message = "Native declaration is unavailable";
+    const char *provider = NULL;
+    size_t payload = 0u, effort = 0u, index, extent;
+    int result = 1, opened = 0, found = 0;
+
+    if (used_bytes) *used_bytes = 0u;
+    if (used_work) *used_work = 0u;
+    if (error_out) *error_out = message;
+    if (!out || out->struct_size < sizeof(*out)) return 1;
+    memset(out, 0, sizeof(*out)); out->struct_size = sizeof(*out);
+    if (!context || !rxvm_worker_is_current_thread_owner(&context->worker)) return 4;
+    for (active = native_declaration_queries; active; active = active->previous)
+        if (active->context == context) {
+            if (error_out) *error_out = "Nested native declaration query";
+            return 1;
+        }
+    if (!artifact || !callable || !*callable ||
+        (extent = strlen(artifact)) < 9u ||
+        strcmp(artifact + extent - 9u, ".rxplugin") != 0) {
+        if (error_out) *error_out = "Native declaration requires an explicit .rxplugin artifact";
+        return 1;
+    }
+    if (!native_query_charge(extent, bytes, &payload) ||
+        !native_query_charge(strlen(callable), bytes, &payload) ||
+        !native_query_charge(payload, work, &effort)) {
+        result = 2; message = "Native declaration input budget"; goto done;
+    }
+    guard.context = context; guard.previous = native_declaration_queries;
+    native_declaration_queries = &guard;
+    memset(&manifest, 0, sizeof(manifest));
+    if (rxpa_open_plugin(NULL, (char *)artifact, &manifest)) {
+        message = "Cannot open native declaration artifact"; goto guarded_done;
+    }
+    opened = 1;
+    if (!provider_id_valid(manifest.plugin_id)) {
+        message = "Native declaration requires a manifest provider identity";
+        goto guarded_done;
+    }
+    for (index = 0u; index < context->num_modules; ++index) {
+        const module *candidate = context->modules[index];
+        if (!native_query_charge(1u, work, &effort)) {
+            result = 2; message = "Native declaration module budget"; goto guarded_done;
+        }
+        if (candidate->native && strcmp(candidate->name, artifact) == 0) {
+            owner = candidate; break;
+        }
+    }
+    if (!owner) {
+        int loaded = rxldmod_provider(context, (char *)artifact, manifest.plugin_id);
+        if (loaded <= 0 || (size_t)loaded > context->num_modules) {
+            message = "Cannot load native declaration artifact"; goto guarded_done;
+        }
+        owner = context->modules[(size_t)loaded - 1u];
+    }
+    memset(&selected, 0, sizeof(selected)); selected.struct_size = sizeof(selected);
+    selected.owner = "";
+    {
+        int offset = owner->meta_head;
+        size_t visited = 0u;
+        while (offset != -1 && visited++ <= owner->segment.const_size / 8u + 1u) {
+            const meta_entry *entry;
+            if (offset < 0 || (size_t)offset > owner->segment.const_size ||
+                owner->segment.const_size - (size_t)offset < sizeof(meta_entry)) {
+                message = "Invalid native declaration metadata"; goto guarded_done;
+            }
+            entry = (const meta_entry *)(owner->segment.const_pool + (size_t)offset);
+            if (entry->base.size_in_pool < sizeof(meta_entry) ||
+                entry->base.size_in_pool > owner->segment.const_size - (size_t)offset) {
+                message = "Invalid native declaration record"; goto guarded_done;
+            }
+            if (!native_query_charge(entry->base.size_in_pool, work, &effort)) {
+                result = 2; message = "Native declaration metadata budget"; goto guarded_done;
+            }
+            if (entry->base.type == META_FUNC && entry->base.size_in_pool >= sizeof(meta_func_constant)) {
+                const meta_func_constant *fn = (const meta_func_constant *)entry;
+                const char *name = provider_module_string(owner, fn->symbol);
+                if (name && strcmp(name, callable) == 0) {
+                    if (found++) { message = "Ambiguous native declaration"; goto guarded_done; }
+                    selected.name = name;
+                    selected.flags = provider_module_string(owner, fn->option);
+                    selected.result = provider_module_string(owner, fn->type);
+                    selected.arguments = provider_module_string(owner, fn->args);
+                }
+            } else if (entry->base.type == META_PROVIDER && entry->base.size_in_pool >= sizeof(meta_provider_constant)) {
+                const meta_provider_constant *record = (const meta_provider_constant *)entry;
+                const char *name = provider_module_string(owner, record->symbol);
+                if (name && strcmp(name, callable) == 0)
+                    provider = provider_module_string(owner, record->provider);
+            } else if (entry->base.type == META_MEMBER && entry->base.size_in_pool >= sizeof(meta_member_constant)) {
+                const meta_member_constant *member = (const meta_member_constant *)entry;
+                const char *name = provider_module_string(owner, member->owner);
+                const char *kind = provider_module_string(owner, member->kind);
+                const char *part = provider_module_string(owner, member->member);
+                if (name && kind && part) {
+                    static const char factory_prefix[] = "\xc2\xa7" "factory";
+                    size_t name_length = strlen(name);
+                    if (strncmp(callable, name, name_length) == 0 && callable[name_length] == '.') {
+                        const char *suffix = callable + name_length + 1u;
+                        int factory = strcmp(kind, "factory") == 0;
+                        int matches = strcmp(suffix, part) == 0;
+                        if (factory) {
+                            size_t prefix_length = sizeof(factory_prefix) - 1u;
+                            matches = strncmp(suffix, factory_prefix, prefix_length) == 0 &&
+                                (strcmp(part, "*") == 0
+                                    ? suffix[prefix_length] == 0
+                                    : suffix[prefix_length] == '.' &&
+                                      strcmp(suffix + prefix_length + 1u, part) == 0);
+                        }
+                        if (matches) {
+                            selected.owner = name;
+                            selected.kind = factory ? 2u : 1u;
+                        }
+                    }
+                }
+            } else if (entry->base.type == META_TASK_TARGET && entry->base.size_in_pool >= sizeof(meta_task_target_constant)) {
+                const meta_task_target_constant *task = (const meta_task_target_constant *)entry;
+                const char *name = provider_module_string(owner, task->symbol);
+                if (name && strcmp(name, callable) == 0) selected.task = 1u;
+            }
+            offset = entry->next;
+        }
+        if (offset != -1) { message = "Cyclic native declaration metadata"; goto guarded_done; }
+    }
+    if (!found || !selected.name || !selected.flags || !selected.result || !selected.arguments ||
+        !provider || strcmp(provider, manifest.plugin_id) != 0) {
+        message = "Native callable or provider declaration is missing"; goto guarded_done;
+    }
+    selected.provider_id = provider;
+    {
+        const char *fields[] = {selected.provider_id, selected.name, selected.flags,
+            selected.result, selected.arguments, selected.owner};
+        for (index = 0u; index < sizeof(fields) / sizeof(fields[0]); ++index) {
+            extent = strlen(fields[index]);
+            if (!native_query_charge(extent, bytes, &payload) ||
+                !native_query_charge(extent, work, &effort)) {
+                result = 2; message = "Native declaration output budget"; goto guarded_done;
+            }
+        }
+    }
+    *out = selected; result = 0; message = "";
+guarded_done:
+    if (opened) rxpa_close_plugin(&manifest);
+    native_declaration_queries = guard.previous;
+done:
+    if (used_bytes) *used_bytes = payload;
+    if (used_work) *used_work = effort;
+    if (error_out) *error_out = message;
+    return result;
 }
 
 static int load_declared_provider(rxvm_context *context,

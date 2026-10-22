@@ -1479,6 +1479,25 @@ dispatch reserved as the fallback for non-standard interface implementations.
 This keeps repeated native callback writes stable while still allowing future
 custom Rexx objects to implement the same ADDRESS interfaces.
 
+### Embedded owner-thread interruption and clocks
+
+`rxvml_request_interrupt(ctx)` queues `POSIX_INT` in the existing active
+execution word and returns zero. It requires `ctx` to be the current executing
+RXVML context on its owning thread. This includes a native callback or a host
+OS-signal handler delivered on that thread. An inactive, different or
+foreign-thread context returns -1 without changing its pending word. The host
+keeps the context alive. This entry does not grant cross-thread RXVML access;
+a host that uses OS delivery must target the actual executing owner thread.
+There is no new dispatch poll or interrupt queue. The standalone VM retains its
+single designated process-main OS target.
+
+`TIME`, `MTIME` and `XTIME` preserve their existing civil-time/timezone and UTC
+arithmetic. A failed system sample, local-time conversion, timezone query or
+processor-clock query raises `FAILURE` rather than using uninitialized data.
+Local-time conversion uses caller-owned `struct tm` storage through
+`localtime_r`/`localtime_s`. Configured Classic clocks are owned by the shared
+Classic host/runtime facade; the VM instructions introduce no clock-policy ABI.
+
 ### ADDRESS Environment Objects and Functions
 
 `ADDRESS` environments are normal Rexx objects implementing
@@ -1508,6 +1527,34 @@ are not needed. The native provider object stores the callback handle and
 instance id, so both `ADDRESS env "command"` and explicit
 `(addressenv(env) as .addressfunctionenvironment).invoke(...)` reach
 the same host environment instance.
+
+For exact-length content, register with
+`rxvml_address_register_callback_environment_spans(ctx, name, id, command_cb,
+function_cb, userdata)`. This additive API shares the same registry and Rexx
+environment provider. Its sized request/response structures use
+`rxvml_text_span { data, length }` for command, scalar binding values, function
+arguments/results and diagnostics. Content is UTF-8 and may contain NUL;
+protocol names and flags remain NUL-terminated, NUL-free UTF-8. Function
+arguments here are all present strings; Classic omission/presence remains in
+the Classic host request/frame protocol.
+
+Request strings are read-only owned snapshots valid through the synchronous
+callback, including nested same-context VM calls. Endpoint, sandbox and typed
+binding-value handles remain borrowed from that context for the callback.
+Response strings are copied synchronously before return. An optional
+`release(release_userdata)` is called exactly once after the copy attempt,
+including refusal of invalid spans or a callback error; NULL permits static or
+caller-owned buffers. Each request snapshot and response copy admits at most
+`RXVML_ADDRESS_SPAN_MAX_BYTES` (64 MiB) of logical payload/auxiliary storage.
+Oversized, malformed or invalid UTF-8 responses raise `FAILURE` after release.
+A nonzero callback return supplies the response rc only when its rc is zero.
+
+The span function response has explicit `has_result` (0 or 1), distinguishing
+an absent result from present empty text. Shared `addressfunctionresponse`
+retains its original five attributes and adds presence as its sixth attribute;
+`set_result` marks presence and `clear_result` clears it. Legacy callback APIs
+retain their original C layouts and always produce a present result, including
+when their result pointer is NULL.
 
 Native ADDRESS text uses the same Level B UTF-8 boundary as RXVML. CREXXSAA
 validates variable setter values before buffering write-back records, and the

@@ -474,8 +474,8 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v22/88 with
-36 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
+C to the two-argument source-unit ABI. The current family is v23/88 with
+38 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
 static signed statement providers, selected-queue PUSH/QUEUE, keyed explicit/active
 commands, complete SIGNAL, practical TRACE and delayed CALL/clause completion.
 Local instruction qualification is tracked in
@@ -487,9 +487,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 whole-C observations and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 22. The neutral scalar names do not load the G
+types and `crexx.c` version 23. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–21 are never reinterpreted as version 22. Within version 22, the complete C
+versions 1–22 are never reinterpreted as version 23. Within version 23, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -649,10 +649,11 @@ Ordinary frames save all named fatal policies before installing their `sigbrv`
 handlers. Protected SIGNAL frames use the canonical `core.protect` setup
 defined below, with the same complete saved-stack marker for every tag.
 A failed setting diverts to that C frame's checked condition/fatal path and
-cannot reach numeric install or the ordinary next statement. Outward relay installs
-`sighalt` before `signalorigin`: this profile is nonresumable even with an
-outer B skip handler. Do not claim outer-handler recovery or alter that policy
-in this migration. The unchanged direct B adapter tests prove stored-state
+cannot reach numeric install or the ordinary next statement. Without an explicitly
+bound live host completion, outward relay installs `sighalt` before
+`signalorigin` and remains nonresumable even with an outer B skip handler.
+The Group 2 host boundary below supplies owned terminal completion, not VM
+skip/resume or reactivation of an outer Classic trap. The unchanged direct B adapter tests prove stored-state
 atomicity; generated error executions and branch-shape checks prove diversion.
 Child return restores the caller VM frame; its stored activation was never
 changed by the child. Same-frame FUZZ/FORM proof must use observations whose
@@ -2469,12 +2470,13 @@ initializer; this profile adds no concurrent C-worker or new platform matrix.
 
 <a id="group2-calls-host-proposal"></a>
 
-## Group 2: calls and host integration proposal
+## Group 2: calls and host integration contract
 
-**Proposed, awaiting Adrian's approval before product implementation.** This
+**Approved by Adrian for one complete implementation increment, including expression calls.** This
 section records the requested ownership principles and the complete Group 2
-design boundary. It extends the locally delivered CALL3 profile; it does not
-claim that arbitrary typed calls or complete host invocation already work.
+design boundary. C23 extends the locally delivered CALL3 profile with scalar
+typed/native calls, expressions, explicit processes and the shared host facade.
+The admitted contracts and qualification limits are recorded below.
 [PLAN](../PLAN.md#group2-calls-host-plan) owns the acceptance criteria, steps
 and current status. INTERPRET and automatic Classic source invocation remain
 last. Native C frontend sources remain read-only.
@@ -2496,14 +2498,14 @@ explicit callable accessors under its declared interface. This visibility rule
 is separate from `arg expose` writable formals, whose temporary-cell adaptation
 is described below; it does not reset or isolate the callee's module globals.
 
-| Call domain | Existing owner and proposed integration |
+| Call domain | Owner and integration |
 |---|---|
 | Local Classic label | Existing shared source body, child activation and live pool binding; preserve recursion, PROCEDURE/EXPOSE and RETURN/EXIT semantics. |
 | Classic BIF | Existing direct BIF body plus call-local `RexxBifCallContext`, with actual presence and borrowed Classic config/pool/activation. This special context is an explicit BIF ABI, not a universal function ABI. |
 | Precompiled Classic routine | Existing signed activation-packet protocol and recovered completion presence, extended to expression calls. Its declared `.void` transport does not imply an absent Classic result. |
 | Ordinary typed procedure | Export metadata determines conversion and ordinary VM CALL arguments/result. No hidden Classic context. |
 | Native RXPA procedure | The same checked typed procedure route, preserving manifest provider identity, `.provider` requirements and normal VM native dispatch/session policy. No fabricated bytecode body or filename-derived native identity. |
-| Process-backed callable | Proposed explicit process binding; ordinary argv strings, with result convention stated below. Reuse exactly the shared child-process/byte-channel services used by ADDRESS. |
+| Process-backed callable | Explicit process binding; ordinary argv strings, with result convention stated below. Reuse exactly the shared child-process/byte-channel services used by ADDRESS. |
 | ADDRESS command / shell | Existing environment protocol over those same process/byte-channel services. Command status, output and routine return retain their separate policies. |
 | Classic source file | Dynamic compilation/execution and its resolver belong to STEP11/INTERPRET. No automatic `.rexx` source search or fallback in Group 2. |
 
@@ -2531,28 +2533,31 @@ typed dispatch, worker lifetime, exact text/byte transport, processes, clocks
 and interrupts. A missing platform capability is reported by that owner;
 the compiler must not silently emulate it with a different operation.
 
-### Proposed ordinary typed-call contract
+### Ordinary typed-call contract
 
 Use the existing explicit provider selection and prepared bounded snapshot for
 both statement and expression calls. Unquoted names retain local-label, direct
-BIF, then explicit-provider precedence; quoted names bypass locals and retain
-the existing external-import casing convention. Quoting alone does not select
+BIF, then explicit-provider precedence; quoted names bypass locals, still check the case-sensitive BIF spelling, and retain
+the existing external-import casing convention. Thus quoted uppercase LENGTH
+still selects the BIF; quoting does not force an external provider. Quoting alone does not select
 a process or shell. Classic, ordinary typed and explicit process bindings share
-one external alias namespace; a process binding owns its executable path and
+one external alias namespace using the existing callable-identifier grammar,
+including qualified names. Quoting changes resolution, not this binding grammar;
+a process binding separately owns its arbitrary platform executable path and
 direct-argv policy. No automatic OS PATH fallback is inferred for an unresolved
 routine. Duplicate and ambiguous selected exports/aliases
 fail at build time, including dead source. A genuinely unselected name retains
 reached Classic 43.1 after actual effects; a selected but unavailable linked
 provider retains the existing typed provider/loader error.
 
-| Declared type / formal | Proposed Classic boundary |
+| Declared type / formal | Classic boundary |
 |---|---|
 | `.string`, `.binary`, `.int`, `.float`, `.decimal`, `.boolean` | Convert each present RexxValue through existing value/cast services, using the declared type. Preserve exact text/bytes; numeric and boolean conversion can raise existing runtime conditions. Do not substitute IF/WHEN logical validation for a typed boolean cast. |
 | Canonical `RexxValue` | Pass/return the existing scalar value representation, without a competing wrapper or algorithm. |
 | `expose T`, for admitted scalar `T` | Convert into a bridge-owned temporary cell, pass it through the ordinary exposed-argument ABI, then discard updates. Never alias a Classic source variable or write it back. |
 | Optional fixed formal | Preserve absence and let the callee execute its own default. No caller evaluation or reconstruction of default expressions/literals. |
 | Scalar vararg tail | Use ordinary argument-count and repeated-cell ABI. Reject an authored omitted vararg position at build time; do not invent a meaning for holes. |
-| `.void` result | Absent routine result: statement CALL drops RESULT/.RESULT. Proposed expression policy preserves Classic required-result checking: execute the call, then raise reached 44.1 if no value exists. |
+| `.void` result | Absent routine result: statement CALL drops RESULT/.RESULT. Expression calls preserve Classic required-result checking: execute the call, then raise reached 44.1 if no value exists. |
 | Arrays, arbitrary objects, true `reference T` values, methods/factories/tasks | No implicit scalar mapping or fabricated receiver, array, object, reference or task context. Require an explicit callable adapter with an admitted scalar contract. |
 
 The compiler knows the selected signature and each source call's positional
@@ -2579,7 +2584,7 @@ trap mappings. Borrowed arguments cannot escape their synchronous lifetime.
 `rxvml_call_procedure_descriptor` is not a universal native-procedure trampoline:
 its current procedure path requires bytecode. Generated ordinary CALL already
 dispatches bytecode/native procedures through the owning VM services and is the
-proposed C-to-typed/RXPA route. RXPA provider/thread/session/lifetime rules
+implemented C-to-typed/RXPA route. RXPA provider/thread/session/lifetime rules
 continue to apply unchanged.
 
 ### Activation and host lifecycle
@@ -2616,11 +2621,11 @@ generic typed function argument grants no implicit pool access. Configuration
 hooks retain explicit trap overrides, replacement, null-result fallthrough and
 failure semantics; no process-global configuration substitutes for an invocation.
 
-The current RXVML/CREXXSAA main length API handles present NUL text but not this
-complete mode/presence/completion contract. Current native ADDRESS callbacks
-still contain terminated strings, so they cannot prove exact NUL transport.
-The proposal is a shared B request/result facade and generated ordinary typed
-host export, called through existing RXVML factory/method/procedure descriptors.
+The RXVML/CREXXSAA main length API handles present NUL text but does not itself
+represent every mode/presence/completion outcome. Group 2 adds sized ADDRESS
+callback spans alongside the compatible legacy interface. A shared B
+request/result facade and generated ordinary typed host export use existing
+RXVML factory/method/procedure descriptors.
 The runtime owns mode, argument presence, configuration/resources/traps and
 completion; the host constructs objects through checked factories/methods,
 never hardcoded field ordinals. Existing length-bearing string setters/getters
@@ -2631,8 +2636,9 @@ Keep those failures separate; demonstrate any missing generic outcome transport
 before extending the native boundary. Existing entry points stay compatible.
 If a new native interface is needed, its exact versioned declarations,
 allocation/release rules, callback
-reentry and failure behavior remain an explicit approval gate; this proposal
-does not pre-approve an unspecified RXVML/CREXXSAA ABI or new ISA operation.
+reentry and failure behavior require exact contract review. The implemented
+additive interfaces are documented in the VM guide; unspecified ABI or ISA
+changes remain outside this approval.
 
 ### Processes, I/O, clocks and interrupts
 
@@ -2653,7 +2659,7 @@ argv into ADDRESS command text, add another launcher, use a separate `system` /
 `popen` path or recreate process ownership in Classic runtime/compiler code.
 This remains true for compiled Classic executables.
 
-The proposed binding maps an external routine alias to an executable path and
+The explicit binding maps an external routine alias to an executable path and
 direct-argv policy; external aliases obey existing duplicate/ambiguity and
 quoted-name rules. A present Classic actual converts to one platform text argv
 element, preserving empty text and spaces. Reject authored omitted positions
@@ -2703,25 +2709,148 @@ UTC/local/offset interpretation and the existing UTC-derived TIME(E/R) elapsed
 origin. A future monotonic duration/deadline facility is generic VM/platform
 work and must not silently change Classic elapsed semantics. Group 2 integrates
 and tests real clock production; it does not assume a new clock opcode.
-Current clock instructions do not yet check all platform clock failures, and
-public embedding has no compiled-activation clock-injection surface. Resolve
-required host clock selection/failure handling at the shared owner with explicit
-capability outcomes; a required new public control API retains its exact gate.
+The VM clock owner checks platform sample failures and uses reentrant local
+time conversion. The shared host request accepts an explicit clock provider;
+existing real samples remain the default. Failed samples retain their typed
+condition rather than supplying invented time values.
 Likewise real HALT must enter through the existing execution-local pending
 interrupt and designated OS target, then reuse CCOND clause delivery/buffering.
 Do not add a second global HALT queue or make every worker an OS signal target.
-The existing research C selector has no real `POSIX_INT` ingress adapter and
-the public embedding headers have no context-targeted asynchronous HALT request.
-Supply the C condition adapter and, if required, a lifetime-safe generic host
-interrupt ingress under an exact reviewed API contract; controlled typed HALT
-tests do not qualify this missing producer.
+The C selector admits real `POSIX_INT` and maps it through the shared event
+owner to HALT. `rxvml_request_interrupt` targets the active execution on its
+owner thread and rejects foreign/inactive requests. It does not promise a
+cross-thread asynchronous request queue. Native callback/OS controls and an
+actual compiled Classic handler exercise the ingress.
+
+### Reviewed Group 2 implementation interfaces
+
+The approved increment uses C23 `call.external(arguments:A,context:C)` with
+required `target:T` and `function:boolean` attributes. One prepared binding
+snapshot classifies Classic-packet, ordinary typed/native and explicit process
+routes. Source/dead/raw/loaded admission checks actual count/presence from the
+existing closed argument-producer proof, never from an untrusted summary.
+Source-order evaluation precedes conversion; owned scalar scratch cells remain
+separate from helper windows and are cleared on normal/condition cleanup.
+
+The generic process entry is `_rxsysb.processrun(executable:string,
+arguments:string[],?stdin:addressredirect,?stdout:addressredirect,
+?stderr:addressredirect)->int`. Omitted endpoints inherit host streams. It shares ADDRESS's existing `spawn_request`
+envelope, wait, endpoints and cleanup. Child-process request mode4 adds direct
+argv including an empty argument vector; modes0–3 retain their existing meaning.
+Mode4 maps to the existing PATH execution owner and never reparses executable
+text as a command line. Existing NUL refusal and process outcomes remain.
+
+The compiler-only optional RXPA `rxcontract.project(name:string,result:string,
+args:string,flags:string,kind:int,task:int,bytes:int,work:int)->string[]` projects
+through binutils `rxcontract`. Kind is procedure0/method1/factory2; task is0/1.
+Its owning typed vector has header `rxcontract1,status,error-field,error-message,
+error-offset,reserved-bytes,reserved-work,name,kind,task,result-type,flags,argc`,
+then seven fields per argument: name, complete type, expose, optional, vararg,
+default kind and authored literal. Status is ok/invalid/limit/allocation;
+failure publishes only the header. Inputs/owned output and copy work have finite
+budgets; no native references escape. This is a transient typed projection,
+not a new RXBIN format. Static applications, core L and bootstrap do not select
+this provider; C admission retains semantic/kind/assignability/provenance checks.
+
+C23 retains five C types and 88 operations. `say(value:V,context:C)`
+selects `llctarget.sayconfigured`; the old public `sayvalue` remains available.
+`call.missing(arguments:A,context:C){name:T,function:boolean}->R` is an
+observable configured external-routine callback boundary, after internal/BIF and
+selected external resolution. An unhandled callback retains reached43.1;
+handled-without-result remains distinct from unhandled, including expression44.1.
+The exact captured argument values/presence, routine spelling, invocation kind
+and original source enter an explicitly enabled synchronous window. This hook
+adds no PATH/source search or implicit ordinary typed capability.
+
+`addressbytestream` supplies `input_snapshot()->binary`,
+`append_bytes(binary)` and `finish()` to the existing `addressredirect` owner.
+Input/output stream factories carry borrowed adapters; configured defaults fill
+absent redirects. Raw snapshot slicing keeps offset and byte count explicitly
+integer-typed for the existing BSLICE ABI; validated total-minus-offset needs
+no Classic numeric helper. Exact byte drains go directly to their existing transport,
+without decoding or becoming a routine result. Finish flushes; the host scope
+owns close. Classic's codec owner translates logical seek positions; a pipe
+with pending decoded lookahead is refused before child start. Raw writes
+invalidate the logical output position until the existing codec recalculates it.
+
+Generated host entry uses the shared runtime request/result and scope described
+in [RexxClassicHost](../../../../lib/rxfnsc/RexxClassicHost.md). The checked
+current Context snapshot contains only authoritative owner references and is
+refreshed at callback boundaries after PROCEDURE. A per-VM reference sentinel,
+invocation generation and nested-window tokens reject expired/foreign borrows
+before dereferencing them. Nested calls restore their previous binding; teardown
+detaches the Context and closes scope-owned streams/queues once.
+
+The stable host-root activation owns terminal failure independently of each
+Classic program root. Scope alone calls `beginHostCompletion()` and idempotent
+`endHostCompletion()`; begin resets pending failure/result/EXIT and refuses a
+second live binding. `hostCompletionRoot()->reference RexxActivationArguments`
+returns a checked live owner or an empty reference. Each inherited reference
+carries its owner generation; ending and reopening the same root cannot revive
+a stale child. Begin refuses generation exhaustion before publication.
+Internal/external activation inheritance carries that association; external
+program initialization resets its
+own result/EXIT while retaining the host association. New fields follow existing
+fields so their public ordinals remain stable.
+
+`requestProgramFailure(problem:runtime_signal)->boolean` accepts only a live
+owner, retains the first exact owned event and clears result presence. With no
+live owner it returns false and preserves the existing HALT relay.
+`hostFailurePending()->boolean` participates in `programExitRequested()`;
+`hostFailure()->runtime_signal` returns an owned event and refuses absent or
+expired direct access. Scope.finish reads its authoritative activation, rather
+than a fresh absence carrier. Scope.close disables the association before
+releasing owners. Nested scopes have distinct roots; stale/foreign references
+never become authority.
+
+Every declined C event performs its existing resource/policy cleanup before
+requesting this terminal completion. Accepted failure returns an absent carrier
+and cannot resume authored execution. Internal and selected external Classic
+calls use the existing paired `program.exiting` guard before requirevalue,
+RESULT or later operands. An adjacent raw `core.return` of the same call result
+is also a proved terminal continuation; unguarded semantic continuation is
+refused. A child's ordinary external EXIT stays local, since the parent query
+observes the shared host failure rather than the child's normal EXIT. No new
+IR operation, schema count, ISA or host entry signature is needed.
+
+Cleanup handlers preserve default-ignored VM notifications, including POSIX_CHLD.
+They catch propagating conditions and relay typed payload/origin after cleanup;
+ordinary B has no general finally/resume contract for arbitrary outer handlers
+on otherwise ignored OS events. The bounded B seed repair admits the existing
+CANCEL tag, so shared cleanup selectors and generated RXAS preserve it after
+releasing their resources. Strong KILL retains terminal native teardown. The
+required Classic HALT route maps real POSIX_INT through the shared event owner.
 
 ### Decisions and qualification boundary
+
+Native declarations use `rxcontract.acquire(artifact:string,callable:string,
+bytes:int,work:int)->string[]`. The owned `rxnative1` vector has status,
+diagnostic, reserved bytes/work, actual provider ID, canonical name, kind,
+owner, result, arguments, flags and task fields. It queries declarations
+materialized by the ordinary native loader through a sized optional RXPA host
+service; it never replaces a loaded DSO's helper table with a metadata scanner.
+Plugin initialization retains the trusted provider's existing lifecycle; logical
+projection limits are not a claim to bound arbitrary native initialization.
+
+The generated host export takes `RexxClassicHostRequest` and returns
+`RexxClassicHostResult`. The request owns mode/presence/configuration/resources;
+the wrapper anchors fresh activation/pool/config before creating
+`RexxClassicHostScope(reference Context,request)`. Scope entry, completion-packet
+finish, failure and close own callback-window lifetime. Protocol interfaces
+separate hooks, pool access and clocks from the existing concrete owners;
+resolved/direct pool names preserve exact compound tails while substituted
+operations delegate to the shared symbol resolver. Module-overlay sentinel
+references distinguish VM owners without a new global registry or identity API.
+
+Shared `rxfnsb.signalrelay(problem:signal)->void` transports a bound VM event
+after cleanup with its typed payload and source origin. Its literal-tag
+SIGNALORIGIN dispatch lives with the existing signal representation owner;
+ADDRESS and the host facade use that one relay rather than parallel tag tables.
 
 Adrian confirmed that true `reference T` values remain behind explicit adapters;
 there is no implicit temporary-reference construction. He also confirmed that
 B/G exposed globals are inaccessible to the Level C caller. Both distinctions
-remain separate from the proposed writable scalar argument temporaries.
+remain separate from writable scalar argument temporaries.
 
 External routines written in another language are part of Classic CALL through
 the host's calling interface; that does not prescribe a universal arbitrary
@@ -2733,15 +2862,15 @@ results. Existing cREXX CALL contracts deliberately provide no OS-command
 fallback. The ordinary typed/RXPA bridge supplies one non-REXX routine interface;
 the explicit process binding above supplies another through exactly the ADDRESS
 low-level services. Its exit-status result and inherited stdout/stderr are
-approved; binding lookup, argument/omission and failure rules remain part of
-the overall architecture proposal for approval. Automatic
+approved along with the binding lookup, argument/omission and failure rules
+for the complete increment. Automatic
 Classic source execution remains deferred to INTERPRET regardless.
 
-The proposed void expression policy, scalar/default/vararg rules and preservation of current
-clock semantics are part of the design presented for approval.
+The void-expression policy, scalar/default/vararg rules and preservation of
+current clock semantics are approved parts of this contract.
 
-After approval, implement Group 2 as one coordinated increment with Sol 6.1
-Extra High workers. Start from maintained native C fixture sources and checked
+Group 2 is one coordinated increment with Sol 6.1 Extra High workers. Its
+component checks start from maintained native C fixture sources and checked
 expectations, shared B/RXPA/host controls and independent supplements for these
 new contracts. Review coherent source and an early simple typed-call RXAS,
 then batch material fixes. Use one prepared normal Debug configuration and
@@ -2960,7 +3089,8 @@ Consume eligibility once before body0; leading PROCEDURE stays17.1, positive
 internal entries unchanged. Do not reset caller-prepared root/source mode:
 Classic parent gives SUBROUTINE; unparented B frame keeps COMMAND. Transfer only
 unit value/presence into incoming frame before releasing owners and returning
-void. Child EXIT completes this distinct root; no parent-program EXIT guard follows.
+void. Child EXIT completes this distinct root. Group 2 adds a parent-activation
+completion guard for shared host failure; it does not propagate this child EXIT.
 
 Absent inventory retains reached43.1 after actual effects. Selected but unlinked
 provider retains core FUNCTION_NOT_FOUND. Only units with actual external
@@ -2982,15 +3112,16 @@ shared host/platform obligations remain open.
 5. **CEXT-AC05:** focused complementary CLI/service/product checks and actual RXAS
    prove768 recovery before clear, sole void export, normal/fatal cleanup and
    no status/VM EXIT/heavy image copies. Close only local CCALL-AC05/07; broader
-   host/platforms, external expressions and whole CALL/C stay open; CALL4 is
-   delivered by CCOND.
+   host/platforms and whole CALL/C stay open. Group 2 supplies external expressions;
+   CALL4 is delivered by CCOND.
 
 **CEXT-STEP01–03 are complete for local CEXT-AC01–05.** The independent
 `tests/call/external` source/provider/host, metadata/raw-IR and readable RXAS
 controls own this profile. Local CCALL-AC05/07 statement integration is delivered;
-complete host/platforms, external expressions and whole CALL remain open.
-CCOND supplies delayed handlers. The proposed Group 2 extension above has not
-yet replaced this current statement-only admission profile.
+complete host/platforms and whole CALL remain open. Group 2 supplies external
+expressions; CCOND supplies delayed handlers. The Group 2 contract supersedes CALL3
+statement-only admission with external expressions and its additional explicit
+provider kinds; CALL3 packet ownership and completion remain in force.
 
 ### Acceptance and feature boundaries
 
@@ -3014,9 +3145,10 @@ yet replaced this current statement-only admission profile.
    external condition scope,
    host services, result/error restoration and static missing-provider boundary.
    Source-produced providers use prebuilt owning-compiler metadata imports,
-   never request-time native source delegation. This covers statement CALL and later delayed
-   handlers only; external function expressions, general late provider search,
-   source loading/native callbacks and a new host resolver remain deferred.
+   never request-time native source delegation. CALL3 originally covers statement
+   CALL and delayed handlers; Group 2 extends its packet protocol to expressions
+   and adds configured callbacks and typed/native scalar routes. General late
+   provider search and Classic source loading remain with INTERPRET.
 6. **CCALL-AC06 (CALL4):** four-condition CALL ON/OFF replaces SIGNAL policy,
    delayed clause checkpoints, suppression/buffered HALT, SIGL/CONDITION data,
    nested restoration and local/BIF/external handlers use existing B owners.
@@ -5114,11 +5246,13 @@ formatted string substitute. Preserve saved VM handler ownership through balance
 push/pop operations. Push every protected tag before installing any BRV handler,
 so all handlers capture the same complete saved-stack marker; delivery must not
 unwind another protected tag's save. Restore owned entries in reverse order.
-Default unhandled Classic failure is nonresumable: after restoring saved outer
-policy, install current-frame HALT for the relayed tag before SIGNALORIGIN.
-This prevents a disabled child SYNTAX or consumed one-shot from reactivating
-its parent's C trap. Preserve tag/payload/origin for diagnostics; wider outward
-host resumption remains an enduring qualification. Normal and handled exits
+Unhandled Classic failure is nonresumable. A live explicitly bound Group 2 host
+completion captures the original event and unwinds through owned completion; it
+does not resume a disabled caller trap. Without that boundary, restore saved
+outer policy then install current-frame HALT before SIGNALORIGIN, preventing
+a disabled child SYNTAX or consumed one-shot from reactivating its parent.
+Preserve tag/payload/origin; arbitrary outward host skip/resume remains outside
+this completion contract. Normal and handled exits
 restore/retain their owned policies correctly; avoid recapture loops. Queued or
 suppressed delayed events must not be mistaken for unhandled events merely
 because `queueCallCondition()` returned false. Delayed CALL delivery itself
@@ -5130,8 +5264,9 @@ Route existing shared BIF/NUMERIC/PARSE/ADDRESS SYNTAX and typed conditions
 through this dispatcher. Retain ordinary unconfigured ADDRESS/PARSE completion.
 Use the existing pure-B ADDRESS environment protocol for ERROR/FAILURE and
 stream NOTREADY; reuse the signed event provider for controlled typed IDs2..7.
-Controlled HALT proves SIGNAL delivery, not the separately unimplemented real
-host/asynchronous HALT producer.
+Controlled HALT proves SIGNAL delivery. Group 2 adds real execution-owner
+POSIX_INT ingress; its native callback/OS and compiled-C controls qualify that
+producer separately. Cross-thread asynchronous ingress is not implied.
 
 Final variable reads resolve once with shared `resolveSymbolName`, then use
 `resolvedHasValue`/`resolvedValue` on that captured name under current policy6.

@@ -159,7 +159,7 @@ def main():
                 shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
             return directory, vm
 
-        host, host_vm = stage('C compiler host', ('rxfs',))
+        host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
         application, target_vm = stage('static application', ('rxfs', 'rxcstream'))
         compiler = host / 'llrxc-c-linked.rxbin'; shutil.copy2(backend / compiler.name, compiler)
         empty_path = work / 'empty PATH'; empty_path.mkdir()

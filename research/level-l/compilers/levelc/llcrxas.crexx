@@ -38,7 +38,19 @@ compilation: class
   _providers = reference .llcbindings..prepared
   _bound = .int
   _export = .string
+  _hostexport = .string
   _externalindices = .int[]
+  _externalkinds = .string[]
+  _externalpaths = .string[]
+  _externalshapes = .string[]
+  _nativeids = .string[]
+  _typedmaximum = .int[]
+  _typedbase = .int
+  _typedcapacity = .int
+  _handlerbindings = .int[]
+  _handlerindices = .int[]
+  _handlerkinds = .string[]
+  _handlerpaths = .string[]
   _hasexternal = .int[]
   _signals = .string
   _limit = .int
@@ -144,8 +156,8 @@ compilation: class
     _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
     return
   bound: factory
-    arg graph = .llir..module, providers = reference .llcbindings..prepared, bytes = 67108864, registers = 65536, routine_export = ''
-    _graph = graph; _path = ''; _providers = providers; _bound = 1; _export = routine_export; _limit = bytes; _reglimit = registers
+    arg graph = .llir..module, providers = reference .llcbindings..prepared, bytes = 67108864, registers = 65536, routine_export = '', host_export = ''
+    _graph = graph; _path = ''; _providers = providers; _bound = 1; _export = routine_export; _hostexport = host_export; _limit = bytes; _reglimit = registers
     _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
     return
   /** Private synchronous proof borrows. Owners stay strong in the caller;
@@ -157,8 +169,8 @@ compilation: class
     _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
     return
   boundprechecked: factory
-    arg graph = .llir..module, entries = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, providers = reference .llcbindings..prepared, bytes = 67108864, registers = 65536, routine_export = ''
-    _graph = graph; _path = ''; _providers = providers; _bound = 1; _export = routine_export; _limit = bytes; _reglimit = registers
+    arg graph = .llir..module, entries = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, providers = reference .llcbindings..prepared, bytes = 67108864, registers = 65536, routine_export = '', host_export = ''
+    _graph = graph; _path = ''; _providers = providers; _bound = 1; _export = routine_export; _hostexport = host_export; _limit = bytes; _reglimit = registers
     _programborrow = entries; _signalborrow = signals; _prechecked = 1
     _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
     return
@@ -170,8 +182,8 @@ compilation: class
     _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
     return
   boundprecheckedclauses: factory
-    arg graph = .llir..module, entries = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, loops = reference .llcdoprotocol..checked, clauses = reference .llcclauseprotocol..checked, providers = reference .llcbindings..prepared, bytes = 67108864, registers = 65536, routine_export = ''
-    _graph = graph; _path = ''; _providers = providers; _bound = 1; _export = routine_export; _limit = bytes; _reglimit = registers
+    arg graph = .llir..module, entries = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, loops = reference .llcdoprotocol..checked, clauses = reference .llcclauseprotocol..checked, providers = reference .llcbindings..prepared, bytes = 67108864, registers = 65536, routine_export = '', host_export = ''
+    _graph = graph; _path = ''; _providers = providers; _bound = 1; _export = routine_export; _hostexport = host_export; _limit = bytes; _reglimit = registers
     _programborrow = entries; _signalborrow = signals; _loopborrow = loops; _clauseborrow = clauses
     _prechecked = 1; _clauseprechecked = 1
     _ready = 0; _error = ''; _origin = 0; _offset = 0; _classicready = 0; _bifvalues = 0; _bifpresence = 0
@@ -324,11 +336,15 @@ compilation: class
       when type = '.rexxactivationarguments' then type = '.rexxactivation..rexxactivationarguments'
       when type = '.rexxclassicconfig' then type = '.rexxclassicconfig..rexxclassicconfig'
       when type = '.rexxclassiccontext' then type = '.rexxclassiccontext..rexxclassiccontext'
+      when type = '.rexxclassichostrequest' then type = '.rexxclassichost..rexxclassichostrequest'
+      when type = '.rexxclassichostresult' then type = '.rexxclassichost..rexxclassichostresult'
+      when type = '.rexxclassichostscope' then type = '.rexxclassichost..rexxclassichostscope'
       when type = '.rexxbifcallcontext' then type = '.rexxclassicbifs..rexxbifcallcontext'
       when type = '.rexxclassicconditionevent' then type = '.rexxclassicconditionevent..rexxclassicconditionevent'
       when type = '.runtime_signal' then type = '.rxfnsb..runtime_signal'
       when type = '.tracecontext' then type = '.rxfnsb..tracecontext'
       when type = '.trace_interrupt_raw' then type = '.rxfnsb..trace_interrupt_raw'
+      when type = '.addressredirect' then type = '._rxsysb..addressredirect'
       otherwise nop
     end
     return prefix || type
@@ -439,6 +455,7 @@ compilation: class
     return
   checkoperation: method = .void
     arg op = .llir..opview, entry_ref = reference .llcprocedureprotocol..checked
+    boolean = .llir..boolcodec()
     entryfacts = dereference entry_ref
     name = op.name(); bytes = .binary; packet = .llcparseprogram..checked; symbol = .string
     opid = .int; clausefirst = .int; constructor = .int
@@ -496,6 +513,10 @@ compilation: class
       call checkselectorigin(op,'CALL/RETURN')
       if _error <> '' then return
       _parseclauses[op.id()] = op.origin().first() + 1
+      if name = 'crexx.c.call.missing' then do
+        bytes = op.attribute('function')
+        if boolean.check(bytes) <> '' then do; call fail('LOWERING: invalid unresolved invocation kind'); return; end
+      end
       if name = 'crexx.c.call.external' then do
         _hastrace = 1
         call checkexternal(op)
@@ -556,7 +577,7 @@ compilation: class
     if name = 'crexx.c.load' | name = 'crexx.c.store' | name = 'crexx.c.drop' then call checksymbol(op.attribute('name') as .string)
     if name = 'crexx.c.numeric.digits' | name = 'crexx.c.numeric.fuzz' | name = 'crexx.c.numeric.form' then call checkselectorigin(op,'NUMERIC')
     if name = 'crexx.c.call' then do
-      bytes = op.attribute('function'); boolean = .llir..boolcodec()
+      bytes = op.attribute('function')
       if boolean.check(bytes) <> '' then call fail('LOWERING: invalid invocation kind')
       symbol = localname(op.attribute('target') as .string)
     end
@@ -565,6 +586,9 @@ compilation: class
    * signature parser is revisited by the source/raw operation path. */
   checkexternal: method = .void
     arg op = .llir..opview
+    signature = .llcompilercontracts..signature
+    following = .llir..opview; tail = .int
+    store = dereference _store
     if _bound = 0 then do; call fail('IMPORT: external CALL requires explicit providers'); return; end
     if <refvalid>(_providers) = 0 then do; call fail('IMPORT: provider owner is not live'); return; end
     providers = dereference _providers
@@ -575,6 +599,41 @@ compilation: class
     symbol = providers.callable(selected)
     if providers.status() then do; _error = providers.error(); return; end
     if target \== symbol then do; call fail('IMPORT: external CALL requires the canonical selected identity'); return; end
+    bytes = op.attribute('function'); boolean = .llir..boolcodec()
+    if boolean.check(bytes) <> '' then do; call fail('LOWERING: invalid external invocation kind'); return; end
+    proof_ref = programproof(); proof = dereference proof_ref
+    presence = proof.argumentpresence(op.id())
+    if proof.status() then do; _error = proof.error(); return; end
+    refusal = providers.accept(selected,presence)
+    if refusal <> '' then do; call fail('IMPORT: ' || refusal); return; end
+    route = providers.kind(selected)
+    if route = 'classic' & proof.programquery(op.id()) = 0 then do
+      tail = store.get(3,op.id(),3)
+      if tail = 0 then do; call fail('LOWERING: Classic external call requires a program guard or direct result return'); return; end
+      following = _graph.operation(tail)
+      if following.name() <> 'core.return' | following.inputs() <> 1 then do
+        call fail('LOWERING: Classic external call requires a program guard or direct result return'); return
+      end
+      if following.input(1).id() <> op.result().id() then do
+        call fail('LOWERING: Classic external tail substitutes its result'); return
+      end
+    end
+    extent = <blen>(presence as .binary)
+    if extent > _limit - _sourceworkspace then do; call fail('LIMIT: external call shape exceeds selection budget'); return; end
+    _sourceworkspace = _sourceworkspace + extent
+    _externalshapes[op.id()] = presence; _externalkinds[op.id()] = route
+    fn = store.get(2,op.blockid(),1)
+    count = length(presence)
+    if route = 'process' then do
+      path = providers.artifact(selected)
+      if providers.status() then do; _error = providers.error(); return; end
+      extent = <blen>(path as .binary)
+      if extent > _limit - _sourceworkspace then do; call fail('LIMIT: executable path exceeds selection budget'); return; end
+      _sourceworkspace = _sourceworkspace + extent; _externalpaths[op.id()] = path
+      _typedmaximum[fn] = max(_typedmaximum[fn],count,1)
+      _hasexternal[fn] = 1
+      return
+    end
     index = 0
     do i = 1 to _names[0]
       if _names[i] == symbol then index = i
@@ -587,9 +646,13 @@ compilation: class
       assembler null symbol
       assembler move _signatures[index],signature
       assembler null signature
+      _nativeids[index] = providers.provider(selected)
     end
     _externalindices[op.id()] = index
-    store = dereference _store
+    if route = 'typed' then do
+      signature = _signatures[index]; count = max(count,signature.arguments() - signature.vararg(signature.arguments()))
+      _typedmaximum[fn] = max(_typedmaximum[fn],count,1)
+    end
     _hasexternal[store.get(2,op.blockid(),1)] = 1
     return
   /** Resolve immutable CALL rows once, through the admitted source inventory
@@ -657,14 +720,26 @@ compilation: class
             if selected > 0 then do
               kind = 3; symbol = providers.callable(selected)
               if providers.status() then do; _error = providers.error(); return; end
-              signature = providers.signature(selected)
-              if signature.error() <> '' then do; _error = signature.error(); return; end
+              route = providers.kind(selected); refusal = providers.accept(selected,'')
+              if refusal <> '' then do; call fail('IMPORT: delayed CALL ' || refusal); return; end
               found = 0
-              do binding_index = 1 to _names[0]
-                if _names[binding_index] == symbol then found = binding_index
+              if route <> 'process' then do
+                signature = providers.signature(selected)
+                if signature.error() <> '' then do; _error = signature.error(); return; end
+                do binding_index = 1 to _names[0]
+                  if _names[binding_index] == symbol then found = binding_index
+                end
+                if found = 0 then do
+                  found = _names[0] + 1; _names[found] = symbol; _signatures[found] = signature
+                  _nativeids[found] = providers.provider(selected)
+                end
               end
-              if found = 0 then do
-                found = _names[0] + 1; _names[found] = symbol; _signatures[found] = signature
+              if route <> 'classic' then do
+                _handlerbindings[ordinal] = selected; _handlerindices[ordinal] = found
+                _handlerkinds[ordinal] = route
+                if route = 'process' then _handlerpaths[ordinal] = providers.artifact(selected)
+                symbol = '__rxexternal_' || ordinal
+                if route = 'process' then kind = 6
               end
               _hasexternal[fn] = 1; _hastrace = 1
             end
@@ -936,6 +1011,10 @@ compilation: class
         if name = 'command.active' then call argcopy(3,reg(_workbase + 8))
         else call argtext(3,op.attribute('environment') as .string)
         call argcopy(4,text); call invoke(storage,symbol,4)
+        call binding(context,'config',reg(_workbase + 3)); call emit('link',receiver || ',' || storage)
+        symbol = member(ownerclass,'bindhostconfig','.void','reference@.rexxclassicconfig..rexxclassicconfig')
+        call argcopy(2,reg(_workbase + 3)); call invoke('',symbol,2,receiver)
+        call emit('unlink',receiver); call emit('null',reg(_workbase + 3))
         if name = 'command.active' then do
           call emit('link',receiver || ',' || storage)
           symbol = member(ownerclass,'useactiveconnections','.void')
@@ -965,6 +1044,7 @@ compilation: class
         call emit('unlink',receiver)
       end
       when name = 'command.run' then do
+        call refreshhostcontext(context)
         call emit('link',receiver || ',' || storage)
         symbol = member(ownerclass,'run','._rxsysb..addressresponse'); call invoke('',symbol,1,receiver); call emit('null',reg(_scratch))
         detail = reg(_workbase + 8); condition = reg(_workbase + 5); description = reg(_workbase + 6)
@@ -981,6 +1061,19 @@ compilation: class
       end
       otherwise call fail('LOWERING: unsupported command operation')
     end
+    return
+  /** Publish only the current checked context at an actual callback boundary.
+   * A PROCEDURE may have rebound its pool since command construction. */
+  refreshhostcontext: method = .void
+    arg context = .string
+    receiver = reg(_workbase + 1); config = reg(_workbase + 3)
+    call binding(context,'config',config)
+    call emit('linkref',receiver || ',' || context)
+    call argcopy(2,receiver); call emit('unlink',receiver)
+    call emit('linkref',receiver || ',' || config)
+    symbol = member('rexxclassicconfig.rexxclassicconfig','bindhostcontext','.void','.object')
+    call invoke('',symbol,2,receiver)
+    call emit('unlink',receiver); call emit('null',config)
     return
   /** Shared producer route; adapter fields are owned before any transfer. */
   conditiontransition: method = .void
@@ -1048,6 +1141,90 @@ compilation: class
     call emit('null',bundle); call emit('null',configref)
     call emit('null',activation); call emit('null',pool); call emit('null',config)
     call emit('ret','r0')
+    return
+  caughtsignals: method = .string
+    return 'FAILURE ERROR DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OUT_OF_RANGE UNICODE_ERROR REFERENCE_INVALID OBJECT_NOT_INITIALIZED RXBIN_CORRUPTION UNKNOWN_INSTRUCTION FUNCTION_NOT_FOUND NOT_IMPLEMENTED INVALID_SIGNAL_CODE NOTREADY QUIT TERM POSIX_INT CHANNEL_ERROR TASK_FAILURE CLASSIC_SYNTAX CLASSIC_CONDITION CANCEL OTHER'
+  /** A delayed handler receives no authored arguments. Only this condition
+   * route needs a packet-shaped wrapper around the same ordinary marshaller. */
+  handleradapter: method = .void
+    arg ordinal = .int
+    route = _handlerkinds[ordinal]; index = _handlerindices[ordinal]
+    _typedcapacity = 0
+    if route = 'typed' then do
+      signature = _signatures[index]
+      _typedcapacity = signature.arguments() - signature.vararg(signature.arguments())
+    end
+    _typedbase = 1; _workbase = 1 + max(_typedcapacity,1); _scratch = _workbase + 11
+    _callbase = _scratch + 1; _maxargs = max(_typedcapacity,2)
+    if route = 'process' then _maxargs = max(_maxargs,5)
+    _locals = _callbase + _maxargs + 1
+    _sizing = 0; _origin = 0
+    _target = .llrxas..program(_locals,_reglimit,1000000)
+    call _target.window(_callbase,_maxargs + 1)
+    call emit('__rxexternal_' || ordinal || '()','.locals=' || _locals)
+    call clearsource()
+    call ordinarycall('r0','a1',index,'',route,_handlerpaths[ordinal],'','a2')
+    call emit('null','r0'); call emit('ret'); call flush()
+    return
+  /** The host owns mode/services, while these stable locals own every borrow
+   * until the shared scope has captured completion and closed its window. */
+  hostentry: method = .void
+    i = .int
+    request = 'r12'; scope = 'r13'; completion = 'r14'; response = 'r15'; event = 'r16'
+    activation = reg(_workbase + 8); pool = reg(_workbase + 9); bundle = reg(_workbase + 10)
+    config = reg(_workbase + 7); configref = reg(_workbase + 3); receiver = reg(_workbase)
+    requestclass = 'rexxclassichost.rexxclassichostrequest'; scopeclass = 'rexxclassichost.rexxclassichostscope'
+    resulttype = '.rexxclassichost..rexxclassichostresult'
+    call emit('copy',request || ',a1'); call emit('link',receiver || ',' || request)
+    logicalsource = ''
+    do sourceop = 1 to _graph.operations()
+      sourceorigin = _graph.operation(sourceop).origin()
+      if sourceorigin.kind() = 'exact' then do; logicalsource = llcompilercontracts..sourcename(sourceorigin.filename()); leave; end
+    end
+    symbol = member(requestclass,'source','.string'); call invoke('r17',symbol,1,receiver)
+    call emit('strlen','r18,r17'); call emit('bne','llhost_source_ready,r18,0')
+    symbol = member(requestclass,'setsource','.void','.string'); call argtext(2,logicalsource); call invoke('',symbol,2,receiver)
+    call emit('llhost_source_ready:'); call emit('null','r17'); call emit('null','r18')
+    symbol = member(requestclass,'activation','.rexxactivation..rexxactivationarguments'); call invoke(activation,symbol,1,receiver)
+    symbol = member(requestclass,'pool','.rexxpool..rexxvariablepool'); call invoke(pool,symbol,1,receiver)
+    symbol = member(requestclass,'configuration','.rexxclassicconfig..rexxclassicconfig'); call invoke(config,symbol,1,receiver)
+    call emit('unlink',receiver); call emit('mkref',configref || ',' || config)
+    call newbundle(bundle,activation,pool,configref)
+    symbol = member(scopeclass,'§factory','.rexxclassichost..rexxclassichostscope','reference@.rexxclassiccontext..rexxclassiccontext .rexxclassichost..rexxclassichostrequest')
+    call argcopy(1,bundle,1); call argcopy(2,request); call invoke(scope,symbol,2)
+    signals = caughtsignals()
+    do i = 1 to words(signals); call emit('sigpush',llrxastext..quote(word(signals,i) as .binary)); end
+    do i = 1 to words(signals); call emit('sigbrv','llhost_failed,' || event || ',' || llrxastext..quote(word(signals,i) as .binary)); end
+    call emit('link',receiver || ',' || scope)
+    symbol = member(scopeclass,'enter','.void'); call invoke('',symbol,1,receiver); call emit('unlink',receiver)
+    call argcopy(1,bundle,1); call emit('load',reg(_callbase + 2) || ',0'); call invoke(completion,'llf1',2)
+    call emit('link',receiver || ',' || scope)
+    symbol = member(scopeclass,'finish',resulttype,'.rexxactivation..rexxactivationarguments')
+    call argcopy(2,completion); call invoke(response,symbol,2,receiver); call emit('unlink',receiver)
+    do i = words(signals) to 1 by -1; call emit('sigpop',llrxastext..quote(word(signals,i) as .binary)); end
+    call emit('br','llhost_complete')
+    call emit('llhost_failed:'); call emit('unlink',receiver)
+    do i = words(signals) to 1 by -1; call emit('sigpop',llrxastext..quote(word(signals,i) as .binary)); end
+    call emit('link',receiver || ',' || scope)
+    symbol = member(scopeclass,'failed',resulttype,'.rxfnsb..runtime_signal')
+    call argcopy(2,event); call invoke(response,symbol,2,receiver); call emit('unlink',receiver)
+    call emit('llhost_complete:')
+    do i = 1 to words(signals); call emit('sigpush',llrxastext..quote(word(signals,i) as .binary)); end
+    do i = 1 to words(signals); call emit('sigbrv','llhost_closefailed,' || event || ',' || llrxastext..quote(word(signals,i) as .binary)); end
+    call emit('link',receiver || ',' || scope)
+    symbol = member(scopeclass,'close','.void'); call invoke('',symbol,1,receiver); call emit('unlink',receiver)
+    do i = words(signals) to 1 by -1; call emit('sigpop',llrxastext..quote(word(signals,i) as .binary)); end
+    call emit('br','llhost_release')
+    call emit('llhost_closefailed:'); call emit('unlink',receiver)
+    do i = words(signals) to 1 by -1; call emit('sigpop',llrxastext..quote(word(signals,i) as .binary)); end
+    call emit('link',receiver || ',' || scope)
+    symbol = member(scopeclass,'failed',resulttype,'.rxfnsb..runtime_signal')
+    call argcopy(2,event); call invoke(response,symbol,2,receiver); call emit('unlink',receiver)
+    call emit('llhost_release:')
+    do i = 1 to 16
+      if i <> 15 then call emit('null','r' || i)
+    end
+    call emit('move','r0,' || response); call emit('ret','r0')
     return
   /** Ordinary typed void(frame) entry. Named by-value inputs isolate; a
    * disposable incoming frame remains anchored by the caller's call window.
@@ -1154,6 +1331,11 @@ compilation: class
    * ordinary disposable window. Recover its anchor before any window clear. */
   externalcall: method = .void
     arg op = .llir..opview
+    route = _externalkinds[op.id()]
+    if route = 'typed' | route = 'process' then do
+      call ordinarycall(result(op),input(op),_externalindices[op.id()],_externalshapes[op.id()],route,_externalpaths[op.id()],input(op,2))
+      return
+    end
     activation = reg(_workbase + 8); parent = reg(_workbase + 4)
     pool = reg(_workbase + 2); receiver = reg(_workbase + 1)
     call emit('copy',activation || ',' || input(op))
@@ -1166,6 +1348,13 @@ compilation: class
     call argcopy(2,pool); call invoke('',symbol,2,receiver)
     symbol = member('rexxactivation.rexxactivationarguments','beginexternalprogram','.void')
     call invoke('',symbol,1,receiver)
+    bytes = op.attribute('function')
+    if <at..u8>(0) bytes <> 0 then do
+      symbol = member('rexxactivation.rexxactivationarguments','begininternalfunction','.void')
+      call invoke('',symbol,1,receiver)
+      symbol = member('rexxactivation.rexxactivationarguments','consumefirstinstruction','.void')
+      call invoke('',symbol,1,receiver)
+    end
     call emit('unlink',receiver)
     symbol = _names[_externalindices[op.id()]]
     if _sizing then _maxargs = max(_maxargs,1)
@@ -1181,6 +1370,121 @@ compilation: class
     call emit('null',activation); call emit('null',parent); call emit('null',pool)
     call tracesync(input(op,2))
     return
+  /** Convert all operands before dispatch, using private cells disjoint from
+   * helper windows. Exposed formals never alias a Classic variable. */
+  ordinarycall: method = .void
+    arg destination = .string, packet = .string, index = .int, presence = .string, route = .string, path = '', context = '', configured = ''
+    signature = .llcompilercontracts..signature; count = length(presence); fixed = 0; variable = 0
+    ordinal = .int; formal = .int; argc = .int; flags = .int
+    cell = .string; type = .string; conversion_method = .string; resulttype = .string
+    optional = .string; parameters = .string; symbol = .string; vector = .string; wrapper_factory = .string
+    if route = 'typed' then do
+      signature = _signatures[index]; fixed = signature.arguments()
+      if fixed > 0 then variable = signature.vararg(fixed)
+      fixed = fixed - variable; count = max(count,fixed)
+    end
+    if _sizing then do
+      _maxargs = max(_maxargs,count,2)
+      if route = 'process' then _maxargs = max(_maxargs,5)
+      return
+    end
+    receiver = reg(_workbase + 1); value = reg(_workbase + 8); returned = reg(_workbase + 9)
+    do ordinal = 1 to count
+      cell = reg(_typedbase + ordinal - 1)
+      call emit('null',cell)
+      if substr(presence,ordinal,1) <> '1' then iterate
+      call emit('link',receiver || ',' || packet)
+      symbol = member('rexxactivation.rexxactivationarguments','argument','.rexxvalue..rexxvalue','.int')
+      call emit('load',reg(_callbase + 2) || ',' || ordinal); call invoke(value,symbol,2,receiver)
+      call emit('unlink',receiver)
+      type = '.string'; formal = ordinal
+      if route = 'typed' then do
+        if variable & ordinal > fixed then formal = signature.arguments()
+        type = qualifiedtype(signature.type(formal))
+      end
+      if type = '.rexxvalue..rexxvalue' then call emit('move',cell || ',' || value)
+      else do
+        conversion_method = 'asstring'; resulttype = type; optional = '1'; parameters = '.int'; argc = 2
+        select type
+          when '.int' then conversion_method = 'asint'
+          when '.float' then conversion_method = 'asfloat'
+          when '.decimal' then conversion_method = 'asdecimal'
+          when '.binary' then do; conversion_method = 'asbinary'; optional = ''; parameters = ''; argc = 1; end
+          when '.boolean' then resulttype = '.string'
+          otherwise nop
+        end
+        symbol = member('rexxvalue.rexxvalue',conversion_method,resulttype,parameters,optional)
+        call argcopy(1,value)
+        if argc = 2 then call emit('load',reg(_callbase + 2) || ',1')
+        call invoke(cell,symbol,argc)
+        if type = '.boolean' then call emit('stoi',cell || ',' || cell)
+        call emit('null',value)
+      end
+    end
+    if route = 'process' then do
+      vector = reg(_workbase + 7); call emit('null',vector); call emit('setattrs',vector || ',' || count)
+      do ordinal = 1 to count
+        call emit('linkattr1',receiver || ',' || vector || ',' || ordinal)
+        call emit('move',receiver || ',' || reg(_typedbase + ordinal - 1)); call emit('unlink',receiver)
+      end
+      /* The execution owner supplies only its three explicit raw stream
+       * endpoints. The child remains an ordinary external process. */
+      if configured <> '' then call emit('copy',reg(_workbase + 3) || ',' || configured)
+      else call binding(context,'config',reg(_workbase + 3))
+      symbol = member('rexxclassicconfig.rexxclassicconfig','processendpoint','._rxsysb..addressredirect','.int')
+      do ordinal = 1 to 3
+        call emit('linkref',receiver || ',' || reg(_workbase + 3))
+        call emit('load',reg(_callbase + 2) || ',' || ordinal)
+        call invoke(reg(_workbase + 3 + ordinal),symbol,2,receiver); call emit('unlink',receiver)
+      end
+      symbol = imported('library','_rxsysb.processrun','.int','.string .string[*] ._rxsysb..addressredirect ._rxsysb..addressredirect ._rxsysb..addressredirect','00111')
+      call argtext(1,path); call argcopy(2,vector)
+      do ordinal = 1 to 3; call argcopy(ordinal + 2,reg(_workbase + 3 + ordinal)); end
+      call invoke(returned,symbol,5)
+      do ordinal = 3 to 6; call emit('null',reg(_workbase + ordinal)); end
+      call emit('null',vector); type = '.int'
+    end
+    else do
+      do ordinal = 1 to count
+        cell = reg(_callbase + ordinal)
+        call emit('move',cell || ',' || reg(_typedbase + ordinal - 1))
+        flags = 0
+        if substr(presence,ordinal,1) = '1' then do
+          flags = 768; formal = ordinal
+          if variable & ordinal > fixed then formal = signature.arguments()
+          if signature.exposed(formal) then flags = 256
+        end
+        call emit('settp',cell || ',' || flags)
+      end
+      call emit('load',reg(_callbase) || ',' || count)
+      call emit('call',returned || ',' || _names[index] || '(),' || reg(_callbase))
+      do ordinal = 1 to count; call emit('null',reg(_callbase + ordinal)); end
+      type = qualifiedtype(signature.result())
+    end
+    if type = '.void' then do
+      call emit('null',returned)
+      symbol = imported('llctarget','llctarget.absent','.rexxactivation..rexxactivationarguments','')
+      call invoke(destination,symbol,0)
+    end
+    else do
+      if type = '.rexxvalue..rexxvalue' then call emit('move',value || ',' || returned)
+      else do
+        wrapper_factory = '§factory'
+        select type
+          when '.int' then wrapper_factory = '§factory.fromint'
+          when '.boolean' then do; wrapper_factory = '§factory.fromint'; type = '.int'; end
+          when '.float' then wrapper_factory = '§factory.fromfloat'
+          when '.decimal' then wrapper_factory = '§factory.fromdecimal'
+          when '.binary' then wrapper_factory = '§factory.frombinary'
+          otherwise nop
+        end
+        symbol = member('rexxvalue.rexxvalue',wrapper_factory,'.rexxvalue..rexxvalue',type)
+        call argcopy(1,returned); call invoke(value,symbol,1); call emit('null',returned)
+      end
+      symbol = imported('llctarget','llctarget.present','.rexxactivation..rexxactivationarguments','.rexxvalue..rexxvalue')
+      call argcopy(1,value); call invoke(destination,symbol,1); call emit('null',value)
+    end
+    return
   run: method = .void
     if _ready then return
     _ready = 1; _phase = 'admission'
@@ -1195,6 +1499,10 @@ compilation: class
         if providers.status() then do; _error = providers.error(); return; end
         _path = providers.root()
         if providers.status() then do; _error = providers.error(); return; end
+      end
+      if _hostexport <> '' then do
+        if _export <> '' then do; call fail('IMPORT: routine and host exports are mutually exclusive'); return; end
+        _export = _hostexport
       end
       if _export <> '' then do
         if llbinmeta..validname(_export) = 0 | pos('.',_export) = 0 then do
@@ -1350,6 +1658,7 @@ compilation: class
       call _writer.line('.globals=0')
       _origin = 0; _sizing = 0; _scratch = -1; _location = -1; _recordbytes = 0
       _locals = 16; _workbase = 1; _callbase = 12; _scratch = 0
+      if _hostexport <> '' then do; _locals = 25; _callbase = 20; end
       _target = .llrxas..program(_locals,_reglimit,1000000)
       call _target.window(_callbase,_locals - _callbase)
       if store.text(store.get(1,1,1)) = '$MAIN' then do
@@ -1361,9 +1670,16 @@ compilation: class
           do i = 1 to store.count(1)
             if store.get(1,i,6) > 0 then do; call fail('LOWERING: routine output requires a private unit body'); return; end
           end
+          if _hostexport <> '' then do
+            call emit('llhost()','.locals=' || _locals || ' .expose=' || _export)
+            call emit('.meta',llrxastext..quote(_export as .binary) || '="b" ".rexxclassichost..rexxclassichostresult" llhost() "request=.rexxclassichost..rexxclassichostrequest"')
+            call clearsource(); call hostentry()
+          end
+          else do
           call emit('llprovider()','.locals=' || _locals || ' .expose=' || _export)
           call emit('.meta',llrxastext..quote(_export as .binary) || '="b" ".void" llprovider() "frame=.rexxactivation..rexxactivationarguments"')
           call clearsource(); call providerentry()
+          end
         end
         _phase = 'entry flush'; call flush()
         if _error <> '' then return
@@ -1375,6 +1691,12 @@ compilation: class
       do f = 1 to store.count(1)
         _phase = 'delayed CALL helper ' || f
         call emitcalls(f)
+        if _error <> '' then return
+      end
+      do bindingid = 1 to _handlerbindings[0]
+        if _handlerbindings[bindingid] = 0 then iterate
+        _phase = 'delayed external adapter ' || bindingid
+        call handleradapter(bindingid)
         if _error <> '' then return
       end
       if _hastrace then do
@@ -1418,9 +1740,14 @@ compilation: class
           if j > 1 then args = args || ','
           if signature.exposed(j) then args = args || 'expose '
           if signature.optional(j) then args = args || '?'
-          args = args || signature.paramname(j) || '=' || signature.type(j)
+          args = args || signature.paramname(j) || '='
+          if signature.defaultkind(j) <> 'none' then args = args || signature.defaultliteral(j)
+          else args = args || signature.type(j)
         end
         call _writer.line('  .meta ' || llrxastext..quote(_names[i] as .binary) || '=' || llrxastext..quote(signature.flags_text() as .binary) || ' ' || llrxastext..quote(signature.result() as .binary) || ' ' || _names[i] || '() ' || llrxastext..quote(args as .binary))
+        if i <= _nativeids[0] then do
+          if _nativeids[i] <> '' then call _writer.line('  .meta ' || llrxastext..quote(_names[i] as .binary) || '=".provider" ' || llrxastext..quote(_nativeids[i] as .binary))
+        end
       end
       _output = _writer.finish()
       if _output.error() <> '' then _error = _output.error()
@@ -1455,7 +1782,7 @@ compilation: class
     anchor = .int; clause = .int; commandowner = .int; ownerregister = .int; canonicalname = .int; nameid = .int
     store = dereference _store; blocks = .int[]
     _signals = 'CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE'
-    if _hasexternal[_fn] then _signals = _signals || ' FUNCTION_NOT_FOUND'
+    if _hasexternal[_fn] | _hostexport <> '' then _signals = caughtsignals()
     _phase = 'slot allocation'; next = 1; _cleanupnumber = 0
     do slotindex = 1 to _index.functionslots(_fn)
       i = _index.functionslot(_fn,slotindex)
@@ -1544,11 +1871,15 @@ compilation: class
       _captureowner = next; _capturepayload = next + 1; _capturetag = next + 2
       _captureline = next + 3; _capturebusy = next + 4; _faultline = next + 5
       next = next + 6
-      _signals = _signals || ' CLASSIC_CONDITION'
+      if wordpos('CLASSIC_CONDITION',_signals) = 0 then _signals = _signals || ' CLASSIC_CONDITION'
+      if wordpos('POSIX_INT',_signals) = 0 then _signals = _signals || ' POSIX_INT'
     end
-    else if _hasexternal[_fn] | signalfacts.hascalls(_fn) then _signals = _signals || ' CLASSIC_CONDITION'
+    else if _hasexternal[_fn] | signalfacts.hascalls(_fn) then do
+      if wordpos('CLASSIC_CONDITION',_signals) = 0 then _signals = _signals || ' CLASSIC_CONDITION'
+    end
     /* Use the same selector for planning and emission. Hidden helper calls
      * therefore participate without a second arity table to maintain. */
+    _typedcapacity = _typedmaximum[_fn]; _typedbase = next; next = next + _typedcapacity
     _phase = 'frame planning'; _workbase = next; next = next + 11
     _scratch = next; _location = next + 1; _callbase = next + 2
     _maxargs = -1; _needsscratch = 0; _sizing = 1; _fallthrough = 0
@@ -1704,6 +2035,7 @@ compilation: class
       end
       call rawcondition('r0',reg(_location),5)
       call restorepolicies()
+      call hostfailure('r0','r0','llhostfailure' || _fn)
       do i = 1 to words(_signals) - 1
         call emit('beq','llraise' || _fn || '_' || i || ',' || reg(_scratch) || ',' || i)
       end
@@ -1726,6 +2058,7 @@ compilation: class
       call emit('unlink',reg(_workbase)); call emit('unlink',reg(_workbase + 1))
     end
     do i = 1 to _maxargs; call emit('null',reg(_callbase + i)); end
+    do i = 0 to _typedcapacity - 1; call emit('null',reg(_typedbase + i)); end
     do i = 0 to 10; call emit('null',reg(_workbase + i)); end
     if _parsestate >= 0 then call emit('null',reg(_parsestate))
     do i = 1 to _dofatal[0]; call emit('null',reg(_doowners[_dofatal[i]])); end
@@ -1979,7 +2312,10 @@ compilation: class
       when name = 'drop' then call dropoperation(op)
       when left(name,7) = 'signal.' then call signaloperation(op,name,signal_ref)
       when name = 'push' | name = 'queue' then call queuewrite(op,name)
-      when name = 'say' then call adapter(op,'sayvalue','.void',v)
+      when name = 'say' then do
+        symbol = imported('llctarget','llctarget.sayconfigured','.void',contexttype || ' ' || v)
+        call argcopy(1,input(op,2)); call argcopy(2,input(op)); call invoke('',symbol,2)
+      end
       when name = 'arguments.empty' then call adapter(op,'arguments',a,'')
       when name = 'arguments.append' then call adapter(op,'append',a,a || ' ' || v || ' .int')
       when name = 'arguments.count' then call adapter(op,'countargs',v,contexttype)
@@ -1996,8 +2332,10 @@ compilation: class
         call invoke(result(op),symbol,2)
       end
       when name = 'call.missing' then do
-        symbol = imported('llctarget','llctarget.missing',a,'.string')
-        call argtext(1,op.attribute('name') as .string); call invoke(result(op),symbol,1)
+        bytes = op.attribute('function')
+        symbol = imported('llctarget','llctarget.missingconfigured',a,a || ' ' || contexttype || ' .string .int')
+        call argcopy(1,input(op)); call argcopy(2,input(op,2)); call argtext(3,op.attribute('name') as .string)
+        call emit('load',reg(_callbase + 4) || ',' || <at..u8>(0) bytes); call invoke(result(op),symbol,4)
       end
       when name = 'setresult' then do
         poolref = reg(_workbase + 2); call binding(input(op),'pool',poolref)
@@ -2195,6 +2533,21 @@ compilation: class
     call emit('unlink',field); call emit('unlink',raw)
     call emit('null',field); call emit('null',raw)
     return
+  /** An explicitly live host owner accepts an owned nonresumable completion.
+   * Ordinary roots retain the established outward HALT/origin transport. */
+  hostfailure: method = .void
+    arg event = .string, destination = .string, prefix = .string
+    activation = reg(_workbase + 4); receiver = reg(_workbase + 1); accepted = reg(_workbase + 9)
+    call binding('a1','activation',activation)
+    call emit('linkref',receiver || ',' || activation)
+    symbol = member('rexxactivation.rexxactivationarguments','requestprogramfailure','.boolean','.rxfnsb..runtime_signal')
+    call argcopy(2,event); call invoke(accepted,symbol,2,receiver)
+    call emit('unlink',receiver); call emit('null',activation)
+    call emit('brf',prefix || '_ordinary,' || accepted)
+    symbol = imported('llctarget','llctarget.absent','.rexxactivation..rexxactivationarguments','')
+    call invoke(destination,symbol,0); call emit('ret',destination)
+    call emit(prefix || '_ordinary:'); call emit('null',accepted)
+    return
   /** Outward C failure is deliberately nonresumable. Restore owned policy
    * stacks then HALT the actual tag, preventing an OFF child rearming its parent.
    * Keep a defensive owned R only if a VM host nevertheless resumes. */
@@ -2209,6 +2562,7 @@ compilation: class
     end
     call rawcondition(reg(_captureowner),reg(_capturepayload),5)
     call exitcleanup(1)
+    call hostfailure(reg(_captureowner),destination,prefix || '_host')
     do i = 1 to words(_signals)
       call emit('seq',reg(_workbase + 7) || ',' || reg(_capturetag) || ',' || llrxastext..quote(word(_signals,i) as .binary))
       call emit('brt',prefix || '_raise' || i || ',' || reg(_workbase + 7))
@@ -2257,7 +2611,10 @@ compilation: class
       call emit('seq',reg(_workbase + 7) || ',' || reg(_capturetag) || ',"CLASSIC_SYNTAX"')
       call emit('brt',prefix || '_syntax,' || reg(_workbase + 7))
       call emit('seq',reg(_workbase + 7) || ',' || reg(_capturetag) || ',"CLASSIC_CONDITION"')
+      call emit('brt',prefix || '_shared,' || reg(_workbase + 7))
+      call emit('seq',reg(_workbase + 7) || ',' || reg(_capturetag) || ',"POSIX_INT"')
       call emit('brf',prefix || '_done,' || reg(_workbase + 7))
+      call emit(prefix || '_shared:')
       symbol = imported('rxfnsc','rexxclassicbifs.rexxclassic_signal_event_id','.int','.rxfnsb..runtime_signal')
       call argcopy(1,reg(_captureowner)); call invoke(result(op),symbol,1)
       call emit('br',prefix || '_done'); call emit(prefix || '_syntax:')
@@ -2366,7 +2723,7 @@ compilation: class
         call fail('LOWERING: program-exit query has no retained parent activation'); return
       end
       callid = entryfacts.programcall(op.id())
-      if _graph.operation(callid).name() = 'crexx.c.clause.complete' then call binding(input(op),'activation',activation)
+      if _graph.operation(callid).name() <> 'crexx.c.call' then call binding(input(op),'activation',activation)
       call emit('linkref',receiver || ',' || activation)
       symbol = member('rexxactivation.rexxactivationarguments','programexitrequested','.boolean')
       call invoke(result(op),symbol,1,receiver)

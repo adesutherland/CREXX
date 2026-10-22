@@ -42,7 +42,8 @@ contract: procedure = .string
 
 /** Emit one private dispatcher from already admitted immutable handler rows.
  * Sparse arrays use the combined CSIG ordinal; SIGNAL rows have kind zero.
- * Kinds: 1 local, 2 BIF, 3 signed provider, 4 missing, 5 trace-only local.
+ * Kinds: 1 local, 2 BIF, 3 signed provider, 4 missing, 5 trace-only local,
+ * 6 private process adapter with the caller's configuration reference.
  * Symbols have no parentheses. Only local rows use a positive entry ID.
  * @param fn source function identity, also the helper's private suffix
  * @param conditions_ref Classic condition IDs, 2..5 for CALL rows
@@ -195,18 +196,23 @@ CallEmitter: class
     call argument(2,'r1'); call child('','inheritsignalpolicy',2)
     call argument(2,'r2'); call child('','capturecallerpool',2)
     call child('','begininternalcall')
-    if kind = 3 then call child('','beginexternalprogram')
+    if kind = 3 | kind = 6 then call child('','beginexternalprogram')
     call argument(2,'r5'); call argument(3,'r6'); call child('','begincalltrap',3)
     call line('linkref r30,r2')
     call argument(2,'r7')
     call invoke('','rexxpool.rexxvariablepool.setcalltrapsigl',2,'r30')
     call line('unlink r30')
-    if kind = 3 then do
+    if kind = 3 | kind = 6 then do
       /* Provider wrappers may consume the disposable window. Recover the
        * anchor before clearing it, matching the ordinary external caller. */
-      call line('swap r8,r33'); call line('load r32,1'); call line('settp r33,768')
+      count = 1
+      if kind = 6 then do
+        call argument(2,'r3'); call line('settp r34,768'); count = 2
+      end
+      call line('swap r8,r33'); call line('load r32,' || count); call line('settp r33,768')
       call line('call r31,' || symbol || '(),r32')
       call line('swap r8,r33'); call line('null r33')
+      if kind = 6 then call line('null r34')
     end
     else do
       call argument(1,'r8',1); call argument(2,'r2'); call argument(3,'r3')

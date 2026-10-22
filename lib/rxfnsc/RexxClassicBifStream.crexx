@@ -7,6 +7,7 @@ import rexxvalue
 import rexxclassicbifs
 import rexxclassicconfig
 import rexxclassicstream
+import rexxclassichostprotocol
 
 /** @bif CHARIN @checkargs oANY oWHOLE>0 oWHOLE>=0 @return codepoint string */
 rexxclassicbif_charin: procedure = .RexxValue
@@ -16,6 +17,8 @@ rexxclassicbif_charin: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref,"oANY oWHOLE>0 oWHOLE>=0") = 0 then return .RexxValue("")
   name = context.argumentText(1)
   if \_name_valid(context_ref,name) then return .RexxValue("")
+  host_response = context.invokeHost()
+  if host_response.handled() then return host_response.value()
   stream = _open(context_ref,name,1)
   start = -1
   count = 1
@@ -39,6 +42,8 @@ rexxclassicbif_linein: procedure = .RexxValue
   end
   name = context.argumentText(1)
   if \_name_valid(context_ref,name) then return .RexxValue("")
+  host_response = context.invokeHost()
+  if host_response.handled() then return host_response.value()
   stream = _open(context_ref,name,1)
   start = -1
   count = 1
@@ -58,6 +63,8 @@ rexxclassicbif_charout: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref,"oANY oANY oWHOLE>0") = 0 then return .RexxValue("")
   name = context.argumentText(1)
   if \_name_valid(context_ref,name) then return .RexxValue("")
+  host_response = context.invokeHost()
+  if host_response.handled() then return host_response.value()
   stream = _open(context_ref,name,2)
   if context.argumentExists(3) & \stream.positionable() then return _position_error(context_ref,name)
   result = .int
@@ -82,6 +89,8 @@ rexxclassicbif_lineout: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref,"oANY oANY oWHOLE>0") = 0 then return .RexxValue("")
   name = context.argumentText(1)
   if \_name_valid(context_ref,name) then return .RexxValue("")
+  host_response = context.invokeHost()
+  if host_response.handled() then return host_response.value()
   stream = _open(context_ref,name,2)
   if context.argumentExists(3) & \stream.positionable() then return _position_error(context_ref,name)
   result = .int
@@ -115,6 +124,8 @@ _count: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref,"oANY oCNI") = 0 then return .RexxValue("")
   name = context.argumentText(1)
   if \_name_valid(context_ref,name) then return .RexxValue("")
+  host_response = context.invokeHost()
+  if host_response.handled() then return host_response.value()
   stream = _open(context_ref,name,1)
   result = .int
   if lines then result = stream.lines()
@@ -134,6 +145,8 @@ rexxclassicbif_qualify: procedure = .RexxValue
   if rexxclassicbif_check_args(context_ref,"oANY") = 0 then return .RexxValue("")
   name = context.argumentText(1)
   if \_name_valid(context_ref,name) then return .RexxValue("")
+  host_response = context.invokeHost()
+  if host_response.handled() then return host_response.value()
   if name = "" then return .RexxValue("")
   return .RexxValue(rxfs..abspath(name))
 
@@ -153,6 +166,10 @@ rexxclassicbif_stream: procedure = .RexxValue
   selector = "S"
   if context.argumentExists(2) then selector = translate(context.argumentText(2))
   if selector <> "S" & selector <> "D" & selector <> "C" then return _command_error(context_ref,"STREAM option must be S, D or C")
+  if selector <> "C" & context.argumentExists(3) then return _command_error(context_ref,"A STREAM command requires option C")
+  if selector = "C" & \context.argumentExists(3) then return _command_error(context_ref,"STREAM C requires a command")
+  host_response = context.invokeHost()
+  if host_response.handled() then return host_response.value()
   config_ref = context.configReference()
   config = dereference config_ref
   stream = .RexxClassicStream

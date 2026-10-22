@@ -116,5 +116,9 @@ RexxStem: class
   size: method = .int
     return slots.size()
 
+  /** Snapshot assigned tail names in the owning map's insertion order. */
+  tailNames: method = .string[]
+    return slots.keyArray()
+
   free: method = .int
     return slots.free()

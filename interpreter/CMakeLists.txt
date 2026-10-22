@@ -2019,6 +2019,27 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_interfaces ALL DEPENDS tests_interfaces.rxbin)
 
+# Public embedding contract: one switch VM, exact spans, cleanup and owner ingress.
+add_custom_command(
+        OUTPUT test_rxvml_spans.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin
+                -o test_rxvml_spans ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_rxvml_spans.crexx
+        COMMAND $<TARGET_FILE:rxas> test_rxvml_spans
+        DEPENDS tests/rexx/test_rxvml_spans.crexx rxc rxas library compiler_exit_bin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling RXVML span callback contract ...")
+add_custom_target(test_rxvml_spans_bin DEPENDS test_rxvml_spans.rxbin)
+add_executable(test_rxvml_spans tests/test_rxvml_spans.c)
+target_link_libraries(test_rxvml_spans PRIVATE rxbvml rxpashim Threads::Threads)
+target_include_directories(test_rxvml_spans PRIVATE
+        . ./rxvmplugin ../assembler ../binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
+add_dependencies(test_rxvml_spans test_rxvml_spans_bin)
+add_test(NAME rxvml_span_callbacks COMMAND test_rxvml_spans
+        ${CMAKE_BINARY_DIR}/bin/library.rxbin ${CMAKE_CURRENT_BINARY_DIR}/test_rxvml_spans.rxbin)
+set_tests_properties(rxvml_span_callbacks PROPERTIES TIMEOUT 90
+        LABELS "interpreter;embedding;regression" CREXX_PREP_TARGETS test_rxvml_spans)
+
 add_executable(test_rxvmlinkindex tests/test_rxvmlinkindex.c)
 target_link_libraries(test_rxvmlinkindex PRIVATE rxvml rxpashim)
 target_include_directories(test_rxvmlinkindex PRIVATE

@@ -107,7 +107,7 @@ typedef struct rxvm_timeval {
     long tv_usec;
 } rxvm_timeval;
 
-static void rxvm_get_timeval(rxvm_timeval *time_value) {
+static int rxvm_get_timeval(rxvm_timeval *time_value) {
     FILETIME file_time;
     ULARGE_INTEGER ticks;
     uint64_t unix_ticks;
@@ -118,25 +118,31 @@ static void rxvm_get_timeval(rxvm_timeval *time_value) {
     unix_ticks = ticks.QuadPart - UINT64_C(116444736000000000);
     time_value->tv_sec = (time_t) (unix_ticks / UINT64_C(10000000));
     time_value->tv_usec = (long) ((unix_ticks % UINT64_C(10000000)) / UINT64_C(10));
+    return 0;
 }
 
-static long rxvm_timezone_seconds(void) {
-    long timezone_seconds = 0;
+static int rxvm_timezone_seconds(long *seconds) {
     _tzset();
-    (void) _get_timezone(&timezone_seconds);
-    return timezone_seconds;
+    return _get_timezone(seconds) == 0 ? 0 : -1;
+}
+static int rxvm_localtime(const time_t *time_value, struct tm *result) {
+    return localtime_s(result, time_value) == 0 ? 0 : -1;
 }
 #define RXVM_TZNAME _tzname
 #else
 typedef struct timeval rxvm_timeval;
 
-static void rxvm_get_timeval(rxvm_timeval *time_value) {
-    (void) gettimeofday(time_value, NULL);
+static int rxvm_get_timeval(rxvm_timeval *time_value) {
+    return gettimeofday(time_value, NULL);
 }
 
-static long rxvm_timezone_seconds(void) {
+static int rxvm_timezone_seconds(long *seconds) {
     tzset();
-    return timezone;
+    *seconds = timezone;
+    return 0;
+}
+static int rxvm_localtime(const time_t *time_value, struct tm *result) {
+    return localtime_r(time_value, result) ? 0 : -1;
 }
 #define RXVM_TZNAME tzname
 #endif

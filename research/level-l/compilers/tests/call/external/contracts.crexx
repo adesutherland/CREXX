@@ -10,11 +10,24 @@ import llcfrontend
 import llccompiler
 import llcrxas
 import llcompilercontracts
+import llbinmeta
 
 main: procedure = .int expose checks failures
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  if argv[0] < 1 | argv[0] > 2 then return 2
   checks = 0; failures = 0
+  if argv[0] = 2 then do
+    if argv[2] == 'hostfailure' then do
+      call hostguards(argv[1])
+      say 'GROUP2_HOST_GUARDS|checks=' || checks || '|failures=' || failures
+      return failures
+    end
+    if argv[2] \== 'group2' then return 2
+    call schema()
+    call rawtyped(argv[1])
+    say 'GROUP2_CONTRACTS|checks=' || checks || '|failures=' || failures
+    return failures
+  end
   call formals()
   call bindings(argv[1])
   call limits(argv[1])
@@ -256,18 +269,23 @@ schema: procedure = .void
   do family = 1 to data.familycount()
     if data.familyname(family) == 'crexx.c' then version = data.version(family)
   end
-  call check(version = 14 & data.ops() = 65 & data.opname(63) == 'crexx.c.call.external','append-only C14/65 schema')
+  call check(version = 23 & data.ops() = 88 & data.opname(63) == 'crexx.c.call.external','current C23/88 schema')
   call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) == 'arguments' & data.typename(data.fieldtype(id,1,1)) == 'crexx.c.arguments' & data.fieldname(id,1,2) == 'context' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context','exact external operands')
-  call check(data.arity(id,2) = 1 & data.typename(data.fieldtype(id,2,1)) == 'crexx.c.result' & data.arity(id,3) = 1 & data.fieldname(id,3,1) == 'target' & data.typename(data.fieldtype(id,3,1)) == 'crexx.g.text','exact external result/target')
+  call check(data.arity(id,2) = 1 & data.typename(data.fieldtype(id,2,1)) == 'crexx.c.result' & data.arity(id,3) = 2 & data.fieldname(id,3,1) == 'target' & data.typename(data.fieldtype(id,3,1)) == 'crexx.g.text','exact external result/target')
   call check(data.effectvalue(id,1) == 'context.input.output.observation' & data.effectvalue(id,2) == 'condition.resource' & data.effectvalue(id,3) == 'returns','exact external effects')
   return
 
 fixture: procedure = .llir..module
-  arg mode = .int
+  arg mode = .int, selected = 'extfixture.LENGTH', shape = ''
+  value = .llir..valuehandle; present = .llir..valuehandle; current = .llir..valuehandle
+  appended = .llir..opview; counted = .llir..opview; queried = .llir..opview
+  guarded = .llir..opview; carried = .llir..valuehandle; guardcontext = .llir..valuehandle
+  guardorigin = .llir..origin; carrier = .llir..slot; unwind = .llir..block; continuation = .llir..block
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
   contract = registry.finish(); builder = .llir..builder(contract)
-  source = ('call extfixture.LENGTH' || ('0A'x as .string) || 'return') as .binary
-  file = builder.source('external-ir.crexx',source); authored = file.origin(0,22); generated = builder.synthetic('external dispatch')
+  clause = 'call ' || selected
+  source = (clause || ('0A'x as .string) || 'return') as .binary
+  file = builder.source('external-ir.crexx',source); authored = file.origin(0,<blen>(clause as .binary)); generated = builder.synthetic('external dispatch')
   fn = builder.function('$MAIN',contract.type('crexx.c.result'))
   ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
   context_slot = fn.slot('$context',contract.type('crexx.c.context')); entry_slot = fn.slot('$entry',contract.type('crexx.g.int64')); packet_slot = fn.slot('$packet',contract.type('crexx.c.arguments'))
@@ -316,21 +334,181 @@ fixture: procedure = .llir..module
     call draft.input('arguments',arguments); call draft.input('value',value); call draft.input('present',present); appended = draft.finish()
     call body.store(packet_slot,appended.result(),authored); arguments = body.load(packet_slot,authored)
   end
+  do ordinal = 1 to length(shape)
+    value = body.constantbytes(contract.type('crexx.c.value'),'x' as .binary,authored)
+    flag = substr(shape,ordinal,1)
+    if flag = '?' then do
+      current = body.load(context_slot,authored)
+      draft = body.operation(contract.operation('crexx.c.arguments.count'),authored)
+      call draft.input('context',current); counted = draft.finish()
+      draft = body.operation(contract.operation('crexx.c.truth'),authored)
+      call draft.input('value',counted.result()); call draft.input('context',current)
+      queried = draft.finish(); present = queried.result()
+    end
+    else present = body.constant(contract.type('core.boolean'),flag,authored)
+    draft = body.operation(contract.operation('crexx.c.arguments.append'),authored)
+    call draft.input('arguments',arguments); call draft.input('value',value); call draft.input('present',present)
+    appended = draft.finish(); arguments = appended.result()
+  end
   context = body.load(context_slot,authored)
   if mode = 3 then context = body.readarg(1,authored)
   origin = authored; if mode = 4 then origin = generated
-  target = 'extfixture.LENGTH'; if mode = 2 then target = 'unselected.run'
+  target = selected; if mode = 2 then target = 'unselected.run'
   draft = body.operation(contract.operation('crexx.c.call.external'),origin)
-  call draft.input('arguments',arguments); call draft.input('context',context); call draft.attribute('target',target as .binary)
-  finished = draft.finish(); call body.returnvalue(finished.result(),authored)
+  call draft.input('arguments',arguments); call draft.input('context',context); call draft.attribute('target',target as .binary); call draft.attribute('function','00'x)
+  finished = draft.finish()
+  if mode = 13 then do
+    guardorigin = authored.derive('synthetic'); carrier = fn.slot('$completion',contract.type('crexx.c.result'))
+    call body.store(carrier,finished.result(),guardorigin)
+    guardcontext = body.load(context_slot,guardorigin)
+    draft = body.operation(contract.operation('crexx.c.program.exiting'),guardorigin)
+    call draft.input('context',guardcontext); guarded = draft.finish()
+    unwind = fn.block('program.unwind'); continuation = fn.block('program.continue')
+    call body.branch(guarded.result(),unwind,continuation,guardorigin)
+    call unwind.returnvalue(unwind.load(carrier,guardorigin),guardorigin)
+    call continuation.returnvalue(continuation.load(carrier,guardorigin),guardorigin)
+  end
+  else do
+    if mode = 12 then do
+      value = body.constantbytes(contract.type('crexx.c.value'),'must not resume' as .binary,authored)
+      context = body.load(context_slot,authored)
+      draft = body.operation(contract.operation('crexx.c.say'),authored)
+      call draft.input('value',value); call draft.input('context',context); guarded = draft.finish()
+    end
+    call body.returnvalue(finished.result(),authored)
+  end
   if mode = 6 then do
     dead = fn.block('dead'); context = dead.load(context_slot,authored)
     draft = dead.operation(contract.operation('crexx.c.arguments.empty'),authored); packet = draft.finish()
     draft = dead.operation(contract.operation('crexx.c.call.external'),authored)
-    call draft.input('arguments',packet.result()); call draft.input('context',context); call draft.attribute('target','unselected.run' as .binary)
+    call draft.input('arguments',packet.result()); call draft.input('context',context); call draft.attribute('target','unselected.run' as .binary); call draft.attribute('function','00'x)
     finished = draft.finish(); call dead.returnvalue(finished.result(),authored)
   end
   return builder.finish()
+
+/* A Classic callee can complete with a live host failure. Its caller either
+ * immediately unwinds the same carrier or proves the existing root guard. */
+hostguards: procedure = .void
+  arg root = .string
+  selected = .llcbindings..binding[]
+  selected[1] = .llcbindings..binding('packet-provider','g2packet.run')
+  owner = .llcbindings..prepared(root,selected,67108864,67108864)
+  call check(owner.status() = 0,'host completion provider: ' || owner.error())
+  if owner.status() <> 0 then return
+  graph = .llir..module; loaded = .llir..module; mode = .int; at = .int
+  modes = '1 12 13'
+  do at = 1 to words(modes)
+    mode = word(modes,at) as .int
+    graph = fixture(mode,'g2packet.run')
+    call check(graph.error() == '','generic-valid completion shape ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    call admission(reference owner,graph,mode <> 12,'host completion raw ' || mode)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '','loaded completion shape ' || mode)
+    if loaded.error() == '' then call admission(reference owner,loaded,mode <> 12,'host completion loaded ' || mode)
+  end
+  return
+
+/* Static arity uses the actual proved packet graph, including loaded and
+ * transformed graphs. A dynamic presence Boolean is not a shape certificate. */
+rawtyped: procedure = .void
+  arg root = .string
+  i = .int
+  selected = .llcbindings..binding[]
+  names = 'scalar.required scalar.optional scalar.tail'
+  do i = 1 to words(names)
+    selected[i] = .llcbindings..binding('group2-signatures',word(names,i))
+  end
+  selected[4] = .llcbindings..binding.process('child','/explicit/group2/process')
+  owner = .llcbindings..prepared(root,selected,67108864,67108864)
+  call check(owner.status() = 0,'typed raw snapshot: ' || owner.error())
+  if owner.status() <> 0 then return
+  optional = owner.signature(2); tail = owner.signature(3)
+  call check(optional.optional(1) & optional.defaultkind(1) == 'string' & optional.defaultliteral(1) == "'DEFAULT'",'callee default projection stays authored')
+  call check(tail.arguments() = 2 & tail.vararg(2) & tail.paramname(2) == '...','scalar vararg projection stays complete')
+  targets = .string[]; shapes = .string[]; accepted = .int[]
+  targets[1] = 'scalar.required'; shapes[1] = ''; accepted[1] = 0
+  targets[2] = 'scalar.required'; shapes[2] = '1'; accepted[2] = 1
+  targets[3] = 'scalar.required'; shapes[3] = '0'; accepted[3] = 0
+  targets[4] = 'scalar.required'; shapes[4] = '11'; accepted[4] = 0
+  targets[5] = 'scalar.required'; shapes[5] = '?'; accepted[5] = 0
+  targets[6] = 'scalar.optional'; shapes[6] = ''; accepted[6] = 1
+  targets[7] = 'scalar.optional'; shapes[7] = '0'; accepted[7] = 1
+  targets[8] = 'scalar.optional'; shapes[8] = '1'; accepted[8] = 1
+  targets[9] = 'scalar.optional'; shapes[9] = '00'; accepted[9] = 0
+  targets[10] = 'scalar.tail'; shapes[10] = ''; accepted[10] = 0
+  targets[11] = 'scalar.tail'; shapes[11] = '1'; accepted[11] = 1
+  targets[12] = 'scalar.tail'; shapes[12] = '10'; accepted[12] = 0
+  targets[13] = 'scalar.tail'; shapes[13] = '111'; accepted[13] = 1
+  targets[14] = 'child'; shapes[14] = ''; accepted[14] = 1
+  targets[15] = 'child'; shapes[15] = '1'; accepted[15] = 1
+  targets[16] = 'child'; shapes[16] = '0'; accepted[16] = 0
+  targets[17] = 'child'; shapes[17] = '?'; accepted[17] = 0
+  do i = 1 to targets[0]
+    graph = fixture(1,targets[i],shapes[i])
+    call check(graph.error() == '','generic-valid typed packet ' || i || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    call admission(reference owner,graph,accepted[i],'typed raw ' || i)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '','loaded typed packet ' || i)
+    if loaded.error() == '' then call admission(reference owner,loaded,accepted[i],'typed loaded ' || i)
+  end
+  /* Ordinary CALL and function syntax share this admission path; no context,
+   * aggregate or task semantics are invented for an inadmissible callee. */
+  names = 'scalar.reference scalar.array scalar.task scalar.duplicate'
+  do i = 1 to words(names)
+    selected_kind = .llcbindings..binding[]
+    selected_kind[1] = .llcbindings..binding('group2-signatures',word(names,i))
+    owner = .llcbindings..prepared(root,selected_kind,67108864,67108864)
+    call check(owner.status() <> 0 & pos('LL_COMPILER_IMPORT:',owner.error()) = 1,'selected scalar boundary refuses ' || word(names,i))
+  end
+  call taskmetadata(root)
+  return
+
+taskmetadata: procedure = .void
+  arg root = .string
+  original = readbinary(root || '/group2-signatures.rxbin')
+  decoder = .llbinmeta..catalog(original); image = binsubstr(original,1,304)
+  /* Use the owning decoder for compressed payloads, then mutate only the
+   * selected task discriminator in the portable metadata envelope. */
+  do section = 1 to 6
+    row = 64 + (section - 1) * 40
+    offset = <at..i64>(row + 16) original; extent = <at..i64>(row + 24) original
+    bits = binsubstr(original,offset + 1,extent)
+    if (section = 3 | section = 4) & <at..u32>(row + 4) original = 1 then do
+      bits = decoder.expand(bits,<at..i64>(row + 32) original)
+      <at..u32>(row + 4) image = 0
+    end
+    image = image || x2bin(copies('00',(8 - <blen>(image) <mod> 8) <mod> 8))
+    <at..i64>(row + 16) image = <blen>(image); <at..i64>(row + 24) image = <blen>(bits)
+    image = image || bits
+  end
+  <at..i64>(16) image = <blen>(image)
+  reader = .llbinmeta..catalog.bounded(reference image,67108864,67108864)
+  item = reader.classify('scalar.task')
+  call check(item.error() == '' & item.task() = 1,'task marker projects on selected ordinary callable')
+  item = reader.classify('scalar.required')
+  call check(item.error() == '' & item.task() = 0,'ordinary scalar has no task capability')
+  item = reader.classify('scalar.duplicate')
+  call check(pos('ambiguous task-target',item.error()) > 0,'duplicate task marker refuses selected callable')
+  at = <at..i64>(200) image; limit = at + <at..i64>(216) image; at = at + 16; found = 0
+  do while at < limit
+    if <at..u32>(at + 8) image = 19 then do
+      pool = <at..u32>(at) image
+      if reader.text(pool,<at..u32>(at + 24 + 16) image) == 'scalar.task' then do
+        <at..u32>(at + 24 + 24) image = 0; found = 1; leave
+      end
+    end
+    at = at + 24 + <at..i64>(at + 16) image
+    at = at + (8 - at <mod> 8) <mod> 8
+  end
+  call check(found,'selected task marker located by pool-local identity')
+  if found then do
+    reader = .llbinmeta..catalog.bounded(reference image,67108864,67108864)
+    item = reader.classify('scalar.task')
+    call check(pos('invalid task-target kind',item.error()) > 0 & item.task() = 0,'malformed selected task marker refuses atomically')
+  end
+  return
 
 absent: procedure = .void
   arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
@@ -363,7 +541,7 @@ deadcycle: procedure = .llir..module
   call consume(cycleblock,contract,context,authored)
   early = cycleblock.load(arguments,authored); current = cycleblock.load(context,authored)
   draft = cycleblock.operation(contract.operation('crexx.c.call.external'),authored)
-  call draft.input('arguments',early); call draft.input('context',current); call draft.attribute('target','extfixture.LENGTH' as .binary); finished = draft.finish()
+  call draft.input('arguments',early); call draft.input('context',current); call draft.attribute('target','extfixture.LENGTH' as .binary); call draft.attribute('function','00'x); finished = draft.finish()
   draft = cycleblock.operation(contract.operation('crexx.c.arguments.empty'),callat); seeded = draft.finish()
   call cycleblock.store(arguments,seeded.result(),callat)
   current = cycleblock.load(context,callat)

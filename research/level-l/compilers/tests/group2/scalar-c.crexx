@@ -1,0 +1,30 @@
+options levelc
+say g2scalar.twice('21')
+say g2scalar.real('1.5')
+say g2scalar.decimal('0.1','0.2')
+say g2scalar.flag('1')
+say g2scalar.value('Gràdh 中 😀')
+say g2scalar.bytes('Gràdh'||'00'x||'中😀')
+say g2scalar.optional('A')
+say g2scalar.optional('A','')
+say g2scalar.optional('A',)
+say g2scalar.tail('P')
+say g2scalar.tail('P','one','')
+NUMBER = '5'
+say g2scalar.mutate(NUMBER)
+say NUMBER
+say g2scalar.twice(g2scalar.touch('8'))
+say g2scalar.count()
+call g2scalar.noresult
+say symbol('RESULT')
+say symbol('.RESULT')
+say g2scalar.count()
+say length('ignored')
+say 'LENGTH'('four')
+if 0 then say 'LENGTH'('dead')
+call 'LENGTH' 'three'
+say result
+say g2scalar.length()
+return
+LENGTH:
+return 'LOCAL-LENGTH'

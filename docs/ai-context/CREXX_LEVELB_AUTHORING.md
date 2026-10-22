@@ -428,6 +428,13 @@ value and is intentionally uninitialized; it is useful for type defaults and
 can be probed with `initialized(value)`, but calling methods on it raises
 `OBJECT_NOT_INITIALIZED`.
 
+For optional class/interface attributes, assign that typed default explicitly in
+the factory, and initialize both sides of sparse parallel provider arrays. An
+attribute declaration alone can leave a plain null slot; `initialized()` treats
+non-object values as initialized, so it cannot identify that slot as an absent
+provider. Reuse an existing clear/reset method when it establishes the same
+typed absence contract. Classic host access and clock providers use this pattern.
+
 ```rexx
 vehicle: interface
   *: factory

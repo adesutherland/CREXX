@@ -1,4 +1,4 @@
-/* cREXX License (MIT). C22 effect premises and entry-bound context identities. */
+/* cREXX License (MIT). C23 effect premises and entry-bound context identities. */
 options levelb
 namespace llceffects expose checked model
 import rxfnsb
@@ -9,15 +9,15 @@ import llireffects
 /** Versioned C premises. Runtime state is deliberately conservative: a context
  * operation can deliver a handler and mutate pool/alias/numeric policy. Calls
  * additionally cross callback/host boundaries. This is not a pool cache proof.
- * C22 clause.complete has only a conditional result, even though transport is
+ * C23 clause.complete has only a conditional result, even though transport is
  * cleared on its false path. Existing protocol proofs own its exact use guard.
- * @param owner Canonically admitted C22 graph owner.
+ * @param owner Canonically admitted C23 graph owner.
  * @param bytes Logical retained model budget.
  * @return Sealed graph-bound structured effects, or an invalid atomic model.
  */
 model: procedure = .llireffects..model
   arg owner = reference .llir..module, bytes = 67108864
-  graph = dereference owner; result = .llireffects..model(owner,'crexx.c.C22',1,1000000,bytes)
+  graph = dereference owner; result = .llireffects..model(owner,'crexx.c.C23',1,1000000,bytes)
   if graph.error() <> '' then return result
   store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
   id = .int; i = .int; domainindex = .int; sealed = .int; op = .llir..opview
@@ -139,7 +139,7 @@ checked: class
     do i = 1 to schema.familycount()
       if schema.familyname(i) = 'crexx.c' then cversion = schema.version(i)
     end
-    if cversion <> 22 then do; call fail('LOWERING: context proof requires C22'); return; end
+    if cversion <> 23 then do; call fail('LOWERING: context proof requires C23'); return; end
     workspace = 0
     if index.operations() > _limit <idiv> 16 then do; call fail('LIMIT: context identity workspace exceeds output.bytes budget'); return; end
     workspace = index.operations() * 16

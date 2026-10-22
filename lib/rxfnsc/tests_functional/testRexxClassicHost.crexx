@@ -1,0 +1,527 @@
+/* Independent shared host request/window/state contracts; no source compiler. */
+options levelb comments_dash numeric_classic
+import rxfnsb
+import rexxclassichost
+import rexxclassichostprotocol
+import rexxclassicconfig
+import rexxclassiccontext
+import rexxactivation
+import rexxpool
+import rexxvalue
+
+main: procedure = .int
+  errors = 0
+  ordinary_config = .RexxClassicConfig("UTF8")
+  absent_context = .object
+  call ordinary_config.bindHostContext(absent_context)
+  disabled_window = ordinary_config.openHostCallback()
+  errors = errors + check(\disabled_window.valid() & disabled_window.token() = 0,"ordinary configuration has no host access provider")
+  call ordinary_config.closeHostCallback(disabled_window)
+  empty_values = .RexxValue[]
+  empty_presence = .int[]
+  call ordinary_config.registerHostHook("FIRST",.EmptyTrap())
+  call ordinary_config.registerHostHook("SECOND",.EmptyTrap(),1)
+  ordinary_reply = ordinary_config.invokeHost("FIRST",empty_values,empty_presence)
+  errors = errors + check(ordinary_reply.handled() & ordinary_reply.hasValue(),"sparse trap slots retain absent providers")
+  ordinary_reply = ordinary_config.invokeHost("SECOND",empty_values,empty_presence)
+  errors = errors + check(\ordinary_reply.handled(),"sparse configuration slots retain absent providers")
+  absent_hook = .RexxClassicHostHook
+  call ordinary_config.registerHostHook("FIRST",absent_hook)
+  ordinary_reply = ordinary_config.invokeHost("FIRST",empty_values,empty_presence)
+  errors = errors + check(\ordinary_reply.handled(),"uninitialized provider removes a registered hook")
+  ordinary_activation = .RexxActivationArguments()
+  clock_sample = ordinary_activation.sampleHostClock()
+  errors = errors + check(\clock_sample.present(),"ordinary activation has no configured clock provider")
+  ordinary_request = .RexxClassicHostRequest("COMMAND")
+  ordinary_activation = ordinary_request.activation()
+  clock_sample = ordinary_activation.sampleHostClock()
+  errors = errors + check(\clock_sample.present(),"ordinary request retains native clock fallback")
+  ordinary_pool = ordinary_request.pool()
+  ordinary_context = .RexxClassicContext(reference ordinary_activation,reference ordinary_pool,reference ordinary_config)
+  unopened_scope = .RexxClassicHostScope(reference ordinary_context,ordinary_request)
+  call unopened_scope.close()
+  call unopened_scope.close()
+  prior_queue = rxqueue("QUERY")
+  collision = "_CREXX_HOST_1"
+  collision_payload = "occupied" || ('00'x as .string) || "queue"
+  collision_status = rxqueue("CREATE",collision)
+  errors = errors + check(collision_status = "0","prepare existing first private-queue candidate")
+  collision_status = rxqueue("SET",collision)
+  call queue collision_payload
+  collision_status = rxqueue("SET",prior_queue)
+  probe = .HostProbe()
+  hooks = .ProbeHook(reference probe)
+  config = .RexxClassicConfig("UTF8")
+  call config.registerHostHook("SAY",hooks)
+  call config.registerHostHook("SAY",.EmptyTrap(),1)
+  call config.registerHostHook("NESTED",hooks)
+  call config.registerHostHook("EXTERNALROUTINE",hooks)
+  request = .RexxClassicHostRequest("FUNCTION","host µ source")
+  payload = "é雪" || ('00'x as .string) || "tail "
+  call request.appendText(payload)
+  call request.appendText("",0)
+  call request.appendText("")
+  call request.setConfiguration(config)
+  call request.setNumeric(15,2,2)
+  call request.setEnvironment("EDITOR")
+  call request.setTrace("I")
+  ticks = 0
+  call request.setClock(.CountingClock(reference ticks))
+  call request.setClock(.NullClock(),1)
+  activation = request.activation()
+  pool = request.pool()
+  selected = request.configuration()
+  context = .RexxClassicContext(reference activation,reference pool,reference selected)
+  call probe.bindConfig(reference selected)
+  scope = .RexxClassicHostScope(reference context,request)
+  call scope.enter()
+  errors = errors + check(activation.programSourceMode() = "FUNCTION","host root mode")
+  errors = errors + check(activation.argumentCount() = 3 & \activation.argumentExists(2) & activation.argumentExists(3),"raw omitted and present empty positions")
+  errors = errors + check(activation.argument(1).asString() == payload,"exact Unicode NUL argument")
+  errors = errors + check(activation.numericDigits() = 15 & activation.numericFuzz() = 2 & activation.numericForm() = 2,"initial numeric state")
+  errors = errors + check(activation.addressEnvironment() = "EDITOR" & activation.traceSetting() = "I","initial ADDRESS TRACE state")
+  call selected.sayText("suppressed by configured hook")
+  errors = errors + probe.errors()
+  errors = errors + check(probe.calls() = 1 & probe.nested() = 1,"trap fallthrough and nested callback")
+  errors = errors + check(\probe.savedValid(),"callback capability revoked on return")
+  call selected.registerHostHook("SAY",.ReplacingTrap(),1)
+  call selected.sayText("replaced by trap")
+  errors = errors + check(probe.calls() = 1,"nonempty trap replaces configuration hook")
+  values = .RexxValue[]
+  presence = .int[]
+  values[1] = .RexxValue("first")
+  values[2] = .RexxValue("")
+  values[3] = .RexxValue("")
+  presence[1] = 1
+  presence[2] = 0
+  presence[3] = 1
+  external = selected.externalRoutine("exact" || ('00'x as .string) || "name",1,values,presence)
+  errors = errors + check(external.handled() & external.hasValue() & external.value().asString() == payload,"external callback exact present result")
+  errors = errors + check(probe.external() = 1,"external callback receives independent metadata")
+  call activation.ensureClauseTime()
+  first = activation.clauseUtcMicroseconds()
+  elapsed = activation.clauseElapsedMicroseconds(0)
+  call activation.ensureClauseTime()
+  errors = errors + check(ticks = 1 & activation.clauseUtcMicroseconds() = first,"frozen lazy clock and null trap fallthrough")
+  call activation.beginClauseTime()
+  call activation.ensureClauseTime()
+  errors = errors + check(ticks = 2 & activation.clauseElapsedMicroseconds(0) = 1000000,"UTC elapsed origin retained across samples")
+  child = .RexxActivationArguments()
+  call child.inheritSignalPolicy(reference activation)
+  call child.beginInternalCall()
+  call child.ensureClauseTime()
+  errors = errors + check(ticks = 3 & activation.clauseUtcMicroseconds() = first + 1000000,"nested sample uses root producer and keeps parent sample")
+  call selected.pushText("front")
+  call selected.queueText(payload)
+  errors = errors + check(selected.queuedCount() = 2,"selected queue count")
+  errors = errors + check(selected.pullText() == "front" & selected.pullText() == payload,"FIFO LIFO and NUL queue payload")
+  completed = .RexxActivationArguments()
+  call completed.setReturnValue(.RexxValue(payload))
+  outcome = scope.finish(completed)
+  call scope.close()
+  call scope.close()
+  errors = errors + check(outcome.outcome() = "RESULT" & outcome.indicator() = "R" & outcome.value().asString() == payload,"owned completion survives teardown")
+  errors = errors + check(outcome.source() == "host µ source" & outcome.commandStatus() = 0,"source and integer compatibility view")
+  errors = errors + check(rxqueue("QUERY") = prior_queue,"outer selected queue restored")
+  collision_status = rxqueue("SET",collision)
+  errors = errors + check(queued() = 1 & pull() == collision_payload,"private queue selection preserves preexisting candidate contents")
+  collision_status = rxqueue("SET",prior_queue)
+  collision_status = rxqueue("DELETE",collision)
+  errors = errors + completionContracts()
+  errors = errors + check(staleRefused(probe.saved()),"retained window refuses access")
+  no_result = .RexxClassicHostResult(.RexxActivationArguments(),"source")
+  empty_packet = .RexxActivationArguments()
+  call empty_packet.setReturnValue(.RexxValue(""))
+  empty_result = .RexxClassicHostResult(empty_packet,"source")
+  errors = errors + check(no_result.indicator() = "N" & \no_result.hasValue() & empty_result.hasValue(),"absent and present empty completions distinct")
+  limited = .RexxClassicHostRequest("COMMAND")
+  call limited.setLimits(1,1,1)
+  refused = 0
+  do
+    call limited.appendText("xx")
+  on signal classic_syntax as problem
+    refused = pos("RXC-LC-5.1",problem.message()) = 1
+  end
+  call limited.appendText("a")
+  errors = errors + check(refused & limited.activation().argumentCount() = 1,"request budget failure is atomic")
+  captured = .RexxClassicHostResult
+  do
+    assembler signal "FAILURE",payload
+  on signal failure as problem
+    captured = .RexxClassicHostResult.failed(problem as .runtime_signal,"failure source")
+  end
+  errors = errors + check(captured.indicator() = "E" & captured.condition().message() == payload,"typed condition and NUL payload captured")
+  do
+    assembler signal "FAILURE","RXC-LC-5.1: unrelated provider text"
+  on signal failure as problem
+    captured = .RexxClassicHostResult.failed(problem as .runtime_signal,"typed failure source")
+  end
+  errors = errors + check(captured.indicator() = "E","FAILURE text cannot counterfeit resource outcome")
+  do
+    assembler signal "CLASSIC_SYNTAX","RXC-LC-5.10: another exact Classic code"
+  on signal classic_syntax as problem
+    captured = .RexxClassicHostResult.failed(problem as .runtime_signal,"exact code source")
+  end
+  errors = errors + check(captured.indicator() = "E","Classic resource code requires an exact token")
+  limited_probe = .HostProbe()
+  limited_hook = .ProbeHook(reference limited_probe)
+  limited_config = .RexxClassicConfig("UTF8")
+  call limited_config.registerHostHook("SAY",limited_hook)
+  call limited_config.registerHostHook("NESTED",limited_hook)
+  limited_request = .RexxClassicHostRequest("COMMAND","depth limit source")
+  call limited_request.setConfiguration(limited_config)
+  call limited_request.setLimits(1024,16,1)
+  limited_outcome = attemptHost(limited_request,reference limited_probe,1)
+  errors = errors + check(limited_outcome.indicator() = "X" & limited_outcome.hasCondition(),"callback depth refusal has explicit resource outcome")
+  unavailable = .RexxClassicHostRequest("COMMAND","missing queue source")
+  call unavailable.setQueue("_CREXX_HOST_MISSING_TEST_QUEUE_")
+  missing_outcome = attemptHost(unavailable,reference limited_probe,0)
+  errors = errors + check(missing_outcome.indicator() = "S" & missing_outcome.hasCondition(),"unavailable selected queue has unable outcome")
+  errors = errors + check(rxqueue("QUERY") = prior_queue,"failure teardown restores outer queue")
+  cancel_probe = .HostProbe()
+  cancel_config = .RexxClassicConfig("UTF8")
+  cancel_hook = .CancelHook(reference cancel_probe)
+  call cancel_config.registerHostHook("SAY",cancel_hook)
+  cancelled = .RexxClassicHostRequest("COMMAND","cancelled host source")
+  call cancelled.setConfiguration(cancel_config)
+  cancel_outcome = attemptHost(cancelled,reference cancel_probe,1)
+  errors = errors + check(cancel_outcome.indicator() = "E" & cancel_outcome.hasCondition(),"real VM CANCEL becomes owned host condition")
+  if cancel_outcome.hasCondition() then do
+    cancel_condition = cancel_outcome.condition()
+    errors = errors + check(cancel_condition.name() = "CANCEL" & cancel_condition.message() == "cancel" || ('00'x as .string) || "fixture","CANCEL retains original typed payload")
+  end
+  errors = errors + check(\cancel_probe.savedValid() & staleRefused(cancel_probe.saved()),"CANCEL revokes callback access")
+  errors = errors + check(rxqueue("QUERY") = prior_queue,"CANCEL restores outer queue")
+  call cancel_config.registerHostHook("SAY",.EmptyTrap())
+  call cancelled.setConfiguration(cancel_config)
+  recovered_cancel = attemptHost(cancelled,reference cancel_probe,1)
+  errors = errors + check(recovered_cancel.indicator() = "N" & \cancel_probe.savedValid(),"same Request and VM recover after CANCEL without reviving old grant")
+  call cancel_config.registerHostHook("SAY",.RecoveringHook(reference cancel_probe))
+  call cancel_config.registerHostHook("CANCEL_NESTED",cancel_hook)
+  call cancelled.setConfiguration(cancel_config)
+  recovered_nested = attemptHost(cancelled,reference cancel_probe,1)
+  errors = errors + check(recovered_nested.indicator() = "N" & cancel_probe.errors() = 0,"caught nested CANCEL restores the live outer callback")
+  if errors = 0 then say "CLASSIC_HOST_OK"
+  return errors
+
+completionContracts: procedure = .int
+  errors = 0
+  first = .runtime_signal
+  second = .runtime_signal
+  first_message = "RXC-LC-45.1: original" || ('00'x as .string) || "failure"
+  do
+    assembler signal "CLASSIC_SYNTAX",first_message
+  on signal classic_syntax as problem
+    first = problem as .runtime_signal
+  end
+  do
+    assembler signal "CHANNEL_ERROR","secondary provider failure"
+  on signal channel_error as problem
+    second = problem as .runtime_signal
+  end
+  owner = .RexxActivationArguments()
+  errors = errors + check(\owner.requestProgramFailure(first) & \owner.hostFailurePending(),"ordinary activation has no terminal failure owner")
+  call owner.requestProgramExit(.RexxValue("old result"),1)
+  call owner.beginHostCompletion()
+  errors = errors + check(\owner.hasReturnValue() & \owner.programExitRequested(),"host completion begin resets old result and EXIT")
+  double_refused = 0
+  do
+    call owner.beginHostCompletion()
+  on signal reference_invalid
+    double_refused = 1
+  end
+  errors = errors + check(double_refused,"live host completion cannot be rebound")
+  child = .RexxActivationArguments()
+  call child.inheritSignalPolicy(reference owner)
+  external = .RexxActivationArguments()
+  call external.inheritSignalPolicy(reference child)
+  call external.setReturnValue(.RexxValue("old external result"))
+  call external.beginExternalProgram()
+  errors = errors + check(\external.hasReturnValue(),"external program reset clears its old return packet")
+  call external.requestProgramExit(.RexxValue("local exit"),1)
+  errors = errors + check(external.programExitRequested() & \owner.programExitRequested(),"ordinary external EXIT remains local")
+  call external.beginExternalProgram()
+  accepted = external.requestProgramFailure(first)
+  retained = child.hostFailure()
+  errors = errors + check(accepted & owner.hostFailurePending() & child.programExitRequested() & external.programExitRequested(),"failure owner survives internal and external program roots")
+  errors = errors + check(retained.name() = first.name() & retained.message() == first_message & retained.module() = first.module() & retained.address() = first.address(),"terminal completion retains exact first event and origin")
+  accepted = child.requestProgramFailure(second)
+  retained = owner.hostFailure()
+  errors = errors + check(accepted & retained.name() = "CLASSIC_SYNTAX" & retained.message() == first_message,"later failure cannot erase the primary event")
+  call owner.endHostCompletion()
+  call owner.endHostCompletion()
+  errors = errors + check(\child.hostFailurePending() & \child.requestProgramFailure(second),"closed completion refuses retained children")
+  call owner.beginHostCompletion()
+  errors = errors + check(\child.requestProgramFailure(second) & \external.requestProgramFailure(second),"new generation does not revive old children")
+  fresh_child = .RexxActivationArguments()
+  call fresh_child.inheritSignalPolicy(reference owner)
+  accepted = fresh_child.requestProgramFailure(second)
+  retained = owner.hostFailure()
+  errors = errors + check(accepted & retained.name() = "CHANNEL_ERROR","new child receives only the current generation")
+  errors = errors + check(\child.programExitRequested() & \external.programExitRequested() & fresh_child.programExitRequested(),"normal EXIT traversal cannot expose a newer host failure to stale children")
+  call owner.endHostCompletion()
+  expired = expiredCompletion()
+  errors = errors + check(\expired.hostFailurePending() & \expired.requestProgramFailure(first),"expired completion owner is never borrowed")
+  request = .RexxClassicHostRequest("FUNCTION","terminal completion source")
+  activation = request.activation()
+  pool = request.pool()
+  config = request.configuration()
+  context = .RexxClassicContext(reference activation,reference pool,reference config)
+  scope = .RexxClassicHostScope(reference context,request)
+  call scope.enter()
+  call activation.setReturnValue(.RexxValue("discarded root result"))
+  scope_child = .RexxActivationArguments()
+  call scope_child.inheritSignalPolicy(reference activation)
+  accepted = scope_child.requestProgramFailure(first)
+  detached = .RexxActivationArguments()
+  call detached.setReturnValue(.RexxValue("discarded detached result"))
+  outcome = scope.finish(detached)
+  call scope.close()
+  retained = outcome.condition()
+  errors = errors + check(accepted & outcome.indicator() = "E" & \outcome.hasValue() & retained.message() == first_message & retained.address() = first.address(),"Scope consumes authoritative failure rather than the detached packet")
+  scope = .RexxClassicHostScope(reference context,request)
+  call scope.enter()
+  errors = errors + check(\scope_child.requestProgramFailure(second),"Scope reuse cannot revive a prior activation grant")
+  inner_request = .RexxClassicHostRequest("COMMAND","independent nested owner")
+  inner_activation = inner_request.activation()
+  inner_pool = inner_request.pool()
+  inner_config = inner_request.configuration()
+  inner_context = .RexxClassicContext(reference inner_activation,reference inner_pool,reference inner_config)
+  inner_scope = .RexxClassicHostScope(reference inner_context,inner_request)
+  call inner_scope.enter()
+  accepted = inner_activation.requestProgramFailure(second)
+  inner_outcome = inner_scope.finish(.RexxActivationArguments())
+  call inner_scope.close()
+  errors = errors + check(accepted & inner_outcome.indicator() = "E" & \activation.hostFailurePending(),"nested Scope has an independent failure owner")
+  outcome = scope.finish(.RexxActivationArguments())
+  call scope.close()
+  errors = errors + check(outcome.indicator() = "N","same stable activation recovers with a fresh Scope")
+  return errors
+
+expiredCompletion: procedure = .RexxActivationArguments
+  owner = .RexxActivationArguments()
+  call owner.beginHostCompletion()
+  child = .RexxActivationArguments()
+  call child.inheritSignalPolicy(reference owner)
+  return child
+
+attemptHost: procedure = .RexxClassicHostResult
+  arg request = .RexxClassicHostRequest, probe_ref = reference .HostProbe, invoke = .boolean
+  activation = request.activation()
+  pool = request.pool()
+  config = request.configuration()
+  context = .RexxClassicContext(reference activation,reference pool,reference config)
+  probe = dereference probe_ref
+  call probe.bindConfig(reference config)
+  scope = .RexxClassicHostScope(reference context,request)
+  result = .RexxClassicHostResult
+  do
+    call scope.enter()
+    if invoke then call config.sayText("depth test")
+    result = scope.finish(.RexxActivationArguments())
+    call scope.close()
+  on signal classic_syntax,cancel as problem
+    result = scope.failed(problem as .runtime_signal)
+    call scope.close()
+  end
+  return result
+
+staleRefused: procedure = .boolean
+  arg window = .RexxClassicHostPool
+  refused = 0
+  do
+    call window.set("BAD",.RexxValue("bad"))
+  on signal reference_invalid
+    refused = 1
+  end
+  return refused
+
+check: procedure = .int
+  arg ok = .boolean, detail = .string
+  if ok then return 0
+  say "CLASSIC_HOST_FAIL" detail
+  return 1
+
+HostProbe: class
+  probe_errors = .int
+  probe_calls = .int
+  probe_nested = .int
+  probe_external = .int
+  probe_window = .RexxClassicHostPool
+  probe_config = reference .RexxClassicConfig
+  *: factory
+    probe_errors = 0
+    probe_calls = 0
+    probe_nested = 0
+    probe_external = 0
+    return
+  bindConfig: method = .void
+    arg config = reference .RexxClassicConfig
+    probe_config = config
+    return
+  record: method = .void
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    if operation = "NESTED" then do
+      probe_nested = probe_nested + 1
+      probe_errors = probe_errors + check(\probe_window.valid() & window.valid(),"outer callback suspended during inner")
+      call window.set("NESTED",.RexxValue("yes"))
+      return
+    end
+    if operation = "EXTERNALROUTINE" then do
+      probe_external = probe_external + 1
+      routine_fact = window.valueOther("ROUTINE")
+      mode = window.valueOther("INVOCATION")
+      probe_errors = probe_errors + check(routine_fact.found() & routine_fact.value().asString() == "exact" || ('00'x as .string) || "name","exact external routine identity")
+      probe_errors = probe_errors + check(mode.value().asString() = "FUNCTION" & presence[0] = 3 & presence[2] = 0 & presence[3] = 1,"external kind and positional presence")
+      return
+    end
+    probe_calls = probe_calls + 1
+    probe_window = window
+    inner_request = .RexxClassicHostRequest("COMMAND","nested host source")
+    inner_activation = inner_request.activation()
+    inner_pool = inner_request.pool()
+    inner_config = inner_request.configuration()
+    inner_context = .RexxClassicContext(reference inner_activation,reference inner_pool,reference inner_config)
+    inner_scope = .RexxClassicHostScope(reference inner_context,inner_request)
+    call inner_scope.enter()
+    probe_errors = probe_errors + check(\window.valid() & staleRefused(window),"new nested host entry suspends actual outer pool access")
+    inner_window = inner_config.openHostCallback()
+    probe_errors = probe_errors + check(inner_window.valid(),"nested host has its own enabled window")
+    call inner_config.closeHostCallback(inner_window)
+    inner_outcome = inner_scope.finish(.RexxActivationArguments())
+    call inner_scope.close()
+    probe_errors = probe_errors + check(window.valid() & inner_outcome.indicator() = "N","nested host close restores outer capability")
+    call window.set("KEY",.RexxValue("b"))
+    call window.set("A.KEY",.RexxValue("substituted"))
+    call window.setDirect("A.KEY",.RexxValue("literal"))
+    item = window.value("A.KEY")
+    direct = window.valueDirect("A.KEY")
+    probe_errors = probe_errors + check(item.value().asString() = "substituted" & direct.value().asString() = "literal","substituted and direct API names")
+    call window.dropDirect("A.b")
+    item = window.value("A.KEY")
+    probe_errors = probe_errors + check(\item.found(),"direct DROP preserves exact tail")
+    call window.reset()
+    call window.set("LATE",.RexxValue("later"))
+    name = window.next()
+    saw_late = 0
+    do while name <> ""
+      if name = "LATE" then saw_late = 1
+      name = window.next()
+    end
+    probe_errors = probe_errors + check(\saw_late,"iterator name snapshot excludes later addition")
+    config_ref = probe_config
+    config = dereference config_ref
+    nested_values = .RexxValue[]
+    nested_presence = .int[]
+    nested = config.invokeHost("NESTED",nested_values,nested_presence)
+    probe_errors = probe_errors + check(window.valid(),"outer callback restored after nested")
+    return
+  saved: method = .RexxClassicHostPool
+    return probe_window
+  remember: method = .void
+    arg window = .RexxClassicHostPool
+    probe_window = window
+    return
+  cancelAndRecover: method = .void
+    arg window = .RexxClassicHostPool
+    probe_window = window
+    config_ref = probe_config
+    config = dereference config_ref
+    values = .RexxValue[]
+    presence = .int[]
+    caught = 0
+    do
+      response = config.invokeHost("CANCEL_NESTED",values,presence)
+    on signal cancel as problem
+      caught = problem.name() = "CANCEL" & problem.message() == "cancel" || ('00'x as .string) || "fixture"
+    end
+    probe_errors = probe_errors + check(caught & window.valid(),"nested CANCEL restores outer token before handler resumes")
+    call window.set("AFTER_CANCEL",.RexxValue("restored"))
+    item = window.value("AFTER_CANCEL")
+    probe_errors = probe_errors + check(item.found() & item.value().asString() = "restored","outer pool remains usable after caught CANCEL")
+    return
+  savedValid: method = .boolean
+    return probe_window.valid()
+  errors: method = .int
+    return probe_errors
+  calls: method = .int
+    return probe_calls
+  nested: method = .int
+    return probe_nested
+  external: method = .int
+    return probe_external
+
+ProbeHook: class implements .RexxClassicHostHook
+  hook_probe = reference .HostProbe
+  *: factory
+    arg probe = reference .HostProbe
+    hook_probe = probe
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    probe_ref = hook_probe
+    probe = dereference probe_ref
+    call probe.record(operation,values,presence,window)
+    if operation = "EXTERNALROUTINE" then return .RexxClassicHostHookResult.returning(.RexxValue("é雪" || ('00'x as .string) || "tail "))
+    return .RexxClassicHostHookResult.returning(.RexxValue(""))
+
+EmptyTrap: class implements .RexxClassicHostHook
+  *: factory
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    return .RexxClassicHostHookResult.returning(.RexxValue(""))
+
+ReplacingTrap: class implements .RexxClassicHostHook
+  *: factory
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    return .RexxClassicHostHookResult.returning(.RexxValue(" "))
+
+CountingClock: class implements .RexxClassicHostClock
+  clock_ticks = reference .int
+  *: factory
+    arg ticks = reference .int
+    clock_ticks = ticks
+    return
+  sample: method = .RexxClassicHostClockSample
+    ticks_ref = clock_ticks
+    ticks = dereference ticks_ref
+    ticks = ticks + 1
+    return .RexxClassicHostClockSample(737000,ticks * 1000000,100000000 + ticks * 1000000,0)
+
+NullClock: class implements .RexxClassicHostClock
+  *: factory
+    return
+  sample: method = .RexxClassicHostClockSample
+    return .RexxClassicHostClockSample.fallthrough()
+
+CancelHook: class implements .RexxClassicHostHook
+  probe_ref = reference .HostProbe
+  *: factory
+    arg probe = reference .HostProbe
+    probe_ref = probe
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    current_probe_ref = probe_ref
+    probe = dereference current_probe_ref
+    if operation = "SAY" then call probe.remember(window)
+    call window.set("CANCEL_MARK",.RexxValue("before cancellation"))
+    message = "cancel" || ('00'x as .string) || "fixture"
+    assembler signal "CANCEL",message
+    return .RexxClassicHostHookResult.absent()
+
+RecoveringHook: class implements .RexxClassicHostHook
+  probe_ref = reference .HostProbe
+  *: factory
+    arg probe = reference .HostProbe
+    probe_ref = probe
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    current_probe_ref = probe_ref
+    probe = dereference current_probe_ref
+    call probe.cancelAndRecover(window)
+    return .RexxClassicHostHookResult.absent()

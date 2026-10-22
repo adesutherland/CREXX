@@ -1038,6 +1038,7 @@ request: class
         if _error <> '' then return
         do
           op = _block.operation(_contract.operation('crexx.c.say'),origin); call op.input('value',value)
+          call op.input('context',_block.load(_contextslot,origin))
         end
         built = op.finish()
       end
@@ -2015,6 +2016,8 @@ request: class
     built = op.finish(); return built.result()
   invocation: method = .llir..valuehandle
     arg node = .llast..node, expressioncall = .int
+    i = .int
+    boolean = .llir..boolcodec()
     invalid = .llir..valuehandle; origin = at(node); name = node.text('name')
     quoted = node.kind() = 'InvokeQuoted' | node.kind() = 'CallQuoted'
     if quoted then name = decodestring(node,name)
@@ -2032,19 +2035,33 @@ request: class
       call fail(node,'SYNTAX: RXC-LC-16.3: local target is a trace-only group label ' || name); return invalid
     end
     bif = ''; if target = 0 then bif = llcbifs..entry(name)
-    provider = 0; externalname = .string
-    if target = 0 & bif = '' & expressioncall = 0 & _bound then do
+    provider = 0; externalname = .string; externalclassic = 0
+    if target = 0 & bif = '' & _bound then do
       if <refvalid>(_providers) = 0 then do; call fail(node,'IMPORT: provider owner is not live'); return invalid; end
       providers = dereference _providers
       if initialized(providers) = 0 then do; call fail(node,'IMPORT: provider owner is not initialized'); return invalid; end
       provider = providers.find(name)
       if providers.status() then do; call fail(node,'IMPORT: ' || providers.error()); return invalid; end
+      if provider > 0 then do
+        if entryspace(count,4,'call presence') = 0 then return invalid
+        presencebytes = x2bin(copies('30',count))
+        do i = 1 to count
+          if tick(node) = 0 then return invalid
+          if arguments.child('items',i).count('value') > 0 then <at..u8>(i - 1) presencebytes = 49
+        end
+        presence = presencebytes as .string
+        refusal = providers.accept(provider,presence)
+        if refusal <> '' then do; call fail(node,'IMPORT: ' || refusal); return invalid; end
+      end
       if provider < 0 then do; call fail(node,'IMPORT: ambiguous provider alias ' || name); return invalid; end
-      if provider > 0 then externalname = providers.callable(provider)
+      if provider > 0 then do
+        externalname = providers.callable(provider)
+        externalclassic = providers.kind(provider) = 'classic'
+      end
       if providers.status() then do; call fail(node,'IMPORT: ' || providers.error()); return invalid; end
     end
     argument = .llast..node; value = .llir..valuehandle
-    op = .llir..opdraft; built = .llir..opview; i = .int; slot = .llir..slot
+    op = .llir..opdraft; built = .llir..opview; slot = .llir..slot
     result = .llir..valuehandle; specialized = 0
     if bif <> '' then do
       call classiccontract(node,name)
@@ -2110,15 +2127,23 @@ request: class
       if target > 0 then do
         call op.attribute('target','$MAIN' as .binary)
         integer = .llir..intcodec(); call op.attribute('entry',integer.parse((target - 1) as .string))
-        boolean = .llir..boolcodec(); call op.attribute('function',boolean.parse(expressioncall as .string))
+        call op.attribute('function',boolean.parse(expressioncall as .string))
       end
-      else if provider > 0 then call op.attribute('target',externalname as .binary)
-      else call op.attribute('name',name as .binary)
+      else if provider > 0 then do
+        call op.attribute('target',externalname as .binary)
+        call op.attribute('function',boolean.parse(expressioncall as .string))
+      end
+      else do
+        call op.attribute('name',name as .binary)
+        if operation = 'call.missing' then do
+          call op.attribute('function',boolean.parse(expressioncall as .string))
+        end
+      end
       built = op.finish()
       if bif <> '' then value = built.result()
       else do
         result = built.result()
-        if target > 0 then result = programguard(result,origin)
+        if target > 0 | externalclassic then result = programguard(result,origin)
       end
     end
     if bif <> '' then do

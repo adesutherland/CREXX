@@ -79,7 +79,7 @@ schema: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 22 & types = 5 & data.ops() = 88,'C22/88 operations/five C types')
+  call check(version = 23 & types = 5 & data.ops() = 88,'C22/88 operations/five C types')
   policy = contract.operation('crexx.c.call.policy').id()
   complete = contract.operation('crexx.c.clause.complete').id()
   call check(policy = 87 & complete = 88,'two append-only C operations')

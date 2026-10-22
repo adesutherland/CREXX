@@ -163,10 +163,10 @@ schemacontract: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
   end
-  call check(version = 22 & data.ops() = 88 & count = 5,'exact C22/88/five-type schema')
+  call check(version = 23 & data.ops() = 88 & count = 5,'exact C22/88/five-type schema')
   call shape(contract,'return.empty','context:crexx.c.context','value:crexx.c.result','','context','condition.resource')
   call shape(contract,'bif','arguments:crexx.c.arguments context:crexx.c.context','value:crexx.c.value','name:crexx.g.text','context.input.output.observation','condition.resource')
-  call shape(contract,'call.missing','arguments:crexx.c.arguments context:crexx.c.context','value:crexx.c.result','name:crexx.g.text','context','condition')
+  call shape(contract,'call.missing','arguments:crexx.c.arguments context:crexx.c.context','value:crexx.c.result','name:crexx.g.text function:core.boolean','context.input.output.observation','condition.resource')
   call shape(contract,'requirevalue','result:crexx.c.result','value:crexx.c.value','name:crexx.g.text','none','missing.result')
   call check(data.opname(59) = 'crexx.c.return.empty' & data.opname(60) = 'crexx.c.bif' & data.opname(61) = 'crexx.c.call.missing' & data.opname(62) = 'crexx.c.program.exiting','append-only operation order')
   return
@@ -279,6 +279,7 @@ fixture: procedure = .llir..module
   if mode = 7 | mode = 10 then do; operation = 'crexx.c.call.missing'; name = 'ABSENT'; end
   draft = body.operation(contract.operation(operation),origin)
   call draft.input('arguments',arguments.result()); call draft.input('context',context); call draft.attribute('name',name as .binary)
+  if operation = 'crexx.c.call.missing' then call draft.attribute('function','00'x)
   finished = draft.finish()
   if mode = 11 | mode = 12 | mode = 14 | mode = 15 then do
     packet = body.operation(contract.operation('crexx.c.return.absent'),generated); result = packet.finish()

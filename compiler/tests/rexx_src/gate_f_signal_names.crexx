@@ -15,6 +15,35 @@ main: procedure = .int
   on signal task_failure as task_problem
     if task_problem.name() = "TASK_FAILURE" & task_problem.code() = 27 then caught = caught + 1
   end
-  if caught <> 2 then return 1
+  marker = 0
+  do
+    do
+      marker = 1
+    on signal cancel
+      return 2
+    end
+    assembler signal "CANCEL","normal policy restored"
+    return 3
+  on signal cancel as normal_problem
+    if marker = 1 & normal_problem.name() = "CANCEL" & normal_problem.code() = 18 & normal_problem.message() = "normal policy restored" then caught = caught + 1
+  end
+  original_module = 0
+  original_address = -1
+  message = "cancel" || ('00'x as .string) || "fixture"
+  do
+    do
+      assembler signal "CANCEL",message
+      return 4
+    on signal cancel as explicit_problem
+      if explicit_problem.name() = "CANCEL" & explicit_problem.code() = 18 & explicit_problem.message() = message then caught = caught + 1
+      original_module = explicit_problem.module()
+      original_address = explicit_problem.address()
+      call rxfnsb..signalrelay(explicit_problem)
+      return 5
+    end
+  on signal as relayed_problem
+    if relayed_problem.name() = "CANCEL" & relayed_problem.code() = 18 & relayed_problem.message() = message & original_module > 0 & original_address >= 0 & relayed_problem.module() = original_module & relayed_problem.address() = original_address then caught = caught + 1
+  end
+  if caught <> 5 then return 1
   say "PASS: Gate F signal names"
   return 0

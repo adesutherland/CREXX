@@ -188,7 +188,7 @@ raw: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 22 & types = 5,'C22/five type family identity')
+  call check(version = 23 & types = 5,'C22/five type family identity')
   call check(data.arity(73,1) = 2 & data.fieldname(73,1,1) == 'command' & data.fieldname(73,1,2) == 'context' & data.arity(73,2) = 0,'active constructor canonical context input2 and void output')
   call check(data.arity(73,3) = 1 & data.fieldname(73,3,1) == 'key' & data.typename(data.fieldtype(73,3,1)) == 'crexx.g.text','only key text attribute')
   call check(data.effectvalue(73,1) == 'context' & data.effectvalue(73,2) == 'condition.resource' & data.effectvalue(73,3) == 'returns','complete constructor effects')

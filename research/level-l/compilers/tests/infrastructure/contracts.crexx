@@ -91,7 +91,7 @@ effects: procedure = .void
   call block.store(carrier,completed.result(),at)
   draft = block.operation(contract.operation('crexx.c.arguments.empty'),at); arguments = draft.finish()
   draft = block.operation(contract.operation('crexx.c.call.external'),at)
-  call draft.input('arguments',arguments.result()); call draft.input('context',before); call draft.attribute('target','SIGNED' as .binary); invoked = draft.finish()
+  call draft.input('arguments',arguments.result()); call draft.input('context',before); call draft.attribute('target','SIGNED' as .binary); call draft.attribute('function','00'x); invoked = draft.finish()
   after = block.load(slot,at); call block.returnvoid(at)
   graph = builder.finish(); saved = graph.binary()
   call check(graph.error() = '','generic-valid effects fixture: ' || graph.error())
@@ -100,7 +100,7 @@ effects: procedure = .void
   call check(owned.status() = 0,'C effect adapter admitted: ' || owned.error())
   if owned.status() then return
   model_ref = owned.effects(); model = dereference model_ref
-  call check(model.valid() & model.matches(reference graph) & model.profile() = 'crexx.c.C22','sealed effects bind exact C22 graph/profile')
+  call check(model.valid() & model.matches(reference graph) & model.profile() = 'crexx.c.C23','sealed effects bind exact C22 graph/profile')
   domainindex = .int; domain = .string
   do domainindex = 1 to 6
     domain = 'crexx.c.' || word('pool alias numeric handlers observation callback',domainindex)

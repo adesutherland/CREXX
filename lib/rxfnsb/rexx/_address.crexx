@@ -24,7 +24,7 @@
 
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_var_ref _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_apply_response_request_stem_ref _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressredirect addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment crexxaddressenvironment systemaddressenvironment shelladdressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
+namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_var_ref _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_apply_response_request_stem_ref _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressredirect addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment crexxaddressenvironment systemaddressenvironment shelladdressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment addressbytestream processrun
 import rxfnsb
 
 /**
@@ -309,6 +309,16 @@ standardaddresssandbox: class implements .addresssandbox
 
     return ""
 
+/** Borrowed raw-byte endpoint used by ADDRESS and direct process calls.
+ * Implementations own EOF/error distinction and complete writes; finish flushes
+ * without closing caller-owned resources. No text decoding occurs here.
+ */
+addressbytestream: interface
+  input_snapshot: method = .binary
+  append_bytes: method = .void
+    arg bytes = .binary
+  finish: method = .void
+
 /**
  * Controller-owned adapter between classic ADDRESS redirection and bounded
  * byte endpoints. Input is snapshotted by the factory. Output is accumulated
@@ -321,6 +331,7 @@ addressredirect: class
   _captured = .binary
   _string_target = reference .string
   _array_target = reference .string[]
+  zz_stream_provider = .addressbytestream
 
   none: factory
     empty = .binary
@@ -381,28 +392,50 @@ addressredirect: class
     _array_target = target
     return
 
+  input_stream: factory
+    arg provider = .addressbytestream
+    _kind = 4
+    zz_stream_provider = provider
+    return
+
+  output_stream: factory
+    arg provider = .addressbytestream
+    _kind = 5
+    zz_stream_provider = provider
+    return
+
+  /** True for an authored endpoint, including explicitly empty input. */
+  active: method = .boolean
+    return _kind <> 0
+
   has_input: method = .boolean
-    return _kind = 1
+    return _kind = 1 | _kind = 4
 
   captures_output: method = .boolean
-    return _kind = 2 | _kind = 3
+    return _kind = 2 | _kind = 3 | _kind = 5
 
   input_snapshot: method = .binary
+    if _kind = 4 then return zz_stream_provider.input_snapshot()
     return _input
 
   append_bytes: method = .void
     arg bytes = .binary
-    if captures_output() then assembler bappend _captured,bytes
+    if _kind = 5 then call zz_stream_provider.append_bytes(bytes)
+    else if captures_output() then assembler bappend _captured,bytes
     return
 
   native_emit: method = .int
     arg text = .string
     if captures_output() = 0 then return 0
     bytes = text as .binary
-    assembler bappend _captured,bytes
+    call append_bytes(bytes)
     return 1
 
   finish: method = .void
+    if _kind = 5 then do
+      call zz_stream_provider.finish()
+      return
+    end
     if _kind = 2 then do
       if <refvalid>(_string_target) = 0 then do
         assembler signal "REFERENCE_INVALID","ADDRESS output string is no longer live"
@@ -699,6 +732,7 @@ addressfunctionresponse: class
   _diagnostics = .string[]
   _rc = .int
   _result = .string
+  zz_has_result = .boolean
 
   *: factory
     arg rc = 0, result = "", condition_name = ""
@@ -706,6 +740,7 @@ addressfunctionresponse: class
     _result = result
     _condition_name = condition_name
     _diagnostic_count = 0
+    zz_has_result = 1
     return
 
   get_rc: method = .int
@@ -721,6 +756,15 @@ addressfunctionresponse: class
   set_result: method = .void
     arg result = .string
     _result = result
+    zz_has_result = 1
+
+  /** Distinguish an absent function result from present empty text. */
+  has_result: method = .boolean
+    return zz_has_result
+
+  clear_result: method = .void
+    _result = ""
+    zz_has_result = 0
 
   get_condition_name: method = .string
     return _condition_name
@@ -1946,6 +1990,15 @@ _address_cv_as_binary: procedure = .binary
   assembler bslice result,document,start,byte_count
   return result
 
+_address_cv_as_string: procedure = .string
+  arg document = .binary
+  if _address_cv_type(document) <> 6 then do
+    call _address_channel_error "RXCV string type", 2
+    return ""
+  end
+  byte_count = <at..int>(20) document
+  return <at..string>(28,byte_count) document
+
 _address_chan_open: procedure = .int
   arg provider = .int, capabilities = .int, configuration = .binary
   status = 0
@@ -2038,8 +2091,44 @@ _address_byte_start_drain: procedure = .int
   envelope = _address_cv_record("crexx.channel.byte-drain", names, values)
   return _address_chan_start(handle, envelope, -1)
 
+/** Execute a direct argv vector through the shared ADDRESS child provider.
+ * @param executable Exact executable path/name; never parsed as command text.
+ * @param arguments Ordered present strings, including empty arguments.
+ * @param stdin Optional borrowed raw input; omitted inherits host stdin.
+ * @param stdout Optional borrowed raw output; omitted inherits host stdout.
+ * @param stderr Optional borrowed raw output; omitted inherits host stderr.
+ * @return Normal child exit status; streams use the shared ADDRESS owner.
+ * @signal CHANNEL_ERROR Launch, unavailable/resource or channel failure.
+ * Embedded NUL is refused by the existing child provider before launch.
+ */
+processrun: procedure = .int
+  arg executable = .string, arguments = .string[], ?stdin = .addressredirect, ?stdout = .addressredirect, ?stderr = .addressredirect
+  if \initialized(stdin) then stdin = .addressredirect.none()
+  if \initialized(stdout) then stdout = .addressredirect.none()
+  if \initialized(stderr) then stderr = .addressredirect.none()
+  request = .addressrequest("PATH",executable,stdin,stdout,stderr)
+  response = spawn_request(request,4,arguments)
+  return response.get_rc()
+
+/* Try every close even after a failure. A signal path cancels rather than
+ * draining a child whose stream/controller work has been interrupted. */
+_address_spawn_close: procedure = .int
+  arg child = .int, input = .int, output = .int, error = .int, mode = .int
+  first_status = 0
+  handles = .int[]
+  handles[1] = child; handles[2] = input; handles[3] = output; handles[4] = error
+  do index = 1 to 4
+    handle = handles[index]
+    if handle <> 0 then do
+      close_status = 0
+      assembler chanclose close_status,handle,mode
+      if first_status = 0 then first_status = close_status
+    end
+  end
+  return first_status
+
 spawn_request: procedure = .addressresponse
-  arg request = .addressrequest, spawn_mode = 0
+  arg request = .addressrequest, spawn_mode = 0, ?arguments = .string[]
 
   response = .addressresponse(0)
   env_names = .string[]
@@ -2057,6 +2146,11 @@ spawn_request: procedure = .addressresponse
   child_handle = 0
   stdout_done = 1
   stderr_done = 1
+  process_failure = 0
+  process_error_code = 0
+  process_message = ""
+
+  do
 
   stdin_adapter = request.get_stdin_endpoint()
   stdout_adapter = request.get_stdout_endpoint()
@@ -2162,7 +2256,8 @@ spawn_request: procedure = .addressresponse
   child_names = .string[]
   child_values = .binary[]
   child_names[1] = "arguments"
-  child_values[1] = _address_cv_string_array(empty_arguments)
+  if spawn_mode = 4 then child_values[1] = _address_cv_string_array(arguments)
+  else child_values[1] = _address_cv_string_array(empty_arguments)
   child_names[2] = "bindings"
   child_values[2] = _address_cv_string_array(crexx_bindings)
   child_names[3] = "environment"
@@ -2193,6 +2288,11 @@ spawn_request: procedure = .addressresponse
         child_done = 1
         child_state = _address_cv_as_integer(_address_cv_field(child_completion, "state"))
         if child_state = 1 then rc = _address_cv_as_integer(_address_cv_field(child_completion, "result"))
+        else do
+          process_failure = child_state
+          process_error_code = _address_cv_as_integer(_address_cv_field(child_completion, "errorCode"))
+          process_message = _address_cv_as_string(_address_cv_field(child_completion, "message"))
+        end
       end
     end
 
@@ -2232,10 +2332,9 @@ spawn_request: procedure = .addressresponse
     end
   end
 
-  call _address_chan_close child_handle,1
-  if stdin_handle <> 0 then call _address_chan_close stdin_handle,1
-  if stdout_handle <> 0 then call _address_chan_close stdout_handle,1
-  if stderr_handle <> 0 then call _address_chan_close stderr_handle,1
+  close_status = _address_spawn_close(child_handle,stdin_handle,stdout_handle,stderr_handle,1)
+  if close_status <> 0 then call _address_channel_error "child completion close",close_status
+  child_handle = 0; stdin_handle = 0; stdout_handle = 0; stderr_handle = 0
 
   /* Class values are copied at the request/provider boundary. Apply the
      bytes accumulated by this controller-owned copy to its explicit target
@@ -2243,6 +2342,17 @@ spawn_request: procedure = .addressresponse
   call stdout_adapter.finish()
   call stderr_adapter.finish()
   call response.set_rc(rc)
+  if process_failure <> 0 then do
+    if spawn_mode = 4 then call _address_channel_error "child state=" || process_failure || " " || process_message,process_error_code
+    call response.set_condition_name("FAILURE")
+    call response.add_diagnostic(process_message)
+  end
+  return response
+  on signal failure,error,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,classic_syntax,classic_condition,cancel,other as problem
+    ignored_close = _address_spawn_close(child_handle,stdin_handle,stdout_handle,stderr_handle,2)
+    call rxfnsb..signalrelay(problem)
+    return response
+  end
   return response
 
 unknown_environment_response: procedure = .addressresponse

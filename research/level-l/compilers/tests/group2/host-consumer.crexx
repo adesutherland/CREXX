@@ -1,0 +1,193 @@
+/* Owning B consumer of the generated ordinary typed C host export. */
+options levelb comments_dash numeric_classic
+import rxfnsb
+import g2host
+import rexxvalue
+import rexxclassichost
+import rexxclassichostprotocol
+import rexxclassicconfig
+
+main: procedure = .int
+  errors = 0
+  condition = .runtime_signal
+  state = .ProbeState()
+  hooks = .HostHook(reference state)
+  config = .RexxClassicConfig("UTF8")
+  call config.registerHostHook("SAY",hooks)
+  call config.registerHostHook("EXTERNALROUTINE",hooks)
+  payload = "é雪" || ('00'x as .string) || "tail "
+  external_payload = "external" || ('00'x as .string) || "result"
+  request = .RexxClassicHostRequest("FUNCTION","logical host source")
+  call request.appendText(payload)
+  call request.appendText("",0)
+  call request.appendText("")
+  call request.setConfiguration(config)
+  result = g2host..run(request)
+  expected = payload || "|changed|" || external_payload || "|shared changed|1|1|FUNCTION|logical host source"
+  errors = errors + check(result.indicator() = "R" & result.value().asString() == expected,"FUNCTION exact result, omissions, private/exposed pools and source mode")
+  errors = errors + check(state.errors() = 0 & state.sayCount() = 1 & state.externalCount() = 1,"enabled callbacks use current private caller")
+  errors = errors + check(\state.retainedValid(),"all callback grants revoked after host completion")
+  other = .RexxClassicHostRequest("SUBROUTINE","second source")
+  call other.appendText("exit")
+  exited = g2host..run(other)
+  errors = errors + check(exited.indicator() = "R" & exited.value().asString() = "exit-result","EXIT completes selected host root")
+  absent = .RexxClassicHostRequest("COMMAND","third source")
+  call absent.appendText("absent")
+  ended = g2host..run(absent)
+  errors = errors + check(ended.indicator() = "N" & \ended.hasValue(),"absent host completion stays distinct")
+  bare = .RexxClassicHostRequest("FUNCTION","failure source")
+  call bare.appendText("bare")
+  failed = g2host..run(bare)
+  errors = errors + check(failed.indicator() = "E" & failed.hasCondition(),"FUNCTION bare RETURN is structured condition")
+  if failed.hasCondition() then do
+    condition = failed.condition()
+    errors = errors + check(condition.name() = "CLASSIC_SYNTAX" & pos("45.1",condition.message()) > 0,"FUNCTION required RETURN keeps condition identity")
+  end
+  failure_modes = .string[]
+  failure_modes[1] = "nested-bare"
+  failure_modes[2] = "packet-bare"
+  do failure_index = 1 to 2
+    escaping = .RexxClassicHostRequest("FUNCTION","nested terminal failure source")
+    call escaping.appendText(failure_modes[failure_index])
+    escaping_result = g2host..run(escaping)
+    errors = errors + check(escaping_result.indicator() = "E" & escaping_result.hasCondition() & \escaping_result.hasValue(),"nested local/external failure is an owned terminal completion")
+    if escaping_result.hasCondition() then do
+      condition = escaping_result.condition()
+      errors = errors + check(condition.name() = "CLASSIC_SYNTAX" & pos("RXC-LC-45.1:",condition.message()) = 1,"declined nested failure cannot resume a parent Classic handler")
+    end
+    recovered_exit = g2host..run(other)
+    errors = errors + check(recovered_exit.indicator() = "R" & recovered_exit.value().asString() = "exit-result","host entry recovers after terminal nested failure")
+  end
+  packet_exit = .RexxClassicHostRequest("FUNCTION","external local EXIT source")
+  call packet_exit.appendText("packet-exit")
+  packet_exit_result = g2host..run(packet_exit)
+  errors = errors + check(packet_exit_result.indicator() = "R" & packet_exit_result.value().asString() == "CHILD-EXIT|continued","ordinary external EXIT remains local under a host boundary")
+  expression = .RexxClassicHostRequest("FUNCTION","expression source")
+  call expression.appendText("function")
+  call expression.setConfiguration(config)
+  expression_result = g2host..run(expression)
+  errors = errors + check(expression_result.indicator() = "R" & expression_result.value().asString() == external_payload,"configured expression callback returns exact present result")
+  empty_expression = .RexxClassicHostRequest("FUNCTION","absent expression source")
+  call empty_expression.appendText("absent-function")
+  call empty_expression.setConfiguration(config)
+  empty_expression_result = g2host..run(empty_expression)
+  errors = errors + check(empty_expression_result.indicator() = "E" & empty_expression_result.hasCondition(),"handled absent expression requires a value")
+  if empty_expression_result.hasCondition() then do
+    condition = empty_expression_result.condition()
+    errors = errors + check(condition.name() = "CLASSIC_SYNTAX" & pos("44.1",condition.message()) > 0,"handled absent expression keeps 44.1")
+  end
+  errors = errors + check(state.errors() = 0,"expression callback invocation metadata")
+  cold_state = .ProbeState()
+  cold_config = .RexxClassicConfig("UTF8")
+  call cold_config.registerHostHook("SAY",.ColdHook(reference cold_state))
+  cold = .RexxClassicHostRequest("FUNCTION","cold private callback source")
+  call cold.appendText("cold")
+  call cold.setConfiguration(cold_config)
+  cold_result = g2host..run(cold)
+  errors = errors + check(cold_result.indicator() = "E" & cold_result.hasCondition(),"cold private callback failure becomes owned condition")
+  if cold_result.hasCondition() then do
+    condition = cold_result.condition()
+    errors = errors + check(condition.name() = "CHANNEL_ERROR" & condition.message() == "cold" || ('00'x as .string) || "failure","cold failure retains original typed payload")
+  end
+  errors = errors + check(\cold_state.retainedValid(),"cold failure revokes private callback window")
+  recovered_hooks = .HostHook(reference cold_state)
+  call cold_config.registerHostHook("SAY",recovered_hooks)
+  call cold_config.registerHostHook("EXTERNALROUTINE",recovered_hooks)
+  recovered = .RexxClassicHostRequest("FUNCTION","recovered source")
+  call recovered.appendText("recovered")
+  call recovered.appendText("",0)
+  call recovered.appendText("")
+  call recovered.setConfiguration(cold_config)
+  recovered_result = g2host..run(recovered)
+  recovered_expected = "recovered|changed|" || external_payload || "|shared changed|1|1|FUNCTION|recovered source"
+  errors = errors + check(recovered_result.indicator() = "R" & recovered_result.value().asString() == recovered_expected & cold_state.errors() = 0,"fresh host invocation restores private callback owners after cold failure")
+  if errors = 0 then say "G2_HOST_OK"
+  return errors
+
+check: procedure = .int
+  arg ok = .boolean, detail = .string
+  if ok then return 0
+  say "G2_HOST_FAIL" detail
+  return 1
+
+ProbeState: class
+  failures = .int
+  says = .int
+  externals = .int
+  retained = .RexxClassicHostPool
+  *: factory
+    failures = 0
+    says = 0
+    externals = 0
+    return
+  observe: method = .void
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    retained = window
+    if operation = "EXTERNALROUTINE" then do
+      routine = window.valueOther("ROUTINE").value().asString()
+      if routine = "EXTERNAL_FUNCTION" | routine = "ABSENT_FUNCTION" then do
+        invocation = window.valueOther("INVOCATION").value().asString()
+        failures = failures + check(invocation = "FUNCTION","external expression invocation kind")
+        if routine = "EXTERNAL_FUNCTION" then
+          failures = failures + check(presence[0] = 3 & presence[1] = 1 & presence[2] = 0 & presence[3] = 1,"external expression omissions")
+        return
+      end
+    end
+    local = window.value("LOCAL")
+    failures = failures + check(local.found() & (local.value().asString() = "private" | local.value().asString() = "changed"),"callback private pool is live")
+    if operation = "SAY" then do
+      says = says + 1
+      argument = window.valueOther("ARG",1)
+      failures = failures + check(argument.value().asString() = "inner","callback ARG observes private invocation")
+      call window.set("LOCAL",.RexxValue("changed"))
+    end
+    else do
+      externals = externals + 1
+      name = window.valueOther("ROUTINE")
+      kind = window.valueOther("INVOCATION")
+      failures = failures + check(name.value().asString() = "EXTERNAL_ALIAS" & kind.value().asString() = "SUBROUTINE","external fallback metadata")
+      failures = failures + check(presence[0] = 3 & presence[1] = 1 & presence[2] = 0 & presence[3] = 1,"external fallback raw positional presence")
+      call window.set("SHARED",.RexxValue("shared changed"))
+    end
+    return
+  errors: method = .int
+    return failures
+  sayCount: method = .int
+    return says
+  externalCount: method = .int
+    return externals
+  retainedValid: method = .boolean
+    return retained.valid()
+
+HostHook: class implements .RexxClassicHostHook
+  state_ref = reference .ProbeState
+  *: factory
+    arg state = reference .ProbeState
+    state_ref = state
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    current_state_ref = state_ref
+    state = dereference current_state_ref
+    call state.observe(operation,values,presence,window)
+    if operation = "EXTERNALROUTINE" then do
+      routine = window.valueOther("ROUTINE").value().asString()
+      if routine = "ABSENT_FUNCTION" then return .RexxClassicHostHookResult.absent()
+    end
+    if operation = "EXTERNALROUTINE" then return .RexxClassicHostHookResult.returning(.RexxValue("external" || ('00'x as .string) || "result"))
+    return .RexxClassicHostHookResult.absent()
+
+ColdHook: class implements .RexxClassicHostHook
+  state_ref = reference .ProbeState
+  *: factory
+    arg state = reference .ProbeState
+    state_ref = state
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    current_state_ref = state_ref
+    state = dereference current_state_ref
+    call state.observe(operation,values,presence,window)
+    message = "cold" || ('00'x as .string) || "failure"
+    assembler signal "CHANNEL_ERROR",message
+    return .RexxClassicHostHookResult.absent()

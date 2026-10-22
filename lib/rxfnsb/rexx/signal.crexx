@@ -30,7 +30,7 @@
  */
 options levelb
 
-namespace rxfnsb expose signal standard_signal runtime_signal runtime_signal_raw signalaction standard_signalaction
+namespace rxfnsb expose signal standard_signal runtime_signal runtime_signal_raw signalaction standard_signalaction signalrelay
 
 /** Public condition contract used by Level B signal handlers. */
 signal: interface
@@ -234,6 +234,7 @@ _signal_code: procedure = .int
     when "CLASSIC_CONDITION" then return 29
     when "OBJECT_NOT_INITIALIZED" then return 16
     when "RXBIN_CORRUPTION" then return 17
+    when "CANCEL" then return 18
     when "QUIT" then return 19
     when "TERM" then return 20
     when "POSIX_INT" then return 21
@@ -291,3 +292,48 @@ _signal_metadata_int: procedure = .int
   end
 
   return 0
+
+/** Relay one bound VM event after caller-owned cleanup.
+ * @param problem Original VM-bound signal; its typed payload and origin survive.
+ * @return No value; a caller that skips the relayed event must return.
+ * @signal INVALID_ARGUMENTS A user-created signal has no bound runtime origin.
+ * SIGNALORIGIN tags are instruction literals; this shared transport covers every
+ * maskable canonical tag without converting its payload into message text.
+ */
+signalrelay: procedure = .void
+  arg problem = .signal
+  name = problem.name()
+  payload = problem.payload()
+  select
+    when name = "FAILURE" then assembler signalorigin "FAILURE",payload,problem
+    when name = "ERROR" then assembler signalorigin "ERROR",payload,problem
+    when name = "OVERFLOW_UNDERFLOW" then assembler signalorigin "OVERFLOW_UNDERFLOW",payload,problem
+    when name = "DIVISION_BY_ZERO" then assembler signalorigin "DIVISION_BY_ZERO",payload,problem
+    when name = "CONVERSION_ERROR" then assembler signalorigin "CONVERSION_ERROR",payload,problem
+    when name = "INVALID_ARGUMENTS" then assembler signalorigin "INVALID_ARGUMENTS",payload,problem
+    when name = "OUT_OF_RANGE" then assembler signalorigin "OUT_OF_RANGE",payload,problem
+    when name = "UNICODE_ERROR" then assembler signalorigin "UNICODE_ERROR",payload,problem
+    when name = "UNKNOWN_INSTRUCTION" then assembler signalorigin "UNKNOWN_INSTRUCTION",payload,problem
+    when name = "FUNCTION_NOT_FOUND" then assembler signalorigin "FUNCTION_NOT_FOUND",payload,problem
+    when name = "NOT_IMPLEMENTED" then assembler signalorigin "NOT_IMPLEMENTED",payload,problem
+    when name = "INVALID_SIGNAL_CODE" then assembler signalorigin "INVALID_SIGNAL_CODE",payload,problem
+    when name = "REFERENCE_INVALID" then assembler signalorigin "REFERENCE_INVALID",payload,problem
+    when name = "NOTREADY" then assembler signalorigin "NOTREADY",payload,problem
+    when name = "OBJECT_NOT_INITIALIZED" then assembler signalorigin "OBJECT_NOT_INITIALIZED",payload,problem
+    when name = "RXBIN_CORRUPTION" then assembler signalorigin "RXBIN_CORRUPTION",payload,problem
+    when name = "CANCEL" then assembler signalorigin "CANCEL",payload,problem
+    when name = "QUIT" then assembler signalorigin "QUIT",payload,problem
+    when name = "TERM" then assembler signalorigin "TERM",payload,problem
+    when name = "POSIX_INT" then assembler signalorigin "POSIX_INT",payload,problem
+    when name = "POSIX_HUP" then assembler signalorigin "POSIX_HUP",payload,problem
+    when name = "POSIX_USR1" then assembler signalorigin "POSIX_USR1",payload,problem
+    when name = "POSIX_USR2" then assembler signalorigin "POSIX_USR2",payload,problem
+    when name = "POSIX_CHLD" then assembler signalorigin "POSIX_CHLD",payload,problem
+    when name = "CHANNEL_ERROR" then assembler signalorigin "CHANNEL_ERROR",payload,problem
+    when name = "TASK_FAILURE" then assembler signalorigin "TASK_FAILURE",payload,problem
+    when name = "CLASSIC_SYNTAX" then assembler signalorigin "CLASSIC_SYNTAX",payload,problem
+    when name = "CLASSIC_CONDITION" then assembler signalorigin "CLASSIC_CONDITION",payload,problem
+    when name = "BREAKPOINT" then assembler signalorigin "BREAKPOINT",payload,problem
+    otherwise assembler signalorigin "OTHER",payload,problem
+  end
+  return

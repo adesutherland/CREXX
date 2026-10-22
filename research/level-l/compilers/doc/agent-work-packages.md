@@ -56,6 +56,23 @@ checks during development does not remove later milestone obligations.
 | **WP-11 INTERPRET compiler/runtime** | Assigned C mode/entry/continuation and B runtime dispatch files | Final-stage mechanism proof, then same-pipeline group compilation, live caller binding, cross-owner outcomes, handler resumption and source observations. Interfaces agreed with WP-09 image ownership. | CFC-AC05/11; STEP11 after static acceptance. No source compiler/evaluator fallback and no premature dynamic implementation. |
 | **WP-12 Independent acceptance review** | Read-only implementation and temporary diagnostics; own test edits only if granted | Start at the early stable code/first-RXAS checkpoint: check contract/test traceability and effect/lifetime assumptions. Final inspection covers scope, preservation and changed material deltas. Findings name mechanism, affected criterion and reproducer. | Early in every increment; complete delivery review at STEP10/11d. Coordinator independently validates; worker assertions alone never close a criterion. No automatic whole-cycle restart. |
 
+## Group 2 ownership
+
+The [Group 2 plan](../PLAN.md#group2-calls-host-plan) and
+[contract](architecture.md#group2-calls-host-proposal) own the calls/host increment.
+WP-05/06 own Classic name resolution, static admission and value adaptation;
+WP-03/07 own activation, request/completion, callback windows and configured
+resources. WP-09 owns additive embedding spans/interrupt ingress and the thin
+optional metadata provider over binutils and the native loader. WP-10 owns
+prepared bindings, CLI selection and component consumers; WP-12 reviews coherent
+source and representative typed-call/host RXAS before final qualification.
+
+Ordinary callees retain their ABI and capabilities. Generic Level L owns no
+Classic call-search, pool or result policy. Process-backed calls and ADDRESS
+share the existing child/byte-channel owners. Native C frontend, automatic
+Classic source invocation and full compiler/platform QA remain outside this
+increment; INTERPRET stays last.
+
 ## Group 4 ownership
 
 The [Group 4 plan](../PLAN.md#group4-infrastructure-plan) and
