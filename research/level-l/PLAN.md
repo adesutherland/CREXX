@@ -66,6 +66,32 @@ installed or cross-platform qualification is claimed. Cache reuse requires
 unchanged generator artifacts; normal version relinks can intentionally miss.
 
 
+<a id="dfa-construction-backlog"></a>
+
+## Backlog: DFA construction cost and Unicode reuse
+
+**L-UNICODE-REUSE-01 — investigation complete; improvements unapproved.**
+The bounded busy-host probe used a Unicode XID identifier/space lexer, an
+independent ASCII lexer and a small LR control. DFA construction dominated the
+Unicode case; property loading, set algebra, UTF-8 lowering and NFA construction
+were comparatively small. This locates a phase, not avoidable cost or a reason
+to change it. The full C grammar and individual DFA subphases remain unprofiled;
+retaining the current implementation is a valid outcome.
+
+Unicode properties, interval algebra, UTF-8 lowering and source decoding already
+have shared owners (`llproperties`, `llcharset`, `llsource`). The combined DFA
+still depends on authored rules, priority and longest matching. Source inspection
+identified linear searches through canonical DFA subsets and repeated NFA scans
+for byte classes as possible investigation targets. A short DFA sample did not
+show VM storage-owner searches; that does not exclude their cost in other phases.
+
+| Stable step / status | Possible follow-up and decision gate |
+|---|---|
+| **L-UNICODE-REUSE-STEP01 — complete** | Bounded phase investigation; findings and limits above. No lexer algorithm change. |
+| **L-UNICODE-REUSE-STEP02 — backlog; benefit gate** | If warranted, isolate byte-class partitioning, closure/sorting, subset lookup and table filling. Assess an exact binary-key subset index or cheaper byte-class construction against current code, including hashing/storage/maintenance costs. Preserve exact collision equality, discovery order, matching, spans, diagnostics and limits. Implement only if the benefit justifies the complexity. |
+| **L-UNICODE-REUSE-STEP03 — backlog; separate design gates** | Consider compact prefix-factored byte-set fragments, a scalar/class alphabet or relink-tolerant semantic cache identity only if needed. Share Unicode data/algorithms; preserve occurrence mappings and logical budget charging. Current LRUSE cache admission stays unchanged. |
+| **L-UNICODE-REUSE-STEP04 — unapproved implementation** | Review the selected contract first; then use independent small/Unicode lexers, exact token/span oracles and focused collision, priority/longest-match, invalid UTF-8, limit/failure and cold/reused checks where affected. No speed claim follows from phase timing or asymptotic reasoning alone. |
+
 ## Repository architecture and cleanup
 
 **Status: reorganisation and final naming/library-only refinement published.**

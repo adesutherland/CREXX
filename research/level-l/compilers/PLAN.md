@@ -150,7 +150,7 @@ remains read-only, no push is authorized, and INTERPRET stays last.
 |---|---|---|
 | **Conditions and observations** | **Complete local increment:** CALL ON/OFF, delayed delivery/resumption and buffered HALT; configured conditions, SIGL/CONDITION/origins, authored clause/clocks and field/drop observations, including handler pool/resource restoration. Wider host producers/platforms and dynamic execution retain the groups below. | CCOND-AC01–08 / STEP01–03; CALL4; C-OBS; condition portions of STEP03/07 and instruction criteria. |
 | **Calls and host integration** | **Complete local increment:** [Group 2 contract](doc/architecture.md#group2-calls-host-proposal) and [steps](#group2-calls-host-plan). Delivered static internal/external call and activation semantics: arguments/omissions, RESULT and RETURN/EXIT completion, PROCEDURE/private/shared pools and EXPOSE aliases, inherited/restored numeric/ADDRESS/TRACE state, provider/callback entry and teardown. Preserve already-qualified ordinary recursion and call behavior. Metadata-guided ordinary scalar B/G/RXPA calls are delivered; B/G exposed globals remain inaccessible to C, true reference values require explicit adapters. COMMAND/FUNCTION/SUBROUTINE host invocation supplies exact-length/empty/NUL arguments/results, live pool access windows, initial ADDRESS/stream/queue selection, I/O adapters and NUL transport, real clock/HALT producers, resource failures and concurrent-context isolation. Declared platform/delivery proof remains open. CALL ON/OFF and event delivery remain with conditions. | C-ACT/C-HOST; call portions of C-POOL; STEP03/06/08; CPROC/CCALL/CEXT/RRET/CEXIT and host portions of queue/stream/ADDRESS criteria; BF05/06/08/09 integration dependencies. |
-| **Language functionality: source, expressions and BIFs** | Remaining syntax/header controls, Unicode names/source inventory, operators/numeric semantics, exact diagnostics and dead-source validation; outstanding variable/stem and instruction semantics outside the condition/call/host groups; complete C context and behavior contracts for the 95 already-bound BIF names, reusing the shared B bodies. INTERPRET is the last feature in this group, with call/lifecycle integration and compiler support supplied by their owners. | C-SRC/C-EXPR/C-NUM/C-POOL/C-UNI; STEP04–06; BF01–09 language contracts; STEP11 last. |
+| **Language functionality: source, expressions and BIFs (Group 3 — next)** | Remaining syntax/header controls, Unicode names/source inventory, operators/numeric semantics, exact diagnostics and dead-source validation; outstanding variable/stem and instruction semantics outside the condition/call/host groups; complete C context and behavior contracts for the 95 already-bound BIF names, reusing the shared B bodies. INTERPRET is the last feature in this group, with call/lifecycle integration and compiler support supplied by their owners. | C-SRC/C-EXPR/C-NUM/C-POOL/C-UNI; STEP04–06; BF01–09 language contracts; STEP11 last. |
 | **Compiler and emitter** | **Group 4 STEP01–08 locally delivered for their recorded profiles:** optional neutral L analyses/proofs, RXAS records/allocation and bounded IR execution, with C integration and four-image package closure. The [architecture](doc/architecture.md#group4-infrastructure-proposal) owns conservative lifetime/control limits. Full G4/CFC acceptance remains open; further C-OPT opportunities and both native B seed defects retain their owners. | G4-AC01–10 / STEP01–08; STEP01/02/09; C-ABI; C-OPT-01–06; CFC-AC07/10–12; B-SEED-ALIAS; B-SEED-INLINE-RECEIVER. |
 
 Calls and host integration owns activation/pool/alias entry, inheritance,
@@ -158,6 +158,34 @@ arguments/results, completion and teardown, including later INTERPRET integratio
 Conditions owns when handlers transfer or resume execution; compiler work owns
 the supporting emitted ownership/cleanup mechanisms. Each mechanism retains one
 owner, and locally qualified recursion/PROCEDURE/EXPOSE is not reopened.
+
+### Next action: Group 3 static language functionality
+
+Groups 1 and 2 and Group 4 STEP01–08 are locally delivered for their recorded
+profiles. Group 3 is the next implementation area. Its first increment should
+close static source/expression gaps before completing the BIF/context crosswalk:
+
+1. Complete source/header, Unicode symbol and expression contracts under
+   C-SRC/C-EXPR/C-NUM/C-UNI and CLC-STEP04. The current grammar lacks power `**`,
+   integer division `%`, remainder `//` and the complete strict/negated comparison
+   families, including binary `\==`. Retain Classic precedence/left-associative
+   power, eager logical evaluation, exact values/errors and dead-source admission.
+2. Complete remaining pool/stem/instruction semantics, retained source inventory
+   (including SOURCELINE) and authored diagnostics through their existing ledger
+   rows. Preserve the activation, conditions, host and emitter owners already
+   delivered; source inventory is distinct from logical source identity.
+3. Close BF01–09 language/context obligations through the existing shared B
+   entries. All 95 names already have bindings; that is not full BIF conformance.
+   Start with maintained native fixture sources and checked expectations, extend
+   only missing new-compiler boundaries, and repair a shared body only for a
+   demonstrated defect or an explicitly unfinished contract.
+
+Record/review the complete increment contract before product edits. Use early
+source/RXAS review and proportionate component checks, then a local commit.
+Formal compiler QA, delivery/platform proof and CFC-AC01–12 remain open.
+INTERPRET is excluded from this static increment and remains STEP11, last, with
+its own continuation/code-owner approval gate. No Group 3 product edits are
+claimed by this status review.
 
 INTERPRET retains its final position and existing contract/approval gates.
 Formal whole-compiler QA follows feature completion. STEP10 delivery checks
@@ -301,13 +329,13 @@ stages retain full shared acceptance; they do not replace the ordered queue.
 | Shared step | Status / remaining work |
 |---|---|
 | **CLC-STEP01** | Partial: finish every ledger disposition, independent expectations, ABI/platform decisions and test traceability. Exact exceptions need Adrian's approval. |
-| <a id="l-construct-01"></a>**CLC-STEP02** | Partial: L exceptional/resumable edges, effects/facts/invalidation, liveness, bounded atomic failure and checked rewrites. Keep block-local values/cross-block slots; needed L APIs receive internal contract review under the standing authority. Generic lexical reuse and CMETA-STEP01–03 scalar attribute-index reading are delivered; linear llregular construction remains separate. |
-| <a id="active-first-implementation-increment"></a><a id="shared-b-unicode-interface-and-c-adapter-migration"></a><a id="active-c-contract-baseline-increment"></a><a id="active-borrowed-classic-context-increment"></a>**CLC-STEP03** | Partial: borrowed context/shared B Unicode foundations delivered. Complete activation/pool/alias ownership, recursion, restoration, abrupt paths and needed direct/BIF APIs; preserve existing B/G/public metadata contracts and one algorithm/data owner. |
+| <a id="l-construct-01"></a>**CLC-STEP02** | Partial: L exceptional/resumable edges, effects/facts/invalidation, liveness, bounded atomic failure and checked rewrites. Keep block-local values/cross-block slots; needed L APIs receive internal contract review under the standing authority. Generic lexical reuse and CMETA-STEP01–03 scalar attribute-index reading are delivered; possible DFA construction improvements remain in the separate [Level L backlog](../PLAN.md#dfa-construction-backlog), with no prerequisite on Group 3. |
+| <a id="active-first-implementation-increment"></a><a id="shared-b-unicode-interface-and-c-adapter-migration"></a><a id="active-c-contract-baseline-increment"></a><a id="active-borrowed-classic-context-increment"></a>**CLC-STEP03** | Shared B Unicode/borrowed context and Group 2 static activation, recursion, pool/alias entry, restoration and host ownership are locally delivered. Remaining language/pool/BIF contracts belong to Group 3; dynamic lifetime and declared delivery/platform proof remain open. Preserve existing B/G/public metadata and one algorithm/data owner. |
 | **CLC-STEP04** | Partial: complete contextual source/Unicode names, exact byte/scalar origins, dead-source validation, expressions/numeric semantics and BF01–05 bindings. No native frontend dependency. |
 | **CLC-STEP05** | Partial: finish shared dependencies of the delivered LC-I-01–10 profiles in the instruction table. |
-| **CLC-STEP06** | Local LC-I-11–19 profiles and CALL4 condition integration delivered; remaining full scope stays explicit. Retain ARG/PARSE/PULL delivery/platform and broader call/host completion obligations. |
+| **CLC-STEP06** | Local LC-I-11–19 profiles, CCOND delayed handlers and Group 2 static call/host completion are delivered. Remaining source/expression/BIF, dynamic and ARG/PARSE/PULL delivery/platform obligations stay explicit. |
 | **CLC-STEP07** | SIGNAL, practical TRACE and Group 1 conditions/observations locally qualified. Complete source inventory/diagnostics, remaining BF07/09 contracts and host/platform/delivery acceptance retain their owners. |
-| **CLC-STEP08** | Not started as a full stage: remaining BIF/host adapters, exact-length invocation/completion, callback pools, queues/streams/clocks/HALT, concurrency and declared platforms. New host APIs/exclusions require approval. |
+| **CLC-STEP08** | Group 2 static host implementation is locally delivered: exact-length invocation/completion, callback pools, queues/streams, clocks/HALT and lifecycle. Remaining source inventory/BIF language contracts belong to Group 3; declared platform, delivery and formal acceptance proof stay open. New host API/platform exceptions retain their gates. |
 | **CLC-STEP09** | Open throughout: C-OPT-01–06 and actual caller/helper RXAS review, truthful source/TRACE, bounded registers/call windows and cleanup. Fix construction defects; document necessary costs. Needed ISA/storage contracts receive internal review under standing authority; production performance edits retain their qualification gate. |
 | <a id="step07a-validation"></a>**CLC-STEP10** | Not started: complete static ledger and CLI/service/install/cold/incremental/relocated/platform delivery, independent walkthrough/review. Static acceptance is not complete C. |
 | **CLC-STEP11** | Last: same-compiler INTERPRET after static acceptance and approval of exact continuation/code-owner contracts; close every CFC criterion. |

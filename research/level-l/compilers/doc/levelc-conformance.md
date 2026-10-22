@@ -211,8 +211,12 @@ focused development closure from installed/platform and formal acceptance.
 
 ## Material work remaining
 
-Full expression coverage, including binary strict inequality `\==`, remains
-with CLC-STEP04. Negated strict equality `\(a == b)` is currently admitted.
+Full expression coverage remains with Group 3 / CLC-STEP04. The current
+grammar lacks power `**`, integer division `%`, remainder `//` and the complete
+strict/negated comparison family, including binary strict inequality `\==`.
+Negated strict equality `\(a == b)` is currently admitted. All 95 BIF names have
+bindings; their complete language/context contracts and retained source
+inventory still require new-compiler integration/qualification.
 
 The [plan](../PLAN.md#remaining-actions) and
 [ledger](levelc-requirements.md#shared-requirements-before-instruction-closure)
