@@ -502,6 +502,19 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
 
 ## Outstanding decisions and dependencies
 
+- **INLINING-STRATEGY — separate design review; implementation decision open:**
+  [the existing inlining design](../../../compiler/docs/inlining_design.md#future-inlining-boundary-review)
+  compares native AST, semantic IR and RXAS/bytecode expansion. The proposed
+  direction is producer-independent inlining of RXAS instruction bodies through
+  checked target IR, using the bound caller context and existing machine proofs.
+  This is the shared boundary for B/G/C and DSL producers; semantic IR may still
+  specialize earlier but is not a required parallel library-body format.
+  First specify call/context, lifetime, module-body and source contracts, then
+  prove local expansion and real imported-helper integration before migration.
+  Cross-module bodies require an explicit pre-link/link-time stage. This review
+  authorizes no replacement inliner, new body format, B/G expansion or default
+  switch. Repair the recorded native seed defects independently of that choice;
+  no existing supported inlining shape is withdrawn as a workaround.
 - **B-SEED-CANCEL — locally complete; required Group 2 dependency:** typed B
   admission, catch-all emission and the shared signal mapping now admit the
   existing maskable VM CANCEL tag. Shared process/host cleanup selectors release

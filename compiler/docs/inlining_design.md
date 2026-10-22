@@ -1425,3 +1425,209 @@ The local inlining design should be considered established when:
   can be emitted before `LEAVE_WITH` for each parent bucket
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven
+
+<a id="future-inlining-boundary-review"></a>
+
+## Future inlining boundary review
+
+**Separate architecture proposal; implementation and migration are not yet
+approved.** The current AST inliner and all its supported shapes retain their
+contracts above. The [Level L compiler plan](../../research/level-l/compilers/PLAN.md#outstanding-decisions-and-dependencies)
+tracks the decision alongside the reproduced native seed defects. This review
+does not commission formal compiler QA or a production performance campaign.
+
+### Present implementation
+
+The native `rxc` and `rxc-c` entry points share the backend containing
+`rxcp_opt.c` and the `rxcp_inline_*` clone/bind/rewrite implementation. Classic
+source first lowers into that backend's typed AST; admitted calls then use the
+same optimizer. Local bodies and imported
+`META_INLINE` templates use that same route. The optional template is compiler
+transport, not an assembler proof that it matches executable bytecode.
+The earlier accepted RXC-owned template boundary remains the current contract;
+this user-requested review considers the future strategy without changing it.
+
+The compiler services written in B do not currently implement function-body
+inlining. `llccompiler` and the retained typed `llgcompiler` invoke
+`llirservices.optimise`, whose current transformations are private-slot
+propagation, registered constant evaluation, branch selection, reachability and
+unused pure-operation removal. Their selectors still emit calls. The typed
+research frontend is a limited profile, not the complete native B replacement.
+Native B may inline implementation methods while building these compiler
+services; that is distinct from those services inlining their target programs.
+The dynamic selector's explicitly written inline dispatcher is also distinct
+from an automatic function inliner.
+
+Native RXAS has procedure-local CFG, storage/component/value, signal and
+observation analyses, plus checked transformations. It has no general
+callee-body expansion pass. `flushopt` optimizes and emits one procedure, and
+`rxasproc` flushes the preceding procedure before beginning the next. General
+forward-call expansion therefore needs retained module-level bodies or another
+explicit body source. Cross-module calls additionally need imported executable
+bodies and dependency/global/provenance remapping. RXLINK presently selects and
+links modules; it is not an interprocedural optimizer. The optional B-written
+`llrxas` package likewise owns one function's records and conservative allocation,
+not a module body catalogue or a general register allocator for native RXAS.
+
+### Bound caller context is an input to the proof
+
+At a resolved call site the compiler knows the callee contract, receiver and
+actual bindings, argument presence and the relationships between caller and
+callee contexts. Inheritance is useful knowledge even when a context's concrete
+runtime value is not a constant. Expansion can bind the same context directly,
+specialize known settings and remove equivalent setup. The native inliner's
+`inline_numeric_setting_compatible` already treats inherited settings as
+compatible and compares explicitly selected settings with the caller.
+
+The initial expansion should be conservative and correct before cleanup.
+Fresh callee-local identities and argument/result transport are a useful
+starting point. Required call-boundary behavior must also be represented:
+
+- Evaluate the receiver, actuals and captured locators once in source order;
+  retain omission/default semantics and both return-conversion boundaries.
+- Preserve by-value isolation, exposed aliases, argument entry bindings,
+  `LINK`/`UNLINK` base identities, mutations and copyback on the required exits.
+- Retain numeric state changes and restoration, handler installation and
+  restoration, cleanup and reference invalidation on normal and abrupt exits.
+- Preserve module globals, initialization dependencies, provider identities,
+  logical source/inline origins, TRACE observations and declared stack/caller
+  introspection behavior. An operation that explicitly observes a physical
+  frame needs an admitted virtual-frame equivalent or must remain a call.
+
+These are proof obligations, not blanket reasons to reject inlining. Unknown
+or mutated state can retain explicit save/restore and cleanup. Proved inherited,
+unchanged or unobservable state can omit them. Existing instructions may suffice
+for a bounded profile; a new VM primitive is not assumed necessary. Profitability
+and resource growth are separate from semantic legality.
+
+The VM currently implements numeric inheritance/restoration and reference expiry
+through real child frames. Merely moving a numeric-setting instruction into the
+caller changes its later state. Merely relocating a callee local into the caller
+extends an escaping reference's lifetime. Explicit restoration and `ENDLIFE`
+can express the respective obligations for suitable expanded bodies. RXAS proof
+passes can simplify exposed copies, but current passes do not establish that
+all expansion scaffolding or excess frame cells will disappear.
+
+### Comparison and proposed ownership
+
+| Expansion layer | Strength | Remaining work / limit |
+|---|---|---|
+| Existing native AST | Already has typed binding, local/imported bodies, receiver/default/copyback rules and extensive maintained fixtures. | Tree cloning remains coupled to lexical scopes, symbol remapping and parent-expression/emitter lifetime rules. Repairing an admitted shape is still required. It is not the reusable boundary for the B/L compiler set. |
+| Semantic Level L IR | Explicit operands and identities can finish name/receiver binding before expansion. One transformation can serve compiled and interpreted consumers, with language-owned legality/context adapters. | No generic call interface or inliner exists yet. Current values are block-local; multi-block expansion needs explicit slot/continuation transport. Invocation-wide protection and cleanup cannot be copied into the caller without a scoped contract. Imported B helper bodies are not available in this representation today. |
+| RXAS / lowered target IR | Uses the executable body and already resolved register/attribute operations, supports independent producers, and exposes copies and machine constraints to existing RXAS proofs. | Needs call-frame expansion semantics, fresh labels/metadata, argument/base/global remapping, retained bodies and growth/allocation control. Assembly-only placement does not benefit runtime semantic IR execution. Cross-module scope naturally requires body delivery or a link-time stage. |
+
+RXAS is where the different producers and existing library bodies come together,
+including independently authored DSLs. The proposed common boundary is therefore
+**producer-independent inlining of RXAS instruction bodies through checked
+target IR**. Assembler-level
+and IR-based inlining are compatible choices: expand structured instruction/CFG
+records, not rendered text or a source-language AST. Bind the caller context,
+create fresh private identities and preserve the full call boundary, then use
+machine proofs to simplify the correct expansion. Semantic IR remains useful
+for earlier language-specific specialization and interpreted consumers, without
+becoming a second mandatory body format for ordinary libraries.
+
+A DSL producer should need correct instruction lowering, the ordinary callable
+contract and appropriate source metadata to participate. It should not need to
+export a cREXX AST, duplicate its implementation in another language or implement
+its own general inliner. Source evaluation order and language semantics remain
+with the producer; instruction expansion, storage/context legality and machine
+cleanup belong to the shared target layer. Existing public instruction and
+status-bit contracts remain authoritative for independent producers.
+
+The shared call/callable view must identify the exact executable callee body,
+ordered actuals/presence, incoming storage bindings, result and exit contracts,
+context requirements, module dependencies and provenance. The target service
+owns bounded CFG cloning, register/label/metadata mapping, return/continuation
+reconstruction and atomic publication. Default behavior for an unresolved or
+unproved boundary is the existing call. Receiver identity is already resolved
+into operands here, avoiding later rediscovery through an enclosing source AST.
+Legality, body availability, growth policy and profitability remain separate
+decisions. Precise interfaces, implementation language and packaging need their
+own approval; the present native queues and optional L target records do not
+yet implement this module-level service.
+
+For multi-block expansion, split the caller at the call, clone private storage
+and labels, preserve the argument entry map and optional presence, and join
+returns at an explicit continuation. Recompute owner-bound analyses after
+publication. Source-step and TRACE register references need the same checked
+remapping as executable operands. Preserve the call's source relation and the
+body's contributing origins; ordinary composite provenance alone must not be
+assumed to define an inline stack. Unsupported scope/protection boundaries
+remain calls until their precise expansion is implemented and qualified.
+
+MLIR's [generic inliner with explicit interfaces](https://mlir.llvm.org/docs/Tutorials/Toy/Ch-4/#inlining)
+is a useful precedent for separating the cloning engine from the legality of
+the represented call, not a reason to require high-level IR or adopt MLIR.
+
+### Bodies, modules and delivery
+
+Most existing shared B libraries are built by native B and deliver executable
+bytecode plus optional native AST inline templates. They do not deliver Level L
+semantic IR. Using the actual instruction body avoids making a new B/G-to-L
+exporter or full B self-hosting a prerequisite to optimizing their calls. It
+also avoids a second, independently supplied inline implementation of each BIF.
+`META_INLINE` remains opaque compiler transport rather than machine proof input.
+A hash can bind artifact identities; it does not prove semantic equivalence
+between independently supplied implementations.
+
+Same-module forward calls need retained procedure bodies before expansion.
+Cross-module bodies are available when the selected module set is collected,
+so common imported inlining needs an explicit pre-link/link-time stage or an
+equivalent body-input contract. It need not reparse RXAS text: assembled bytecode
+can be admitted into the same instruction representation under the canonical
+ISA. Native RXPA bodies and unresolved/dynamic callees remain opaque; expanding
+a bytecode caller can still retain such inner calls when their boundaries are
+represented correctly.
+
+Cross-module expansion must retain original global bindings, initializer and
+provider dependencies, and source identity. A callee's `gN` is not the caller's
+`gN`; copying its integer operand is not a global-binding map. Existing loader
+and linker owners must supply or verify those relationships. Do not weaken
+Classic callers' source-level prohibition on accessing B/G globals.
+
+The future B-written assembler/linker and the current native tools should
+consume an explicit shared target contract. Select one long-term expansion
+owner and a deliberate migration, rather than maintaining separate general
+inliners for each source language. Broader semantic IR inlining can be added
+for an independent interpreted-consumer need; its missing call and scope
+interfaces are not prerequisites for this common target-level design.
+
+### Tactical repairs and strategic follow-up
+
+`B-SEED-ALIAS` occurs in native no-opt indexed-receiver emission. It is not
+caused by AST inlining; moving the inliner cannot repair already incorrect
+receiver/index code. `B-SEED-INLINE-RECEIVER` is an AST inline binding defect and
+needs its own correct capture/remapping repair. `B-SEED-CLASSIC-CATCHALL` is a
+signal-tag emission omission, independent of the inlining layer. All three need
+focused native repairs while that compiler remains the build seed. Keep their
+maintained C/L consumers and introduce isolated owning regressions; withdrawing
+supported inlining shapes is not a repair.
+
+The strategic repair is to expand already bound receiver, value/storage,
+call-context and exit identities at the common target boundary, reducing repeated
+reconstruction from source-tree position. That direction complements rather
+than replaces the immediate seed repairs. The AST choice was reasonable for a
+compiler whose available typed representation was the AST. The common RXAS
+representation and Level L target tooling now support a more reusable direction,
+once their missing call-scope, module-body and expansion contracts are supplied.
+
+Proposed sequence for approval:
+
+1. Specify the RXAS bound-call/context, lifetime, presence, result/exit, module
+   and provenance contracts and where complete bodies are collected. Preserve
+   current APIs, metadata and supported native shapes while this is designed.
+2. Repair the three recorded native seed defects in their owning paths with
+   minimal reproducers and affected optimizer-mode/consumer checks.
+3. Prototype checked single-block local instruction-body expansion with an
+   independent handwritten/DSL-style producer, then scalar defaults, nested
+   calls and multi-return control. Inspect initial and simplified records,
+   register demand and source observations before expanding the profile.
+4. Prove representative existing imported B helpers through the selected
+   pre-link/link-time body collection path, retaining their actual module/global
+   identities and ordinary ABI. Do not require another semantic IR export or
+   full B self-hosting first.
+5. Extend supported scope/ownership/condition/TRACE boundaries deliberately,
+   retain recursion and code-growth limits, then select migration and default
+   policy from correctness, resource and code-quality evidence. Research
+   feasibility is not a production speed or replacement verdict.
