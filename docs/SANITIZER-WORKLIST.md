@@ -28,6 +28,14 @@ existing allocation sizes, preserving numeric and path output. Qualify the
 affected numeric, provider-loading, process and disassembler contracts before
 the matching maintained sanitizer checks; do not expand into functional QA.
 
+Portable tool-error checks accept the legacy assembler/disassembler `-1` exit
+on Windows only when the expected diagnostic is present. Signal/exception
+statuses and sanitizer diagnostics remain failures; success requires zero and
+a fresh nonempty output. Read the Unicode worklist explicitly as UTF-8 on every
+host. Qualify this harness boundary with signed-exit/crash/diagnostic controls,
+the affected normal/maintained checks and normal Windows MSVC/MinGW CI; reuse
+unchanged native memory qualification instead of repeating the full panel.
+
 1. **MEMORY-AC01 — done:** maintain an explicit panel/ownership map for VM,
    providers, compiler, assembler, linker and every SAN memory regression.
    Inspect each command and required fixtures; replacing a broad regression

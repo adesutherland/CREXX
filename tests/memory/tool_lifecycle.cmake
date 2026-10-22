@@ -17,7 +17,11 @@ function(memory_call expected artifact)
     if(diagnostic MATCHES "(ERROR|SUMMARY): (AddressSanitizer|LeakSanitizer):|AddressSanitizer:|LeakSanitizer has encountered a fatal error")
         message(FATAL_ERROR "Instrumented ${STAGE} reported a memory failure:\n${diagnostic}")
     endif()
-    if(NOT result MATCHES "^[0-9]+$")
+    # rxas/rxdas return -1 for ordinary input errors. Windows preserves that
+    # signed exit; POSIX reports 255. Do not admit native exception statuses.
+    if((NOT result MATCHES "^[0-9]+$" OR result GREATER 255) AND
+       NOT (WIN32 AND result STREQUAL "-1" AND
+            (STAGE STREQUAL assembler OR STAGE STREQUAL disassembler)))
         message(FATAL_ERROR "${STAGE} terminated abnormally (${result}):\n${diagnostic}")
     endif()
     if(expected STREQUAL success)
