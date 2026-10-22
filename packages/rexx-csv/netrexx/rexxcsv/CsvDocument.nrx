@@ -1,0 +1,60 @@
+/* rexx-csv, MIT License; see ../../LICENSE. Copyright 2026 Adrian Sutherland. */
+options binary
+package rexxcsv
+
+/** Checked parse result with immutable rows. See ../../SPEC.md. */
+class CsvDocument public final
+  properties private
+    data = CsvRow[]
+    code = String
+    recordNumber = int
+    fieldNumber = int
+    limitName = String
+
+  method CsvDocument(rows = CsvRow[], fault = String, record = int, column = int, limit = String) shared
+    data = CsvRow[rows.length]
+    System.arraycopy(rows, 0, data, 0, rows.length)
+    code = fault
+    recordNumber = record
+    fieldNumber = column
+    limitName = limit
+
+  /** @return true for a successful parse, including an empty document. */
+  method ok() public returns boolean
+    return code.length() = 0
+
+  /** @return row count; zero on failure. */
+  method rowCount() public returns int
+    return data.length
+
+  /** @return field count, or -1 for an invalid row/failed document. */
+  method fieldCount(row = int) public returns int
+    if row < 1 | row > data.length then return -1
+    return data[row - 1].fieldCount()
+
+  /** @param row one-based row @param column one-based field @return exact text. */
+  method field(row = int, column = int) public returns String
+    if row < 1 | row > data.length then signal IllegalArgumentException('Invalid row coordinate')
+    return data[row - 1].field(column)
+
+  /** @return an independent array of immutable rows, empty on failure. */
+  method rows() public returns CsvRow[]
+    snapshot = CsvRow[data.length]
+    System.arraycopy(data, 0, snapshot, 0, data.length)
+    return snapshot
+
+  /** @return shared CSV code, binding E_ARGUMENT, or empty on success. */
+  method errorCode() public returns String
+    return code
+  /** @return logical error record, zero for success/precondition failure. */
+  method errorRecord() public returns int
+    return recordNumber
+  /** @return logical error field, zero for success/precondition failure. */
+  method errorField() public returns int
+    return fieldNumber
+  /** @return shared resource limit name, or empty. */
+  method errorLimit() public returns String
+    return limitName
+  /** @return readable non-normative diagnostic, or empty. */
+  method error() public returns String
+    return Csv.message(code, limitName)

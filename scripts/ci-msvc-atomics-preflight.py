@@ -1,4 +1,4 @@
-"""Compile the two private-header consumers before spending a full MSVC build.
+"""Compile private-header harnesses before spending a full MSVC build.
 
 The negative control removes only MSVC's atomics switch from each actual CMake
 command. The positive control compiles that unchanged generated command. This
@@ -17,10 +17,13 @@ def main(build):
         raise RuntimeError('This preflight requires the real Windows MSVC compiler')
     output = build / 'atomics-preflight'
     output.mkdir(parents=True, exist_ok=True)
+    expected = {'cri17_attached_provider_control.c': 2, 'test_sustained_vm.c': 1}
     rows = [row for row in json.loads((build / 'compile_commands.json').read_text())
-            if Path(row['file']).name == 'cri17_attached_provider_control.c']
-    if len(rows) != 2:
-        raise RuntimeError(f'Expected two attached-provider compile commands, got {len(rows)}')
+            if Path(row['file']).name in expected]
+    for source, count in expected.items():
+        actual_count = sum(Path(row['file']).name == source for row in rows)
+        if actual_count != count:
+            raise RuntimeError(f'Expected {count} {source} compile commands, got {actual_count}')
     (output / 'compile-commands.json').write_text(json.dumps(rows, indent=2) + '\n')
     results = []
     for index, row in enumerate(rows, 1):

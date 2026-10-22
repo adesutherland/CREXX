@@ -56,42 +56,17 @@ class Strategy(unittest.TestCase):
             self.assertNotRegex(name, P.excluded('daily'))
         for profile in P.BROAD_PROFILES:
             self.assertEqual(P.excluded(profile), '')
-        decide = lambda **kw: P.decide(kw.get('event', 'schedule'), kw.get('active', True),
-                                       kw.get('day', 2), kw.get('changes', []), kw.get('requested', 'full'))['profile']
-        self.assertEqual(decide(active=False), 'full')
-        self.assertEqual(decide(day=7), 'weekly')
-        self.assertEqual(decide(changes=None), 'full')
-        self.assertEqual(decide(changes=['lib/example.crexx']), 'daily')
-        self.assertEqual(decide(event='manual'), 'full')
-        self.assertEqual(decide(event='manual', requested='daily'), 'daily')
-        self.assertEqual(decide(event='tag', requested='daily'), 'full')
-        self.assertEqual(P.platform_profile('daily', True, '', 'new'), 'full')
-        self.assertEqual(P.platform_profile('daily', True, 'old', 'new'), 'full')
-        self.assertEqual(P.platform_profile('daily', True, 'same', 'same'), 'daily')
-        self.assertEqual(P.platform_profile('daily', False, '', 'new'), 'daily')
-        for name in ('lib/CMakeLists.txt', 'lib/plugins/vector/CMakeLists.txt',
-                     'tests/rxpa/CMakeLists.txt', 'compiler/rxcp.c', 'new/control.unknown',
-                     'compiler/tests/rexx_src/san003_inline_scoped_array_actual.crexx', 'cmake/new.cmake'):
-            self.assertEqual(decide(changes=[name]), 'full', name)
+        for day in range(1, 8):
+            expected = 'weekly' if day == 7 else 'daily'
+            self.assertEqual(P.decide('schedule', True, day)['profile'], expected)
+            # An explicit manual choice remains independent of the weekday.
+            for profile in ('full', 'daily'):
+                self.assertEqual(P.decide('manual', False, day, profile)['profile'], profile)
+            self.assertEqual(P.decide('tag', False, day, 'daily')['profile'], 'full')
+        with self.assertRaisesRegex(ValueError, 'disabled'):
+            P.decide('schedule', False, 2)
 
-    def test_affected_source_ownership_and_platform_absence(self):
-        def decision(name):
-            value = P.decide('schedule', True, 2, [name])
-            self.assertEqual(value['profile'], 'daily', name)
-            return set(value['affected_tests'])
-        for name in ('langtools/rexx/some_source.crexx', 'lib/rxfnsl/rexx/llast.crexx',
-                     'research/level-l/compilers/src/compiler.crexx', 'lib/rxfnsg/rexx/general.crexx'):
-            self.assertEqual(decision(name), set(), name)
-        for name in ('lib/rxfnsl/unicode/algorithm.crexx', 'lib/rxfnsg/unicode/data/UnicodeData.txt',
-                     'lib/rxfnsg/rexx/unicode_case_mapping.crexx.in'):
-            self.assertEqual(decision(name), P.WEEKLY_GROUPS['unicode-runtime-matrix'])
-        self.assertEqual(decision('lib/rxfnsl/rexx/llir.crexx'), P.WEEKLY_GROUPS['level-l-workload-matrix'])
-        self.assertEqual(decision('langtools/rexx/llgenerate.crexx'),
-                         {'levell_services_noopt_rxbvm', 'levell_services_noopt_rxtvm'})
-        structured=decision('langtools/tests/ts_llstructuredflow.crexx')
-        self.assertEqual(len(structured), 14)
-        self.assertTrue(all(name.startswith('ts_llstructuredflow_') for name in structured))
-        self.assertEqual(len(decision('compiler/tests/rexx_src/levelc_bif_reference_audit.expected')), 5)  # four owners + shared setup
+    def test_explicit_affected_scope_and_platform_absence(self):
         # A platform can omit known reference names; new tests remain default keep.
         universe={'future_native_contract','binary_global_import_types','arg_semantics_scalar_run_opt'}
         self.assertEqual(universe-P.DAILY_MOVED, {'future_native_contract','arg_semantics_scalar_run_opt'})
@@ -248,7 +223,7 @@ if name == 'python3': print(os.environ['QA_PROFILE'])
         environment = {**os.environ, 'PATH': str(bindir)+os.pathsep+os.environ['PATH'],
             'CALL_LOG': str(log), 'RUNNER_TEMP': str(self.root/'runner temp'),
             'GITHUB_OUTPUT': str(self.root/'output'), 'GITHUB_STEP_SUMMARY': str(self.root/'summary'),
-            'GITHUB_EVENT_NAME': 'workflow_dispatch', 'QA_BASELINES': '{}'}
+            'GITHUB_EVENT_NAME': 'workflow_dispatch'}
         shells = sorted({str(Path(p).resolve()) for p in ('/bin/bash', shutil.which('bash') or '/bin/bash')})
 
         def execute(shell, name, **values):
@@ -260,13 +235,18 @@ if name == 'python3': print(os.environ['QA_PROFILE'])
 
         for shell in shells:
             for profile in ('full', 'daily'):
-                calls = execute(shell, 'Configure matching ordinary and instrumented inputs',
-                    QA_PROFILE=profile, QA_PLATFORM='macos', QA_QUALIFICATION=profile)
-                cmake = [args for name, args in calls if name == 'cmake']
-                self.assertEqual(len(cmake), 2 if profile == 'daily' else 1)
-                self.assertIn('-DCMAKE_C_FLAGS=-fsanitize=address -fno-omit-frame-pointer', cmake[-1])
-                donor = '-DCREXX_QA_FIXTURE_TREE=' + environment['RUNNER_TEMP'] + '/ordinary'
-                self.assertEqual(donor in cmake[-1], profile == 'daily')
+                for platform in ('linux', 'macos'):
+                    for baseline in ('', '{"linux":"old","macos":"old"}'):
+                        calls = execute(shell, 'Configure matching ordinary and instrumented inputs',
+                            QA_PROFILE=profile, QA_PLATFORM=platform, QA_QUALIFICATION=profile,
+                            GITHUB_EVENT_NAME='schedule', QA_BASELINES=baseline)
+                        cmake = [args for name, args in calls if name == 'cmake']
+                        self.assertEqual(len(cmake), 2 if profile == 'daily' else 1)
+                        self.assertIn('-DCMAKE_C_FLAGS=-fsanitize=address -fno-omit-frame-pointer', cmake[-1])
+                        donor = '-DCREXX_QA_FIXTURE_TREE=' + environment['RUNNER_TEMP'] + '/ordinary'
+                        self.assertEqual(donor in cmake[-1], profile == 'daily')
+                        self.assertEqual(Path(environment['GITHUB_OUTPUT']).read_text().splitlines()[-1],
+                                         'profile='+profile)
             for platform in ('linux', 'macos'):
                 for qualification in ('daily', 'continuation-linux'):
                     regex = '^(one|two with spaces)$'
@@ -322,6 +302,37 @@ if name == 'python3': print(os.environ['QA_PROFILE'])
             execute('full',platform,success=False)
             execute('candidate',platform,success=False)
         execute('daily','macos',success=False,event='schedule')
+
+    @unittest.skipUnless(Path('/bin/bash').is_file(), 'Workflow matrix contract requires Bash')
+    def test_scheduled_scope_ignores_history_and_changed_inputs(self):
+        from datetime import datetime, timezone
+        source = self.root/'scheduled'; source.mkdir()
+        (source/'tools').symlink_to(ROOT/'tools', target_is_directory=True)
+        bindir = source/'bin'; bindir.mkdir()
+        git = bindir/'git'
+        # Source resolution is allowed; any reintroduced history/diff query fails.
+        git.write_text('#!/bin/sh\n[ "$*" = "rev-parse HEAD" ] || exit 37\nprintf "%s\\n" ' + 'a'*40 + '\n')
+        git.chmod(0o755)
+        for name in ('compiler/native.c', 'CMakeLists.txt', 'AGENTS.md', 'unclassified.input'):
+            path = source/name; path.parent.mkdir(exist_ok=True); path.write_text('changed')
+        history = source/'.ci-assurance/history.json'; history.parent.mkdir()
+        output = source/'output'
+        expected = 'weekly' if datetime.now(timezone.utc).isoweekday() == 7 else 'daily'
+        for previous in (None, 'invalid stale history', json.dumps({'head':'missing','native_configs':{'linux':'old'}})):
+            with self.subTest(history=previous):
+                if previous is not None: history.write_text(previous)
+                result = subprocess.run(['/bin/bash', '-c', self.workflow_block('Select profile and independent platform jobs')],
+                    cwd=source, env={**os.environ, 'PATH':str(bindir)+os.pathsep+os.environ['PATH'],
+                        'GITHUB_OUTPUT':str(output), 'GITHUB_STEP_SUMMARY':str(source/'summary'),
+                        'GITHUB_REF':'refs/heads/master', 'GITHUB_EVENT_NAME':'schedule',
+                        'SANITIZER_DAILY_ACTIVATED':'true', 'REQUESTED_SCOPE':'', 'DAILY_PLATFORM':'both'},
+                    text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                values = dict(line.split('=',1) for line in output.read_text().splitlines())
+                rows = json.loads(values['matrix'])['include']
+                self.assertEqual(values['profile'], expected)
+                self.assertEqual({row['platform'] for row in rows}, {'linux','macos'})
+                self.assertTrue(all(row['profile'] == expected and not row.get('affected') for row in rows))
 
     def mini_project(self):
         source = self.root / 'source with spaces'
@@ -512,7 +523,7 @@ crexx_finalize_qa_fixtures()
             with self.assertRaisesRegex(ValueError,'missing_fixture_target'):P.preparation_plan(build,'daily')
 
     @unittest.skipUnless(shutil.which('git'), 'Source-identity contracts require Git')
-    def test_missing_history_and_test_consumed_docs(self):
+    def test_test_consumed_docs_and_changed_input_identity(self):
         source = self.root/'src'; source.mkdir(); command('git', 'init', '-q', source)
         (source/'sample.c').write_text('a')
         (source/'docs').mkdir(); document=source/'docs'/'oracle.md'; document.write_text('one')
@@ -520,8 +531,6 @@ crexx_finalize_qa_fixtures()
         document.write_text('two')
         self.assertEqual(ordinary, F.source_identity(source, False))
         self.assertNotEqual(result, F.source_identity(source))
-        self.assertIsNone(P.changed_files(source, '', 'HEAD'))
-        self.assertIsNone(P.changed_files(source, 'missing', 'HEAD'))
         (source/'__pycache__').mkdir(); (source/'__pycache__/ignored.pyc').write_bytes(b'cache')
         hints = F.changed_git_paths(source, include_docs=False, limit=1)
         self.assertEqual(hints, {'count': 1, 'paths': ['sample.c'], 'truncated': False})

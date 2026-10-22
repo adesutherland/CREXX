@@ -1,0 +1,1109 @@
+{
+  "schema_version": 1,
+  "profile": "rexx-csv-0.1",
+  "cases": [
+    {
+      "id": "P001",
+      "description": "Empty document",
+      "operation": "parse",
+      "input": "",
+      "expected": {
+        "ok": true,
+        "rows": []
+      }
+    },
+    {
+      "id": "P002",
+      "description": "One record without final separator",
+      "operation": "parse",
+      "input": "a,b",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P003",
+      "description": "Final CRLF adds no record",
+      "operation": "parse",
+      "input": "a,b\r\n",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P004",
+      "description": "Final LF adds no record",
+      "operation": "parse",
+      "input": "a,b\n",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P005",
+      "description": "Two records",
+      "operation": "parse",
+      "input": "a,b\r\nc,d",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a",
+            "b"
+          ],
+          [
+            "c",
+            "d"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P006",
+      "description": "Mixed CRLF and LF record endings",
+      "operation": "parse",
+      "input": "a\r\nb\nc\r\n",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a"
+          ],
+          [
+            "b"
+          ],
+          [
+            "c"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P007",
+      "description": "Quoted comma",
+      "operation": "parse",
+      "input": "\"a,b\",c",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a,b",
+            "c"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P008",
+      "description": "Doubled quote",
+      "operation": "parse",
+      "input": "\"a\"\"b\",c",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a\"b",
+            "c"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P009",
+      "description": "Quoted LF is retained",
+      "operation": "parse",
+      "input": "\"a\nb\",c",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a\nb",
+            "c"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P010",
+      "description": "Quoted CRLF is retained",
+      "operation": "parse",
+      "input": "\"a\r\nb\",c",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a\r\nb",
+            "c"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P011",
+      "description": "Quoted lone CR is retained",
+      "operation": "parse",
+      "input": "\"a\rb\",c",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a\rb",
+            "c"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P012",
+      "description": "Empty fields at every position",
+      "operation": "parse",
+      "input": ",a,,",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "",
+            "a",
+            "",
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P013",
+      "description": "One explicitly quoted empty field",
+      "operation": "parse",
+      "input": "\"\"",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P014",
+      "description": "One blank LF record",
+      "operation": "parse",
+      "input": "\n",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P015",
+      "description": "One blank CRLF record",
+      "operation": "parse",
+      "input": "\r\n",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P016",
+      "description": "Two blank records",
+      "operation": "parse",
+      "input": "\n\n",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            ""
+          ],
+          [
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P017",
+      "description": "Leading blank record",
+      "operation": "parse",
+      "input": "\na\n",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            ""
+          ],
+          [
+            "a"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P018",
+      "description": "Interior blank record",
+      "operation": "parse",
+      "input": "a\n\nb",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a"
+          ],
+          [
+            ""
+          ],
+          [
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P019",
+      "description": "Leading and trailing spaces are data",
+      "operation": "parse",
+      "input": " a ,\" b \"",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            " a ",
+            " b "
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P020",
+      "description": "Tabs are data",
+      "operation": "parse",
+      "input": "\ta\t,b",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "\ta\t",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P021",
+      "description": "Quoted ordinary values",
+      "operation": "parse",
+      "input": "\"a\",\"b\"",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P022",
+      "description": "Ragged rows are accepted",
+      "operation": "parse",
+      "input": "a,b\nx\ny,z,w",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a",
+            "b"
+          ],
+          [
+            "x"
+          ],
+          [
+            "y",
+            "z",
+            "w"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P023",
+      "description": "Headers including duplicates are ordinary rows",
+      "operation": "parse",
+      "input": "name,name\nx,y",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "name",
+            "name"
+          ],
+          [
+            "x",
+            "y"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P024",
+      "description": "Leading zeros and formula text are strings",
+      "operation": "parse",
+      "input": "0012,=1+1,+42,-7,@name",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "0012",
+            "=1+1",
+            "+42",
+            "-7",
+            "@name"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P025",
+      "description": "Accented CJK astral and decomposed text",
+      "operation": "parse",
+      "input": "café,東京,🙂,é",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "café",
+            "東京",
+            "🙂",
+            "é"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P026",
+      "description": "One document BOM is removed",
+      "operation": "parse",
+      "input": "﻿a,b",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P027",
+      "description": "BOM-only document has no rows",
+      "operation": "parse",
+      "input": "﻿",
+      "expected": {
+        "ok": true,
+        "rows": []
+      }
+    },
+    {
+      "id": "P028",
+      "description": "Interior BOM is field data",
+      "operation": "parse",
+      "input": "a﻿b,c",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a﻿b",
+            "c"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P029",
+      "description": "BOM inside first quoted field is data",
+      "operation": "parse",
+      "input": "\"﻿a\",b",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "﻿a",
+            "b"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P030",
+      "description": "Only the first of two leading BOMs is removed",
+      "operation": "parse",
+      "input": "﻿﻿a",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "﻿a"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P031",
+      "description": "A comma is two empty fields",
+      "operation": "parse",
+      "input": ",",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "",
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P032",
+      "description": "Additional final blank record is retained",
+      "operation": "parse",
+      "input": "a\n\n",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a"
+          ],
+          [
+            ""
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P033",
+      "description": "Final newline inside quotes is field data",
+      "operation": "parse",
+      "input": "\"a\n\"",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "a\n"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P034",
+      "description": "A quoted quote",
+      "operation": "parse",
+      "input": "\"\"\"\"",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "\""
+          ]
+        ]
+      }
+    },
+    {
+      "id": "P035",
+      "description": "Multiline field followed by another record",
+      "operation": "parse",
+      "input": "\"x\r\ny\",z\r\nnext,row",
+      "expected": {
+        "ok": true,
+        "rows": [
+          [
+            "x\r\ny",
+            "z"
+          ],
+          [
+            "next",
+            "row"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "E001",
+      "description": "Quote in an unquoted field",
+      "operation": "parse",
+      "input": "a\"b,c",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_QUOTE",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E002",
+      "description": "Unexpected text after closing quote",
+      "operation": "parse",
+      "input": "\"a\"b,c",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_AFTER_QUOTE",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E003",
+      "description": "Space after closing quote",
+      "operation": "parse",
+      "input": "\"a\" ,c",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_AFTER_QUOTE",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E004",
+      "description": "Tab after closing quote",
+      "operation": "parse",
+      "input": "\"a\"\t,c",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_AFTER_QUOTE",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E005",
+      "description": "Unclosed quoted field",
+      "operation": "parse",
+      "input": "\"a",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_UNCLOSED_QUOTE",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E006",
+      "description": "Escaped quote without final closing quote",
+      "operation": "parse",
+      "input": "\"a\"\"",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_UNCLOSED_QUOTE",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E007",
+      "description": "Lone CR between values",
+      "operation": "parse",
+      "input": "a\rb",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_RECORD_SEPARATOR",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E008",
+      "description": "Final lone CR",
+      "operation": "parse",
+      "input": "a\r",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_RECORD_SEPARATOR",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E009",
+      "description": "NUL in first field",
+      "operation": "parse",
+      "input": "a\u0000b",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_NUL",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E010",
+      "description": "NUL in second field",
+      "operation": "parse",
+      "input": "a,b\u0000",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_NUL",
+          "record": 1,
+          "field": 2
+        }
+      }
+    },
+    {
+      "id": "E011",
+      "description": "Quote error in second record second field",
+      "operation": "parse",
+      "input": "first,row\nx,a\"b",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_QUOTE",
+          "record": 2,
+          "field": 2
+        }
+      }
+    },
+    {
+      "id": "E012",
+      "description": "Unclosed multiline field uses logical coordinates",
+      "operation": "parse",
+      "input": "a,b\nx,\"p\nq",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_UNCLOSED_QUOTE",
+          "record": 2,
+          "field": 2
+        }
+      }
+    },
+    {
+      "id": "E013",
+      "description": "A space does not separate adjacent quoted fields",
+      "operation": "parse",
+      "input": "\"x\" \"y\"",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_AFTER_QUOTE",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E014",
+      "description": "NUL in quoted text",
+      "operation": "parse",
+      "input": "\"a\u0000b\"",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_NUL",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "E015",
+      "description": "Lone CR after closing quote",
+      "operation": "parse",
+      "input": "\"a\"\r",
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_RECORD_SEPARATOR",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "W001",
+      "description": "Zero rows write an empty document",
+      "operation": "write",
+      "rows": [],
+      "expected": {
+        "ok": true,
+        "text": ""
+      }
+    },
+    {
+      "id": "W002",
+      "description": "Canonical final CRLF",
+      "operation": "write",
+      "rows": [
+        [
+          "a",
+          "b"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "a,b\r\n"
+      }
+    },
+    {
+      "id": "W003",
+      "description": "Sole empty field is quoted",
+      "operation": "write",
+      "rows": [
+        [
+          ""
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"\"\r\n"
+      }
+    },
+    {
+      "id": "W004",
+      "description": "All empty fields are quoted",
+      "operation": "write",
+      "rows": [
+        [
+          "",
+          "a",
+          "",
+          ""
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"\",a,\"\",\"\"\r\n"
+      }
+    },
+    {
+      "id": "W005",
+      "description": "Comma requires quotes",
+      "operation": "write",
+      "rows": [
+        [
+          "a,b",
+          "c"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"a,b\",c\r\n"
+      }
+    },
+    {
+      "id": "W006",
+      "description": "Quotes are doubled",
+      "operation": "write",
+      "rows": [
+        [
+          "a\"b"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"a\"\"b\"\r\n"
+      }
+    },
+    {
+      "id": "W007",
+      "description": "Embedded LF is retained and quoted",
+      "operation": "write",
+      "rows": [
+        [
+          "a\nb"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"a\nb\"\r\n"
+      }
+    },
+    {
+      "id": "W008",
+      "description": "Embedded CRLF is retained and quoted",
+      "operation": "write",
+      "rows": [
+        [
+          "a\r\nb"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"a\r\nb\"\r\n"
+      }
+    },
+    {
+      "id": "W009",
+      "description": "Embedded lone CR is retained and quoted",
+      "operation": "write",
+      "rows": [
+        [
+          "a\rb"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"a\rb\"\r\n"
+      }
+    },
+    {
+      "id": "W010",
+      "description": "Spaces and tabs need no quotes",
+      "operation": "write",
+      "rows": [
+        [
+          " a ",
+          "\tb\t"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": " a ,\tb\t\r\n"
+      }
+    },
+    {
+      "id": "W011",
+      "description": "Unicode remains unchanged",
+      "operation": "write",
+      "rows": [
+        [
+          "café",
+          "東京",
+          "🙂",
+          "é"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "café,東京,🙂,é\r\n"
+      }
+    },
+    {
+      "id": "W012",
+      "description": "Ragged rows remain ragged",
+      "operation": "write",
+      "rows": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          "x"
+        ],
+        [
+          "y",
+          "z",
+          "w"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "a,b\r\nx\r\ny,z,w\r\n"
+      }
+    },
+    {
+      "id": "W013",
+      "description": "Numeric-looking and formula strings are not coerced",
+      "operation": "write",
+      "rows": [
+        [
+          "0012",
+          "=1+1",
+          "+42",
+          "-7",
+          "@name"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "0012,=1+1,+42,-7,@name\r\n"
+      }
+    },
+    {
+      "id": "W014",
+      "description": "Headers are not special",
+      "operation": "write",
+      "rows": [
+        [
+          "name",
+          "name"
+        ],
+        [
+          "x",
+          "y"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "name,name\r\nx,y\r\n"
+      }
+    },
+    {
+      "id": "W015",
+      "description": "Initial BOM field is protected with quotes",
+      "operation": "write",
+      "rows": [
+        [
+          "﻿a",
+          "b"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"﻿a\",b\r\n"
+      }
+    },
+    {
+      "id": "W016",
+      "description": "Later BOM field is ordinary text",
+      "operation": "write",
+      "rows": [
+        [
+          "a",
+          "﻿b"
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "a,﻿b\r\n"
+      }
+    },
+    {
+      "id": "W017",
+      "description": "A zero-field row is invalid",
+      "operation": "write",
+      "rows": [
+        []
+      ],
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_EMPTY_ROW",
+          "record": 1,
+          "field": 0
+        }
+      }
+    },
+    {
+      "id": "W018",
+      "description": "Writer rejects NUL",
+      "operation": "write",
+      "rows": [
+        [
+          "a\u0000b"
+        ]
+      ],
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_NUL",
+          "record": 1,
+          "field": 1
+        }
+      }
+    },
+    {
+      "id": "W019",
+      "description": "A later zero-field row fails atomically",
+      "operation": "write",
+      "rows": [
+        [
+          "a"
+        ],
+        []
+      ],
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_EMPTY_ROW",
+          "record": 2,
+          "field": 0
+        }
+      }
+    },
+    {
+      "id": "W020",
+      "description": "A later NUL field fails atomically",
+      "operation": "write",
+      "rows": [
+        [
+          "a"
+        ],
+        [
+          "b",
+          "c\u0000"
+        ]
+      ],
+      "expected": {
+        "ok": false,
+        "error": {
+          "code": "E_NUL",
+          "record": 2,
+          "field": 2
+        }
+      }
+    },
+    {
+      "id": "W021",
+      "description": "Two empty rows stay distinct",
+      "operation": "write",
+      "rows": [
+        [
+          ""
+        ],
+        [
+          ""
+        ]
+      ],
+      "expected": {
+        "ok": true,
+        "text": "\"\"\r\n\"\"\r\n"
+      }
+    }
+  ]
+}

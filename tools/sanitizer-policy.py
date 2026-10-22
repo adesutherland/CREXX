@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Exact sanitizer membership, conservative cadence and qualified result scope."""
+"""Exact sanitizer membership, fixed VM daily cadence and qualified result scope."""
 import argparse
 import hashlib
 import importlib.util
@@ -72,75 +72,19 @@ def excluded(profile, build=None):
     return '^(' + '|'.join(branches) + ')$'
 
 
-def decide(event, activated, weekday, changed=None, requested='full'):
+def decide(event, activated, weekday, requested='full'):
     if event == 'tag':
         return {'profile': 'full', 'reason': 'version tags retain original broad qualification'}
     if event == 'manual':
         return {'profile': requested, 'reason': 'explicit manual scope; default is full'}
     if not activated:
-        return {'profile': 'full', 'reason': 'daily activation is disabled pending qualification/master decision'}
+        raise ValueError('scheduled sanitizer cadence is disabled')
     if weekday == 7:
         return {'profile': 'weekly', 'reason': 'weekly broad safety net with original instrumented producers'}
-    if changed is None:
-        return {'profile': 'full', 'reason': 'missing qualification history or unavailable comparison'}
-    # Native/build/control changes retain conservative original-producer broad
-    # fallback. Source language ownership alone does not force that campaign.
-    known_roots = ('lib/', 'langtools/', 'research/level-l/', 'compiler/tests/rexx_src/',
-                   'tests/', 'examples/', 'docs/')
-    restore = set()
-    for name in changed:
-        if Path(name).name in {'CMakeLists.txt', 'AGENTS.md'}:
-            return {'profile': 'full', 'reason': f'build/policy control changed: {name}'}
-        suffix = Path(name).suffix.lower()
-        allowed = suffix in {'.crexx', '.rexx', '.expected', '.rxas', '.levell', '.rxl', '.md', '.tex'} or name.endswith(('.crexx.in', '.rexx.in'))
-        allowed = allowed or (suffix == '.txt' and '/unicode/data/' in name)
-        if (not name.startswith(known_roots) and name != 'README.md') or not allowed:
-            return {'profile': 'full', 'reason': f'native/shared/uncertain affected scope: {name}'}
-        # Closed producer SAN trigger edits retain original instrumented scope.
-        if any(trigger in name for trigger in ('san001', 'san003', 'san004', 'san006', 'san007', 'san008',
-                                               'san010', 'san011', 'san012', 'binary_global_import_types',
-                                               'frame_control_ast', 'compiler_contract_builder')):
-            return {'profile': 'full', 'reason': f'producer SAN trigger changed: {name}'}
-        if suffix in {'.md', '.tex'}:
-            continue
-        # These named contracts alter the retained panel's native allocation or
-        # request/graph histories. Other source-only edits use ordinary full
-        # semantics plus the fixed daily panel, not every Level L permutation.
-        unicode_owner = (name.startswith(('lib/rxfnsg/unicode/', 'lib/rxfnsl/unicode/')) or
-                         name.startswith('lib/rxfnsg/rexx/unicode') or
-                         name.startswith('lib/rxfnsb/rexx/rxunicode'))
-        if unicode_owner:
-            restore.update(WEEKLY_GROUPS['unicode-runtime-matrix'])
-        if name in {'lib/rxfnsl/rexx/llir.crexx', 'lib/rxfnsl/rexx/llcfg.crexx',
-                    'lib/rxfnsl/rexx/llflow.crexx', 'langtools/rexx/llfront.crexx'}:
-            # Shared graph/front-end storage feeds all configured backends.
-            restore.update(WEEKLY_GROUPS['level-l-workload-matrix'])
-        if name in {'langtools/rexx/llgenerate.crexx', 'langtools/tests/services.crexx'}:
-            restore.update(test for test in WEEKLY_GROUPS['level-l-workload-matrix']
-                           if test.startswith('levell_services_'))
-        if name.startswith('langtools/tests/'):
-            stem = Path(name).stem
-            prefix = 'ast_' if stem == 'ast-probe' else stem + '_'
-            restore.update(test for test in WEEKLY_GROUPS['level-l-workload-matrix']
-                           if test.startswith(prefix))
-        if name.startswith('compiler/tests/rexx_src/'):
-            stem = Path(name).stem
-            restore.update(test for test in DAILY_MOVED
-                           if test == stem or test.startswith(stem + '_'))
-    return {'profile': 'daily', 'affected_tests': sorted(restore),
-            'reason': 'VM-priority daily scope plus exact affected source-family names; new tests default keep'}
-
-
-def changed_files(source, base, head):
-    if not base:
-        return None
-    test = subprocess.run(['git', '-C', str(source), 'merge-base', '--is-ancestor', base, head],
-                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    if test.returncode:
-        return None
-    result = subprocess.run(['git', '-C', str(source), 'diff', '--name-only', '-z', base, head],
-                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return result.stdout.decode().rstrip('\0').split('\0') if result.returncode == 0 and result.stdout else ([] if result.returncode == 0 else None)
+    # Scope is a cadence decision. Changed inputs invalidate exact reuse but
+    # never expand the approved VM/provider panel into a producer campaign.
+    return {'profile': 'daily',
+            'reason': 'fixed VM-priority daily scope; full coverage is weekly or explicitly requested'}
 
 
 def ctest_inventory(args):
@@ -243,10 +187,6 @@ def canonical_input(build, profile, execution=None, native_only=False):
         for key in ('source', 'profile', 'preparation'):
             value.pop(key)
     return hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
-
-
-def platform_profile(requested, scheduled, expected, current):
-    return 'full' if requested == 'daily' and scheduled and (not expected or expected != current) else requested
 
 
 def profile_names(build, profile, definitions=None):
@@ -412,9 +352,6 @@ def main():
     p.add_argument('--event', choices=('schedule', 'manual', 'tag'), default='manual')
     p.add_argument('--activated', choices=('on', 'off'), default='off')
     p.add_argument('--weekday', type=int, choices=range(1, 8), default=1)
-    p.add_argument('--source', type=Path, default=Path(__file__).resolve().parents[1])
-    p.add_argument('--base', default='')
-    p.add_argument('--head', default='HEAD')
     a, extra = p.parse_known_args()
     if extra and extra[0] == '--':
         extra.pop(0)
@@ -429,8 +366,7 @@ def main():
     elif a.command == 'exclude':
         print(excluded(a.profile, a.build_dir))
     elif a.command == 'decide':
-        print(json.dumps(decide(a.event, a.activated == 'on', a.weekday,
-                               changed_files(a.source, a.base, a.head), a.profile)))
+        print(json.dumps(decide(a.event, a.activated == 'on', a.weekday, a.profile)))
     elif a.command == 'prep':
         value = preparation_plan(a.build_dir, a.profile)
         if a.verify_plan and value != fixture_tools().json_read(a.verify_plan):

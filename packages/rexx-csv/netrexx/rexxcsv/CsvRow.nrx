@@ -1,0 +1,34 @@
+/* rexx-csv, MIT License; see ../../LICENSE. Copyright 2026 Adrian Sutherland. */
+options binary
+package rexxcsv
+
+/** An immutable snapshot of string fields. CSV coordinates are one-based. */
+class CsvRow public final
+  properties private
+    values = String[]
+
+  method CsvRow(fields = String[]) shared
+    if fields = null then signal IllegalArgumentException('Null field array')
+    values = String[fields.length]
+    loop i = int 0 to fields.length - 1
+      if fields[i] = null then signal IllegalArgumentException('Null field')
+      values[i] = fields[i]
+    end
+
+  /** @return number of fields, including zero for an unwritable empty row. */
+  method fieldCount() public returns int
+    return values.length
+
+  /** @param column one-based field number @return exact field string. */
+  method field(column = int) public returns String
+    if column < 1 | column > values.length then signal IllegalArgumentException('Invalid field coordinate')
+    return values[column - 1]
+
+  /** @return a new row; this row and caller-owned arrays remain unchanged. */
+  method withField(column = int, text = String) public returns CsvRow
+    if column < 1 | column > values.length then signal IllegalArgumentException('Invalid field coordinate')
+    if text = null then signal IllegalArgumentException('Null replacement text')
+    changed = String[values.length]
+    System.arraycopy(values, 0, changed, 0, values.length)
+    changed[column - 1] = text
+    return CsvRow(changed)

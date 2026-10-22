@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Check an unpublished Classic archive as a consumer on one actual runtime."""
+import argparse
+import os
+from pathlib import Path
+import runpy
+import subprocess
+import tarfile
+import tempfile
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def check(runtime):
+    runtime = runtime.expanduser().resolve(strict=True)
+    # ooRexx on Windows passes the raw command tail to Rexx. Python's normal
+    # argv quoting would insert backslashes before the example's literal quotes.
+    raw_tail = (os.name == 'nt' and b'Open Object Rexx' in subprocess.check_output(
+        [str(runtime), '-v'], stderr=subprocess.STDOUT))
+    build = runpy.run_path(str(ROOT / 'packaging/build_classic.py'))['build']
+    with tempfile.TemporaryDirectory(prefix='rexx csv installed ') as temp:
+        temp = Path(temp)
+        artifact, repeat = temp / 'classic.rxpkg', temp / 'repeat.rxpkg'
+        build(artifact)
+        build(repeat)
+        assert artifact.read_bytes() == repeat.read_bytes(), 'artifact is nondeterministic'
+        tag = '' if os.name == 'nt' else 'Ω '
+        installed = temp / ('Installed CSV package ' + tag + 'with spaces')
+        installed.mkdir()
+        with tarfile.open(artifact) as archive:
+            assert len(archive.getmembers()) == 5
+            assert all(m.isfile() and '/' not in m.name and m.mode == 0o644
+                       for m in archive.getmembers())
+            archive.extractall(installed, filter='data')
+
+        def run(command_string=None, success=True, script='classic_demo.rexx', marker='PASS: CSV example;'):
+            args = [str(runtime), script]
+            if command_string is not None:
+                if raw_tail:
+                    args = subprocess.list2cmdline(args) + ' ' + command_string
+                else:
+                    args.append(command_string)
+            log = temp / 'command.log'
+            with log.open('wb') as out:
+                result = subprocess.run(args, cwd=installed, stdout=out,
+                                        stderr=subprocess.STDOUT, timeout=180)
+            text = log.read_text(encoding='utf-8', errors='replace')
+            if success:
+                assert result.returncode == 0 and marker in text, text[-2500:]
+            return result.returncode, text
+
+        run()
+        readme = (installed / 'rexx-csv-README.md').read_text(encoding='utf-8')
+        snippet = readme.split('```rexx\n', 1)[1].split('```', 1)[0]
+        (installed / 'usage.rexx').write_text(snippet, encoding='utf-8')
+        _, text = run(script='usage.rexx', marker='Grace,London')
+        assert text.startswith('Ada\n'), text
+        if os.name == 'nt':
+            source, target = installed / 'probe Ω input.csv', installed / 'probe Ω output.csv'
+            source.write_bytes(b'name,city\nAda,London\n')
+            target.write_bytes(b'keep existing output')
+            status, text = run(f'"{source}" "{target}"', success=False)
+            if status:
+                assert 'Cannot open input' in text, text
+                assert target.read_bytes() == b'keep existing output', text
+                print('LIMIT: Windows Classic CLI cannot transport Ω filenames; existing output preserved')
+            else:
+                assert target.read_bytes() == b'name,city\r\nAda,London\r\n'
+                print('PASS: Windows Unicode filename probe')
+        source = installed / ('input ' + tag + 'file.csv')
+        target = installed / ('output ' + tag + 'file.csv')
+        paths = f'"{source}" "{target}"'
+        original = 'name,city\r\n"Ada, Jr.","Montréal"\n'.encode('utf-8')
+        expected = 'name,city\r\n"Ada, Jr.",Montréal\r\n'.encode('utf-8')
+        source.write_bytes(original)
+        target.write_bytes(b'old contents' * 100)
+        run(paths)
+        assert target.read_bytes() == expected, 'exact UTF-8/CRLF/truncation'
+        source.write_bytes('a,"x\r\ny",🙂\nz,,"q""uote"'.encode('utf-8'))
+        run(paths)
+        assert target.read_bytes() == 'a,"x\r\ny",🙂\r\nz,"","q""uote"\r\n'.encode('utf-8')
+        expected = target.read_bytes()
+        for invalid, code in [(b'\xff', 'E_ARGUMENT'), (b'"unfinished', 'E_UNCLOSED_QUOTE'),
+                              (b'a\x00', 'E_NUL')]:
+            source.write_bytes(invalid)
+            status, text = run(paths, success=False)
+            assert status != 0 and code in text, text
+            assert target.read_bytes() == expected, 'invalid input replaced output'
+        source.write_bytes(b'')
+        run(paths)
+        assert target.read_bytes() == b'', 'empty document truncates old output'
+        source.write_bytes(original)
+        run(f'"{source}"')
+        # The source is fully read and closed before replacing the same file.
+        run(f'"{source}" "{source}"')
+        assert source.read_bytes() == 'name,city\r\n"Ada, Jr.",Montréal\r\n'.encode('utf-8')
+        status, text = run(f'"{installed / "missing.csv"}" "{target}"', success=False)
+        assert status != 0 and 'Cannot open input' in text, text
+        assert target.read_bytes() == b'', 'open failure replaced output'
+    print('PASS: deterministic Classic source archive; fresh consumer; spaced paths; exact UTF-8/CRLF; failure preserves output')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--runtime', type=Path, required=True)
+    args = parser.parse_args()
+    check(args.runtime)

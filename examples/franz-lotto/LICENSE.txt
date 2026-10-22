@@ -21,3 +21,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 See https://github.com/adesutherland/CREXX for project details
+
+Attribution: original LottoV41 example by Franz Marx; cREXX console adaptation
+and packaging by Adrian Sutherland. Franz's original ooRexx source is not
+included in this package.
