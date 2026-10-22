@@ -117,8 +117,10 @@ proof retains the complete non-measurement scope and original instrumented
 producers. Daily proof is a distinct profile and cannot certify broad assurance.
 Adrian approved scheduled activation after clean platform qualification.
 The master workflow runs at 03:47 UTC daily, selecting the VM-priority profile
-on ordinary days and full original-producer assurance on Sundays. Native/build
-changes and missing compatible history retain conservative full fallback.
+Monday–Saturday and full original-producer assurance on Sundays. Missing history,
+native/build/control changes and changed toolchains never broaden daily scope;
+they invalidate incompatible reuse and require fresh selected execution. Full
+coverage otherwise requires an explicit request or version-tag qualification.
 
 ## Emitted-code quality
 

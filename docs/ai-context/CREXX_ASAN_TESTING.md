@@ -287,18 +287,19 @@ histories may first be detected weekly; no native branch/history equivalence is
 claimed. Closed producer SAN triggers remain weekly/affected, with original
 full closure intact; VM/provider SAN regressions remain daily.
 
-Native/shared/build/unknown changes and missing compatible native baseline select
-full coverage. Source-only Level L/new-C edits use ordinary full semantics plus
-the fixed runtime panel unless an explicit affected ownership mapping restores
-named histories; Unicode/shared graph/service changes have such mappings.
 The scheduled policy is enabled following Adrian's approval and clean daily
 platform qualification. At **03:47 UTC daily**, the definition on `master`
 checks out current `develop`; Sunday selects weekly full original-producer
-assurance. Other days select the VM-priority profile only when history and
-affected inputs permit it. Missing compatible history, changed native/build
-inputs or unavailable comparison select full coverage. Initial activation may
-therefore run full before subsequent daily reuse becomes eligible. Default
-manual dispatch from `master` also qualifies current `develop`, because this
+assurance. Monday–Saturday always select the fixed VM-priority `daily` panel.
+Adrian's 22 October amendment removes automatic full/affected-family expansion:
+missing history, native/shared/build/control changes, unknown paths and changed
+toolchains/configurations never broaden daily membership. Changed inputs or a
+cache miss require fresh preparation and execution of the same selected profile.
+No prior broad baseline is required. Daily remains bounded assurance; omitted
+producer/semantic histories retain weekly/release coverage, and actual SAN
+findings retain their focused repair and full closure gates. Additional full
+coverage requires explicit manual dispatch or version-tag release qualification.
+Default manual dispatch from `master` also qualifies current `develop`, because this
 narrow rollout leaves master's released product sources unchanged. Explicit
 `source_ref`, branch-selected manual runs and version-tag source identity remain
 unchanged; focused historical diagnostics should provide their owning source ref.
@@ -377,14 +378,14 @@ replay route with optional `source_ref`; it cannot write broad assurance.
 Reusable success is keyed by platform/image, profile, preparation mode, source
 and dependency contents, effective flags/options, compiler/build-tool identities
 and runtime/leak policy. Equivalent full/weekly/native/affected requests reuse
-one broad scope; daily stays distinct. Broad history also binds native toolchain,
-dependency and host configuration before scheduled daily can be selected.
+one broad scope; daily stays distinct. Native toolchain, dependency and host
+configuration changes invalidate incompatible reuse without changing the profile.
 Exact observed artifact/configuration identities are
 recorded separately. Canonical reuse normalizes relocated build/source paths
 and generated timestamp/commit/dirty presentation metadata, preserving semantic
 version inputs and channel. Manual/tag runs stay unconditional. Each successful
-platform scope is retained independently; joint broad history requires both
-platforms complete. Daily/focused/incomplete results never become broad history.
+platform scope is retained independently. Daily/focused results never certify
+broad assurance, and incomplete results cannot be reused as successful proof.
 Uploaded diagnostics and operational cache summaries are not committed evidence;
 extract useful findings into the worklist and delete local task logs.
 

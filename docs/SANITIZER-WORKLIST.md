@@ -7,15 +7,61 @@ sanitizer configurations.  Repository policy and closure requirements are in
 
 ## Sanitizer scope review and proposal — 20 October 2026
 
+### Daily cadence correction — 22 October 2026
+
+Adrian explicitly replaces the conservative daily escalation policy: scheduled
+Monday–Saturday assurance stays on the approved fixed VM/provider `daily`
+panel. Sunday retains full original-producer `weekly` coverage; explicit full
+requests and version-tag release qualification retain broad scope. Missing
+history, source/build/control changes and changed native configurations must
+never expand scheduled daily membership. Changed inputs invalidate reuse and
+require fresh selected preparation/execution, not a broader profile. Omitted
+producer/semantic histories retain their accepted weekly/release ownership;
+actual SAN findings retain their existing focused repair and broad closure gates.
+This amendment supersedes the affected-change/fallback rules below without
+changing the approved test manifest, fixture ownership or instrumentation.
+
+1. **CADENCE-AC01 — done (amends SCOPE-AC04/07):** schedule chooses `daily`
+   Monday–Saturday and `weekly` Sunday, independently of history, changed paths
+   and native configuration. Check the actual workflow decision/configuration
+   blocks with absent/stale history, native/build changes and both platforms.
+2. **CADENCE-AC02 — done (preserves SCOPE-AC02/03/08):** retain exact daily
+   membership, default-keep new tests, selected donor/native preparation, Linux
+   leak checks, strict completed-scope validation and exact-input per-platform
+   cache reuse. A miss reruns that profile; daily never certifies broad coverage.
+   Reuse existing product qualification and check the miniature scope/cache
+   contracts; no fresh full campaign is required for a scheduling-only change.
+3. **CADENCE-AC03 — done (preserves SCOPE-AC04/06/07):** preserve explicit
+   manual full/daily/candidate/diagnostic routes, version-tag broad assurance
+   and both platforms by default. Reconcile AGENTS and the operator guide;
+   check manual/weekly/tag selection and lint the effective workflow.
+4. **CADENCE-AC04 — done (amends SCOPE-AC07):** commit/push the focused repair
+   on hotfix and develop, then update only the scheduled workflow on master.
+   Verify the remote scheduled definition and source selector; leave running
+   jobs and unrelated local work intact. Report exact publication and limits.
+
+1. **CADENCE-STEP01 — done (AC01–04):** inspect the live fallback, existing
+   policy/fixture contracts and remote branches; record this approved amendment.
+2. **CADENCE-STEP02 — done (AC01–03), after STEP01:** remove automatic broad
+   and affected-family expansion plus the now-unused joint-history service;
+   retain exact per-platform/profile reuse and independent assurance validation.
+3. **CADENCE-STEP03 — done (AC01–03), after STEP02:** run focused policy and
+   actual Bash workflow contracts, CTest miniature inventories and workflow lint;
+   review the coherent diff. Reuse unchanged native product results.
+4. **CADENCE-STEP04 — done (AC04), after STEP03:** publish hotfix/develop and
+   the master workflow-only update; verify effective cadence without dispatching
+   another full run. Normal automatic CI remains a separate hosted result.
+
 **Status: VM-priority implementation and clean daily Linux/Apple qualification
 are complete. Adrian approved scheduled activation on 21 October 2026.**
 
 The current rollout supersedes the earlier activation holds below. The narrow
 `master` exception changes only `.github/workflows/sanitizers.yml`; it does not
 promote product code or cut a release. At 03:47 UTC daily the workflow tests
-current `develop`, using the VM-priority profile when compatible proof permits,
-weekly full original-producer scope on Sunday, and conservative full fallback
-for native/build changes or missing comparison/history. Keep Linux leak checks,
+current `develop`, using the fixed VM-priority profile Monday–Saturday and
+weekly full original-producer scope on Sunday. The 22 October amendment removes
+automatic full fallback and affected-family expansion; changed inputs or missing
+proof require fresh execution of the same selected profile. Keep Linux leak checks,
 both platforms, scope-qualified reuse and all SAN closure rules intact.
 The original approved order was unchanged isolated Linux timeout diagnosis first, then the
 exact ten-cell daily reduction, separated fixture/native preparation and shared
@@ -384,17 +430,14 @@ hang backstop derived separately from functional resource budgets.
 
 #### Affected-change policy and approval/qualification conditions
 
-Proposed policy: source-only Level L/new-C/tool semantic changes receive the
-relevant full ordinary correctness and emitted-code checks plus the daily VM
-panel; a changed native usage pattern expands its named runtime family. They
-do not automatically force a whole native sanitizer campaign per source slice.
-Native VM allocator, loader, reference, ABI, shared support or provider changes
-expand the affected runtime/native boundary families, with broad full fallback
-for uncertain shared impact. Native compiler/assembler/linker changes run their
-producer-native/SAN profile, conservatively full where ownership is uncertain.
-Missing history, new native configuration/toolchain/dependency identity, or
-unclassified build/control changes select broad. These decisions need explicit
-path/ownership fixtures; source extensions or a label alone are insufficient.
+Adrian's 22 October amendment keeps scheduled daily membership fixed regardless
+of source ownership, native/build changes or missing comparison history. Relevant
+ordinary correctness and emitted-code checks remain owned by development QA.
+Additional affected/native-tool qualification requires an explicit request;
+automatic daily scheduling does not restore omitted producer/semantic matrices.
+Sunday, explicit full requests and version tags retain original broad coverage.
+Source/configuration/toolchain/dependency changes invalidate incompatible cached
+proof and cause fresh selected preparation/execution, never profile escalation.
 Platform/profile/preparation/leak-qualified reuse and strict actual selection/
 execution checks remain. Daily never creates broad assurance.
 
@@ -1959,16 +2002,16 @@ complete; scheduled activation stays disabled.
    platforms to existing tests and explicit gaps. The approved VM-REV-AC01
    replaces equal measured coverage as this reduction's gate with explicit
    risk-based cadence. Preserve the narrow prior measurement without claiming
-   branch/history equivalence. Every moved family has its owner, weekly/affected
-   trigger and residual risk; preserve the approved VM/provider SAN ownership.
+   branch/history equivalence. Every moved family retains its owner, weekly or
+   explicit affected coverage and residual risk; preserve VM/provider SAN ownership.
 3. **SCOPE-AC03 — done:** from clean inputs,
    ordinary fixture preparation and the instrumented VM/provider closure
    produce compatible, traceable artifacts without stale/missing dependencies.
    Prove which native binaries execute in all selected host/subprocess paths.
    The native-tool profile retains instrumented producer tests, Linux leaks
    stay on, and full-profile selection retains the existing broad set.
-4. **SCOPE-AC04 — done:** policy fixtures prove daily/weekly/affected-change/
-   manual/tag decisions, missing-history fallback, platform/profile-qualified
+4. **SCOPE-AC04 — amended by CADENCE-AC01/03:** policy fixtures prove fixed
+   daily/weekly/manual/tag decisions, cache-independent scope, platform/profile
    reuse, failure propagation and no false broad-success marker. No workflow
    is `continue-on-error`; incomplete execution is reported as incomplete.
 5. **SCOPE-AC05 — done (measurement); the provisional two-hour target remains unmet on Linux:** after profile approval, measure one clean execution
@@ -3920,8 +3963,10 @@ repair commit or worktree identity, exact final commands, and broad result.
 
 `.github/workflows/sanitizers.yml` currently runs full Linux x64 ASan/LSan
 and macOS arm64 ASan for version tags and default manual dispatch. Scheduled
-invocations resolve current `develop`, select daily/weekly/full from the qualified
-policy, and reuse only compatible platform/profile proof. Ordinary pushes and pull requests do not invoke this
+invocations resolve current `develop`, select fixed VM-focused daily scope
+Monday–Saturday and full weekly scope Sunday, and reuse only compatible
+platform/profile proof. Missing history or changed inputs never expand daily.
+Ordinary pushes and pull requests do not invoke this
 workflow; full sanitizer jobs are not universal develop publication gates.
 The explicit `normalization-linux` dispatch is an isolated diagnosis route and
 cannot write a broad-assurance marker. Linux build/test leaks stay enabled;
