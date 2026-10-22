@@ -176,6 +176,24 @@ if rexxscript_value("x") <> "1:ababab:2:the:4:12.5:-1:-1:MIXED:mixed:3" then do
   say "REXXSCRIPT expanded BIF value failed:" rexxscript_value("x")
 end
 
+result = rexxscript_evaluate("x = qwords('one " || '"two three"' || " four') || ':' || qword('one " || '"two three"' || " four', 2) || ':' || qpos(';', 'say " || '"hello;world"' || "; next')", 0)
+if result[1] <> "OK" | rexxscript_value("x") <> '3:"two three":18' then do
+  errors = errors + 1
+  say "REXXSCRIPT quote-aware BIF value failed:" result[1] rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("x = qpos(';', ';;;;', 3)", 0)
+if result[1] <> "OK" | rexxscript_value("x") <> "3" then do
+  errors = errors + 1
+  say "REXXSCRIPT QPOS start failed:" result[1] rexxscript_value("x")
+end
+
+result = rexxscript_evaluate('x = qword("one ''two", 1)', 0)
+if result[1] = "OK" | pos("unmatched quote", lower(result[1])) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT quote-aware error failed:" result[1]
+end
+
 result = rexxscript_evaluate("measurements_count = 3; measurements_1 = 10; measurements_2 = 20; measurements_3 = 30; total = 0; do i = 1 to measurements_count; total = total + VALUE('measurements_' || i); end", 0)
 if result[1] <> "OK" | rexxscript_value("total") <> "60" then do
   errors = errors + 1

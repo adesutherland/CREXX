@@ -651,4 +651,9 @@ endfunction()
 
 crexx_isolate_bin_test_environment()
 
+
+crexx_register_test_prep_targets(
+    TESTS crexx_headerless_rexx_levelc_smoke crexx_explicit_header_smoke crexx_rxunicode_default_runtime crexx_spaced_source_smoke crexx_nocompile_exec_smoke crexx_native_nocompile_smoke crexx_native_address_crexx_smoke crexx_native_linkmap_keep_source crexx_native_link_keep_inline crexx_native_nokeep_cleanup
+    TARGETS crexx rxc rxc-c rxas rxlink rxvm rxvme rxbvme rxdas stage-product stage-optional)
+
 crexx_finalize_directory_qa_tiers()

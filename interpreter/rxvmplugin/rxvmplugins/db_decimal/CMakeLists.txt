@@ -40,6 +40,9 @@ enable_testing()
 add_test(NAME db_decimal_tests COMMAND db_decimal_tests)
 set_tests_properties(db_decimal_tests PROPERTIES WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS db_decimal_tests TARGETS db_decimal_tests db_decimal_dynamic)
+
 crexx_finalize_directory_qa_tiers()
 
 # Published products owned by this component.

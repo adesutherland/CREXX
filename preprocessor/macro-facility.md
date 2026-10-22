@@ -419,6 +419,20 @@ those surrounding quotes:
 ##MEND
 ```
 
+When interpolating a value into a generated string literal, prefer double
+quotes around the `&value` substitution:
+
+```rexx
+value = unquote(value)
+.gen say "value=&value"
+```
+
+Avoid using single quotes as the interpolation wrapper, for example
+`.gen say 'value=&value'`. The `.gen` expression is assembled internally from
+single-quoted RexxScript fragments, so that form becomes ambiguous when the
+value contains a single quote. Single quotes remain valid for ordinary
+RexxScript literals that do not contain an interpolated macro value.
+
 The macro-time variable `name` and the generated CREXX variable named by its
 value are separate. They may have the same spelling, but they do not share
 storage or scope. Likewise, `.mcall` should not be confused with these output

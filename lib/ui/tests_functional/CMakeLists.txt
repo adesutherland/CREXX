@@ -167,3 +167,5 @@ crexx_add_rexx_opt_matrix(
         TEST_LABELS "library;ui;tui;event-loop;classes"
         REQUIRED_OUTPUT_REGEX "PASS: TUI drives semantic events"
         FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+set_tests_properties(ui_contract_generation PROPERTIES CREXX_PREP_NONE TRUE)

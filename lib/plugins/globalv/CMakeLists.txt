@@ -125,6 +125,7 @@ if(BUILD_TESTING)
                     "GLOBALV_HOME=${CMAKE_CURRENT_BINARY_DIR}/lock-test-home;GLOBALV_SESSION=${CMAKE_CURRENT_BINARY_DIR}/lock-test-session"
             RESOURCE_LOCK globalv_storage
             LABELS "globalv;regression"
+            CREXX_PREP_TARGETS globalv
             TIMEOUT 60)
 endif()
 

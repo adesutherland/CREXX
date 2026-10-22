@@ -63,6 +63,9 @@ if(BUILD_TESTING)
     target_link_libraries(rxgraph_bench PRIVATE rxbin)
 endif()
 
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS rxgraph_unit TARGETS test_rxgraph)
+
 crexx_finalize_directory_qa_tiers()
 
 # Published products owned by this component.

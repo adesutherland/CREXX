@@ -314,7 +314,7 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
   else()
     set(_rxfnsc_primary_source "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
   endif()
-  add_custom_command(
+  crexx_add_fixture_command(
     OUTPUT "${_binfile}"
     BYPRODUCTS
       "${_member_source}"
@@ -365,7 +365,7 @@ string(APPEND _rxfnsc_control_text
 
 file(GENERATE OUTPUT ${_rxfnsc_control_file} CONTENT "${_rxfnsc_control_text}")
 
-add_custom_command(
+crexx_add_fixture_command(
   OUTPUT "${_rxfnsc_link_image}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${_rxfnsc_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c ${_rxfnsc_control_file}

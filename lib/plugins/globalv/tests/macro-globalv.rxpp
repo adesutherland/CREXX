@@ -1,0 +1,72 @@
+
+##cflag nosrcmap 3buf maclog
+##EXTERNAL &syslib/rxglobalv_address.rxbin
+/*
+ * Scripted RXPP command macros for GLOBALV.
+ *
+ * GLOBALV forwards ordinary operands through a generated ADDRESS command.
+ * GLOBALVLIST additionally forwards the compiler-level OUTPUT stem clause.
+ */
+##define cmd globalv(p0 p1 p2 p3 p4 p5 p6 p7 p8 p9) {##MACRO_GLOBALV p0,p1,p2,p3,p4,p5,p6,p7,p8,p9}
+##define cmd globalvlist(p0 p1 p2 p3) {##MACRO_GLOBALV_LIST p0,p1,p2,p3}
+##macro MACRO_GLOBALV p0,p1,p2,p3,p4,p5,p6,p7,p8,p9
+  .gen address globalv "&p0 &p1 &p2 &p3 &p4 &p5 &p6 &p7 &p8 &p9"
+##mend
+##macro MACRO_GLOBALV_LIST p0,p1,p2,p3
+  .gen address globalv "&p0 &p1 &p2" output &p3
+##mend
+
+failures = 0
+listing = .string[]
+
+/* Start from a known session state, then store a value containing blanks. */
+GLOBALV INIT
+if rc <> 0 then do
+  say "FAIL INIT rc=" rc
+  failures = failures + 1
+end
+
+message = "Message from RXPP macro"
+GLOBALV SELECT RXPPMAC PUTL MESSAGE :message
+if rc <> 0 then do
+  say "FAIL PUTL rc=" rc
+  failures = failures + 1
+end
+
+/* GET must restore the value through the :message host-variable anchor. */
+message = "cleared"
+GLOBALV SELECT RXPPMAC GET :message
+if rc <> 0 | message <> "Message from RXPP macro" then do
+  say "FAIL GET rc=" rc "message=" message
+  failures = failures + 1
+end
+
+/* These operands are literal macro arguments, not host variables. */
+GLOBALV SELECT RXPPMAC SETL MODE literal
+if rc <> 0 then do
+  say "FAIL SETL rc=" rc
+  failures = failures + 1
+end
+
+/* This variant proves that the generated OUTPUT clause is preserved. */
+GLOBALVLIST SELECT RXPPMAC LIST listing
+if rc <> 0 | listing.0 < 2 then do
+  say "FAIL LIST rc=" rc "count=" listing.0
+  failures = failures + 1
+end
+
+say "MACRO GLOBALV LIST COUNT=" listing.0
+do i = 1 to listing.0
+  say "  " listing[i]
+end
+
+GLOBALV SELECT RXPPMAC PURGE
+if rc <> 0 then do
+  say "FAIL PURGE rc=" rc
+  failures = failures + 1
+end
+
+if failures = 0 then say "PASS GLOBALV RXPP MACROS"
+else say "FAIL GLOBALV RXPP MACROS errors=" failures
+
+return failures

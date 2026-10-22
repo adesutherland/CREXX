@@ -162,7 +162,7 @@ set(REXX_IMPORT_RXAS
 unset(_prev_target)
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
-	add_custom_command(
+	crexx_add_fixture_command(
 		  COMMAND ${CMAKE_COMMAND} -E rm -f ${_basename}.rxas
 		  # A library self-build must not import the previous library image next
 		  # to rxc. Current sibling sources and the explicit RXAS root are the

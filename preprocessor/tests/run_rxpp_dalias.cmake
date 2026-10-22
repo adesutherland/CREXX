@@ -7,13 +7,15 @@ endif()
 
 file(REMOVE_RECURSE "${WORK}")
 file(MAKE_DIRECTORY "${WORK}")
-file(WRITE "${WORK}/alias.rxpp" [=[##CFLAG nosrcmap
+file(WRITE "${WORK}/alias.rxpp" [=[##CFLAG nosrcmap blockmacros
+##define ALIASED_MACRO() {first from macro}
+##define DATA_MACRO() {second from macro}
 ##DALIAS config, routes
 ##config aliased
-first
+ALIASED_MACRO()
 ##END
 ##DATA direct
-second
+DATA_MACRO()
 ##END
 say aliased.1
 say direct.1
@@ -37,17 +39,40 @@ string(FIND "${output}${errors}" "12345" marker)
 if(NOT marker EQUAL -1)
     message(FATAL_ERROR "RXPP emitted its internal alias marker: ${output}${errors}")
 endif()
-string(FIND "${output}" "first\nsecond\n" expected)
+string(FIND "${output}" "first from macro\nsecond from macro\n" expected)
 if(expected EQUAL -1)
     message(FATAL_ERROR "Alias and direct DATA values differ: ${output}")
 endif()
 file(READ "${WORK}/alias.crexx" generated)
-foreach(assignment IN ITEMS "aliased.1='first'" "direct.1='second'")
+foreach(assignment IN ITEMS "aliased.1='first from macro'" "direct.1='second from macro'")
     string(FIND "${generated}" "${assignment}" found)
     if(found EQUAL -1)
         message(FATAL_ERROR "Missing generated assignment ${assignment}: ${generated}")
     endif()
 endforeach()
+
+file(WRITE "${WORK}/literal.rxpp" [=[
+##define ALIASED_MACRO() {should not expand}
+##DALIAS config
+##config literal
+ALIASED_MACRO()
+##END
+say literal.1
+]=])
+execute_process(
+    COMMAND "${CREXX_BIN}" ${options} literal.rxpp
+    WORKING_DIRECTORY "${WORK}"
+    RESULT_VARIABLE literal_result
+    OUTPUT_VARIABLE literal_output
+    ERROR_VARIABLE literal_errors
+    TIMEOUT 120)
+if(NOT literal_result EQUAL 0)
+    message(FATAL_ERROR "RXPP default-off block macro run failed: ${literal_result}\n${literal_output}\n${literal_errors}")
+endif()
+string(FIND "${literal_output}" "ALIASED_MACRO()\n" literal_expected)
+if(literal_expected EQUAL -1)
+    message(FATAL_ERROR "RXPP nblockmacros did not preserve literal content: ${literal_output}")
+endif()
 
 foreach(invalid_case IN ITEMS reserved malformed duplicate)
     if(invalid_case STREQUAL "reserved")

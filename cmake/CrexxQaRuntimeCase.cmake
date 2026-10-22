@@ -1,0 +1,68 @@
+include_guard(GLOBAL)
+
+# An opt-in split of the simple compile/assemble/(linked) runtime oracle. The
+# ordinary CTest command stays unchanged. Only declared generated artifacts may
+# cross to the instrumented tree; runtime/provider paths always belong there.
+function(crexx_add_qa_runtime_case NAME SOURCE MODE OUT_SCRIPT OUT_TARGET)
+    set(_work "${CMAKE_CURRENT_BINARY_DIR}/qa-runtime/${NAME}_${MODE}")
+    set(_base "${NAME}_run_${MODE}")
+    set(_image "${_work}/${_base}.rxbin")
+    set(_assembly "${_work}/${_base}.rxas")
+    set(_output "${_work}/producer.qa-output")
+    set(_rxc_flags)
+    if(MODE STREQUAL "noopt")
+        set(_rxc_flags "${COMPILER_NOOPT_FLAG}")
+    endif()
+    set(_produce "${CMAKE_CURRENT_BINARY_DIR}/qa_runtime_${NAME}_${MODE}_produce.cmake")
+    set(_content "file(MAKE_DIRECTORY [=[${_work}]=])\nset(full_out \"\")\n")
+    string(APPEND _content "file(REMOVE [=[${_output}]=] [=[${_image}]=] [=[${_assembly}]=])\n")
+    foreach(_tool IN ITEMS rxc rxas)
+        if(_tool STREQUAL "rxc")
+            set(_arguments "-i [=[${CMAKE_BINARY_DIR}/bin]=] ${_rxc_flags} -o [=[${_base}]=] [=[${SOURCE}]=]")
+        else()
+            # Preserve the original noopt wrapper: compiler -n, assembler default.
+            set(_arguments "-o [=[${_base}.rxbin]=] [=[${_base}]=]")
+        endif()
+        string(APPEND _content "execute_process(COMMAND [=[$<TARGET_FILE:${_tool}>]=] ${_arguments} WORKING_DIRECTORY [=[${_work}]=] OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\nstring(APPEND full_out \"\${out}\")\nif(NOT res EQUAL 0)\n message(FATAL_ERROR \"${_tool} failed: \${out}\")\nendif()\n")
+    endforeach()
+    set(_byproducts "${_assembly}")
+    if(MODE STREQUAL "opt")
+        list(APPEND _byproducts "${_image}")
+        set(_image "${_work}/${_base}-linked.rxbin")
+        string(APPEND _content "file(REMOVE [=[${_image}]=])\nexecute_process(COMMAND [=[$<TARGET_FILE:rxlink>]=] -s -o [=[${_image}]=] [=[${_work}/${_base}.rxbin]=] [=[${CMAKE_BINARY_DIR}/bin/library.rxbin]=] WORKING_DIRECTORY [=[${_work}]=] OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\nif(NOT res EQUAL 0)\n message(FATAL_ERROR \"rxlink failed: \${out}\${err}\")\nendif()\n")
+        # The original linked helper emits linker output only on failure.
+    endif()
+    string(APPEND _content "file(WRITE [=[${_output}]=] \"\${full_out}\")\n")
+    file(GENERATE OUTPUT "${_produce}" CONTENT "${_content}")
+    crexx_add_fixture_command(OUTPUT "${_image}" "${_output}"
+        BYPRODUCTS ${_byproducts}
+        COMMAND "${CMAKE_COMMAND}" -P "${_produce}"
+        DEPENDS rxc rxas rxlink compiler_exit_bin library
+            "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+            "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${SOURCE}" "${_produce}"
+        VERBATIM)
+    set(_target "qa-runtime-${NAME}-${MODE}")
+    add_custom_target("${_target}" DEPENDS "${_image}" "${_output}")
+    set(_run "${CMAKE_CURRENT_BINARY_DIR}/qa_runtime_${NAME}_${MODE}_run.cmake")
+    set(_runtime "")
+    if(CREXX_QA_FIXTURE_TREE)
+        string(APPEND _runtime "execute_process(COMMAND [=[${Python3_EXECUTABLE}]=] [=[${CREXX_QA_FIXTURE_HELPER}]=] runtime --build-dir [=[${CMAKE_BINARY_DIR}]=] --runner [=[${CREXX_RXVM_EXECUTABLE}]=] --runtime-paths [=[${_image}]=] [=[${CMAKE_BINARY_DIR}/bin]=] RESULT_VARIABLE route)\nif(NOT route EQUAL 0)\n message(FATAL_ERROR \"Invalid native runtime/provider route\")\nendif()\n")
+    endif()
+    string(APPEND _runtime "file(READ [=[${_output}]=] full_out)\n")
+    if(MODE STREQUAL "noopt")
+        set(_runtime_args "[=[${CMAKE_BINARY_DIR}/bin/library.rxbin]=] [=[${_image}]=]")
+    else()
+        set(_runtime_args "[=[${_image}]=]")
+    endif()
+    if(MODE STREQUAL "opt")
+        set(_capture "OUTPUT_VARIABLE out ERROR_VARIABLE err")
+        set(_observed "\${out}\${err}")
+    else()
+        set(_capture "OUTPUT_VARIABLE out ERROR_VARIABLE out")
+        set(_observed "\${out}")
+    endif()
+    string(APPEND _runtime "execute_process(COMMAND [=[${CREXX_RXVM_EXECUTABLE}]=] ${_runtime_args} WORKING_DIRECTORY [=[${CMAKE_CURRENT_BINARY_DIR}]=] ${_capture} RESULT_VARIABLE res)\nstring(APPEND full_out \"${_observed}\")\nif(NOT res EQUAL 0)\n message(FATAL_ERROR \"rxvm failed: \${out}\")\nendif()\nfile(READ [=[${CMAKE_CURRENT_SOURCE_DIR}/golden/run/${NAME}.out]=] golden_out)\nstring(REPLACE \"\\r\\n\" \"\\n\" full_out \"\${full_out}\")\nstring(REPLACE \"\\r\\n\" \"\\n\" golden_out \"\${golden_out}\")\nif(NOT full_out STREQUAL golden_out)\n message(FATAL_ERROR \"Output mismatch: \\nExpected:\\n\${golden_out}\\nGot:\\n\${full_out}\")\nendif()\n")
+    file(GENERATE OUTPUT "${_run}" CONTENT "${_runtime}")
+    set(${OUT_SCRIPT} "${_run}" PARENT_SCOPE)
+    set(${OUT_TARGET} "${_target}" PARENT_SCOPE)
+endfunction()

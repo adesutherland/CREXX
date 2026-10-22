@@ -396,7 +396,11 @@ foreach(_mode opt noopt)
       add_test(NAME levell_services_${_mode}_${_vm} COMMAND $<TARGET_FILE:${_vm}>
         "${_services}/${_mode}-linked.rxbin" -a "${_generated_spec}" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${_services}/${_mode}-${_vm}.bin" "${_generated_grammar}")
       set_tests_properties(levell_services_${_mode}_${_vm} PROPERTIES
-        PASS_REGULAR_EXPRESSION "TOOL_SERVICES[|]failures=0" TIMEOUT 300 LABELS "level-l;optimizer-parity")
+        # Callable generation is a substantial aggregate: unchanged Linux ASan
+        # passes isolated in 118s but exhausts 300s in the shared pool. Keep
+        # every request/oracle and use a generous functional hang backstop.
+        PASS_REGULAR_EXPRESSION "TOOL_SERVICES[|]failures=0"
+        RUN_SERIAL TRUE TIMEOUT 900 LABELS "level-l;optimizer-parity")
       crexx_register_test_prep_targets(TESTS levell_services_${_mode}_${_vm} TARGETS levell_services_${_mode} ${_vm})
       crexx_label_smoke_tests(levell_services_${_mode}_${_vm})
     endif()
@@ -420,3 +424,8 @@ add_test(NAME levell_product_inventory COMMAND ${CMAKE_COMMAND}
   -P "${CMAKE_CURRENT_SOURCE_DIR}/check-products.cmake")
 set_tests_properties(levell_product_inventory PROPERTIES PASS_REGULAR_EXPRESSION "LEVEL_L_PRODUCTS[|]PASS" TIMEOUT 30 LABELS "level-l;essential")
 crexx_register_test_prep_targets(TESTS levell_product_inventory TARGETS rxfnsl rxlang rxlanglib llrxastext llfileoutput llbinmeta)
+
+# Bounded persistent-VM measurement targets; register after isolated Debug timing.
+include("${CMAKE_SOURCE_DIR}/interpreter/tests/sustained_vm.cmake")
+# Isolated ordinary Debug fixes the bounded workloads; deadline is hang protection.
+crexx_register_sustained_vm_tests(1000 1000 10 1800)

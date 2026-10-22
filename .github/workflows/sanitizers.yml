@@ -2,14 +2,61 @@ name: Sanitizer QA
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
   schedule:
     - cron: '47 3 * * *'
   workflow_dispatch:
+    inputs:
+      qualification:
+        description: Qualification scope (default retains both full platform jobs)
+        type: choice
+        options: [full, daily, candidate, normalization-linux, services-linux, continuation-linux, identity-linux]
+        default: full
+      daily_platform:
+        description: Manual daily retry platform (full assurance always retains both)
+        type: choice
+        options: [both, linux, macos]
+        default: both
+      source_ref:
+        description: Optional source commit for focused or candidate qualification
+        type: string
+        default: ''
+      ordinary_regex:
+        description: Optional ordinary continuation regex (manual candidate only; empty retains full)
+        type: string
+        default: ''
+      runtime_regex:
+        description: Exact runtime selector (continuation-linux only; focused receipt)
+        type: string
+        default: ''
+      expected_native_key:
+        description: Required prior platform/toolchain/dependency key for continuation
+        type: string
+        default: ''
+      expected_tests:
+        description: Required selected CTest count including fixtures for continuation
+        type: number
+        default: 0
+      expected_universe:
+        description: Required complete non-measurement CTest count for continuation
+        type: number
+        default: 0
+      expected_names_sha256:
+        description: Required SHA256 of sorted selected names with final newline
+        type: string
+        default: ''
+      expected_universe_sha256:
+        description: Required SHA256 of sorted complete non-measurement names
+        type: string
+        default: ''
+
+# Qualified VM-priority cadence, activated by Adrian on 21 October 2026.
+# Scheduled definitions live on master; product inputs come from develop.
+env:
+  SANITIZER_DAILY_ACTIVATED: 'true'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}${{ (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux' || inputs.qualification == 'continuation-linux' || inputs.qualification == 'identity-linux') && format('-{0}', inputs.qualification) || '' }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}
 
 permissions:
@@ -18,160 +65,481 @@ permissions:
 
 jobs:
   assurance-gate:
-    name: Check for an unqualified develop change
+    if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux' && inputs.qualification != 'identity-linux'
+    name: Resolve source and scheduled or explicit profile
     runs-on: ubuntu-24.04
     outputs:
-      should_run: ${{ steps.decision.outputs.should_run }}
-      target_sha: ${{ steps.target.outputs.target_sha }}
-
+      target_sha: ${{ steps.decision.outputs.target_sha }}
+      profile: ${{ steps.decision.outputs.profile }}
+      matrix: ${{ steps.decision.outputs.matrix }}
     steps:
-      - name: Resolve the commit to qualify
+      - name: Resolve source
         id: target
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          REQUESTED_SOURCE: ${{ inputs.source_ref }}
         run: |
           set -euo pipefail
-
-          target_sha="${GITHUB_SHA}"
-          if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
-            target_sha="$(
-              gh api --method GET \
-                "repos/${GITHUB_REPOSITORY}/git/ref/heads/develop" \
-                --jq '.object.sha'
-            )"
+          target_sha="${REQUESTED_SOURCE:-$GITHUB_SHA}"
+          # master receives only this workflow; its released product sources
+          # do not yet contain the new policy tools. Default manual assurance
+          # from master therefore qualifies develop, just like the schedule.
+          if [ "$GITHUB_EVENT_NAME" = schedule ] ||
+             { [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] &&
+               [ "$GITHUB_REF" = refs/heads/master ] && [ -z "$REQUESTED_SOURCE" ]; }; then
+            target_sha=$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/develop" --jq '.object.sha')
           fi
-          echo "target_sha=${target_sha}" >> "$GITHUB_OUTPUT"
+          echo "target_sha=$target_sha" >> "$GITHUB_OUTPUT"
 
-      - name: Look for successful sanitizer assurance of this develop commit
-        id: qualified
-        if: github.event_name == 'schedule'
-        uses: actions/cache/restore@v5
+      - uses: actions/checkout@v5
         with:
-          path: .ci-assurance/sanitizer-qualified-sha
-          key: crexx-sanitizer-qualified-${{ steps.target.outputs.target_sha }}
-          lookup-only: true
+          submodules: recursive
+          fetch-depth: 0
+          ref: ${{ steps.target.outputs.target_sha }}
 
-      - name: Decide whether sanitizer assurance is required
+      - name: Select profile and independent platform jobs
         id: decision
         shell: bash
+        env:
+          REQUESTED_SCOPE: ${{ inputs.qualification }}
+          DAILY_PLATFORM: ${{ inputs.daily_platform || 'both' }}
         run: |
           set -euo pipefail
-
-          if [ "${GITHUB_EVENT_NAME}" != "schedule" ]; then
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            echo "Manual and version-tag sanitizer runs are unconditional." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-
-          if [ "${{ steps.qualified.outputs.cache-hit }}" = "true" ]; then
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping sanitizer QA: develop ${{ steps.target.outputs.target_sha }} already passed the scheduled sanitizer workflow." >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "should_run=true" >> "$GITHUB_OUTPUT"
-            echo "Running sanitizer QA: develop ${{ steps.target.outputs.target_sha }} has not passed a scheduled sanitizer workflow." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          python3 - <<'PYTHON'
+          import importlib.util, json, os, subprocess
+          spec=importlib.util.spec_from_file_location('policy','tools/sanitizer-policy.py')
+          policy=importlib.util.module_from_spec(spec); spec.loader.exec_module(policy)
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          event='tag' if os.environ['GITHUB_REF'].startswith('refs/tags/') else ('schedule' if os.environ['GITHUB_EVENT_NAME']=='schedule' else 'manual')
+          from datetime import datetime, timezone
+          requested='daily' if os.environ.get('REQUESTED_SCOPE')=='daily' else 'full'
+          decision=policy.decide(event,os.environ['SANITIZER_DAILY_ACTIVATED']=='true',datetime.now(timezone.utc).isoweekday(),requested)
+          rows=[{'name':'Linux x64 ASan/LSan','os':'ubuntu-24.04','platform':'linux','profile':decision['profile']},
+                {'name':'macOS arm64 ASan','os':'macos-15','platform':'macos','profile':decision['profile']}]
+          if os.environ.get('REQUESTED_SCOPE')=='candidate':
+              rows=[{**rows[0],'name':'Linux original full qualification','profile':'full'},
+                    {**rows[0],'name':'Linux separated daily qualification','profile':'daily'},
+                    {**rows[1],'name':'Apple separated daily qualification','profile':'daily'}]
+          if os.environ.get('REQUESTED_SCOPE')=='continuation-linux':
+              rows=[{**rows[0],'name':'Linux bounded original-producer continuation','profile':'full'}]
+          platform=os.environ['DAILY_PLATFORM']
+          assert platform in ('both','linux','macos'), 'Unknown daily retry platform'
+          if platform!='both':
+              assert event=='manual' and os.environ.get('REQUESTED_SCOPE')=='daily', 'Platform selection is only for explicit manual daily retries'
+              rows=[row for row in rows if row['platform']==platform]
+          with open(os.environ['GITHUB_OUTPUT'],'a') as stream:
+              stream.write('target_sha='+head+'\nprofile='+decision['profile']+'\nmatrix='+json.dumps({'include':rows})+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
+              label='bounded full-profile selection / focused proof' if os.environ.get('REQUESTED_SCOPE')=='continuation-linux' else decision['profile']
+              stream.write('Profile: **'+label+'**. '+decision['reason']+'\n')
+          PYTHON
 
   sanitizer:
     name: ${{ matrix.name }}
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux' && inputs.qualification != 'identity-linux'
     runs-on: ${{ matrix.os }}
-    # Full macOS ASan took 239.5 minutes before structured-flow isolation.
-    # Leave headroom beyond each test's own measured hang backstop.
     timeout-minutes: 360
-
+    env:
+      CREXX_QA_AFFECTED_TESTS: '[]'
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: Linux x64 ASan/LSan
-            os: ubuntu-24.04
-            platform: linux
-            cmake_args: ""
-          - name: macOS arm64 ASan
-            os: macos-15
-            platform: macos
-            cmake_args: "-DCMAKE_OSX_ARCHITECTURES=arm64"
-
+      matrix: ${{ fromJSON(needs.assurance-gate.outputs.matrix) }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           ref: ${{ needs.assurance-gate.outputs.target_sha }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Configure matching ordinary and instrumented inputs
+        id: configure
+        shell: bash
+        env:
+          QA_PROFILE: ${{ matrix.profile }}
+          QA_PLATFORM: ${{ matrix.platform }}
+          QA_QUALIFICATION: ${{ inputs.qualification }}
+          QA_CONTINUATION_REGEX: ${{ inputs.runtime_regex }}
+          QA_EXPECTED_NATIVE_KEY: ${{ inputs.expected_native_key }}
+          QA_EXPECTED_TESTS: ${{ inputs.expected_tests }}
+          QA_EXPECTED_UNIVERSE: ${{ inputs.expected_universe }}
+          QA_EXPECTED_NAMES_SHA256: ${{ inputs.expected_names_sha256 }}
+          QA_EXPECTED_UNIVERSE_SHA256: ${{ inputs.expected_universe_sha256 }}
+        run: |
+          set -euo pipefail
+          common=(-DCMAKE_BUILD_TYPE=Debug -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
+            "-DCREXX_BUILD_TIMESTAMP=$(date -u +%Y%m%dT%H%M%SZ)"
+            "-DCREXX_BUILD_COMMIT=${{ needs.assurance-gate.outputs.target_sha }}")
+          if [ "$QA_PLATFORM" = macos ]; then common+=(-DCMAKE_OSX_ARCHITECTURES=arm64); fi
+          configure=(cmake -S . -G Ninja -B "$RUNNER_TEMP/debugasan" "${common[@]}")
+          if [ "$QA_PROFILE" = daily ]; then
+            cmake -S . -G Ninja -B "$RUNNER_TEMP/ordinary" "${common[@]}"
+            configure+=("-DCREXX_QA_FIXTURE_TREE=$RUNNER_TEMP/ordinary")
+          fi
+          native=(-DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer"
+            -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer"
+            -DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address -DCMAKE_SHARED_LINKER_FLAGS=-fsanitize=address
+            -DCMAKE_MODULE_LINKER_FLAGS=-fsanitize=address)
+          "${configure[@]}" "${native[@]}"
+          leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          if [ "$QA_QUALIFICATION" = continuation-linux ]; then
+            export QA_NATIVE_KEY
+            QA_NATIVE_KEY=$(python3 tools/sanitizer-policy.py native-key --build-dir "$RUNNER_TEMP/debugasan" --leaks "$leaks" --build-leaks "$leaks")
+            python3 - <<'PYTHON'
+          import hashlib, json, os, pathlib, subprocess
+          assert os.environ['QA_EXPECTED_NATIVE_KEY'] and os.environ['QA_NATIVE_KEY']==os.environ['QA_EXPECTED_NATIVE_KEY'], 'Prior platform/toolchain/dependency configuration differs; reused cells are not qualified'
+          pattern=os.environ['QA_CONTINUATION_REGEX']
+          assert pattern, 'Continuation requires an explicit selector'
+          expected=int(os.environ['QA_EXPECTED_TESTS']); universe=int(os.environ['QA_EXPECTED_UNIVERSE'])
+          assert 0 < expected < universe, 'Continuation must remain a bounded focused selection'
+          command=['ctest','--test-dir',str(pathlib.Path(os.environ['RUNNER_TEMP'])/'debugasan'),'--show-only=json-v1','-LE','^performance-measurement$']
+          all_names={value['name'] for value in json.loads(subprocess.check_output(command,text=True))['tests']}
+          selected={value['name'] for value in json.loads(subprocess.check_output(command+['-R',pattern],text=True))['tests']}
+          assert len(all_names)==universe and len(selected)==expected and selected < all_names, 'Continuation inventory differs from the reviewed scope'
+          digest=lambda names: hashlib.sha256(('\n'.join(sorted(names))+'\n').encode()).hexdigest()
+          assert digest(selected)==os.environ['QA_EXPECTED_NAMES_SHA256'] and digest(all_names)==os.environ['QA_EXPECTED_UNIVERSE_SHA256'], 'Continuation names differ from the reviewed exact inventory'
+          print('Matched prior native configuration; bounded selection:',len(selected),'of',len(all_names))
+          PYTHON
+          fi
+          echo "profile=$QA_PROFILE" >> "$GITHUB_OUTPUT"
+
+      - name: Compute platform/configuration/profile input key
+        id: identity
+        shell: bash
+        env:
+          QA_PROFILE: ${{ steps.configure.outputs.profile }}
+          QA_PLATFORM: ${{ matrix.platform }}
+        run: |
+          set -euo pipefail
+          leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          key=$(python3 tools/sanitizer-policy.py key --build-dir "$RUNNER_TEMP/debugasan" \
+            --profile "$QA_PROFILE" --leaks "$leaks" --build-leaks "$leaks")
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+          scope=broad; if [ "$QA_PROFILE" = daily ]; then scope=daily; fi
+          echo "cache_scope=$scope" >> "$GITHUB_OUTPUT"
+
+      - name: Reuse only this platform and complete profile
+        id: qualified
+        if: github.event_name == 'schedule'
+        uses: actions/cache/restore@v5
+        with:
+          path: .ci-assurance/${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}.json
+          key: crexx-sanitizer-v2-${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}-${{ steps.identity.outputs.key }}
+
+      - name: Prepare and seal ordinary fixtures
+        if: steps.configure.outputs.profile == 'daily' && steps.qualified.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          QA_PLATFORM: ${{ matrix.platform }}
+          QA_QUALIFICATION: ${{ inputs.qualification }}
+        run: |
+          set -euo pipefail
+          leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          preparation_profile=daily
+          # The legacy explicit three-job candidate includes full ordinary
+          # correctness; revised manual daily qualification reuses that proof.
+          if [ "$QA_QUALIFICATION" = candidate ] && [ "$QA_PLATFORM" = linux ]; then preparation_profile=full; fi
+          python3 tools/sanitizer-fixtures.py prepare --build-dir "$RUNNER_TEMP/ordinary" \
+            --profile "$preparation_profile" --build-jobs 4 --build-leaks "$leaks"
+
+      - name: Candidate ordinary correctness (Linux donor)
+        if: inputs.qualification == 'candidate' && steps.configure.outputs.profile == 'daily' && matrix.platform == 'linux'
+        shell: bash
+        env:
+          QA_ORDINARY_REGEX: ${{ inputs.ordinary_regex }}
+        run: |
+          set -euo pipefail
+          command=(tools/asan-run.sh --build-dir "$RUNNER_TEMP/ordinary" --phase ctest
+            --profile full --test-jobs 8 --leaks on --no-live-tail)
+          if [ -n "$QA_ORDINARY_REGEX" ]; then command+=(--regex "$QA_ORDINARY_REGEX"); fi
+          "${command[@]}"
+
+      - name: Complete instrumented build and selected runtime scope
+        id: execution
+        if: steps.qualified.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          QA_PROFILE: ${{ steps.configure.outputs.profile }}
+          QA_PLATFORM: ${{ matrix.platform }}
+          QA_QUALIFICATION: ${{ inputs.qualification }}
+          QA_CONTINUATION_REGEX: ${{ inputs.runtime_regex }}
+        run: |
+          set -euo pipefail
+          leaks=on; if [ "$QA_PLATFORM" = macos ]; then leaks=off; fi
+          command=(tools/asan-run.sh --build-dir "$RUNNER_TEMP/debugasan" --phase full
+            --profile "$QA_PROFILE" --build-jobs 4 --test-jobs 8
+            --build-leaks "$leaks" --leaks "$leaks" --no-live-tail)
+          if [ "$QA_QUALIFICATION" = continuation-linux ]; then command+=(--regex "$QA_CONTINUATION_REGEX"); fi
+          "${command[@]}"
+
+      - name: Verify complete assurance or exact qualified reuse
+        id: proof
+        shell: bash
+        env:
+          QA_PROFILE: ${{ steps.configure.outputs.profile }}
+          QA_PLATFORM: ${{ matrix.platform }}
+          QA_INPUT_KEY: ${{ steps.identity.outputs.key }}
+          QA_TARGET: ${{ needs.assurance-gate.outputs.target_sha }}
+          QA_REUSED: ${{ steps.qualified.outputs.cache-hit }}
+          QA_QUALIFICATION: ${{ inputs.qualification }}
+          QA_EXPECTED_NATIVE_KEY: ${{ inputs.expected_native_key }}
+          QA_EXPECTED_TESTS: ${{ inputs.expected_tests }}
+          QA_EXPECTED_UNIVERSE: ${{ inputs.expected_universe }}
+          QA_EXPECTED_NAMES_SHA256: ${{ inputs.expected_names_sha256 }}
+          QA_EXPECTED_UNIVERSE_SHA256: ${{ inputs.expected_universe_sha256 }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PYTHON'
+          import hashlib, json, os, pathlib
+          profile=os.environ['QA_PROFILE']; platform=os.environ['QA_PLATFORM']
+          scope='daily' if profile=='daily' else 'broad'
+          path=pathlib.Path('.ci-assurance')/(platform+'-'+scope+'.json')
+          if os.environ['QA_REUSED']=='true':
+              result=json.loads(path.read_text())
+          else:
+              result=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'debugasan/asan-logs/latest/result.json').read_text())
+          if os.environ['QA_QUALIFICATION']=='continuation-linux':
+              assert result['complete'] and result['scope']=='focused' and result['identity']['preparation']=='original-producers', 'Continuation cannot certify complete broad assurance'
+              assert result['native_configuration_key']==os.environ['QA_EXPECTED_NATIVE_KEY'], 'Prior native configuration changed'
+              assert result['executed']==int(os.environ['QA_EXPECTED_TESTS']) and len(result['universe'])==int(os.environ['QA_EXPECTED_UNIVERSE']), 'Continuation scope changed'
+              digest=lambda names: hashlib.sha256(('\n'.join(sorted(names))+'\n').encode()).hexdigest()
+              assert digest(result['selected'])==os.environ['QA_EXPECTED_NAMES_SHA256'] and digest(result['universe'])==os.environ['QA_EXPECTED_UNIVERSE_SHA256'], 'Continuation names changed'
+              with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
+                  stream.write('Original-producer bounded continuation: '+str(result['executed'])+' tests; FOCUSED only. No single-run broad-pass marker or cache entry.\n')
+              raise SystemExit(0)
+          assert result['complete'] and result['scope']==scope, 'Incomplete/focused result cannot certify selected scope'
+          assert result['reusable_input_key']==os.environ['QA_INPUT_KEY'], 'Qualified input key changed'
+          compact={key:result[key] for key in ('complete','scope','reusable_input_key','native_configuration_key','executed')}
+          compact.update(platform=platform,profile=profile,requested_head=os.environ['QA_TARGET'])
+          path.parent.mkdir(exist_ok=True); path.write_text(json.dumps(compact)+'\n')
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as stream:
+              stream.write(platform+' '+profile+': '+('reused qualified inputs' if os.environ['QA_REUSED']=='true' else str(result['executed'])+' tests executed')+'; scope='+scope+'\n')
+          PYTHON
+
+      - name: Retain independently qualified platform scope
+        if: steps.execution.outcome == 'success' && inputs.qualification != 'continuation-linux'
+        uses: actions/cache/save@v5
+        with:
+          path: .ci-assurance/${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}.json
+          key: crexx-sanitizer-v2-${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}-${{ steps.identity.outputs.key }}
+
+      - name: Publish compact scope result
+        if: inputs.qualification != 'continuation-linux'
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-proof-${{ matrix.platform }}-${{ steps.configure.outputs.profile }}
+          path: .ci-assurance/${{ matrix.platform }}-${{ steps.identity.outputs.cache_scope }}.json
+          retention-days: 14
+
+      - name: Upload diagnostic logs
+        if: always() && steps.qualified.outputs.cache-hit != 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-logs-${{ matrix.platform }}-${{ steps.configure.outputs.profile }}
+          path: |
+            ${{ runner.temp }}/debugasan/asan-logs
+            ${{ runner.temp }}/ordinary/asan-logs
+          if-no-files-found: warn
+          retention-days: 14
+
+  normalization-linux:
+    name: Linux x64 isolated timeout diagnosis
+    if: github.event_name == 'workflow_dispatch' && (inputs.qualification == 'normalization-linux' || inputs.qualification == 'services-linux')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    env:
+      QA_DIAGNOSTIC: ${{ inputs.qualification }}
+    steps:
+      - name: Checkout original failing inputs
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ inputs.source_ref || github.sha }}
 
       - name: Python for core QA
         uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
-      - name: Configure instrumented Debug build
+      - name: Isolated ordinary Debug control
         shell: bash
         run: |
           set -euo pipefail
+          targets=(--build-target ts_unicode_normalization)
+          regex='^ts_unicode_normalization_rxtvm_(noopt|opt)$'
+          if [ "$QA_DIAGNOSTIC" = services-linux ]; then
+            targets=(--build-target levell_services_opt --build-target rxtvm)
+            regex='^levell_services_opt_rxtvm$'
+          fi
+          cmake -S . -G Ninja -B "${RUNNER_TEMP}/debug" \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
+          tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debug" \
+            --phase build "${targets[@]}" \
+            --build-jobs 4 --build-leaks on --no-live-tail
+          tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debug" \
+            --phase ctest --regex "$regex" \
+            --test-jobs 1 --leaks on --no-live-tail
+
+      - name: Isolated maintained ASan and LSan replay
+        shell: bash
+        run: |
+          set -euo pipefail
+          targets=(--build-target ts_unicode_normalization)
+          regex='^ts_unicode_normalization_rxtvm_(noopt|opt)$'
+          if [ "$QA_DIAGNOSTIC" = services-linux ]; then
+            targets=(--build-target levell_services_opt --build-target rxtvm)
+            regex='^levell_services_opt_rxtvm$'
+          fi
           cmake -S . -G Ninja -B "${RUNNER_TEMP}/debugasan" \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
             -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
             -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
             -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address" \
-            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF \
-            ${{ matrix.cmake_args }}
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
+          tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debugasan" \
+            --phase build "${targets[@]}" \
+            --build-jobs 4 --build-leaks on --no-live-tail
+          tools/asan-run.sh --build-dir "${RUNNER_TEMP}/debugasan" \
+            --phase ctest --regex "$regex" \
+            --test-jobs 1 --leaks on --no-live-tail
 
-      - name: Full instrumented build and CTest
-        shell: bash
-        run: |
-          set -euo pipefail
-          sanitizer_args=(
-            --build-dir "${RUNNER_TEMP}/debugasan"
-            --phase full
-            --build-jobs 4
-            --test-jobs 8
-            --exclude-label '^performance-measurement$'
-            --no-live-tail
-          )
-
-          if [ "${{ matrix.platform }}" = "macos" ]; then
-            sanitizer_args+=(--build-leaks off --leaks off)
-          else
-            sanitizer_args+=(--build-leaks on --leaks on)
-          fi
-
-          tools/asan-run.sh "${sanitizer_args[@]}"
-
-      - name: Upload sanitizer logs
+      - name: Upload focused diagnostic logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: sanitizer-logs-${{ matrix.platform }}
+          name: ${{ inputs.qualification == 'services-linux' && 'sanitizer-services-linux' || 'sanitizer-normalization-linux' }}
           path: |
+            ${{ runner.temp }}/debug/asan-logs
             ${{ runner.temp }}/debugasan/asan-logs
           if-no-files-found: error
           retention-days: 14
 
-  record-assurance:
-    name: Record qualified develop commit
-    needs:
-      - assurance-gate
-      - sanitizer
-    if: >-
-      always() &&
-      github.event_name == 'schedule' &&
-      needs.assurance-gate.outputs.should_run == 'true' &&
-      needs.sanitizer.result == 'success'
+  identity-linux:
+    name: Linux ordinary source identity diagnosis
+    if: github.event_name == 'workflow_dispatch' && inputs.qualification == 'identity-linux'
     runs-on: ubuntu-24.04
-
+    timeout-minutes: 60
+    env:
+      QA_IDENTITY_TESTS: >-
+        sanitizer_strategy_contract import_discovery_snapshot project_dependencies
+        import_resolution_report levelc_implicit_source_tree levelc_address_source_tree
+        levelc_procedure_source_tree levelc_return_source_tree levelc_exit_source_tree
+        levelc_select_source_tree levelc_arg_template_source_tree levelc_pull_source_tree
+        levelc_parse_source_tree levelc_push_source_tree levelc_queue_source_tree
+        levelc_signal_source_tree levelc_call_expression_source_tree levelc_call_resolution_source_tree
+        levelc_strictc_transfer_source_tree classlib_rexxdoc_coverage
     steps:
-      - name: Write assurance marker
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          ref: ${{ inputs.source_ref || github.sha }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - name: Configure ordinary unchanged native inputs
         shell: bash
         run: |
-          mkdir -p .ci-assurance
-          echo "${{ needs.assurance-gate.outputs.target_sha }}" \
-            > .ci-assurance/sanitizer-qualified-sha
-
-      - name: Retain assurance marker
-        uses: actions/cache/save@v5
+          set -euo pipefail
+          cmake -S . -G Ninja -B "$RUNNER_TEMP/debug" -DCMAKE_BUILD_TYPE=Debug \
+            -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF
+      - name: Build only source-aware probe prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYTHON'
+          import json, os, pathlib, re, subprocess
+          build=pathlib.Path(os.environ['RUNNER_TEMP'])/'debug'
+          names=os.environ['QA_IDENTITY_TESTS'].split()
+          pattern='^('+'|'.join(map(re.escape,names))+')$'
+          inventory=json.loads(subprocess.check_output(['ctest','--test-dir',str(build),'--show-only=json-v1','-R',pattern],text=True))
+          assert {test['name'] for test in inventory['tests']}==set(names)|{'sanitizer_fixture_integrity'}
+          declared=set()
+          for test in inventory['tests']:
+              for prop in test['properties']:
+                  if prop['name']=='CREXX_PREP_TARGETS':
+                      value=prop['value']; declared.update(value.split(';') if isinstance(value,str) else value)
+          # These older tests lack per-test declarations: the three native
+          # executables and RexxDoc's compiler/assembler/VM/library commands.
+          targets=declared|{'test_import_discovery_snapshot','test_import_resolution_report',
+                            'rxc','rxas','rxvm','library'}
+          expected={'classlib','library','rxc','rxfnsc','rxas','rxvm',
+                    'test_import_discovery_snapshot','test_project_dependencies','test_import_resolution_report'}
+          assert targets==expected, 'Review changed source-probe producer ownership before running'
+          print('Declared preparation targets:',sorted(declared),flush=True)
+          command=['tools/asan-run.sh','--build-dir',str(build),'--phase','build']
+          for target in sorted(targets): command+=['--build-target',target]
+          subprocess.run(command+['--build-jobs','4','--build-leaks','on','--no-live-tail'],check=True)
+          PYTHON
+      - name: Stop at the first per-test input drift
+        id: probe
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PYTHON'
+          import importlib.util, json, os, pathlib, re, subprocess
+          spec=importlib.util.spec_from_file_location('fixtures','tools/sanitizer-fixtures.py')
+          f=importlib.util.module_from_spec(spec); spec.loader.exec_module(f)
+          build=pathlib.Path(os.environ['RUNNER_TEMP'])/'debug'
+          config=f.json_read(build/f.CONFIG)
+          dependency=f.dependency_identity(config)
+          assert dependency=={'DSLSH_SOURCE_DIR':{'commit':'383e5daab0ffcf6ec83e02db7a01a27709dabb2c','contents':'dfc44b44e4344b0c152fb8f278d694b96f2386ac1fe1f220af201cdbdab7d010'}}, 'External dependency differs from the failed candidate'
+          names=os.environ['QA_IDENTITY_TESTS'].split()
+          pattern='^('+'|'.join(map(re.escape,names))+')$'
+          discovered=json.loads(subprocess.check_output(['ctest','--test-dir',str(build),'--show-only=json-v1','-R',pattern],text=True))
+          selected={test['name'] for test in discovered['tests']}
+          assert selected==set(names)|{'sanitizer_fixture_integrity'}, 'Source probe selection changed'
+          def files(root):
+              root=pathlib.Path(root)
+              listed=b''.join(subprocess.check_output(['git','-C',str(root),*args]) for args in
+                  (['ls-files','--cached','--recurse-submodules','-z'],['ls-files','--others','--exclude-standard','-z']))
+              return {name:f.digest(root/name) for name in set(listed.decode().split('\0'))- {''}
+                      if f.source_path_in_identity(name) and (root/name).is_file()}
+          def snapshot():
+              return {'identity':f.identity(build),'source_files':files(config['CMAKE_HOME_DIRECTORY']),
+                      'dependency_files':files(config['DSLSH_SOURCE_DIR'])}
+          def changes(before,after):
+              result={}
+              if before['identity']!=after['identity']:
+                  result['identity']=f.identity_mismatch_details(build,before['identity'],after['identity'])
+              for owner in ('source_files','dependency_files'):
+                  left,right=before[owner],after[owner]
+                  changed=sorted(name for name in left.keys()|right.keys() if left.get(name)!=right.get(name))
+                  if changed: result[owner]={'count':len(changed),'paths':changed[:20],'truncated':len(changed)>20}
+              return result
+          baseline=snapshot()
+          for name in names:
+              before=snapshot()
+              assert not changes(baseline,before), 'Input drift between owning tests: '+json.dumps(changes(baseline,before))
+              command=['tools/asan-run.sh','--build-dir',str(build),'--phase','ctest','--regex','^'+re.escape(name)+'$',
+                       '--test-jobs','1','--build-leaks','on','--leaks','on','--no-live-tail']
+              status=subprocess.run(command).returncode
+              after=snapshot(); drift=changes(before,after)
+              print('SOURCE_IDENTITY_PROBE '+json.dumps({'test':name,'status':status,'drift':drift}),flush=True)
+              if status or drift:
+                  with open(os.environ['GITHUB_OUTPUT'],'a') as output: output.write('failed_owner='+name+'\n')
+                  raise AssertionError('Owning test failed or changed inputs: '+name)
+          print('All20 owning tests preserve exact source/configuration/dependency inputs; no daily/broad assurance published.')
+          PYTHON
+      - name: Upload failing owning-test diagnostics
+        if: failure() && steps.probe.outputs.failed_owner != ''
+        uses: actions/upload-artifact@v7
         with:
-          path: .ci-assurance/sanitizer-qualified-sha
-          key: crexx-sanitizer-qualified-${{ needs.assurance-gate.outputs.target_sha }}
+          name: sanitizer-identity-linux-owner
+          path: |
+            ${{ runner.temp }}/debug/compiler/tests/*source_tree.log
+            ${{ runner.temp }}/debug/compiler/tests/levelc_strictc_transfer*.log
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Upload bounded probe diagnostics
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitizer-identity-linux
+          path: ${{ runner.temp }}/debug/asan-logs
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,60 @@
+/*
+ * GLOBALV RXPP macro demonstration.
+ *
+ * The command macros below turn readable wrapper statements into generated
+ * GLOBALV ADDRESS commands.  GVLIST also demonstrates that the compiler-level
+ * OUTPUT stem clause must be generated outside the quoted command text.
+ */
+options levelg
+
+##cflag nosrcmap 3buf maclog nstrictmacrocheck
+
+##EXTERNAL &syslib/rxglobalv_address.rxbin
+
+##define cmd gvput(...args) {##MACRO_GLOBALV_PUT ...args}
+##define cmd gvget(...args) {##MACRO_GLOBALV_GET ...args}
+##define cmd gvlist(p0 p1 p2 p3) {##MACRO_GLOBALV_LIST p0,p1,p2,p3}
+
+##macro MACRO_GLOBALV_PUT ...args
+  .gen address globalv "&args"
+##mend
+
+##macro MACRO_GLOBALV_GET ...args
+  .gen address globalv "&args"
+##mend
+
+##macro MACRO_GLOBALV_LIST p0,p1,p2,p3
+  .gen address globalv "&p0 &p1 &p2" output &p3
+##mend
+
+message = "Hello from a cREXX RXPP macro"
+entries = .string[]
+
+say "1. Store a value using a macro-expanded host variable"
+GVPUT SELECT DEMO PUTL :message
+if rc <> 0 then do
+  say "GLOBALV PUTL failed, rc=" rc
+  return 1
+end
+
+say "2. Read it back using a second macro"
+message = "cleared before GET"
+GVGET SELECT DEMO GET :message
+if rc <> 0 then do
+  say "GLOBALV GET failed, rc=" rc
+  return 1
+end
+say "   MESSAGE =" message
+
+say "3. List the group into a cREXX stem"
+GVLIST SELECT DEMO LIST entries
+if rc <> 0 then do
+  say "GLOBALV LIST failed, rc=" rc
+  return 1
+end
+do i = 1 to entries.0
+  say "   " entries[i]
+end
+
+say "The value remains in GLOBALV storage for another program to read."
+return 0

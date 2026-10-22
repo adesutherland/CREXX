@@ -460,6 +460,11 @@ RXPPPassThree: procedure
      line = source.lineNo
      uline=upper(strip(line))
      if stype.LineNo='X' then iterate    ## suppress any ##ELSE ##ENDIF
+     else if stype.LineNo='noexp' then do
+        if pos('/* reserved',line)>0 then iterate
+        call writeline line
+        iterate
+     end
      if pos('/* reserved',line)>0 then iterate
   	 else if stype.LineNo='D' then do
  	    if pos(' ndef',cflags)>0 then iterate     ## ndef    : suppress original definition, just output expanded result
@@ -732,6 +737,8 @@ CMD_rexxscript_run: procedure
         found=1
         leave
      end
+     if rxpp_expand_block_line(i) then iterate
+     line=source.i
      script_count=script_count+1
      script_lines[script_count]=line
      source.i=''
@@ -793,6 +800,8 @@ CMD_fortran_run: procedure expose fortran_bind_count fortran_bind_target fortran
         found=1
         leave
      end
+     if rxpp_expand_block_line(i) then iterate
+     line=source.i
      if pos('BIND', upper(line)) > 0 then do
         bind_line=strip(substr(line,pos('BIND',upper(line))+4))
         bind_body=bind_line
@@ -830,6 +839,7 @@ CMD_fortran_run: procedure expose fortran_bind_count fortran_bind_target fortran
      end
      j=j+1
      source.i='fortran_source.'j'='safe_quote(line)
+     stype.i='noexp'
   end
   if found=1 then do
      source.i=''
@@ -999,6 +1009,12 @@ CMD_define: procedure=.int
       arglist=''
    end
 
+   if validateForwardingParams(arglist,name)
+   then do
+      call rxpp_diag 'error','RXPP_MACRO_FORWARDING_POSITION','macro',name,'arguments',arglist
+      exit 8
+   end
+
 /* Remove braces and trim */
    body = strip(body)
    stype.nlino='D'
@@ -1063,6 +1079,11 @@ CMD_macro: procedure=.int
     stype.line_no = 'D'
     macname = word(source.line_no,2)
     parms   = subword(source.line_no,3)
+    if validateForwardingParams(parms,macname)
+    then do
+       call rxpp_diag 'error','RXPP_MACRO_FORWARDING_POSITION','macro',macname,'arguments',parms
+       exit 8
+    end
     body = ''
     i=.int
     do i=line_no+1 to source.0
@@ -1103,6 +1124,32 @@ StoreScriptMacro: procedure=.void
     scriptMacro.macname.parms = mparms
     scriptMacro.macname.calls = 0
 return
+
+/* ----------------------------------------------------------------------
+ * validateForwardingParams
+ *
+ * A named forwarding parameter is written as terminal ...name. Bare ...
+ * retains the historical repeat-body meaning.
+ * ----------------------------------------------------------------------
+ */
+validateForwardingParams: procedure=.int
+    arg parms=.string,macname=.string
+    formal=.string
+    count=.int
+    forwarding=.int
+    parm=.string
+    formal=translate(strip(parms),,' ,')
+    count=words(formal)
+    forwarding=0
+    do forward_param_index=1 to count
+       parm=word(formal,forward_param_index)
+       if left(parm,3) \= '...' | parm='...' then iterate
+       if parm='...' then iterate
+       if forwarding=1 | forward_param_index \= count then return 1
+       forwarding=1
+    end
+return 0
+
 /* ----------------------------------------------------------------------
  * LoadExternalScriptMacro
  *
@@ -1316,6 +1363,30 @@ rxpp_cflag_present: procedure=.int
   do flag_no=1 to words(cflags)
      if word(cflags,flag_no)=flag then return 1
   end
+return 0
+
+/* Embedded free-form text is literal by default.  BLOCKMACROS opts in to
+ * normal command-macro expansion and the subsequent scripted-macro facade
+ * expansion while a block collector is reading its lines.  The negative form
+ * is useful when a shared flag list enables the feature globally. */
+rxpp_block_macros_enabled: procedure=.int
+  if rxpp_cflag_present('nblockmacros') then return 0
+  if rxpp_cflag_present('blockmacros') then return 1
+return 0
+
+/* Expand one line in a free-form collector.  Return 1 when a scripted macro
+ * inserted replacement source lines and the caller must iterate so those
+ * lines are collected in source order. */
+rxpp_expand_block_line: procedure=.int expose source stype
+  arg line_no=.int
+  if rxpp_block_macros_enabled()=0 then return 0
+  line=expandLine(source.line_no,line_no)
+  macname=rxpp_script_macro_name(line)
+  if macname<>'' then do
+     line=newMacros(macname,line,line_no,1,1)
+     return 1
+  end
+  source.line_no=line
 return 0
 
 rxpp_srcmap_enabled: procedure=.int
@@ -2013,8 +2084,11 @@ CMD_data: procedure
   do i=line_no+1 to source.0
      line=source.i
      if upper(word(line,1))='##END' then leave
+     if rxpp_expand_block_line(i) then iterate
+     line=source.i
      j=j+1
      source.i=array'.'j'='safe_quote(line)
+     stype.i='noexp'
   end
   if callback = '' then stype.i='D'   ## set D for ##END
   else do
@@ -2129,11 +2203,12 @@ CMD_data_alias: procedure
         foundEnd = 1
         leave
      end
-     /*
-      * Store the original source line as an array element.
-      */
+     /* BLOCKMACROS applies the same two-stage expansion to DALIAS blocks. */
+     if rxpp_expand_block_line(i) then iterate
+     line=source.i
      j = j + 1
      source.i = array'.'j'='safe_quote(line)
+     stype.i = 'noexp'
   end
   /*
    * Protect against an unterminated data block. Without this
@@ -2366,6 +2441,13 @@ newMacros:  procedure=.string
   arg macname=.string,line=.string,linnum=.int,ipi=.int,suppress_call_comment=.int
   original_call=.string
   source_len=.int
+  forward_text=.string
+  forward_value=.string
+  script_formals=.string
+  script_formal=.string
+  script_formal_count=.int
+  script_forward_name=.string
+  grouped_script_args=.int
   if scriptMacro.macname.error='error' then return line' ## File not available: 'syspath||macname'.rxpm'
   if scriptMacro.macname = '' then do
      rc = LoadExternalScriptMacro(macname)
@@ -2385,8 +2467,13 @@ newMacros:  procedure=.string
 
   subparm=substr(line,ipi)
   subparm=subword(subparm,2)
+  forward_text=subparm
   grouped_script_args=pos('=(',subparm)>0
-  if grouped_script_args then subparm=protectScriptMacroGroup(subparm)
+  if grouped_script_args then do
+     subparm=protectScriptMacroGroup(subparm)
+     forward_text=changestr(d2c(1),subparm,',')
+     forward_text=changestr(d2c(2),forward_text,' ')
+  end
   subparm=translate(subparm,,',')
   inparms=''
   original_call=source[linnum]
@@ -2396,12 +2483,27 @@ newMacros:  procedure=.string
      stype[linnum]='D'
      source[linnum]='/* 'source[linnum]' */'
   end
-  do kk=1 to words(scriptMacro.macname.parms)
-     sword=qword(subparm,kk)
+  script_formals=translate(scriptMacro.macname.parms,,',')
+  script_formal_count=words(script_formals)
+  script_forward_name=''
+  do script_forward_index=1 to script_formal_count
+     script_formal=word(script_formals,script_forward_index)
+     if left(script_formal,3)='...' then do
+        if script_formal='...' | script_forward_index \= script_formal_count then do
+           call rxpp_diag 'error','RXPP_MACRO_FORWARDING_POSITION','macro',macname,'arguments',scriptMacro.macname.parms
+           exit 8
+        end
+        script_forward_name=substr(script_formal,4)
+        leave
+     end
+  end
+  if script_forward_name \= '' then script_formal_count=script_formal_count-1
+  do script_bind_index=1 to script_formal_count
+     sword=qword(subparm,script_bind_index)
      if grouped_script_args then do
         sword=changestr(d2c(1),sword,',')
         sword=changestr(d2c(2),sword,' ')
-        expectedarg=word(scriptMacro.macname.parms,kk)
+        expectedarg=word(script_formals,script_bind_index)
         equal_pos=pos('=',sword)
         if equal_pos>0 & upper(substr(sword,1,equal_pos-1))=upper(expectedarg) then do
            sword=substr(sword,equal_pos+1)
@@ -2409,7 +2511,21 @@ newMacros:  procedure=.string
         end
      end
      sword=quote(sword)
-     if sword \= '' then inparms=inparms||word(scriptMacro.macname.parms,kk)' = 'sword'; '
+     if sword \= '' then inparms=inparms||word(script_formals,script_bind_index)' = 'sword'; '
+  end
+  if script_forward_name \= '' then do
+     /* script_formal_count is the number of fixed parameters remaining;
+      * the forwarded tail starts immediately after those parameters. */
+     /* Use the original quote-aware text.  The normalized SUBPARM replaces
+      * commas with separators and would corrupt commas inside quoted values. */
+     forward_text=scriptForwardTail(forward_text,script_formal_count+1,grouped_script_args)
+     /* INPARMS wraps the forwarded value in a single-quoted RexxScript
+      * literal.  Double quotes are ordinary data there and must remain
+      * single; doubling them would make QWORDS see escaped quotes instead of
+      * quote delimiters.  Only the enclosing single quote needs escaping. */
+     forward_value=forward_text
+     forward_value=changestr("'",forward_value,"''")
+     inparms=inparms||script_forward_name' = '''forward_value'''; '
   end
 /* Prepare RexxScript Call */
    out=.string[]
@@ -2575,13 +2691,31 @@ resolveMacro: procedure=.string
    body=injectVariable(body)    ## inject pre-compiler variables, if there are any
    mexpanded=mexpanded+1
    if rxpp_cflag_present('macrotrace') then say '++RXPP-DIAG macrotrace macro='name ' line='linnum ' source='source_origin_file[linnum]':'source_origin_line[linnum]
-   ## test Macro is variadic
-   isVariadic=.int
-   if pos('...', args,1) > 0 then do
-      isVariadic = 1
-      args = strip(changestr('...', '', args))
+   ## test whether the macro repeats or forwards variadic arguments
+   isVariadic=0
+   isForward=0
+   forwardName=''
+   forwardMarker=0
+   forwardToken=.string
+   fixedArgs=.string
+   forwardStart=0
+   forwardMarker=pos('...',args)
+   if forwardMarker>0 then do
+      forwardToken=word(translate(substr(args,forwardMarker),,' ,'),1)
+      if forwardToken='...' then isVariadic=1
+      else do
+         isForward=1
+         forwardName=substr(forwardToken,4)
+      end
    end
-   else isVariadic = 0
+   if isVariadic then args=strip(changestr('...', args, ''))
+   fixedArgs=args
+   if isForward then do
+      /* Remove the forwarding marker and any separator left before it. */
+      fixedArgs=changestr('...'forwardName,args,'')
+      fixedArgs=strip(changestr(',', fixedArgs, ''))
+      forwardStart=words(translate(fixedArgs,,','))+1
+   end
    if mspace=1 then do   ## command macros have stricter rule, they must be the first word of the line and they can't be nested
       if word(uline,1) \=strip(name) then return line  ## not a valid command macro call
    end
@@ -2601,6 +2735,7 @@ resolveMacro: procedure=.string
        remain  = substr(line, callPos + length(name))    ## set to parameter part, macro has format name( +length positions into it
     ## extract argument list
        argtext = fetchArguments(remain)
+       rawArgText=argtext
        if mspace=1 then do
           argtext=normalizeCommandKeywords(argtext,args)
           argtext=ConcParms(argtext)
@@ -2608,8 +2743,13 @@ resolveMacro: procedure=.string
        callargcount = parseArgList(argtext)
        bodyExp = body
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
+       if isForward then do
+          if fixedArgs\='' then bodyExp=replaceFixArg(bodyExp,name,fixedArgs,callargcount,callpos+length(name)-1,0)
+          forwardText=forwardArgumentTail(forwardStart,callargcount,mspace)
+          bodyExp=replaceForwardArg(bodyExp,forwardName,forwardText)
+       end
+       else bodyExp=replaceFixArg(bodyExp,name,args,callargcount,callpos+length(name)-1,1)
     /* Here is the non variadic processing */
-       bodyExp = replaceFixArg(bodyExp, name,args,callargcount,callpos+length(name)-1)
        if substr(bodyexp,1,3)='+++' then return bodyexp  ## +++ error occurred in call
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
        if rxpp_srcmap_enabled() then do
@@ -2675,13 +2815,13 @@ injectVariable: procedure=.string
  * ------------------------------------------------------------------
  */
 replaceFixArg: Procedure=.string
-  arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int,source_base=.int
+  arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int,source_base=.int,check_arity=.int
   iargs=xargs
   preserveScriptGroups=pos('##_',bodyExp)>0    /* check if the expansion contains a script macro call */
 
   xargs   = translate(xargs, , ',')
   wrds=words(xargs)
-  if wrds\=callargcount then do    ## callargs.0 is may be not set properly
+  if check_arity \= 0 & wrds\=callargcount then do    ## callargs.0 is may be not set properly
      if pos(' strictmacrocheck',cflags)>0 then do
         call writeline '## +++++ macro 'macname' call parameters do not match with template'
         call writeline '## +++++ template 'quote(xargs)
@@ -2747,6 +2887,63 @@ replaceFixArg: Procedure=.string
      bodyExp = replaceArg(bodyExp, aname, aval)
   end
 return bodyExp
+/* ------------------------------------------------------------------
+ * replaceForwardArg: Substitutes a terminal ...name forwarding marker once.
+ * The marker is deliberately distinct from the ordinary identifier so a
+ * forwarding body can pass the complete original argument text onward.
+ * ------------------------------------------------------------------
+ */
+replaceForwardArg: procedure=.string
+  arg str=.string,name=.string,value=.string
+  marker='...'name
+  result=''
+  cursor=1
+  do forever
+     found=pos(marker,str,cursor)
+     if found=0 then do
+        result=result||substr(str,cursor)
+        leave
+     end
+     result=result||substr(str,cursor,found-cursor)||value
+     cursor=found+length(marker)
+  end
+return result
+/* ------------------------------------------------------------------
+ * forwardArgumentTail: Joins the actual arguments after the fixed prefix.
+ * ------------------------------------------------------------------
+ */
+forwardArgumentTail: procedure=.string
+  arg start=.int,count=.int,space_style=.int
+  separator=','
+  if space_style=1 then separator=' '
+  result=''
+  do k=start to count
+     if result='' then result=callargs.k
+     else result=result||separator||callargs.k
+  end
+return result
+/* ------------------------------------------------------------------
+ * scriptForwardTail: Returns the quote-aware tail of a scripted macro call.
+ * ------------------------------------------------------------------
+ */
+scriptForwardTail: procedure=.string
+  arg text=.string,start=.int,grouped=.int
+  count=.int
+  result=.string
+  value=.string
+  k=.int
+  if grouped then do
+     text=changestr(d2c(1),text,',')
+     text=changestr(d2c(2),text,' ')
+  end
+  result=''
+  count=qwords(text)
+  do k=start to count
+     value=qword(text,k)
+     if result='' then result=value
+     else result=result' 'value
+  end
+return result
 /* ------------------------------------------------------------------
  * protectScriptMacroGroup: Protects separators inside key=(...) while
  * the existing qword argument splitter handles surrounding arguments.
@@ -4176,7 +4373,7 @@ rxppinit: procedure=.string
   syspath=substr(maclib,1,wlast-1)
   call setvar 'rxpp_rexx',rxmodule
   rxmodule=word(translate(rxmodule,,'.'),1)
-  cflags=' ndef nset svars siflink n1buf n2buf n3buf n4buf nvars nparse strictmacrocheck nmaclog'
+  cflags=' ndef nset svars siflink n1buf n2buf n3buf n4buf nvars nparse strictmacrocheck nmaclog nblockmacros'
   call setvar 'cflags',cflags
   printgen_flags='all'
   call setvar 'printgen',printgen_flags

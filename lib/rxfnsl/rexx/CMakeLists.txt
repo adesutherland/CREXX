@@ -61,7 +61,7 @@ foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
   foreach(_dep IN LISTS RXFNSL_DEPS_${_basename})
     list(APPEND _module_deps "${CMAKE_CURRENT_BINARY_DIR}/${_dep}.rxbin")
   endforeach()
-  add_custom_command(
+  crexx_add_fixture_command(
     OUTPUT "${_binfile}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_source_root}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -102,7 +102,7 @@ string(APPEND _rxfnsl_control_text
 
 file(GENERATE OUTPUT "${_rxfnsl_control_file}" CONTENT "${_rxfnsl_control_text}")
 
-add_custom_command(
+crexx_add_fixture_command(
   OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   COMMAND $<TARGET_FILE:rxlink> -c "${_rxfnsl_control_file}"
   DEPENDS rxlink ${RXFNSL_REXX_BINS} "${_rxfnsl_control_file}"

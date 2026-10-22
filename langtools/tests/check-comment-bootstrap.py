@@ -21,7 +21,8 @@ out.mkdir(parents=True, exist_ok=True)
 source, build, blocked = work / 'source', work / 'build', work / 'no-re2c'
 shutil.copytree(root / 'lib/rxfnsl', source / 'lib/rxfnsl')
 (source / 'cmake').mkdir()
-shutil.copy2(root / 'cmake/CrexxImportRoots.cmake', source / 'cmake/CrexxImportRoots.cmake')
+for name in ['CrexxImportRoots.cmake', 'CrexxQaFixtures.cmake']:
+    shutil.copy2(root / 'cmake' / name, source / 'cmake' / name)
 blocked.mkdir()
 (blocked / 're2c').write_text('#!/bin/sh\nexit 97\n')
 (blocked / 're2c').chmod(0o755)

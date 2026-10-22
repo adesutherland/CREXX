@@ -513,6 +513,31 @@ These options allow for clean, modular macro organization and reuse across multi
 
 This will repeat the macro body as many times as there are variadic arguments.
 
+#### One-shot argument forwarding
+
+Use a named terminal marker such as `...args` when the macro should receive
+and forward the complete argument sequence once.  This is different from the
+bare `...` form above, which repeats the body once for each variadic argument.
+
+```rexx
+##define cmd globalv(...args) {##MACRO_GLOBALV ...args}
+
+##macro MACRO_GLOBALV ...args
+  .gen address globalv "&args"
+##mend
+```
+
+`...args` may be the only parameter or may follow fixed positional parameters,
+but it must be the final parameter.  The C-style macro receives the original
+argument text in source order.  A scripted macro receives the same sequence as
+the named `args` value, including zero arguments; this makes it suitable for
+facades that pass arbitrary operands to an ADDRESS environment.  Quoted
+operands remain quoted, and a `.gen` string such as `"&args"` preserves those
+quotes in the generated command.
+
+The named marker is intentionally not interchangeable with the existing bare
+`...` repeat-body syntax.
+
 ### 5. **Emission**
 
 * Final expanded code lines are stored in `outbuf.` and written to the output file
@@ -840,6 +865,8 @@ Use the following RXPP flags in `cflags` to control preprocessing behavior and d
 | **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                                               |
 | **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.<br/>                                          |
 | **strictmacrocheck** | Prints warnings when a macro call does not satisfy all parameters defined by the macro template. Disable this option when using macros with optional parameters to suppress these warnings.<br/> |
+| **blockmacros** | Expands RXPP command macros, including facade-to-script-macro calls, while collecting free-form text blocks such as `##DATA` and `##DALIAS`. Disabled by default. |
+| **nblockmacros** | Explicitly disables macro expansion while collecting free-form text blocks. This is the default configuration. |
 
 If a specific flag is not set, the corresponding option is disabled by default. Alternatively, you can explicitly disable an option by prefixing the flag with n (e.g., nset, n1buf, etc.)
 
@@ -847,6 +874,20 @@ If a specific flag is not set, the corresponding option is disabled by default. 
 ```rexx
 ##cflags def set iflink nbuf 2buf 3buf vars nmaclist  /* set early stage RXPP flags */
 ```
+
+Use `blockmacros` when an embedded text block is intended to contain generated
+source rather than literal text:
+
+```rexx
+##CFLAG blockmacros
+##DALIAS PYTHON
+##PYTHON source
+  GREETING()
+##END PYTHON
+```
+
+Without `blockmacros`, `GREETING()` remains literal block content. The
+negative form, `nblockmacros`, explicitly restores the default behavior.
 
 
 ### `##SET var value`

@@ -24,3 +24,6 @@ set_tests_properties(rxbin_autoload_contract PROPERTIES
 crexx_label_smoke_tests(
         rxbin_autoload_contract
         PREP_TARGETS rxbin_autoload_test_prereqs)
+
+# This owner uses smoke labels directly, without QA-tier finalization.
+crexx_apply_sanitizer_failure_guards()
