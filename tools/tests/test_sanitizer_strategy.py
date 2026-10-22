@@ -52,7 +52,7 @@ class Strategy(unittest.TestCase):
         for names in P.MEMORY_REGRESSIONS.values():
             self.assertTrue(set(names) <= P.MEMORY_TESTS)
         known=set(re.findall(r'^### (SAN-[0-9]+)\b',
-                            (ROOT/'docs/SANITIZER-WORKLIST.md').read_text(),re.MULTILINE))-{'SAN-009'}
+                            (ROOT/'docs/SANITIZER-WORKLIST.md').read_text(encoding='utf-8'),re.MULTILINE))-{'SAN-009'}
         self.assertTrue(known <= P.MEMORY_REGRESSIONS.keys())
         invalid={'schema':1,'panels':{'one':{'boundary':'owned','tests':['duplicate','duplicate']}},'regressions':{}}
         with patch.object(Path, 'read_text', return_value=json.dumps(invalid)):
@@ -127,6 +127,60 @@ Path(output+suffix).write_text('owned output')
                 result=subprocess.run(args,env={**environment,'STAGE_ABNORMAL':'1'},text=True,capture_output=True)
                 self.assertNotEqual(result.returncode,0)
                 self.assertIn('terminated abnormally',result.stderr)
+
+    def test_tool_exit_statuses_preserve_error_and_crash_oracles(self):
+        # Exercise the real CMake harness with Windows process results on every
+        # host. The native Windows smoke tests additionally use the real tools.
+        wrapper=self.root/'process-results.cmake'
+        wrapper.write_text(r'''
+set(WIN32 "${SIMULATE_WINDOWS}")
+function(execute_process)
+ cmake_parse_arguments(PARSE_ARGV 0 call ""
+   "WORKING_DIRECTORY;RESULT_VARIABLE;OUTPUT_VARIABLE;ERROR_VARIABLE" "COMMAND")
+ string(JOIN " " invocation ${call_COMMAND})
+ if(invocation MATCHES "invalid\\.(rxas|rxbin)")
+  set(result "${INJECT_STATUS}")
+  set(error "${INJECT_DIAGNOSTIC}")
+ else()
+  set(result "${SUCCESS_STATUS}")
+  list(FIND call_COMMAND -o index)
+  math(EXPR index "${index}+1")
+  list(GET call_COMMAND ${index} output)
+  if(STAGE STREQUAL assembler)
+   set(output "${WORK}/${output}.rxbin")
+  endif()
+  file(WRITE "${output}" "fresh component output")
+ endif()
+ set(${call_RESULT_VARIABLE} "${result}" PARENT_SCOPE)
+ set(${call_OUTPUT_VARIABLE} "" PARENT_SCOPE)
+ set(${call_ERROR_VARIABLE} "${error}" PARENT_SCOPE)
+endfunction()
+include("@HARNESS@")
+'''.replace('@HARNESS@',(ROOT/'tests/memory/tool_lifecycle.cmake').as_posix()),encoding='utf-8')
+        cases=[('TRUE','-1','SYNTAX ERROR',True),
+               ('TRUE','255','SYNTAX ERROR',True),
+               ('FALSE','255','SYNTAX ERROR',True),
+               ('FALSE','-1','SYNTAX ERROR',False),
+               ('TRUE','-1073741819','SYNTAX ERROR',False),
+               ('TRUE','3221225477','SYNTAX ERROR',False),
+               ('TRUE','1073741845','SYNTAX ERROR',False),
+               ('TRUE','Subprocess aborted','SYNTAX ERROR',False),
+               ('TRUE','-1','unrelated output',False),
+               ('TRUE','-1','ERROR: LeakSanitizer: detected memory leaks',False),
+               ('TRUE','0','SYNTAX ERROR',False)]
+        for stage in ('assembler','disassembler'):
+            args=['cmake','-DSTAGE='+stage,'-DTOOL=controlled-process-result',
+                  '-DSOURCE='+str(ROOT),'-DINPUT='+str(self.root),
+                  '-DWORK='+str(self.root/'process-work')]
+            for windows,status,diagnostic,accepted in cases:
+                with self.subTest(stage=stage,windows=windows,status=status,diagnostic=diagnostic):
+                    command(*args,'-DSIMULATE_WINDOWS='+windows,'-DSUCCESS_STATUS=0',
+                            '-DINJECT_STATUS='+status,'-DINJECT_DIAGNOSTIC='+diagnostic,
+                            '-P',wrapper,success=accepted)
+            # A valid output cannot turn a nonzero success-path exit into success.
+            command(*args,'-DSIMULATE_WINDOWS=TRUE','-DSUCCESS_STATUS=-1',
+                    '-DINJECT_STATUS=-1','-DINJECT_DIAGNOSTIC=SYNTAX ERROR',
+                    '-P',wrapper,success=False)
 
     @unittest.skipUnless(shutil.which('ninja'), 'Independent CTest fixture requires Ninja')
     def test_real_ctest_daily_fixture_closure(self):
