@@ -113,7 +113,7 @@ foreach(_mode opt noopt)
     set(_parts ir parse frontend rxas)
     if(_language STREQUAL "c")
       list(APPEND _host "${_classic_names}")
-      set(_parts ir language symbols bifs bindings diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend traceemit callemit effects rxas)
+      set(_parts ir language symbols bifs bindings srcmap diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend traceemit callemit effects rxas)
     endif()
     foreach(_part IN LISTS _parts)
       # Parsing/frontend modules keep their core-only closure. Target/proof
@@ -189,6 +189,7 @@ foreach(_mode opt noopt)
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcbifs.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcbindings.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdiagnostics.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcsrcmap.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcdoprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcclauseprotocol.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcparseprogram.rxbin"
@@ -1031,6 +1032,20 @@ if("c" IN_LIST _languages)
     llcompiler_llrxc-c_opt llcompiler_target_opt llcompiler_call_external_contracts_opt
     library classlib rxfnsc rxunicode_core fs cstream llcontract _hash
     g2_process_fixture address_argv_fixture test_rxvml_spans rxc rxas rxlink rxbvm)
+  # The static language/BIF crosswalk is deliberately one prepared component
+  # lane. Formal compiler QA and other mode/platform coverage remain separate.
+  set(_test "llcompiler_c_group3_opt_rxbvm")
+  add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/group3/check-group3.py"
+    --build "${CMAKE_BINARY_DIR}"
+    --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}")
+  set_tests_properties(${_test} PROPERTIES
+    PASS_REGULAR_EXPRESSION "GROUP3_STATIC[|]checks=[0-9]+[|]PASS"
+    TIMEOUT 7200 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+    LABELS "library;level-l;levelc;compiler-backend")
+  crexx_register_test_prep_targets(TESTS ${_test} TARGETS
+    llcompiler_llrxc-c_opt llcompiler_target_opt
+    library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink rxbvm)
   set(_test "llcompiler_c_conditions_observations_opt_on_rxbvm")
   add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/conditions-observations/check-conditions.py"

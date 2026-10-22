@@ -1,8 +1,9 @@
 # Level C compiler architecture
 
 **Target architecture approved by Adrian, 19 October 2026.** Current source
-implements the context ABI, complete-template ARG over the finite PARSE profile,
-and static named LEAVE/ITERATE. The [plan](../PLAN.md) owns instruction status,
+implements the C24 static language profile, conditions/observations, calls and
+host integration through the shared B runtime and optional L target services.
+The [plan](../PLAN.md) owns instruction status,
 remaining work and complete-C acceptance;
 [requirements](levelc-requirements.md) map coverage and
 [agent work packages](agent-work-packages.md) define implementation assignments.
@@ -38,23 +39,22 @@ and feature work are outside this delivery.
 | Native `compiler/rxcpcscn.re`, `rxcpcpar.c`, `rxcpcgmr.y`, `rxcpcval.c`, `rxcp_levelc_lower.c`, `rxcc.[ch]` | Separate Classic parsing/lowering feeds the common native backend. `rxcc_parse` owns an exact-length parsed/mapped unit, not a complete compile service. | Reuse requirements/fixtures, not the native implementation as a dependency. Parse success proves neither execution nor INTERPRET. |
 | Native architecture/worklist | 24 admitted instruction reviews closed with exceptions; INTERPRET rejected; host/source/configuration/lifecycle obligations open. | Native closure never automatically closes the new compiler. |
 | Native direct-BIF table | 70 catalogue names, LOWER/UPPER and 23 Unicode extension names have entries. | Integrate and test every name; entry presence is not conformance. |
-| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; bounded DROP/SELECT/static DO/named LEAVE/ITERATE and seven-source PARSE/complete-template ARG lowering, limited operators, shared source-unit entries/constant-symbol labels, ordered PROCEDURE EXPOSE and ordinary CALL/direct shared BIF bindings. | Qualify each instruction increment; PARSE condition/TRACE/platform obligations and wider source/instruction coverage remain open. |
+| `levelc/levelc.rxl`, `llcparse`, `llcfrontend` | Generated Unicode-variable lexer/LR grammar and C token policy; admitted static instructions, complete operator families, exact static diagnostics/dead-source validation, shared source-unit entries and direct shared BIF bindings. `llcsrcmap` adapts RXPP provenance above physical L origins. | Preserve shared runtime owners and current source policy; INTERPRET and broader configured-source/platform/delivery acceptance remain open. |
 | `llcir`, `llcrxas`, `llccompiler`, `llrxc-c` | Independent C family/selector/service/CLI; neutral ABI attributes still use `crexx.g` type names. Owned RXAS output and explicit limits. | Preserve separation; neutral ABI types belong in compiler-common contracts, not typed semantics. |
 | `levelc/llccallemit.crexx` | Private finite delayed CALL adapter over admitted immutable handler rows. | Shared B owns pending delivery, suppression, activation and CONDITION state; no target compiler dependency. |
 | `levelc/llctraceemit.crexx` | Private emitted frame-local TRACE observer, checked existing B service signatures and retained scalar event metadata. | Reuse B option/controller/output owners; keep raw parent-register reads in the direct handler and compiler code outside the target closure. |
 | `common/llcompilercontracts.crexx` | Retains existing B exposed/optional formal qualifiers independently of bare names; C/G emitters preserve them. | Metadata recognition does not expand either source-call profile; owning admissions retain required by-value contracts. |
 | `lib/rxfnsl/rexx/llflow.crexx` | Checked AST-role graphs, structured loops/branches, condition facts and finite definite assignment already exist. | Reuse this foundation; distinguish source-AST analysis from executable IR analysis. Its short-circuit roles cannot model eager Classic AND/OR. |
-| `lib/rxfnsl/rexx/llir*` | Frozen modules/schemas, block-local values, cross-block slots, revision-bound facts, checked rewrites and bounded local optimisation. | Add exceptional/resumable edges, generic analyses and liveness before relying on them. No immediate SSA rewrite. |
+| `lib/rxfnsl/rexx/llir*` | Frozen core modules/schemas plus optional Group 4 indexed graph/liveness, sealed effect/proof and bounded execution services. | Preserve the [recorded conservative lifetime/control profiles](#group4-infrastructure-proposal); broader exception/resumption ownership remains explicit. No immediate SSA rewrite. |
 | `levelc/llcparseprogram.crexx` | C-owned LCP1 construction and independent packet admission reuse the compilation-owned source index and existing strict text codec. | Keep runtime envelope ownership in shared B and generic descriptor execution in the cursor kernel. |
-| `levelc/runtime/llctarget.crexx` | One 36-export B target delegates contextual expressions/BIFs, DO state, PARSE acquisition and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; complete later operations/BIF host contracts and prove any specialization's state/failure/observation equivalence. |
+| `levelc/runtime/llctarget.crexx` | One 38-export B target delegates contextual expressions/BIFs, DO state, PARSE acquisition and error bridges to shared B bodies, alongside literal/pool/packet/result helpers; no per-operation default config/pool or copied activation. | Preserve live owners and shared algorithms; broader host/platform proof remains open. Any specialization must prove state/failure/observation equivalence. |
 | `lib/rxfnsc` | B implementations own values, pools, activation, DO state, PARSE execution, BIFs and streams; package imports include classlib, B Unicode core, cstream/fs. | Extend existing owners; retain independent Unicode/provider delivery and Classic policy. |
 | Maintained `examples/step06/walk-c.after.rxas` | Borrowed root owners and result packets remain; exact literal branches prune dead arms while retaining runtime truth. Checked context/entry dispatch selects one shared source body; clause IDs remain zero (full TRACE is open). | Named conservative costs remain C-OPT-01–03/05/06; review includes wrappers, cold handlers and helper bodies separately. No minimal-frame or speed claim. |
 | RXAS sources, `binutils/include/rxops.h`, VM guide, `interpreter/rxvml.h` | Existing peephole/procedure analysis and decimal/context/call/PARSE primitives. Public load-file/load-buffer/context-destroy, no individual-module unload. | Prefer existing operations. Dynamic code needs continuation and reclamation, not merely a bounded lookup cache. |
 
-Some old BIF/reference paragraphs still describe DATE/TIME refresh and streams
-as missing despite later code/worklist corrections. Resolve using current code
-and the owning contract; reconcile stale prose in the corresponding increment.
-Do not import historical statuses into the new requirements ledger.
+The [BF01–09 crosswalk](levelc-requirements.md#group3-bif-crosswalk) records current
+language integration of all 95 names. Historical native implementation gaps do
+not override the current shared runtime owner or establish new-compiler proof.
 
 ## Ownership and permitted dependencies
 
@@ -474,10 +474,11 @@ introduced into static applications.
 #### Approved C-family revision and generated procedure ABI
 
 **CLC-STEP03d is locally complete; the approved PROCEDURE increment advances
-C to the two-argument source-unit ABI. The current family is v23/88 with
-38 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
+C to the two-argument source-unit ABI. The current family is v24/97 with
+five C types and 38 target exports, including ordinary CALL, the reviewed EXIT program-root contract and
 static signed statement providers, selected-queue PUSH/QUEUE, keyed explicit/active
-commands, complete SIGNAL, practical TRACE and delayed CALL/clause completion.
+commands, complete SIGNAL, practical TRACE, delayed CALL/clause completion and
+the Group 3 static operators/source-map declaration.
 Local instruction qualification is tracked in
 the plan.** Use the following contract with one current
 C target and no compatibility bridge for earlier research C programs. The five shared B callables and eight borrowed signatures
@@ -487,9 +488,9 @@ record or RXAS/VM operation is introduced. Shared-label/PROCEDURE delivery follo
 whole-C observations and INTERPRET retain their later gates.
 
 The C selector accepts `core` version 1, neutral `crexx.g` version 1 scalar
-types and `crexx.c` version 23. The neutral scalar names do not load the G
+types and `crexx.c` version 24. The neutral scalar names do not load the G
 frontend. The generic LLIR text/binary format remains version 2. `crexx.c`
-versions 1–22 are never reinterpreted as version 23. Within version 23, the complete C
+versions 1–23 are never reinterpreted as version 24. Within version 24, the complete C
 type/operation declarations, including unused declarations and all ordered
 fields and effect summaries, must match the canonical C registration before
 emission. Foreign operations remain outside the C profile.
@@ -548,6 +549,14 @@ core Boolean to the branch while retaining the effectful runtime truth call.
 Dead-arm pruning therefore preserves owner checks, pool-policy effects and
 condition timing. Removing that context work remains C-OPT-03, subject to its
 state/failure/observation proof.
+
+The [Group 3 contract](#group3-static-language-contract) appends the eight binary
+descriptors `pow idiv rem strictne strictlt strictgt strictle strictge` at 89–96.
+They have the same ordered `left:V right:V context:C` inputs, `value:V` result,
+`context` state and `condition` failure as the base binary descriptors.
+Descriptor 97 is `source.map`, with no inputs/results, ordered text attributes
+`original` and `filename`, `source.observation` state and no runtime failure.
+Its separate bounded compile-time admission is mandatory before mapped emission.
 
 | Operation(s) | Ordered inputs | Ordered attributes | Output | State | Failure |
 |---|---|---|---|---|---|
@@ -789,9 +798,10 @@ remains variable. Preserve number/string/other expression token meanings and
 keyword variables such as `drop=1`; suppress inserted expression-concatenation
 tokens only in DROP item lists. No XID/combining-mark/emoji expansion or NFC is
 introduced. Pass raw variable spellings to pool operations: its existing simple
-casing retains micro-sign U+00B5 identity. The scanner L set equals pinned
+casing preserves Latin-1 input, including micro-sign U+00B5 and U+00FF.
+The scanner L set equals pinned
 Unicode 17 `gc.L`; [the shared generator](../../../../cmake/CrexxClassicUnicode.cmake)
-owns that letter authority and micro-sign case exception.
+owns that letter authority and the Classic case boundary.
 The C lexer retains `typename` only as a whole-token rejection sink, with no
 C parser production consuming it. In particular, `.RCx`/`.RESULTx` must not
 split into a reserved-dot variable plus another target or concatenated value;
@@ -799,8 +809,9 @@ reducing the sink must preserve that refusal and the original error position.
 Preserve raw ARG destination names too; the shared PARSE executor uppercases
 the captured argument without changing target/operand names. Routine/local-CALL
 names admit the current identifier-token Unicode, punctuation and dotted forms,
-using shared whole-name casing. Numeric/quoted labels and expanded CALL forms
-remain STEP04/06 work; preserve those boundaries in shared-symbol regressions.
+using shared whole-name casing. The current Group 2/3 contracts own expanded
+CALL forms and exact numeric-label identity; quoted labels are refused with
+13.1, independently of quoted routine-call names.
 [L token/tree byte offsets](../../../../langtools/doc/user-guide.md#input-profiles)
 and original source bytes remain unchanged. Switching to scalar `utf8` also
 expands the quoted-body sets beyond U+00FF, preserving existing Greek/CJK/emoji
@@ -2467,6 +2478,130 @@ initializer; this profile adds no concurrent C-worker or new platform matrix.
    private C prepared owner and request-local comment overrides implemented.
 3. **CPREP-STEP03 — complete local profile:** focused generic/C acceptance and
    full caller/helper inspection; retain the declared lifecycle/platform scope.
+
+<a id="group3-static-language-contract"></a>
+
+## Group 3 complete static language contract
+
+Group 3 completes the remaining admitted static C language functionality in one
+local increment under G3-AC01–06. It excludes INTERPRET, automatic Rexx source/
+program invocation and new host/platform policy. Native C remains read-only;
+its fixtures/checked results and shared B runtime are reused without treating
+native defects as required behavior. Full CFC/platform/delivery and formal QA
+remain separate. Current static source uses the pinned Unicode/default source
+policy; runtime Config settings affect their owning services and cannot re-lex
+an already compiled unit. Broader configurable source callbacks and alternative
+platform negator policies retain their existing explicit dynamic/platform gates.
+
+### Source, expressions and runtime reuse
+
+C24 appends eight existing-context binary semantics: `pow`, `idiv`, `rem`,
+`strictne`, `strictlt`, `strictgt`, `strictle`, `strictge`. `power` is a chain of
+unary operands, consumed by multiplication/division/quotient/remainder; prefix
+binds tighter and power associates left. Normal/strict/negated comparison
+aliases canonicalize to existing/added operations; logical operands remain
+once-only and eager. Composite operator components admit space/HT gaps, while
+VT/FF are ordinary source blanks. Comment-only gaps abut; actual blanks
+concatenate. Numeric d/D suffixes are not C literals: `7d` is constant `7D`.
+Quoted Unicode/NUL/control data is retained except physical CR/LF and unmatched
+quotes. Existing shared symbol punctuation @/#/$ is retained; a native scanner
+mismatch cannot override the shared symbol owner. Canonical names are separate
+strings: simple uppercase may shrink or grow their UTF-8 encoding without
+rewriting source bytes, token spans or scalar columns.
+Keyword recognition uses ASCII spelling and cannot promote a Unicode variable
+to a keyword through casing. Exact nonquoted labels,
+contextual words, reserved five period names and existing statement policy stay
+with C; other period constants retain 50.1. Unquoted ending-period function
+names retain 51.1; quoted routine names preserve their existing bypass.
+
+Adrian's Latin-1 compatibility rule applies only to ordinary Classic C
+character functions and name casing, with later Classic O reuse intended.
+It does not change B/G language semantics or generic Unicode services.
+Codepoints U+0000–U+00FF retain Latin-1 behavior;
+simple upper/lower mappings that would leave that range retain the original
+character. Above it, existing simple Unicode codepoint mappings apply. LENGTH
+and character positions count codepoints throughout, preserving Latin-1 counts;
+the fixed byte-ordinal bridge remains unchanged. Explicit Unicode functions
+such as TOUPPERCASE/TOLOWERCASE retain their full Unicode contracts. The shared
+`CrexxClassicUnicode.cmake` generator owns both native C and B-implemented
+Classic runtime simple-case tables; apply the range rule there, with no second
+algorithm or lexer rewrite.
+Its existing letter-category input is unchanged. Independent all-256 ordinary
+upper/lower controls and above-range/width-changing controls own this boundary.
+
+The existing `llctarget.binaryop` signature/exports remain. Arithmetic names map
+to existing POWER/INTEGERDIVIDE/REMAINDER contextual B operations and retain both
+operand LOSTDIGITS checks. Strict comparisons call the existing RexxValue
+methods without numeric conversion/LOSTDIGITS. All 95 BIF names retain their
+direct entries, raw presence vector and borrowed current Config/pool/activation;
+BF01–09 qualification exercises those routes, not a second BIF dispatcher/body.
+Static diagnostics have one bounded source/token/AST validation path before
+emission, including dead text, while specific instruction errors retain priority.
+
+### Retained source and SRCMAP
+
+`RexxClassicConfig.clearSourceLines()->void` resets its owned line vector/count;
+existing append/count/read APIs remain unchanged. Generated standalone/provider/
+host root entry replaces inventory once from the compile-owned original source;
+internal labels share it. Standalone/provider output omits unused inventory when
+there is no direct SOURCELINE binding. Host exports retain inventory because
+the existing host window can observe it independently of source BIF calls.
+Split LF, CR and CRLF, exclude EOL, retain interior
+empty/final unterminated lines, and add no trailing phantom line. Exact Unicode
+and NUL survive. Host initialization happens inside the protected Scope, after
+entry and before authored code; a request template's detached Config is not
+mutated. Existing emission/source/output budgets charge the inventory and setup.
+
+An explicitly source-mapped generated buffer is not an original inventory.
+As in the maintained native contract, SRCMAP units expose unavailable source
+inventory (count zero); original payload text is used only where the map actually
+supplies it. No runtime reread or synthesized original lines are permitted.
+Logical host source identity remains separate from source inventory.
+
+The C-owned `llcsrcmap` adapter implements the existing RXPP @ wire protocol:
+file and absolute/relative line/column records, optional doubled-quote/@@ text,
+positive-length nested spans and literal@@ across the entire raw file. It reuses
+`llsource` UTF-8/index services; it imports no native compiler. Bounds, checked
+integer parsing, unbalanced/malformed refusal and narrowest-span selection are
+explicit. Decode and provenance lookup share a finite work allowance; exhaustion
+is an explicit limit failure, never an invented physical/mapped fallback. The
+existing wire owns its supplied spans and its implicit generated-byte widths;
+physical L source columns still use scalar indexing. Missing original line text
+remains missing. The prepared object owns
+clean bytes and bounded map records; no callback/raw native references escape.
+Its interface is `prepared(source:binary,enabled:int,filename:string,limit:int)`
+with `bytes/active/status/error/offset` and `location(first,last)` returning owned
+filename, one-based line/column/end-column, optional exact text and validity.
+Diagnostics and RXAS source records consult this same owner. Generated physical
+byte origins remain the L origin; mapped provenance is an explicit C relation.
+
+C24 also appends `source.map{original:text,filename:text}`: no inputs/results,
+source-state observation, no target instruction or runtime helper. It is a
+single first entry declaration before executable work, retained by transforms.
+Its source-unit relation also serves internal functions using that physical
+source; repeated declarations for the same source must agree exactly. The
+selector independently prepares/validates its raw payload and requires cleaned
+bytes to equal its function source bytes before using it. This gives C24
+97 operations, five existing C types and 38 target exports. Missing payloads,
+duplicate, foreign or misplaced declarations fail bounded admission; ordinary raw IR has
+no implicit mapping. Mapped target coordinates must fit the existing RXAS
+32-bit source metadata; larger wire coordinates remain usable by the source-map
+service but selection refuses them without truncation. The source body and
+compiler diagnostic path use the same prepared adapter; unsupported public
+wire/ISA changes are not introduced.
+
+### Ownership and focused closure
+
+WP-05 owns the grammar/token/frontend/C IR/static diagnostics; WP-03 owns minimal
+runtime adaptation and the C source-map service; the coordinator owns selector,
+source inventory, schema/count integration, build orchestration and docs. WP-07/
+10 owns tests/group3 and existing native/oracle reuse; WP-12/coordinator review
+coherent source and first RXAS before final checks. Leases are disjoint.
+One grammar regeneration and warm prepared compiler batches serve the complete
+finite component crosswalk. Simple SAY retains its admitted root lifetime cost;
+structural checks forbid accidental per-operation owner construction/decoder
+work while retaining necessary numeric/call/cleanup operations. Further C-OPT
+setup specialization and DFA construction remain separate backlog owners.
 
 <a id="group2-calls-host-proposal"></a>
 

@@ -9,6 +9,7 @@ import llcbindings
 import llbinmeta
 import llcompilercontracts
 import llsource
+import llcsrcmap
 import llrxastext
 import llrxas
 import llirgraph
@@ -74,6 +75,12 @@ compilation: class
   _sourceindexes = .llsource..index[]
   _sourcebytes = .binary[]
   _sourceworkspace = .int
+  _sourcemaps = .llcsrcmap..prepared[]
+  _mapped = .int[]
+  _maporiginals = .binary[]
+  _mapfilenames = .string[]
+  _inventory = .binary[]
+  _needsinventory = .int
   _selectlines = .int[]
   _parselines = .int[]
   _parseclauses = .int[]
@@ -453,6 +460,131 @@ compilation: class
       end
     end
     return
+  /** A C declaration relates the physical L source to RXPP provenance. Raw
+   * graphs receive the same bounded decoding and byte-identity checks as source
+   * requests. It is metadata, never a target instruction or TRACE event. */
+  checksourcemaps: method = .void
+    store = dereference _store
+    f = .int; b = .int; id = .int; ordinal = .int; declarations = .int
+    sourceid = .int; extent = .int
+    do f = 1 to _index.functions()
+      declarations = 0
+      do ordinal = 1 to _index.functionblocks(f)
+        b = _index.functionblock(f,ordinal); id = store.get(2,b,2)
+        do while id > 0
+          op = _graph.operation(id)
+          if op.name() = 'crexx.c.source.map' then do
+            declarations = declarations + 1
+            if declarations > 1 | b <> _index.functionentry(f) | id <> store.get(2,b,2) then do
+              call fail('SOURCE: source.map must be the single first entry declaration'); return
+            end
+            origin = op.origin()
+            if origin.id() = 0 | origin.belongs(_store) = 0 | origin.kind() = 'synthetic' then do
+              call fail('SOURCE: source.map requires an owned physical source'); return
+            end
+            sourceid = store.get(9,origin.id(),1)
+            if sourceid < 1 then do; call fail('SOURCE: source.map has no source record'); return; end
+            original = op.attribute('original'); filename = op.attribute('filename') as .string
+            if filename \== llcompilercontracts..sourcename(origin.filename()) then do
+              call fail('SOURCE: source.map filename differs from its source identity'); return
+            end
+            if _mapped[sourceid] then do
+              if original \= _maporiginals[sourceid] | filename \== _mapfilenames[sourceid] then do
+                call fail('SOURCE: conflicting source.map declarations for one source'); return
+              end
+            end
+            else do
+              extent = <blen>(original)
+              if extent > (_limit - _sourceworkspace - 64) <idiv> 64 then do
+                call fail('LIMIT: source.map workspace exceeded'); return
+              end
+              candidate = .llcsrcmap..prepared(original,1,filename,max(1,_limit <idiv> 64))
+              if candidate.status() then do
+                if candidate.status() = 2 then call fail('LIMIT: ' || candidate.error())
+                else call fail('SOURCE: ' || candidate.error())
+                return
+              end
+              clean = candidate.bytes()
+              expectedbytes = origin.sourcebytes()
+              if clean \= expectedbytes then do
+                call fail('SOURCE: source.map cleaned bytes differ from physical source'); return
+              end
+              _sourceworkspace = _sourceworkspace + extent * 64 + 64
+              _mapped[sourceid] = 1; _maporiginals[sourceid] = original; _mapfilenames[sourceid] = filename
+              assembler move _sourcemaps[sourceid],candidate
+              assembler null candidate
+            end
+          end
+          id = store.get(3,id,3)
+        end
+      end
+    end
+    return
+  mappedorigin: method = .llcsrcmap..location
+    arg origin = .llir..origin
+    missing = .llcsrcmap..location()
+    if origin.id() = 0 then return missing
+    store = dereference _store; sourceid = store.get(9,origin.id(),1)
+    if sourceid < 1 then return missing
+    if _mapped[sourceid] = 0 then return missing
+    mapref = reference _sourcemaps[sourceid]; mapping = dereference mapref
+    location = mapping.location(origin.first(),origin.last())
+    if mapping.status() then call fail('LIMIT: ' || mapping.error())
+    if location.valid() then do
+      if location.line() > 4294967295 | location.column() > 4294967295 | location.endcolumn() > 4294967295 then do
+        call fail('LIMIT: mapped coordinates exceed RXAS source metadata range')
+        return missing
+      end
+    end
+    return location
+  /** Retain exact physical lines once per root; generated SRCMAP input has no
+   * original source inventory. Internal activations reuse this Config owner. */
+  prepareinventory: method = .void
+    if _needsinventory = 0 then return
+    store = dereference _store; source = .binary; sourceid = .int
+    i = .int; at = .int; first = .int; byte = .int; extent = .int
+    do i = 1 to store.count(3)
+      origin = _graph.operation(i).origin()
+      if origin.id() = 0 then iterate
+      sourceid = store.get(9,origin.id(),1)
+      if sourceid < 1 then iterate
+      if _mapped[sourceid] then return
+      source = origin.sourcebytes(); leave
+    end
+    extent = <blen>(source); at = 0
+    do while at < extent
+      first = at
+      do while at < extent
+        byte = <at..u8>(at) source
+        if byte = 10 | byte = 13 then leave
+        at = at + 1
+      end
+      cost = at - first + 32
+      if cost > _limit - _sourceworkspace then do; call fail('LIMIT: source inventory workspace exceeded'); return; end
+      _sourceworkspace = _sourceworkspace + cost
+      _inventory[_inventory[0] + 1] = binsubstr(source,first + 1,at - first)
+      if at < extent then do
+        byte = <at..u8>(at) source; at = at + 1
+        if byte = 13 & at < extent then do
+          byte = <at..u8>(at) source
+          if byte = 10 then at = at + 1
+        end
+      end
+    end
+    return
+  sourceinventory: method = .void
+    arg config = .string
+    if _needsinventory = 0 then return
+    receiver = reg(_workbase)
+    call emit('linkref',receiver || ',' || config)
+    symbol = member('rexxclassicconfig.rexxclassicconfig','clearsourcelines','.void')
+    call invoke('',symbol,1,receiver)
+    symbol = member('rexxclassicconfig.rexxclassicconfig','appendsourceline','.void','.string')
+    do line = 1 to _inventory[0]
+      call argtext(2,_inventory[line] as .string); call invoke('',symbol,2,receiver)
+    end
+    call emit('unlink',receiver)
+    return
   checkoperation: method = .void
     arg op = .llir..opview, entry_ref = reference .llcprocedureprotocol..checked
     boolean = .llir..boolcodec()
@@ -524,6 +656,7 @@ compilation: class
       if _error <> '' then return
       if name = 'crexx.c.bif' then do
         bifname = op.attribute('name') as .string; symbol = llcbifs..entry(bifname)
+        if bifname = 'SOURCELINE' then _needsinventory = 1
         if bifname = 'TRACE' then _hastrace = 1
         if symbol = '' then do; call fail('LOWERING: unknown direct Classic BIF'); return; end
         types = 'reference@.rexxclassicbifs..rexxbifcallcontext'
@@ -841,6 +974,9 @@ compilation: class
       call fail('SOURCE: ' || label || ' requires a valid indexed location'); return
     end
     opid = op.id(); line = at.line()
+    mapped = mappedorigin(origin)
+    if _error <> '' then return
+    if mapped.valid() then line = mapped.line()
     _selectlines[opid] = line
     return
   /** All raw variable attributes share the compiler-internal C authority. */
@@ -1134,6 +1270,7 @@ compilation: class
     symbol = member('rexxclassicconfig.rexxclassicconfig','§factory','.rexxclassicconfig..rexxclassicconfig','.string','1')
     call argtext(1,'UTF8'); call invoke(config,symbol,1)
     call emit('mkref',configref || ',' || config)
+    call sourceinventory(configref)
     call newbundle(bundle,activation,pool,configref)
     call argcopy(1,bundle,1); call emit('load',reg(_callbase + 2) || ',0'); call invoke('r0','llf1',2)
     symbol = imported('llctarget','llctarget.status','.int','.rexxactivation..rexxactivationarguments')
@@ -1197,6 +1334,7 @@ compilation: class
     do i = 1 to words(signals); call emit('sigbrv','llhost_failed,' || event || ',' || llrxastext..quote(word(signals,i) as .binary)); end
     call emit('link',receiver || ',' || scope)
     symbol = member(scopeclass,'enter','.void'); call invoke('',symbol,1,receiver); call emit('unlink',receiver)
+    call sourceinventory(configref)
     call argcopy(1,bundle,1); call emit('load',reg(_callbase + 2) || ',0'); call invoke(completion,'llf1',2)
     call emit('link',receiver || ',' || scope)
     symbol = member(scopeclass,'finish',resulttype,'.rexxactivation..rexxactivationarguments')
@@ -1257,6 +1395,7 @@ compilation: class
     symbol = member('rexxclassicconfig.rexxclassicconfig','§factory','.rexxclassicconfig..rexxclassicconfig','.string','1')
     call argtext(1,'UTF8'); call invoke(config,symbol,1)
     call emit('mkref',configref || ',' || config)
+    call sourceinventory(configref)
     call newbundle(bundle,activation,pool,configref)
     call argcopy(1,bundle,1); call emit('load',reg(_callbase + 2) || ',0'); call invoke('r0','llf1',2)
     /* Read both completion fields before any void helper may overwrite r0. */
@@ -1534,6 +1673,13 @@ compilation: class
       _phase = 'context-slot admission'
       call checkcontextslots()
       if _error <> '' then return
+      /* Source-map declarations are compiler metadata, not generated setup.
+       * Own their placement/provenance refusal before entry protocol checks. */
+      _phase = 'source-map admission'
+      if store.count(5) > _limit <idiv> 8 then do; call fail('LIMIT: SIGNAL slot index exceeds output.bytes workspace'); return; end
+      _sourceworkspace = store.count(5) * 8
+      call checksourcemaps()
+      if _error <> '' then return
       _phase = 'source-unit admission'
       if _prechecked then do
         if <refvalid>(_programborrow) = 0 | <refvalid>(_signalborrow) = 0 then do
@@ -1553,8 +1699,6 @@ compilation: class
       if signalfacts.status() then do; _error = signalfacts.error(); _offset = signalfacts.offset(); return; end
       if signalfacts.belongs(reference _graph) = 0 then do; call fail('LOWERING: SIGNAL proof belongs to another graph'); return; end
       if signalfacts.bytesused() > _limit | signalfacts.workused() > _limit then do; call fail('LIMIT: prechecked SIGNAL admission exceeds selection budget'); return; end
-      if store.count(5) > _limit <idiv> 8 then do; call fail('LIMIT: SIGNAL slot index exceeds output.bytes workspace'); return; end
-      _sourceworkspace = store.count(5) * 8
       do i = 1 to store.count(3)
         op = _graph.operation(i)
         if op.name() = 'core.store' then do
@@ -1600,7 +1744,7 @@ compilation: class
         else _commandlinks[commandtails[ownerfunction]] = i
         commandtails[ownerfunction] = i; _commandlinks[i] = 0
       end
-      _hastrace = _export <> ''
+      _hastrace = _export <> ''; _needsinventory = _hostexport <> ''
       _phase = 'operation admission'
       _selectorsymbols = .llcsymbols..checked(_limit,_limit)
       do i = 1 to store.count(3)
@@ -1609,6 +1753,8 @@ compilation: class
         call checkoperation(op,entry_ref)
         if _error <> '' then return
       end
+      call prepareinventory()
+      if _error <> '' then return
       _phase = 'delayed CALL target admission'
       call preparecalls(signal_ref)
       if _error <> '' then return
@@ -1801,7 +1947,7 @@ compilation: class
       do while id > 0
         op = _graph.operation(id)
         if op.name() = 'crexx.c.parse.source' then hasparse = 1
-        if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 then do
+        if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 & op.name() <> 'crexx.c.source.map' then do
           do r = 1 to op.results()
             nameid = op.result(r).id()
             contextcell = _contextproof.loadcell(id)
@@ -1992,7 +2138,7 @@ compilation: class
         if _hastrace & op.name() = 'crexx.c.clause.begin' & clausefacts.erased(id) then do
           call source(op.origin(),_parseclauses[id],0,1)
         end
-        if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 then do
+        if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 & op.name() <> 'crexx.c.source.map' then do
           anchor = entryfacts.programanchor(id); clause = _parseclauses[id]
           if anchor = 0 then anchor = signalfacts.sourceanchor(id)
           if anchor > 0 then clause = _parseclauses[anchor]
@@ -2155,13 +2301,25 @@ compilation: class
       if flags = 17 then flags = 65
       else if flags = 34 then flags = 98
     end
-    if _hastrace & traceclause & (flags <has> 64) = 0 then flags = flags + 64
     filename = llcompilercontracts..sourcename(origin.filename())
+    sourcetext = binsubstr(bytes,first + 1,last - first)
+    mapped = mappedorigin(origin)
+    if _error <> '' then return
+    if mapped.valid() then do
+      filename = llcompilercontracts..sourcename(mapped.filename())
+      line = mapped.line(); column = mapped.column(); endcolumn = mapped.endcolumn()
+      sourcetext = mapped.text() as .binary
+      if mapped.hastext() = 0 then do
+        if (flags <has> 16) <> 0 then flags = flags - 16
+        if (flags <has> 32) = 0 then flags = flags + 32
+      end
+    end
+    if _hastrace & traceclause & (flags <has> 64) = 0 then flags = flags + 64
     _sourceline = line
     location = filename || ':' || line || ':' || column
     if kind <> 'exact' then location = filename || ': generated code in ' || _routine
     if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
-    key = flags || ' ' || llrxastext..quote(filename as .binary) || ' ' || line || ' ' || column || ' ' || endcolumn || ' ' || llrxastext..quote(binsubstr(bytes,first + 1,last - first))
+    key = flags || ' ' || llrxastext..quote(filename as .binary) || ' ' || line || ' ' || column || ' ' || endcolumn || ' ' || llrxastext..quote(sourcetext)
     call sourcerecord(key,location,clause,traceclause)
     return
   /** Proved mechanical unwind transport keeps its generated source record and
@@ -2170,6 +2328,9 @@ compilation: class
     arg origin = .llir..origin
     filename = llcompilercontracts..sourcename(origin.filename())
     if origin.kind() <> 'exact' then return filename || ': generated code in ' || _routine
+    mapped = mappedorigin(origin)
+    if _error <> '' then return ''
+    if mapped.valid() then return llcompilercontracts..sourcename(mapped.filename()) || ':' || mapped.line() || ':' || mapped.column()
     positions_ref = sourceindex(origin)
     if _error <> '' then return ''
     positions = dereference positions_ref
@@ -2198,6 +2359,7 @@ compilation: class
     clausefacts = dereference clause_ref
     store = dereference _store; name = op.name(); id = op.id()
     if signalfacts.erased(id) | signalfacts.nametransport(id) | clausefacts.erased(id) then return
+    if name = 'crexx.c.source.map' then return
     if name = 'crexx.c.clause.begin' then do; call clauseoperation(); return; end
     dest = result(op)
     select
@@ -2287,7 +2449,7 @@ compilation: class
     if wordpos(name,'do.new do.capture do.start do.entry do.advance do.close') > 0 then do
       call dooperation(op,name,loop_ref); return
     end
-    if wordpos(name,'add sub mul div eq ne lt le gt ge strict concat blank abut and or xor') then do
+    if wordpos(name,'add sub mul div pow idiv rem eq ne lt le gt ge strict strictne strictlt strictle strictgt strictge concat blank abut and or xor') then do
       call adapter(op,'binaryop',v,'.string ' || v || ' ' || v || ' ' || contexttype,name); return
     end
     if wordpos(name,'positive negative not') then do

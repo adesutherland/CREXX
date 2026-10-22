@@ -1,6 +1,44 @@
 /* cREXX License (MIT). Owned Classic source-warning projection. */
 options levelb
-namespace llcdiagnostics expose warning
+namespace llcdiagnostics expose warning format
+import rxfnsb
+import llsource
+import llcsrcmap
+
+/** Render one compiler error through its owned source relation. Map-decoder
+ * failures use original offsets; later failures retain physical clean offsets
+ * while reporting only authored provenance actually present in the map.
+ * @param clean exact bytes parsed by the C frontend
+ * @param original exact supplied generated source, including map directives
+ * @param offset zero-based byte offset in the failing stage's bytes
+ * @param error full stable compiler diagnostic text
+ * @param filename fallback logical generated-source identity
+ * @param mapping owned C source-map adapter, possibly uninitialized after an
+ * earlier header refusal
+ * @return located, escaped diagnostic text, without an invented source line
+ */
+format: procedure = .string
+  arg clean = .binary, original = .binary, offset = .int, error = .string, filename = .string, mapping = .llcsrcmap..prepared
+  split = pos(':',error); code = 'LL_COMPILER_SYNTAX'; message = error
+  if split > 0 then do; code = left(error,split - 1); message = strip(substr(error,split + 1)); end
+  if initialized(mapping) = 0 then return filename || ': ' || llsource..diagnostic(original,offset,code,message)
+  if mapping.status() = 2 then return filename || ': ' || mapping.error()
+  if mapping.status() <> 0 then return filename || ': ' || llsource..diagnostic(original,offset,code,message)
+  if mapping.active() = 0 then return filename || ': ' || llsource..diagnostic(clean,offset,code,message)
+  first = .int; finish = .int; extent = <blen>(clean)
+  first = min(extent,max(0,offset)); finish = first
+  if first < extent then finish = first + 1
+  location = mapping.location(first,finish)
+  if mapping.status() <> 0 then return filename || ': ' || mapping.error()
+  if location.valid() = 0 then return filename || ': ' || llsource..diagnostic(clean,offset,code,message)
+  result = location.filename() || ': ' || code || ' at line ' || location.line() || ', column ' || location.column() || ' (byte ' || offset || '): ' || message
+  if location.hastext() then do
+    text = location.text(); prefix = left(text,min(length(text),max(0,location.column() - 1)))
+    rendered = llsource..diagnostic(text as .binary,<blen>(prefix as .binary),code,message)
+    newline = pos('0A'x,rendered)
+    if newline > 0 then result = result || substr(rendered,newline)
+  end
+  return result
 
 /** Immutable source coordinates; no source or request reference escapes.
  * @param filename stable logical source name

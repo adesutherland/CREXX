@@ -10,6 +10,7 @@ import llclanguage
 import llcomments
 import llsource
 import rexxclassicunicodeproperties
+import llcsrcmap
 
 /** One parse request owns source, diagnostics and projected AST. Token layout
  * filters continuations and inserts zero-width separators; original spans are
@@ -21,8 +22,11 @@ parsed: class
   _status = .int
   _strictc = .int
   _sourcetokens = .llcore..stream
+  _source = .binary
+  _mapping = .llcsrcmap..prepared
   *: factory
-    arg source = .binary, limit = 1000000
+    arg source = .binary, limit = 1000000, filename = '<source>'
+    _source = source; empty_mapping = .llcsrcmap..prepared; _mapping = empty_mapping
     _error = ''; _offset = 0; _status = 0; _strictc = 0
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
 
@@ -37,24 +41,54 @@ parsed: class
     policy = .lllimits..policy()
     ok = policy.set('source.bytes',limit)
     comments = .llcomments..rules
-    comments = headerpolicy(language_ref,source,policy,reference _status,reference _error,reference _offset,reference _strictc)
+    mapped = 0
+    comments = headerpolicy(language_ref,source,policy,reference _status,reference _error,reference _offset,reference _strictc,reference mapped)
+    if _status <> 0 then do; _error = lexicalmessage(_error,source,_offset); return; end
+    _mapping = .llcsrcmap..prepared(source,mapped,filename,limit)
+    if _mapping.status() <> 0 then do
+      _status = _mapping.status(); _error = _mapping.error(); _offset = _mapping.offset(); return
+    end
+    source = _mapping.bytes(); _source = source
     if _status <> 0 then return
     request = .lllanguage..request.borrowed(language_ref,source,policy,comments)
     _status = request.lex(0)
     if _status <> 0 then do
-      _error = request.error(); _offset = request.offset()
+      _error = lexicalmessage(request.error(),source,request.offset()); _offset = request.offset()
       if left(_error,11) = 'LL_LEXICAL:' then do
         byte = binsubstr(source,_offset + 1,1)
-        if byte = "'" as .binary | byte = '"' as .binary then _error = 'LL_COMPILER_SYNTAX: unterminated quoted string'
-        else _error = 'LL_COMPILER_SYNTAX: invalid input byte 0x' || bin2x(byte)
+        if byte = "'" as .binary then _error = 'LL_COMPILER_SYNTAX: RXC-LC-6.2: unmatched single quote'
+        else if byte = '"' as .binary then _error = 'LL_COMPILER_SYNTAX: RXC-LC-6.3: unmatched double quote'
+        else _error = 'LL_COMPILER_SYNTAX: RXC-LC-13.1: invalid input byte 0x' || bin2x(byte)
       end
       return
     end
     rawlayout = request.tokens()
+    /* Generic comment preparation preserves byte gaps by masking. A Classic
+     * composite operator may span only authored space/HT, never a comment
+     * that happens to mask to those bytes. Keep this raw-source boundary
+     * check here rather than adding another comment parser or lexer. */
+    composites = 'concat power remainder strict strictne strictlt strictgt strictle strictge ne le ge xor'
+    compositeids = .int[]; rawop = .int; rawindex = .int
+    do rawop = 1 to words(composites)
+      compositeids[rawop] = language.tokenid(word(composites,rawop))
+    end
+    do rawindex = 0 to rawlayout.size() - 1
+      rawkind = rawlayout.symbol(rawindex); composite = 0
+      do rawop = 1 to compositeids[0]
+        if rawkind = compositeids[rawop] then do; composite = 1; leave; end
+      end
+      if composite then do
+        rawfirst = rawlayout.start(rawindex); rawlast = rawlayout.finish(rawindex + 1)
+        if binpos('/*' as .binary,binsubstr(source,rawfirst + 1,rawlast - rawfirst)) > 0 then do
+          _status = 1; _offset = rawfirst; _error = 'LL_COMPILER_SYNTAX: RXC-LC-35.1: comment cannot separate composite operator characters'; return
+        end
+      end
+    end
     id = language.tokenid('identifier'); sep = language.tokenid('separator')
     opening = language.tokenid('open'); closing = language.tokenid('close')
     colon = language.tokenid('colon'); equals = language.tokenid('assign'); comma = language.tokenid('comma')
     kind = .int; first = .int; last = .int; spelling = .string; i = .int; next = .int; emptyrhs = .int
+    labelbyte = .int; gapbyte = .int
     /* Successful lexing owns comment masking. Filter only a visible physical
      * continuation, retaining original spans/gaps and any second separator.
      * One suffix scan plus one advancing pass is bounded by the source budget;
@@ -134,9 +168,18 @@ parsed: class
       end
       labeltoken = kind = id | kind = language.tokenid('number') | kind = language.tokenid('typename') | kind = language.tokenid('constantname') | kind = language.tokenid('parsedot')
       if labeltoken & next = colon & parsemode = '' then do
+        /* A label is one authored lexical form. Generic comment masking
+         * must not make a raw comment/newline/VT/FF gap look like its admitted
+         * optional space/HT before the colon. */
+        do labelbyte = last to layout.start(i + 1) - 1
+          gapbyte = <at..u8>(labelbyte) source
+          if gapbyte <> 9 & gapbyte <> 32 then do
+            _status = 1; _offset = layout.start(i + 1); _error = 'LL_COMPILER_SYNTAX: RXC-LC-13.1: invalid colon after a separated label name'; return
+          end
+        end
         rawlabel = binsubstr(source,first + 1,last - first) as .string
         if pos('+',rawlabel) > 0 | pos('-',rawlabel) > 0 then do
-          _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: invalid signed-exponent label'; return
+          _status = 1; _offset = layout.start(i + 1); _error = 'LL_COMPILER_SYNTAX: RXC-LC-13.1: invalid colon after signed-exponent label'; return
         end
         kind = language.tokenid('labelname')
       end
@@ -321,6 +364,7 @@ parsed: class
           else if condition > 0 & spelling = 'THEN' & term then do
             word = 'THEN'; condition = condition - 1
           end
+          else if clause & spelling = 'THEN' & next <> equals then word = 'THEN'
           else if spelling = 'ELSE' & next <> equals then do
             if clause then word = 'ELSE'
             else if condition = 0 & term & ownercount > 0 then do
@@ -335,11 +379,23 @@ parsed: class
 
         if word <> '' then kind = language.tokenid(lower(word) || 'word')
       end
+      /* The active IF stack, including restored owners after END, owns ELSE.
+       * A prior header or clause cannot hide an otherwise stray keyword. */
+      if word = 'ELSE' then do
+        ownedelse = 0
+        if ownercount > 0 then ownedelse = owners[ownercount] = 'if'
+        if ownedelse = 0 then do
+          _status = 1; _offset = first; _error = "LL_COMPILER_SYNTAX: RXC-LC-8.2: unexpected 'else' without corresponding THEN"; return
+        end
+      end
       /* The marker leaves the original expression token/gaps untouched.
        * Recognized instructions, labels and malformed symbol assignments keep
        * their prior ownership before a clause can become an implicit command. */
       if clause & word = '' & parsemode = '' & addressmode = '' & proceduretail = 0 & doheader = 0 then do
         symbolhead = kind = id | kind = language.tokenid('number') | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot')
+        if symbolhead & kind <> id & next = equals then do
+          _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-31.1: a value cannot be assigned to a constant symbol'; return
+        end
         expressionhead = symbolhead | kind = language.tokenid('string') | kind = opening | kind = language.tokenid('plus') | kind = language.tokenid('minus') | kind = language.tokenid('not')
         if expressionhead & (symbolhead & next = equals) = 0 then do
           ok = classified.synthetic(language.tokenid('commandword'),first); commandseen = 1
@@ -420,7 +476,7 @@ parsed: class
       if word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' then do; operandmode = ''; addressmode = ''; signalmode = ''; callmode = ''; tracemode = ''; end
       clause = kind = sep | word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' | kind = colon
       if kind <> sep | condition = 0 then do
-        term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
+        term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
         if emptyrhs | wordpos(word,'SAY PUSH QUEUE ADDRESS RETURN EXIT OPTIONS ARG PULL DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
         if kind = language.tokenid('numericvalue') | kind = language.tokenid('signalvalue') | kind = language.tokenid('signalname') | word = 'SIGNAL' then term = 1
         if kind = language.tokenid('callon') | kind = language.tokenid('calloff') | kind = language.tokenid('callcondition') | kind = language.tokenid('callhandlername') | kind = language.tokenid('callname') then term = 1
@@ -497,7 +553,7 @@ parsed: class
       function = target & kind = opening & previousend = first
       if dropping = 0 & callpolicy = 0 & parsing <> 1 & leftterm & rightterm & function = 0 & beforeprevious <> callword & beforeprevious <> signalword then do
         token = language.tokenid('abut')
-        if first > previousend then token = language.tokenid('blank')
+        if sourceblank(source,previousend,first,comments) then token = language.tokenid('blank')
         ok = joined.synthetic(token,previousend)
       end
       if first = last then ok = joined.synthetic(kind,first)
@@ -517,7 +573,8 @@ parsed: class
         if decorated == _error then decorated = signalmessage(language_ref,reference joined,reference _offset,_error)
         if decorated == _error then decorated = tracemessage(language_ref,reference joined,reference _offset,_error)
         if decorated == _error then decorated = completionmessage(language_ref,reference joined,reference _offset,_error)
-        if decorated == _error then _error = armmessage(language_ref,reference joined,reference _offset,_error)
+        if decorated == _error then decorated = armmessage(language_ref,reference joined,reference _offset,_error)
+        if decorated == _error then _error = generalmessage(language_ref,reference joined,reference _offset,_error)
         else _error = decorated
       end
       else _error = decorated
@@ -550,6 +607,10 @@ parsed: class
     return _offset
   ast: method = .llast..tree
     return _tree
+  bytes: method = .binary
+    return _source
+  mapping: method = .llcsrcmap..prepared
+    return _mapping
   /** C-private synchronous borrow. The caller anchors this completed parsed
    * owner and never retains the reference after collecting owned plans. */
   sourcetokens: method = reference .llcore..stream
@@ -563,10 +624,10 @@ armmessage: procedure = .string
   language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
   thenword = language.tokenid('thenword'); elseword = language.tokenid('elseword')
   label = language.tokenid('labelname'); colon = language.tokenid('colon'); sep = language.tokenid('separator')
-  pending = 0; cause = 0; code = ''
+  pending = 0; cause = 0; code = ''; failedkind = -1
   do i = 0 to tokens.size() - 1
     kind = tokens.symbol(i)
-    if tokens.start(i) >= offset then leave
+    if tokens.start(i) >= offset then do; failedkind = kind; leave; end
     if kind = thenword | kind = elseword then do
       pending = 1; cause = tokens.start(i); code = '14.3'
       if kind = elseword then code = '14.4'
@@ -574,6 +635,10 @@ armmessage: procedure = .string
     else if kind <> label & kind <> colon & kind <> sep then pending = 0
   end
   if pending = 0 then return original
+  if failedkind = language.tokenid('endword') then do
+    endingcode = '10.5'; if code = '14.4' then endingcode = '10.6'
+    return 'LL_COMPILER_SYNTAX: RXC-LC-' || endingcode || ': END cannot immediately follow THEN or ELSE'
+  end
   offset = cause
   return 'LL_COMPILER_SYNTAX: RXC-LC-' || code || ': expected instruction after ' || word('THEN ELSE',1 + (code = '14.4'))
 
@@ -581,9 +646,10 @@ armmessage: procedure = .string
  * quotes/comments; raw separators merely frame a candidate for exact lexing.
  * A failed candidate never contributes partial static settings. */
 headerpolicy: procedure = .llcomments..rules
-  arg language_ref = reference .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int, strictc_ref = reference .int
+  arg language_ref = reference .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int, strictc_ref = reference .int, srcmap_ref = reference .int
   language = dereference language_ref
   status = dereference status_ref; error = dereference error_ref; offset = dereference offset_ref; strictc = dereference strictc_ref
+  srcmap = dereference srcmap_ref
   byte = .int; i = .int; setting = .int
   result = language.comments()
   prepared = .llsource..prepared(source,language.encoding(),'','',policy.limit('source.bytes'),0,result,policy.limit('scan.work'))
@@ -596,7 +662,7 @@ headerpolicy: procedure = .llcomments..rules
   masked = prepared.bytes(); extent = <blen>(masked); first = 0
   do while first < extent
     byte = <at..u8>(first) masked
-    if byte <> 9 & byte <> 32 & byte <> 10 & byte <> 13 & byte <> 59 then leave
+    if byte <> 9 & byte <> 11 & byte <> 12 & byte <> 32 & byte <> 10 & byte <> 13 & byte <> 59 then leave
     first = first + 1
   end
   finish = first
@@ -642,7 +708,7 @@ headerpolicy: procedure = .llcomments..rules
     if verify(raw,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_') = 0 then spelling = upper(raw)
     message = ''
     if wordpos(spelling,'LEVELA LEVELB LEVELD LEVELG LEVELL NUMERIC_COMMON COMMENTS_SLASH') > 0 then message = 'incompatible source option '
-    if spelling = 'SRCMAP' then message = 'unsupported static source option '
+    if spelling = 'SRCMAP' then srcmap = 1
     if spelling = 'STRICTC' then requestedstrict = 1
     if spelling = 'COMMENTS_HASH' | spelling = 'COMMENTS_NOHASH' then do
       setting = 1; if spelling = 'COMMENTS_NOHASH' then setting = -1
@@ -894,7 +960,7 @@ numericmessage: procedure = .string
       offset = prefix
     end
     else do
-      operators = 'plus minus times divide concat blank abut lt gt le ge ne strict and or xor not assign'
+      operators = 'plus minus times divide power integerdivide remainder concat blank abut lt gt le ge ne strict strictne strictlt strictgt strictle strictge and or xor not assign'
       trailing = 0
       do i = 1 to words(operators)
         if previouskind = language.tokenid(word(operators,i)) then do
@@ -949,7 +1015,7 @@ tracemessage: procedure = .string
   if mode <> 'value' then return fallback
   if seen = 0 then offset = prefix
   else do
-    operators = 'plus minus times divide concat blank abut lt gt le ge ne strict and or xor not assign'
+    operators = 'plus minus times divide power integerdivide remainder concat blank abut lt gt le ge ne strict strictne strictlt strictgt strictle strictge and or xor not assign'
     do i = 1 to words(operators)
       if previouskind = language.tokenid(word(operators,i)) then do; offset = previousstart; leave; end
     end
@@ -1095,7 +1161,7 @@ signalmessage: procedure = .string
     offset = prefix; return 'LL_COMPILER_SYNTAX: RXC-LC-19.4: SIGNAL VALUE requires an expression'
   end
   if at_end then do
-    operators = 'plus minus times divide concat blank abut lt gt le ge ne strict and or xor not assign'
+    operators = 'plus minus times divide power integerdivide remainder concat blank abut lt gt le ge ne strict strictne strictlt strictgt strictle strictge and or xor not assign'
     trailing = 0
     do i = 1 to words(operators)
       if previouskind = language.tokenid(word(operators,i)) then do; offset = previousstart; trailing = 1; leave; end
@@ -1133,7 +1199,7 @@ completionmessage: procedure = .string
   end
   if active = '' then return fallback
   if failedkind = separator | offset >= tokens.bytes() then do
-    operators = 'plus minus times divide concat blank abut lt gt le ge ne strict and or xor not assign'
+    operators = 'plus minus times divide power integerdivide remainder concat blank abut lt gt le ge ne strict strictne strictlt strictgt strictle strictge and or xor not assign'
     do i = 1 to words(operators)
       if previouskind = language.tokenid(word(operators,i)) then do; offset = previousstart; leave; end
     end
@@ -1152,4 +1218,159 @@ tokenname: procedure = .string
   values[19] = "'('"; values[20] = "')'"; values[21] = "','"; values[22] = 'name'; values[23] = 'number'; values[24] = 'quoted string'
   index = wordpos(name,keys)
   if index > 0 then return values[index]
+  keys = 'power integerdivide remainder strictne strictlt strictgt strictle strictge'
+  values[1] = "'**'"; values[2] = "'%'"; values[3] = "'//'"; values[4] = "'\=='"
+  values[5] = "'<<'"; values[6] = "'>>'"; values[7] = "'<<='"; values[8] = "'>>='"
+  index = wordpos(name,keys)
+  if index > 0 then return values[index]
   return name
+
+/** Keep generic source validation single-owned; only translate its identity. */
+lexicalmessage: procedure = .string
+  arg original = .string, source = .binary, offset = .int
+  if left(original,8) = 'LL_UTF8:' then return 'LL_COMPILER_SYNTAX: RXC-LC-22.1: invalid UTF-8 source string ' || bin2x(binsubstr(source,offset + 1,1))
+  if left(original,11) = 'LL_COMMENT:' then return 'LL_COMPILER_SYNTAX: RXC-LC-6.1: unmatched comment delimiter'
+  return original
+
+/** Comment-only gaps do not introduce a blank. Mark potential blank bytes,
+ * then let the shared comment coordinator erase only marks inside comments.
+ * Every gap is disjoint, so source traversal remains linear and bounded. */
+sourceblank: procedure = .int
+  arg source = .binary, first = .int, last = .int, comments = .llcomments..rules
+  if first >= last then return 0
+  gap = binsubstr(source,first + 1,last - first)
+  do i = 0 to <blen>(gap) - 1
+    byte = <at..u8>(i) gap
+    if byte = 9 | byte = 10 | byte = 11 | byte = 12 | byte = 13 | byte = 32 then <at..u8>(i) gap = 1
+  end
+  stripped = .llcomments..processor(gap,comments,max(1000,<blen>(gap) * 16))
+  status = stripped.run()
+  if status <> 0 then return 1
+  return binpos('01'x as .binary,stripped.bytes()) > 0
+
+/** Last-resort Classic diagnostic classification after the specific
+ * instruction owners. Inspect the rejected prefix once, without recovery or
+ * manufacturing an executable AST. Located operators own missing operands. */
+generalmessage: procedure = .string
+  arg language_ref = reference .lllanguage..definition, tokens_ref = reference .llcore..stream, offset_ref = reference .int, fallback = .string
+  language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
+  operators = 'plus minus times divide power integerdivide remainder concat blank abut lt gt le ge ne strict strictne strictlt strictgt strictle strictge and or xor not assign'
+  sep = language.tokenid('separator'); opening = language.tokenid('open'); closing = language.tokenid('close')
+  depth = 0; groups = .string[]; groupoffsets = .int[]; count = 0
+  opens = .int[]; active = ''; head = 0; previous = -1; previousstart = 0; failed = -1
+  code = ''; reason = ''; instruction = ''; thenpending = 0; whenpending = 0; selectpending = 0
+  i = .int
+  do i = 0 to tokens.size() - 1
+    first = tokens.start(i); kind = tokens.symbol(i)
+    if first > offset then leave
+    if first = offset then failed = kind
+    if selectpending & kind <> language.tokenid('selectword') & kind <> sep & kind <> language.tokenid('labelname') & kind <> language.tokenid('colon') & kind <> language.tokenid('whenword') & kind <> language.tokenid('endword') then do
+      code = '7.2'; reason = 'SELECT requires WHEN, OTHERWISE or END'; offset = first; leave
+    end
+    if kind = closing & depth = 0 then do
+      code = '37.2'; reason = 'unmatched closing parenthesis'; offset = first; leave
+    end
+    if kind = opening then do; depth = depth + 1; opens[depth] = first; end
+    if kind = closing & depth > 0 then depth = depth - 1
+    if kind = language.tokenid('doword') | kind = language.tokenid('selectword') then do
+      count = count + 1; groups[count] = 'DO'; groupoffsets[count] = first
+      if kind = language.tokenid('selectword') then do; groups[count] = 'SELECT'; selectpending = 1; end
+    end
+    if kind = language.tokenid('endword') then do
+      if count = 0 then do; code = '10.1'; reason = 'unexpected END'; offset = first; leave; end
+      if previous = language.tokenid('thenword') | previous = language.tokenid('elseword') then do
+        code = '10.5'; if previous = language.tokenid('elseword') then code = '10.6'
+        reason = 'END cannot immediately follow THEN or ELSE'; offset = first; leave
+      end
+      if groups[count] = 'SELECT' then do
+        if selectpending then do; code = '7.1'; reason = 'SELECT requires WHEN'; offset = first; leave; end
+        if tokens.symbol(i + 1) <> sep & tokens.symbol(i + 1) <> -1 then do
+          code = '10.4'; reason = 'SELECT END must not have a name'; offset = tokens.start(i + 1); leave
+        end
+      end
+      count = count - 1
+    end
+    if kind = language.tokenid('whenword') | kind = language.tokenid('otherwiseword') then do
+      if count = 0 then do
+        code = '9.1'; if kind = language.tokenid('otherwiseword') then code = '9.2'
+        reason = 'WHEN or OTHERWISE requires SELECT'; offset = first; leave
+      end
+      if groups[count] <> 'SELECT' then do
+        code = '9.1'; if kind = language.tokenid('otherwiseword') then code = '9.2'
+        reason = 'WHEN or OTHERWISE requires SELECT'; offset = first; leave
+      end
+      selectpending = 0; whenpending = kind = language.tokenid('whenword')
+    end
+    if kind = sep | kind = language.tokenid('thenword') | kind = language.tokenid('elseword') | kind = language.tokenid('otherwiseword') then do
+      if first < offset then active = ''
+      if kind = language.tokenid('thenword') then do
+        if thenpending = 0 & whenpending = 0 then do; code = '8.1'; reason = 'unexpected THEN'; offset = first; leave; end
+        thenpending = 0; whenpending = 0
+      end
+      if kind = language.tokenid('elseword') & i = 0 then do; code = '8.2'; reason = 'unexpected ELSE'; offset = first; leave; end
+    end
+    else if active = '' then do
+      active = 'expression'; head = first
+      if kind = language.tokenid('nopword') then active = 'NOP'
+      if kind = language.tokenid('dropword') then active = 'DROP'
+      if kind = language.tokenid('procedureword') then active = 'PROCEDURE'
+      if kind = language.tokenid('leaveword') then active = 'LEAVE'
+      if kind = language.tokenid('iterateword') then active = 'ITERATE'
+      if kind = language.tokenid('whenword') then active = 'WHEN'
+      if kind = language.tokenid('ifword') then do; active = 'IF'; thenpending = 1; end
+    end
+    if first < offset & kind <> sep then do; previous = kind; previousstart = first; end
+  end
+  if code = '' & active = 'NOP' then do; code = '21.1'; reason = 'NOP has an unexpected operand'; end
+  if code = '' & active = 'DROP' then do
+    code = '20.1'; reason = 'DROP requires a variable reference'
+    if depth > 0 then do; code = '46.1'; reason = 'closing parenthesis expected in variable reference'; end
+  end
+  if code = '' & active = 'PROCEDURE' then do; code = '20.1'; reason = 'PROCEDURE EXPOSE requires a variable reference'; end
+  if code = '' & (active = 'LEAVE' | active = 'ITERATE') then do
+    code = '20.1'; reason = active || ' requires a symbol target'
+    if previous = language.tokenid('identifier') then do; code = '21.1'; reason = 'unexpected operand after ' || active || ' target'; end
+  end
+  if code = '' & count > 0 then do
+    if groups[count] = 'DO' then do
+      if failed = language.tokenid('toword') | failed = language.tokenid('byword') | failed = language.tokenid('forword') | previous = language.tokenid('foreverword') then do
+        code = '27.1'; reason = 'invalid keyword in DO clause'
+      end
+      if previous = language.tokenid('toword') | previous = language.tokenid('byword') | previous = language.tokenid('forword') | previous = language.tokenid('whileword') | previous = language.tokenid('untilword') then do
+        code = '35.1'; reason = 'missing expression in DO clause'; offset = previousstart
+      end
+    end
+  end
+  if code = '' & thenpending then do; code = '18.1'; reason = 'IF requires THEN'; end
+  if code = '' & whenpending then do; code = '18.2'; reason = 'WHEN requires THEN'; end
+  if code = '' & depth > 0 then do; code = '36'; reason = 'unmatched opening parenthesis'; offset = opens[depth]; end
+  /* LR can stop at a subsequent statement before reaching EOF when SELECT
+   * lacks END. Only its clause-boundary expectation licenses this tail check;
+   * nested classified groups must close before an END can close this owner.
+   * A present matching END retains the actual rejected-clause diagnostic. */
+  if code = '' & count > 0 then do
+    if groups[count] = 'SELECT' & pos('END',fallback) > 0 & pos('WHEN',fallback) > 0 & pos('OTHERWISE',fallback) > 0 then do
+      taildepth = 1; tailindex = .int
+      doid = language.tokenid('doword'); selectid = language.tokenid('selectword'); endid = language.tokenid('endword')
+      do tailindex = i to tokens.size() - 1
+        tailkind = tokens.symbol(tailindex)
+        if tailkind = doid | tailkind = selectid then taildepth = taildepth + 1
+        if tailkind = endid then taildepth = taildepth - 1
+        if taildepth = 0 then leave
+      end
+      if taildepth > 0 then do; code = '14.2'; reason = 'SELECT requires END'; offset = groupoffsets[count]; end
+    end
+  end
+  if code = '' & count > 0 & (offset >= tokens.bytes() | failed = sep) then do
+    code = '14.1'; reason = 'DO requires END'; offset = groupoffsets[count]
+    if groups[count] = 'SELECT' then do; code = '14.2'; reason = 'SELECT requires END'; end
+  end
+  if code = '' & failed = language.tokenid('comma') then do; code = '37.1'; reason = 'unexpected comma'; end
+  if code = '' & failed = language.tokenid('colon') then do; code = '13.1'; reason = 'unexpected colon'; end
+  if code = '' then do
+    code = '35.1'; reason = 'invalid expression'
+    do i = 1 to words(operators)
+      if previous = language.tokenid(word(operators,i)) then do; offset = previousstart; leave; end
+    end
+  end
+  return 'LL_COMPILER_SYNTAX: RXC-LC-' || code || ': ' || reason || '; ' || fallback

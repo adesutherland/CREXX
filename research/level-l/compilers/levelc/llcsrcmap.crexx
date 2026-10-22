@@ -1,0 +1,412 @@
+/* cREXX License (MIT). C-owned decoder for the existing RXPP source-map wire. */
+options levelb
+namespace llcsrcmap expose prepared location
+import rxfnsb
+import llsource
+
+/** Detached mapped provenance. Columns and end-column are one-based, with an
+ * exclusive end. Missing original text stays distinguishable from empty text. */
+location: class
+  _valid = .int
+  _filename = .string
+  _line = .int
+  _column = .int
+  _endcolumn = .int
+  _text = .string
+  _hastext = .int
+  *: factory
+    arg valid = 0, filename = '', line = 0, column = 0, endcolumn = 0, text = '', hastext = 0
+    _valid = valid; _filename = filename; _line = line; _column = column
+    _endcolumn = endcolumn; _text = text; _hastext = hastext
+    return
+  valid: method = .int
+    return _valid
+  filename: method = .string
+    return _filename
+  line: method = .int
+    return _line
+  column: method = .int
+    return _column
+  endcolumn: method = .int
+    return _endcolumn
+  text: method = .string
+    return _text
+  hastext: method = .int
+    return _hastext
+
+/** Own raw/clean bytes and bounded segment/span records. The source-map wire is
+ * processed before lexical comments/quotes: literal @ is always doubled.
+ * Mapping rows describe intervals, never one object per source byte.
+ * @param source original exact UTF-8 generated source
+ * @param enabled zero preserves bytes; one consumes RXPP map directives
+ * @param filename logical raw-source identity, used until a file directive
+ * @param limit source-byte budget; record/work budgets use the compiler's
+ * existing conservative 64 logical bytes per admitted source byte
+ */
+prepared: class
+  _raw = .binary
+  _clean = .binary
+  _size = .int
+  _write = .int
+  _active = .int
+  _status = .int
+  _error = .string
+  _offset = .int
+  _ready = .int
+  _limit = .int
+  _remaining = .int
+  _work = .int
+  _cursor = .int
+  _number = .int
+  _relative = .int
+  _quoted = .string
+  _file = .string
+  _line = .int
+  _column = .int
+  _linecolumn = .int
+  _text = .string
+  _hastext = .int
+  _depth = .int
+  _stackfirst = .int[]
+  _stackfile = .string[]
+  _stackline = .int[]
+  _stackcolumn = .int[]
+  _stacklength = .int[]
+  _stacktext = .string[]
+  _stackhastext = .int[]
+  _stackraw = .int[]
+  _rows = .int
+  _first = .int[]
+  _last = .int[]
+  _files = .string[]
+  _lines = .int[]
+  _columns = .int[]
+  _lengths = .int[]
+  _texts = .string[]
+  _hastexts = .int[]
+  _segments = .int
+  _segmentfirst = .int[]
+  _segmentlast = .int[]
+  _segmentraw = .int[]
+  _remembered = .int
+  _rememberfile = .string[]
+  _rememberline = .int[]
+  _remembertext = .string[]
+  _lineactive = .int
+  _linefirst = .int
+  _linefile = .string
+  _lineline = .int
+  _linecol = .int
+  _linetext = .string
+  *: factory
+    arg source = .binary, enabled = .int, filename = .string, limit = .int
+    _raw = source; _clean = source; _size = <blen>(source); _active = enabled
+    _file = filename; _limit = limit; _ready = 0
+    return
+  run: method = .void
+    if _ready then return
+    _ready = 1; limit = _limit; source = _raw; enabled = _active
+    _status = 0; _error = ''; _offset = 0; _write = 0; _cursor = 0
+    _rows = 0; _segments = 0; _remembered = 0; _depth = 0; _lineactive = 0
+    _line = 0; _column = 0; _linecolumn = 0; _text = ''; _hastext = 0
+    if limit < 1 | _size > limit then do
+      call fail(2,'LL_COMPILER_LIMIT: source-map source byte budget exceeded',0); return
+    end
+    if enabled <> 0 & enabled <> 1 then do
+      call fail(1,'SRCMAP_MALFORMED: enable flag must be zero or one',0); return
+    end
+    _remaining = 9223372036854775807
+    if limit <= 9223372036854775807 <idiv> 64 then _remaining = limit * 64
+    _work = _remaining
+    if charge(_size) = 0 then return
+    if charge(_size) = 0 then return
+    if charge(_size) = 0 then return
+    validated = .llsource..prepared(source,'utf8','','',limit)
+    state = validated.status()
+    if state <> 0 then do
+      if state = 1 then call fail(1,'RXC-LC-22.1: ' || validated.error(),validated.offset())
+      else call fail(2,validated.error(),validated.offset())
+      return
+    end
+    if enabled = 0 then do; _write = _size; return; end
+    call decode()
+    if _status = 0 then _clean = binsubstr(_clean,1,_write)
+    return
+  bytes: method = .binary
+    call run()
+    return _clean
+  active: method = .int
+    call run()
+    return _active
+  status: method = .int
+    call run()
+    return _status
+  error: method = .string
+    call run()
+    return _error
+  offset: method = .int
+    call run()
+    return _offset
+  fail: method = .void
+    arg status = .int, message = .string, offset = .int
+    if _status <> 0 then return
+    _status = status; _error = message; _offset = offset
+    return
+  charge: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _remaining then do
+      call fail(2,'LL_COMPILER_LIMIT: source-map record byte budget exceeded',_cursor); return 0
+    end
+    _remaining = _remaining - amount
+    return 1
+  tick: method = .int
+    if _work < 1 then do
+      call fail(2,'LL_COMPILER_LIMIT: source-map work budget exceeded',_cursor); return 0
+    end
+    _work = _work - 1
+    return 1
+  byte: method = .int
+    arg index = .int
+    if index < 0 | index >= _size then return -1
+    return <at..u8>(index) _raw
+  malformed: method = .void
+    arg reason = .string, marker = .int
+    call fail(1,'SRCMAP_MALFORMED: ' || reason,marker)
+    return
+  /** Checked signed decimal wire integer. No numeric-context conversion. */
+  number: method = .int
+    _number = 0; _relative = 0; sign = 1; count = 0
+    c = byte(_cursor)
+    if c = 43 | c = 45 then do
+      _relative = 1
+      if c = 45 then sign = -1
+      _cursor = _cursor + 1
+    end
+    c = byte(_cursor)
+    do while c >= 48 & c <= 57
+      if tick() = 0 then return 0
+      digit = c - 48
+      if _number > (9223372036854775807 - digit) <idiv> 10 then return 0
+      _number = _number * 10 + digit; count = count + 1; _cursor = _cursor + 1
+      c = byte(_cursor)
+    end
+    _number = _number * sign
+    return count > 0
+  /** Decode only doubled quotes/@@; neither backslash nor NUL is special. */
+  quoted: method = .int
+    arg marker = .int
+    c = .int
+    _quoted = ''; first = _cursor + 1; finish = first; closed = 0
+    /* Find this payload's exact extent before allocating it. Repeated file/
+     * line directives never copy the remaining source suffix quadratically. */
+    do while finish < _size
+      if tick() = 0 then return 0
+      c = byte(finish)
+      if c = 10 | c = 13 then do
+        call malformed('newline in quoted payload',marker); return 0
+      end
+      if c = 34 then do
+        if byte(finish + 1) = 34 then finish = finish + 1
+        else do; closed = 1; leave; end
+      end
+      finish = finish + 1
+    end
+    if closed = 0 then do
+      call malformed('unterminated quoted payload',marker); return 0
+    end
+    payload = binsubstr(_raw,first + 1,finish - first); write = 0; _cursor = first
+    do while _cursor < finish
+      if tick() = 0 then return 0
+      c = byte(_cursor)
+      if c = 34 & byte(_cursor + 1) = 34 then _cursor = _cursor + 1
+      else if c = 64 & byte(_cursor + 1) = 64 then _cursor = _cursor + 1
+      <at..u8>(write) payload = c; write = write + 1; _cursor = _cursor + 1
+    end
+    _cursor = finish + 1; _quoted = binsubstr(payload,1,write) as .string
+    return 1
+  /** Relative coordinates use the last explicit line/column base. */
+  coordinate: method = .int
+    arg base = .int, value = .int, relative = .int, label = .string, marker = .int
+    if relative then do
+      if value > 0 then do
+        if base > 9223372036854775806 - value then do
+          call malformed(label || ' exceeds supported coordinate range',marker); return -1
+        end
+      end
+      value = base + value
+    end
+    else value = value - 1
+    if value < 0 then do
+      call malformed(label || ' is before the start of the source',marker); return -1
+    end
+    return value
+  remember: method = .void
+    if charge(48 + <blen>(_text as .binary)) = 0 then return
+    _remembered = _remembered + 1
+    _rememberfile[_remembered] = _file; _rememberline[_remembered] = _line; _remembertext[_remembered] = _text
+    return
+  recall: method = .void
+    _text = ''; _hastext = 0
+    do i = _remembered to 1 by -1
+      if tick() = 0 then return
+      if _rememberline[i] = _line & _rememberfile[i] == _file then do
+        _text = _remembertext[i]; _hastext = 1; return
+      end
+    end
+    return
+  addrow: method = .void
+    arg first = .int, last = .int, file = .string, line = .int, column = .int, length = .int, text = .string, hastext = .int
+    if last <= first then return
+    if length > 9223372036854775806 - column then do
+      call malformed('span end exceeds supported coordinate range',_cursor); return
+    end
+    if charge(80) = 0 then return
+    _rows = _rows + 1
+    _first[_rows] = first; _last[_rows] = last; _files[_rows] = file
+    _lines[_rows] = line; _columns[_rows] = column; _lengths[_rows] = length
+    _texts[_rows] = text; _hastexts[_rows] = hastext
+    return
+  openline: method = .void
+    if _lineactive | _depth > 0 | _hastext = 0 then return
+    _lineactive = 1; _linefirst = _write; _linefile = _file
+    _lineline = _line; _linecol = _linecolumn; _linetext = _text
+    return
+  closeline: method = .void
+    if _lineactive = 0 then return
+    call addrow(_linefirst,_write,_linefile,_lineline,_linecol,_write - _linefirst,_linetext,1)
+    _lineactive = 0
+    return
+  put: method = .void
+    arg byte = .int, raw = .int, escaped = 0
+    extend = 0
+    if _segments > 0 & escaped = 0 then do
+      extend = _segmentraw[_segments] + _write - _segmentfirst[_segments] = raw
+    end
+    if extend = 0 then do
+      if charge(24) = 0 then return
+      _segments = _segments + 1; _segmentfirst[_segments] = _write; _segmentraw[_segments] = raw
+    end
+    <at..u8>(_write) _clean = byte; _write = _write + 1; _segmentlast[_segments] = _write
+    return
+  decode: method = .void
+    do while _cursor < _size & _status = 0
+      if tick() = 0 then return
+      c = byte(_cursor)
+      if c <> 64 then do
+        if c = 10 | c = 13 then call closeline()
+        else call openline()
+        call put(c,_cursor)
+        if c = 10 then _linecolumn = 0
+        else if c <> 13 then do
+          if _linecolumn = 9223372036854775807 then do
+            call malformed('column number exceeds supported coordinate range',_cursor); return
+          end
+          _linecolumn = _linecolumn + 1
+        end
+        _cursor = _cursor + 1; iterate
+      end
+      call closeline(); marker = _cursor; _cursor = _cursor + 1; c = byte(_cursor)
+      select
+        when c = -1 then call malformed('marker at end of file',marker)
+        when c = 64 then do
+          if _linecolumn = 9223372036854775807 then do
+            call malformed('column number exceeds supported coordinate range',marker); return
+          end
+          call openline(); call put(64,marker,1); _linecolumn = _linecolumn + 1; _cursor = _cursor + 1
+        end
+        when c = 125 then do
+          if _depth = 0 then call fail(1,'SRCMAP_UNBALANCED: closing span has no matching opening span',marker)
+          else do
+            call addrow(_stackfirst[_depth],_write,_stackfile[_depth],_stackline[_depth],_stackcolumn[_depth],_stacklength[_depth],_stacktext[_depth],_stackhastext[_depth])
+            _depth = _depth - 1; _cursor = _cursor + 1
+          end
+        end
+        when c = 34 then do
+          if quoted(marker) then do; _file = _quoted; _text = ''; _hastext = 0; end
+        end
+        otherwise call directive(marker)
+      end
+    end
+    call closeline()
+    if _status = 0 & _depth > 0 then call fail(1,'SRCMAP_UNBALANCED: opening span has no matching closing span',_stackraw[_depth])
+    return
+  directive: method = .void
+    arg marker = .int
+    if number() = 0 then do
+      call malformed('unescaped marker is not a source-map directive',marker); return
+    end
+    c = byte(_cursor)
+    if c = -1 then do; call malformed('directive is incomplete',marker); return; end
+    select
+      when c = 108 then do
+        _line = coordinate(_line,_number,_relative,'line number',marker)
+        if _status <> 0 then return
+        _column = 0; _linecolumn = 0; _cursor = _cursor + 1
+        if byte(_cursor) = 34 then do
+          if quoted(marker) = 0 then return
+          _text = _quoted; _hastext = 1; call remember()
+        end
+        else call recall()
+      end
+      when c = 99 then do
+        _column = coordinate(_column,_number,_relative,'column number',marker)
+        if _status <> 0 then return
+        _linecolumn = _column; _cursor = _cursor + 1
+      end
+      when c = 43 then do
+        column = coordinate(_column,_number,_relative,'span column',marker)
+        if _status <> 0 then return
+        _cursor = _cursor + 1
+        if byte(_cursor) < 48 | byte(_cursor) > 57 then do
+          call malformed('span length is missing',marker); return
+        end
+        if number() = 0 then do; call malformed('span length is missing',marker); return; end
+        if _number <= 0 then do; call malformed('span length must be positive',marker); return; end
+        if _number > 9223372036854775806 - column then do
+          call malformed('span end exceeds supported coordinate range',marker); return
+        end
+        if byte(_cursor) <> 123 then do
+          call malformed('span directive is missing opening brace',marker); return
+        end
+        if charge(88) = 0 then return
+        _depth = _depth + 1
+        _stackfirst[_depth] = _write; _stackfile[_depth] = _file; _stackline[_depth] = _line
+        _stackcolumn[_depth] = column; _stacklength[_depth] = _number
+        _stacktext[_depth] = _text; _stackhastext[_depth] = _hastext; _stackraw[_depth] = marker
+        _cursor = _cursor + 1
+      end
+      otherwise call malformed('unknown source-map directive',marker)
+    end
+    return
+  /** Map a clean byte boundary back to its raw first byte, including EOF. */
+  rawoffset: method = .int
+    arg cleanoffset = .int
+    call run()
+    if _status <> 0 | cleanoffset < 0 | cleanoffset > _write then return -1
+    if _active = 0 then return cleanoffset
+    if cleanoffset = _write then return _size
+    low = 1; high = _segments
+    do while low <= high
+      middle = low + (high - low) <idiv> 2
+      if cleanoffset < _segmentfirst[middle] then high = middle - 1
+      else if cleanoffset >= _segmentlast[middle] then low = middle + 1
+      else return _segmentraw[middle] + cleanoffset - _segmentfirst[middle]
+    end
+    return -1
+  /** Match native narrowest generated interval, tie resolved by later close.
+   * A supplied end validates the authored range; the selected map's source
+   * width owns its original end-column, rather than a generated-text width. */
+  location: method = .llcsrcmap..location
+    arg first = .int, last = .int
+    call run()
+    if _status <> 0 | _active = 0 | first < 0 | last < first | last > _write then return .llcsrcmap..location()
+    best = 0; width = 0
+    do i = 1 to _rows
+      if tick() = 0 then return .llcsrcmap..location()
+      if first >= _first[i] & first < _last[i] then do
+        current = _last[i] - _first[i]
+        if best = 0 | current <= width then do; best = i; width = current; end
+      end
+    end
+    if best = 0 then return .llcsrcmap..location()
+    return .llcsrcmap..location(1,_files[best],_lines[best] + 1,_columns[best] + 1,_columns[best] + _lengths[best] + 1,_texts[best],_hastexts[best])

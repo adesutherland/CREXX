@@ -75,26 +75,53 @@ syntax: procedure = .void
   do langindex = 1 to 2
     language = word('c g',langindex)
     call bad(language,'if 1 say 2' as .binary,'LL_COMPILER_SYNTAX:','THEN',10,'line 1, column 11')
-    call bad(language,('do' || ('0A'x as .string) || 'say 1') as .binary,'LL_COMPILER_SYNTAX:','END',8,'line 2, column 6')
+    if language = 'c' then call bad(language,('do' || ('0A'x as .string) || 'say 1') as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-14.1',0,'line 1, column 1')
+    else call bad(language,('do' || ('0A'x as .string) || 'say 1') as .binary,'LL_COMPILER_SYNTAX:','END',8,'line 2, column 6')
     call bad(language,'else say 1' as .binary,'LL_COMPILER_SYNTAX:',"unexpected 'else'",0)
-    call bad(language,'say 1 +' as .binary,'LL_COMPILER_SYNTAX:','number',7)
-    call bad(language,'say f(1' as .binary,'LL_COMPILER_SYNTAX:',"')'",7)
-    call bad(language,'say (1 + 2' as .binary,'LL_COMPILER_SYNTAX:',"')'",10)
-    call bad(language,"say 'broken" as .binary,'LL_COMPILER_SYNTAX:','unterminated quoted string',4)
-    call bad(language,('say 1' || ('0A'x as .string) || '/* bad') as .binary,'LL_COMMENT:','unclosed nested comment',6)
+    if language = 'c' then call bad(language,'say 1 +' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-35.1',6)
+    else call bad(language,'say 1 +' as .binary,'LL_COMPILER_SYNTAX:','number',7)
+    if language = 'c' then call bad(language,'say f(1' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-36',5)
+    else call bad(language,'say f(1' as .binary,'LL_COMPILER_SYNTAX:',"')'",7)
+    if language = 'c' then call bad(language,'say (1 + 2' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-36',4)
+    else call bad(language,'say (1 + 2' as .binary,'LL_COMPILER_SYNTAX:',"')'",10)
+    if language = 'c' then call bad(language,"say 'broken" as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-6.2',4)
+    else call bad(language,"say 'broken" as .binary,'LL_COMPILER_SYNTAX:','unterminated quoted string',4)
+    if language = 'c' then call bad(language,('say 1' || ('0A'x as .string) || '/* bad') as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-6.1',6)
+    else call bad(language,('say 1' || ('0A'x as .string) || '/* bad') as .binary,'LL_COMMENT:','unclosed nested comment',6)
     if language = 'g' then call bad(language,'say @' as .binary,'LL_COMPILER_SYNTAX:','0x40',4)
     else call bad(language,'say ~' as .binary,'LL_COMPILER_SYNTAX:','0x7E',4)
-    call bad(language,'73617920FF'x as .binary,'LL_UTF8:','malformed UTF-8',4)
+    if language = 'c' then call bad(language,'73617920FF'x as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-22.1',4)
+    else call bad(language,'73617920FF'x as .binary,'LL_UTF8:','malformed UTF-8',4)
     call bad(language,'7361792000'x as .binary,'LL_COMPILER_SYNTAX:','0x00',4)
-    call bad(language,('say ''α''' || ('0D0A'x as .string) || 'say 1 +') as .binary,'LL_COMPILER_SYNTAX:','number',17,'line 2, column 8')
-    call bad(language,"say 'α' +" as .binary,'LL_COMPILER_SYNTAX:','number',10,'line 1, column 10')
+    if language = 'c' then call bad(language,('say ''α''' || ('0D0A'x as .string) || 'say 1 +') as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-35.1',16,'line 2, column 7')
+    else call bad(language,('say ''α''' || ('0D0A'x as .string) || 'say 1 +') as .binary,'LL_COMPILER_SYNTAX:','number',17,'line 2, column 8')
+    if language = 'c' then call bad(language,"say 'α' +" as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-35.1',9,'line 1, column 9')
+    else call bad(language,"say 'α' +" as .binary,'LL_COMPILER_SYNTAX:','number',10,'line 1, column 10')
     call bad(language,'interpret "say 1"' as .binary,'LL_COMPILER_PROFILE:','INTERPRET',0)
     if language = 'g' then call bad(language,'select' as .binary,'LL_COMPILER_PROFILE:','SELECT',0)
-    else call bad(language,'select' as .binary,'LL_COMPILER_SYNTAX:','expected',6)
+    else call bad(language,'select' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-14.2',0)
   end
   call bad('c','numeric form wrong' as .binary,'LL_COMPILER_SYNTAX:','SCIENTIFIC',13)
   call bad('g','x = ' as .binary,'LL_COMPILER_SYNTAX:','number')
   call bad('g','x = .unknown' as .binary,'LL_COMPILER_TYPE:','unsupported type',4)
+  return
+
+/** A digit-start D symbol is a Classic constant in live and dead source. */
+classicconstant: procedure = .void expose artifacts
+  arg source = .string
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'constant.crexx')
+  call check(request.status() = 0,'Classic D symbol accepted: ' || request.error())
+  if request.status() <> 0 then return
+  tree = request.ast(); walk = tree.walk('parents first'); found = 0
+  do while walk.next()
+    node = walk.node()
+    if node.kind() = 'Constant' then do
+      if upper(node.text('spelling')) = '1D' then found = found + 1
+    end
+  end
+  call check(found = 1,'one authored Classic D constant in admitted source')
+  graph = request.graph()
+  call check(graph.error() = '','Classic D constant publishes verified IR')
   return
 
 /** C source ordinals are Unicode scalar constants, not raw UTF-8 byte casts. */
@@ -834,7 +861,7 @@ selecttests: procedure = .void expose artifacts
     end
     call bad('c',source as .binary,'LL_COMPILER_SYNTAX:','expected')
   end
-  call bad('c','select; when 1 then nop; when 1d then nop; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call classicconstant('select; when 1 then nop; when 1d then nop; end')
   call bad('c',"select; when 1 then nop; otherwise say 'GG'x; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
   call bad('c','select; when 0 then interpret "x"; end' as .binary,'LL_COMPILER_PROFILE:','INTERPRET')
   return
@@ -950,8 +977,8 @@ iferrors: procedure = .void
   call bad('c','else nop' as .binary,'LL_COMPILER_SYNTAX:',"unexpected 'else'",0)
   call bad('c','if 1 then call' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-19.2')
   call bad('c','if 1 then numeric else nop' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-25.15')
-  call bad('c','if 1 then exit 0 else exit 1; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
-  call bad('c','exit 0; p: procedure; if 1 then return else return 2; nop; options; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call classicconstant('if 1 then exit 0 else exit 1; say 1d')
+  call classicconstant('exit 0; p: procedure; if 1 then return else return 2; nop; options; say 1d')
   return
 
 /** Header policy is request-local; every clause still has an operand AST. */
@@ -1058,9 +1085,9 @@ optionstests: procedure = .void expose artifacts
   end
   call bad('c',"options 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',8)
   call bad('c',"exit 0; options ('2'b)" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
-  call bad('c','exit 0; options ((1d))' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
-  call bad('c','6F7074696F6E7320FF'x as .binary,'LL_UTF8:','malformed UTF-8',8)
-  call bad('c',('options levelc comments_hash' as .binary) || ('0A23FF'x as .binary),'LL_UTF8:','malformed UTF-8')
+  call classicconstant('exit 0; options ((1d))')
+  call bad('c','6F7074696F6E7320FF'x as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-22.1',8)
+  call bad('c',('options levelc comments_hash' as .binary) || ('0A23FF'x as .binary),'LL_COMPILER_SYNTAX:','RXC-LC-22.1')
   parsed = .lltestparse..parsed('c','6F7074696F6E7320FF'x as .binary,4)
   call check(pos('LL_COMPILER_LIMIT: source byte budget',parsed.error()) = 1,'source limit rejects before header/UTF-8 scanning')
   return
@@ -1101,9 +1128,9 @@ noptests: procedure = .void
   end
   call bad('c','if 1 then nop x' as .binary,'LL_COMPILER_SYNTAX:','unexpected',14)
   call bad('c','exit 0; nop x' as .binary,'LL_COMPILER_SYNTAX:','unexpected',12)
-  call bad('c','exit 0; nop; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
-  call bad('c','exit 0; do; nop; say 1d; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
-  call bad('c','exit 0; p: procedure; return; do; nop; say 1d; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call classicconstant('exit 0; nop; say 1d')
+  call classicconstant('exit 0; do; nop; say 1d; end')
+  call classicconstant('exit 0; p: procedure; return; do; nop; say 1d; end')
   return
 
 treechecks: procedure = .void
@@ -1170,7 +1197,7 @@ mapping: procedure = .void
   call bad('c','iterate' as .binary,'LL_COMPILER_FLOW:','RXC-LC-28.2: invalid ITERATE target')
   call bad('g','x=.int; x=.int' as .binary,'LL_COMPILER_BIND:','duplicate declaration')
   call bad('g','say 9223372036854775808' as .binary,'LL_', 'int64')
-  call bad('c','say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call classicconstant('say 1d')
   return
 
 calls: procedure = .void

@@ -526,6 +526,16 @@ RexxClassicConfig: class
     end
     return linein()
 
+  /** Replace the invocation's retained source without changing other services.
+   * The configuration owns its vector; a detached host configuration leaves
+   * the request template unchanged. Existing internal calls share this owner.
+   */
+  clearSourceLines: method = .void
+    empty_lines = .string[]
+    source_lines = empty_lines
+    source_line_count = 0
+    return
+
   /** Retain one original source line supplied by the compiler, without its EOL. */
   appendSourceLine: method = .void
     arg text = .string

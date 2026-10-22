@@ -1,0 +1,12 @@
+/* Configured BIFs use the current host-owned service, never a default copy. */
+options levelc
+if arg(1) = 'source' then return sourceline() || '|' || sourceline(1) || '|' || sourceline(2)
+if arg(1) = 'next' then return random(0,999)
+if arg(1) = 'random' then do
+  first=random(0,999,1729)
+  second=random(0,999)
+  again=random(0,999,1729)
+  return (first == again) || '|' || (first >= 0 & first <= 999) || '|' || (second >= 0 & second <= 999)
+end
+if arg(1) = 'bad' then return c2x('€')
+return word('a·b',2) || '|' || space('a··b',1,'/') || '|' || c2x(x2c('٠١·٠٢')) || '|' || x2b('٠١·٠٢') || '|' || x2d('٠١') || '|' || b2x('٠٠٠١·٠٠١٠')

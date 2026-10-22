@@ -73,15 +73,17 @@ exception or platform exclusion is approved by writing this design.
 
 ## Current new-compiler baseline
 
-The independent `levelc/levelc.rxl` / `llcparse` / `llcfrontend` pipeline admits
-bounded scalar expressions/control, complete-template ARG/PULL, selected-queue
-PUSH/QUEUE and binding routes
-for all 95 shared BIF names. Whole BIF/host/platform checks remain open.
+The independent `levelc/levelc.rxl` / `llcparse` / `llcfrontend` pipeline locally
+qualifies the admitted static source, expression/numeric and control profile,
+complete-template ARG/PULL, selected-queue PUSH/QUEUE and the value/context/error
+integration of all 95 shared BIF names. Full BIF-CHECK, host/platform and
+complete-C acceptance remain open.
 DROP uses ordered direct/indirect lists and shared Unicode/raw variable names.
 The approved [PROCEDURE increment](architecture.md#proposed-procedure-contract)
-implements one source-unit body, shared-pool calls, identifier-token Unicode
-labels and ordered EXPOSE in the locally qualified static/fatal profile.
-Full Classic source/operators and host contracts remain open.
+implements one source-unit body, shared-pool calls and ordered EXPOSE in the
+locally qualified static/fatal profile. Group 3 completes admitted nonquoted
+symbol/numeric labels, source/operator forms and static diagnostics; dynamic
+source and full host/delivery/platform acceptance remain open.
 SAY supports adjacent radix literals; whole-SAY closure remains open.
 
 The [Group 1 conditions and observations contract](architecture.md#conditions-observations-complete-contract)
@@ -111,9 +113,24 @@ contracts. Earlier research C images/IR must be rebuilt without a compatibility
 bridge; neutral scalar ABI records retain `crexx.g` names.
 
 Shared B Unicode extraction/public API and the existing eight stream/23 Unicode
-BIF bodies are reusable assets. Remaining work is C recognition, binding/context,
-host integration and missing named contracts, without a second Unicode or BIF
-algorithm implementation.
+BIF bodies supply the integrated C services. Wider per-name and host/platform
+verification retains those owners, without a second Unicode or BIF algorithm.
+
+The [static Group 3 contract](architecture.md#group3-static-language-contract)
+is locally qualified for the admitted static profile: C24 adds the remaining
+admitted operators, static source/diagnostic completion, Config-owned retained
+physical lines and the RXPP SRCMAP provenance relation. All 95 bindings keep
+their existing shared B bodies and one current context/presence/error route.
+The [family crosswalk](#group3-bif-crosswalk) records maintained qualification
+inputs. Full BIF-CHECK, CFC/formal QA and declared platform/delivery criteria
+remain open; native qualification is not a new-compiler result.
+
+Ordinary Classic C character and name casing retains an input codepoint in
+0–255 when its simple mapping would leave that range; above 255 it uses the
+existing simple Unicode mapping. LENGTH and positions count codepoints.
+Explicit Unicode casing retains its full contract, and generic B/G Unicode
+semantics are unchanged. This is Classic policy implemented by shared B services,
+not a generic Unicode or Level O implementation change.
 
 ## Shared requirements before instruction closure
 
@@ -219,10 +236,10 @@ its existing qualification. This plan does not commission 95 new BIF bodies,
 repeat their semantic design, or reopen unchanged library qualification.
 
 The new compiler binds all 95 names through the existing direct B entries.
-Representative C calls qualify ordered operands, raw omissions, live context and
-result/error transport; each whole BIF-CHECK obligation remains open. Complete
-admitted source forms and configured condition/host/platform behavior through
-the named owners, reusing one checked call mechanism and existing B entrypoints.
+Group 3 locally qualifies their static value/context/error crosswalk, including
+ordered operands, raw omissions, live context and result/error transport.
+Each full BIF-CHECK obligation retains its wider verification through the named
+owners, one checked call mechanism and the existing B entrypoints.
 
 BF01–09 below are integration/verification groups. Reuse existing independent
 expected results and fixtures through the new compiler, extending tests only
@@ -237,6 +254,45 @@ packaging/API extraction. Wider host/HALT/source/resource obligations remain
 with those owners; their existence is not a blanket BIF rewrite mandate. No new
 BIF-body defect was established by this architecture review. The cases below
 identify observable contracts, not a direction to rebuild their algorithms.
+
+<a id="group3-bif-crosswalk"></a>
+
+### Group 3 static BIF integration crosswalk
+
+The admitted static integration profile is locally qualified. The finite
+[`tests/group3/check-group3.py`](../tests/group3/check-group3.py) harness retains
+an independent 95-name inventory, checks every name's bounded-arity or MAX/MIN
+required-argument error path in panels of at most ten names, preserving global
+case identities, and combines maintained positive fixture sources
+with authored value/presence/context/error supplements. It compiles maintained
+native C sources using their checked `.expected` or CMake expectations; it does
+not execute the native C frontend or derive expected results from native output.
+The family rows below identify inputs and owners rather than run results.
+
+| Family | Existing owner and static integration contract | Maintained fixture / new boundary |
+|---|---|---|
+| BF01 | Shared character operations and direct BIF entries; exact text, scalar positions, padding and Classic C Latin-1 casing | `compiler/tests/rexx_src/levelc_bif_reference_audit.rexx`, `levelc_unicode_character_bifs.rexx`; Group 3 values, presence/errors and `classic-casing.crexx` with its independent all-256 checked oracle |
+| BF02 | CharacterScan plus current Config; Unicode/configured blanks and word positions, no compiler splitter | The same maintained value/Unicode panels; `tests/group3/runtime-c.crexx` and `runtime-host.crexx` supply configured blanks |
+| BF03 | Shared values, numeric context and fixed ordinal bridge; signed64 WHOLE remains distinct from arbitrary-precision radix operands | `levelc_bif_numeric_context.rexx`, `levelc_bif_whole.rexx`, `levelc_bif_integer_limits.rexx`, `levelc_latin1_ordinals.rexx`, `levelc_literal_ordinals.rexx`; Group 3 all-ordinal, rounding/guard and error boundaries |
+| BF04 | Existing 23 adapters and pinned Unicode core; raw presence, exact codecs and Classic error transport | `levelc_unicode_services.rexx` and its checked expected output; Group 3 omission/replacement/high-scalar errors, reusing existing UCD qualification |
+| BF05 | Existing live activation/pool and executing numeric frame; VALUE/SYMBOL preserve compound/default/dropped states | Maintained reference/numeric/whole/pool-read fixtures; Group 3 shared-pool/stem and current host-context boundaries |
+| BF06 | Existing Config-selected queue count and acquisition owners | `levelc_bif_queued.rexx`; existing Group 2 queue selection/lifecycle proof remains owned there |
+| BF07 | Activation ADDRESS/CONDITION/TRACE entries, one generated English diagnostic catalog, Config source lines and C-owned provenance | `levelc_bif_errortext.rexx`, `levelc_bif_sourceline.rexx`; Group 3 newline/NUL/host inventory and SRCMAP fixtures, including `srcmap-contracts.crexx` |
+| BF08 | Existing eight Config/host stream adapters; checked positions, codecs, EOF/close and NOTREADY | Existing Unicode/stream controls and Group 3 eight-function language consumer; Group 2 retains its host transport/cleanup proof |
+| BF09 | Activation clause clock and Config RNG; no process-global state substitute | Maintained reference DATE/TIME conversions and `levelc_bif_config_lifecycle.rexx`; Group 3 configured host/RNG isolation, preserving Group 1/2 clock proof |
+
+Generated roots install Config's retained physical lines once when a SOURCELINE
+call or exported host boundary makes them observable, keeping interior empty
+lines, final unterminated lines and exact Unicode/NUL. Unobservable simple
+programs omit setup; internal calls share the owner. SRCMAP generated input has
+no original inventory, so
+SOURCELINE returns count zero. Optional original map text is used only for
+diagnostics/TRACE where supplied, never synthesized into source lines.
+`llcsrcmap` consumes the existing RXPP wire and C24 `source.map` declaration;
+it adds no runtime decoder or source reread. Shared runtime algorithms and
+ordinary native/typed/RexxScript consumers retain their existing owners.
+Full per-name BIF-CHECK, formal compiler QA and platform/delivery criteria stay
+open beyond this selected development lane.
 
 ### BF01 — STEP04
 
@@ -511,59 +567,59 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | ID | Reference obligation | New C status | Owner / step | Next closure check |
 |---|---|---|---|---|
 | LC-REF-001 | Invocation modes COMMAND, FUNCTION, SUBROUTINE | Group 2 modes implemented; wider QA open | C-HOST / STEP08 | Retain generated host entry/teardown controls; qualify declared platforms and delivery. |
-| LC-REF-002 | Initial source identity and line inventory | Partial: logical origins, no inventory | C-SRC / STEP04; source/host completion STEP07/08 | Provide retained physical/mapped source and initial identity; test no runtime reread. |
+| LC-REF-002 | Initial source identity and line inventory | Static physical inventory/SRCMAP locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain exact observable root-owned lines and logical identity without runtime reread; SRCMAP exposes no original inventory and uses supplied provenance text only. Wider host/platform proof remains. |
 | LC-REF-003 | Initial environment and stream selection | Group 2 configured environment/streams implemented | C-HOST / STEP08 | Retain defaults, configured resources, failure cleanup and context-isolation controls; qualify declared platforms. |
 | LC-REF-004 | Invocation arguments and omitted positions | Group 2 exact argument/presence transport implemented | C-HOST / STEP08 | Retain omitted/empty/NUL and trailing positions across all modes; qualify declared platform adapters. |
 | LC-REF-005 | Caller-provided trap overrides | Group 2 scoped configuration/trap overrides implemented | C-HOST / STEP08 | Retain replacement, fallthrough, nested restoration and stale-window controls; wider platform proof remains. |
 | LC-REF-006 | Completion classes: no value, result, condition, resource failure, unable to continue | Group 2 owned N/R/E/X/S completions implemented | C-HOST / STEP08 | Retain exact resource/unavailable classification, first-event origin, cleanup secondary and detached-result lifetime controls. |
-| LC-REF-007 | Source characters, EOL/EOS and invalid-encoding `22.1` | Partial: bounded source reader | C-SRC / STEP04; source/host completion STEP07/08 | Test UTF8, NUL, every newline/EOF form and authored 22.1 refusal. |
-| LC-REF-008 | Configured extra blank characters and uppercase mapping | Runtime only | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Integrate configured blanks/simple uppercase in scanner, pools and calls. |
-| LC-REF-009 | Configured compare, substring, length and range ordering | Partial: admitted comparisons | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Run comparison/substring/length/range cases through configured new-C entries. |
-| LC-REF-010 | Binary-digit/character conversion hooks | Partial: radix literals | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Bind conversion hooks and test configured digits, errors and isolation. |
-| LC-REF-011 | Fixed `00`–`FF` ↔ `U+0000`–`U+00FF` bridge, PAD/XRANGE and out-of-range signal | Partial: radix literals | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Run all 256 ordinals, pad/range and >U+00FF refusal through new C. |
-| LC-REF-012 | Unicode scalar text and codepoint character positions | Partial: scalar runtime/literals | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Qualify codepoint positions across expressions, names, BIFs, PARSE and host text. |
-| LC-REF-013 | No implicit BYTE/UTF8 switch, normalization or grapheme behavior | Partial: exact-text subset | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Prove ordinary text has no implicit encoding/normalization/grapheme switch. |
-| LC-REF-014 | DATATYPE extra letter/digit families, blanks and exponent limit | Runtime only | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Bind DATATYPE; test configured classes/blanks and exponent/resource limits. |
+| LC-REF-007 | Source characters, EOL/EOS and invalid-encoding `22.1` | Static source reader locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain exact UTF8/NUL, LF/CR/CRLF/EOF and located 22.1 controls; wider source/host/platform verification remains. |
+| LC-REF-008 | Configured extra blank characters and uppercase mapping | Runtime services integrated; static scanner policy pinned | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Retain configured runtime blanks and shared Classic casing; static source uses the agreed pinned policy, with wider capability/platform acceptance open. |
+| LC-REF-009 | Configured compare, substring, length and range ordering | Static comparison and character BIF integration locally qualified | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Retain exact text/scalar ordering and configured service boundaries; full per-name/configuration/platform verification remains. |
+| LC-REF-010 | Binary-digit/character conversion hooks | Configured radix/BIF integration locally qualified | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Retain configured digit conversion, exact byte errors and invocation isolation; wider hook/platform obligations remain. |
+| LC-REF-011 | Fixed `00`–`FF` ↔ `U+0000`–`U+00FF` bridge, PAD/XRANGE and out-of-range signal | All-256 ordinal bridge locally qualified | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Retain all-ordinal round trips, padding/ranges and >U+00FF refusal through shared entries; wider BIF/platform verification remains. |
+| LC-REF-012 | Unicode scalar text and codepoint character positions | Static Unicode text/positions locally qualified | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Retain codepoint positions across expressions, names, BIFs and source origins, with existing PARSE/host controls; wider platform acceptance remains. |
+| LC-REF-013 | No implicit BYTE/UTF8 switch, normalization or grapheme behavior | Static exact-text profile locally qualified | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Retain no implicit normalization/encoding/grapheme switch and explicit Unicode-service separation; wider delivery/platform proof remains. |
+| LC-REF-014 | DATATYPE extra letter/digit families, blanks and exponent limit | DATATYPE bound; runtime configuration integrated | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Retain checked DATATYPE values and shared configured classes/numeric limits; full per-name BIF-CHECK and platform verification remain. |
 | LC-REF-015 | Configured command completion, RC/.RC/.RS and ERROR/FAILURE | Shared command completion integrated through Group 2 | C-HOST / STEP08 | Retain RC/.RC/.RS, explicit NORMAL provenance, ERROR/FAILURE and callback-span controls; qualify platform adapters. |
 | LC-REF-016 | External routine lookup with arguments, environment, streams and pool access | Group 2 static external/callback routes implemented | C-HOST / STEP08 | Retain selected Classic, scalar B/G/RXPA, explicit process and callback presence/pool contracts. Classic source lookup remains with INTERPRET. |
 | LC-REF-017 | Queue push, queue, pull and count services | Selected queue services integrated through Group 2 | C-HOST / STEP08 | Retain FIFO/LIFO/NUL, private-name collision, nested selection and failure/cancel restoration; qualify platforms. |
 | LC-REF-018 | Character and line stream input/output, positioning, state and close | Shared stream/I/O adapters integrated through Group 2 | C-HOST / STEP08 | Retain raw/codec position, lookahead refusal, EOF/close, configured process streams and recovery controls; wider BIF/platform proof remains. |
-| LC-REF-019 | Stream qualification, temporary names and availability queries | Runtime only | C-HOST / STEP08 | Bind QUALIFY/STREAM queries; disposition temporary-name/host capabilities. |
+| LC-REF-019 | Stream qualification, temporary names and availability queries | QUALIFY/STREAM language queries locally qualified | C-HOST / STEP08 | Retain stream/path query controls; full host capability and temporary-name/platform dispositions remain explicit. |
 | LC-REF-020 | Trap override/fallthrough for configuration hooks | Group 2 hook/trap/fallthrough protocol implemented | C-HOST / STEP08 | Retain null, absent, empty, replacement, trap and resource/unavailable controls; qualify platform providers. |
 | LC-REF-021 | API_Set, API_Value, API_Drop with compound substitution | Group 2 checked substituted pool API implemented | C-HOST / STEP08 | Retain ordered compound substitution, alias/current-private-pool and mutation controls; dynamic callers remain with INTERPRET. |
 | LC-REF-022 | Direct API set/value/drop without substitution | Group 2 direct pool API implemented | C-HOST / STEP08 | Retain exact raw names and direct set/value/drop without substitution; qualify declared host adapters. |
 | LC-REF-023 | API_ValueOther and visible-name iteration/reset | Group 2 other-pool/iteration protocol implemented | C-HOST / STEP08 | Retain other-pool access, visible iteration/reset, mutation and teardown controls; qualify host adapters. |
 | LC-REF-024 | API access only during enabled external/host callbacks | Group 2 generation-checked callback windows implemented | C-HOST / STEP08 | Retain disabled/stale/foreign/nested/teardown refusal and ordinary typed-call isolation; qualify host adapters. |
-| LC-REF-025 | Minimum numeric, literal, symbol and string limits | Partial: request limits | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Pin numeric/source/string budgets; test boundaries and recoverable resource failures. |
-| LC-REF-026 | Contextual instruction words, no general reserved words | Partial: bounded grammar | C-SRC / STEP04; source/host completion STEP07/08 | Test every instruction word as a noninstruction symbol where legal. |
-| LC-REF-027 | Quoted/doubled strings and radix suffix boundaries | Partial: quoted/radix subset | C-SRC / STEP04; source/host completion STEP07/08 | Complete quoted/doubled/radix lexical forms and located invalid cases. |
-| LC-REF-028 | Hex/binary literal grouping and left padding | Partial: radix repair | C-SRC / STEP04; source/host completion STEP07/08 | Extend retained radix proof across contexts, grouping, padding and failures. |
-| LC-REF-029 | Numeric constants, exponent signs and period-start tokens | Partial: numeric tokens; legacy `7d`/`7D` expression suffix refusal remains | C-SRC / STEP04; source/host completion STEP07/08 | Close constant-expression classification with `7d`/`7D` → `7D`, `7dogs` and numeric `7e2` controls; CALL/label raw identity is separate. Test configured limits. |
-| LC-REF-030 | Comma continuation and inferred clause endings | Partial: bounded grammar | C-SRC / STEP04; source/host completion STEP07/08 | Test continuation and clause inference across comments/newlines/Unicode blanks. |
-| LC-REF-031 | Nested comments and unterminated `6.*` messages | Partial: bounded tokenizer | C-SRC / STEP04; source/host completion STEP07/08 | Test arbitrary nested comments and exact unterminated-comment identities. |
-| LC-REF-032 | Alternative negators and inferred blank/nonblank concatenation | Partial: concatenation subset | C-SRC / STEP04; source/host completion STEP07/08 | Complete alternative negators and blank/abutment including adjacent calls. |
-| LC-REF-033 | Top-syntax VALUE insertion, assignment, label and keyword promotion | Partial: bounded grammar | C-SRC / STEP04; source/host completion STEP07/08 | Test every VALUE/assignment/label/keyword promotion ambiguity. |
-| LC-REF-034 | Reserved .MN/.RESULT/.RC/.RS/.SIGL and `50.1` | Partial: RESULT/command/SIGL state integrated | C-POOL / STEP03/05/06; STEP08 external API | Retain implemented call/command/SIGNAL state and CCOND lifecycle; complete remaining reserved-value access and precise 50.1 with host/dynamic tests. |
-| LC-REF-035 | Function-name ending-period `51.1` | Not implemented | C-SRC / STEP04; source/host completion STEP07/08 | Emit authored 51.1 for illegal ending-period function names. |
-| LC-REF-036 | Clause/label/null-clause program structure | Partial: private labels | C-SRC / STEP04; source/host completion STEP07/08 | Implement one-body labels/null clauses/fall-through and source/TRACE anchors. |
+| LC-REF-025 | Minimum numeric, literal, symbol and string limits | Local source/numeric/output/register boundaries qualified | C-UNI / STEP03/04; BF01–04 and STEP08 limits | Retain atomic bounded failure and recovery; full reference minimums, host resources and delivery/platform verification remain. |
+| LC-REF-026 | Contextual instruction words, no general reserved words | Admitted static contextual words locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain legal symbol/assignment/label and instruction promotion boundaries; full ledger and dynamic/platform verification remain. |
+| LC-REF-027 | Quoted/doubled strings and radix suffix boundaries | Static quoted/doubled/radix forms locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain Unicode/NUL/control data, doubling, suffix boundaries and exact live/dead errors; wider source/resource/platform verification remains. |
+| LC-REF-028 | Hex/binary literal grouping and left padding | Static grouping/padding and exact errors locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain hex/binary grouping, left padding and 15.* failures; full resource/platform verification remains. |
+| LC-REF-029 | Numeric constants, exponent signs and period-start tokens | Static constant classification locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain 7d/7D -> 7D, 7dogs, raw numeric 7e2 and period/reserved forms; CALL/label raw identity stays separate. Wider configured/dynamic/platform limits remain. |
+| LC-REF-030 | Comma continuation and inferred clause endings | Static continuation/clause inference locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain nested-comment/newline/blank continuation and original source anchors; wider initialization/host/platform verification remains. |
+| LC-REF-031 | Nested comments and unterminated `6.*` messages | Static nested comments and exact 6.* locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain shared bounded comment processing and located live/dead unterminated errors; wider resource/platform verification remains. |
+| LC-REF-032 | Alternative negators and inferred blank/nonblank concatenation | Admitted negator/blank/abutment forms locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain approved negators, adjacent calls, comment-only abutment and actual-blank concatenation; platform policy and broader acceptance remain explicit. |
+| LC-REF-033 | Top-syntax VALUE insertion, assignment, label and keyword promotion | Admitted static promotion locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain contextual VALUE, assignment, raw label and keyword promotion boundaries; dynamic-entry and broader acceptance remain open. |
+| LC-REF-034 | Reserved .MN/.RESULT/.RC/.RS/.SIGL and `50.1` | Live reserved state and static 50.1 locally qualified | C-POOL / STEP03/05/06; STEP08 external API | Retain reserved pool reads, live/dead 50.1 and call/command/SIGNAL/CCOND lifecycle; wider host/dynamic/platform proof remains. |
+| LC-REF-035 | Unquoted function-name ending-period `51.1` | Unquoted static 51.1 locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain live/dead unquoted ending-period refusal and quoted routine-name bypass; wider source/host/platform verification remains. |
+| LC-REF-036 | Clause/label/null-clause program structure | Static one-body labels/null clauses locally qualified | C-SRC / STEP04; source/host completion STEP07/08 | Retain ordered labels, null clauses/fall-through and truthful source/TRACE anchors; dynamic caller-label and platform proof remains. |
 | LC-REF-037 | IF/THEN/ELSE branch selection and nearest ELSE | Partial: admitted IF locally qualified | LC-I-06–10 / STEP05 | Retain CCOND captured-truth completion/observations; complete LC-I-06 expressions/diagnostics and wider source/dynamic-entry forms. |
 | LC-REF-038 | SELECT/WHEN/OTHERWISE order and absent-match `7.3` | Partial: admitted forms locally qualified | LC-I-06–10 / STEP05 | Retain the SELECT contract and LC-I-07 expression, dynamic-control, diagnostic/recovery and observation dependencies. |
 | LC-REF-039 | Simple DO grouping and empty body | Partial: simple DO | LC-I-06–10 / STEP05 | Complete simple-group placements, empty bodies, labels and observations. |
 | LC-REF-040 | Counted, controlled, FOREVER, WHILE and UNTIL DO | Partial: static forms locally qualified | LC-I-06–10 / STEP05 | The [DO contract](architecture.md#approved-do-contract) covers header/entry/step timing, arbitrary counts/errors and keyed frame lifetime; whole-instruction dependencies stay open. |
 | LC-REF-041 | LEAVE/ITERATE nesting and named loop targets | Partial: named static transfers locally qualified | LC-I-06–10 / STEP05 | LEAVE/ITERATE-AC01–04 qualify static targets, distinct crossed-state cleanup/end work and default/STRICTC timing; whole-instruction dependencies stay open. |
 | LC-REF-042 | END-name matching and group-label branch restrictions | Partial: bounded groups | C-SRC / STEP04; source/host completion STEP07/08 | Validate END names and forbidden group-label transfers with correct source. |
-| LC-REF-043 | Expression terms, prefix, power and arithmetic precedence | Partial: operator subset | C-EXPR / STEP04; STEP05/07 contexts | Complete all terms/operators/order with independent values and side effects. |
-| LC-REF-044 | Left-associative Classic power | Not implemented | C-EXPR / STEP04; STEP05/07 contexts | Implement and independently test left-associative power and prefix interaction. |
-| LC-REF-045 | Normal/strict comparisons and configured character ordering | Partial: comparison subset | C-EXPR / STEP04; STEP05/07 contexts | Complete normal/strict families and configured character-order tests. |
-| LC-REF-046 | Logical AND/OR/XOR and prefix negation with exact values | Partial: logical subset | C-EXPR / STEP04; STEP05/07 contexts | Complete eager AND/OR/XOR/NOT and context-specific exact logical failures. |
+| LC-REF-043 | Expression terms, prefix, power and arithmetic precedence | Admitted static operator families locally qualified | C-EXPR / STEP04; STEP05/07 contexts | Retain ordered terms/operators, quotient/remainder, values/errors/effects and the shared numeric owner; wider host/platform acceptance remains. |
+| LC-REF-044 | Left-associative Classic power | Classic power/prefix interaction locally qualified | C-EXPR / STEP04; STEP05/07 contexts | Retain independently computed left-associative power, tighter prefix and exact exponent errors; full compiler/platform verification remains. |
+| LC-REF-045 | Normal/strict comparisons and configured character ordering | Normal/strict/negated families locally qualified | C-EXPR / STEP04; STEP05/07 contexts | Retain exact text and numeric/FUZZ distinctions; full configuration/platform verification remains. |
+| LC-REF-046 | Logical AND/OR/XOR and prefix negation with exact values | Eager logical forms locally qualified | C-EXPR / STEP04; STEP05/07 contexts | Retain once-only AND/OR/XOR/NOT effects and exact contextual 34.* with CCOND completion; wider host/platform acceptance remains. |
 | LC-REF-047 | PARSE ARG/PULL/SOURCE/LINEIN/VERSION/VALUE/VAR and UPPER | Partial: seven-source C profile locally qualified | LC-I-11/16/19 / STEP06 | CPARSE-AC01/04/07/08: all seven once-only sources, empty/comma behavior, raw argument preservation, simple UPPER and source/condition/platform proof. |
 | LC-REF-048 | PARSE targets, placeholders, literal/variable patterns and positions | Partial: v3/shared B/C profile locally qualified | LC-I-11/16/19 / STEP06 | CPARSE-AC01–03/05–08: v3 backward/anchor/empty-pattern normalization, live ordered fields, shared configured word policy, errors, ownership and observations. |
 | LC-REF-049 | Pool dropped, implicit, exposed and scalar/stem binding states | Partial: DROP states/shared-private pools/static EXPOSE aliases | C-POOL / STEP03/05/06; STEP08 external API | Retain CCOND admitted cleanup/observations; complete callback/dynamic alias lifetime and configured host access. |
 | LC-REF-050 | Set/value/drop, stem-tail propagation and recursive exposure | Partial: assignment/DROP and source-ordered recursive EXPOSE | C-POOL / STEP03/05/06; STEP08 external API | Retain CCOND admitted condition/observation paths; complete host access and callback/dynamic lifetime. |
 | LC-REF-051 | Compound-tail evaluation without NOVALUE, final lookup with NOVALUE | Complete local C read path; external API/platform scope open | C-POOL / STEP03/05/06; STEP08 external API | Shared once-resolved reads suppress tail NOVALUE and guard final lookup, including PARSE/DO reads; retain external API/platform obligations. |
-| LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | Partial: causing-event SIGL state integrated | C-POOL / STEP03/05/06; STEP08 external API | SIGNAL updates SIGL/.SIGL; CCOND uses existing CALL trap SIGL while preserving reserved .SIGL. Complete remaining constant/reserved symbols, pool-0 access and host/dynamic lifecycle. |
-| LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | Partial: NUMERIC/arithmetic subset | C-EXPR / STEP04; STEP05/07 contexts | Qualify DIGITS/FORM/FUZZ, rounding, error/LOSTDIGITS and restoration end to end. |
-| LC-REF-054 | Exact logical values and contextual `34.*` identities | Partial: admitted IF/WHEN/loop truth | C-EXPR / STEP04; STEP05/07 contexts | Retain CCOND captured truth and admitted condition/origin/practical TRACE paths; complete full source/expression contexts and exact logical identities. |
+| LC-REF-052 | Constant symbols, reserved pool 0 and SIGL/.SIGL updates | Static constants/reserved and causing-event state locally qualified | C-POOL / STEP03/05/06; STEP08 external API | Retain constant/reserved reads, SIGNAL SIGL/.SIGL and CALL SIGL with preserved .SIGL; full pool-0/host/dynamic lifecycle verification remains. |
+| LC-REF-053 | Numeric DIGITS/FORM/FUZZ and arithmetic error/condition model | Static numeric context/arithmetic locally qualified | C-EXPR / STEP04; STEP05/07 contexts | Retain DIGITS/FORM/FUZZ, rounding, guards, exact errors/LOSTDIGITS and existing restoration; broader full-C/platform acceptance remains. |
+| LC-REF-054 | Exact logical values and contextual `34.*` identities | Admitted static logical contexts locally qualified | C-EXPR / STEP04; STEP05/07 contexts | Retain exact logical identities, captured truth and CCOND condition/origin/practical TRACE paths; full compiler/platform verification remains. |
 | LC-REF-055 | Function/CALL omitted arguments and resolution order | Group 2 static call/expression routes implemented | C-ACT and LC-I-13–15 / STEP06; STEP08 host completion | Retain local/BIF/external precedence, quoting, source order, omissions, dead-source admission and arity controls. Dynamic source loading remains with INTERPRET. |
 | LC-REF-056 | Function RETURN value, `45.1` and RESULT/.RESULT lifecycle | Owned result presence and Group 2 host completion implemented | C-ACT and LC-I-13–15 / STEP06; STEP08 host completion | Retain required RETURN45.1, expression44.1, empty/absent RESULT lifecycle and terminal host-error controls; wider source/platform proof remains. |
 | LC-REF-057 | Program initialization and clause-boundary HALT/trap/TRACE work | CCOND checkpoints and Group 2 real HALT ingress implemented | C-HOST / STEP07/08 | Retain frozen/lazy clocks, execution-local real interrupts and trap/TRACE restoration; declared platform and broader source proof remain. |
@@ -573,38 +629,38 @@ checkpoint excludes only dynamic LC-REF-062/LC-87 proof, closed in STEP11.
 | LC-REF-061 | EXIT value, fallthrough and finalization | Local/external EXIT and Group 2 host finalization implemented | C-ACT and LC-I-13–15 / STEP06; STEP07/08 | Retain external EXIT locality, shared terminal failure, resource teardown and recovery; dynamic source/platform proof remains. |
 | LC-REF-062 | INTERPRET source, HALT, syntax and label restrictions | Not implemented | LC-I-25 / STEP11; LC-87-01–05 | Close LC-87-01–05 through same compiler with live caller and bounded code. |
 | LC-REF-063 | NUMERIC DIGITS/FORM/FUZZ validation and defaults | Partial: NUMERIC subset | C-EXPR / STEP04; STEP05/07 contexts | Validate all NUMERIC forms/defaults atomically and install in owning C frame. |
-| LC-REF-064 | OPTIONS word handling and unknown-option policy | Partial: current zero-word forms locally qualified | LC-I-05 / STEP05 | Current zero runtime words have no processor effect; all nontrivial operands retain once-only effects/errors. Complete header controls and shared dependencies remain open. |
+| LC-REF-064 | OPTIONS word handling and unknown-option policy | Static header/runtime OPTIONS profile locally qualified | LC-I-05 / STEP05 | Retain header/source-map policy, zero-word specialization and once-only nontrivial operands/errors; full shared host/delivery/platform obligations remain. |
 | LC-REF-065 | PROCEDURE pool creation and EXPOSE aliases | Static PROCEDURE/EXPOSE and Group 2 live callback pools implemented | C-POOL / STEP03/05/06; STEP08 external API | Retain source-order aliases and private-pool callback/cleanup controls; dynamic eligibility and wider source/platform proof remain. |
 | LC-REF-066 | PUSH/QUEUE ordering and null-expression value | Partial: local profiles qualified; CCOND observations integrated | LC-I-17/18 / STEP06 | Retain one queue owner, null/once-only/ordering and CCOND contracts; wider host/platform proof remains open. |
 | LC-REF-067 | RETURN function/subroutine/outermost lifecycle | Owned RETURN and Group 2 host completion implemented | C-ACT and LC-I-13–15 / STEP06; STEP07/08 observations/host | Retain main/subroutine/function presence, terminal failure and handler cleanup; complete source traceback and declared platform/delivery proof. |
-| LC-REF-068 | SAY default output and optional empty expression | Partial: SAY/radix subset | LC-I-01 / STEP05; STEP07/08 observations/host | Complete modern expression/output order and ordinary errors; further historical host edge parity is deferred and unclaimed. |
+| LC-REF-068 | SAY default output and optional empty expression | Static SAY expression/output profile locally qualified | LC-I-01 / STEP05; STEP07/08 observations/host | Retain modern Unicode output, empty expression, order and errors; wider historical host edges and declared-platform acceptance remain open. |
 | LC-REF-069 | SIGNAL branch/trap modes and loop-state clearing | Complete for the agreed SIGNAL contract | C-OBS and LC-I-23 / STEP07; shared qualifications STEP08/11 | All SIGNAL targets/traps, causing-event state and crossed-control cleanup use CSIGNAL-AC01–07; named conformance qualifications remain explicit. |
 | LC-REF-070 | TRACE options, interactive mode, skip/inhibit and source/result tracing | Complete for the agreed practical TRACE contract | C-OBS and LC-I-13/20/21/23/24 / STEP07; shared delivery STEP08 | CTRACE-AC01–07 implements options/query, command state and truthful retained observations with the explicit practical divergences; formal whole-compiler/platform QA remains open. |
 | LC-REF-071 | SYNTAX, HALT, ERROR, FAILURE, NOTREADY, NOVALUE, LOSTDIGITS | Immediate/delayed conditions and Group 2 real HALT ingress implemented | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Retain typed origins, buffering and nested cleanup; broader source/host/platform acceptance remains open. |
-| LC-REF-072 | Message catalog, .MN, source/line traceback and trap handling | Partial: logical fatal origins | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Bind messages/.MN/source traceback; preserve original condition and mapped origin. |
+| LC-REF-072 | Message catalog, .MN, source/line traceback and trap handling | Static catalog/located and mapped origins locally qualified | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Retain message/.MN identity and supplied mapped origins without reread; full traceback, host and delivery/platform verification remains. |
 | LC-REF-073 | Immediate SIGNAL ON, delayed CALL ON and HALT buffering | CCOND delayed delivery/buffering and Group 2 real HALT ingress implemented | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | Retain shared DELAY suppression, ancestor buffering and nested restoration; declared host/platform acceptance remains open. |
 | LC-REF-074 | CONDITION BIF state fields | Integrated authoritative event state; whole BIF-CHECK open | C-OBS and LC-I-13/20/21/23/24 / STEP07/08 | CCOND preserves CALL/DELAY fields, description and interrupted CONDITION isolation through the existing shared BIF. CCOND-AC02/03 own selected state proof; broader BIF/host/platform coverage remains open. |
-| LC-REF-075 | NOP as a statement with no visible effect | Partial: childless forms locally qualified; CCOND observations implemented | LC-I-04 / STEP05; STEP07 observations | Retain admitted source-only markers/completion and practical TRACE; complete exact diagnostics and wider source/dynamic placements. |
+| LC-REF-075 | NOP as a statement with no visible effect | Static childless forms/exact 21.1 locally qualified | LC-I-04 / STEP05; STEP07 observations | Retain source-only markers, CCOND completion/practical TRACE and live/dead diagnostics; wider dynamic placements and full acceptance remain open. |
 
 ## Syntax and detailed native contract crosswalk
 
 The [native syntax catalogue](../../../../docs/planning/release-1/levelc-compatibility-worklist.md#syntax-and-instruction-inventory)
 contains **36 contracts**, including capabilities beyond the 25 instruction
 names. Each row below inherits the full current owner/closure check named here.
-All are open for the new compiler; native “closed” or “parked” statuses do not
-transfer. Existing native editor behavior is a retained consumer contract, not
+Each row retains its stated new-compiler status and wider closure obligations;
+native “closed” or “parked” statuses do not transfer. Existing native editor behavior is a retained consumer contract, not
 an instruction or an automatic requirement for a new editor protocol.
 
 | Native syntax contract | New C status | Owner / step | Next closure check |
 |---|---|---|---|
-| `SYN-CLASSIC-OPTIONS` | Partial: bounded COptions/header forms locally qualified | LC-I-05 / STEP05 | CCOND integrates admitted completion/observations; complete remaining header/source-map controls and exact diagnostics under LC-I-05. |
-| `SYN-CLASSIC-CLAUSES` | Partial: grammar/source with CCOND authored completion | C-SRC/C-OBS; STEP04/07/08 | Retain CCOND lazy checkpoints/observations; close remaining LC-REF-007/030/036/057/070/072 source/initialization and host/platform obligations. |
-| `SYN-CLASSIC-CONTEXTUAL-KEYWORDS` | Partial: bounded grammar | C-SRC; STEP04 | Close LC-REF-026/033 for every contextual symbol/promotion case. |
-| `SYN-CLASSIC-LABELS` | Partial: identifier-token shared labels | C-ACT/C-SRC/C-OBS; STEP03/06/07/11 | Close LC-REF-036/042/055/056/069 and dynamic caller-label reachability. |
-| `SYN-CLASSIC-SYMBOLS` | Partial: shared Unicode/raw variable names | C-SRC/C-POOL; STEP03/04/05/06/08 | Retain distinct micro-sign/Greek and raw ARG/name admission proof; close remaining constant symbols, routine/call names, configuration and host access. |
+| `SYN-CLASSIC-OPTIONS` | Static header/runtime profile locally qualified | LC-I-05 / STEP05 | Retain CCOND completion/observations, SRCMAP/header controls and exact diagnostics; full LC-I-05 host/delivery/platform acceptance remains open. |
+| `SYN-CLASSIC-CLAUSES` | Static grammar/source and CCOND completion locally qualified | C-SRC/C-OBS; STEP04/07/08 | Retain lazy checkpoints, continuation/null clauses and truthful physical/mapped origins; full initialization/host/platform acceptance remains open. |
+| `SYN-CLASSIC-CONTEXTUAL-KEYWORDS` | Admitted static promotion locally qualified | C-SRC; STEP04 | Retain LC-REF-026/033 symbol/promotion boundaries; full ledger/dynamic/platform verification remains open. |
+| `SYN-CLASSIC-LABELS` | Admitted nonquoted static labels locally qualified | C-ACT/C-SRC/C-OBS; STEP03/06/07/11 | Retain LC-REF-036/042/055/056/069, raw space/HT boundaries and first-label identity; dynamic caller-label reachability and wider acceptance remain open. |
+| `SYN-CLASSIC-SYMBOLS` | Static constants/Unicode/raw names locally qualified | C-SRC/C-POOL; STEP03/04/05/06/08 | Retain distinct micro-sign/Greek and Latin-1-closed Classic names, live reserved reads and call-name policy; full configured/host/dynamic acceptance remains open. |
 | `SYN-CLASSIC-STEMS` | Partial: shared reads/writes/DROP | C-POOL; STEP03/05/06/08 | Complete LC-I-03/12 and LC-REF-049–051 with source-ordered recursive aliases and conditions. |
-| `SYN-CLASSIC-STRINGS` | Partial: quoted/radix subset | C-SRC/C-UNI; STEP04 | Close LC-REF-011–013/025/027/028, quoted doubling/grouping, limits and exact text. |
-| `SYN-CLASSIC-ASSIGNMENT` | Partial: one-write forms locally qualified | LC-I-03 / STEP05 | Retain CCOND admitted condition/NOVALUE/practical TRACE paths; close remaining diagnostics, source/expression and dynamic-entry dependencies in LC-I-03. |
+| `SYN-CLASSIC-STRINGS` | Admitted quoted/radix forms locally qualified | C-SRC/C-UNI; STEP04 | Retain LC-REF-011–013/025/027/028 values, doubling/grouping, exact errors and bounded failure; full minimums/platform verification remains open. |
+| `SYN-CLASSIC-ASSIGNMENT` | Static one-write/source profile locally qualified | LC-I-03 / STEP05 | Retain once-only RHS, CCOND condition/NOVALUE/practical TRACE and static diagnostics; full LC-I-03 dynamic/host/platform acceptance remains open. |
 | `SYN-CLASSIC-COMMAND` | Partial: once-only active command, warning and CCOND completion | LC-I-21 / STEP07 | Full LC-I-21 check in the instruction ledger; wider host/NUL/platform dependencies remain open. |
 | `SYN-CLASSIC-ADDRESS` | Explicit source profile delivered; full instruction open | LC-I-20 / STEP07 | Full LC-I-20 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-ARG` | Partial | LC-I-11 / STEP06 | Full LC-I-11 check in the instruction ledger; shared dependencies remain open. |
@@ -612,11 +668,11 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-DO` | Partial | LC-I-08 / STEP05 | Full LC-I-08 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-DROP` | Partial: direct/indirect forms locally qualified | LC-I-02 / STEP05 | CCOND integrates admitted condition/clause/practical TRACE paths; full LC-I-02 closure retains diagnostics and host/dynamic dependencies. |
 | `SYN-CLASSIC-EXIT` | Partial | LC-I-15 / STEP06 | Full LC-I-15 check in the instruction ledger; shared dependencies remain open. |
-| `SYN-CLASSIC-IF` | Partial: admitted forms locally qualified | LC-I-06 / STEP05 | Retain CCOND captured-truth completion and admitted observations; close remaining placements, expressions and exact diagnostics in LC-I-06. |
+| `SYN-CLASSIC-IF` | Admitted static forms/diagnostics locally qualified | LC-I-06 / STEP05 | Retain nearest ELSE, captured truth and CCOND observations; full LC-I-06 dynamic/host/platform acceptance remains open. |
 | `SYN-CLASSIC-INTERPRET` | Not implemented | LC-I-25 / STEP11 | Full LC-I-25 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-ITERATE` | Partial | LC-I-10 / STEP05 | Full LC-I-10 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-LEAVE` | Partial | LC-I-09 / STEP05 | Full LC-I-09 check in the instruction ledger; shared dependencies remain open. |
-| `SYN-CLASSIC-NOP` | Partial: childless forms locally qualified | LC-I-04 / STEP05 | Retain CCOND clause/condition/practical TRACE integration; close exact 21.1 and wider source/dynamic placements in LC-I-04. |
+| `SYN-CLASSIC-NOP` | Static childless forms/exact 21.1 locally qualified | LC-I-04 / STEP05 | Retain CCOND clause/condition/practical TRACE integration; full LC-I-04 dynamic/host/platform acceptance remains open. |
 | `SYN-CLASSIC-NUMERIC` | Partial | LC-I-22 / STEP07 | Full LC-I-22 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-PARSE` | Partial: admitted forms locally qualified | LC-I-19 / STEP06 | Full LC-I-19 check in the instruction ledger; shared dependencies remain open. |
 | `SYN-CLASSIC-PROCEDURE` | Partial | LC-I-12 / STEP06 | Full LC-I-12 check in the instruction ledger; shared dependencies remain open. |
@@ -628,10 +684,10 @@ an instruction or an automatic requirement for a new editor protocol.
 | `SYN-CLASSIC-SELECT` | Partial: admitted forms locally qualified | LC-I-07 / STEP05 | Full LC-I-07 and shared dependencies remain open. |
 | `SYN-CLASSIC-SIGNAL` | Complete for the agreed instruction | LC-I-23 / STEP07 | CSIGNAL-AC01–07 close all source forms and required helpers; retain the ledger's named cross-cutting qualifications. |
 | `SYN-CLASSIC-TRACE` | Complete for the agreed practical TRACE contract | LC-I-24 / STEP07 | Bare/static/VALUE, contextual/dead forms and exact error admission use CTRACE-AC01–07; retain shared full-C acceptance and practical limitations. |
-| `SYN-CLASSIC-EXPRESSIONS` | Partial: operator subset | C-EXPR/C-NUM; STEP04/07 | Close LC-REF-043–046/053/054, including power, integer division/remainder and full comparisons. |
-| `SYN-CLASSIC-BIF-CALL` | All 95 names bound; whole BIF-CHECK open | BF01–09; STEP04/06/07/08 | Close every one of the 95 binding rows with BIF-CHECK, including LC-REF-055. |
+| `SYN-CLASSIC-EXPRESSIONS` | Admitted static operators/numeric integration locally qualified | C-EXPR/C-NUM; STEP04/07 | Retain independent LC-REF-043–046/053/054 values/errors/effects; broader full-C/platform acceptance remains open. |
+| `SYN-CLASSIC-BIF-CALL` | All 95 static integrations locally qualified; full BIF-CHECK open | BF01–09; STEP04/06/07/08 | Retain the Group 3 all-name value/context/error crosswalk; close wider per-name BIF-CHECK, including LC-REF-055, at full acceptance. |
 | `SYN-CLASSIC-LOCAL-CALL` | Partial: shared-entry local calls | C-ACT/C-ABI; STEP03/06/07 | Close LC-I-11–15 and LC-REF-055/056/061/067; complete resolution, dynamic entries and outcomes. |
-| `SYN-CLASSIC-DSLSH` | Partial: new source/diagnostics; native editor retained | C-SRC; STEP04; existing editor owner | Qualify new-C trees/located diagnostics. Preserve existing native rxc/editor projection; no new B/L editor protocol or editor replacement is implied. |
+| `SYN-CLASSIC-DSLSH` | New-C located static diagnostics locally qualified; native editor retained | C-SRC; STEP04; existing editor owner | Retain checked new-C source diagnostics and the existing native rxc/editor projection; full source/diagnostic acceptance remains open, with no new editor protocol or replacement implied. |
 | `SYN-CLASSIC-CANONICAL-LOWERING` | Partial: C AST/IR pipeline | CFC-AC07/10/11; STEP01/02/04 | Verify ownership, structure, types/effects, provenance and refusal at C AST→L IR→RXAS boundaries; native canonical AST/lowerer reuse is not required or allowed as fallback. |
 
 The instruction ledger links all **72 detailed LC-74–87 criteria** and its

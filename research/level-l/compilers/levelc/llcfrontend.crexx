@@ -19,6 +19,7 @@ import llcsignalprotocol
 import llccommandprotocol
 import llcdiagnostics
 import rexxclassicunicodeproperties
+import llcsrcmap
 
 /** First source-unit entry identity and its result contract. */
 routine: class
@@ -55,6 +56,8 @@ routine: class
  * Imports are read from an explicit artifact directory; no tool is spawned. */
 request: class
   _source = .binary
+  _originalsource = .binary
+  _mapping = .llcsrcmap..prepared
   _providers = reference .llcbindings..prepared
   _bound = .int
   _filename = .string
@@ -158,7 +161,8 @@ request: class
   _conditionblock = .llir..block
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
-    _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
+    empty_mapping = .llcsrcmap..prepared; _mapping = empty_mapping
+    _source = source; _originalsource = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
     _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
     _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
     _parsepositionsready = 0
@@ -171,7 +175,8 @@ request: class
   /** Borrow only an external anchored snapshot; no self-reference is retained. */
   bound: factory
     arg source = .binary, providers = reference .llcbindings..prepared, filename = '<source>', budget = 1000000, nesting = 512
-    _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = ''; _providers = providers; _bound = 1
+    empty_mapping = .llcsrcmap..prepared; _mapping = empty_mapping
+    _source = source; _originalsource = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = ''; _providers = providers; _bound = 1
     _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
     _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
     _parsepositionsready = 0
@@ -192,7 +197,9 @@ request: class
         if providers.status() then do; _error = providers.error(); return; end
         _rootpath = providers.root()
       end
-      parsed = .llcparse..parsed(_source,_budget)
+      _originalsource = _source
+      parsed = .llcparse..parsed(_source,_budget,_filename)
+      _source = parsed.bytes(); _mapping = parsed.mapping()
       if parsed.status() <> 0 then do
         _error = parsed.error(); _offset = parsed.offset(); return
       end
@@ -262,12 +269,16 @@ request: class
   diagnostic: method = .string
     call run()
     if _error = '' then return ''
-    split = pos(':',_error)
-    if split = 0 then return _filename || ': ' || llsource..diagnostic(_source,_offset,'LL_COMPILER_SYNTAX',_error)
-    return _filename || ': ' || llsource..diagnostic(_source,_offset,left(_error,split - 1),strip(substr(_error,split + 1)))
+    return llcdiagnostics..format(_source,_originalsource,_offset,_error,_filename,_mapping)
   status: method = .int
     call run()
     return _error <> ''
+  bytes: method = .binary
+    call run()
+    return _source
+  mapping: method = .llcsrcmap..prepared
+    call run()
+    return _mapping
   /** Owned completed source warnings survive later lowering failure. */
   warnings: method = .llcdiagnostics..warning[]
     call run()
@@ -478,6 +489,11 @@ request: class
     _blocknumber = 0; _tempnumber = 0; _loops = 0; _donumber = 0; _commandnumber = 0; _terminated = 0; _alive = 1
     body = _current.body(); origin = at(body).derive()
     _block = newblock('entry')
+    if _mapping.active() then do
+      op = _block.operation(_contract.operation('crexx.c.source.map'),origin)
+      call op.attribute('original',_originalsource); call op.attribute('filename',_filename as .binary)
+      built = op.finish()
+    end
     _contextslot = _fn.slot('$context',type('context'))
     _entryslot = _fn.slot('$entry',type('int64'))
     call _block.store(_contextslot,_block.readarg(1,origin),origin)
@@ -846,6 +862,7 @@ request: class
     previous = 0; lineend = -1; line = 0; column = 0; searchcost = 2
     node = .llast..node; head = .llast..node; first = .int; last = .int
     gap = .int; extent = .int; remaining = .int; point = .llsource..position
+    mapped = .llcsrcmap..location; warningfilename = .string; warningline = .int; warningcolumn = .int
     filenamebytes = <blen>(_filename as .binary)
     walk = _tree.walk('parents first')
     do while walk.next()
@@ -895,11 +912,20 @@ request: class
         if warningspace(gap,2) = 0 then return
         column = column + length(binsubstr(_source,previous + 1,gap) as .string)
       end
+      warningfilename = _filename; warningline = line; warningcolumn = column
+      if _mapping.active() then do
+        mapped = _mapping.location(first,last)
+        if _mapping.status() <> 0 then do; _error = _mapping.error(); _offset = first; return; end
+        if mapped.valid() then do
+          warningfilename = mapped.filename(); warningline = mapped.line(); warningcolumn = mapped.column()
+        end
+      end
+      filenamebytes = <blen>(warningfilename as .binary)
       /* Account both pending and published owned record/filename payload. */
       if warningspace(144) = 0 | warningspace(filenamebytes,2) = 0 then return
       if warningwork(filenamebytes) = 0 | warningwork(filenamebytes) = 0 then return
       if warningwork(filenamebytes) = 0 | warningwork(filenamebytes) = 0 | warningwork(32) = 0 then return
-      pending[pending[0] + 1] = .llcdiagnostics..warning(_filename,first,last,line,column)
+      pending[pending[0] + 1] = .llcdiagnostics..warning(warningfilename,first,last,warningline,warningcolumn)
       previous = first
     end
     _warnings = pending; _offset = 0
@@ -1904,16 +1930,18 @@ request: class
     suffix = upper(right(spelling,1)); text = substr(spelling,2,length(spelling) - 3)
     digits = '0123456789ABCDEF'; group = 2; description = 'hexadecimal'
     if suffix = 'B' then do; digits = '01'; group = 4; description = 'binary'; end
-    count = 0; size = length(text)
+    count = 0; size = length(text); code = .string
     do i = size to 1 by -1
       ch = upper(substr(text,i,1))
       if ch = ' ' then do
         if i = 1 | i = size | count % group <> 0 then do
-          call fail(node,'SYNTAX: invalid ' || description || ' literal grouping'); return ''
+          code = '15.1'; if suffix = 'B' then code = '15.2'
+          call fail(node,'SYNTAX: RXC-LC-' || code || ': invalid ' || description || ' literal grouping'); return ''
         end
       end
       else if pos(ch,digits) = 0 then do
-        call fail(node,'SYNTAX: invalid digit in ' || description || ' literal'); return ''
+        code = '15.3'; if suffix = 'B' then code = '15.4'
+        call fail(node,'SYNTAX: RXC-LC-' || code || ': invalid digit in ' || description || ' literal'); return ''
       end
       else count = count + 1
     end
@@ -1944,14 +1972,14 @@ request: class
       when kind = 'Number' then do
         spelling = node.text('spelling')
         do
-          if right(lower(spelling),1) = 'd' then do
-            call fail(node,'PROFILE: decimal suffix is not Classic syntax'); return invalid
-          end
           if discardliteral then return invalid
           return _block.constantbytes(type('value'),spelling as .binary,origin)
         end
       end
       when kind = 'Constant' then do
+        if left(node.text('spelling'),1) = '.' then do
+          call fail(node,'SYNTAX: RXC-LC-50.1: unrecognized reserved symbol ' || node.text('spelling')); return invalid
+        end
         if discardliteral then return invalid
         return _block.constantbytes(type('value'),rexxclassic_unicode_upper(node.text('spelling')) as .binary,origin)
       end
@@ -2019,6 +2047,9 @@ request: class
     i = .int
     boolean = .llir..boolcodec()
     invalid = .llir..valuehandle; origin = at(node); name = node.text('name')
+    if node.kind() = 'Call' & right(name,1) = '.' then do
+      call fail(node,'SYNTAX: RXC-LC-51.1: unquoted function name ends in a period: ' || name); return invalid
+    end
     quoted = node.kind() = 'InvokeQuoted' | node.kind() = 'CallQuoted'
     if quoted then name = decodestring(node,name)
     else do

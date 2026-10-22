@@ -100,7 +100,7 @@ effects: procedure = .void
   call check(owned.status() = 0,'C effect adapter admitted: ' || owned.error())
   if owned.status() then return
   model_ref = owned.effects(); model = dereference model_ref
-  call check(model.valid() & model.matches(reference graph) & model.profile() = 'crexx.c.C23','sealed effects bind exact C22 graph/profile')
+  call check(model.valid() & model.matches(reference graph) & model.profile() = 'crexx.c.C24','sealed effects bind exact C24 graph/profile')
   domainindex = .int; domain = .string
   do domainindex = 1 to 6
     domain = 'crexx.c.' || word('pool alias numeric handlers observation callback',domainindex)

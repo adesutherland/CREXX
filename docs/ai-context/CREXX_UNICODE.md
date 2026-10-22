@@ -17,6 +17,27 @@ ordinals and consoles to UTF-8. Existing Unicode whitespace defaults remain.
 No implicit normalization is added. B/G typed values and RexxScript retain
 their separate contracts. The LC-UNICODE worklist owns qualification.
 
+Ordinary Classic UPPER/LOWER, default TRANSLATE, PARSE UPPER (including ARG/PULL)
+and canonical names share the generated simple-case authority. An input scalar
+in U+0000–U+00FF changes case only when the simple result remains within that
+range; otherwise it stays unchanged. Ordinary uppercase therefore preserves
+`µ` and `ÿ`. Inputs above U+00FF keep the pinned simple Unicode mappings, so
+LOWER(`Ÿ`) produces `ÿ`; the ordinary canonical names `ÿ` and `Ÿ` stay distinct.
+LENGTH/positions still count codepoints, with no change to the byte-ordinal
+bridge. This is an input-domain rule, not an upper/lower reversibility promise.
+
+`cmake/CrexxClassicUnicode.cmake` produces the native Classic C and B-implemented
+Classic runtime case tables from one pinned data input and applies that Latin-1
+boundary in both directions. This is a Classic Level C policy, also agreed for
+future Level O; this increment adds no Level O implementation. Ordinary Level
+B/G casing and `rxunicode` are unchanged.
+Its letter categories and lexer grammar are unchanged. Explicit Unicode
+TOUPPERCASE/TOLOWERCASE retain the full `rxunicode` contracts, including mapping
+`ÿ` to `Ÿ` and expanding `ß` to `SS`; their algorithms/tables are separate from
+ordinary Classic policy. Group 3's all-256 ordinary-case and higher-character
+controls qualify the changed consumer boundary; unchanged Unicode algorithm
+qualification remains reusable under its existing owner.
+
 ## Agreed source boundary (2026-10-08, clarified 2026-10-09)
 
 Source input remains UTF-8 Unicode across B/C/G/L. NUL is source data rather

@@ -48,8 +48,26 @@ supported. The [target architecture](doc/architecture.md),
 open stages are not implemented capability. Shared Unicode algorithms and the
 23 procedural entrypoints now belong to the optional B `rxunicode-core` component;
 C adapters use that core directly, while G retains its API and two wrapper
-classes. Ordinary CALL binds all 95 direct shared BIF names; complete BIF/host
-semantics and wider activation/platform work remain open.
+classes. Ordinary CALL binds all 95 direct shared BIF names. Group 3 adds the
+complete admitted static operator family, source diagnostics and inventory, and
+the BF01–09 language/context crosswalk over those existing bodies. Full compiler,
+host/platform and delivery acceptance remain open.
+
+The [Group 3 static language contract](doc/architecture.md#group3-static-language-contract)
+uses C24 with 97 operations and the existing five C types/38 target exports.
+Power, quotient/remainder and strict/negated comparisons call the shared value
+owners; prefix binds tighter than left-associative power. Static validation
+includes dead source. Ordinary Classic casing preserves the Latin-1 input range;
+higher characters use simple Unicode mappings. LENGTH and character positions
+count codepoints. Explicit Unicode functions and B/G policy remain unchanged.
+SOURCELINE retains exact compiled physical lines when source or host observation
+requires inventory; unused standalone inventory is omitted. Source-
+mapped RXPP input exposes unavailable inventory while using supplied original
+provenance for diagnostics and observations. The C-owned map adapter sits above
+physical Level L origins and is absent from generated runtime calls. The focused
+`llcompiler_c_group3_opt_rxbvm` component lane reuses maintained native fixtures
+and checked expectations with one warm compiler. INTERPRET and automatic Rexx
+source/program invocation remain the final feature work, outside this increment.
 
 Labels after THEN/ELSE (including WHEN THEN) prefix one required instruction,
 retaining nearest-ELSE ownership. Local CALL/function entries can reach an eligible IF-arm

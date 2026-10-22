@@ -95,6 +95,7 @@ request: class
   diagnostic: method = .string
     call run()
     if _error = '' then return ''
+    if initialized(_frontend) then return llcdiagnostics..format(_frontend.bytes(),_source,_offset,_error,_filename,_frontend.mapping())
     split = pos(':',_error)
     if split = 0 then return _filename || ': ' || _error
     return _filename || ': ' || llsource..diagnostic(_source,_offset,left(_error,split - 1),strip(substr(_error,split + 1)))

@@ -34,10 +34,10 @@ main: procedure = .int expose checks failures
   end
   source = 'return 1, /* unterminated' as .binary
   parsed = .llcparse..parsed(source)
-  call check(parsed.status() <> 0 & left(parsed.error(),11) == 'LL_COMMENT:' & pos('unclosed nested comment',parsed.error()) > 0 & pos('35.1',parsed.error()) = 0,'comment failure keeps precedence: ' || parsed.error())
+  call check(parsed.status() <> 0 & pos('RXC-LC-6.1',parsed.error()) > 0 & pos('35.1',parsed.error()) = 0,'comment failure keeps precedence: ' || parsed.error())
   source = "return 'unterminated" as .binary
   parsed = .llcparse..parsed(source)
-  call check(parsed.status() <> 0 & pos('UNTERMINATED',upper(parsed.error())) > 0 & pos('35.1',parsed.error()) = 0,'literal failure keeps precedence')
+  call check(parsed.status() <> 0 & pos('RXC-LC-6.2',parsed.error()) > 0 & pos('35.1',parsed.error()) = 0,'literal failure keeps precedence')
   prefix = 'return 1,' || lf || lf
   source = (prefix || 'return 2') as .binary
   parsed = .llcparse..parsed(source)

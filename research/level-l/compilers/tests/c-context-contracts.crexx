@@ -80,7 +80,7 @@ selectschema: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 23 & data.ops() = 88,'current C v23 has exactly 88 operations')
+  call check(version = 24 & data.ops() = 97,'current C v24 has exactly 97 operations')
   call check(data.opname(40) = 'crexx.c.exit' & data.opname(41) = 'crexx.c.when.truth' & data.opname(42) = 'crexx.c.select.missing','SELECT descriptor order after scalar ARG retirement')
   descriptor = contract.operation('crexx.c.when.truth'); id = descriptor.id()
   call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) = 'value' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.value' & data.fieldname(id,1,2) = 'context' & data.typename(data.fieldtype(id,1,2)) = 'crexx.c.context','WHEN truth requires ordered value and context inputs')
@@ -373,7 +373,7 @@ doschema: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 23 & count = 5 & data.ops() = 88,'C22 has five types and exactly 88 operations')
+  call check(version = 24 & count = 5 & data.ops() = 97,'C24 has five types and exactly 97 operations')
   names = 'do.new do.capture do.start do.entry do.advance do.close while.truth until.truth'
   do i = 1 to 8
     call check(data.opname(42 + i) = 'crexx.c.' || word(names,i),'DO descriptor order after scalar ARG retirement ' || i)
@@ -420,7 +420,7 @@ transfercontracts: procedure = .void
   do i = 1 to data.familycount()
     if data.familyname(i) = 'crexx.c' then version = data.version(i)
   end
-  call check(version = 23 & count = 5 & data.ops() = 88,'transfer foundation retains C22/five types/88 operations')
+  call check(version = 24 & count = 5 & data.ops() = 97,'transfer foundation retains C24/five types/97 operations')
   call check(data.opname(51) = 'crexx.c.transfer.invalid','transfer is descriptor 51 after scalar ARG retirement')
   call doshape(contract,'transfer.invalid','','','code:crexx.g.text name:crexx.g.text','none','condition','diverges')
   call forgedschema(artifacts,8)

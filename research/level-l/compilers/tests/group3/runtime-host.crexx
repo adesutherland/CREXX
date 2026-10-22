@@ -1,0 +1,88 @@
+/* Owning host consumer: configuration, source replacement, failures and reuse. */
+options levelb comments_dash numeric_classic
+import rxfnsb
+import g3runtime
+import g3inventory
+import rexxvalue
+import rexxclassicconfig
+import rexxclassichost
+import rexxclassichostprotocol
+
+main: procedure = .int
+  errors = 0
+  config = .RexxClassicConfig('UTF8')
+  call config.setTextOtherBlanks('·')
+  call config.setTextDatatypeDigits('٠١٢٣٤٥٦٧٨٩')
+  call config.appendSourceLine('stale template')
+  request = .RexxClassicHostRequest('FUNCTION','configured language')
+  call request.appendText('configured')
+  call request.setConfiguration(config)
+  result = g3runtime..run(request)
+  errors = errors + check(result.indicator() = 'R','configured root result')
+  if result.indicator() = 'R' then errors = errors + check(result.value().asString() == 'b|a/b|0102|0000000100000010|1|12','configured word/blank/radix services')
+  source_request = .RexxClassicHostRequest('FUNCTION','source identity differs from inventory')
+  call source_request.appendText('source')
+  call source_request.setConfiguration(config)
+  source_result = g3runtime..run(source_request)
+  errors = errors + check(source_result.indicator() = 'R','source inventory root result')
+  if source_result.indicator() = 'R' then do
+    inventory = source_result.value().asString()
+    errors = errors + check(inventory == '12|/* Configured BIFs use the current host-owned service, never a default copy. */|options levelc','compiled original inventory replaces stale host lines')
+  end
+  errors = errors + check(config.sourceLineCount() = 1 & config.sourceLine(1) == 'stale template','detached execution preserves configuration template')
+  random_request = .RexxClassicHostRequest('FUNCTION','random root')
+  call random_request.appendText('random')
+  call random_request.setConfiguration(config)
+  first = g3runtime..run(random_request)
+  second = g3runtime..run(random_request)
+  errors = errors + check(first.indicator() = 'R' & second.indicator() = 'R','independent random roots complete')
+  if first.indicator() = 'R' & second.indicator() = 'R' then errors = errors + check(first.value().asString() == '1|1|1' & second.value().asString() == '1|1|1','seed reset and bounded execution-local random state')
+  call config.seedRandom(1729)
+  expected_random = config.nextRandom(1000)
+  expected_random_text = expected_random as .string
+  call config.seedRandom(1729)
+  unseeded = .RexxClassicHostRequest('FUNCTION','independent random snapshot')
+  call unseeded.appendText('next')
+  call unseeded.setConfiguration(config)
+  random_a = g3runtime..run(unseeded)
+  random_b = g3runtime..run(unseeded)
+  errors = errors + check(random_a.indicator() = 'R' & random_b.indicator() = 'R','independent seeded-template roots complete')
+  if random_a.indicator() = 'R' & random_b.indicator() = 'R' then errors = errors + check(random_a.value().asString() == expected_random_text & random_b.value().asString() == expected_random_text,'root random draws do not advance the sibling snapshot')
+  errors = errors + check(config.nextRandom(1000) = expected_random,'host random draws preserve the template random state')
+  bad_request = .RexxClassicHostRequest('FUNCTION','byte error root')
+  call bad_request.appendText('bad')
+  call bad_request.setConfiguration(config)
+  bad = g3runtime..run(bad_request)
+  errors = errors + check(bad.indicator() = 'E' & bad.hasCondition(),'byte-domain error has owned condition')
+  if bad.hasCondition() then do
+    problem = bad.condition()
+    errors = errors + check(problem.name() = 'CLASSIC_SYNTAX' & pos('23.1',problem.message()) > 0,'byte-domain error identity')
+  end
+  recovered = g3runtime..run(request)
+  errors = errors + check(recovered.indicator() = 'R','same configuration recovers after failed root')
+  callback_config = .RexxClassicConfig('UTF8')
+  call callback_config.registerHostHook('SAY',.InventoryHook())
+  callback_request = .RexxClassicHostRequest('FUNCTION','callback source identity')
+  call callback_request.setConfiguration(callback_config)
+  callback_result = g3inventory..run(callback_request)
+  errors = errors + check(callback_result.indicator() = 'R','host callback sees source without a source-BIF call')
+  if callback_result.indicator() = 'R' then errors = errors + check(callback_result.value().asString() == 'complete','source-observing callback preserves completion')
+  if errors = 0 then say 'GROUP3_RUNTIME_OK'
+  return errors
+
+check: procedure = .int
+  arg ok = .boolean, detail = .string
+  if ok then return 0
+  say 'GROUP3_RUNTIME_FAIL' detail
+  return 1
+
+InventoryHook: class implements .RexxClassicHostHook
+  *: factory
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    count = window.valueOther('SOURCELINES')
+    first = window.valueOther('SOURCELINE',1)
+    if \count.found() | \first.found() then assembler signal 'ERROR','missing host source inventory'
+    if count.value().asString() \== '3' | first.value().asString() \== 'options levelc' then assembler signal 'ERROR','wrong host source inventory'
+    return .RexxClassicHostHookResult.absent()

@@ -96,7 +96,7 @@ sourcecontracts: procedure = .void
   call bad('if 1 then trace value else nop','35.1','value')
   call bad("if '雪' = '雪' then trace value +",'35.1','+')
   comment = .llcparse..parsed('trace value /* open' as .binary)
-  call check(comment.status() <> 0 & pos('LL_COMMENT:',comment.error()) = 1 & pos('35.1',comment.error()) = 0,'unclosed comment retains its owning shared cause: ' || comment.error())
+  call check(comment.status() <> 0 & pos('RXC-LC-6.1',comment.error()) > 0 & pos('35.1',comment.error()) = 0,'unclosed comment retains its owning shared cause: ' || comment.error())
   literal = .llcparse..parsed("trace value 'open" as .binary)
   call check(literal.status() <> 0 & pos('35.1',literal.error()) = 0,'unclosed literal retains its shared lexical cause: ' || literal.error())
   return
@@ -126,7 +126,7 @@ raw: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 23 & types = 5 & data.ops() = 88,'C22/five C types/88 operations')
+  call check(version = 24 & types = 5 & data.ops() = 97,'C24/five C types/97 operations')
   id = contract.operation('crexx.c.trace').id()
   call check(id = 86 & data.arity(id,1) = 2 & data.arity(id,2) = 0 & data.arity(id,3) = 0,'one appended void TRACE operation')
   call check(data.fieldname(id,1,1) == 'value' & data.fieldname(id,1,2) == 'context','TRACE input names')

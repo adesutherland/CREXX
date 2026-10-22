@@ -1,0 +1,129 @@
+/* Independent append-only C24 identities and raw/loaded source-map admission. */
+options levelb
+import rxfnsb
+import llir
+import llcir
+import llirservices
+import llcrxas
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  i = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  version = 0; types = 0
+  do family = 1 to data.familycount()
+    if data.familyname(family) == 'crexx.c' then version = data.version(family)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
+  end
+  call check(version = 24 & types = 5 & data.ops() = 97,'C24/97/five-type inventory')
+  call check(data.opname(63) == 'crexx.c.call.external' & data.opname(87) == 'crexx.c.call.policy' & data.opname(88) == 'crexx.c.clause.complete','existing operation identities survive append')
+  do i = 1 to 8
+    name = word('pow idiv rem strictne strictlt strictgt strictle strictge',i)
+    call check(data.opname(88 + i) == 'crexx.c.' || name,'append identity for ' || name)
+    call check(data.arity(88 + i,1) = 3 & data.arity(88 + i,2) = 1,'binary borrowed-context shape ' || name)
+  end
+  id = contract.operation('crexx.c.source.map').id()
+  call check(id = 97 & data.arity(id,1) = 0 & data.arity(id,2) = 0 & data.arity(id,3) = 2,'single metadata-only source.map shape')
+  call check(data.effectvalue(id,1) == 'source.observation' & data.effectvalue(id,2) == 'none','source.map retains source observation without a runtime failure')
+  reasons = .string[]
+  reasons[1] = ''; reasons[2] = 'single first entry declaration'; reasons[3] = 'single first entry declaration'
+  reasons[4] = 'cleaned bytes differ'; reasons[5] = 'filename differs'; reasons[6] = 'SRCMAP_UNBALANCED'
+  reasons[7] = 'conflicting source.map'; reasons[8] = 'owned physical source'
+  reasons[9] = 'mapped coordinates exceed RXAS source metadata range'
+  do mode = 1 to 9
+    graph = fixture(contract,mode)
+    call check(graph.error() == '','generic-valid source.map case ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    call admission(graph,argv[1],mode = 1,reasons[mode],'fresh ' || mode)
+    loaded = llir..loadbinary(contract,graph.binary())
+    call check(loaded.error() == '' & bincompare(loaded.binary(),graph.binary()) = 0,'owned binary load preserves case ' || mode)
+    if loaded.error() == '' then call admission(loaded,argv[1],mode = 1,reasons[mode],'loaded ' || mode)
+    if mode = 1 then do
+      changed = llirservices..optimise(reference graph)
+      call check(changed.status() <> 'invalid' & changed.status() <> 'limit','source.map survives admitted optimisation')
+      if changed.status() <> 'invalid' & changed.status() <> 'limit' then call admission(changed.result(),argv[1],1,'','transformed mapped graph')
+    end
+  end
+  if failures = 0 then say 'G3_IR_OK'
+  return failures
+
+check: procedure = .void expose checks failures
+  arg ok = .int, label = .string
+  checks = checks + 1
+  if ok then return
+  failures = failures + 1; say 'G3_IR_FAIL|' || label
+  return
+
+admission: procedure = .void
+  arg graph = .llir..module, artifacts = .string, accepted = .int, reason = .string, label = .string
+  saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  if accepted then do
+    call check(selected.status() = 0 & output.bytes() > 0,label || ' successful selector: ' || selected.error())
+    if selected.status() = 0 then do
+      text = output.text()
+      call check(pos('original.rexx',text) > 0 & pos('source.map()',text) = 0 & pos('llcsrcmap.',text) = 0,label || ' mapped origin with no compiler helper')
+      limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+      call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LIMIT',limited.error()) > 0,label || ' bounded atomic selector refusal')
+      call check(text == output.text(),label || ' earlier output remains owned after refusal')
+    end
+  end
+  else call check(selected.status() <> 0 & output.bytes() = 0 & pos(reason,selected.error()) > 0,label || ' cause-specific refusal: ' || selected.error())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' immutable caller graph')
+  return
+
+/* Duplicate/misplaced, wrong cleaned bytes/identity, malformed wire,
+ * conflicting function declarations and synthetic provenance are independent. */
+fixture: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  builder = .llir..builder(contract)
+  clean = "say 'mapped'" as .binary
+  file = builder.source('mapped-ir.rexx',clean)
+  at = file.origin(0,<blen>(clean)); generated = builder.synthetic('independent C24 setup')
+  count = 1; if mode = 7 then count = 2
+  do function_index = 1 to count
+    name = '$MAIN'; if function_index = 2 then name = '$SECOND'
+    fn = builder.function(name,contract.type('crexx.c.result'))
+    ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+    context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+    setup = fn.block('setup'); dispatch = fn.block('dispatch'); body = fn.block('body'); invalid = fn.block('invalid')
+    original = '@"original.rexx"@7l"  say ''mapped''"@3+12{say ''mapped''@}' as .binary
+    if mode = 4 then original = '@1+3{nop@}' as .binary
+    if mode = 6 then original = '@1+12{say ''mapped''' as .binary
+    if mode = 7 & function_index = 2 then original = '@"other.rexx"@7l"  say ''mapped''"@3+12{say ''mapped''@}' as .binary
+    if mode = 9 then original = '@"original.rexx"@4294967296l@3+12{say ''mapped''@}' as .binary
+    filename = 'mapped-ir.rexx'; if mode = 5 then filename = 'foreign.rexx'
+    origin = at; if mode = 8 then origin = generated
+    if mode = 3 then unused = setup.constantbytes(contract.type('crexx.c.value'),'before declaration' as .binary,generated)
+    draft = setup.operation(contract.operation('crexx.c.source.map'),origin)
+    call draft.attribute('original',original); call draft.attribute('filename',filename as .binary); done = draft.finish()
+    if mode = 2 then do
+      draft = setup.operation(contract.operation('crexx.c.source.map'),origin)
+      call draft.attribute('original',original); call draft.attribute('filename',filename as .binary); done = draft.finish()
+    end
+    call setup.store(context,setup.readarg(1,generated),generated)
+    call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+    draft = dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+    call draft.input('context',dispatch.load(context,generated)); call draft.input('entry',dispatch.load(entry,generated))
+    integer = .llir..intcodec(); call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x)
+    tested = draft.finish(); call dispatch.branch(tested.result(),body,invalid,generated)
+    draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); done = draft.finish()
+    call absent(invalid,contract,generated)
+    draft = body.operation(contract.operation('crexx.c.procedure.consume'),at)
+    call draft.input('context',body.load(context,at)); done = draft.finish()
+    draft = body.operation(contract.operation('crexx.c.say'),at)
+    call draft.input('value',body.constantbytes(contract.type('crexx.c.value'),'mapped' as .binary,at))
+    call draft.input('context',body.load(context,at)); done = draft.finish()
+    call absent(body,contract,at)
+  end
+  return builder.finish()
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
+  call block.returnvalue(finished.result(),origin)
+  return

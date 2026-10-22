@@ -672,9 +672,15 @@ checked: class
       do while opid > 0
         if charge() = 0 then return
         op = graph.operation(opid); name = op.name()
-        call generated(op); if _error <> '' then return
+        if name <> 'crexx.c.source.map' then call generated(op)
+        if _error <> '' then return
         if name = 'core.jump' | name = 'core.protect' then leave
         allowed = 0
+        /* C24 source provenance has no inputs/results or runtime work and
+         * precedes all parameter/dispatch setup. The selector's source-map
+         * admission independently owns payload and physical provenance; this
+         * structural allowance cannot replace or move any entry guard. */
+        if name = 'crexx.c.source.map' then allowed = opid = store.get(2,b,2)
         if name = 'core.argument' then allowed = store.get(3,opid,12) = 1 | store.get(3,opid,12) = 2
         /* Structural allowance only. Mandatory signal admission later owns
          * the exact payload, unique setup/store and complete all-record uses. */

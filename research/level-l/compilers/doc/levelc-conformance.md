@@ -10,18 +10,20 @@ comparison implementation; its defects are not acceptance targets.
 
 ## Current baseline
 
-Committed local profiles cover bounded expressions/control, shared local calls
-and PROCEDURE/EXPOSE, RETURN/EXIT, ARG/PARSE, selected queues, explicit and
-implicit ADDRESS, NUMERIC and binding routes for all 95 shared BIF names.
-A binding route does not establish complete BIF, host or platform conformance.
+Locally delivered profiles cover admitted static source, expression/numeric and
+control forms, shared local calls and PROCEDURE/EXPOSE, RETURN/EXIT, ARG/PARSE,
+selected queues, explicit and implicit ADDRESS, NUMERIC and the static
+value/context/error integration of all 95 shared BIF names. Full BIF-CHECK,
+host, platform and complete-C acceptance remain separate obligations.
 
 The [whole SIGNAL contract](architecture.md#signal-complete-contract) combines
 retained direct/quoted/VALUE transfers, seven-condition ON/OFF, producers,
 cleanup and typed payload/origin transport as one complete instruction.
 The [whole practical TRACE contract](architecture.md#trace-complete-contract)
 adds source forms, shared activation options/query state, command inhibition
-and a private observer over existing B services. The current C23 family has
-88 operations, five C types and 38 target exports. These instructions include
+and a private observer over existing B services. Group 3 extends the C23
+baseline to C24 with 97 operations, five C types and 38 target exports;
+its static profile is locally qualified. These instructions include
 their required helpers and dependencies; complete C remains open.
 
 The Group 2 real HALT ingress uses the existing execution-owner pending
@@ -44,7 +46,11 @@ into separate prerequisite or partial-profile deliveries.
   codepoint positions, exact text and no implicit normalization. Ordinals
   0–255 retain the fixed Latin-1 bridge; byte-valued operations reject input
   above U+00FF rather than reinterpret UTF-8 bytes. Unicode behavior above 255
-  is intentional. Names use the shared simple-casing policy.
+  is intentional. Ordinary Classic C character and name casing keeps an input
+  codepoint in 0–255 within that range, retaining the original character when a
+  simple mapping would leave it. Higher codepoints use simple Unicode mappings.
+  Explicit Unicode casing retains its full contract; generic B/G Unicode
+  semantics are unchanged.
 - Modern SAY emits Unicode text through the output route, rather than promising
   historical raw-byte output. Wider host/callback/platform proof remains in
   the [SAY ledger row](levelc-requirements.md#whole-instruction-work-units).
@@ -88,6 +94,48 @@ Classic source invocation remains deferred to final INTERPRET. Current UTC-based
 TIME(E/R) is preserved. Any required new public API/ISA/platform disposition
 retains its exact approval gate. Formal compiler/platform/delivery QA remains
 open under [PLAN](../PLAN.md#group2-calls-host-plan).
+
+## Static language functionality
+
+The [Group 3 contract](architecture.md#group3-static-language-contract) is
+locally qualified for its complete admitted static profile. It adds left-associative
+power, integer division/remainder and the complete admitted strict/negated
+comparison family, preserving tighter prefix precedence and eager logical
+operands. `llctarget.binaryop` maps arithmetic to existing shared contextual
+operations and strict comparisons to existing RexxValue methods. Shared B owns
+numeric normalization, rounding, LOSTDIGITS and Classic error identities.
+No BIF body, numeric representation or pool algorithm is replaced.
+
+Static admission covers the agreed header, contextual-symbol, constant, quoted
+Unicode/NUL, whitespace/comment/continuation and diagnostic forms, including dead
+source. The five reserved period symbols keep their live pool route; other
+nonnumeric period constants use 50.1. Unquoted ending-period function names use
+51.1; quoted routine names retain their existing bypass.
+`7d`/`7D` are the constant `7D`. Source uses the pinned Unicode/default policy;
+runtime character configuration does not re-lex an already compiled unit.
+Broader configurable-source callbacks and platform negator policy retain their
+existing decision and acceptance gates.
+
+Root/provider entries install their Config-owned source inventory once when a
+SOURCELINE call or exported host boundary makes it observable, using compile-owned
+physical lines with exact Unicode/NUL and LF/CR/CRLF handling. Unobservable simple
+programs omit that setup. Internal labels share the inventory. An SRCMAP
+generated buffer is
+not an original inventory: SOURCELINE reports zero available lines, while mapped
+diagnostics/TRACE use original text only when the RXPP wire supplies it.
+`llcsrcmap` owns bounded decoding and provenance; generic L retains physical
+byte origins. The C24 `source.map` declaration is compile-time metadata and
+introduces no emitted decoder, runtime source reread or target export.
+
+All 95 BIF names keep direct existing entries, ordered operands, raw omissions
+and borrowed current Config/pool/activation. The
+[BF01–09 crosswalk](levelc-requirements.md#group3-bif-crosswalk) reuses maintained
+native C sources with checked expected values, alongside new all-name error,
+configured-context, ordinal/casing and source-map boundaries in `tests/group3`.
+These are qualification inputs, not inherited native passes. One prepared
+normal Debug C-opt/IR-on/rxbvm lane qualifies this local increment; full BIF-CHECK,
+CFC, platform/delivery and formal compiler acceptance remain open.
+INTERPRET and new automatic Rexx-program invocation remain excluded and last.
 
 <a id="practical-trace-target"></a>
 
@@ -211,17 +259,15 @@ focused development closure from installed/platform and formal acceptance.
 
 ## Material work remaining
 
-Full expression coverage remains with Group 3 / CLC-STEP04. The current
-grammar lacks power `**`, integer division `%`, remainder `//` and the complete
-strict/negated comparison family, including binary strict inequality `\==`.
-Negated strict equality `\(a == b)` is currently admitted. All 95 BIF names have
-bindings; their complete language/context contracts and retained source
-inventory still require new-compiler integration/qualification.
+Group 3 static source/expression, retained-source/SRCMAP and all-name BIF/context
+integration is locally qualified under its selected component contract.
+The full per-name BIF-CHECK and complete-C acceptance criteria retain their wider
+verification; local qualification does not close them.
 
 The [plan](../PLAN.md#remaining-actions) and
 [ledger](levelc-requirements.md#shared-requirements-before-instruction-closure)
-retain remaining expression/BIF/host/lifecycle contracts, exact diagnostic
-completion, delivery and declared platforms. Group 2 supplies execution-local
+retain full-ledger, BIF-CHECK, host/lifecycle, formal compiler, delivery and
+declared-platform acceptance. Group 2 supplies execution-local
 real HALT ingress; declared platform proof and general outward raw-provider event
 resumption remain open.
 INTERPRET remains required and last. Accepted profile choices do not close these

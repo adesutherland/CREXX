@@ -7,6 +7,9 @@ This document records the implemented contract. All eight criteria for this
 approved local programme are verified in the
 [historical development receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/levelc-unicode-2026-10-09/README.md); wider
 Level C/Release 1 obligations retain their separate status.
+The later ordinary-case Latin-1 boundary below belongs to the
+[Group 3 plan](../../research/level-l/compilers/PLAN.md#group3-static-language-plan)
+and its focused qualification; the earlier receipt does not qualify that change.
 
 ## Ordinary values and byte compatibility
 
@@ -27,12 +30,26 @@ Symbols admit the source scanner's Unicode letter categories, with its existing
 ASCII digits and symbol punctuation. Runtime SYMBOL/DATATYPE and compiled pool
 lookup use that same letter authority. This is not a general UAX #31 identifier
 profile: combining marks or emoji are not newly admitted identifier characters.
-Simple Unicode case mapping identifies compiled names and implements ordinary
-UPPER/LOWER and default TRANSLATE without expanding a scalar into several
-scalars. Compiler and runtime share pinned mappings, including changes in UTF-8
-width. The pre-existing Classic micro-sign uppercase identity is retained.
-Full casing and folding remain explicit operations. BYTE-profile direct clients
-and RexxScript retain their existing limited case and name policy.
+Ordinary Classic case mapping identifies compiled names and implements
+UPPER/LOWER, default TRANSLATE and PARSE UPPER (including ARG/PULL) without
+expanding a scalar into several scalars. For an input in U+0000–U+00FF, a simple
+mapping is applied only if its result also lies in U+0000–U+00FF; otherwise the
+original scalar is retained. Thus ordinary UPPER preserves both `µ` and `ÿ`.
+An input above U+00FF uses the pinned simple Unicode mapping, including mappings
+back into Latin-1: ordinary LOWER maps `Ÿ` to `ÿ`. This input-domain rule does
+not require upper/lower reversibility, and ordinary canonical names `ÿ` and `Ÿ`
+remain distinct. LENGTH and all character positions continue to count
+codepoints, preserving every Latin-1 count and the fixed byte-ordinal bridge.
+
+The Classic C compiler and B-implemented Classic runtime obtain these mappings
+from the single `cmake/CrexxClassicUnicode.cmake` generator, including mappings above Latin-1
+that change UTF-8 width. Its letter-category data and lexer rules are unchanged.
+Explicit Unicode TOUPPERCASE/TOLOWERCASE and the folding functions keep their
+full Unicode contracts; TOUPPERCASE can therefore map `ÿ` to `Ÿ` and expand
+`ß` to `SS`. Ordinary Level B/G casing and `rxunicode` are unchanged; the policy
+is confined to Classic Level C. It is also the agreed future Level O rule,
+without adding a Level O implementation here. BYTE-profile direct clients and
+RexxScript retain their existing limited case and name policy.
 
 Existing Unicode White_Space word/PARSE defaults and configured extra blanks
 remain in force. Padding counts characters. Ordinary nonnumeric ordering follows
@@ -156,6 +173,7 @@ uses the existing host filesystem qualification service.
 | --- | --- |
 | All 256 bytes, NUL, literals, PARSE positions, conversions and bitwise operations | `classic_unicode_contract.py`: ordinals and byte_error cases |
 | Unicode letters, simple mappings that shrink/grow UTF-8, pool/SIGNAL/CALL parity | `levelc_unicode_symbols.rexx`, case_width |
+| Ordinary Latin-1 casing stays within 0–255; higher simple mappings and explicit full casing remain distinct | `research/level-l/compilers/tests/group3/check-group3.py`: all-256 ordinary upper/lower oracle and selected name/PARSE/explicit-Unicode controls |
 | Exact text, codepoint operations and explicit algorithms | `levelc_unicode_services.rexx`, ordinals, replacement_omission |
 | Eight stream BIFs, raw bytes, positions/counts/close and host qualification | streams |
 | Every codec, codepage mappings above U+00FF, strict/replacement and default input | codec_*, strict_stream, replacement_stream, default_transport, parse_linein |

@@ -73,6 +73,32 @@ share the existing child/byte-channel owners. Native C frontend, automatic
 Classic source invocation and full compiler/platform QA remain outside this
 increment; INTERPRET stays last.
 
+## Group 3 ownership
+
+The [static Group 3 plan](../PLAN.md#group3-static-language-plan) and
+[contract](architecture.md#group3-static-language-contract) commission one
+complete static language increment, locally qualified for its admitted static
+profile. WP-05 owns source/header/classification,
+expressions, dead-source diagnostics and C24 IR integration. WP-03 owns the
+minimal existing `llctarget.binaryop` adaptation, Config source-inventory reset
+and the C-owned `llcsrcmap` adapter. Shared B retains value, numeric, pool,
+Unicode and all 95 BIF algorithms; generic L retains physical source/IR owners.
+The Classic C casing boundary is implemented in B but does not change generic
+B/G Unicode semantics or explicit full Unicode casing.
+The integrator owns selector provenance/inventory emission, shared schema/counts,
+CMake, prepared builds and the local commit.
+
+WP-07/10 owns `tests/group3` and the maintained native-source/checked-oracle
+crosswalk, including direct source-map and raw/loaded C24 admission fixtures.
+WP-12/coordinator owns coherent source and first representative RXAS review
+before the finite prepared Debug C-opt/IR-on/rxbvm lane. The
+[BIF family crosswalk](levelc-requirements.md#group3-bif-crosswalk) distinguishes
+new C transport/context proof from reused library qualification. SRCMAP has no
+original SOURCELINE inventory; supplied line text belongs to provenance only.
+Native C remains read-only. INTERPRET, new automatic Rexx-program invocation,
+publication and full CFC/platform/delivery/formal QA remain outside this local
+increment, with their existing acceptance and decision gates preserved.
+
 ## Group 4 ownership
 
 The [Group 4 plan](../PLAN.md#group4-infrastructure-plan) and

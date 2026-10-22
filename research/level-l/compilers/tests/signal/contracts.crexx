@@ -65,7 +65,7 @@ sourcecontracts: procedure = .void
   call bad('if 1 then signal value else nop','19.4','value')
   call bad("if 'é' = 'é' then signal value +",'35.1','+')
   comments = .llcparse..parsed('signal value /* open' as .binary)
-  call check(comments.status() <> 0 & pos('LL_COMMENT:',comments.error()) = 1 & pos('unclosed',comments.error()) > 0 & pos('19.4',comments.error()) = 0,'shared comment error retains precedence: ' || comments.error())
+  call check(comments.status() <> 0 & pos('RXC-LC-6.1',comments.error()) > 0 & pos('19.4',comments.error()) = 0,'shared comment error retains precedence: ' || comments.error())
   literal = .llcparse..parsed("signal 'open" as .binary)
   call check(literal.status() <> 0 & pos('19.4',literal.error()) = 0,'shared literal failure retains precedence: ' || literal.error())
   incomplete = .llcparse..parsed('if 1 then signal P else' as .binary)
@@ -108,7 +108,7 @@ raw: procedure = .void
   do i = 1 to data.types()
     if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
   end
-  call check(version = 23 & types = 5 & data.ops() = 88,'C22/five types/88 operations')
+  call check(version = 24 & types = 5 & data.ops() = 97,'C24/five types/97 operations')
   do i = 1 to 4
     id = contract.operation('crexx.c.signal.' || word('mark name test invalid',i)).id()
     call check(id = 73 + i & data.arity(id,1) = 2 & data.arity(id,2) = (i = 2 | i = 3),'exact appended SIGNAL descriptor ' || i)

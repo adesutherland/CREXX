@@ -102,7 +102,7 @@ sourcecontracts: procedure = .void
   call bad('select; when 1 then A: ; end','14.3','then')
   call bad("if '雪' = '雪' then A:",'14.3','then')
   comment = .llcparse..parsed('if 1 then A: /* open' as .binary)
-  call check(comment.status() <> 0 & pos('LL_COMMENT:',comment.error()) = 1 & pos('14.3',comment.error()) = 0,'comment failure retains lexical priority: ' || comment.error())
+  call check(comment.status() <> 0 & pos('RXC-LC-6.1',comment.error()) > 0 & pos('14.3',comment.error()) = 0,'comment failure retains lexical priority: ' || comment.error())
   literal = .llcparse..parsed("if 1 then A: say 'open" as .binary)
   call check(literal.status() <> 0 & pos('14.3',literal.error()) = 0,'unterminated literal retains lexical priority: ' || literal.error())
   return

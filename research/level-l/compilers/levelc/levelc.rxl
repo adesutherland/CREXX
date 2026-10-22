@@ -102,20 +102,29 @@ calloff: token = 97
 callcondition: token = 98
 callhandlername: token = 99
 callname: token = 100
+power: token = 101 then tree pow()
+integerdivide: token = 102 then tree idiv()
+remainder: token = 103 then tree rem()
+strictne: token = 104 then tree strictne()
+strictlt: token = 105 then tree strictlt()
+strictgt: token = 106 then tree strictgt()
+strictle: token = 107 then tree strictle()
+strictge: token = 108 then tree strictge()
 
 comment: comments nested "/*" "*/"
 scan: lexer input utf8
   digit: charset = U+0030 to U+0039
   letter: charset = unicode.gc.L | '!' | '?' | '_' | '@' | '#' | '$'
-  hspace: charset = U+0009 | U+0020
+  hspace: charset = U+0009 | U+000B | U+000C | U+0020
+  opblank: charset = U+0009 | U+0020
   newline: charset = U+000A | U+000D
-  squote.body: charset = (scalar except (U+0000 to U+001F | "'")) | U+0009
-  dquote.body: charset = (scalar except (U+0000 to U+001F | '"')) | U+0009
+  squote.body: charset = scalar except (U+000A | U+000D | "'")
+  dquote.body: charset = scalar except (U+000A | U+000D | '"')
   numeric: pattern = (digit+ ("." digit*)? | "." digit+) (("e" | "E") ("+" | "-")? digit+)?
   name: pattern = letter (letter | digit | ".")*
   reserved: pattern = "." (("m" | "M") ("n" | "N") | ("r" | "R") (("c" | "C") | ("s" | "S") | ("e" | "E") ("s" | "S") ("u" | "U") ("l" | "L") ("t" | "T")) | ("s" | "S") ("i" | "I") ("g" | "G") ("l" | "L"))
   whitespace: rule = hspace+ then skip
-  numeric.literal: rule = numeric ("d" | "D")? then emit number
+  numeric.literal: rule = numeric then emit number
   name.literal: rule = name | reserved then emit identifier
   type.literal: rule = "." name then emit typename
   constant.literal: rule = (digit (letter | digit | ".")* | "." (letter | digit | ".")+) then emit constantname
@@ -127,22 +136,30 @@ scan: lexer input utf8
   op.2: rule = "-" then emit minus
   op.3: rule = "*" then emit times
   op.4: rule = "/" then emit divide
-  op.5: rule = "||" then emit concat
+  op.5: rule = "|" opblank* "|" then emit concat
   op.6: rule = "(" then emit open
   op.7: rule = ")" then emit close
   op.8: rule = "," then emit comma
   op.9: rule = ":" then emit colon
   op.10: rule = "<" then emit lt
   op.11: rule = ">" then emit gt
-  op.12: rule = "<=" then emit le
-  op.13: rule = ">=" then emit ge
-  op.14: rule = "<>" then emit ne
-  op.15: rule = "==" then emit strict
+  op.12: rule = "<" opblank* "=" | "\" opblank* ">" then emit le
+  op.13: rule = ">" opblank* "=" | "\" opblank* "<" then emit ge
+  op.14: rule = "<" opblank* ">" | ">" opblank* "<" | "\" opblank* "=" then emit ne
+  op.15: rule = "=" opblank* "=" then emit strict
   op.16: rule = "&" then emit and
   op.17: rule = "|" then emit or
-  op.18: rule = "&&" then emit xor
+  op.18: rule = "&" opblank* "&" then emit xor
   op.19: rule = "\" then emit not
   op.20: rule = "." then emit parsedot
+  op.21: rule = "*" opblank* "*" then emit power
+  op.22: rule = "%" then emit integerdivide
+  op.23: rule = "/" opblank* "/" then emit remainder
+  op.24: rule = "\" opblank* "=" opblank* "=" then emit strictne
+  op.25: rule = "<" opblank* "<" then emit strictlt
+  op.26: rule = ">" opblank* ">" then emit strictgt
+  op.27: rule = "<" opblank* "<" opblank* "=" | "\" opblank* ">" opblank* ">" then emit strictle
+  op.28: rule = ">" opblank* ">" opblank* "=" | "\" opblank* "<" opblank* "<" then emit strictge
 
 parse: parser semantics contextfree input tokens start program backend lr1
   program: rule = statements as body then tree Program(body = body)
@@ -250,13 +267,15 @@ parse: parser semantics contextfree input tokens start program backend lr1
     then tree Chain(operands = item+, operators = op*)
   logical.and: rule = comparison as item (and as op comparison as item)*
     then tree Chain(operands = item+, operators = op*)
-  comparison: rule = concatenation as item ((assign | ne | lt | gt | le | ge | strict) as op concatenation as item)*
+  comparison: rule = concatenation as item ((assign | ne | lt | gt | le | ge | strict | strictne | strictlt | strictgt | strictle | strictge) as op concatenation as item)*
     then tree Chain(operands = item+, operators = op*)
   concatenation: rule = additive as item ((concat | blank | abut) as op additive as item)*
     then tree Chain(operands = item+, operators = op*)
   additive: rule = multiplicative as item ((plus | minus) as op multiplicative as item)*
     then tree Chain(operands = item+, operators = op*)
-  multiplicative: rule = unary as item ((times | divide) as op unary as item)*
+  multiplicative: rule = power.expression as item ((times | divide | integerdivide | remainder) as op power.expression as item)*
+    then tree Chain(operands = item+, operators = op*)
+  power.expression: rule = unary as item (power as op unary as item)*
     then tree Chain(operands = item+, operators = op*)
   unary: rule = prefix | cast.value
   prefix: rule = (plus | minus | not) as op unary as value then tree Prefix(operator = op, value = value)

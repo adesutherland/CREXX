@@ -202,13 +202,18 @@ binaryop: procedure = .RexxValue
   numeric form inherited
   arg operation = .string, left = .RexxValue, right = .RexxValue, context = reference .rexxclassiccontext..RexxClassicContext
   if operation = 'strict' then return left.strictCompareEqual(right)
+  if operation = 'strictne' then return left.strictCompareNotEqual(right)
+  if operation = 'strictlt' then return left.strictCompareLessThan(right)
+  if operation = 'strictgt' then return left.strictCompareGreaterThan(right)
+  if operation = 'strictle' then return left.strictCompareLessOrEqual(right)
+  if operation = 'strictge' then return left.strictCompareGreaterOrEqual(right)
   if operation = 'concat' | operation = 'abut' then return left.concat(right)
   if operation = 'blank' then return left.spaceConcat(right)
-  if wordpos(operation,'add sub mul div eq ne lt le gt ge') > 0 then do
+  if wordpos(operation,'add sub mul div pow idiv rem eq ne lt le gt ge') > 0 then do
     call lostdigitscheck(left,context); call lostdigitscheck(right,context)
   end
-  index = wordpos(operation,'add sub mul div eq ne lt le gt ge and or xor')
-  name = word('ADD SUBTRACT MULTIPLY DIVIDE COMPAREEQUAL COMPARENOTEQUAL COMPARELESSTHAN COMPARELESSOREQUAL COMPAREGREATERTHAN COMPAREGREATEROREQUAL LOGICALAND LOGICALOR LOGICALXOR',index)
+  index = wordpos(operation,'add sub mul div pow idiv rem eq ne lt le gt ge and or xor')
+  name = word('ADD SUBTRACT MULTIPLY DIVIDE POWER INTEGERDIVIDE REMAINDER COMPAREEQUAL COMPARENOTEQUAL COMPARELESSTHAN COMPARELESSOREQUAL COMPAREGREATERTHAN COMPAREGREATEROREQUAL LOGICALAND LOGICALOR LOGICALXOR',index)
   callcontext = bifcontext(name,context)
   result = rexxclassic_expression_binary(reference callcontext,left,right)
   return rexxclassicbif_checked(reference callcontext,result)

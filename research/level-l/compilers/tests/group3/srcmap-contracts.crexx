@@ -1,0 +1,103 @@
+/* Independent RXPP-wire expectations; no native compiler result is an oracle. */
+options levelb
+import rxfnsb
+import llcsrcmap
+
+main: procedure = .int expose errors checks
+  lookup = .int
+  errors = 0; checks = 0
+  raw = 'say "é@@a"' as .binary
+  plain = .llcsrcmap..prepared(raw,0,'plain.rexx',4096)
+  call check(plain.status() = 0 & plain.active() = 0 & bincompare(plain.bytes(),raw) = 0,'disabled map preserves exact bytes')
+  call check(plain.rawoffset(2) = 2 & plain.rawoffset(<blen>(raw)) = <blen>(raw),'disabled raw offsets include EOF')
+  call check(plain.location(0,3).valid() = 0,'disabled source has no invented provenance')
+
+  mapped = .llcsrcmap..prepared('@"one.rexx"@10l"original"@5cabc@+2cdef' as .binary,1,'generated.rexx',4096)
+  call check(mapped.status() = 0 & bincompare(mapped.bytes(),'abcdef' as .binary) = 0,'file line column directives leave only source bytes')
+  first = mapped.location(1,2); second = mapped.location(4,5)
+  call check(first.valid() & first.filename() == 'one.rexx' & first.line() = 10 & first.column() = 5 & first.endcolumn() = 8 & first.text() == 'original' & first.hastext(),'line interval retains explicit base and original text')
+  call check(second.valid() & second.column() = 7 & second.endcolumn() = 10,'relative column uses last explicit base')
+  call check(mapped.rawoffset(0) = 28 & mapped.rawoffset(3) = 35 & mapped.rawoffset(6) = 38,'deleted directives retain raw segment boundaries and EOF')
+  call check(mapped.rawoffset(-1) = -1 & mapped.rawoffset(7) = -1 & mapped.location(0,7).valid() = 0,'invalid offsets and ranges fail without fabricated mapping')
+
+  lines = .llcsrcmap..prepared(('@10l"same"a' || ('0A'x as .string) || 'b@+2l"next"c') as .binary,1,'line.rexx',4096)
+  call check(lines.status() = 0 & bincompare(lines.bytes(),('a' || ('0A'x as .string) || 'bc') as .binary) = 0,'newlines survive stripping')
+  call check(lines.location(2,3).line() = 10 & lines.location(3,4).line() = 12,'ordinary newline does not advance the explicit mapped line')
+
+  cached = .llcsrcmap..prepared('@"cache"@2l"saved"abc@3l"other"x@2lab' as .binary,1,'raw',4096)
+  call check(cached.status() = 0 & cached.location(4,6).line() = 2 & cached.location(4,6).text() == 'saved','line-text cache is keyed by file and mapped line')
+  cleared = .llcsrcmap..prepared('@"first"@2l"saved"a@"second"b@1+4{c@}' as .binary,1,'raw',4096)
+  call check(cleared.status() = 0 & cleared.location(1,2).valid() = 0,'file change clears current original text')
+  explicit = cleared.location(2,3)
+  call check(explicit.valid() & explicit.filename() == 'second' & explicit.line() = 2 & explicit.column() = 1 & explicit.endcolumn() = 5 & explicit.hastext() = 0,'explicit span without original line text remains mapped without invention')
+
+  nested = .llcsrcmap..prepared('@"nested.rexx"@7l"answer = OUTER(totl + 1)"@10c@+0+17{@+6+4{x@}yz@}' as .binary,1,'raw',4096)
+  call check(nested.status() = 0 & bincompare(nested.bytes(),'xyz' as .binary) = 0,'nested spans strip structurally')
+  inner = nested.location(0,1); outer = nested.location(1,3)
+  call check(inner.line() = 7 & inner.column() = 16 & inner.endcolumn() = 20,'narrowest generated interval wins')
+  call check(outer.column() = 10 & outer.endcolumn() = 27,'outer mapping owns its declared source width')
+  tied = .llcsrcmap..prepared('@1+2{@4+7{x@}@}' as .binary,1,'raw',4096)
+  call check(tied.status() = 0 & tied.location(0,1).column() = 1 & tied.location(0,1).endcolumn() = 3,'equal generated widths select the later closed row')
+
+  escaped = .llcsrcmap..prepared('@"a@@b"@1l"say ""x@@y"""@1+3{say "@@" /*@@*/@}' as .binary,1,'raw',4096)
+  call check(escaped.status() = 0 & bincompare(escaped.bytes(),'say "@" /*@*/' as .binary) = 0,'literal markers decode globally inside generated quotes and comments')
+  original = escaped.location(0,3)
+  call check(original.filename() == 'a@b' & original.text() == 'say "x@y"','quoted wire payload decodes doubled quotes and markers')
+  nul = .llcsrcmap..prepared(('@1l"é' || ('00'x as .string) || '雪"@1+2{x@}') as .binary,1,'raw',4096)
+  call check(nul.status() = 0 & nul.location(0,1).text() == 'é' || ('00'x as .string) || '雪','supplied Unicode and NUL original text remain exact')
+  sparse = .llcsrcmap..prepared('@2147483647l@1+1{x@}' as .binary,1,'raw',4096)
+  call check(sparse.status() = 0 & sparse.location(0,1).line() = 2147483647,'large line number requires no blank-line padding')
+
+  call bad('@','SRCMAP_MALFORMED','marker at end of file',0)
+  call bad('a@q','SRCMAP_MALFORMED','unescaped marker is not a source-map directive',1)
+  call bad('@1','SRCMAP_MALFORMED','directive is incomplete',0)
+  call bad('@1q','SRCMAP_MALFORMED','unknown source-map directive',0)
+  call bad('@0l','SRCMAP_MALFORMED','line number is before the start of the source',0)
+  call bad('@-1c','SRCMAP_MALFORMED','column number is before the start of the source',0)
+  call bad('@0+1{x@}','SRCMAP_MALFORMED','span column is before the start of the source',0)
+  call bad('@1+{','SRCMAP_MALFORMED','span length is missing',0)
+  call bad('@1+0{','SRCMAP_MALFORMED','span length must be positive',0)
+  call bad('@1+2x','SRCMAP_MALFORMED','span directive is missing opening brace',0)
+  call bad('@"no end','SRCMAP_MALFORMED','unterminated quoted payload',0)
+  call bad('@"line' || ('0A'x as .string) || 'end"','SRCMAP_MALFORMED','newline in quoted payload',0)
+  call bad('x@}','SRCMAP_UNBALANCED','closing span has no matching opening span',1)
+  call bad('@1+2{x','SRCMAP_UNBALANCED','opening span has no matching closing span',0)
+  call bad('@9223372036854775808l','SRCMAP_MALFORMED','unescaped marker is not a source-map directive',0)
+  call bad('@1+9223372036854775807{x@}','SRCMAP_MALFORMED','span end exceeds supported coordinate range',0)
+  malformed_utf8 = .llcsrcmap..prepared('61FF'x as .binary,1,'raw',4096)
+  call check(malformed_utf8.status() = 1 & pos('RXC-LC-22.1',malformed_utf8.error()) = 1 & malformed_utf8.offset() = 1,'shared UTF8 validation owns malformed source identity and raw offset')
+  limited = .llcsrcmap..prepared('12345' as .binary,1,'raw',4)
+  call check(limited.status() = 2 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,'source bytes are bounded before processing')
+  invalid_mode = .llcsrcmap..prepared('abc' as .binary,2,'raw',4096)
+  call check(invalid_mode.status() = 1 & pos('SRCMAP_MALFORMED:',invalid_mode.error()) = 1,'invalid enable flag has no usable mapping')
+  lookupraw = '@1+1{x@}' as .binary
+  lookuplimited = .llcsrcmap..prepared(lookupraw,1,'raw',<blen>(lookupraw))
+  call check(lookuplimited.status() = 0,'bounded lookup control starts as a valid map')
+  do lookup = 1 to 1024
+    unavailable = lookuplimited.location(-1,0)
+  end
+  call check(lookuplimited.status() = 0,'harmless invalid query does not consume or expire a prepared map')
+  exhausted = 0
+  do lookup = 1 to 1024
+    available = lookuplimited.location(0,1)
+    if lookuplimited.status() <> 0 then do; exhausted = 1; leave; end
+  end
+  call check(exhausted & lookuplimited.status() = 2 & lookuplimited.error() == 'LL_COMPILER_LIMIT: source-map work budget exceeded','repeated interval queries have an explicit bounded work failure')
+  repeated = .llcsrcmap..prepared('@1l"fresh"x' as .binary,1,'raw',4096)
+  call check(repeated.status() = 0 & repeated.location(0,1).text() == 'fresh' & bincompare(mapped.bytes(),'abcdef' as .binary) = 0,'independent prepared requests retain no stale failure or map state')
+  if errors = 0 then say 'G3_SRCMAP_OK'
+  return errors
+
+check: procedure = .void expose errors checks
+  arg ok = .int, detail = .string
+  checks = checks + 1
+  if ok then return
+  errors = errors + 1; say 'G3_SRCMAP_FAIL' detail
+  return
+
+bad: procedure = .void
+  arg raw = .string, code = .string, reason = .string, offset = .int
+  prepared = .llcsrcmap..prepared(raw as .binary,1,'raw',4096)
+  call check(prepared.status() = 1 & prepared.error() == code || ': ' || reason & prepared.offset() = offset,'malformed wire ' || raw)
+  call check(prepared.location(0,0).valid() = 0 & prepared.rawoffset(0) = -1,'failed map publishes no valid provenance')
+  return

@@ -1,0 +1,67 @@
+/* cREXX License (MIT). One prepared compiler service for a finite C contract. */
+options levelb
+namespace g3compile
+import rxfnsb
+import _rxsysb
+import llccompiler
+import llcbindings
+import llir
+import llfileoutput
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 3 then return 2
+  artifacts = argv[1]; rows = readlines(argv[2]); assembler_path = argv[3]
+  requests = 0; have_previous = 0
+  previous = .llir..output; previous_text = .string
+  do row_index = 1 to rows[0]
+    fields = splitrow(rows[row_index])
+    if fields[0] <> 10 then return 2
+    sourcefile = fields[1]; output = fields[2]; logical = fields[3]
+    host = fields[4]; expected = fields[5]
+    say 'START|' || logical
+    /* Keep VM defaults, including ignored asynchronous POSIX_CHLD from the
+     * assembler child. Fatal compiler/VM signals halt; the driver checks its
+     * exit status and diagnostics. A catch-all would intercept ignored CHLD. */
+    do
+      source = readbinary(sourcefile)
+      bindings = .llcbindings..binding[]
+      request = .llccompiler..request(source,artifacts,logical,fields[6] as .int,fields[7] as .int,fields[8] as .int,fields[9] as .int,1,bindings,'',host)
+      status = request.status(); requests = requests + 1
+      if expected <> '' then do
+        if status = 0 | pos(expected,request.error()) = 0 then do
+          say 'FAIL|refusal|' || logical || '|' || request.diagnostic(); return 1
+        end
+        refused = request.output()
+        if refused.bytes() <> 0 then do; say 'FAIL|partial output|' || logical; return 1; end
+        if have_previous then do
+          if previous.text() \== previous_text then do; say 'FAIL|earlier owned output|' || logical; return 1; end
+        end
+        say 'REFUSAL|' || logical || '|' || request.offset() || '|' || request.diagnostic()
+        iterate
+      end
+      if status <> 0 then do; say 'FAIL|compile|' || logical || '|' || request.diagnostic(); return 1; end
+      message = llfileoutput..publish(request.output(),output)
+      if message <> '' then do; say 'FAIL|publish|' || logical || '|' || message; return 1; end
+      if have_previous = 0 then do
+        previous = request.output(); previous_text = previous.text(); have_previous = 1
+      end
+    end
+    arguments = .string[]
+    arguments[1] = '-o'; arguments[2] = left(output,length(output) - 5) || '.rxbin'; arguments[3] = output
+    status = processrun(assembler_path,arguments)
+    if status <> 0 then do; say 'FAIL|assemble|' || logical || '|' || status; return 1; end
+    say 'COMPILED|' || logical
+  end
+  say 'GROUP3_FIXTURES|requests=' || requests || '|PASS'
+  return 0
+
+splitrow: procedure = .string[]
+  arg row = .string
+  fields = .string[]
+  do forever
+    delimiter = pos('|',row)
+    if delimiter = 0 then do; fields[fields[0] + 1] = row; return fields; end
+    fields[fields[0] + 1] = left(row,delimiter - 1)
+    row = substr(row,delimiter + 1)
+  end

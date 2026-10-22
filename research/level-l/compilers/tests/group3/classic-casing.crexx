@@ -1,0 +1,21 @@
+/* Level C Latin-1 casing, Unicode codepoint positions and explicit full casing. */
+options levelc
+all=xrange()
+up=upper(all); low=lower(all); mapped=translate(all)
+parse upper value all with parsed
+say length(all) length(up) length(low) length(mapped) length(parsed)
+say c2x(all)
+say c2x(up)
+say c2x(low)
+say c2x(mapped)
+say c2x(parsed)
+say upper('µßÿ') || '|' || touppercase('µßÿ')
+say upper('Straße') || '|' || touppercase('Straße')
+say lower('İ') || '|' || tolowercase('İ')
+say upper('ſıɐ') || '|' || lower('ȺⱯİŸ')
+say length('ſıɐ') length(upper('ſıɐ')) pos('Ɐ',upper('ſıɐ')) length(lower('ȺⱯİŸ'))
+say length('é🙂ÿ') pos('🙂','é🙂ÿ') substr('é🙂ÿ',3,1)
+parse upper value 'µßÿſıɐ' with parsed
+say parsed
+ÿ='Latin'; Ÿ='Unicode'
+say ÿ || '|' || Ÿ

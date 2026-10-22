@@ -1,5 +1,7 @@
 # Share the scanner's exact Unicode letter categories with Classic runtime
-# validation. Generated sources remain in the build tree; no Python dependency.
+# validation. Case policy belongs to Level C and its B-implemented Classic
+# runtime; it does not change ordinary Level B/G or explicit Unicode casing.
+# Generated sources remain in the build tree; no Python dependency.
 function(crexx_classic_u32_hex value output)
     set(result "")
     set(digits "0123456789ABCDEF")
@@ -73,7 +75,7 @@ function(crexx_classic_unicode_source output)
     set(case_input "${CMAKE_SOURCE_DIR}/lib/rxfnsb/unicode/data/unicode-17.0.0/UnicodeData.txt")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${case_input}")
     file(STRINGS "${case_input}" case_lines)
-    set(c_header "/* Generated from pinned Unicode 17.0.0 simple case mappings. */\n")
+    set(c_header "/* Generated from pinned Unicode 17.0.0 simple case mappings, preserving Latin-1 input range. */\n")
     foreach(direction upper lower)
         set(case_records "")
         set(count 0)
@@ -86,9 +88,16 @@ function(crexx_classic_unicode_source output)
                 else()
                     set(mapped_hex "${CMAKE_MATCH_3}")
                 endif()
-                if(NOT mapped_hex STREQUAL "" AND NOT (direction STREQUAL "upper" AND cp_hex STREQUAL "00B5"))
+                if(NOT mapped_hex STREQUAL "")
                     math(EXPR cp "0x${cp_hex}")
                     math(EXPR mapped "0x${mapped_hex}")
+                    # Ordinary Classic casing preserves the fixed Latin-1
+                    # domain. A missing record makes both generated consumers
+                    # retain the input scalar; higher inputs keep Unicode's
+                    # simple mapping, including mappings back into Latin-1.
+                    if(cp LESS_EQUAL 255 AND mapped GREATER 255)
+                        continue()
+                    endif()
                     crexx_classic_u32_hex(${cp} cp_bytes)
                     crexx_classic_u32_hex(${mapped} mapped_bytes)
                     string(APPEND case_records "${cp_bytes}${mapped_bytes}")
