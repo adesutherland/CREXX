@@ -1,0 +1,213 @@
+/* cREXX License (MIT). Independent exact runtime and continuation expectations. */
+options levelb
+import rxfnsb
+import llir
+import llirexecute
+import classicbridge
+import rexxvalue
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  graph = classicbridge..graph()
+  call check(graph.error() = '','shared semantic graph is valid')
+  call classicbridge..emit(graph,argv[1])
+  registry = classicbridge..registry()
+  prepared = .llirexecute..plan(reference graph,registry)
+  call check(prepared.valid(),prepared.message())
+  runner = .llirexecute..session(prepared)
+  values = .object[]; present = .int[]
+  result = runner.start(1,values,present)
+  call check(result.status() = 'suspended' & result.depth() = 2,'nested call suspends with its live caller')
+  owner = runner.service('classic') as .classicbridge..service
+  call check(owner.writes() = 1 & owner.poolvalue() = '4100C3A9','actual VALUE mutates the owned live pool exactly once')
+  call check(owner.held() = 1 & owner.live() & owner.cleanups() = 0,'suspension retains its strong value and runtime owner')
+  token = result.token()
+  response = .llirexecute..outcome(); call response.add(owner.pending())
+  result = runner.resume(token,response)
+  call check(result.status() = 'done' & result.size() = 1,'resume completes both call frames')
+  if result.size() = 1 then call check(bin2x(result.at(1).bits()) = '33' & result.present(1),'independent UTF8 scalar length is three')
+  owner = runner.service('classic') as .classicbridge..service
+  call exactevents(owner)
+  call check(owner.cleanups() = 1 & owner.reason() = 'done' & owner.live() = 0 & owner.held() = 0,'normal terminal cleanup releases pool and retained values once')
+  do i = 1 to owner.eventcount(); say 'RUNNER|' || owner.event(i); end
+  say 'RUNNER|RETURN|' || bin2x(result.at(1).bits())
+  say 'RUNNER|STATE|' || owner.writes() || '|' || owner.cleanups() || '|' || owner.live() || '|' || owner.held() || '|' || owner.final()
+  replay = runner.resume(token,response)
+  call check(replay.status() = 'rejected' & runner.status() = 'done','a consumed token cannot run an effect again')
+  owner = runner.service('classic') as .classicbridge..service
+  call check(owner.writes() = 1 & owner.cleanups() = 1,'replay changes neither effects nor cleanup')
+  call stopped(prepared,'discard')
+  call stopped(prepared,'cancel')
+  call stopped(prepared,'failure')
+  call presencecontracts()
+  call admission(graph)
+  call ownedplan()
+  call handlerlimits()
+  say 'IR_EXECUTION_RUNTIME|checks=' || checks || '|failures=' || failures
+  if failures = 0 then say 'IR_EXECUTION_RUNTIME|PASS'
+  return failures <> 0
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1
+  say 'FAIL|' || label
+  return
+
+exactevents: procedure = .void
+  arg owner = .classicbridge..service
+  expected = .string[]
+  expected[1] = 'SET|4100C3A9'
+  expected[2] = 'OBS|4954454D'
+  expected[3] = 'OBS|3432'
+  expected[4] = 'OBS|33'
+  expected[5] = 'OBS|00FF'
+  expected[6] = 'PAUSE|4100C3A9'
+  expected[7] = 'OBS|4100C3A9'
+  call check(owner.eventcount() = 7,'independent complete ordered effect count')
+  do i = 1 to min(owner.eventcount(),7)
+    call check(owner.event(i) == expected[i],'independent ordered effect ' || i)
+  end
+  return
+
+stopped: procedure = .void
+  arg prepared = .llirexecute..plan, mode = .string
+  runner = .llirexecute..session(prepared)
+  values = .object[]; presence = .int[]
+  result = runner.start(1,values,presence)
+  call check(result.status() = 'suspended',mode || ' reaches actual owned suspension')
+  token = result.token()
+  response = .llirexecute..outcome
+  select mode
+    when 'discard' then result = runner.discard(token)
+    when 'cancel' then result = runner.cancel()
+    otherwise do
+      response = .llirexecute..outcome('failure','HOST_ABORT','independent host failure','00FF'x as .binary)
+      result = runner.resume(token,response)
+    end
+  end
+  expected = 'failure'
+  if mode = 'discard' then expected = 'discarded'
+  if mode = 'cancel' then expected = 'cancelled'
+  call check(result.status() = expected,mode || ' has a distinct terminal outcome')
+  if mode = 'failure' then call check(result.code() = 'HOST_ABORT' & bin2x(result.payload()) = '00FF','failure retains exact code and binary payload')
+  owner = runner.service('classic') as .classicbridge..service
+  call check(owner.writes() = 1 & owner.eventcount() = 6,'stopped continuation does not repeat or enter later effects')
+  call check(owner.cleanups() = 1 & owner.live() = 0 & owner.held() = 0,mode || ' releases every owned bridge resource once')
+  response = .llirexecute..outcome()
+  replay = runner.resume(token,response)
+  call check(replay.status() = 'rejected',mode || ' token cannot resume after terminal cleanup')
+  return
+
+lengthgraph: procedure = .llir..module
+  schema = .llir..schema(); call classicbridge..registerfamilies(reference schema)
+  contract = schema.finish(); builder = .llir..builder(contract)
+  at = builder.synthetic('independent optional BIF argument')
+  type = contract.type('fixture.classic.value')
+  fn = builder.function('length',type); ignored = fn.argument(type,1)
+  block = fn.block('entry'); fallback = block.constantbytes(type,''x as .binary,at)
+  value = block.readarg(1,at,fallback); exists = block.hasarg(1,at)
+  draft = block.operation(contract.operation('fixture.classic.length.optional'),at)
+  call draft.input('first',value); call draft.input('second',exists)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  return builder.finish()
+
+presencecontracts: procedure = .void
+  graph = lengthgraph(); registry = classicbridge..registry()
+  prepared = .llirexecute..plan(reference graph,registry)
+  call check(prepared.valid(),'optional BIF semantic graph is admitted')
+  codec = .classicbridge..valuetype()
+  values = .object[]; presence = .int[]
+  runner = .llirexecute..session; result = .llirexecute..result; owner = .classicbridge..service
+  do mode = 1 to 4
+    if mode > 1 then do
+      bits = ''x as .binary
+      if mode = 3 then bits = '4100C3A9'x as .binary
+      values[1] = codec.materialize('fixture.classic.value',bits) as .object
+      presence[1] = mode <> 4
+    end
+    runner = .llirexecute..session(prepared)
+    result = runner.start(1,values,presence)
+    if mode = 1 | mode = 4 then call check(result.status() = 'failure' & result.code() = 'RXC-LC-40.5','shared LENGTH preserves omitted presence ' || mode)
+    else do
+      expected = '30'; if mode = 3 then expected = '33'
+      call check(result.status() = 'done' & result.size() = 1,'shared LENGTH returns present result ' || mode)
+      if result.size() = 1 then call check(bin2x(result.at(1).bits()) = expected,'empty and NUL/Unicode exact expected length ' || mode)
+    end
+    owner = runner.service('classic') as .classicbridge..service
+    call check(owner.cleanups() = 1 & owner.live() = 0,'shared BIF success/error lifecycle ' || mode)
+  end
+  /* A public boxed-value factory does not license contradictory underlying
+   * payloads, including when its stored tag and encoding agree with a carrier. */
+  wrong = .classicbridge..boxedvalue('fixture.classic.value','41'x as .binary,.rexxvalue..RexxValue('B'))
+  forged = .llirexecute..value('fixture.classic.value','41'x as .binary,wrong as .object)
+  call check(codec.check(forged) <> '','owned payload encoding honesty is checked')
+  values[1] = forged as .object; presence[1] = 1
+  runner = .llirexecute..session(prepared); result = runner.start(1,values,presence)
+  call check(result.status() = 'rejected','dishonest owned argument is rejected before dispatch')
+  owner = runner.service('classic') as .classicbridge..service
+  call check(owner.calls() = 0,'dishonest owned argument has no BIF effect')
+  return
+
+admission: procedure = .void
+  arg graph = .llir..module
+  registry = classicbridge..registry(1)
+  prepared = .llirexecute..plan(reference graph,registry)
+  call check(prepared.valid() = 0,'unsupported operation later than VALUE prevents whole-plan admission')
+  runner = .llirexecute..session(prepared)
+  values = .object[]; presence = .int[]
+  result = runner.start(1,values,presence)
+  call check(result.status() = 'rejected','unsupported plan never starts')
+  owner = runner.service('classic') as .classicbridge..service
+  call check(owner.calls() = 0 & owner.writes() = 0 & owner.eventcount() = 0,'unsupported late capability fails before every target effect')
+  return
+
+detachedplan: procedure = .llirexecute..plan
+  graph = classicbridge..graph(); registry = classicbridge..registry()
+  return .llirexecute..plan(reference graph,registry)
+
+ownedplan: procedure = .void
+  prepared = detachedplan()
+  call check(prepared.valid(),'plan owns its graph after preparing procedure exits')
+  runner = .llirexecute..session(prepared)
+  values = .object[]; presence = .int[]
+  result = runner.start(1,values,presence)
+  call check(result.status() = 'suspended','owned graph and runtime state survive expired preparation frame')
+  result = runner.discard(result.token())
+  call check(result.status() = 'discarded','detached plan continuation can be discarded cleanly')
+  return
+
+handlerlimits: procedure = .void
+  codec = .classicbridge..valuetype()
+  allowed = codec.materialize('fixture.classic.value',copies('x',1024) as .binary)
+  refused = codec.materialize('fixture.classic.value',copies('x',1025) as .binary)
+  call check(codec.check(allowed) = '' & codec.check(refused) <> '','trusted value admission enforces its exact byte boundary')
+  owner = .classicbridge..service()
+  values = .object[]; presence = .int[]; n = .int
+  values[1] = codec.materialize('fixture.classic.value','x' as .binary) as .object
+  presence[1] = 1
+  answer = .llirexecute..outcome
+  do n = 1 to 16
+    answer = owner.dispatch('fixture.classic.observe',values,presence)
+    call check(answer.status() = 'normal','admitted observation ' || n)
+  end
+  answer = owner.dispatch('fixture.classic.observe',values,presence)
+  call check(answer.status() = 'failure' & answer.code() = 'FIXTURE_LIMIT' & owner.eventcount() = 16,'observation limit refuses before appending an effect')
+  call owner.cleanup('limit')
+  call check(owner.cleanups() = 1 & owner.live() = 0,'bounded external-state refusal has explicit cleanup')
+  owner = .classicbridge..service()
+  values[1] = codec.materialize('fixture.classic.value','ITEM' as .binary) as .object
+  presence[2] = 1
+  do n = 1 to 8
+    values[2] = codec.materialize('fixture.classic.value',(n as .string) as .binary) as .object
+    answer = owner.dispatch('fixture.classic.value.set',values,presence)
+    call check(answer.status() = 'normal','admitted actual VALUE write ' || n)
+  end
+  values[2] = codec.materialize('fixture.classic.value','9' as .binary) as .object
+  answer = owner.dispatch('fixture.classic.value.set',values,presence)
+  call check(answer.status() = 'failure' & owner.writes() = 8 & owner.poolvalue() = '38','write limit preserves the actual prior shared-pool state')
+  call owner.cleanup('limit')
+  return

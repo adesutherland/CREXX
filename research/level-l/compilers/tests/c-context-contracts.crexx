@@ -1,0 +1,838 @@
+/* cREXX License (MIT). Independent clean C-family admission boundaries. */
+options levelb
+import rxfnsb
+import llir
+import llcir
+import llcrxas
+import llirservices
+import llcdoprotocol
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] < 1 | argv[0] > 2 then return 2
+  selector = 'all'; if argv[0] = 2 then selector = argv[2]
+  if selector <> 'all' & selector <> 'do' & selector <> 'do-exact' & selector <> 'leave' & selector <> 'parse' then return 2
+  checks = 0; failures = 0; mode = .int
+  if selector = 'do-exact' then do
+    call doexactparts(argv[1])
+    say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
+    return failures
+  end
+  call versionrefusal(argv[1],5)
+  call versionrefusal(argv[1],6)
+  call versionrefusal(argv[1],7)
+  call versionrefusal(argv[1],8)
+  call versionrefusal(argv[1],11)
+  call versionrefusal(argv[1],19)
+  if selector = 'parse' then do
+    call selectschema(); call parseschema(); call forgedschema(argv[1],4)
+    say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
+    return failures
+  end
+  if selector = 'all' | selector = 'leave' then call transfercontracts(argv[1])
+  if selector = 'leave' then do
+    say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
+    return failures
+  end
+  if selector = 'all' then do
+    call selectschema()
+    call parseschema()
+    do mode = 1 to 6
+      call functioncontract(argv[1],mode)
+      call forgedschema(argv[1],mode)
+      call selectorigin(argv[1],mode)
+    end
+    do mode = 1 to 4
+      call contextslots(argv[1],mode)
+    end
+  end
+  call doschema()
+  call forgedschema(argv[1],7)
+  call docontracts(argv[1])
+  call doexactparts(argv[1])
+  say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1
+  say 'FAIL|' || label
+  return
+
+parseschema: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  call check(data.opname(52) = 'crexx.c.parse.source' & data.opname(53) = 'crexx.c.parse.execute','PARSE operations follow the v8 scalar-shortcut retirement')
+  descriptor = contract.operation('crexx.c.arguments.read')
+  call check(descriptor.valid() = 0,'retired scalar ARG operation is absent')
+  call doshape(contract,'parse.source','context:crexx.c.context','value:crexx.c.value','kind:crexx.g.text ordinal:crexx.g.int64','context.input','condition.resource')
+  call doshape(contract,'parse.execute','context:crexx.c.context source:crexx.c.value','','program:crexx.c.parseprogram','context.input.output.observation','condition.resource')
+  return
+
+/* Literal expectations complement whole-schema admission. V8 removes the
+ * scalar ARG descriptor; all later operation ordinals decrease by one. */
+selectschema: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  version = 0
+  do i = 1 to data.familycount()
+    if data.familyname(i) = 'crexx.c' then version = data.version(i)
+  end
+  call check(version = 22 & data.ops() = 88,'current C v22 has exactly 88 operations')
+  call check(data.opname(40) = 'crexx.c.exit' & data.opname(41) = 'crexx.c.when.truth' & data.opname(42) = 'crexx.c.select.missing','SELECT descriptor order after scalar ARG retirement')
+  descriptor = contract.operation('crexx.c.when.truth'); id = descriptor.id()
+  call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) = 'value' & data.typename(data.fieldtype(id,1,1)) = 'crexx.c.value' & data.fieldname(id,1,2) = 'context' & data.typename(data.fieldtype(id,1,2)) = 'crexx.c.context','WHEN truth requires ordered value and context inputs')
+  call check(data.arity(id,2) = 1 & data.fieldname(id,2,1) = 'value' & data.typename(data.fieldtype(id,2,1)) = 'core.boolean' & data.arity(id,3) = 0,'WHEN truth returns only a Boolean with no attributes')
+  call check(data.effectvalue(id,1) = 'context' & data.effectvalue(id,2) = 'condition' & data.effectvalue(id,3) = 'returns','WHEN truth retains contextual condition effects')
+  descriptor = contract.operation('crexx.c.select.missing'); id = descriptor.id()
+  call check(data.arity(id,1) = 0 & data.arity(id,2) = 0 & data.arity(id,3) = 0,'SELECT missing has no serialized operands, results or line attribute')
+  call check(data.effectvalue(id,1) = 'none' & data.effectvalue(id,2) = 'condition' & data.effectvalue(id,3) = 'diverges','SELECT missing declares the current fatal-profile effect')
+  return
+
+/* Old and unknown semantic versions are refused before their function ABI is
+ * interpreted. These are valid generic graphs, not corrupt byte streams. */
+versionrefusal: procedure = .void
+  arg artifacts = .string, version = .int
+  registry = .llir..schema(); family = registry.family('crexx.c',version)
+  context = family.type('context',.llir..bytescodec() as .object)
+  result = family.type('result',.llir..bytescodec() as .object)
+  absent = family.operation('return.absent'); call absent.output('value',result)
+  call absent.state('none'); call absent.failure('none'); call absent.termination('returns')
+  contract = registry.finish(); builder = .llir..builder(contract)
+  at = builder.synthetic('C semantic version refusal')
+  fn = builder.function('$MAIN',result); ignored = fn.argument(context)
+  block = fn.block('entry'); draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'valid generic version fixture ' || version)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call check(backend.status() <> 0 & pos('unsupported family version crexx.c',backend.error()) > 0, 'precise semantic version refusal ' || version)
+  call check(output.bytes() = 0 & bin2x(saved) = bin2x(graph.binary()), 'version refusal publishes no output and preserves input ' || version)
+  return
+
+/* The accepted function carries required context and entry-ID arguments in
+ * the target ABI. Optional, value, extra and wrong-result variants must not be
+ * repaired by the selector or accepted because the body ignores parameters. */
+functioncontract: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  context = contract.type('crexx.c.context'); result = contract.type('crexx.c.result')
+  value = contract.type('crexx.c.value')
+  at = builder.synthetic('C function ABI')
+  resulttype = result; if mode = 5 then resulttype = value
+  fn = builder.function('$MAIN',resulttype)
+  argumenttype = context; if mode = 3 then argumenttype = value
+  optional = mode = 2
+  ignored = fn.argument(argumenttype,optional)
+  ignored = fn.argument(contract.type('crexx.g.int64'),optional)
+  if mode = 4 then ignored = fn.argument(context)
+  block = fn.block('entry')
+  if mode = 1 | mode = 6 then do
+    context_slot = fn.slot('$context',context)
+    call block.store(context_slot,block.readarg(1,at),at)
+    block = entrybody(fn,contract,block,context_slot,at)
+  end
+  if mode = 6 then ignoredvalue = block.constantbytes(context,'bad context' as .binary,at)
+  returned = .llir..valuehandle
+  if mode = 5 then returned = block.constantbytes(value,'unaccepted result' as .binary,at)
+  else do
+    draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+    operation = draft.finish(); returned = operation.result()
+  end
+  call block.returnvalue(returned,at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'valid generic function fixture ' || mode)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if mode = 1 then do
+    call check(backend.status() = 0 & output.bytes() > 0, 'required context/entry ABI admitted: ' || backend.error())
+    restored = llir..loadbinary(contract,graph.binary())
+    call check(restored.error() = '' & bin2x(restored.binary()) = bin2x(saved), 'new C family survives generic binary round trip')
+  end
+  else do
+    call check(backend.status() <> 0 & (pos('Classic',backend.error()) > 0 | pos('unsupported constant type crexx.c.context',backend.error()) > 0), 'incompatible C function ABI refused ' || mode)
+    call check(output.bytes() = 0, 'function refusal publishes no output ' || mode)
+  end
+  call check(bin2x(saved) = bin2x(graph.binary()), 'function admission preserves input ' || mode)
+  return
+
+/* Clone the canonical declarations through the generic schema API, changing
+ * exactly one unused descriptor. This checks whole-schema admission without
+ * keeping a second operation inventory in the test oracle. */
+forgedschema: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  canonical = registry.finish(); source = dereference canonical.data()
+  data = .llir..schema_data(); call data.bootstrap()
+  i = .int; kind = .int; field = .int; name = .string; spelling = .string; ignored = .int
+  do i = 2 to source.familycount()
+    ignored = data.addfamily(source.familyname(i),source.version(i))
+  end
+  do i = 3 to source.types()
+    codec = source.codec(i)
+    if mode = 4 & source.typename(i) = 'crexx.g.int64' then codec = .laxcodec() as .object
+    if (mode = 7 | mode = 8) & source.typename(i) = 'crexx.g.text' then codec = .laxcodec() as .object
+    ignored = data.addtype(source.typename(i),codec)
+  end
+  do i = 1 to source.ops()
+    name = source.opname(i); spelling = name
+    if mode = 3 & name = 'crexx.c.numeric.form' then spelling = 'core.spoofed'
+    declared = .llir..operation(reference data,data.addop(spelling))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field)
+        if mode = 2 & name = 'crexx.c.numeric.form' & kind = 1 then spelling = 'wrongcontext'
+        if mode = 5 & name = 'crexx.c.when.truth' & kind = 1 & field = 2 then spelling = 'wrongcontext'
+        type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    state = source.effectvalue(i,1)
+    if mode = 1 & name = 'crexx.c.numeric.form' then state = 'none'
+    call declared.state(state); call declared.failure(source.effectvalue(i,2))
+    termination = source.effectvalue(i,3)
+    if mode = 6 & name = 'crexx.c.select.missing' then termination = 'returns'
+    call declared.termination(termination)
+  end
+  ignored = data.freeze(); contract = .llir..contract(data)
+  operation = .llir..opview
+  builder = .llir..builder(contract); at = builder.synthetic('unused descriptor refusal')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context'))
+  ignored = fn.argument(contract.type('crexx.g.int64')); block = fn.block('entry')
+  context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+  call block.store(context_slot,block.readarg(1,at),at)
+  block = entrybody(fn,contract,block,context_slot,at)
+  context = .llir..valuehandle; forged = .llir..opdraft
+  if mode = 4 then do
+    context = block.load(context_slot,at)
+    forged = block.operation(contract.operation('crexx.c.parse.source'),at)
+    call forged.input('context',context)
+    call forged.attribute('kind','ARG' as .binary)
+    call forged.attribute('ordinal','000000000000000001'x as .binary)
+    operation = forged.finish()
+  end
+  if mode = 7 then do
+    context = block.load(context_slot,at)
+    forged = block.operation(contract.operation('crexx.c.do.new'),at)
+    call forged.input('context',context)
+    call forged.attribute('key','FF'x as .binary); call forged.attribute('name',''x as .binary)
+    operation = forged.finish()
+  end
+  if mode = 8 then do
+    forged = block.operation(contract.operation('crexx.c.transfer.invalid'),at)
+    call forged.attribute('code','28.1' as .binary); call forged.attribute('name','FF'x as .binary)
+    operation = forged.finish()
+  end
+  draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'forged unused descriptor is a valid generic graph ' || mode)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  expected = word('effects field operation constant field effects constant constant',mode)
+  diagnosed = pos(expected,backend.error()) > 0
+  if mode = 7 then diagnosed = diagnosed | pos('key',backend.error()) > 0 | pos('UTF',backend.error()) > 0
+  call check(backend.status() <> 0 & diagnosed, 'unused descriptor refused precisely ' || mode)
+  call check(output.bytes() = 0 & bin2x(saved) = bin2x(graph.binary()), 'unused descriptor refusal is atomic ' || mode)
+  return
+
+/* A permissive foreign codec must not license the target's raw payload read. */
+laxcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    return text as .binary
+  check: method = .string
+    arg bytes = .binary
+    return ''
+  format: method = .string
+    arg bytes = .binary
+    return bin2x(bytes)
+
+/* Context slots are aliases initialized once in the entry block. They are
+ * never independent reference storage that an arbitrary path may replace. */
+contextslots: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  context = contract.type('crexx.c.context'); result = contract.type('crexx.c.result')
+  fn = builder.function('$MAIN',result); ignored = fn.argument(context)
+  ignored = fn.argument(contract.type('crexx.g.int64'))
+  slot = fn.slot('context',context); alias = fn.slot('alias',context)
+  at = builder.synthetic('entry context alias'); entry = fn.block('entry')
+  unused = .llir..valuehandle; argument = .llir..valuehandle
+  canonical = slot
+  if mode <> 4 then do
+    canonical = fn.slot('$canonical',context)
+    call entry.store(canonical,entry.readarg(1,at),at)
+  end
+  if mode = 1 then unused = entry.load(slot,at)
+  if mode = 4 then do
+    argument = entry.readarg(1,at); call entry.store(slot,argument,at)
+    argument = entry.load(slot,at); call entry.store(alias,argument,at)
+    unused = entry.load(alias,at)
+  end
+  entry = entrybody(fn,contract,entry,canonical,at)
+  draft = entry.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call entry.returnvalue(operation.result(),at)
+  if mode = 2 | mode = 3 then do
+    dead = fn.block('dead')
+    if mode = 2 then unused = dead.load(slot,at)
+    else do
+      argument = dead.readarg(1,at); call dead.store(slot,argument,at)
+    end
+    draft = dead.operation(contract.operation('crexx.c.return.absent'),at)
+    operation = draft.finish(); call dead.returnvalue(operation.result(),at)
+  end
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'generic context slot graph ' || mode)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if mode = 4 then call check(backend.status() = 0 & output.bytes() > 0, 'entry-bound context aliases admitted: ' || backend.error())
+  else call check(backend.status() <> 0 & pos('context',lower(backend.error())) > 0, 'unbound/nonentry context slot refused ' || mode || ': ' || backend.error())
+  call check((mode = 4 | output.bytes() = 0) & bin2x(saved) = bin2x(graph.binary()), 'context alias admission is atomic ' || mode)
+  if mode = 4 then do
+    /* Local forwarding may bind both aliases directly from argument 1.
+     * Dispatch still identifies its own declared context slot consistently. */
+    changed = llirservices..optimise(reference graph)
+    call check(changed.status() = 'keep' | changed.status() = 'changed','context alias generic optimisation succeeds: ' || changed.message())
+    if changed.status() = 'keep' | changed.status() = 'changed' then do
+      selected = changed.result(); backend = .llcrxas..compilation(selected,artifacts); output = backend.output()
+      call check(backend.status() = 0 & output.bytes() > 0,'forwarded entry-bound context aliases admitted: ' || backend.error())
+    end
+    call check(bin2x(saved) = bin2x(graph.binary()),'context alias optimisation preserves original graph')
+  end
+  return
+
+/* These origins are structurally valid generic IR. SELECT alone needs one
+ * exact, nonempty authored span, including for an unreachable operation.
+ * Generic ts_llir already covers absent/out-of-range/recovered origin refusal;
+ * those malformed graphs never reach target admission. */
+selectorigin: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  text = 'α' || ('0D0A'x as .string) || 'select'
+  file = builder.source('<source>',text as .binary); exact = file.origin(4,10)
+  at = exact
+  if mode = 2 then at = file.origin(4,4)
+  if mode = 3 then at = builder.synthetic('SELECT missing synthetic refusal')
+  if mode = 4 | mode = 6 then at = exact.derive()
+  if mode = 5 then at = exact.derive('composite')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context'))
+  ignored = fn.argument(contract.type('crexx.g.int64')); block = fn.block('entry')
+  context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+  generated = builder.synthetic('test-only SELECT origin unit entry')
+  call block.store(context_slot,block.readarg(1,generated),generated)
+  block = entrybody(fn,contract,block,context_slot,generated)
+  closure = exact.derive()
+  draft = .llir..opdraft; operation = .llir..opview
+  if mode = 6 then do
+    draft = block.operation(contract.operation('crexx.c.return.absent'),closure)
+    operation = draft.finish(); call block.returnvalue(operation.result(),closure)
+    block = fn.block('dead')
+  end
+  draft = block.operation(contract.operation('crexx.c.select.missing'),at)
+  operation = draft.finish()
+  draft = block.operation(contract.operation('crexx.c.return.absent'),closure)
+  operation = draft.finish(); call block.returnvalue(operation.result(),closure)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'generic-valid SELECT origin fixture ' || mode || ': ' || graph.error())
+  restored = llir..loadbinary(contract,saved)
+  call check(restored.error() = '' & bin2x(restored.binary()) = bin2x(saved),'SELECT origin survives binary round trip ' || mode)
+  call selectadmission(artifacts,graph,mode,'fresh')
+  call selectadmission(artifacts,restored,mode,'loaded')
+  return
+
+selectadmission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, mode = .int, lane = .string
+  saved = graph.binary(); label = lane || ' SELECT origin ' || mode
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if mode = 1 then do
+    call check(backend.status() = 0 & output.bytes() > 0, label || ' admits anonymous exact source: ' || backend.error())
+    call check(pos('<source>',output.text()) > 0 & pos('llctarget.selectmissing',output.text()) > 0,label || ' retains logical source and missing helper')
+  end
+  else call check(backend.status() <> 0 & pos('SELECT missing',backend.error()) > 0 & output.bytes() = 0,label || ' refuses before publication: ' || backend.error())
+  call check(bin2x(saved) = bin2x(graph.binary()),label || ' preserves input')
+  return
+
+/* Independent literal shapes for the approved C5 extension. DO keys retain
+ * ordinary text attributes; PARSE's later nominal type is not loop state. */
+doschema: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  count = 0; version = 0; i = .int
+  do i = 1 to data.types()
+    if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
+  end
+  do i = 1 to data.familycount()
+    if data.familyname(i) = 'crexx.c' then version = data.version(i)
+  end
+  call check(version = 22 & count = 5 & data.ops() = 88,'C22 has five types and exactly 88 operations')
+  names = 'do.new do.capture do.start do.entry do.advance do.close while.truth until.truth'
+  do i = 1 to 8
+    call check(data.opname(42 + i) = 'crexx.c.' || word(names,i),'DO descriptor order after scalar ARG retirement ' || i)
+  end
+  call doshape(contract,'do.new','context:crexx.c.context','','key:crexx.g.text name:crexx.g.text','loop.context','condition.resource')
+  call doshape(contract,'do.capture','value:crexx.c.value','','key:crexx.g.text part:crexx.g.text','loop.context','condition')
+  call doshape(contract,'do.start','','','key:crexx.g.text','loop.context','condition')
+  call doshape(contract,'do.entry','','value:core.boolean','key:crexx.g.text','loop.context','condition')
+  call doshape(contract,'do.advance','','','key:crexx.g.text','loop.context','condition')
+  call doshape(contract,'do.close','','','key:crexx.g.text','loop','none')
+  call doshape(contract,'while.truth','value:crexx.c.value context:crexx.c.context','value:core.boolean','','context','condition')
+  call doshape(contract,'until.truth','value:crexx.c.value context:crexx.c.context','value:core.boolean','','context','condition')
+  return
+
+doshape: procedure = .void
+  arg contract = .llir..contract, name = .string, inputs = .string, outputs = .string, attributes = .string, state = .string, failure = .string, termination = 'returns'
+  data = dereference contract.data(); descriptor = contract.operation('crexx.c.' || name)
+  id = descriptor.id(); expected = .string; actual = .string; kind = .int; i = .int
+  do kind = 1 to 3
+    expected = inputs
+    if kind = 2 then expected = outputs
+    if kind = 3 then expected = attributes
+    actual = ''
+    do i = 1 to data.arity(id,kind)
+      if i > 1 then actual = actual || ' '
+      actual = actual || data.fieldname(id,kind,i) || ':' || data.typename(data.fieldtype(id,kind,i))
+    end
+    call check(actual == expected,name || ' exact ordered fields ' || kind)
+  end
+  call check(data.effectvalue(id,1) = state & data.effectvalue(id,2) = failure & data.effectvalue(id,3) = termination,name || ' exact state/failure/continuation')
+  return
+
+/* The shared transfer foundation admits all four identities even while named
+ * ITERATE source remains outside the current instruction slice. Generic
+ * origins stay valid: unlike SELECT missing, no line operand is derived. */
+transfercontracts: procedure = .void
+  arg artifacts = .string
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data(); count = 0; version = 0
+  i = .int; mode = .int; accepted = .int
+  do i = 1 to data.types()
+    if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
+  end
+  do i = 1 to data.familycount()
+    if data.familyname(i) = 'crexx.c' then version = data.version(i)
+  end
+  call check(version = 22 & count = 5 & data.ops() = 88,'transfer foundation retains C22/five types/88 operations')
+  call check(data.opname(51) = 'crexx.c.transfer.invalid','transfer is descriptor 51 after scalar ARG retirement')
+  call doshape(contract,'transfer.invalid','','','code:crexx.g.text name:crexx.g.text','none','condition','diverges')
+  call forgedschema(artifacts,8)
+  cases = '1 2 3 4 5 6 10 11 12 13 14 15 16 18 19 20 21 22 23 24 25'
+  good = '1 2 3 4 5 6 20 23 24 25'
+  loaded = '1 4 5 10 11 14 15 20 21 23 24'
+  transformed = '1 5 10 13 20 23 24 25'
+  graph = .llir..module; restored = .llir..module; selected = .llir..module
+  proof = .llcdoprotocol..checked
+  saved = .binary
+  do i = 1 to words(cases)
+    mode = word(cases,i) as .int; accepted = wordpos(mode as .string,good) > 0
+    graph = transfergraph(mode); saved = graph.binary(); label = 'transfer graph ' || mode
+    call check(graph.error() = '',label || ' is generic-valid: ' || graph.error())
+    if graph.error() <> '' then iterate
+    call transferadmission(artifacts,graph,accepted,'fresh ' || label)
+    if wordpos(mode as .string,loaded) > 0 then do
+      store_ref = reference .llir..arena; contract_ref = reference .llir..contract
+      store_ref = graph.storage(); loaded_store = dereference store_ref
+      contract_ref = loaded_store.contract(); loaded_contract = dereference contract_ref
+      restored = llir..loadbinary(loaded_contract,saved)
+      call check(restored.error() = '' & bincompare(saved,restored.binary()) = 0,label || ' loads unchanged')
+      if restored.error() = '' then call transferadmission(artifacts,restored,accepted,'loaded ' || label)
+    end
+    if wordpos(mode as .string,transformed) > 0 then do
+      change = llirservices..optimise(reference graph)
+      call check(change.status() = 'keep' | change.status() = 'changed',label || ' generic transform succeeds: ' || change.message())
+      if change.status() = 'keep' | change.status() = 'changed' then do
+        selected = change.result()
+        call transferadmission(artifacts,selected,accepted,'selected ' || label)
+      end
+    end
+    /* Invalid dead declarations must fail before an optimiser could prune
+     * them; execution stops never license a malformed later declaration. */
+    if mode = 15 | mode = 16 | mode = 21 | mode = 22 then do
+      proof = .llcdoprotocol..checked(reference graph)
+      call check(proof.status() <> 0,label || ' is refused by the pre-transform owning checker')
+    end
+    call check(bincompare(saved,graph.binary()) = 0,label || ' load/transform preserve original graph')
+  end
+  graph = transfergraph(1); saved = graph.binary()
+  backend = .llcrxas..compilation(graph,artifacts); prior = backend.output(); priorbytes = prior.text()
+  call check(backend.status() = 0 & prior.bytes() > 0,'transfer prior owned output succeeds')
+  call check(pos('transfer.crexx',priorbytes) > 0 & pos('llctarget.invalidtransfer',priorbytes) > 0,'transfer keeps logical source and the existing helper route')
+  backend = .llcrxas..compilation(graph,artifacts,128); output = backend.output()
+  call check(backend.status() <> 0 & pos('LIMIT',backend.error()) > 0 & output.bytes() = 0,'transfer output limit refusal publishes nothing')
+  call check(bincompare(saved,graph.binary()) = 0 & prior.text() == priorbytes,'transfer output refusal preserves graph and earlier output')
+  graph = transfergraph(26); longsaved = graph.binary()
+  proof = .llcdoprotocol..checked(reference graph,67108864,128)
+  call check(graph.error() = '' & proof.status() <> 0 & pos('DO admission work budget',proof.error()) > 0,'transfer text work is bounded before enum decoding')
+  call check(bincompare(longsaved,graph.binary()) = 0 & prior.text() == priorbytes,'transfer work refusal preserves input and earlier output')
+  return
+
+transferadmission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ' admitted: ' || backend.error())
+  else do
+    diagnosed = pos('transfer',backend.error()) > 0 | pos('invalid variable symbol',backend.error()) > 0 | pos('DO state key',backend.error()) > 0
+    call check(backend.status() <> 0 & output.bytes() = 0 & diagnosed,label || ' owning refusal: ' || backend.error())
+  end
+  call check(bincompare(saved,graph.binary()) = 0,label || ' admission preserves input')
+  return
+
+transferemit: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, at = .llir..origin, code = .string, name = .string
+  draft = block.operation(contract.operation('crexx.c.transfer.invalid'),at)
+  call draft.attribute('code',code as .binary); call draft.attribute('name',name as .binary)
+  operation = draft.finish()
+  return
+
+transfergraph: procedure = .llir..module
+  arg mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  prefix = '/* α */' || ('0D0A'x as .string); sourcebytes = (prefix || 'leave outer') as .binary
+  file = builder.source('transfer.crexx',sourcebytes); first = <blen>(prefix as .binary); extent = <blen>(sourcebytes)
+  at = file.origin(first,extent)
+  if mode = 23 then at = builder.synthetic('valid transfer synthetic origin')
+  if mode = 24 then at = at.derive()
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context'))
+  ignored = fn.argument(contract.type('crexx.g.int64')); block = fn.block('entry')
+  context = fn.slot('context',contract.type('crexx.c.context'))
+  generated = builder.synthetic('test-only transfer unit entry')
+  call block.store(context,block.readarg(1,generated),generated)
+  block = entrybody(fn,contract,block,context,generated)
+  code = '28.1'; name = ''
+  if mode = 2 then name = 'outer'
+  if mode = 3 | mode = 4 then code = '28.2'
+  if mode = 4 then name = 'σ.key'
+  if mode = 5 | mode = 11 then code = '28.3'
+  if mode = 5 then name = 'µ.key'
+  if mode = 6 | mode = 12 then code = '28.4'
+  if mode = 6 then name = 'Σ.key'
+  if mode = 10 | mode = 15 then code = '28.5'
+  if mode = 13 | mode = 16 then name = 'a-b'
+  if mode = 14 then name = 'a' || ('00'x as .string) || 'b'
+  if mode = 18 then code = ' 28.1 '
+  if mode = 19 then code = '28.1 28.2'
+  if mode = 26 then code = copies('x',1024)
+  if mode = 15 | mode = 16 | mode = 25 then do
+    call doreturn(block,contract,at); block = fn.block('dead')
+  end
+  operation = .llir..opview
+  if mode = 20 | mode = 21 then do
+    operation = doemit(block,contract,at,context,'new')
+    operation = doemit(block,contract,at,context,'capture','outer','repeat')
+    operation = doemit(block,contract,at,context,'start')
+    operation = doemit(block,contract,at,context,'entry')
+    body = fn.block('body'); exhausted = fn.block('exhausted')
+    call block.branch(operation.result(),body,exhausted,at)
+    operation = doemit(exhausted,contract,at,context,'close'); call doreturn(exhausted,contract,at)
+    block = body
+  end
+  call transferemit(block,contract,at,code,name)
+  if mode = 20 | mode = 21 then do
+    key = 'outer'; if mode = 21 then key = 'missing'
+    operation = doemit(block,contract,at,context,'close',key)
+    operation = doemit(block,contract,at,context,'advance',key)
+  end
+  if mode = 22 then call transferemit(block,contract,at,'28.5','')
+  call doreturn(block,contract,at)
+  return builder.finish()
+
+/* Each graph is small generic-valid IR with explicit normal terminators.
+ * Runtime semantics are tested elsewhere; these cases test admission, never
+ * execute malformed code or make phase claims about unreachable components. */
+docontracts: procedure = .void
+  arg artifacts = .string
+  cases = '1 2 3 4 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 40 41 42 43 44 45 46 47 48 49'
+  loaded = '1 3 4 10 15 17 20 24 25 27 29 30 40 41 43 46 47 48 49'
+  transformed = '1 2 3 4 19 20 25 29 41 42 44 45 46 47 48'
+  good = '1 2 3 4 19 42 44 45 46 47 48'
+  i = .int; mode = .int; accepted = .int
+  graph = .llir..module; restored = .llir..module; selected = .llir..module
+  saved = .binary
+  do i = 1 to words(cases)
+    mode = word(cases,i) as .int; accepted = wordpos(mode as .string,good) > 0
+    graph = dograph(mode); saved = graph.binary(); label = 'DO graph ' || mode
+    call check(graph.error() = '',label || ' is generic-valid: ' || graph.error())
+    if graph.error() <> '' then iterate
+    call doadmission(artifacts,graph,accepted,'fresh ' || label)
+    if wordpos(mode as .string,loaded) > 0 then do
+      store_ref = reference .llir..arena; contract_ref = reference .llir..contract
+      store_ref = graph.storage(); loaded_store = dereference store_ref
+      contract_ref = loaded_store.contract(); loaded_contract = dereference contract_ref
+      restored = llir..loadbinary(loaded_contract,saved)
+      call check(restored.error() = '' & bincompare(saved,restored.binary()) = 0,label || ' loads unchanged')
+      if restored.error() = '' then call doadmission(artifacts,restored,accepted,'loaded ' || label)
+    end
+    if wordpos(mode as .string,transformed) > 0 then do
+      change = llirservices..optimise(reference graph)
+      call check(change.status() = 'keep' | change.status() = 'changed',label || ' generic transform succeeds: ' || change.message())
+      if change.status() = 'keep' | change.status() = 'changed' then do
+        selected = change.result()
+        call doadmission(artifacts,selected,accepted,'selected ' || label)
+      end
+    end
+    call check(bincompare(saved,graph.binary()) = 0,label || ' load/transform preserve original graph')
+  end
+  graph = dograph(3); saved = graph.binary()
+  backend = .llcrxas..compilation(graph,artifacts); prior = backend.output(); priorbytes = prior.text()
+  call check(backend.status() = 0 & prior.bytes() > 0,'valid nested owner output retained as prior result')
+  do mode = 1 to 2
+    bytes = 128; registers = 65536
+    if mode = 2 then do; bytes = 67108864; registers = 16; end
+    backend = .llcrxas..compilation(graph,artifacts,bytes,registers); output = backend.output()
+    call check(backend.status() <> 0 & pos('LIMIT',backend.error()) > 0 & output.bytes() = 0,'DO-bearing request resource refusal is atomic ' || mode)
+    call check(bincompare(saved,graph.binary()) = 0 & prior.text() == priorbytes,'resource refusal preserves graph and earlier owned output ' || mode)
+  end
+  /* The same small work allowance admits the ordinary graph but refuses
+   * repeated long-key validation/hash work, before any writer publication. */
+  graph = dograph(1); proof = .llcdoprotocol..checked(reference graph,67108864,400)
+  call check(proof.status() = 0,'bounded short-key protocol work succeeds: ' || proof.error())
+  graph = dograph(50); saved = graph.binary()
+  call check(graph.error() = '', 'long repeated-key work fixture is generic-valid: ' || graph.error())
+  proof = .llcdoprotocol..checked(reference graph,67108864,400)
+  call check(proof.status() <> 0 & pos('DO admission work budget',proof.error()) > 0,'long repeated key consumes bounded admission work')
+  call check(bincompare(saved,graph.binary()) = 0 & prior.text() == priorbytes,'key-work refusal preserves graph and earlier owned output')
+  return
+
+/* Enum attributes are exact byte strings, not WORDPOS phrases. Both fixtures
+ * otherwise complete a legal count/control protocol and are generic-valid. */
+doexactparts: procedure = .void
+  arg artifacts = .string
+  do mode = 51 to 52
+    graph = dograph(mode)
+    call check(graph.error() = '', 'exact DO part fixture is generic-valid ' || mode || ': ' || graph.error())
+    if graph.error() = '' then call doadmission(artifacts,graph,0,'exact DO capture part ' || mode)
+  end
+  return
+
+doadmission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ' admitted: ' || backend.error())
+  else do
+    diagnosed = pos('DO',upper(backend.error())) > 0 | pos('invalid variable symbol',backend.error()) > 0
+    call check(backend.status() <> 0 & output.bytes() = 0 & diagnosed,label || ' owning protocol refusal: ' || backend.error())
+  end
+  call check(bincompare(saved,graph.binary()) = 0,label || ' admission preserves input')
+  return
+
+/* Operation helpers construct only the public IR contract, with one literal
+ * capture per call and no copied runtime algorithm or hidden owner knowledge. */
+doemit: procedure = .llir..opview
+  arg block = .llir..block, contract = .llir..contract, at = .llir..origin, context = .llir..slot, action = .string, key = 'outer', part = '', name = ''
+  draft = block.operation(contract.operation('crexx.c.do.' || action),at)
+  if action = 'new' then call draft.input('context',block.load(context,at))
+  if action = 'capture' then call draft.input('value',block.constantbytes(contract.type('crexx.c.value'),'1' as .binary,at))
+  call draft.attribute('key',key as .binary)
+  if action = 'new' then call draft.attribute('name',name as .binary)
+  if action = 'capture' then call draft.attribute('part',part as .binary)
+  return draft.finish()
+
+doreturn: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  return
+
+dograph: procedure = .llir..module
+  arg mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  at = builder.synthetic('independent DO protocol ' || mode)
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context'))
+  ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('context',contract.type('crexx.c.context'))
+  entry = fn.block('entry'); argument = entry.readarg(1,at); call entry.store(context,argument,at)
+  entry = entrybody(fn,contract,entry,context,at)
+  key = 'outer'; part = 'repeat'; name = ''
+  if mode = 2 | mode = 43 | mode = 52 then do; part = 'start'; name = 'µ.key'; end
+  if mode = 51 then part = ' repeat '
+  if mode = 2 then key = 'do.λ'
+  if mode = 47 then key = 'same'
+  if mode = 48 then key = '646F2EC3A9'x as .string
+  if mode = 50 then key = copies('k',128)
+  if mode = 10 then key = ''
+  operation = .llir..opview; draft = .llir..opdraft
+  value = .llir..valuehandle; block = .llir..block
+  left = .llir..block; right = .llir..block; joined = .llir..block
+  child = .llir..function; childcontext = .llir..slot
+  source = .llir..sourcefile; exact = .llir..origin
+
+  if mode >= 15 & mode <= 17 | mode = 19 | mode = 46 | mode = 49 then do
+    call doreturn(entry,contract,at); dead = fn.block('dead')
+    if mode = 15 then operation = doemit(dead,contract,at,context,'capture','missing','repeat')
+    else do
+      if mode = 17 then name = 'a-b'
+      if mode = 49 then key = ''
+      operation = doemit(dead,contract,at,context,'new',key,'',name)
+      if mode = 16 then operation = doemit(dead,contract,at,context,'new',key)
+      if mode = 19 then operation = doemit(dead,contract,at,context,'advance',key)
+      if mode = 46 then operation = doemit(dead,contract,at,context,'entry',key)
+    end
+    call doreturn(dead,contract,at)
+    return builder.finish()
+  end
+
+  if mode = 20 then operation = doemit(entry,contract,at,context,'capture',key,part)
+  operation = doemit(entry,contract,at,context,'new',key,'',name)
+  if mode = 11 then operation = doemit(entry,contract,at,context,'new',key)
+  if mode = 32 then operation = doemit(entry,contract,at,context,'new','inner')
+  capturekey = key; if mode = 12 then capturekey = 'missing'
+  if mode = 13 then part = 'unknown'
+  if mode = 14 then part = 'for'
+  if mode <> 22 then operation = doemit(entry,contract,at,context,'capture',capturekey,part)
+  if mode = 21 then operation = doemit(entry,contract,at,context,'capture',key,'repeat')
+  if mode = 33 then operation = doemit(entry,contract,at,context,'close',key)
+  if mode = 2 then do
+    operation = doemit(entry,contract,at,context,'capture',key,'for')
+    operation = doemit(entry,contract,at,context,'capture',key,'by')
+    operation = doemit(entry,contract,at,context,'capture',key,'to')
+  end
+  if mode = 52 then operation = doemit(entry,contract,at,context,'capture',key,'to by')
+  block = entry
+  if mode = 43 then do
+    left = fn.block('capture.left'); right = fn.block('capture.right'); joined = fn.block('capture.join')
+    value = entry.constantbytes(contract.type('core.boolean'),'01'x as .binary,at)
+    call entry.branch(value,left,right,at)
+    operation = doemit(left,contract,at,context,'capture',key,'to'); call left.jump(joined,at)
+    operation = doemit(right,contract,at,context,'capture',key,'by'); call right.jump(joined,at)
+    block = joined
+  end
+  operation = doemit(block,contract,at,context,'start',key)
+  if mode = 23 then operation = doemit(block,contract,at,context,'capture',key,'repeat')
+  header = fn.block('header'); body = fn.block('body'); exhausted = fn.block('exhausted'); after = fn.block('after')
+  call block.jump(header,at)
+  if mode = 28 then operation = doemit(header,contract,at,context,'advance',key)
+  operation = doemit(header,contract,at,context,'entry',key); value = operation.result()
+  if mode = 30 then do
+    boolean = fn.slot('entry.copy',contract.type('core.boolean')); call header.store(boolean,value,at)
+  end
+  if mode = 29 then call header.jump(body,at)
+  else call header.branch(value,body,exhausted,at)
+
+  select
+    when mode = 3 | mode = 47 | mode = 48 then do
+      /* Case, embedded NUL and canonical Unicode spelling are all exact
+       * bytes: none may collapse two distinct constructor identities. */
+      innerkey = 'OUTER'
+      if mode = 47 then innerkey = 'same' || ('00'x as .string) || 'tail'
+      if mode = 48 then innerkey = '646F2E65CC81'x as .string
+      operation = doemit(body,contract,at,context,'new',innerkey)
+      operation = doemit(body,contract,at,context,'capture',innerkey,'repeat')
+      operation = doemit(body,contract,at,context,'start',innerkey)
+      inner = fn.block('inner.header'); innerbody = fn.block('inner.body'); innerexit = fn.block('inner.exit'); step = fn.block('outer.step')
+      call body.jump(inner,at); operation = doemit(inner,contract,at,context,'entry',innerkey)
+      call inner.branch(operation.result(),innerbody,innerexit,at)
+      operation = doemit(innerbody,contract,at,context,'advance',innerkey); call innerbody.jump(inner,at)
+      operation = doemit(innerexit,contract,at,context,'close',innerkey); call innerexit.jump(step,at)
+      operation = doemit(step,contract,at,context,'advance',key); call step.jump(header,at)
+    end
+    when mode = 24 then do
+      operation = doemit(body,contract,at,context,'new','inner')
+      operation = doemit(body,contract,at,context,'capture','inner','repeat')
+      operation = doemit(body,contract,at,context,'start','inner')
+      operation = doemit(body,contract,at,context,'advance',key); call body.jump(header,at)
+    end
+    when mode = 25 then do
+      operation = doemit(body,contract,at,context,'close',key)
+      operation = doemit(body,contract,at,context,'advance',key); call body.jump(header,at)
+    end
+    when mode = 26 then call body.jump(entry,at)
+    when mode = 27 then call doreturn(body,contract,at)
+    when mode = 40 | mode = 42 then do
+      left = fn.block('body.left'); right = fn.block('body.right'); joined = fn.block('body.join')
+      value = body.constantbytes(contract.type('core.boolean'),'01'x as .binary,at)
+      call body.branch(value,left,right,at)
+      if mode = 40 then operation = doemit(left,contract,at,context,'close',key)
+      call left.jump(joined,at); call right.jump(joined,at)
+      if mode = 42 then do
+        operation = doemit(joined,contract,at,context,'advance',key); call joined.jump(header,at)
+      end
+      else call doreturn(joined,contract,at)
+    end
+    when mode = 41 then call body.jump(header,at)
+    when mode = 44 | mode = 45 then do
+      if mode = 44 then do
+        operation = doemit(body,contract,at,context,'close',key)
+        source = builder.source('<source>','exit 0' as .binary); exact = source.origin(0,6)
+        value = body.constantbytes(contract.type('crexx.c.value'),'0' as .binary,exact)
+        draft = body.operation(contract.operation('crexx.c.return.present'),exact)
+        call draft.input('value',value); packet = draft.finish()
+        draft = body.operation(contract.operation('crexx.c.exit'),exact)
+        call draft.input('result',packet.result()); call draft.input('context',body.load(context,exact))
+        operation = draft.finish(); call body.returnvalue(packet.result(),exact.derive('synthetic'))
+        body = fn.block('dead.after.exit')
+      end
+      else do
+        source = builder.source('<source>','select' as .binary); exact = source.origin(0,6)
+        draft = body.operation(contract.operation('crexx.c.select.missing'),exact)
+      end
+      if mode = 45 then operation = draft.finish()
+      /* Cold suffixes retain declaration checks, with no live phase claim. */
+      operation = doemit(body,contract,at,context,'advance',key)
+      call doreturn(body,contract,at)
+    end
+    otherwise do
+      operation = doemit(body,contract,at,context,'advance',key); call body.jump(header,at)
+    end
+  end
+  if mode = 31 then operation = doemit(exhausted,contract,at,context,'advance',key)
+  operation = doemit(exhausted,contract,at,context,'close',key); call exhausted.jump(after,at)
+  call doreturn(after,contract,at)
+  if mode = 18 then do
+    child = builder.function('$CHILD',contract.type('crexx.c.result'))
+    ignored = child.argument(contract.type('crexx.c.context'))
+    ignored = child.argument(contract.type('crexx.g.int64')); block = child.block('entry')
+    childcontext = child.slot('context',contract.type('crexx.c.context'))
+    call block.store(childcontext,block.readarg(1,at),at)
+    block = entrybody(child,contract,block,childcontext,at)
+    operation = doemit(block,contract,at,context,'capture',key,'repeat')
+    call doreturn(block,contract,at)
+  end
+  if mode = 4 then do
+    /* The same key is legal in another function, whose entry is also checked. */
+    child = builder.function('$CHILD',contract.type('crexx.c.result'))
+    ignored = child.argument(contract.type('crexx.c.context'))
+    ignored = child.argument(contract.type('crexx.g.int64'))
+    childcontext = child.slot('context',contract.type('crexx.c.context'))
+    childentry = child.block('entry'); childbody = child.block('body'); childexit = child.block('exhausted')
+    argument = childentry.readarg(1,at); call childentry.store(childcontext,argument,at)
+    childentry = entrybody(child,contract,childentry,childcontext,at)
+    operation = doemit(childentry,contract,at,childcontext,'new',key)
+    operation = doemit(childentry,contract,at,childcontext,'capture',key,'repeat')
+    operation = doemit(childentry,contract,at,childcontext,'start',key)
+    operation = doemit(childentry,contract,at,childcontext,'entry',key)
+    call childentry.branch(operation.result(),childbody,childexit,at)
+    operation = doemit(childbody,contract,at,childcontext,'close',key); call doreturn(childbody,contract,at)
+    operation = doemit(childexit,contract,at,childcontext,'close',key); call doreturn(childexit,contract,at)
+  end
+  return builder.finish()
+
+/* Test-only canonical C unit entry. The caller declares both arguments before
+ * creating setup and binds argument 1 to the canonical context slot. Keep slot
+ * reads in a separate dispatch block so local forwarding preserves them. */
+entrybody: procedure = .llir..block
+  arg fn = .llir..function, contract = .llir..contract, setup = .llir..block, context = .llir..slot, at = .llir..origin
+  entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  call setup.store(entry,setup.readarg(2,at),at)
+  dispatch = fn.block('dispatch.0'); body = fn.block('source.body'); invalid = fn.block('entry.invalid')
+  call setup.jump(dispatch,at)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),at)
+  call draft.input('context',dispatch.load(context,at)); call draft.input('entry',dispatch.load(entry,at))
+  integer = .llir..intcodec()
+  call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  operation = draft.finish(); call dispatch.branch(operation.result(),body,invalid,at)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),at); operation = draft.finish()
+  draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
+  call invalid.returnvalue(operation.result(),at)
+  return body

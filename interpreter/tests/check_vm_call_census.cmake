@@ -4,8 +4,14 @@ if(NOT DEFINED VM OR NOT DEFINED INPUT OR NOT DEFINED OUTPUT OR
 endif()
 
 file(REMOVE "${OUTPUT}")
+# Keep this measured call workload stable while the default functional fixture
+# independently grows its linked-window coverage.
+set(profile_args ${RUNTIME_ARGS})
+if(CASE STREQUAL "signal_unwind")
+    list(APPEND profile_args -a census)
+endif()
 execute_process(
-        COMMAND "${VM}" --profile-output "${OUTPUT}" "${INPUT}" ${RUNTIME_ARGS}
+        COMMAND "${VM}" --profile-output "${OUTPUT}" "${INPUT}" ${profile_args}
         RESULT_VARIABLE profile_result
         OUTPUT_VARIABLE program_output
         ERROR_VARIABLE profile_error)

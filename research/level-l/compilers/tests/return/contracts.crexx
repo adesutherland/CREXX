@@ -1,0 +1,84 @@
+/* Independent source-contract checks; CALL owns unchanged raw-IR admission. */
+options levelb
+import rxfnsb
+import llcparse
+import llast
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  lf = '0A'x as .string; crlf = '0D0A'x as .string; cr = '0D'x as .string
+  call continued(('return 1,' || lf || ' +2') as .binary,'LF',0,1)
+  call continued(('return 1,' || cr || ' +2') as .binary,'CR',0,1)
+  call continued(('return 1,' || crlf || ' +2') as .binary,'CRLF',0,1)
+  call continued(('return 1, /* 雪' || lf || ' */' || lf || ' +2') as .binary,'masked block comment',0,1)
+  prefix = 'options comments_dash' || lf
+  call continued((prefix || 'return 1, -- ignored' || lf || ' +2') as .binary,'line comment',<blen>(prefix as .binary),2)
+  group_prefix = "return 'LENGTH'," || lf || ' '
+  source = (group_prefix || "('abc')") as .binary
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'continued function gap parses: ' || parsed.error())
+  tree = parsed.ast(); walk = .llast..walk; quoted = 0; blanks = 0; groups = 0
+  node = .llast..node
+  if parsed.status() = 0 then do
+    walk = tree.walk()
+    do while walk.next()
+      node = walk.node()
+      if node.kind() = 'CallQuoted' then quoted = quoted + 1
+      if node.kind() = 'blank' then blanks = blanks + 1
+      if node.kind() = 'Group' then do
+        groups = groups + 1
+        call check(node.start() = <blen>(group_prefix as .binary),'continued group retains original byte start')
+      end
+    end
+    call check(quoted = 0 & blanks = 1 & groups = 1,'physical gap remains blank concatenation')
+  end
+  source = 'return 1, /* unterminated' as .binary
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() <> 0 & left(parsed.error(),11) == 'LL_COMMENT:' & pos('unclosed nested comment',parsed.error()) > 0 & pos('35.1',parsed.error()) = 0,'comment failure keeps precedence: ' || parsed.error())
+  source = "return 'unterminated" as .binary
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() <> 0 & pos('UNTERMINATED',upper(parsed.error())) > 0 & pos('35.1',parsed.error()) = 0,'literal failure keeps precedence')
+  prefix = 'return 1,' || lf || lf
+  source = (prefix || 'return 2') as .binary
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'continuation preserves a second physical separator: ' || parsed.error())
+  returns = 0
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk()
+    do while walk.next()
+      node = walk.node()
+      if node.kind() <> 'Return' then iterate
+      returns = returns + 1
+      if returns = 1 then call check(node.start() = 0 & node.line() = 1,'first RETURN keeps its original source position')
+      if returns = 2 then call check(node.start() = <blen>(prefix as .binary) & node.line() = 3,'second RETURN follows the preserved separator')
+    end
+    call check(returns = 2,'one continuation does not merge two RETURN clauses')
+  end
+  say 'RETURN_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+continued: procedure = .void
+  arg source = .binary, label = .string, first = .int, line = .int
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,label || ' continuation: ' || parsed.error())
+  if parsed.status() <> 0 then return
+  tree = parsed.ast(); walk = tree.walk()
+  node = .llast..node; returns = 0; plus = 0
+  do while walk.next()
+    node = walk.node()
+    if node.kind() = 'Return' then do
+      returns = returns + 1
+      call check(node.start() = first & node.finish() = <blen>(source) & node.line() = line,label || ' original RETURN byte/line span')
+      call check(node.count('value') = 1,label || ' one continued expression')
+    end
+    if node.kind() = 'plus' then plus = plus + 1
+  end
+  call check(returns = 1 & plus = 1,label || ' preserved expression shape')
+  return
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

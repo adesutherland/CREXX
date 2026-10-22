@@ -1,0 +1,143 @@
+/* Existing B queue ownership supplies selected input to one exported C body. */
+options levelb
+import rxfnsb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import pullfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0
+  previous = rxqueue('QUERY')
+  call check(rxqueue('SETX','PULL-FIXTURE') == '0','select the owned test queue')
+  call check(rxqueue('CLEAR') == '0','start with an empty selected queue')
+  visible = .rexxpool..RexxVariablePool()
+  returned = .rexxactivation..RexxActivationArguments
+  nul = '00'x as .string
+  if argv[0] > 0 then do
+    if argv[1] <> 'late-bare' & argv[1] <> 'late-empty' & argv[1] <> 'bad-position' then return 2
+    call queue 'Nleft:right'
+    call queue 'sentinel'
+    say 'PULL_FATAL|before'
+    returned = invokeFixture(argv[1],reference visible)
+    say 'UNREACHED fatal host'
+    return 1
+  end
+
+  call check(rxqueue('SETX','PULL-OTHER') == '0','select a second execution-local queue')
+  call queue 'other untouched'
+  call check(rxqueue('SET','PULL-FIXTURE') == '0','return to the selected test queue')
+  call runCase('words','aéµμ🙂' || nul || 'b rest','AÉµΜ🙂' || nul || 'B','REST','old later',1)
+  call runCase('bare','discard me','old first','old rest','old later',1)
+  call runCase('empty-first','discard me','old first','old rest','',1)
+  call runCase('all-empty','discard me','old first','old rest','old later',1)
+  call runCase('commas','alpha beta','ALPHA','BETA','',1)
+  call runCase('words','','','','old later',1)
+  call runCase('drop','discard me','old first','old rest','old later',1)
+  call runCase('position','é🙂abc','É🙂','ABC','old later',1)
+  call runCase('live','Nleft:right','old first','old rest','old later',1)
+  call runCase('pattern-case','ab','AB','','old later',1)
+  call runCase('private','mixed Case','old first','old rest','old later',1)
+  call runCase('contextual','not consumed','old first','old rest','old later',0)
+  call runCase('dead','not consumed','old first','old rest','old later',0)
+  call ordering()
+  call check(rxqueue('QUERY') == 'PULL-FIXTURE','C activations retain the selected execution queue')
+  call check(rxqueue('SET','PULL-OTHER') == '0','reselect the independent named queue')
+  call check(queued() = 1 & pull() == 'other untouched','selected reads leave another queue unchanged')
+  call check(rxqueue('SET',previous) == '0','restore the original selection')
+  call check(rxqueue('DELETE','PULL-FIXTURE') == '0' & rxqueue('DELETE','PULL-OTHER') == '0','remove owned test queues')
+  say 'PULL_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+runCase: procedure = .void
+  arg mode = .string, source = .string, first = .string, rest = .string, later = .string, reads = .int
+  call check(rxqueue('CLEAR') == '0',mode || ': reset the selected queue')
+  call queue source
+  call queue 'sentinel'
+  parent = .rexxpool..RexxVariablePool()
+  call parent.setString('SHARED','parent shared')
+  visible = .rexxpool..RexxVariablePool()
+  call visible.exposeSymbol('SHARED',reference parent)
+  call visible.setString('FIRST','old first'); call visible.setString('REST','old rest')
+  call visible.setString('LEFT','old left'); call visible.setString('RIGHT','old right')
+  call visible.setString('LATER','old later'); call visible.setString('LOCAL','caller local')
+  returned = invokeFixture(mode,reference visible)
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == '0',mode || ': caller continues with an owned result')
+  call check(visible.symbolValue('FIRST').asString() == first & visible.symbolValue('REST').asString() == rest,mode || ': exact UPPER source and template result')
+  call check(visible.symbolValue('LATER').asString() == later,mode || ': later comma sources are empty')
+  call check(visible.symbolValue('LOCAL').asString() == 'caller local',mode || ': private target remains local')
+  call check(queued() = 2 - reads & queued() = 2 - reads,mode || ': exactly one acquisition or no untaken acquisition')
+  if reads then do
+    call check(peek() == 'sentinel' & queued() = 1,mode || ': later templates did not acquire another entry')
+    call check(pull() == 'sentinel',mode || ': UPPER did not mutate the remaining queue entry')
+  end
+  else call check(peek() == source,mode || ': contextual/dead PULL leaves the queue unchanged')
+  if mode = 'live' then do
+    call check(visible.symbolValue('KEY2').asString() == 'N','early section writes before the next operand')
+    call check(visible.symbolValue('LEFT').asString() == 'LEFT' & visible.symbolValue('RIGHT').asString() == 'RIGHT','later compound pattern resolves the new tail')
+  end
+  if mode = 'pattern-case' then call check(visible.symbolValue('DELIM').asString() == 'b','UPPER preserves the dynamic pattern value')
+  if mode = 'private' then do
+    call check(parent.symbolValue('SHARED').asString() == 'MIXED','PULL writes through nested EXPOSE aliases')
+    call check(visible.symbolValue('RESULT').asString() == 'CASE','private remainder returns without leaking its local')
+  end
+  else call check(parent.symbolValue('SHARED').asString() == 'parent shared',mode || ': unrelated caller alias remains unchanged')
+  if mode = 'contextual' then call check(visible.symbolValue('PULL').asString() == '7' & visible.symbolValue('RESULT').asString() == 'pull label','PULL remains a variable and local CALL label')
+  call check(visible.symbolValue('UNREACHED').asString() == 'UNREACHED',mode || ': untaken template performs no write')
+  return
+
+ordering: procedure = .void
+  visible = .rexxpool..RexxVariablePool()
+  parent = .rexxpool..RexxVariablePool()
+  returned = .rexxactivation..RexxActivationArguments
+  recursive = .int; mode = .string; expected = .string
+  call check(rxqueue('CLEAR') == '0','reset front/tail control')
+  call queue 'tail'
+  call push 'head'
+  call queue 'sentinel'
+  returned = invokeFixture('order',reference visible)
+  call check(visible.symbolValue('FIRST').asString() == 'HEAD' & visible.symbolValue('SECOND').asString() == 'TAIL','PULL consumes selected front then tail')
+  call check(queued() = 1 & pull() == 'sentinel','front/tail route consumes exactly two entries')
+  do recursive = 0 to 1
+    visible = .rexxpool..RexxVariablePool()
+    parent = .rexxpool..RexxVariablePool()
+    call parent.setString('SHARED','parent shared')
+    call visible.exposeSymbol('SHARED',reference parent)
+    call visible.setString('LOCAL','caller local')
+    call queue 'first one'
+    call queue 'second two'
+    call queue 'sentinel'
+    mode = 'nested'
+    if recursive then mode = 'recursive'
+    returned = invokeFixture(mode,reference visible)
+    expected = 'FIRST'
+    if recursive then expected = 'SECOND'
+    call check(parent.symbolValue('SHARED').asString() == expected,mode || ': private calls share the same queue and exposed target')
+    call check(visible.symbolValue('LOCAL').asString() == 'caller local',mode || ': private target restoration')
+    if \recursive then call check(visible.symbolValue('NEXT').asString() == 'SECOND TWO','shared caller reads the entry after its private child')
+    call check(queued() = 1 & pull() == 'sentinel',mode || ': nested calls acquire one entry per reached PULL')
+  end
+  return
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments
+  arg mode = .string, visible_ref = reference .rexxpool..RexxVariablePool
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.appendText(mode)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,visible_ref,reference config)
+  returned = pullfixture..run(reference context,0)
+  rebound = context.pool(); rebound_activation = context.activation(); rebound_config = context.config()
+  original_activation = reference activation; original_config = reference config
+  call check(<refvalid>(rebound) & (rebound <refsame> visible_ref),mode || ': restore the live original pool')
+  call check((rebound_activation <refsame> original_activation) & (rebound_config <refsame> original_config),mode || ': keep caller-owned context borrows')
+  return returned
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

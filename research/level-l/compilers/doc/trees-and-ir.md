@@ -35,19 +35,20 @@ has count zero, rather than a fake value.
 | Kind | Fields | Purpose |
 |---|---|---|
 | Program | `body: Sequence`; G also `routines: GProcedure*` | Top-level unit; Classic labels remain in the statement sequence. |
-| Sequence / Block | `items: node*` / `body: Sequence` | Authored order / explicit DO group. |
+| Sequence / Block (G) | `items: node*` / `body: Sequence` | Authored order / typed-language DO group. |
 | Number / String / Name | `spelling: text` | Exact numeral, quoted literal (including an adjacent Classic X/B suffix) or unresolved name. |
 | Chain | `operands: node+`, `operators: node*` | One precedence level, left-to-right order. Exactly one fewer operator than operand. A zero-operator chain is transparent during lowering. |
 | Operator tokens | no fields; kind is `plus`, `minus`, `times`, `divide`, `assign`, `ne`, `lt`, `le`, `gt`, `ge`, `strict`, `concat`, `blank`, `abut`, `and`, `or`, `xor`, `not` | Operator identity and its original span; `assign` means equality when used in a comparison chain. |
 | Prefix / Group | `operator: node, value: node` / `value: node` | Unary operation / explicit parentheses. |
 | Assignment | `name: text`, `value: node` (optional for C) | Assignment is separate from declaration. Missing C RHS means empty value. |
 | IfThen / IfElse | `condition: node, yes: node`; IfElse adds `no: node` | Matched/unmatched grammar preserves nearest-IF ELSE association. |
-| While | `condition: node, body: Sequence` | Pre-test DO WHILE. |
+| While (G) | `condition: node, body: Sequence` | Typed-language pre-test DO WHILE. |
 | Leave / Iterate / Nop | no fields | Innermost loop transfer / no operation. |
 | Say / Return / Exit | `value: node?` | Optional authored value; each instruction has its own semantics. |
 | Call / Invoke | `name: text, arguments: Arguments` | Expression call / CALL instruction. |
 | Arguments / Argument | `items: Argument+` / `value: node?` | Positional presence. A single empty Argument represents a zero-argument call; two empty entries are two omitted positions. |
-| Options | `level: text` | If present, must select the requested language and start the source. |
+| COptions | `value: node?` | Classic retains every optional expression, including the first bare-word header. Only that complete initial clause selects static settings; all operands keep ordinary evaluation. |
+| Options (G) | `level: text` | If present, must select G and start the source. |
 
 Each expression precedence level produces a Chain, including transparent
 single-operand levels. These preserve the selected grammar structure; the
@@ -80,19 +81,41 @@ as an uninitialised C-language variable.
 
 ### Classic nodes
 
+Classic DO uses `CDo(header:DoHeader, body:Sequence, ending:DoEnd)` for all
+grouping and repetitive forms. Optional repetition/condition children, raw
+control/END names and ordered modifiers follow the
+[approved DO schema](architecture.md#approved-do-contract); G's Block/While
+schema is unchanged.
+
 | Kind | Fields |
 |---|---|
 | CLabel | `name: text` |
 | CProcedure | no fields |
-| CArg / ArgTarget | `items: ArgTarget+` / `name: text`, empty for omitted target |
+| CArg | `templates: ParseTemplates`, exactly one required child; implicit ARG source/UPPER is private lowering policy |
 | CNumeric | `setting: text, value: node?` |
 | CForm | `form: text`, the optional SCIENTIFIC/ENGINEERING token spelling; empty means reset |
 
-CLabel and CProcedure remain separate nodes. The routine table recognises an
-admitted label followed immediately by PROCEDURE and records the interval up
-to the next label. It rejects shared-pool labels and reachable fall-through into
-a label. Dynamic source names remain uppercase pool keys. They never become G
-local variables or acquire typed default semantics.
+CArg reuses the existing ParseTemplate and Parse* item shapes; `ArgTarget`
+and `CArg.items` are absent. Its complete authored instruction span, every
+template/item span and empty boundary remain exact, without a fabricated UPPER
+or ParseSource token. The [approved ARG contract](architecture.md#proposed-arg-contract)
+also retires the scalar read operation/export in C v8/53 operations and the
+33-export target. The plan tracks instruction status and remaining shared work.
+
+CLabel and CProcedure remain separate nodes. One source-unit body has a checked
+entry0 for main and positive first-occurrence label entries; adjacent labels,
+fall-through and shared pools do not require PROCEDURE. Group labels are
+observation-only. An executed PROCEDURE privately binds that activation and
+applies ordered EXPOSE. See the [shared-entry contract](architecture.md#proposed-procedure-contract).
+
+Ordinary CALL retains `Invoke(name,arguments)` and `Call(name,arguments)`;
+`InvokeQuoted`/`CallQuoted` preserve raw literal spelling and distinguish local
+bypass. Constant-symbol expression nodes retain spelling and lower to shared
+whole-name-cased literal text. Names never become G locals or typed defaults.
+The [CALL contract](architecture.md#call-contract) owns required-result identity
+and direct BIF binding within the [current C family](architecture.md#current-c-family-contract);
+dynamic/provider/handler scope stays explicit. EXIT uses an owned presence packet
+and visible program-root guard branches before caller result observations.
 
 ### Where IF's fields come from
 

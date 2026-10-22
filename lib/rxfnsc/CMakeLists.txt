@@ -132,19 +132,24 @@ set(RXFNSC_MODULES
   RexxClassicAddress
   RexxVariablePool
   RexxActivationArguments
+  RexxClassicContext
   RexxClassicConditionEvent
   RexxClassicDiagnosticCatalog
   RexxDoState
   RexxClassicBifs
+  RexxClassicParse
   RexxClassicBitFunctions
   ${RXFNSC_DIRECT_BIF_MODULES}
 )
 
 set(RXFNSC_BINS)
+set(RXFNSC_MEMBER_RXAS)
 set(RXFNSC_MEMBER_ROOT "${CMAKE_CURRENT_BINARY_DIR}/members")
 foreach(MOD IN LISTS RXFNSC_MODULES)
   list(APPEND RXFNSC_BINS
     "${RXFNSC_MEMBER_ROOT}/${MOD}/${MOD}.rxbin")
+  list(APPEND RXFNSC_MEMBER_RXAS
+    "${RXFNSC_MEMBER_ROOT}/${MOD}/${MOD}.rxas")
 endforeach()
 
 set(RXFNSC_MEMBER_BUILD_DEPS
@@ -158,7 +163,7 @@ set(RXFNSC_IMPORT_LIBRARY "${RXFNSC_IMPORT_ROOT}/library.rxbin")
 set(RXFNSC_IMPORT_CLASSLIB "${RXFNSC_IMPORT_ROOT}/classlib.rxbin")
 set(RXFNSC_IMPORT_STREAM "${RXFNSC_IMPORT_ROOT}/rxcstream.rxplugin")
 set(RXFNSC_IMPORT_FS "${RXFNSC_IMPORT_ROOT}/rxfs.rxplugin")
-set(RXFNSC_IMPORT_UNICODE "${RXFNSC_IMPORT_ROOT}/rxfnsg.rxbin")
+set(RXFNSC_IMPORT_UNICODE "${RXFNSC_IMPORT_ROOT}/rxunicode-core.rxbin")
 set(RXFNSC_IMPORT_EXITS "${RXFNSC_IMPORT_ROOT}/rxcexits.rxbin")
 add_custom_command(
   OUTPUT
@@ -169,6 +174,7 @@ add_custom_command(
     "${RXFNSC_IMPORT_STREAM}"
     "${RXFNSC_IMPORT_FS}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${RXFNSC_IMPORT_ROOT}"
+  COMMAND ${CMAKE_COMMAND} -E rm -f "${RXFNSC_IMPORT_ROOT}/rxfnsg.rxbin"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "${CMAKE_BINARY_DIR}/bin/library.rxbin"
     "${RXFNSC_IMPORT_LIBRARY}"
@@ -179,15 +185,24 @@ add_custom_command(
     "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
     "${RXFNSC_IMPORT_EXITS}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin"
     "${RXFNSC_IMPORT_UNICODE}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:cstream> "${RXFNSC_IMPORT_STREAM}"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:fs> "${RXFNSC_IMPORT_FS}"
+  # Consume a completed producer refresh even when all copied bytes match.
+  # Keep every declared output current for Make's secondary-output rules.
+  COMMAND ${CMAKE_COMMAND} -E touch_nocreate
+    "${RXFNSC_IMPORT_LIBRARY}"
+    "${RXFNSC_IMPORT_CLASSLIB}"
+    "${RXFNSC_IMPORT_EXITS}"
+    "${RXFNSC_IMPORT_UNICODE}"
+    "${RXFNSC_IMPORT_STREAM}"
+    "${RXFNSC_IMPORT_FS}"
   DEPENDS
     cstream
     fs
-    rxfnsg
-    "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+    rxunicode_core
+    "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin"
     library
     classlib
     compiler_exit_bin
@@ -213,7 +228,9 @@ set(RXFNSC_DEPS_RexxClassicState RexxValue)
 set(RXFNSC_DEPS_RexxClassicAddress RexxClassicState RexxActivationArguments RexxVariablePool RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicUnicodeProperties)
 set(RXFNSC_DEPS_RexxActivationArguments RexxValue RexxClassicState RexxVariablePool)
-set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool)
+set(RXFNSC_DEPS_RexxClassicContext RexxActivationArguments RexxVariablePool RexxClassicConfig RexxValue RexxClassicConditionEvent)
+set(RXFNSC_DEPS_RexxClassicParse RexxClassicContext RexxClassicBifs RexxClassicDatatype RexxClassicCharacterScan RexxValue RexxVariablePool RexxActivationArguments RexxClassicConfig)
+set(RXFNSC_DEPS_RexxDoState RexxValue RexxVariablePool RexxClassicContext)
 set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicCharacterScan RexxClassicEncoding RexxClassicBitFunctions RexxClassicState RexxClassicConditionEvent RexxClassicDiagnosticCatalog RexxActivationArguments RexxVariablePool RexxClassicUnicodeProperties)
 set(RXFNSC_DEPS_RexxClassicConfig RexxValue RexxClassicStream)
 set(RXFNSC_DEPS_RexxClassicStream RexxClassicEncoding)
@@ -315,10 +332,9 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
     set(_rxfnsc_primary_source "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
   endif()
   crexx_add_fixture_command(
-    OUTPUT "${_binfile}"
+    OUTPUT "${_binfile}" "${_member_dir}/${_basename}.rxas"
     BYPRODUCTS
       "${_member_source}"
-      "${_member_dir}/${_basename}.rxas"
       ${_rxfnsc_staged_sources}
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_member_source_root}"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -337,6 +353,7 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
       "${RXFNSC_IMPORT_LIBRARY}"
       "${RXFNSC_IMPORT_CLASSLIB}"
       "${RXFNSC_IMPORT_EXITS}"
+      "${RXFNSC_IMPORT_UNICODE}"
       ${_rxfnsc_source_deps}
       ${RXFNSC_MEMBER_BUILD_DEPS}
     WORKING_DIRECTORY "${_member_dir}"
@@ -344,6 +361,11 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
     VERBATIM
   )
 endforeach()
+
+# Compiler hosts reuse this self-contained member without linking the runtime
+# aggregate. Keep the existing member command as its only producer.
+add_custom_target(rxfnsc_unicode_properties_member DEPENDS
+  "${RXFNSC_MEMBER_ROOT}/RexxClassicUnicodeProperties/RexxClassicUnicodeProperties.rxbin")
 
 set(_rxfnsc_control_file ${CMAKE_CURRENT_BINARY_DIR}/rxfnsc_link_$<CONFIG>.ctl)
 set(_rxfnsc_link_root "${CMAKE_CURRENT_BINARY_DIR}/linked")
@@ -392,6 +414,9 @@ add_custom_command(
 add_custom_target(rxfnsc ALL
   DEPENDS "${_rxfnsc_publish_image}"
 )
+# QA consumers read real producer metadata from every member's readable RXAS.
+# Export the exact co-output set without creating a second compilation rule.
+set_property(TARGET rxfnsc PROPERTY CREXX_RXFNSC_MEMBER_RXAS "${RXFNSC_MEMBER_RXAS}")
 
 add_dependencies(rxfnsc library classlib)
 

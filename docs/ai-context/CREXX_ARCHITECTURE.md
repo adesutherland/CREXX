@@ -82,10 +82,22 @@ outside this phase.
 
 `langtools/` owns Level L itself: the `rxlang` command, callable `llgenerate` service,
 specification frontend, bootstrap and generic RXAS/metadata/file-output helpers.
-`lib/rxfnsl/` owns only generic SDK source and its required Unicode build inputs.
+`lib/rxfnsl/` owns SDK implementation, optional analysis/execution/RXAS packages
+and required Unicode build inputs.
 All Level L guides/examples and independent library tests live in `langtools/`.
 The SDK has no dependency on a source-language compiler or the Level L command.
 `rxfnsl.rxbin` is the SDK; `rxlanglib.rxbin` is the tool service package.
+Optional `rxfnsl-analysis`, `rxfnsl-rxas` and `rxfnsl-execute` images have
+separate build/link selections. The first supplies neutral graph/effect/proof
+services, the second canonical instruction records and checked allocation,
+and the third bounded IR execution through trusted runtime handlers. They do
+not enter grammar bootstrap or static application targets. Source-language
+policy and runtime algorithms stay in their existing owners; see the public
+[IR guide](../../langtools/doc/ir-design.md) and
+[execution prototype](../../langtools/doc/execute-design.md).
+`stage-l-libraries` prepares all four SDK images for normal installation;
+optional refers to import/link/runtime selection. The individual `rxfnsl`
+target and grammar bootstrap retain their core/library closure.
 
 The new compilers live in `research/level-l/compilers/`. Classic owns an
 independent frontend, semantic family, RXAS selector, service and main. G uses
@@ -440,8 +452,10 @@ The architecture direction is:
   ordinal bridge handles byte-valued Classic operations without weakening the
   Level B/G `.string` contract. Shared `RexxValue` retains binary storage for
   RexxScript and future explicit binary facilities.
-- Level G's `rxunicode` module owns richer Unicode services. Its production
-  executors are Level B codepoint algorithms over pinned, generated Unicode
+- Shared B `rxunicode` procedures own explicit Unicode services; G owns
+  collection/iterator objects and C owns Classic adapters. The optional
+  `rxunicode-core.rxbin` and G aggregate contain the same B members; select
+  one provider per linked image. Their executors use pinned, generated Unicode
   17.0.0 constants; they do not require an external Unicode provider or make
   provider choice part of application semantics.
 
@@ -565,7 +579,7 @@ The completed UTF baseline is:
 
 The remaining work has moved to its owning levels:
 
-- Level G's implemented `rxunicode` baseline owns explicit normalization,
+- The shared B `rxunicode` baseline owns explicit normalization,
   default casing/folding, grapheme segmentation, and codecs. Four positive
   normalization certificates are stored in the VM value/register status word
   because the VM owns copy and mutation, but they occupy the protected

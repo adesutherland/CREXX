@@ -1,0 +1,106 @@
+options levelc
+say 'before'
+do 3
+  say 'count'
+end
+do 0
+  say 'wrong zero'
+end
+do 2147483648
+  say 'large'
+  leave
+end
+do 1E30
+  say 'exponent'
+  leave
+end
+n=0
+do forever
+  n=n+1
+  if n=1 then iterate
+  say 'forever' n
+  leave
+end
+n=0
+do while n<1
+  say 'while' n
+  n=n+1
+end
+n=0
+do until n=2
+  n=n+1
+  if n=1 then iterate
+  say 'until' n
+end
+do 0 while marker('wrong count while',1)
+  nop
+end
+do 0 until marker('wrong count until',1)
+  nop
+end
+do i=2 to 1 while marker('wrong to while',1)
+  nop
+end
+say 'to-suppressed' i
+do i=5 for 0
+  say 'wrong for zero'
+end
+say 'for-zero' i
+do i=1 for 1
+  say 'for-final' i
+end
+say 'advanced' i
+do i=1 for 3 until marker('until-check',1)
+  iterate
+end
+say 'until-unstepped' i
+do i=1 for 3 until marker('wrong leave until',1)
+  leave
+end
+say 'leave-unstepped' i
+do i=1 to 3
+  i=12.0
+end
+say 'mutated' i
+a='a'
+b='b'
+key='a'
+do items.key=1.0 to 2
+  key='b'
+  items.key=10
+end
+say 'compound' items.a items.b
+do outer=1 for 2
+  do forever
+    do
+      leave
+    end
+  end
+  say 'outer' outer
+end
+do k=1 for 3
+  select
+    when k=1 then iterate
+    otherwise leave
+  end
+end
+say 'select-transfer' k
+i='parent'
+say owned('first') owned('second') i
+do σ=1 for 1
+  nop
+end Σ
+say 'unicode' σ
+say 'after'
+exit 0
+marker: procedure
+  arg label,value
+  say label
+  return value
+owned: procedure
+  arg value
+  do 2
+    do forever
+      return value
+    end
+  end

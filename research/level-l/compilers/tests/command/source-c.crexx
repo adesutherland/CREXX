@@ -1,0 +1,74 @@
+/* One implicit-command image; host cases never invoke an OS command. */
+options levelc
+parse arg MODE
+if MODE = 'plan' then do
+  address 'COMMAND-TEST' with input stem INPUT. output stem OUTPUT.
+  'literal :SCALAR'
+  return RC || '|' || .RC || '|' || .RS
+end
+if MODE = 'dynamic' then do
+  address 'COMMAND-TEST'
+  COMMAND = PAYLOAD
+  COMMAND
+  return RC
+end
+if MODE = 'repeat' then do
+  address 'COMMAND-TEST'
+  do 2
+    ('again :SCALAR')
+  end
+  return SCALAR
+end
+if MODE = 'once' then do
+  address 'COMMAND-TEST' with output stem OUTPUT.
+  MAKE()
+  return COUNT || '|' || ADDRESS() || '|' || ADDRESS('O')
+end
+if MODE = 'private' then do
+  address 'COMMAND-TEST'
+  call PRIVATECOMMAND
+  return RESULT
+end
+if MODE = 'exit' then do
+  call PRIVATEEXIT
+  UNREACHED = 'after private call'
+  return 'bad'
+end
+if MODE = 'late' then do
+  call LATEENTRY
+  return 'bad'
+end
+address CREXX
+('')
+say 'COMMAND_SOURCE|ok'
+return 0
+/* Both warnings survive dead code and share one physical Unicode line. */
+if 0 then ((DEAD)); if 'é' = 'é' then if 0 then SAME
+if 0 then -1
+if 0 then 'a' + 1
+if 0 then 2 + 3
+
+MAKE:
+COUNT = COUNT + 1
+address 'CHILD'
+return 'once'
+PRIVATECOMMAND:
+procedure expose SCALAR
+LOCAL = 'private changed'
+'private :SCALAR'
+return SCALAR
+PRIVATEEXIT:
+procedure expose COUNT PAYLOAD
+LOCAL = 'private changed'
+ESCAPE()
+UNREACHED = 'after command creation'
+return 'bad'
+ESCAPE:
+COUNT = COUNT + 1
+exit PAYLOAD
+LATEENTRY:
+('')
+LATEPROCEDURE:
+procedure
+say 'UNREACHED late procedure'
+return

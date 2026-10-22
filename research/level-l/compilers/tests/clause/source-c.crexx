@@ -1,0 +1,74 @@
+/* One image; the host supplies a portable command that pauses one second. */
+options levelc
+parse arg PAUSE
+PAUSES = 0
+PAIR = 'DATE'('B') || '|' || 'TIME'('L') || '|' || DELAYCHILD() || '|' || 'DATE'('B') || '|' || 'TIME'('L')
+parse var PAIR D1 '|' T1 '|' CHILD '|' D2 '|' T2
+LATER = 'TIME'('L')
+say 'CLAUSE|pair=' || ((D1 == D2) & (T1 == T2) & (CHILD == 'child')) || '|child=' || (\(CHILD_BEFORE == CHILD_AFTER)) || '|later=' || (\(T1 == LATER))
+
+WHILE_COUNT = 0
+HEADER_COUNT = 0
+do I = 'TIME'('E') to 'TIME'('E') by PAUSEZERO() for HEADERCAP('TIME'('E')) while WHILECAP('TIME'('E'))
+  iterate
+end
+say 'CLAUSE|header=' || ((HEADER_COUNT = 1) & (HEADER_SAMPLE = I)) || '|first=' || (WHILE_FIRST = I) || '|repeat=' || (WHILE_SECOND <> WHILE_FIRST) || '|while=' || WHILE_COUNT
+
+UNTIL_COUNT = 0
+do U = 'TIME'('E') by PAUSEZERO() for 2 until UNTILCAP('TIME'('E'))
+  iterate
+end
+say 'CLAUSE|until-first=' || (UNTIL_FIRST <> U) || '|until-repeat=' || (UNTIL_SECOND <> UNTIL_FIRST) || '|until=' || UNTIL_COUNT
+say 'CLAUSE|shadow=' || TIME() || '|' || DATE() || '|pauses=' || PAUSES
+return 'clause-pass'
+
+DELAYCHILD:
+procedure expose PAUSE PAUSES CHILD_BEFORE CHILD_AFTER
+LOCAL = 'private'
+CHILD_BEFORE = 'TIME'('L')
+address SYSTEM PAUSE
+if RC <> 0 then do; say 'PAUSE_FAILED|' || RC; exit 97; end
+PAUSES = PAUSES + 1
+CHILD_AFTER = 'TIME'('L')
+return 'child'
+
+PAUSEZERO:
+procedure expose PAUSE PAUSES
+address SYSTEM PAUSE
+if RC <> 0 then do; say 'PAUSE_FAILED|' || RC; exit 97; end
+PAUSES = PAUSES + 1
+return 0
+
+HEADERCAP:
+procedure expose HEADER_COUNT HEADER_SAMPLE
+parse arg SAMPLE
+HEADER_COUNT = HEADER_COUNT + 1
+HEADER_SAMPLE = SAMPLE
+return 2
+
+WHILECAP:
+procedure expose WHILE_COUNT WHILE_FIRST WHILE_SECOND
+parse arg SAMPLE
+WHILE_COUNT = WHILE_COUNT + 1
+if WHILE_COUNT = 1 then WHILE_FIRST = SAMPLE
+else WHILE_SECOND = SAMPLE
+return 1
+
+UNTILCAP:
+procedure expose UNTIL_COUNT UNTIL_FIRST UNTIL_SECOND PAUSE PAUSES
+parse arg SAMPLE
+UNTIL_COUNT = UNTIL_COUNT + 1
+if UNTIL_COUNT = 1 then do
+  UNTIL_FIRST = SAMPLE
+  address SYSTEM PAUSE
+  if RC <> 0 then do; say 'PAUSE_FAILED|' || RC; exit 97; end
+  PAUSES = PAUSES + 1
+  return 0
+end
+UNTIL_SECOND = SAMPLE
+return 1
+
+TIME:
+return 'local-time'
+DATE:
+return 'local-date'

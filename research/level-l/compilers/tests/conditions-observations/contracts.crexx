@@ -1,0 +1,266 @@
+/* cREXX License (MIT). Independent C22 policy/conditional-carrier admission.
+ * Native sources own runtime language expectations. These tiny graphs cover
+ * only new C22 invariants which native AST/RXAS fixtures cannot express.
+ */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+import llcir
+import llcprocedureprotocol
+import llcsignalprotocol
+import llcrxas
+import llcparse
+import llast
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  call schema(contract); call contextual()
+  graph = .llir..module; loaded = .llir..module
+  do mode = 1 to 13
+    graph = fixture(contract,mode)
+    call check(graph.error() == '','generic-valid C22 control ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    accepted = mode = 1 | mode = 10
+    call admission(argv[1],reference graph,accepted,'fresh-' || mode)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '' & bincompare(loaded.binary(),graph.binary()) = 0,'exact loaded bytes ' || mode)
+    if loaded.error() == '' then call admission(argv[1],reference loaded,accepted,'loaded-' || mode)
+    if mode = 10 then do
+      changed = llirservices..optimise(reference graph)
+      call check(changed.status() == 'changed','dead setter performs an actual rewrite: ' || changed.message())
+      if changed.status() == 'changed' then do
+        rewritten = changed.result()
+        call check(bincompare(rewritten.binary(),graph.binary()) <> 0 & rewritten.blocks() < graph.blocks(),'rewrite removes dead blocks and changes bytes')
+        call admission(argv[1],reference rewritten,1,'rewritten-dead-setter')
+        loaded = loadgraph(reference rewritten)
+        call check(loaded.error() == '','rewritten C22 reloads')
+        if loaded.error() == '' then call admission(argv[1],reference loaded,1,'loaded-rewritten-dead-setter')
+      end
+    end
+  end
+  graph = fixture(contract,1); call limits(argv[1],reference graph)
+  say 'CONDITIONS_OBSERVATIONS_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+/* The maintained native keyword-variable fixture has CALL assignment but no
+ * ON/OFF/NAME operand collision. This adds only that missing AST distinction. */
+contextual: procedure = .void
+  source = "ON='on'; OFF='off'; CALL='call'; NAME='name'; if 1 then call on error name ON else call off error; call on failure name 'μ'; call off failure" as .binary
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'CALL policy keywords retain assignment/arm/name contexts: ' || parsed.error())
+  if parsed.status() <> 0 then return
+  tree = parsed.ast(); walk = tree.walk(); assignments = 0; enabled = 0; disabled = 0
+  do while walk.next()
+    node = walk.node()
+    if node.kind() == 'Assignment' then assignments = assignments + 1
+    if node.kind() == 'CCallOn' then enabled = enabled + 1
+    if node.kind() == 'CCallOff' then disabled = disabled + 1
+  end
+  call check(assignments = 4 & enabled = 2 & disabled = 2,'four ordinary variables and exact contextual policy nodes')
+  return
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+schema: procedure = .void
+  arg contract = .llir..contract
+  data = dereference contract.data(); version = 0; types = 0; i = .int
+  do i = 1 to data.familycount()
+    if data.familyname(i) == 'crexx.c' then version = data.version(i)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
+  end
+  call check(version = 22 & types = 5 & data.ops() = 88,'C22/88 operations/five C types')
+  policy = contract.operation('crexx.c.call.policy').id()
+  complete = contract.operation('crexx.c.clause.complete').id()
+  call check(policy = 87 & complete = 88,'two append-only C operations')
+  do i = 1 to 2
+    id = policy; if i = 2 then id = complete
+    callback = data.callback(id,1)
+    call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) == 'table' & data.fieldname(id,1,2) == 'context','canonical inventory/context inputs ' || i)
+    call check(data.typename(data.fieldtype(id,1,1)) == 'crexx.g.text' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context','input types ' || i)
+    call check((callback is .llir..evaluator) = 0 & data.effectvalue(id,2) == 'condition.resource' & data.effectvalue(id,3) == 'returns','non-evaluable observed runtime effects ' || i)
+  end
+  call check(data.arity(policy,2) = 0 & data.arity(policy,3) = 4 & data.effectvalue(policy,1) == 'context','void policy and four source attributes')
+  call check(data.arity(complete,2) = 1 & data.typename(data.fieldtype(complete,2,1)) == 'crexx.c.result','conditional result carrier type')
+  call check(data.arity(complete,3) = 1 & data.fieldname(complete,3,1) == 'id' & data.effectvalue(complete,1) == 'context.input.output.observation','authored completion identity/effects')
+  return
+
+loadgraph: procedure = .llir..module
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref; storage = dereference graph.storage(); contract = dereference storage.contract()
+  return llir..loadbinary(contract,graph.binary())
+
+admission: procedure = .void
+  arg artifacts = .string, graph_ref = reference .llir..module, accepted = .int, label = .string
+  graph = dereference graph_ref; previous = graph.binary()
+  entries = .llcprocedureprotocol..checked(graph_ref)
+  signals = .llcsignalprotocol..checked(graph_ref,reference entries)
+  selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  if accepted then do
+    call check(entries.status() = 0 & signals.status() = 0,label || ' source-owned proof: ' || entries.error() || signals.error())
+    call check(selected.status() = 0 & output.bytes() > 0,label || ' nonempty output: ' || selected.error())
+    if signals.status() = 0 then do
+      call check(signals.hascalls(1) & signals.callhandlers(1) = 1 & signals.callhandler(1,1) = 1,label || ' immutable CALL declaration survives dead-setter pruning')
+      call check(signals.callcondition(1,1) = 2 & signals.callentry(1,1) = 1,label || ' condition/local entry facts')
+      name_ref = signals.callname(1,1); name = dereference name_ref
+      call check(name == 'P',label || ' exact retained handler name')
+    end
+  end
+  else do
+    call check(entries.status() <> 0 | signals.status() <> 0,label || ' explicit C proof refuses')
+    call check(selected.status() <> 0 & output.bytes() = 0 & pos('LL_COMPILER_LOWERING:',selected.error()) = 1,label || ' atomic source-specific refusal: ' || selected.error())
+  end
+  call check(bincompare(previous,graph.binary()) = 0,label || ' immutable input')
+  return
+
+limits: procedure = .void
+  arg artifacts = .string, graph_ref = reference .llir..module
+  graph = dereference graph_ref; previous = graph.binary()
+  entries = .llcprocedureprotocol..checked(graph_ref)
+  signals = .llcsignalprotocol..checked(graph_ref,reference entries)
+  call check(entries.status() = 0 & signals.status() = 0,'adequate C22 proofs before local limit checks')
+  if entries.status() | signals.status() then return
+  small = .llcsignalprotocol..checked(graph_ref,reference entries,signals.bytesused() - 1)
+  less = .llcsignalprotocol..checked(graph_ref,reference entries,67108864,signals.workused() - 1)
+  call check(small.status() <> 0 & pos('LL_COMPILER_LIMIT:',small.error()) = 1,'one byte below actual policy workspace refuses')
+  call check(less.status() <> 0 & pos('LL_COMPILER_LIMIT:',less.error()) = 1,'one work unit below actual policy work refuses')
+  good = .llcrxas..compilation(graph,artifacts); output = good.output(); saved = output.text()
+  limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+  call check(good.status() = 0 & limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,'output-limit refusal preserves prior owned output')
+  again = .llcrxas..compilation(graph,artifacts); repeated = again.output()
+  call check(again.status() = 0 & repeated.text() == saved & output.text() == saved & bincompare(previous,graph.binary()) = 0,'normal selection recovers after narrow limits')
+  loaded = loadgraph(graph_ref)
+  call check(signals.belongs(reference loaded) = 0,'byte-identical loaded graph cannot borrow another admission identity')
+  return
+
+/* 1 accepted;2 other C slot;3 wrong clause ID;4 derived completion origin;
+ *5 false carrier read;6 wrong true result;7 shared result;8 CALL SYNTAX;
+ *9 bad CSIG3 mode;10 valid dead setter;11 mode/policy mismatch;
+ *12 invalid dead setter, which raw admission must still inspect;
+ *13 otherwise-valid internal call crosses the source-owned policy domain. */
+fixture: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  builder = .llir..builder(contract); ontext = 'call on error name P'
+  source = (ontext || ('0A'x as .string) || 'nop' || ('0A'x as .string) || 'P: return') as .binary
+  file = builder.source('conditions-observations-ir.crexx',source)
+  at = file.origin(0,length(ontext)); first = length(ontext) + 1
+  nop_at = file.origin(first,first + 3); returned_at = file.origin(first + 7,<blen>(source))
+  generated = builder.synthetic('independent C22 dispatch'); derived = nop_at.derive('synthetic')
+  condition = 2; if mode = 8 then condition = 1
+  kind = 'C'; if mode = 9 then kind = 'X'; if mode = 11 then kind = 'S'
+  label_first = first + 4
+  payload = 'CSIG3' || ('0A'x as .string) || '1:' || framed('P') || '1:' || framed('conditions-observations-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
+  payload = payload || '1:1:' || framed(kind) || condition || ':1:' || framed('P') || framed('conditions-observations-ir.crexx') || '0:' || length(ontext) || ':'
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('canonical C',contract.type('crexx.c.context')); other = fn.slot('alternate C',contract.type('crexx.c.context'))
+  entry = fn.slot('entry',contract.type('crexx.g.int64')); table = fn.slot('table',contract.type('crexx.g.text'))
+  carrier = fn.slot('conditional R',contract.type('crexx.c.result')); duplicate = fn.slot('illegal second R',contract.type('crexx.c.result'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch'); nexttest = fn.block('next entry')
+  body = fn.block('main'); invalid = fn.block('invalid'); pentry = fn.block('P entry'); leaf = fn.block('P payload')
+  unwind = fn.block('completion true'); continuation = fn.block('completion false')
+  call setup.store(context,setup.readarg(1,generated),generated)
+  if mode = 2 then call setup.store(other,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated)
+  value = setup.constantbytes(contract.type('crexx.g.text'),payload as .binary,generated)
+  call setup.store(table,value,generated); call setup.jump(dispatch,generated)
+  call entrytest(dispatch,contract,context,entry,0,'',body,nexttest,generated)
+  call entrytest(nexttest,contract,context,entry,1,'P',pentry,invalid,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish(); call absent(invalid,contract,generated)
+  call consume(pentry,contract,context,returned_at); call pentry.jump(leaf,generated); call absent(leaf,contract,returned_at)
+  call consume(body,contract,context,at)
+  policy_body = body; complete_body = body
+  if mode = 10 | mode = 12 then do
+    policy_body = fn.block('dead CALL setter'); complete_body = fn.block('live completion')
+    false_value = body.constant(contract.type('core.boolean'),'false',at)
+    call body.branch(false_value,policy_body,complete_body,at)
+  end
+  policy_at = at; if mode = 12 then policy_at = at.derive('synthetic')
+  draft = policy_body.operation(contract.operation('crexx.c.call.policy'),policy_at)
+  call draft.input('table',policy_body.load(table,at.derive('synthetic'))); call draft.input('context',policy_body.load(context,at))
+  integer = .llir..intcodec()
+  call draft.attribute('condition',integer.parse(condition || '')); call draft.attribute('handler',integer.parse('1'))
+  call draft.attribute('label',integer.parse('1')); call draft.attribute('name','P' as .binary); finished = draft.finish()
+  if mode = 10 | mode = 12 then call policy_body.jump(complete_body,generated)
+  used_context = context; if mode = 2 then used_context = other
+  complete_at = nop_at; if mode = 4 then complete_at = derived
+  draft = complete_body.operation(contract.operation('crexx.c.clause.complete'),complete_at)
+  call draft.input('table',complete_body.load(table,derived)); call draft.input('context',complete_body.load(used_context,derived))
+  clause_id = first + 1; if mode = 3 then clause_id = first + 2
+  call draft.attribute('id',integer.parse(clause_id || '')); completed = draft.finish()
+  call complete_body.store(carrier,completed.result(),derived)
+  if mode = 7 then call complete_body.store(duplicate,completed.result(),derived)
+  draft = complete_body.operation(contract.operation('crexx.c.program.exiting'),derived)
+  call draft.input('context',complete_body.load(context,derived)); tested = draft.finish()
+  call complete_body.branch(tested.result(),unwind,continuation,derived)
+  if mode = 6 then call absent(unwind,contract,derived)
+  else call unwind.returnvalue(unwind.load(carrier,derived),derived)
+  if mode = 5 then unused = continuation.load(carrier,derived)
+  if mode = 13 then do
+    cross_carrier = fn.slot('ordinary cross-function R',contract.type('crexx.c.result'))
+    cross_unwind = fn.block('ordinary call true'); cross_continue = fn.block('ordinary call false')
+    draft = continuation.operation(contract.operation('crexx.c.arguments.empty'),nop_at); arguments = draft.finish()
+    draft = continuation.operation(contract.operation('crexx.c.call'),nop_at)
+    call draft.input('arguments',arguments.result()); call draft.input('context',continuation.load(context,nop_at))
+    call draft.attribute('target','SECOND' as .binary); call draft.attribute('entry',integer.parse('1'))
+    boolean = .llir..boolcodec(); call draft.attribute('function',boolean.parse('false')); invoked = draft.finish()
+    call continuation.store(cross_carrier,invoked.result(),derived)
+    draft = continuation.operation(contract.operation('crexx.c.program.exiting'),derived)
+    call draft.input('context',continuation.load(context,derived)); tested = draft.finish()
+    call continuation.branch(tested.result(),cross_unwind,cross_continue,derived)
+    call cross_unwind.returnvalue(cross_unwind.load(cross_carrier,derived),derived)
+    continuation = cross_continue
+    secondary = builder.function('SECOND',contract.type('crexx.c.result'))
+    ignored = secondary.argument(contract.type('crexx.c.context')); ignored = secondary.argument(contract.type('crexx.g.int64'))
+    secondary_context = secondary.slot('secondary C',contract.type('crexx.c.context'))
+    secondary_entry = secondary.slot('secondary entry',contract.type('crexx.g.int64'))
+    secondary_setup = secondary.block('secondary setup'); secondary_dispatch = secondary.block('secondary dispatch0')
+    secondary_next = secondary.block('secondary dispatch1'); secondary_main = secondary.block('secondary main')
+    secondary_body = secondary.block('secondary internal'); secondary_invalid = secondary.block('secondary invalid')
+    call secondary_setup.store(secondary_context,secondary_setup.readarg(1,generated),generated)
+    call secondary_setup.store(secondary_entry,secondary_setup.readarg(2,generated),generated)
+    call secondary_setup.jump(secondary_dispatch,generated)
+    call entrytest(secondary_dispatch,contract,secondary_context,secondary_entry,0,'',secondary_main,secondary_next,generated)
+    call entrytest(secondary_next,contract,secondary_context,secondary_entry,1,'Q',secondary_body,secondary_invalid,generated)
+    call absent(secondary_main,contract,generated)
+    call consume(secondary_body,contract,secondary_context,returned_at); call absent(secondary_body,contract,returned_at)
+    draft = secondary_invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish()
+    call absent(secondary_invalid,contract,generated)
+  end
+  call continuation.jump(leaf,generated)
+  return builder.finish()
+
+framed: procedure = .string
+  arg value = .string
+  bytes = value as .binary
+  return <blen>(bytes) || ':' || value
+
+entrytest: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, entry = .llir..slot, id = .int, name = .string, yes = .llir..block, no = .llir..block, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.entry.test'),origin)
+  call draft.input('context',block.load(context,origin)); call draft.input('entry',block.load(entry,origin))
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse(id || '')); call draft.attribute('name',name as .binary)
+  tested = draft.finish(); call block.branch(tested.result(),yes,no,origin)
+  return
+
+consume: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.procedure.consume'),origin)
+  call draft.input('context',block.load(context,origin)); finished = draft.finish()
+  return
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
+  call block.returnvalue(finished.result(),origin)
+  return

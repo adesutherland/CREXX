@@ -1,0 +1,23 @@
+scalar=second
+empty=<>
+keywords=say|then|else|drop
+reset=reset|reset|reset
+restore=restored
+empty-tail=<>
+empty-stem=<>|<>
+numeric=leading|one
+unset=symbolic
+empty-component=empty component
+case=lower|upper
+compound=joined
+empty-middle=empty middle
+unicode-tail=Unicode tail
+nul-tail=nul-a
+nul-tail-other=nul-b
+ordinals=3|1
+text=3|1
+names=micro|same Greek|same Greek
+old-value=old+
+context=if-group
+RHS_MARKER
+rhs=new|b|parent

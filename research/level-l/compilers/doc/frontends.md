@@ -53,6 +53,16 @@ request's retained result:
 | `diagnostic()` | Filename, category, line/Unicode column, byte offset, source excerpt and caret. Empty on success. |
 | `ast()` | Owned Level L source tree if parsing succeeded. Semantic failure may retain that tree; parse failure returns a failed tree. |
 | `graph()` | Verified immutable module on success. On failure returns a failed module with nonempty `error()`, never a partly built successful graph. |
+| `warnings()` (C only) | Owned `llcdiagnostics.warning[]`; an empty array when no warnings were collected. |
+
+C frontend and compiler requests collect implicit-command warnings after a clean
+parse, before lowering. Each immutable record exposes `severity`, `code`,
+`message`, `filename`, `first`, `last`, `line`, `column` and `text`. Byte bounds
+cover the original head token; line/column count Unicode scalars. String-headed
+commands, including grouped and left-string concatenations, do not warn.
+Records outlive their request and completed warnings survive later compilation
+failure. Collection-limit failure returns no partial list. A compiler request's
+`warnings()` prepares only its frontend, preserving graph-first behavior.
 
 The AST and IR own their storage; borrowed node/value handles follow Level L's
 owner/revision rules. Keep their owning result alive while using borrowed views.
@@ -149,24 +159,29 @@ comment or longer identifier after the quote retains ordinary concatenation.
 G's admitted literal syntax is unchanged. Decoding adds no target operation or
 runtime helper call. See the [SAY instruction review](LEVELC-INSTRUCTION-REVIEW.md).
 
-Each function receives an argument packet and an immutable numeric-context
-snapshot, and creates a private pool for the admitted PROCEDURE profile. NUMERIC
-operations create replacement snapshots stored in that activation; calls receive
-the current snapshot. A callee's changes do not mutate its caller's snapshot.
-Main's initial activation/context is a STEP04 entry-wrapper obligation.
+Each source unit receives required borrowed-context and integer-entry
+parameters. The caller owns a fresh activation and separate child bundle that
+initially borrows its current pool; the root owns the UTF8 configuration.
+Arguments remain ordered presence packets. Internal calls evaluate actuals
+before constructing child owners and inherit the parent's numeric state.
+Only executed PROCEDURE replaces the live pool; see the
+[current entry/lifetime contract](architecture.md#proposed-procedure-contract). NUMERIC validates the live activation, then the executing C frame
+installs its validated settings; child return restores the parent frame.
 
 | Operation | Contract |
 |---|---|
-| `pool.new`, `load`, `store` | Fresh activation-owned pool; named load/store with resource/condition behaviour. |
+| `load`, `store` | Resolve named reads/writes through the borrowed bundle's current pool. |
 | `add/sub/mul/div`, comparisons, `positive/negative/not` | Exact Classic values and explicit numeric context. Arithmetic/conversion/logical errors occur at the operation's runtime point. |
 | `concat/blank/abut`, `and/or/xor` | Source-specific concatenation; both logical operands evaluate in source order. |
-| `truth` | Validate the Classic logical value and produce core Boolean; invalid logical values can fail at runtime. |
-| `numeric.digits/fuzz/form`, `digits` | Validate/update or inspect an immutable numeric snapshot, including defaults/reset and caller inheritance. |
+| `truth` | Validate the Classic logical value through the live context; invalid values can fail. Exact literal `0`/`1` also proves a derived core Boolean for control selection, while retaining runtime truth effects. |
+| `numeric.digits/fuzz/form`, `digits` | Validate/update the borrowed activation or inspect the executing frame, including defaults/reset and caller inheritance. |
 | `arguments.empty/append` | Ordered original argument values and a separate presence Boolean; omitted and supplied-empty arguments differ. |
-| `arguments.read` | The admitted simple ARG target: uppercase a copy, apply Classic single-target parsing, missing gives empty; preserve the original packet for ARG queries. |
+| `parse.source/execute` | PARSE, standalone ARG and PULL share acquisition and immutable LCP1 execution. ARG implies UPPER only for captured source; empty ARG templates skip acquisition/execution and preserve ordinal gaps. PULL implies UPPER, acquires once even when bare/empty-first, and supplies empty text to later comma templates. Live names/presence/original arguments retain the shared runtime contract. |
+| `push/queue` | Convert one optional/bare operand with existing Classic asString(1), then insert at the front/tail through the borrowed current config. Operand EXIT completes before insertion; normal/fatal paths end scoped borrows. |
 | `arguments.count/exists` | ARG count and `ARG(n,'E')`/presence option validation. |
-| `call` | Resolved local target, argument packet and current numeric context; fresh PROCEDURE pool and explicit returned-value presence. |
-| `return.present/absent`, `requirevalue`, `setresult` | Distinguish RETURN with/without value; expression calls require a value; CALL sets or drops RESULT. |
+| `call` | Resolved local entry, argument packet, borrowed context and function/subroutine attribute; fresh child activation/bundle initially share the current pool. |
+| `bif`, `call.missing` | Exact named shared BIF binding or reached missing43.1 after actual evaluation; preserve raw presence. |
+| `return.present/empty/absent`, `requirevalue`, `setresult` | Present value, authored bare RETURN45.1 in a function, or generated EOF absence; expression EOF fails44.1 with target identity, and CALL sets or drops RESULT/.RESULT. |
 | `length`, `say`, `exit` | Actual Classic BIF contract, observable output and process exit. |
 
 These names carry the `crexx.c.` prefix in IR. No contextual Classic constant
@@ -175,8 +190,12 @@ labels and PROCEDURE remain separate AST nodes; semantic inventory pairs the
 admitted entry with its statement interval. Label-only shared-pool routines and
 fall-through into a procedure entry receive profile diagnostics.
 
-Both languages lower IF, DO WHILE, LEAVE, ITERATE and RETURN to the common
-block/edge structure. EXIT has a diverging compiler operation; a structural
+Both languages lower IF, loops, LEAVE, ITERATE and RETURN to the common
+block/edge structure. Classic's [approved static DO forms](architecture.md#approved-do-contract)
+use ordered header captures and function-local state keys, checked by the
+compiler-owned `llcdoprotocol` before source-graph publication and again after
+transformation/loaded-graph admission. G retains its existing DO WHILE profile.
+EXIT has a diverging compiler operation; a structural
 return closes its block but is unreachable under that contract. General flow
 services must refuse to claim complete coverage when their accepted termination
 profile excludes such a diverging extension. Neither graph shape nor an effect

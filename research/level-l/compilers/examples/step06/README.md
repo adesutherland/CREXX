@@ -1,10 +1,9 @@
 # A complete C/G compilation, with failures
 
-These are actual outputs from the Level B C/G compiler over STEP05 commit
-`5f9feff27eaf114bd57f17e162d956270ff8fc54`. The STEP06 additions are tests and
-documentation; no compiler/runtime implementation changed. The
-[current plan](../../PLAN.md) records modes, commands and
-qualification boundaries. [Coverage](../../doc/poc-coverage.md) maps the whole
+These retained walkthrough outputs illustrate the earlier STEP06 construction
+and error paths. Their C schema predates the [current contract](../../doc/architecture.md#current-c-family-contract);
+G views retain the STEP06 output. The
+[current plan](../../PLAN.md) tracks instruction status and remaining work. [Coverage](../../doc/poc-coverage.md) maps the whole
 agreed PoC, rather than treating this one example as complete language coverage.
 
 Start each file with `options levelc` or `options levelg`, then:
@@ -23,6 +22,12 @@ value and formats it for SAY.
 |---|---|---|---|---|---|---|
 | C | [source](walk-c.crexx) | [tree](walk-c.ast) | [before](walk-c.before.ir) | [after](walk-c.after.ir) | [before](walk-c.before.rxas) | [after](walk-c.after.rxas) |
 | G | [source](walk-g.crexx) | [tree](walk-g.ast) | [before](walk-g.before.ir) | [after](walk-g.after.ir) | [before](walk-g.before.rxas) | [after](walk-g.after.rxas) |
+
+The C AST retains COptions and its ordinary `levelc` Name expression. Current
+C IR uses required context/entry parameters, separate generated binding and
+dispatch blocks, and one source-unit body. Checked dispatch remains after the
+literal source IF is folded; it has context/condition effects and is not a
+pure integer branch fact.
 
 The AST listing is a parents-first view: `kind|start:finish|source text`, with
 zero-based byte spans and multiline source text left intact. Both contain
@@ -58,18 +63,10 @@ zero. The complete output retains its entry wrapper and meaningful source
 records. C retains Classic activation, pool, numeric, argument and condition
 work; inspecting the caller alone does not measure work inside those helpers.
 
-| Complete emitted module | C before | C after | G before | G after |
-|---|---:|---:|---:|---:|
-| Executable instructions | 147 | 96 | 27 | 10 |
-| Calls | 17 | 11 | 1 | 1 |
-| Wrapper/body frame registers | 6 / 25 | 6 / 16 | 2 / 14 | 2 / 5 |
-| Source records | 18 | 11 | 16 | 9 |
-| RXAS bytes | 5,336 | 3,814 | 1,244 | 657 |
-
-[Counts](shapes.json) include entry wrappers and cold handlers, exclude labels,
-metadata and external declarations, and do not include external helper bodies.
-These demonstrate smaller emitted code, not a speed claim. Source records
-sharing a line can still represent different expression ranges or provenance.
+Read the full RXAS, including wrapper and cold handlers, alongside shared helper
+bodies. Stable root/context owners, numeric setup and result packets remain
+necessary costs. Structural checks require the unreachable source division to
+disappear without dropping required dispatch or truthful source records.
 
 ## Run with installed tools
 
@@ -91,7 +88,8 @@ cd "$tools"
 "$tools/llrxc-c" -i "$tools" -o "$work/walk-c.rxas" "$examples/walk-c.crexx"
 "$tools/rxas" -n "$work/walk-c.rxas"
 "$tools/rxlink" -o "$work/walk-c-linked" "$work/walk-c.rxbin" \
-  "$tools/library.rxbin" "$tools/llctarget.rxbin" "$tools/rxfnsc.rxbin"
+  "$tools/library.rxbin" "$tools/llctarget.rxbin" "$tools/rxfnsc.rxbin" \
+  "$tools/classlib.rxbin" "$tools/rxunicode-core.rxbin"
 "$tools/rxbvm" "$work/walk-c-linked.rxbin"
 ```
 
@@ -109,7 +107,8 @@ then fail at `else say 1 / 0`, line 4, column 10:
   [actual diagnostic](reached-c.txt).
 
 The runtime diagnostic also names the assembled module's identity; that is
-separate from the logical source filename in `.srcstep` metadata.
+separate from the logical source filename in `.srcstep` metadata. The refreshed
+C diagnostic omits its temporary host-directory prefix.
 
 Remove `then` instead. Both report `LL_COMPILER_SYNTAX` at the unexpected ELSE
 on line 4, column 1, with THEN in the expected-token set:

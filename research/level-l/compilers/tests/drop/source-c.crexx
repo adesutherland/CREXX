@@ -1,0 +1,98 @@
+options levelc
+drop = 'keyword'
+say 'keyword=' || drop
+then = 'held'; else = 'held'
+drop then else
+say 'keywords=' || then || '|' || else
+if 1 then nop
+then = 'again'; else = 'again'
+drop then else
+say 'completed-if=' || then || '|' || else
+a = 'held'; else = 'held'
+if 1 then nop
+if 0 then nop else drop a else
+say 'else-target=' || a || '|' || else
+a = 'held'; else = 'kept'
+if 1 then if 0 then nop else drop a else say 'outer'
+say 'nested=' || a || '|' || else
+then = 'held'; else = 'held'
+do
+  drop then else
+end
+say 'do-keywords=' || then || '|' || else
+a = 'held'
+if 1 then drop a else say 'wrong arm'
+say 'inline=' || a 'tail'
+if 0 then drop a else say 'else' 'joined'
+drop a; say 'separator' 'joined'
+a = 'set'; b = 'set'; c = 'set'; empty = ''
+drop a b c
+say 'direct=' || a || '|' || b || '|' || c || '|<' || empty || '>'
+drop empty
+say 'empty=' || empty
+items. = 'default'; items.a = 'set'; items.b = ''
+drop items.a
+say 'tail=' || items.a || '|<' || items.b || '>|' || items.c
+drop items.
+say 'stem=' || items.a || '|' || items.b || '|' || items.c
+items.1 = 'numeric'
+drop items.1
+say 'numeric-tail=' || items.1
+x = 'part'; y = 'Tail'; z = 'last'; key = 'part.Tail.last'
+deep.key = 'value'
+say 'deep=' || deep.x.y.z
+drop deep.x.y.z
+say 'deep-drop=' || deep.key
+key = 'b'; items.key = 'lower'; items.B = 'upper'
+names = 'key items.key'
+drop (names)
+say 'indirect-order=' || key || '|' || items.key
+key = 'b'
+say 'retained=' || items.key || '|' || items.B
+drop key items.key
+say 'direct-order=' || key || '|' || items.key
+key = 'b'
+say 'retained-again=' || items.key
+names = 'key'
+drop (names) items.key
+say 'mixed-order=' || key || '|' || items.key
+key = 'b'
+say 'mixed-retained=' || items.key
+a = 'held'; names = 'a'
+drop names (names)
+say 'outer-order=' || a || '|' || names
+victim = 'live'; names = 'names victim'
+drop (names)
+say 'capture=' || names || '|' || victim
+key = 'x'; lists.key = 'victim'; victim = 'live'
+drop (lists.key)
+say 'compound-carrier=' || victim
+a = 'live'; b = 'live'; names = 'a / 1bad 🙂 b'
+drop (names)
+say 'invalid-words=' || a || '|' || b
+µ = 'micro'; μ = 'lower'; Μ = 'greek'; 漢 = 'cjk'; 𐐨 = 'deseret'
+say 'unicode=' || µ || '|' || μ || '|' || Μ || '|' || 漢 || '|' || 𐐨
+drop μ 漢 𐐨
+say 'unicode-drop=' || µ || '|' || μ || '|' || Μ || '|' || 漢 || '|' || 𐐨
+drop µ
+say 'micro=' || µ
+µ = 'list-micro'; μ = 'list-greek'; names = 'µ μ'
+drop (names)
+say 'unicode-list=' || µ || '|' || μ
+say 'length=' || length('α漢🙂')
+!v = 'held'; ?v = 'held'; _v = 'held'; @v = 'held'; #v = 'held'; $v = 'held'
+drop !v ?v _v @v #v $v
+say 'punctuation=' || !v || '|' || ?v || '|' || _v || '|' || @v || '|' || #v || '|' || $v
+.MN = 'held'; .RESULT = 'held'; .RC = 'held'; .RS = 'held'; .SIGL = 'held'
+drop .MN .RESULT .RC .RS .SIGL
+say 'dot=' || .MN || '|' || .RESULT || '|' || .RC || '|' || .RS || '|' || .SIGL
+keep = 'parent'
+say 'args=' || probe('micro','greek','cjk')
+say 'private=' || keep
+exit 0
+probe: procedure
+  arg µ, μ, 漢
+  say 'arg-values=' || µ || '|' || μ || '|' || 漢
+  keep = 'child'
+  drop µ μ 漢 keep
+  return µ || '|' || μ || '|' || 漢 || '|' || keep

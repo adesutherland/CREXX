@@ -1,0 +1,7 @@
+options levelc
+say 'before'
+options empty()
+say 'after'
+exit 0
+empty: procedure
+  return

@@ -1,0 +1,22 @@
+shared MIXED|MiXeD|3|0|1
+private-child CHILD
+private MIXED
+before b|lower|1|2|HIDDEN
+dropped BOX.b
+switched BOX.B
+ordered b|deep|upper|X|Y|root hidden
+reversed deep|upper
+whole deep|stem change
+reset local default|local default
+stem-drop BOX.b|BOX.B
+exact restored|stem change
+recursive 0|6
+unicode after
+nul 1|3
+first unicode
+second unicode
+dotted
+reserved label
+source main label
+adjacent
+trailing RESULT

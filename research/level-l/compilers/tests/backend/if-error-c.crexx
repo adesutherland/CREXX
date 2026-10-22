@@ -1,0 +1,8 @@
+options levelc
+say 'before'
+if invalid() then say 'wrong true' else say 'wrong false'
+say 'wrong after'
+exit 0
+invalid: procedure
+  say 'condition'
+  return '1.0'

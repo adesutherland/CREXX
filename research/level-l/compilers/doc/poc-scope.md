@@ -33,6 +33,10 @@ already model observable failures, source events and calls conservatively, so
 that adding those constructs does not require changing the meaning of an
 existing operation. No debugger/TRACE parity claim is made from the first slice.
 
+This table records the original shared PoC. Later C instruction increments,
+including the [approved static DO forms](architecture.md#approved-do-contract),
+are owned by the current C plan/ledger; G retains its existing bounded profile.
+
 Recognised unadmitted instructions and semantic forms report
 `LL_COMPILER_PROFILE` with their source location. Syntax errors use
 `LL_COMPILER_SYNTAX`; source preparation retains `LL_UTF8`/`LL_COMMENT`.

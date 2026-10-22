@@ -1,0 +1,33 @@
+main [  MAIN MIXED  ] [  main MiXeD  ]
+sparse []|1
+whole [  A  B  ]
+words [A]|[ B  ]
+three [A]|[B]|[ ]
+drop [ B  ]
+lower-pattern [ABCDEF]|[]
+upper-pattern [AB]|[DEF]
+dynamic-pattern [ABCDEF]|[]|[c]
+raw-pattern [abcDef]
+presence 3|1|0|1|0|1
+slots [ FIRST ]|[]|[]|[]
+repeat [ FIRST ]|[]|[]|[ first ]
+live N|LEFT|RIGHT
+closing X|Y
+commas :|LEFT|RIGHT
+compound M|REST|saved
+section X||Y Z
+backward ONE TWO THREE|ONE TWO THREE
+zero ONE|TWO THREE|ONE TWO THREE
+relative AA|BB CC
+empty-pattern ONE TWO THREE|
+unicode AÉ|🙂B|Ÿ|µ|ß
+nul 1|3
+raw-unicode aé🙂b|ÿ|µ|ß
+raw-nul 1
+names A|B|C|D|E|F
+else-pattern LEFT|RIGHT
+inline A B C D E F|A B C D E F
+outer-before PARENT|0|1
+inner CHILD|1
+outer-after PARENT|parent|3
+recursive 6

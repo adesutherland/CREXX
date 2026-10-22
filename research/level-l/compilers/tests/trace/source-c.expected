@@ -1,0 +1,15 @@
+STATE|bare=N
+STATE|call=N|L
+STATE|first=R|O
+STATE|env=E
+STATE|prefix=?!L
+STATE|even=?!L
+STATE|positive=?!L
+STATE|negative=?!L
+STATE|zero=O
+STATE|reset=N
+STATE|once=1|?L
+STATE|clock=?L
+STATE|bif-reset=?L|N
+STATE|child=L>!L|L
+STATE|off=O

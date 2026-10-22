@@ -31,6 +31,29 @@ The request/response, binding, standard sandbox, and standard stem class
 attribute order is part of the native VM bridge ABI in `interpreter/rxvml.c`.
 Do not reorder or insert attributes without changing and testing that bridge.
 
+### Borrowed response workers
+
+`_address_apply_response_var_ref(response:reference addressresponse,
+name:string,target:reference string)->int` applies ordered VAR updates to
+caller-owned scalar storage. It returns 1 when any update matched the internal
+name or external alias; the last matching update wins. No match leaves the
+target unchanged, while a matching empty value writes the empty string.
+
+`_address_apply_response_request_stem_ref(response:reference addressresponse,
+request:reference addressrequest,index:int,name:string)->void` merges ordered
+STEM updates into the selected request binding, using the existing basename,
+tail and alias matching rules. It does not project a variable pool or decide
+which counted cells to write back.
+
+Both workers borrow live inputs only for the synchronous call. Their scoped
+dereference aliases avoid a full request/response copy per binding. Matching
+still scans response updates once per binding; these APIs add no index or cache.
+The existing `_address_apply_response_var` by-value/expose signature and
+`_address_apply_response_request_stem` by-value signature delegate to the same
+workers and retain their behavior. Request stem bindings still use their
+existing shared stem owner, so direct provider mutation of a request stem is
+visible through request copies even without response update records.
+
 ### Errors
 
 Invalid programmer arguments are reported with the `INVALID_ARGUMENTS`
@@ -83,7 +106,8 @@ normalization or object allocation.
 `lib/rxfnsb/tests_functional/ts_address_protocol.crexx` covers the pure Level B
 protocol in optimized and unoptimized modes: registry aliases/prefixes,
 typed cursors, normalization, drop/iteration, request/response objects,
-sandbox/stem/scalar writeback, function requests, environment selection,
+sandbox/stem/scalar writeback, borrowed worker aliases/empty/Unicode/NUL and
+last-match behavior, function requests, environment selection,
 unknown-environment responses, and signal errors. The existing
 `ts_address.crexx`, `ts_address_crexx.crexx`, compiler ADDRESS cases, and native
 host callback tests cover execution integration.

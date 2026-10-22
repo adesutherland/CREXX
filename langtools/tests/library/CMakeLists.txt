@@ -47,7 +47,7 @@ crexx_add_import_root(levell_ast_test_imports
   DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ast-imports" OUTPUT_VARIABLE _ast_imports
   FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   DEPENDS library rxfnsl)
-foreach(_test llast llanalysis llir llirservices llsource lloptimise)
+foreach(_test llast llanalysis llir llirservices llirflow llsource lloptimise llborrowed)
   foreach(_mode noopt opt)
     set(_ast_flags)
     if(_mode STREQUAL "noopt")
@@ -78,5 +78,69 @@ foreach(_test llast llanalysis llir llirservices llsource lloptimise)
 
 endforeach()
 
+
+# Read the already-built SDK RXAS; diagnostic noopt SDK builds intentionally
+# disable the inline resize shape checked here.
+if(NOT CREXX_LEVEL_L_NOOPT)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(NAME levell_ir_flow_rxas COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/../check-ir-flow-rxas.py"
+    "${CMAKE_BINARY_DIR}/lib/rxfnsl/rexx/llirservices.rxas")
+  set_tests_properties(levell_ir_flow_rxas PROPERTIES
+    PASS_REGULAR_EXPRESSION "IR_FLOW_RXAS[|]PASS" TIMEOUT 30
+    LABELS "library;level-l;optimizer-parity")
+  crexx_register_test_prep_targets(TESTS levell_ir_flow_rxas TARGETS rxfnsl)
+endif()
+
+# Inspect the built readers through their nested metadata/expected-token path.
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME levell_borrowed_rxas COMMAND ${Python3_EXECUTABLE}
+  "${CMAKE_CURRENT_SOURCE_DIR}/../check-borrowed-rxas.py"
+  "${CMAKE_BINARY_DIR}/lib/rxfnsl/rexx")
+set_tests_properties(levell_borrowed_rxas PROPERTIES
+  PASS_REGULAR_EXPRESSION "BORROWED_RXAS[|]PASS" TIMEOUT 30
+  LABELS "library;level-l;optimizer-parity")
+crexx_register_test_prep_targets(TESTS levell_borrowed_rxas TARGETS rxfnsl)
+
+# Optional IR analyses, execution and RXAS constraints use one focused normal lane. These
+# packages are deliberately absent from the generic AST/bootstrap import root.
+foreach(_test llirgraph llrxas llirexecute)
+  set(_name "ts_${_test}_opt")
+  set(_images "${CMAKE_BINARY_DIR}/bin/library.rxbin")
+  set(_producers library)
+  if(_test STREQUAL "llirgraph" OR _test STREQUAL "llirexecute")
+    list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+      "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin")
+    list(APPEND _producers rxfnsl rxfnsl_analysis)
+    if(_test STREQUAL "llirexecute")
+      list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin")
+      list(APPEND _producers rxfnsl_execute)
+    endif()
+  else()
+    list(APPEND _images "${CMAKE_BINARY_DIR}/bin/rxfnsl-rxas.rxbin")
+    list(APPEND _producers rxfnsl_rxas)
+  endif()
+  crexx_add_import_root(${_name}_imports
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/${_name}-imports"
+    OUTPUT_VARIABLE _infrastructure_imports FILES ${_images} DEPENDS ${_producers})
+  add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_name}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+      -i "${CMAKE_CURRENT_BINARY_DIR}/${_name}-imports"
+      -o "${_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_${_test}.crexx"
+    COMMAND $<TARGET_FILE:rxas> "${_name}"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_name}-linked" "${_name}"
+      ${_images}
+    DEPENDS rxc rxas rxlink ${_name}_imports ${_infrastructure_imports}
+      "${CMAKE_CURRENT_SOURCE_DIR}/ts_${_test}.crexx"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+  add_custom_target(${_name} DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_name}-linked.rxbin")
+  if(TARGET rxbvm)
+    add_test(NAME ${_name}_rxbvm
+      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/${_name}-linked.rxbin")
+    set_tests_properties(${_name}_rxbvm PROPERTIES
+      PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l")
+    crexx_register_test_prep_targets(TESTS ${_name}_rxbvm TARGETS ${_name} rxbvm)
+  endif()
+endforeach()
 
 crexx_finalize_directory_qa_tiers()

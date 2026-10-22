@@ -411,7 +411,7 @@ prepared image should fail closed.
 The research implementation established the proved D-form shape before the
 product generator and executor adopted its prepared-data conclusions. The
 maintained sources are now under
-[`lib/rxfnsg/unicode/tools`](../../../lib/rxfnsg/unicode/tools) and the public
+[`tools/unicode`](../../../tools/unicode) and the public
 surface is generated through
 [`lib/rxfnsg/rexx/CMakeLists.txt`](../../../lib/rxfnsg/rexx/CMakeLists.txt).
 The figures below describe the historical correctness and operation-shape

@@ -1,0 +1,11 @@
+fixed=1.20|7E2|7D|.ENV
+unary=4|-4|1
+keyword=INPUT STREAM keyword.txt
+selection=ALPHA
+value=GAMMA:1
+paren=PAREN
+group-tail=PAREN
+stream=REPLACE STREAM first.txt
+private=DELTA:ALPHA:REPLACE STREAM first.txt
+context=7:contextual
+empty=0:ALPHA

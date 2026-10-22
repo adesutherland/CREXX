@@ -1,0 +1,3 @@
+options levelc
+exit 0
+parse arg target +bare

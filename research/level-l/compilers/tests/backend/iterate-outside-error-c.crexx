@@ -1,0 +1,4 @@
+options levelc strictc
+say 'before'
+iterate MiSsInG
+say 'after'

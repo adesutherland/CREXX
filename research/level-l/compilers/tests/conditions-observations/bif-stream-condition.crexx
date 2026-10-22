@@ -1,0 +1,29 @@
+/* No native fixture covers a BIF handler producing another stream condition.
+ * LINEIN is the delayed ERROR handler; its NOTREADY belongs to this source.
+ */
+options levelc
+parse arg MODE
+HITS = 0
+AFTER = 0
+if MODE == 'bif-error' then do
+  signal on syntax name SYNTAX_CAUGHT
+  call on error name LENGTH
+  address 'CONDITION-TEST' 'error' /* CAUSING_BIF_ERROR */
+  say 'UNREACHED delayed BIF argument error'
+  return 'UNREACHED error completion'
+end
+if MODE == 'signal' then signal on notready name CAUGHT
+else call on notready name CAUGHT
+call on error name LINEIN
+address 'CONDITION-TEST' 'error' /* CAUSING_ADDRESS */
+AFTER = AFTER + 1
+return 'resumed'
+CAUGHT:
+HITS = HITS + 1
+SEEN = condition('C') || '|' || condition('D') || '|' || condition('I') || '|' || condition('S') || '|' || SIGL
+if MODE == 'signal' then return 'signalled'
+return 'ignored'
+SYNTAX_CAUGHT:
+HITS = HITS + 1
+SEEN = condition('C') || '|' || condition('E') || '|' || SIGL
+return 'bif-error-caught'

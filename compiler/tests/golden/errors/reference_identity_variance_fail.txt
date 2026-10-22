@@ -1,0 +1,3 @@
+Error in reference_identity_variance_fail.crexx @ 9:21 - #REFERENCE_TYPE_MISMATCH, "(item_ref)"
+Error in reference_identity_variance_fail.crexx @ 10:6 - #REFERENCE_TYPE_MISMATCH, "item_ref <refsame> interface_ref"
+2 error(s) in source file

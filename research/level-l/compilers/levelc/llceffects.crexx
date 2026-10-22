@@ -1,0 +1,195 @@
+/* cREXX License (MIT). C22 effect premises and entry-bound context identities. */
+options levelb
+namespace llceffects expose checked model
+import rxfnsb
+import llir
+import llirgraph
+import llireffects
+
+/** Versioned C premises. Runtime state is deliberately conservative: a context
+ * operation can deliver a handler and mutate pool/alias/numeric policy. Calls
+ * additionally cross callback/host boundaries. This is not a pool cache proof.
+ * C22 clause.complete has only a conditional result, even though transport is
+ * cleared on its false path. Existing protocol proofs own its exact use guard.
+ * @param owner Canonically admitted C22 graph owner.
+ * @param bytes Logical retained model budget.
+ * @return Sealed graph-bound structured effects, or an invalid atomic model.
+ */
+model: procedure = .llireffects..model
+  arg owner = reference .llir..module, bytes = 67108864
+  graph = dereference owner; result = .llireffects..model(owner,'crexx.c.C22',1,1000000,bytes)
+  if graph.error() <> '' then return result
+  store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
+  id = .int; i = .int; domainindex = .int; sealed = .int; op = .llir..opview
+  mode = .string; availability = .string; failure = .string; transfer = .string; resume = .string; domain = .string
+  do id = 1 to graph.operations()
+    op = graph.operation(id); name = op.name()
+    if left(name,8) <> 'crexx.c.' then iterate
+    descriptor = schema.opindex(name)
+    summary = .llireffects..summary(op.inputs(),op.results())
+    do i = 1 to op.inputs()
+      mode = 'value'
+      if schema.typename(op.input(i).type().id()) = 'crexx.c.context' then mode = 'borrow'
+      call summary.operand(i,mode)
+    end
+    do i = 1 to op.results()
+      availability = 'normal'
+      if name = 'crexx.c.clause.complete' then availability = 'conditional'
+      call summary.result(i,availability)
+    end
+    failure = 'none'; transfer = 'none'; resume = 'none'
+    if schema.effectvalue(descriptor,2) <> 'none' then failure = 'possible'
+    if schema.effectvalue(descriptor,3) <> 'returns' then transfer = 'possible'
+    if schema.effectvalue(descriptor,1) <> 'none' then do
+      do domainindex = 1 to 6
+        domain = 'crexx.c.' || word('pool alias numeric handlers observation callback',domainindex)
+        call summary.read(domain); call summary.write(domain)
+      end
+    end
+    if pos('observation',schema.effectvalue(descriptor,1)) > 0 then call summary.observe('crexx.c.observation')
+    if pos('resource',schema.effectvalue(descriptor,2)) > 0 then call summary.allocate('crexx.c.owner')
+    if name = 'crexx.c.do.close' then call summary.release('crexx.c.loop')
+    if name = 'crexx.c.call' | name = 'crexx.c.call.external' | name = 'crexx.c.call.missing' | name = 'crexx.c.bif' | name = 'crexx.c.clause.complete' then do
+      transfer = 'possible'; resume = 'possible'
+      call summary.write('crexx.c.callback'); call summary.observe('crexx.c.observation')
+    end
+    call summary.control(failure,transfer,resume)
+    sealed = summary.seal(); call result.put(id,summary)
+  end
+  sealed = result.seal()
+  return result
+
+/** One C-owned proof of immutable context slot bindings. This is the former
+ * selector admission, retained beside its effect adapter rather than duplicated
+ * in a generic alias lattice. Every admitted binding is argument 1, directly or
+ * through an already bound context slot in the function entry. Shared context
+ * mutations do not rebind that borrowed identity. Invocation protection cannot
+ * change this structural fact, so no ordinary protected-edge liveness is used.
+ * @param owner Strong graph owner retained by the selector.
+ * @param index_ref Exact indexed graph owner, never a copied graph claim.
+ * @param bytes Logical workspace/model budget.
+ */
+checked: class
+  _owner = reference .llir..module
+  _index = reference .llirgraph..index
+  _revision = .int
+  _ready = .int
+  _limit = .int
+  _error = .string
+  _cells = .int[]
+  _loads = .int[]
+  _arguments = .int[]
+  _functioncells = .int[]
+  _model = .llireffects..model
+  *: factory
+    arg owner = reference .llir..module, index_ref = reference .llirgraph..index, bytes = 67108864
+    _owner = owner; _index = index_ref; _limit = bytes; _error = ''; _ready = 0
+    return
+  fail: method = .void
+    arg reason = .string
+    if _error = '' then _error = 'LL_COMPILER_' || reason
+    return
+  belongs: method = .int
+    arg owner = reference .llir..module
+    call run()
+    if _error <> '' | <refvalid>(_owner) = 0 | <refvalid>(_index) = 0 | <refvalid>(owner) = 0 then return 0
+    if (_owner <refsame> owner) = 0 then return 0
+    graph = dereference _owner; index = dereference _index
+    return graph.error() = '' & graph.identity() = _revision & index.matches(_owner)
+  status: method = .int
+    call run()
+    return _error <> '' | belongs(_owner) = 0
+  error: method = .string
+    call run()
+    if _error <> '' then return _error
+    if belongs(_owner) = 0 then return 'LL_COMPILER_LOWERING: context proof belongs to another graph'
+    return ''
+  cell: method = .int
+    arg slot = .int
+    call run()
+    if belongs(_owner) = 0 then return 0
+    return _cells[slot]
+  loadcell: method = .int
+    arg op = .int
+    call run()
+    if belongs(_owner) = 0 then return 0
+    return _loads[op]
+  argumentcell: method = .int
+    arg op = .int
+    call run()
+    if belongs(_owner) = 0 then return 0
+    return _arguments[op]
+  effects: method = reference .llireffects..model
+    call run()
+    if belongs(_owner) = 0 then do
+      empty = reference .llireffects..model
+      return empty
+    end
+    return reference _model
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    if <refvalid>(_owner) = 0 | <refvalid>(_index) = 0 then do; call fail('LOWERING: context proof owner expired'); return; end
+    graph = dereference _owner; index = dereference _index
+    if graph.error() <> '' then do; _error = graph.error(); return; end
+    if index.matches(_owner) = 0 then do; call fail('LOWERING: context proof index belongs to another graph'); return; end
+    _revision = graph.identity(); store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
+    i = .int; fn = .int; opid = .int; slot = .int; producer = .int; opcode = .int
+    cversion = 0
+    do i = 1 to schema.familycount()
+      if schema.familyname(i) = 'crexx.c' then cversion = schema.version(i)
+    end
+    if cversion <> 22 then do; call fail('LOWERING: context proof requires C22'); return; end
+    workspace = 0
+    if index.operations() > _limit <idiv> 16 then do; call fail('LIMIT: context identity workspace exceeds output.bytes budget'); return; end
+    workspace = index.operations() * 16
+    if index.slots() > (_limit - workspace) <idiv> 16 then do; call fail('LIMIT: context identity workspace exceeds output.bytes budget'); return; end
+    workspace = workspace + index.slots() * 16
+    if index.functions() > (_limit - workspace) <idiv> 8 then do; call fail('LIMIT: context identity workspace exceeds output.bytes budget'); return; end
+    workspace = workspace + index.functions() * 8
+    ready = .int[]
+    do i = 1 to index.slots()
+      if schema.typename(store.get(5,i,2)) = 'crexx.c.parseprogram' then do; call fail('LOWERING: PARSE program is an attribute, not a runtime slot'); return; end
+      ready[i] = 0; _cells[i] = 0
+    end
+    do fn = 1 to index.functions()
+      entry = index.functionentry(fn); opid = index.firstop(entry)
+      do while opid > 0
+        opcode = index.opcode(opid)
+        if opcode = 3 | opcode = 4 then do
+          slot = index.opslot(opid)
+          if schema.typename(store.get(5,slot,2)) = 'crexx.c.context' then do
+            if opcode = 3 & ready[slot] = 0 then do; call fail('LOWERING: unbound context slot'); return; end
+            if opcode = 4 then do
+              if ready[slot] then do; call fail('LOWERING: context slot must be bound once at function entry'); return; end
+              producer = index.definition(store.operand(opid,1))
+              source = index.opcode(producer); proven = 0
+              if source = 2 & store.get(3,producer,12) = 1 then proven = 1
+              if source = 3 then proven = ready[index.opslot(producer)]
+              if proven = 0 then do; call fail('LOWERING: unsupported context slot binding'); return; end
+              ready[slot] = 1
+              if _functioncells[fn] = 0 then _functioncells[fn] = slot
+              _cells[slot] = _functioncells[fn]
+            end
+          end
+        end
+        opid = index.nextop(opid)
+      end
+    end
+    do opid = 1 to index.operations()
+      _loads[opid] = 0; _arguments[opid] = 0
+      opcode = index.opcode(opid); fn = index.blockfunction(index.opblock(opid))
+      if opcode = 2 & store.get(3,opid,12) = 1 then _arguments[opid] = _functioncells[fn]
+      if opcode <> 3 & opcode <> 4 then iterate
+      slot = index.opslot(opid)
+      if schema.typename(store.get(5,slot,2)) <> 'crexx.c.context' then iterate
+      if opcode = 3 & ready[slot] = 0 then do; call fail('LOWERING: unbound context slot'); return; end
+      if opcode = 4 & index.opblock(opid) <> index.functionentry(fn) then do; call fail('LOWERING: context slot must be bound once at function entry'); return; end
+      if opcode = 3 then _loads[opid] = _cells[slot]
+    end
+    _model = llceffects..model(_owner,_limit - workspace)
+    if _model.valid() = 0 then do
+      if pos('LL_RESOURCE_LIMIT:',_model.error()) = 1 then call fail('LIMIT: ' || _model.error())
+      else _error = _model.error()
+    end
+    return

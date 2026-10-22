@@ -1,0 +1,146 @@
+/* cREXX License (MIT). Independent assignment AST/IR and supplied-context fixture. */
+options levelb
+import rxfnsb
+import llir
+import llcir
+import llcparse
+import llcfrontend
+import llcrxas
+
+main: procedure = .int expose checks failures artifacts
+  arg argv = .string[]
+  if argv[0] <> 2 then return 2
+  artifacts = argv[1]; checks = 0; failures = 0
+  call sourcecontracts()
+  call provider(argv[2])
+  say 'ASSIGN_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+sourcecontracts: procedure = .void expose artifacts
+  graph = .llir..module; stores = .int; i = .int
+  operation = .llir..opview; value = .llir..valuehandle
+  parsed = .llcparse..parsed('µ.key = old' as .binary)
+  call check(parsed.status() = 0,'raw compound assignment parses: ' || parsed.error())
+  if parsed.status() <> 0 then return
+  tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+  call check(node.kind() = 'Assignment' & node.text('name') = 'µ.key','raw Unicode target retained')
+  call check(node.start() = 0 & node.finish() = 12,'original complete byte span')
+  call check(node.count('value') = 1,'one authored RHS child')
+  rhs = node.child('value')
+  do while rhs.kind() = 'Chain'
+    call check(rhs.count('operands') = 1 & rhs.count('operators') = 0,'single-name grammar layer has no extra operands')
+    rhs = rhs.child('operands',1)
+  end
+  call check(rhs.kind() = 'Name' & rhs.text('spelling') = 'old','RHS leaf keeps its authored name')
+  empty = .llcfrontend..request('empty =' as .binary,artifacts,'assignment-empty.crexx')
+  call check(empty.status() = 0,'omitted RHS frontend: ' || empty.error())
+  if empty.status() = 0 then do
+    graph = empty.graph(); stores = 0
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      if operation.name() <> 'crexx.c.store' then iterate
+      stores = stores + 1; value = operation.input(2)
+      call check(value.isconstant() & <blen>(value.bytes()) = 0,'omitted RHS stores an actual empty value')
+    end
+    call check(stores = 1,'omitted RHS has one store')
+  end
+  text = "old = 'before'; µ.key = old || marker(); exit 0; marker: procedure; return 'after'"
+  request = .llcfrontend..request(text as .binary,artifacts,'assignment-order.crexx')
+  call check(request.status() = 0,'RHS-call frontend: ' || request.error())
+  if request.status() <> 0 then return
+  graph = request.graph(); reads = 0; calls = 0; stores = 0; readid = 0; callid = 0; storeid = 0; tailreads = 0; emptydefaults = 0
+  do i = 1 to graph.operations()
+    operation = graph.operation(i); name = operation.name()
+    if name = 'crexx.c.load' then do
+      if operation.attribute('name') as .string = 'old' then do; reads = reads + 1; readid = operation.id(); end
+      if operation.attribute('name') as .string = 'key' then tailreads = tailreads + 1
+    end
+    if name = 'crexx.c.call' then do; calls = calls + 1; callid = operation.id(); end
+    if name = 'crexx.c.store' then if operation.attribute('name') as .string = 'µ.key' then do
+      stores = stores + 1; storeid = operation.id(); at = operation.origin()
+      call check(at.filename() = 'assignment-order.crexx' & at.kind() = 'exact','store retains authored logical origin')
+    end
+    if name = 'core.constant' then do
+      value = operation.result()
+      if <blen>(value.bytes()) = 0 then emptydefaults = emptydefaults + 1
+    end
+  end
+  call check(reads = 1 & calls = 1 & stores = 1,'one old-value read, RHS call and target write')
+  call check(readid < callid & callid < storeid,'RHS read and call precede target store')
+  call check(tailreads = 0,'compiler does not pre-read compound substitution')
+  call check(emptydefaults = 0,'explicit RHS constructs no unused empty default')
+  return
+
+/* This test-only export composes same-context effects with the source call
+ * ordering proof. It is not a private source call or source EXPOSE. */
+provider: procedure = .void expose artifacts
+  arg destination = .string
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  call fn.exportas('assignfixture.run'); ignored = fn.argument(contract.type('crexx.c.context'))
+  ignored = fn.argument(contract.type('crexx.g.int64'))
+  block = fn.block('entry'); at = builder.synthetic('test-only supplied-context assignment effects')
+  context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+  call block.store(context_slot,block.readarg(1,at),at)
+  block = entrybody(fn,contract,block,context_slot,at)
+  context = block.load(context_slot,at)
+  draft = block.operation(contract.operation('crexx.c.load'),at)
+  call draft.input('context',context); call draft.attribute('name','cached' as .binary)
+  operation = draft.finish(); cached = operation.result()
+  do i = 1 to 8
+    name = ''; value = cached
+    select i
+      when 1 then do; name = 'key'; value = block.constantbytes(contract.type('crexx.c.value'),'b' as .binary,at); end
+      when 2 then name = 'items.key'
+      when 3 then name = 'exact'
+      when 4 then name = 'nested'
+      when 5 then name = 'shared.'
+      when 6 then name = 'private.'
+      otherwise do
+        source = 'payload'; name = 'textcopy'
+        if i = 8 then do; source = 'decimal'; name = 'decimalcopy'; end
+        draft = block.operation(contract.operation('crexx.c.load'),at)
+        call draft.input('context',context); call draft.attribute('name',source as .binary)
+        operation = draft.finish(); value = operation.result()
+      end
+    end
+    draft = block.operation(contract.operation('crexx.c.store'),at)
+    call draft.input('context',context); call draft.input('value',value)
+    call draft.attribute('name',name as .binary); operation = draft.finish()
+  end
+  draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'supplied-context graph: ' || graph.error())
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call check(backend.status() = 0 & output.bytes() > 0,'supplied-context selection: ' || backend.error())
+  call check(bin2x(saved) = bin2x(graph.binary()),'selection preserves graph')
+  if backend.status() = 0 then call check(writebinary(destination,output.text() as .binary) > 0,'provider RXAS written for B host')
+  return
+
+/* Test-only canonical C unit entry. The caller declares both arguments before
+ * creating setup and binds argument 1 to the canonical context slot. Keep slot
+ * reads in a separate dispatch block so local forwarding preserves them. */
+entrybody: procedure = .llir..block
+  arg fn = .llir..function, contract = .llir..contract, setup = .llir..block, context = .llir..slot, at = .llir..origin
+  entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  call setup.store(entry,setup.readarg(2,at),at)
+  dispatch = fn.block('dispatch.0'); body = fn.block('source.body'); invalid = fn.block('entry.invalid')
+  call setup.jump(dispatch,at)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),at)
+  call draft.input('context',dispatch.load(context,at)); call draft.input('entry',dispatch.load(entry,at))
+  integer = .llir..intcodec()
+  call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  operation = draft.finish(); call dispatch.branch(operation.result(),body,invalid,at)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),at); operation = draft.finish()
+  draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
+  call invalid.returnvalue(operation.result(),at)
+  return body

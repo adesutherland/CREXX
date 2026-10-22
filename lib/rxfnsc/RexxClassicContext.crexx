@@ -1,0 +1,166 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassiccontext expose RexxClassicContext
+import rexxactivation
+import rexxpool
+import rexxclassicconfig
+import rexxvalue
+import rexxclassicconditionevent
+
+/**
+ * Borrowed Classic activation, visible-pool binding and execution configuration.
+ *
+ * The caller owns and initializes all three targets and keeps their storage
+ * alive for every borrow. This value owns no activation, pool or configuration
+ * and does not select a character profile or pool-name policy. Copying it shares
+ * the targets but gives the copy its own replaceable pool binding. Pass a
+ * reference to one authoritative bundle when helpers must observe rebinding.
+ * If a caller explicitly skips REFERENCE_INVALID with a procedure handler, a
+ * failed factory returns an unbound bundle, a failed getter returns an empty
+ * reference, and a failed bindPool leaves its previous binding unchanged.
+ */
+RexxClassicContext: class
+  activation_ref = reference .rexxactivation..RexxActivationArguments
+  pool_ref = reference .rexxpool..RexxVariablePool
+  config_ref = reference .rexxclassicconfig..RexxClassicConfig
+  /* Class fields sort by name; keep existing borrowed-owner ordinals. */
+  zz_parse_observations = .boolean
+
+  /**
+   * Borrow existing caller-owned objects without copying or extending lifetime.
+   * @param activation reference to stable activation storage
+   * @param pool reference to stable visible-pool storage
+   * @param config reference to stable execution-configuration storage
+   * @return a value bundle whose fields retain the supplied references
+   * @throws REFERENCE_INVALID if any reference is empty or expired
+   */
+  *: factory
+    arg activation = reference .rexxactivation..RexxActivationArguments, pool = reference .rexxpool..RexxVariablePool, config = reference .rexxclassicconfig..RexxClassicConfig
+    if <refvalid>(activation) = 0 then do
+      assembler signal "REFERENCE_INVALID", "Classic activation reference is not live"
+      return
+    end
+    if <refvalid>(pool) = 0 then do
+      assembler signal "REFERENCE_INVALID", "Classic pool reference is not live"
+      return
+    end
+    if <refvalid>(config) = 0 then do
+      assembler signal "REFERENCE_INVALID", "Classic configuration reference is not live"
+      return
+    end
+    activation_ref = activation
+    pool_ref = pool
+    config_ref = config
+    zz_parse_observations = 0
+    return
+
+  /**
+   * Opt this borrowed bundle into authored PARSE field/drop observations.
+   * The compiled observer saves and restores this flag with its own scope;
+   * direct library callers remain disabled unless they explicitly opt in.
+   * No observer object, source state or owner is retained here.
+   * @param enabled true while the caller owns the compiled TRACE observer
+   */
+  enableParseObservations: method = .void
+    arg enabled = .boolean
+    zz_parse_observations = enabled
+    return
+
+  /** @return whether the caller permits authored PARSE observations */
+  parseObservations: method = .boolean
+    return zz_parse_observations
+
+  /**
+   * @return the borrowed activation reference, without copying its state
+   * @throws REFERENCE_INVALID if the activation owner has expired
+   */
+  activation: method = reference .rexxactivation..RexxActivationArguments
+    if <refvalid>(activation_ref) = 0 then do
+      assembler signal "REFERENCE_INVALID", "Classic activation reference is not live"
+      empty_activation = reference .rexxactivation..RexxActivationArguments
+      return empty_activation
+    end
+    return activation_ref
+
+  /**
+   * @return this bundle's current borrowed visible-pool reference
+   * @throws REFERENCE_INVALID if the current pool owner has expired
+   */
+  pool: method = reference .rexxpool..RexxVariablePool
+    if <refvalid>(pool_ref) = 0 then do
+      assembler signal "REFERENCE_INVALID", "Classic pool reference is not live"
+      empty_pool = reference .rexxpool..RexxVariablePool
+      return empty_pool
+    end
+    return pool_ref
+
+  /**
+   * @return the borrowed execution-configuration reference
+   * @throws REFERENCE_INVALID if the configuration owner has expired
+   */
+  config: method = reference .rexxclassicconfig..RexxClassicConfig
+    if <refvalid>(config_ref) = 0 then do
+      assembler signal "REFERENCE_INVALID", "Classic configuration reference is not live"
+      empty_config = reference .rexxclassicconfig..RexxClassicConfig
+      return empty_config
+    end
+    return config_ref
+
+  /**
+   * Read a final Classic symbol against the live pool and condition policy.
+   * Compound tails are resolved once through the pool's shared non-signalling
+   * substitution. A stem default counts as an assigned final value.
+   * @param name validated Classic variable-symbol spelling
+   * @return the current resolved value, or its implicit name when unassigned
+   * @signal CLASSIC_CONDITION configured NOVALUE, with the resolved name
+   * @signal REFERENCE_INVALID if a borrowed activation or pool has expired
+   */
+  readSymbol: method = .rexxvalue..RexxValue
+    arg name = .string
+    current_pool = dereference pool_ref
+    current_activation = dereference activation_ref
+    resolved = current_pool.resolveSymbolName(name)
+    if current_activation.signalPolicy(6) > 0 then do
+      if \current_pool.resolvedHasValue(resolved) then do
+        event = .rexxclassicconditionevent..RexxClassicConditionEvent(6,resolved)
+        assembler signal "CLASSIC_CONDITION",event
+      end
+    end
+    return current_pool.resolvedValue(resolved)
+
+  /**
+   * Replace only this bundle's pool binding; leave the old binding on failure.
+   * @param pool reference to replacement caller-owned pool storage
+   * @throws REFERENCE_INVALID if the replacement reference is empty or expired
+   */
+  bindPool: method = .void
+    arg pool = reference .rexxpool..RexxVariablePool
+    if <refvalid>(pool) = 0 then do
+      assembler signal "REFERENCE_INVALID", "Classic replacement pool reference is not live"
+      return
+    end
+    pool_ref = pool
+    return

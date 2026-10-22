@@ -1,0 +1,179 @@
+/* cREXX License (MIT). Independent indexed flow/effect/proof expectations. */
+options levelb
+import rxfnsb
+import llir
+import llirgraph
+import llireffects
+
+main: procedure = .int
+  failures = diamond() + cycles() + protection() + effects()
+  say 'failures=' || failures
+  return failures
+
+/** Both diamond arms define a, so a is live into the join but not out. A dead
+ * store to b never makes b live. The dead block and second function are separate
+ * reachability/dominance cases. Expectations do not come from native analysis. */
+diamond: procedure = .int
+  ignored = .int
+  schema = .llir..schema(); family = schema.family('independent',1)
+  integer = family.type('integer',.llir..intcodec() as .object); contract = schema.finish()
+  draft = .llir..builder(contract); origin = draft.synthetic('diamond')
+  fn = draft.function('diamond',contract.voidtype())
+  entry = fn.block('entry'); left = fn.block('left'); right = fn.block('right'); join = fn.block('join'); dead = fn.block('dead')
+  a = fn.slot('a',integer); b = fn.slot('b',integer)
+  cond = entry.constant(contract.boolean(),'true',origin); call entry.branch(cond,left,right,origin)
+  one = left.constant(integer,'1',origin); call left.store(a,one,origin); call left.jump(join,origin)
+  two = right.constant(integer,'2',origin); call right.store(a,two,origin); call right.jump(join,origin)
+  read = join.load(a,origin); call join.store(b,read,origin); call join.returnvoid(origin)
+  call dead.returnvoid(origin)
+  other = draft.function('other',contract.voidtype()); otherentry = other.block('entry'); call otherentry.returnvoid(origin)
+  graph = draft.finish(); failures = check(graph.error() = '','diamond verifies')
+  if graph.error() <> '' then return failures
+  saved = graph.binary(); index = .llirgraph..index(reference graph)
+  failures = failures + check(index.status() = 'ok','index succeeds')
+  if index.status() <> 'ok' then do; say index.message(); return failures; end
+  failures = failures + check(index.functionblocks(fn.id()) = 5 & index.functionslots(fn.id()) = 2,'per-function block/slot index')
+  failures = failures + check(index.functionblock(other.id(),1) = otherentry.id() & index.functionoperations(other.id()) = 1,'separate function membership')
+  failures = failures + check(index.functionslot(fn.id(),2) = b.id(),'slot ordinal index')
+  failures = failures + check(index.reachable(dead.id()) = 0 & index.reachable(otherentry.id()),'independent roots and dead block')
+  failures = failures + check(index.successors(entry.id()) = 2 & index.predecessors(join.id()) = 2,'indexed CFG edges')
+  failures = failures + check(index.idom(join.id()) = entry.id() & index.dominates(left.id(),join.id()) = 0,'diamond dominance')
+  failures = failures + check(index.dominates(entry.id(),join.id()) & index.dominates(entry.id(),otherentry.id()) = 0,'dominance stays in function')
+  store = dereference graph.storage(); readop = store.get(4,read.id(),1); storeop = index.nextop(readop)
+  failures = failures + check(index.definition(read.id()) = readop & index.uses(read.id()) = 1 & index.use(read.id(),1) = storeop,'indexed exact def/use')
+  failures = failures + check(index.slotreads(a.id()) = 1 & index.slotwrites(a.id()) = 2 & index.slotread(a.id(),1) = readop,'slot read/write lists')
+  live = index.liveness()
+  failures = failures + check(live.status() = 'ok' & live.complete(fn.id()),'exact ordinary liveness')
+  if live.status() = 'ok' then do
+    failures = failures + check(live.slotin(join.id(),a.id()) & live.slotout(join.id(),a.id()) = 0,'join slot union and death')
+    failures = failures + check(live.slotin(entry.id(),a.id()) = 0,'both arms kill incoming a')
+    failures = failures + check(live.slotbefore(readop,a.id()) & live.slotafter(readop,a.id()) = 0,'read point liveness')
+    failures = failures + check(live.slotbefore(storeop,b.id()) = 0 & live.slotafter(storeop,b.id()) = 0,'dead store kills prior b')
+    failures = failures + check(live.valueafter(readop,read.id()) & live.valuebefore(storeop,read.id()) & live.valueafter(storeop,read.id()) = 0,'value last-use interval')
+  end
+  limited = .llirgraph..index(reference graph,1)
+  failures = failures + check(limited.status() = 'limit' & limited.valid() = 0,'atomic index work limit')
+  caught = 0
+  do; ignored = limited.blocks(); on signal; caught = 1; end
+  failures = failures + check(caught,'failed index publishes no query surface')
+  limited = .llirgraph..index(reference graph,1000000,1)
+  failures = failures + check(limited.status() = 'limit','preflight index storage limit')
+  limited = .llirgraph..index(reference graph,index.usedwork() - 1)
+  failures = failures + check(limited.status() = 'limit' & limited.valid() = 0,'late index failure remains atomic')
+  limitedlive = index.liveness(1)
+  failures = failures + check(limitedlive.status() = 'limit' & live.valid(),'failed demand preserves prior result')
+  retry = index.liveness()
+  failures = failures + check(retry.status() = 'ok' & retry.slotin(join.id(),a.id()),'liveness retries independently')
+  foreign = graph
+  failures = failures + check(index.matches(reference foreign) = 0,'byte-identical foreign module refused')
+  failures = failures + check(bin2x(saved) = bin2x(graph.binary()),'analysis does not mutate IR')
+  graph = llir..loadbinary(contract,saved)
+  failures = failures + check(index.valid() = 0 & live.valid() = 0,'replacing owner expires index and demands')
+  caught = 0
+  do; ignored = index.reachable(1); on signal; caught = 1; end
+  failures = failures + check(caught,'stale query signals')
+  return failures
+
+cycles: procedure = .int
+  schema = .llir..schema(); family = schema.family('independent',1); integer = family.type('integer',.llir..intcodec() as .object)
+  contract = schema.finish(); draft = .llir..builder(contract); origin = draft.synthetic('cycles')
+  fn = draft.function('irreducible',contract.voidtype()); entry = fn.block('entry'); left = fn.block('left'); right = fn.block('right'); done = fn.block('done')
+  slot = fn.slot('loop.value',integer)
+  cond = entry.constant(contract.boolean(),'true',origin); call entry.branch(cond,left,right,origin)
+  one = left.constant(integer,'1',origin); call left.store(slot,one,origin); call left.jump(right,origin)
+  read = right.load(slot,origin); again = right.constant(contract.boolean(),'false',origin); call right.branch(again,left,done,origin); call done.returnvoid(origin)
+  natural = draft.function('natural',contract.voidtype()); head = natural.block('head'); body = natural.block('body'); exitblock = natural.block('exit')
+  cond2 = head.constant(contract.boolean(),'true',origin); call head.branch(cond2,body,exitblock,origin); call body.jump(head,origin); call exitblock.returnvoid(origin)
+  graph = draft.finish(); index = .llirgraph..index(reference graph); loops = index.loops()
+  failures = check(loops.status() = 'ok','demanded SCC/loops')
+  if loops.status() <> 'ok' then do; say loops.message(); return failures; end
+  component = loops.component(left.id())
+  failures = failures + check(component = loops.component(right.id()) & loops.cyclic(component) & loops.irreducible(component),'two-entry SCC is irreducible')
+  component = loops.component(head.id())
+  failures = failures + check(loops.cyclic(component) & loops.irreducible(component) = 0,'single-entry natural SCC')
+  failures = failures + check(loops.backedge(body.id(),head.id()) & loops.loopcontains(head.id(),body.id()) & loops.loopcontains(head.id(),exitblock.id()) = 0,'natural loop membership')
+  live = index.liveness()
+  failures = failures + check(live.status() = 'ok' & live.slotin(entry.id(),slot.id()) & live.slotin(left.id(),slot.id()) = 0 & live.slotout(left.id(),slot.id()),'cyclic liveness converges with a kill and bypass entry')
+  limited = index.loops(1)
+  failures = failures + check(limited.status() = 'limit' & loops.valid(),'loop limit preserves successful result')
+  model = .llireffects..model(reference graph,'independent'); sealed = model.seal()
+  generator = index.firstop(head.id()); candidate = index.nextop(generator)
+  proof = .llireffects..proof(reference index,reference model,'preserves',generator,candidate,'test.state')
+  failures = failures + check(proof.status() = 'unknown' & proof.reason() = 'cyclic.block.unsupported','cyclic ordered interval is refused')
+  return failures
+
+protection: procedure = .int
+  observed = .llir..opview
+  schema = .llir..schema(); family = schema.family('independent',1); integer = family.type('integer',.llir..intcodec() as .object)
+  action = family.operation('opaque.control'); call action.state('none'); call action.failure('none'); call action.termination('diverges'); contract = schema.finish()
+  draft = .llir..builder(contract); origin = draft.synthetic('protection'); fn = draft.function('protected',contract.voidtype())
+  setup = fn.block('setup'); normal = fn.block('normal'); handler = fn.block('handler'); slot = fn.slot('saved',integer)
+  value = setup.constant(integer,'7',origin); call setup.store(slot,value,origin); call setup.protect(normal,handler,origin)
+  call normal.returnvoid(origin); read = handler.load(slot,origin); call handler.returnvoid(origin)
+  other = draft.function('divergent',contract.voidtype()); otherentry = other.block('entry'); otherslot = other.slot('saved',integer)
+  operation = otherentry.operation(action,origin); observed = operation.finish(); call otherentry.returnvoid(origin)
+  graph = draft.finish(); index = .llirgraph..index(reference graph); live = index.liveness()
+  failures = check(index.status() = 'ok' & live.status() = 'ok','protect index and bounded overapproximation')
+  failures = failures + check(index.pinnedfunction(fn.id()) & live.complete(fn.id()) = 0 & live.pinnedslot(slot.id()) & live.pinnedvalue(value.id()),'protected storage is explicitly pinned/incomplete')
+  failures = failures + check(live.slotin(normal.id(),slot.id()) & live.slotout(normal.id(),slot.id()) & live.valuebefore(index.firstop(normal.id()),value.id()),'all protected function storage remains live beyond setup edge')
+  failures = failures + check(index.pinnedfunction(other.id()) & live.complete(other.id()) = 0 & live.slotout(otherentry.id(),otherslot.id()),'nonreturns extensions retain structural indexing and conservative lifetime')
+  return failures
+
+/** Two state domains distinguish a real invalidator from an unrelated write.
+ * Conditional results, opaque/missing summaries, and borrowed operands cannot
+ * turn declaration insertion into a proof. */
+effects: procedure = .int
+  middle = .llir..opview
+  model = .llireffects..model; record = .llireffects..summary; proof = .llireffects..proof; available = .llireffects..proof; sealed = .int
+  schema = .llir..schema(); family = schema.family('independent',1); integer = family.type('integer',.llir..intcodec() as .object)
+  action = family.operation('action'); call action.input('value',integer); call action.output('result',integer)
+  call action.state('none'); call action.failure('none'); call action.termination('returns'); contract = schema.finish()
+  draft = .llir..builder(contract); origin = draft.synthetic('effects'); fn = draft.function('effects',contract.voidtype()); entry = fn.block('entry')
+  first = entry.constant(integer,'1',origin); op = entry.operation(action,origin); call op.input('value',first); middle = op.finish(); produced = middle.result(1)
+  slot = fn.slot('a',integer); other = fn.slot('b',integer); call entry.store(slot,produced,origin); call entry.returnvoid(origin)
+  graph = draft.finish(); index = .llirgraph..index(reference graph); store = dereference graph.storage()
+  generator = store.get(4,first.id(),1); candidate = index.nextop(middle.id())
+  failures = 0; domain = .string; mode = .int
+  do mode = 1 to 5
+    model = .llireffects..model(reference graph,'independent.effects')
+    record = .llireffects..summary(1,1); call record.operand(1,'value'); call record.result(1,'normal'); call record.control('none','none','none')
+    if mode = 1 then call record.write('unrelated')
+    if mode = 2 then call record.write('pool')
+    if mode = 3 then call record.operand(1,'borrow')
+    if mode = 4 then call record.result(1,'conditional')
+    if mode = 5 then call record.control('possible','none','none')
+    sealed = record.seal(); call model.put(middle.id(),record); sealed = model.seal()
+    failures = failures + check(sealed & model.valid(),'sealed exact effect profile ' || mode)
+    proof = .llireffects..proof(reference index,reference model,'preserves',generator,candidate,'pool')
+    if mode = 1 | mode = 4 then failures = failures + check(proof.status() = 'proved','unaffected state preserved ' || mode)
+    else failures = failures + check(proof.status() = 'unknown','mutation/borrow blocks proof ' || mode)
+    available = .llireffects..proof(reference index,reference model,'available',middle.id(),candidate,'',1)
+    if mode = 4 then failures = failures + check(available.status() = 'unknown' & available.reason() = 'result.unavailable','conditional result not assumed initialized')
+    else if mode = 3 | mode = 5 then failures = failures + check(available.status() = 'unknown','borrow/failure without completion proof is refused ' || mode)
+    else failures = failures + check(available.status() = 'proved','normal result available ' || mode)
+  end
+  model = .llireffects..model(reference graph,'independent.unknown'); sealed = model.seal()
+  proof = .llireffects..proof(reference index,reference model,'preserves',generator,candidate,'pool')
+  failures = failures + check(proof.status() = 'unknown','missing extension premise remains unknown')
+  cells = .llireffects..proof(reference index,reference model,'cells',slot.id(),other.id())
+  failures = failures + check(cells.status() = 'proved' & cells.reason() = 'core.cells.disjoint','distinct core cells are disjoint within invocation')
+  failures = failures + check(model.writes(candidate,'pool') = 0 & model.writes(candidate,'core.slot.' || slot.id()),'core store does not invent pool mutation')
+  limited = .llireffects..proof(reference index,reference model,'cells',slot.id(),other.id(),'',0,0)
+  failures = failures + check(limited.status() = 'limit' & limited.valid() = 0 & cells.status() = 'proved','proof budget cannot poison prior proof')
+  foreign = model
+  failures = failures + check(cells.matches(reference index,reference foreign) = 0,'copied effect owner cannot carry proof')
+  model = .llireffects..model(reference graph,'replacement'); sealed = model.seal()
+  failures = failures + check(cells.valid() = 0 & cells.status() = 'invalid','replaced model invalidates checked proof')
+  tiny = .llireffects..model(reference graph,'small',1,1000000,1)
+  failures = failures + check(tiny.seal() = 0 & tiny.valid() = 0,'atomic model byte failure')
+  forged = .llireffects..model(reference graph,'forged.core')
+  record = .llireffects..summary(1,0); call record.operand(1,'value'); call record.control('none','none','none'); sealed = record.seal()
+  call forged.put(candidate,record)
+  failures = failures + check(forged.seal() = 0 & pos('core',forged.error()) > 0,'trusted extension premises cannot suppress a core store')
+  return failures
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL: ' || message
+  return 1

@@ -1,0 +1,102 @@
+/* One NUMERIC image; shared setters own validation and arithmetic. */
+options levelc
+parse arg MODE
+if MODE = 'state' then do
+  numeric digits 7
+  numeric fuzz 2
+  numeric form value 'engineering suffix'
+  return digits() || '|' || fuzz() || '|' || form()
+end
+if MODE = 'invalid-form' then do
+  numeric digits 7
+  numeric fuzz 2
+  numeric form engineering
+  numeric form value BADFORM()
+  UNREACHED = 'after rejected form'
+  return 'bad'
+end
+if MODE = 'reset-digits' then do
+  numeric digits 12
+  numeric fuzz 10
+  numeric digits
+  UNREACHED = 'after rejected default'
+  return 'bad'
+end
+if MODE = 'exit' then do
+  numeric digits 6
+  numeric fuzz 1
+  numeric form engineering
+  call PRIVATEEXIT
+  UNREACHED = 'after private call'
+  return 'bad'
+end
+say 'initial=' || digits() || '|' || fuzz() || '|' || form()
+numeric digits 4
+numeric fuzz 1
+numeric form engineering
+say 'effect=' || (1.234 = 1.233) || '|' || (1 / 3) || '|' || (10000 * 10000)
+FORMWORD = 'engineering suffix'
+numeric form value FORMWORD
+say 'value=' || form()
+COUNT = 0
+numeric form value MAKEFORM()
+say 'once=' || COUNT || '|' || digits() || '|' || fuzz() || '|' || form()
+numeric form ('engineering suffix')
+say 'group=' || form()
+numeric fuzz
+numeric digits
+numeric form
+say 'reset=' || digits() || '|' || fuzz() || '|' || form()
+numeric digits 5
+numeric fuzz 1
+numeric form engineering
+LOCAL = 'caller local'
+call PRIVATECHANGE
+say 'private=' || RESULT || '|' || LOCAL || '|' || digits() || '|' || fuzz() || '|' || form()
+say 'recursive=' || RECUR(2) || '|' || digits() || '|' || fuzz() || '|' || form()
+NUMERIC = 7; DIGITS = 8; FUZZ = 9; FORM = 10; VALUE = 11; SCIENTIFIC = 12; ENGINEERING = 13
+parse value 'left right' with FORM VALUE
+call ENGINEERING
+say 'names=' || NUMERIC || '|' || DIGITS || '|' || FUZZ || '|' || FORM || '|' || VALUE || '|' || SCIENTIFIC || '|' || ENGINEERING || '|' || RESULT
+if 'é' = 'é' then numeric form value, /* original physical gap */
+  ('scientific suffix')
+say 'continued=' || form()
+return 0
+
+MAKEFORM:
+COUNT = COUNT + 1
+numeric digits 2
+numeric fuzz 0
+numeric form engineering
+return 'scientific suffix'
+PRIVATECHANGE:
+procedure
+BEFORE = digits() || ':' || fuzz() || ':' || form()
+LOCAL = 'private local'
+numeric fuzz 0
+numeric digits 3
+numeric form value 'scientific suffix'
+return BEFORE || '>' || digits() || ':' || fuzz() || ':' || form()
+RECUR:
+procedure
+parse arg DEPTH
+STARTDIGITS = digits()
+if DEPTH = 0 then return STARTDIGITS
+numeric digits STARTDIGITS - 1
+CHILD = RECUR(DEPTH - 1)
+return STARTDIGITS || '>' || CHILD || '/' || digits()
+PRIVATEEXIT:
+procedure expose COUNT PAYLOAD
+LOCAL = 'private changed'
+numeric form value ESCAPE()
+UNREACHED = 'after skipped numeric setter'
+return 'bad'
+ESCAPE:
+COUNT = COUNT + 1
+exit PAYLOAD
+BADFORM:
+COUNT = COUNT + 1
+say 'NUMERIC_ACTUAL|' || COUNT
+return 'invalid'
+ENGINEERING:
+return 'contextual'

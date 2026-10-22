@@ -1,0 +1,16 @@
+options levelb
+namespace reference_identity_shape_fail
+
+main: procedure = .int
+  first = reference .Item[1 to 2]
+  other_base = reference .reference_identity_shape_fail..Item[0 to 1]
+  other_extent = reference .reference_identity_shape_fail..Item[1 to 3]
+  other_rank = reference .reference_identity_shape_fail..Item[1 to 2,1 to 2]
+  if first <refsame> other_base then return 1
+  if first <refsame> other_extent then return 2
+  if first <refsame> other_rank then return 3
+  return 0
+
+Item: class
+  *: factory
+    return

@@ -1,0 +1,101 @@
+/* cREXX License (MIT). C prepared-owner reuse and request isolation. */
+options levelb
+import rxfnsb
+import llclanguage
+import lllanguage
+import llcsymbols
+import llcparse
+import llcfrontend
+import llcrxas
+import llir
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] < 1 | argv[0] > 2 then return 2
+  checks = 0; failures = 0
+  owner = reference .lllanguage..definition
+  if argv[0] = 2 then do
+    owner = llclanguage..prepared()
+    call check(<refvalid>(owner) = 0,'failed initialization publishes no owner')
+    refused = .llcparse..parsed('nop' as .binary)
+    call check(refused.status() = 3 & pos('LL_BORROW_OWNER:',refused.error()) = 1,'source refusal after failed preparation is atomic')
+    say 'C_PREPARED|checks=' || checks || '|failures=' || failures
+    return failures
+  end
+  owner = llclanguage..prepared(); repeated = llclanguage..prepared()
+  call check(<refvalid>(owner) & (owner <refsame> repeated),'one anchored owner for repeated requests')
+  call policies()
+  call namechecks()
+  source = .string
+  do sample = 1 to 3
+    select sample
+      when 1 then source = "say 'x'; exit 0"
+      when 2 then source = 'call p; exit 0; p: nop; return'
+      otherwise source = 'call p; exit 0; p: procedure expose X (NAMES); return'
+    end
+    front = .llcfrontend..request(source as .binary,argv[1],'prepared-language.crexx')
+    call check(front.status() = 0,'frontend ' || sample || ': ' || front.error())
+    if front.status() <> 0 then iterate
+    graph = front.graph(); selected = .llcrxas..compilation(graph,argv[1])
+    call check(selected.status() = 0,'selector ' || sample || ': ' || selected.error())
+    if selected.status() <> 0 then iterate
+    previous = selected.output(); saved = previous.text()
+    call check(previous.bytes() > 0,'owned nonempty output ' || sample)
+    if sample = 3 then do
+      store = dereference graph.storage(); contract = dereference store.contract()
+      loaded = llir..loadbinary(contract,graph.binary())
+      call check(loaded.error() = '', 'loaded private graph remains checked')
+      again = .llcrxas..compilation(loaded,argv[1])
+      call check(again.status() = 0 & again.output().text() == saved,'loaded raw entry/name admission is unchanged')
+    end
+    current = llclanguage..prepared()
+    call check(owner <refsame> current,'frontend/backend preserve prepared owner ' || sample)
+  end
+  call policies()
+  call namechecks()
+  say 'C_PREPARED|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+policies: procedure = .void
+  hash = "options comments_hash; say 'hash'; # ignored ???" || '0a'x || 'exit 0'
+  dash = "options comments_dash; say 'dash'; -- ignored ???" || '0a'x || 'exit 0'
+  parsed = .llcparse..parsed(hash as .binary)
+  call check(parsed.status() = 0,'hash override accepts its complete source: ' || parsed.error())
+  parsed = .llcparse..parsed(dash as .binary)
+  call check(parsed.status() = 0,'dash override accepts its complete source: ' || parsed.error())
+  parsed = .llcparse..parsed("say 'default'; # ignored ???" as .binary)
+  call check(parsed.status() <> 0,'hash override does not leak into default request')
+  parsed = .llcparse..parsed("say 'default'; -- ignored ???" as .binary)
+  call check(parsed.status() <> 0,'dash override does not leak into default request')
+  parsed = .llcparse..parsed('options strictc; nop' as .binary)
+  call check(parsed.status() = 0 & parsed.strictc() = 1,'STRICTC belongs to this header')
+  tree = parsed.ast(); span = tree.root().finish()
+  parsed = .llcparse..parsed('nop' as .binary)
+  call check(parsed.status() = 0 & parsed.strictc() = 0,'next request starts with default STRICTC')
+  call check(tree.root().finish() = span,'materialized prior AST owns its byte spans')
+  parsed = .llcparse..parsed('options strictc comments_slash; nop' as .binary)
+  call check(parsed.status() <> 0 & parsed.strictc() = 0,'failed header publishes no partial policy')
+  parsed = .llcparse..parsed('nop' as .binary,2)
+  call check(parsed.status() = 2,'source byte limit refuses locally')
+  parsed = .llcparse..parsed('nop' as .binary)
+  call check(parsed.status() = 0,'prepared owner recovers after failed header/limit')
+  return
+
+namechecks: procedure = .void
+  symbols = .llcsymbols..checked()
+  call symbols.symbol('#'); call symbols.symbol('α.key'); call symbols.symbol('.RC')
+  call check(symbols.error() = '', 'whole generated name rule keeps Unicode/dots/hash outside source comment policy')
+  invalid = .llcsymbols..checked()
+  call invalid.symbol('a b')
+  call check(pos('LOWERING',invalid.error()) > 0,'name refusal is independent of source/graph execution')
+  clean = .llcsymbols..checked()
+  call clean.symbol('valid')
+  call check(clean.error() = '', 'name failure cannot poison the prepared owner')
+  return

@@ -405,6 +405,7 @@ request: class
     if signature.flags_text() <> 'b' & signature.flags_text() <> 'g' then do; call fail(node,'IMPORT: unsupported callable flags'); return invalid; end
     item = .routine(name,metatype(node,signature.result(),1),node,0,0)
     do i = 1 to signature.arguments()
+      if signature.exposed(i) then do; call fail(node,'IMPORT: exposed typed source arguments are unsupported'); return invalid; end
       call item.parameter(upper(signature.paramname(i)),metatype(node,signature.type(i)),signature.optional(i),node)
     end
     index = _externals[0] + 1; _externals[index] = name; _externalsigs[index] = item as .object
@@ -577,7 +578,7 @@ request: class
     signature = _library.lookup('rxfnsb.length')
     if signature.error() <> '' then call fail(node,'IMPORT: ' || signature.error())
     else if signature.result() <> '.int' | signature.arguments() <> 1 then call fail(node,'IMPORT: incompatible LENGTH signature')
-    else if signature.type(1) <> '.string' | signature.optional(1) then call fail(node,'IMPORT: incompatible LENGTH argument')
+    else if signature.type(1) <> '.string' | signature.optional(1) | signature.exposed(1) then call fail(node,'IMPORT: incompatible LENGTH argument')
     return
   newblock: method = .llir..block
     arg purpose = .string

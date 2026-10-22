@@ -1,0 +1,171 @@
+/* Required arm AST, source-ordered eligibility and unchanged C17 IR boundary. */
+options levelb
+import rxfnsb
+import llcparse
+import llcfrontend
+import llast
+import llir
+import llirservices
+import llcrxas
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  call sourcecontracts()
+  call inventory(argv[1])
+  call graphcontracts(argv[1])
+  say 'LABEL_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+labelled: procedure = .void
+  arg node = .llast..node, names = .string, payload = .string
+  call check(node.valid(),'required labelled arm exists')
+  if \node.valid() then return
+  call check(node.kind() == 'CLabelled','one transparent arm wrapper')
+  if node.kind() \== 'CLabelled' then return
+  call check(node.count('labels') = words(names) & node.count('value') = 1,'nonempty labels and exactly one real payload')
+  do index = 1 to node.count('labels')
+    name = node.child('labels',index)
+    call check(name.kind() == 'CLabel' & name.text('name') == word(names,index),'ordered raw prefix name ' || index)
+  end
+  value = node.child('value')
+  call check(value.kind() == payload,'real payload kind ' || payload)
+  first = node.child('labels',1)
+  call check(node.start() = first.start() & node.finish() = value.finish(),'wrapper spans first label through real instruction')
+  return
+
+sourcecontracts: procedure = .void
+  gap = '0D0A'x as .string
+  text = "if 0 then é: ; /* gap */ ALIAS: ; say 'bad' else OTHER: nop"
+  source = text as .binary; parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'Unicode/comment/null prefix preserves ELSE: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); root = tree.root(); body = root.child('body'); branch = body.child('items',1)
+    call check(branch.kind() == 'IfElse' & body.count('items') = 1,'payload never escapes the IF into a sibling instruction')
+    call labelled(branch.child('yes'),'é ALIAS','Say')
+    call labelled(branch.child('no'),'OTHER','Nop')
+    yes = branch.child('yes')
+    call check(yes.start() = binpos('é:' as .binary,source) - 1,'prefix keeps original UTF8 byte position')
+  end
+  nearest = .llcparse..parsed("if 1 then OUTER: if 0 then INNER: nop else NEAREST: nop" as .binary)
+  call check(nearest.status() = 0,'label wrappers preserve nearest ELSE: ' || nearest.error())
+  if nearest.status() = 0 then do
+    nearest_tree = nearest.ast(); nearest_root = nearest_tree.root(); nearest_body = nearest_root.child('body'); outer = nearest_body.child('items',1)
+    call check(outer.kind() == 'IfThen','nearest ELSE does not attach to outer IF')
+    call labelled(outer.child('yes'),'OUTER','IfElse')
+    wrapped = outer.child('yes')
+    if wrapped.kind() == 'CLabelled' then do
+      inner = wrapped.child('value')
+      call labelled(inner.child('yes'),'INNER','Nop'); call labelled(inner.child('no'),'NEAREST','Nop')
+    end
+  end
+  selected = .llcparse..parsed(('select' || gap || 'when 1 then A: ; B: nop' || gap || 'end') as .binary)
+  call check(selected.status() = 0,'WHEN THEN owns labelled real instruction: ' || selected.error())
+  if selected.status() = 0 then do
+    select_tree = selected.ast(); select_root = select_tree.root(); select_body = select_root.child('body'); selection = select_body.child('items',1)
+    clause = selection.child('clauses',1)
+    call check(clause.kind() == 'CWhen','WHEN remains its own clause')
+    call labelled(clause.child('body'),'A B','Nop')
+  end
+  constants = .llcparse..parsed('if 0 then 1.20: 7E2: 7dogs: .RC: .foo: .: µ: μ: nop' as .binary)
+  call check(constants.status() = 0,'existing numeric constant dot and Unicode labels remain accepted: ' || constants.error())
+  if constants.status() = 0 then do
+    constant_tree = constants.ast(); constant_root = constant_tree.root(); constant_body = constant_root.child('body'); constant_if = constant_body.child('items',1)
+    call labelled(constant_if.child('yes'),'1.20 7E2 7dogs .RC .foo . µ μ','Nop')
+  end
+  plain = .llcparse..parsed('if 1 then nop' as .binary)
+  call check(plain.status() = 0,'unlabelled IF remains accepted')
+  if plain.status() = 0 then do
+    plain_tree = plain.ast(); plain_root = plain_tree.root(); plain_body = plain_root.child('body'); plain_if = plain_body.child('items',1)
+    call check(plain_if.child('yes').kind() == 'Nop','unlabelled AST is not wrapped')
+  end
+  fresh = .llcparse..parsed('if 0 then FRESH: ALIAS: procedure' as .binary)
+  call check(fresh.status() = 0,'labelled PROCEDURE retains lexical first-after-label placement: ' || fresh.error())
+  if fresh.status() = 0 then do
+    fresh_tree = fresh.ast(); fresh_root = fresh_tree.root(); fresh_body = fresh_root.child('body'); fresh_if = fresh_body.child('items',1)
+    call labelled(fresh_if.child('yes'),'FRESH ALIAS','CProcedure')
+  end
+  quoted = .llcparse..parsed("if 1 then 'not a label': nop" as .binary)
+  call check(quoted.status() <> 0,'quoted label declarations are not introduced')
+  call bad('if 0 then A:','14.3','then')
+  call bad('if 1 then A: ; /* no payload */ B: ;','14.3','then')
+  call bad('if 0 then nop else A:','14.4','else')
+  call bad('if 1 then if 0 then nop else A: ;','14.4','else')
+  call bad('select; when 1 then A: ; end','14.3','then')
+  call bad("if '雪' = '雪' then A:",'14.3','then')
+  comment = .llcparse..parsed('if 1 then A: /* open' as .binary)
+  call check(comment.status() <> 0 & pos('LL_COMMENT:',comment.error()) = 1 & pos('14.3',comment.error()) = 0,'comment failure retains lexical priority: ' || comment.error())
+  literal = .llcparse..parsed("if 1 then A: say 'open" as .binary)
+  call check(literal.status() <> 0 & pos('14.3',literal.error()) = 0,'unterminated literal retains lexical priority: ' || literal.error())
+  return
+
+bad: procedure = .void
+  arg text = .string, code = .string, owner = .string
+  source = text as .binary; parsed = .llcparse..parsed(source)
+  expected = binpos(owner as .binary,source) - 1
+  call check(parsed.status() <> 0 & pos(code,parsed.error()) > 0 & parsed.offset() = expected,code || ' at owning ' || owner || ': ' || parsed.error() || ' / ' || parsed.offset())
+  return
+
+inventory: procedure = .void
+  arg runtime = .string
+  call inventory_case(runtime,"call DUP; exit 0; DUP: return 'first'; do; DUP: nop; end",1,'eligible first duplicate')
+  call inventory_case(runtime,"do; DUP: nop; end; DUP: return 'late'; call DUP",0,'first grouped CALL blocks later duplicate')
+  call inventory_case(runtime,"do; LENGTH: nop; end; LENGTH: return 'late'; say LENGTH('abc')",0,'first grouped function blocks later duplicate and BIF')
+  call inventory_case(runtime,"do; LENGTH: nop; end; LENGTH: return 'late'; call 'LENGTH' 'abc'",1,'quoted CALL bypasses trace-only local name')
+  call inventory_case(runtime,"select; when 0 then DUP: nop; otherwise nop; end; DUP: return; call DUP",0,'WHEN prefix remains at SELECT lexical depth')
+  call inventory_case(runtime,"call P; exit 0; if 0 then P: do; nop; end; return 'ok'",1,'prefix before DO payload remains eligible')
+  call inventory_case(runtime,"do; if 0 then P: nop; end; call P",0,'IF does not erase enclosing DO depth')
+  return
+
+inventory_case: procedure = .void
+  arg runtime = .string, text = .string, accepted = .int, label = .string
+  graph = .llir..module
+  request = .llcfrontend..request(text as .binary,runtime,'inventory.crexx')
+  if accepted then do
+    call check(request.status() = 0,label || ': ' || request.error())
+    graph = request.graph(); call check(graph.error() == '',label || ' publishes checked IR')
+  end
+  else do
+    call check(request.status() <> 0 & pos('16.3',request.error()) > 0,label || ': ' || request.error())
+    graph = request.graph(); call check(graph.error() <> '',label || ' publishes no graph')
+  end
+  return
+
+graphcontracts: procedure = .void
+  arg runtime = .string
+  text = "call P 'x'; return RESULT; if 0 then P: return ARG(1)"
+  request = .llcfrontend..request(text as .binary,runtime,'roundtrip.crexx')
+  call check(request.status() = 0,'labelled entry source lowers: ' || request.error())
+  if request.status() then return
+  graph = request.graph(); saved = graph.binary()
+  original = .llcrxas..compilation(graph,runtime); previous = original.output(); previous_text = previous.text()
+  call check(original.status() = 0 & previous.bytes() > 0,'source graph selects under current C17 contract: ' || original.error())
+  restored = loadgraph(reference graph)
+  call check(restored.error() == '', 'current graph binary roundtrip')
+  loaded = .llcrxas..compilation(restored,runtime)
+  call check(loaded.status() = 0,'loaded labelled-entry graph selects: ' || loaded.error())
+  transformed = llirservices..optimise(reference graph)
+  call check(transformed.status() == 'changed' & bin2x(transformed.result().binary()) \== bin2x(saved),'actual typed packet forwarding changes representative labelled-entry graph')
+  if transformed.status() == 'changed' then do
+    changed = .llcrxas..compilation(transformed.result(),runtime)
+    call check(changed.status() = 0,'transformed labelled-entry graph selects: ' || changed.error())
+  end
+  limited = .llcrxas..compilation(graph,runtime,128); empty = limited.output()
+  call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LIMIT',limited.error()) > 0,'bounded selector refuses atomically')
+  call check(bin2x(graph.binary()) == bin2x(saved) & previous.text() == previous_text,'failure retains source graph and earlier owned output')
+  return
+
+loadgraph: procedure = .llir..module
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref
+  storage = dereference graph.storage()
+  contract = dereference storage.contract()
+  return llir..loadbinary(contract,graph.binary())

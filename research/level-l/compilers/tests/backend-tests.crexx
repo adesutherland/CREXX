@@ -10,16 +10,524 @@ import llcompilercontracts
 
 main: procedure = .int expose checks failures artifacts outputfile
   arg argv = .string[]
-  if argv[0] < 1 | argv[0] > 2 then return 2
-  outputfile = ''; if argv[0] = 2 then outputfile = argv[2]
+  if argv[0] < 1 | argv[0] > 3 then return 2
+  outputfile = ''; if argv[0] >= 2 then outputfile = argv[2]
   artifacts = argv[1]; checks = 0; failures = 0
-  call requests()
-  call graphs()
-  call provenance()
-  call cleanup()
-  if outputfile <> '' then call literals()
+  if argv[0] = 3 then do
+    select argv[3]
+      when 'nop' then call nopchecks(outputfile)
+      when 'options' then call optionschecks(outputfile)
+      when 'if' then call ifchecks(outputfile)
+      when 'select' then call selectchecks(outputfile)
+      when 'do' then call dochecks(outputfile)
+      when 'do-final' then call dochecks(outputfile,1)
+      when 'leave' then call leavechecks(outputfile)
+      when 'leave-invalid' then call leavechecks(outputfile,1)
+      when 'iterate' then call iteratechecks(outputfile)
+      otherwise return 2
+    end
+  end
+  else do
+    call requests()
+    call graphs()
+    call provenance()
+    call cleanup()
+    call nopchecks()
+    call optionschecks()
+    call ifchecks()
+    call selectchecks()
+    call dochecks()
+    call leavechecks()
+    call iteratechecks()
+    if outputfile <> '' then call literals()
+  end
   say 'BACKEND|checks=' || checks || '|failures=' || failures
   return failures
+
+/* Equal-width blanks preserve following source coordinates. Source records
+ * remain in actual output; only this comparison omits metadata and abstracts
+ * diagnostic-location payloads, retaining their executable loads and frames. */
+nopchecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; written = .int
+  do sample = 1 to 5
+    select sample
+      when 1 then source = "say 'before'; nop; say 'after'"
+      when 2 then source = 'exit 0; nop'
+      when 3 then source = 'do; exit 0; do; nop; end; end'
+      when 4 then source = 'exit 0; p: procedure; return 1; do; nop; end'
+      otherwise source = 'if 1 then do; nop; end; else do; nop; end'
+    end
+    control = changestr('nop',source,'   ')
+    do optimise = 0 to 1
+      withnop = .lltestcompiler..request('c',source as .binary,artifacts,'nop-shape.crexx',1000000,512,67108864,65536,optimise)
+      without = .lltestcompiler..request('c',control as .binary,artifacts,'nop-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(withnop.status() = 0 & without.status() = 0,'valid NOP/control pair ' || sample || '/' || optimise || ': ' || withnop.error() || ' / ' || without.error())
+      if withnop.status() <> 0 | without.status() <> 0 then iterate
+      graph = withnop.graph(); other = without.graph()
+      call check(irshape(graph) = irshape(other),'NOP adds no source IR operation/value/block/slot ' || sample || '/' || optimise)
+      graph = withnop.emissiongraph(); other = without.emissiongraph()
+      call check(irshape(graph) = irshape(other),'NOP adds no selected IR operation/value/block/slot ' || sample || '/' || optimise)
+      output = withnop.output(); blank = without.output()
+      if inspect <> '' & optimise = 0 & (sample = 2 | sample = 4) then do
+        written = writebinary(inspect || '-' || sample || '-nop.rxas',output.text() as .binary)
+        written = writebinary(inspect || '-' || sample || '-blank.rxas',blank.text() as .binary)
+      end
+      call check(execshape(output.text()) = execshape(blank.text()),'NOP adds no instruction/frame/helper/default ' || sample || '/' || optimise)
+      call check(pos('.srcstep',output.text()) > 0 & pos('nop-shape.crexx',output.text()) > 0,'truthful source records retained ' || sample || '/' || optimise)
+    end
+  end
+  return
+
+/** Only the discarded OPTIONS clause changes; the header and layout match. */
+optionschecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; target = .string; written = .int; graph = .llir..module
+  output = .llir..output; blank = .llir..output
+  header = 'options levelc; '
+  do sample = 1 to 5
+    select sample
+      when 1 then do
+        target = "options; options 'λ'; options 42; options ((42))"
+        source = "options levelc; " || target || "; say 'after'"
+      end
+      when 2 then do; target = "options; options ('λ'); options 42"; source = 'options levelc; exit 0; ' || target; end
+      when 3 then do; target = 'options'; source = 'options levelc; do; exit 0; do; ' || target || '; end; end'; end
+      when 4 then do; target = "options ((42))"; source = 'options levelc; exit 0; p: procedure; return 1; do; ' || target || '; end'; end
+      otherwise do; target = "options 'literal'"; source = 'options levelc; if 1 then do; ' || target || '; end; else do; ' || target || '; end'; end
+    end
+    control = header || changestr(target,substr(source,length(header) + 1),copies(' ',<blen>(target as .binary)))
+    do optimise = 0 to 1
+      withoptions = .lltestcompiler..request('c',source as .binary,artifacts,'options-shape.crexx',1000000,512,67108864,65536,optimise)
+      without = .lltestcompiler..request('c',control as .binary,artifacts,'options-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(withoptions.status() = 0 & without.status() = 0,'valid OPTIONS/control pair ' || sample || '/' || optimise || ': ' || withoptions.error() || ' / ' || without.error())
+      if withoptions.status() <> 0 | without.status() <> 0 then iterate
+      graph = withoptions.graph(); other = without.graph()
+      call check(irshape(graph) = irshape(other),'OPTIONS adds no source IR value/helper/block/slot ' || sample || '/' || optimise)
+      graph = withoptions.emissiongraph(); other = without.emissiongraph()
+      call check(irshape(graph) = irshape(other),'OPTIONS adds no selected IR value/helper/block/slot ' || sample || '/' || optimise)
+      output = withoptions.output(); blank = without.output()
+      call check(execshape(output.text(),'options-shape.crexx') = execshape(blank.text(),'options-shape.crexx'),'OPTIONS adds no instruction/frame/default/dead return ' || sample || '/' || optimise)
+      call check(pos('applyoptions',output.text()) = 0,'no empty processor/config-conversion call ' || sample || '/' || optimise)
+      if inspect <> '' & optimise = 0 & (sample = 1 | sample = 2 | sample = 4) then do
+        written = writebinary(inspect || '-' || sample || '-options.rxas',output.text() as .binary)
+        written = writebinary(inspect || '-' || sample || '-blank.rxas',blank.text() as .binary)
+      end
+    end
+  end
+  source = 'options levelc; options raw; options +1; options -2; options 1+2; options marker(); exit 0; marker: procedure; return 1'
+  request = .lltestcompiler..request('c',source as .binary,artifacts,'options-effects.crexx',1000000,512,67108864,65536,0)
+  call check(request.status() = 0,'effectful discarded operands accepted: ' || request.error())
+  if request.status() <> 0 then return
+  graph = request.graph(); text = graph.dump()
+  call check(occurrences(text,'crexx.c.load ') = 2,'header and ordinary Name reads retained')
+  call check(pos('crexx.c.positive',text) > 0 & pos('crexx.c.negative',text) > 0 & pos('crexx.c.add',text) > 0,'unary and binary work retained')
+  call check(pos('crexx.c.call',text) > 0 & pos('crexx.c.requirevalue',text) > 0,'call and required-result work retained')
+  output = request.output()
+  call check(pos('applyoptions',output.text()) = 0,'effectful operand still has no OPTIONS processor call')
+  if inspect <> '' then written = writebinary(inspect || '-effects.rxas',output.text() as .binary)
+  return
+
+/** Closed arms need no join/default result; open endpoints still converge. */
+ifchecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; expected = .int; written = .int
+  sample = .int; optimise = .int; selected = .int; request = .lltestcompiler..request
+  graph = .llir..module; output = .llir..output; text = .string
+  do sample = 1 to 7
+    select sample
+      when 1 then do; source = 'if flag then exit 0 else exit 1'; expected = 2; end
+      when 2 then do; source = 'exit 0; p: procedure; arg flag; if flag then return 1 else return 2'; expected = 1; end
+      when 3 then do; source = 'if flag then if inner then exit 0 else exit 1; else exit 2'; expected = 3; end
+      when 4 then do; source = 'do while flag; if flag then leave else iterate; end'; expected = 1; end
+      when 5 then do; source = 'if flag then exit 0 else nop'; expected = 2; end
+      when 6 then do; source = 'if flag then exit 0'; expected = 2; end
+      otherwise do; source = 'if flag then exit 0 else exit 1; do; nop; options ((42)); end'; expected = 2; end
+    end
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'if-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'IF endpoint source accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      graph = request.graph(); text = graph.dump()
+      if sample = 5 | sample = 6 then call check(pos('if.join.',text) > 0,'open or missing ELSE retains convergence ' || sample || '/' || optimise)
+      else call check(pos('if.join.',text) = 0,'closed arms add no predecessorless join ' || sample || '/' || optimise)
+      call check(sourcepackets(graph) = expected,'only necessary EXIT/absent result packets ' || sample || '/' || optimise)
+      output = request.output()
+      call check(pos('.srcstep',output.text()) > 0 & pos('if-shape.crexx',output.text()) > 0,'IF source/fatal records retained ' || sample || '/' || optimise)
+      if inspect <> '' & (sample = 1 | sample = 2 | sample = 4) then written = writebinary(inspect || '-closed-' || sample || '-' || optimise || '.rxas',output.text() as .binary)
+    end
+  end
+  do optimise = 0 to 1
+    source = 'if marker() then nop else nop; exit 0; marker: procedure; return 1'
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'if-once.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'effectful condition accepted ' || optimise || ': ' || request.error())
+    if request.status() <> 0 then iterate
+    do selected = 0 to 1
+      graph = request.graph(); if selected then graph = request.emissiongraph()
+      text = graph.dump()
+      call check(occurrences(text,'crexx.c.call ') = 1 & occurrences(text,'crexx.c.truth ') = 1,'one condition call and contextual truth ' || optimise || '/' || selected)
+      call check(pos('crexx.c.call ',text) < pos('crexx.c.truth ',text),'condition precedes truth ' || optimise || '/' || selected)
+    end
+    output = request.output()
+    if inspect <> '' then written = writebinary(inspect || '-once-' || optimise || '.rxas',output.text() as .binary)
+    source = "if '1' then say 'yes' else say 'no'; exit 0"
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'if-literal.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'literal condition accepted ' || optimise)
+    if request.status() <> 0 then iterate
+    graph = request.graph(); text = graph.dump()
+    call check(occurrences(text,'crexx.c.truth ') = 1 & sourcebranches(graph) = 1,'source retains effectful truth and literal branch')
+    graph = request.emissiongraph(); text = graph.dump()
+    call check(occurrences(text,'crexx.c.truth ') = 1,'selected literal branch keeps contextual truth ' || optimise)
+    call check(sourcebranches(graph) = 1 - optimise,'only IR-on prunes literal branch ' || optimise)
+  end
+  return
+
+/** Follow the selected end path through CFG edges, not printed block order. */
+iteratechecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; selectedkey = .string; assembly = .string; instruction = .string
+  sample = .int; optimise = .int; selected = .int; first = .int; expected = .int
+  ordinal = .int; state = .int; i = .int; closes = .int; selectedcloses = .int
+  jumps = .int; invalid = .int; reads = .int; target = .int; truthid = .int
+  advanceblock = .int; exitblock = .int; entryblock = .int; advances = .int
+  entries = .int; exitcloses = .int; exitadvances = .int; written = .int
+  request = .lltestcompiler..request; graph = .llir..module; output = .llir..output
+  operation = .llir..opview
+  do sample = 1 to 5
+    expected = 1; ordinal = 1; instruction = 'iterate'
+    select sample
+      when 1 then source = 'do i=1 by 2 for 2 until flag; do j=10 for 2; iterate I; end; end'
+      when 2 then source = 'do i=1 by 2 for 2; do forever; do; select; when 1 then do j=10; iterate I; end; end; end; end; end'
+      when 3 then do; source = 'do i=1 for 1; do I=10 for 2; iterate i; end; end'; expected = 0; ordinal = 2; end
+      when 4 then do; source = 'do i=1; do j=10; leave I; end; end'; expected = 2; instruction = 'leave'; end
+      otherwise do; source = 'options levelc strictc; do i=1; do j=10; iterate Ghost; end; end'; expected = 0; end
+    end
+    first = pos(instruction,source) - 1
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'iterate-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'ITERATE shape accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      do selected = 0 to 1
+        graph = request.graph(); if selected then graph = request.emissiongraph()
+        selectedkey = ''; state = 0
+        do i = 1 to graph.operations()
+          operation = graph.operation(i)
+          if operation.name() <> 'crexx.c.do.new' then iterate
+          state = state + 1
+          if state = ordinal then selectedkey = operation.attribute('key') as .string
+        end
+        call check(selectedkey <> '', 'selected static state is declared')
+        closes = 0; selectedcloses = 0; jumps = 0; invalid = 0; reads = 0; target = 0
+        do i = 1 to graph.operations()
+          operation = graph.operation(i)
+          if operation.origin().first() <> first then iterate
+          select operation.name()
+            when 'crexx.c.do.close' then do
+              closes = closes + 1
+              if (operation.attribute('key') as .string) = selectedkey then selectedcloses = selectedcloses + 1
+            end
+            when 'core.jump' then do; jumps = jumps + 1; target = operation.successor(1); end
+            when 'crexx.c.load' then reads = reads + 1
+            when 'crexx.c.transfer.invalid' then do
+              invalid = invalid + 1
+              call check((operation.attribute('code') as .string) = '28.4' & (operation.attribute('name') as .string) = 'Ghost','invalid ITERATE keeps exact code/raw name')
+            end
+            otherwise nop
+          end
+        end
+        call check(closes = expected & reads = 0,'transfer closes only crossed owners without target pool reads')
+        if sample < 4 then do
+          call check(selectedcloses = 0 & jumps = 1 & invalid = 0,'ITERATE preserves selected owner and has one normal edge')
+          truthid = 0; advanceblock = target; exitblock = 0; entryblock = 0
+          if sample = 1 then do
+            do i = 1 to graph.operations()
+              operation = graph.operation(i)
+              if operation.blockid() = target & operation.name() = 'crexx.c.until.truth' then truthid = operation.result().id()
+            end
+            do i = 1 to graph.operations()
+              operation = graph.operation(i)
+              if operation.blockid() <> target | operation.name() <> 'core.branch' then iterate
+              if operation.input(1).id() = truthid then do; exitblock = operation.successor(1); advanceblock = operation.successor(2); end
+            end
+            call check(truthid > 0 & exitblock > 0 & advanceblock > 0,'selected continuation evaluates UNTIL before choosing exit or advance')
+          end
+          advances = 0; entries = 0; exitcloses = 0; exitadvances = 0
+          do i = 1 to graph.operations()
+            operation = graph.operation(i)
+            if operation.blockid() = advanceblock then do
+              if operation.name() = 'crexx.c.do.advance' then if (operation.attribute('key') as .string) = selectedkey then advances = advances + 1
+              if operation.name() = 'core.jump' then entryblock = operation.successor(1)
+            end
+            if sample = 1 & operation.blockid() = exitblock then do
+              if operation.name() = 'crexx.c.do.close' then if (operation.attribute('key') as .string) = selectedkey then exitcloses = exitcloses + 1
+              if operation.name() = 'crexx.c.do.advance' then exitadvances = exitadvances + 1
+            end
+          end
+          do i = 1 to graph.operations()
+            operation = graph.operation(i)
+            if operation.blockid() = entryblock & operation.name() = 'crexx.c.do.entry' then if (operation.attribute('key') as .string) = selectedkey then entries = entries + 1
+          end
+          call check(advances = 1 & entries = 1,'selected advance returns to selected count/TO entry')
+          if sample = 1 then call check(exitcloses = 1 & exitadvances = 0,'true UNTIL closes selected state without advancing it')
+        end
+        else if sample = 4 then call check(selectedcloses = 1 & jumps = 1 & invalid = 0,'shared LEAVE still closes selected state and exits')
+        else call check(closes = 0 & jumps = 0 & invalid = 1,'invalid ITERATE has no normal cleanup/jump continuation')
+      end
+      output = request.output(); assembly = output.text()
+      call check(occurrences(assembly,',llctarget.invalidtransfer(),') = (sample = 5),'only invalid ITERATE calls the shared bridge')
+      if inspect <> '' then written = writebinary(inspect || '-iterate-' || sample || '-' || optimise || '.rxas',assembly as .binary)
+    end
+  end
+  return
+
+/** A static LEAVE edge closes exactly crossed owners and then jumps. */
+leavechecks: procedure = .void expose artifacts
+  arg inspect = '', invalidonly = 0
+  source = .string; sample = .int; optimise = .int; selected = .int
+  expected = .int; first = .int; closes = .int; jumps = .int; invalid = .int
+  written = .int; i = .int; text = .string; assembly = .string
+  request = .lltestcompiler..request; graph = .llir..module; output = .llir..output
+  operation = .llir..opview
+  do sample = 1 to 6
+    if invalidonly & sample <> 6 then iterate
+    expected = 1
+    select sample
+      when 1 then do; source = 'do i=1; do j=1; leave i; end; end'; expected = 2; end
+      when 2 then source = 'do i=1 for 1; do i=10 for 1; leave i; end; end'
+      when 3 then source = 'do i=1; do forever; do; select; when 1 then leave i; end; end; end; end'
+      when 4 then source = 'do 2; do 3; leave; end; end'
+      when 5 then do; source = 'do A.KEY=1; do j=1; leave a.key; end; end'; expected = 2; end
+      otherwise do; source = 'options levelc strictc; do i=1; do j=1; leave Ghost; end; end'; expected = 0; end
+    end
+    first = pos('leave',source) - 1
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'leave-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'LEAVE shape accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      do selected = 0 to 1
+        graph = request.graph(); if selected then graph = request.emissiongraph()
+        text = graph.dump(); closes = 0; jumps = 0; invalid = 0
+        do i = 1 to graph.operations()
+          operation = graph.operation(i)
+          if operation.origin().first() <> first then iterate
+          if operation.name() = 'crexx.c.do.close' then closes = closes + 1
+          if operation.name() = 'core.jump' then jumps = jumps + 1
+          if operation.name() = 'crexx.c.transfer.invalid' then do
+            invalid = invalid + 1
+            call check((operation.attribute('code') as .string) = '28.3' & (operation.attribute('name') as .string) = 'Ghost','invalid edge retains exact code/raw name')
+          end
+        end
+        call check(closes = expected,'LEAVE edge closes only crossed owners ' || sample || '/' || optimise || '/' || selected)
+        if sample < 6 then do
+          call check(jumps = 1 & invalid = 0,'valid LEAVE is one direct jump ' || sample || '/' || optimise || '/' || selected)
+          call check(pos('crexx.c.load ',text) = 0,'static target adds no runtime pool-name read ' || sample || '/' || optimise || '/' || selected)
+        end
+        else call check(jumps = 0 & invalid = 1,'invalid edge has no normal cleanup/jump continuation')
+      end
+      output = request.output(); assembly = output.text()
+      call check(occurrences(assembly,',llctarget.invalidtransfer(),') = (sample = 6),'only invalid transfer calls the shared error bridge')
+      call check(pos('.srcstep',assembly) > 0 & pos('leave-shape.crexx',assembly) > 0,'LEAVE keeps authored source/fatal metadata')
+      if inspect <> '' then written = writebinary(inspect || '-leave-' || sample || '-' || optimise || '.rxas',assembly as .binary)
+    end
+  end
+  return
+
+/** Keyed DO owns state only for count/control and preserves header order. */
+dochecks: procedure = .void expose artifacts
+  arg inspect = '', repaironly = 0
+  source = .string; text = .string; assembly = .string; sample = .int; optimise = .int; selected = .int
+  states = .int; captures = .int; starts = .int; written = .int
+  request = .lltestcompiler..request; graph = .llir..module; output = .llir..output
+  operation = .llir..opview; entryvalue = .int; whileblock = .int; guarded = .int; i = .int
+  whilefirst = .int; whilelast = .int; whilecalls = .int; incoming = .int; edge = .int
+  do sample = 1 to 10
+    if repaironly & sample <> 9 then iterate
+    select sample
+      when 1 then do; source = 'do; nop; end'; states = 0; captures = 0; starts = 0; end
+      when 2 then do; source = 'do forever; leave; end'; states = 0; captures = 0; starts = 0; end
+      when 3 then do; source = 'do while flag; leave; end'; states = 0; captures = 0; starts = 0; end
+      when 4 then do; source = 'do until flag; nop; end'; states = 0; captures = 0; starts = 0; end
+      when 5 then do; source = 'do 2; nop; end'; states = 1; captures = 1; starts = 0; end
+      when 6 then do; source = 'do i=1 to 2 by 1 for 1; nop; end i'; states = 1; captures = 4; starts = 1; end
+      when 7 then do; source = 'do 2; do forever; leave; end; end'; states = 1; captures = 1; starts = 0; end
+      when 8 then do; source = 'do i=1 for 2; select; when flag then iterate; otherwise leave; end; end'; states = 1; captures = 2; starts = 1; end
+      when 9 then do; source = 'do 2; do j=1 for 2; exit 0; end; end; exit 0; p: procedure; do 2; do k=1 for 2; return 7; end; end'; states = 4; captures = 6; starts = 2; end
+      otherwise do; source = "do until '1'; leave; end"; states = 0; captures = 0; starts = 0; end
+    end
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'do-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'DO endpoint source accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      graph = request.graph(); text = graph.dump()
+      call check(occurrences(text,'crexx.c.do.new ') = states,'one static constructor per counted/controlled header ' || sample || '/' || optimise)
+      call check(occurrences(text,'crexx.c.do.capture ') = captures,'one capture per authored header term ' || sample || '/' || optimise)
+      if states = 0 then call check(pos('crexx.c.do.',text) = 0,'state-free DO has no owned state protocol ' || sample || '/' || optimise)
+      if sample = 10 then call check(pos('crexx.c.until.truth',text) = 0 & pos('crexx.c.do.advance',text) = 0,'closed body cannot execute UNTIL or advance ' || optimise)
+      output = request.output(); assembly = output.text()
+      call check(occurrences(assembly,',llctarget.donew(),') = states,'one factory call per static state ' || sample || '/' || optimise)
+      call check(occurrences(assembly,',llctarget.dostart(),') = starts,'count start emits no runtime start call ' || sample || '/' || optimise)
+      call check(pos('.srcstep',assembly) > 0 & pos('do-shape.crexx',assembly) > 0,'DO source/fatal locations retained ' || sample || '/' || optimise)
+      if inspect <> '' & (sample = 5 | sample = 6 | sample = 8 | sample = 9) then written = writebinary(inspect || '-do-' || sample || '-' || optimise || '.rxas',assembly as .binary)
+    end
+  end
+  source = "do i=mark('S',1) for mark('F',2) by mark('B',1) to mark('T',3) while mark('W',1); leave; end; exit 0; mark: procedure; arg label,value; return value"
+  do optimise = 0 to 1
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'do-once.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'effectful header/WHILE source accepted ' || optimise || ': ' || request.error())
+    if request.status() <> 0 then iterate
+    do selected = 0 to 1
+      graph = request.graph(); if selected then graph = request.emissiongraph()
+      text = graph.dump()
+      call check(occurrences(text,'crexx.c.call ') = 5 & occurrences(text,'crexx.c.requirevalue ') = 5,'one evaluation/result check per authored term ' || optimise || '/' || selected)
+      call check(occurrences(text,'crexx.c.do.capture ') = 4 & occurrences(text,'crexx.c.do.start ') = 1 & occurrences(text,'crexx.c.while.truth ') = 1,'captures/start/contextual WHILE are retained ' || optimise || '/' || selected)
+      entryvalue = 0; whileblock = 0; guarded = 0; incoming = 0; whilecalls = 0
+      whilefirst = pos("mark('W',1)",source) - 1; whilelast = whilefirst + length("mark('W',1)")
+      do i = 1 to graph.operations()
+        operation = graph.operation(i)
+        if operation.name() = 'crexx.c.do.entry' then entryvalue = operation.result().id()
+        if operation.name() = 'crexx.c.call' & operation.origin().first() = whilefirst & operation.origin().last() = whilelast then do
+          whileblock = operation.blockid(); whilecalls = whilecalls + 1
+        end
+      end
+      do i = 1 to graph.operations()
+        operation = graph.operation(i)
+        do edge = 1 to operation.successors()
+          if operation.successor(edge) = whileblock then incoming = incoming + 1
+        end
+        if operation.name() <> 'core.branch' then iterate
+        if operation.input(1).id() = entryvalue then guarded = operation.successor(1) = whileblock
+      end
+      call check(entryvalue > 0 & whileblock > 0 & whilecalls = 1 & incoming = 1 & guarded,'count/TO true edge alone reaches authored WHILE work ' || optimise || '/' || selected)
+    end
+    output = request.output()
+    if inspect <> '' then written = writebinary(inspect || '-do-once-' || optimise || '.rxas',output.text() as .binary)
+  end
+  return
+
+/** Ordered WHEN edges retain truth; only open endpoints need convergence. */
+selectchecks: procedure = .void expose artifacts
+  arg inspect = ''
+  source = .string; expected = .int; missing = .int; written = .int
+  sample = .int; optimise = .int; selected = .int; request = .lltestcompiler..request
+  graph = .llir..module; output = .llir..output; text = .string
+  do sample = 1 to 7
+    select sample
+      when 1 then do; source = 'select; when flag then exit 0; otherwise exit 1; end'; expected = 2; missing = 0; end
+      when 2 then do; source = 'exit 0; p: procedure; arg flag; select; when flag then return 1; otherwise return 2; end'; expected = 1; missing = 0; end
+      when 3 then do; source = 'select; when flag then select; when inner then exit 0; otherwise exit 1; end; otherwise exit 2; end'; expected = 3; missing = 0; end
+      when 4 then do; source = 'do while flag; select; when flag then leave; otherwise iterate; end; end'; expected = 1; missing = 0; end
+      when 5 then do; source = 'select; when flag then nop; otherwise; end'; expected = 1; missing = 0; end
+      when 6 then do; source = 'select; when flag then exit 0; end; nop; options 42'; expected = 2; missing = 1; end
+      otherwise do; source = 'select; when flag then nop; when other then nop; end'; expected = 2; missing = 1; end
+    end
+    do optimise = 0 to 1
+      request = .lltestcompiler..request('c',source as .binary,artifacts,'select-shape.crexx',1000000,512,67108864,65536,optimise)
+      call check(request.status() = 0,'SELECT endpoint source accepted ' || sample || '/' || optimise || ': ' || request.error())
+      if request.status() <> 0 then iterate
+      graph = request.graph(); text = graph.dump()
+      if sample = 5 | sample = 7 then call check(pos('select.join.',text) > 0,'open SELECT endpoints retain convergence ' || sample || '/' || optimise)
+      else call check(pos('select.join.',text) = 0,'closed SELECT endpoints add no join ' || sample || '/' || optimise)
+      call check(sourcepackets(graph) = expected,'only EXIT/missing/normal structural packets ' || sample || '/' || optimise)
+      call check(occurrences(text,'crexx.c.select.missing') = missing,'only absent OTHERWISE emits missing path ' || sample || '/' || optimise)
+      output = request.output()
+      call check(pos('.srcstep',output.text()) > 0 & pos('select-shape.crexx',output.text()) > 0,'SELECT source/fatal records retained ' || sample || '/' || optimise)
+      if inspect <> '' & (sample = 1 | sample = 2 | sample = 4 | sample = 6) then written = writebinary(inspect || '-select-' || sample || '-' || optimise || '.rxas',output.text() as .binary)
+    end
+  end
+  do optimise = 0 to 1
+    source = 'select; when marker() then nop; when marker() then nop; otherwise nop; end; exit 0; marker: procedure; return 1'
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'select-once.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'effectful WHEN conditions accepted ' || optimise || ': ' || request.error())
+    if request.status() <> 0 then iterate
+    do selected = 0 to 1
+      graph = request.graph(); if selected then graph = request.emissiongraph()
+      text = graph.dump()
+      call check(occurrences(text,'crexx.c.call ') = 2 & occurrences(text,'crexx.c.when.truth ') = 2,'one call/contextual truth per WHEN ' || optimise || '/' || selected)
+      call check(pos('crexx.c.call ',text) < pos('crexx.c.when.truth ',text),'first condition precedes its truth ' || optimise || '/' || selected)
+    end
+    output = request.output()
+    if inspect <> '' then written = writebinary(inspect || '-select-once-' || optimise || '.rxas',output.text() as .binary)
+    source = "select; when '1' then nop; when marker() then say 'wrong'; otherwise nop; end; exit 0; marker: procedure; return 1"
+    request = .lltestcompiler..request('c',source as .binary,artifacts,'select-literal.crexx',1000000,512,67108864,65536,optimise)
+    call check(request.status() = 0,'literal WHEN accepted ' || optimise)
+    if request.status() <> 0 then iterate
+    graph = request.graph(); text = graph.dump()
+    call check(occurrences(text,'crexx.c.when.truth ') = 2 & occurrences(text,'crexx.c.call ') = 1,'source retains both checked WHEN paths')
+    graph = request.emissiongraph(); text = graph.dump()
+    call check(occurrences(text,'crexx.c.when.truth ') = 2 - optimise,'selected first literal keeps its contextual truth ' || optimise)
+    call check(occurrences(text,'crexx.c.call ') = 1 - optimise,'only IR-on prunes dormant later WHEN evaluation ' || optimise)
+  end
+  request = .lltestcompiler..request('c','select; when 0 then nop; end' as .binary,artifacts)
+  call check(request.status() = 0,'default anonymous source admits indexed missing path: ' || request.error())
+  if request.status() = 0 then do
+    output = request.output(); call check(pos('<source>',output.text()) > 0,'anonymous service keeps its logical source identity')
+  end
+  return
+
+/** Count authored control separately from the required checked-entry branch.
+ * This preserves the source-fold oracle when dispatch remains effectful. */
+sourcebranches: procedure = .int
+  arg graph = .llir..module
+  store = dereference graph.storage(); count = 0
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() <> 'core.branch' then iterate
+    producer = store.get(4,op.input(1).id(),1)
+    if graph.operation(producer).name() <> 'crexx.c.entry.test' & graph.operation(producer).name() <> 'crexx.c.program.exiting' then count = count + 1
+  end
+  return count
+
+/** entry.invalid has one mandated cold closure. EXIT owns its real packet,
+ * while missing/normal closures remain absent; guards reuse existing packets. */
+sourcepackets: procedure = .int
+  arg graph = .llir..module
+  i = .int; op = .llir..opview
+  store = dereference graph.storage(); count = 0; closures = 0; exitpackets = .int[]
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() = 'crexx.c.exit' then exitpackets[store.get(4,op.input(1).id(),1)] = 1
+  end
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() <> 'crexx.c.return.absent' then do
+      if op.name() = 'crexx.c.return.present' & exitpackets[op.id()] then count = count + 1
+      iterate
+    end
+    first = store.get(2,op.blockid(),2)
+    if graph.operation(first).name() = 'crexx.c.entry.invalid' then closures = closures + 1
+    else count = count + 1
+  end
+  call check(closures = 1,'one required generated invalid-entry closure')
+  return count
+
+irshape: procedure = .string
+  arg graph = .llir..module
+  value = .llir..valuehandle
+  data = dereference graph.storage()
+  text = data.count(1) || '/' || data.count(2) || '/' || data.count(3) || '/' || data.count(4) || '/' || data.count(5)
+  do i = 1 to graph.operations()
+    op = graph.operation(i); text = text || '|' || op.name() || ':' || op.inputs() || ':' || op.results() || ':' || op.successors()
+    do input = 1 to op.inputs(); value = op.input(input); text = text || ',' || value.id(); end
+    if op.name() = 'core.constant' then do; value = op.result(); text = text || ':' || bin2x(value.bytes()); end
+  end
+  return text
+
+execshape: procedure = .string
+  arg source = .string, logical = 'nop-shape.crexx'
+  text = ''; start = 1
+  do while start <= length(source)
+    finish = pos('0A'x as .string,source,start)
+    if finish = 0 then finish = length(source) + 1
+    line = strip(substr(source,start,finish - start)); start = finish + 1
+    if line = '' | left(line,1) = '.' then iterate
+    if pos(logical || ':',line) > 0 then do
+      quote = pos('"',line)
+      if quote > 0 then line = left(line,quote - 1) || '"<diagnostic location>"'
+    end
+    text = text || line || ('0A'x as .string)
+  end
+  return text
+
 check: procedure = .void expose checks failures
   arg condition = .int, name = .string
   checks = checks + 1

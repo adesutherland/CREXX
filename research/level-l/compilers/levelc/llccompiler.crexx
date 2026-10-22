@@ -3,6 +3,8 @@ options levelb
 namespace llccompiler expose request
 import rxfnsb
 import llcfrontend
+import llcbindings
+import llcdiagnostics
 import llcrxas
 import llir
 import llirservices
@@ -13,6 +15,12 @@ import llcompilercontracts
  * output owns its chunks independently of this request and its source graph. */
 request: class
   _frontend = .llcfrontend..request
+  _providers = .llcbindings..binding[]
+  _snapshot = .llcbindings..prepared
+  _frontready = .int
+  _nesting = .int
+  _routine = .string
+  _bound = .int
   _backend = .llcrxas..compilation
   _source = .binary
   _filename = .string
@@ -26,19 +34,35 @@ request: class
   _error = .string
   _offset = .int
   *: factory
-    arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512, bytes = 67108864, registers = 65536, optimise = 1
+    arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512, bytes = 67108864, registers = 65536, optimise = 1, ?providers = .llcbindings..binding[], routine_export = ''
     _source = source; _filename = llcompilercontracts..sourcename(filename); _path = artifacts
     _bytes = bytes; _registers = registers; _ready = 0; _error = ''; _offset = 0
-    _budget = budget; _optimise = optimise
-    _frontend = .llcfrontend..request(source,artifacts,filename,budget,nesting)
+    _budget = budget; _optimise = optimise; _nesting = nesting
+    _providers = providers; _routine = routine_export
+    return
+  /** Both graph-only and full compilation prepare children only after this
+   * request owns a stable snapshot field. No factory-self borrow can escape. */
+  prepare: method = .void
+    if _frontready then return
+    _frontready = 1
+    _bound = _providers[0] > 0 | _routine <> ''
+    if _bound then do
+      _snapshot = .llcbindings..prepared(_path,_providers,_bytes,_bytes)
+      if _snapshot.status() then do; _error = _snapshot.error(); return; end
+      _frontend = .llcfrontend..request.bound(_source,reference _snapshot,_filename,_budget,_nesting)
+    end
+    else _frontend = .llcfrontend..request(_source,_path,_filename,_budget,_nesting)
     return
   run: method = .void
     if _ready then return
     _ready = 1
+    call prepare()
+    if _error <> '' then return
     if _frontend.status() <> 0 then do
       _error = _frontend.error(); _offset = _frontend.offset(); return
     end
     _emission = _frontend.graph()
+    sourceidentity = _emission.identity()
     if _optimise then do
       change = llirservices..optimise(reference _emission,_budget,1000000,_bytes)
       if change.status() = 'invalid' | change.status() = 'limit' then do
@@ -46,7 +70,16 @@ request: class
       end
       _emission = change.result()
     end
-    _backend = .llcrxas..compilation(_emission,_path,_bytes,_registers)
+    if _emission.identity() = sourceidentity then do
+      entries = _frontend.entryproof(); signals = _frontend.signalproof()
+      loops = _frontend.loopproof(); clauses = _frontend.clauseproof()
+      if _bound then _backend = .llcrxas..compilation.boundprecheckedclauses(_emission,entries,signals,loops,clauses,reference _snapshot,_bytes,_registers,_routine)
+      else _backend = .llcrxas..compilation.precheckedclauses(_emission,entries,signals,loops,clauses,_path,_bytes,_registers)
+    end
+    else do
+      if _bound then _backend = .llcrxas..compilation.bound(_emission,reference _snapshot,_bytes,_registers,_routine)
+      else _backend = .llcrxas..compilation(_emission,_path,_bytes,_registers)
+    end
     if _backend.status() <> 0 then do
       _error = _backend.error(); _offset = _backend.offset()
     end
@@ -71,6 +104,20 @@ request: class
     end
     return _backend.output()
   graph: method = .llir..module
-    return _frontend.graph()
+    call prepare()
+    if _error <> '' then do
+      empty = .llir..schema(); contract = empty.finish()
+      return llir..loadbinary(contract,''x)
+    end
+    graph = _frontend.graph()
+    if _frontend.status() then do; _error = _frontend.error(); _offset = _frontend.offset(); end
+    return graph
+  /** Prepare only the frontend; completed records remain owned on failure. */
+  warnings: method = .llcdiagnostics..warning[]
+    call prepare()
+    if initialized(_frontend) = 0 then do
+      empty = .llcdiagnostics..warning[]; return empty
+    end
+    return _frontend.warnings()
   emissiongraph: method = .llir..module
     call run(); return _emission

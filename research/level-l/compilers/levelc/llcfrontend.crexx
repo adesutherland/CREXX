@@ -6,10 +6,21 @@ import llast
 import llir
 import llsource
 import llcir
+import llcbifs
+import llcbindings
 import llcparse
+import llcore
+import llcparseprogram
 import llcompilercontracts
+import llcdoprotocol
+import llcclauseprotocol
+import llcprocedureprotocol
+import llcsignalprotocol
+import llccommandprotocol
+import llcdiagnostics
+import rexxclassicunicodeproperties
 
-/** Classic routine: one source statement interval and its result contract. */
+/** First source-unit entry identity and its result contract. */
 routine: class
   _name = .string
   _result = .string
@@ -44,10 +55,16 @@ routine: class
  * Imports are read from an explicit artifact directory; no tool is spawned. */
 request: class
   _source = .binary
+  _providers = reference .llcbindings..prepared
+  _bound = .int
   _filename = .string
   _rootpath = .string
   _nesting = .int
   _budget = .int
+  _bytebudget = .int
+  _parsepositions = .llsource..index
+  _parsepositionsready = .int
+  _strictc = .int
   _work = .int
   _ready = .int
   _building = .int
@@ -55,6 +72,10 @@ request: class
   _offset = .int
   _tree = .llast..tree
   _graph = .llir..module
+  _entryproof = .llcprocedureprotocol..checked
+  _signalproof = .llcsignalprotocol..checked
+  _loopproof = .llcdoprotocol..checked
+  _clauseproof = .llcclauseprotocol..checked
   _registry = .llir..schema
   _contract = .llir..contract
   _builder = .llir..builder
@@ -75,6 +96,13 @@ request: class
   _callsymbols = .string[]
   _callpackages = .string[]
   _routines = .object[]
+  _routineids = .stem
+  _entrybytes = .int
+  _sourceentries = .int[]
+  _nextinstructions = .object[]
+  _labelleaders = .int[]
+  _labelnodes = .object[]
+  _labelcapacity = .int
   _functions = .object[]
   _current = .routine
   _scope = .int
@@ -87,48 +115,113 @@ request: class
   _loops = .int
   _breaks = .object[]
   _continues = .object[]
+  _hasbreaks = .int[]
+  _hascontinues = .int[]
+  _breakalive = .int[]
+  _continuealive = .int[]
+  _loopkeys = .string[]
+  _loopnames = .string[]
+  _donumber = .int
   _bindscope = .int[]
   _bindnames = .string[]
   _bindtypes = .string[]
   _explicit = .int[]
   _slots = .object[]
-  _poolslot = .llir..slot
   _contextslot = .llir..slot
-  _argsslot = .llir..slot
+  _entryslot = .llir..slot
+  _sourceblocks = .object[]
+  _commandnumber = .int
+  _commandfirst = .stem
+  _commandcount = .stem
+  _anchorseen = .stem
+  _anchorkinds = .string[]
+  _anchornames = .string[]
+  _anchorfirst = .int[]
+  _anchorlast = .int[]
+  _warnings = .llcdiagnostics..warning[]
+  _hassignal = .int
+  _signalnames = .string[]
+  _signalids = .int[]
+  _signalnodes = .llast..node[]
+  _signalrows = .stem
+  _signalslot = .llir..slot
+  _signalbuilding = .int
+  _handlernodes = .llast..node[]
+  _handlernames = .string[]
+  _handlerconditions = .int[]
+  _handlerordinals = .int[]
+  _handlerrows = .int[]
+  _handlermodes = .string[]
+  _signalhandlers = .int
+  _callhandlers = .int
+  _handlercapacity = .int
+  _conditionblock = .llir..block
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512
     _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = artifacts
     _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
-    _ready = 0; _nesting = nesting; _building = 0
+    _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
+    _parsepositionsready = 0
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
+    if budget < 1 | budget > (9223372036854775807 <idiv> 64) then do
+      _error = 'LL_COMPILER_LIMIT: frontend byte budget is not representable'; _ready = 1; return
+    end
+    _bytebudget = budget * 64
+    return
+  /** Borrow only an external anchored snapshot; no self-reference is retained. */
+  bound: factory
+    arg source = .binary, providers = reference .llcbindings..prepared, filename = '<source>', budget = 1000000, nesting = 512
+    _source = source; _filename = llcompilercontracts..sourcename(filename); _rootpath = ''; _providers = providers; _bound = 1
+    _budget = budget; _work = 0; _error = ''; _offset = 0; _haslibrary = 0; _hasclassic = 0; _importb = 0
+    _ready = 0; _nesting = nesting; _building = 0; _strictc = 0
+    _parsepositionsready = 0
+    _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
+    if budget < 1 | budget > (9223372036854775807 <idiv> 64) then do
+      _error = 'LL_COMPILER_LIMIT: frontend byte budget is not representable'; _ready = 1; return
+    end
+    _bytebudget = budget * 64
     return
   run: method = .void
     if _ready then return
     _ready = 1
     do
+      if _bound then do
+        if <refvalid>(_providers) = 0 then do; _error = 'LL_COMPILER_IMPORT: provider owner is not live'; return; end
+        providers = dereference _providers
+        if initialized(providers) = 0 then do; _error = 'LL_COMPILER_IMPORT: provider owner is not initialized'; return; end
+        if providers.status() then do; _error = providers.error(); return; end
+        _rootpath = providers.root()
+      end
       parsed = .llcparse..parsed(_source,_budget)
       if parsed.status() <> 0 then do
         _error = parsed.error(); _offset = parsed.offset(); return
       end
+      _strictc = parsed.strictc()
       _tree = parsed.ast()
       if _tree.isrecovered() then do
         _error = 'LL_COMPILER_RECOVERED: executable IR requires clean input'; return
       end
-      walk = _tree.walk('parents first')
+      walk = _tree.walk('parents first'); hascommands = 0
       do while walk.next()
         if walk.depth() > _nesting then do
           call fail(walk.node(),'LIMIT: AST nesting budget exceeded'); return
         end
+        if walk.node().kind() = 'CCommand' then hascommands = 1
+        if wordpos(walk.node().kind(),'CSignal CSignalValue CSignalOn CSignalOff CCallOn CCallOff') > 0 then _hassignal = 1
       end
+      _entrybytes = 0
+      if hascommands then call sourcewarnings(reference parsed)
+      if _error <> '' then return
+      call addressplans(reference parsed)
+      if _error <> '' then return
       _registry = .llir..schema(); call llcir..registerfamilies(reference _registry)
       call inventory()
-      if _error <> '' then return
       if _error <> '' then return
       _contract = _registry.finish()
       if _contract.error() <> '' then do
         _error = _contract.error(); return
       end
-      _builder = .llir..builder(_contract,_budget,_budget * 64)
+      _builder = .llir..builder(_contract,_budget,_bytebudget)
       _building = 1
       _file = _builder.source(_filename,_source)
       if _error <> '' then return
@@ -136,8 +229,29 @@ request: class
       if _error <> '' then return
       _graph = _builder.finish()
       if _graph.error() <> '' then _error = _graph.error()
+      if _error = '' then do
+        _entryproof = .llcprocedureprotocol..checked(reference _graph,_bytebudget,_budget)
+        if _entryproof.status() then do; _error = _entryproof.error(); _offset = _entryproof.offset(); end
+        if _error = '' then do
+          _signalproof = .llcsignalprotocol..checked(reference _graph,reference _entryproof,_bytebudget,_budget)
+          if _signalproof.status() then do; _error = _signalproof.error(); _offset = _signalproof.offset(); end
+        end
+        if _error = '' then do
+          commands = .llccommandprotocol..checked(reference _graph,reference _entryproof,_bytebudget,_budget)
+          if commands.status() then do; _error = commands.error(); _offset = commands.offset(); end
+        end
+        if _error = '' then do
+          _loopproof = .llcdoprotocol..checked.withsignals(reference _graph,reference _entryproof,reference _signalproof,_bytebudget,_budget)
+          if _loopproof.status() then do; _error = _loopproof.error(); _offset = _loopproof.offset(); end
+        end
+        if _error = '' then do
+          _clauseproof = .llcclauseprotocol..checked(reference _graph,reference _entryproof,reference _loopproof,_bytebudget,_budget)
+          if _clauseproof.status() then do; _error = _clauseproof.error(); _offset = _clauseproof.offset(); end
+        end
+      end
     on signal as problem
       if _building then _error = _builder.error()
+      if _signalbuilding & left(_error,18) = 'LL_RESOURCE_LIMIT:' then _error = 'LL_COMPILER_LIMIT: frontend SIGNAL construction IR budget exceeded'
       if _error = '' then _error = 'LL_COMPILER_INVALID: ' || problem.message()
     end
     return
@@ -154,6 +268,31 @@ request: class
   status: method = .int
     call run()
     return _error <> ''
+  /** Owned completed source warnings survive later lowering failure. */
+  warnings: method = .llcdiagnostics..warning[]
+    call run()
+    return _warnings
+  /** Private synchronous borrows; the request remains the strong owner. */
+  entryproof: method = reference .llcprocedureprotocol..checked
+    call run()
+    missing = reference .llcprocedureprotocol..checked
+    if _error <> '' then return missing
+    return reference _entryproof
+  signalproof: method = reference .llcsignalprotocol..checked
+    call run()
+    missing = reference .llcsignalprotocol..checked
+    if _error <> '' then return missing
+    return reference _signalproof
+  loopproof: method = reference .llcdoprotocol..checked
+    call run()
+    missing = reference .llcdoprotocol..checked
+    if _error <> '' then return missing
+    return reference _loopproof
+  clauseproof: method = reference .llcclauseprotocol..checked
+    call run()
+    missing = reference .llcclauseprotocol..checked
+    if _error <> '' then return missing
+    return reference _clauseproof
   offset: method = .int
     call run()
     return _offset
@@ -183,45 +322,142 @@ request: class
     return _file.origin(node.start(),node.finish(),node.origin())
   findroutine: method = .int
     arg name = .string
-    do i = 1 to _routines[0]
-      item = _routines[i] as .routine
-      if item.name() = upper(name) then return i
+    if namework(name) = 0 then return 0
+    found = _routineids.get(name)
+    if found = '' then return 0
+    return found as .int
+  namework: method = .int
+    arg name = .string
+    extent = <blen>(name as .binary)
+    if extent > (_budget - _work) <idiv> 2 then do
+      call fail(_tree.root(),'LIMIT: frontend label-name work budget exceeded'); return 0
     end
-    return 0
+    _work = _work + extent * 2
+    return _error = ''
+  entryspace: method = .int
+    arg count = .int, width = .int, reason = 'entry'
+    if count < 0 | width < 1 then do; call fail(_tree.root(),'LIMIT: invalid frontend ' || reason || ' dimensions'); return 0; end
+    if count > (_bytebudget - _entrybytes) <idiv> width then do
+      call fail(_tree.root(),'LIMIT: frontend ' || reason || ' workspace exceeded'); return 0
+    end
+    _entrybytes = _entrybytes + count * width
+    return 1
+  /** Reserve the four sparse node-indexed label maps before any cell growth. */
+  labelindex: method = .int
+    arg node = .llast..node
+    id = node.id()
+    if id > _labelcapacity then do
+      if entryspace(id - _labelcapacity,32,'label index') = 0 then return 0
+      _labelcapacity = id
+    end
+    return id
   inventory: method = .void
+    id = .int; i = .int
     root = _tree.root(); body = root.child('body')
-    main = .routine('$MAIN','int64',body,1,body.count('items'))
-    call main.resulttype('result')
-    _namespace = ''
-
-    if _namespace = '' then _routines[1] = main as .object
-    item = .routine; node = .llast..node; next = .llast..node; part = .llast..node; parameter = .llast..node
-    name = .string; result = .string; ptype = .string; i = .int; j = .int
-    do i = 1 to body.count('items')
-      node = body.child('items',i)
+    _routines[1] = .routine('$MAIN','result',body,1,body.count('items')) as .object
+    _namespace = ''; _routineids = .stem(); _labelcapacity = 0; _signalrows = .stem()
+    groups = .int[]; walk = _tree.walk('parents first')
+    node = .llast..node; item = .llast..node; following = .llast..node
+    do while walk.next() & _error = ''
+      node = walk.node()
+      if tick(node) = 0 then return
+      level = walk.depth() + 1; grouped = 0
+      if level > 1 then grouped = groups[level - 1]
+      if node.kind() = 'CDo' | node.kind() = 'CSelect' then grouped = grouped + 1
+      if entryspace(1,8,'label traversal') = 0 then return
+      groups[level] = grouped
+      /* Each source list is indexed once. Consecutive labels share only the
+       * continuation of this list; a different IF arm has another list. */
+      if node.kind() = 'Sequence' | node.kind() = 'CLabelled' then do
+        field = 'items'; hasfollowing = 0; leader = 0
+        if node.kind() = 'CLabelled' then do
+          field = 'labels'; following = node.child('value'); hasfollowing = 1
+        end
+        do i = node.count(field) to 1 by -1 while _error = ''
+          item = node.child(field,i)
+          if tick(item) = 0 then return
+          if item.kind() = 'CLabel' then do
+            id = labelindex(item); if id = 0 then return
+            if entryspace(1,32,'label continuation') = 0 then return
+            if hasfollowing then _nextinstructions[id] = following as .object
+            else _nextinstructions[id] = item as .object
+          end
+          else do; following = item; hasfollowing = 1; end
+        end
+        do i = 1 to node.count(field) while _error = ''
+          item = node.child(field,i)
+          if tick(item) = 0 then return
+          if item.kind() = 'CLabel' then do
+            id = labelindex(item); if id = 0 then return
+            if leader = 0 then leader = id
+            _labelleaders[id] = leader
+          end
+          else leader = 0
+        end
+      end
+      if node.kind() = 'CSignalOn' | node.kind() = 'CCallOn' then call inventoryhandler(node)
       if node.kind() <> 'CLabel' then iterate
-      name = upper(node.text('name'))
-      if findroutine(name) > 0 then do
-        call fail(node,'BIND: duplicate routine ' || name); return
+      id = labelindex(node); if id = 0 then return
+      raw = node.text('name'); if namework(raw) = 0 then return
+      name = rexxclassic_unicode_upper(raw)
+      if namework(name) = 0 then return
+      if entryspace(1,64,'label record') = 0 then return
+      ordinal = _labelnodes[0] + 1; _labelnodes[ordinal] = node as .object
+      _sourceentries[id] = 0
+      if grouped > 0 then _labelleaders[id] = 0
+      else if _labelleaders[id] = 0 then _labelleaders[id] = id
+      if _routineids.get(name) <> '' then iterate
+      if _hassignal then do
+        if entryspace(128,1,'SIGNAL label') = 0 | entryspace(<blen>(name as .binary),2,'SIGNAL label') = 0 then return
+        row = _signalnames[0] + 1
+        _signalnames[row] = name; _signalnodes[row] = node; _signalids[row] = 0
+        if grouped = 0 then _signalids[row] = _routines[0]
+        call _signalrows.set(name,row as .string)
       end
-      if i = body.count('items') then do
-        call fail(node,'PROFILE: Classic label requires PROCEDURE'); return
+      if entryspace(96,1,'label identity') = 0 then return
+      if entryspace(<blen>(name as .binary),2,'label identity') = 0 then return
+      if grouped > 0 then do
+        call _routineids.set(name,'-1'); iterate
       end
-      next = body.child('items',i + 1)
-      if next.kind() <> 'CProcedure' then do
-        call fail(node,'PROFILE: shared-pool labels are outside this profile'); return
-      end
-      item = _routines[_routines[0]] as .routine; call item.endat(i - 1)
-      _routines[_routines[0]] = item as .object
-      item = .routine(name,'result',body,i + 2,body.count('items'))
-      _routines[_routines[0] + 1] = item as .object
+      /* Every eligible label belongs to a Sequence or labelled-arm list.
+       * Its explicit same-label sentinel denotes EOF, never an object default. */
+      entry = _routines[0] + 1; following = _nextinstructions[id] as .llast..node
+      _routines[entry] = .routine(name,'result',following,id,0) as .object
+      _sourceentries[id] = entry
+      call _routineids.set(name,entry as .string)
     end
-
     return
+  /** One source-order declaration, retained independently of a pruned setter. */
+  inventoryhandler: method = .void
+    arg node = .llast..node
+    target = .llast..node; name = .string
+    condition = conditionid(node); ordinal = _handlernodes[0] + 1; id = node.id()
+    name = word('SYNTAX ERROR FAILURE HALT NOTREADY NOVALUE LOSTDIGITS',condition)
+    if node.count('target') then do
+      target = node.child('target')
+      if target.kind() = 'String' then name = stringliteral(target)
+      else name = target.text('spelling')
+    end
+    if _error <> '' | namework(name) = 0 then return
+    name = rexxclassic_unicode_upper(name)
+    if namework(name) = 0 | entryspace(128,1,'SIGNAL handler') = 0 then return
+    if entryspace(<blen>(name as .binary),2,'SIGNAL handler') = 0 then return
+    if id > _handlercapacity then do
+      if entryspace(id - _handlercapacity,8,'SIGNAL handler index') = 0 then return
+      _handlercapacity = id
+    end
+    _handlernodes[ordinal] = node; _handlernames[ordinal] = name
+    _handlerconditions[ordinal] = condition; _handlerordinals[id] = ordinal
+    if node.kind() = 'CCallOn' then do; _handlermodes[ordinal] = 'C'; _callhandlers = _callhandlers + 1; end
+    else do; _handlermodes[ordinal] = 'S'; _signalhandlers = _signalhandlers + 1; end
+    return
+  conditionid: method = .int
+    arg node = .llast..node
+    return wordpos(upper(node.child('condition').text('spelling')),'SYNTAX ERROR FAILURE HALT NOTREADY NOVALUE LOSTDIGITS')
   type: method = .llir..typeid
     arg name = .string
     if name = 'void' then return _contract.voidtype()
-    if wordpos(name,'value numeric pool arguments result') > 0 then return _contract.type('crexx.c.' || name)
+    if wordpos(name,'value context arguments result') > 0 then return _contract.type('crexx.c.' || name)
     return _contract.type('crexx.g.' || name)
   /** Only observed call masks create descriptors; no optional-subset expansion. */
   newblock: method = .llir..block
@@ -233,46 +469,322 @@ request: class
     _tempnumber = _tempnumber + 1
     return _fn.slot('$tmp.' || _tempnumber,type)
   lowerall: method = .void
-    item = .routine; fn = .llir..function; index = .int; i = .int; j = .int
-    slot = .llir..slot; op = .llir..opdraft; built = .llir..opview
-    fallback = .llir..valuehandle; value = .llir..valuehandle; defaultorigin = .llir..origin
-    do i = 1 to _routines[0]
-      item = _routines[i] as .routine
-      fn = _builder.function(item.name(),type(item.result()))
-      do
-        index = fn.argument(type('arguments')); index = fn.argument(type('numeric'))
-      end
-      _functions[i] = fn as .object
-    end
-    do scope = 1 to _routines[0] while _error = ''
-      _scope = scope
-      _current = _routines[_scope] as .routine; _fn = _functions[_scope] as .llir..function
-      _blocknumber = 0; _tempnumber = 0; _loops = 0; _terminated = 0; _alive = 1
-      _block = newblock('entry'); authored = at(_current.body()); origin = authored.derive()
-      do
-        _poolslot = _fn.slot('$pool',type('pool')); _contextslot = _fn.slot('$numeric',type('numeric')); _argsslot = _fn.slot('$arguments',type('arguments'))
-        op = _block.operation(_contract.operation('crexx.c.pool.new'),origin); built = op.finish()
-        call _block.store(_poolslot,built.result(),origin)
-        call _block.store(_argsslot,_block.readarg(1,origin),origin)
-        call _block.store(_contextslot,_block.readarg(2,origin),origin)
-      end
-      do i = _current.first() to _current.last() while _error = ''
-        if _terminated then do
-          _block = newblock('unreachable'); _terminated = 0; _alive = 0
-        end
-        call statement(_current.body().child('items',i))
-      end
+    i = .int; node = .llast..node; target = .llir..block; labelblock = .llir..block
+    op = .llir..opdraft; built = .llir..opview
+    _scope = 1; _current = _routines[1] as .routine
+    _fn = _builder.function('$MAIN',type('result'))
+    ignored = _fn.argument(type('context')); ignored = _fn.argument(type('int64'))
+    _functions[1] = _fn as .object
+    _blocknumber = 0; _tempnumber = 0; _loops = 0; _donumber = 0; _commandnumber = 0; _terminated = 0; _alive = 1
+    body = _current.body(); origin = at(body).derive()
+    _block = newblock('entry')
+    _contextslot = _fn.slot('$context',type('context'))
+    _entryslot = _fn.slot('$entry',type('int64'))
+    call _block.store(_contextslot,_block.readarg(1,origin),origin)
+    call _block.store(_entryslot,_block.readarg(2,origin),origin)
+    if _hassignal then do
+      _signalslot = _fn.slot('$signal.table',type('text'))
+      tablebytes = signaltable()
       if _error <> '' then return
-      if _scope < _routines[0] & _alive & _terminated = 0 then do
-        call fail(_current.body(),'PROFILE: fall-through into a Classic label is outside this profile'); return
-      end
-      if _terminated = 0 then do
-
-        if _current.result() = 'void' then call _block.returnvoid(origin)
-        else do
-          op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
-          call _block.returnvalue(built.result(),origin)
+      call _block.store(_signalslot,_block.constantbytes(type('text'),tablebytes,origin),origin)
+    end
+    dispatch = newblock('entry.dispatch')
+    if _signalhandlers > 0 then do
+      _conditionblock = newblock('signal.exception')
+      call _block.protect(dispatch,_conditionblock,origin)
+    end
+    else call _block.jump(dispatch,origin)
+    mainbody = newblock('source.main')
+    do i = 1 to _labelnodes[0] while _error = ''
+      node = _labelnodes[i] as .llast..node
+      if tick(node) = 0 then return
+      id = node.id(); leader = _labelleaders[id]
+      if leader = 0 then iterate
+      if id = leader then labelblock = newblock('source.label')
+      else labelblock = _sourceblocks[leader] as .llir..block
+      _sourceblocks[id] = labelblock as .object
+    end
+    integer = .llir..intcodec(); landing = .llir..block; landingposition = 0
+    do i = 1 to _routines[0] while _error = ''
+      if tick(body) = 0 then return
+      item = _routines[i] as .routine; target = mainbody; name = ''
+      if i > 1 then do
+        name = item.name(); labelid = item.first(); target = _sourceblocks[labelid] as .llir..block
+        first = item.body(); j = first.id()
+        if first.kind() <> 'CLabel' then do
+          if first.kind() <> 'CProcedure' then do
+            if j <> landingposition then do
+              landing = newblock('entry.consume'); _block = landing; consumeorigin = at(first)
+              op = _block.operation(_contract.operation('crexx.c.procedure.consume'),consumeorigin)
+              call op.input('context',_block.load(_contextslot,consumeorigin)); built = op.finish()
+              call _block.jump(target,origin); landingposition = j
+            end
+            target = landing
+          end
         end
+      end
+      _block = dispatch
+      op = _block.operation(_contract.operation('crexx.c.entry.test'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); call op.input('entry',_block.load(_entryslot,origin))
+      call op.attribute('id',integer.parse((i - 1) as .string)); call op.attribute('name',name as .binary)
+      built = op.finish(); next = newblock('entry.next')
+      call _block.branch(built.result(),target,next,origin); dispatch = next
+    end
+    _block = dispatch
+    op = _block.operation(_contract.operation('crexx.c.entry.invalid'),origin); built = op.finish()
+    op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
+    call _block.returnvalue(built.result(),origin)
+    _block = mainbody
+    call statement(body)
+    if _error <> '' then return
+    if _terminated = 0 then do
+      op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
+      call _block.returnvalue(built.result(),origin)
+    end
+    if _signalhandlers > 0 & _error = '' then call conditiondispatch(origin)
+    return
+  /** Length framing writes bytes once into the owned table; no source/table
+   * is copied per semantic SIGNAL or per label lookup. */
+  signalfield: method = .void
+    arg target_ref = reference .binary, bytes = .binary
+    target = dereference target_ref
+    size = <blen>(bytes)
+    if entryspace(size,2,'SIGNAL table') = 0 then return
+    if size > _budget - _work then do; call fail(_tree.root(),'LIMIT: frontend SIGNAL table work budget exceeded'); return; end
+    _work = _work + size
+    assembler bappend target,bytes
+    return
+  signaltable: method = .binary
+    bytes = .binary; i = .int; row = .int; found = .string; name = .string; node = .llast..node
+    call signalfield(reference bytes,'43534947330A'x as .binary)
+    call signalfield(reference bytes,((_signalnames[0] as .string) || ':') as .binary)
+    do i = 1 to _signalnames[0] while _error = ''
+      node = _signalnodes[i]; name = _signalnames[i]
+      call signalfield(reference bytes,((<blen>(name as .binary) as .string) || ':') as .binary)
+      call signalfield(reference bytes,name as .binary)
+      call signalfield(reference bytes,((_signalids[i] as .string) || ':') as .binary)
+      call signalfield(reference bytes,((<blen>(_filename as .binary) as .string) || ':') as .binary)
+      call signalfield(reference bytes,_filename as .binary)
+      call signalfield(reference bytes,((node.start() as .string) || ':') as .binary)
+      call signalfield(reference bytes,((node.finish() as .string) || ':') as .binary)
+    end
+    call signalfield(reference bytes,((_handlernodes[0] as .string) || ':') as .binary)
+    do i = 1 to _handlernodes[0] while _error = ''
+      node = _handlernodes[i]; name = _handlernames[i]
+      found = _signalrows.get(name); row = 0
+      if found <> '' then row = found as .int
+      _handlerrows[i] = row
+      call signalfield(reference bytes,((i as .string) || ':') as .binary)
+      call signalfield(reference bytes,('1:' || _handlermodes[i]) as .binary)
+      call signalfield(reference bytes,((_handlerconditions[i] as .string) || ':') as .binary)
+      call signalfield(reference bytes,((row as .string) || ':') as .binary)
+      call signalfield(reference bytes,((<blen>(name as .binary) as .string) || ':') as .binary)
+      call signalfield(reference bytes,name as .binary)
+      call signalfield(reference bytes,((<blen>(_filename as .binary) as .string) || ':') as .binary)
+      call signalfield(reference bytes,_filename as .binary)
+      call signalfield(reference bytes,((node.start() as .string) || ':') as .binary)
+      call signalfield(reference bytes,((node.finish() as .string) || ':') as .binary)
+    end
+    return bytes
+  /** Mutable policy names an immutable table declaration; OFF has no target. */
+  conditionpolicy: method = .void
+    arg node = .llast..node
+    origin = at(node); integer = .llir..intcodec()
+    ordinal = 0; row = 0; name = ''
+    if node.kind() = 'CSignalOn' | node.kind() = 'CCallOn' then do
+      id = node.id(); ordinal = _handlerordinals[id]
+      row = _handlerrows[ordinal]; name = _handlernames[ordinal]
+      if row = 0 then row = -1
+    end
+    if signalwork(node,16) = 0 then return
+    operation = 'signal.policy'
+    if node.kind() = 'CCallOn' | node.kind() = 'CCallOff' then operation = 'call.policy'
+    op = _block.operation(_contract.operation('crexx.c.' || operation),origin)
+    call op.input('table',_block.load(_signalslot,origin.derive()))
+    call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('condition',integer.parse(conditionid(node) as .string))
+    call op.attribute('handler',integer.parse(ordinal as .string))
+    call op.attribute('label',integer.parse(row as .string)); call op.attribute('name',name as .binary)
+    built = op.finish()
+    return
+  /** Only a real protected successor reaches this once-owned event segment.
+   * The setup origin is generated once; all cold operations reuse it rather
+   * than claiming an authored ON clause or a runtime causing location. */
+  conditiondispatch: method = .void
+    arg origin = .llir..origin
+    integer = .llir..intcodec(); _block = _conditionblock
+    op = .llir..opdraft; built = .llir..opview; target = .llir..block
+    labelnode = .llast..node; code = .string
+    if signalwork(_tree.root(),32) = 0 then return
+    op = _block.operation(_contract.operation('crexx.c.signal.capture'),origin)
+    call op.input('table',_block.load(_signalslot,origin))
+    call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key','SIGNAL' as .binary)
+    built = op.finish(); captured = built.result()
+    op = _block.operation(_contract.operation('crexx.c.signal.select'),origin)
+    call op.input('condition',captured); call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('key','SIGNAL' as .binary); built = op.finish()
+    selected = temporary(type('int64')); call _block.store(selected,built.result(),origin)
+    do i = 1 to _handlernodes[0] while _error = ''
+      if _handlermodes[i] <> 'S' then iterate
+      if signalwork(_handlernodes[i],64) = 0 then return
+      op = _block.operation(_contract.operation('crexx.c.signal.selected'),origin)
+      call op.input('selected',_block.load(selected,origin)); call op.attribute('key','SIGNAL' as .binary)
+      call op.attribute('handler',integer.parse(i as .string)); built = op.finish()
+      yes = newblock('signal.handler'); no = newblock('signal.handler.next')
+      call _block.branch(built.result(),yes,no,origin); _block = yes
+      op = _block.operation(_contract.operation('crexx.c.signal.deliver'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key','SIGNAL' as .binary)
+      call op.attribute('condition',integer.parse(_handlerconditions[i] as .string))
+      call op.attribute('handler',integer.parse(i as .string)); built = op.finish()
+      row = _handlerrows[i]; code = '16.1'
+      if row > 0 then do
+        code = '16.2'
+        if _signalids[row] > 0 then code = ''
+      end
+      if code = '' then do
+        labelnode = _signalnodes[row]; id = labelnode.id(); target = _sourceblocks[id] as .llir..block
+        call _block.jump(target,origin)
+      end
+      else do
+        op = _block.operation(_contract.operation('crexx.c.signal.handler.invalid'),origin)
+        call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key','SIGNAL' as .binary)
+        call op.attribute('condition',integer.parse(_handlerconditions[i] as .string))
+        call op.attribute('handler',integer.parse(i as .string)); call op.attribute('code',code as .binary)
+        built = op.finish(); call _block.returnvalue(built.result(),origin)
+      end
+      _block = no
+    end
+    op = _block.operation(_contract.operation('crexx.c.signal.relay'),origin)
+    call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key','SIGNAL' as .binary)
+    built = op.finish(); call _block.returnvalue(built.result(),origin)
+    return
+  signalwork: method = .int
+    arg node = .llast..node, count = 1
+    if _error <> '' then return 0
+    message = _builder.error()
+    if message <> '' then do
+      if left(message,18) = 'LL_RESOURCE_LIMIT:' then call fail(node,'LIMIT: frontend SIGNAL construction IR budget exceeded')
+      else _error = message
+      return 0
+    end
+    if count < 0 | count > _budget - _work then do
+      call fail(node,'LIMIT: frontend SIGNAL construction work budget exceeded'); return 0
+    end
+    _work = _work + count; return 1
+  signalclose: method = .void
+    arg node = .llast..node, origin = .llir..origin
+    do level = _loops to 1 by -1
+      if _loopkeys[level] <> '' then do
+        if signalwork(node,16) = 0 then return
+        built = dostate('close',_loopkeys[level],origin.derive())
+        if signalwork(node,0) = 0 then return
+      end
+    end
+    return
+  signalmark: method = .void
+    arg label = .int, origin = .llir..origin, node = .llast..node
+    if signalwork(node,8) = 0 then return
+    op = _block.operation(_contract.operation('crexx.c.signal.mark'),origin)
+    call op.input('table',_block.load(_signalslot,origin.derive()))
+    call op.input('context',_block.load(_contextslot,origin))
+    integer = .llir..intcodec(); call op.attribute('label',integer.parse(label as .string))
+    built = op.finish(); ignored = signalwork(node,0)
+    return
+  signalinvalid: method = .void
+    arg name = .llir..valuehandle, code = .string, origin = .llir..origin, node = .llast..node
+    if signalwork(node,8) = 0 then return
+    op = _block.operation(_contract.operation('crexx.c.signal.invalid'),origin)
+    call op.input('name',name); call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('code',code as .binary); built = op.finish()
+    if signalwork(node,0) = 0 then return
+    generated = origin.derive('synthetic')
+    op = _block.operation(_contract.operation('crexx.c.return.absent'),generated); built = op.finish()
+    if signalwork(node,0) = 0 then return
+    call _block.returnvalue(built.result(),generated)
+    return
+  signalstatement: method = .void
+    arg node = .llast..node
+    _signalbuilding = 1
+    origin = at(node); name = .string; found = .string; row = .int; labelid = .int
+    labelnode = .llast..node; destination = .llir..block; yes = .llir..block; no = .llir..block
+    target = .llast..node; value = .llir..valuehandle; named = .llir..valuehandle
+    op = .llir..opdraft; built = .llir..opview; nameslot = .llir..slot
+    if node.kind() = 'CSignal' then do
+      target = node.child('target')
+      if target.kind() = 'String' then name = stringliteral(target)
+      else name = target.text('spelling')
+      if _error <> '' | namework(name) = 0 then return
+      name = rexxclassic_unicode_upper(name)
+      if namework(name) = 0 then return
+      found = _signalrows.get(name); row = -1
+      if found <> '' then do
+        row = found as .int
+        if _signalids[row] = 0 then do
+          call fail(target,'SYNTAX: RXC-LC-16.2: SIGNAL target is trace-only ' || name); return
+        end
+      end
+      call signalmark(row,origin,node)
+      if _error <> '' then return
+      if row > 0 then do
+        labelnode = _signalnodes[row]; labelid = labelnode.id()
+        destination = _sourceblocks[labelid] as .llir..block
+        call signalclose(node,origin)
+        if signalwork(node) = 0 then return
+        call _block.jump(destination,origin.derive())
+      end
+      else call signalinvalid(_block.constantbytes(type('text'),name as .binary,origin.derive()),'16.1',origin,node)
+    end
+    else do
+      value = expression(node.child('value')); if _error <> '' then return
+      if signalwork(node,8) = 0 then return
+      op = _block.operation(_contract.operation('crexx.c.signal.name'),origin)
+      call op.input('value',value); call op.input('context',_block.load(_contextslot,origin))
+      built = op.finish(); if signalwork(node,0) = 0 then return
+      named = built.result(); nameslot = temporary(type('text'))
+      call _block.store(nameslot,named,origin.derive())
+      call signalmark(0,origin,node); integer = .llir..intcodec()
+      if _error <> '' then return
+      do row = 1 to _signalnames[0] while _error = ''
+        if signalwork(node,64) = 0 then return
+        op = _block.operation(_contract.operation('crexx.c.signal.test'),origin.derive())
+        call op.input('table',_block.load(_signalslot,origin.derive()))
+        call op.input('name',_block.load(nameslot,origin.derive()))
+        call op.attribute('label',integer.parse(row as .string)); built = op.finish()
+        if signalwork(node,0) = 0 then return
+        yes = newblock('signal.match'); no = newblock('signal.next')
+        if signalwork(node,0) = 0 then return
+        call _block.branch(built.result(),yes,no,origin.derive())
+        if signalwork(node,0) = 0 then return
+        _block = yes
+        if _signalids[row] = 0 then call signalinvalid(_block.load(nameslot,origin.derive()),'16.2',origin,node)
+        else do
+          labelnode = _signalnodes[row]; labelid = labelnode.id()
+          destination = _sourceblocks[labelid] as .llir..block
+          call signalclose(node,origin)
+          if signalwork(node) = 0 then return
+          call _block.jump(destination,origin.derive())
+        end
+        _block = no
+      end
+      call signalinvalid(_block.load(nameslot,origin.derive()),'16.1',origin,node)
+    end
+    ignored = signalwork(node,0); _signalbuilding = 0
+    _terminated = 1; _alive = 0
+    return
+  procedurestatement: method = .void
+    arg node = .llast..node
+    origin = at(node)
+    op = _block.operation(_contract.operation('crexx.c.procedure.enter'),origin)
+    call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+    if node.count('exposes') then do
+      exposes = node.child('exposes'); boolean = .llir..boolcodec()
+      do i = 1 to exposes.count('items') while _error = ''
+        item = exposes.child('items',i); itemorigin = at(item)
+        op = _block.operation(_contract.operation('crexx.c.procedure.expose'),itemorigin)
+        call op.input('context',_block.load(_contextslot,itemorigin))
+        call op.attribute('name',item.child('name').text('spelling') as .binary)
+        call op.attribute('indirect',boolean.parse((item.kind() = 'ProcedureExposeIndirect') as .string))
+        built = op.finish()
       end
     end
     return
@@ -280,32 +792,243 @@ request: class
     arg name = .string, origin = .llir..origin
     if name = 'text' | name = 'value' then return _block.constantbytes(type(name),''x as .binary,origin)
     return _block.constant(type(name),'0',origin)
+  /** Classify only; the selected expression path still owns every visit and
+   * literal check. Fallback expression lowering is never visited twice. */
+  simpleliteral: method = .int
+    arg node = .llast..node
+    do forever
+      kind = node.kind()
+      if kind = 'Group' then node = node.child('value')
+      else if kind = 'Chain' then do
+        if node.count('operators') <> 0 | node.count('operands') <> 1 then return 0
+        node = node.child('operands',1)
+      end
+      else return kind = 'String' | kind = 'Number' | kind = 'Constant'
+    end
+  /** Classify suppression before choosing the original head token span. */
+  warninghead: method = .llast..node
+    arg node = .llast..node
+    do forever
+      if warningwork(1) = 0 then return node
+      kind = node.kind()
+      if kind = 'Group' then node = node.child('value')
+      else if kind = 'Chain' then do
+        if node.count('operators') = 0 then node = node.child('operands',1)
+        else do
+          operator = node.child('operators',1).kind()
+          if wordpos(operator,'concat blank abut') = 0 then return node
+          node = node.child('operands',1)
+        end
+      end
+      else return node
+    end
+  warningwork: method = .int
+    arg count = .int
+    if count < 0 | count > _budget - _work then do
+      _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend work budget'; return 0
+    end
+    _work = _work + count; return 1
+  warningspace: method = .int
+    arg count = .int, width = 1
+    if count < 0 | width < 1 then do
+      _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend byte budget'; return 0
+    end
+    if count > (_bytebudget - _entrybytes) <idiv> width then do
+      _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend byte budget'; return 0
+    end
+    _entrybytes = _entrybytes + count * width; return 1
+  /** Publish once after complete collection. Token and coordinate gaps advance
+   * monotonically; the index owns one source copy, never one per warning. */
+  sourcewarnings: method = .void
+    arg parsed_ref = reference .llcparse..parsed
+    parsed = dereference parsed_ref
+    pending = .llcdiagnostics..warning[]; cursor = 0; ready = 0
+    previous = 0; lineend = -1; line = 0; column = 0; searchcost = 2
+    node = .llast..node; head = .llast..node; first = .int; last = .int
+    gap = .int; extent = .int; remaining = .int; point = .llsource..position
+    filenamebytes = <blen>(_filename as .binary)
+    walk = _tree.walk('parents first')
+    do while walk.next()
+      if warningwork(1) = 0 then return
+      node = walk.node()
+      if node.kind() <> 'CCommand' then iterate
+      head = warninghead(node.child('value'))
+      if _error <> '' then return
+      if head.kind() = 'String' then iterate
+      first = head.start(); _offset = first
+      if ready = 0 then do
+        extent = <blen>(_source)
+        /* Conservative retained index cells, plus its one owned source. */
+        if warningspace(extent,17) = 0 | warningspace(16) = 0 then return
+        if warningwork(extent) = 0 then return
+        remaining = extent
+        do while remaining > 0
+          if warningwork(1) = 0 then return
+          searchcost = searchcost + 1; remaining = remaining <idiv> 2
+        end
+        _parsepositions = .llsource..index(_source,_budget,_bytebudget,_bytebudget)
+        if _parsepositions.error() <> '' then do
+          _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend byte budget'; return
+        end
+        _parsepositionsready = 1; ready = 1
+      end
+      do
+        tokens_ref = parsed.sourcetokens(); tokens = dereference tokens_ref
+        do while cursor < tokens.size()
+          if warningwork(1) = 0 then return
+          if tokens.start(cursor) >= first then leave
+          cursor = cursor + 1
+        end
+        if cursor >= tokens.size() then do; _error = 'LL_COMPILER_INVALID: warning head has no original token'; return; end
+        if tokens.start(cursor) <> first then do; _error = 'LL_COMPILER_INVALID: warning head is not a token boundary'; return; end
+        last = tokens.finish(cursor + 1)
+      end
+      gap = first - previous
+      if warningwork(gap) = 0 then return
+      if first > lineend then do
+        if warningwork(searchcost) = 0 then return
+        point = _parsepositions.position(first)
+        if point.error() <> '' then do; _error = 'LL_COMPILER_LIMIT: warning diagnostics exceed frontend work budget'; return; end
+        line = point.line(); column = point.column(); lineend = point.last()
+      end
+      else do
+        if warningspace(gap,2) = 0 then return
+        column = column + length(binsubstr(_source,previous + 1,gap) as .string)
+      end
+      /* Account both pending and published owned record/filename payload. */
+      if warningspace(144) = 0 | warningspace(filenamebytes,2) = 0 then return
+      if warningwork(filenamebytes) = 0 | warningwork(filenamebytes) = 0 then return
+      if warningwork(filenamebytes) = 0 | warningwork(filenamebytes) = 0 | warningwork(32) = 0 then return
+      pending[pending[0] + 1] = .llcdiagnostics..warning(_filename,first,last,line,column)
+      previous = first
+    end
+    _warnings = pending; _offset = 0
+    return
+  /** Begin ownership is explicit IR; the admitted K-use proof erases an
+   * unneeded marker and its exclusively used canonical context transport. */
+  clausebegin: method = .void
+    arg node = .llast..node, first = .int, last = .int
+    if 3 > _budget - _work then do; call fail(node,'LIMIT: frontend clause construction work budget exceeded'); return; end
+    _work = _work + 3
+    origin = _file.origin(first,last,node.origin()); codec = .llir..intcodec()
+    op = _block.operation(_contract.operation('crexx.c.clause.begin'),origin)
+    call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('id',codec.parse((node.start() + 1) as .string)); built = op.finish()
+    if _builder.error() <> '' then _error = _builder.error()
+    return
+  /** One authored checkpoint, with a conditional EXIT carrier. A normal
+   * continuation never reads that carrier or allocates an absent packet. */
+  clausecomplete: method = .void
+    arg node = .llast..node, first = -1, last = -1
+    if _callhandlers = 0 | _error <> '' then return
+    if first < 0 then first = node.start()
+    if last < 0 then last = node.finish()
+    if signalwork(node,32) = 0 then return
+    origin = _file.origin(first,last,node.origin()); generated = origin.derive('synthetic')
+    integer = .llir..intcodec()
+    op = _block.operation(_contract.operation('crexx.c.clause.complete'),origin)
+    call op.input('table',_block.load(_signalslot,generated))
+    call op.input('context',_block.load(_contextslot,generated))
+    call op.attribute('id',integer.parse((node.start() + 1) as .string)); built = op.finish()
+    carrier = temporary(type('result')); call _block.store(carrier,built.result(),generated)
+    op = _block.operation(_contract.operation('crexx.c.program.exiting'),generated)
+    call op.input('context',_block.load(_contextslot,generated)); built = op.finish()
+    unwind = newblock('clause.unwind'); continuation = newblock('clause.continue')
+    call _block.branch(built.result(),unwind,continuation,generated)
+    _block = unwind; call _block.returnvalue(_block.load(carrier,generated),generated)
+    _block = continuation
+    return
+  /** Retain an already evaluated decision or completion across a handler.
+   * This temporary carries the original value, never the conditional carrier. */
+  checkpointvalue: method = .llir..valuehandle
+    arg node = .llast..node, value = .llir..valuehandle, first = -1, last = -1
+    if _callhandlers = 0 then return value
+    origin = at(node).derive('synthetic'); saved = temporary(value.type())
+    call _block.store(saved,value,origin)
+    call clausecomplete(node,first,last)
+    return _block.load(saved,origin)
   statement: method = .void
     arg node = .llast..node
     if tick(node) = 0 then return
     i = .int
     origin = at(node); kind = node.kind(); value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    /* Visit structural/non-emitting statements without reopening a terminated
+     * block. Later emitting statements still lower in checked dead code. */
+    nonemitting = kind = 'Sequence' | kind = 'Block' | kind = 'Nop' | kind = 'CLabel' | kind = 'CLabelled'
+    if kind = 'CDo' then do
+      header = node.child('header')
+      nonemitting = header.count('repetition') = 0 & header.count('condition') = 0
+    end
+    if kind = 'COptions' then do
+      nonemitting = 1
+      if node.count('value') then nonemitting = simpleliteral(node.child('value'))
+    end
+    if kind = 'CArg' then do
+      nonemitting = 1; templates = node.child('templates')
+      do i = 1 to templates.count('items')
+        if templates.child('items',i).count('items') > 0 then nonemitting = 0
+      end
+    end
+    if _callhandlers > 0 & wordpos(kind,'Nop COptions CArg') > 0 then nonemitting = 0
+    if _terminated & nonemitting = 0 then do
+      _block = newblock('unreachable'); _terminated = 0; _alive = 0
+    end
+    observes = nonemitting = 0 | wordpos(kind,'Nop COptions CArg CSelect') > 0
+    if _terminated = 0 & observes & kind <> 'CProcedure' & kind <> 'CDo' then do
+      finish = node.finish()
+      if kind = 'IfThen' | kind = 'IfElse' then finish = node.child('condition').finish()
+      call clausebegin(node,node.start(),finish)
+      if _error <> '' then return
+    end
     select
       when kind = 'Sequence' then do i = 1 to node.count('items') while _error = ''
-        if _terminated then do
-          _block = newblock('unreachable'); _terminated = 0; _alive = 0
-        end
         call statement(node.child('items',i))
       end
       when kind = 'Block' then call statement(node.child('body'))
-      when kind = 'Options' then do
-        root = _tree.root(); body = root.child('body'); first = body.child('items',1)
-        if first.id() <> node.id() | lower(node.text('level')) <> 'levelc' then call fail(node,'PROFILE: options must select this frontend at the start of the source')
+      when kind = 'COptions' then do
+        if node.count('value') then value = expression(node.child('value'),'',nonemitting)
       end
       when kind = 'Nop' then nop
+      when kind = 'CLabel' then do
+        id = node.id()
+        if _labelleaders[id] = 0 then return
+        target = _sourceblocks[id] as .llir..block
+        if _block.id() <> target.id() then do
+          if _terminated = 0 then call _block.jump(target,origin.derive())
+          _block = target; _terminated = 0
+        end
+        if _sourceentries[id] > 0 then _alive = 1
+      end
+      when kind = 'CLabelled' then do
+        do i = 1 to node.count('labels') while _error = ''
+          call statement(node.child('labels',i))
+        end
+        if _error = '' then call statement(node.child('value'))
+      end
+      when kind = 'CProcedure' then do
+        call procedurestatement(node)
+        if _error = '' then call clausebegin(node,node.start(),node.finish())
+      end
+      when kind = 'CDrop' then do i = 1 to node.count('items') while _error = ''
+        item = node.child('items',i); itemorigin = at(item)
+        if item.kind() <> 'DropDirect' & item.kind() <> 'DropIndirect' then do
+          call fail(item,'PROFILE: invalid DROP item'); return
+        end
+        op = _block.operation(_contract.operation('crexx.c.drop'),itemorigin)
+        call op.input('context',_block.load(_contextslot,itemorigin))
+        call op.attribute('name',item.text('name') as .binary)
+        boolean = .llir..boolcodec()
+        call op.attribute('indirect',boolean.parse((item.kind() = 'DropIndirect') as .string))
+        built = op.finish()
+      end
       when kind = 'Assignment' then do
         do
           if node.count('value') then value = expression(node.child('value'))
           else value = defaultvalue('value',origin)
           if _error = '' then do
             op = _block.operation(_contract.operation('crexx.c.store'),origin)
-            call op.input('pool',_block.load(_poolslot,origin)); call op.input('value',value)
-            call op.attribute('name',upper(node.text('name')) as .binary); built = op.finish()
+            call op.input('context',_block.load(_contextslot,origin)); call op.input('value',value)
+            call op.attribute('name',node.text('name') as .binary); built = op.finish()
           end
         end
       end
@@ -318,93 +1041,840 @@ request: class
         end
         built = op.finish()
       end
+      when kind = 'CPush' | kind = 'CQueue' then do
+        if node.count('value') then value = expression(node.child('value'))
+        else value = defaultvalue('value',origin)
+        if _error <> '' then return
+        op = _block.operation(_contract.operation('crexx.c.' || lower(substr(kind,2))),origin)
+        call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+      end
+      when kind = 'CAddress' then call addressstatement(node)
+      when kind = 'CCommand' then call commandstatement(node)
+      when kind = 'CSignal' | kind = 'CSignalValue' then call signalstatement(node)
+      when kind = 'CSignalOn' | kind = 'CSignalOff' | kind = 'CCallOn' | kind = 'CCallOff' then call conditionpolicy(node)
+      when kind = 'CTrace' | kind = 'CTraceValue' then call tracestatement(node)
+      when kind = 'CSelect' then call selection(node)
+      when kind = 'CDo' then call doloop(node)
       when kind = 'IfThen' | kind = 'IfElse' then do
         value = expression(node.child('condition')); if _error <> '' then return
         value = truth(value,origin)
-        yes = newblock('if.yes'); no = newblock('if.no'); join = newblock('if.join')
+        value = checkpointvalue(node,value,node.start(),node.child('condition').finish())
+        yes = newblock('if.yes'); no = newblock('if.no')
+        join = .llir..block; hasjoin = .int; hasjoin = 0
         call _block.branch(value,yes,no,origin)
         incoming = _alive; _block = yes; _terminated = 0
         call statement(node.child('yes')); yesalive = _alive & _terminated = 0
-        if _terminated = 0 then call _block.jump(join,origin)
+        if _terminated = 0 then do
+          join = newblock('if.join'); hasjoin = 1
+          call _block.jump(join,origin)
+        end
         _block = no; _terminated = 0; _alive = incoming
         if kind = 'IfElse' then call statement(node.child('no'))
         noalive = _alive & _terminated = 0
-        if _terminated = 0 then call _block.jump(join,origin)
-        _block = join; _terminated = 0; _alive = yesalive | noalive
-      end
-      when kind = 'While' then do
-        header = newblock('while.test'); bodyblock = newblock('while.body'); after = newblock('while.after')
-        call _block.jump(header,origin); _block = header
-        value = expression(node.child('condition')); if _error <> '' then return
-        value = truth(value,origin); call _block.branch(value,bodyblock,after,origin)
-        _loops = _loops + 1; _breaks[_loops] = after as .object; _continues[_loops] = header as .object
-        incoming = _alive; _block = bodyblock; _terminated = 0
-        call statement(node.child('body'))
-        if _terminated = 0 then call _block.jump(header,origin)
-        _loops = _loops - 1; _block = after; _terminated = 0; _alive = incoming
-      end
-      when kind = 'Leave' | kind = 'Iterate' then do
-        if _loops = 0 then do
-          call fail(node,'FLOW: ' || kind || ' requires a surrounding loop'); return
+        if _terminated = 0 then do
+          if hasjoin = 0 then do; join = newblock('if.join'); hasjoin = 1; end
+          call _block.jump(join,origin)
         end
-        target = _breaks[_loops] as .llir..block
-        if kind = 'Iterate' then target = _continues[_loops] as .llir..block
-        call _block.jump(target,origin); _terminated = 1; _alive = 0
+        /* Even dead open endpoints need structural closure. Closed arms need
+         * no join; later dead source still follows the normal checked path. */
+        if hasjoin then do; _block = join; _terminated = 0; end
+        else _terminated = 1
+        _alive = yesalive | noalive
       end
+      when kind = 'Leave' | kind = 'Iterate' then call looptransfer(node,origin)
       when kind = 'Return' then do
         do
           if node.count('value') then do
             value = expression(node.child('value')); if _error <> '' then return
             op = _block.operation(_contract.operation('crexx.c.return.present'),origin); call op.input('value',value)
           end
-          else op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
-          built = op.finish(); call _block.returnvalue(built.result(),origin)
+          else do
+            op = _block.operation(_contract.operation('crexx.c.return.empty'),origin)
+            call op.input('context',_block.load(_contextslot,origin))
+          end
+          built = op.finish(); value = built.result()
+          value = checkpointvalue(node,value)
+          call closeactive(origin)
+          call _block.returnvalue(value,origin)
         end
         _terminated = 1; _alive = 0
       end
       when kind = 'Exit' then do
-        name = 'int64'; name = 'value'
-        value = _block.constantbytes(type(name),'0' as .binary,origin)
-        if node.count('value') then value = expression(node.child('value'),'int64')
-        if _error <> '' then return
-
-        op = _block.operation(_contract.operation('crexx.' || 'c' || '.exit'),origin); call op.input('value',value); built = op.finish()
-        /* EXIT never returns. The final core terminator closes the structural
-         * block; it is unreachable after this explicitly diverging operation. */
-        do
-          op = _block.operation(_contract.operation('crexx.c.return.absent'),origin); built = op.finish()
-          call _block.returnvalue(built.result(),origin)
+        if node.count('value') then do
+          value = expression(node.child('value'))
+          if _error <> '' then return
+          op = _block.operation(_contract.operation('crexx.c.return.present'),origin)
+          call op.input('value',value)
         end
+        else op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
+        built = op.finish(); value = built.result()
+        value = checkpointvalue(node,value)
+        if _error <> '' then return
+        op = _block.operation(_contract.operation('crexx.c.exit'),origin)
+        call op.input('result',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+        /* The proved pair is one program-unwind terminal. Its selector clears
+         * every DO phase, including a header not yet on the source loop stack. */
+        call _block.returnvalue(value,origin.derive('synthetic'))
         _terminated = 1; _alive = 0
       end
-      when kind = 'Invoke' then value = invocation(node,0)
-      when kind = 'CArg' then do i = 1 to node.count('items')
-        targetnode = node.child('items',i); name = upper(strip(targetnode.text('name')))
-        if name = '' then iterate
-        op = _block.operation(_contract.operation('crexx.c.arguments.read'),origin)
-        call op.input('arguments',_block.load(_argsslot,origin))
-        codec = .llir..intcodec(); call op.attribute('ordinal',codec.parse(i as .string)); built = op.finish(); value = built.result()
-        op = _block.operation(_contract.operation('crexx.c.store'),origin)
-        call op.input('pool',_block.load(_poolslot,origin)); call op.input('value',value)
-        call op.attribute('name',name as .binary); built = op.finish()
-      end
+      when kind = 'Invoke' | kind = 'InvokeQuoted' then value = invocation(node,0)
+      when kind = 'Parse' | kind = 'CArg' | kind = 'CPull' then call parsestatement(node)
       when kind = 'CNumeric' then do
-        setting = lower(node.text('setting')); initial = '9'; if setting = 'fuzz' then initial = '0'
-        value = _block.constantbytes(type('value'),initial as .binary,origin)
+        setting = lower(node.text('setting'))
         if node.count('value') then value = expression(node.child('value'))
+        else do
+          initial = '9'; if setting = 'fuzz' then initial = '0'
+          value = _block.constantbytes(type('value'),initial as .binary,origin)
+        end
         if _error <> '' then return
         op = _block.operation(_contract.operation('crexx.c.numeric.' || setting),origin)
         call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
-        call _block.store(_contextslot,built.result(),origin)
       end
-      when kind = 'CForm' then do
-        form = upper(node.text('form')); if form = '' then form = 'SCIENTIFIC'
+      when kind = 'CForm' | kind = 'CFormValue' then do
+        if kind = 'CForm' then do
+          form = lower(node.text('form')); if form = '' then form = 'scientific'
+          value = _block.constantbytes(type('value'),form as .binary,origin)
+        end
+        else value = expression(node.child('value'))
+        if _error <> '' then return
         op = _block.operation(_contract.operation('crexx.c.numeric.form'),origin)
-        call op.input('context',_block.load(_contextslot,origin)); call op.attribute('form',form as .binary); built = op.finish()
-        call _block.store(_contextslot,built.result(),origin)
+        call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
       end
       otherwise call fail(node,'PROFILE: unsupported statement ' || kind)
     end
+    if _terminated = 0 & wordpos(kind,'Sequence Block CLabel CLabelled') = 0 then call clausecomplete(node)
+    return
+  /** Static admission recognizes syntax only. The activation's shared
+   * RexxTraceState remains the sole owner of option updates and toggles. */
+  traceoption: method = .int
+    arg node = .llast..node, option = .string
+    extent = <blen>(option as .binary)
+    if extent > (_budget - _work) <idiv> 2 then do
+      call fail(node,'LIMIT: frontend TRACE option work budget exceeded'); return 0
+    end
+    _work = _work + extent * 2
+    bits = option as .binary; first = 0; codepoint = .int
+    do while first < extent
+      assembler bgetu8 codepoint,bits,first
+      if codepoint <> 63 & codepoint <> 33 then leave
+      first = first + 1
+    end
+    if first = extent then return 1
+    remainder = substr(option,first + 1); head = left(remainder,1)
+    if head = '+' | head = '-' | pos(head,'0123456789') > 0 then do
+      digits = remainder
+      if head = '+' | head = '-' then digits = substr(remainder,2)
+      if digits <> '' & verify(digits,'0123456789') = 0 then return 1
+    end
+    else if pos(translate(head),'ACEFILNOR') > 0 then return 1
+    call fail(node,'SYNTAX: RXC-LC-24.1: Invalid TRACE option')
+    return 0
+  tracestatement: method = .void
+    arg node = .llast..node
+    origin = at(node); value = .llir..valuehandle
+    if node.kind() = 'CTraceValue' then value = expression(node.child('value'))
+    else do
+      spelling = ''
+      if node.count('option') then do
+        option = node.child('option')
+        if tick(option) = 0 then return
+        if option.kind() = 'String' then spelling = stringliteral(option)
+        else do
+          spelling = option.text('spelling')
+          if option.kind() = 'TraceSigned' then spelling = option.text('sign') || spelling
+        end
+        if _error <> '' then return
+        if traceoption(option,spelling) = 0 then return
+      end
+      value = _block.constantbytes(type('value'),spelling as .binary,origin)
+    end
+    if _error <> '' then return
+    op = _block.operation(_contract.operation('crexx.c.trace'),origin)
+    call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+    return
+  /** PARSE, ARG and PULL share immutable, source-owned template packets. The
+   * standalone instructions retain identity and privately imply source/UPPER.
+   * The shared executor owns all live name reads and target writes. */
+  /** One source-ordered pass over the clean original lexer stream. The parsed
+   * owner remains live in run; no stream/source copy is returned per command. */
+  addressplans: method = .void
+    arg parsed_ref = reference .llcparse..parsed
+    parsed = dereference parsed_ref
+    walk = _tree.walk('parents first'); cursor = 0; ready = 0
+    node = .llast..node; target = .llast..node; command = .llast..node
+    do while walk.next()
+      node = walk.node()
+      if node.kind() = 'CCommand' then command = node.child('value')
+      else if node.kind() = 'CAddress' then do
+        if node.count('target') = 0 then iterate
+        target = node.child('target')
+        if target.kind() = 'AddressValue' then iterate
+        if target.count('command') = 0 then iterate
+        command = target.child('command')
+      end
+      else iterate
+      if ready = 0 then do
+        _commandfirst = .stem(); _commandcount = .stem(); _anchorseen = .stem(); ready = 1
+      end
+      do
+        tokens_ref = parsed.sourcetokens(); tokens = dereference tokens_ref
+        key = node.start() as .string
+        if entryspace(96 + length(key),1,'command binding') = 0 then return
+        call _commandfirst.set(key,(_anchorkinds[0] + 1) as .string)
+        before = _anchorkinds[0]
+        do while cursor < tokens.size()
+          if tick(node) = 0 then return
+          if tokens.start(cursor) >= command.finish() then leave
+          if tokens.start(cursor) >= command.start() then do
+            call scananchors(node,tokens.start(cursor),tokens.finish(cursor + 1),tokens.symbol(cursor) = 3)
+            if _error <> '' then return
+          end
+          cursor = cursor + 1
+        end
+        call _commandcount.set(key,(_anchorkinds[0] - before) as .string)
+      end
+    end
+    return
+  anchorstart: method = .int
+    arg byte = .int
+    return byte = 95 | (byte >= 65 & byte <= 90) | (byte >= 97 & byte <= 122)
+  anchorpart: method = .int
+    arg byte = .int
+    return anchorstart(byte) | (byte >= 48 & byte <= 57)
+  /** Byte traversal is monotone within disjoint original tokens; UTF8 source
+   * is never repeatedly sliced at scalar offsets to discover ASCII anchors. */
+  scananchors: method = .void
+    arg node = .llast..node, first = .int, last = .int, allowcolon = .int
+    j = .int
+    source_ref = reference _source; source = dereference source_ref
+    i = first; braces = 1; begin = .int; finish = .int; after = .int; stemflag = .int; valid = .int
+    do while i < last
+      if tick(node) = 0 then return
+      byte = <at..u8>(i) source; begin = -1; finish = -1; after = i + 1; stemflag = 0
+      if braces & byte = 36 & i + 1 < last then do
+        if <at..u8>(i + 1) source = 123 then do
+          j = i + 2
+          do while j < last
+            if tick(node) = 0 then return
+            if <at..u8>(j) source = 125 then leave
+            j = j + 1
+          end
+          if j < last & j > i + 2 then do
+            begin = i + 2; finish = j; after = j + 1
+            if finish - begin > 2 then do
+              if <at..u8>(finish - 2) source = 91 & <at..u8>(finish - 1) source = 93 then do
+                stemflag = 1; finish = finish - 2
+              end
+            end
+            if stemflag = 0 & finish > begin then do
+              if <at..u8>(finish - 1) source = 46 then do; stemflag = 1; finish = finish - 1; end
+            end
+          end
+          /* One failed suffix search disables later brace searches, while
+           * the ordinary pass still discovers any later colon anchors. */
+          else if j >= last then braces = 0
+        end
+      end
+      if byte = 58 & allowcolon then do
+        previouscolon = 0
+        if i > first then previouscolon = <at..u8>(i - 1) source = 58
+        if previouscolon = 0 & i + 1 < last then do
+          if anchorstart(<at..u8>(i + 1) source) then do
+            begin = i + 1; j = begin + 1
+            do while j < last
+              if tick(node) = 0 then return
+              if anchorpart(<at..u8>(j) source) = 0 then leave
+              j = j + 1
+            end
+            finish = j; after = j
+            if j + 1 < last then do
+              if <at..u8>(j) source = 91 & <at..u8>(j + 1) source = 93 then do; stemflag = 1; after = j + 2; end
+            end
+            if stemflag = 0 & j < last then do
+              if <at..u8>(j) source = 46 then do
+                safe = j + 1 = last
+                if j + 1 < last then do
+                  nextbyte = <at..u8>(j + 1) source
+                  safe = nextbyte = 32 | nextbyte = 9 | nextbyte = 10 | nextbyte = 13 | nextbyte = 34 | nextbyte = 39
+                end
+                if safe then do; stemflag = 1; after = j + 1; end
+              end
+            end
+          end
+        end
+      end
+      if begin >= 0 then do
+        valid = finish > begin
+        if valid then valid = anchorstart(<at..u8>(begin) source)
+        do j = begin + 1 to finish - 1 while valid
+          if tick(node) = 0 then return
+          valid = anchorpart(<at..u8>(j) source)
+        end
+        if valid then do
+          extent = finish - begin
+          if entryspace(extent,4,'command binding') = 0 then return
+          if entryspace(128,1,'command binding') = 0 then return
+          if extent > (_budget - _work) <idiv> 4 then do
+            call fail(node,'LIMIT: frontend command binding work budget exceeded'); return
+          end
+          _work = _work + extent * 4
+          name = upper(binsubstr(source,begin + 1,extent) as .string)
+          kind = 'VAR'; if stemflag then kind = 'STEM'
+          key = (node.start() as .string) || ':' || kind || ':' || name
+          if _anchorseen.get(key) = '' then do
+            call _anchorseen.set(key,'1'); n = _anchorkinds[0] + 1
+            _anchorkinds[n] = kind; _anchornames[n] = name; _anchorfirst[n] = first; _anchorlast[n] = last
+          end
+        end
+      end
+      i = after
+    end
+    return
+  /** Validate the complete authored WITH list before emitting its operations. */
+  addressstatement: method = .void
+    arg node = .llast..node
+    i = .int; option = .string; position = .string; kind = .string; name = .string
+    origin = at(node); target = .llast..node; connections = .llast..node
+    item = .llast..node; spec = .llast..node; resource = .llast..node
+    value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    directions = ''; commandkey = ''; environment = ''; transient = 0
+    if node.count('connections') then do
+      connections = node.child('connections')
+      if node.count('target') = 0 then do; call fail(connections,'SYNTAX: RXC-LC-25.5: ADDRESS WITH requires an environment'); return; end
+      do i = 1 to connections.count('items')
+        item = connections.child('items',i); option = upper(item.text('option')); spec = item.child('spec'); kind = upper(spec.text('kind'))
+        if wordpos(option,'INPUT OUTPUT ERROR') = 0 | wordpos(option,directions) > 0 then do
+          call fail(item,'SYNTAX: RXC-LC-25.5: invalid or duplicate ADDRESS direction'); return
+        end
+        directions = directions || ' ' || option; position = ''; code = '25.6'
+        if option = 'OUTPUT' then code = '25.7'
+        if option = 'ERROR' then code = '25.14'
+        if item.count('position') then do
+          position = upper(item.child('position').text('spelling'))
+          if option = 'INPUT' then do; call fail(item.child('position'),'SYNTAX: RXC-LC-25.6: INPUT does not accept a position'); return; end
+          code = '25.8'; if position = 'REPLACE' then code = '25.9'
+        end
+        if wordpos(kind,'NORMAL STREAM STEM') = 0 | (position <> '' & kind = 'NORMAL') then do
+          call fail(spec,'SYNTAX: RXC-LC-' || code || ': invalid ADDRESS connection type'); return
+        end
+        if kind <> 'NORMAL' then do
+          if spec.count('resource') = 0 then do
+            code = '53.1'; if kind = 'STEM' then code = '53.2'
+            call fail(spec,'SYNTAX: RXC-LC-' || code || ': ADDRESS resource requires a variable symbol'); return
+          end
+          resource = spec.child('resource'); name = resource.text('spelling')
+          if kind = 'STEM' then do
+            if right(name,1) <> '.' | pos('.',name) <> length(name) then do
+              call fail(resource,'SYNTAX: RXC-LC-53.3: ADDRESS STEM requires a simple stem'); return
+            end
+          end
+        end
+      end
+    end
+    if node.count('target') = 0 then do
+      op = _block.operation(_contract.operation('crexx.c.address.swap'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); built = op.finish(); return
+    end
+    target = node.child('target'); transient = 0
+    if target.kind() <> 'AddressValue' then transient = target.count('command') > 0
+    if target.kind() = 'AddressValue' then value = expression(target.child('environment'))
+    else do
+      environment = target.text('environment')
+      if target.kind() = 'AddressQuoted' then environment = decodestring(target,environment)
+      /* Constant symbols preserve their authored bytes; the shared ADDRESS
+       * state owns runtime environment normalization. */
+      if transient then value = expression(target.child('command'))
+      else value = _block.constantbytes(type('value'),environment as .binary,at(target))
+    end
+    if _error <> '' then return
+    if transient then do
+      _commandnumber = _commandnumber + 1; commandkey = 'command.' || _commandnumber
+      op = _block.operation(_contract.operation('crexx.c.command.new'),origin)
+      call op.attribute('key',commandkey as .binary); call op.attribute('environment',environment as .binary)
+      call op.input('command',value)
+    end
+    else do
+      op = _block.operation(_contract.operation('crexx.c.address.select'),origin); call op.input('environment',value)
+    end
+    call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+    if node.count('connections') then do i = 1 to connections.count('items')
+      item = connections.child('items',i); itemorigin = at(item); option = left(upper(item.text('option')),1)
+      position = 'REPLACE'; if option = 'I' then position = 'INPUT'
+      if item.count('position') then position = upper(item.child('position').text('spelling'))
+      spec = item.child('spec'); kind = upper(spec.text('kind')); name = ''
+      if spec.count('resource') then name = spec.child('resource').text('spelling')
+      operation = 'address.connection'; if transient then operation = 'command.connection'
+      op = _block.operation(_contract.operation('crexx.c.' || operation),itemorigin)
+      call op.input('context',_block.load(_contextslot,itemorigin))
+      if transient then call op.attribute('key',commandkey as .binary)
+      call op.attribute('option',option as .binary); call op.attribute('position',position as .binary)
+      call op.attribute('kind',kind as .binary); call op.attribute('resource',name as .binary); built = op.finish()
+    end
+    if transient then call commandfinish(node,commandkey)
+    return
+  commandstatement: method = .void
+    arg node = .llast..node
+    value = expression(node.child('value'))
+    if _error <> '' then return
+    origin = at(node); _commandnumber = _commandnumber + 1; key = 'command.' || _commandnumber
+    op = _block.operation(_contract.operation('crexx.c.command.active'),origin)
+    call op.input('command',value); call op.input('context',_block.load(_contextslot,origin))
+    call op.attribute('key',key as .binary); built = op.finish()
+    call commandfinish(node,key)
+    return
+  commandfinish: method = .void
+    arg node = .llast..node, commandkey = .string
+    i = .int; origin = at(node)
+    op = .llir..opdraft; built = .llir..opview
+    key = node.start() as .string; first = _commandfirst.get(key) as .int; count = _commandcount.get(key) as .int
+    do i = first to first + count - 1
+      bindingorigin = _file.origin(_anchorfirst[i],_anchorlast[i],'exact')
+      op = _block.operation(_contract.operation('crexx.c.command.binding'),bindingorigin)
+      call op.input('context',_block.load(_contextslot,bindingorigin)); call op.attribute('key',commandkey as .binary)
+      call op.attribute('kind',_anchorkinds[i] as .binary); call op.attribute('name',_anchornames[i] as .binary); built = op.finish()
+    end
+    op = _block.operation(_contract.operation('crexx.c.command.run'),origin)
+    call op.input('context',_block.load(_contextslot,origin)); call op.attribute('key',commandkey as .binary); built = op.finish()
+    return
+  parsestatement: method = .void
+    arg node = .llast..node
+    name = .llast..node; operand = .llast..node; item = .llast..node
+    template = .llast..node; emptyorigin = .llir..origin
+    op = .llir..opdraft; built = .llir..opview
+    mode = .string; decoded = .string; movement = .int; code = .string; indexwork = .int
+    source = .llast..node; templates = node.child('templates'); origin = at(node)
+    kind = 'ARG'; if node.kind() = 'CPull' then kind = 'PULL'
+    upperflag = 1; value = .llir..valuehandle
+    if node.kind() = 'Parse' then do
+      source = node.child('source'); spelling = source.text('kind'); kind = ''
+      if verify(spelling,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') = 0 then kind = upper(spelling)
+      if wordpos(kind,'ARG PULL SOURCE LINEIN VERSION VALUE VAR') = 0 then do
+        code = '25.12'; if node.text('upper') <> '' then code = '25.13'
+        call fail(source,'SYNTAX: RXC-LC-' || code || ': invalid PARSE type ' || spelling); return
+      end
+      uppertext = node.text('upper')
+      if uppertext <> '' then do
+        if verify(uppertext,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz') <> 0 | upper(uppertext) <> 'UPPER' then do
+          call fail(node,'SYNTAX: invalid PARSE UPPER flag'); return
+        end
+      end
+      upperflag = uppertext <> ''
+    end
+    select
+      when kind = 'VALUE' then do
+        if source.count('value') then value = expression(source.child('value'))
+        else do
+          /* VALUE is five authored ASCII bytes. Its end is a truthful empty
+           * boundary before WITH, including intervening comments/trivia. */
+          emptyorigin = _file.origin(source.start() + 5,source.start() + 5,source.origin())
+          value = defaultvalue('value',emptyorigin)
+        end
+      end
+      when kind = 'VAR' then value = expression(source.child('name'))
+      when kind <> 'ARG' then value = parsesource(kind,0,origin)
+      otherwise nop
+    end
+    if _error <> '' then return
+    do ordinal = 1 to templates.count('items') while _error = ''
+      template = templates.child('items',ordinal)
+      /* Empty ARG positions advance the ordinal without reading arguments. */
+      if kind = 'ARG' & template.count('items') = 0 then iterate
+      if _parsepositionsready = 0 then do
+        indexwork = _bytebudget
+        if indexwork < 10000000 then indexwork = 10000000
+        _parsepositions = .llsource..index(_source,_budget,_bytebudget,indexwork)
+        if _parsepositions.error() <> '' then do
+          call fail(node,'LIMIT: PARSE source index: ' || _parsepositions.error()); return
+        end
+        _parsepositionsready = 1
+      end
+      packet = .llcparseprogram..builder(_filename,_source,ordinal,upperflag,template.start(),template.finish(),node.start() + 1,_bytebudget)
+      call packet.useindex(_parsepositions)
+      do itemindex = 1 to template.count('items') while _error = ''
+        item = template.child('items',itemindex)
+        if tick(item) = 0 then return
+        select item.kind()
+          when 'ParseTarget' then do
+            name = item.child('name'); call packet.target(name.text('spelling'),name.start(),name.finish())
+          end
+          when 'ParseDrop' then call packet.drop(item.start(),item.finish())
+          when 'ParseLiteral' then do
+            decoded = stringliteral(item.child('value'))
+            if _error <> '' then return
+            call packet.literal(decoded,item.start(),item.finish())
+          end
+          when 'ParseVariablePattern' then do
+            name = item.child('name')
+            call packet.input('LITERAL',name.text('spelling'),item.start(),item.finish(),name.start(),name.finish())
+          end
+          when 'ParsePosition' then do
+            mode = item.text('mode'); operand = item.child('operand')
+            select mode
+              when '' then mode = 'ABS'
+              when '=' then mode = 'ABS'
+              when '+' then mode = 'PLUS'
+              when '-' then mode = 'MINUS'
+              otherwise do; call fail(item,'SYNTAX: invalid PARSE position mode'); return; end
+            end
+            if operand.kind() = 'Name' then call packet.input(mode,operand.text('spelling'),item.start(),item.finish(),operand.start(),operand.finish())
+            else if operand.kind() = 'Number' then do
+              movement = parseposition(operand)
+              if _error <> '' then return
+              call packet.position(mode,movement,item.start(),item.finish())
+            end
+            else do; call fail(operand,'SYNTAX: PARSE position requires a number or variable'); return; end
+          end
+          otherwise do; call fail(item,'SYNTAX: invalid PARSE template item'); return; end
+        end
+      end
+      bytes = packet.bytes()
+      if packet.error() <> '' then do
+        _error = packet.error(); _offset = packet.offset(); return
+      end
+      if kind = 'ARG' then value = parsesource(kind,ordinal,origin)
+      else if ordinal > 1 then value = defaultvalue('value',at(template))
+      op = _block.operation(_contract.operation('crexx.c.parse.execute'),origin)
+      call op.input('context',_block.load(_contextslot,origin)); call op.input('source',value)
+      call op.attribute('program',bytes); built = op.finish()
+    end
+    return
+  parsesource: method = .llir..valuehandle
+    arg kind = .string, ordinal = .int, origin = .llir..origin
+    op = _block.operation(_contract.operation('crexx.c.parse.source'),origin)
+    call op.input('context',_block.load(_contextslot,origin)); call op.attribute('kind',kind as .binary)
+    codec = .llir..intcodec(); call op.attribute('ordinal',codec.parse(ordinal as .string))
+    built = op.finish(); return built.result()
+  /** Source positions are unsigned decimal integer tokens. Conversion is
+   * checked before multiplication, independently of the active DIGITS. */
+  parseposition: method = .int
+    arg node = .llast..node
+    spelling = node.text('spelling'); value = 0
+    if spelling = '' | verify(spelling,'0123456789') <> 0 then do
+      call fail(node,'SYNTAX: RXC-LC-38.1: invalid PARSE template at ' || spelling); return 0
+    end
+    do i = 1 to length(spelling)
+      digit = pos(substr(spelling,i,1),'0123456789') - 1
+      if value > 922337203685477580 | (value = 922337203685477580 & digit > 7) then do
+        call fail(node,'LIMIT: PARSE position exceeds signed descriptor range: ' || spelling); return 0
+      end
+      value = value * 10 + digit
+    end
+    return value
+  /** Ordinary grouping never owns a transfer target. Repetitive DO targets
+   * and edge-local closes are separate from the checked dead-source cursor. */
+  loopafter: method = .llir..block
+    arg level = .int
+    if _hasbreaks[level] = 0 then do
+      target = newblock('do.after'); _breaks[level] = target as .object; _hasbreaks[level] = 1
+    end
+    return _breaks[level] as .llir..block
+  loopcontinue: method = .llir..block
+    arg level = .int
+    if _hascontinues[level] = 0 then do
+      target = newblock('do.continue'); _continues[level] = target as .object; _hascontinues[level] = 1
+    end
+    return _continues[level] as .llir..block
+  dostate: method = .llir..opview
+    arg action = .string, key = .string, origin = .llir..origin
+    op = _block.operation(_contract.operation('crexx.c.do.' || action),origin)
+    call op.attribute('key',key as .binary)
+    return op.finish()
+  docapture: method = .void
+    arg key = .string, part = .string, value = .llir..valuehandle, origin = .llir..origin
+    op = _block.operation(_contract.operation('crexx.c.do.capture'),origin)
+    call op.input('value',value); call op.attribute('key',key as .binary); call op.attribute('part',part as .binary)
+    built = op.finish()
+    return
+  closeactive: method = .void
+    arg origin = .llir..origin
+    do level = _loops to 1 by -1
+      if _loopkeys[level] <> '' then built = dostate('close',_loopkeys[level],origin.derive())
+    end
+    return
+  /** Select a static source-loop binding. Names never read the pool or expand
+   * compound tails; only the common symbol-casing rule defines identity. */
+  looptransfer: method = .void
+    arg node = .llast..node, origin = .llir..origin
+    name = ''; selected = _loops; level = .int
+    op = .llir..opdraft; built = .llir..opview
+    target = .llir..block
+    continuing = node.kind() = 'Iterate'
+    if node.count('name') then do
+      named = node.child('name'); if tick(named) = 0 then return
+      name = named.text('spelling'); selected = 0
+      identity = rexxclassic_unicode_upper(name)
+      do level = _loops to 1 by -1
+        _work = _work + 1
+        if _work > _budget then do; call fail(named,'LIMIT: frontend work budget exceeded'); return; end
+        if _loopnames[level] = identity then do; selected = level; leave; end
+      end
+    end
+    call clausecomplete(node)
+    if _error <> '' then return
+    if selected = 0 then do
+      code = '28.1'; if _loops > 0 then code = '28.3'
+      if continuing then do; code = '28.2'; if _loops > 0 then code = '28.4'; end
+      if _strictc = 0 then do
+        instruction = upper(node.kind())
+        call fail(node,'FLOW: RXC-LC-' || code || ': invalid ' || instruction || ' target "' || name || '"'); return
+      end
+      op = _block.operation(_contract.operation('crexx.c.transfer.invalid'),origin)
+      call op.attribute('code',code as .binary); call op.attribute('name',name as .binary); built = op.finish()
+      /* The current fatal profile never resumes this operation. A cold packet
+       * and core return still close the generic structural block. */
+      op = _block.operation(_contract.operation('crexx.c.return.absent'),origin.derive()); built = op.finish()
+      call _block.returnvalue(built.result(),origin.derive())
+      _terminated = 1; _alive = 0; return
+    end
+    outermost = selected
+    if continuing then do
+      target = loopcontinue(selected); _continuealive[selected] = _continuealive[selected] | _alive
+      outermost = selected + 1
+    end
+    else do
+      target = loopafter(selected); _breakalive[selected] = _breakalive[selected] | _alive
+    end
+    do level = _loops to outermost by -1
+      if _loopkeys[level] <> '' then built = dostate('close',_loopkeys[level],origin.derive())
+    end
+    call _block.jump(target,origin); _terminated = 1; _alive = 0
+    return
+  doloop: method = .void
+    arg node = .llast..node
+    header = node.child('header'); ending = node.child('ending')
+    if tick(header) = 0 | tick(ending) = 0 then return
+    repetition = .llast..node; condition = .llast..node; modifier = .llast..node; named = .llast..node
+    origin = at(node); headerorigin = at(header); endorigin = at(ending)
+    testorigin = .llir..origin
+    kind = ''; name = ''; conditionkind = ''; key = ''; seen = ''; i = .int
+    value = .llir..valuehandle; built = .llir..opview; op = .llir..opdraft
+    entry = .llir..block; body = .llir..block; test = .llir..block; exhausted = .llir..block
+    after = .llir..block; advance = .llir..block; continuing = .llir..block
+    if header.count('repetition') then do
+      repetition = header.child('repetition'); kind = repetition.kind()
+      if tick(repetition) = 0 then return
+      if wordpos(kind,'DoCount DoForever DoControl') = 0 then do; call fail(repetition,'PROFILE: invalid DO repetition'); return; end
+      if kind = 'DoControl' then do
+        named = repetition.child('name'); if tick(named) = 0 then return
+        name = named.text('spelling')
+        do i = 1 to repetition.count('modifiers')
+          modifier = repetition.child('modifiers',i); if tick(modifier) = 0 then return
+          part = lower(modifier.text('keyword'))
+          if wordpos(part,'to by for') = 0 then do; call fail(modifier,'SYNTAX: invalid DO modifier'); return; end
+          if wordpos(part,seen) > 0 then do; call fail(modifier,'SYNTAX: RXC-LC-27.1: duplicate DO ' || upper(part)); return; end
+          seen = seen || ' ' || part
+        end
+      end
+    end
+    if header.count('condition') then do
+      condition = header.child('condition'); conditionkind = condition.kind()
+      if tick(condition) = 0 then return
+      if conditionkind <> 'DoWhile' & conditionkind <> 'DoUntil' then do; call fail(condition,'PROFILE: invalid DO condition'); return; end
+    end
+    if ending.count('name') then do
+      named = ending.child('name'); if tick(named) = 0 then return
+      if name = '' then do; call fail(named,'SYNTAX: RXC-LC-10.3: END name requires a controlled DO'); return; end
+      if rexxclassic_unicode_upper(name) <> rexxclassic_unicode_upper(named.text('spelling')) then do
+        call fail(named,'SYNTAX: RXC-LC-10.2: END name does not match DO control symbol'); return
+      end
+    end
+    if kind = '' & conditionkind = '' then do
+      if _terminated = 0 then call clausebegin(node,node.start(),header.finish())
+      call statement(node.child('body')); return
+    end
+    stateful = kind = 'DoCount' | kind = 'DoControl'; incoming = _alive
+    initialfinish = header.finish()
+    if conditionkind = 'DoUntil' then initialfinish = condition.start()
+    call clausebegin(node,node.start(),initialfinish)
+    if _error <> '' then return
+    if stateful then do
+      _donumber = _donumber + 1; key = 'do.' || _donumber
+      op = _block.operation(_contract.operation('crexx.c.do.new'),headerorigin)
+      call op.input('context',_block.load(_contextslot,headerorigin))
+      call op.attribute('key',key as .binary); call op.attribute('name',name as .binary); built = op.finish()
+      if kind = 'DoCount' then do
+        value = expression(repetition.child('value')); if _error <> '' then return
+        call docapture(key,'repeat',value,at(repetition))
+      end
+      else do
+        value = expression(repetition.child('initial')); if _error <> '' then return
+        call docapture(key,'start',value,at(repetition.child('initial')))
+        do i = 1 to repetition.count('modifiers')
+          modifier = repetition.child('modifiers',i)
+          value = expression(modifier.child('value')); if _error <> '' then return
+          call docapture(key,lower(modifier.text('keyword')),value,at(modifier))
+        end
+      end
+      built = dostate('start',key,headerorigin)
+      call clausecomplete(node,node.start(),initialfinish)
+      if _error <> '' then return
+    end
+    _loops = _loops + 1; level = _loops
+    _loopkeys[level] = key; _hasbreaks[level] = 0; _hascontinues[level] = 0
+    _loopnames[level] = rexxclassic_unicode_upper(name)
+    _breakalive[level] = 0; _continuealive[level] = 0
+    body = newblock('do.body')
+    entry = body
+    if conditionkind = 'DoWhile' then do; test = newblock('do.while'); entry = test; end
+    if stateful then entry = newblock('do.entry')
+    call _block.jump(entry,origin)
+    if stateful then do
+      _block = entry; built = dostate('entry',key,headerorigin)
+      exhausted = newblock('do.exhausted'); after = loopafter(level)
+      chosen = body
+      if conditionkind = 'DoWhile' then chosen = test
+      call _block.branch(built.result(),chosen,exhausted,headerorigin)
+      _block = exhausted
+      if conditionkind = 'DoWhile' then call clausecomplete(node,node.start(),header.finish())
+      built = dostate('close',key,endorigin.derive())
+      call _block.jump(after,endorigin); _breakalive[level] = incoming
+    end
+    if conditionkind = 'DoWhile' then do
+      _block = test; _terminated = 0; _alive = incoming
+      value = expression(condition.child('value')); if _error <> '' then return
+      testorigin = _file.origin(condition.start(),condition.start() + 5,condition.origin())
+      value = truth(value,testorigin,'crexx.c.while.truth')
+      value = checkpointvalue(node,value,node.start(),header.finish()); after = loopafter(level)
+      if stateful then do
+        exhausted = newblock('do.while.exit')
+        call _block.branch(value,body,exhausted,testorigin)
+        _block = exhausted; built = dostate('close',key,endorigin.derive()); call _block.jump(after,endorigin)
+      end
+      else call _block.branch(value,body,after,testorigin)
+      _breakalive[level] = incoming
+    end
+    if stateful = 0 & conditionkind <> 'DoUntil' then do
+      repeating = entry
+      if conditionkind = 'DoWhile' then repeating = newblock('do.repeat')
+      _continues[level] = repeating as .object; _hascontinues[level] = 1
+    end
+    _block = body; _terminated = 0; _alive = incoming
+    call statement(node.child('body')); if _error <> '' then return
+    if _terminated = 0 then do
+      if node.child('body').count('items') = 0 then call clausecomplete(node,node.start(),header.finish())
+      continuing = loopcontinue(level); _continuealive[level] = _continuealive[level] | _alive
+      call _block.jump(continuing,endorigin)
+    end
+    if (stateful | conditionkind = 'DoUntil' | conditionkind = 'DoWhile') & _hascontinues[level] then do
+      _block = _continues[level] as .llir..block; _terminated = 0; _alive = _continuealive[level]
+      if conditionkind = 'DoUntil' then do
+        call clausebegin(node,node.start(),header.finish())
+        if _error <> '' then return
+        value = expression(condition.child('value')); if _error <> '' then return
+        testorigin = _file.origin(condition.start(),condition.start() + 5,condition.origin())
+        value = truth(value,testorigin,'crexx.c.until.truth')
+        value = checkpointvalue(node,value,node.start(),header.finish()); after = loopafter(level)
+        advance = entry
+        if stateful then advance = newblock('do.advance')
+        if stateful then do
+          exhausted = newblock('do.until.exit')
+          call _block.branch(value,exhausted,advance,testorigin)
+          _block = exhausted; built = dostate('close',key,endorigin.derive()); call _block.jump(after,endorigin)
+        end
+        else call _block.branch(value,after,advance,testorigin)
+        _breakalive[level] = _breakalive[level] | _continuealive[level]
+        _block = advance
+      end
+      if conditionkind <> 'DoUntil' then do
+        call clausebegin(node,node.start(),header.finish())
+        if _error <> '' then return
+      end
+      if stateful then do
+        built = dostate('advance',key,endorigin); call _block.jump(entry,endorigin)
+      end
+      else if conditionkind = 'DoWhile' then call _block.jump(entry,endorigin)
+    end
+    else if conditionkind = 'DoUntil' then do
+      /* A closed body still owns static validation of its unreachable UNTIL
+       * operand. Simple literals need no dead value/helper construction. */
+      if simpleliteral(condition.child('value')) then value = expression(condition.child('value'),'',1)
+      else do
+        _block = newblock('unreachable.until'); _terminated = 0; _alive = 0
+        call clausebegin(node,node.start(),header.finish())
+        if _error <> '' then return
+        value = expression(condition.child('value')); if _error <> '' then return
+        op = _block.operation(_contract.operation('crexx.c.return.absent'),endorigin.derive()); built = op.finish()
+        call _block.returnvalue(built.result(),endorigin.derive())
+      end
+    end
+    _loops = _loops - 1
+    if _hasbreaks[level] then do
+      _block = _breaks[level] as .llir..block; _terminated = 0; _alive = _breakalive[level]
+    end
+    else do; _terminated = 1; _alive = 0; end
+    return
+  /** Ordered SELECT tests share ordinary statement lowering. Semantic liveness
+   * and structural completion stay separate, including checked dead source. */
+  selection: method = .void
+    arg node = .llast..node
+    clause = .llast..node; origin = .llir..origin; missingorigin = .llir..origin
+    join = .llir..block; chosen = .llir..block; following = .llir..block
+    value = .llir..valuehandle; op = .llir..opdraft; built = .llir..opview
+    i = .int; kind = .string; hasjoin = 0; hasotherwise = 0; whens = 0
+    incoming = _alive; normal = 0
+    do i = 1 to node.count('clauses') while _error = ''
+      clause = node.child('clauses',i); kind = clause.kind()
+      if hasotherwise then do
+        call fail(clause,'PROFILE: SELECT clause follows OTHERWISE'); return
+      end
+      select
+        when kind = 'CWhen' then do
+          if tick(clause) = 0 then return
+          whens = whens + 1
+          call clausebegin(clause,clause.start(),clause.child('condition').finish())
+          if _error <> '' then return
+          value = expression(clause.child('condition')); if _error <> '' then return
+          origin = _file.origin(clause.start(),clause.start() + 4,clause.origin())
+          value = truth(value,origin,'crexx.c.when.truth')
+          value = checkpointvalue(clause,value,clause.start(),clause.child('condition').finish())
+          chosen = newblock('select.when'); following = newblock('select.next')
+          call _block.branch(value,chosen,following,origin)
+          _block = chosen; _terminated = 0; _alive = incoming
+          call statement(clause.child('body')); if _error <> '' then return
+          normal = normal | (_alive & _terminated = 0)
+          if _terminated = 0 then do
+            if hasjoin = 0 then do; join = newblock('select.join'); hasjoin = 1; end
+            call _block.jump(join,origin)
+          end
+          _block = following; _terminated = 0; _alive = incoming
+        end
+        when kind = 'COtherwise' then do
+          if tick(clause) = 0 then return
+          if whens = 0 then do
+            call fail(clause,'PROFILE: SELECT requires a WHEN clause'); return
+          end
+          hasotherwise = 1; origin = at(clause)
+          call statement(clause.child('body')); if _error <> '' then return
+          normal = normal | (_alive & _terminated = 0)
+          if _terminated = 0 then do
+            if hasjoin = 0 then do; join = newblock('select.join'); hasjoin = 1; end
+            call _block.jump(join,origin)
+          end
+        end
+        when kind = 'CLabel' then call statement(clause)
+        otherwise do
+          call fail(clause,'PROFILE: invalid SELECT clause ' || kind); return
+        end
+      end
+    end
+    if _error <> '' then return
+    if whens = 0 then do
+      call fail(node,'PROFILE: SELECT requires a WHEN clause'); return
+    end
+    if hasotherwise = 0 then do
+      missingorigin = _file.origin(node.start(),node.start() + 6,node.origin())
+      op = _block.operation(_contract.operation('crexx.c.select.missing'),missingorigin)
+      built = op.finish()
+      /* The fatal C profile cannot return here. Close the structural block
+       * using the existing return packet contract, as for EXIT. */
+      origin = missingorigin.derive()
+      op = _block.operation(_contract.operation('crexx.c.return.absent'),origin)
+      built = op.finish(); call _block.returnvalue(built.result(),origin)
+      _terminated = 1; _alive = 0
+    end
+    if hasjoin then do; _block = join; _terminated = 0; end
+    else _terminated = 1
+    _alive = normal
     return
   valuetype: method = .string
     arg value = .llir..valuehandle
@@ -413,11 +1883,18 @@ request: class
     if left(name,5) = 'core.' then return substr(name,6)
     return substr(name,9)
   truth: method = .llir..valuehandle
-    arg value = .llir..valuehandle, origin = .llir..origin
+    arg value = .llir..valuehandle, origin = .llir..origin, operation = 'crexx.c.truth'
     built = .llir..opview
-
-    op = _block.operation(_contract.operation('crexx.c.truth'),origin)
-    call op.input('value',value); built = op.finish(); return built.result()
+    op = _block.operation(_contract.operation(operation),origin)
+    call op.input('value',value); call op.input('context',_block.load(_contextslot,origin)); built = op.finish()
+    /* Preserve owner checks and pool-policy effects even for known truth.
+     * A separate exact literal fact lets ordinary branch pruning remain safe. */
+    if value.isconstant() then do
+      spelling = bin2x(value.bytes())
+      if spelling = '30' then return _block.constant(_contract.boolean(),'0',origin.derive())
+      if spelling = '31' then return _block.constant(_contract.boolean(),'1',origin.derive())
+    end
+    return built.result()
   /** Decode Classic source digits once, using the existing B ordinal bridge.
    * Only the leading group may be short; a blank separates complete groups.
    * The original String node retains its spelling and authored source span. */
@@ -441,8 +1918,23 @@ request: class
     end
     if suffix = 'B' then text = b2x(text)
     return x2c(text)
+  /** One literal decoder serves expressions and static PARSE patterns. */
+  stringliteral: method = .string
+    arg node = .llast..node
+    return decodestring(node,node.text('spelling'))
+  decodestring: method = .string
+    arg node = .llast..node, spelling = .string
+    quote = left(spelling,1)
+    if right(spelling,1) <> quote then return ordinalliteral(node,spelling)
+    text = substr(spelling,2,length(spelling) - 2); decoded = ''; i = 1
+    do while i <= length(text)
+      ch = substr(text,i,1); decoded = decoded || ch
+      if ch = quote & substr(text,i + 1,1) = quote then i = i + 1
+      i = i + 1
+    end
+    return decoded
   expression: method = .llir..valuehandle
-    arg node = .llast..node, expected = ''
+    arg node = .llast..node, expected = '', discardliteral = 0
     invalid = .llir..valuehandle
     if tick(node) = 0 then return invalid
     _offset = node.offset()
@@ -454,34 +1946,29 @@ request: class
           if right(lower(spelling),1) = 'd' then do
             call fail(node,'PROFILE: decimal suffix is not Classic syntax'); return invalid
           end
+          if discardliteral then return invalid
           return _block.constantbytes(type('value'),spelling as .binary,origin)
         end
       end
+      when kind = 'Constant' then do
+        if discardliteral then return invalid
+        return _block.constantbytes(type('value'),rexxclassic_unicode_upper(node.text('spelling')) as .binary,origin)
+      end
       when kind = 'String' then do
-        spelling = node.text('spelling'); quote = left(spelling,1)
-        if right(spelling,1) <> quote then do
-          ordinaltext = ordinalliteral(node,spelling)
-          if _error <> '' then return invalid
-          return _block.constantbytes(type('value'),ordinaltext as .binary,origin)
-        end
-        text = substr(spelling,2,length(spelling) - 2); decoded = ''; i = 1
-        do while i <= length(text)
-          ch = substr(text,i,1); decoded = decoded || ch
-          if ch = quote & substr(text,i + 1,1) = quote then i = i + 1
-          i = i + 1
-        end
-        target = 'value'
-        return _block.constantbytes(type(target),decoded as .binary,origin)
+        decoded = stringliteral(node)
+        if _error <> '' then return invalid
+        if discardliteral then return invalid
+        return _block.constantbytes(type('value'),decoded as .binary,origin)
       end
       when kind = 'Name' then do
-        name = upper(node.text('spelling'))
+        name = node.text('spelling')
         do
           op = _block.operation(_contract.operation('crexx.c.load'),origin)
-          call op.input('pool',_block.load(_poolslot,origin)); call op.attribute('name',name as .binary)
+          call op.input('context',_block.load(_contextslot,origin)); call op.attribute('name',name as .binary)
           built = op.finish(); return built.result()
         end
       end
-      when kind = 'Group' then return expression(node.child('value'),expected)
+      when kind = 'Group' then return expression(node.child('value'),expected,discardliteral)
       when kind = 'Prefix' then do
         name = node.child('operator').kind(); child = node.child('value')
 
@@ -498,14 +1985,14 @@ request: class
         built = op.finish(); return built.result()
       end
       when kind = 'Chain' then do
-        value = expression(node.child('operands',1),expected)
+        value = expression(node.child('operands',1),expected,discardliteral)
         do i = 1 to node.count('operators') while _error = ''
           operator = node.child('operators',i).kind(); right = node.child('operands',i + 1)
           value = binary(value,operator,right,origin,expected)
         end
         return value
       end
-      when kind = 'Call' then return invocation(node,1)
+      when kind = 'Call' | kind = 'CallQuoted' then return invocation(node,1)
       otherwise call fail(node,'PROFILE: unsupported expression ' || kind)
     end
     return invalid
@@ -528,83 +2015,139 @@ request: class
     built = op.finish(); return built.result()
   invocation: method = .llir..valuehandle
     arg node = .llast..node, expressioncall = .int
-    invalid = .llir..valuehandle; origin = at(node); name = upper(node.text('name'))
+    invalid = .llir..valuehandle; origin = at(node); name = node.text('name')
+    quoted = node.kind() = 'InvokeQuoted' | node.kind() = 'CallQuoted'
+    if quoted then name = decodestring(node,name)
+    else do
+      if namework(name) = 0 then return invalid
+      name = rexxclassic_unicode_upper(name)
+    end
+    if _error <> '' then return invalid
     arguments = node.child('arguments'); count = arguments.count('items')
     if count = 1 & arguments.child('items',1).count('value') = 0 then count = 0
-    target = findroutine(name); argument = .llast..node; value = .llir..valuehandle
+    target = 0
+    if quoted = 0 then target = findroutine(name)
+    if _error <> '' then return invalid
+    if target < 0 then do
+      call fail(node,'SYNTAX: RXC-LC-16.3: local target is a trace-only group label ' || name); return invalid
+    end
+    bif = ''; if target = 0 then bif = llcbifs..entry(name)
+    provider = 0; externalname = .string
+    if target = 0 & bif = '' & expressioncall = 0 & _bound then do
+      if <refvalid>(_providers) = 0 then do; call fail(node,'IMPORT: provider owner is not live'); return invalid; end
+      providers = dereference _providers
+      if initialized(providers) = 0 then do; call fail(node,'IMPORT: provider owner is not initialized'); return invalid; end
+      provider = providers.find(name)
+      if providers.status() then do; call fail(node,'IMPORT: ' || providers.error()); return invalid; end
+      if provider < 0 then do; call fail(node,'IMPORT: ambiguous provider alias ' || name); return invalid; end
+      if provider > 0 then externalname = providers.callable(provider)
+      if providers.status() then do; call fail(node,'IMPORT: ' || providers.error()); return invalid; end
+    end
+    argument = .llast..node; value = .llir..valuehandle
     op = .llir..opdraft; built = .llir..opview; i = .int; slot = .llir..slot
-
-    result = .llir..valuehandle
-    if target = 0 then do
-      if wordpos(name,'LENGTH ARG DIGITS') = 0 then do
-        call fail(node,'CALL: unknown Classic routine ' || name); return invalid
-      end
-      if (name = 'LENGTH' & count <> 1) | (name = 'DIGITS' & count <> 0) | (name = 'ARG' & count <> 0 & count <> 2) then do
-        call fail(node,'CALL: BIF argument form outside the admitted profile'); return invalid
-      end
+    result = .llir..valuehandle; specialized = 0
+    if bif <> '' then do
       call classiccontract(node,name)
       if _error <> '' then return invalid
+      specialized = (name = 'LENGTH' & count = 1) | (name = 'DIGITS' & count = 0) | (name = 'ARG' & (count = 0 | count = 2))
+      do i = 1 to count
+        if arguments.child('items',i).count('value') = 0 then specialized = 0
+      end
+    end
+    if specialized then do
       if name = 'DIGITS' then do
         op = _block.operation(_contract.operation('crexx.c.digits'),origin)
         call op.input('context',_block.load(_contextslot,origin)); built = op.finish(); value = built.result()
       end
       else if name = 'ARG' & count = 0 then do
         op = _block.operation(_contract.operation('crexx.c.arguments.count'),origin)
-        call op.input('arguments',_block.load(_argsslot,origin)); built = op.finish(); value = built.result()
+        call op.input('context',_block.load(_contextslot,origin)); built = op.finish(); value = built.result()
       end
       else do
         saved = .object[]
         do i = 1 to count
           argument = arguments.child('items',i)
-          if argument.count('value') = 0 then do
-            call fail(argument,'CALL: missing BIF argument'); return invalid
-          end
           value = expression(argument.child('value'))
           if _error <> '' then return invalid
           slot = temporary(type('value')); call _block.store(slot,value,origin); saved[i] = slot as .object
         end
         if name = 'LENGTH' then do
-          call classiccontract(node,'LENGTH')
-          if _error <> '' then return invalid
           op = _block.operation(_contract.operation('crexx.c.length'),origin)
           slot = saved[1] as .llir..slot; call op.input('value',_block.load(slot,origin))
+          call op.input('context',_block.load(_contextslot,origin))
         end
         else do
           op = _block.operation(_contract.operation('crexx.c.arguments.exists'),origin)
-          call op.input('arguments',_block.load(_argsslot,origin))
+          call op.input('context',_block.load(_contextslot,origin))
           slot = saved[1] as .llir..slot; call op.input('ordinal',_block.load(slot,origin))
           slot = saved[2] as .llir..slot; call op.input('option',_block.load(slot,origin))
         end
         built = op.finish(); value = built.result()
       end
-      if expressioncall then return value
-      op = _block.operation(_contract.operation('crexx.c.return.present'),origin)
-      call op.input('value',value); built = op.finish(); result = built.result()
     end
     else do
       op = _block.operation(_contract.operation('crexx.c.arguments.empty'),origin); built = op.finish()
       packet = temporary(type('arguments')); call _block.store(packet,built.result(),origin)
       do i = 1 to count
         argument = arguments.child('items',i); present = argument.count('value') <> 0
-        value = defaultvalue('value',at(argument))
         if present then value = expression(argument.child('value'))
+        else value = defaultvalue('value',at(argument))
         if _error <> '' then return invalid
-        op = _block.operation(_contract.operation('crexx.c.arguments.append'),at(argument))
-        call op.input('arguments',_block.load(packet,origin)); call op.input('value',value)
-        call op.input('present',_block.constant(_contract.boolean(),present as .string,origin)); built = op.finish()
-        call _block.store(packet,built.result(),origin)
+        itemorigin = at(argument)
+        op = _block.operation(_contract.operation('crexx.c.arguments.append'),itemorigin)
+        call op.input('arguments',_block.load(packet,itemorigin)); call op.input('value',value)
+        call op.input('present',_block.constant(_contract.boolean(),present as .string,itemorigin)); built = op.finish()
+        call _block.store(packet,built.result(),itemorigin)
       end
-      op = _block.operation(_contract.operation('crexx.c.call'),origin)
+      operation = 'call'
+      if target = 0 then do
+        operation = 'call.missing'
+        if bif <> '' then operation = 'bif'
+        else if provider > 0 then operation = 'call.external'
+      end
+      op = _block.operation(_contract.operation('crexx.c.' || operation),origin)
       call op.input('arguments',_block.load(packet,origin)); call op.input('context',_block.load(_contextslot,origin))
-      call op.attribute('target',name as .binary); built = op.finish(); result = built.result()
+      if target > 0 then do
+        call op.attribute('target','$MAIN' as .binary)
+        integer = .llir..intcodec(); call op.attribute('entry',integer.parse((target - 1) as .string))
+        boolean = .llir..boolcodec(); call op.attribute('function',boolean.parse(expressioncall as .string))
+      end
+      else if provider > 0 then call op.attribute('target',externalname as .binary)
+      else call op.attribute('name',name as .binary)
+      built = op.finish()
+      if bif <> '' then value = built.result()
+      else do
+        result = built.result()
+        if target > 0 then result = programguard(result,origin)
+      end
+    end
+    if bif <> '' then do
+      if expressioncall then return value
+      op = _block.operation(_contract.operation('crexx.c.return.present'),origin)
+      call op.input('value',value); built = op.finish(); result = built.result()
     end
     if expressioncall then do
       op = _block.operation(_contract.operation('crexx.c.requirevalue'),origin)
-      call op.input('result',result); built = op.finish(); return built.result()
+      call op.input('result',result); call op.attribute('name',name as .binary)
+      built = op.finish(); return built.result()
     end
     op = _block.operation(_contract.operation('crexx.c.setresult'),origin)
-    call op.input('pool',_block.load(_poolslot,origin)); call op.input('result',result); built = op.finish()
+    call op.input('context',_block.load(_contextslot,origin)); call op.input('result',result); built = op.finish()
     return invalid
+  /** Preserve the owned packet across visible program-root control flow before
+   * any ordinary result observation or later authored operand can execute. */
+  programguard: method = .llir..valuehandle
+    arg result = .llir..valuehandle, origin = .llir..origin
+    generated = origin.derive('synthetic'); carrier = temporary(type('result'))
+    call _block.store(carrier,result,generated)
+    op = _block.operation(_contract.operation('crexx.c.program.exiting'),generated)
+    call op.input('context',_block.load(_contextslot,generated)); built = op.finish()
+    unwind = newblock('program.unwind'); continuation = newblock('program.continue')
+    call _block.branch(built.result(),unwind,continuation,generated)
+    _block = unwind
+    call _block.returnvalue(_block.load(carrier,generated),generated)
+    _block = continuation
+    return _block.load(carrier,generated)
   classiccontract: method = .void
     arg node = .llast..node, name = .string
     if _rootpath = '' then do
@@ -625,15 +2168,13 @@ request: class
       end
       _hasclassic = 1
     end
-    symbol = 'rexxclassicbiflength.rexxclassicbif_length'; count = 1
-    if name = 'ARG' then do; symbol = 'rexxclassicbifarg.rexxclassicbif_arg'; count = 2; end
-    if name = 'DIGITS' then symbol = 'rexxclassicbifnumeric.rexxclassicbif_digits'
+    symbol = llcbifs..entry(name); count = 1 + llcbifs..activation(name)
     signature = _classic.lookup(symbol)
     if signature.error() <> '' then call fail(node,'IMPORT: ' || signature.error())
     else if signature.result() <> '.rexxvalue..rexxvalue' | signature.arguments() <> count then call fail(node,'IMPORT: incompatible Classic ' || name || ' contract')
     else if signature.type(1) <> 'reference .rexxbifcallcontext' then call fail(node,'IMPORT: incompatible Classic BIF context')
-    else if signature.optional(1) then call fail(node,'IMPORT: optional Classic context is incompatible')
-    else if name = 'ARG' then do
-      if signature.type(2) <> 'reference .rexxactivationarguments' | signature.optional(2) then call fail(node,'IMPORT: incompatible Classic activation contract')
+    else if signature.optional(1) | signature.exposed(1) then call fail(node,'IMPORT: optional or exposed Classic context is incompatible')
+    else if count = 2 then do
+      if signature.type(2) <> 'reference .rexxactivationarguments' | signature.optional(2) | signature.exposed(2) then call fail(node,'IMPORT: incompatible Classic activation contract')
     end
     return

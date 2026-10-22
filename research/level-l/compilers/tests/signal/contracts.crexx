@@ -1,0 +1,389 @@
+/* Independent C18 source/table/transport/landing and bounded-proof controls. */
+options levelb
+import rxfnsb
+import llcparse
+import llcfrontend
+import llast
+import llcir
+import llir
+import llirservices
+import llcprocedureprotocol
+import llcsignalprotocol
+import llcrxas
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  call sourcecontracts(argv[1]); call raw(argv[1])
+  say 'SIGNAL_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+sourcecontracts: procedure = .void
+  arg artifacts = .string
+  nl = '0D0A'x as .string
+  text = "signal P; signal 'p'; signal '70'x; signal value ELSE" || nl
+  text = text || 'signal 1.20; signal 7E2; signal 7d; signal .RC; signal .foo; signal .' || nl
+  text = text || "signal ('p'); signal +1; signal -1; signal \0" || nl
+  text = text || 'if 0 then A: signal P else signal value ELSE' || nl || 'P: return'
+  source = text as .binary; parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'direct token breadth, decoded strings, special starts and contextual ELSE parse: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk(); node = .llast..node; direct = 0; dynamic = 0; else_names = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() == 'CSignal' | node.kind() == 'CSignalValue' then do
+        call check((binsubstr(source,node.start() + 1,6) as .string) == 'signal' & node.finish() > node.start() + 6,'authored SIGNAL node includes its operand')
+        if node.kind() == 'CSignal' then do
+          direct = direct + 1; target = node.child('target')
+          call check(target.valid(),'direct SIGNAL retains one real target')
+          if target.valid() then call check(target.kind() == 'Name' | target.kind() == 'String','direct Name or decoded String AST')
+        end
+        else do
+          dynamic = dynamic + 1; operand = node.child('value')
+          call check(operand.valid(),'explicit/implied VALUE retains a real expression')
+        end
+      end
+      if node.kind() == 'Name' then if node.text('spelling') == 'ELSE' then else_names = else_names + 1
+    end
+    call check(direct = 10 & dynamic = 6 & else_names = 2,'source keeps static/dynamic distinction and unowned ELSE operands')
+  end
+  call bad('signal','19.4','signal')
+  call bad('signal value','19.4','value')
+  call bad('signal P extra','19.4','extra')
+  call bad('signal ,','19.4',',')
+  call bad('signal +','35.1','+')
+  call bad('signal value 1 +','35.1','+')
+  call bad('if 0 then signal value','19.4','value')
+  call bad('if 1 then signal value else nop','19.4','value')
+  call bad("if 'é' = 'é' then signal value +",'35.1','+')
+  comments = .llcparse..parsed('signal value /* open' as .binary)
+  call check(comments.status() <> 0 & pos('LL_COMMENT:',comments.error()) = 1 & pos('unclosed',comments.error()) > 0 & pos('19.4',comments.error()) = 0,'shared comment error retains precedence: ' || comments.error())
+  literal = .llcparse..parsed("signal 'open" as .binary)
+  call check(literal.status() <> 0 & pos('19.4',literal.error()) = 0,'shared literal failure retains precedence: ' || literal.error())
+  incomplete = .llcparse..parsed('if 1 then signal P else' as .binary)
+  call check(incomplete.status() <> 0 & pos('14.4',incomplete.error()) > 0 & pos('19.4',incomplete.error()) = 0,'missing enclosing arm retains ownership: ' || incomplete.error())
+  call sourcecase(artifacts,'signal ABSENT; return',1,'missing direct remains a reached-time error')
+  call sourcecase(artifacts,"signal value 'P'; return; do; P: nop; end; P: return",1,'VALUE literal grouped lookup stays reached-time')
+  call sourcecase(artifacts,'if 0 then signal P; return; do; P: nop; end; P: return',0,'dead static first grouped match refuses')
+  call sourcecase(artifacts,"signal 'p'; return; do; P: nop; end; P: return",0,'decoded quoted first grouped match refuses')
+  call sourcecase(artifacts,'return 0',1,'no SIGNAL means no inventory prefix')
+  return
+
+bad: procedure = .void
+  arg text = .string, code = .string, token = .string
+  source = text as .binary; parsed = .llcparse..parsed(source)
+  expected = binpos(token as .binary,source) - 1
+  call check(parsed.status() <> 0 & pos(code,parsed.error()) > 0 & parsed.offset() = expected,code || ' exact original byte offset: ' || text || ': ' || parsed.error())
+  return
+
+sourcecase: procedure = .void
+  arg artifacts = .string, source = .string, accepted = .int, label = .string
+  request = .llcfrontend..request(source as .binary,artifacts,'signal-source.crexx')
+  if accepted then do
+    call check(request.status() = 0,label || ': ' || request.error())
+    if request.status() = 0 then do
+      graph = request.graph(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+      call check(selected.status() = 0 & output.bytes() > 0,label || ' selects: ' || selected.error())
+      call check(pos('CSIG3',output.text()) = 0,label || ' has no executable table data')
+    end
+  end
+  else call check(request.status() <> 0 & pos('16.2',request.error()) > 0,label || ': ' || request.error())
+  return
+
+raw: procedure = .void
+  arg artifacts = .string
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  data = dereference contract.data(); i = .int; family = .int; version = 0; types = 0
+  do family = 1 to data.familycount()
+    if data.familyname(family) == 'crexx.c' then version = data.version(family)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
+  end
+  call check(version = 22 & types = 5 & data.ops() = 88,'C22/five types/88 operations')
+  do i = 1 to 4
+    id = contract.operation('crexx.c.signal.' || word('mark name test invalid',i)).id()
+    call check(id = 73 + i & data.arity(id,1) = 2 & data.arity(id,2) = (i = 2 | i = 3),'exact appended SIGNAL descriptor ' || i)
+    call check(data.arity(id,3) = (i <> 2),'no unapproved SIGNAL attributes ' || i)
+    if i <> 3 then call check(data.fieldname(id,1,2) == 'context' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context','canonical context input2 ' || i)
+    callback = data.callback(id,1)
+    call check((callback is .llir..evaluator) = 0,'no SIGNAL evaluator ' || i)
+  end
+  testid = contract.operation('crexx.c.signal.test').id()
+  call check(data.effectvalue(testid,1) == 'none' & data.effectvalue(testid,2) == 'none' & data.effectvalue(testid,3) == 'returns','test stays pure with real table dependencies')
+  graph = .llir..module; loaded = .llir..module; mode = .int
+  do mode = 1 to 28
+    graph = fixture(contract,mode)
+    call check(graph.error() == '', 'generic-valid SIGNAL control ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    accepted = mode = 1 | mode = 11 | mode = 16 | mode = 17 | mode = 18
+    call admission(artifacts,graph,accepted,'fresh SIGNAL ' || mode,mode = 20)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '' & bincompare(graph.binary(),loaded.binary()) = 0,'owned loaded SIGNAL ' || mode)
+    if loaded.error() == '' then call admission(artifacts,loaded,accepted,'loaded SIGNAL ' || mode,mode = 20)
+    if mode = 11 | mode = 18 then do
+      changed = llirservices..optimise(reference graph)
+      call check(changed.status() == 'changed','representative forwarding/pruning really changes mode ' || mode || ': ' || changed.message())
+      if changed.status() == 'changed' then do
+        rewritten = changed.result()
+        call check(bincompare(graph.binary(),rewritten.binary()) <> 0,'transformed bytes differ ' || mode)
+        if mode = 18 then call check(rewritten.blocks() < graph.blocks(),'generic pruning leaves a canonical orphan prefix')
+        call admission(artifacts,rewritten,1,'transformed SIGNAL ' || mode,0)
+      end
+    end
+    if mode = 1 then call prooflimits(artifacts,reference graph)
+  end
+  old = stalecontract(contract); graph = fixture(old,1)
+  call check(graph.error() == '', 'prior C17 graph remains generic-valid')
+  if graph.error() == '' then do
+    call admission(artifacts,graph,0,'prior C17',0)
+    loaded = loadgraph(reference graph)
+    if loaded.error() == '' then call admission(artifacts,loaded,0,'loaded prior C17',0)
+  end
+  return
+
+loadgraph: procedure = .llir..module
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref; storage = dereference graph.storage(); contract = dereference storage.contract()
+  return llir..loadbinary(contract,graph.binary())
+
+admission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, source_error = .int
+  saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  if accepted then do
+    call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
+    call check(pos('CSIG3',output.text()) = 0,label || ' erases compile-time table')
+  end
+  else do
+    category = pos('LL_COMPILER_LOWERING:',selected.error()) = 1
+    if source_error then category = pos('LL_COMPILER_SOURCE:',selected.error()) = 1
+    call check(selected.status() <> 0 & output.bytes() = 0 & category,label || ' refuses at C admission without partial output: ' || selected.error())
+    if source_error then call check(pos('LL_COMPILER_SOURCE:',selected.error()) = 1,label || ' preserves exact SOURCE category: ' || selected.error())
+  end
+  call check(bincompare(saved,graph.binary()) = 0,label || ' input unchanged')
+  return
+
+prooflimits: procedure = .void
+  arg artifacts = .string, graph_ref = reference .llir..module
+  i = .int
+  graph = dereference graph_ref
+  entries = .llcprocedureprotocol..checked(reference graph)
+  signals = .llcsignalprotocol..checked(reference graph,reference entries)
+  call check(entries.status() = 0 & signals.status() = 0,'completed request-owned entry and SIGNAL proofs: ' || entries.error() || signals.error())
+  if entries.status() <> 0 | signals.status() <> 0 then return
+  cap = max(entries.bytesused(),signals.bytesused()) - 1
+  call check(cap >= 128 & entries.workused() > 0 & signals.workused() > 0,'actual admission cost is available without a quota API')
+  valid = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts)
+  owned = valid.output(); previous = owned.text()
+  call check(valid.status() = 0 & owned.bytes() > 0,'completed proof selects normally')
+  narrow = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts,cap)
+  empty = narrow.output()
+  call check(narrow.status() <> 0 & pos('LL_COMPILER_LIMIT:',narrow.error()) = 1 & empty.bytes() = 0,'narrower request cannot reuse more expensive cached proofs: ' || narrow.error())
+  call check(entries.status() = 0 & signals.status() = 0 & owned.text() == previous,'local narrow failure preserves proofs and earlier output')
+  again = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts)
+  result = again.output()
+  call check(again.status() = 0 & result.text() == previous,'later valid proof reuse remains usable')
+  source_text = ''
+  do i = 1 to 16
+    source_text = source_text || "signal value 'P';"
+  end
+  source_text = source_text || 'P:'
+  do i = 2 to 16
+    source_text = source_text || ' L' || i || ':'
+  end
+  source_text = source_text || ' return 0'
+  saved = graph.binary()
+  bounded = .llcfrontend..request(source_text as .binary,artifacts,'signal-limit.crexx',4096)
+  call check(bounded.status() <> 0 & pos('LL_COMPILER_LIMIT: frontend SIGNAL construction work budget exceeded',bounded.error()) = 1,'low-work source refuses during bounded SIGNAL construction: ' || bounded.error())
+  failed_graph = bounded.graph()
+  call check(failed_graph.error() <> '' & owned.text() == previous & bincompare(saved,graph.binary()) = 0,'construction refusal publishes no graph and preserves earlier input/output')
+  changing = graph
+  changed_entries = .llcprocedureprotocol..checked(reference changing)
+  changed_signals = .llcsignalprotocol..checked(reference changing,reference changed_entries)
+  call check(changed_entries.status() = 0 & changed_signals.status() = 0,'replacement control begins with completed live proof owners')
+  original_identity = changing.identity(); replacement = loadgraph(reference changing)
+  call check(replacement.error() == '' & replacement.identity() <> original_identity & bincompare(replacement.binary(),changing.binary()) = 0,'generic-loaded byte-identical graph has a distinct frozen identity')
+  changing = replacement
+  live_graph = reference changing; live_entries = reference changed_entries; live_signals = reference changed_signals
+  call check(<refvalid>(live_graph) & <refvalid>(live_entries) & <refvalid>(live_signals),'replaced graph cell and completed proof objects remain live')
+  call check(changed_entries.belongs(reference changing) = 0 & changed_signals.belongs(reference changing) = 0,'cached indices cannot follow replacement of their original graph cell')
+  rejected = .llcrxas..compilation.prechecked(changing,reference changed_entries,reference changed_signals,artifacts)
+  rejected_output = rejected.output()
+  call check(rejected.status() <> 0 & pos('LL_COMPILER_LOWERING:',rejected.error()) = 1 & rejected_output.bytes() = 0,'prechecked replacement identity refuses without output: ' || rejected.error())
+  call check(changed_entries.status() = 0 & changed_signals.status() = 0 & entries.belongs(reference graph) & signals.belongs(reference graph) & owned.text() == previous & bincompare(saved,graph.binary()) = 0,'replacement refusal leaves both proof states and original input/output intact')
+  return
+
+/* Valid direct1/dynamic11/empty16/orphan17/dead18; all other modes isolate
+ * malformed framing, closure, canonical context, provenance or source ranges. */
+fixture: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  builder = .llir..builder(contract)
+  source_text = 'signal P /*é*/' || ('0A'x as .string) || 'P: return'
+  source = source_text as .binary; file = builder.source('signal-ir.crexx',source)
+  finish = binpos('0A'x,source) - 1; at = file.origin(0,finish)
+  return_origin = .llir..origin
+  generated = builder.synthetic('independent SIGNAL setup'); derived = at.derive('synthetic')
+  label_first = binpos('P:' as .binary,source) - 1
+  payload = 'CSIG3' || ('0A'x as .string) || '1:' || framed('P') || '1:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
+  if mode = 4 then payload = 'CSIG3' || ('0A'x as .string) || '01:' || substr(payload,9)
+  if mode = 5 then payload = 'CSIG3' || ('0A'x as .string) || '1:' || framed('P') || '99:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
+  if mode = 16 then payload = 'CSIG3' || ('0A'x as .string) || '0:'
+  if mode = 19 then payload = 'CSIG3' || ('0A'x as .string) || '1:0:1:' || framed('signal-ir.crexx') || label_first || ':' || (label_first + 2) || ':'
+  payload = payload || '0:' /* Mandatory empty handler section, including malformed label controls. */
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  table = fn.slot('table owner',contract.type('crexx.g.text')); other_table = fn.slot('escaped table',contract.type('crexx.g.text'))
+  name = fn.slot('runtime name',contract.type('crexx.g.text')); other_name = fn.slot('escaped name',contract.type('crexx.g.text'))
+  other = fn.slot('alternate context',contract.type('crexx.c.context')); spill = fn.slot('typed value',contract.type('crexx.c.value'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch'); nexttest = fn.block('next test')
+  body = fn.block('main'); invalid = fn.block('invalid entry'); pentry = fn.block('P entry'); leaf = fn.block('P natural')
+  yes = fn.block('signal true'); no = fn.block('signal false')
+  call setup.store(context,setup.readarg(1,generated),generated)
+  if mode = 2 | mode = 21 | mode = 22 then call setup.store(other,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated)
+  constant_origin = generated; if mode = 24 then constant_origin = at
+  store_origin = generated; if mode = 25 then store_origin = at
+  table_value = setup.constantbytes(contract.type('crexx.g.text'),payload as .binary,constant_origin)
+  if mode <> 6 then call setup.store(table,table_value,store_origin)
+  if mode = 7 then call setup.store(table,table_value,generated)
+  if mode = 8 then call setup.store(other_table,table_value,generated)
+  call setup.jump(dispatch,generated)
+  if mode = 16 then do
+    call entrytest(dispatch,contract,context,entry,0,'',body,invalid,generated)
+    call absent(nexttest,contract,generated); call absent(pentry,contract,generated); call absent(leaf,contract,generated)
+  end
+  else do
+    call entrytest(dispatch,contract,context,entry,0,'',body,nexttest,generated)
+    call entrytest(nexttest,contract,context,entry,1,'P',pentry,invalid,generated)
+    return_origin = file.origin(label_first + 3,<blen>(source))
+    call consume(pentry,contract,context,return_origin); call pentry.jump(leaf,generated)
+    call absent(leaf,contract,return_origin)
+  end
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish(); call absent(invalid,contract,generated)
+  if mode = 17 then do
+    call consume(body,contract,context,at); call absent(body,contract,at)
+    call absent(yes,contract,generated); call absent(no,contract,generated)
+    return builder.finish()
+  end
+  if mode = 18 then do; call consume(body,contract,context,at); call absent(body,contract,at); body = fn.block('dead signal'); end
+  call consume(body,contract,context,at)
+  operation_origin = at
+  if mode = 3 then operation_origin = generated
+  if mode = 20 then operation_origin = file.origin(binpos('é' as .binary,source),finish)
+  dynamic = (mode >= 11 & mode <= 16) | mode = 21 | mode = 22 | mode = 28
+  if dynamic then do
+    value = body.constantbytes(contract.type('crexx.c.value'),'P' as .binary,at)
+    call body.store(spill,value,at); value = body.load(spill,at)
+    draft = body.operation(contract.operation('crexx.c.signal.name'),at)
+    call draft.input('value',value)
+    name_context = context; if mode = 21 then name_context = other
+    call draft.input('context',body.load(name_context,at)); named = draft.finish()
+    call body.store(name,named.result(),derived)
+    if mode = 15 then call body.store(other_name,named.result(),derived)
+    if mode = 28 then do
+      draft = body.operation(contract.operation('crexx.c.store'),at)
+      call draft.input('context',body.load(context,at)); call draft.input('value',value)
+      call draft.attribute('name','SIDE' as .binary); finished = draft.finish()
+    end
+  end
+  mark_slot = context; if mode = 2 then mark_slot = other
+  draft = body.operation(contract.operation('crexx.c.signal.mark'),operation_origin)
+  load_origin = derived
+  if mode = 26 then load_origin = at
+  if mode = 27 then load_origin = return_origin.derive('synthetic')
+  call draft.input('table',body.load(table,load_origin)); call draft.input('context',body.load(mark_slot,at))
+  integer = .llir..intcodec(); id = 1; if dynamic then id = 0
+  call draft.attribute('label',integer.parse(id || '')); finished = draft.finish()
+  if dynamic then do
+    if mode = 16 then do; call absent(no,contract,generated); no = body; end
+    else do
+      draft = body.operation(contract.operation('crexx.c.signal.test'),derived)
+      call draft.input('table',body.load(table,derived)); call draft.input('name',body.load(name,derived))
+      call draft.attribute('label',integer.parse('1')); tested = draft.finish()
+      if mode = 12 then call body.jump(yes,derived)
+      else call body.branch(tested.result(),yes,no,derived)
+    end
+    call yes.jump(leaf,derived)
+    draft = no.operation(contract.operation('crexx.c.signal.invalid'),at)
+    call draft.input('name',no.load(name,derived))
+    invalid_context = context; if mode = 22 then invalid_context = other
+    call draft.input('context',no.load(invalid_context,at))
+    code = '16.1'; if mode = 14 then code = '16.2'
+    call draft.attribute('code',code as .binary); finished = draft.finish(); call absent(no,contract,derived)
+    if mode = 13 then do; intruder = fn.block('dead foreign predecessor'); call intruder.jump(no,generated); end
+  end
+  else do
+    if mode = 23 then do
+      draft = body.operation(contract.operation('crexx.c.do.close'),derived)
+      call draft.attribute('key','not-open' as .binary); finished = draft.finish()
+    end
+    target = leaf; if mode = 9 then target = body
+    call body.jump(target,derived)
+    call absent(yes,contract,generated); call absent(no,contract,generated)
+  end
+  if mode = 10 then do
+    detached = fn.block('detached mark')
+    draft = detached.operation(contract.operation('crexx.c.signal.mark'),generated)
+    call draft.input('table',detached.load(table,generated)); call draft.input('context',detached.load(context,at))
+    call draft.attribute('label',integer.parse('1')); finished = draft.finish(); call detached.jump(leaf,generated)
+  end
+  return builder.finish()
+
+framed: procedure = .string
+  arg value = .string
+  bytes = value as .binary
+  return <blen>(bytes) || ':' || value
+
+entrytest: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, entry = .llir..slot, id = .int, name = .string, yes = .llir..block, no = .llir..block, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.entry.test'),origin)
+  call draft.input('context',block.load(context,origin)); call draft.input('entry',block.load(entry,origin))
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse(id || '')); call draft.attribute('name',name as .binary)
+  tested = draft.finish(); call block.branch(tested.result(),yes,no,origin)
+  return
+
+consume: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.procedure.consume'),origin)
+  call draft.input('context',block.load(context,origin)); finished = draft.finish()
+  return
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
+  call block.returnvalue(finished.result(),origin)
+  return
+
+stalecontract: procedure = .llir..contract
+  arg canonical = .llir..contract
+  source = dereference canonical.data(); data = .llir..schema_data(); call data.bootstrap()
+  i = .int; kind = .int; field = .int; ignored = .int
+  do i = 2 to source.familycount()
+    version = source.version(i); if source.familyname(i) == 'crexx.c' then version = 17
+    ignored = data.addfamily(source.familyname(i),version)
+  end
+  do i = 3 to source.types()
+    ignored = data.addtype(source.typename(i),source.codec(i))
+  end
+  do i = 1 to source.ops()
+    declared = .llir..operation(reference data,data.addop(source.opname(i)))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field); type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    call declared.state(source.effectvalue(i,1)); call declared.failure(source.effectvalue(i,2)); call declared.termination(source.effectvalue(i,3))
+  end
+  ignored = data.freeze(); return .llir..contract(data)

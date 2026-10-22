@@ -1,11 +1,9 @@
 # STEP07A: scalar call contracts and tree design
 
-**Exact API approved for implementation, 16 October 2026.** Adrian approved
-the surface and scope below. F7A-STEP01–04 are locally complete under
-[current plan](../PLAN.md). The API and source forms below are
-implemented; focused qualification is recorded in the
-[validation summary](../PLAN.md#step07a-validation).
-[PLAN.md](../PLAN.md) retains the full vision, F7A-AC01–06 and F7A-STEP01–04.
+**Approved and implemented bounded scalar-call contract.** The API and source
+forms below are implemented; the [active plan](../PLAN.md) now tracks complete C.
+The [acceptance checks](#acceptance-and-next-implementation-checks) below define
+this slice, not wider B/G or complete Classic coverage.
 
 ## Intended result and ownership
 
@@ -209,7 +207,7 @@ optional `.meta` spelling and provider-owned default body. The emitted shape is 
 ## Acceptance and next implementation checks
 
 F7A-AC01 was closed by the explicit API approval on 16 October 2026.
-Implementation qualification follows these approved checks:
+The maintained checks for this implemented bounded contract are:
 
 1. **F7A-STEP02 / AC02/04:** generic non-C/G optional-input/export/codec/rewrite
    tests, with malformed flags/ordinals/types, stale ownership, v1 compatibility
@@ -222,8 +220,12 @@ Implementation qualification follows these approved checks:
 3. **F7A-STEP04 / AC01–06:** inspect complete RXAS, run focused end-to-end modes
    and installed CLI/service requests with old compilers unavailable, refresh
    only invalidated evidence, and update architecture/trees/algorithms/guide.
-   Measure new aggregates in isolation in Debug and maintained ASan before
-   registration; no formal performance campaign or automatic CI rerun.
+   Follow [AGENTS.md](../../../../AGENTS.md) for isolated aggregate measurement,
+   scheduling and sanitizer scope; no formal performance campaign or automatic CI rerun.
 
 Full replacement, arbitrary defaults, references, conditions/TRACE, proper B
 self-hosting and INTERPRET retain their named later gates.
+
+The [current plan](../PLAN.md) tracks instruction status and remaining
+delivery/platform work. Bounded scalar-call proof does not establish
+complete C, B/G replacement or hosted qualification.

@@ -1,0 +1,365 @@
+/* Independent consumer of the mandatory generic PARSE cursor.
+ * Packed descriptors are authored oracles, not compiler-generated snapshots. */
+options levelb
+import rxfnsb
+import rxparse
+import rexxpool
+import rexxvalue
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  call words_and_drops()
+  call ownership()
+  call inputs_and_live_writes()
+  call sections()
+  call section_mode()
+  call protocols()
+  call malformed()
+  call conversions()
+  say 'PARSE_CURSOR|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+section_mode: procedure = .void
+  single = '50030C0001000100000000000101'x as .binary
+  source = '  raw text  '; plan = single
+  cursor = .rxparse..cursor(source,plan); alias = cursor
+  source = 'changed'; <at..u8>(0) plan = 0
+  call field(cursor,1,1,'  raw text  ')
+  saved = cursor.text(); call alias.close()
+  call check(saved == '  raw text  ' & cursor.item() = 0,'v3 snapshots and alias close')
+  cursor = .rxparse..cursor('',single); call field(cursor,1,1,''); call done(cursor)
+  cursor = .rxparse..cursor('one two three','50030C000400020000000000030001000000000000000101030001000000000000000101'x as .binary)
+  call field(cursor,2,1,'one two three'); call field(cursor,4,2,'one two three'); call done(cursor)
+  cursor = .rxparse..cursor('one two three','50030C0003000200000000000101020000000000000000000101'x as .binary)
+  call field(cursor,1,1,'one two three'); call field(cursor,3,2,''); call done(cursor)
+  cursor = .rxparse..cursor('aa:bb cc','50030C0004000200000000000101020001000000010000003A040001000000000000000101'x as .binary)
+  call field(cursor,1,1,'aa'); call field(cursor,4,2,'bb cc'); call done(cursor)
+  cursor = .rxparse..cursor('a' || ('00'x as .string) || ':b','50030C0003000200000000000101020001000000010000003A0101'x as .binary)
+  call field(cursor,1,1,'a' || ('00'x as .string)); call field(cursor,3,2,'b'); call done(cursor)
+  cursor = .rxparse..cursor('a:b/c','50030C0005000300010000000101070000000101070000000101'x as .binary)
+  call check(cursor.next() = 2 & cursor.item() = 2 & cursor.slot() = 1,'v3 closing Input precedes Field')
+  delimiter = ':'; call cursor.supply(delimiter); delimiter = '/'
+  call field(cursor,1,1,'a')
+  call check(cursor.next() = 2 & cursor.item() = 4 & cursor.slot() = 1,'v3 repeated external slot reads again')
+  call cursor.supply(delimiter)
+  call field(cursor,3,2,'b'); call field(cursor,5,3,'c'); call done(cursor)
+  cursor = .rxparse..cursor('abc','50030C0003000200010000000101070000000101'x as .binary)
+  call check(cursor.next() = 2,'v3 dynamic empty pattern Input')
+  call cursor.supply(''); call field(cursor,1,1,'abc'); call field(cursor,3,2,''); call done(cursor)
+  cursor = .rxparse..cursor('Nleft:right','50030C000600030001000000030001000000000000000101030002000000000000000101070000000101'x as .binary)
+  pool = .rexxpool..RexxVariablePool(1)
+  call pool.setString('KEY','OLD')
+  call pool.setStemString('PATTERNS.','OLD','!')
+  call pool.setStemString('PATTERNS.','N',':')
+  call check(cursor.next() = 1 & cursor.item() = 2,'v3 earlier Field precedes later Input')
+  call pool.setSymbolValue('KEY',.rexxvalue..RexxValue(cursor.text()))
+  call check(cursor.next() = 2 & cursor.item() = 5,'v3 live operand checkpoint')
+  call cursor.supply(pool.symbolValue('PATTERNS.KEY').asString())
+  call field(cursor,4,2,'left'); call field(cursor,6,3,'right'); call done(cursor)
+  cursor = .rxparse..cursor('drop','50030C0001000000000000000100'x as .binary)
+  call check(cursor.next() = 1 & cursor.slot() = 0,'v3 lazy drop Field'); call done(cursor)
+  results = .string[]; results[1] = 'sentinel'; source = 'abc'; caught = 0
+  do
+    assembler parseplan results,source,"50030C0001000100000000000101"x
+  on signal invalid_arguments
+    caught = 1
+  end
+  call check(caught = 1 & results[0] = 1 & results[1] == 'sentinel','whole parseplan refuses v3 before vector mutation')
+  return
+
+field: procedure = .void
+  arg cursor = .rxparse..cursor, item = .int, slot = .int, expected = .string
+  call check(cursor.next() = 1,'Field event')
+  call check(cursor.item() = item & cursor.slot() = slot,'authored item and result slot')
+  value = cursor.text()
+  call check(value == expected & cursor.text() == expected,'owned stable field text')
+  return
+
+done: procedure = .void
+  arg cursor = .rxparse..cursor
+  call check(cursor.next() = 0 & cursor.next() = 0,'Done is stable')
+  call check(cursor.item() = 0 & cursor.slot() = 0,'Done clears event IDs')
+  call cursor.close(); call cursor.close()
+  call check(cursor.item() = 0 & cursor.slot() = 0,'close is idempotent and clears IDs')
+  return
+
+wordplan: procedure = .binary
+  return '5001080003000300010101010101'x as .binary
+
+words_and_drops: procedure = .void
+  cursor = .rxparse..cursor('alpha beta gamma tail',wordplan())
+  call check(cursor.item() = 0 & cursor.slot() = 0,'Ready has no event')
+  call field(cursor,1,1,'alpha'); call field(cursor,2,2,'beta')
+  call field(cursor,3,3,'gamma tail'); call done(cursor)
+  cursor = .rxparse..cursor('alpha beta gamma','5001080003000200010101000101'x as .binary)
+  call field(cursor,1,1,'alpha')
+  call check(cursor.next() = 1 & cursor.item() = 2 & cursor.slot() = 0,'drop is an observable Field with no result slot')
+  call check(cursor.text() == 'beta','drop text remains lazily readable')
+  call field(cursor,3,2,'gamma'); call done(cursor)
+  cursor = .rxparse..cursor('λ' || ('00'x as .string) || ' Z','500108000200020001010101'x as .binary)
+  call field(cursor,1,1,'λ' || ('00'x as .string)); call field(cursor,2,2,'Z')
+  call done(cursor)
+  return
+
+ownership: procedure = .void
+  source = 'one two three'; plan = wordplan()
+  cursor = .rxparse..cursor(source,plan); alias = cursor
+  source = 'mutated'; <at..u8>(0) plan = 0
+  call check(cursor.next() = 1,'construction owns both snapshots')
+  saved = cursor.text()
+  call check(alias.text() == 'one','copies share progress')
+  call field(alias,2,2,'two'); call field(cursor,3,3,'three')
+  call alias.close()
+  call check(cursor.item() = 0 & saved == 'one','alias close retains returned text')
+  caught = 0
+  do
+    ignored = cursor.next()
+  on signal invalid_arguments
+    caught = 1
+  end
+  call check(caught = 1,'closed aliases cannot advance')
+  call cursor.close()
+  left = .rxparse..cursor('a b c',wordplan())
+  right = .rxparse..cursor('x y z',wordplan())
+  call field(left,1,1,'a'); call field(right,1,1,'x')
+  call field(left,2,2,'b'); call field(right,2,2,'y')
+  call left.close(); call right.close()
+  do iteration = 1 to 3
+    call lifetime()
+  end
+  return
+
+lifetime: procedure = .void
+  cursor = .rxparse..cursor('scope owns this',wordplan())
+  call check(cursor.next() = 1 & cursor.text() == 'scope','last-owner finalization path')
+  return
+
+inputs_and_live_writes: procedure = .void
+  plan = '50020C0005000300010000000101070000000101070000000101'x as .binary
+  cursor = .rxparse..cursor('a:b/c',plan)
+  call check(cursor.next() = 2 & cursor.item() = 2 & cursor.slot() = 1,'closing delimiter is requested before unfinished target write')
+  delimiter = ':'; call cursor.supply(delimiter); delimiter = '/'
+  call check(cursor.item() = 0 & cursor.slot() = 0,'supply returns Ready')
+  call field(cursor,1,1,'a')
+  call check(cursor.next() = 2 & cursor.item() = 4 & cursor.slot() = 1,'same slot at another occurrence requests anew')
+  call cursor.supply(delimiter)
+  call field(cursor,3,2,'b'); call field(cursor,5,3,'c'); call done(cursor)
+  cursor = .rxparse..cursor('a,aZtail','50020C000600030000000000030001000000000000000101020001000000010000002C0101070100000101'x as .binary)
+  call field(cursor,2,1,'a'); call field(cursor,4,2,''); call field(cursor,6,3,'Ztail')
+  call done(cursor)
+
+  /* ABS1, KEY, ABS2, PIECE, external literal, REST. KEY completes
+   * before the later live pool read. No native compiler is the oracle. */
+  plan = '50020C000600030001000000030001000000000000000101030002000000000000000101070000000101'x as .binary
+  cursor = .rxparse..cursor('Nleft:right',plan)
+  pool = .rexxpool..RexxVariablePool(1)
+  call pool.setString('KEY','OLD')
+  call pool.setStemString('PATTERNS.','OLD','!')
+  call pool.setStemString('PATTERNS.','N',':')
+  call check(cursor.next() = 1 & cursor.item() = 2,'position completes earlier KEY before Input')
+  key = cursor.text()
+  call pool.setSymbolValue('KEY',.rexxvalue..RexxValue(key))
+  call check(cursor.next() = 2 & cursor.item() = 5,'later compound pattern requests live value')
+  pattern = pool.symbolValue('PATTERNS.KEY').asString()
+  call cursor.supply(pattern)
+  call check(cursor.next() = 1,'piece completes after supplied pattern')
+  piece = cursor.text()
+  call check(cursor.next() = 1,'rest completes')
+  rest = cursor.text()
+  call check(key || '|' || piece || '|' || rest == 'N|left|right','live completed-write counterexample')
+  call done(cursor)
+  return
+
+sections: procedure = .void
+  /* A Classic section with two word targets is composed from two cursors
+   * using the same kernel, not from another cursor algorithm. */
+  outer = .rxparse..cursor('x:y z','50020C000400020001000000030001000000000000000101070000000101'x as .binary)
+  pool = .rexxpool..RexxVariablePool(1)
+  call pool.setString('KEY','OLD')
+  call pool.setStemString('PATTERNS.','OLD',':')
+  call pool.setStemString('PATTERNS.','x','!')
+  call check(outer.next() = 2 & outer.item() = 3,'unfinished section requests delimiter before its writes')
+  call outer.supply(pool.symbolValue('PATTERNS.KEY').asString())
+  call check(outer.next() = 1 & outer.item() = 2,'literal closes authored outer section')
+  prefix = outer.text()
+  inner = .rxparse..cursor(prefix,'500108000400020003000100000000000000010106000101'x as .binary)
+  call check(inner.next() = 1,'first inner word'); a = inner.text()
+  call pool.setSymbolValue('KEY',.rexxvalue..RexxValue(a))
+  call check(inner.next() = 1,'second inner word'); b = inner.text()
+  call done(inner)
+  call check(outer.next() = 1,'outer suffix is processed once'); rest = outer.text()
+  call check(a || '|' || b || '|' || rest == 'x||y z','outer-section/inner-word composition')
+  call done(outer)
+  legacy = .rxparse..cursor('x:y z','500108000600030003000100000000000000010106000101020001000000010000003A0101'x as .binary)
+  call field(legacy,2,1,'x:y'); call field(legacy,4,2,'z'); call field(legacy,6,3,'')
+  call done(legacy)
+  return
+
+protocols: procedure = .void
+  ignored = .int; text = .string; mode = .int
+  cursor = .rxparse..cursor
+  empty = .rxparse..cursor
+  caught = 0
+  do
+    ignored = empty.next()
+  on signal object_not_initialized
+    caught = 1
+  end
+  call check(caught = 1,'ordinary uninitialized receiver guard')
+  do mode = 1 to 3
+    cursor = .rxparse..cursor('a b c',wordplan()); caught = 0
+    do
+      if mode = 1 then text = cursor.text()
+      if mode = 2 then call cursor.supply('unexpected')
+      if mode = 3 then do
+        call check(cursor.next() = 1,'Field before wrong supply')
+        call cursor.supply('unexpected')
+      end
+    on signal invalid_arguments
+      caught = 1
+    end
+    call check(caught = 1,'wrong phase refuses ' || mode)
+    if mode = 3 then call check(cursor.item() = 1 & cursor.slot() = 1,'Failed retains event IDs')
+    caught = 0
+    do
+      ignored = cursor.next()
+    on signal invalid_arguments
+      caught = 1
+    end
+    call check(caught = 1,'failure is terminal'); call cursor.close()
+    call check(cursor.item() = 0 & cursor.slot() = 0,'close clears failed IDs')
+  end
+  cursor = .rxparse..cursor('a:b','50020C0003000200010000000101070000000101'x as .binary)
+  call check(cursor.next() = 2,'Input requires supply'); caught = 0
+  do
+    ignored = cursor.next()
+  on signal invalid_arguments
+    caught = 1
+  end
+  call check(caught = 1 & cursor.item() = 2 & cursor.slot() = 1,'unsupplied Input becomes Failed')
+  call cursor.close()
+  cursor = .rxparse..cursor('a b c',wordplan())
+  do while cursor.next() <> 0
+  end
+  do mode = 1 to 2
+    caught = 0
+    do
+      if mode = 1 then text = cursor.text()
+      else call cursor.supply('unexpected')
+    on signal invalid_arguments
+      caught = 1
+    end
+    call check(caught = 1 & cursor.next() = 0,'wrong operation leaves Done terminal ' || mode)
+  end
+  call cursor.close()
+  cursor = .rxparse..cursor('a:b','50020C0003000200010000000101070000000101'x as .binary)
+  call check(cursor.next() = 2,'one supply per Input'); call cursor.supply(':')
+  caught = 0
+  do
+    call cursor.supply(':')
+  on signal invalid_arguments
+    caught = 1
+  end
+  call check(caught = 1,'duplicate supply refuses')
+  caught = 0
+  do
+    ignored = cursor.next()
+  on signal invalid_arguments
+    caught = 1
+  end
+  call check(caught = 1,'duplicate supply leaves Failed'); call cursor.close()
+  return
+
+malformed: procedure = .void
+  cursor = .rxparse..cursor; caught = .int
+  do mode = 1 to 9
+    plan = wordplan()
+    if mode = 1 then plan = ''x as .binary
+    if mode = 2 then <at..u8>(1) plan = 3
+    if mode = 3 then <at..u8>(4) plan = 0
+    if mode = 4 then <at..u8>(6) plan = 2
+    if mode = 5 then plan = binsubstr(plan,1,<blen>(plan) - 1)
+    if mode = 6 then plan = plan || ('00'x as .binary)
+    if mode = 7 then <at..u8>(8) plan = 99
+    if mode = 8 then plan = '50020C000200010001000000070100000101'x as .binary
+    if mode = 9 then plan = '50020C0002000100000000000701FFFF0101'x as .binary
+    before = plan; caught = 0
+    do
+      cursor = .rxparse..cursor('source',plan)
+    on signal invalid_arguments
+      caught = 1
+    end
+    call check(caught = 1 & bincompare(before,plan) = 0,'whole descriptor refusal before publication ' || mode)
+  end
+  caught = 0
+  do
+    cursor = .rxparse..cursor('text','500108000200010002000100000001000000FF0101'x as .binary)
+  on signal unicode_error
+    caught = 1
+  end
+  call check(caught = 1,'invalid literal UTF8 is validated at construction')
+  return
+
+conversions: procedure = .void
+  do version = 2 to 3
+  do mode = 0 to 1
+    plan = '50020C000200010001000000080000000101'x as .binary
+    <at..u8>(1) plan = version
+    <at..u8>(10) plan = mode
+    cursor = .rxparse..cursor('abc',plan)
+    call check(cursor.next() = 2 & cursor.item() = 1,'numeric input event')
+    caught = 0
+    do
+      call cursor.supply('Q')
+    on signal conversion_error
+      if mode = 0 then caught = 1
+    on signal classic_syntax
+      if mode = 1 then caught = 1
+    end
+    call check(caught = 1 & cursor.item() = 1 & cursor.slot() = 1,'dynamic numeric policy and failing IDs ' || mode)
+    call cursor.close()
+    cursor = .rxparse..cursor('abc',plan)
+    call check(cursor.next() = 2,'NUL numeric input event'); caught = 0
+    do
+      call cursor.supply('2' || ('00'x as .string) || 'junk')
+    on signal conversion_error
+      if mode = 0 then caught = 1
+    on signal classic_syntax
+      if mode = 1 then caught = 1
+    end
+    call check(caught = 1,'numeric conversion consumes exact operand bytes including NUL')
+    call cursor.close()
+    plan = '50020C00050002000100000003000100000000000000010103000200000000000000080000000101'x as .binary
+    <at..u8>(1) plan = version
+    <at..u8>(10) plan = mode
+    cursor = .rxparse..cursor('Nlater',plan)
+    call check(cursor.next() = 1 & cursor.item() = 2,'earlier field completes before failing numeric input')
+    published = cursor.text()
+    call check(cursor.next() = 2 & cursor.item() = 4,'later numeric input is deferred')
+    caught = 0
+    do
+      call cursor.supply('Q')
+    on signal conversion_error
+      if mode = 0 then caught = 1
+    on signal classic_syntax
+      if mode = 1 then caught = 1
+    end
+    call check(caught = 1 & published == 'N','failure preserves already acknowledged visible write')
+    caught = 0
+    do
+      ignored = cursor.next()
+    on signal invalid_arguments
+      caught = 1
+    end
+    call check(caught = 1 & cursor.item() = 4,'failure cannot publish a later field')
+    call cursor.close()
+  end
+  end
+  return

@@ -8,6 +8,7 @@ options levelb comments_dash numeric_classic
 namespace rexxdostate expose RexxDoState rexxdostate_invalid_transfer
 import rexxvalue
 import rexxpool
+import rexxclassiccontext
 import rxfnsb
 
 /**
@@ -27,6 +28,9 @@ RexxDoState: class
   has_to = .boolean
   has_count = .boolean
   remaining = .string
+  /* Late-sorted additions preserve the existing physical field ordinals. */
+  zz_context_ref = reference .rexxclassiccontext..RexxClassicContext
+  zz_has_context = .boolean
 
   *: factory
     arg pool = reference .RexxVariablePool, control_symbol = .string
@@ -36,6 +40,25 @@ RexxDoState: class
     has_to = 0
     has_count = 0
     remaining = "0"
+    zz_has_context = 0
+    return
+
+  /**
+   * Borrow the executing Classic context for configured final control reads.
+   * The caller retains this context and its owners, using the same visible
+   * pool supplied to the existing factory. Unbound consumers keep their old
+   * non-signalling pool reads and require no activation owner.
+   * @param context reference to stable executing context storage
+   * @signal REFERENCE_INVALID an empty or expired context leaves binding unchanged
+   */
+  bindContext: method = .void
+    arg context = reference .rexxclassiccontext..RexxClassicContext
+    if <refvalid>(context) = 0 then do
+      assembler signal "REFERENCE_INVALID", "Classic DO context reference is not live"
+      return
+    end
+    zz_context_ref = context
+    zz_has_context = 1
     return
 
   /** Capture a control start before the other header operands are evaluated. */
@@ -100,7 +123,9 @@ RexxDoState: class
     call pool.setSymbolValue(symbol, initial)
     return
 
-  /** Test count and fixed endpoint before a source WHILE expression. */
+  /** Test count and fixed endpoint before a source WHILE expression.
+   * @signal CLASSIC_CONDITION configured NOVALUE on a bound control read
+   */
   entryAllowed: method = .boolean
     numeric digits inherited
     numeric fuzz inherited
@@ -108,17 +133,29 @@ RexxDoState: class
     if has_count & remaining = "0" then return 0
     if symbol = "" | \has_to then return 1
     pool = dereference pool_ref
-    current = pool.symbolValue(symbol)
+    current = .RexxValue
+    if zz_has_context then do
+      context = dereference zz_context_ref
+      current = context.readSymbol(symbol)
+    end
+    else current = pool.symbolValue(symbol)
     return current.controlToContinueBy(to_value, by_value)
 
-  /** Advance after an iteration unless a source UNTIL condition ended it. */
+  /** Advance after an iteration unless a source UNTIL condition ended it.
+   * @signal CLASSIC_CONDITION configured NOVALUE on a bound control read
+   */
   advance: method = .void
     numeric digits inherited
     numeric fuzz inherited
     numeric form inherited
     if symbol \= "" then do
       pool = dereference pool_ref
-      current = pool.symbolValue(symbol)
+      current = .RexxValue
+      if zz_has_context then do
+        context = dereference zz_context_ref
+        current = context.readSymbol(symbol)
+      end
+      else current = pool.symbolValue(symbol)
       next_value = current.controlStepBy(by_value)
       call pool.setSymbolValue(symbol, next_value)
     end

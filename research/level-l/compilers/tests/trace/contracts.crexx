@@ -1,0 +1,249 @@
+/* Independent source admission and fresh/loaded/rewritten C22 TRACE contracts. */
+options levelb
+import rxfnsb
+import llcparse
+import llcfrontend
+import llast
+import llcir
+import llir
+import llirservices
+import llcrxas
+import llcompilercontracts
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  call signatures(); call sourcecontracts(argv[1]); call raw(argv[1])
+  say 'TRACE_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+signatures: procedure = .void
+  item = .llcompilercontracts..signature('fixture.observe','.void','expose raw=.rxfnsb..trace_interrupt_raw','b')
+  call check(item.error() == '' & item.arguments() = 1 & item.paramname(1) == 'raw' & item.exposed(1) & \item.optional(1),'existing exposed TRACE raw formal retains its bare name and required-reference flag')
+  item = .llcompilercontracts..signature('fixture.observe','.void','expose ?value=.string,plain=.int','b')
+  call check(item.error() == '' & item.paramname(1) == 'value' & item.exposed(1) & item.optional(1),'expose precedes optional and both flags are retained')
+  call check(item.paramname(2) == 'plain' & \item.exposed(2) & \item.optional(2),'ordinary by-value formal retains independent flags')
+  bad = .string[]
+  bad[1] = 'expose raw=.string,RAW=.string'
+  bad[2] = 'raw=.string,expose ?RAW=.string'
+  bad[3] = '?expose raw=.string'
+  bad[4] = 'expose expose raw=.string'
+  bad[5] = 'expose =.string'
+  do i = 1 to bad[0]
+    item = .llcompilercontracts..signature('fixture.observe','.void',bad[i],'b')
+    call check(item.error() <> '','duplicate bare name or malformed expose order refuses: ' || bad[i])
+  end
+  return
+
+sourcecontracts: procedure = .void
+  arg artifacts = .string
+  tree = .llast..tree; walk = .llast..walk; node = .llast..node
+  gap = '0D0A'x as .string
+  text = "trace; trace RAS; trace ?!L; trace ??!!L; trace +2; trace -2; trace 0; trace 'I'" || gap
+  text = text || 'trace value CHOOSE()' || gap
+  text = text || "if 'é' = 'é' then trace value, /* physical gap */" || gap || "  ('labels suffix')" || gap
+  text = text || "TRACE = 'L'; VALUE = 'R'; if 1 then trace else trace labels"
+  parsed = .llcparse..parsed(text as .binary)
+  call check(parsed.status() = 0,'bare/static/string/prefix/signed/VALUE and contextual arms: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk()
+    fixed = 0; dynamic = 0; assignments = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() == 'CTrace' then fixed = fixed + 1
+      if node.kind() == 'CTraceValue' then do
+        dynamic = dynamic + 1
+        call check(node.child('value').valid(),'TRACE VALUE retains an ordinary authored expression')
+      end
+      if node.kind() == 'Assignment' then assignments = assignments + 1
+    end
+    call check(fixed = 10 & dynamic = 2,'all ten static/bare and two VALUE nodes survive source admission')
+    call check(assignments = 2,'TRACE and VALUE remain ordinary assignment names')
+  end
+  do i = 1 to words('A C E F I L N O R RAS ENV AS ASM LL LLM')
+    spelling = word('A C E F I L N O R RAS ENV AS ASM LL LLM',i)
+    accepted = .llcparse..parsed(('trace ' || spelling) as .binary)
+    call check(accepted.status() = 0,'accepted first-letter/extension spelling ' || spelling || ': ' || accepted.error())
+  end
+  ordinary = .llcparse..parsed('trace value ELSE' as .binary)
+  call check(ordinary.status() = 0,'unowned ELSE is an ordinary TRACE VALUE name: ' || ordinary.error())
+  if ordinary.status() = 0 then do
+    tree = ordinary.ast(); walk = tree.walk(); names = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() == 'Name' then if node.text('spelling') == 'ELSE' then names = names + 1
+    end
+    call check(names = 1,'unowned ELSE retained as one operand Name')
+  end
+  call staticbad(artifacts,'trace scan','scan')
+  call staticbad(artifacts,'trace zebra','zebra')
+  call staticbad(artifacts,"trace 'scan'","'scan'")
+  call staticbad(artifacts,'if 0 then trace scan','scan')
+  call staticbad(artifacts,'if 0 then trace zebra','zebra')
+  call bad('trace +','19.6','+')
+  call bad('trace -R','19.6','-')
+  call bad('trace R extra','19.6','extra')
+  call bad('trace value','35.1','value')
+  call bad('trace value 1 +','35.1','+')
+  call bad('if 1 then trace value else nop','35.1','value')
+  call bad("if '雪' = '雪' then trace value +",'35.1','+')
+  comment = .llcparse..parsed('trace value /* open' as .binary)
+  call check(comment.status() <> 0 & pos('LL_COMMENT:',comment.error()) = 1 & pos('35.1',comment.error()) = 0,'unclosed comment retains its owning shared cause: ' || comment.error())
+  literal = .llcparse..parsed("trace value 'open" as .binary)
+  call check(literal.status() <> 0 & pos('35.1',literal.error()) = 0,'unclosed literal retains its shared lexical cause: ' || literal.error())
+  return
+
+staticbad: procedure = .void
+  arg artifacts = .string, text = .string, token = .string
+  source = text as .binary; request = .llcfrontend..request(source,artifacts,'trace-source.crexx')
+  expected = binpos(token as .binary,source) - 1
+  call check(request.status() <> 0 & pos('24.1',request.error()) > 0 & request.offset() = expected,'24.1 source meaning and original byte offset for ' || text || ': ' || request.error() || ' at ' || request.offset())
+  return
+
+bad: procedure = .void
+  arg text = .string, code = .string, token = .string
+  source = text as .binary; parsed = .llcparse..parsed(source)
+  expected = binpos(token as .binary,source) - 1
+  call check(parsed.status() <> 0 & pos(code,parsed.error()) > 0 & parsed.offset() = expected,code || ' original byte offset for ' || text || ': ' || parsed.error() || ' at ' || parsed.offset())
+  return
+
+raw: procedure = .void
+  arg artifacts = .string
+  graph = .llir..module; loaded = .llir..module
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  data = dereference contract.data(); version = 0; types = 0
+  do family = 1 to data.familycount()
+    if data.familyname(family) == 'crexx.c' then version = data.version(family)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
+  end
+  call check(version = 22 & types = 5 & data.ops() = 88,'C22/five C types/88 operations')
+  id = contract.operation('crexx.c.trace').id()
+  call check(id = 86 & data.arity(id,1) = 2 & data.arity(id,2) = 0 & data.arity(id,3) = 0,'one appended void TRACE operation')
+  call check(data.fieldname(id,1,1) == 'value' & data.fieldname(id,1,2) == 'context','TRACE input names')
+  call check(data.typename(data.fieldtype(id,1,1)) == 'crexx.c.value' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context','TRACE input types')
+  call check(data.effectvalue(id,1) == 'context.observation' & data.effectvalue(id,2) == 'condition.resource' & data.effectvalue(id,3) == 'returns','TRACE effects preserve state/observation/failure/continuation')
+  callback = data.callback(id,1)
+  call check((callback is .llir..evaluator) = 0,'TRACE has no constant evaluator')
+  do mode = 1 to 7
+    graph = fixture(contract,mode)
+    call check(graph.error() == '','generic-valid TRACE ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    reason = 'TRACE'; if mode = 2 then reason = 'slot'
+    call admission(artifacts,graph,mode = 1 | mode = 7,'fresh TRACE ' || mode,reason)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '' & bincompare(graph.binary(),loaded.binary()) = 0,'owned loaded TRACE ' || mode)
+    if loaded.error() == '' then call admission(artifacts,loaded,mode = 1 | mode = 7,'loaded TRACE ' || mode,reason)
+    if mode = 7 then do
+      change = llirservices..optimise(reference graph)
+      call check(change.status() == 'changed','typed TRACE spill performs a real forwarding rewrite')
+      if change.status() == 'changed' then do
+        rewritten = change.result()
+        call check(bincompare(graph.binary(),rewritten.binary()) <> 0,'rewritten TRACE input bytes differ')
+        call admission(artifacts,rewritten,1,'rewritten TRACE','')
+      end
+    end
+  end
+  old = stalecontract(contract); graph = fixture(old,1)
+  call check(graph.error() == '','prior C20 remains generic-valid')
+  if graph.error() == '' then do
+    call admission(artifacts,graph,0,'prior C20','unsupported family version crexx.c')
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '','loaded prior C20 remains generic-valid')
+    if loaded.error() == '' then call admission(artifacts,loaded,0,'loaded prior C20','unsupported family version crexx.c')
+  end
+  return
+
+loadgraph: procedure = .llir..module
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref; storage = dereference graph.storage(); contract = dereference storage.contract()
+  return llir..loadbinary(contract,graph.binary())
+
+admission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string
+  saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  if accepted then do
+    call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
+    previous = output.text(); limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+    call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,label || ' bounded atomic output failure')
+    call check(previous == output.text(),label || ' prior output remains owned')
+  end
+  else call check(selected.status() <> 0 & output.bytes() = 0 & pos('LL_COMPILER_LOWERING:',selected.error()) = 1 & pos(reason,selected.error()) > 0,label || ' cause-specific refusal: ' || selected.error())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' input unchanged')
+  return
+
+/* 1 accepted,2 other context,3 dead generated,4 empty authored,5 derived,
+ *6 live generated,7 accepted typed spill followed by an actual rewrite. */
+fixture: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  builder = .llir..builder(contract)
+  source = "trace value 'labels'" as .binary
+  file = builder.source('trace-ir.crexx',source); at = file.origin(0,<blen>(source))
+  generated = builder.synthetic('independent TRACE dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  other = fn.slot('other context',contract.type('crexx.c.context')); spill = fn.slot('value spill',contract.type('crexx.c.value'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch'); body = fn.block('main'); invalid = fn.block('invalid')
+  call setup.store(context,setup.readarg(1,generated),generated)
+  if mode = 2 then call setup.store(other,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',dispatch.load(context,generated)); call draft.input('entry',dispatch.load(entry,generated))
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x)
+  tested = draft.finish(); call dispatch.branch(tested.result(),body,invalid,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish(); call absent(invalid,contract,generated)
+  if mode = 3 then do; call absent(body,contract,generated); body = fn.block('dead TRACE'); end
+  draft = body.operation(contract.operation('crexx.c.procedure.consume'),at)
+  call draft.input('context',body.load(context,at)); finished = draft.finish()
+  value = body.constantbytes(contract.type('crexx.c.value'),'labels' as .binary,at)
+  if mode = 7 then do; call body.store(spill,value,at); value = body.load(spill,at); end
+  origin = at
+  if mode = 3 | mode = 6 then origin = generated
+  if mode = 4 then origin = file.origin(0,0)
+  if mode = 5 then origin = at.derive()
+  slot = context; if mode = 2 then slot = other
+  draft = body.operation(contract.operation('crexx.c.trace'),origin)
+  call draft.input('value',value); call draft.input('context',body.load(slot,at)); finished = draft.finish()
+  call absent(body,contract,at)
+  return builder.finish()
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
+  call block.returnvalue(finished.result(),origin)
+  return
+
+stalecontract: procedure = .llir..contract
+  arg canonical = .llir..contract
+  i = .int; kind = .int; field = .int; ignored = .int
+  source = dereference canonical.data(); data = .llir..schema_data(); call data.bootstrap()
+  do i = 2 to source.familycount()
+    version = source.version(i); if source.familyname(i) == 'crexx.c' then version = 20
+    ignored = data.addfamily(source.familyname(i),version)
+  end
+  do i = 3 to source.types()
+    ignored = data.addtype(source.typename(i),source.codec(i))
+  end
+  do i = 1 to source.ops()
+    declared = .llir..operation(reference data,data.addop(source.opname(i)))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field); type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    call declared.state(source.effectvalue(i,1)); call declared.failure(source.effectvalue(i,2)); call declared.termination(source.effectvalue(i,3))
+  end
+  ignored = data.freeze(); return .llir..contract(data)

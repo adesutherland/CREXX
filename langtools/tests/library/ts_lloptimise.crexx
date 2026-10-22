@@ -51,6 +51,7 @@ main: procedure = .int expose checks failures
   end
   call looptest()
   call multiresult()
+  call protectiontest()
   say 'OPTIMISE|checks=' || checks || '|failures=' || failures
   return failures
 
@@ -142,6 +143,7 @@ rungraph: procedure = .string
       when 5 then next = store.get(2,store.successor(op,1),2)
       when 6 then next = store.get(2,store.successor(op,2 - values[store.operand(op,1)]),2)
       when 7 then return output || 'return:' || values[store.operand(op,1)]
+      when 10 then return 'UNSUPPORTED: core.protect requires exception support'
       otherwise select store.opname(code)
         when 'fixture.add' then values[store.result(op)] = values[store.operand(op,1)] + values[store.operand(op,2)]
         when 'fixture.positive' then values[store.result(op)] = values[store.operand(op,1)] > 0
@@ -161,6 +163,29 @@ rungraph: procedure = .string
     op = next
   end
   return 'LIMIT'
+
+/** Protect has no Boolean fold and its exceptional edge remains a live root
+ * of protected execution while unrelated blocks still disappear. */
+protectiontest: procedure = .void
+  schema = .llir..schema(); contract = schema.finish(); builder = .llir..builder(contract)
+  at = builder.synthetic('protected control'); fn = builder.function('protected',contract.voidtype())
+  entry = fn.block('entry'); dead = fn.block('dead'); body = fn.block('body'); exceptional = fn.block('exceptional')
+  unused = entry.constant(contract.boolean(),'true',at); call entry.protect(body,exceptional,at)
+  call dead.returnvoid(at); call body.returnvoid(at); call exceptional.returnvoid(at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'protect optimisation fixture: ' || graph.error())
+  if graph.error() <> '' then return
+  change = llirservices..optimise(reference graph); result = change.result()
+  call check(change.status() = 'changed' & result.error() = '' & result.blocks() = 3, 'protect preserves exceptional reachability while pruning')
+  call check(change.block(2) = 0 & change.block(3) = 2 & change.block(4) = 3, 'protect successors remap around dead block')
+  op = result.operation(change.operation(2))
+  call check(op.name() = 'core.protect' & op.successors() = 2 & op.successor(1) = 2 & op.successor(2) = 3, 'protect is retained with ordered mapped edges')
+  expected = 'UNSUPPORTED: core.protect requires exception support'
+  call check(rungraph(graph) = expected & rungraph(result) = expected, 'independent interpreter refuses unsupported protect execution')
+  again = llirservices..optimise(reference result); stable = again.result()
+  call check(again.status() = 'keep' & stable.identity() = result.identity(), 'protect reconstruction converges')
+  call check(bin2x(saved) = bin2x(graph.binary()), 'protect optimisation leaves input immutable')
+  return
 
 looptest: procedure = .void
   schema = .llir..schema(); contract = schema.finish(); builder = .llir..builder(contract)

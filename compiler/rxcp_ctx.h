@@ -67,6 +67,7 @@ struct Context {
     size_t executable_import_root_index;
     importable_file **importable_file_list;
     int import_discovery_error; /* errno of incomplete enumeration, never a usable list */
+    unsigned char core_parse_metadata_loaded; /* Per-request immutable native declarations. */
     FILE *file_pointer;
     FILE *traceFile;
     char *buff_start;

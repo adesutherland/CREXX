@@ -25,7 +25,9 @@ import llir
 
 /** Compile one specification without file I/O or output side effects. The
  * returned Level L output owns its bytes; failed requests expose no artifact.
- * format is crexx, rxas or graph. Limits are supplied explicitly by the host. */
+ * format is crexx, rxas or graph. Limits are supplied explicitly by the host.
+ * @param lexical Optional advisory owned capsule; omission avoids key/capsule work.
+ * An empty supplied binary requests a cold capsule. Cache misses remain cold. */
 request: class
   _writer = .llir..writer
   _output = .llir..output
@@ -38,9 +40,16 @@ request: class
   _rxl = .int
   _bytes = .int
   _ready = .int
+  _lexicalenabled = .int
+  _candidate = .binary
+  _lexical = .binary
+  _reused = .int
+  _lexcache = .lexicalcapsule
   *: factory
-    arg source = .binary, format = 'rxas', filename = '<source>', limits = .lllimits..policy(), rxl = 0, bytes = 67108864
+    arg source = .binary, format = 'rxas', filename = '<source>', limits = .lllimits..policy(), rxl = 0, bytes = 67108864, ?lexical = .binary
     _source = source; _format = format; _filename = filename; _limits = limits; _rxl = rxl; _bytes = bytes; _ready = 0
+    _lexicalenabled = ?lexical; _reused = 0
+    if ?lexical then _candidate = lexical
     return
   run: method = .void
     if _ready then return
@@ -56,8 +65,15 @@ request: class
       if _status = 0 then _status = 1
       empty = .binary[]; origins = .int[]
       _output = .llir..output(empty,origins,0,_error)
+      _lexical = ''x as .binary; _reused = 0
     end
-    else _output = _writer.finish()
+    else do
+      _output = _writer.finish()
+      if _output.error() <> '' then do
+        _error = _output.error(); _status = 1
+        _lexical = ''x as .binary; _reused = 0
+      end
+    end
     return
   status: method = .int
     call run(); return _status
@@ -65,6 +81,12 @@ request: class
     call run(); return _error
   output: method = .llir..output
     call run(); return _output
+  /** Owned lexical construction only after successful opted-in generation. */
+  lexical: method = .binary
+    call run(); return _lexical
+  /** A tentative hit is not observable if current admission/output fails. */
+  reused: method = .int
+    call run(); return _reused
   fail: method = .void
     arg message = .string
     if _error = '' then _error = message
@@ -108,10 +130,33 @@ request: class
         call fail('LL_RECOVERY_CAPABILITY: flat-record recovery with token stages requires a checked state-reset boundary'); return 1
       end
     end
-    /* Admission completes before any output is published. */
-    lex = .llregular..builder(doc.lexgrammar(),doc.lexroots(),doc.lexkinds(),limits)
-    if lex.error() <> '' then do
-      call fail(lex.error()); return 1
+    /* Reuse concerns only immutable lexical machines. The complete current
+     * document has already been admitted, and parser/policy checks stay fresh. */
+    key = .binary; hit = 0; nfastates = .int; dfa = .llmunch..automaton
+    if _lexicalenabled then do
+      stamp = generationstamp()
+      if length(stamp) = 64 & verify(stamp,'0123456789abcdef') = 0 then do
+        identity = .lexicalidentity(doc,limits,_bytes,stamp)
+        key = identity.image()
+      end
+    end
+    if <blen>(key) > 0 then do
+      _lexcache = .lexicalcapsule(doc,limits,_bytes,key,_candidate)
+      hit = _lexcache.load()
+    end
+    if hit then do
+      dfa = _lexcache.machine(1); nfastates = _lexcache.nfa(1)
+    end
+    else do
+      lex = .llregular..builder(doc.lexgrammar(),doc.lexroots(),doc.lexkinds(),limits)
+      if lex.error() <> '' then do
+        call fail(lex.error()); return 1
+      end
+      dfa = lex.automaton(); nfastates = lex.nfastates()
+      if <blen>(key) > 0 then do
+        dfa = .llmunch..automaton.loaded(dfa.image())
+        call _lexcache.record(1,dfa,nfastates)
+      end
     end
     graph = doc.grammar(); table = .lllr..tables; states = 0
     if doc.root() > 0 & doc.backend() = 'lr1' then do
@@ -156,23 +201,36 @@ request: class
         end
       end
     end
-    policies = doc.comments(); shields = .binary[]
+    policies = doc.comments(); shields = .binary[]; machineindex = 1
     do entry = 1 to policies.size()
       if doc.commentroot(entry) = 0 then iterate
-      roots = .int[]; kinds = .int[]; roots[1] = doc.commentroot(entry); kinds[1] = 1
-      shield = .llregular..builder(doc.lexgrammar(),roots,kinds,limits)
-      if shield.error() <> '' then do
-        call fail(filename || ': ' || doc.commentlocation(entry) || ': outside pattern: ' || shield.error()); return 1
+      machineindex = machineindex + 1
+      shieldmachine = .llmunch..automaton
+      if hit then shieldmachine = _lexcache.machine(machineindex)
+      else do
+        roots = .int[]; kinds = .int[]; roots[1] = doc.commentroot(entry); kinds[1] = 1
+        shield = .llregular..builder(doc.lexgrammar(),roots,kinds,limits)
+        if shield.error() <> '' then do
+          call fail(filename || ': ' || doc.commentlocation(entry) || ': outside pattern: ' || shield.error()); return 1
+        end
+        shieldmachine = shield.automaton()
+        if <blen>(key) > 0 then do
+          shieldmachine = .llmunch..automaton.loaded(shieldmachine.image())
+          call _lexcache.record(machineindex,shieldmachine,shield.nfastates())
+        end
       end
-      ok = policies.shielding(entry,shield.automaton())
-      shields[entry] = shield.automaton().image()
+      ok = policies.shielding(entry,shieldmachine)
+      shields[entry] = shieldmachine.image()
     end
     if policies.validate() = 0 then do
       call fail(filename || ': ' || policies.error()); return 1
     end
-    dfa = lex.automaton()
+    if <blen>(key) > 0 then do
+      _lexical = _lexcache.image()
+      _reused = hit
+    end
     call line('/* Unicode property data: ' || llproperties..version() || ' */')
-    call line('/* Generated by Level L 1. NFA states:' lex.nfastates() 'DFA states:' dfa.states() 'LR states:' states '*/')
+    call line('/* Generated by Level L 1. NFA states:' nfastates 'DFA states:' dfa.states() 'LR states:' states '*/')
     if format = 'rxas' then do
       call assembly(doc,table,dfa,shields,policies)
       return 0
@@ -838,3 +896,268 @@ request: class
     call line('  load a' || argument || ',1000000')
     call line(label || ':')
     return
+
+/** Build preparation replaces this one literal for every bootstrap stage.
+ * Unprepared manual source never assigns an identity to reusable machines. */
+generationstamp: procedure = .string
+  return '@LLGENERATE_SOURCE_STAMP@'
+
+/** Private bounded binary assembly. Geometric storage avoids copying the
+ * completed key at each record. Reservations also bound pending graph nodes. */
+lexicalbuffer: class
+  _data = .binary
+  _limit = .int
+  _size = .int
+  _capacity = .int
+  _reserved = .int
+  _valid = .int
+  *: factory
+    arg limit = .int
+    _limit = limit; _size = 0; _capacity = 0; _reserved = 0; _valid = limit > 0
+    return
+  valid: method = .int
+    return _valid
+  disable: method = .void
+    _valid = 0
+    return
+  reserve: method = .int
+    arg size = .int
+    if _valid = 0 then return 0
+    if size < 0 | size > _limit - _size - _reserved then do
+      _valid = 0; return 0
+    end
+    _reserved = _reserved + size
+    return 1
+  release: method = .void
+    arg size = .int
+    if size < 0 | size > _reserved then _valid = 0
+    else _reserved = _reserved - size
+    return
+  ensure: method = .int
+    arg size = .int
+    if _valid = 0 then return 0
+    if size < 0 | size > _limit - _size - _reserved then do
+      _valid = 0; return 0
+    end
+    needed = _size + size
+    if needed > _capacity then do
+      capacity = _limit
+      if _capacity <= _limit <idiv> 2 then capacity = min(_limit,max(256,_capacity * 2,needed))
+      call binresize _data,capacity; _capacity = capacity
+    end
+    return 1
+  put: method = .void
+    arg data = .binary
+    size = <blen>(data)
+    if ensure(size) = 0 then return
+    call bincopy _data,_size,data,0,size
+    _size = _size + size
+    return
+  integer: method = .void
+    arg value = .int
+    if value < -1 | value > 2147483647 then do; _valid = 0; return; end
+    if ensure(4) = 0 then return
+    <at..i32>(_size) _data = value; _size = _size + 4
+    return
+  blob: method = .void
+    arg data = .binary
+    call integer(<blen>(data)); call put(data)
+    return
+  image: method = .binary
+    if _valid = 0 | _reserved <> 0 then return ''x as .binary
+    return binsubstr(_data,1,_size)
+
+/** All lengths are checked by subtraction before reading or allocating. A bad
+ * candidate has no diagnostic channel into the current compilation request. */
+lexicalreader: class
+  _data = .binary
+  _at = .int
+  _valid = .int
+  *: factory
+    arg data = .binary
+    _data = data; _at = 0; _valid = 1
+    return
+  valid: method = .int
+    return _valid
+  left: method = .int
+    return <blen>(_data) - _at
+  integer: method = .int
+    if _valid = 0 then return -1
+    if left() < 4 then do; _valid = 0; return -1; end
+    value = <at..i32>(_at) _data; _at = _at + 4
+    return value
+  take: method = .binary
+    arg size = .int
+    if _valid = 0 then return ''x as .binary
+    if size < 0 | size > left() then do; _valid = 0; return ''x as .binary; end
+    data = binsubstr(_data,_at + 1,size); _at = _at + size
+    return data
+  blob: method = .binary
+    size = integer()
+    return take(size)
+
+/** Exact reachable topology, not algebraic language equivalence. Dense IDs are
+ * assigned by ordered roots then left/right edges. The existing B map keeps
+ * raw-ID lookup bounded by visited nodes instead of the largest incidental ID.
+ * Source locations, labels and parser-only declarations never enter the key. */
+lexicalidentity: class
+  _doc = .llfront..document
+  _limits = .lllimits..policy
+  _budget = .int
+  _stamp = .string
+  _ready = .int
+  _buffer = .lexicalbuffer
+  _graph = .llcore..grammar
+  _map = .rxfnsb..stem
+  _nodes = .int[]
+  *: factory
+    arg doc = .llfront..document, limits = .lllimits..policy, budget = .int, stamp = .string
+    _doc = doc; _limits = limits; _budget = budget; _stamp = stamp; _ready = 0
+    return
+  node: method = .int
+    arg raw = .int
+    if raw < 1 | raw > _graph.size() then do
+      call _buffer.disable(); return 0
+    end
+    found = _map.get(raw as .string)
+    if found <> '' then return found as .int
+    /* Every queued record needs at least four i32 fields. Reserve that space
+     * before growing either the work list or its map. */
+    if _buffer.reserve(16) = 0 then return 0
+    id = _nodes[0] + 1; _nodes[id] = raw
+    call _map.set(raw as .string,id as .string)
+    return id
+  run: method = .void
+    if _ready then return
+    _ready = 1; _buffer = .lexicalbuffer(_budget)
+    _graph = _doc.lexgrammar(); _map = .rxfnsb..stem()
+    call _buffer.put('LLXKEY01' as .binary)
+    call _buffer.blob(_stamp as .binary); call _buffer.blob(_doc.encoding() as .binary)
+    call _buffer.blob(llproperties..version() as .binary)
+    call _buffer.integer(1279542833)
+    call _buffer.integer(_limits.limit('nfa.states')); call _buffer.integer(_limits.limit('dfa.states'))
+    roots = _doc.lexroots(); kinds = _doc.lexkinds()
+    call _buffer.integer(roots[0])
+    i = .int; entry = .int; id = .int; a = .int; b = .int; op = .int; cursor = .int
+    do i = 1 to roots[0] while _buffer.valid()
+      id = node(roots[i]); call _buffer.integer(id); call _buffer.integer(kinds[i])
+    end
+    policies = _doc.comments(); count = 0
+    do entry = 1 to policies.size()
+      if _doc.commentroot(entry) > 0 then count = count + 1
+    end
+    call _buffer.integer(count)
+    do entry = 1 to policies.size() while _buffer.valid()
+      if _doc.commentroot(entry) = 0 then iterate
+      id = node(_doc.commentroot(entry))
+      call _buffer.integer(entry); call _buffer.integer(id)
+      call _buffer.blob(policies.form(entry) as .binary)
+      call _buffer.blob(policies.opening(entry)); call _buffer.blob(policies.closing(entry))
+      call _buffer.integer(policies.keep(entry))
+    end
+    cursor = 1
+    do while cursor <= _nodes[0] & _buffer.valid()
+      raw = _nodes[cursor]; cursor = cursor + 1
+      call _buffer.release(16)
+      op = _graph.op(raw); a = _graph.left(raw); b = _graph.right(raw)
+      select
+        when op = 2 | op = 4 then do; a = node(a); b = node(b); end
+        when op = 5 | op = 7 | op = 14 | op = 15 then do; a = node(a); b = 0; end
+        when op = 1 | op = 11 | op = 12 | op = 16 | op = 6 then nop
+        otherwise do; call _buffer.disable(); return; end
+      end
+      call _buffer.integer(op); call _buffer.integer(a); call _buffer.integer(b)
+      call _buffer.blob(_graph.text(raw))
+    end
+    return
+  image: method = .binary
+    call run()
+    return _buffer.image()
+
+/** One private lexical result owns either a completely admitted candidate or
+ * cold machines. Its methods are not part of the exposed request contract. */
+lexicalcapsule: class
+  _doc = .llfront..document
+  _limits = .lllimits..policy
+  _bytes = .int
+  _key = .binary
+  _candidate = .binary
+  _machines = .llmunch..automaton[]
+  _counts = .int[]
+  _hit = .int
+  *: factory
+    arg doc = .llfront..document, limits = .lllimits..policy, bytes = .int, key = .binary, candidate = .binary
+    _doc = doc; _limits = limits; _bytes = bytes; _key = key; _candidate = candidate; _hit = 0
+    return
+  record: method = .void
+    arg ordinal = .int, machine = .llmunch..automaton, nfa = .int
+    _machines[ordinal] = machine; _counts[ordinal] = nfa
+    return
+  machine: method = .llmunch..automaton
+    arg ordinal = .int
+    return _machines[ordinal]
+  nfa: method = .int
+    arg ordinal = .int
+    return _counts[ordinal]
+  /** Candidate data is advisory. Validate every machine before retaining any;
+   * source/parser/policy diagnostics never inherit a candidate's failure. */
+  load: method = .int
+    doc = _doc; key = _key
+    if <blen>(_candidate) = 0 | <blen>(_candidate) > _bytes then return 0
+    reader = .lexicalreader(_candidate)
+    if reader.take(8) <> 'LLXCAP01' as .binary then return 0
+    if reader.blob() <> key then return 0
+    count = reader.integer()
+    if count < 1 | count > reader.left() <idiv> 1060 then return 0
+    slots = .int[]; slots[1] = 0; policies = doc.comments(); entry = .int; i = .int
+    do entry = 1 to policies.size()
+      if doc.commentroot(entry) = 0 then iterate
+      if slots[0] >= count then return 0
+      slots[slots[0] + 1] = entry
+    end
+    if slots[0] <> count then return 0
+    machines = .llmunch..automaton[]; counts = .int[]; image = .binary
+    machine = .llmunch..automaton; nfa = .int
+    do i = 1 to count
+      if reader.integer() <> slots[i] then return 0
+      nfa = reader.integer()
+      if nfa < 1 | nfa > _limits.limit('nfa.states') then return 0
+      image = reader.blob()
+      if validdfa(image) = 0 then return 0
+      machine = .llmunch..automaton.loaded(image)
+      if machine.error() <> '' then return 0
+      machines[i] = machine; counts[i] = nfa
+    end
+    if reader.valid() = 0 | reader.left() <> 0 then return 0
+    _machines = machines; _counts = counts; _hit = 1
+    return 1
+  /** Establish bounded packed dimensions before the SDK loader performs any
+   * dimension products or walks. The loader then checks all mappings/targets. */
+  validdfa: method = .int
+    arg image = .binary
+    size = <blen>(image)
+    if size < 1040 then return 0
+    if <at..i32>(0) image <> 1279542833 then return 0
+    states = <at..i32>(4) image; classes = <at..i32>(8) image
+    if states < 1 | states > _limits.limit('dfa.states') | classes < 1 | classes > 256 then return 0
+    cells = size - 1040
+    if cells <mod> 4 <> 0 then return 0
+    cells = cells <idiv> 4
+    if cells <mod> (classes + 1) <> 0 then return 0
+    if states <> cells <idiv> (classes + 1) then return 0
+    if <at..i32>(12) image <> 0 then return 0
+    return 1
+  image: method = .binary
+    if _hit then return _candidate
+    doc = _doc; key = _key
+    buffer = .lexicalbuffer(_bytes)
+    call buffer.put('LLXCAP01' as .binary); call buffer.blob(key)
+    call buffer.integer(_machines[0])
+    call buffer.integer(0); call buffer.integer(_counts[1]); call buffer.blob(_machines[1].image())
+    policies = doc.comments(); ordinal = 1
+    do entry = 1 to policies.size() while buffer.valid()
+      if doc.commentroot(entry) = 0 then iterate
+      ordinal = ordinal + 1
+      call buffer.integer(entry); call buffer.integer(_counts[ordinal]); call buffer.blob(_machines[ordinal].image())
+    end
+    return buffer.image()

@@ -1,0 +1,132 @@
+/* Pure B environment: reuse shared ADDRESS snapshots/status, no host shell. */
+options levelb
+import _rxsysb
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import commandfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0; calls = 0
+  call _reset_address_environments()
+  provider = .CommandFixtureEnvironment('COMMAND-TEST')
+  call provider.observe(reference calls)
+  call _register_address_environment('COMMAND-TEST',provider)
+  if argv[0] > 0 then do
+    if argv[1] <> 'late' then return 2
+    visible = .rexxpool..RexxVariablePool()
+    say 'COMMAND_FATAL|before'
+    returned = invokeFixture('late',reference visible)
+    say 'UNREACHED late command host'
+    return 1
+  end
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  call runCase('plan','7|7|1',1,reference calls)
+  call runCase('dynamic','0',1,reference calls)
+  call runCase('repeat','old!!',2,reference calls)
+  call runCase('once','1|COMMAND-TEST|REPLACE STEM OUTPUT.',1,reference calls)
+  call runCase('private',payload,1,reference calls)
+  call runCase('exit',payload,0,reference calls)
+  call _reset_address_environments()
+  say 'COMMAND_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+runCase: procedure = .void
+  arg mode = .string, expected = .string, dispatches = .int, calls_ref = reference .int
+  calls = dereference calls_ref
+  before = calls
+  visible = .rexxpool..RexxVariablePool()
+  payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+  call visible.setString('PAYLOAD',payload); call visible.setString('SCALAR','old')
+  call visible.setString('COUNT','0'); call visible.setString('LOCAL','caller local')
+  call visible.setString('UNREACHED','untouched')
+  call visible.setStemString('INPUT','0','1'); call visible.setStemString('INPUT','1',payload)
+  returned = invokeFixture(mode,reference visible)
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == expected,mode || ': exact owned result after helper expiry')
+  call check(calls - before = dispatches,mode || ': once-only dispatch')
+  call check(visible.symbolValue('LOCAL').asString() == 'caller local' & visible.symbolValue('UNREACHED').asString() == 'untouched',mode || ': private restore and no late effects')
+  if mode = 'plan' then do
+    call check(visible.symbolValue('SCALAR').asString() == payload,'literal lexical plan writes exact Unicode NUL trailing blank')
+    call check(visible.stemSymbolValue('OUTPUT','1').asString() == 'captured','implicit command uses lasting output capture')
+  end
+  if mode = 'once' then do
+    call check(visible.symbolValue('COUNT').asString() == '1','operand function evaluated once')
+    call check(visible.stemSymbolValue('OUTPUT','1').asString() == 'captured','operand child state does not replace parent connections')
+  end
+  if mode = 'private' then call check(visible.symbolValue('SCALAR').asString() == payload,'private lexical plan reaches exposed caller')
+  return
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments
+  arg mode = .string, pool_ref = reference .rexxpool..RexxVariablePool
+  activation = .rexxactivation..RexxActivationArguments(); call activation.appendText(mode)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,pool_ref,reference config)
+  returned = commandfixture..run(reference context,0)
+  rebound = context.pool(); rebound_activation = context.activation(); rebound_config = context.config()
+  original_activation = reference activation; original_config = reference config
+  call check(<refvalid>(rebound) & (rebound <refsame> pool_ref),mode || ': original live pool restored')
+  call check((rebound_activation <refsame> original_activation) & (rebound_config <refsame> original_config),mode || ': activation/config borrows retained')
+  call check(activation.programExitRequested() = (mode == 'exit'),mode || ': root completion')
+  if mode = 'exit' then do
+    pool = dereference pool_ref
+    call check(pool.symbolValue('COUNT').asString() == '1','EXIT operand evaluated once before command construction')
+    call check(activation.returnValue().asString() == returned.returnValue().asString(),'full root and packet Unicode NUL equality')
+  end
+  return returned
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+CommandFixtureEnvironment: class implements .addressenvironment
+  _name = .string
+  _calls = reference .int
+  *: match
+    arg env_name = .string
+    if _address_normalize_environment_name(env_name) == 'COMMAND-TEST' then return 100
+    return 0
+  *: factory
+    arg name = .string
+    _name = name
+    return
+  observe: method = .void
+    arg calls = reference .int
+    _calls = calls
+    return
+  environment_name: method = .string
+    return _name
+  environment_id: method = .string
+    return _name
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    calls = dereference _calls; calls = calls + 1
+    payload = 'éµμ雪' || ('00'x as .string) || 'tail '
+    text = request.get_command(); response = .addressresponse(0)
+    call check(request.get_environment_name() == 'COMMAND-TEST','capture caller active environment after operand completion')
+    if text == 'literal :SCALAR' | text == 'private :SCALAR' then do
+      call check(request.get_binding_count() = 1 & request.get_binding_value('SCALAR') == 'old','one live literal binding')
+      call response.add_updated_binding('var','SCALAR','SCALAR',payload,'')
+      if text == 'literal :SCALAR' then do
+        input_endpoint = request.get_stdin_endpoint()
+        call check((input_endpoint.input_snapshot() as .string) == (payload || ('0A'x as .string)),'lasting input snapshot')
+        call response.set_rc(7); call response.set_condition_name('ERROR')
+      end
+    end
+    else if text == 'again :SCALAR' then do
+      call check(request.get_binding_count() = 1,'one grouped-string lexical descriptor')
+      call response.add_updated_binding('var','SCALAR','SCALAR',request.get_binding_value('SCALAR') || '!','')
+    end
+    else do
+      call check(request.get_binding_count() = 0,'runtime/call text has no invented lexical descriptor')
+      call check(text == payload | text == 'once','exact dynamic Unicode NUL command or once-only function result')
+    end
+    if text == 'literal :SCALAR' | text == 'once' then do
+      output_endpoint = request.get_stdout_endpoint()
+      call output_endpoint.native_emit('captured' || ('0A'x as .string)); call output_endpoint.finish()
+    end
+    return response

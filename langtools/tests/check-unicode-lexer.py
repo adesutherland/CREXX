@@ -20,7 +20,7 @@ out = scratch()
 out.mkdir(parents=True, exist_ok=True)
 records = []
 sets = {'XID_Start': [], 'XID_Continue': []}
-raw = root / 'lib/rxfnsl/unicode/data/unicode-17.0.0/DerivedCoreProperties.txt'
+raw = root / 'lib/rxfnsb/unicode/data/unicode-17.0.0/DerivedCoreProperties.txt'
 for line in raw.read_text().splitlines():
     body = line.split('#', 1)[0].strip()
     if not body:

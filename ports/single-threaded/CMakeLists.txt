@@ -16,7 +16,8 @@ set(CREXX_VM_SLAB_SIZE 4096 CACHE STRING "Bytes per aligned VM allocator slab")
 set(CREXX_VM_MAX_POOLED_SIZE 2048 CACHE STRING "Maximum pooled byte/value allocation")
 
 set(vm_sources
-    interpreter/rxvmintp.c interpreter/rxvmlinkindex.c interpreter/rxvmworker.c interpreter/rxvmprogram.c
+    interpreter/rxvmintp.c interpreter/rxvmparse.c interpreter/rxvmparse_cursor.c
+    interpreter/rxvmlinkindex.c interpreter/rxvmworker.c interpreter/rxvmprogram.c
     interpreter/rxvmactive.c interpreter/rxvmload.c interpreter/interrupt_single.c
     interpreter/rxenv.c interpreter/exitfunc.c interpreter/rxpacallmethod.c interpreter/rxpafuncs.c
     interpreter/rxvml/rxvm_run.c
@@ -89,6 +90,12 @@ add_executable(rxbvm_single "${CREXX_SOURCE}/interpreter/rxvmmain.c")
 target_link_libraries(rxbvm_single PRIVATE rxvm_single_core ${CMAKE_DL_LIBS} m)
 
 include(CTest)
+set(CREXX_PARSE_CURSOR_FIXTURE "" CACHE FILEPATH "Core-only native PARSE cursor smoke bytecode")
+if(BUILD_TESTING AND CREXX_PARSE_CURSOR_FIXTURE)
+    add_test(NAME single_vm_parse_cursor COMMAND rxbvm_single --no-autoload "${CREXX_PARSE_CURSOR_FIXTURE}")
+    set_tests_properties(single_vm_parse_cursor PROPERTIES
+        PASS_REGULAR_EXPRESSION "PARSE_CURSOR_CORE_PASS" TIMEOUT 90)
+endif()
 set(CREXX_CLASSIC_PROVIDER_FIXTURE "" CACHE FILEPATH "Linked canonical Classic/G provider smoke bytecode")
 if(BUILD_TESTING AND CREXX_VM_CLASSIC_PROVIDERS AND CREXX_CLASSIC_PROVIDER_FIXTURE)
     add_test(NAME single_vm_classic_providers COMMAND rxbvm_single ${CREXX_CLASSIC_PROVIDER_FIXTURE})

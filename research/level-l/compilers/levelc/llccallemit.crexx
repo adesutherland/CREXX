@@ -1,0 +1,313 @@
+/* cREXX License (MIT). Private finite RXAS adapter for shared delayed CALL. */
+options levelb
+namespace llccallemit expose imports contract handler
+import llir
+import llrxastext
+import llrxas
+import llcbifs
+import rxfnsb
+
+/** Fixed target dependencies. The owning selector registers case-specific
+ * local/BIF/provider callables separately, after the sole CSIG admission. */
+imports: procedure = .string
+  return 'llctarget.arguments llctarget.present llctarget.absent llctarget.bifarguments rexxclassiccontext.rexxclassiccontext.activation rexxclassiccontext.rexxclassiccontext.pool rexxclassiccontext.rexxclassiccontext.config rexxclassiccontext.rexxclassiccontext.§factory rexxactivation.rexxactivationarguments.takecallcondition rexxactivation.rexxactivationarguments.dispatchedconditionid rexxactivation.rexxactivationarguments.dispatchedconditiondescription rexxactivation.rexxactivationarguments.dispatchedconditionline rexxactivation.rexxactivationarguments.delayedconditionid rexxactivation.rexxactivationarguments.inheritsignalpolicy rexxactivation.rexxactivationarguments.capturecallerpool rexxactivation.rexxactivationarguments.begininternalcall rexxactivation.rexxactivationarguments.beginexternalprogram rexxactivation.rexxactivationarguments.begincalltrap rexxactivation.rexxactivationarguments.programexitrequested rexxactivation.rexxactivationarguments.programroot rexxactivation.rexxactivationarguments.returnvalue rexxactivation.rexxactivationarguments.hasreturnvalue rexxactivation.rexxactivationarguments.recordcalldispatcherror rexxactivation.rexxactivationarguments.numericdigits rexxactivation.rexxactivationarguments.numericfuzz rexxactivation.rexxactivationarguments.numericform rexxactivation.rexxactivationarguments.queuecallcondition rexxactivation.rexxactivationarguments.signalpolicy rexxpool.rexxvariablepool.setcalltrapsigl rexxclassicbifs.rexxbifcallcontext.haserror rexxclassicbifs.rexxbifcallcontext.errordetail rexxclassicbifs.rexxbifcallcontext.conditionid rexxclassicbifs.rexxbifcallcontext.conditiondescription rexxclassicconditionevent.rexxclassicconditionevent.§factory'
+
+/** Existing runtime ABI. Hidden method receivers are not declared formals. */
+contract: procedure = .string
+  arg name = .string
+  select
+    when name = 'llctarget.arguments' | name = 'llctarget.absent' then return '.rexxactivation..rexxactivationarguments|||'
+    when name = 'llctarget.present' then return '.rexxactivation..rexxactivationarguments|.rexxvalue..rexxvalue||'
+    when name = 'llctarget.bifarguments' then return '.rexxclassicbifs..rexxbifcallcontext|reference@.rexxclassiccontext..rexxclassiccontext .string reference@.rexxvalue[*] reference@.int[*]||'
+    when name = 'rexxclassiccontext.rexxclassiccontext.activation' | name = 'rexxactivation.rexxactivationarguments.programroot' then return 'reference .rexxactivation..rexxactivationarguments|||'
+    when name = 'rexxclassiccontext.rexxclassiccontext.pool' then return 'reference .rexxpool..rexxvariablepool|||'
+    when name = 'rexxclassiccontext.rexxclassiccontext.config' then return 'reference .rexxclassicconfig..rexxclassicconfig|||'
+    when name = 'rexxclassiccontext.rexxclassiccontext.§factory' then return '.rexxclassiccontext..rexxclassiccontext|reference@.rexxactivation..rexxactivationarguments reference@.rexxpool..rexxvariablepool reference@.rexxclassicconfig..rexxclassicconfig||'
+    when name = 'rexxactivation.rexxactivationarguments.inheritsignalpolicy' then return '.void|reference@.rexxactivation..rexxactivationarguments||'
+    when name = 'rexxactivation.rexxactivationarguments.capturecallerpool' then return '.void|reference@.rexxpool..rexxvariablepool||'
+    when name = 'rexxactivation.rexxactivationarguments.begincalltrap' then return '.void|.int .string||'
+    when name = 'rexxactivation.rexxactivationarguments.begininternalcall' | name = 'rexxactivation.rexxactivationarguments.beginexternalprogram' then return '.void|||'
+    when name = 'rexxactivation.rexxactivationarguments.takecallcondition' | name = 'rexxactivation.rexxactivationarguments.dispatchedconditionid' | name = 'rexxactivation.rexxactivationarguments.dispatchedconditionline' | name = 'rexxactivation.rexxactivationarguments.delayedconditionid' | name = 'rexxactivation.rexxactivationarguments.numericdigits' | name = 'rexxactivation.rexxactivationarguments.numericfuzz' | name = 'rexxactivation.rexxactivationarguments.numericform' | name = 'rexxclassicbifs.rexxbifcallcontext.conditionid' then return '.int|||'
+    when name = 'rexxactivation.rexxactivationarguments.dispatchedconditiondescription' | name = 'rexxclassicbifs.rexxbifcallcontext.errordetail' | name = 'rexxclassicbifs.rexxbifcallcontext.conditiondescription' then return '.string|||'
+    when name = 'rexxactivation.rexxactivationarguments.programexitrequested' | name = 'rexxactivation.rexxactivationarguments.hasreturnvalue' | name = 'rexxclassicbifs.rexxbifcallcontext.haserror' then return '.boolean|||'
+    when name = 'rexxactivation.rexxactivationarguments.returnvalue' then return '.rexxvalue..rexxvalue|||'
+    when name = 'rexxactivation.rexxactivationarguments.recordcalldispatcherror' then return '.void|.string||'
+    when name = 'rexxactivation.rexxactivationarguments.queuecallcondition' then return '.boolean|.int .string .int||'
+    when name = 'rexxactivation.rexxactivationarguments.signalpolicy' then return '.int|.int||'
+    when name = 'rexxpool.rexxvariablepool.setcalltrapsigl' then return '.void|.int||'
+    when name = 'rexxclassicconditionevent.rexxclassicconditionevent.§factory' then return '.rexxclassicconditionevent..rexxclassicconditionevent|.int .string||'
+    otherwise return ''
+  end
+  return ''
+
+/** Emit one private dispatcher from already admitted immutable handler rows.
+ * Sparse arrays use the combined CSIG ordinal; SIGNAL rows have kind zero.
+ * Kinds: 1 local, 2 BIF, 3 signed provider, 4 missing, 5 trace-only local.
+ * Symbols have no parentheses. Only local rows use a positive entry ID.
+ * @param fn source function identity, also the helper's private suffix
+ * @param conditions_ref Classic condition IDs, 2..5 for CALL rows
+ * @param kinds_ref selector-resolved target kinds
+ * @param entries_ref admitted local entry identities
+ * @param names_ref exact canonical target names
+ * @param symbols_ref registered target callable names
+ * @param limit bounded generated text size
+ * The generated private ABI takes the borrowed context in a1 and a borrowed
+ * boolean delivery flag in a2. Its caller initializes that flag to false.
+ * @return module-local RXAS, without a global callable metadata identity
+ */
+handler: procedure = .llir..output
+  arg fn = .int, conditions_ref = reference .int[], kinds_ref = reference .int[], entries_ref = reference .int[], names_ref = reference .string[], symbols_ref = reference .string[], limit = 67108864
+  conditions = dereference conditions_ref; kinds = dereference kinds_ref
+  entries = dereference entries_ref; names = dereference names_ref; symbols = dereference symbols_ref
+  generator = .CallEmitter(fn,limit)
+  row = .int
+  call generator.begin()
+  do row = 1 to conditions[0]
+    if kinds[row] = 0 then iterate
+    call generator.branch(row)
+  end
+  call generator.invalid()
+  do row = 1 to conditions[0]
+    if kinds[row] = 0 then iterate
+    call generator.target(row,conditions[row],kinds[row],entries[row],names[row],symbols[row])
+  end
+  return generator.finish()
+
+/* Register plan: r1 parent activation reference, r2 pool reference, r3 config
+ * reference; r4 selected ordinal; r5/6/7 delivered ID/description/line;
+ * r8 child activation, r9 child reference, r10 child bundle; r11 BIF owner;
+ * r12/13/14 tests/detail/typed event; r15/16 root value/presence; r17 root ref;
+ * r20..22 numeric settings; r23/24 empty BIF arrays; r30 scoped receiver;
+ * r32..36 the one bounded call window. No owners are allocated on idle entry.
+ */
+CallEmitter: class
+  _writer = .llir..writer
+  _target = .llrxas..program
+  _prefix = .string
+
+  *: factory
+    arg fn = .int, limit = .int
+    _writer = .llir..writer(limit)
+    _target = .llrxas..program(40,40,1000000)
+    call _target.window(32,8)
+    _prefix = '__rxcalltrap_' || fn
+    return
+
+  line: method = .void
+    arg text = .string
+    call _target.recordline(text)
+    return
+
+  argument: method = .void
+    arg ordinal = .int, value = .string, borrow = 0
+    mnemonic = 'copy'
+    if borrow then mnemonic = 'mkref'
+    call line(mnemonic || ' r' || (32 + ordinal) || ',' || value)
+    return
+
+  integer: method = .void
+    arg ordinal = .int, value = .int
+    call line('load r' || (32 + ordinal) || ',' || value)
+    return
+
+  text: method = .void
+    arg ordinal = .int, value = .string
+    call line('load r' || (32 + ordinal) || ',' || llrxastext..quote(value as .binary))
+    return
+
+  invoke: method = .void
+    arg destination = .string, symbol = .string, count = .int, receiver = ''
+    index = .int
+    if destination = '' then destination = 'r31'
+    if receiver <> '' then call line('swap r33,' || receiver)
+    call line('load r32,' || count)
+    do index = 1 to count
+      flags = 768
+      if index = 1 & receiver <> '' then flags = 256
+      call line('settp r' || (32 + index) || ',' || flags)
+    end
+    call line('call ' || destination || ',' || symbol || '(),r32')
+    if receiver <> '' then call line('swap r33,' || receiver)
+    do index = 1 to count
+      call line('null r' || (32 + index))
+    end
+    return
+
+  bind: method = .void
+    arg destination = .string, member = .string
+    call line('linkref r30,a1')
+    call invoke(destination,'rexxclassiccontext.rexxclassiccontext.' || member,1,'r30')
+    call line('unlink r30')
+    return
+
+  parent: method = .void
+    arg destination = .string, member = .string, count = 1
+    call line('linkref r30,r1')
+    call invoke(destination,'rexxactivation.rexxactivationarguments.' || member,count,'r30')
+    call line('unlink r30')
+    return
+
+  child: method = .void
+    arg destination = .string, member = .string, count = 1
+    call line('link r30,r8')
+    call invoke(destination,'rexxactivation.rexxactivationarguments.' || member,count,'r30')
+    call line('unlink r30')
+    return
+
+  begin: method = .void
+    call line(_prefix || '() .locals=40')
+    call line('.srcstep 0 0 6 "" 0 0 0 ""')
+    call bind('r1','activation')
+    call line(_prefix || '_next:')
+    call parent('r12','programexitrequested')
+    call line('brt ' || _prefix || '_root,r12')
+    call parent('r4','takecallcondition')
+    call line('beq ' || _prefix || '_idle,r4,0')
+    call parent('r5','dispatchedconditionid')
+    call parent('r6','dispatchedconditiondescription')
+    call parent('r7','dispatchedconditionline')
+    return
+
+  branch: method = .void
+    arg row = .int
+    call line('beq ' || _prefix || '_case' || row || ',r4,' || row)
+    return
+
+  invalid: method = .void
+    call line('signal "INVALID_ARGUMENTS","Delayed CALL policy is outside its source function"')
+    call line('br ' || _prefix || '_idle')
+    return
+
+  target: method = .void
+    arg row = .int, condition = .int, kind = .int, entry = .int, name = .string, symbol = .string
+    call line(_prefix || '_case' || row || ':')
+    call line('linkref r30,a2'); call line('load r30,1'); call line('unlink r30')
+    if kind = 4 | kind = 5 then do
+      detail = 'RXC-LC-16.1: Label not found: ' || _trace_escape_text(name)
+      if kind = 5 then detail = 'RXC-LC-16.2: CALL handler is inside a DO or SELECT group: ' || _trace_escape_text(name)
+      call text(2,detail)
+      call parent('','recordcalldispatcherror',2)
+      call line('br ' || _prefix || '_idle')
+      return
+    end
+    call bind('r2','pool'); call bind('r3','config')
+    call invoke('r8','llctarget.arguments',0)
+    call argument(2,'r1'); call child('','inheritsignalpolicy',2)
+    call argument(2,'r2'); call child('','capturecallerpool',2)
+    call child('','begininternalcall')
+    if kind = 3 then call child('','beginexternalprogram')
+    call argument(2,'r5'); call argument(3,'r6'); call child('','begincalltrap',3)
+    call line('linkref r30,r2')
+    call argument(2,'r7')
+    call invoke('','rexxpool.rexxvariablepool.setcalltrapsigl',2,'r30')
+    call line('unlink r30')
+    if kind = 3 then do
+      /* Provider wrappers may consume the disposable window. Recover the
+       * anchor before clearing it, matching the ordinary external caller. */
+      call line('swap r8,r33'); call line('load r32,1'); call line('settp r33,768')
+      call line('call r31,' || symbol || '(),r32')
+      call line('swap r8,r33'); call line('null r33')
+    end
+    else do
+      call argument(1,'r8',1); call argument(2,'r2'); call argument(3,'r3')
+      call invoke('r10','rexxclassiccontext.rexxclassiccontext.§factory',3)
+      if kind = 1 then do
+        call argument(1,'r10',1); call integer(2,entry)
+        call invoke('r31',symbol,2)
+      end
+      else call bif(name,symbol,row)
+    end
+    call clearowners()
+    call line('br ' || _prefix || '_complete')
+    return
+
+  bif: method = .void
+    arg name = .string, symbol = .string, row = .int
+    call child('r20','numericdigits'); call child('r21','numericfuzz'); call child('r22','numericform')
+    call line('setnumfuz 0'); call line('setnumdgts r20'); call line('setnumfuz r21'); call line('setnumfrm r22')
+    call line('null r23'); call line('null r24')
+    call argument(1,'r10',1); call text(2,name); call argument(3,'r23',1); call argument(4,'r24',1)
+    call invoke('r11','llctarget.bifarguments',4)
+    call argument(1,'r11',1)
+    count = 1
+    if llcbifs..activation(name) then do
+      call argument(2,'r8',1); count = 2
+    end
+    call invoke('r31',symbol,count)
+    call line('null r31')
+    call line('link r30,r11')
+    call invoke('r12','rexxclassicbifs.rexxbifcallcontext.haserror',1,'r30')
+    call line('brf ' || _prefix || '_bifready' || row || ',r12')
+    call invoke('r13','rexxclassicbifs.rexxbifcallcontext.errordetail',1,'r30')
+    call line('unlink r30')
+    call argument(2,'r13'); call parent('','recordcalldispatcherror',2)
+    call clearowners()
+    call line('br ' || _prefix || '_idle')
+    call line(_prefix || '_bifready' || row || ':')
+    call invoke('r5','rexxclassicbifs.rexxbifcallcontext.conditionid',1,'r30')
+    call invoke('r6','rexxclassicbifs.rexxbifcallcontext.conditiondescription',1,'r30')
+    call line('unlink r30')
+    call line('beq ' || _prefix || '_bifdone' || row || ',r5,0')
+    /* Native source-less BIF completion belongs to the interrupted source
+     * dispatcher. Its fresh child marker supplies same-event suppression;
+     * that route uses the existing queue owner, including HALT buffering.
+     * Different events queue/transfer on the source parent and are drained
+     * by this same finite dispatcher, never left on a discarded child. */
+    call child('r12','delayedconditionid')
+    call line('bne ' || _prefix || '_bifparent' || row || ',r12,r5')
+    call argument(2,'r5'); call argument(3,'r6'); call argument(4,'r7')
+    call child('','queuecallcondition',4)
+    call line('br ' || _prefix || '_bifdone' || row)
+    call line(_prefix || '_bifparent' || row || ':')
+    call argument(2,'r5'); call argument(3,'r6'); call argument(4,'r7')
+    call parent('','queuecallcondition',4)
+    call argument(2,'r5'); call parent('r12','signalpolicy',2)
+    call line('ble ' || _prefix || '_bifdone' || row || ',r12,0')
+    call argument(1,'r5'); call argument(2,'r6')
+    call invoke('r14','rexxclassicconditionevent.rexxclassicconditionevent.§factory',2)
+    call line('signal "CLASSIC_CONDITION",r14')
+    call line(_prefix || '_bifdone' || row || ':')
+    return
+
+  clearowners: method = .void
+    index = .int
+    do index = 2 to 3
+      call line('null r' || index)
+    end
+    do index = 5 to 14
+      call line('null r' || index)
+    end
+    do index = 20 to 24
+      call line('null r' || index)
+    end
+    call line('null r31')
+    return
+
+  finish: method = .llir..output
+    call line(_prefix || '_complete:')
+    call line('br ' || _prefix || '_next')
+    call line(_prefix || '_root:')
+    call parent('r17','programroot')
+    call line('linkref r30,r17')
+    call invoke('r15','rexxactivation.rexxactivationarguments.returnvalue',1,'r30')
+    call invoke('r16','rexxactivation.rexxactivationarguments.hasreturnvalue',1,'r30')
+    call line('unlink r30'); call line('null r17')
+    call line('brf ' || _prefix || '_absent,r16')
+    call argument(1,'r15'); call invoke('r0','llctarget.present',1)
+    call line('br ' || _prefix || '_return')
+    call line(_prefix || '_absent:')
+    call invoke('r0','llctarget.absent',0)
+    call line(_prefix || '_return:')
+    call line('null r1'); call line('null r15'); call line('null r16'); call line('ret r0')
+    call line(_prefix || '_idle:')
+    call clearowners()
+    call line('null r1'); call line('null r0'); call line('ret r0')
+    selected = _target.finish(0)
+    if selected.valid() = 0 then do
+      chunks = .binary[]; origins = .int[]
+      return .llir..output(chunks,origins,0,selected.error())
+    end
+    do i = 1 to selected.records()
+      call _writer.line(selected.text(i),selected.origin(i))
+    end
+    return _writer.finish()

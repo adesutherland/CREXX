@@ -1,0 +1,6 @@
+/* A foreign pool must not classify another pool's dotted ordinary procedure
+ * as a method. Its imported prototype is not a second definition either. */
+.globals=0
+.meta "classify.deep"="b" ".unknown" .class
+§classify.deep.run() .expose=classify.deep.run
+.meta "classify.deep.run"="b" ".void" §classify.deep.run() "packet=.binary"

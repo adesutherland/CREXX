@@ -1,0 +1,5 @@
+[
+  {"source": "push +", "code": "35.1", "purpose": "missing unary operand"},
+  {"source": "if 0 then push 'x', y", "code": "35.1", "purpose": "dead malformed expression is still checked"},
+  {"source": "return 0; push 'x')", "code": "35.1", "purpose": "closing delimiter after a terminated path"}
+]

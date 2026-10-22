@@ -5,6 +5,90 @@ read-only views, exact saved forms and a text emitter. `llirservices` supplies
 revision-bound facts, flow analysis, semantic-service dispatch and atomic
 transformations. Both are Level B modules in `rxfnsl`.
 
+The optional `rxfnsl-analysis` package adds `llirgraph` and `llireffects`, with
+no cREXX frontend, runtime or instruction dependency. The separately selected
+[`rxfnsl-rxas` package](rxas-design.md) supplies instruction records and register
+assignment. Neither enters the core image or grammar bootstrap. Source-language
+policy stays in its frontend/adapters. The optional
+[`rxfnsl-execute` prototype](execute-design.md) coordinates bounded runtime
+execution through trusted handlers; constant evaluators below do not execute
+effectful programs. Execution support does not imply that an arbitrary family
+or every structurally valid IR control is executable.
+
+`stage-l-libraries` prepares all four SDK images for normal bytecode installation.
+Their import/link closures stay separate: build the individual `rxfnsl` target
+for the core alone. Grammar bootstrap imports only core/library, and a static
+program needs only the runtime services selected by its emitted code.
+
+## Optional analysis and proof services
+
+Build `rxfnsl_analysis` and link `rxfnsl-analysis.rxbin` with `rxfnsl.rxbin` and
+`library.rxbin`. Import `llirgraph` for graph analysis and `llireffects` for
+semantic premises and checked conclusions. These services accept any admitted
+Level L family; they do not recognize Classic variable names, BIFs or RXAS.
+Keep the module variable and index alive while using borrowed results:
+
+```rexx
+import llirgraph
+index = .llirgraph..index(reference graph,1000000,67108864)
+if index.status() = 'ok' then do
+  live = index.liveness()
+  loops = index.loops()
+  if live.status() = 'ok' then say live.slotin(block_id,slot_id)
+end
+```
+
+`index` supplies indexed function blocks/slots/operations, block predecessors
+and successors, reachable blocks, RPO, immediate dominators/dominance, value
+definitions/uses and slot read/write lists. IDs belong to the original frozen
+module. `functionblocks(f)`/`functionblock(f,i)` and the corresponding slot and
+operation methods let consumers avoid repeated whole-module filtering.
+`loops(work,bytes)` adds SCCs, cyclic/irreducible classification, backedges and
+natural-loop header/membership queries. It does not claim a nesting forest for
+irreducible control. `liveness(work,bytes)` supplies slot entry/exit and operation
+before/after facts, plus block-local value before/after facts.
+
+Both demands have independent retry budgets. Check `status()` before querying;
+`message()` describes invalid input or resource exhaustion. Failed construction
+publishes no usable facts. `valid()` and `matches(reference graph)` reject an
+expired, copied or replaced owner even when its saved bytes are identical.
+Budgets count declared work and logical retained storage, rather than VM heap
+overhead. Replacing a module or analysis owner invalidates dependent results.
+
+The graph describes declared IR control. Invocation-wide `protect`, incomplete
+continuations and opaque lifetime effects conservatively keep all relevant
+function storage live/pinned; `live.complete(f)` is false there. This permits
+safe consumers to retain a fixed-storage profile. The two setup successors of
+`protect` are not a proof that handler inputs die after setup. AST/source-flow
+roles in `llflow` remain a separate service.
+Liveness is a storage fact for declared control, not a result-availability or
+alias proof. Consumers must also honor structured effect/ownership premises;
+an effect model does not add missing continuation edges to the graph.
+
+`llireffects.summary(inputs,results,version=1)` separates domain reads, writes,
+observations, allocation/release, operand value/borrow/escape modes, result
+normal/conditional/unknown availability, and failure/transfer/resume. Set the
+fields explicitly, then `seal()`. Domains are exact opaque strings with `*` as
+the wildcard. Reserved `core.slot.ID` domains describe IR cells; runtime pools,
+host callbacks and source bindings need their own semantic adapter.
+
+`llireffects.model(reference graph,profile,version,entries,bytes)` snapshots
+sealed, arity-checked extension summaries with `put(operation_id,summary)`, then
+`seal()`. Core overrides are rejected; core operations have canonical built-in
+summaries, and missing extensions are opaque.
+Declarations are trusted semantic premises, not proved optimizations.
+
+`llireffects.proof(reference index,reference model,rule,from,to,domain,result,work)`
+computes a conclusion with no caller setter for a proved payload. `preserves`
+checks an ordered interval in one acyclic block and refuses effect, ownership,
+observation or continuation invalidators. `available` requires a normal,
+non-failing, non-transferring, value-only producer and an ordered actual use;
+conditional results need a language-owned guard proof. `cells` distinguishes
+actual core cells in one invocation, without inventing external alias facts.
+Check `status()='proved'` and exact live `matches` before consuming a proof.
+Unknown is distinct from false; it prohibits the affected rewrite. Arbitrary
+`llirservices.facts.put` entries cannot turn into these checked conclusions.
+
 ## The model
 
 An **intermediate representation**, or IR, describes operations and how their
@@ -186,7 +270,7 @@ supports `functions`, `function(id)`, `blocks`, `operations`, `operation(id)`, `
 | Function | `argument(type,optional=0)` before creating blocks; `exportas(name)`; `block(name)`; `slot(name,type)`. The first block is the entry. |
 | Block | `constant`, `constantbytes`, `readarg(ordinal,origin,fallback)`, `hasarg(ordinal,origin)`, `load(slot,origin)`, `store(slot,value,origin)`. |
 | Block | `binary(descriptor,left,right,origin)` for two inputs, one result and no attributes; `operation(descriptor,origin)` for a named draft. |
-| Block | `jump(block,origin)`, `branch(boolean,yes,no,origin)`, `returnvoid(origin)`, `returnvalue(value,origin)`. |
+| Block | `jump(block,origin)`, `branch(boolean,yes,no,origin)`, `protect(normal,exceptional,origin)`, `returnvoid(origin)`, `returnvalue(value,origin)`. |
 | Operation draft | `input(name,value)`, `attribute(name,bits)`, `finish()`. Every declared field must be supplied once. |
 | Operation view | `name`, `inputs`, `input`, `results`, `result`, `namedresult`, `attribute`, `origin`, `next`, `blockid`, `successors`, `successor`, `schema`. |
 | Value handle | `type`, `isconstant`, `bytes` for literal constants. |
@@ -196,11 +280,52 @@ by its declared name. Read operations in a block with `block.first()` and
 `op.next()` until `op.valid()` is false. Function results currently have one
 value or `core.void`; extension operations may have multiple results.
 
-The nine core operations are constant, argument, load, store, jump, branch,
-return, hasarg and optionalargument. A branch consumes exactly `core.boolean`, with true then false
+The ten core operations are constant, argument, load, store, jump, branch,
+return, hasarg, optionalargument and protect. A branch consumes exactly `core.boolean`, with true then false
 successors. A return matches its owning function's result. Edges stay within one
-function. A block has one final jump, branch or return. Extension operations in
+function. A block has one final jump, branch, protect or return. Extension operations in
 this profile are straight-line operations; graph control uses the core forms.
+
+### Invocation protection
+
+`protect(normal,exceptional,origin)` declares normal continuation and an
+exceptional entry for the protected remainder of the current invocation. It has
+no inputs, results, attributes or auxiliary ID. Its two successors, in that
+order, belong to the same function. It ends its block and is retained control,
+not an evaluated Boolean branch. The host supplies runtime exception binding,
+payload transport and cleanup; Level L supplies no condition names or policies.
+An interpreter or backend without exceptional execution support must reject
+`core.protect` explicitly rather than silently follow only its normal edge.
+Constant evaluation retains it with `keep` and does not execute either edge.
+
+Reachability and transformations preserve both edges. Definite assignment at
+the exceptional entry starts from the setup preceding the declaration; later
+stores on the normal path do not establish handler input values. A host using
+the declaration must keep exceptional consumers within that setup contract.
+No general resumable-edge or exception-matching algorithm is implied.
+
+The intended outcome is explicit exceptional reachability that survives saved
+forms and generic transformations without a false runtime condition or a
+consumer-only hidden root. The implementation and focused regression ownership
+is `llir`, `llirservices`, `ts_llir` and `ts_lloptimise`.
+
+1. **LPROTECT-AC01:** construction and raw loading enforce opcode 10, zero
+   inputs/results/attributes/auxiliary ID, two same-function edges and final
+   block position, including malformed and foreign-owner controls.
+2. **LPROTECT-AC02:** text/binary round trips retain both edges in version 2;
+   version 1 rejects opcode 10 without publishing a graph.
+3. **LPROTECT-AC03:** generic analysis reaches both continuations and distinguishes
+   setup assignment from a store confined to the normal body. Optimisation and
+   reconstruction retain the exceptional continuation while pruning unrelated
+   blocks and remapping its IDs.
+4. **LPROTECT-AC04:** constant evaluation retains the declaration; the independent
+   execution oracle reports unsupported exceptional execution explicitly.
+
+1. **LPROTECT-STEP01:** record the core/API/wire contract above (AC01–04).
+2. **LPROTECT-STEP02:** implement structural admission and preserve generic
+   edge processing; add the existing independent fixture controls (AC01–04).
+3. **LPROTECT-STEP03:** qualify these controls within the owning combined
+   consumer feature batch; no separate feature qualification or commit.
 
 Optionality is exactly 0 or 1 per formal, including optional positions before
 required ones. `readarg(ordinal,origin)` reads a required formal. An optional
@@ -244,12 +369,61 @@ unassigned slot. A compiler must inspect those issues before emitting code that
 requires definite assignment. Structural verification alone does not establish
 that every load is initialised.
 
-Reachability follows both branch edges. Definite assignment intersects the
+Reachability follows both branch and protect edges. Definite assignment intersects the
 incoming sets at a join and iterates loops until no set changes. Function entry
 starts with no assigned slots. The analysis checks each reachable load against
 the stores preceding it. An unreachable block is still structurally checked.
 Unknown state effects or incomplete continuation contracts return `unsupported`.
 Other outcomes are `invalid` and `limit`; neither publishes analysis facts.
+
+The analyser indexes each terminator edge once in a private predecessor list.
+It computes reachability from every function entry, then schedules all reachable
+blocks once. A block intersects its reachable predecessors' slot sets and applies
+its ordered stores; a changed exit set schedules its successors. A ring queue
+holds at most one pending entry per block. Unreachable predecessors do not affect
+a meet, and function entries retain empty incoming sets even with back edges.
+Reachable exit sets start at the finite lattice top and only lose assignment
+facts; stores generate fixed facts. Each entry transfer starts from empty,
+regardless of its position in the block table. This monotone iteration also
+handles irreducible cycles and terminates when no changed exit remains queued.
+
+For `B` blocks, `E` edges and `S` slots, private index/queue storage is `O(B+E)`
+and the two byte lattices use `2*B*S` bytes, with one `S`-byte transfer buffer.
+The work budget checks the lattice product before allocation and charges its
+initialization, edge indexing/traversal, slot meets/transfers, operation walks and
+sparse fact-key searches. Each rescheduled block examines only its predecessor
+and successor lists; it does not rescan unrelated blocks to discover incoming
+edges. Final fact publication is also budgeted. Charges check the remaining
+allowance before addition, including a maximum signed-integer budget. Work exhaustion at
+any stage returns `limit` without usable partial facts; a later request starts a
+fresh analysis.
+
+These are analysis scheduling and storage bounds, not executable-value liveness
+or a register allocator. The finite `core.protect` declaration exposes setup to
+its exceptional entry; other exceptional/resumable edge contracts remain unsupported.
+The independent `ts_llirflow` regression checks a two-entry cycle, unreachable
+predecessors, independent function roots, slot-free cycles, effect refusals,
+resource recovery and owner/revision invalidation using hand-checked facts.
+
+The emitted implementation resizes `before` and `after` once to `B*S`, uses
+strict byte reads/writes for lattice cells, and resizes `temp` to one `S`-byte
+row. Its transfer and publication paths use the existing checked, target-sized
+three-operand `bcopy`: the destination's current logical length bounds each copy
+to `S` bytes. Row offsets are within the previously checked lattice product;
+slot-free paths skip the copy. The initial `bincopy` calls were not sufficient:
+that helper's ordinary by-value source argument copied the entire `B*S` payload
+before moving the requested row. The two callers now avoid that hidden clone
+without changing the BIF or VM instruction contract.
+
+`levell_ir_flow_rxas` reads the already-built SDK RXAS and resolves storage
+registers from metadata. It checks lattice versus scratch sizes, direct byte
+access and bounded row-copy sites, and rejects whole-lattice copies or the old
+helper calls. It ignores unrelated object copies and source/debug record counts;
+it is omitted for deliberately unoptimised SDK builds. The native B seed still
+emits tracing/source observations, ordinary object/fact/service calls, and some
+unused inline-resize result bookkeeping. These are residual seed/ownership costs,
+not additional lattice copies or a speed claim. The shape check complements
+functional/resource tests; it does not prove all control-flow or alias semantics.
 
 Facts use `has(domain,id,key)` and `get(domain,id,key)`. `get` returns exact bytes;
 it raises `LL_IR_FACT` for absence. `reachable` facts belong to blocks and
@@ -321,7 +495,7 @@ Core slots belong to one invocation and have no address/escape operation.
 A load may reuse the most recent same-block stored value; an extension whose
 state contract is not `none` invalidates those facts. Unknown/control-transfer
 continuations keep the original graph. All function entries remain roots,
-including uncalled functions. Unknown branches keep both edges; a known branch
+including uncalled functions. Protect declarations retain both edges. Unknown branches keep both edges; a known branch
 does not grant permission to remove observable condition evaluation.
 
 Only constants, arguments and extensions with state `none`, failure `none` and
@@ -392,13 +566,15 @@ data before publishing a graph.
 | Arguments (3) | function, type, optional flag (0 or 1) |
 | Contributors (1) | earlier origin ID |
 
-Core opcode IDs are 1–9 in the order listed above. Extension IDs are 16 plus
+Core opcode IDs are 1–10 in the order listed above. Extension IDs are 16 plus
 registration ordinal. Numeric IDs are not pointers, persisted callbacks or VM
 registers. Zero represents absence only in the fields that permit it.
 
 Writers emit version 2. Readers also accept version 1 with argument rows of
 width 2, all required, and private functions. They validate v1's reserved zero
-export field and reject opcodes 8/9 in a v1 image. Neither old reserved fields
+export field and reject opcodes 8–10 in a v1 image. Version 2 retains the
+existing record layout; older readers without opcode 10 reject it as unknown.
+Neither old reserved fields
 nor unknown future versions silently acquire new semantics. Clone/rewrite and
 optimisation retain signature flags and exports, subject to normal budgets.
 

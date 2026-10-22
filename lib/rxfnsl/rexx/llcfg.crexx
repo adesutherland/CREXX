@@ -140,6 +140,18 @@ productions: class
     arg nt = .int
     if nt > _g.size() then return '<root>'
     return _g.label(nt)
+  /** Read retained symbol metadata without copying the source grammar. */
+  symbolkind: method = .int
+    arg symbol = .int
+    return _g.op(symbol)
+  /** Preserve the parser's first declared terminal label and fallback. */
+  terminalname: method = .string
+    arg token = .int
+    if token = 256 then return 'end of input'
+    do named = 1 to _g.size()
+      if _g.op(named) = 1 & _g.left(named) = token then return _g.label(named)
+    end
+    return 'token ' || token
   location: method = .string
     arg p = .int
     nt = _lhs[p]

@@ -1,0 +1,87 @@
+/* cREXX License (MIT). Exercise actual generated C source checkpoints.
+ * Compiled after the hand-built parsecore module, with explicit metadata only.
+ */
+options levelb comments_dash numeric_classic
+import rxfnsb
+import parsecore
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import rexxclassicstream
+import rexxclassicconditionevent
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] > 1 then return 2
+  if argv[0] = 1 then if argv[1] <> 'reference' then return 2
+  checks = 0; failures = 0
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  broken = .rexxclassicstream..RexxClassicStream('.','READ')
+  call config.storeStream('',1,broken)
+  call config.queueText('queued input stays')
+  entered = .int; caught = .int
+  completion = .rexxactivation..RexxActivationArguments
+  if argv[0] = 1 then do
+    call expirePool(reference context)
+    say 'PARSE_C_REFERENCE_INVALID|before'
+    do
+      completion = parsecore..run(reference context,0)
+      say 'UNREACHED|C returned after expired pool'
+    on signal reference_invalid
+      say 'UNREACHED|outer B recovered a fatal C error'
+    end
+    return 1
+  end
+  do mode = 0 to 2
+    call activation.setSignalPolicy(5,0)
+    if mode = 1 then call activation.setCallPolicy(5,77)
+    if mode = 2 then call activation.setSignalPolicy(5,88)
+    call pool.setSymbolValue('x',.RexxValue('sentinel-x'))
+    call pool.setSymbolValue('y',.RexxValue('sentinel-y'))
+    entered = 0; caught = 0
+    do
+      completion = parsecore..run(reference context,0)
+      entered = 1
+    on signal classic_condition as problem
+      event = problem.payload() as .rexxclassicconditionevent..RexxClassicConditionEvent
+      caught = event.conditionId() = 5 & event.description() == ''
+      call check(problem.file() == 'core-parse-c' & problem.line() = 1,'typed event keeps actual C caller origin')
+    end
+    call check(config.queuedCount() = 1,'generated LINEIN bypasses queued text')
+    if mode < 2 then do
+      call check(entered & caught = 0,'OFF/CALL continue through generated checkpoint')
+      call check(pool.symbolValue('x').asString(1) == '' & pool.symbolValue('y').asString(1) == '', 'two generated sources execute with one reused transport owner')
+    end
+    if mode = 0 then call check(activation.hasPendingCallCondition() = 0,'OFF has no pending CALL')
+    if mode = 1 then do
+      call check(activation.hasPendingCallCondition(),'CALL queues before execute')
+      handler = activation.takeCallCondition()
+      call check(handler = 77 & activation.dispatchedConditionId() = 5 &,
+        activation.dispatchedConditionLine() = 1 & activation.dispatchedConditionDescription() == '', 'CALL preserves causing C line and payload')
+    end
+    if mode = 2 then do
+      call check(entered = 0 & caught & activation.hasPendingCallCondition() = 0,'SIGNAL preserves typed transport')
+      call check(pool.symbolValue('x').asString(1) == 'sentinel-x' & pool.symbolValue('y').asString(1) == 'sentinel-y', 'SIGNAL precedes all template writes and later acquisition')
+    end
+  end
+  say 'PARSE_C_CHECKPOINT|checks=' || checks || '|failures=' || failures
+  return failures
+
+expirePool: procedure = .void
+  arg context_ref = reference .rexxclassiccontext..RexxClassicContext
+  transient = .rexxpool..RexxVariablePool(1)
+  context = dereference context_ref
+  call context.bindPool(reference transient)
+  return
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

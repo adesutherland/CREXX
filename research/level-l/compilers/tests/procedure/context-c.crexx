@@ -1,0 +1,22 @@
+/* Real generated unit borrowed by the independent B caller; root entry is 0. */
+options levelc
+return
+EXPLICIT:
+procedure expose SHARED KEY BOX.KEY (NAMES)
+parse arg FIRST,, EMPTY
+BEFORE = PRIVATE
+PRIVATE = 'secret'
+HIDDEN = 'private hidden'
+SHARED = SHARED || ':' || FIRST
+EXTRA = 'exposed'
+BOX. = 'reset'
+KEY = 'B'
+BOX.KEY = 'private uppercase'
+return BEFORE || '|' || FIRST || '|' || ARG(2,'E') || '|' || ARG(3,'E')
+ABSENT:
+procedure expose SHARED
+SHARED = SHARED || ':absent'
+return
+EOF:
+procedure expose SHARED
+SHARED = SHARED || ':eof'

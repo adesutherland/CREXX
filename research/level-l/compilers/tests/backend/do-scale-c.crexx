@@ -1,0 +1,16 @@
+options levelc
+do i=1.00 to 2.00
+  say 'scale' i
+end
+say 'after-scale' i
+do i=.500 to 1.500 by .500
+  say 'fraction' i
+end
+do i=3 to 1 by -1
+  say 'negative' i
+end
+do i=2 by 0 for 2
+  say 'zero-by' i
+end
+say 'zero-after' i
+exit 0

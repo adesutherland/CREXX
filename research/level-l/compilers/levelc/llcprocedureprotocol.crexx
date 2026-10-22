@@ -1,0 +1,814 @@
+/* cREXX License (MIT). Compiler-internal Classic source-unit admission. */
+options levelb
+namespace llcprocedureprotocol expose checked
+import rxfnsb
+import llir
+import llscalar
+import llcsymbols
+import llcparseprogram
+import rexxclassicunicodeproperties
+
+/** Request-owned read-only entry/group/eligibility facts. Generic L owns graph
+ * structure; C owns this finite protocol. No source is reparsed for semantics. */
+checked: class
+  _graph = reference .llir..module
+  _store = reference .llir..arena
+  _limit = .int
+  _budget = .int
+  _bytes = .int
+  _work = .int
+  _ready = .int
+  _error = .string
+  _offset = .int
+  _identity = .int
+  _names = .stem
+  _functions = .stem
+  _entries = .int[]
+  _hasprocedure = .int[]
+  _groups = .int[]
+  _dispatch = .int[]
+  _tests = .int[]
+  _invalid = .int[]
+  _uses = .int[]
+  _consumers = .int[]
+  _writers = .int[]
+  _predecessors = .int[]
+  _predops = .int[]
+  _carriercalls = .int[]
+  _carrierfalse = .int[]
+  _conditionalcarriers = .int[]
+  _callfunctions = .int[]
+  _unwindblocks = .int[]
+  _falseblocks = .int[]
+  _programneutral = .int[]
+  _programterminals = .int[]
+  _programqueries = .int[]
+  _querycalls = .int[]
+  _entryslots = .int[]
+  _contextslots = .int[]
+  _writes = .int[]
+  _before = .int[]
+  _queue = .int[]
+  _symbols = .llcsymbols..checked
+  _hasexternal = .int
+  _argumenttype = .int
+  _argumentprior = .int[]
+  _argumentstate = .int[]
+  _argumentdependency = .int[]
+  _argumentends = .stem
+  _argumentboundaries = .stem
+  _tableslots = .int[]
+  _tableconstants = .int[]
+  _entrytestids = .stem
+  *: factory
+    arg graph = reference .llir..module, bytes = 67108864, work = 1000000
+    _graph = graph; _limit = bytes; _budget = work
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0
+    _names = .stem(); _functions = .stem(); _entrytestids = .stem()
+    return
+  fail: method = .void
+    arg reason = .string, opid = 0
+    if _error <> '' then return
+    _error = 'LL_COMPILER_' || reason
+    if opid > 0 then do
+      graph = dereference _graph; _offset = graph.operation(opid).origin().first()
+    end
+    return
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call fail('LIMIT: invalid entry admission dimensions'); return 0; end
+    if count > (_limit - _bytes) <idiv> width then do
+      call fail('LIMIT: entry admission exceeds output.bytes workspace'); return 0
+    end
+    _bytes = _bytes + count * width
+    return 1
+  charge: method = .int
+    arg count = 1
+    if count < 0 | count > _budget - _work then do
+      call fail('LIMIT: entry admission work budget exceeded'); return 0
+    end
+    _work = _work + count
+    return 1
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  offset: method = .int
+    call run(); return _offset
+  entries: method = .int
+    arg fn = .int
+    call run(); return _entries[fn]
+  bytesused: method = .int
+    call run(); return _bytes
+  workused: method = .int
+    call run(); return _work
+  tableslot: method = .int
+    arg fn = .int
+    call run(); return _tableslots[fn]
+  tableconstant: method = .int
+    arg fn = .int
+    call run(); return _tableconstants[fn]
+  contextslot: method = .int
+    arg fn = .int
+    call run(); return _contextslots[fn]
+  entrytest: method = .int
+    arg fn = .int, id = .int
+    call run(); found = _entrytestids.get(fn || ':' || id)
+    if found = '' then return 0
+    return found as .int
+  hasentry: method = .int
+    arg fn = .int, id = .int
+    call run(); return id > 0 & id < _entries[fn]
+  hasprocedure: method = .int
+    arg fn = .int
+    call run(); return _hasprocedure[fn]
+  group: method = .int
+    arg opid = .int
+    call run(); return _groups[opid]
+  programneutral: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _programneutral[opid] <> 0
+  programanchor: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _programneutral[opid]
+  programterminal: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _programterminals[opid] <> 0
+  programquery: method = .int
+    arg callid = .int
+    call run(); if _error <> '' then return 0
+    return _programqueries[callid]
+  programcall: method = .int
+    arg queryid = .int
+    call run(); if _error <> '' then return 0
+    return _querycalls[queryid]
+  /** Admitted target source-function identity for internal calls. */
+  callfunction: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _callfunctions[opid]
+  /** Private normal continuation fact, owned by the same proved CALL guard. */
+  falsepredecessor: method = .int
+    arg blockid = .int
+    call run(); if _error <> '' then return 0
+    if _falseblocks[blockid] = 0 then return 0
+    return _predops[blockid]
+  belongs: method = .int
+    arg graph_ref = reference .llir..module
+    call run()
+    if _error <> '' | <refvalid>(_graph) = 0 | <refvalid>(_store) = 0 | <refvalid>(graph_ref) = 0 then return 0
+    graph = dereference graph_ref; held = dereference _graph
+    return graph.error() = '' & held.error() = '' & held.identity() = _identity & graph.identity() = _identity
+  /** Generated transport is anchored to this exact invoking origin, including
+   * an owned generated invocation. Inspect arena identities, never source data. */
+  programorigin: method = .int
+    arg opid = .int, anchor = .int
+    if charge(8) = 0 then return 0
+    store = dereference _store
+    id = store.get(3,opid,11); kind = store.get(9,id,4)
+    if (kind <> 3 & kind <> 4) | store.get(9,id,6) <> 1 then do
+      call fail('LOWERING: program-exit transport requires generated paired provenance',opid); return 0
+    end
+    if store.get(13,store.get(9,id,5),1) <> anchor then do
+      call fail('LOWERING: program-exit transport belongs to another invoking origin',opid); return 0
+    end
+    do field = 1 to 3
+      if store.get(9,id,field) <> store.get(9,anchor,field) then do
+        call fail('LOWERING: program-exit transport source boundary differs from its invocation',opid); return 0
+      end
+    end
+    return 1
+  programcontext: method = .int
+    arg value = .llir..valuehandle, fn = .int, opid = .int
+    if charge(6) = 0 then return 0
+    store = dereference _store; producer = store.get(4,value.id(),1)
+    binding = store.get(3,producer,12)
+    if store.get(3,producer,1) <> 3 | binding <> _contextslots[fn] then do
+      call fail('LOWERING: program-exit operation requires the canonical context load',opid); return 0
+    end
+    if store.get(5,binding,1) <> fn | _writes[binding] <> 1 then do
+      call fail('LOWERING: program-exit context must retain its once-bound owner',opid); return 0
+    end
+    return 1
+  /** Every claimed path is disjoint and walked once, so multiple calls cannot
+   * multiply a whole-CFG search. The shared slot/pred/use indices cover dead IR. */
+  programproof: method = .void
+    graph = dereference _graph; store = dereference _store
+    opid = .int; next = .int; id = .int; slotid = .int; b = .int; previous = .int
+    anchor = .int; fn = .int; target = .int; terminal = .int
+    op = .llir..opview; following = .llir..opview; name = .string; finished = .int
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name(); b = op.blockid(); fn = store.get(2,b,1)
+      if name = 'crexx.c.exit' then do
+        if op.origin().kind() <> 'exact' then do
+          call fail('LOWERING: program-exit EXIT requires an authored exact origin',opid); return
+        end
+        if programcontext(op.input(2),fn,opid) = 0 then return
+        terminal = store.get(3,opid,3)
+        if terminal = 0 then do; call fail('LOWERING: program-exit EXIT requires its same-result return',opid); return; end
+        following = graph.operation(terminal)
+        if following.name() <> 'core.return' | following.inputs() <> 1 then do
+          call fail('LOWERING: program-exit EXIT requires its adjacent structural return',opid); return
+        end
+        if following.input(1).id() <> op.input(1).id() then do
+          call fail('LOWERING: program-exit EXIT tail substitutes the result',terminal); return
+        end
+        if programorigin(terminal,op.origin().id()) = 0 then return
+        _programneutral[opid] = opid; _programneutral[terminal] = opid; _programterminals[terminal] = opid
+      end
+      if name <> 'crexx.c.call' & name <> 'crexx.c.clause.complete' then iterate
+      checkpoint = name = 'crexx.c.clause.complete'
+      if checkpoint then do
+        if op.origin().kind() <> 'exact' then do; call fail('LOWERING: clause completion requires an authored origin',opid); return; end
+        _programneutral[opid] = opid
+        do ordinal = 1 to 2
+          producer = store.get(4,op.input(ordinal).id(),1)
+          if store.get(3,producer,1) <> 3 then do; call fail('LOWERING: clause completion requires canonical input loads',opid); return; end
+          binding = _tableslots[fn]; if ordinal = 2 then binding = _contextslots[fn]
+          if binding = 0 | store.get(3,producer,12) <> binding | _uses[op.input(ordinal).id()] <> 1 then do
+            call fail('LOWERING: clause completion substitutes or shares its canonical input',opid); return
+          end
+          if programorigin(producer,op.origin().id()) = 0 then return
+          _programneutral[producer] = opid
+        end
+      end
+      if programcontext(op.input(2),fn,opid) = 0 then return
+      id = op.result().id(); anchor = op.origin().id(); next = store.get(3,opid,3)
+      if _uses[id] <> 1 | next = 0 then do
+        call fail('LOWERING: program-exit call result requires one immediate carrier store',opid); return
+      end
+      following = graph.operation(next)
+      if following.name() <> 'core.store' | _consumers[id] <> next then do
+        call fail('LOWERING: program-exit result is observed before its guard',opid); return
+      end
+      slotid = store.get(3,next,12)
+      if _writes[slotid] <> 1 | _writers[slotid] <> next | _carriercalls[slotid] <> 0 then do
+        call fail('LOWERING: program-exit carrier requires one static writer per call',next); return
+      end
+      if store.get(5,slotid,1) <> fn | store.get(5,slotid,2) <> store.get(4,id,3) then do
+        call fail('LOWERING: program-exit carrier has the wrong owner or type',next); return
+      end
+      _carriercalls[slotid] = opid; _conditionalcarriers[slotid] = checkpoint
+      if programorigin(next,anchor) = 0 then return
+      _programneutral[next] = opid; next = store.get(3,next,3)
+      if next > 0 then do
+        following = graph.operation(next)
+        if following.name() = 'core.load' then do
+          if store.get(3,next,12) <> _contextslots[fn] then do
+            call fail('LOWERING: program-exit guard permits only the canonical context load',next); return
+          end
+          if programorigin(next,anchor) = 0 then return
+          _programneutral[next] = opid; next = store.get(3,next,3)
+        end
+      end
+      if next = 0 then do; call fail('LOWERING: program-exit call lacks its immediate query',opid); return; end
+      following = graph.operation(next)
+      if following.name() <> 'crexx.c.program.exiting' then do
+        call fail('LOWERING: program-exit call lacks its immediate query',next); return
+      end
+      if programcontext(following.input(1),fn,next) = 0 then return
+      if programorigin(next,anchor) = 0 then return
+      _programqueries[opid] = next; _querycalls[next] = opid; _programneutral[next] = opid
+      id = following.result().id(); next = store.get(3,next,3)
+      if next = 0 then do; call fail('LOWERING: program-exit query requires its branch',opid); return; end
+      following = graph.operation(next)
+      if following.name() <> 'core.branch' then do
+        call fail('LOWERING: program-exit query requires its immediate branch',next); return
+      end
+      if following.input(1).id() <> id | _uses[id] <> 1 then do
+        call fail('LOWERING: program-exit query must exclusively control its branch',next); return
+      end
+      if programorigin(next,anchor) = 0 then return
+      _programneutral[next] = opid
+      target = store.successor(next,2)
+      if _predecessors[target] <> 1 | _predops[target] <> next | _falseblocks[target] <> 0 | _unwindblocks[target] <> 0 then do
+        call fail('LOWERING: program-exit continuation is not private to its false edge',next); return
+      end
+      _falseblocks[target] = opid; _carrierfalse[slotid] = target
+      previous = next; b = store.successor(next,1); finished = 0
+      do while finished = 0
+        if charge() = 0 then return
+        if _predecessors[b] <> 1 | _predops[b] <> previous | _unwindblocks[b] <> 0 | _falseblocks[b] <> 0 | store.get(2,b,1) <> fn then do
+          call fail('LOWERING: program-exit unwind path is shared, cyclic or has an outside incoming edge',previous); return
+        end
+        _unwindblocks[b] = opid; next = store.get(2,b,2)
+        do while next > 0
+          if charge() = 0 then return
+          following = graph.operation(next); name = following.name()
+          if programorigin(next,anchor) = 0 then return
+          _programneutral[next] = opid
+          select name
+            when 'core.load' then do
+              if store.get(3,next,12) <> slotid then do
+                call fail('LOWERING: program-exit unwind load substitutes its carrier',next); return
+              end
+            end
+            when 'core.jump' then nop
+            when 'core.return' then do
+              if following.inputs() <> 1 then do; call fail('LOWERING: program-exit unwind requires its owned result',next); return; end
+              id = store.get(4,following.input(1).id(),1)
+              if graph.operation(id).name() <> 'core.load' | store.get(3,id,12) <> slotid then do
+                call fail('LOWERING: program-exit unwind returns another result',next); return
+              end
+              _programterminals[next] = opid; finished = 1
+            end
+            otherwise do; call fail('LOWERING: program-exit unwind path contains semantic work',next); return; end
+          end
+          previous = next; next = store.get(3,next,3)
+        end
+        if finished = 0 then b = store.successor(previous,1)
+      end
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name()
+      if name = 'crexx.c.program.exiting' & _querycalls[opid] = 0 then do
+        call fail('LOWERING: program-exit query has no paired internal call',opid); return
+      end
+      if name <> 'core.load' then iterate
+      slotid = store.get(3,opid,12); id = _carriercalls[slotid]
+      if id = 0 then iterate
+      b = op.blockid()
+      if _conditionalcarriers[slotid] & _unwindblocks[b] <> id then do
+        call fail('LOWERING: conditional clause carrier is read outside its true EXIT unwind',opid); return
+      end
+      if b <> _carrierfalse[slotid] & _unwindblocks[b] <> id then do
+        call fail('LOWERING: program-exit carrier escapes its protected continuation',opid); return
+      end
+      if programorigin(opid,graph.operation(id).origin().id()) = 0 then return
+      _programneutral[opid] = id
+    end
+    return
+  /** Resolve only entry transport through already-proved private false edges.
+   * The current block's final store can never seed an earlier load. Protected
+   * exceptional/handler edges are not false continuations and cannot carry an
+   * unfinished external argument packet into another invocation path. */
+  argumentwriter: method = .int
+    arg opid = .int
+    graph = dereference _graph; store = dereference _store
+    writer = _argumentprior[opid]
+    if writer > 0 then return store.operand(writer,1)
+    op = graph.operation(opid); b = op.blockid(); slotid = store.get(3,opid,12)
+    path = .string[]; key = .string; known = .string; final = .string; value = .int
+    do forever
+      key = b || ':' || slotid
+      if charge(<blen>(key as .binary) + 2) = 0 then return 0
+      known = _argumentboundaries.get(key)
+      if known == '?' then do; call fail('LOWERING: external arguments contain a cyclic slot boundary',opid); return 0; end
+      if known <> '' then do; value = known as .int; leave; end
+      if reserve(128 + 2 * <blen>(key as .binary),1) = 0 then return 0
+      call _argumentboundaries.set(key,'?'); path[path[0] + 1] = key
+      if _falseblocks[b] = 0 | _predecessors[b] <> 1 then do
+        call fail('LOWERING: external arguments require a definite empty/append seed across private continuations',opid); return 0
+      end
+      previous = _predops[b]
+      b = store.get(3,previous,2)
+      key = b || ':' || slotid
+      if charge(<blen>(key as .binary) + 2) = 0 then return 0
+      if _argumentboundaries.get(key) == '?' then do
+        call fail('LOWERING: external arguments contain a cyclic slot boundary',opid); return 0
+      end
+      final = _argumentends.get(key)
+      if final <> '' then do; value = store.operand(final as .int,1); leave; end
+    end
+    do i = 1 to path[0]
+      if charge() = 0 | reserve(20,1) = 0 then return 0
+      call _argumentboundaries.set(path[i],value as .string)
+    end
+    return value
+  /** Iterative closure with one memoized visit per A value. Slot versions
+   * come from the forward index, not the graph's last-writer summary. */
+  argumentseed: method = .void
+    arg value = .int, owner = .int
+    graph = dereference _graph; store = dereference _store
+    stack = .int[]; stack[1] = value; top = 1
+    op = .llir..opview; dependency = .int; producer = .int; name = .string
+    do while top > 0
+      value = stack[top]
+      if _argumentstate[value] = 2 then do; top = top - 1; iterate; end
+      if charge() = 0 then return
+      if _argumentstate[value] = 0 then do
+        if store.get(4,value,3) <> _argumenttype then do
+          call fail('LOWERING: external arguments have a foreign producer type',owner); return
+        end
+        _argumentstate[value] = 1
+        producer = store.get(4,value,1); op = graph.operation(producer); name = op.name()
+        select name
+          when 'crexx.c.arguments.empty' then dependency = 0
+          when 'crexx.c.arguments.append' then dependency = op.input(1).id()
+          when 'core.load' then do
+            dependency = argumentwriter(producer)
+            if _error <> '' then return
+          end
+          otherwise do; call fail('LOWERING: external arguments require an empty/append producer',owner); return; end
+        end
+        _argumentdependency[value] = dependency
+      end
+      dependency = _argumentdependency[value]
+      if dependency = 0 then do
+        _argumentstate[value] = 2; top = top - 1
+      end
+      else if _argumentstate[dependency] = 2 then do
+        _argumentstate[value] = 2; top = top - 1
+      end
+      else if _argumentstate[dependency] = 1 then do
+        call fail('LOWERING: external arguments contain a cyclic value dependency',owner); return
+      end
+      else do
+        top = top + 1; stack[top] = dependency
+      end
+    end
+    return
+  /** One ordered index includes unreachable records. The sparse boundary memo
+   * charges every distinct (block,slot), avoiding per-call whole-CFG walks. */
+  argumentproof: method = .void
+    if _hasexternal = 0 then return
+    graph = dereference _graph; store = dereference _store
+    contract = dereference store.contract(); _argumenttype = contract.type('crexx.c.arguments').id()
+    if reserve(store.count(3),8) = 0 | reserve(store.count(4),24) = 0 then return
+    _argumentends = .stem(); _argumentboundaries = .stem()
+    b = .int; opid = .int; slotid = .int; key = .string; known = .string
+    op = .llir..opview; name = .string
+    do b = 1 to store.count(2)
+      opid = store.get(2,b,2)
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name()
+        if name = 'core.store' | name = 'core.load' then do
+          slotid = store.get(3,opid,12)
+          if store.get(5,slotid,2) = _argumenttype then do
+            key = b || ':' || slotid
+            if charge(<blen>(key as .binary) + 1) = 0 then return
+            known = _argumentends.get(key)
+            if name = 'core.load' then do
+              if known <> '' then _argumentprior[opid] = known as .int
+            end
+            else do
+              if known = '' then if reserve(64 + <blen>(key as .binary),1) = 0 then return
+              if reserve(20,1) = 0 then return
+              call _argumentends.set(key,opid as .string)
+            end
+          end
+        end
+        opid = store.get(3,opid,3)
+      end
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid)
+      if op.name() <> 'crexx.c.call.external' then iterate
+      call argumentseed(op.input(1).id(),opid)
+      if _error <> '' then return
+    end
+    return
+  text: method = .string
+    arg op = .llir..opview, name = .string
+    bytes = op.attribute(name); size = <blen>(bytes)
+    if reserve(size,1) = 0 | charge(size + 1) = 0 then return ''
+    codec = .llscalar..textcodec()
+    if codec.check(bytes) <> '' then do; call fail('LOWERING: invalid entry text attribute',op.id()); return ''; end
+    return bytes as .string
+  integer: method = .int
+    arg op = .llir..opview, name = .string
+    bytes = op.attribute(name); codec = .llir..intcodec()
+    if codec.check(bytes) <> '' then do; call fail('LOWERING: invalid entry integer attribute',op.id()); return -1; end
+    return <at..i64>(0) bytes
+  exact: method = .void
+    arg op = .llir..opview
+    origin = op.origin(); bytes = origin.sourcebytes(); extent = <blen>(bytes)
+    if origin.belongs(_store) = 0 | origin.kind() <> 'exact' then do
+      call fail('LOWERING: PROCEDURE transition requires an owned exact source origin',op.id()); return
+    end
+    if origin.first() < 0 | origin.last() <= origin.first() | origin.last() > extent then do
+      call fail('LOWERING: PROCEDURE transition requires a nonempty source-backed span',op.id()); return
+    end
+    if llcparseprogram..sourceboundary(bytes,origin.first()) = 0 | llcparseprogram..sourceboundary(bytes,origin.last()) = 0 then call fail('SOURCE: PROCEDURE origin is not at a Unicode boundary',op.id())
+    return
+  generated: method = .void
+    arg op = .llir..opview
+    origin = op.origin()
+    if origin.belongs(_store) = 0 | (origin.kind() <> 'derived' & origin.kind() <> 'synthetic') then call fail('LOWERING: entry dispatch requires generated provenance',op.id())
+    return
+  /** Dispatch operands must be loads of its two once-bound entry slots. */
+  slot: method = .int
+    arg value = .llir..valuehandle, fn = .int, ordinal = .int
+    store = dereference _store
+    producer = store.get(4,value.id(),1)
+    if store.get(3,producer,1) <> 3 then do; call fail('LOWERING: entry dispatch requires bound slot loads',producer); return 0; end
+    slot = store.get(3,producer,12)
+    if store.get(5,slot,1) <> fn | _writes[slot] <> 1 then do
+      call fail('LOWERING: entry slot must be bound once at function entry',producer); return 0
+    end
+    binding = _entryslots[fn]; if ordinal = 1 then binding = _contextslots[fn]
+    if slot <> binding then do; call fail('LOWERING: entry dispatch uses a different bound slot',producer); return 0; end
+    return slot
+  union: method = .int
+    arg left = .int, right = .int
+    total = left
+    do bit = 1 to 4 by 1
+      if bit = 3 then iterate
+      if (right <idiv> bit) % 2 & (left <idiv> bit) % 2 = 0 then total = total + bit
+    end
+    return total
+  run: method = .void
+    contextinput = .int; producer = .int
+    if _ready then return
+    _ready = 1
+    graph = dereference _graph
+    if graph.error() <> '' then do; _error = graph.error(); return; end
+    _identity = graph.identity()
+    if _limit < 1 | _budget < 1 then do; call fail('LIMIT: invalid entry admission budget'); return; end
+    _store = graph.storage(); store = dereference _store
+    contract = dereference store.contract(); texttype = contract.type('crexx.g.text').id()
+    _symbols = .llcsymbols..checked(_limit,_budget)
+    op = .llir..opview; name = .string; key = .string; targetname = .string
+    fn = .int; b = .int; opid = .int; ordinal = .int; id = .int; value = .int; i = .int
+    target = .int; state = .int; ignored = .int; terminal = .int; allowed = .int; selectedslot = .int
+    /* Arrays and the at-most-three-changes-per-block queue are checked before
+     * allocation. All record/name/edge traversal spends the existing budget. */
+    if reserve(store.count(1),40) = 0 | reserve(store.count(2),80) = 0 then return
+    if reserve(store.count(3),72) = 0 | reserve(store.count(4),16) = 0 | reserve(store.count(5),48) = 0 then return
+    do fn = 1 to store.count(1)
+      if charge() = 0 then return
+      name = store.text(store.get(1,fn,1)); if reserve(<blen>(name as .binary) + 64,1) = 0 | charge(<blen>(name as .binary) + 1) = 0 then return
+      call _functions.set(name,fn as .string)
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name(); b = op.blockid(); fn = store.get(2,b,1)
+      if name = 'crexx.c.call.external' then _hasexternal = 1
+      do i = 1 to op.inputs()
+        if charge() = 0 then return
+        value = op.input(i).id(); _uses[value] = _uses[value] + 1; _consumers[value] = opid
+      end
+      do i = 1 to store.get(3,opid,9)
+        if charge() = 0 then return
+        target = store.successor(opid,i); _predecessors[target] = _predecessors[target] + 1; _predops[target] = opid
+      end
+      if name = 'core.store' then do
+        slot = store.get(3,opid,12); _writes[slot] = _writes[slot] + 1; _writers[slot] = opid
+        producer = store.get(4,op.input(1).id(),1)
+        if b = store.get(1,fn,3) & store.get(3,producer,1) = 2 then do
+          ordinal = store.get(3,producer,12)
+          if ordinal = 1 & _contextslots[fn] = 0 then _contextslots[fn] = slot
+          if ordinal = 2 & _entryslots[fn] = 0 then _entryslots[fn] = slot
+        end
+      end
+      if name = 'crexx.c.procedure.enter' | name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.expose' then do
+        call exact(op); if _error <> '' then return
+      end
+      if name = 'crexx.c.procedure.enter' then _hasprocedure[fn] = 1
+    end
+    /* All-record exposure grouping also covers unreachable authored clauses. */
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      group = 0; opid = store.get(2,b,2)
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name()
+        if name = 'crexx.c.procedure.enter' | name = 'crexx.c.procedure.consume' | name = 'crexx.c.procedure.expose' then do
+          ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if name = 'crexx.c.return.empty' | name = 'crexx.c.bif' | name = 'crexx.c.call.missing' | name = 'crexx.c.call.external' | name = 'crexx.c.push' | name = 'crexx.c.queue' | name = 'crexx.c.numeric.digits' | name = 'crexx.c.numeric.fuzz' | name = 'crexx.c.numeric.form' | name = 'crexx.c.trace' then do
+          contextinput = 2; if name = 'crexx.c.return.empty' then contextinput = 1
+          ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if left(name,16) = 'crexx.c.address.' | left(name,16) = 'crexx.c.command.' then do
+          contextinput = 1
+          if name = 'crexx.c.address.select' | name = 'crexx.c.command.new' | name = 'crexx.c.command.active' then contextinput = 2
+          ignored = slot(op.input(contextinput),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if name = 'crexx.c.clause.begin' then do
+          ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.name' | name = 'crexx.c.signal.invalid' then do
+          ignored = slot(op.input(2),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if wordpos(name,'crexx.c.signal.policy crexx.c.call.policy crexx.c.clause.complete crexx.c.signal.capture crexx.c.signal.select') > 0 then do
+          ignored = slot(op.input(2),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if wordpos(name,'crexx.c.signal.deliver crexx.c.signal.handler.invalid crexx.c.signal.relay') > 0 then do
+          ignored = slot(op.input(1),store.get(2,b,1),1); if _error <> '' then return
+        end
+        if name = 'crexx.c.procedure.enter' then group = opid
+        else if name = 'crexx.c.procedure.expose' then do
+          if group = 0 then do; call fail('LOWERING: EXPOSE requires its contiguous PROCEDURE group',opid); return; end
+          enter = graph.operation(group).origin(); item = op.origin()
+          if store.get(9,enter.id(),1) <> store.get(9,item.id(),1) | item.first() < enter.first() | item.last() > enter.last() then do
+            call fail('LOWERING: EXPOSE origin is outside its PROCEDURE clause',opid); return
+          end
+          _groups[opid] = group
+          symbol = text(op,'name'); call _symbols.symbol(symbol)
+          if _symbols.error() <> '' then do; _error = _symbols.error(); return; end
+          boolean = .llir..boolcodec(); if boolean.check(op.attribute('indirect')) <> '' then do; call fail('LOWERING: invalid EXPOSE kind',opid); return; end
+        end
+        else if name <> 'core.load' then group = 0
+        else if group > 0 then do
+          if store.get(3,opid,12) <> _contextslots[store.get(2,b,1)] then group = 0
+        end
+        opid = store.get(3,opid,3)
+      end
+    end
+    do fn = 1 to store.count(1)
+      /* Keep setup separate so generic same-block forwarding cannot erase
+       * the canonical context/entry loads in the first dispatch test. */
+      b = store.get(1,fn,3); _dispatch[b] = 1; opid = store.get(2,b,2); entrybound = 0
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name()
+        call generated(op); if _error <> '' then return
+        if name = 'core.jump' | name = 'core.protect' then leave
+        allowed = 0
+        if name = 'core.argument' then allowed = store.get(3,opid,12) = 1 | store.get(3,opid,12) = 2
+        /* Structural allowance only. Mandatory signal admission later owns
+         * the exact payload, unique setup/store and complete all-record uses. */
+        if name = 'core.constant' then do
+          if op.result().type().id() = texttype & _tableconstants[fn] = 0 then do
+            _tableconstants[fn] = opid; allowed = 1
+          end
+        end
+        if name = 'core.load' | name = 'core.store' then do
+          selectedslot = store.get(3,opid,12)
+          allowed = selectedslot = _entryslots[fn]
+          if selectedslot = _entryslots[fn] then do
+            if name = 'core.load' & entrybound = 0 then do; call fail('LOWERING: entry slot read precedes parameter binding',opid); return; end
+            if name = 'core.store' then entrybound = 1
+          end
+          if store.get(5,selectedslot,2) = store.get(5,_contextslots[fn],2) then allowed = 1
+          if name = 'core.store' & store.get(5,selectedslot,2) = texttype then do
+            producer = store.get(4,op.input(1).id(),1)
+            if _tableconstants[fn] = producer & _tableslots[fn] = 0 & _writes[selectedslot] = 1 then do
+              if store.get(3,producer,3) = opid then do; _tableslots[fn] = selectedslot; allowed = 1; end
+            end
+          end
+        end
+        if allowed = 0 then do; call fail('LOWERING: noncanonical source-unit entry setup',opid); return; end
+        opid = store.get(3,opid,3)
+      end
+      if opid = 0 then do; call fail('LOWERING: source-unit setup requires dispatch jump'); return; end
+      if (_tableconstants[fn] > 0) <> (_tableslots[fn] > 0) then do; call fail('LOWERING: SIGNAL table setup requires its unique slot store',opid); return; end
+      if opid <> store.get(2,b,3) then do; call fail('LOWERING: source-unit dispatch jump must terminate setup',opid); return; end
+      if name = 'core.protect' then do
+        exceptional = store.successor(opid,2)
+        if exceptional = store.get(1,fn,3) | exceptional = store.successor(opid,1) then do
+          call fail('LOWERING: protected entry substitutes its exceptional successor',opid); return
+        end
+        /* Exceptional delivery belongs to this consumed activation, never a
+         * source invocation landing. Mandatory SIGNAL proof owns its closure. */
+        _before[exceptional] = union(_before[exceptional],2)
+      end
+      b = store.successor(opid,1); ordinal = 0
+      do forever
+        if charge() = 0 then return
+        if _dispatch[b] then do; call fail('LOWERING: cyclic or shared entry dispatch'); return; end
+        if store.get(2,b,1) <> fn then do; call fail('LOWERING: foreign entry dispatch block'); return; end
+        _dispatch[b] = 1; opid = store.get(2,b,2); test = 0
+        do while opid > 0
+          if charge() = 0 then return
+          op = graph.operation(opid); name = op.name()
+          call generated(op); if _error <> '' then return
+          if name = 'crexx.c.entry.test' then do
+            test = opid; leave
+          end
+          allowed = 0
+          if name = 'core.load' then do
+            selectedslot = store.get(3,opid,12)
+            allowed = selectedslot = _contextslots[fn] | selectedslot = _entryslots[fn]
+          end
+          if allowed = 0 then do; call fail('LOWERING: noncanonical entry dispatch setup',opid); return; end
+          opid = store.get(3,opid,3)
+        end
+        if test = 0 then do; call fail('LOWERING: missing canonical entry test'); return; end
+        id = integer(op,'id'); entryname = text(op,'name')
+        if _error <> '' then return
+        if id <> ordinal then do; call fail('LOWERING: entry IDs must be dense and source ordered',test); return; end
+        if id = 0 & entryname <> '' then do; call fail('LOWERING: entry zero requires its empty name sentinel',test); return; end
+        if id > 0 then do
+          if entryname = '' | entryname <> rexxclassic_unicode_upper(entryname) then do; call fail('LOWERING: entry name must be canonical and nonempty',test); return; end
+          call _symbols.label(entryname)
+          if _symbols.error() <> '' then do; _error = _symbols.error(); return; end
+          key = fn || ':' || entryname
+          if charge(<blen>(key as .binary) + 1) = 0 | reserve(<blen>(key as .binary) + 64,1) = 0 then return
+          if _names.get(key) <> '' then do; call fail('LOWERING: duplicate entry name',test); return; end
+          call _names.set(key,id as .string)
+        end
+        ignored = slot(op.input(1),fn,1); ignored = slot(op.input(2),fn,2)
+        if _error <> '' then return
+        branch = store.get(3,test,3)
+        if branch = 0 then do; call fail('LOWERING: entry test requires its branch',test); return; end
+        if branch <> store.get(2,b,3) | store.get(3,branch,1) <> 6 then do; call fail('LOWERING: entry test must directly control its branch',test); return; end
+        call generated(graph.operation(branch)); if _error <> '' then return
+        value = op.result().id()
+        if store.operand(branch,1) <> value | _uses[value] <> 1 then do; call fail('LOWERING: entry test requires one direct branch use',test); return; end
+        target = store.successor(branch,1)
+        if store.get(2,target,1) <> fn then do; call fail('LOWERING: foreign entry target',test); return; end
+        state = 1; if id = 0 then state = 2
+        _before[target] = union(_before[target],state); _tests[test] = 1
+        key = fn || ':' || id
+        if reserve(length(key) + 64,1) = 0 | charge(length(key) + 1) = 0 then return
+        call _entrytestids.set(key,test as .string)
+        ordinal = ordinal + 1; next = store.successor(branch,2)
+        if store.get(2,next,1) <> fn then do; call fail('LOWERING: foreign entry continuation',test); return; end
+        first = store.get(2,next,2)
+        if graph.operation(first).name() = 'crexx.c.entry.invalid' then do
+          _invalid[first] = 1; _dispatch[next] = 1
+          call generated(graph.operation(first)); if _error <> '' then return
+          absent = store.get(3,first,3); terminal = store.get(3,absent,3)
+          if graph.operation(absent).name() <> 'crexx.c.return.absent' | terminal <> store.get(2,next,3) then do; call fail('LOWERING: invalid dispatch closure',first); return; end
+          if graph.operation(terminal).name() <> 'core.return' | store.operand(terminal,1) <> graph.operation(absent).result().id() then do; call fail('LOWERING: invalid dispatch terminal',first); return; end
+          call generated(graph.operation(absent)); call generated(graph.operation(terminal))
+          if _error <> '' then return
+          leave
+        end
+        b = next
+      end
+      _entries[fn] = ordinal
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name()
+      if name = 'crexx.c.entry.test' & _tests[opid] = 0 then do; call fail('LOWERING: entry test outside canonical dispatch',opid); return; end
+      if name = 'crexx.c.entry.invalid' & _invalid[opid] = 0 then do; call fail('LOWERING: invalid entry outside canonical dispatch',opid); return; end
+      if name = 'crexx.c.call' then do
+        targetname = text(op,'target'); if charge(<blen>(targetname as .binary) + 1) = 0 then return
+        found = _functions.get(targetname); id = integer(op,'entry')
+        if found = '' then do; call fail('LOWERING: unknown source-unit call target',opid); return; end
+        if id <= 0 | id >= _entries[found as .int] then do; call fail('LOWERING: call entry is not a positive declared ID',opid); return; end
+        _callfunctions[opid] = found as .int
+      end
+    end
+    /* SIGNAL relay/handler.invalid have their own proved same-R returns.
+     * They are not program-root EXIT terminals: their exceptional activation
+     * was seeded consumed above, and mandatory SIGNAL admission owns the cold
+     * closure without introducing a reverse dependency into this proof. */
+    call programproof(); if _error <> '' then return
+    call argumentproof(); if _error <> '' then return
+    /* At most three new state bits can schedule each block. */
+    head = 1; tail = 0
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      if _dispatch[b] & _before[b] <> 0 then do; call fail('LOWERING: entry target re-enters dispatch'); return; end
+      if _before[b] > 0 then do; tail = tail + 1; _queue[tail] = b; end
+    end
+    do while head <= tail
+      b = _queue[head]; head = head + 1; state = _before[b]; opid = store.get(2,b,2); divergent = 0
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name()
+        select
+          when name = 'crexx.c.procedure.consume' then do
+            nextstate = 0; if state % 4 > 0 then nextstate = 2
+            if state >= 4 then nextstate = nextstate + 4
+            state = nextstate
+          end
+          when name = 'crexx.c.procedure.enter' then do
+            if state % 2 then state = 4
+            else do; divergent = 1; leave; end
+          end
+          when name = 'crexx.c.procedure.expose' then do
+            if state <> 4 then do; call fail('LOWERING: EXPOSE requires successful private entry',opid); return; end
+          end
+          when name = 'crexx.c.entry.invalid' | name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' | name = 'crexx.c.signal.invalid' then do
+            if state % 2 then do; call fail('LOWERING: fresh entry requires consume before divergent semantic work',opid); return; end
+            divergent = 1; leave
+          end
+          otherwise do
+            if state % 2 then do
+              allowed = name = 'core.jump'
+              if name = 'core.load' then allowed = store.get(3,opid,12) = _contextslots[store.get(2,b,1)]
+              if name = 'crexx.c.return.absent' then do
+                terminal = store.get(3,opid,3)
+                if terminal = store.get(2,b,3) & graph.operation(terminal).name() = 'core.return' then do
+                  if store.operand(terminal,1) = op.result().id() then do
+                    call generated(op); call generated(graph.operation(terminal))
+                    if _error <> '' then return
+                    divergent = 1; leave
+                  end
+                end
+              end
+              if allowed = 0 then do; call fail('LOWERING: fresh entry requires consume or PROCEDURE before semantic work',opid); return; end
+            end
+            if name = 'core.return' | name = 'crexx.c.exit' then do; divergent = 1; leave; end
+          end
+        end
+        opid = store.get(3,opid,3)
+      end
+      if divergent then iterate
+      last = store.get(2,b,3)
+      do edge = 1 to store.get(3,last,9)
+        if charge() = 0 then return
+        target = store.successor(last,edge)
+        if _dispatch[target] then do; call fail('LOWERING: body edge re-enters dispatch',last); return; end
+        merged = union(_before[target],state)
+        if merged <> _before[target] then do
+          _before[target] = merged; tail = tail + 1
+          if tail > store.count(2) * 3 then do; call fail('LIMIT: entry changed-state queue exceeded'); return; end
+          _queue[tail] = target
+        end
+      end
+    end
+    return

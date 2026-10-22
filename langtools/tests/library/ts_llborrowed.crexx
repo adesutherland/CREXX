@@ -1,0 +1,275 @@
+/* cREXX License (MIT). Independent prepared DFA/LR borrowing contracts. */
+options levelb
+import rxfnsb
+import llcore
+import llmunch
+import lllr
+import lllanguage
+import lllimits
+import llcomments
+import llast
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  language = makelanguage()
+  dfa = language.automaton(); tables = language.tables()
+  call check(dfa.verify() = 1 & tables.status() = 0,'prepared packed owners')
+  inputs = .string[]; inputs[1] = 'a'; inputs[2] = 'ab'; inputs[3] = 'a b'
+  inputs[4] = ''; inputs[5] = 'b'; inputs[6] = 'a a'; inputs[7] = 'abb'
+  inputs[8] = 'a' || '00'x
+  do i = 1 to inputs[0]
+    source = inputs[i] as .binary
+    owning = .lllanguage..request(language,source)
+    borrowed = .lllanguage..request.borrowed(reference language,source)
+    expected = owning.parse(); actual = borrowed.parse()
+    call check(actual = expected,'request status ' || i)
+    call check(borrowed.error() = owning.error() & borrowed.offset() = owning.offset(),'request diagnostic ' || i)
+    call same_tokens(owning.tokens(),borrowed.tokens(),'request tokens ' || i)
+    call same_tree(owning.tree(),borrowed.tree(),'request tree ' || i)
+  end
+  missing = .lllanguage..request.borrowed(reference language,'b' as .binary)
+  call check(missing.parse() = 1 & pos('alpha',missing.error()) > 0,'first terminal label')
+  extra = .lllanguage..request.borrowed(reference language,'aa' as .binary)
+  call check(extra.parse() = 1 & pos('expected beta, end of input',extra.error()) > 0,'ordered expected terminals and EOF')
+  complete = .lllanguage..request.borrowed(reference language,'abb' as .binary)
+  call check(complete.parse() = 1 & pos('expected end of input',complete.error()) > 0,'EOF expectation')
+
+  first = .lllanguage..request.borrowed(reference language,'ab' as .binary)
+  copied = first
+  call check(first.parse() = 0 & copied.parse() = 0,'copied request retains weak borrow')
+  tokens = copied.tokens(); tree = copied.tree()
+  call check(tree.label(copied.root()) = 'Pair','reduction label')
+  call check(tree.start(copied.root()) = 0 & tree.finish(copied.root()) = 2,'reduction byte span')
+  do mode = 1 to 3
+    name = word('munch reverse recover',mode)
+    owning_scan = .llmunch..scanner(dfa,'ab a' as .binary,name)
+    borrowed_scan = .llmunch..scanner.borrowed(reference dfa,'ab a' as .binary,name)
+    scan_copy = borrowed_scan
+    call check(owning_scan.run() = borrowed_scan.run() & scan_copy.run() = 0,'shared scanner loop ' || name)
+    call same_tokens(owning_scan.tokens(),scan_copy.tokens(),'scanner tokens ' || name)
+    call check(owning_scan.steps() = borrowed_scan.steps(),'scanner work ' || name)
+  end
+  owning_parser = .lllr..parser(tables,tokens)
+  borrowed_parser = .lllr..parser.borrowed(reference tables,tokens)
+  parser_copy = borrowed_parser
+  call check(owning_parser.run() = 0 & borrowed_parser.run() = 0 & parser_copy.run() = 0,'shared LR loop and copied reader')
+  call same_tree(owning_parser.tree(),borrowed_parser.tree(),'direct LR tree')
+  call check(owning_parser.work() = borrowed_parser.work(),'direct LR work')
+  wrapped_scan = language.borrowedscanner('ab' as .binary,'munch')
+  call check(wrapped_scan.run() = 0,'anchored definition scanner wrapper')
+  wrapped_parser = language.borrowedparser(wrapped_scan.tokens())
+  call check(wrapped_parser.run() = 0,'anchored definition parser wrapper')
+  image = dfa.image(); <at..i32>(0) image = 0
+  malformed_dfa = .llmunch..automaton.loaded(image)
+  malformed_scan = .llmunch..scanner.borrowed(reference malformed_dfa,'ab' as .binary,'munch')
+  call check(malformed_scan.run() = 3 & malformed_scan.tokens().size() = 0,'malformed DFA has no successful borrower')
+  graph = makegrammar()
+  incompatible_tables = .lllr..tables.loaded(graph,graph.size(),tables.image(),'wrong identity')
+  incompatible_parser = .lllr..parser.borrowed(reference incompatible_tables,tokens)
+  call check(incompatible_parser.run() = 3 & incompatible_parser.root() = 0,'incompatible LR has no successful borrower')
+  image = dfa.image(); <at..i32>(16 + 122 * 4) image = 0
+  changed_dfa = .llmunch..automaton.loaded(image)
+  changed_graph = makegrammar('Changed')
+  changed_tables = .lllr..tables.loaded(changed_graph,changed_graph.size(),tables.image(),changed_graph.signature() || '|root=' || changed_graph.size())
+  changed_language = .lllanguage..definition(changed_dfa,changed_tables,'utf8')
+  changed_request = .lllanguage..request.borrowed(reference changed_language,'zb' as .binary)
+  call check(changed_request.parse() = 0 & changed_request.tree().label(changed_request.root()) = 'Changed','freshly validated changed artifact owner')
+  original_request = .lllanguage..request.borrowed(reference language,'zb' as .binary)
+  call check(original_request.lex() = 1,'changed artifact does not replace original owner')
+
+  policy = .lllimits..policy()
+  hash = .llcomments..rules(); ok = hash.add('hash','line','#')
+  dash = .llcomments..rules(); ok = dash.add('dash','line','--')
+  hash_request = .lllanguage..request.borrowed(reference language,('a # x' || '0A'x || 'b') as .binary,policy,hash)
+  dash_request = .lllanguage..request.borrowed(reference language,('a -- x' || '0A'x || 'b') as .binary,policy,dash)
+  default_request = .lllanguage..request.borrowed(reference language,'a /* x */ b' as .binary)
+  plain = .lllanguage..request.borrowed(reference language,'a # x' as .binary)
+  call check(dash_request.parse() = 0 & default_request.parse() = 0 & hash_request.parse() = 0,'interleaved request comment policies')
+  call check(plain.lex() = 1,'override does not mutate baseline')
+  hash_tokens = hash_request.tokens()
+  call check(hash_tokens.start(1) = 6 & hash_tokens.finish(2) = 7,'comment override preserves byte spans')
+  tiny = .lllimits..policy(); ok = tiny.set('source.bytes',1)
+  limited = .lllanguage..request.borrowed(reference language,'ab' as .binary,tiny)
+  call check(limited.lex() = 2,'request source budget')
+  tiny = .lllimits..policy(); ok = tiny.set('scan.work',1)
+  limited = .lllanguage..request.borrowed(reference language,'ab' as .binary,tiny)
+  call check(limited.lex() = 2,'request scan budget')
+  tiny = .lllimits..policy(); ok = tiny.set('parse.work',1)
+  limited = .lllanguage..request.borrowed(reference language,'ab' as .binary,tiny)
+  call check(limited.parse_tokens(tokens) = 2,'request parse budget')
+  after_limit = .lllanguage..request.borrowed(reference language,'ab' as .binary)
+  call check(after_limit.parse() = 0,'limits do not poison owner')
+  bad_comments = .llcomments..rules(); ok = bad_comments.add('one','line','#'); ok = bad_comments.add('two','line','#')
+  bad_policy = .lllanguage..request.borrowed(reference language,'ab' as .binary,policy,bad_comments)
+  call check(bad_policy.lex() = 3 & pos('LL_COMMENT_CONTRACT:',bad_policy.error()) = 1,'invalid local comment override')
+  call check(bad_policy.parse_tokens(tokens) = 3,'manual token API cannot bypass failed construction')
+  empty_comments = .llcomments..rules
+  bad_policy = .lllanguage..request.borrowed(reference language,'ab' as .binary,policy,empty_comments)
+  call check(bad_policy.lex() = 3 & pos('LL_COMMENT_CONTRACT:',bad_policy.error()) = 1,'uninitialized override is not an empty policy')
+
+  graph = makegrammar()
+  unsupported = .lllanguage..definition.interpreted(dfa,graph,graph.size(),'ll1','utf8')
+  refused = .lllanguage..request.borrowed(reference unsupported,'ab' as .binary)
+  call check(refused.lex() = 0,'borrowed DFA lex independent of parse backend')
+  call check(refused.parse_tokens(refused.tokens()) = 3 & refused.error() = 'LL_BORROW_BACKEND: borrowed parsing requires LR1','no unsupported backend copy fallback')
+
+  empty_definition = reference .lllanguage..definition
+  empty_dfa = reference .llmunch..automaton
+  empty_tables = reference .lllr..tables
+  uninitialized_definition = .lllanguage..definition
+  uninitialized_dfa = .llmunch..automaton
+  uninitialized_tables = .lllr..tables
+  call bad_definition(empty_definition,'empty')
+  call bad_definition(reference uninitialized_definition,'uninitialized')
+  call bad_definition(expired_definition(),'expired')
+  call bad_dfa(empty_dfa,'empty')
+  call bad_dfa(reference uninitialized_dfa,'uninitialized')
+  call bad_dfa(expired_dfa(),'expired')
+  call bad_tables(empty_tables,tokens,'empty')
+  call bad_tables(reference uninitialized_tables,tokens,'uninitialized')
+  call bad_tables(expired_tables(),tokens,'expired')
+  expired_scan = make_expired_scan()
+  expired_scan_copy = expired_scan
+  call check(expired_scan.run() = 3 & pos('LL_BORROW_OWNER:',expired_scan.error()) = 1,'scanner expires after construction')
+  call check(expired_scan_copy.run() = 3,'copied scanner does not keep owner alive')
+  expired_parser = make_expired_parser(tokens)
+  call check(expired_parser.run() = 3 & pos('LL_BORROW_OWNER:',expired_parser.error()) = 1,'LR owner expires after construction')
+  expired_wrapped_scan = make_expired_wrapped_scan()
+  call check(expired_wrapped_scan.run() = 3 & pos('LL_BORROW_OWNER:',expired_wrapped_scan.error()) = 1,'wrapper DFA field expires with definition')
+  expired_wrapped_parser = make_expired_wrapped_parser(tokens)
+  call check(expired_wrapped_parser.run() = 3 & pos('LL_BORROW_OWNER:',expired_wrapped_parser.error()) = 1,'wrapper LR field expires with definition')
+  saved_ast = .llast..tree
+  expired_request = make_expired_request(reference saved_ast)
+  saved_tokens = expired_request.tokens(); saved_tree = expired_request.tree()
+  expired_request_copy = expired_request
+  call check(expired_request_copy.parse_tokens(saved_tokens) = 3 & pos('LL_BORROW_OWNER:',expired_request_copy.error()) = 1,'copied request does not keep owner alive')
+  failed_ast = expired_request.ast()
+  call check(failed_ast.status() = 3 & pos('LL_BORROW_OWNER:',failed_ast.error()) = 1,'AST metadata requires live owner')
+  failed_projection = expired_request.projection()
+  call check(failed_projection.run() = 3 & pos('LL_BORROW_OWNER:',expired_request.error()) = 1,'projection metadata requires live owner')
+  call check(saved_tokens.size() = 2 & saved_tree.source() = 'ab' as .binary,'materialized tokens/tree outlive owner')
+  call check(saved_ast.status() = 0 & saved_ast.root().kind() = 'pair','materialized AST outlives owner')
+  own_scan = make_own_scan(); scan_snapshot = own_scan
+  call check(scan_snapshot.run() = 0,'owning scanner copy outlives constructor local')
+  own_parser = make_own_parser(tokens); parser_snapshot = own_parser
+  call check(parser_snapshot.run() = 0,'owning parser copy outlives constructor local')
+  own_request = make_own_request(); request_snapshot = own_request
+  call check(request_snapshot.parse() = 0,'owning request copy outlives constructor local')
+  say 'BORROWED_READERS|checks=' || checks || '|failures=' || failures
+  return failures
+
+makegrammar: procedure = .llcore..grammar
+  arg label = 'Pair'
+  graph = .llcore..grammar('contextfree')
+  alpha = graph.add(1,1,0,'alpha',1)
+  alias = graph.add(1,1,0,'alias-alpha',2)
+  beta = graph.add(1,2,0,'beta',3)
+  optional = graph.add(15,beta,0,'optional-beta',4)
+  body = graph.add(2,alpha,optional,'pair-body',5)
+  root = graph.add(5,body,0,label,6)
+  return graph
+
+maketables: procedure = .lllr..tables
+  graph = makegrammar()
+  built = .lllr..tables(graph,graph.size(),'lr1')
+  call check(built.status() = 0,'small independent LR construction')
+  return .lllr..tables.loaded(graph,graph.size(),built.image(),graph.signature() || '|root=' || graph.size())
+
+makedfa: procedure = .llmunch..automaton
+  built = .llmunch..automaton(4,3)
+  ok = built.mapping(97,0); ok = built.mapping(98,1); ok = built.mapping(32,2); ok = built.mapping(10,2)
+  ok = built.transition(1,0,2); ok = built.transition(1,1,3); ok = built.transition(1,2,4); ok = built.transition(4,2,4)
+  ok = built.accepting(2,1); ok = built.accepting(3,2); ok = built.accepting(4,-1)
+  return .llmunch..automaton.loaded(built.image())
+
+makelanguage: procedure = .lllanguage..definition
+  language = .lllanguage..definition(makedfa(),maketables(),'utf8','/*','*/')
+  call language.token(1,'alpha'); call language.token(2,'beta')
+  ok = language.astmap('Pair','pair'); ok = language.keep('Pair',5,0)
+  return language
+
+bad_definition: procedure = .void
+  arg owner = reference .lllanguage..definition, label = .string
+  reader = .lllanguage..request.borrowed(owner,'ab' as .binary)
+  call check(reader.parse() = 3 & pos('LL_BORROW_OWNER:',reader.error()) = 1,'definition ' || label)
+  call check(reader.tokens().size() = 0 & reader.root() = 0,'definition atomic refusal ' || label)
+  return
+
+bad_dfa: procedure = .void
+  arg owner = reference .llmunch..automaton, label = .string
+  reader = .llmunch..scanner.borrowed(owner,'ab' as .binary,'munch')
+  call check(reader.run() = 3 & pos('LL_BORROW_OWNER:',reader.error()) = 1,'DFA ' || label)
+  call check(reader.tokens().size() = 0,'DFA atomic refusal ' || label)
+  return
+
+bad_tables: procedure = .void
+  arg owner = reference .lllr..tables, tokens = .llcore..stream, label = .string
+  reader = .lllr..parser.borrowed(owner,tokens)
+  call check(reader.run() = 3 & pos('LL_BORROW_OWNER:',reader.error()) = 1,'LR ' || label)
+  call check(reader.root() = 0 & reader.tree().size() = 0,'LR atomic refusal ' || label)
+  return
+
+expired_definition: procedure = reference .lllanguage..definition
+  owner = makelanguage()
+  return reference owner
+expired_dfa: procedure = reference .llmunch..automaton
+  owner = makedfa()
+  return reference owner
+expired_tables: procedure = reference .lllr..tables
+  owner = maketables()
+  return reference owner
+make_expired_scan: procedure = .llmunch..scanner
+  owner = makedfa()
+  return .llmunch..scanner.borrowed(reference owner,'ab' as .binary,'munch')
+make_expired_parser: procedure = .lllr..parser
+  arg tokens = .llcore..stream
+  owner = maketables()
+  return .lllr..parser.borrowed(reference owner,tokens)
+make_expired_wrapped_scan: procedure = .llmunch..scanner
+  owner = makelanguage()
+  return owner.borrowedscanner('ab' as .binary,'munch')
+make_expired_wrapped_parser: procedure = .lllr..parser
+  arg tokens = .llcore..stream
+  owner = makelanguage()
+  return owner.borrowedparser(tokens)
+make_expired_request: procedure = .lllanguage..request
+  arg result = reference .llast..tree
+  owner = makelanguage()
+  reader = .lllanguage..request.borrowed(reference owner,'ab' as .binary)
+  call check(reader.parse() = 0,'local owner request completes')
+  target = dereference result
+  target = reader.ast()
+  return reader
+make_own_scan: procedure = .llmunch..scanner
+  owner = makedfa()
+  return .llmunch..scanner(owner,'ab' as .binary,'munch')
+make_own_parser: procedure = .lllr..parser
+  arg tokens = .llcore..stream
+  owner = maketables()
+  return .lllr..parser(owner,tokens)
+make_own_request: procedure = .lllanguage..request
+  owner = makelanguage()
+  return .lllanguage..request(owner,'ab' as .binary)
+
+same_tokens: procedure = .void
+  arg left = .llcore..stream, right = .llcore..stream, label = .string
+  call check(left.source() = right.source() & left.size() = right.size(),label)
+  do i = 0 to left.size() - 1
+    call check(left.symbol(i) = right.symbol(i) & left.start(i) = right.start(i) & left.finish(i + 1) = right.finish(i + 1),label || ' span')
+  end
+  return
+same_tree: procedure = .void
+  arg left = .llcore..tree, right = .llcore..tree, label = .string
+  call check(left.source() = right.source() & left.size() = right.size(),label)
+  do i = 1 to left.size()
+    call check(left.kind(i) = right.kind(i) & left.label(i) = right.label(i),label || ' kind/label')
+    call check(left.start(i) = right.start(i) & left.finish(i) = right.finish(i),label || ' span')
+    call check(left.left(i) = right.left(i) & left.right(i) = right.right(i),label || ' children')
+  end
+  return
+check: procedure = .void expose checks failures
+  arg condition = .int, label = .string
+  checks = checks + 1
+  if condition then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

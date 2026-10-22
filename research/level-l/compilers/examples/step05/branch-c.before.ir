@@ -1,22 +1,37 @@
 function $MAIN -> crexx.c.result
+  argument 1 crexx.c.context required
+  argument 2 crexx.g.int64 required
   entry.1:
-    %1 = crexx.c.pool.new @origin:2
-    core.store %1 slot:$pool @origin:2
-    %2 = core.argument argument:1 @origin:2
-    core.store %2 slot:$arguments @origin:2
-    %3 = core.argument argument:2 @origin:2
-    core.store %3 slot:$numeric @origin:2
-    %4 = core.constant 31 : crexx.c.value @origin:11
-    %5 = crexx.c.truth %4 @origin:4
-    core.branch %5 -> if.yes.2 -> if.no.3 @origin:4
-  if.yes.2:
-    %6 = core.constant 796573 : crexx.c.value @origin:19
-    crexx.c.say %6 @origin:12
-    core.jump -> if.join.4 @origin:4
-  if.no.3:
-    %7 = core.constant 6E6F : crexx.c.value @origin:27
-    crexx.c.say %7 @origin:20
-    core.jump -> if.join.4 @origin:4
-  if.join.4:
-    %8 = crexx.c.return.absent @origin:2
-    core.return %8 @origin:2
+    %1 = core.argument argument:1 @origin:2
+    core.store %1 slot:$context @origin:2
+    %2 = core.argument argument:2 @origin:2
+    core.store %2 slot:$entry @origin:2
+    core.jump -> entry.dispatch.2 @origin:2
+  entry.dispatch.2:
+    %3 = core.load slot:$context @origin:2
+    %4 = core.load slot:$entry @origin:2
+    %5 = crexx.c.entry.test %3 %4 id="0" name="" @origin:2
+    core.branch %5 -> source.main.3 -> entry.next.4 @origin:2
+  source.main.3:
+    %7 = core.load slot:$context @origin:10
+    %8 = crexx.c.load %7 name="levelc" @origin:10
+    %9 = core.constant 31 : crexx.c.value @origin:18
+    %10 = core.load slot:$context @origin:11
+    %11 = crexx.c.truth %9 %10 @origin:11
+    %12 = core.constant true : core.boolean @origin:19
+    core.branch %12 -> if.yes.5 -> if.no.6 @origin:11
+  entry.next.4:
+    crexx.c.entry.invalid @origin:2
+    %6 = crexx.c.return.absent @origin:2
+    core.return %6 @origin:2
+  if.yes.5:
+    %13 = core.constant 796573 : crexx.c.value @origin:27
+    crexx.c.say %13 @origin:20
+    core.jump -> if.join.7 @origin:11
+  if.no.6:
+    %14 = core.constant 6E6F : crexx.c.value @origin:35
+    crexx.c.say %14 @origin:28
+    core.jump -> if.join.7 @origin:11
+  if.join.7:
+    %15 = crexx.c.return.absent @origin:2
+    core.return %15 @origin:2

@@ -24,7 +24,7 @@
 
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressredirect addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment crexxaddressenvironment systemaddressenvironment shelladdressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
+namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_var_ref _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_apply_response_request_stem_ref _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressredirect addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment crexxaddressenvironment systemaddressenvironment shelladdressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
 import rxfnsb
 
 /**
@@ -1183,6 +1183,20 @@ _address_link_request_sandbox: procedure = .void
 
 _address_apply_response_var: procedure = .void
   arg response = .addressresponse, internal_name = .string, expose target = .string
+  call _address_apply_response_var_ref(reference response, internal_name, reference target)
+  return
+
+/** Apply ordered VAR updates without copying the response container.
+ * @param response_ref live response, borrowed only for this call
+ * @param internal_name existing internal-name or external-alias match key
+ * @param target_ref live scalar output storage
+ * @return 1 when at least one VAR update matched; the last match wins
+ */
+_address_apply_response_var_ref: procedure = .int
+  arg response_ref = reference .addressresponse, internal_name = .string, target_ref = reference .string
+  response = dereference response_ref
+  target = dereference target_ref
+  matched = 0
 
   update = .addressbinding
   update_kind = .string
@@ -1200,9 +1214,10 @@ _address_apply_response_var: procedure = .void
 
     if normalize_environment_name(internal_name) = normalize_environment_name(update_internal) | normalize_environment_name(internal_name) = normalize_environment_name(update_alias) then do
       target = update.get_value()
+      matched = 1
     end
   end
-  return
+  return matched
 
 _address_apply_response_sandbox: procedure = .void
   arg response = .addressresponse, expose sandbox = .addresssandbox
@@ -1264,6 +1279,20 @@ _address_apply_response_stem: procedure = .void
 
 _address_apply_response_request_stem: procedure = .void
   arg response = .addressresponse, request = .addressrequest, binding_index = .int, internal_name = .string
+  call _address_apply_response_request_stem_ref(reference response, reference request, binding_index, internal_name)
+  return
+
+/** Merge ordered STEM updates into one live request binding.
+ * @param response_ref live response, borrowed only for this call
+ * @param request_ref live request whose selected shared stem is updated
+ * @param binding_index one-based selected binding index
+ * @param internal_name existing stem basename or external-alias match key
+ * @return no result; callers retain the complete counted request snapshot
+ */
+_address_apply_response_request_stem_ref: procedure = .void
+  arg response_ref = reference .addressresponse, request_ref = reference .addressrequest, binding_index = .int, internal_name = .string
+  response = dereference response_ref
+  request = dereference request_ref
 
   update = .addressbinding
   update_kind = .string

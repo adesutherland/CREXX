@@ -1,0 +1,121 @@
+/* cREXX License (MIT). Existing native ADDRESS source, existing B environment.
+ * Python translates only editor_command's maintained response rows from
+ * compiler/tests/src/test_levelc_address_host_callback.c into the argv manifest.
+ * The original C source and its twelve-call/file/status oracles are unchanged.
+ */
+options levelb
+import rxfnsb
+import _rxsysb
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import nativeaddressfixture
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do; say 'FAIL|NATIVE_ADDRESS_HOST|arguments=' || argv[0]; return 2; end
+  call _reset_address_environments()
+  environment = .NativeEditorEnvironment('EDITOR')
+  calls = 0; invalid = 0
+  call environment.observe(reference calls,reference invalid)
+  call environment.configure(argv[1])
+  call _register_address_environment('EDITOR',environment)
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool()
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+  returned = nativeaddressfixture..run(reference context,0)
+  original_pool = reference pool; actual_pool = context.pool()
+  original_activation = reference activation; actual_activation = context.activation()
+  original_config = reference config; actual_config = context.config()
+  pool_valid = <refvalid>(actual_pool); pool_same = 0
+  if pool_valid then pool_same = original_pool <refsame> actual_pool
+  activation_same = 0; config_same = 0
+  if <refvalid>(actual_activation) then activation_same = original_activation <refsame> actual_activation
+  if <refvalid>(actual_config) then config_same = original_config <refsame> actual_config
+  has_value = returned.hasReturnValue(); value = '<absent>'
+  if has_value then value = returned.returnValue().asString()
+  environment_valid = environment.valid(); parse_observations = context.parseObservations()
+  if pool_valid = 0 | pool_same = 0 | activation_same = 0 | config_same = 0 | has_value = 0 | value <> '0' | environment_valid = 0 | parse_observations then do
+    say 'FAIL|NATIVE_ADDRESS_HOST|return-present=' || has_value || '|value=' || value || '|calls=' || environment.calls() || '|environment-valid=' || environment_valid || '|pool-valid=' || pool_valid || '|pool-same=' || pool_same || '|activation-same=' || activation_same || '|config-same=' || config_same || '|parse-observations=' || parse_observations
+    return 1
+  end
+  call _reset_address_environments()
+  say 'NATIVE_ADDRESS_HOST|calls=' || environment.calls() || '|PASS'
+  return 0
+
+NativeEditorEnvironment: class implements .addressenvironment
+  _commands = .string[]
+  _codes = .int[]
+  _conditions = .string[]
+  _output = .string[]
+  _error = .string[]
+  _calls = reference .int
+  _invalid = reference .int
+  *: match
+    arg name = .string
+    if _address_normalize_environment_name(name) == 'EDITOR' then return 100
+    return 0
+  *: factory
+    arg name = .string
+    return
+  environment_name: method = .string
+    return 'EDITOR'
+  environment_id: method = .string
+    return 'EDITOR'
+  observe: method = .void
+    arg calls = reference .int, invalid = reference .int
+    _calls = calls; _invalid = invalid
+    return
+  configure: method = .void
+    arg path = .string
+    invalid = dereference _invalid
+    rows = readlines(path)
+    do row_index = 1 to rows[0]
+      fields = splitrow(rows[row_index])
+      if fields[0] <> 5 then do; invalid = 1; return; end
+      command = fields[1]; code = fields[2]; condition = fields[3]
+      output_hex = fields[4]; error_hex = fields[5]
+      index = _commands[0] + 1
+      _commands[index] = command; _codes[index] = code as .int
+      _conditions[index] = condition
+      _output[index] = x2bin(output_hex) as .string
+      _error[index] = x2bin(error_hex) as .string
+    end
+    return
+  calls: method = .int
+    calls = dereference _calls
+    return calls
+  valid: method = .int
+    invalid = dereference _invalid; calls = dereference _calls
+    return invalid = 0 & calls = _commands[0]
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    calls = dereference _calls; invalid = dereference _invalid
+    calls = calls + 1
+    if calls > _commands[0] then do; invalid = 1; return .addressresponse(-10); end
+    index = calls
+    if request.get_command() <> _commands[index] then do; invalid = 1; return .addressresponse(-10); end
+    response = .addressresponse(_codes[index])
+    endpoint = .addressredirect
+    if _conditions[index] <> '' then call response.set_condition_name(_conditions[index])
+    if _output[index] <> '' then do
+      endpoint = request.get_stdout_endpoint()
+      call endpoint.native_emit(_output[index]); call endpoint.finish()
+    end
+    if _error[index] <> '' then do
+      endpoint = request.get_stderr_endpoint()
+      call endpoint.native_emit(_error[index]); call endpoint.finish()
+    end
+    return response
+
+splitrow: procedure = .string[]
+  arg row = .string
+  fields = .string[]
+  do forever
+    delimiter = pos('|',row)
+    if delimiter = 0 then do; fields[fields[0] + 1] = row; return fields; end
+    fields[fields[0] + 1] = left(row,delimiter - 1)
+    row = substr(row,delimiter + 1)
+  end

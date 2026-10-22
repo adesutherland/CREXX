@@ -1,0 +1,298 @@
+/* cREXX License (MIT). Explicit static provider selections, owned by C. */
+options levelb
+namespace llcbindings expose binding prepared
+import rxfnsb
+import llbinmeta
+import llcompilercontracts
+import rexxclassicunicodeproperties
+
+/** One explicit artifact stem and fully qualified callable identity. */
+binding: class
+  _artifact = .string
+  _callable = .string
+  *: factory
+    arg artifact = .string, callable = .string
+    _artifact = artifact; _callable = callable
+    return
+  artifact: method = .string
+    return _artifact
+  callable: method = .string
+    return _callable
+
+/** Immutable prepared selections. Images/readers exist only while their group
+ * is selected; later queries own small checked records, never image snapshots.
+ * @param root explicit artifact directory
+ * @param bindings ordered selections, not source files or a search path
+ * @param bytes aggregate logical retained/acquired payload allowance
+ * @param work aggregate logical acquisition/metadata/query allowance
+ */
+prepared: class
+  _root = .string
+  _input = .binding[]
+  _artifacts = .string[]
+  _callables = .string[]
+  _signatures = .llcompilercontracts..signature[]
+  _sizes = .int[]
+  _aliases = .stem
+  _bytecap = .int
+  _workcap = .int
+  _bytes = .int
+  _work = .int
+  _ready = .int
+  _error = .string
+  *: factory
+    arg root = .string, bindings = .binding[], bytes = .int, work = .int
+    _bytecap = bytes; _workcap = work
+    if bytes < 0 | work < 0 then do
+      _error = 'LL_RESOURCE_LIMIT: provider allowance is negative'; _ready = 1; return
+    end
+    if pos('00'x as .string,root) > 0 | (bindings[0] > 0 & root = '') then do
+      _error = 'LL_COMPILER_IMPORT: provider requires an explicit NUL-free artifact directory'; _ready = 1; return
+    end
+    extent = <blen>(root as .binary)
+    if extent > bytes | extent > work then do
+      _error = 'LL_RESOURCE_LIMIT: provider root payload'; _ready = 1; return
+    end
+    _bytes = extent; _work = extent; _root = root
+    if bindings[0] > (bytes - _bytes) <idiv> 8 | bindings[0] > (work - _work) <idiv> 8 then do
+      _error = 'LL_RESOURCE_LIMIT: provider binding vector'; _ready = 1; return
+    end
+    _bytes = _bytes + bindings[0] * 8; _work = _work + bindings[0] * 8
+    item = .binding; stem = .string; name = .string
+    do i = 1 to bindings[0]
+      item = bindings[i]
+      if initialized(item) = 0 then do
+        _error = 'LL_COMPILER_IMPORT: uninitialized provider binding'; _ready = 1; return
+      end
+      stem = item.artifact(); name = item.callable()
+      extent = <blen>(stem as .binary) + <blen>(name as .binary)
+      if extent > _bytecap - _bytes - 16 then do
+        _error = 'LL_RESOURCE_LIMIT: provider binding payload'; _ready = 1; return
+      end
+      _bytes = _bytes + 16 + extent
+      if extent > (_workcap - _work) <idiv> 4 then do
+        _error = 'LL_RESOURCE_LIMIT: provider binding copy work'; _ready = 1; return
+      end
+      _work = _work + extent * 4
+    end
+    _input = bindings
+    return
+  reserve: method = .int
+    arg bytes = .int, work = .int
+    if _error <> '' then return 0
+    if bytes < 0 | bytes > _bytecap - _bytes then do
+      _error = 'LL_RESOURCE_LIMIT: provider metadata.bytes'; return 0
+    end
+    _bytes = _bytes + bytes
+    if work < 0 | work > _workcap - _work then do
+      _error = 'LL_RESOURCE_LIMIT: provider metadata.work'; return 0
+    end
+    _work = _work + work
+    return 1
+  fail: method = .void
+    arg reason = .string
+    if _error = '' then _error = 'LL_COMPILER_IMPORT: ' || reason
+    return
+  /** Reserve before each bounded read/append. Fixed chunk temporaries are not
+   * retained payload; actual acquired bytes and reserved read work never refund. */
+  readimage: method = .binary
+    arg artifact = .string
+    image = .binary; chunk = .binary; fileid = 0; eof = 0; status = 0; closed = 0
+    path = _root || '/' || artifact || '.rxbin'; mode = 'rb'
+    assembler fopen fileid,path,mode
+    if fileid = 0 then do; call fail('cannot open provider ' || artifact); return image; end
+    do
+    do while eof = 0 & _error = ''
+      wanted = min(32768,_bytecap - _bytes,_workcap - _work)
+      if wanted <= 0 then do
+        ignored = reserve(1,1); leave
+      end
+      if reserve(0,wanted) = 0 then leave
+      assembler freadb chunk,fileid,wanted
+      size = <blen>(chunk)
+      assembler ferror status,fileid
+      assembler feof eof,fileid
+      if status <> 0 | (size = 0 & eof = 0) then do; call fail('cannot read provider ' || artifact); leave; end
+      if reserve(size,0) = 0 then leave
+      if size > 0 then assembler bappend image,chunk
+    end
+    on signal as problem
+      assembler fclose closed,fileid
+      call fail('cannot read provider ' || artifact || ': ' || problem.name())
+      return image
+    end
+    assembler fclose closed,fileid
+    if closed <> 0 then call fail('cannot close provider ' || artifact)
+    return image
+  /** Charge each retained map projection before insertion/replacement. */
+  remember: method = .void
+    arg map_ref = reference .stem, key = .string, value = .string
+    extent = <blen>(key as .binary) + <blen>(value as .binary)
+    if reserve(32 + extent,4 + extent) = 0 then return
+    map = dereference map_ref
+    call map.set(key,value)
+    return
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    if _input[0] = 0 then return
+    groups = .stem(); tails = .stem(); targets = .stem(); _aliases = .stem()
+    next = .int[]; groupnames = .string[]; selected = .llbinmeta..callable[]
+    item = .binding; stem = .string; name = .string; canonical = .string; key = .string
+    known = .string; i = .int; n = .int; first = .int; tail = .int; group = .int
+    image = .binary; reader = .llbinmeta..catalog; raw = .llbinmeta..callable
+    signature = .llcompilercontracts..signature; extent = .int; ignored = .int
+    emptyreader = .llbinmeta..catalog
+    do
+      do i = 1 to _input[0]
+        item = _input[i]
+        if initialized(item) = 0 then do; call fail('uninitialized provider binding'); return; end
+        stem = item.artifact(); name = item.callable()
+        extent = <blen>(stem as .binary) + <blen>(name as .binary)
+        if extent > 2147483647 <idiv> 4 then do; ignored = reserve(-1,0); return; end
+        if reserve(64 + extent,16 + extent * 4) = 0 then return
+        if stem = '' | stem == '.' | stem == '..' | pos('00'x as .string,stem) > 0 | pos('/',stem) > 0 | pos('\',stem) > 0 | pos(':',stem) > 0 then do
+          call fail('provider artifact must be a nonempty stem'); return
+        end
+        if llbinmeta..validname(name) = 0 | pos('.',name) = 0 then do
+          call fail('provider callable must be a qualified metadata identity'); return
+        end
+        canonical = upper(name)
+        if targets.get(canonical) <> '' then do; call fail('duplicate provider callable ' || name); return; end
+        call remember(reference targets,canonical,i as .string)
+        _artifacts[i] = stem; _callables[i] = name; next[i] = 0
+        key = stem; known = groups.get(key)
+        if known = '' then do
+          call remember(reference groups,key,i as .string); call remember(reference tails,key,i as .string)
+          if reserve(8 + <blen>(key as .binary),<blen>(key as .binary)) = 0 then return
+          groupnames[groupnames[0] + 1] = key
+        end
+        else do
+          tail = tails.get(key) as .int; next[tail] = i
+          call remember(reference tails,key,i as .string)
+        end
+        call alias(name,i)
+        if _error <> '' then return
+        key = substr(name,lastpos('.',name) + 1)
+        if key <> '' & key \== name then call alias(key,i)
+      end
+      do group = 1 to groupnames[0]
+        first = groups.get(groupnames[group]) as .int
+        image = readimage(_artifacts[first])
+        if _error <> '' then return
+        reader = .llbinmeta..catalog.bounded(reference image,_bytecap - _bytes,_workcap - _work)
+        n = first
+        do while n > 0
+          raw = reader.classify(_callables[n])
+          if raw.error() <> '' | reader.error() <> '' then leave
+          /* Transport the already charged owned result. No new checked
+           * signature or C payload is constructed while this reader is live. */
+          assembler move selected[n],raw
+          assembler null raw
+          n = next[n]
+        end
+        ignored = reserve(reader.consumed(),reader.work())
+        if _error <> '' then return
+        if n > 0 then do; call fail(raw.error()); return; end
+        if reader.error() <> '' then do; call fail(reader.error()); return; end
+        reader = emptyreader; image = ''x
+        /* The complete group is selected/debited before C-owned copies use
+         * the remaining allowance. No reader can spend that allowance again. */
+        n = first
+        do while n > 0
+          held_ref = reference selected[n]
+          held = dereference held_ref
+          if held.kind() \== 'procedure' then do; call fail('provider is not an ordinary procedure: ' || _callables[n]); return; end
+          /* The selected ABI has one nominal formal. Reject incompatible
+           * multi-formal/type text before the general signature parser's
+           * duplicate/type walks; the parser still validates the accepted name. */
+          arguments = held.arguments(); declared = held.result()
+          extent = <blen>((arguments || declared) as .binary)
+          if extent > 2147483647 <idiv> 16 then do; ignored = reserve(-1,0); return; end
+          if reserve(0,extent * 16) = 0 then return
+          split = pos('=',arguments)
+          if pos(',',arguments) > 0 | split = 0 then do
+            call fail('provider requires one required by-value activation: ' || _callables[n]); return
+          end
+          formaltype = lower(strip(substr(arguments,split + 1)))
+          if lower(strip(declared)) \== '.void' | (formaltype \== '.rexxactivationarguments' & formaltype \== '.rexxactivation..rexxactivationarguments') then do
+            call fail('provider requires void and one by-value activation: ' || _callables[n]); return
+          end
+          extent = <blen>((held.name() || held.result() || held.arguments() || held.flags()) as .binary)
+          if extent > 2147483647 <idiv> 4 then do; ignored = reserve(-1,0); return; end
+          if reserve(128 + extent * 4,16 + extent * 4) = 0 then return
+          signature = .llcompilercontracts..signature(held.name(),declared,arguments,held.flags())
+          if signature.error() <> '' then do; call fail('provider signature: ' || signature.error()); return; end
+          if signature.flags_text() \== 'b' | signature.result() \== '.void' | signature.arguments() <> 1 then do
+            call fail('provider requires void and one by-value activation: ' || _callables[n]); return
+          end
+          if signature.optional(1) | signature.exposed(1) | (signature.type(1) \== '.rexxactivationarguments' & signature.type(1) \== '.rexxactivation..rexxactivationarguments') then do
+            call fail('provider requires one required by-value activation: ' || _callables[n]); return
+          end
+          _callables[n] = held.name(); _sizes[n] = extent * 4 + 128
+          assembler move _signatures[n],signature
+          assembler null signature
+          n = next[n]
+        end
+        /* End every scoped held borrow before releasing raw result owners. */
+        n = first
+        do while n > 0
+          assembler null selected[n]
+          n = next[n]
+        end
+      end
+    on signal as problem
+      call fail('provider preparation: ' || problem.name() || ': ' || problem.message())
+    end
+    return
+  alias: method = .void
+    arg key = .string, index = .int
+    extent = <blen>(key as .binary)
+    if extent > 2147483647 <idiv> 4 then do; ignored = reserve(-1,0); return; end
+    if reserve(0,extent * 4) = 0 then return
+    key = rexxclassic_unicode_upper(key)
+    known = _aliases.get(key)
+    if known <> '' then do
+      if known as .int <> index then call remember(reference _aliases,key,'-1')
+      return
+    end
+    call remember(reference _aliases,key,index as .string)
+    return
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  root: method = .string
+    if _error <> '' then return ''
+    extent = <blen>(_root as .binary)
+    if reserve(extent,extent) = 0 then return ''
+    return _root
+  find: method = .int
+    arg name = .string
+    call run()
+    if _error <> '' | _input[0] = 0 then return 0
+    extent = <blen>(name as .binary)
+    if extent > 2147483647 <idiv> 4 then do; ignored = reserve(-1,0); return 0; end
+    if reserve(0,extent * 4 + 4) = 0 then return 0
+    value = _aliases.get(rexxclassic_unicode_upper(name))
+    if value = '' then return 0
+    return value as .int
+  artifact: method = .string
+    arg index = .int
+    call run()
+    if _error <> '' | index < 1 | index > _artifacts[0] then return ''
+    if reserve(<blen>(_artifacts[index] as .binary),<blen>(_artifacts[index] as .binary)) = 0 then return ''
+    return _artifacts[index]
+  callable: method = .string
+    arg index = .int
+    call run()
+    if _error <> '' | index < 1 | index > _callables[0] then return ''
+    if reserve(<blen>(_callables[index] as .binary),<blen>(_callables[index] as .binary)) = 0 then return ''
+    return _callables[index]
+  signature: method = .llcompilercontracts..signature
+    arg index = .int
+    call run()
+    if _error <> '' then return .llcompilercontracts..signature.failed(_error)
+    if index < 1 | index > _signatures[0] then return .llcompilercontracts..signature.failed('LL_COMPILER_IMPORT: invalid provider index')
+    if reserve(_sizes[index],_sizes[index]) = 0 then return .llcompilercontracts..signature.failed(_error)
+    return _signatures[index]

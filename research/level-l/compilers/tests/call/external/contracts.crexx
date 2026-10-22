@@ -1,0 +1,405 @@
+/* Independent prepared-provider admission. Arguments are artifact directories,
+ * not source discovery paths; no provider body is executed by this probe. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+import llcir
+import llcbindings
+import llcfrontend
+import llccompiler
+import llcrxas
+import llcompilercontracts
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  call formals()
+  call bindings(argv[1])
+  call limits(argv[1])
+  call borrowed(argv[1])
+  call service(argv[1])
+  selections = .llcbindings..binding[]
+  selections[1] = .llcbindings..binding('c-provider','extfixture.LENGTH')
+  owner = .llcbindings..prepared(argv[1],selections,67108864,67108864)
+  call check(owner.status() = 0,'prepared C provider: ' || owner.error())
+  call schema()
+  mode = .int; graph = .llir..module
+  loaded = .llir..module
+  do mode = 1 to 11
+    graph = fixture(mode)
+    call check(graph.error() == '', 'generic-valid raw control ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    call admission(reference owner,graph,mode = 1 | mode = 7 | mode = 11,'raw ' || mode)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '', 'loaded raw control ' || mode)
+    if loaded.error() == '' then call admission(reference owner,loaded,mode = 1 | mode = 7 | mode = 11,'loaded ' || mode)
+    if mode = 7 | mode = 11 then do
+      changed = llirservices..optimise(reference graph)
+      call check(changed.status() = 'changed','typed packet spill really transforms')
+      if changed.status() = 'changed' then do
+        rewritten = changed.result()
+        call check(bincompare(graph.binary(),rewritten.binary()) <> 0,'transformed admission receives different graph bytes')
+        call admission(reference owner,rewritten,1,'transformed typed packet spill')
+      end
+    end
+  end
+  graph = deadcycle()
+  call check(graph.error() == '', 'generic-valid dead self-continuation: ' || graph.error())
+  if graph.error() == '' then do
+    call admission(reference owner,graph,0,'dead self-continuation','external arguments contain a cyclic slot boundary')
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '', 'loaded dead self-continuation')
+    if loaded.error() == '' then call admission(reference owner,loaded,0,'loaded dead self-continuation','external arguments contain a cyclic slot boundary')
+  end
+  say 'EXTERNAL_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+loadgraph: procedure = .llir..module
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref
+  storage = dereference graph.storage(); contract = dereference storage.contract()
+  return llir..loadbinary(contract,graph.binary())
+
+formals: procedure = .void
+  names = .string[]
+  item = .llcompilercontracts..signature
+  names[1] = 'é!?$@#.part'; names[2] = '.part'; names[3] = 'a.7'; names[4] = '_frame'
+  i = .int
+  do i = 1 to names[0]
+    item = .llcompilercontracts..signature('fixture.run','.void',names[i] || '=.rexxactivationarguments','b')
+    call check(item.error() == '' & item.paramname(1) == names[i] & \item.optional(1),'metadata formal spelling ' || names[i] || ': ' || item.error())
+  end
+  item = .llcompilercontracts..signature('fixture.run','.void','?é!?$@#.part=.rexxactivationarguments','b')
+  call check(item.error() == '' & item.paramname(1) == 'é!?$@#.part' & item.optional(1),'only optional marker is removed')
+  invalidnames = .string[]
+  invalidnames[1] = '7frame'; invalidnames[2] = 'a b'; invalidnames[3] = 'a' || ('00'x as .string) || 'b'
+  do i = 1 to invalidnames[0]
+    item = .llcompilercontracts..signature('fixture.run','.void',invalidnames[i] || '=.rexxactivationarguments','b')
+    call check(item.error() <> '', 'invalid metadata formal refuses ' || i)
+  end
+  item = .llcompilercontracts..signature('fixture.run','.void','a=.int,A=.int','b')
+  call check(item.error() <> '', 'strict folded duplicate formal refuses')
+  item = .llcompilercontracts..signature('fixture.run','.void','a=.int,aa=.int','b')
+  call check(item.error() == '', 'distinct whole formal names remain distinct')
+  return
+
+bindings: procedure = .void
+  arg root = .string
+  selected = .llcbindings..binding[]
+  blankbindings = .llcbindings..binding[]
+  selected[1] = .llcbindings..binding('bg-b','levelc_call_external_bg.typedentry')
+  selected[2] = .llcbindings..binding('alias','levelc_call_alias.typedentry')
+  owner = .llcbindings..prepared(root,selected,67108864,67108864)
+  call check(owner.status() = 0,'B and declared-namespace providers: ' || owner.error())
+  call check(owner.find('LEVELC_CALL_EXTERNAL_BG.TYPEDENTRY') = 1 & owner.find('levelc_call_alias.typedentry') = 2 & owner.find('TYPEDENTRY') = -1,'qualified bindings coexist and alias is ambiguous')
+  call check(owner.artifact(2) == 'alias' & owner.callable(2) == 'levelc_call_alias.typedentry','artifact stem never becomes public namespace')
+  item = owner.signature(1)
+  call check(item.error() == '' & item.result() == '.void' & item.arguments() = 1 & \item.optional(1),'owned checked B signature')
+  selected = blankbindings
+  selected[1] = .llcbindings..binding('bg-g','levelc_call_external_bg.typedentry')
+  owner = .llcbindings..prepared(root,selected,67108864,67108864)
+  call check(owner.status() = 0 & owner.find('typedentry') = 1,'unchanged provider prepared by G: ' || owner.error())
+  owner = .llcbindings..prepared('',selected,67108864,67108864)
+  call check(owner.status() <> 0 & pos('LL_COMPILER_IMPORT:',owner.error()) = 1 & owner.find('typedentry') = 0,'selected providers require an explicit artifact root')
+  owner = .llcbindings..prepared(root || ('00'x as .string) || 'tail',selected,67108864,67108864)
+  call check(owner.status() <> 0 & pos('LL_COMPILER_IMPORT:',owner.error()) = 1 & owner.find('typedentry') = 0,'NUL artifact root refuses before filesystem projection')
+  selected[2] = selected[1]
+  owner = .llcbindings..prepared(root,selected,67108864,67108864)
+  call check(owner.status() <> 0 & pos('LL_COMPILER_IMPORT:',owner.error()) = 1,'identical duplicate selection refuses')
+  stems = .string[]
+  stems[1] = ''; stems[2] = '.'; stems[3] = '..'; stems[4] = 'a/b'; stems[5] = 'a\b'; stems[6] = 'a:b'; stems[7] = 'a' || ('00'x as .string)
+  selected = blankbindings; i = .int
+  do i = 1 to stems[0]
+    selected[1] = .llcbindings..binding(stems[i],'fixture.good')
+    owner = .llcbindings..prepared(root,selected,67108864,67108864)
+    call check(owner.status() <> 0 & pos('LL_COMPILER_IMPORT:',owner.error()) = 1,'invalid artifact stem ' || i)
+  end
+  names = 'bad.result bad.arity bad.reference bad.optional bad.flags bad.formal box.run box.§factory face.ready'
+  do i = 1 to words(names)
+    selected[1] = .llcbindings..binding('signatures',word(names,i))
+    owner = .llcbindings..prepared(root,selected,67108864,67108864)
+    call check(owner.status() <> 0 & pos('LL_COMPILER_IMPORT:',owner.error()) = 1,'selected kind/signature refuses ' || word(names,i) || ': ' || owner.error())
+  end
+  selected[1] = .llcbindings..binding('signatures','plain.good')
+  owner = .llcbindings..prepared(root,selected,67108864,67108864)
+  call check(owner.status() = 0,'unselected incompatible signatures stay opaque: ' || owner.error())
+  selected[1] = .llcbindings..binding('signatures','plain.unicode')
+  owner = .llcbindings..prepared(root,selected,67108864,67108864)
+  item = owner.signature(1)
+  call check(owner.status() = 0 & item.error() == '' & item.paramname(1) == 'é!?$@#.part','selected Unicode/punctuation formal remains exact: ' || owner.error())
+  selected[1] = .llcbindings..binding('signatures','scope.ı')
+  owner = .llcbindings..prepared(root,selected,67108864,67108864)
+  call check(owner.status() = 0 & owner.find('SCOPE.I') = 1 & owner.callable(1) == 'scope.ı','Classic source alias retains original metadata identity: ' || owner.error())
+  frontend = .llcfrontend..request.bound('call scope.ı' as .binary,reference owner,'unicode-provider.crexx')
+  call check(frontend.status() = 0,'shared Classic Unicode alias resolves from source: ' || frontend.error())
+  graph = frontend.graph(); found = 0
+  if graph.error() == '' then do i = 1 to graph.operations()
+    operation = graph.operation(i)
+    if operation.name() == 'crexx.c.call.external' then do
+      found = found + 1
+      call check((operation.attribute('target') as .string) == 'scope.ı','source uses real metadata export after alias lookup')
+    end
+  end
+  call check(found = 1,'one external operation for dotless-I alias')
+  return
+
+/* Find the same-group success boundary instead of coupling the oracle to
+ * private index sizes. Both selected records already fit; moving the second
+ * selection to an identical second image must charge acquisition again.
+ * No compiler request runs in this loop. */
+limits: procedure = .void
+  arg root = .string
+  kind = .int; low = .int; high = .int; middle = .int; bytes = .int; work = .int
+  owner = .llcbindings..prepared
+  selected = .llcbindings..binding[]
+  blankbindings = .llcbindings..binding[]
+  selected[1] = .llcbindings..binding('tiny-a','tiny.a')
+  selected[2] = .llcbindings..binding('tiny-a','tiny.b')
+  do kind = 1 to 2
+    low = 0; high = 1048576
+    do while low < high
+      middle = low + (high - low) <idiv> 2
+      bytes = 1048576; work = 1048576
+      if kind = 1 then bytes = middle
+      else work = middle
+      owner = .llcbindings..prepared(root,selected,bytes,work)
+      if owner.status() = 0 then high = middle
+      else do
+        call check(pos('LL_RESOURCE_LIMIT:',owner.error()) > 0,'bounded search fails only for allowance: ' || owner.error())
+        low = middle + 1
+      end
+    end
+    bytes = 1048576; work = 1048576
+    if kind = 1 then bytes = high
+    else work = high
+    owner = .llcbindings..prepared(root,selected,bytes,work)
+    call check(owner.status() = 0,'two selections in one group fit measured allowance ' || kind || ': ' || owner.error())
+    selected = blankbindings
+    selected[1] = .llcbindings..binding('tiny-a','tiny.a')
+    owner = .llcbindings..prepared(root,selected,bytes,work)
+    call check(owner.status() = 0,'first individual group fits same allowance ' || kind || ': ' || owner.error())
+    selected[1] = .llcbindings..binding('tiny-b','tiny.b')
+    owner = .llcbindings..prepared(root,selected,bytes,work)
+    call check(owner.status() = 0,'equal-size independent group fits same allowance ' || kind || ': ' || owner.error())
+    selected[1] = .llcbindings..binding('tiny-a','tiny.a'); selected[2] = .llcbindings..binding('tiny-b','tiny.b')
+    owner = .llcbindings..prepared(root,selected,bytes,work)
+    call check(owner.status() <> 0 & pos('LL_RESOURCE_LIMIT:',owner.error()) > 0 & owner.find('tiny.a') = 0,'two groups cannot reset aggregate allowance ' || kind)
+    /* Both paths contain identical bytes. On case-insensitive hosts they can
+     * name one physical file; this proves exact stem accounting only. */
+    selected[2] = .llcbindings..binding('TINY-A','tiny.b')
+    owner = .llcbindings..prepared(root,selected,bytes,work)
+    call check(owner.status() <> 0 & pos('LL_RESOURCE_LIMIT:',owner.error()) > 0,'case-distinct artifact stems remain separate groups ' || kind)
+    selected = blankbindings; selected[1] = .llcbindings..binding('tiny-a','tiny.a'); selected[2] = .llcbindings..binding('tiny-a','tiny.b')
+  end
+  return
+
+borrowed: procedure = .void
+  arg root = .string
+  owner = .llcbindings..prepared
+  frontend = .llcfrontend..request.bound('return 0' as .binary,reference owner)
+  call check(frontend.status() <> 0 & pos('LL_COMPILER_IMPORT:',frontend.error()) = 1,'live uninitialized snapshot refuses')
+  stale = expired(root)
+  frontend = .llcfrontend..request.bound('return 0' as .binary,stale)
+  call check(frontend.status() <> 0 & pos('LL_COMPILER_IMPORT:',frontend.error()) = 1,'expired snapshot refuses')
+  graph = fixture(1); saved = graph.binary()
+  backend = .llcrxas..compilation.bound(graph,stale); output = backend.output()
+  call check(backend.status() <> 0 & output.bytes() = 0 & pos('LL_COMPILER_IMPORT:',backend.error()) = 1,'selector expired snapshot fails atomically')
+  call check(bincompare(saved,graph.binary()) = 0,'expired owner preserves input graph')
+  return
+
+expired: procedure = reference .llcbindings..prepared
+  arg root = .string
+  selected = .llcbindings..binding[]
+  local = .llcbindings..prepared(root,selected,1048576,1048576)
+  return reference local
+
+service: procedure = .void
+  arg root = .string
+  selected = .llcbindings..binding[]
+  selected[1] = .llcbindings..binding('c-provider','extfixture.LENGTH')
+  request = .llccompiler..request('call extfixture.LENGTH' as .binary,root,'external-service.crexx',1000000,512,67108864,65536,1,selected)
+  graph = request.graph()
+  call check(graph.error() == '' & graph.functions() = 1,'graph-first accessor prepares bound frontend: ' || graph.error())
+  output = request.output(); text = output.text()
+  call check(request.status() = 0 & output.bytes() > 0,'same service completes selection: ' || request.error())
+  retained = ownedoutput(root)
+  call check(retained.bytes() > 0 & pos('extfixture.length',lower(retained.text())) > 0,'completed output outlives request/provider owners')
+  failed = .llccompiler..request('call extfixture.LENGTH' as .binary,root,'external-limited.crexx',1000000,512,16,65536,1,selected)
+  empty = failed.output()
+  call check(failed.status() <> 0 & empty.bytes() = 0 & pos('LIMIT',failed.error()) > 0,'service aggregate refusal publishes no output')
+  call check(output.text() == text,'failed request preserves previous owned output')
+  /* The default empty inventory must not touch even this nonexistent root. */
+  ordinary = .llccompiler..request('return 0' as .binary,root || '/nonexistent', 'no-provider.crexx')
+  graph = ordinary.graph()
+  call check(graph.error() == '' & graph.functions() = 1,'default graph preparation performs no provider acquisition')
+  return
+
+ownedoutput: procedure = .llir..output
+  arg root = .string
+  selected = .llcbindings..binding[]; selected[1] = .llcbindings..binding('c-provider','extfixture.LENGTH')
+  request = .llccompiler..request('call extfixture.LENGTH' as .binary,root,'owned-service.crexx',1000000,512,67108864,65536,1,selected)
+  return request.output()
+
+schema: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  op = contract.operation('crexx.c.call.external'); id = op.id(); family = .int; version = 0
+  do family = 1 to data.familycount()
+    if data.familyname(family) == 'crexx.c' then version = data.version(family)
+  end
+  call check(version = 14 & data.ops() = 65 & data.opname(63) == 'crexx.c.call.external','append-only C14/65 schema')
+  call check(data.arity(id,1) = 2 & data.fieldname(id,1,1) == 'arguments' & data.typename(data.fieldtype(id,1,1)) == 'crexx.c.arguments' & data.fieldname(id,1,2) == 'context' & data.typename(data.fieldtype(id,1,2)) == 'crexx.c.context','exact external operands')
+  call check(data.arity(id,2) = 1 & data.typename(data.fieldtype(id,2,1)) == 'crexx.c.result' & data.arity(id,3) = 1 & data.fieldname(id,3,1) == 'target' & data.typename(data.fieldtype(id,3,1)) == 'crexx.g.text','exact external result/target')
+  call check(data.effectvalue(id,1) == 'context.input.output.observation' & data.effectvalue(id,2) == 'condition.resource' & data.effectvalue(id,3) == 'returns','exact external effects')
+  return
+
+fixture: procedure = .llir..module
+  arg mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  source = ('call extfixture.LENGTH' || ('0A'x as .string) || 'return') as .binary
+  file = builder.source('external-ir.crexx',source); authored = file.origin(0,22); generated = builder.synthetic('external dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context_slot = fn.slot('$context',contract.type('crexx.c.context')); entry_slot = fn.slot('$entry',contract.type('crexx.g.int64')); packet_slot = fn.slot('$packet',contract.type('crexx.c.arguments'))
+  setup = fn.block('entry'); dispatch = fn.block('dispatch'); body = fn.block('body'); invalid = fn.block('invalid')
+  call setup.store(context_slot,setup.readarg(1,generated),generated); call setup.store(entry_slot,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  context = dispatch.load(context_slot,generated); entry = dispatch.load(entry_slot,generated)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',context); call draft.input('entry',entry)
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x)
+  tested = draft.finish(); call dispatch.branch(tested.result(),body,invalid,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish()
+  call absent(invalid,contract,generated)
+  context = body.load(context_slot,authored)
+  draft = body.operation(contract.operation('crexx.c.procedure.consume'),authored); call draft.input('context',context); finished = draft.finish()
+  draft = body.operation(contract.operation('crexx.c.arguments.empty'),authored); packet = draft.finish(); arguments = packet.result()
+  if mode = 5 then arguments = body.constantbytes(contract.type('crexx.c.arguments'),''x,authored)
+  if mode = 7 then do; call body.store(packet_slot,arguments,authored); arguments = body.load(packet_slot,authored); end
+  if mode = 8 then arguments = body.load(packet_slot,authored)
+  if mode = 9 then do
+    arguments = body.load(packet_slot,authored)
+    call body.store(packet_slot,packet.result(),authored)
+  end
+  if mode = 10 then do
+    /* A real invocation-dependent Boolean leaves both predecessor paths live. */
+    context = body.load(context_slot,authored)
+    draft = body.operation(contract.operation('crexx.c.arguments.count'),authored); call draft.input('context',context); counted = draft.finish()
+    draft = body.operation(contract.operation('crexx.c.truth'),authored)
+    call draft.input('value',counted.result()); call draft.input('context',context); condition = draft.finish()
+    writer = fn.block('writer'); bypass = fn.block('bypass'); join = fn.block('join')
+    call body.branch(condition.result(),writer,bypass,generated)
+    draft = writer.operation(contract.operation('crexx.c.arguments.empty'),authored); seeded = draft.finish()
+    call writer.store(packet_slot,seeded.result(),authored); call writer.jump(join,generated); call bypass.jump(join,generated)
+    body = join; arguments = body.load(packet_slot,authored)
+  end
+  if mode = 11 then do
+    /* Repeated writes to the same packet slot are the real source-actual
+     * transport, not an immutable-slot restriction. */
+    call body.store(packet_slot,arguments,authored)
+    arguments = body.load(packet_slot,authored)
+    value = body.constantbytes(contract.type('crexx.c.value'),'x' as .binary,authored)
+    present = body.constant(contract.type('core.boolean'),'true',authored)
+    draft = body.operation(contract.operation('crexx.c.arguments.append'),authored)
+    call draft.input('arguments',arguments); call draft.input('value',value); call draft.input('present',present); appended = draft.finish()
+    call body.store(packet_slot,appended.result(),authored); arguments = body.load(packet_slot,authored)
+    draft = body.operation(contract.operation('crexx.c.arguments.append'),authored)
+    call draft.input('arguments',arguments); call draft.input('value',value); call draft.input('present',present); appended = draft.finish()
+    call body.store(packet_slot,appended.result(),authored); arguments = body.load(packet_slot,authored)
+  end
+  context = body.load(context_slot,authored)
+  if mode = 3 then context = body.readarg(1,authored)
+  origin = authored; if mode = 4 then origin = generated
+  target = 'extfixture.LENGTH'; if mode = 2 then target = 'unselected.run'
+  draft = body.operation(contract.operation('crexx.c.call.external'),origin)
+  call draft.input('arguments',arguments); call draft.input('context',context); call draft.attribute('target',target as .binary)
+  finished = draft.finish(); call body.returnvalue(finished.result(),authored)
+  if mode = 6 then do
+    dead = fn.block('dead'); context = dead.load(context_slot,authored)
+    draft = dead.operation(contract.operation('crexx.c.arguments.empty'),authored); packet = draft.finish()
+    draft = dead.operation(contract.operation('crexx.c.call.external'),authored)
+    call draft.input('arguments',packet.result()); call draft.input('context',context); call draft.attribute('target','unselected.run' as .binary)
+    finished = draft.finish(); call dead.returnvalue(finished.result(),authored)
+  end
+  return builder.finish()
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish(); call block.returnvalue(finished.result(),origin)
+  return
+
+/* Detached B is its own proved program-exit false continuation. Its later
+ * final store cannot initialize an A load from the start of the same block,
+ * even when backward resolution follows that one incoming self edge. */
+deadcycle: procedure = .llir..module
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  source = ('call extfixture.LENGTH' || ('0A'x as .string) || 'return' || ('0A'x as .string) || 'call P' || ('0A'x as .string) || 'P:' || ('0A'x as .string) || 'return') as .binary
+  file = builder.source('external-cycle.crexx',source)
+  authored = file.origin(0,22); callat = file.origin(30,36); returning = file.origin(40,46)
+  generated = builder.synthetic('external cyclic boundary entry'); guard = callat.derive('synthetic')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  arguments = fn.slot('cyclic arguments',contract.type('crexx.c.arguments')); carrier = fn.slot('guarded call result',contract.type('crexx.c.result'))
+  setup = fn.block('setup'); dispatch = fn.block('entry0'); next = fn.block('entry1')
+  main = fn.block('main'); leaf = fn.block('P'); invalid = fn.block('invalid')
+  cycleblock = fn.block('detached self continuation'); unwind = fn.block('private unwind')
+  call setup.store(context,setup.readarg(1,generated),generated); call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  call entrycase(dispatch,contract,context,entry,0,'',main,next,generated)
+  call entrycase(next,contract,context,entry,1,'P',leaf,invalid,generated)
+  call consume(main,contract,context,authored); call absent(main,contract,generated)
+  call consume(leaf,contract,context,returning); call absent(leaf,contract,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish(); call absent(invalid,contract,generated)
+  call consume(cycleblock,contract,context,authored)
+  early = cycleblock.load(arguments,authored); current = cycleblock.load(context,authored)
+  draft = cycleblock.operation(contract.operation('crexx.c.call.external'),authored)
+  call draft.input('arguments',early); call draft.input('context',current); call draft.attribute('target','extfixture.LENGTH' as .binary); finished = draft.finish()
+  draft = cycleblock.operation(contract.operation('crexx.c.arguments.empty'),callat); seeded = draft.finish()
+  call cycleblock.store(arguments,seeded.result(),callat)
+  current = cycleblock.load(context,callat)
+  draft = cycleblock.operation(contract.operation('crexx.c.call'),callat)
+  call draft.input('arguments',seeded.result()); call draft.input('context',current)
+  integer = .llir..intcodec(); boolean = .llir..boolcodec()
+  call draft.attribute('target','$MAIN' as .binary); call draft.attribute('entry',integer.parse('1')); call draft.attribute('function',boolean.parse('false')); called = draft.finish()
+  call cycleblock.store(carrier,called.result(),guard)
+  current = cycleblock.load(context,guard)
+  draft = cycleblock.operation(contract.operation('crexx.c.program.exiting'),guard); call draft.input('context',current); queried = draft.finish()
+  call cycleblock.branch(queried.result(),unwind,cycleblock,guard)
+  packet = unwind.load(carrier,guard); call unwind.returnvalue(packet,guard)
+  return builder.finish()
+
+entrycase: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, entry = .llir..slot, id = .int, name = .string, yes = .llir..block, no = .llir..block, origin = .llir..origin
+  current = block.load(context,origin); value = block.load(entry,origin)
+  draft = block.operation(contract.operation('crexx.c.entry.test'),origin)
+  call draft.input('context',current); call draft.input('entry',value)
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse(id as .string)); call draft.attribute('name',name as .binary)
+  tested = draft.finish(); call block.branch(tested.result(),yes,no,origin)
+  return
+
+consume: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, origin = .llir..origin
+  current = block.load(context,origin)
+  draft = block.operation(contract.operation('crexx.c.procedure.consume'),origin); call draft.input('context',current); finished = draft.finish()
+  return
+
+admission: procedure = .void
+  arg owner_ref = reference .llcbindings..prepared, graph = .llir..module, accepted = .int, label = .string, reason = ''
+  saved = graph.binary(); backend = .llcrxas..compilation.bound(graph,owner_ref); output = backend.output()
+  if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ': ' || backend.error())
+  else do
+    call check(backend.status() <> 0 & output.bytes() = 0,label || ' refuses: ' || backend.error())
+    if reason <> '' then call check(pos('LL_COMPILER_LOWERING:',backend.error()) = 1 & pos(reason,backend.error()) > 0,label || ' exact intended refusal: ' || backend.error())
+  end
+  call check(bincompare(saved,graph.binary()) = 0,label || ' preserves original graph')
+  return

@@ -1,0 +1,111 @@
+/* Standalone PULL uses the existing source adapter and UPPER template engine. */
+options levelc
+parse arg MODE
+pull = 7
+if 0 then pull UNREACHED
+if MODE = 'words' then do
+  pull FIRST REST
+  return 0
+end
+if MODE = 'bare' then do
+  pull
+  return 0
+end
+if MODE = 'empty-first' then do
+  pull , LATER
+  return 0
+end
+if MODE = 'all-empty' then do
+  pull ,,,;
+  return 0
+end
+if MODE = 'commas' then do
+  pull FIRST REST,, LATER
+  return 0
+end
+if MODE = 'drop' then do
+  pull .
+  return 0
+end
+if MODE = 'position' then do
+  OFFSET = 3
+  pull FIRST =(OFFSET) REST
+  return 0
+end
+if MODE = 'live' then do
+  KEY2 = 'OLD'
+  PATTERNS.OLD = '!'
+  PATTERNS.N = ':'
+  pull 1 KEY2 2 LEFT (PATTERNS.KEY2) RIGHT
+  return 0
+end
+if MODE = 'pattern-case' then do
+  DELIM = 'b'
+  pull FIRST (DELIM) REST
+  return 0
+end
+if MODE = 'private' then do
+  call PRIVATE
+  return 0
+end
+if MODE = 'order' then do
+  pull FIRST
+  pull SECOND
+  return 0
+end
+if MODE = 'nested' then do
+  call LEVELONE
+  return 0
+end
+if MODE = 'recursive' then do
+  call RECURSE 2
+  return 0
+end
+if MODE = 'contextual' then do
+  call PULL
+  return 0
+end
+if MODE = 'dead' then return 0
+if MODE = 'late-bare' then call ELIGIBLEBARE
+if MODE = 'late-empty' then call ELIGIBLEEMPTY
+if MODE = 'bad-position' then do
+  POSITION = 'Q'
+  pull EARLY 2 CURRENT =(POSITION) LATER
+  say 'UNREACHED position'
+  return 0
+end
+if 'é' = 'é' then pull HEAD '00'x TAIL
+say 'input=' || HEAD || '|' || TAIL
+pull AT_EOF
+say 'eof=[' || AT_EOF || ']'
+return 0
+
+PRIVATE:
+procedure expose SHARED
+pull SHARED LOCAL
+return LOCAL
+LEVELONE:
+call PRIVATE
+pull NEXT
+return
+RECURSE:
+procedure expose SHARED
+parse arg DEPTH
+if DEPTH = 0 then return
+pull SHARED LOCAL
+call RECURSE DEPTH - 1
+return
+PULL:
+return 'pull label'
+ELIGIBLEBARE:
+pull
+LATEBARE:
+procedure
+say 'UNREACHED bare eligibility'
+return
+ELIGIBLEEMPTY:
+pull ,,,;
+LATEEMPTY:
+procedure
+say 'UNREACHED empty eligibility'
+return

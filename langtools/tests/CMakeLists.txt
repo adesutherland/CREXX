@@ -371,6 +371,101 @@ crexx_finalize_directory_qa_tiers()
 
 # Public callable tooling, independent of both research compilers.
 set(_services "${CMAKE_CURRENT_BINARY_DIR}/services")
+# Independent metadata-reader linkage regression, not executable application code.
+foreach(_part definition import)
+  add_custom_command(OUTPUT "${_services}/metadata-${_part}.rxbin"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_services}"
+    COMMAND $<TARGET_FILE:rxas> -n -o "${_services}/metadata-${_part}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-${_part}.rxas"
+    DEPENDS rxas "${CMAKE_CURRENT_SOURCE_DIR}/metadata-${_part}.rxas" VERBATIM)
+endforeach()
+add_custom_command(OUTPUT "${_services}/metadata-linked.rxbin"
+  COMMAND $<TARGET_FILE:rxlink> -s -o "${_services}/metadata-linked"
+    "${_services}/metadata-definition.rxbin" "${_services}/metadata-import.rxbin"
+  DEPENDS rxlink "${_services}/metadata-definition.rxbin" "${_services}/metadata-import.rxbin" VERBATIM)
+add_custom_target(levell_metadata_fixtures DEPENDS "${_services}/metadata-linked.rxbin")
+set(_attribute_files "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+  "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin")
+crexx_add_import_root(levell_metadata_attribute_imports
+  DIRECTORY "${_services}/attribute-imports" OUTPUT_VARIABLE _attribute_imports
+  FILES ${_attribute_files} DEPENDS library llbinmeta)
+foreach(_attribute_mode opt noopt)
+  set(_attribute_flags)
+  if(_attribute_mode STREQUAL "noopt")
+    set(_attribute_flags -n)
+  endif()
+  set(_attribute_output "${_services}/attributes-${_attribute_mode}")
+  add_custom_command(OUTPUT "${_attribute_output}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> ${_attribute_flags} -x --no-exe-import
+      -i "${_services}/attribute-imports" -o "${_attribute_output}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-attributes.crexx"
+    COMMAND $<TARGET_FILE:rxas> ${_attribute_flags} "${_attribute_output}"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_attribute_output}-linked"
+      "${_attribute_output}" ${_attribute_files}
+    DEPENDS rxc rxas rxlink levell_metadata_attribute_imports ${_attribute_imports}
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-attributes.crexx" VERBATIM)
+  add_custom_target(levell_metadata_attributes_${_attribute_mode}
+    DEPENDS "${_attribute_output}-linked.rxbin"
+      "${_services}/metadata-definition.rxbin")
+  set(_attribute_vm rxbvm)
+  if(_attribute_mode STREQUAL "noopt" AND TARGET rxtvm)
+    set(_attribute_vm rxtvm)
+  endif()
+  add_test(NAME levell_metadata_attributes_${_attribute_mode}
+    COMMAND $<TARGET_FILE:${_attribute_vm}> "${_attribute_output}-linked.rxbin"
+      -a "${_services}/metadata-definition.rxbin")
+  set_tests_properties(levell_metadata_attributes_${_attribute_mode} PROPERTIES
+    PASS_REGULAR_EXPRESSION "META_ATTRIBUTES[|]checks=[0-9]+[|]failures=0"
+    TIMEOUT 60 LABELS "level-l;optimizer-parity")
+  crexx_register_test_prep_targets(TESTS levell_metadata_attributes_${_attribute_mode}
+    TARGETS levell_metadata_attributes_${_attribute_mode} ${_attribute_vm})
+endforeach()
+foreach(_classify_part metadata-classify metadata-classify-import)
+  add_custom_command(OUTPUT "${_services}/${_classify_part}.rxbin"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${_services}"
+    COMMAND $<TARGET_FILE:rxas> -n -o "${_services}/${_classify_part}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_classify_part}.rxas"
+    DEPENDS rxas "${CMAKE_CURRENT_SOURCE_DIR}/${_classify_part}.rxas" VERBATIM)
+endforeach()
+add_custom_command(OUTPUT "${_services}/metadata-classify-linked.rxbin"
+  COMMAND $<TARGET_FILE:rxlink> -s -o "${_services}/metadata-classify-linked"
+    "${_services}/metadata-classify.rxbin" "${_services}/metadata-classify-import.rxbin"
+  DEPENDS rxlink "${_services}/metadata-classify.rxbin"
+    "${_services}/metadata-classify-import.rxbin" VERBATIM)
+crexx_add_import_root(levell_metadata_classify_imports
+  DIRECTORY "${_services}/classify-imports" OUTPUT_VARIABLE _classify_imports
+  FILES ${_attribute_files} DEPENDS library llbinmeta)
+foreach(_classify_mode opt noopt)
+  set(_classify_flags)
+  if(_classify_mode STREQUAL "noopt")
+    set(_classify_flags -n)
+  endif()
+  set(_classify_output "${_services}/classify-${_classify_mode}")
+  add_custom_command(OUTPUT "${_classify_output}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> ${_classify_flags} -x --no-exe-import
+      -i "${_services}/classify-imports" -o "${_classify_output}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-classify.crexx"
+    COMMAND $<TARGET_FILE:rxas> ${_classify_flags} "${_classify_output}"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_classify_output}-linked"
+      "${_classify_output}" ${_attribute_files}
+    DEPENDS rxc rxas rxlink levell_metadata_classify_imports ${_classify_imports}
+      "${CMAKE_CURRENT_SOURCE_DIR}/metadata-classify.crexx" VERBATIM)
+  add_custom_target(levell_metadata_classify_${_classify_mode}
+    DEPENDS "${_classify_output}-linked.rxbin"
+      "${_services}/metadata-classify.rxbin" "${_services}/metadata-classify-linked.rxbin")
+  set(_classify_vm rxbvm)
+  if(_classify_mode STREQUAL "noopt" AND TARGET rxtvm)
+    set(_classify_vm rxtvm)
+  endif()
+  add_test(NAME levell_metadata_classify_${_classify_mode}
+    COMMAND $<TARGET_FILE:${_classify_vm}> "${_classify_output}-linked.rxbin"
+      -a "${_services}/metadata-classify.rxbin" "${_services}/metadata-classify-linked.rxbin")
+  set_tests_properties(levell_metadata_classify_${_classify_mode} PROPERTIES
+    PASS_REGULAR_EXPRESSION "META_CLASSIFY[|]checks=[0-9]+[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 300 LABELS "level-l;optimizer-parity")
+  crexx_register_test_prep_targets(TESTS levell_metadata_classify_${_classify_mode}
+    TARGETS levell_metadata_classify_${_classify_mode} ${_classify_vm})
+endforeach()
 set(_service_files "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
   "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin"
   "${CMAKE_BINARY_DIR}/langtools/common/llbinmeta.rxbin" "${CMAKE_BINARY_DIR}/langtools/common/llfileoutput.rxbin")
@@ -388,13 +483,13 @@ foreach(_mode opt noopt)
     COMMAND $<TARGET_FILE:rxas> ${_flags} "${_services}/${_mode}"
     COMMAND $<TARGET_FILE:rxlink> -s -o "${_services}/${_mode}-linked" "${_services}/${_mode}" ${_service_files}
     DEPENDS rxc rxas rxlink levell_service_test_imports ${_service_imports} services.crexx VERBATIM)
-  add_custom_target(levell_services_${_mode} ALL DEPENDS "${_services}/${_mode}-linked.rxbin")
-  add_dependencies(levell_services_${_mode} levell_generated_grammar)
+  add_custom_target(levell_services_${_mode} ALL DEPENDS "${_services}/${_mode}-linked.rxbin" "${_services}/metadata-linked.rxbin")
+  add_dependencies(levell_services_${_mode} levell_generated_grammar levell_metadata_fixtures)
   add_dependencies(testlangtools levell_services_${_mode})
   foreach(_vm rxtvm rxbvm)
     if(TARGET ${_vm})
       add_test(NAME levell_services_${_mode}_${_vm} COMMAND $<TARGET_FILE:${_vm}>
-        "${_services}/${_mode}-linked.rxbin" -a "${_generated_spec}" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${_services}/${_mode}-${_vm}.bin" "${_generated_grammar}")
+        "${_services}/${_mode}-linked.rxbin" -a "${_generated_spec}" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${_services}/${_mode}-${_vm}.bin" "${_generated_grammar}" "${_services}/metadata-linked.rxbin" "${_services}/metadata-import.rxbin")
       set_tests_properties(levell_services_${_mode}_${_vm} PROPERTIES
         # Callable generation is a substantial aggregate: unchanged Linux ASan
         # passes isolated in 118s but exhausts 300s in the shared pool. Keep
@@ -423,7 +518,96 @@ add_test(NAME levell_product_inventory COMMAND ${CMAKE_COMMAND}
   -DBUILD=${CMAKE_BINARY_DIR} -DSUFFIX=${CMAKE_EXECUTABLE_SUFFIX}
   -P "${CMAKE_CURRENT_SOURCE_DIR}/check-products.cmake")
 set_tests_properties(levell_product_inventory PROPERTIES PASS_REGULAR_EXPRESSION "LEVEL_L_PRODUCTS[|]PASS" TIMEOUT 30 LABELS "level-l;essential")
-crexx_register_test_prep_targets(TESTS levell_product_inventory TARGETS rxfnsl rxlang rxlanglib llrxastext llfileoutput llbinmeta)
+crexx_register_test_prep_targets(TESTS levell_product_inventory
+  TARGETS rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute
+    rxlang rxlanglib llrxastext llfileoutput llbinmeta)
+
+# Inspect real prepared package/import manifests; this check never rebuilds.
+add_test(NAME levell_package_closures COMMAND ${Python3_EXECUTABLE}
+  "${CMAKE_CURRENT_SOURCE_DIR}/check-package-closures.py"
+  --build "${CMAKE_BINARY_DIR}" --config "$<CONFIG>")
+set_tests_properties(levell_package_closures PROPERTIES
+  PASS_REGULAR_EXPRESSION "LEVEL_L_PACKAGE_CLOSURES[|]PASS" TIMEOUT 60
+  LABELS "level-l;essential")
+crexx_register_test_prep_targets(TESTS levell_package_closures
+  TARGETS rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute
+    rxlang llrxastext llfileoutput llbinmeta)
+
+if(TARGET rxbvm)
+  # One guide-derived producer and its independent static target, on one VM.
+  add_test(NAME levell_public_packages_opt_rxbvm COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/check-public-packages.py" --build "${CMAKE_BINARY_DIR}")
+  set_tests_properties(levell_public_packages_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "LEVEL_L_PUBLIC_PACKAGES[|]PASS" TIMEOUT 300 RUN_SERIAL TRUE
+    LABELS "level-l;component")
+  crexx_register_test_prep_targets(TESTS levell_public_packages_opt_rxbvm
+    TARGETS library rxfnsl rxfnsl_rxas rxc rxas rxlink rxbvm)
+endif()
+
+# Independent lexical reuse: one ordinary prepared service and one intentionally
+# unprepared manual service. Each image has one producer and a private import root.
+set(_reuse "${CMAKE_CURRENT_BINARY_DIR}/lexical-reuse")
+file(MAKE_DIRECTORY "${_reuse}/unstamped")
+set(_reuse_base "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
+set(_reuse_bootstrap "${CMAKE_BINARY_DIR}/langtools/bootstrap/L2")
+crexx_add_import_root(levell_lexical_base_imports DIRECTORY "${_reuse}/base"
+  OUTPUT_VARIABLE _reuse_base_imports FILES ${_reuse_base}
+    "${_reuse_bootstrap}/llfront.rxbin" "${_reuse_bootstrap}/llsyntax.rxbin"
+  DEPENDS library rxfnsl rxlang_bootstrap)
+add_custom_command(OUTPUT "${_reuse}/llgenerate.rxbin" BYPRODUCTS "${_reuse}/llgenerate.rxas"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_reuse}/base"
+    -o "${_reuse}/llgenerate" "${CMAKE_BINARY_DIR}/langtools/bootstrap/source/llgenerate.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_reuse}/llgenerate"
+  DEPENDS rxc rxas levell_generator_source levell_lexical_base_imports ${_reuse_base_imports}
+    "${CMAKE_BINARY_DIR}/langtools/bootstrap/source/llgenerate.crexx" VERBATIM)
+add_custom_target(levell_lexical_service DEPENDS "${_reuse}/llgenerate.rxbin")
+crexx_add_import_root(levell_lexical_imports DIRECTORY "${_reuse}/imports"
+  OUTPUT_VARIABLE _reuse_imports FILES ${_reuse_base} "${_reuse}/llgenerate.rxbin"
+    "${_reuse_bootstrap}/llfront.rxbin" "${_reuse_bootstrap}/llsyntax.rxbin"
+  DEPENDS library rxfnsl rxlang_bootstrap levell_lexical_service)
+add_custom_command(OUTPUT "${_reuse}/service-linked.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_reuse}/imports"
+    -o "${_reuse}/service" "${CMAKE_CURRENT_SOURCE_DIR}/lexical-reuse.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_reuse}/service"
+  COMMAND $<TARGET_FILE:rxlink> -s -o "${_reuse}/service-linked" "${_reuse}/service"
+    "${_reuse}/llgenerate" "${_reuse_bootstrap}/llfront" "${_reuse_bootstrap}/llsyntax" ${_reuse_base}
+  DEPENDS rxc rxas rxlink levell_lexical_imports ${_reuse_imports} lexical-reuse.crexx VERBATIM)
+add_custom_command(OUTPUT "${_reuse}/unstamped/llgenerate.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_reuse}/base"
+    -o "${_reuse}/unstamped/llgenerate" "${CMAKE_CURRENT_SOURCE_DIR}/../rexx/llgenerate.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_reuse}/unstamped/llgenerate"
+  DEPENDS rxc rxas levell_lexical_base_imports ${_reuse_base_imports}
+    "${CMAKE_CURRENT_SOURCE_DIR}/../rexx/llgenerate.crexx" VERBATIM)
+crexx_add_import_root(levell_unstamped_imports DIRECTORY "${_reuse}/unstamped/imports"
+  OUTPUT_VARIABLE _unstamped_imports FILES ${_reuse_base}
+    "${_reuse_bootstrap}/llfront.rxbin" "${_reuse_bootstrap}/llsyntax.rxbin"
+    "${_reuse}/unstamped/llgenerate.rxbin"
+  DEPENDS library rxfnsl rxlang_bootstrap "${_reuse}/unstamped/llgenerate.rxbin")
+add_custom_command(OUTPUT "${_reuse}/unstamped/linked.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_reuse}/unstamped/imports"
+    -o "${_reuse}/unstamped/probe" "${CMAKE_CURRENT_SOURCE_DIR}/lexical-reuse.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_reuse}/unstamped/probe"
+  COMMAND $<TARGET_FILE:rxlink> -s -o "${_reuse}/unstamped/linked" "${_reuse}/unstamped/probe"
+    "${_reuse}/unstamped/llgenerate" "${_reuse_bootstrap}/llfront" "${_reuse_bootstrap}/llsyntax" ${_reuse_base}
+  DEPENDS rxc rxas rxlink levell_unstamped_imports ${_unstamped_imports} lexical-reuse.crexx VERBATIM)
+add_custom_target(levell_lexical_reuse ALL DEPENDS "${_reuse}/service-linked.rxbin" "${_reuse}/unstamped/linked.rxbin")
+add_dependencies(testlangtools levell_lexical_reuse)
+add_test(NAME levell_lexical_reuse_service COMMAND $<TARGET_FILE:rxbvm>
+  --no-autoload "${_reuse}/service-linked.rxbin" -a service)
+add_test(NAME levell_lexical_reuse_unstamped COMMAND $<TARGET_FILE:rxbvm>
+  --no-autoload "${_reuse}/unstamped/linked.rxbin" -a unstamped)
+# Isolated Debug service 64s; CLI/cache panel 42 commands/30s. Source-only
+# qualification follows AGENTS.md; serialize these against other nested work.
+set_tests_properties(levell_lexical_reuse_service levell_lexical_reuse_unstamped PROPERTIES
+  PASS_REGULAR_EXPRESSION "LEXICAL_REUSE[|].*[|]failures=0" RUN_SERIAL TRUE TIMEOUT 900 LABELS "level-l;essential")
+crexx_register_test_prep_targets(TESTS levell_lexical_reuse_service levell_lexical_reuse_unstamped
+  TARGETS levell_lexical_reuse rxbvm)
+add_test(NAME rxlang_lexical_reuse_cli COMMAND ${Python3_EXECUTABLE}
+  "${CMAKE_CURRENT_SOURCE_DIR}/check-lexical-reuse.py" --bin "${CMAKE_BINARY_DIR}/bin"
+  --cmake "${CMAKE_COMMAND}" --service-rxas "${_reuse}/llgenerate.rxas")
+set_tests_properties(rxlang_lexical_reuse_cli PROPERTIES
+  PASS_REGULAR_EXPRESSION "LEXICAL_REUSE_CLI[|]commands=.*[|]failures=0" RUN_SERIAL TRUE TIMEOUT 1800 LABELS "level-l;essential")
+crexx_register_test_prep_targets(TESTS rxlang_lexical_reuse_cli TARGETS rxlang levell_lexical_service)
 
 # Bounded persistent-VM measurement targets; register after isolated Debug timing.
 include("${CMAKE_SOURCE_DIR}/interpreter/tests/sustained_vm.cmake")

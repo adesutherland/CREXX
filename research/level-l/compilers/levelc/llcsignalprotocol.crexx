@@ -1,0 +1,1088 @@
+/* cREXX License (MIT). C-private immutable SIGNAL inventory/edge admission. */
+options levelb
+namespace llcsignalprotocol expose checked
+import rxfnsb
+import llir
+import llscalar
+import llcsymbols
+import llcprocedureprotocol
+import rexxclassicunicodeproperties
+
+/** Request-owned facts over a frozen graph and a completed borrowed CPROC
+ * proof. This layer declares no generic edge, runtime table or DO reset. The
+ * caller retains both owners until the last scalar/cell query has returned. */
+checked: class
+  _graph = reference .llir..module
+  _program = reference .llcprocedureprotocol..checked
+  _store = reference .llir..arena
+  _identity = .int
+  _limit = .int
+  _budget = .int
+  _bytes = .int
+  _work = .int
+  _ready = .int
+  _error = .string
+  _offset = .int
+  _symbols = .llcsymbols..checked
+  _erased = .int[]
+  _nametransport = .int[]
+  _namevalues = .int[]
+  _transfers = .int[]
+  _testrows = .int[]
+  _uses = .int[]
+  _consumer = .int[]
+  _writes = .int[]
+  _writer = .int[]
+  _preds = .int[]
+  _predop = .int[]
+  _order = .int[]
+  _segments = .int[]
+  _blocks = .int[]
+  _tablevalues = .int[]
+  _tableslots = .int[]
+  _nameowners = .int[]
+  _nameslots = .int[]
+  _namestores = .int[]
+  _namemarks = .int[]
+  _firstrow = .int[]
+  _rowcount = .int[]
+  _rownames = .string[]
+  _rowentries = .int[]
+  _landings = .int[]
+  _rowkeys = .stem
+  _sourcekeys = .stem
+  _sourcebytes = .binary[]
+  _sourceready = .int[]
+  _protections = .int[]
+  _captures = .int[]
+  _eventowners = .int[]
+  _eventkeys = .string[]
+  _selections = .int[]
+  _selectedvalues = .int[]
+  _selectedslots = .int[]
+  _selectedstores = .int[]
+  _handlerfirst = .int[]
+  _handlercount = .int[]
+  _signalcount = .int[]
+  _callcount = .int[]
+  _callfirst = .int[]
+  _callrows = .int[]
+  _handlermodes = .string[]
+  _completes = .int[]
+  _handlerrows = .int[]
+  _handlernames = .string[]
+  _handlerconditions = .int[]
+  _handlerlabels = .int[]
+  _handlerlandings = .int[]
+  _handlercodes = .int[]
+  _handlerpolicies = .int[]
+  _handlersources = .int[]
+  _handlerstarts = .int[]
+  _handlerends = .int[]
+  _payload = .binary
+  _cursor = .int
+  _end = .int
+  *: factory
+    arg graph = reference .llir..module, program = reference .llcprocedureprotocol..checked, bytes = 67108864, work = 1000000
+    _graph = graph; _program = program; _limit = bytes; _budget = work
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _identity = 0
+    _rowkeys = .stem(); _sourcekeys = .stem()
+    return
+  fail: method = .void
+    arg reason = .string, opid = 0
+    if _error <> '' then return
+    _error = 'LL_COMPILER_' || reason
+    if opid > 0 & <refvalid>(_graph) then do
+      graph = dereference _graph; _offset = graph.operation(opid).origin().first()
+    end
+    return
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call fail('LIMIT: invalid SIGNAL proof dimensions'); return 0; end
+    if count > (_limit - _bytes) <idiv> width then do; call fail('LIMIT: SIGNAL proof workspace exceeded'); return 0; end
+    _bytes = _bytes + count * width; return 1
+  charge: method = .int
+    arg count = 1
+    if count < 0 | count > _budget - _work then do; call fail('LIMIT: SIGNAL proof work budget exceeded'); return 0; end
+    _work = _work + count; return 1
+  bulkwork: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call fail('LIMIT: invalid SIGNAL work dimensions'); return 0; end
+    if count > (_budget - _work) <idiv> width then do; call fail('LIMIT: SIGNAL proof work budget exceeded'); return 0; end
+    _work = _work + count * width; return 1
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  offset: method = .int
+    call run(); return _offset
+  bytesused: method = .int
+    call run(); return _bytes
+  workused: method = .int
+    call run(); return _work
+  belongs: method = .int
+    arg graph_ref = reference .llir..module
+    call run()
+    if _error <> '' | <refvalid>(_graph) = 0 | <refvalid>(_program) = 0 | <refvalid>(_store) = 0 | <refvalid>(graph_ref) = 0 then return 0
+    graph = dereference graph_ref; held = dereference _graph; program = dereference _program
+    return graph.error() = '' & held.error() = '' & graph.identity() = _identity & held.identity() = _identity & program.belongs(_graph)
+  erased: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _erased[opid] <> 0
+  nametransport: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _nametransport[opid] <> 0
+  namevalue: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _namevalues[opid]
+  rowname: method = reference .string
+    arg opid = .int
+    call run(); missing = reference .string
+    if _error <> '' then return missing
+    row = _testrows[opid]; if row < 1 then return missing
+    return reference _rownames[row]
+  transfer: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _transfers[opid] <> 0
+  protection: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _protections[fn]
+  capture: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _captures[fn]
+  owner: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _eventowners[opid]
+  handlerpolicy: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    row = _handlerrows[opid]; if row = 0 then return 0
+    return _handlerpolicies[row]
+  handlerlanding: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    row = _handlerrows[opid]; if row = 0 then return 0
+    return _handlerlandings[row]
+  handlercode: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    row = _handlerrows[opid]; if row = 0 then return 0
+    return _handlercodes[row]
+  /** The immutable declaration survives pruning of its executable ON setter. */
+  handlername: method = reference .string
+    arg opid = .int
+    call run(); missing = reference .string
+    if _error <> '' then return missing
+    row = _handlerrows[opid]; if row = 0 then return missing
+    return reference _handlernames[row]
+  /** CALL declarations retain combined immutable source ordinals. The
+   * selector resolves BIF/provider bindings once from these borrowed names. */
+  hascalls: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _callcount[fn] > 0
+  callhandlers: method = .int
+    arg fn = .int
+    call run(); if _error <> '' then return 0
+    return _callcount[fn]
+  callhandler: method = .int
+    arg fn = .int, index = .int
+    call run(); if _error <> '' | index < 1 | index > _callcount[fn] then return 0
+    return _callrows[_callfirst[fn] + index - 1]
+  callrow: method = .int
+    arg fn = .int, ordinal = .int
+    if fn < 1 | ordinal < 1 | ordinal > _handlercount[fn] then return 0
+    row = _handlerfirst[fn] + ordinal - 1
+    if _handlermodes[row] <> 'C' then return 0
+    return row
+  callcondition: method = .int
+    arg fn = .int, ordinal = .int
+    call run(); if _error <> '' then return 0
+    row = callrow(fn,ordinal); if row = 0 then return 0
+    return _handlerconditions[row]
+  /** Positive local entry, -1 trace-only first label, or zero nonlocal name. */
+  callentry: method = .int
+    arg fn = .int, ordinal = .int
+    call run(); if _error <> '' then return 0
+    row = callrow(fn,ordinal); if row = 0 then return 0
+    label = _handlerlabels[row]; if label = 0 then return 0
+    entry = _rowentries[_firstrow[fn] + label - 1]
+    if entry = 0 then return -1
+    return entry
+  callname: method = reference .string
+    arg fn = .int, ordinal = .int
+    call run(); missing = reference .string
+    if _error <> '' then return missing
+    row = callrow(fn,ordinal); if row = 0 then return missing
+    return reference _handlernames[row]
+  iscomplete: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _completes[opid] <> 0
+  /** Preserve the owning authored clause/diagnostic while emitting truthful
+   * generated records. Claiming already proved this disjoint mark ownership;
+   * setup, operand work and operations outside a segment have no anchor. */
+  sourceanchor: method = .int
+    arg opid = .int
+    call run(); if _error <> '' then return 0
+    return _segments[opid]
+  integer: method = .int
+    arg op = .llir..opview, name = .string
+    if charge(9) = 0 then return 0
+    bits = op.attribute(name); codec = .llir..intcodec()
+    if codec.check(bits) <> '' then do; call fail('LOWERING: SIGNAL integer attribute is invalid',op.id()); return 0; end
+    return <at..i64>(0) bits
+  text: method = .string
+    arg op = .llir..opview, name = .string
+    bits = op.attribute(name); size = <blen>(bits)
+    if reserve(size,3) = 0 | charge(size) = 0 | charge(size) = 0 | charge(size + 1) = 0 then return ''
+    codec = .llscalar..textcodec()
+    if codec.check(bits) <> '' then do; call fail('LOWERING: SIGNAL text attribute is invalid',op.id()); return ''; end
+    return bits as .string
+  /** The decoded source is cached once. Endpoint checks borrow that one cell;
+   * no label, mark or candidate makes another full source projection. */
+  range: method = .int
+    arg sourceid = .int, first = .int, last = .int, opid = 0
+    store = dereference _store; extent = .int; byte = .int
+    if sourceid < 1 | sourceid > store.count(10) | first < 0 | first >= last then do
+      call fail('LOWERING: SIGNAL requires an owned nonempty source range',opid); return 0
+    end
+    if _sourceready[sourceid] = 0 then do
+      bytes = store.bits(store.get(10,sourceid,2)); extent = <blen>(bytes)
+      if reserve(extent,4) = 0 | charge(extent) = 0 | charge(extent) = 0 | charge(extent + 1) = 0 then return 0
+      codec = .llscalar..textcodec()
+      if codec.check(bytes) <> '' then do; call fail('SOURCE: SIGNAL source is not valid UTF8',opid); return 0; end
+      assembler move _sourcebytes[sourceid],bytes
+      assembler null bytes
+      _sourceready[sourceid] = 1
+    end
+    bytes_ref = reference _sourcebytes[sourceid]; source = dereference bytes_ref
+    extent = <blen>(source)
+    if last > extent then do; call fail('LOWERING: SIGNAL source range exceeds its owner',opid); return 0; end
+    if charge(3) = 0 then return 0
+    boundary = 1
+    if first < extent then do; byte = <at..u8>(first) source; boundary = byte < 128 | byte >= 192; end
+    if last < extent then do; byte = <at..u8>(last) source; boundary = boundary & (byte < 128 | byte >= 192); end
+    if boundary = 0 then do; call fail('SOURCE: SIGNAL origin is not at a Unicode boundary',opid); return 0; end
+    return 1
+  authored: method = .int
+    arg opid = .int, anchor = 0
+    store = dereference _store; at = store.get(3,opid,11)
+    if charge(5) = 0 then return 0
+    if store.get(9,at,4) <> 1 then do; call fail('LOWERING: SIGNAL requires an owned exact authored origin',opid); return 0; end
+    if range(store.get(9,at,1),store.get(9,at,2),store.get(9,at,3),opid) = 0 then return 0
+    if anchor > 0 then do
+      do field = 1 to 3
+        if store.get(9,at,field) <> store.get(9,anchor,field) then do
+          call fail('LOWERING: SIGNAL operation substitutes its authored statement',opid); return 0
+        end
+      end
+    end
+    return 1
+  paired: method = .int
+    arg opid = .int, anchor = .int
+    store = dereference _store; at = store.get(3,opid,11); kind = store.get(9,at,4)
+    if charge(9) = 0 then return 0
+    if (kind <> 3 & kind <> 4) | store.get(9,at,6) <> 1 then do
+      call fail('LOWERING: SIGNAL transport requires generated paired provenance',opid); return 0
+    end
+    if store.get(13,store.get(9,at,5),1) <> anchor then do
+      call fail('LOWERING: SIGNAL transport belongs to another statement',opid); return 0
+    end
+    do field = 1 to 3
+      if store.get(9,at,field) <> store.get(9,anchor,field) then do
+        call fail('LOWERING: SIGNAL transport source boundary differs from its statement',opid); return 0
+      end
+    end
+    return 1
+  setupgenerated: method = .int
+    arg opid = .int
+    graph = dereference _graph; op = graph.operation(opid); at = op.origin()
+    if charge(3) = 0 then return 0
+    if at.belongs(_store) = 0 | (at.kind() <> 'derived' & at.kind() <> 'synthetic') then do
+      call fail('LOWERING: SIGNAL table setup requires generated provenance',opid); return 0
+    end
+    return 1
+  claim: method = .int
+    arg opid = .int, mark = .int
+    if opid < 1 then do; call fail('LOWERING: SIGNAL segment ends before its terminal',mark); return 0; end
+    if charge() = 0 then return 0
+    if _segments[opid] <> 0 then do; call fail('LOWERING: SIGNAL segments overlap or cycle',opid); return 0; end
+    _segments[opid] = mark; return 1
+  privateblock: method = .int
+    arg blockid = .int, predecessor = .int, mark = .int
+    store = dereference _store; fn = store.get(2,store.get(3,mark,2),1)
+    if charge(5) = 0 then return 0
+    if store.get(2,blockid,1) <> fn | _preds[blockid] <> 1 | _predop[blockid] <> predecessor | _blocks[blockid] <> 0 then do
+      call fail('LOWERING: SIGNAL continuation is shared, cyclic or has a foreign incoming edge',predecessor); return 0
+    end
+    _blocks[blockid] = mark; return 1
+  /** Parse one canonical unsigned field without a decimal/string conversion. */
+  uint: method = .int
+    value = 0; digits = 0; leadingzero = 0
+    do while _cursor < _end
+      if charge() = 0 then return 0
+      byte = <at..u8>(_cursor) _payload; _cursor = _cursor + 1
+      if byte = 58 then do
+        if digits = 0 then call fail('LOWERING: SIGNAL table has an empty unsigned field')
+        return value
+      end
+      if byte < 48 | byte > 57 | leadingzero then do; call fail('LOWERING: SIGNAL table has a noncanonical unsigned field'); return 0; end
+      digit = byte - 48
+      if value > (9223372036854775807 - digit) <idiv> 10 then do; call fail('LOWERING: SIGNAL table integer overflows'); return 0; end
+      value = value * 10 + digit; digits = digits + 1
+      if digits = 1 & digit = 0 then leadingzero = 1
+    end
+    call fail('LOWERING: SIGNAL table unsigned field is truncated'); return 0
+  frame: method = .string
+    size = uint(); if _error <> '' then return ''
+    if size > _end - _cursor then do; call fail('LOWERING: SIGNAL table frame is truncated'); return ''; end
+    if reserve(size,3) = 0 | charge(size) = 0 | charge(size) = 0 | charge(size + 1) = 0 then return ''
+    bits = binsubstr(_payload,_cursor + 1,size); _cursor = _cursor + size
+    codec = .llscalar..textcodec()
+    if codec.check(bits) <> '' then do; call fail('LOWERING: SIGNAL table frame is not UTF8'); return ''; end
+    return bits as .string
+  /** Entry-test true edges, not serialized IDs or origins, locate the source.
+   * CPROC already proves the entry protocol. Only its finite consume trampoline
+   * is unwrapped; PROCEDURE and EOF destinations remain exactly as admitted. */
+  landing: method = .int
+    arg fn = .int, entryid = .int
+    graph = dereference _graph; store = dereference _store; program = dereference _program
+    test = program.entrytest(fn,entryid)
+    if test = 0 then do; call fail('LOWERING: SIGNAL row has no canonical entry test'); return 0; end
+    branch = store.get(3,test,3); target = store.successor(branch,1); first = store.get(2,target,2)
+    if charge(8) = 0 then return 0
+    if graph.operation(first).name() = 'core.load' then do
+      consume = store.get(3,first,3)
+      if consume > 0 then do
+        if graph.operation(consume).name() = 'crexx.c.procedure.consume' then do
+          jump = store.get(3,consume,3)
+          if jump > 0 then do
+            if graph.operation(jump).name() = 'core.jump' & jump = store.get(2,target,3) then do
+              if store.get(3,first,12) <> program.contextslot(fn) | store.operand(consume,1) <> store.result(first,1) then do
+                call fail('LOWERING: SIGNAL entry trampoline substitutes its context',consume); return 0
+              end
+              target = store.successor(jump,1)
+            end
+          end
+        end
+      end
+    end
+    if store.get(2,target,1) <> fn then do; call fail('LOWERING: SIGNAL natural landing belongs to another function',test); return 0; end
+    return target
+  decode: method = .void
+    arg fn = .int, constantop = .int
+    graph = dereference _graph; store = dereference _store; program = dereference _program
+    op = graph.operation(constantop); bits = op.result().bytes(); extent = <blen>(bits)
+    if reserve(extent,2) = 0 | charge(extent + 1) = 0 then return
+    assembler move _payload,bits
+    assembler null bits
+    _cursor = 6; _end = extent
+    if extent < 6 then do; call fail('LOWERING: SIGNAL table header is truncated',constantop); return; end
+    if bin2x(binsubstr(_payload,1,6)) \== '43534947330A' then do; call fail('LOWERING: SIGNAL table has an unknown header',constantop); return; end
+    count = uint(); if _error <> '' then return
+    /* Every row has at least its five unsigned fields and a nonempty name. */
+    if count > (_end - _cursor) <idiv> 11 then do; call fail('LOWERING: SIGNAL table row count exceeds its framing',constantop); return; end
+    if reserve(count,32) = 0 then return
+    _firstrow[fn] = _rownames[0] + 1; _rowcount[fn] = count; nextentry = 1
+    name = .string; filename = .string; key = .string; sourceid = .int; row = .int; i = .int
+    entryid = .int; first = .int; last = .int; test = .int; entryname = .string
+    do i = 1 to count
+      if charge() = 0 then return
+      name = frame(); entryid = uint(); filename = frame(); first = uint(); last = uint()
+      if _error <> '' then return
+      if name == '' then do; call fail('LOWERING: SIGNAL table label is empty',constantop); return; end
+      if reserve(<blen>(name as .binary),2) = 0 | charge(<blen>(name as .binary) + 1) = 0 then return
+      key = fn || ':' || bin2x(name as .binary)
+      if reserve(<blen>(key as .binary) + 64,1) = 0 | charge(<blen>(key as .binary) + 1) = 0 then return
+      if _rowkeys.get(key) <> '' then do; call fail('LOWERING: SIGNAL table repeats a canonical label',constantop); return; end
+      if entryid > 0 then do
+        if entryid <> nextentry then do; call fail('LOWERING: SIGNAL table entries are not source ordered',constantop); return; end
+        test = program.entrytest(fn,entryid)
+        if test = 0 then do; call fail('LOWERING: SIGNAL table substitutes an entry identity',constantop); return; end
+        entryname = text(graph.operation(test),'name'); if _error <> '' then return
+        if name \== entryname then do; call fail('LOWERING: SIGNAL row name disagrees with its canonical entry',constantop); return; end
+        nextentry = nextentry + 1
+      end
+      else do
+        size = <blen>(name as .binary)
+        if reserve(size,4) = 0 | charge(size) = 0 | charge(size) = 0 | charge(size + 1) = 0 then return
+        if name \== rexxclassic_unicode_upper(name) then do; call fail('LOWERING: SIGNAL trace-only label is not canonical',constantop); return; end
+        if bulkwork(size,16) = 0 | charge(64) = 0 | reserve(size,16) = 0 then return
+        call _symbols.label(name)
+        if _symbols.error() <> '' then do; _error = _symbols.error(); return; end
+      end
+      if charge(<blen>(filename as .binary) + 1) = 0 then return
+      found = _sourcekeys.get(bin2x(filename as .binary))
+      if found == '' | found == '0' then do; call fail('LOWERING: SIGNAL table source is absent or ambiguous',constantop); return; end
+      sourceid = found as .int
+      if range(sourceid,first,last,constantop) = 0 then return
+      sourcekey = fn || ':' || sourceid
+      prior = _sourcekeys.get(sourcekey)
+      if prior <> '' then do
+        if first <= prior as .int then do; call fail('LOWERING: SIGNAL table label anchors are not source ordered',constantop); return; end
+      end
+      if reserve(length(sourcekey) + 64,1) = 0 | charge(length(sourcekey) + 1) = 0 then return
+      call _sourcekeys.set(sourcekey,first as .string)
+      row = _rownames[0] + 1; _rownames[row] = name; _rowentries[row] = entryid
+      if entryid > 0 then _landings[row] = landing(fn,entryid)
+      if _error <> '' then return
+      call _rowkeys.set(key,row as .string)
+    end
+    if nextentry <> program.entries(fn) then do; call fail('LOWERING: SIGNAL table omits a positive local entry',constantop); return; end
+    call decodehandlers(fn,constantop)
+    if _error <> '' then return
+    if _cursor <> _end then do; call fail('LOWERING: SIGNAL table has trailing bytes',constantop); return; end
+    assembler null _payload
+    return
+  /** Dense immutable ON declarations keep cold targets truthful after an
+   * unreachable executing policy setter has been pruned. Decode once. */
+  decodehandlers: method = .void
+    arg fn = .int, constantop = .int
+    count = uint(); if _error <> '' then return
+    if count > (_end - _cursor) <idiv> 17 then do; call fail('LOWERING: SIGNAL handler count exceeds its framing',constantop); return; end
+    if reserve(count,112) = 0 then return
+    _handlerfirst[fn] = _handlernames[0] + 1; _handlercount[fn] = count
+    _callfirst[fn] = _callrows[0] + 1
+    i = .int; row = .int; ordinal = .int; condition = .int; label = .int
+    first = .int; last = .int; sourceid = .int; labelrow = .int
+    name = .string; filename = .string; key = .string; prior = .string; found = .string
+    do i = 1 to count
+      if charge() = 0 then return
+      ordinal = uint(); mode = frame(); condition = uint(); label = uint(); name = frame(); filename = frame(); first = uint(); last = uint()
+      if _error <> '' then return
+      if (mode <> 'S' & mode <> 'C') | ordinal <> i | condition < 1 | condition > 7 | label > _rowcount[fn] then do
+        call fail('LOWERING: SIGNAL handler declaration has an invalid ordinal, condition or row',constantop); return
+      end
+      if mode = 'C' & (condition < 2 | condition > 5) then do; call fail('LOWERING: CALL declaration has an invalid condition',constantop); return; end
+      size = <blen>(name as .binary)
+      if reserve(size,4) = 0 | bulkwork(size,3) = 0 | charge() = 0 then return
+      if name \== rexxclassic_unicode_upper(name) then do; call fail('LOWERING: SIGNAL handler name is not canonical',constantop); return; end
+      key = fn || ':' || bin2x(name as .binary)
+      if reserve(<blen>(key as .binary) + 32,1) = 0 | charge(<blen>(key as .binary) + 1) = 0 then return
+      found = _rowkeys.get(key)
+      if label = 0 then do
+        if found <> '' then do; call fail('LOWERING: SIGNAL missing handler actually names the first label',constantop); return; end
+      end
+      else do
+        labelrow = _firstrow[fn] + label - 1
+        if found \== labelrow as .string | name \== _rownames[labelrow] then do
+          call fail('LOWERING: SIGNAL handler substitutes its first label row',constantop); return
+        end
+      end
+      if charge(<blen>(filename as .binary) + 1) = 0 then return
+      found = _sourcekeys.get(bin2x(filename as .binary))
+      if found == '' | found == '0' then do; call fail('LOWERING: SIGNAL handler source is absent or ambiguous',constantop); return; end
+      sourceid = found as .int
+      if range(sourceid,first,last,constantop) = 0 then return
+      key = 'handler:' || fn || ':' || sourceid
+      if reserve(length(key) + 64,1) = 0 | charge(length(key) + 1) = 0 then return
+      prior = _sourcekeys.get(key)
+      if prior <> '' then do
+        if first <= prior as .int then do; call fail('LOWERING: SIGNAL handler declarations are not source ordered',constantop); return; end
+      end
+      call _sourcekeys.set(key,first as .string)
+      row = _handlernames[0] + 1; _handlernames[row] = name; _handlermodes[row] = mode
+      if mode = 'S' then _signalcount[fn] = _signalcount[fn] + 1
+      else do
+        _callcount[fn] = _callcount[fn] + 1
+        _callrows[_callrows[0] + 1] = ordinal
+      end
+      _handlerconditions[row] = condition; _handlerlabels[row] = label
+      _handlersources[row] = sourceid; _handlerstarts[row] = first; _handlerends[row] = last
+      if label = 0 then _handlercodes[row] = 161
+      else do
+        if _rowentries[labelrow] = 0 then _handlercodes[row] = 162
+        else _handlerlandings[row] = _landings[labelrow]
+      end
+    end
+    return
+  /** Only canonical context loads and this segment's two proved transports can
+   * occur between its semantic operations. Exact context mappings are retained. */
+  transport: method = .int
+    arg opid = .int, mark = .int, owner = .int
+    graph = dereference _graph; store = dereference _store; program = dereference _program
+    op = graph.operation(opid)
+    if op.name() <> 'core.load' then return 0
+    fn = store.get(2,op.blockid(),1); slotid = store.get(3,opid,12); value = op.result().id()
+    anchor = store.get(3,mark,11)
+    if slotid = program.contextslot(fn) then do
+      if store.get(9,store.get(3,opid,11),4) = 1 then return authored(opid,anchor)
+      return paired(opid,anchor)
+    end
+    if _tablevalues[value] = fn then return paired(opid,anchor)
+    if owner > 0 & _nameowners[value] = owner then do
+      _namevalues[opid] = owner; return paired(opid,anchor)
+    end
+    return 0
+  success: method = .void
+    arg first = .int, mark = .int, row = .int, owner = .int
+    graph = dereference _graph; store = dereference _store
+    id = first; anchor = store.get(3,mark,11)
+    do while id > 0
+      if claim(id,mark) = 0 then return
+      op = graph.operation(id); name = op.name()
+      if name = 'core.load' then do
+        if transport(id,mark,owner) = 0 then do; call fail('LOWERING: SIGNAL close path has an unproved load',id); return; end
+      end
+      else do
+        if paired(id,anchor) = 0 then return
+        if name = 'core.jump' then do
+          if op.successor(1) <> _landings[row] then do; call fail('LOWERING: SIGNAL jumps outside its natural source landing',id); return; end
+          _transfers[id] = 1; _namevalues[id] = owner; return
+        end
+        if name <> 'crexx.c.do.close' then do; call fail('LOWERING: SIGNAL success path contains an unproved operation',id); return; end
+      end
+      id = store.get(3,id,3)
+    end
+    call fail('LOWERING: SIGNAL success path lacks its transfer',mark); return
+  failure: method = .void
+    arg first = .int, mark = .int, owner = .int, code = .string
+    graph = dereference _graph; store = dereference _store; op = .llir..opview
+    id = first; anchor = store.get(3,mark,11); found = 0; constantop = 0
+    do while id > 0
+      if claim(id,mark) = 0 then return
+      op = graph.operation(id); name = op.name()
+      if name = 'crexx.c.signal.invalid' then do; found = id; leave; end
+      if name = 'core.load' then do
+        if transport(id,mark,owner) = 0 then do; call fail('LOWERING: SIGNAL error path has an unproved load',id); return; end
+      end
+      else if owner = 0 & name = 'core.constant' & constantop = 0 then do
+        if paired(id,anchor) = 0 then return
+        constantop = id
+      end
+      else do; call fail('LOWERING: SIGNAL error path contains an unproved operation',id); return; end
+      id = store.get(3,id,3)
+    end
+    if found = 0 then do; call fail('LOWERING: SIGNAL error path lacks its exact invalid operation',mark); return; end
+    if authored(found,anchor) = 0 then return
+    if text(op,'code') \== code then do; call fail('LOWERING: SIGNAL error path substitutes its error code',found); return; end
+    value = op.input(1).id()
+    if owner > 0 then do
+      if _nameowners[value] <> owner then do; call fail('LOWERING: SIGNAL error substitutes its dynamic name',found); return; end
+      _namevalues[found] = owner
+    end
+    else do
+      producer = store.get(4,value,1)
+      if producer <> constantop | constantop = 0 then do; call fail('LOWERING: SIGNAL missing target requires its exact constant',found); return; end
+      bits = graph.operation(constantop).result().bytes(); size = <blen>(bits)
+      if reserve(size,5) = 0 | charge(size) = 0 | charge(size) = 0 | charge(size + 1) = 0 then return
+      codec = .llscalar..textcodec()
+      if codec.check(bits) <> '' then do; call fail('LOWERING: SIGNAL missing target is not UTF8',constantop); return; end
+      missing = bits as .string
+      if missing \== rexxclassic_unicode_upper(missing) then do; call fail('LOWERING: SIGNAL missing target is not canonical',constantop); return; end
+      fn = store.get(2,op.blockid(),1); key = fn || ':' || bin2x(bits)
+      if reserve(<blen>(key as .binary) + 32,1) = 0 | charge(<blen>(key as .binary) + 1) = 0 then return
+      if _rowkeys.get(key) <> '' then do; call fail('LOWERING: SIGNAL missing target actually names an admitted row',constantop); return; end
+      if _uses[value] <> 1 then do; call fail('LOWERING: SIGNAL missing target constant escapes its error',constantop); return; end
+    end
+    absent = store.get(3,found,3); terminal = store.get(3,absent,3)
+    if absent = 0 | terminal = 0 then do; call fail('LOWERING: SIGNAL invalid lacks its structural terminal',found); return; end
+    if graph.operation(absent).name() <> 'crexx.c.return.absent' | graph.operation(terminal).name() <> 'core.return' then do
+      call fail('LOWERING: SIGNAL invalid has a noncanonical structural tail',found); return
+    end
+    if terminal <> store.get(2,op.blockid(),3) | store.operand(terminal,1) <> store.result(absent,1) | _uses[store.result(absent,1)] <> 1 then do
+      call fail('LOWERING: SIGNAL invalid tail substitutes its absent packet',terminal); return
+    end
+    if claim(absent,mark) = 0 | claim(terminal,mark) = 0 then return
+    ignored = paired(absent,anchor); ignored = paired(terminal,anchor)
+    return
+  dynamic: method = .void
+    arg mark = .int, fn = .int
+    graph = dereference _graph; store = dereference _store
+    anchor = store.get(3,mark,11); id = store.get(3,mark,3); owner = 0
+    row = .int; test = .int; branch = .int; yes = .int; no = .int; i = .int; value = .int
+    op = .llir..opview; name = .string
+    do i = 0 to _rowcount[fn]
+      test = 0
+      do while id > 0
+        op = graph.operation(id); name = op.name()
+        if name = 'crexx.c.signal.test' | name = 'crexx.c.signal.invalid' then do; test = id; leave; end
+        if name <> 'core.load' then do; call fail('LOWERING: SIGNAL search has an unproved operation',id); return; end
+        /* The first name load identifies the one owning conversion. */
+        value = op.result().id()
+        if owner = 0 then owner = _nameowners[value]
+        if claim(id,mark) = 0 | transport(id,mark,owner) = 0 then do; call fail('LOWERING: SIGNAL search has an unproved load',id); return; end
+        id = store.get(3,id,3)
+      end
+      if test = 0 then do; call fail('LOWERING: SIGNAL search lacks its next row or terminal',mark); return; end
+      if owner = 0 then owner = _nameowners[store.operand(test,2)]
+      if i = _rowcount[fn] then do
+        if owner = 0 then owner = _nameowners[store.operand(test,1)]
+        call failure(test,mark,owner,'16.1'); leave
+      end
+      row = _firstrow[fn] + i
+      if op.name() <> 'crexx.c.signal.test' then do; call fail('LOWERING: SIGNAL search omits an inventory row',test); return; end
+      if claim(test,mark) = 0 | paired(test,anchor) = 0 then return
+      if integer(op,'label') <> i + 1 then do; call fail('LOWERING: SIGNAL search row order differs from its inventory',test); return; end
+      if _tablevalues[op.input(1).id()] <> fn | owner = 0 | _nameowners[op.input(2).id()] <> owner then do
+        call fail('LOWERING: SIGNAL test substitutes its table or runtime name',test); return
+      end
+      _testrows[test] = row; _namevalues[test] = owner
+      branch = store.get(3,test,3)
+      if branch = 0 then do; call fail('LOWERING: SIGNAL test lacks its direct branch',test); return; end
+      if graph.operation(branch).name() <> 'core.branch' | store.operand(branch,1) <> op.result().id() | _uses[op.result().id()] <> 1 then do
+        call fail('LOWERING: SIGNAL test must exclusively control its branch',test); return
+      end
+      if claim(branch,mark) = 0 | paired(branch,anchor) = 0 then return
+      yes = store.successor(branch,1); no = store.successor(branch,2)
+      if privateblock(yes,branch,mark) = 0 | privateblock(no,branch,mark) = 0 then return
+      if _rowentries[row] > 0 then call success(store.get(2,yes,2),mark,row,owner)
+      else call failure(store.get(2,yes,2),mark,owner,'16.2')
+      if _error <> '' then return
+      id = store.get(2,no,2)
+    end
+    if _error <> '' then return
+    if owner = 0 | _namemarks[owner] <> 0 then do; call fail('LOWERING: SIGNAL conversion is missing or shared between segments',mark); return; end
+    _namemarks[owner] = mark; _namevalues[mark] = owner
+    producer = store.get(4,owner,1); writer = _namestores[owner]
+    if writer = 0 | store.get(3,producer,2) <> store.get(3,mark,2) | store.get(3,writer,2) <> store.get(3,mark,2) then do
+      call fail('LOWERING: SIGNAL name must be prepared in its mark block',mark); return
+    end
+    if _order[producer] >= _order[writer] | _order[writer] >= _order[mark] then do
+      call fail('LOWERING: SIGNAL name must be stored before its owning mark',mark); return
+    end
+    if authored(producer,anchor) = 0 | paired(writer,anchor) = 0 then return
+    /* The conversion, its unique store and mark are one finite prefix. A
+     * second semantic operation cannot hide between capture and resolution.
+     * Prefix visits, like search-path visits, are disjoint between segments. */
+    id = producer
+    do while id <> mark
+      if claim(id,mark) = 0 then return
+      if id <> producer & id <> writer then do
+        if transport(id,mark,0) = 0 then do
+          call fail('LOWERING: SIGNAL conversion-to-mark prefix contains unproved semantic work',id); return
+        end
+      end
+      id = store.get(3,id,3)
+    end
+    return
+  /** Policy execution is separate from the immutable ON declarations. A
+   * generic prune may remove setters without removing their declared targets. */
+  policy: method = .void
+    arg opid = .int
+    store = dereference _store; op = .llir..opview(_store,opid)
+    fn = store.get(2,op.blockid(),1)
+    if authored(opid) = 0 then return
+    if _tablevalues[store.operand(opid,1)] <> fn then do; call fail('LOWERING: SIGNAL policy uses a foreign or missing table',opid); return; end
+    mode = 'S'; if op.name() = 'crexx.c.call.policy' then mode = 'C'
+    condition = integer(op,'condition'); ordinal = integer(op,'handler'); label = integer(op,'label'); name = text(op,'name')
+    if _error <> '' then return
+    if condition < 1 | condition > 7 | ordinal < 0 | ordinal > _handlercount[fn] then do
+      call fail('LOWERING: SIGNAL policy has an invalid condition or handler',opid); return
+    end
+    if mode = 'C' & (condition < 2 | condition > 5) then do; call fail('LOWERING: CALL policy has an invalid condition',opid); return; end
+    if ordinal = 0 then do
+      if label <> 0 | name \== '' then do; call fail('LOWERING: SIGNAL OFF has a target or handler',opid); return; end
+    end
+    else do
+      row = _handlerfirst[fn] + ordinal - 1; expected = _handlerlabels[row]
+      if expected = 0 then expected = -1
+      at = store.get(3,opid,11)
+      if mode <> _handlermodes[row] | condition <> _handlerconditions[row] | label <> expected | name \== _handlernames[row] then do
+        call fail('LOWERING: SIGNAL ON disagrees with its immutable declaration',opid); return
+      end
+      if store.get(9,at,1) <> _handlersources[row] | store.get(9,at,2) <> _handlerstarts[row] | store.get(9,at,3) <> _handlerends[row] then do
+        call fail('LOWERING: SIGNAL ON substitutes its declared authored origin',opid); return
+      end
+      if _handlerpolicies[row] <> 0 then do; call fail('LOWERING: SIGNAL ON ordinal has more than one setter',opid); return; end
+      _handlerpolicies[row] = opid; _handlerrows[opid] = row
+    end
+    ignored = claim(opid,opid)
+    return
+  complete: method = .void
+    arg opid = .int
+    store = dereference _store; program = dereference _program; op = .llir..opview(_store,opid)
+    fn = store.get(2,op.blockid(),1)
+    if authored(opid) = 0 then return
+    if _tablevalues[store.operand(opid,1)] <> fn | _callcount[fn] = 0 then do
+      call fail('LOWERING: clause completion lacks its source-owned CALL inventory',opid); return
+    end
+    identity = integer(op,'id'); at = store.get(3,opid,11)
+    if identity <> store.get(9,at,2) + 1 then do; call fail('LOWERING: clause completion id differs from its authored head',opid); return; end
+    if program.programquery(opid) = 0 then do; call fail('LOWERING: clause completion lacks its conditional EXIT guard',opid); return; end
+    if claim(opid,opid) = 0 then return
+    _completes[opid] = 1
+    return
+  /** Every cold record belongs to one generated capture, with one visit.
+   * No cold record pretends to be the runtime fault or the ON instruction. */
+  coldclaim: method = .int
+    arg opid = .int, captureid = .int
+    if opid < 1 then do; call fail('LOWERING: SIGNAL dispatcher ends before its terminal',captureid); return 0; end
+    store = dereference _store
+    if store.get(3,opid,11) <> store.get(3,captureid,11) then do
+      call fail('LOWERING: SIGNAL dispatcher substitutes its generated origin',opid); return 0
+    end
+    if claim(opid,captureid) = 0 then return 0
+    _eventowners[opid] = captureid
+    return 1
+  eventkey: method = .int
+    arg opid = .int, captureid = .int
+    op = .llir..opview(_store,opid); key = text(op,'key')
+    if _error <> '' then return 0
+    if key \== _eventkeys[captureid] then do; call fail('LOWERING: SIGNAL dispatcher uses a foreign event key',opid); return 0; end
+    return 1
+  /** Only canonical context and the unique selected-I transport are admitted
+   * between cold semantic operations. The table is read only by capture. */
+  coldloads: method = .int
+    arg first = .int, captureid = .int, selection = 0, table = 0
+    store = dereference _store; program = dereference _program
+    fn = store.get(2,store.get(3,captureid,2),1); id = first
+    do while id > 0
+      if store.get(3,id,1) <> 3 then leave
+      slotid = store.get(3,id,12); value = store.result(id,1)
+      allowed = slotid = program.contextslot(fn)
+      if table & _tablevalues[value] = fn then allowed = 1
+      if selection & _selectedslots[slotid] = captureid then do
+        allowed = 1; _selectedvalues[value] = captureid
+      end
+      if allowed = 0 then do; call fail('LOWERING: SIGNAL dispatcher reads an unproved slot',id); return 0; end
+      if coldclaim(id,captureid) = 0 then return 0
+      id = store.get(3,id,3)
+    end
+    return id
+  coldreturn: method = .int
+    arg producer = .int, captureid = .int
+    store = dereference _store; terminal = store.get(3,producer,3)
+    if terminal = 0 then do; call fail('LOWERING: SIGNAL resumed path lacks its owned result return',producer); return 0; end
+    op = .llir..opview(_store,terminal); value = store.result(producer,1)
+    if op.name() <> 'core.return' | op.inputs() <> 1 then do
+      call fail('LOWERING: SIGNAL resumed path lacks its result return',terminal); return 0
+    end
+    if store.operand(terminal,1) <> value | _uses[value] <> 1 then do
+      call fail('LOWERING: SIGNAL resumed path substitutes or shares its result',terminal); return 0
+    end
+    return coldclaim(terminal,captureid)
+  coldhandler: method = .void
+    arg first = .int, captureid = .int, row = .int, ordinal = .int
+    store = dereference _store
+    id = coldloads(first,captureid); if _error <> '' then return
+    if id = 0 then do; call fail('LOWERING: SIGNAL selected branch lacks delivery',captureid); return; end
+    op = .llir..opview(_store,id)
+    if op.name() <> 'crexx.c.signal.deliver' then do; call fail('LOWERING: SIGNAL selected branch lacks delivery',id); return; end
+    if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+    if integer(op,'condition') <> _handlerconditions[row] | integer(op,'handler') <> ordinal then do
+      call fail('LOWERING: SIGNAL delivery substitutes its selected declaration',id); return
+    end
+    _handlerrows[id] = row; next = store.get(3,id,3)
+    if _handlercodes[row] = 0 then do
+      if next = 0 then do; call fail('LOWERING: SIGNAL delivery lacks its natural jump',id); return; end
+      op = .llir..opview(_store,next)
+      if op.name() <> 'core.jump' then do; call fail('LOWERING: SIGNAL delivery is not followed by its natural jump',next); return; end
+      if op.successor(1) <> _handlerlandings[row] then do; call fail('LOWERING: SIGNAL handler jumps outside its natural landing',next); return; end
+      if coldclaim(next,captureid) = 0 then return
+      _handlerrows[next] = row; _transfers[next] = 1
+    end
+    else do
+      id = coldloads(next,captureid); if _error <> '' then return
+      if id = 0 then do; call fail('LOWERING: SIGNAL invalid handler lacks its error',captureid); return; end
+      op = .llir..opview(_store,id)
+      if op.name() <> 'crexx.c.signal.handler.invalid' then do; call fail('LOWERING: SIGNAL invalid handler substitutes its error',id); return; end
+      if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+      code = '16.1'; if _handlercodes[row] = 162 then code = '16.2'
+      if integer(op,'condition') <> _handlerconditions[row] | integer(op,'handler') <> ordinal | text(op,'code') \== code then do
+        call fail('LOWERING: SIGNAL handler error disagrees with its selected declaration',id); return
+      end
+      _handlerrows[id] = row; ignored = coldreturn(id,captureid)
+    end
+    return
+  /** One finite private dispatcher covers the immutable declaration order,
+   * including cases whose executing setter disappeared under generic prune. */
+  dispatcher: method = .void
+    arg fn = .int
+    store = dereference _store; program = dereference _program
+    protectid = _protections[fn]; captureid = _captures[fn]
+    if protectid = 0 | captureid = 0 then do; call fail('LOWERING: SIGNAL protection and capture must be paired'); return; end
+    if store.get(3,protectid,2) <> store.get(1,fn,3) then do; call fail('LOWERING: SIGNAL protection is outside canonical setup',protectid); return; end
+    root = store.successor(protectid,2)
+    if root = store.get(1,fn,3) | store.successor(protectid,1) = root | store.get(3,captureid,2) <> root then do
+      call fail('LOWERING: SIGNAL capture is outside its unique exceptional entry',captureid); return
+    end
+    if setupgenerated(protectid) = 0 | setupgenerated(captureid) = 0 then return
+    at = store.get(3,captureid,11)
+    if range(store.get(9,at,1),store.get(9,at,2),store.get(9,at,3),captureid) = 0 then return
+    if privateblock(root,protectid,captureid) = 0 then return
+    id = coldloads(store.get(2,root,2),captureid,0,1)
+    if _error <> '' then return
+    if id <> captureid then do; call fail('LOWERING: SIGNAL capture is not first exceptional semantic work',captureid); return; end
+    if _tablevalues[store.operand(captureid,1)] <> fn then do; call fail('LOWERING: SIGNAL capture uses a foreign or missing table',captureid); return; end
+    op = .llir..opview(_store,captureid); key = text(op,'key')
+    if _error <> '' then return
+    if key == '' then do; call fail('LOWERING: SIGNAL capture key is empty',captureid); return; end
+    _eventkeys[captureid] = key
+    if coldclaim(captureid,captureid) = 0 then return
+    id = coldloads(store.get(3,captureid,3),captureid); if _error <> '' then return
+    if id = 0 then do; call fail('LOWERING: SIGNAL capture lacks policy selection',captureid); return; end
+    op = .llir..opview(_store,id)
+    if op.name() <> 'crexx.c.signal.select' then do; call fail('LOWERING: SIGNAL capture lacks policy selection',id); return; end
+    if store.operand(id,1) <> store.result(captureid,1) | _uses[store.result(captureid,1)] <> 1 then do
+      call fail('LOWERING: SIGNAL select substitutes or shares its captured condition',id); return
+    end
+    if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+    _selections[captureid] = id; value = store.result(id,1); _selectedvalues[value] = captureid
+    writer = store.get(3,id,3)
+    if writer = 0 then do; call fail('LOWERING: SIGNAL selected policy lacks its unique slot',id); return; end
+    if store.get(3,writer,1) <> 4 then do; call fail('LOWERING: SIGNAL selected policy lacks its immediate store',writer); return; end
+    slotid = store.get(3,writer,12)
+    if _writes[slotid] <> 1 | store.operand(writer,1) <> value | _tableslots[slotid] <> 0 | slotid = program.contextslot(fn) then do
+      call fail('LOWERING: SIGNAL selected policy substitutes or shares its slot',writer); return
+    end
+    if coldclaim(writer,captureid) = 0 then return
+    _selectedstores[captureid] = writer; _selectedslots[slotid] = captureid
+    id = store.get(3,writer,3); i = .int; row = .int; branch = .int; yes = .int; no = .int
+    do i = 1 to _handlercount[fn]
+      row = _handlerfirst[fn] + i - 1
+      if _handlermodes[row] <> 'S' then iterate
+      id = coldloads(id,captureid,1); if _error <> '' then return
+      if id = 0 then do; call fail('LOWERING: SIGNAL dispatcher omits a declared handler',captureid); return; end
+      op = .llir..opview(_store,id); row = _handlerfirst[fn] + i - 1
+      if op.name() <> 'crexx.c.signal.selected' then do; call fail('LOWERING: SIGNAL dispatcher omits a declared handler test',id); return; end
+      if _selectedvalues[store.operand(id,1)] <> captureid then do
+        call fail('LOWERING: SIGNAL dispatcher substitutes its selected policy',id); return
+      end
+      if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+      if integer(op,'handler') <> i then do; call fail('LOWERING: SIGNAL handler tests are not in declaration order',id); return; end
+      _handlerrows[id] = row; branch = store.get(3,id,3)
+      if branch = 0 then do; call fail('LOWERING: SIGNAL selected test lacks its branch',id); return; end
+      if store.get(3,branch,1) <> 6 then do; call fail('LOWERING: SIGNAL selected test lacks its direct branch',branch); return; end
+      if store.operand(branch,1) <> store.result(id,1) | _uses[store.result(id,1)] <> 1 then do
+        call fail('LOWERING: SIGNAL selected test does not exclusively control its branch',branch); return
+      end
+      if coldclaim(branch,captureid) = 0 then return
+      yes = store.successor(branch,1); no = store.successor(branch,2)
+      if privateblock(yes,branch,captureid) = 0 | privateblock(no,branch,captureid) = 0 then return
+      call coldhandler(store.get(2,yes,2),captureid,row,i)
+      if _error <> '' then return
+      id = store.get(2,no,2)
+    end
+    id = coldloads(id,captureid); if _error <> '' then return
+    if id = 0 then do; call fail('LOWERING: SIGNAL dispatcher lacks its outward relay',captureid); return; end
+    op = .llir..opview(_store,id)
+    if op.name() <> 'crexx.c.signal.relay' then do; call fail('LOWERING: SIGNAL dispatcher fallback is not its relay',id); return; end
+    if coldclaim(id,captureid) = 0 | eventkey(id,captureid) = 0 then return
+    ignored = coldreturn(id,captureid)
+    return
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    if <refvalid>(_graph) = 0 | <refvalid>(_program) = 0 then do; call fail('LOWERING: SIGNAL proof owner is not live'); return; end
+    graph = dereference _graph; program = dereference _program
+    if graph.error() <> '' then do; _error = graph.error(); return; end
+    if program.status() <> 0 then do; _error = program.error(); _offset = program.offset(); return; end
+    if program.belongs(_graph) = 0 then do; call fail('LOWERING: SIGNAL proof belongs to another graph'); return; end
+    _identity = graph.identity()
+    if _limit < 1 | _budget < 1 then do; call fail('LIMIT: invalid SIGNAL proof budget'); return; end
+    _store = graph.storage(); store = dereference _store
+    op = .llir..opview; name = .string; key = .string; id = .int; fn = .int; b = .int
+    i = .int; value = .int; target = .int; slotid = .int; producer = .int; writer = .int
+    constantop = .int; table = .int; owner = .int; mark = .int; row = .int; first = .int; found = 0; allowed = .int; captureid = .int
+    do fn = 1 to store.count(1)
+      if charge() = 0 then return
+      if program.tableconstant(fn) > 0 then found = 1
+    end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      name = graph.operation(id).name()
+      if left(name,15) = 'crexx.c.signal.' | name = 'crexx.c.call.policy' | name = 'crexx.c.clause.complete' | name = 'core.protect' then found = 1
+    end
+    if found = 0 then return
+    /* Fixed-width graph facts are reserved once before any indexed write. */
+    if reserve(store.count(3) + 1,136) = 0 | reserve(store.count(4) + 1,56) = 0 then return
+    if reserve(store.count(5) + 1,40) = 0 | reserve(store.count(2) + 1,24) = 0 then return
+    if reserve(store.count(1) + 1,72) = 0 | reserve(store.count(10) + 1,32) = 0 then return
+    _symbols = .llcsymbols..checked(_limit,_budget)
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      op = .llir..opview(_store,id); name = op.name()
+      do i = 1 to op.inputs()
+        if charge() = 0 then return
+        value = op.input(i).id(); _uses[value] = _uses[value] + 1; _consumer[value] = id
+      end
+      do i = 1 to op.successors()
+        if charge() = 0 then return
+        target = op.successor(i); _preds[target] = _preds[target] + 1; _predop[target] = id
+      end
+      if name = 'core.store' then do
+        slotid = store.get(3,id,12); _writes[slotid] = _writes[slotid] + 1; _writer[slotid] = id
+      end
+      if name = 'crexx.c.signal.name' then do
+        value = op.result().id(); _nameowners[value] = value; _namevalues[id] = value
+      end
+      fn = store.get(2,op.blockid(),1)
+      if name = 'core.protect' then do
+        if _protections[fn] <> 0 then do; call fail('LOWERING: SIGNAL function has more than one protection declaration',id); return; end
+        _protections[fn] = id
+      end
+      if name = 'crexx.c.signal.capture' then do
+        if _captures[fn] <> 0 then do; call fail('LOWERING: SIGNAL function has more than one event capture',id); return; end
+        _captures[fn] = id
+      end
+      if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.name' | name = 'crexx.c.signal.invalid' then do
+        if authored(id) = 0 then return
+      end
+    end
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      id = store.get(2,b,2); ordinal = 0
+      do while id > 0
+        if charge() = 0 then return
+        ordinal = ordinal + 1; _order[id] = ordinal; id = store.get(3,id,3)
+      end
+    end
+    /* Logical source identities are strict and injectively keyed. Ambiguity
+     * is retained and fails only if the inventory selects that source. */
+    do id = 1 to store.count(10)
+      if charge() = 0 then return
+      filename = store.text(store.get(10,id,1)); size = <blen>(filename as .binary)
+      if reserve(size,3) = 0 | reserve(64,1) = 0 | bulkwork(size,2) = 0 | charge() = 0 then return
+      key = bin2x(filename as .binary)
+      if _sourcekeys.get(key) <> '' then call _sourcekeys.set(key,'0')
+      else call _sourcekeys.set(key,id as .string)
+    end
+    do fn = 1 to store.count(1)
+      if charge() = 0 then return
+      constantop = program.tableconstant(fn); slotid = program.tableslot(fn)
+      if constantop = 0 then iterate
+      if slotid = 0 | _writes[slotid] <> 1 then do; call fail('LOWERING: SIGNAL table needs its mandatory once-written slot',constantop); return; end
+      writer = _writer[slotid]
+      if store.operand(writer,1) <> store.result(constantop,1) | store.get(3,constantop,3) <> writer then do
+        call fail('LOWERING: SIGNAL table store substitutes its setup constant',writer); return
+      end
+      if setupgenerated(constantop) = 0 | setupgenerated(writer) = 0 then return
+      _tableslots[slotid] = fn; value = store.result(constantop,1); _tablevalues[value] = fn
+      _erased[constantop] = 1; _erased[writer] = 1
+      call decode(fn,constantop); if _error <> '' then return
+    end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(id); name = op.name(); b = op.blockid(); fn = store.get(2,b,1)
+      if name <> 'core.store' then iterate
+      value = op.input(1).id(); owner = _nameowners[value]
+      if owner = 0 then iterate
+      slotid = store.get(3,id,12)
+      if _namestores[owner] <> 0 | _writes[slotid] <> 1 | _tableslots[slotid] <> 0 then do
+        call fail('LOWERING: SIGNAL dynamic name needs one distinct once-written slot',id); return
+      end
+      _nameslots[slotid] = owner; _namestores[owner] = id; _nametransport[id] = 1; _namevalues[id] = owner
+    end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(id); name = op.name()
+      if name <> 'core.load' then iterate
+      slotid = store.get(3,id,12); value = op.result().id()
+      if _tableslots[slotid] > 0 then do; _tablevalues[value] = _tableslots[slotid]; _erased[id] = 1; end
+      owner = _nameslots[slotid]
+      if owner > 0 then do; _nameowners[value] = owner; _nametransport[id] = 1; _namevalues[id] = owner; end
+    end
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      opname = store.opname(store.get(3,id,1))
+      if opname = 'crexx.c.signal.policy' | opname = 'crexx.c.call.policy' then do
+        call policy(id); if _error <> '' then return
+      end
+      if opname = 'crexx.c.clause.complete' then do
+        call complete(id); if _error <> '' then return
+      end
+      if opname = 'crexx.c.call' then do
+        fn = store.get(2,store.get(3,id,2),1)
+        if _callcount[fn] > 0 & program.callfunction(id) <> fn then do
+          call fail('LOWERING: internal call crosses its source-owned CALL policy domain',id); return
+        end
+      end
+    end
+    do fn = 1 to store.count(1)
+      if charge() = 0 then return
+      if _signalcount[fn] > 0 & _protections[fn] = 0 then do; call fail('LOWERING: SIGNAL handler declarations lack protected entry'); return; end
+      if _protections[fn] > 0 | _captures[fn] > 0 then do
+        call dispatcher(fn); if _error <> '' then return
+      end
+    end
+    do mark = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(mark)
+      if op.name() <> 'crexx.c.signal.mark' then iterate
+      fn = store.get(2,op.blockid(),1)
+      if _tablevalues[op.input(1).id()] <> fn then do; call fail('LOWERING: SIGNAL mark uses a foreign or missing table',mark); return; end
+      if claim(mark,mark) = 0 then return
+      row = integer(op,'label'); first = store.get(3,mark,3)
+      select
+        when row > 0 then do
+          if row > _rowcount[fn] then do; call fail('LOWERING: SIGNAL mark row is outside its inventory',mark); return; end
+          row = _firstrow[fn] + row - 1
+          if _rowentries[row] = 0 then do; call fail('LOWERING: static SIGNAL selects a trace-only row',mark); return; end
+          call success(first,mark,row,0)
+        end
+        when row = -1 then call failure(first,mark,0,'16.1')
+        when row = 0 then call dynamic(mark,fn)
+        otherwise call fail('LOWERING: SIGNAL mark has an invalid label mode',mark)
+      end
+      if _error <> '' then return
+    end
+    /* Complete use closure includes dead records and forwarded constants.
+     * No ordinary consumer or unclaimed conversion/error/test can survive. */
+    do id = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(id); name = op.name(); fn = store.get(2,op.blockid(),1)
+      if (left(name,15) = 'crexx.c.signal.' | name = 'crexx.c.call.policy' | name = 'crexx.c.clause.complete') & _segments[id] = 0 then do; call fail('LOWERING: SIGNAL operation is outside its owning segment',id); return; end
+      if _nametransport[id] then do
+        owner = _namevalues[id]; mark = _namemarks[owner]
+        if mark = 0 then do; call fail('LOWERING: SIGNAL name transport has no owning mark',id); return; end
+        if _segments[id] <> mark then do; call fail('LOWERING: SIGNAL name transport escapes its owning segment',id); return; end
+      end
+      if _erased[id] & name = 'core.load' then do
+        if _uses[op.result().id()] = 0 then do; call fail('LOWERING: SIGNAL table has stray unused load transport',id); return; end
+      end
+      if name = 'core.load' then do
+        slotid = store.get(3,id,12); captureid = _selectedslots[slotid]
+        if captureid > 0 then do
+          value = store.result(id,1)
+          if _eventowners[id] <> captureid | _uses[value] = 0 then do
+            call fail('LOWERING: SIGNAL selected-policy transport escapes its dispatcher',id); return
+          end
+          _selectedvalues[value] = captureid
+        end
+      end
+      do i = 1 to op.inputs()
+        if charge() = 0 then return
+        value = op.input(i).id(); table = _tablevalues[value]; owner = _nameowners[value]
+        if table > 0 then do
+          allowed = table = fn & i = 1
+          allowed = allowed & (name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | name = 'crexx.c.signal.policy' | name = 'crexx.c.call.policy' | name = 'crexx.c.clause.complete' | name = 'crexx.c.signal.capture' | (_erased[id] & name = 'core.store'))
+          if allowed = 0 then do; call fail('LOWERING: SIGNAL table escapes its full-use closure',id); return; end
+          if name = 'crexx.c.signal.mark' | name = 'crexx.c.signal.test' | name = 'crexx.c.signal.policy' | name = 'crexx.c.call.policy' | name = 'crexx.c.clause.complete' | name = 'crexx.c.signal.capture' then do
+            producer = store.get(4,value,1)
+            if producer <> program.tableconstant(fn) then do
+              /* Includes the pre-mark load, which is outside the forward
+               * segment walk. A retained authored/foreign load cannot vanish
+               * merely because its value has the right immutable slot. */
+              mark = _segments[id]; anchor = store.get(3,mark,11)
+              if graph.operation(producer).name() <> 'core.load' then do; call fail('LOWERING: SIGNAL table has an unproved alias',producer); return; end
+              if name = 'crexx.c.signal.capture' then do
+                if _eventowners[producer] <> id then do; call fail('LOWERING: SIGNAL capture table load escapes its generated entry',producer); return; end
+              end
+              else if paired(producer,anchor) = 0 then return
+            end
+          end
+        end
+        if owner > 0 then do
+          allowed = (name = 'core.store' & _namestores[owner] = id & i = 1) | (name = 'crexx.c.signal.test' & i = 2) | (name = 'crexx.c.signal.invalid' & i = 1)
+          mark = _namemarks[owner]
+          if allowed = 0 | mark = 0 | _segments[id] <> mark then do; call fail('LOWERING: SIGNAL dynamic name escapes its segment',id); return; end
+        end
+        captureid = _selectedvalues[value]
+        if captureid > 0 then do
+          allowed = (name = 'core.store' & _selectedstores[captureid] = id & i = 1) | (name = 'crexx.c.signal.selected' & i = 1)
+          if allowed = 0 | _eventowners[id] <> captureid then do
+            call fail('LOWERING: SIGNAL selected policy escapes its private use closure',id); return
+          end
+        end
+      end
+    end
+    return

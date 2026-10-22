@@ -1,0 +1,4 @@
+options levelc
+say 'before'
+options 1 / 0
+say 'after'

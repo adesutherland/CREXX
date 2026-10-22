@@ -6,10 +6,17 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/rxfnsb/` (Classic REXX Built-In Functions for Level B)
 
+- `lib/rxfnsb/unicode/` (separately built B Unicode executors and canonical
+  pinned data; `rxunicode-core.rxbin` supplies the 23 existing public
+  `rxunicode` procedures and retains the private `_rxunicode` ABI. G owns
+  its collection/iterator classes; Classic adapters own BIF policy. Large
+  Unicode tables do not enter the minimal bootstrap `library.rxbin`.)
+
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
 
-- `lib/rxfnsl/` (Level L language-engineering examples and generated-output
-  proving slices)
+- `lib/rxfnsl/` (Level L SDK implementation, with separately linked neutral
+  analysis/execution and RXAS target packages; public guides, examples and
+  independent consumers live in `langtools/`)
 
 - `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, housing the
   Rexx value, stem, and variable-pool classes plus directly callable Classic
@@ -39,6 +46,34 @@ message handles. Reuse these main-library facilities in tools instead of adding
 private OS plugins or shell wrappers. See the human `rxfs` reference and
 `lib/plugins/fs/rxfs_test.crexx` for executable ownership/failure controls.
 
+The built-in VM service `.rxparse..cursor(source=.string, plan=.binary)` uses
+native RXPA bindings for object dispatch, metadata and lifetime. Its incremental
+packed-PARSE Field/Input events preserve visible-write/live-read ordering.
+The development implementation is locally qualified in normal Debug and focused
+Apple ASan, without a speed claim; real platform proof remains open.
+Source/plan snapshots and shared alias-close ownership belong to the cursor,
+while source acquisition, section normalization and live pool writes remain
+consumer policy. The shared VM kernel is mandatory core infrastructure, with
+no runtime template-source parser or optional/dynamically loaded plugin. See the
+[cursor API, lifecycle, errors and limits](RXVM_INTERPRETER.md#native-parse-cursor).
+Packed v3 adds cursor-only Classic sections; `parseplan` continues to admit only
+v1/v2. The same VM kernel owns matching/positions; no new callable is added.
+The shared `rexxclassicparse.execute(context=reference
+.rexxclassiccontext..RexxClassicContext, source=.rexxvalue..RexxValue,
+program=.binary)->.void` owns LCP1 validation, live pool reads/writes and word
+distribution using the existing Classic CharacterScan blank policy. The C host
+constructs/adopts packets independently and never imports this target executor.
+The research `llctarget.parsesource` adapter returns one raw acquired value and
+retains errors/NOTREADY in caller-owned BIF-context storage; generated C performs
+the typed condition checkpoint before executing the template. Opted-in C bundles
+also permit exact post-effect PARSE field/drop observations in R/I text mode.
+The same executor owns distribution and observation order; shared
+`rxfnsb._trace_write_value(prefix,value)` owns quoting/output for these records
+and generated scalar TRACE. Disabled bundles make no trace-state calls and retain
+the all-dot fast path; observed dots allocate no RexxValue. LLM retains its
+existing partial event scope. Complete instruction/delivery and real platform
+proof retain their [integration gates](../../research/level-l/compilers/doc/architecture.md#proposed-c-parse-integration).
+
 - `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
   integer and decimal mathematics authored in Level B)
 
@@ -57,6 +92,35 @@ named entries through the shared BIF context, without name-based
 The [detailed compatibility layer](../../compiler/docs/levelc_compatibility_layer.md)
 maps each current entry, actual test path and outstanding contract. A same-named
 standalone string wrapper or legacy unit is not automatically the compiled path.
+
+`rexxclassiccontext.RexxClassicContext` in `rxfnsc` bundles three existing,
+caller-owned references: `RexxActivationArguments`, `RexxVariablePool` and
+`RexxClassicConfig`. Its required factory arguments are `activation`, `pool`
+and `config`; `activation()`, `pool()` and `config()` return checked references,
+and `bindPool(pool)` replaces only the receiving bundle's binding. It allocates
+no owner, selects no character policy and has no Level L dependency. Copies
+share referents but have independent pool bindings; pass the authoritative
+bundle by reference when rebinding must remain visible. Empty/expired references
+raise `REFERENCE_INVALID` before mutation. Explicit signal-skip recovery returns
+an unbound factory result or empty getter result and leaves a rejected rebind
+unchanged. Keep all owners initialized and in stable storage while borrowed.
+`enableParseObservations(enabled)` and `parseObservations()` control a default-off
+bundle-local observation flag. A compiled C observer saves/restores the incoming
+flag on normal, EXIT and fatal cleanup; direct B/native/RexxScript callers remain
+disabled unless explicitly opted in. The bundle owns no observer or source state.
+
+The research C target has one namespace, `llctarget`, in `llctarget.rxbin`.
+Its borrowed-context/result/loop/PARSE adapters call the existing shared B
+implementations. Its current 36 exports include ordinary CALL transport;
+EXIT uses the existing activation program-root methods directly. Compiler policy
+remains in `research/level-l/compilers`; shared B classes own no compiler or
+VM policy. Generated C source units take `(context, entry)` and share one body.
+Callers own fresh child activations and bundles, borrowing current pool/config;
+only an executed PROCEDURE creates a private pool. Numeric adapters inherit VM
+settings and generated C installs validated activation settings in its frame.
+Earlier research C images/IR must be rebuilt; there is no compatibility bridge.
+See the [current C contract](../../research/level-l/compilers/doc/architecture.md#current-c-family-contract)
+and [CALL binding contract](../../research/level-l/compilers/doc/architecture.md#call-contract).
 
 The CMake build treats each `rxfnsc` member as an isolated source compilation.
 Its own source and only its declared transitive `rxfnsc` source dependencies
@@ -1023,7 +1087,7 @@ delivery route:
 | `rxid` | `rxid.uuid4`, `uuid7`, `ulid`, `nanoid`, `snowflake`, `base58` | Bundled optional Level G identifier strings, callable from B when installed; random forms use platform cryptographic randomness and generation failures signal. |
 | `rxfs` | `rxfs.cwd`, `loadpath`, `chdir`, `isdir`, `mkdir`, `rmdir`, `delete`, `rename`, `isfile`, `listdir`, `append`, `pathkind`, `abspath`, `copy`, `hardlink`, `move`; `.fileguard` | Narrow filesystem operations plus non-overwriting publication primitives and owning locks/leases. Return/status contracts are documented in the library reference. |
 | `rxplatform` | `rxplatform.uptime`, `user`, `host`, `osname`, `sleep` | Bundled optional Level G host/platform information and millisecond sleep, callable from B when installed. Clipboard, beep, process-global and developer functions from the old draft `system` surface were retired. |
-| `rxunicode` | `version`; four normalization transforms and predicates; `toUppercase`, `toLowercase`; full/simple/Turkic folding; typed `encode`, `decode`, and codec predicates; grapheme count, substring, position, reverse, and `.graphemes` | Level G Unicode 17.0.0 services over `.string` plus explicit `.binary` codec boundaries. The pure Level G facade delegates to private Level B codepoint executors and generated immutable tables. See the [Unicode library reference](../books/crexx_library_reference/unicode.md) and [implementation context](CREXX_UNICODE.md). |
+| `rxunicode` | `version`; four normalization transforms and predicates; `toUppercase`, `toLowercase`; full/simple/Turkic folding; typed `encode`, `decode`, and codec predicates; grapheme count, substring, position, reverse, and `.graphemes` | Shared Level B Unicode 17.0.0 procedures over `.string` plus explicit `.binary` codec boundaries; G retains collections/iterators. The core and G aggregate expose the same procedural bodies over private B executors and immutable tables; select one provider per image. See the [Unicode library reference](../books/crexx_library_reference/unicode.md) and [implementation context](CREXX_UNICODE.md). |
 
 The source CMake target for `rxplatform` is named `_platform` to avoid a target
 collision, but `PROVIDER_ID rxplatform` makes its manifest, artifact stem,
@@ -1483,14 +1547,17 @@ payloads.
 ## Classic Unicode and streams (2026-10-09)
 
 Compiled Level C rxfnsc now provides all 70 catalogued Classic names and 23
-explicit Unicode BIFs using rxfnsg algorithms. RexxClassicConfig owns stream
+explicit Unicode BIFs using the shared B `rxunicode-core` algorithms. RexxClassicConfig owns stream
 values, positions and codec selection; local calls share configuration, while
 independent root configurations own separate handles. The private rxcstream
 RXPA provider uses checked C factories/method bindings and session-affine
 native payload ownership. Copies share a handle; explicit close closes aliases
 and finalization closes remaining resources. No forwarding construction class
 or VM opcode is added. Dynamic metadata and static archives are packaged through
-the ordinary provider catalogue; rxfnsc stages rxfnsg, rxcstream and rxfs imports.
+the ordinary provider catalogue; rxfnsc stages exact `rxunicode-core`, rxcstream
+and rxfs imports. It retains external Unicode imports rather than embedding
+another copy. Standalone C uses the B core; combined products use the same
+members already embedded in G, selecting only one aggregate per linked image.
 `stage-c-rexx-tools` explicitly builds `cstream_static` as well as the dynamic
 provider selected by those imports. Fresh product payloads need both
 `bin/providers/rxcstream.rxplugin` and `rxcstream.a` (`.lib` on MSVC); a dynamic
@@ -1517,6 +1584,7 @@ checks this failure boundary and uses RexxClassicStream's compiled behavior.
 Classic embeddings that load `rxfnsc` must configure the runtime/provider
 directory with the existing `rxvml_create(runtime_bin_directory, ...)` option.
 An empty library path supplies no dynamic-provider search directories. The
-packaged runtime includes `rxcstream`, `rxfs` and `rxfnsg`; explicit bytecode
+packaged runtime includes `rxcstream`, `rxfs` and Unicode support (standalone
+`rxunicode-core`, or the existing combined G aggregate); explicit bytecode
 module paths do not themselves configure the provider search path. The SAY,
 ADDRESS, ARG and CALL embedding fixtures now exercise this installed layout.

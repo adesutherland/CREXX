@@ -54,21 +54,71 @@ formword: token = 49
 scientificword: token = 50
 engineeringword: token = 51
 asword: token = 52
+dropword: token = 53
+selectword: token = 54
+whenword: token = 55
+otherwiseword: token = 56
+foreverword: token = 57
+untilword: token = 58
+toword: token = 59
+byword: token = 60
+forword: token = 61
+docontrol: token = 62
+parseword: token = 63
+parseupper: token = 64
+parsekind: token = 65
+parsevalue: token = 66
+parsevar: token = 67
+parsewith: token = 68
+parsedot: token = 69
+exposeword: token = 70
+constantname: token = 71
+pullword: token = 72
+pushword: token = 73
+queueword: token = 74
+addressword: token = 75
+addressenv: token = 76
+addressquoted: token = 77
+addressvalue: token = 78
+addresswith: token = 79
+addressoption: token = 80
+addressposition: token = 81
+addresskind: token = 82
+addressresource: token = 83
+commandword: token = 84
+numericvalue: token = 85
+signalword: token = 86
+signalvalue: token = 87
+signalname: token = 88
+signalon: token = 89
+signaloff: token = 90
+signalcondition: token = 91
+signalhandlername: token = 92
+traceword: token = 93
+tracevalue: token = 94
+traceoption: token = 95
+callon: token = 96
+calloff: token = 97
+callcondition: token = 98
+callhandlername: token = 99
+callname: token = 100
 
 comment: comments nested "/*" "*/"
-scan: lexer input utf8bytes
+scan: lexer input utf8
   digit: charset = U+0030 to U+0039
-  letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
+  letter: charset = unicode.gc.L | '!' | '?' | '_' | '@' | '#' | '$'
   hspace: charset = U+0009 | U+0020
   newline: charset = U+000A | U+000D
-  squote.body: charset = U+0020 to U+0026 | U+0028 to U+00FF | U+0009
-  dquote.body: charset = U+0020 to U+0021 | U+0023 to U+00FF | U+0009
+  squote.body: charset = (scalar except (U+0000 to U+001F | "'")) | U+0009
+  dquote.body: charset = (scalar except (U+0000 to U+001F | '"')) | U+0009
   numeric: pattern = (digit+ ("." digit*)? | "." digit+) (("e" | "E") ("+" | "-")? digit+)?
-  name: pattern = letter (letter | digit)*
+  name: pattern = letter (letter | digit | ".")*
+  reserved: pattern = "." (("m" | "M") ("n" | "N") | ("r" | "R") (("c" | "C") | ("s" | "S") | ("e" | "E") ("s" | "S") ("u" | "U") ("l" | "L") ("t" | "T")) | ("s" | "S") ("i" | "I") ("g" | "G") ("l" | "L"))
   whitespace: rule = hspace+ then skip
   numeric.literal: rule = numeric ("d" | "D")? then emit number
-  name.literal: rule = name then emit identifier
+  name.literal: rule = name | reserved then emit identifier
   type.literal: rule = "." name then emit typename
+  constant.literal: rule = (digit (letter | digit | ".")* | "." (letter | digit | ".")+) then emit constantname
   single.literal: rule = "'" (squote.body | "''")* "'" then emit string
   double.literal: rule = '"' (dquote.body | '""')* '"' then emit string
   terminator: rule = (newline | ";") then emit separator
@@ -92,32 +142,109 @@ scan: lexer input utf8bytes
   op.17: rule = "|" then emit or
   op.18: rule = "&&" then emit xor
   op.19: rule = "\" then emit not
+  op.20: rule = "." then emit parsedot
 
 parse: parser semantics contextfree input tokens start program backend lr1
   program: rule = statements as body then tree Program(body = body)
   statements: rule = separator* (statement as item (separator (statement as item)?)*)?
     then tree Sequence(items = item*)
-  statement: rule = closed.statement | open.statement
-  closed.statement: rule = simple | block | if.closed
+  statement: rule = label.statement | closed.statement | open.statement
+  arm: rule = closed.arm | open.arm
+  closed.arm: rule = closed.statement | labelled.closed
+  open.arm: rule = open.statement | labelled.open
+  labelled.closed: rule = (label.statement as label separator+)+ closed.statement as value
+    then tree CLabelled(labels = label+, value = value)
+  labelled.open: rule = (label.statement as label separator+)+ open.statement as value
+    then tree CLabelled(labels = label+, value = value)
+  closed.statement: rule = simple | block | select.statement | if.closed
   open.statement: rule = if.open | if.continued
-  if.closed: rule = ifword expression as condition thenword closed.statement as yes elseword closed.statement as no
+  if.closed: rule = ifword expression as condition thenword closed.arm as yes elseword closed.arm as no
     then tree IfElse(condition = condition, yes = yes, no = no)
-  if.open: rule = ifword expression as condition thenword statement as yes
+  if.open: rule = ifword expression as condition thenword arm as yes
     then tree IfThen(condition = condition, yes = yes)
-  if.continued: rule = ifword expression as condition thenword closed.statement as yes elseword open.statement as no
+  if.continued: rule = ifword expression as condition thenword closed.arm as yes elseword open.arm as no
     then tree IfElse(condition = condition, yes = yes, no = no)
+  select.statement: rule = selectword separator
+    (separator | (label.statement as clause separator))*
+    select.when as clause separator
+    (separator | ((select.when | label.statement) as clause separator))*
+    (select.otherwise as clause)? endword
+    then tree CSelect(clauses = clause+)
+  select.when: rule = whenword expression as condition thenword arm as body
+    then tree CWhen(condition = condition, body = body)
+  select.otherwise: rule = otherwiseword otherwise.body as body
+    then tree COtherwise(body = body)
+  otherwise.body: rule = (statement as item)? separator (separator | (statement as item separator))*
+    then tree Sequence(items = item*)
   say.statement: rule = sayword (expression as value)? then tree Say(value = value?)
-  call.statement: rule = callword identifier as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
+  push.statement: rule = pushword (expression as value)? then tree CPush(value = value?)
+  queue.statement: rule = queueword (expression as value)? then tree CQueue(value = value?)
+  command.statement: rule = commandword expression as value then tree CCommand(value = value)
+  signal.statement: rule = signal.direct | signal.value | signal.on | signal.off
+  signal.condition: rule = signalcondition then tree CCondition(spelling = text)
+  signal.on: rule = signalword signalon signal.condition as condition (signalhandlername signal.target as target)?
+    then tree CSignalOn(condition = condition, target = target?)
+  signal.off: rule = signalword signaloff signal.condition as condition then tree CSignalOff(condition = condition)
+  signal.direct: rule = signalword signal.target as target then tree CSignal(target = target)
+  signal.target: rule = signal.symbol | signal.string
+  signal.symbol: rule = signalname then tree Name(spelling = text)
+  signal.string: rule = string then tree String(spelling = text)
+  signal.value: rule = signalword signalvalue expression as value then tree CSignalValue(value = value)
+  trace.statement: rule = trace.static | trace.value
+  trace.static: rule = traceword (trace.option as option)? then tree CTrace(option = option?)
+  trace.option: rule = trace.symbol | trace.string | trace.signed
+  trace.symbol: rule = traceoption then tree TraceOption(spelling = text)
+  trace.string: rule = string then tree String(spelling = text)
+  trace.signed: rule = (plus | minus) as sign number as number
+    then tree TraceSigned(sign = text(sign), spelling = text(number))
+  trace.value: rule = traceword tracevalue expression as value then tree CTraceValue(value = value)
+  address.statement: rule = addressword (address.target as target)? (address.connections as connections)?
+    then tree CAddress(target = target?, connections = connections?)
+  address.target: rule = address.fixed | address.quoted | address.value
+  address.fixed: rule = addressenv as environment (expression as command)?
+    then tree AddressFixed(environment = text(environment), command = command?)
+  address.quoted: rule = addressquoted as environment (expression as command)?
+    then tree AddressQuoted(environment = text(environment), command = command?)
+  address.value: rule = addressvalue expression as environment
+    then tree AddressValue(environment = environment)
+  address.connections: rule = addresswith address.connection as item (address.connection as item)*
+    then tree AddressConnections(items = item+)
+  address.connection: rule = addressoption as option (address.position as position)? address.spec as spec
+    then tree AddressConnection(option = text(option), position = position?, spec = spec)
+  address.position: rule = addressposition then tree AddressPosition(spelling = text)
+  address.spec: rule = addresskind as kind (address.resource as resource)?
+    then tree AddressSpec(kind = text(kind), resource = resource?)
+  address.resource: rule = addressresource then tree Name(spelling = text)
+  call.on: rule = callword callon call.condition as condition (callhandlername call.target as target)?
+    then tree CCallOn(condition = condition, target = target?)
+  call.off: rule = callword calloff call.condition as condition then tree CCallOff(condition = condition)
+  call.condition: rule = callcondition then tree CCondition(spelling = text)
+  call.target: rule = call.symbol | signal.string
+  call.symbol: rule = callname then tree Name(spelling = text)
+  call.statement: rule = callword (identifier | number | typename | constantname | parsedot) as name arguments as arguments then tree Invoke(name = text(name), arguments = arguments)
+  call.quoted: rule = callword string as name arguments as arguments then tree InvokeQuoted(name = text(name), arguments = arguments)
   return.statement: rule = returnword (expression as value)? then tree Return(value = value?)
   exit.statement: rule = exitword (expression as value)? then tree Exit(value = value?)
-  leave.statement: rule = leaveword then tree Leave()
-  iterate.statement: rule = iterateword then tree Iterate()
+  leave.statement: rule = leaveword (name.value as name)? then tree Leave(name = name?)
+  iterate.statement: rule = iterateword (name.value as name)? then tree Iterate(name = name?)
   nop.statement: rule = nopword then tree Nop()
-  options.statement: rule = optionsword identifier as level then tree Options(level = text(level))
-  block: rule = do.group | do.while
-  do.group: rule = doword separator statements as body endword then tree Block(body = body)
-  do.while: rule = doword whileword expression as condition separator statements as body endword
-    then tree While(condition = condition, body = body)
+  options.statement: rule = optionsword (expression as value)? then tree COptions(value = value?)
+  block: rule = doword do.header as header separator statements as body do.end as ending
+    then tree CDo(header = header, body = body, ending = ending)
+  do.header: rule = (do.repetition as repetition)? (do.condition as condition)?
+    then tree DoHeader(repetition = repetition?, condition = condition?)
+  do.repetition: rule = do.control | do.count | do.forever
+  do.count: rule = expression as value then tree DoCount(value = value)
+  do.forever: rule = foreverword then tree DoForever()
+  do.control: rule = do.name as name assign expression as initial (do.modifier as modifier)*
+    then tree DoControl(name = name, initial = initial, modifiers = modifier*)
+  do.name: rule = docontrol then tree Name(spelling = text)
+  do.modifier: rule = (toword | byword | forword) as keyword expression as value
+    then tree DoModifier(keyword = text(keyword), value = value)
+  do.condition: rule = do.while | do.until
+  do.while: rule = whileword expression as value then tree DoWhile(value = value)
+  do.until: rule = untilword expression as value then tree DoUntil(value = value)
+  do.end: rule = endword (name.value as name)? then tree DoEnd(name = name?)
   expression: rule = logical.or
   logical.or: rule = logical.and as item ((or | xor) as op logical.and as item)*
     then tree Chain(operands = item+, operators = op*)
@@ -133,22 +260,53 @@ parse: parser semantics contextfree input tokens start program backend lr1
     then tree Chain(operands = item+, operators = op*)
   unary: rule = prefix | cast.value
   prefix: rule = (plus | minus | not) as op unary as value then tree Prefix(operator = op, value = value)
-  primary: rule = number.value | string.value | name.value | call.value | group.value
+  primary: rule = number.value | string.value | constant.value | name.value | call.value | call.value.quoted | group.value
   number.value: rule = number then tree Number(spelling = text)
   string.value: rule = string then tree String(spelling = text)
+  constant.value: rule = (constantname | typename | parsedot) as spelling then tree Constant(spelling = text(spelling))
   name.value: rule = identifier then tree Name(spelling = text)
   group.value: rule = open expression as value close then tree Group(value = value)
-  call.value: rule = identifier as name open arguments as arguments close then tree Call(name = text(name), arguments = arguments)
+  call.value: rule = (identifier | number | typename | constantname | parsedot) as name open arguments as arguments close then tree Call(name = text(name), arguments = arguments)
+  call.value.quoted: rule = string as name open arguments as arguments close then tree CallQuoted(name = text(name), arguments = arguments)
   arguments: rule = argument as item (comma argument as item)* then tree Arguments(items = item+)
   argument: rule = (expression as value)? then tree Argument(value = value?)
-  simple: rule = assignment | say.statement | call.statement | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | label.statement | procedure.statement | numeric.statement
+  simple: rule = assignment | say.statement | push.statement | queue.statement | address.statement | command.statement | signal.statement | trace.statement | call.on | call.off | call.statement | call.quoted | return.statement | exit.statement | leave.statement | iterate.statement | nop.statement | options.statement | arg.statement | pull.statement | procedure.statement | numeric.statement | drop.statement | parse.statement
+  parse.statement: rule = parseword parse.upper as upper parse.source as source parse.templates as templates
+    then tree Parse(source = source, templates = templates, upper = text(upper))
+  parse.upper: rule = parseupper?
+  parse.source: rule = (parsekind as kind) | (parsevalue as kind (expression as value)? parsewith) | (parsevar as kind name.value as name)
+    then tree ParseSource(kind = text(kind), value = value?, name = name?)
+  parse.templates: rule = parse.template as item (comma parse.template as item)*
+    then tree ParseTemplates(items = item+)
+  parse.template: rule = (parse.item as item)* then tree ParseTemplate(items = item*)
+  parse.item: rule = parse.target | parse.drop | parse.literal | parse.pattern | parse.position
+  parse.target: rule = name.value as name then tree ParseTarget(name = name)
+  parse.drop: rule = parsedot then tree ParseDrop()
+  parse.literal: rule = string.value as value then tree ParseLiteral(value = value, spelling = text)
+  parse.pattern: rule = open name.value as name close then tree ParseVariablePattern(name = name)
+  parse.position: rule = parse.position.number | parse.position.variable
+  parse.position.number: rule = parse.position.mode as mode number.value as operand
+    then tree ParsePosition(mode = text(mode), operand = operand)
+  parse.position.mode: rule = (assign | plus | minus)?
+  parse.position.variable: rule = (assign | plus | minus) as mode open name.value as operand close
+    then tree ParsePosition(mode = text(mode), operand = operand)
+  drop.statement: rule = dropword drop.item as item (drop.item as item)* then tree CDrop(items = item+)
+  drop.item: rule = drop.direct | drop.indirect
+  drop.direct: rule = identifier as name then tree DropDirect(name = text(name))
+  drop.indirect: rule = open identifier as name close then tree DropIndirect(name = text(name))
   assignment: rule = identifier as name assign (expression as value)? then tree Assignment(name = text(name), value = value?)
   cast.value: rule = primary
   label.statement: rule = labelname as name colon then tree CLabel(name = text(name))
-  procedure.statement: rule = procedureword then tree CProcedure()
-  arg.statement: rule = argword arg.target as item (comma arg.target as item)* then tree CArg(items = item+)
-  arg.target: rule = (identifier as name)? then tree ArgTarget(name = text)
+  procedure.statement: rule = procedureword (procedure.exposes as exposes)? then tree CProcedure(exposes = exposes?)
+  procedure.exposes: rule = exposeword procedure.expose as item (procedure.expose as item)* then tree ProcedureExposes(items = item+)
+  procedure.expose: rule = procedure.direct | procedure.indirect
+  procedure.direct: rule = name.value as name then tree ProcedureExposeDirect(name = name)
+  procedure.indirect: rule = open name.value as name close then tree ProcedureExposeIndirect(name = name)
+  arg.statement: rule = argword parse.templates as templates then tree CArg(templates = templates)
+  pull.statement: rule = pullword parse.templates as templates then tree CPull(templates = templates)
   numeric.statement: rule = numeric.value | numeric.form
   numeric.value: rule = numericword (digitsword | fuzzword) as setting (expression as value)? then tree CNumeric(setting = text(setting), value = value?)
-  numeric.form: rule = numericword formword numeric.form.value
-  numeric.form.value: rule = (scientificword | engineeringword)? then tree CForm(form = text)
+  numeric.form: rule = numeric.form.literal | numeric.form.dynamic
+  numeric.form.literal: rule = numericword formword numeric.form.keyword as form then tree CForm(form = text(form))
+  numeric.form.keyword: rule = (scientificword | engineeringword)?
+  numeric.form.dynamic: rule = numericword formword numericvalue expression as value then tree CFormValue(value = value)

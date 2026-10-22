@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Isolated cold/incremental/failure graph proof using unchanged host prerequisites."""
-import argparse,hashlib,json,os,shutil,subprocess,time
+import argparse,hashlib,json,os,re,shutil,subprocess,time
 from pathlib import Path
 from _scratch import scratch
 p=argparse.ArgumentParser();p.add_argument('tools',type=Path);p.add_argument('work',type=Path);p.add_argument('evidence',type=Path);a=p.parse_args()
@@ -10,10 +10,17 @@ work.mkdir(parents=True);out.mkdir(parents=True,exist_ok=True)
 source=work/'source';build=work/'build';blocked=work/'no-re2c';blocked.mkdir()
 shutil.copytree(root/'lib/rxfnsl',source/'lib/rxfnsl')
 shutil.copytree(root/'langtools',source/'langtools')
-(source/'lib/rxfnsg/unicode').mkdir(parents=True)
+# Keep the isolated source snapshot complete for checked stamp/property inputs.
+manifest=(root/'langtools/cmake/generator-inputs.cmake').read_text()
+for relative in re.findall(r'^  ([^\s]+)$',manifest,re.M):
+ target=source/relative
+ if not target.exists():
+  target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(root/relative,target)
+
+(source/'tools/unicode').mkdir(parents=True)
 for name in ['LevelL.cmake','gennorm2.levell']:
- shutil.copyfile(root/'lib/rxfnsg/unicode'/name,source/'lib/rxfnsg/unicode'/name)
-(source/'cmake').mkdir()
+ shutil.copyfile(root/'tools/unicode'/name,source/'tools/unicode'/name)
+(source/'cmake').mkdir(exist_ok=True)
 for name in ['CrexxImportRoots.cmake', 'CrexxQaFixtures.cmake']:
  shutil.copy2(root/'cmake'/name,source/'cmake'/name)
 (blocked/'re2c').write_text('#!/bin/sh\necho forbidden-re2c-invocation >> "'+str(out/'forbidden-re2c.log')+'"\nexit 97\n');(blocked/'re2c').chmod(0o755)
@@ -56,9 +63,17 @@ for stage in range(3):
 run('frontend-api-noop',cmd)
 assert snapshot()==after_api,'API rebuild did not settle to a no-op'
 after=after_api
+stamp=build/'langtools/bootstrap/source/generator.identity';previous_stamp=stamp.read_bytes()
 grammar=source/'langtools/grammar/levell.levell';original=grammar.read_text();grammar.write_text(original+'\n/* regeneration lifecycle probe */\n')
 run('grammar-edit',cmd);changed=snapshot()
-assert changed['langtools/bootstrap/L0/rxlang-linked.rxbin']==after['langtools/bootstrap/L0/rxlang-linked.rxbin']
+# The self-description is a checked stamp input. Even a comment change must
+# invalidate all real service images; downstream fixed-point bytes still agree.
+assert stamp.read_bytes()!=previous_stamp
+for stage in range(3):
+ name=f'langtools/bootstrap/L{stage}/llgenerate.rxbin'
+ assert changed[name][1]!=after[name][1],(stage,'grammar stamp did not change service')
+ name=f'langtools/bootstrap/L{stage}/rxlang-linked.rxbin'
+ assert changed[name][0]!=after[name][0],(stage,'grammar stamp did not rebuild driver')
 assert changed['langtools/bootstrap/L1/llsyntax.rxas'][0]!=after['langtools/bootstrap/L1/llsyntax.rxas'][0]
 assert changed['langtools/bootstrap/L2/llsyntax.rxas'][0]!=after['langtools/bootstrap/L2/llsyntax.rxas'][0]
 runtime=source/'lib/rxfnsl/rexx/llcharset.crexx';runtime.write_text(runtime.read_text().replace("'byte range'","'byte range lifecycle probe'"))

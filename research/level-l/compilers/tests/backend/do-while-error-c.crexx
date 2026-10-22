@@ -1,0 +1,11 @@
+options levelc
+say 'before'
+do 1 while mark('W','1.0')
+  say 'body'
+end
+say 'wrong after'
+exit 0
+mark: procedure
+  arg label,value
+  say label
+  return value

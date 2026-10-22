@@ -415,9 +415,14 @@ add_test(NAME repository_source_hygiene
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/check-source-hygiene.py)
 add_test(NAME repository_cleanup_contracts
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/tests/test_cleanup_contracts.py)
+set(_product_install_inventory_bytecode_args)
+if(TARGET rxunicode_core)
+    list(APPEND _product_install_inventory_bytecode_args --expect-bytecode rxunicode-core)
+endif()
 add_test(NAME product_install_inventory
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/tests/check_install_inventory.py
-        --build ${CMAKE_BINARY_DIR} --cmake ${CMAKE_COMMAND})
+        --build ${CMAKE_BINARY_DIR} --cmake ${CMAKE_COMMAND}
+        ${_product_install_inventory_bytecode_args})
 set_tests_properties(repository_source_hygiene repository_cleanup_contracts
     PROPERTIES LABELS "repository;cmake" TIMEOUT 60)
 set_tests_properties(product_install_inventory PROPERTIES

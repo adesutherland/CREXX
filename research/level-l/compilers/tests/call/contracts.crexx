@@ -1,0 +1,381 @@
+/* MIT. Independent C14 catalogue, source, schema and raw-admission controls. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+import llcir
+import llcparse
+import llcrxas
+import llcbifs
+import llcompilercontracts
+import llbinmeta
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] < 1 | argv[0] > 2 then return 2
+  checks = 0; failures = 0
+  mode = .int; graph = .llir..module
+  call catalogue(argv[1])
+  call signaturetypes()
+  call sourcecontract()
+  call schemacontract()
+  do mode = 1 to 5
+    call forgedschema(argv[1],mode)
+  end
+  do mode = 1 to 15
+    graph = fixture(mode)
+    call check(graph.error() = '', 'generic valid fixture ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    call admission(argv[1],graph,mode = 1 | mode = 14 | mode = 15,'fresh ' || mode)
+    storage = dereference graph.storage(); contract = dereference storage.contract()
+    restored = llir..loadbinary(contract,graph.binary())
+    call check(restored.error() = '', 'binary roundtrip ' || mode)
+    if restored.error() = '' then call admission(argv[1],restored,mode = 1 | mode = 14 | mode = 15,'loaded ' || mode)
+    if mode = 1 then do
+      transformed = llirservices..optimise(reference graph)
+      call check(transformed.status() = 'keep' | transformed.status() = 'changed','generic transform')
+      if transformed.status() = 'keep' | transformed.status() = 'changed' then call admission(argv[1],transformed.result(),1,'transformed')
+    end
+  end
+  graph = fixture(1); saved = graph.binary()
+  selected = .llcrxas..compilation(graph,argv[1]); previous = selected.output(); previous_text = previous.text()
+  limited = .llcrxas..compilation(graph,argv[1],128); output = limited.output()
+  call check(selected.status() = 0 & previous.bytes() > 0,'previous owned output')
+  call check(limited.status() <> 0 & output.bytes() = 0 & pos('LIMIT',limited.error()) > 0,'bounded atomic refusal')
+  call check(bincompare(saved,graph.binary()) = 0 & previous.text() == previous_text,'failure preserves input and previous output')
+  if argv[0] = 2 then call fieldindices(argv[1],argv[2],graph,previous)
+  say 'CALL_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+/* Independent inventory and namespace rules, checked against physical B metadata.
+ * No catalogue entry is called just to demonstrate that its binding exists. */
+catalogue: procedure = .void
+  arg artifacts = .string
+  names = 'ABBREV ABS ADDRESS ARG B2X BITAND BITOR BITXOR C2D C2X CENTER CENTRE CHANGESTR COMPARE CONDITION COPIES COUNTSTR D2C D2X DATATYPE DATE DELSTR DELWORD DIGITS ERRORTEXT FORM FORMAT FUZZ INSERT LASTPOS LEFT LENGTH LOWER MAX MIN OVERLAY POS QUEUED RANDOM REVERSE RIGHT SIGN SOURCELINE SPACE STRIP SUBSTR SUBWORD SYMBOL TIME TRACE TRANSLATE TRUNC UPPER VALUE VERIFY WORD WORDINDEX WORDLENGTH WORDPOS WORDS X2B X2C X2D XRANGE CHARIN CHAROUT CHARS LINEIN LINEOUT LINES QUALIFY STREAM UNICODEVERSION TONFD TONFC TONFKD TONFKC ISNFD ISNFC ISNFKD ISNFKC TOUPPERCASE TOLOWERCASE TOCASEFOLD TOSIMPLECASEFOLD TOTURKICCASEFOLD TOTURKICSIMPLECASEFOLD GRAPHEMECOUNT GRAPHEMEREVERSE GRAPHEMESUBSTR GRAPHEMEPOS ENCODE DECODE ISDECODABLE ISENCODINGSUPPORTED'
+  unicode = subword(names,73)
+  runtime = .llcompilercontracts..catalog(readbinary(artifacts || '/rxfnsc.rxbin'),67108864)
+  call check(runtime.error() = '' & words(names) = 95,'independent 95-name runtime inventory')
+  call check(runtime.field(12,'rexxactivation.rexxactivationarguments.values','',3) = '.rexxvalue[*]' & runtime.field(12,'rexxactivation.rexxactivationarguments.presence','',3) = '.int[*]','raw argument vector metadata')
+  call check(runtime.field(12,'rexxactivation.rexxactivationarguments.slot_count','',3) = '.int' & runtime.field(12,'rexxactivation.rexxactivationarguments.supplied_count','',3) = '.int','raw and supplied argument extents remain distinct')
+  i = .int; name = .string; module = .string; entry = .string; active = .int
+  do i = 1 to words(names)
+    name = word(names,i); module = 'rexxclassicbif' || lower(name); entry = 'rexxclassicbif_' || lower(name)
+    if wordpos(name,'BITAND BITOR BITXOR LOWER UPPER') > 0 then module = 'rexxclassicbifs'
+    if name = 'CENTRE' then module = 'rexxclassicbifcenter'
+    if wordpos(name,'DIGITS FUZZ FORM') > 0 then module = 'rexxclassicbifnumeric'
+    if wordpos(name,'CHARIN CHAROUT CHARS LINEIN LINEOUT LINES QUALIFY STREAM') > 0 then module = 'rexxclassicbifstream'
+    if wordpos(name,unicode) > 0 then module = 'rexxclassicbifunicode'
+    if name = 'ADDRESS' | name = 'TRACE' then entry = entry || '_frame'
+    expected = module || '.' || entry
+    active = wordpos(name,'ARG ADDRESS CONDITION TRACE') > 0
+    call check(llcbifs..entry(name) == expected & llcbifs..activation(name) = active,'exact direct binding ' || name)
+    signature = runtime.lookup(expected)
+    call check(signature.error() = '' & signature.result() = '.rexxvalue..rexxvalue' & signature.arguments() = 1 + active,'physical result/arity ' || name || ': ' || signature.error())
+    if signature.error() = '' then do
+      call check(signature.type(1) = 'reference .rexxbifcallcontext' & signature.optional(1) = 0,'required context ' || name)
+      if active then call check(signature.type(2) = 'reference .rexxactivationarguments' & signature.optional(2) = 0,'required activation ' || name)
+    end
+  end
+  call check(llcbifs..entry('length') == '', 'catalogue rejects lowercase')
+  call check(llcbifs..entry(' LENGTH') == '', 'catalogue rejects leading blank')
+  call check(llcbifs..entry('LENGTH ') == '', 'catalogue rejects trailing blank')
+  call check(llcbifs..entry('ABS ADDRESS') == '', 'catalogue rejects a phrase')
+  call check(llcbifs..entry('LENGTH' || '00'x) == '', 'catalogue rejects embedded NUL')
+  call check(llcbifs..entry('UNKNOWN') == '', 'catalogue rejects an unknown name')
+  call check(llcbifs..activation(' ARG') = 0 & llcbifs..activation('ARG ') = 0, 'activation catalogue rejects surrounding blanks')
+  return
+
+/* Generic metadata syntax admits these transport vectors; C's selected
+ * callable checks still impose their exact ABI after parsing. */
+signaturetypes: procedure = .void
+  call check(llcompilercontracts..validtype('.VOID[*]') = 0,'direct uppercase void array refuses')
+  call check(llcompilercontracts..validtype('reference .VOID[*]') = 0,'direct uppercase referenced void array refuses')
+  signature = .llcompilercontracts..signature('fixture.vectors','.void','values=reference .rexxvalue..rexxvalue[*],presence=reference .int[*]')
+  call check(signature.error() = '' & signature.arguments() = 2,'reference vector signature parses')
+  if signature.error() = '' then call check(signature.type(1) = 'reference .rexxvalue..rexxvalue[*]' & signature.type(2) = 'reference .int[*]' & \signature.optional(1) & \signature.optional(2),'exact required reference vector types')
+  signature = .llcompilercontracts..signature('fixture.values','.int[*]','value=.string[*]')
+  call check(signature.error() = '' & signature.result() = '.int[*]' & signature.type(1) = '.string[*]','single nominal array dimension parses')
+  malformed = .string[]
+  malformed[1] = '.void[*]'
+  malformed[2] = 'reference reference .int[*]'
+  malformed[3] = '.int[**]'
+  malformed[4] = '.int[*][*]'
+  malformed[5] = '.int[*,*]'
+  malformed[6] = 'reference .void[*]'
+  i = .int
+  do i = 1 to malformed[0]
+    signature = .llcompilercontracts..signature('fixture.invalid','.void','value=' || malformed[i])
+    call check(signature.error() <> '', 'malformed vector metadata refuses ' || malformed[i])
+  end
+  return
+
+sourcecontract: procedure = .void
+  source = "call '4C454E475448'x 'abc',, ''" as .binary
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'quoted CALL AST: ' || parsed.error())
+  tree = parsed.ast()
+  if parsed.status() = 0 then do
+    node = tree.root().child('body').child('items',1)
+    call check(node.kind() = 'InvokeQuoted' & node.text('name') = "'4C454E475448'x",'quoted raw target identity')
+    call check(node.start() = 0 & node.finish() = <blen>(source),'complete quoted CALL byte span')
+    arguments = node.child('arguments')
+    call check(arguments.count('items') = 3 & arguments.child('items',2).count('value') = 0,'raw omitted slot retained')
+  end
+  source = ('call 1.20' || ('0A'x as .string) || '1.20: return') as .binary
+  call check(bin2x(source) == '63616C6C20312E32300A312E32303A2072657475726E','constant target source bytes')
+  parsed = .llcparse..parsed(source as .binary)
+  call check(parsed.status() = 0,'constant target AST: ' || parsed.error())
+  tree = parsed.ast()
+  if parsed.status() = 0 then do
+    root = tree.root()
+    call check(root.valid(),'constant target root is valid')
+    if \root.valid() then return
+    call check(root.kind() = 'Program','constant target root kind: ' || root.kind())
+    items = root.child('body')
+    call check(items.valid(),'constant target body is valid')
+    if \items.valid() then return
+    call check(items.kind() = 'Sequence','constant target body kind: ' || items.kind())
+    call check(items.count('items') = 3,'constant target body item count: ' || items.count('items'))
+    first = items.child('items',1); second = items.child('items',2)
+    call check(first.valid(),'constant target first item is valid')
+    call check(second.valid(),'constant target second item is valid')
+    if \first.valid() | \second.valid() then return
+    call check(first.kind() = 'Invoke','constant target first item kind: ' || first.kind())
+    call check(second.kind() = 'CLabel','constant target second item kind: ' || second.kind())
+    call check(first.text('name') == '1.20' & second.text('name') == '1.20','constant spelling is not numeric canonicalization')
+  end
+  return
+
+schemacontract: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  version = 0; count = 0; i = .int
+  do i = 1 to data.familycount()
+    if data.familyname(i) = 'crexx.c' then version = data.version(i)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
+  end
+  call check(version = 22 & data.ops() = 88 & count = 5,'exact C22/88/five-type schema')
+  call shape(contract,'return.empty','context:crexx.c.context','value:crexx.c.result','','context','condition.resource')
+  call shape(contract,'bif','arguments:crexx.c.arguments context:crexx.c.context','value:crexx.c.value','name:crexx.g.text','context.input.output.observation','condition.resource')
+  call shape(contract,'call.missing','arguments:crexx.c.arguments context:crexx.c.context','value:crexx.c.result','name:crexx.g.text','context','condition')
+  call shape(contract,'requirevalue','result:crexx.c.result','value:crexx.c.value','name:crexx.g.text','none','missing.result')
+  call check(data.opname(59) = 'crexx.c.return.empty' & data.opname(60) = 'crexx.c.bif' & data.opname(61) = 'crexx.c.call.missing' & data.opname(62) = 'crexx.c.program.exiting','append-only operation order')
+  return
+
+shape: procedure = .void
+  arg contract = .llir..contract, name = .string, inputs = .string, outputs = .string, attributes = .string, state = .string, failure = .string
+  data = dereference contract.data(); op = contract.operation('crexx.c.' || name); id = op.id()
+  do kind = 1 to 3
+    fields = inputs
+    if kind = 2 then fields = outputs
+    if kind = 3 then fields = attributes
+    call check(data.arity(id,kind) = words(fields),name || ' ordered arity ' || kind)
+    do field = 1 to words(fields)
+      actual = data.fieldname(id,kind,field) || ':' || data.typename(data.fieldtype(id,kind,field))
+      call check(actual = word(fields,field),name || ' ordered field ' || kind || '/' || field)
+    end
+  end
+  call check(data.effectvalue(id,1) = state & data.effectvalue(id,2) = failure & data.effectvalue(id,3) = 'returns',name || ' exact effects')
+  return
+
+forgedschema: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  canonical = registry.finish(); source = dereference canonical.data()
+  data = .llir..schema_data(); call data.bootstrap()
+  ignored = .int; i = .int; kind = .int; field = .int
+  do i = 2 to source.familycount()
+    version = source.version(i)
+    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 11
+    ignored = data.addfamily(source.familyname(i),version)
+  end
+  do i = 3 to source.types()
+    ignored = data.addtype(source.typename(i),source.codec(i))
+  end
+  do i = 1 to source.ops()
+    name = source.opname(i); declared = .llir..operation(reference data,data.addop(name))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field)
+        if mode = 3 & name = 'crexx.c.requirevalue' & kind = 3 then spelling = 'wrongname'
+        type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if mode = 4 & name = 'crexx.c.return.empty' & kind = 1 then type = .llir..typeid(data.identity(),contracttype(source,'crexx.c.value'))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    state = source.effectvalue(i,1); failure = source.effectvalue(i,2); termination = source.effectvalue(i,3)
+    if mode = 2 & name = 'crexx.c.bif' then state = 'none'
+    if mode = 5 & name = 'crexx.c.call.missing' then termination = 'diverges'
+    call declared.state(state); call declared.failure(failure); call declared.termination(termination)
+  end
+  ignored = data.freeze(); contract = .llir..contract(data); builder = .llir..builder(contract)
+  origin = builder.synthetic('unused schema mutation')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  block = fn.block('entry'); call absent(block,contract,origin)
+  graph = builder.finish()
+  call check(graph.error() = '', 'generic valid unused schema mutation ' || mode)
+  if graph.error() = '' then do
+    saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+    diagnostic = 'incompatible operation'
+    if mode = 1 then diagnostic = 'unsupported family version crexx.c'
+    call check(backend.status() <> 0 & output.bytes() = 0 & pos(diagnostic,backend.error()) > 0,'strict unused descriptor ' || mode || ': ' || backend.error())
+    call check(bincompare(saved,graph.binary()) = 0,'schema refusal preserves input ' || mode)
+  end
+  return
+
+contracttype: procedure = .int
+  arg expose data = .llir..schema_data, name = .string
+  do i = 1 to data.types()
+    if data.typename(i) = name then return i
+  end
+  return 0
+
+fixture: procedure = .llir..module
+  arg mode = .int
+  packet = .llir..opdraft; result = .llir..opview
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  source = 'call LENGTH' || '0A'x || 'return'
+  file = builder.source('call-ir.crexx',source as .binary)
+  authored = file.origin(0,11); returning = file.origin(12,18); generated = builder.synthetic('call dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context_slot = fn.slot('$context',contract.type('crexx.c.context')); entry_slot = fn.slot('$entry',contract.type('crexx.g.int64'))
+  setup = fn.block('entry'); dispatch = fn.block('dispatch'); body = fn.block('body'); invalid = fn.block('invalid')
+  call setup.store(context_slot,setup.readarg(1,generated),generated)
+  call setup.store(entry_slot,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  context = dispatch.load(context_slot,generated); entry = dispatch.load(entry_slot,generated)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',context); call draft.input('entry',entry)
+  integer = .llir..intcodec(); call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  tested = draft.finish(); call dispatch.branch(tested.result(),body,invalid,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated); finished = draft.finish()
+  call absent(invalid,contract,generated)
+  context = body.load(context_slot,authored)
+  draft = body.operation(contract.operation('crexx.c.procedure.consume'),authored)
+  call draft.input('context',context); finished = draft.finish()
+  draft = body.operation(contract.operation('crexx.c.arguments.empty'),authored); arguments = draft.finish()
+  context = body.load(context_slot,authored)
+  if mode = 5 | mode = 7 then context = body.readarg(1,authored)
+  origin = authored
+  if mode = 8 | mode = 10 then origin = generated
+  name = 'LENGTH'
+  if mode = 2 then name = 'UNKNOWN'
+  if mode = 3 then name = 'length'
+  if mode = 4 then name = 'LENGTH' || '00'x
+  operation = 'crexx.c.bif'
+  if mode = 7 | mode = 10 then do; operation = 'crexx.c.call.missing'; name = 'ABSENT'; end
+  draft = body.operation(contract.operation(operation),origin)
+  call draft.input('arguments',arguments.result()); call draft.input('context',context); call draft.attribute('name',name as .binary)
+  finished = draft.finish()
+  if mode = 11 | mode = 12 | mode = 14 | mode = 15 then do
+    packet = body.operation(contract.operation('crexx.c.return.absent'),generated); result = packet.finish()
+    origin = generated
+    if mode = 12 then origin = authored.derive()
+    if mode = 14 | mode = 15 then origin = authored
+    required = body.operation(contract.operation('crexx.c.requirevalue'),origin)
+    call required.input('result',result.result())
+    name = 'LENGTH'; if mode = 12 | mode = 14 then name = ''
+    if mode = 15 then name = 'A' || '00'x || 'B'
+    call required.attribute('name',name as .binary); needed = required.finish()
+  end
+  context = body.load(context_slot,returning)
+  if mode = 6 then context = body.readarg(1,returning)
+  origin = returning
+  if mode = 9 then origin = returning.derive()
+  draft = body.operation(contract.operation('crexx.c.return.empty'),origin)
+  call draft.input('context',context); finished = draft.finish(); call body.returnvalue(finished.result(),returning)
+  if mode = 13 then do
+    dead = fn.block('dead'); context = dead.load(context_slot,authored)
+    packet = dead.operation(contract.operation('crexx.c.arguments.empty'),authored); result = packet.finish()
+    draft = dead.operation(contract.operation('crexx.c.bif'),authored)
+    call draft.input('arguments',result.result()); call draft.input('context',context); call draft.attribute('name','UNKNOWN' as .binary)
+    finished = draft.finish(); call absent(dead,contract,generated)
+  end
+  return builder.finish()
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
+  call block.returnvalue(finished.result(),origin)
+  return
+
+admission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ': ' || backend.error())
+  else call check(backend.status() <> 0 & output.bytes() = 0,label || ' refuses: ' || backend.error())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' preserves original graph')
+  return
+
+/* Forge only the two C-owned index restrictions. The generic reader admits
+ * zero and duplicate scalar indices; no envelope or signature is corrupted. */
+fieldindices: procedure = .void
+  arg artifacts = .string, forged = .string, graph = .llir..module, previous = .llir..output
+  image = uncompressed(readbinary(artifacts || '/rxfnsc.rxbin'))
+  decoder = .llbinmeta..catalog(image,67108864)
+  call check(decoder.error() = '', 'uncompressed runtime metadata is valid')
+  presence = decoder.field(12,'rexxactivation.rexxactivationarguments.presence','',4)
+  call check(presence <> '' & presence <> '0', 'actual presence index is available')
+  start = <at..i64>(200) image
+  limit = start + <at..i64>(216) image; at = start + 16; selected = 0
+  payload = .int; pool = .int
+  do while at < limit
+    if <at..u32>(at + 8) image = 12 then do
+      payload = at + 24; pool = <at..u32>(at) image
+      if decoder.text(pool,<at..u32>(payload + 16) image) = 'rexxactivation.rexxactivationarguments.values' then do
+        selected = payload; leave
+      end
+    end
+    at = at + 24 + <at..i64>(at + 16) image
+    at = at + (8 - at <mod> 8) <mod> 8
+  end
+  call check(selected > 0, 'actual values attribute selected by metadata name')
+  if selected = 0 | presence = '' then return
+  saved = graph.binary(); previous_text = previous.text()
+  mode = .int; index = .int; broken = .binary
+  do mode = 1 to 2
+    index = 0; if mode = 2 then index = presence as .int
+    broken = image; <at..i64>(selected + 28) broken = index
+    decoder = .llbinmeta..catalog(broken,67108864)
+    call check(decoder.field(12,'rexxactivation.rexxactivationarguments.values','',4) = index as .string & decoder.error() = '', 'generic-valid field index ' || mode)
+    call check(writebinary(forged || '/rxfnsc.rxbin',broken) = <blen>(broken), 'write forged runtime ' || mode)
+    backend = .llcrxas..compilation(graph,forged); output = backend.output()
+    call check(backend.status() <> 0 & output.bytes() = 0 & pos('IMPORT: incompatible Classic argument field indices',backend.error()) > 0, 'C refuses nonpositive or duplicate field index ' || mode || ': ' || backend.error())
+    call check(bincompare(saved,graph.binary()) = 0 & previous.text() == previous_text, 'field refusal preserves graph and previous output ' || mode)
+  end
+  return
+
+/* Same section normalization as langtools/tests/services.crexx, using the
+ * existing decompressor so each mutation remains a valid RXBIN envelope. */
+uncompressed: procedure = .binary
+  arg image = .binary
+  decoder = .llbinmeta..catalog(image,67108864); output = binsubstr(image,1,304)
+  do section = 1 to 6
+    row = 64 + (section - 1) * 40
+    offset = <at..i64>(row + 16) image; extent = <at..i64>(row + 24) image
+    bits = binsubstr(image,offset + 1,extent)
+    if (section = 3 | section = 4) & <at..u32>(row + 4) image = 1 then do
+      bits = decoder.expand(bits,<at..i64>(row + 32) image)
+      <at..u32>(row + 4) output = 0
+    end
+    padding = (8 - <blen>(output) <mod> 8) <mod> 8
+    output = output || x2bin(copies('00',padding))
+    <at..i64>(row + 16) output = <blen>(output)
+    <at..i64>(row + 24) output = <blen>(bits)
+    output = output || bits
+  end
+  <at..i64>(16) output = <blen>(output)
+  return output

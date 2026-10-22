@@ -1,0 +1,14 @@
+/* One signed B provider changes the existing shared controller deliberately. */
+options levelb
+namespace traceprobe expose observe
+import rxfnsb
+import rexxactivation
+import rexxvalue
+
+observe: procedure = .void
+  arg frame = .rexxactivation..RexxActivationArguments
+  before = frame.traceSetting()
+  call frame.setTraceOption('?L')
+  call _trace_set('R')
+  call frame.setReturnValue(.rexxvalue..RexxValue(before || '>' || frame.traceSetting()))
+  return

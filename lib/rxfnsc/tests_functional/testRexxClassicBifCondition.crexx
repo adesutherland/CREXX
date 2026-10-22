@@ -48,8 +48,46 @@ errors = errors + check(read(reference activation,"condition") = "NOTREADY", "lo
 errors = errors + check_error("",1,"RXC-LC-40.21")
 errors = errors + check_error("Q",1,"RXC-LC-40.28")
 errors = errors + check_error("C",2,"RXC-LC-40.4")
+errors = errors + external_condition_fields()
 if errors = 0 then say "PASS: Level C CONDITION BIF"
 return errors <> 0
+
+/* Zero foreign policies must not hide an explicitly delivered CALL condition. */
+external_condition_fields: procedure = .int
+  errors = 0
+  payload = "delivered é雪" || ('00'x as .string) || " "
+  parent = .RexxActivationArguments()
+  handler = .RexxActivationArguments
+  ordinary = .RexxActivationArguments
+  do id = 2 to 5
+    call parent.setCallPolicy(id,id + 10)
+    handler = .RexxActivationArguments()
+    call handler.inheritSignalPolicy(reference parent)
+    call handler.beginCallTrap(id,payload)
+    call handler.recordCondition(id,payload,"delivered extra","CALL")
+    call handler.beginExternalProgram()
+    call handler.beginExternalConditionScope()
+    expected = word("ERROR FAILURE HALT NOTREADY",id - 1)
+    errors = errors + check(read(reference handler,"C") == expected,"external CALL identity")
+    errors = errors + check(read(reference handler,"D") == payload,"external exact Unicode NUL description")
+    errors = errors + check(read(reference handler,"E") == "delivered extra","external CALL extra")
+    errors = errors + check(read(reference handler,"I") == "CALL" & read(reference handler,"S") == "DELAY","external CALL DELAY with zero policy")
+    errors = errors + check(handler.signalPolicy(id) = 0 & handler.callPolicy(id) = 0,"DELAY is not a dispatchable foreign ordinal")
+    call handler.recordCondition(1,"later syntax","later extra","SIGNAL")
+    errors = errors + check(read(reference handler,"C") == "SYNTAX" & read(reference handler,"S") == "OFF","later CONDITION describes its own trap")
+    errors = errors + check(handler.delayedSuppressionConditionId() = id,"later CONDITION does not cancel delayed suppression")
+    call handler.recordCondition(id,payload,"delivered extra","CALL")
+    call handler.setCallPolicy(id,id + 20)
+    errors = errors + check(read(reference handler,"S") == "ON" & handler.delayedSuppressionConditionId() = 0,"local CALL ON replaces DELAY")
+    call handler.setSignalPolicy(id,0)
+    errors = errors + check(read(reference handler,"S") == "OFF","local OFF replaces CALL policy")
+    ordinary = .RexxActivationArguments()
+    call ordinary.inheritSignalPolicy(reference handler)
+    call ordinary.beginExternalProgram()
+    call ordinary.beginExternalConditionScope()
+    errors = errors + check(read(reference ordinary,"C") == "" & read(reference ordinary,"D") == "" & read(reference ordinary,"E") == "" & read(reference ordinary,"I") == "" & read(reference ordinary,"S") == "","ordinary external CONDITION fields start empty")
+  end
+  return errors
 
 read: procedure = .string
   arg activation_ref = reference .RexxActivationArguments, option = .string, supplied = 1

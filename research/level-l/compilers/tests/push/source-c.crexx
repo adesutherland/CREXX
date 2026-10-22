@@ -1,0 +1,91 @@
+/* PUSH preserves text; PARSE PULL observes it without UPPER. */
+options levelc
+parse arg MODE
+push = 7
+COUNT = 0
+if 0 then push UNREACHED
+if MODE = 'bare' then do
+  push
+  return 0
+end
+if MODE = 'value' then do
+  push PAYLOAD
+  return 0
+end
+if MODE = 'once' then do
+  push NEXT()
+  return 0
+end
+if MODE = 'operand-exit' then do
+  push EXITVALUE()
+  say 'UNREACHED operand PUSH'
+  return 0
+end
+if MODE = 'private' then do
+  call PRIVATE
+  return 0
+end
+if MODE = 'recursive' then do
+  call RECURSE 2
+  return 0
+end
+if MODE = 'branch' then do
+  select
+    when 1 then push PAYLOAD
+    otherwise push UNREACHED
+  end
+  return 0
+end
+if MODE = 'contextual' then do
+  call PUSH
+  return 0
+end
+if MODE = 'dead' then return 0
+if MODE = 'late-bare' then call ELIGIBLE
+push 'first'
+push 'second'
+say 'count=' || queued() || '|' || queued()
+parse pull FIRST
+parse pull SECOND
+say 'front=' || FIRST || '|' || SECOND
+push
+parse pull EMPTY
+say 'bare=' || length(EMPTY)
+push 'a' || '00'x || 'é'
+parse pull ORDINAL
+say 'latin=' || c2x(ORDINAL)
+push 'é🙂'
+parse pull UNICODE
+say 'unicode=' || UNICODE || '|' || length(UNICODE)
+return 0
+
+NEXT:
+COUNT = COUNT + 1
+return PAYLOAD
+EXITVALUE:
+procedure expose COUNT PAYLOAD
+COUNT = COUNT + 1
+exit PAYLOAD
+PRIVATE:
+procedure expose SHARED COUNT
+LOCAL = 'child local'
+SHARED = 'nested ' || SHARED
+COUNT = COUNT + 1
+push SHARED
+return LOCAL
+RECURSE:
+procedure expose SHARED COUNT
+parse arg DEPTH
+if DEPTH = 0 then return
+COUNT = COUNT + 1
+push SHARED || DEPTH
+call RECURSE DEPTH - 1
+return
+PUSH:
+return 'push label'
+ELIGIBLE:
+push
+LATE:
+procedure
+say 'UNREACHED late PUSH'
+return

@@ -1,0 +1,51 @@
+/* Independent callable ownership records. This image is never executed. */
+.globals=0
+.meta "classify.box"="b" ".unknown" .class
+.meta "classify.box.values"="b" ".int[*]" .attr 7
+.meta "classify.box"="factory" "from_text" ".classify..box" "text=.string" .member
+.meta "classify.box"="factory" "run" ".classify..box" "text=.string" .member
+.meta "classify.box.nest"="b" ".unknown" .class
+.meta "classify.face"="b" ".unknown" .interface
+.meta "classify.face"="method final" "ready" ".void" "" .member
+.meta "classify.face"="method" "pending" ".void" "" .member
+.meta "classify.other"="b" ".unknown" .class
+.meta "classify.other"="method" "unrelated" ".void" "" .member
+
+§classify.deep.run() .locals=1 .expose=classify.deep.run
+ret
+.meta "classify.deep.run"="b" ".void" §classify.deep.run() "packet=.binary"
+§classify.é_#() .locals=1 .expose=classify.é_#
+ret
+.meta "classify.é_#"="b" ".void" §classify.é_#() ""
+§classify.§factoryish() .locals=1 .expose=classify.§factoryish
+ret
+.meta "classify.§factoryish"="b" ".void" §classify.§factoryish() ""
+§classify.orphan.§factory() .locals=1 .expose=classify.orphan.§factory
+ret
+.meta "classify.orphan.§factory"="b" ".classify..orphan" §classify.orphan.§factory() ""
+§classify.box.run() .locals=1 .expose=classify.box.run
+ret
+.meta "classify.box.run"="b" ".void" §classify.box.run() ""
+§classify.box.§factory() .locals=1 .expose=classify.box.§factory
+ret r0
+.meta "classify.box.§factory"="b" ".classify..box" §classify.box.§factory() ""
+§classify.box.§factory.from_text() .locals=1 .expose=classify.box.§factory.from_text
+ret r0
+.meta "classify.box.§factory.from_text"="b" ".classify..box" §classify.box.§factory.from_text() "text=.string"
+§classify.box.§factory.run() .locals=1 .expose=classify.box.§factory.run
+ret r0
+.meta "classify.box.§factory.run"="b" ".classify..box" §classify.box.§factory.run() "text=.string"
+§classify.box.nest.run() .locals=1 .expose=classify.box.nest.run
+ret
+.meta "classify.box.nest.run"="b" ".void" §classify.box.nest.run() ""
+§classify.face.ready() .locals=1 .expose=classify.face.ready
+ret
+.meta "classify.face.ready"="b" ".void" §classify.face.ready() ""
+§classify.ambiguous() .locals=1 .expose=classify.ambiguous
+ret
+.meta "classify.ambiguous"="b" ".void" §classify.ambiguous() ""
+.meta "classify.ambiguous"="b" ".void" §classify.ambiguous() ""
+
+/* An interface declaration alone is not an exported implementation. */
+§classify.face.pending() .expose=classify.face.pending
+.meta "classify.face.pending"="b" ".void" §classify.face.pending() ""

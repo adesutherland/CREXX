@@ -1,0 +1,4 @@
+options levelc
+say 'before'
+items.key = 1 / 0
+say 'unreachable'

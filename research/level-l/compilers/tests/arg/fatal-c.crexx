@@ -1,0 +1,11 @@
+options levelc
+say 'before'
+call FAIL 'nleft:right'
+say 'after'
+exit 0
+
+FAIL: procedure
+POSITION = '1'
+arg POSITION 2 REST =(POSITION) TAIL
+say 'unreachable'
+return

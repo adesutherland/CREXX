@@ -46,6 +46,17 @@ code in the existing `sig_atomic_t` mask without reclassifying Level B errors.
 The Level C condition dispatcher and producers remain under the whole-SIGNAL
 instruction review.
 
+## Built-in VM services
+
+For foundational capabilities on which the toolchain depends, prefer a built-in
+VM service using existing native RXPA bindings when ordinary calls can express
+the contract. Such services must be available in the mandatory core, including
+static/embedded builds; RXPA supplies bindings and resource lifetime, while one
+explicit semantic owner implements the behavior. This is independent of optional
+plugin packaging. Extend the ISA only when instruction-level execution or
+operand integration is justified. Each new capability still requires its own
+scope and exact-contract approval; this principle authorizes no unrelated work.
+
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `interpreter/rxvml/rxvm.h`):
@@ -272,6 +283,7 @@ struct stack_frame {
     char unicode_loaded_here;        /* Whether this frame loaded Unicode support */
     value **baselocals;              /* Array of initial / fixed pointers */
     value **locals;                  /* Active pointer map to variable values */
+    uint32_t *local_identity;        /* Unique slot identities, permuted with locals */
 };
 ```
 
@@ -312,11 +324,23 @@ caller's contiguous call window. Normal return still executes the
 compiler-emitted reverse swaps and pays no restoration scan. If a branch-style
 signal handler discards the callee before those instructions run, the unwind
 path uses that one index plus `number_args` to restore the caller's active
-pointer permutation. It finds each displaced call-slot base pointer in the
-caller's active map and performs the inverse pointer swap, preserving mutations
-and pre-call links instead of resetting values. The base pointer may be
-frame-owned local storage or an incoming argument's recorded entry pointer;
-neither case copies the value.
+pointer permutation. Each active slot has a unique u32 identity initialized on
+frame activation/reuse. Primitive and fused pointer SWAPs exchange identities;
+LINK/UNLINK changes a binding without changing its identity. The cold path finds
+the displaced call-slot identity and inversely swaps pointers and identities,
+preserving mutations and links without copying/resetting values. Linked
+receivers can hide their owned base pointer, and distinct slots can alias one
+value, so value-pointer equality cannot identify this inverse permutation.
+This restores canonical compiler call-window swaps; it does not reconstruct
+arbitrary intentional earlier SWAP state.
+
+The identity array occupies the existing checked frame allocation after owned
+values, retaining alignment and the full INT_MAX frame bound. Its structural
+cost is one pointer/frame, four bytes per allocated nominal slot, one identity
+store per active slot at activation and one u32 exchange per pointer SWAP.
+There is no per-call allocation or normal-return restoration scan; the cold
+scan remains O(argument count × local count). These costs are not performance
+or peak-resource measurements.
 
 `CALL1` through `CALL4` are direct-bytecode alternatives for the common fixed
 arities. They capture their explicitly named caller value pointers before
@@ -329,8 +353,8 @@ procedures; compiler-generated imported/native, dynamic and higher-arity calls
 retain the counted path.
 
 Native calls have no child frame; their cold branch path recovers the counted
-window from the interrupted `CALL`, `DCALL`, `SWAPCALL`, `SETTPSWAPCALL`, or
-`SETTPCALL` instruction. All five forms carry the argument-count register at
+window from the interrupted `CALL`, `DCALL`, `SWAPCALL`, `SETTPSWAPCALL`,
+`SETTPCALL` or `SRCFPROCSEL` factory-selector instruction. All six forms carry the argument-count register at
 operand position three, so the fixed runtime image supplies the window base
 without a generic operand scan. Any future call-bearing fused opcode must be
 added to this cold decoder as part of its signal/unwind contract.
@@ -355,6 +379,13 @@ normal signal/OOM path. Frame cleanup clears any remaining pushed entries and
 discards their saved table values without forcing a private copy, which gives
 block-scoped handling a safety net for frame exit and frame recycling without
 allocating during cleanup.
+
+Branch handlers retain the current interrupt-stack marker. Delivery unwinds
+entries pushed after that marker. To protect several tags in one scope, emit
+all `sigpush` instructions before installing any `sigbr`/`sigbrv` handlers;
+each handler then retains the same complete saved stack. Pair normal exits
+with reverse-order `sigpop` instructions. Interleaving push and installation
+can restore later tags prematurely when an earlier handler is delivered.
 
 Signal codes are defined in `interpreter/rxsignal.h`. The handler responses are
 `IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `BRANCH_VALUE`, `CALL`,
@@ -429,14 +460,20 @@ handlers installed with `sigbrv` perform the same wrapping in the VM before
 branching to the handler label, so compiler-generated block handlers can bind an
 `as name` local directly as a user-facing `.signal` value.
 
-`signalorigin "NAME",rMessage,rSignal` raises a new signal using the source
-module and address carried by that VM-bound runtime event. It validates the
-bound-event representation before reading its raw slots, and an invalid input
-raises `INVALID_ARGUMENTS` at the current instruction. The source override is
-per raised condition within one VM run; the normal `signal` forms keep their
-ordinary current-instruction source. Level C uses this form when a delivered
-SYNTAX handler finds its named target missing, so the resulting 16.1 points
-to the faulting clause rather than the generated handler entry.
+`signalorigin "NAME",rPayload,rSignal` raises a signal with the complete value
+in `rPayload` and the source module/address carried by a VM-bound runtime event.
+Payload copying is identical to register-payload `signal`: preserve type,
+attributes and explicit text/binary length, including embedded NUL, without
+message conversion or UTF8 validation. Validate the literal name first, then
+the bound-event representation before reading its raw slots. Unknown names
+raise `INVALID_SIGNAL_CODE`; invalid origins raise `INVALID_ARGUMENTS`, both at
+the current instruction. The requested name may deliberately differ from the
+origin event's name. Capture the source before copying the payload, so the two
+register operands may alias. The override is per raised condition and consumed
+once by dispatch; ordinary `signal` retains its current-instruction source.
+Opcode 660, operand encoding, flow and handler policy are unchanged. Level C
+uses this form for typed outward relay and a missing delivered handler's 16.1,
+retaining the causing event rather than the generated handler-entry location.
 
 Address semantics matter. VM-raised fault signals stamp the faulting
 instruction address before dispatch advances. `BREAKPOINT` and native or
@@ -2220,9 +2257,11 @@ The handler bounds-checks the header, reference indexes, and every item; rejects
 trailing or structurally inconsistent data with `INVALID_ARGUMENTS`; and raises
 `CLASSIC_SYNTAX` with `RXC-LC-26.4` for an invalid dynamic numeric position
 when the policy bit is set. An unflagged version-2 plan retains
-`CONVERSION_ERROR`. It uses Unicode
-code-point positions in UTF builds and has no load-time cache or private
-prepared representation.
+`CONVERSION_ERROR`. Counted numeric operands must be whole strings; an embedded
+NUL cannot terminate a valid prefix and hide a suffix. It uses Unicode code-point
+positions in UTF builds and byte positions under NUTF8. There is no load-time
+cache: the opcode and native cursor use one private kernel with owned,
+fully checked per-invocation execution state.
 For a backward relative control without a literal-pattern anchor, the pending
 field is stored from its capture start while the next field begins at the
 moved cursor. A backward control using a literal-pattern anchor retains the
@@ -2234,6 +2273,96 @@ instructions and every remaining supported exit form uses `parseplan`, including
 logging/TRACE and explicit `INTO`. Ordered source-level assignments remain
 outside the VM primitive, preserving repeated targets, source aliases, trimming,
 and TRACE source metadata. There is no runtime textual PARSE executor.
+
+### Native PARSE cursor
+
+**Development interface; locally qualified in normal Debug and focused Apple
+ASan. Real platform proof remains open.** The
+built-in VM service `.rxparse..cursor(source=.string, plan=.binary)` exposes the
+same packed kernel incrementally: v1/v2 retain their existing contracts, and
+v3 supplies raw section matching for ordered higher-level consumers. Both
+factory arguments are required.
+Native RXPA bindings provide its factory/method dispatch, metadata and resource
+lifetime; parsing belongs to the shared VM kernel. The service is mandatory core
+code, including CLI/embedded and constructorless static registration, rather
+than an optional or dynamically loaded plugin. Field/Input checkpoints let a
+consumer perform visible writes before later live operand reads; this is a
+correctness boundary, not a speed claim. It accepts a compiled descriptor, not
+template source. This prerequisite does not implement the research compiler's
+C PARSE/ARG source integration.
+
+`next() -> .int` returns `0` Done, `1` Field or `2` Input. For a Field,
+`item() -> .int` gives its 1-based packed target item and `slot() -> .int` its
+1-based stored-result index; a drop has slot zero. `text() -> .string` lazily
+returns a fresh owned text copy. Process the field before calling `next()`
+again, which acknowledges it. Ignoring a drop requires no text allocation or
+target write. Completion follows the packed descriptor: it is not necessarily
+completion of an authored Classic template section. Higher-level consumers own
+section normalization and ordered visible assignments.
+
+V3 is cursor-only: the `parseplan` opcode refuses it. Its 12-byte header and
+literal/numeric/external payload layouts follow v2, but kind 1 denotes a raw
+section. Kind 6, numeric-overlay flags and captured-reference flags are invalid;
+adjacent section targets are invalid. Source positions are codepoints in UTF8
+builds, and the existing byte units under NUTF8. The kernel tracks the preceding
+match's start/end: relative controls start at the former, ordinary captures at
+the latter. Backward/equal numeric controls capture the suffix before moving;
+an empty or missing pattern consumes the remaining section. Every control,
+including targetless controls, updates this state and requests its dynamic
+operand at the actual transition. Existing v1/v2/direct instruction behavior is
+unchanged. The exact versioned layout/transitions and independent controls are
+documented in the [section contract](../../research/level-l/compilers/doc/architecture.md#proposed-c-parse-integration).
+Word/blank policy and pool/TRACE/source policy remain outside the generic VM
+matcher; Classic consumers reuse their shared B character scanner.
+
+For an Input, `item()` identifies that physical dynamic occurrence and `slot()`
+its 1-based external-operand index. Call `supply(text=.string) -> .void` exactly
+once before `next()`. Supply snapshots/converts the value, clears the event and
+returns the cursor to Ready. Distinct occurrences request independently even
+when their slot repeats; internal lookahead cannot read future values early.
+Earlier completed packed fields precede later Input, while an Input needed to
+finish a pending field precedes that field. Captured-reference operands resolve
+inside the kernel only after their capture is complete.
+
+`text()` is valid only for Field. Wrong-phase `next`, `text` or `supply` raises
+`INVALID_ARGUMENTS` and makes a live Ready/Field/Input cursor Failed. Done,
+Failed and Closed remain terminal; Done's `next()` repeatedly returns zero.
+`item()`/`slot()` do not advance: they return zero in Ready/Done/Closed and retain
+the failing IDs in Failed. `close() -> .void` is nonraising/idempotent for a
+successfully constructed current-VM cursor and clears those IDs. Normal
+uninitialized, forged or foreign-receiver guards still apply.
+
+Source, plan and supplied operand storage is owned; no borrowed RXPA handle or
+string view survives a native call. Returned text survives later events, source
+mutation and close. Copying a cursor aliases one session-affine resource rather
+than cloning execution; closing any alias closes them all. Independent cursors
+can interleave. Explicitly close on normal and error paths; last-owner/VM
+finalization is fallback cleanup, without a prompt lexical-finalization promise.
+A failed factory publishes no initialized cursor: preserve its original failure
+and do not mask it by calling a method on the unconstructed result.
+
+The factory validates the complete plan/source before publication or any event:
+nonzero item count, version/flags, boundaries/counts, exact trailing length,
+literal text/counts and external/completed-capture indexes. Malformed plans,
+protocol misuse and forged/foreign receivers raise `INVALID_ARGUMENTS`; an
+uninitialized receiver raises `OBJECT_NOT_INITIALIZED`. Invalid Unicode raises
+`UNICODE_ERROR`, unrepresentable storage extents/products `OUT_OF_RANGE`, and
+allocation/publication failures `FAILURE`. Dynamic numeric failures retain the
+v2 policy described above, leave earlier acknowledged writes visible and stop
+later events. Consumer-side pool failures remain the consumer's event to
+preserve after closing its constructed cursor.
+
+Unicode builds retain strict UTF8/codepoint units; NUTF8 retains byte units.
+State owns source/plan copies, bounded item/capture data, active operands and an
+O(codepoints) offset index for non-ASCII Unicode input. Existing 16-bit descriptor
+counts, 32-bit literal counts and checked native sizes bound representation;
+there is no new configurable work/space quota. Native calls retain existing
+allocation/OOM and interruption limits, with dispatch HALT checks between calls.
+Local constructorless static smoke and kernel-only NUTF8 tests do not establish
+real 31-bit/CMS/TSO/Windows runtime qualification. Apple LeakSanitizer is
+unsupported; Linux LeakSanitizer and hosted proof remain unverified. See the
+[owning contract](../../research/level-l/compilers/doc/architecture.md#proposed-parse-cursor-contract)
+and [local qualification](../../research/level-l/compilers/PLAN.md#parse-cursor-local-qualification).
 
 ### Pooled float operands
 

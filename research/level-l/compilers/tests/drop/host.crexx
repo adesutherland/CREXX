@@ -1,0 +1,45 @@
+/* cREXX License (MIT). Independent caller-owned aliases/configuration oracle. */
+options levelb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import dropfixture
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  parent = .rexxpool..RexxVariablePool(1); child = .rexxpool..RexxVariablePool(1)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  call config.setTextOtherBlanks('·')
+  activation = .rexxactivation..RexxActivationArguments()
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference child,reference config)
+  call parent.setString('key','b')
+  call parent.setStemString('items.','b','lower')
+  call parent.setStemString('items.','B','upper')
+  call parent.setString('victim','held'); call parent.setString('aux','held')
+  call child.exposeSymbol('key',reference parent)
+  call child.exposeSymbol('items.key',reference parent)
+  call child.exposeSymbol('victim',reference parent)
+  call child.exposeSymbol('aux',reference parent)
+  call child.setString('names','names·victim·🙂·aux')
+  returned = dropfixture..run(reference context,0)
+  call check(\returned.hasReturnValue(),'C provider returns a fresh absent result')
+  call check(parent.stemSymbolValue('items.','b').asString() = 'ITEMS.b','whole-stem drop reaches exact lowercase alias')
+  call check(parent.stemSymbolValue('items.','B').asString() = 'upper','unrelated uppercase parent tail survives')
+  call check(child.isDropped('names') & child.symbolValue('names').asString() = 'NAMES','self-carrier drops in the authoritative child pool')
+  call check(parent.isDropped('victim') & parent.isDropped('aux'),'captured list uses configured blank and continues after invalid Unicode word')
+  call check(parent.symbolValue('key').asString() = 'b','unrelated exposed substitution variable survives')
+  call child.setSymbolValue('items.key',.rexxvalue..RexxValue('restored'))
+  call check(parent.stemSymbolValue('items.','b').asString() = 'restored','exact alias remains usable after whole-stem drop')
+  call check(parent.stemSymbolValue('items.','B').asString() = 'upper','alias restoration preserves unrelated tail')
+  call check(config.textOtherBlanks() = '·','provider borrows existing configuration')
+  say 'DROP_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

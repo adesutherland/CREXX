@@ -1379,6 +1379,74 @@ status = request.parse()
 `source` is `.binary`. The optional third constructor argument is a
 `.lllimits..policy`, described under [Resource limits](#resource-limits).
 
+<a id="proposed-borrowed-language-requests"></a>
+
+### Borrowed language requests
+
+A caller-owned, fully prepared DFA/LR
+language may serve fresh requests and readers without copying its packed tables
+or production metadata. The owner remains live, anchored and unchanged for the
+whole borrowed lifetime. These additions do not change the owning APIs above.
+
+Keep the definition in anchored storage until the request and its readers end:
+
+```rexx
+language = levell_settings..language()
+request = .lllanguage..request.borrowed(reference language,source)
+status = request.parse()
+```
+
+The generic additions use existing types and explicit weak references:
+
+| API | Exact arguments / result |
+|---|---|
+| `lllanguage.request.borrowed` factory | `language: reference .lllanguage..definition, source: .binary, ?limits: .lllimits..policy, ?comments: .llcomments..rules` |
+| `lllanguage.definition.borrowedscanner` method | `source: .binary, mode: .string, fuel: .int = 10000000` → `.llmunch..scanner` |
+| `lllanguage.definition.borrowedparser` method | `input: .llcore..stream, fuel: .int = 1000000` → `.lllr..parser` |
+| `llmunch.scanner.borrowed` factory | `dfa: reference .llmunch..automaton, source: .binary, mode: .string, fuel: .int = 10000000` |
+| `lllr.parser.borrowed` factory | `compiled: reference .lllr..tables, input: .llcore..stream, fuel: .int = 1000000` |
+| `lllr.tables.productionlength`, `productionlhs` | Each takes `production: .int` and returns `.int`; delegate existing production-index lookups. |
+| `lllr.tables.symbolkind`, `symbollabel` | Each takes `symbol: .int`; returns `.int` / `.string` respectively. |
+| `lllr.tables.terminalname` | `token: .int` → `.string`; retain the existing parser's first matching terminal label, `token N` fallback and EOF `end of input`. |
+| `llcfg.productions.symbolkind`, `terminalname` | `symbol: .int` → `.int` / `token: .int` → `.string`; read the owned grammar directly, without returning or copying it. |
+
+The table queries delegate the existing CFG authority; move the parser's
+terminal-label lookup there rather than adding a second algorithm. Preserve
+terminal order, reduction labels and augmented-root behavior exactly. Existing
+production/symbol bounds and error behavior remain. The parser uses these
+queries during reductions and expected-token trials instead of value-returning
+`grammar()` / `source()` calls. Definition wrappers borrow their private fields;
+they add no public mutable-table reference getters. Scanner/parser owning and
+borrowed factories feed the same recognition loops.
+
+Definition wrappers require an anchored, live definition receiver: child weak
+references point to its retained DFA/LR fields, never method locals, temporary
+definition values or self-references into a subsequently copied wrapper.
+The borrowed request supports prepared DFA lexing and the LR1 parsing route.
+Other parse backends return status 3 with `LL_BORROW_BACKEND: borrowed parsing
+requires LR1`; there is no silent value-copy fallback. An omitted limits argument
+uses the existing default policy. Omitted comments copy the definition's baseline
+rules; supplied comments copy and validate that request's override through the
+existing rules API. The request never calls
+`usecomments` on the owner. Each consumer retains its declared lexical rules
+and exact source bytes.
+
+The caller keeps every borrowed definition/automaton/table owner live, at a
+stable storage location, unchanged and in the same VM worker until its last
+borrower ends. This is an explicit precondition: reference validity detects
+expired storage, not mutation or rebinding of a still-live owner. Borrowed
+factories and owner-dependent operations refuse an empty, expired or live but
+uninitialized owner with status 3 and an
+`LL_BORROW_OWNER:` diagnostic, without reading it or publishing partial output.
+Ordinary direct method-receiver guards remain unchanged. There is no generic
+freeze or mutation-detection mechanism and no cross-worker sharing. Reader methods take
+scoped live aliases; they do not store self-references into an owning wrapper
+that may subsequently be returned or copied. Copying a borrower retains weak
+borrows; it does not snapshot the heavy owner. Sources, token streams, policies,
+comment rules and already materialized trees/ASTs retain their own data after
+readers end. Later parsing/projection/AST construction still needs a live
+definition for its metadata; expiry does not retroactively invalidate results.
+
 ### Definition methods
 
 | Method | Result |
@@ -2853,6 +2921,7 @@ Messages identify the original grammar file and source location.
 
 ```text
 rxlang specification.crexx [--rxas|--graph] [--limit name=count]
+       [--lexer-in PATH] [--lexer-out NEWPATH]
 rxlang --limits
 ```
 
@@ -2877,6 +2946,17 @@ output. Check its exit code before treating output as a generated module:
 `--limit name=count` can be repeated to set several build allowances. These are
 settings for that invocation; they do not become rules of the generated language.
 
+For `rxas` or source output, `--lexer-in` can supply an owned lexical capsule
+from an earlier successful generation, and `--lexer-out` writes the current
+capsule to a new scratch file. Each option appears at most once; neither is
+valid with `--graph`. Output must not already exist. Source, input and output
+paths must differ; exact `stdin`, `stdout` and `stderr` names are refused.
+Conservative spelling/content guards and exclusive output creation protect
+inputs; they do not promise general filesystem alias resolution. Capsule I/O
+finishes before generated stdout is written. The capsule is private build data,
+not a portable public format or an authenticated input; see the
+[generation contract](generation-design.md).
+
 ### Write an output file safely
 
 Use [generate.cmake](../cmake/generate.cmake):
@@ -2893,6 +2973,15 @@ cmake -DLEVEL_L="$task_bin/rxlang" \
 The wrapper generates a temporary file and replaces the output only on success.
 A failed build preserves the previous module. Direct redirection with
 `> my_language.rxas` truncates that file before `rxlang` runs.
+
+Optional `-DREUSE_LEXER=ON` lets this wrapper own an output-derived lexical
+cache, checksum manifest and lock in the build directory. Missing/stale/damaged
+cache data falls back to cold generation. Parser, source and output validation
+still run freshly; a failed generation preserves prior output/cache. The wrapper
+serializes that output's transaction and publishes the manifest last. An equal
+capsule is not rewritten, and removing the optional cache does not force an
+otherwise up-to-date build. Clean the three sidecars with the owning output.
+Only the research C grammar opts in by default; bootstrap generation stays cold.
 
 `FORMAT=crexx` selects source output. Compile it with `rxc`, assemble with `rxas`,
 and link as for an RXAS-generated module. Level L delegates bytecode production
@@ -3057,7 +3146,7 @@ rxvm build/ir/demo
 
 ### Blocks, slots and analysis
 
-A block is a sequence of operations ending in a branch, jump or return.
+A block is a sequence of operations ending in a branch, jump, protect or return.
 Branches join blocks into a graph; a loop is a cycle in that graph. A temporary
 value is local to its block. To carry a value across a branch, store it in a typed
 slot and load it in the destination block. A slot represents mutable local
@@ -3070,6 +3159,13 @@ edges are considered. The result explains a possible read before assignment
 with its operation ID. This supplements the AST flow mappings: AST mappings
 analyse the source-shaped tree, while IR analysis follows the explicitly lowered
 operations and graph.
+
+`block.protect(normal,exceptional,origin)` declares the normal continuation and
+an exceptional entry for the remainder of one invocation. Both edges stay
+visible to analysis, pruning and renumbering. The host owns runtime exception
+binding and cleanup; a backend without that support must reject the declaration.
+The exceptional entry can rely on setup slots assigned before `protect`, not
+later stores in the normal body. See the [core contract](ir-design.md#invocation-protection).
 
 ### Contracts make transformations checkable
 
@@ -3114,7 +3210,7 @@ else say 0
 
 The G version selects `options levelg` and adds `total = .int` before the
 assignment. G lowers the sum to `crexx.g.int64.add` and stores a typed slot.
-Classic lowers it to `crexx.c.add` with an explicit numeric context and stores
+Classic lowers it to `crexx.c.add` with an explicit borrowed context and stores
 the pool key `TOTAL`. Each lowers the IF expression, converts its result to a
 core Boolean and creates yes/no/join blocks. SAY remains an observable operation.
 
@@ -3185,14 +3281,73 @@ rxlink -o demo-linked demo.rxbin /path/to/bin/library.rxbin
 rxbvm demo-linked.rxbin
 ```
 
-For Classic, use `llrxc-c` and add `/path/to/bin/llctarget.rxbin` and
-`/path/to/bin/rxfnsc.rxbin` to the link command. Use VM `-a` followed by program
+For Classic, use `llrxc-c` and add `/path/to/bin/llctarget.rxbin`,
+`/path/to/bin/rxfnsc.rxbin` and `/path/to/bin/classlib.rxbin` to the link command.
+The collection library supplies the Classic variable pool; include it explicitly
+rather than depending on VM autoload from the compiler installation. The
+`llcompiler_c_only_*` regressions compile with native/typed compiler products
+absent and execute linked static images in a separate directory with autoload
+disabled. This verifies the bounded current profile, not complete C. Use VM `-a` followed by program
 arguments when needed. Keep linker debug metadata for runtime source locations;
 `rxlink -s` deliberately removes it. Assembler optimisation may also be enabled
 by omitting its `-n`. The C/G compilers enable shared IR optimisation by default;
 use `llrxc-g -n` or `llrxc-c -n` for the cleaned unoptimised control. The native
 B seed's `rxc -n`, the new compiler's `-n` and `rxas -n` control three separate
 stages. Use assembler `-n` when inspecting the new compiler's own effects.
+
+Classic statement CALL can use explicit prebuilt providers. The `-i` directory
+must contain each selected `<artifact-stem>.rxbin` and the runtime images.
+For a C source provider, produce one ordinary void/frame export with `--routine`:
+
+```sh
+llrxc-c -i /path/to/artifacts --routine sample.run -o /path/to/artifacts/provider.rxas provider.crexx
+rxas /path/to/artifacts/provider.rxas
+llrxc-c -i /path/to/artifacts --provider provider sample.run -o main.rxas main.crexx
+```
+
+Repeat `--provider <artifact-stem> <fully-qualified-callable>` for more bindings;
+link the selected provider images into the application. Local labels and exact
+BIF names retain priority. Qualified A.run/B.run may coexist; an ambiguous short
+RUN refuses compilation. B/G providers are first built by their owning compiler.
+The C request reads checked binary metadata; it never compiles a provider source,
+searches at runtime or supplies external function expressions. Missing inventory
+fails43.1 when reached; a selected provider omitted from the linked image retains
+FUNCTION_NOT_FOUND. Routine output has no command main/status bridge and leading
+PROCEDURE remains17.1. See the
+[static-provider contract](../../research/level-l/compilers/doc/architecture.md#call3-static-provider-contract).
+
+Standalone Classic `PULL` uses the same templates as `PARSE UPPER PULL`. It
+acquires selected queue or fallback input once, including bare/empty-first forms;
+later comma templates receive empty text. Shared UPPER and live variable-pool
+writes remain in the existing executor. Configured NOTREADY, broader host
+behavior, conditions/TRACE and declared-platform closure remain open under the
+[PULL contract](../../research/level-l/compilers/doc/architecture.md#pull-contract).
+
+Classic `PUSH expression` and `QUEUE expression` convert an operand once and
+insert it at the front or tail of the selected queue; bare forms insert empty
+text. Text retains its case, Unicode and NUL bytes. `PARSE PULL` observes insertion
+without UPPER; standalone `PULL` applies UPPER. Selected queue state is shared by
+nested/private program roots, and `QUEUED()` does not consume entries. Wider
+host/condition/TRACE/platform closure remains open under the
+[queue contract](../../research/level-l/compilers/doc/architecture.md#queue-contract).
+
+Classic `ADDRESS` selects/swaps lasting environments or executes one transient
+command with ordered `WITH` resources and lexical VAR/counted-STEM anchors.
+An expression-only clause executes through the current environment and lasting
+connections, captured after its expression converts to command text. Both routes
+share the B command adapter. Operand EXIT skips construction and dispatch.
+Configured conditions/resumption, TRACE, native host/NUL transport and declared
+platforms retain their [separate gates](../../research/level-l/compilers/doc/architecture.md#address-c-command-contract).
+
+`llrxc-c` prints `RXC-LC-IMPLICIT_ADDRESS` warnings once to stderr for implicit
+commands whose classified head is not a literal string. Grouped strings and
+left-string concatenations suppress the warning; assignments and explicit
+instructions do not warn. Warnings do not change successful status or output
+publication. C frontend/service `warnings()` returns owned immutable records
+with severity/code/message, filename, exact byte bounds, scalar line/column and
+formatted text. An empty array denotes no collected warnings; completed records
+remain available after later lowering/backend failure and after request expiry.
+The getter prepares frontend work only, without emitting RXAS.
 
 A Level B host imports `llgcompiler` and `llir`, links `llgcompiler.rxbin`,
 `rxfnsl.rxbin` and `library.rxbin`, and uses the following G service. For C,
@@ -3221,6 +3376,13 @@ to select the unoptimised path without changing earlier argument positions:
 request = .llgcompiler..request(source, artifacts, 'demo.crexx', 1000000, 512, 67108864, 65536, 0)
 ```
 
+C requests additionally accept optional `providers:llcbindings.binding[]` and
+`routine_export:string` after these eight arguments. Import `llcbindings` to
+construct each explicit `(artifact, callable)` binding. The request owns its
+prepared selections; `graph()` lazily prepares the frontend too. The empty
+default performs no provider acquisition. The same byte/work ceilings bound
+aggregate provider acquisition and metadata selection.
+
 The work/byte budgets also protect the shared optimisation phase. Defaults and the complete API are in
 the [backend reference](../../research/level-l/compilers/doc/backend.md).
 
@@ -3233,11 +3395,17 @@ printing `1`. Classic keeps its numeric/argument/pool semantics; G keeps typed
 values and short-circuiting. A declared G decimal starts absent and displays
 `nan`, while integer/float/Boolean defaults are zero and text is empty.
 
-The current output uses stable registers and runtime adapters. Shared Level L
+The current output retains distinct owned cells and runtime adapters, coalesces
+proved C context aliases, and reuses eligible plain scalar cells within one
+target block. The optional [IR analysis/proof](ir-design.md#optional-analysis-and-proof-services)
+and [RXAS target](rxas-design.md) packages can be used independently of these
+frontends. Shared Level L
 passes propagate proved private values, evaluate admitted constants, simplify
 Boolean branches and remove safe unused operations. G admits checked int64
-arithmetic/comparisons and canonical conversions; C initially admits only exact
-literal `0`/`1` truth. Classic arithmetic, mutable numeric context and variable
+arithmetic/comparisons and canonical conversions. C retains the effectful runtime
+truth check; exact literal `0`/`1` separately supplies a derived Boolean branch
+fact so dead-arm pruning preserves context checks and errors. Classic arithmetic,
+mutable numeric context and variable
 pools keep runtime semantics. Both languages preserve effects and errors. See
 the [actual before/after example](../../research/level-l/compilers/examples/step05/README.md) and
 [generic Level L optimisation API](ir-design.md#optimise-a-frozen-module).
@@ -3340,6 +3508,179 @@ abuttal with variable XYZ. This adds no G literal syntax or general Classic BIF
 support. Full expression, host and TRACE coverage remains described by the
 [instruction review](../../research/level-l/compilers/doc/LEVELC-INSTRUCTION-REVIEW.md).
 
+### Classic variable symbols and DROP
+
+The C profile preserves raw variable spellings for reads, assignments, ARG
+destinations and DROP. Names start with a Unicode letter or `! ? _ @ # $`;
+later characters may also be ASCII digits or dots. Stems and arbitrary compound
+tails use the existing shared pool rules. Leading-digit and ordinary leading-dot
+constant symbols cannot be DROP targets; `.MN`, `.RESULT`, `.RC`, `.RS` and
+`.SIGL` are the admitted leading-dot variable exceptions. Combining marks and emoji are not variable-name letters,
+and names are not implicitly normalized. Micro-sign `µ` remains distinct from
+Greek `μ`/`Μ`. ARG still uppercases argument contents independently of the raw
+destination spelling. Routine/call names retain the ASCII-undotted profile and
+wider shapes receive an explicit diagnostic.
+
+```rexx
+options levelc
+µ = 'micro'
+victim = 'held'
+names = 'names victim'
+drop (names) µ
+say names victim µ
+```
+
+The output is `NAMES VICTIM µ`. A DROP list contains direct variable symbols
+or parenthesized single variable references. Items execute in source order;
+each indirect item captures its current value once, then the shared pool drops
+that captured subsidiary list in order. Dropping its carrier does not discard
+the remaining captured words. Invalid subsidiary words are skipped and later
+valid words continue. Lists use the borrowed configuration's Unicode and extra
+blanks. Direct source targets must be valid variables, even in unreachable
+source; `(a+1)` is an expression and is not an indirect DROP reference.
+
+DROP reuses scalar, stem, compound-tail and exposed-alias pool behavior. A
+dropped binding differs from an assigned empty value and a dropped stem removes
+its default and tails. The compiler emits one contextual operation and existing
+pool call per item; it does not split indirect words or substitute tails itself.
+Source EXPOSE, resumable conditions and full TRACE remain later compiler work.
+The [independent DROP fixtures](../../research/level-l/compilers/tests/drop/)
+own source, state, diagnostic, borrowed-alias and emitted-code expectations.
+
+### Classic assignment
+
+An assignment evaluates its expression once before the current variable pool
+resolves the target. A missing expression assigns empty text. The pool owns
+scalar replacement, compound-tail substitution and stem defaults; the compiler
+passes the raw target name and exact value to that shared implementation.
+
+```rexx
+options levelc
+key = 'b'
+items.key = 'old'
+items.key = items.key || '+'
+empty =
+say items.key || '|<' || empty || '>'
+```
+
+The output is `old+|<>`. Substituted tail contents keep their case and may
+contain Unicode, dots or NUL; these contents are values, not newly parsed source
+identifiers. A whole-stem assignment replaces its default and clears explicit
+or dropped tails. Assigning an individual tail restores a previously dropped
+binding. Assignment preserves the value's text and numeric representation.
+
+Private source routines have fresh pools. The [independent assignment
+fixtures](../../research/level-l/compilers/tests/assignment/) combine source-call
+ordering with a separate B-owned, prebound-context control;
+they do not establish source EXPOSE or shared-label behavior. Those forms,
+resumable conditions and full TRACE remain later compiler work.
+
+### Classic NOP
+
+NOP has no operand and leaves surrounding execution order unchanged. It can
+occupy the admitted main, IF/ELSE, group, WHILE and private-routine statement
+positions. The same word can still name a variable in assignment or expression
+context:
+
+```rexx
+options levelc
+nop = 'variable'
+NoP
+say nop
+```
+
+The output is `variable`. An extra token after the statement, as in `nop x`,
+is rejected even in unreachable source. An unobserved NOP adds no value,
+runtime helper or frame demand; its authored AST span remains available.
+SELECT/shared-label placements, exact Classic diagnostic identities and full
+clause/TRACE observations remain later compiler work.
+
+### Classic OPTIONS
+
+Every OPTIONS clause retains its ordinary optional expression. The operand is
+evaluated once where the clause is reached, including Name reads, arithmetic,
+calls and errors; bare OPTIONS has no operand. The current shared Classic
+processor recognizes no runtime words, so unknown/DBCS words and embedded NUL
+have no processor effect. The compiler omits the empty processor call and unused
+simple String/Number construction, while retaining operand effects and validation.
+
+Only a complete first nonempty clause made of OPTIONS and bare words selects
+file settings. `LEVELC` and `NUMERIC_CLASSIC` are accepted. Nested block comments
+remain enabled; `COMMENTS_HASH`/`COMMENTS_NOHASH` and
+`COMMENTS_DASH`/`COMMENTS_NODASH` select request-local line comments.
+`COMMENTS_NOSLASH` is accepted; slash comments, incompatible levels/numeric
+policy, conflicting switches and unsupported `SRCMAP` are rejected. `STRICTC`
+selects reached-only invalid LEAVE/ITERATE-target errors for this request; default C
+rejects source-provable invalid transfer targets even in dead source. Identical switches
+may repeat; quoted/later/call-shaped STRICTC stays an ordinary operand. Header
+words still have their ordinary expression evaluation.
+
+```rexx
+options levelc comments_hash
+# This line is a comment in this request.
+options 'unknown' || '00'x
+options probe()
+exit 0
+probe: procedure
+  say 'once'
+  return 'ignored'
+```
+
+The output is `once`. Quoted, operator-shaped and call-shaped first clauses,
+and all later OPTIONS clauses, do not select file settings. For example,
+`options levelg()` is an ordinary private function call when that routine is
+defined. Settings never leak into a later compilation request. Adding runtime
+words or effects to the shared processor requires compiler contract review and
+recompilation; complete header controls, source maps, conditions and TRACE
+remain later work under the [OPTIONS plan](../../research/level-l/compilers/PLAN.md#current-action-options).
+
+### Classic IF
+
+IF evaluates its condition once and executes only the selected instruction.
+ELSE belongs to the nearest open IF; a false condition without ELSE continues
+with the following statement. The condition must produce exact text `0` or `1`.
+For example, `'1.0'` raises Classic 34.1 before either arm executes.
+
+```rexx
+options levelc
+if '1' then say 'selected' else say 1/0
+if '0' then say 'not reached'
+```
+
+The output is `selected`; the unchosen division is never evaluated. Current
+main/group/WHILE/private-routine placements retain each arm instruction's own
+contract. Both terminating arms add no spare join/default-return path, and
+literal branch pruning retains the contextual truth check. Full DO,
+shared labels/EXPOSE, complete diagnostic identities, resumed conditions and
+TRACE remain later work in the [IF plan](../../research/level-l/compilers/PLAN.md#current-action-if).
+
+### Classic SELECT
+
+SELECT evaluates WHEN conditions in source order until the first exact text
+`1`, then executes only that instruction. Exact text `0` continues to the next
+WHEN. Later expressions and arms remain dormant after a match. OTHERWISE
+accepts an instruction list, including an empty list, and is optional and final.
+
+```rexx
+options levelc
+select
+  when '0' then say 1/0
+  when '1' then say 'selected'
+  otherwise
+    say 'fallback'
+    nop
+end
+```
+
+The output is `selected`. An invalid logical WHEN value, such as `'1.0'`, raises
+Classic 34.2 at WHEN before either its body or later code. With no true WHEN
+and no OTHERWISE, Classic 7.3 identifies the SELECT line. Nested SELECT and
+admitted main/group/WHILE/private-routine arms preserve ordinary loop transfers;
+SELECT itself creates no loop frame. Current generated C uses the fatal,
+nonresumable condition profile. Shared labels/fall-through/EXPOSE, complete
+expressions/DO, full diagnostic recovery and conditions/TRACE remain open in
+the [SELECT plan](../../research/level-l/compilers/PLAN.md#current-action-select).
+
 ## Optional arguments and separate G modules
 
 STEP07A adds scalar optional arguments to `llrxc-g`, using existing G syntax:
@@ -3376,6 +3717,93 @@ scale: procedure
   if \arg(2,'E') then factor = 2
   return value * factor
 ```
+
+The C call baseline can be checked independently of G using the existing
+examples and expected results:
+
+```sh
+cmake --build cmake-build-debug --target llcompiler_c_calls_measure
+```
+
+This runs the B/L C compiler image in a restricted host and its linked output
+in a separate compiler-free runtime, with bytecode autoload disabled. It checks
+argument holes versus empty strings, recursion, evaluation order, the current
+LENGTH/ARG/DIGITS bindings and rejection of incompatible Classic metadata.
+It does not establish complete ARG/CALL, shared-label activation, the remaining
+BIF bindings or full conditions/TRACE. The [C plan](../../research/level-l/compilers/PLAN.md#active-c-contract-baseline-increment)
+records the precise qualification boundary; INTERPRET is the final stage.
+
+The shared B runtime now exposes a borrowed execution bundle for direct hosts:
+
+```rexx
+import rexxactivation
+import rexxpool
+import rexxclassicconfig
+import rexxclassiccontext
+
+activation = .rexxactivation..RexxActivationArguments()
+pool = .rexxpool..RexxVariablePool(1)
+config = .rexxclassicconfig..RexxClassicConfig("UTF8")
+context = .rexxclassiccontext..RexxClassicContext(reference activation, reference pool, reference config)
+```
+
+Keep those three initialized owners in stable storage for the bundle's lifetime.
+Its `activation()`, `pool()` and `config()` methods return checked references;
+`bindPool(reference replacement)` changes only the receiving bundle's pool
+binding. Copying the bundle shares the owners but not later binding changes.
+Helpers that must observe rebinding take `reference context`. Invalid or expired
+references raise `REFERENCE_INVALID`; a rejected rebind preserves the old pool.
+
+Direct hosts import `llctarget` from `llctarget.rxbin` and use the
+[borrowed-context adapters](../../research/level-l/compilers/doc/architecture.md#checked-bif-reuse-and-target-compatibility-decision).
+They reuse existing BIFs and the host's character configuration. Numeric calls
+inherit the executing caller frame; `setting` updates stored activation state
+only, so a host installs validated settings in its own frame. Generated C does
+this at procedure entry and after each successful NUMERIC statement, preserving
+child inheritance and parent restoration. The direct fixture
+`research/level-l/compilers/tests/target-context.crexx` demonstrates the same
+boundary independently. Generated C uses one required context reference and one
+fresh result packet; caller-owned child activations/pools share the root UTF8
+configuration. The [current C-family contract](../../research/level-l/compilers/doc/architecture.md#current-c-family-contract)
+owns the research schema and target surface: rebuild earlier C images/IR;
+no legacy bridge is provided.
+NUMERIC FORM accepts fixed SCIENTIFIC/ENGINEERING, VALUE expression and bare
+scientific reset. VALUE may be omitted before a parenthesized or unary
+expression. DIGITS/FUZZ retain defaults 9/0. All three evaluate an operand once,
+validate through the shared setter and install only after success; configured
+conditions/LOSTDIGITS, TRACE and wider platform acceptance remain separate.
+Static SIGNAL accepts direct, decoded quoted and VALUE targets, with an implied
+VALUE before a parenthesized or unary expression. The selected Level C profile
+folds all target forms through shared Unicode casing and compares exact text;
+numeric-looking names, trailing blanks and embedded NUL remain distinct.
+Successful transfer updates SIGL/.SIGL and leaves active loop control while
+retaining the current invocation, arguments, pool and numeric settings. It
+cannot rearm PROCEDURE eligibility. The [static SIGNAL contract](../../research/level-l/compilers/doc/architecture.md#signal-static-contract)
+keeps ON/OFF, typed handlers, clause/TRACE and wider host/platform work separate.
+SELECT adds contextual WHEN truth and a shared no-match error bridge; the
+borrowed-context procedure ABI is unchanged. The
+[DO contract](../../research/level-l/compilers/doc/architecture.md#approved-do-contract)
+adds counted/controlled/FOREVER/WHILE/UNTIL forms, ordered once-only header
+captures and hidden frame-owned state delegated to shared `RexxDoState`.
+Grouping and state-free repetition allocate no DO state. END names compare
+authored symbols using shared Classic casing. LEAVE accepts an optional raw
+control name, resolves the innermost matching controlled loop within this
+routine and closes crossed states without end checks/steps or pool-name search.
+ITERATE accepts the same optional raw names, closes only crossed inner states
+and resumes the selected loop's UNTIL/advance/entry path, retaining its owner.
+Shared labels/EXPOSE and complete conditions/TRACE remain later work. The admitted DO
+forms have [focused local qualification](../../research/level-l/compilers/PLAN.md#current-do-proof);
+[named LEAVE proof](../../research/level-l/compilers/PLAN.md#current-leave-proof)
+covers static targets and request-local invalid-target policy.
+[Named ITERATE proof](../../research/level-l/compilers/PLAN.md#current-iterate-proof)
+covers selected-loop end work and default/STRICTC 28.2/28.4 errors.
+INTERPRET remains unimplemented,
+and the current fatal-condition profile remains nonresumable.
+
+Ordinary C text follows the agreed Unicode codepoint model, preserving codes
+0–255 through the fixed Latin-1 ordinal bridge. Modern SAY and BIF behavior is
+the delivery target. Further historical SAY processor/callback/byte-exact edge
+parity is deferred and unclaimed; existing useful controls remain.
 
 For separate G compilation, put `namespace scalelib expose scale` after the
 provider's OPTIONS line and keep only routine declarations. In the consumer,
@@ -3646,6 +4074,144 @@ from `rxfnsl.rxbin`. Grammar-generated programs use only the SDK; hosts that
 compile specifications must explicitly import and link the tool library too.
 There is no dependency from either product into the experimental C/G compilers.
 
+`llbinmeta` reads callable contracts independently of the source compilers.
+A callable definition must point to its own procedure and reciprocal public
+export within the same pool. Imported prototypes do not become definitions
+when pools are merged. Genuine duplicate definitions remain ambiguous; private
+callables and malformed procedure/export references are rejected.
+
+`catalog.field(12, attributeName, '', 4)` returns the META_ATTR register index
+as decimal text: `-1` is the unmapped sentinel and `0..2147483647` are mapped
+indices (**CMETA-AC01**). This reads the existing full 64-bit wire field, not a string-pool ID.
+An unsupported index or selected record size returns empty and sets the existing
+`LL_RXBIN_IMPORT` diagnostic; a missing attribute returns empty under the ordinary
+field lookup contract. Fields 1–3 retain name/options/type semantics (**CMETA-AC02**). Register
+views derive from the complete type; no separate view field is inferred.
+
+The independent [metadata attribute fixture](../tests/metadata-attributes.crexx)
+covers these contracts in complementary owning build/VM modes (**CMETA-AC03**).
+
+### Selected callable classification
+
+The locally qualified `llbinmeta` classification increment lets independent
+consumers distinguish an exported procedure from a callable with a hidden
+class/interface owner, using existing RXBIN007 facts. It does not parse source,
+execute provider code or decide a consumer language's allowed ABI.
+
+`catalog.classify(name:.string)->.llbinmeta..callable` selects one real definition
+through the same pool-local procedure and reciprocal public-export checks as
+`lookup`. Imported prototypes are not definitions. New classification matches
+the whole name strictly under the existing metadata identity casing; it does
+not trim or pad names. Identifier bytes follow
+[metadata conformance](../../compiler/docs/metadata_conformance.md#record-envelope-and-responsibilities),
+including non-ASCII bytes and qualified names. Consumer language casing remains
+the consumer's responsibility.
+
+`llbinmeta..validname(name:.string)->.int` is the pure metadata identifier check,
+available without constructing or preparing a catalogue. It returns `1` for a
+nonempty byte spelling whose first byte is not a digit and whose bytes are ASCII
+letters/digits, non-ASCII bytes, `_!?$@#` or dots; otherwise it returns `0`.
+It neither folds nor trims names and does not impose per-component dot rules.
+`catalog.validname` reserves the same name extent against a bounded catalogue's
+work allowance before delegating to this one check. LMC-AC03 covers utility and
+catalogue name checks through the independent name/formal-name controls;
+consumer type and signature rules remain separate.
+
+The owned result adds `kind()->.string` and `owner()->.string`: `procedure` has
+an empty owner; `method` and `factory` name their qualified class/interface.
+An ordinary class method needs no `META_MEMBER`. A real interface default method
+needs the matching `method final` member. Exact `owner.§factory` and
+`owner.§factory.member` identify default and named factories; a factory marker
+without an owning header refuses. A similarly spelled `§factoryish` is not a
+marker. `META_IMPLEMENTS` does not own a callable. Conflicting or multiple
+matching owners refuse rather than choosing a prefix or record order.
+Header/member flag, type and argument fields are checked as valid string
+references without NUL; their language-specific grammar and ABI remain the
+consumer's responsibility. The callable signature comes from its selected
+`META_FUNC`, not a guessed string equivalence with a member declaration.
+The existing four-argument `callable` factory, `lookup` and `field` retain their
+contracts; their kind/owner values are empty. An additional
+`callable.classified(name,result,arguments,flags,kind,owner)` factory constructs
+owned fields, but arbitrary factory fields do not prove catalogue admission.
+
+Classification builds one immutable request-owned locator index. Every locator
+retains its pool and row identity. It associates headers and members only in the
+selected definition's pool, without inferring ownership from a dot count.
+A recoverable matching owner with malformed payload refuses the selected
+classification. A readable owner with unreadable member identity defers an
+owner-scoped error; readable owner/member with unreadable kind defers errors for
+both possible method/factory identities. Wholly unkeyable unrelated ownership
+records remain opaque. Selected errors return a failed callable without poisoning
+unrelated selections. Completed classification outcomes are cached by selected
+real row and pool: either success or a deterministic selected-data failure.
+Arbitrary missing names are not retained.
+The existing `read_image`/`records` helper wrappers invalidate this new index and
+cache before mutating storage; a subsequent rebuild is charged again. Normal
+lazy preparation uses the reference workers directly.
+
+`catalog.bounded(image:reference .binary, bytes:.int, work:.int)` supplies required
+nonnegative allowances. The synchronous input borrow is checked before the one
+owned image copy, and is not retained. Zero is valid and exhausts at the first
+required reservation. `consumed()->.int` and `work()->.int` query counters without
+preparing the catalogue. `consumed` counts reserved logical payload bytes:
+owned image/expanded sections, integer vectors at eight bytes per cell, locator
+and cache payloads, retained text and returned owned fields. It never refunds
+space after failure or release. It is not a resident-memory or VM temporary
+accounting promise. Fixed catalogue control state and its bounded fixed failure
+diagnostic are exempt, so an exhausted allowance can still report failure;
+input-derived text and owned metadata results are charged. The existing
+`catalog(image,budget=16777216)` remains an
+unmetered legacy route; both counters return zero there.
+
+One work unit is a byte scanned, copied, expanded or passed through text
+validation/casing, plus a structural header/record/candidate/link/cache visit or
+index/search comparison. Bulk operations reserve their whole byte extent before
+execution; this does not add a method call per byte. Compressed input and expanded
+output are both charged. Reserved work is not refunded after an early malformed
+input. Checked subtraction precedes every reservation. Preparation/indexing runs
+once; indexed selections and cached results still charge query and owned-copy
+work. No operation rearms the allowance.
+
+Exhaustion is sticky on that bounded catalogue and reports
+`LL_RESOURCE_LIMIT: metadata.bytes` or `metadata.work`; no partial index or
+selection is published. A dead input reference reports
+`LL_RXBIN_IMPORT: image owner is not live`. Envelope failures retain import
+diagnostics. Owned callable results survive source/catalogue expiry. A caller
+can group all selections for one artifact, debit the counters and owned snapshot
+copies from its aggregate allowance, release that catalogue, and pass the
+remaining allowances to the next; no shared mutable quota service is needed.
+
+**LMC-AC01–06 are locally qualified.** The independent
+[metadata classification fixture](../tests/metadata-classify.crexx) and its tiny
+RXAS producers own the behavioral, lifecycle and logical-budget checks;
+actual reader/sort/cache RXAS is part of code review. This establishes the stated
+metadata boundary, not arbitrary provider-code validity or a resident-memory cap.
+
+1. **LMC-AC01:** plain, class, exact factory and interface-default callables
+   classify from the selected real row and pool; prototype/duplicate/owner
+   conflicts refuse; legacy lookup/field/factory results remain unchanged.
+2. **LMC-AC02:** selected malformed/partial ownership refuses, unrelated opaque
+   rows do not poison it, and foreign-pool ownership is never joined. Tiny RXAS
+   producers and scalar record mutations exercise these boundaries.
+3. **LMC-AC03:** strict full names preserve supported identifier bytes and
+   metadata casing; no language-specific Unicode or resolution algorithm is added.
+4. **LMC-AC04:** returned fields own their lifetime, while preparation/indexing
+   and selected-row caching remain bounded and misses do not grow retained state.
+5. **LMC-AC05:** pre-copy input, preparation, index, selection and output-copy
+   reservations exhaust atomically; counters are monotonic/non-triggering;
+   sequential groups passed remaining budgets cannot exceed the aggregate.
+6. **LMC-AC06:** independent B consumers pass in complementary compiler/VM modes;
+   readable RXAS confirms scoped image aliases, no repeated image copies and
+   no new native/VM service or compiler-policy dependency.
+
+Implementation steps: **LMC-STEP01 — complete:** contract and independent
+criteria (AC01–06); **LMC-STEP02 — complete:** factored reader, bounded route,
+classifier and fixtures (AC01–05); **LMC-STEP03 — complete:** complementary
+consumer qualification, actual RXAS review and local dependency delivery
+(AC01–06).
+
+### Callable generation service
+
 ```rexx
 import llgenerate
 import llir
@@ -3658,8 +4224,19 @@ end
 ```
 
 Here source is `.binary`. Formats are `rxas`, `crexx` and `graph`; optional
-arguments are `limits=.lllimits..policy()`, `rxl=0`, and `bytes=67108864`.
+arguments are `limits=.lllimits..policy()`, `rxl=0`, `bytes=67108864`, and a
+trailing optional `lexical=.binary`.
 Queries evaluate once. Output owns its chunks. Failed admission, generation or
 budget checks produce a diagnostic and no partial artifact. The service performs
 no file I/O or printing; the `rxlang` CLI is a consumer. See
 [tool documentation](../README.md) for bootstrap and helpers.
+
+Omit `lexical` for ordinary cold behavior without capsule work. Present empty
+binary opts into cold construction plus `lexical()` output; present owned bytes
+tries reuse of the complete main/outside-comment-shield DFA set. `reused()` is
+1 only on successful checked reuse; graph/error/disabled/cold requests return 0.
+`lexical()` owns its returned bytes and is empty on errors, graph requests or
+unprepared manual builds. Source/parser/policy/output checks always run on the
+current specification. The existing `bytes` cap bounds capsule/key work too;
+oversize/stale/malformed candidates miss without overriding ordinary limits.
+Persisted-byte integrity is the host's responsibility; the wrapper checks SHA256.

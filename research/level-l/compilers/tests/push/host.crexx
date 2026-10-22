@@ -1,0 +1,116 @@
+/* Test-only pushfixture.run exports the compiled source's existing entry0.
+ * The selected queue belongs to B's execution-local repository, not a frame. */
+options levelb
+import rxfnsb
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import pushfixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  checks = 0; failures = 0
+  previous = rxqueue('QUERY')
+  call check(rxqueue('SETX','PUSH-FIXTURE') == '0','select the owned test queue')
+  call check(rxqueue('CLEAR') == '0','clear selected fixture queue')
+  visible = .rexxpool..RexxVariablePool()
+  if argv[0] > 0 then do
+    if argv[1] <> 'late-bare' then return 2
+    say 'PUSH_FATAL|before'
+    returned = invokeFixture(argv[1],reference visible)
+    say 'UNREACHED fatal host'
+    return 1
+  end
+  call check(rxqueue('SETX','PUSH-OTHER') == '0','select a second named queue')
+  call check(rxqueue('CLEAR') == '0','clear second owned queue')
+  call queue 'other untouched'
+  payload = 'aéµμ🙂' || ('00'x as .string) || 'b '
+  call exercise('bare',payload,'',1,0)
+  call exercise('value',payload,payload,1,0)
+  call exercise('value','','',1,0)
+  call exercise('once',payload,payload,1,1)
+  call exercise('private',payload,'nested ' || payload,1,1)
+  call exercise('recursive',payload,payload || '1',2,2,payload || '2')
+  call exercise('branch',payload,payload,1,0)
+  call exercise('contextual',payload,'',0,0)
+  call exercise('dead',payload,'',0,0)
+  call operandExit(payload)
+  call check(rxqueue('QUERY') == 'PUSH-FIXTURE','nested C invocations keep the selected queue')
+  call check(rxqueue('SET','PUSH-OTHER') == '0','return to independent named queue')
+  call check(queued() = 1 & peek() == 'other untouched','PUSH leaves another queue untouched')
+  if queued() = 1 then call check(pull() == 'other untouched','other queue text remains exact')
+  call check(rxqueue('SET',previous) == '0','restore original queue selection')
+  call check(rxqueue('DELETE','PUSH-FIXTURE') == '0' & rxqueue('DELETE','PUSH-OTHER') == '0','remove only owned fixture queues')
+  say 'PUSH_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+exercise: procedure = .void
+  arg mode = .string, payload = .string, first = .string, inserted = .int, calls = .int, second = ''
+  call check(rxqueue('SET','PUSH-FIXTURE') == '0',mode || ': select fixture queue')
+  call check(rxqueue('CLEAR') == '0',mode || ': reset selected queue')
+  call queue 'tail seed'
+  parent = .rexxpool..RexxVariablePool()
+  call parent.setString('SHARED',payload)
+  visible = .rexxpool..RexxVariablePool()
+  call visible.exposeSymbol('SHARED',reference parent)
+  call visible.setString('PAYLOAD',payload); call visible.setString('LOCAL','caller local')
+  returned = invokeFixture(mode,reference visible)
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == '0',mode || ': owned completion')
+  call check(visible.symbolValue('COUNT').asString() == (calls as .string),mode || ': expression or recursive effect count')
+  call check(visible.symbolValue('LOCAL').asString() == 'caller local',mode || ': private local did not leak')
+  expectedshared = payload
+  if mode = 'private' then expectedshared = 'nested ' || payload
+  call check(parent.symbolValue('SHARED').asString() == expectedshared,mode || ': exact shared alias state')
+  if mode = 'private' then call check(visible.symbolValue('RESULT').asString() == 'child local','private call returns its local before cleanup')
+  if mode = 'contextual' then call check(visible.symbolValue('PUSH').asString() == '7' & visible.symbolValue('RESULT').asString() == 'push label','PUSH remains variable and local label')
+  call check(queued() = inserted + 1 & queued() = inserted + 1,mode || ': QUEUED does not consume')
+  if queued() <> inserted + 1 then return
+  if inserted > 0 then call check(peek() == first,mode || ': front insertion preserves exact Unicode/Latin1/NUL/empty')
+  if inserted = 2 then call check(peek(2) == second,mode || ': recursive insertion is LIFO')
+  call check(peek(inserted + 1) == 'tail seed' & queued() = inserted + 1,mode || ': earlier tail and nonconsuming peek')
+  if inserted > 0 then call check(pull() == first,mode || ': consume inserted front')
+  if inserted = 2 then call check(pull() == second,mode || ': consume second inserted front')
+  call check(pull() == 'tail seed' & queued() = 0,mode || ': original tail follows all inserted entries')
+  return
+
+/* EXIT in a private operand ends the program before any insertion. Its
+ * complete result survives private cleanup and the helper's owner expiry. */
+operandExit: procedure = .void
+  arg payload = .string
+  call check(rxqueue('SET','PUSH-FIXTURE') == '0','operand EXIT: select fixture queue')
+  call check(rxqueue('CLEAR') == '0','operand EXIT: reset selected queue')
+  call queue 'tail seed'
+  visible = .rexxpool..RexxVariablePool()
+  call visible.setString('PAYLOAD',payload); call visible.setString('LOCAL','caller local')
+  returned = invokeFixture('operand-exit',reference visible)
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == payload,'operand EXIT: exact owned Unicode/NUL result survives helper expiry')
+  call check(visible.symbolValue('COUNT').asString() == '1','operand EXIT: private operand executes once')
+  call check(visible.symbolValue('LOCAL').asString() == 'caller local','operand EXIT: private local state does not escape')
+  call check(queued() = 1 & peek() == 'tail seed','operand EXIT: insertion and later statements are skipped')
+  call check(pull() == 'tail seed' & queued() = 0,'operand EXIT: original selected queue remains intact')
+  return
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments
+  arg mode = .string, visible_ref = reference .rexxpool..RexxVariablePool
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.appendText(mode)
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,visible_ref,reference config)
+  returned = pushfixture..run(reference context,0)
+  rebound = context.pool(); reboundactivation = context.activation(); reboundconfig = context.config()
+  originalactivation = reference activation; originalconfig = reference config
+  call check(<refvalid>(rebound) & (rebound <refsame> visible_ref),mode || ': restore original live pool binding')
+  call check((reboundactivation <refsame> originalactivation) & (reboundconfig <refsame> originalconfig),mode || ': retain caller context owners')
+  if mode = 'operand-exit' then do
+    call check(activation.programExitRequested(),'operand EXIT: records the live caller program root')
+    call check(activation.hasReturnValue() & activation.returnValue().asString() == returned.returnValue().asString(),'operand EXIT: caller root retains the full result before owner expiry')
+  end
+  return returned
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

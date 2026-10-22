@@ -1,0 +1,5 @@
+/* A foreign controller mutation requires observer scope without source TRACE. */
+options levelc
+call traceprobe.observe
+AFTER = RESULT
+return AFTER

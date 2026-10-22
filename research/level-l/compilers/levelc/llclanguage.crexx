@@ -1,0 +1,29 @@
+/* cREXX License (MIT). Private, worker-local prepared C language owner. */
+options levelb
+namespace llclanguage expose prepared
+import llcgrammar
+import lllanguage
+import llcore
+
+/** One anchored definition per mutable module overlay. Only this initializer
+ * writes the owner. Readers receive weak references and must never mutate or
+ * replace it; source/comment/limit state belongs to their own requests. */
+prepare: initialiser expose _definition _ready
+  _ready = 0
+  _definition = llcgrammar..language()
+  if initialized(_definition) = 0 then return
+  if _definition.backend() <> 'lr1' | _definition.hasparser() = 0 then return
+  scanner = _definition.borrowedscanner('' as .binary,'munch')
+  if scanner.run() <> 0 then return
+  parser = _definition.borrowedparser(.llcore..stream.tokens('' as .binary))
+  status = parser.run()
+  if status <> 0 & status <> 1 then return
+  _ready = 1
+  return
+
+/** Compiler-internal borrow; failed preparation publishes no usable owner.
+ * The owning loaded grammar/module instance is never retargeted. */
+prepared: procedure = reference .lllanguage..definition expose _definition _ready
+  absent = reference .lllanguage..definition
+  if _ready = 0 then return absent
+  return reference _definition

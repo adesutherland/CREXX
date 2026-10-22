@@ -26,7 +26,7 @@ examples = root.parent/'examples/step06'
 backend = build/'research/level-l/compilers/backend'/args.mode
 runtime = work/'runtime'
 runtime.mkdir(exist_ok=True)
-for name in ['library', 'rxfnsc', 'classlib']:
+for name in ['library', 'rxfnsc', 'classlib', 'rxunicode-core']:
     shutil.copyfile(build/'bin'/f'{name}.rxbin', runtime/f'{name}.rxbin')
 shutil.copyfile(backend/'llctarget.rxbin', runtime/'llctarget.rxbin')
 suffix = '.exe' if os.name == 'nt' else ''
@@ -61,7 +61,8 @@ def execute(level, assembly, label, output, failure=False):
     linked = work/(label+'-linked')
     modules = [assembly.with_suffix('.rxbin'), runtime/'library.rxbin']
     if level == 'c':
-        modules += [runtime/'llctarget.rxbin', runtime/'rxfnsc.rxbin']
+        modules += [runtime/'llctarget.rxbin', runtime/'rxfnsc.rxbin',
+                    runtime/'classlib.rxbin', runtime/'rxunicode-core.rxbin']
     run(label+'-link', [tool('rxlink'), '-o', linked, *modules])
     p = run(label+'-run', [tool(args.vm), str(linked)+'.rxbin'],
             (28 if level == 'c' else 5) if failure else 0)

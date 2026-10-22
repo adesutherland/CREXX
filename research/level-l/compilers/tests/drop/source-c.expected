@@ -1,0 +1,36 @@
+keyword=keyword
+keywords=THEN|ELSE
+completed-if=THEN|ELSE
+else-target=A|ELSE
+nested=A|kept
+do-keywords=THEN|ELSE
+inline=A tail
+else joined
+separator joined
+direct=A|B|C|<>
+empty=EMPTY
+tail=ITEMS.A|<>|default
+stem=ITEMS.A|ITEMS.B|ITEMS.C
+numeric-tail=ITEMS.1
+deep=value
+deep-drop=DEEP.part.Tail.last
+indirect-order=KEY|ITEMS.KEY
+retained=lower|upper
+direct-order=KEY|ITEMS.KEY
+retained-again=lower
+mixed-order=KEY|ITEMS.KEY
+mixed-retained=lower
+outer-order=held|NAMES
+capture=NAMES|VICTIM
+compound-carrier=VICTIM
+invalid-words=A|B
+unicode=micro|greek|greek|cjk|deseret
+unicode-drop=micro|Μ|Μ|漢|𐐀
+micro=µ
+unicode-list=µ|Μ
+length=3
+punctuation=!V|?V|_V|@V|#V|$V
+dot=.MN|.RESULT|.RC|.RS|.SIGL
+arg-values=MICRO|GREEK|CJK
+args=µ|Μ|漢|KEEP
+private=parent

@@ -289,6 +289,27 @@ set_tests_properties(binary_global_import_types PROPERTIES
     RUN_SERIAL TRUE
     TIMEOUT 900)
 
+set(_binary_concat_vms)
+set(_binary_concat_prep rxc rxas rxlink rxbvm library)
+if(TARGET rxtvm)
+    list(APPEND _binary_concat_vms -DRXTVM=$<TARGET_FILE:rxtvm>)
+    list(APPEND _binary_concat_prep rxtvm)
+endif()
+add_test(NAME binary_concat_target
+    COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+        -DRXLINK=$<TARGET_FILE:rxlink> -DRXBVM=$<TARGET_FILE:rxbvm>
+        ${_binary_concat_vms}
+        -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_concat_target.crexx
+        -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/golden/run/binary_concat_target.out
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/binary_concat_target_ws
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/binary_concat_target.cmake)
+set_tests_properties(binary_concat_target PROPERTIES
+    LABELS "compiler;binary;regression;optimizer-parity"
+    RUN_SERIAL TRUE TIMEOUT 1800
+    CREXX_PREP_TARGETS "${_binary_concat_prep}")
+
 add_test(NAME binary_storage_selector_dependencies
     COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
@@ -1401,6 +1422,31 @@ add_crexx_compiler_fail_test(reference_source_refvalid_nonref rexx_src/reference
 add_crexx_compiler_fail_test(reference_source_comparison rexx_src/reference_source_comparison_fail.crexx reference_source_comparison_fail.txt)
 add_crexx_compiler_fail_test(reference_source_refsame_nonref rexx_src/reference_source_refsame_nonref_fail.crexx reference_source_refsame_nonref_fail.txt)
 add_crexx_compiler_fail_test(reference_source_refsame_type rexx_src/reference_source_refsame_type_fail.crexx reference_source_refsame_type_fail.txt)
+foreach(_reference_identity_mode IN ITEMS noopt opt)
+    set(_reference_identity_flags)
+    if(_reference_identity_mode STREQUAL "noopt")
+        set(_reference_identity_flags -n)
+    endif()
+    foreach(_reference_identity_failure IN ITEMS distinct variance shape)
+        set(_reference_identity_name "reference_identity_${_reference_identity_failure}")
+        set(_reference_identity_copies)
+        if(_reference_identity_failure STREQUAL "distinct")
+            set(_reference_identity_copies
+                    --copy "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/qualified_namespace_dep_a.crexx"
+                    --copy "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/qualified_namespace_dep_b.crexx")
+        endif()
+        add_test(NAME ${_reference_identity_name}_${_reference_identity_mode}_fail
+                COMMAND crexx_test_driver --expect-fail ${_reference_identity_copies}
+                "${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/${_reference_identity_name}_fail.txt"
+                "${CMAKE_CURRENT_BINARY_DIR}/${_reference_identity_name}_${_reference_identity_mode}_fail.txt"
+                $<TARGET_FILE:rxc> ${_reference_identity_flags}
+                "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${_reference_identity_name}_fail.crexx")
+        set_tests_properties(${_reference_identity_name}_${_reference_identity_mode}_fail PROPERTIES
+                LABELS "reference;compiler;source"
+                TIMEOUT 300
+                CREXX_PREP_TARGETS "rxc;crexx_test_driver")
+    endforeach()
+endforeach()
 add_crexx_compiler_fail_test(eq_levelb rexx_src/eq_levelb_fail.crexx eq_levelb_fail.txt)
 add_crexx_compiler_fail_test(eq_missing_interface rexx_src/eq_missing_interface_fail.crexx eq_missing_interface_fail.txt)
 add_crexx_compiler_fail_test(eq_nonobject rexx_src/eq_nonobject_fail.crexx eq_nonobject_fail.txt)
@@ -1939,6 +1985,8 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
        FIXTURE STREQUAL "reference_source_iterator" OR
        FIXTURE STREQUAL "reference_source_inline_lifetime")
         string(APPEND CONTENT "foreach(op IN ITEMS mkref deref linkref refvalid)\n")
+    elseif(FIXTURE STREQUAL "reference_source_qualified")
+        string(APPEND CONTENT "foreach(op IN ITEMS mkref linkref refvalid refsame)\n")
     elseif(FIXTURE STREQUAL "reference_source_contract")
         string(APPEND CONTENT "foreach(op IN ITEMS mkref deref refvalid refsame)\n")
     else()
@@ -1974,13 +2022,16 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
             LABELS "${LABELS}")
 endfunction()
 
-foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime reference_source_block_lifetime)
+foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime reference_source_block_lifetime reference_source_qualified)
     foreach(_crexx_runner IN ITEMS rxvm)
         foreach(_crexx_mode IN ITEMS noopt opt)
             add_crexx_reference_source_test(${_crexx_reference_fixture} ${_crexx_runner} ${_crexx_mode})
         endforeach()
     endforeach()
 endforeach()
+set_tests_properties(reference_source_qualified_rxvm_noopt reference_source_qualified_rxvm_opt PROPERTIES
+        RUN_SERIAL TRUE TIMEOUT 300
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library")
 
 function(add_crexx_interface_import_run_test NAME MAIN_FILE DEP_FILE MODE)
     get_filename_component(MAIN_BASENAME "${MAIN_FILE}" NAME)
@@ -2517,6 +2568,14 @@ add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualif
 add_crexx_dual_import_run_test(qualified_namespace_import_binary rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx binary)
 add_crexx_interface_import_run_test(optional_binary_import_source rexx_src/optional_binary_import_main.crexx rexx_src/optional_binary_import_dep.crexx source)
 add_crexx_interface_import_run_test(optional_binary_import_binary rexx_src/optional_binary_import_main.crexx rexx_src/optional_binary_import_dep.crexx binary)
+add_crexx_interface_import_run_test(reference_identity_source_import rexx_src/reference_identity_main.crexx rexx_src/reference_identity_dep.crexx source)
+add_crexx_interface_import_run_test(reference_identity_binary_import rexx_src/reference_identity_main.crexx rexx_src/reference_identity_dep.crexx binary)
+set_tests_properties(
+        reference_identity_source_import_run_noopt reference_identity_source_import_run_opt
+        reference_identity_binary_import_run_noopt reference_identity_binary_import_run_opt
+        PROPERTIES LABELS "reference;compiler;source"
+        RUN_SERIAL TRUE TIMEOUT 300
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library")
 add_crexx_isolated_run_test(interface_tracer rexx_src/interface_tracer.crexx)
 add_crexx_isolated_run_test(interface_runtime_dispatch_multi rexx_src/interface_runtime_dispatch_multi.crexx)
 add_crexx_isolated_run_test(interface_method_arg_same_module rexx_src/interface_method_arg_same_module.crexx)

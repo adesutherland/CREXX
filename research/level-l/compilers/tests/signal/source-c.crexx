@@ -1,0 +1,150 @@
+/* One image: static SIGNAL, private state, operand EXIT and reached errors. */
+options levelc
+parse arg MODE
+select
+  when MODE = 'host' then do
+    call PRIVATE 'argument'
+    return RESULT
+  end
+  when MODE = 'exit' then do
+    call EXIT_ROUTE
+    say 'UNREACHED exit caller'
+  end
+  when MODE = 'missing' then signal value MISSING_HELPER()
+  when MODE = 'grouped' then signal value 'dyn_group'
+  when MODE = 'blank' then signal value 'EXACT '
+  when MODE = 'nul' then signal value 'A' || '00'x || 'B'
+  when MODE = 'procedure' then signal TO_PROC
+  otherwise nop
+end
+COUNT = 0
+call FORMS
+say 'forms=' || RESULT
+call UNICODE
+say 'unicode=' || RESULT
+call STRICT
+say 'strict=' || RESULT
+call CONSTANTS
+say 'constants=' || RESULT
+call ARM_TEST
+say 'arm=' || RESULT
+call DUP_TEST
+say 'duplicate=' || RESULT
+call CONTROL
+say 'control=' || RESULT
+if 0 then signal ABSENT_DEAD
+say 'after'
+exit 0
+
+FORMS:
+signal dIrEcT
+DIRECT:
+signal '71756F746564'x
+QUOTED:
+signal value CHOOSE()
+DYNAMIC:
+SEEN = SIGL
+RESERVED = .SIGL
+signal ('implied')
+IMPLIED:
+signal +2
+2:
+signal \0
+1:
+return 'direct|quoted|dynamic|implied|2|1|' || COUNT || '|' || SEEN || '|' || RESERVED
+CHOOSE:
+COUNT = COUNT + 1
+call NESTED
+return 'dYnAmIc'
+NESTED:
+return
+
+UNICODE:
+signal value 'é'
+é:
+return 'first'
+É:
+return 'UNREACHED duplicate Unicode'
+
+STRICT:
+signal value '1.20'
+1.2:
+return '1.2'
+1.20:
+return '1.20'
+
+CONSTANTS:
+signal 7E2
+7E2:
+CONSTANT = '7E2'
+signal 7d
+7d:
+CONSTANT = CONSTANT || '|7d'
+signal .RC
+.RC:
+return CONSTANT || '|.RC'
+700:
+return 'UNREACHED numeric coercion'
+
+ARM_TEST:
+signal ARM_TARGET
+if 0 then ARM_TARGET: ARM_VALUE = 'then'; else ARM_VALUE = 'UNREACHED else'
+return ARM_VALUE
+DUP_TEST:
+signal DUP_ARM
+if 0 then DUP_ARM: return 'then'; else DUP_ARM: return 'UNREACHED duplicate'
+
+CONTROL:
+TICKS = 0
+do OUTER = 1 to 3
+  do INNER = 1 to 3 until TICK()
+    select
+      when 1 then signal CONTROL_DONE
+      otherwise say 'UNREACHED selection'
+    end
+  end
+end
+CONTROL_DONE:
+FRESH = 0
+do 2
+  FRESH = FRESH + 1
+end
+return OUTER || '|' || INNER || '|' || TICKS || '|' || FRESH
+TICK:
+TICKS = TICKS + 1
+return 0
+
+PRIVATE:
+procedure expose COUNT PAYLOAD
+parse arg GIVEN
+LOCAL = 'private'
+signal PRIVATE_TARGET
+PRIVATE_TARGET:
+COUNT = COUNT + 1
+return PAYLOAD || '|' || GIVEN || '|' || LOCAL || '|' || COUNT || '|' || ARG(1)
+
+EXIT_ROUTE:
+procedure expose COUNT PAYLOAD
+LOCAL = 'private exit'
+signal value ESCAPE()
+say 'UNREACHED signal operand'
+return
+ESCAPE:
+COUNT = COUNT + 1
+exit PAYLOAD
+
+MISSING_HELPER:
+COUNT = COUNT + 1
+say 'SIGNAL_ACTUAL|' || COUNT
+return 'missing target'
+TO_PROC:
+procedure
+say 'UNREACHED procedure rearm'
+return
+EXACT:
+return 'UNREACHED padded equality'
+do
+  DYN_GROUP: nop
+end
+DYN_GROUP:
+return 'UNREACHED later eligible duplicate'

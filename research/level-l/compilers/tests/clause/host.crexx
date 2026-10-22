@@ -1,0 +1,43 @@
+/* Own the activation/config/pool through the one compiled clock execution. */
+options levelb
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import clausefixture
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  returned = invokeFixture(argv[1])
+  call check(returned.hasReturnValue() & returned.returnValue().asString() == 'clause-pass','owned clock result survives all fixture owners')
+  say 'CLAUSE_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+invokeFixture: procedure = .rexxactivation..RexxActivationArguments
+  arg pause_command = .string
+  activation = .rexxactivation..RexxActivationArguments()
+  call activation.appendText(pause_command)
+  visible = .rexxpool..RexxVariablePool()
+  call visible.setString('LOCAL','caller local')
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+  returned = clausefixture..run(reference context,0)
+  original = reference visible; rebound = context.pool()
+  original_activation = reference activation; rebound_activation = context.activation()
+  original_config = reference config; rebound_config = context.config()
+  call check(<refvalid>(rebound) & (rebound <refsame> original),'original pool is restored after private clock children')
+  call check((original_activation <refsame> rebound_activation) & (original_config <refsame> rebound_config),'clock execution preserves activation/config identity')
+  call check(visible.symbolValue('LOCAL').asString() == 'caller local','private child does not replace parent local')
+  call check(visible.symbolValue('PAUSES').asString() == '4','exactly four ordinary host commands execute')
+  call check(visible.symbolValue('WHILE_COUNT').asString() == '2' & visible.symbolValue('UNTIL_COUNT').asString() == '2','both finite loop tests run exactly twice')
+  call check(activation.programExitRequested() = 0,'normal clock completion does not request program EXIT')
+  return returned
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

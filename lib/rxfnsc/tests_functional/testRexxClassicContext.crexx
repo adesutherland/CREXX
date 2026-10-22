@@ -1,0 +1,327 @@
+options levelb comments_dash numeric_classic
+import rexxclassiccontext
+import rexxactivation
+import rexxpool
+import rexxclassicconfig
+import rexxvalue
+import rxfnsb
+
+main: procedure = .int
+  errors = 0
+  activation = .rexxactivation..RexxActivationArguments()
+  pool = .rexxpool..RexxVariablePool()
+  config = .rexxclassicconfig..RexxClassicConfig("BYTE")
+  call activation.appendText("caller argument")
+  call pool.setString("answer", "caller value")
+  call config.setTextOtherBlanks("·")
+  activation_owner = reference activation
+  pool_owner = reference pool
+  config_owner = reference config
+
+  -- The factory result moves through a returning frame before any getter use.
+  context = makeContext(activation_owner, pool_owner, config_owner)
+  activation_ref = context.activation()
+  pool_ref = context.pool()
+  config_ref = context.config()
+  errors = errors + check(activation_ref <refsame> activation_owner, "factory borrows activation owner")
+  errors = errors + check(pool_ref <refsame> pool_owner, "factory borrows pool owner")
+  errors = errors + check(config_ref <refsame> config_owner, "factory borrows configuration owner")
+  errors = errors + check(config.isByteProfile(), "bundle keeps caller character profile")
+  errors = errors + check(\pool.unicodeNames(), "bundle keeps caller pool-name policy")
+
+  do
+    current_activation = dereference activation_ref
+    current_pool = dereference pool_ref
+    current_config = dereference config_ref
+    errors = errors + check(current_activation.argument(1).asString() = "caller argument", "getter reads caller activation")
+    errors = errors + check(current_pool.value("answer").asString() = "caller value", "getter reads caller pool")
+    errors = errors + check(current_config.textOtherBlanks() = "·", "getter reads caller configuration")
+    call current_activation.setReturnValue(.rexxvalue..RexxValue("bundle result"))
+    call current_pool.setString("answer", "bundle value")
+    call current_config.setTextOtherBlanks(":")
+  end
+  errors = errors + check(activation.hasReturnValue(), "activation write reaches caller presence")
+  errors = errors + check(activation.returnValue().asString() = "bundle result", "activation write reaches caller value")
+  errors = errors + check(pool.value("answer").asString() = "bundle value", "pool write reaches caller")
+  errors = errors + check(config.textOtherBlanks() = ":", "configuration write reaches caller")
+
+  -- A bundle value copy shares targets, but owns its pool-binding selection.
+  copied = context
+  replacement = .rexxpool..RexxVariablePool(1)
+  call replacement.setString("answer", "replacement")
+  replacement_owner = reference replacement
+  call copied.bindPool(replacement_owner)
+  copied_activation_ref = copied.activation()
+  copied_pool_ref = copied.pool()
+  copied_config_ref = copied.config()
+  original_pool_ref = context.pool()
+  errors = errors + check(copied_activation_ref <refsame> activation_owner, "value copy shares activation")
+  errors = errors + check(copied_config_ref <refsame> config_owner, "value copy shares configuration")
+  errors = errors + check(copied_pool_ref <refsame> replacement_owner, "copy rebind selects replacement")
+  errors = errors + check(original_pool_ref <refsame> pool_owner, "copy rebind leaves original binding")
+  errors = errors + check(pool.value("answer").asString() = "bundle value", "rebind does not copy replacement into old pool")
+  do
+    copied_pool = dereference copied_pool_ref
+    errors = errors + check(copied_pool.value("answer").asString() = "replacement", "rebound getter reads replacement")
+    call copied_pool.setString("answer", "replacement changed")
+  end
+  errors = errors + check(replacement.value("answer").asString() = "replacement changed", "rebound getter writes replacement owner")
+
+  -- Helpers borrow the authoritative bundle, so its rebind remains visible.
+  call rebindContext(reference context, replacement_owner)
+  rebound_pool_ref = context.pool()
+  errors = errors + check(rebound_pool_ref <refsame> replacement_owner, "reference helper rebind reaches caller bundle")
+  errors = errors + check(pool_ref <refsame> pool_owner, "previously returned reference keeps its original target")
+  call context.bindPool(pool_owner)
+  copied_pool_ref = copied.pool()
+  errors = errors + check(copied_pool_ref <refsame> replacement_owner, "original rebind leaves copy binding")
+
+  -- Independent roots must share neither activation, pool nor configuration.
+  other_activation = .rexxactivation..RexxActivationArguments()
+  other_pool = .rexxpool..RexxVariablePool(1)
+  other_config = .rexxclassicconfig..RexxClassicConfig("UTF8")
+  other_context = .rexxclassiccontext..RexxClassicContext(reference other_activation, reference other_pool, reference other_config)
+  call other_activation.appendText("other argument")
+  call other_pool.setString("answer", "other value")
+  call other_config.setTextOtherBlanks("!")
+  other_activation_ref = other_context.activation()
+  other_pool_ref = other_context.pool()
+  other_config_ref = other_context.config()
+  errors = errors + check(\(other_activation_ref <refsame> activation_owner), "roots have independent activation storage")
+  errors = errors + check(\(other_pool_ref <refsame> pool_owner), "roots have independent pool storage")
+  errors = errors + check(\(other_config_ref <refsame> config_owner), "roots have independent configuration storage")
+  do
+    other_borrowed_activation = dereference other_activation_ref
+    other_borrowed_pool = dereference other_pool_ref
+    other_borrowed_config = dereference other_config_ref
+    errors = errors + check(other_borrowed_activation.argument(1).asString() = "other argument", "independent activation observes caller changes")
+    errors = errors + check(other_borrowed_pool.value("answer").asString() = "other value", "independent pool observes caller changes")
+    errors = errors + check(other_borrowed_config.textOtherBlanks() = "!", "independent configuration observes caller changes")
+  end
+  errors = errors + check(activation.argumentCount() = 1, "other root keeps first activation unchanged")
+  errors = errors + check(pool.value("answer").asString() = "bundle value", "other root keeps first pool unchanged")
+  errors = errors + check(config.textOtherBlanks() = ":", "other root keeps first configuration unchanged")
+
+  empty_activation = reference .rexxactivation..RexxActivationArguments
+  empty_pool = reference .rexxpool..RexxVariablePool
+  empty_config = reference .rexxclassicconfig..RexxClassicConfig
+  errors = errors + check(factoryRejects(empty_activation, pool_owner, config_owner), "factory rejects empty activation")
+  errors = errors + check(factoryRejects(activation_owner, empty_pool, config_owner), "factory rejects empty pool")
+  errors = errors + check(factoryRejects(activation_owner, pool_owner, empty_config), "factory rejects empty configuration")
+  errors = errors + check(rebindRejects(reference context, empty_pool), "rebind rejects empty replacement")
+  retained_pool_ref = context.pool()
+  errors = errors + check(retained_pool_ref <refsame> pool_owner, "empty replacement refusal retains binding")
+
+  -- Each context is valid when made; exactly one target dies on owner return.
+  expired_activation = makeExpiredActivation(pool_owner, config_owner)
+  expired_pool = makeExpiredPool(activation_owner, config_owner)
+  expired_config = makeExpiredConfig(activation_owner, pool_owner)
+  errors = errors + check(getterRejects(expired_activation, 1), "activation getter rejects returned-frame target")
+  errors = errors + check(getterRejects(expired_pool, 2), "pool getter rejects returned-frame target")
+  errors = errors + check(getterRejects(expired_config, 3), "configuration getter rejects returned-frame target")
+  live_pool_ref = expired_activation.pool()
+  live_config_ref = expired_pool.config()
+  live_activation_ref = expired_config.activation()
+  errors = errors + check(live_pool_ref <refsame> pool_owner, "expired activation leaves selected live pool usable")
+  errors = errors + check(live_config_ref <refsame> config_owner, "expired pool leaves selected live configuration usable")
+  errors = errors + check(live_activation_ref <refsame> activation_owner, "expired configuration leaves selected live activation usable")
+
+  dead_activation = reference .rexxactivation..RexxActivationArguments
+  dead_pool = reference .rexxpool..RexxVariablePool
+  dead_config = reference .rexxclassicconfig..RexxClassicConfig
+  dead_activation = makeDeadActivationRef()
+  dead_pool = makeDeadPoolRef()
+  dead_config = makeDeadConfigRef()
+  errors = errors + check(<refvalid>(dead_activation) = 0, "returned activation reference is expired")
+  errors = errors + check(<refvalid>(dead_pool) = 0, "returned pool reference is expired")
+  errors = errors + check(<refvalid>(dead_config) = 0, "returned configuration reference is expired")
+  errors = errors + check(factoryRejects(dead_activation, pool_owner, config_owner), "factory rejects expired activation")
+  errors = errors + check(factoryRejects(activation_owner, dead_pool, config_owner), "factory rejects expired pool")
+  errors = errors + check(factoryRejects(activation_owner, pool_owner, dead_config), "factory rejects expired configuration")
+  errors = errors + check(rebindRejects(reference context, dead_pool), "rebind rejects expired replacement")
+  retained_pool_ref = context.pool()
+  errors = errors + check(retained_pool_ref <refsame> pool_owner, "expired replacement refusal retains binding")
+  errors = errors + check(pool.value("answer").asString() = "bundle value", "failed rebind keeps previous pool value")
+  errors = errors + skippedRebind(reference context, empty_pool, pool_owner)
+  errors = errors + skippedRebind(reference context, dead_pool, pool_owner)
+  errors = errors + skippedFactory(empty_activation, pool_owner, config_owner)
+  errors = errors + skippedFactory(activation_owner, empty_pool, config_owner)
+  errors = errors + skippedFactory(activation_owner, pool_owner, empty_config)
+  errors = errors + skippedFactory(activation_owner, pool_owner, dead_config)
+  errors = errors + skippedGetter(expired_activation, 1)
+  errors = errors + skippedGetter(expired_pool, 2)
+  errors = errors + skippedGetter(expired_config, 3)
+  call expired_pool.bindPool(replacement_owner)
+  recovered_pool_ref = expired_pool.pool()
+  errors = errors + check(recovered_pool_ref <refsame> replacement_owner, "valid replacement repairs expired binding")
+
+  -- Live storage does not imply object initialization; the bundle adds no test.
+  uninitialized_activation = .rexxactivation..RexxActivationArguments
+  uninitialized_pool = .rexxpool..RexxVariablePool
+  uninitialized_config = .rexxclassicconfig..RexxClassicConfig
+  uninitialized_context = .rexxclassiccontext..RexxClassicContext(reference uninitialized_activation, reference uninitialized_pool, reference uninitialized_config)
+  uninitialized_activation_ref = uninitialized_context.activation()
+  uninitialized_pool_ref = uninitialized_context.pool()
+  uninitialized_config_ref = uninitialized_context.config()
+  errors = errors + check(<refvalid>(uninitialized_activation_ref), "uninitialized activation storage stays live")
+  errors = errors + check(<refvalid>(uninitialized_pool_ref), "uninitialized pool storage stays live")
+  errors = errors + check(<refvalid>(uninitialized_config_ref), "uninitialized configuration storage stays live")
+  errors = errors + check(useUninitializedRejects(uninitialized_context, 1), "activation retains OBJECT_NOT_INITIALIZED on use")
+  errors = errors + check(useUninitializedRejects(uninitialized_context, 2), "pool retains OBJECT_NOT_INITIALIZED on use")
+  errors = errors + check(useUninitializedRejects(uninitialized_context, 3), "configuration retains OBJECT_NOT_INITIALIZED on use")
+
+  if errors = 0 then say "ok"
+  return errors
+
+makeContext: procedure = .rexxclassiccontext..RexxClassicContext
+  arg activation = reference .rexxactivation..RexxActivationArguments, pool = reference .rexxpool..RexxVariablePool, config = reference .rexxclassicconfig..RexxClassicConfig
+  return .rexxclassiccontext..RexxClassicContext(activation, pool, config)
+
+rebindContext: procedure = .void
+  arg context_ref = reference .rexxclassiccontext..RexxClassicContext, pool = reference .rexxpool..RexxVariablePool
+  context = dereference context_ref
+  call context.bindPool(pool)
+  return
+
+factoryRejects: procedure = .boolean
+  arg activation = reference .rexxactivation..RexxActivationArguments, pool = reference .rexxpool..RexxVariablePool, config = reference .rexxclassicconfig..RexxClassicConfig
+  caught = 0
+  do
+    unexpected = .rexxclassiccontext..RexxClassicContext(activation, pool, config)
+  on signal reference_invalid
+    caught = 1
+  end
+  return caught
+
+getterRejects: procedure = .boolean
+  arg context = .rexxclassiccontext..RexxClassicContext, selected = .int
+  caught = 0
+  do
+    if selected = 1 then unexpected_activation = context.activation()
+    else if selected = 2 then unexpected_pool = context.pool()
+    else unexpected_config = context.config()
+  on signal reference_invalid
+    caught = 1
+  end
+  return caught
+
+rebindRejects: procedure = .boolean
+  arg context_ref = reference .rexxclassiccontext..RexxClassicContext, pool = reference .rexxpool..RexxVariablePool
+  context = dereference context_ref
+  caught = 0
+  do
+    call context.bindPool(pool)
+  on signal reference_invalid
+    caught = 1
+  end
+  return caught
+
+skippedRebind: procedure = .int expose skipped_signals
+  arg context_ref = reference .rexxclassiccontext..RexxClassicContext, replacement = reference .rexxpool..RexxVariablePool, retained = reference .rexxpool..RexxVariablePool
+  skipped_signals = 0
+  context = dereference context_ref
+  signal on reference_invalid call skipInvalid
+  call context.bindPool(replacement)
+  actual = context.pool()
+  signal off reference_invalid
+  errors = check(skipped_signals = 1, "skipped failed rebind raises one signal")
+  return errors + check(actual <refsame> retained, "skipped failed rebind retains previous binding")
+
+skippedFactory: procedure = .int expose skipped_signals
+  arg activation = reference .rexxactivation..RexxActivationArguments, pool = reference .rexxpool..RexxVariablePool, config = reference .rexxclassicconfig..RexxClassicConfig
+  skipped_signals = 0
+  signal on reference_invalid call skipInvalid
+  context = .rexxclassiccontext..RexxClassicContext(activation, pool, config)
+  activation_ref = context.activation()
+  pool_ref = context.pool()
+  config_ref = context.config()
+  signal off reference_invalid
+  errors = check(skipped_signals = 4, "skipped failed factory leaves all three getters unbound")
+  errors = errors + check(<refvalid>(activation_ref) = 0, "skipped failed factory publishes no activation binding")
+  errors = errors + check(<refvalid>(pool_ref) = 0, "skipped failed factory publishes no pool binding")
+  return errors + check(<refvalid>(config_ref) = 0, "skipped failed factory publishes no configuration binding")
+
+skippedGetter: procedure = .int expose skipped_signals
+  arg context = .rexxclassiccontext..RexxClassicContext, selected = .int
+  skipped_signals = 0
+  errors = 0
+  signal on reference_invalid call skipInvalid
+  if selected = 1 then do
+    activation_ref = context.activation()
+    errors = errors + check(<refvalid>(activation_ref) = 0, "skipped activation getter returns empty reference")
+    errors = errors + check(\(activation_ref <refsame> activation_ref), "skipped activation getter returns no expired identity")
+  end
+  else if selected = 2 then do
+    pool_ref = context.pool()
+    errors = errors + check(<refvalid>(pool_ref) = 0, "skipped pool getter returns empty reference")
+    errors = errors + check(\(pool_ref <refsame> pool_ref), "skipped pool getter returns no expired identity")
+  end
+  else do
+    config_ref = context.config()
+    errors = errors + check(<refvalid>(config_ref) = 0, "skipped configuration getter returns empty reference")
+    errors = errors + check(\(config_ref <refsame> config_ref), "skipped configuration getter returns no expired identity")
+  end
+  signal off reference_invalid
+  return errors + check(skipped_signals = 1, "skipped expired getter raises one signal")
+
+skipInvalid: procedure = .signalaction expose skipped_signals
+  arg problem = .signal
+  skipped_signals = skipped_signals + 1
+  return .signalaction.skip()
+
+useUninitializedRejects: procedure = .boolean
+  arg context = .rexxclassiccontext..RexxClassicContext, selected = .int
+  caught = 0
+  do
+    if selected = 1 then do
+      activation_ref = context.activation()
+      activation = dereference activation_ref
+      unexpected_count = activation.argumentCount()
+    end
+    else if selected = 2 then do
+      pool_ref = context.pool()
+      pool = dereference pool_ref
+      unexpected_policy = pool.unicodeNames()
+    end
+    else do
+      config_ref = context.config()
+      config = dereference config_ref
+      unexpected_profile = config.profile()
+    end
+  on signal object_not_initialized
+    caught = 1
+  end
+  return caught
+
+makeExpiredActivation: procedure = .rexxclassiccontext..RexxClassicContext
+  arg pool = reference .rexxpool..RexxVariablePool, config = reference .rexxclassicconfig..RexxClassicConfig
+  local_activation = .rexxactivation..RexxActivationArguments()
+  return .rexxclassiccontext..RexxClassicContext(reference local_activation, pool, config)
+
+makeExpiredPool: procedure = .rexxclassiccontext..RexxClassicContext
+  arg activation = reference .rexxactivation..RexxActivationArguments, config = reference .rexxclassicconfig..RexxClassicConfig
+  local_pool = .rexxpool..RexxVariablePool()
+  return .rexxclassiccontext..RexxClassicContext(activation, reference local_pool, config)
+
+makeExpiredConfig: procedure = .rexxclassiccontext..RexxClassicContext
+  arg activation = reference .rexxactivation..RexxActivationArguments, pool = reference .rexxpool..RexxVariablePool
+  local_config = .rexxclassicconfig..RexxClassicConfig("UTF8")
+  return .rexxclassiccontext..RexxClassicContext(activation, pool, reference local_config)
+
+makeDeadActivationRef: procedure = reference .rexxactivation..RexxActivationArguments
+  local_activation = .rexxactivation..RexxActivationArguments()
+  return reference local_activation
+
+makeDeadPoolRef: procedure = reference .rexxpool..RexxVariablePool
+  local_pool = .rexxpool..RexxVariablePool()
+  return reference local_pool
+
+makeDeadConfigRef: procedure = reference .rexxclassicconfig..RexxClassicConfig
+  local_config = .rexxclassicconfig..RexxClassicConfig("UTF8")
+  return reference local_config
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1

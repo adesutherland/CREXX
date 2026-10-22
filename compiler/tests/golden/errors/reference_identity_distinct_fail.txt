@@ -1,0 +1,3 @@
+Error in reference_identity_distinct_fail.crexx @ 10:17 - #REFERENCE_TYPE_MISMATCH, "(second_ref)"
+Error in reference_identity_distinct_fail.crexx @ 11:6 - #REFERENCE_TYPE_MISMATCH, "first_ref <refsame> second_ref"
+2 error(s) in source file

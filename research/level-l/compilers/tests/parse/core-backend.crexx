@@ -1,0 +1,83 @@
+/* cREXX License (MIT). Hand-built PARSE IR, independent of source frontend. */
+options levelb
+import rxfnsb
+import llir
+import llcir
+import llcrxas
+import llcparseprogram
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] < 2 | argv[0] > 3 then return 2
+  kind = 'ARG'; if argv[0] = 3 then kind = argv[3]
+  if wordpos(kind,'ARG LINEIN SOURCE') = 0 then return 2
+  statement = 'parse ' || lower(kind) || ' x'
+  source = statement as .binary; statements = 1
+  if kind = 'LINEIN' then do
+    source = (statement || ('0A'x as .string) || 'parse linein y') as .binary
+    statements = 2
+  end
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  file = builder.source('core-parse-c',source); origin = file.origin(0,length(statement),'exact')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  call fn.exportas('parsecore.run')
+  ignored = fn.argument(contract.type('crexx.c.context'))
+  ignored = fn.argument(contract.type('crexx.g.int64')); block = fn.block('entry')
+  context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+  generated = builder.synthetic('test-only PARSE unit entry')
+  call block.store(context_slot,block.readarg(1,generated),generated)
+  block = entrybody(fn,contract,block,context_slot,generated)
+  context = block.load(context_slot,origin)
+  operation = .llir..opdraft; acquired = .llir..opview; executed = .llir..opview
+  loaded = .llir..opview; said = .llir..opview; absent = .llir..opview
+  integer = .llir..intcodec(); ordinal = '0'; if kind = 'ARG' then ordinal = '1'
+  do i = 1 to statements
+    first = (i - 1) * (length(statement) + 1); last = first + length(statement)
+    origin = file.origin(first,last,'exact'); target = 'x'; if i = 2 then target = 'y'
+    packet = .llcparseprogram..builder('core-parse-c',source,1,0,last - 1,last,first + 1)
+    call packet.target(target,last - 1,last); program = packet.bytes()
+    if packet.error() <> '' then do; say packet.error(); return 1; end
+    operation = block.operation(contract.operation('crexx.c.parse.source'),origin)
+    call operation.input('context',context); call operation.attribute('kind',kind as .binary)
+    call operation.attribute('ordinal',integer.parse(ordinal)); acquired = operation.finish()
+    operation = block.operation(contract.operation('crexx.c.parse.execute'),origin)
+    call operation.input('context',context); call operation.input('source',acquired.result())
+    call operation.attribute('program',program); executed = operation.finish()
+  end
+  if kind <> 'LINEIN' then do
+    operation = block.operation(contract.operation('crexx.c.load'),origin)
+    call operation.input('context',context); call operation.attribute('name','x' as .binary)
+    loaded = operation.finish()
+    operation = block.operation(contract.operation('crexx.c.say'),origin)
+    call operation.input('value',loaded.result()); said = operation.finish()
+  end
+  operation = block.operation(contract.operation('crexx.c.return.absent'),origin)
+  absent = operation.finish(); call block.returnvalue(absent.result(),origin)
+  graph = builder.finish()
+  if graph.error() <> '' then do; say graph.error(); return 1; end
+  saved = graph.binary()
+  selected = .llcrxas..compilation(graph,argv[1]); output = selected.output()
+  if selected.status() <> 0 then do; say selected.error(); return 1; end
+  if bin2x(saved) <> bin2x(graph.binary()) then return 1
+  if writebinary(argv[2],output.text() as .binary) <> output.bytes() then return 1
+  return 0
+
+/* Test-only canonical C unit entry. The caller declares both arguments before
+ * creating setup and binds argument 1 to the canonical context slot. Keep slot
+ * reads in a separate dispatch block so local forwarding preserves them. */
+entrybody: procedure = .llir..block
+  arg fn = .llir..function, contract = .llir..contract, setup = .llir..block, context = .llir..slot, at = .llir..origin
+  entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  call setup.store(entry,setup.readarg(2,at),at)
+  dispatch = fn.block('dispatch.0'); body = fn.block('source.body'); invalid = fn.block('entry.invalid')
+  call setup.jump(dispatch,at)
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),at)
+  call draft.input('context',dispatch.load(context,at)); call draft.input('entry',dispatch.load(entry,at))
+  integer = .llir..intcodec()
+  call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  operation = draft.finish(); call dispatch.branch(operation.result(),body,invalid,at)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),at); operation = draft.finish()
+  draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
+  call invalid.returnvalue(operation.result(),at)
+  return body

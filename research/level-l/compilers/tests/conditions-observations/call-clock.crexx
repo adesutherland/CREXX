@@ -1,0 +1,25 @@
+/* Existing native clock fixtures predate delayed C22 checkpoints. This one
+ * source covers only parent clause sampling across a delayed child handler.
+ */
+options levelc
+HITS = 0
+call SEED
+call on error name CAUGHT
+PAIR = time('L') || '|' || TRIGGER() || '|' || time('L')
+LATER = time('L')
+parse var PAIR FIRST '|' MIDDLE '|' LAST
+say 'CALL_CLOCK|' || (FIRST == LAST) || '|' || (\(HANDLER_FIRST == HANDLER_LAST)) || '|' || (\(FIRST == LATER)) || '|' || HITS || '|' || MIDDLE || '|' || RESULT || '|' || .RESULT
+return
+TRIGGER:
+nop /* QUEUED_CLOCK_ERROR */
+return 'triggered'
+CAUGHT:
+HITS = HITS + 1
+HANDLER_FIRST = time('L')
+START = time('E')
+do while time('E') - START < 0.02
+end
+HANDLER_LAST = time('L')
+return 'ignored'
+SEED:
+return 'prior result'

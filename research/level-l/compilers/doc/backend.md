@@ -29,6 +29,14 @@ budgets, not a combined memory/CPU cap. These are protection limits,
 not throughput promises. Exhaustion fails the request and exposes no partial
 successful output. Register budgets below 16 are invalid.
 
+C additionally appends optional `providers:llcbindings.binding[]` and
+`routine_export:string` after those eight arguments. Bindings select prebuilt
+ordinary void/frame exports; routine output supplies one such wrapper. Empty
+defaults avoid provider work. The request anchors checked selections before
+borrowed frontend/backend work, including a `graph()`-first request. See the
+[static-provider contract](architecture.md#call3-static-provider-contract) and
+[CLI guide](../../../../langtools/doc/user-guide.md#compiling-cg-source-to-rxas).
+
 `status`, `error`, `offset`, `diagnostic` and `output` evaluate the request once.
 `graph` retains frontend inspection; `emissiongraph` evaluates the request and
 returns the graph selected for emission. Query successful status before using
@@ -53,45 +61,87 @@ implicitly grant it RXAS semantics.
 | Structure | Contents and purpose | Validation |
 |---|---|---|
 | Source IR | Existing immutable Level L function/block/value/slot/origin records | Frozen module verification, entry/function ABI, language family, supported version, canonical extension shapes |
-| Register maps | Integer arrays indexed by IR slot ID and value ID | Every function gets a fresh frame; all emitted register operands checked against its bound |
+| Virtual cell maps | Integer arrays indexed by IR slot ID and value ID | Function-local identities; C entry-bound context aliases share a checked cell |
 | Call window | Count followed by contiguous argument registers, outside every live slot/value | Maximum call arity measured before selection; result and arguments are disjoint |
-| Selected instruction | Mnemonic, final ordered operand text and origin ID | Constructed only by fixed selectors, checked registers/labels/call names and exact literal quoting |
+| Selected instruction | Typed virtual operands, canonical opcode/effects/components/signals and origin ID | Optional `llrxas.program` admits records before assignment, including helper/window/cleanup and TRACE uses |
+| Assignment | Whole cells, scalar intervals, unique owners and fixed/window constraints | Independent map/interference check, mapped frame budget, atomic rendering |
 | Import cache | Package catalogs and checked callable signatures | B-only RXBIN007 reader, result/arity/type/optional checks and per-position presence masks |
+| Classic DO facts | Function-local text keys, finite phase/owner stacks and hidden strong state registers | C-owned original/final protocol checks; no escaping state value or SDK lifetime rule |
 | Output | Level L writer sections and owned origin-tagged chunks | Per-section and total byte budgets, finish/stream error checks |
 
-Selection allocates stable value locations, runs the selector without output
-to determine scratch/call needs, then emits blocks in stored order. This refines the review's
-proposed virtual target records: the source IR itself remains the virtual
-representation, so there is no second set of mutable virtual-value records.
-Selected records already contain checked physical operands. No register reuse,
-liveness allocation, block rewriting or IR optimisation occurs here.
+Selection numbers virtual cells, runs the selector without output to determine
+scratch/call needs, then records selected operations in stored block order.
+The optional [Level L RXAS service](../../../../langtools/doc/rxas-design.md)
+immediately admits typed operand fields and retains exact literal spans. It
+assigns physical cells only after all selected helper work and observations are
+visible. A request's register budget applies to that physical result; virtual
+storage/work has separate finite bounds. This construction path also applies
+when semantic IR optimization is off.
 
 `r0` is reserved. Slots come first, then each operation's result. Scratch storage
 is added only when selection uses it; Classic also retains its diagnostic
 location. A separate call window includes the argument-count register and the
 largest selected call's operands. The same selector is used for planning and
 emission, including hidden conversions; Classic's cold failure-message call
-requires two arguments. Main's wrapper uses two registers for G and six for C.
-The public minimum register-budget argument remains 16. No liveness reuse is
-introduced. Jumps to the next emitted block fall through, retaining its label
+requires two arguments. Main's wrapper uses two registers for G and sixteen for C.
+The public minimum register-budget argument remains 16. Proved plain integer and
+Boolean temporaries can reuse cells within one target block. Inclusive interval
+endpoints keep simultaneous inputs/results distinct. Unknown signals/components,
+addressed or owned storage, cross-label ranges, backedges and exceptional control
+select conservative storage. A pinned cell retains unique identity but can move
+as a whole before execution; ABI-fixed cells retain their index. Initial reuse
+clears stale components without moving an object finalization point. No component
+packing, speculative cross-block reuse or pressure spilling is implemented.
+Jumps to the next emitted block fall through, retaining its label
 and resetting source/context state at that entry.
+Classic counted/controlled DO adds one hidden owner per static key, outside
+IR values and the call window. Owners initialize before fallible setup; helper
+calls borrow them synchronously, and normal/transfer/fatal exits clear them in
+the [approved lifetime order](architecture.md#approved-do-contract).
+Grouping and state-free repetition add no DO owner.
 A local call targets an internal `llfN` label; a block targets `llbN`. Source
 identifiers never become assembler labels. Recursive calls receive independent
 VM frames. G local calls are checked against the callee's exact IR signature;
-all Classic routines use argument/numeric packets and a result-presence packet.
+Classic source units use required `(context, entry)` parameters and return a
+fresh result-presence packet. Internal calls select positive checked entries in
+one shared source body; see the [current C ABI](architecture.md#proposed-procedure-contract).
 
 Supplied arguments are copied into the private window with flag 768; omitted
 optional positions get flag 512 without constructing a placeholder value. The call
 writes a distinct result register. The window is cleared after return. G callee reads test original presence
 before selecting their fallback; sole-use literal defaults emit only on the
 missing branch. Qualified G exports retain optional flags in `.meta`, and
-provider-only files have no synthetic main. Classic
-pool arguments are explicit references: pool loads/stores use links, and adapter
-calls borrow the same activation pool. Numeric and argument packets are value
-snapshots. Callee NUMERIC updates do not modify its caller's state. Each Classic
-PROCEDURE creates its own pool; CALL applies the returned presence packet to
-RESULT and clears RESULT when no value is returned. Expression calls require a
-value. Main forwards VM `-a` arguments as an ordered presence packet.
+provider-only files have no synthetic main. Classic's caller owns fresh
+activation/bundle objects and copies borrowed pool/configuration references into
+temporary call windows. The callee creates a private pool only when PROCEDURE
+executes. Getters resolve live pool bindings through the bundle; receiver
+aliases use the existing swap/restoration and unlink protocol. Argument/result
+packets retain value semantics. Callee NUMERIC updates do not modify its caller's
+activation or VM frame. Each admitted private PROCEDURE has its own pool; CALL
+applies the returned presence packet to RESULT/.RESULT and drops both when no
+value is returned. Authored bare RETURN checks function kind at the callee;
+an expression receiving EOF absence fails44.1 at its invoking target.
+Direct BIFs borrow metadata-checked raw argument vectors synchronously and use
+the existing named entries and checked-error builder; the
+[CALL contract](architecture.md#call-contract) owns the exact interfaces.
+Main forwards VM `-a` arguments as an ordered presence packet.
+
+`rxfnsl-analysis` supplies the neutral indexed graph and structured effect/proof
+services; the C-owned `llceffects` adapter retains C22 context identity and effect
+premises. The existing once-bound entry-context check proves which slots/loads
+denote argument 1. Those aliases share one cell, so redundant load/store copies
+and result registers are absent even with semantic optimization off. Pool,
+numeric, handler and callback mutation changes the context's contents without
+rebinding its identity. It does not authorize pool-value caching or eliminate
+activation/configuration, condition and cleanup work. CPROC/SIGNAL/DO/CLAUSE keep
+their existing semantic proof ownership and ordering, including conditional R.
+
+Both selectors consume per-function block/slot/operation indices rather than
+repeated whole-module membership scans. C loop/command cleanup lists preserve
+their prior order through indexed function membership. Shared runtime algorithms
+and native C remain unchanged. Parsing/frontends depend only on core L; optional
+analysis/RXAS packages enter at their first actual host consumer. Static C target
+images contain the existing runtime without either package or a compiler.
 
 ## Semantics and literals
 
@@ -119,12 +169,14 @@ backend a fresh destination begins at zero. No claim of checked arithmetic
 exceptions is inferred from an ignored VM signal.
 
 Classic operations call the B-written `llctarget` adapter and existing Classic
-runtime. The adapter installs the explicit DIGITS/FUZZ/FORM snapshot in its call
-frame and uses the checked Classic expression/BIF helpers. Exact source literal
+runtime. The executing C frame selects Classic numeric standard and installs
+validated DIGITS/FUZZ/FORM at entry and after successful NUMERIC. Temporary
+expression/BIF helper frames inherit those settings and borrow the context. Exact source literal
 spelling, pool keys, unset reads, UTF-8 comparison policy, eager logical operands,
 ARG uppercase/presence, numeric changes and Classic error codes remain distinct
-from G. ARG preserves surrounding blanks. The target `rxfnsc` package still has
-G prerequisites; that dependency does not enter the compiler host.
+from G. ARG preserves surrounding blanks. The static target links the standalone
+B Unicode core, class library and Classic runtime; no G aggregate or compiler
+dependency enters that target closure.
 
 The backend independently recreates the supported semantic contract. It checks
 extension field names/types/arity and rejects another language's operations or
@@ -153,9 +205,15 @@ so they cannot inherit the preceding routine's location. The current VM printer
 may display that empty source anchor as `:0:0`; it is not an authored location.
 Improving that presentation is separate from this B-only repair.
 
-The IR has no real authored clause association yet. Source records therefore
-use clause ID zero rather than pretending origin IDs are clause IDs. Full clause
-grouping and TRACE-event fidelity remain open. The backend suppresses identical
+General IR origins and the G frontend do not imply an authored clause identity;
+their records retain clause ID zero. C's admitted clause-begin protocol supplies
+actual statement-head identities. TRACE-capable C units retain these boundaries
+as source metadata even when the clock proof erases executable begin work; TRACE
+does not introduce DATE/TIME sampling. Retained scalar events name live produced
+RexxValues, and the private handler reads the interrupted frame directly through
+the shared B controller. The approved partial coverage and differences belong
+to the [practical conformance profile](levelc-conformance.md#practical-trace-target).
+The backend suppresses identical
 straight-path anchors and location writes, but resets its emission state at
 block entries because control-flow predecessors can leave different dynamic
 location state. Different expressions on one line can still need separate
@@ -169,9 +227,9 @@ sources. Module plus local ID is the linked identity, not basename alone. This
 policy concerns compiler source metadata; the assembler/VM can separately show
 physical binary-module names in their diagnostics.
 
-Source lookup scans original bytes for each origin; register/block discovery
-also uses straightforward scans. Large-program indexing remains later work,
-with no performance claim from this correction.
+Source lookup uses request-owned source indexes. Function block/slot/operation
+and cleanup-owner membership is indexed once; this does not claim every compiler
+pass is linear or establish a performance verdict.
 
 Keep debug metadata when linking (`rxlink -o ...`, without `-s`) for runtime
 source reporting. G direct failures use the VM's original source metadata.
@@ -180,21 +238,13 @@ has unwound, so its existing function-level fatal handler still needs one
 location field. The field names an authored expression, or explicitly describes
 generated work/routine entry; it is not the original fault address.
 
-The handler catches only CLASSIC_SYNTAX, DIVISION_BY_ZERO, CONVERSION_ERROR and
-INVALID_ARGUMENTS. Small per-name entry labels select a literal relay; one
-shared handler disables those catches and calls B `llctarget.failuremessage`
-to format the retained context. That helper only returns text. The generated
-handler uses `signalorigin` with the original VM-bound event, preserving the
-original fault module/address, signal name and nonzero status. It does not
-re-raise an ordinary signal at the formatting helper. Original error text is
-retained after the authored-context prefix. Ignored overflow/lost-digits policy
-is unchanged.
-
-This is the existing standalone string-message fatal profile, not general
-object-payload propagation or complete authored condition trapping. The
-[current plan](../PLAN.md) and PLAN.md's CP criteria retain
-full trapping, clause grouping, stack walking and INTERPRET lifetime as later
-work. No new public condition object, IR format or VM API is introduced.
+The current [condition/observation profile](levelc-conformance.md) owns the
+configured producers, typed payload/origin transport, authored SIGNAL and delayed
+CALL handlers, clause checkpoints and cleanup. Fatal formatting retains the
+original event and authored context. Default unhandled C events remain
+nonresumable; wider host producers/platforms and INTERPRET keep their named
+qualification gates. Allocation preserves these contracts and changes no public
+condition object, IR format or VM API.
 
 Compile-time failures distinguish source syntax/type/profile diagnostics from
 IR lowering, import, output and limit failures. Runtime failures stay runtime

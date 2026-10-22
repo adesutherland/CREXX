@@ -4,13 +4,20 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import tempfile
 import uuid
 
+def bytecode_module(value):
+    if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_-]*', value):
+        raise argparse.ArgumentTypeError('expected a bytecode module name without a path or extension')
+    return value
+
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--build', required=True, type=Path)
 parser.add_argument('--cmake', default='cmake')
+parser.add_argument('--expect-bytecode', action='append', type=bytecode_module, default=[])
 args = parser.parse_args()
 build = args.build.resolve()
 name = 'test_obsolete_' + uuid.uuid4().hex
@@ -35,6 +42,12 @@ try:
                 assert (prefix/'bin'/command).exists() or (prefix/'bin'/f'{command}.exe').exists(), command
             for module in ('library', 'classlib', 'classlib_native', 'rxfnsc', 'rxfnsg', 'rxfnsl', 'rxlanglib'):
                 assert (prefix/'bin'/f'{module}.rxbin').is_file(), module
+            for module in args.expect_bytecode:
+                original = build/'bin'/f'{module}.rxbin'
+                installed = prefix/'bin'/f'{module}.rxbin'
+                assert original.is_file(), 'selected bytecode was not built: ' + module
+                assert installed.is_file(), 'selected bytecode was not installed: ' + module
+                assert installed.read_bytes() == original.read_bytes(), 'installed bytecode differs: ' + module
             for provider in ('rxcstream', 'rxconsole', 'rxfloat'):
                 assert any((prefix/'bin/providers'/f'{provider}{ext}').is_file() for ext in ('.a','.lib')), provider
             assert (prefix/'bin/rxprecomp.rxplugin').is_file(), 'preprocessor provider'

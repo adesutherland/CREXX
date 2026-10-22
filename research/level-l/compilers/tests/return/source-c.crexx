@@ -1,0 +1,72 @@
+/* Independent RETURN source, continuation and owned-result controls. */
+options levelc comments_dash
+parse arg MODE, VALUE
+SHARED = 'root'
+COUNT = 0
+if MODE = 'status' then return VALUE
+if MODE = 'empty' then return ''
+if MODE = 'absent' then return
+if MODE = 'é' then return 'é' || x2c('00') || '雪'
+if MODE = 'private' then return PRIVATE()
+return = 7
+say 'keyword=' || return
+say 'contextual=' || RETURN()
+say 'continued=' || CONTINUED()
+say 'dash=' || DASH()
+say 'gap=' || GAP()
+call PAIR 'a',,
+  'b'
+call OMITTED 'a',;
+say 'parse=' || TEMPLATES('a','b')
+call PRIVATE
+say 'private=' || RESULT || ';shared=' || SHARED || ';count=' || COUNT || ';local=' || LOCAL
+say 'once=' || ONCE() || ';count=' || COUNT
+say 'payload=' || length(PAYLOAD())
+do 1
+  select
+    when 1 then return 0
+    otherwise nop
+  end
+end
+say 'UNREACHED main'
+RETURN:
+return 'label'
+CONTINUED:
+return 1, /* hidden newline inside a Unicode comment: 雪
+             still inside the comment */
+  +2
+DASH:
+return 4, -- the visible physical EOL continues this clause
+  +5
+GAP:
+return 'LENGTH',
+  ('abc')
+PAIR:
+parse arg FIRST, SECOND
+say 'pair=' || FIRST || '/' || SECOND
+return
+OMITTED:
+say 'omitted=' || ARG() || '/' || ARG(2,'E')
+return
+TEMPLATES:
+parse arg FIRST,,
+  SECOND
+return FIRST || '/' || SECOND
+PRIVATE:
+procedure expose SHARED COUNT
+LOCAL = 'secret'
+SHARED = SHARED || ':private'
+do INDEX = 1 to 3
+  select
+    when INDEX = 2 then if 1 then return BUMP() || ':' || LOCAL
+    otherwise nop
+  end
+end
+return 'UNREACHED private'
+ONCE:
+return BUMP()
+BUMP:
+COUNT = COUNT + 1
+return COUNT
+PAYLOAD:
+return 'é' || x2c('00') || '雪'

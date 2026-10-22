@@ -1,0 +1,68 @@
+/* cREXX License (MIT). One C identifier-token admission authority. */
+options levelb
+namespace llcsymbols expose checked
+import rxfnsb
+import llclanguage
+import lllanguage
+import lllimits
+
+/** Request-local lexical admission, independent of DO/PROCEDURE graph facts.
+ * The generated immutable language is borrowed; only policies and tokens are
+ * owned here. Reading error never starts a graph validation traversal. */
+checked: class
+  _limit = .int
+  _budget = .int
+  _work = .int
+  _ready = .int
+  _error = .string
+  _policy = .lllimits..policy
+  *: factory
+    arg bytes = 67108864, work = 1000000
+    _limit = bytes; _budget = work; _work = 0; _ready = 0; _error = ''
+    return
+  error: method = .string
+    return _error
+  symbol: method = .void
+    arg name = .string
+    call recognize(name,0)
+    return
+  /** Callable labels include whole constant symbols, unlike variable names. */
+  label: method = .void
+    arg name = .string
+    call recognize(name,1)
+    return
+  recognize: method = .void
+    arg name = .string, label = .int
+    if _error <> '' then return
+    count = length(name) + 1
+    if count > _budget - _work then do
+      _error = 'LL_COMPILER_LIMIT: DO admission work budget exceeded'; return
+    end
+    _work = _work + count
+    if _ready = 0 then do
+      _policy = .lllimits..policy()
+      ok = _policy.set('source.bytes',min(_limit,2147483647))
+      ok = _policy.set('scan.work',max(10000000,min(_limit,134217727) * 16))
+      if _policy.error() <> '' then do
+        _error = 'LL_COMPILER_LIMIT: ' || _policy.error(); return
+      end
+      _ready = 1
+    end
+    owner = llclanguage..prepared()
+    bytes = name as .binary
+    scan = .lllanguage..request.borrowed(owner,bytes,_policy)
+    lexstatus = scan.lex(0)
+    if lexstatus = 2 | lexstatus = 3 then do
+      _error = 'LL_COMPILER_LIMIT: variable-symbol admission: ' || scan.error(); return
+    end
+    if lexstatus <> 0 then do; _error = 'LL_COMPILER_LOWERING: invalid variable symbol'; return; end
+    tokens = scan.tokens()
+    if tokens.size() <> 1 then do; _error = 'LL_COMPILER_LOWERING: invalid variable symbol'; return; end
+    language = dereference owner
+    kind = tokens.symbol(0); admitted = kind = language.tokenid('identifier')
+    if label then do
+      admitted = admitted | kind = language.tokenid('number') | kind = language.tokenid('typename') | kind = language.tokenid('constantname') | kind = language.tokenid('parsedot')
+      if pos('+',name) > 0 | pos('-',name) > 0 then admitted = 0
+    end
+    if admitted = 0 | tokens.start(0) <> 0 | tokens.finish(1) <> <blen>(bytes) then _error = 'LL_COMPILER_LOWERING: invalid variable symbol'
+    return

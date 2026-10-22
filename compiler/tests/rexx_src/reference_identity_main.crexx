@@ -1,0 +1,34 @@
+options levelb
+import reference_identity_dep
+
+main: procedure = .int
+  value = .reference_identity_dep..Item(4)
+  holder = .reference_identity_dep..Holder(reference value)
+  qualified_ref = holder.borrowed()
+  short_ref = holder.shortBorrowed()
+  if (qualified_ref <refsame> short_ref) = 0 then return 1
+  call setShort(qualified_ref,7)
+  call setQualified(short_ref,9)
+  if value.read() <> 9 then return 2
+  first = reference_identity_dep..shortIdentity(qualified_ref)
+  second = reference_identity_dep..qualifiedIdentity(short_ref)
+  if (first <refsame> second) = 0 then return 3
+  borrowed = dereference first
+  call borrowed.write(12)
+  if value.read() <> 12 then return 4
+  expired = reference_identity_dep..expiredReference()
+  if <refvalid>(expired) then return 5
+  say 'PASS: Imported Reference Identity'
+  return 0
+
+setQualified: procedure = .void
+  arg value = reference .reference_identity_dep..Item, next = .int
+  borrowed = dereference value
+  call borrowed.write(next)
+  return
+
+setShort: procedure = .void
+  arg value = reference .Item, next = .int
+  borrowed = dereference value
+  call borrowed.write(next)
+  return

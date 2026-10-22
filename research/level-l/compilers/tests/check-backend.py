@@ -2,8 +2,8 @@
 """Isolated STEP04 toolchain regression orchestration; no compiler implementation.
 
 Use prebuilt B-only compiler images. Native compilers are only optional,
-independent controls; no source request can fall back to them. Keep all logs and
-command identities in a per-invocation work directory.
+independent controls; no source request can fall back to them. Diagnostics and
+command identities are temporary and removed at the end of each invocation.
 """
 import argparse
 import hashlib
@@ -22,7 +22,22 @@ parser.add_argument('--mode', choices=['opt', 'noopt'], default='noopt')
 parser.add_argument('--vm', default='rxbvm')
 parser.add_argument('--native-controls', action='store_true')
 parser.add_argument('--installed', type=Path)
+parser.add_argument('--case', action='append', help='focused name-level case; skips unrelated controls and uses assembler -n')
+parser.add_argument('--ir', choices=('on', 'off'), default='on', help='research compiler IR optimisation')
+parser.add_argument('--inspect', type=Path, help='copy selected readable RXAS to a temporary review directory')
 args = parser.parse_args()
+source_dir = Path(__file__).resolve().parent / 'backend'
+cases = json.loads((source_dir / 'cases.json').read_text(encoding='utf-8'))
+if args.case:
+    requested = set(args.case)
+    unknown = requested - {case['name'] + '-' + case['level'] for case in cases}
+    if unknown:
+        parser.error('unknown or empty case selection: ' + repr(sorted(unknown)))
+    cases = [case for case in cases if case['name'] + '-' + case['level'] in requested]
+if args.native_controls and args.ir != 'on':
+    parser.error('--ir applies only to the research compiler')
+if args.inspect and not args.case:
+    parser.error('--inspect requires a focused --case selection')
 build = args.build.resolve()
 args.work.mkdir(parents=True, exist_ok=True)
 run_directory = tempfile.TemporaryDirectory(prefix='check-',dir=args.work)
@@ -31,14 +46,13 @@ bin_dir = (args.installed or build / 'bin').resolve()
 ext = '.exe' if os.name == 'nt' else ''
 tool = lambda name: str(bin_dir / (name + ext))
 backend = build / 'research/level-l/compilers/backend' / args.mode
-source_dir = Path(__file__).resolve().parent / 'backend'
 records = []
 start = time.monotonic()
 # Isolated target-contract directory. Host executables cannot discover native
 # compilers through PATH, and do not receive their path as an argument.
 runtime = work / 'runtime'
 runtime.mkdir(exist_ok=True)
-for name in ['library', 'rxfnsc']:
+for name in ['library', 'rxfnsc', 'classlib', 'rxunicode-core']:
     shutil.copyfile(bin_dir / (name + '.rxbin'), runtime / (name + '.rxbin'))
 shutil.copyfile((bin_dir / 'llctarget.rxbin') if args.installed else backend / 'llctarget.rxbin', runtime / 'llctarget.rxbin')
 env = dict(os.environ)
@@ -46,8 +60,11 @@ env['PATH'] = str(work / 'empty-path')
 
 def run(label, command, success=True, isolated=False):
     before = time.monotonic()
+    # The contracts invocation runs the combined source/graph/shape fixture.
+    # Give that serial nested workload a generous hang guard of its own.
+    limit = 1800 if label == 'contracts' else 180
     result = subprocess.run(command, cwd=work, env=env if isolated else None,
-                            capture_output=True, timeout=180)
+                            capture_output=True, timeout=limit)
     (work / (label + '.stdout')).write_bytes(result.stdout)
     (work / (label + '.stderr')).write_bytes(result.stderr)
     records.append(dict(label=label, command=command, status=result.returncode,
@@ -59,12 +76,12 @@ def run(label, command, success=True, isolated=False):
 
 def compiler(level, destination, source):
     if args.installed:
-        return [tool('llrxc-'+level), '-i', str(runtime), '-o', str(destination), str(source)]
+        return [tool('llrxc-'+level), *(['-n'] if args.ir == 'off' else []), '-i', str(runtime), '-o', str(destination), str(source)]
     return [tool(args.vm), str(backend / ('llrxc-'+level+'-linked.rxbin')), '-a',
-            '-i', str(runtime), '-o', str(destination), str(source)]
+            *(['-n'] if args.ir == 'off' else []), '-i', str(runtime), '-o', str(destination), str(source)]
 
 try:
-    if not args.native_controls and not args.installed:
+    if not args.native_controls and not args.installed and not args.case:
         exact = work/'exact.rxas'
         result = run('contracts', [tool(args.vm), str(backend/'backend-tests-linked.rxbin'), '-a', str(runtime), str(exact)], isolated=True)
         assert b'failures=0' in result.stdout, result.stdout
@@ -73,7 +90,6 @@ try:
             run('exact-'+mode+'-link', [tool('rxlink'), '-o', str(work/'exact-linked'), str(work/'exact.rxbin'), str(runtime/'library.rxbin')])
             result = run('exact-'+mode+'-run', [tool(args.vm), str(work/'exact-linked.rxbin')])
             assert result.stdout.replace(b'\r\n', b'\n') == b'A\x00B"\\\xce\xb1\n-inf\n', result.stdout
-    cases = json.loads((source_dir / 'cases.json').read_text())
     for case in cases:
         stem = case['name'] + '-' + case['level']
         source = (source_dir / case['source']).resolve()
@@ -89,16 +105,20 @@ try:
             command = compiler(case['level'], assembly, source)
         run(stem+'-compile', command, isolated=not args.native_controls)
         assert assembly.exists(), stem
+        if args.inspect:
+            args.inspect.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(assembly, args.inspect / f'{stem}-{args.mode}-{args.ir}-{Path(args.vm).name}.rxas')
         # Both assembler modes exercise generated control/call windows. Shared
         # IR optimisation is on; check-optimise.py covers the compiler -n control.
-        for assembler_mode in (['noopt'] if args.native_controls else ['noopt', 'opt']):
+        for assembler_mode in (['noopt'] if args.native_controls or args.case else ['noopt', 'opt']):
             label = stem + '-' + assembler_mode
             command = [tool('rxas')] + (['-n'] if assembler_mode=='noopt' else []) + [str(assembly)]
             run(label+'-assemble', command)
             linked = work / (label+'-linked')
             modules = [str(assembly.with_suffix('.rxbin')), str(runtime/'library.rxbin')]
             if case['level']=='c':
-                modules += [str(runtime/'llctarget.rxbin'), str(runtime/'rxfnsc.rxbin')]
+                modules += [str(runtime/'llctarget.rxbin'), str(runtime/'rxfnsc.rxbin'),
+                            str(runtime/'classlib.rxbin'), str(runtime/'rxunicode-core.rxbin')]
             # Preserve source metadata; -s intentionally strips runtime sources.
             run(label+'-link', [tool('rxlink'), '-o', str(linked)] + modules)
             command = [tool(args.vm), str(linked)+'.rxbin']
@@ -111,12 +131,14 @@ try:
             if case['error']:
                 assert result.returncode != 0 and case['error'].lower() in stderr.lower(), (label, stderr)
                 assert source.name in stderr, (label, 'missing authored source', stderr)
+                if 'error_line' in case:
+                    assert f"{source.name}:{case['error_line']}:" in stderr, (label, 'wrong authored fault line', stderr)
                 if case['name']=='origin-error':
                     assert ':3:' in stderr, (label, 'wrong CRLF source line', stderr)
             else:
                 assert not stderr, (label, stderr)
         print(stem+' PASS', flush=True)
-    if not args.native_controls:
+    if not args.native_controls and not args.case:
         # Every failing command preserves a pre-existing destination, including
         # incomplete source, unsupported features, missing/forged contracts,
         # staging collisions and rename failures. No user-owned file is deleted.

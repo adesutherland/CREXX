@@ -9,7 +9,7 @@ import lltestcompiler
 main: procedure = .int expose checks failures contract artifacts
   arg argv = .string[]
   if argv[0] <> 1 then return 2
-  artifacts = argv[1]; checks = 0; failures = 0; i = .int
+  artifacts = argv[1]; checks = 0; failures = 0; i = .int; operation = .int
   schema = .llir..schema(); call lltestfamilies..registerfamilies(reference schema); contract = schema.finish()
   call fold('int64.add','2','3','5')
   call fold('int64.sub','2','3','-1')
@@ -50,11 +50,30 @@ main: procedure = .int expose checks failures contract artifacts
     call check(raw.status() = 0 & opt.status() = 0, level || ' branch compiles: ' || opt.error())
     before = raw.emissiongraph(); source = opt.graph(); after = opt.emissiongraph()
     call check(source.text() = before.text(),level || ' inspectable original graph')
+    if level = 'c' then do
+      /* This graph has the production required context argument and binding.
+       * Exact branch proof must retain the runtime truth effects and errors. */
+      store = dereference before.storage(); facts = .llirservices..facts(reference before)
+      found = 0
+      do operation = 1 to store.count(3)
+        if store.opname(store.get(3,operation,1)) <> 'crexx.c.truth' then iterate
+        found = found + 1
+        evaluated = llirservices..evaluate(reference before,operation,facts)
+        call check(evaluated.status() = 'keep','contextual C truth has no pure evaluator')
+      end
+      call check(found = 1 & pos('crexx.c.truth',after.dump()) > 0,'literal branch proof retains effectful C truth')
+    end
     call check(after.blocks() < before.blocks(),level || ' dead branch removed')
     call check(oracle(before) = 'yes;' & oracle(after) = 'yes;',level || ' independent source/optimised IR oracle')
     unoptimised = raw.output(); optimised = opt.output()
     call check(optimised.bytes() < unoptimised.bytes(),level || ' smaller RXAS')
-    call check(pos('core.branch',after.dump()) = 0,level || ' no constant branch')
+    remaining = 0; dispatch = 0; storage = dereference after.storage()
+    do operation = 1 to storage.count(3)
+      if storage.opname(storage.get(3,operation,1)) = 'core.branch' then remaining = remaining + 1
+      if storage.opname(storage.get(3,operation,1)) = 'crexx.c.entry.test' then dispatch = dispatch + 1
+    end
+    expectedbranches = 0; if level = 'c' then expectedbranches = 1
+    call check(remaining = expectedbranches & dispatch = expectedbranches,level || ' source constant branch removed; required checked dispatch retained')
     original = before.binary(); change = llirservices..optimise(reference before,1); preserved = change.result()
     call check(change.status() = 'limit' & bin2x(original) = bin2x(preserved.binary()),level || ' atomic opt failure')
     call check(pos('branch.crexx',optimised.text()) > 0,level || ' source metadata retained')
@@ -84,7 +103,8 @@ rejectsink: class implements .llir..sink
 fold: procedure = .void expose contract
   arg name = .string, a = .string, b = .string, expected = .string, status = 'constant', level = 'g'
   draft = .llir..builder(contract); at = draft.synthetic('boundary case')
-  store = dereference contract.data(); operation = contract.operation('crexx.' || level || '.' || name)
+  family = 'crexx.g'; if level = 'c' then family = 'test.classic'
+  store = dereference contract.data(); operation = contract.operation(family || '.' || name)
   descriptor = operation.id()
   /* Descriptors are queried for their declared types, never guessed from name. */
   resulttype = .llir..typeid(contract.identity(),store.fieldtype(descriptor,2,1))
@@ -117,7 +137,11 @@ oracle: procedure = .string
     work = work + 1; code = store.get(3,op,1); next = store.get(3,op,3)
     select code
       when 1 then values[store.result(op)] = store.bits(store.get(8,store.get(3,op,12),2))
-      when 2 then values[store.result(op)] = ''x as .binary
+      when 2 then do
+        bits = ''x as .binary
+        if store.get(3,op,12) = 2 then bits = '0000000000000000'x as .binary
+        values[store.result(op)] = bits
+      end
       when 3 then values[store.result(op)] = slots[store.get(3,op,12)]
       when 4 then slots[store.get(3,op,12)] = values[store.operand(op,1)]
       when 5 then next = store.get(2,store.successor(op,1),2)
@@ -134,6 +158,14 @@ oracle: procedure = .string
             if <at..i64>(0) value = 1 then bits = '01'x as .binary
             values[store.result(op)] = bits
           end
+          when 'crexx.c.entry.test' then do
+            /* This independent oracle invokes main entry 0 with its ineligible
+             * root activation; it never models internal-call eligibility. */
+            tested = graph.operation(op); bits = '00'x as .binary
+            supplied = values[store.operand(op,2)]; wanted = tested.attribute('id')
+            if bincompare(supplied,wanted) = 0 then bits = '01'x as .binary
+            values[store.result(op)] = bits
+          end
           when 'crexx.c.truth' then do
             value = values[store.operand(op,1)]; bits = '00'x as .binary
             if bin2x(value) = '31' then bits = '01'x as .binary
@@ -142,7 +174,6 @@ oracle: procedure = .string
           end
           when 'crexx.c.say' then output = output || (values[store.operand(op,1)] as .string) || ';'
           when 'crexx.g.say' then output = output || (values[store.operand(op,1)] as .string) || ';'
-          when 'crexx.c.pool.new' then nop
           when 'crexx.c.arguments.empty' then nop
           when 'crexx.c.return.absent' then nop
           otherwise return 'UNSUPPORTED:' || name

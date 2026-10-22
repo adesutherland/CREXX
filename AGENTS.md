@@ -1,457 +1,297 @@
 # Repository Instructions
 
-`AGENTS.md` is the canonical repository instruction file. Keep repository-specific agent guidance here. `GEMINI.md` should only refer back to this file so instructions do not drift.
+`AGENTS.md` is the canonical repository instruction file. `GEMINI.md` refers
+here; do not duplicate repository policy elsewhere.
 
-## Project Context
+## Project context
 
-`crexx` is a custom REXX-to-bytecode toolchain with four main CMake-built binaries:
+The CMake toolchain is `rxc` (REXX to RXAS), `rxas` (assembly to bytecode),
+`rxlink` (shared-pool linking) and `rxvm` (register-based execution). `rxc-c`
+owns Classic C; `rxc`/`rxclib` retain typed-language/editor compatibility.
+Common/C code uses `compiler/rxcp_tokens.h`, checked against the typed grammar;
+do not restore generated B parser headers to that closure. Binutils `rxcontract`
+owns metadata reading; `rxcp_contract` adapts it to the common AST. Preserve
+inline enum/payload identities and supported optimisation shapes under
+`compiler/docs/metadata_conformance.md`. C-only typed imports/editor mode need
+the installed owning `rxc`. `rxcc_parse` success precedes backend validation;
+it does not implement INTERPRET.
 
-1. `rxc`: compiler from REXX source to `rxas` assembly
-2. `rxas`: assembler from `rxas` assembly to `rxbin` bytecode
-3. `rxlink`: linker for combining one or more `rxbin` modules into a shared-pool linked image
-4. `rxvm`: interpreter for register-based `rxbin` bytecode
+## Checkout, branches and release status
 
-`rxc-c` is the dedicated Classic Level C compiler over the shared backend.
-`rxc`/`rxclib` retain typed-language and desktop editor compatibility. Common
-and C code use `compiler/rxcp_tokens.h`, checked against the typed grammar's
-generated token table; do not reintroduce generated B parser headers into their
-closure. Metadata fields belong to the independent binutils `rxcontract` reader;
-`rxcp_contract` adapts records to the common AST. Follow
-`compiler/docs/metadata_conformance.md`, preserving original inline enum/payload
-identities and supported optimization shapes. C-only typed source imports and editor
-mode require the installed owning `rxc` tool. `rxcc_parse` is an owned frontend
-API; success precedes backend validation/emission and does not implement INTERPRET.
+Use the existing synchronized `develop` checkout for ordinary development,
+documentation and QA. Reserve existing `hotfix` for urgent repairs promoted to
+`develop`. Reconcile local changes with the current remote branch; preserve
+unrelated work and ask before discarding it. Do not create ordinary topic/QA
+branches or extra worktrees. Qualify the exact `develop` commit to be promoted.
+`master` is the release line: update it from qualified `develop`, then tag it.
 
-## Checkout And Branch Discipline
+Do not infer release status from `develop`. Check tags, `docs/releases/` and
+README/release notes together. Report disagreement; staged beta content is WIP
+until its tag/release exists, then `develop` is WIP for the following beta.
 
-Use the existing `develop` checkout for normal development, documentation,
-release preparation and QA. Use the existing `hotfix` checkout only for an
-urgent fix that is then promoted to `develop`. Keep the selected checkout
-synchronized with its remote branch before editing, and reconcile local changes
-against the current branch rather than leaving an older dirty checkout behind.
+## Core knowledge sources
 
-Do not create temporary topic, release-candidate or QA branches or additional
-worktrees for ordinary repository work. Run pre-release qualification on the
-exact `develop` commit that will be promoted. `master` is the release line:
-update it from the qualified `develop` commit only when cutting a release, then
-tag the resulting `master` commit. Preserve unrelated local work when syncing;
-ask before discarding work unless the maintainer has explicitly directed its
-disposition.
+Consult relevant owning docs before changing or describing syntax, AST,
+validation or runtime behavior. Read only what the task needs:
 
-## Release Branch Status
+- `docs/ai-context/CREXX_ARCHITECTURE.md`, `CREXX_DEBUGGING.md`,
+  `CREXX_LEVELB_AUTHORING.md` and `CREXX_UNICODE.md`.
+- `docs/books/crexx_language_reference/{classes_and_interfaces,data_types,statements}.md`.
+- `docs/ai-context/{RXAS_ASSEMBLER,RXLINK_LINKER,RXVM_INTERPRETER,RXPP_PREPROCESSOR,CREXX_LIBS,CREXX_ASAN_TESTING}.md`.
 
-Do not infer released status from `develop` alone. During the Release 1 beta
-line, `develop` may be staged for the next beta release before the tag exists;
-after a beta tag is cut, `develop` should be described as work in progress for
-the following beta, for example beta 3 WIP after `v1.0.0-beta.2`.
+For Level B `.rexx`/`.crexx` edits, start with the B authoring guide and copy
+referenced repository patterns. For ADDRESS, use the current environment
+object/function protocol and `rxvml_address_register_callback_environment` in
+the VM guide; the old command-only callback is retired. `:name` and `${name}`
+are compiler auto-expose anchors; the environment owns their command meaning.
 
-When making release-status claims, check release tags, `docs/releases/`, and
-the current README/release notes together. If they disagree, say so explicitly
-and avoid calling staged `develop` content "released" until the tag/release
-exists.
+## Development, testing and delivery lifecycle
 
-## Core Knowledge Sources
+1. **Identify the stage first.** Is this a development increment, an agreed
+   integration milestone or final acceptance? State whether broader QA is
+   planned later. A feature or local commit is not full-solution QA. Keep full
+   initiative acceptance and milestone QA open in the existing plan; do not
+   create another plan or per-step run report. Explicit user-required gates
+   remain binding unless the user revises them.
+2. **Select the smallest meaningful development checks.** Build the changed
+   component and necessary prerequisites. Test changed behavior and directly
+   affected contracts, including meaningful negative, state and cleanup cases;
+   use a small integration check when a boundary needs it. Default to one fast
+   normal configuration and one VM. Add modes, native B/G/C comparisons, VMs,
+   platforms, sanitizers, installation or compiler-wide suites only for a
+   specific changed mechanism or unresolved risk. Broader registered regressions
+   may remain for milestone QA/normal CI without execution at every step.
+3. **Budget the whole cost.** In commentary, name the selected scope, expected
+   preparation/check cost and reason; this does not require fresh approval for
+   each feature. Include rebuilds, fixture compilation, review and retesting,
+   considering increment size, complexity, risk and later formal QA. If QA
+   dominates a small change or expands unexpectedly, stop expanding and reduce,
+   batch, reuse or restructure it autonomously; explain why. Seek user scope/
+   budget direction only when substantial expansion remains necessary beyond
+   the agreed scope, with its concrete unresolved risk. Use no arbitrary ratio,
+   weakened oracle or claim of unrun proof.
+4. **Review early, qualify the feature once.** Establish independent expected
+   behavior, review coherent source and first representative RXAS early, batch
+   material fixes, then freeze. Later fixes receive only affected review/checks;
+   formatting and documentation do not trigger code reruns. Reuse unchanged
+   prepared compilers/images and valid results, checking relevant inputs rather
+   than restarting a review/test/review loop. History-only merges do not
+   invalidate results. Document accepted minor TRACE/presentation deviations;
+   fix material wrong values, control, state, ownership or required errors.
+5. **Keep native and source-only risks distinct.** cREXX/B/L edits do not require
+   per-step sanitizer rebuilds/runs merely because native tools execute them.
+   Native memory/ownership changes may justify focused native checks, not an
+   automatic full campaign. Actual first-party ASan/LSan findings retain every
+   worklist, closure and no-suppression rule below.
+6. **Schedule slow tests proportionately.** For new/expanded nested tests, use
+   the smallest representative normal Debug timing needed for safe scheduling,
+   reusing valid timings. Registration does not require running the full
+   aggregate, mode matrix or sanitizer suite. Use generous hang-protection
+   timeouts and serialize costly nested groups; preserve intentional concurrency,
+   explicit timeout/cancellation tests and governed Release criteria. For a
+   timeout-only failure, first check logs for sanitizer/other defects, then
+   replay the unchanged timed-out check once in isolation. If it passes, repair
+   scheduling/timeouts before broader repetition; do not invent a product bug.
+7. **Reserve broad QA for named agreed integration milestones or initiative
+   completion only.** Finishing an instruction, feature or local commit does
+   not create a milestone. At the agreed milestone, deliberately cover the whole
+   compiler, optimisation modes, concrete VMs, platforms, delivery and sanitizers
+   as agreed. Publication needs
+   a current core build (reuse unchanged valid inputs), affected correctness
+   checks and normal automatic CI; a local commit does not invoke publication
+   gates. Release smoke, optimizer parity and CodeQL are normal workflows;
+   local success does not establish hosted success. Do not dispatch or wait for
+   overnight deep/stress/build-graph/full-sanitizer assurance unless expressly
+   required. Production performance verdicts and actual SAN closure keep their
+   separate explicit gates.
+8. **Finish the increment when selected checks pass.** Report input identity,
+   scope, outcomes and limits in conversation, commit authorized paths and move
+   on. Do not add reassurance tests or close unverified initiative criteria.
+   Prepare enduring docs and publication status before pushing; do not wait for
+   normal CI to make a status-only follow-up commit. Repair actual CI failures
+   and link hosted results; never commit merely to mark CI green or archive
+   workflow metadata. Keep plans to contracts, known limits and simple todo/done.
 
-Before changing compiler logic or making claims about syntax, AST shape, validation, or runtime behaviour, consult the relevant project docs instead of guessing:
-
-- `docs/ai-context/CREXX_ARCHITECTURE.md`
-- `docs/ai-context/CREXX_DEBUGGING.md`
-- `docs/ai-context/CREXX_LEVELB_AUTHORING.md`
-- `docs/ai-context/CREXX_UNICODE.md`
-- `docs/books/crexx_language_reference/classes_and_interfaces.md`
-- `docs/books/crexx_language_reference/data_types.md`
-- `docs/books/crexx_language_reference/statements.md`
-- `docs/ai-context/RXAS_ASSEMBLER.md`
-- `docs/ai-context/RXLINK_LINKER.md`
-- `docs/ai-context/RXVM_INTERPRETER.md`
-- `docs/ai-context/RXPP_PREPROCESSOR.md`
-- `docs/ai-context/CREXX_LIBS.md`
-- `docs/ai-context/CREXX_ASAN_TESTING.md`
-
-Read only what is needed for the task, but do not rely on memory for cREXX syntax or compiler internals when the docs cover it.
-
-For tasks that write or edit Level B `.rexx`, start with `docs/ai-context/CREXX_LEVELB_AUTHORING.md` and copy patterns from the referenced repo examples instead of inventing syntax from generic training data.
-
-For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the current protocol reference. The pre-release command-only native callback registration form has been retired; use the current environment object/function protocol and `rxvml_address_register_callback_environment(ctx, name, id, command_cb, function_cb, userdata)`. ADDRESS host-variable anchors (`:name` and `${name}`) are compiler auto-expose syntax only; their command meaning belongs to the selected environment handler.
-
-## Development publication and overnight assurance
-
-For ordinary develop publication, require a successful core product build,
-appropriate focused functional regressions and the relevant normal correctness
-suite. Summarize the exact qualified inputs and outcomes in the current plan.
-Normal automatic workflows provide Release product/smoke, optimizer-parity and
-CodeQL checks; local results do not establish hosted success.
-
-Full hosted deep/comprehensive matrices, build-graph comparisons, stress and
-full Linux ASan/LSan/macOS ASan assurance normally run overnight. Do not dispatch
-or wait for them for routine development, compiler/runtime changes or hotfixes.
-Use failures to drive prompt repairs and, where justified, a targeted repeat.
-Additional pre-publication gates require an explicit scope or concrete risk,
-such as an agreed native-inference change, release candidate or actual sanitizer
-finding. Preserve user-required gates and the SAN closure rules below.
-
-Avoidable testing delay is an engineering cost. Before a long or repeated run,
-name the unresolved risk, why existing results or focused checks are insufficient,
-and why the benefit warrants its time. Reuse valid results when code/test/build
-inputs are unchanged. History-only merges and documentation changes do not
-invalidate them; do not accumulate extra checks merely for more green results.
-
-Prepare current documentation, a concise validation summary and the expected
-publication status before the first substantive push. Once required local gates
-pass, assume normal workflows will succeed for that preparation, while reporting
-only observed passes as verified. Do not hold the task open for CI or leave a
-planned post-CI documentation update.
-
-Never commit or push solely to mark CI passed, replace pending status or archive
-workflow metadata. Hosted run links provide the result; report observed status
-in conversation. If a workflow fails, inspect its logs, diagnose and repair the
-cause, and include necessary documentation corrections with the substantive fix.
-Do not download and retain a second copy of the logs. Required release and
-sanitizer proof still applies. Keep this publication policy here, not in
-component worklists.
-
-The approved sanitizer profile/preparation strategy is owned by
-`docs/SANITIZER-WORKLIST.md` and operated through
-`docs/ai-context/CREXX_ASAN_TESTING.md`. Full, weekly, release and SAN-closure
-proof retains the complete non-measurement scope and original instrumented
-producers. Daily proof is a distinct profile and cannot certify broad assurance.
-Adrian approved scheduled activation after clean platform qualification.
-The master workflow runs at 03:47 UTC daily, selecting the VM-priority profile
-Monday–Saturday and full original-producer assurance on Sundays. Missing history,
-native/build/control changes and changed toolchains never broaden daily scope;
-they invalidate incompatible reuse and require fresh selected execution. Full
-coverage otherwise requires an explicit request or version-tag qualification.
+The sanitizer profile/preparation strategy belongs to `docs/SANITIZER-WORKLIST.md`
+and `docs/ai-context/CREXX_ASAN_TESTING.md`. Daily assurance cannot certify the
+full weekly/release/SAN-closure scope or replace original instrumented producers.
+Those guides own schedules, conservative fallback and runner details.
 
 ## Emitted-code quality
 
-Compiler acceptance includes the quality of emitted code as well as correct
-execution. For changes to lowering, optimisation, register assignment or
-emission, inspect a small representative set of readable RXAS and retain
-checkable code-shape expectations alongside functional regressions. Include
-simple cases where unnecessary machinery is conspicuous. Reuse existing
-evidence where the qualified inputs are unchanged; this is not a requirement
-for a new broad benchmark or release-qualification run.
+Correct execution and emitted-code quality both matter. Use the lifecycle above
+to select a small representative RXAS inspection, including a simple case where
+unnecessary machinery is conspicuous; retain useful structural assertions.
 
-- Compare equivalent inputs with the existing compiler's appropriate B, G and
-  C modes, recording compiler and assembler optimisation separately. An old
-  compiler's excess code or defect is a finding, not an acceptance target.
-  State expected behaviour from the agreed language contract and independent
-  test expectations before using native output as a control. When results
-  disagree, retain a minimal case and classify the cause in the new compiler,
-  native compiler, shared runtime or test oracle; do not reproduce a native
-  bug to obtain parity or weaken an expectation merely to match it.
-- Distinguish source/debug records from executable instructions, and caller
-  code from work hidden in helpers or linked libraries. Inspect calls, copies,
-  frame/register requirements, branches, allocations and numeric/context
-  setup. Raw RXAS line counts alone establish neither speed nor total cost.
-- Preserve truthful source spans, clause identities, generated provenance and
-  defined TRACE/error observations. Do not reduce counts by stripping useful
-  metadata. Avoid mechanically repeated unchanged source records and diagnostic
-  state updates, while preserving mappings at control-flow entries. Emitted
-  source names must use stable logical identities rather than accidentally
-  embedding the compiler host's absolute checkout or temporary paths; retain a
-  deliberate source-resolution/mapping mechanism where needed.
-- Identify which excess comes from a current construction/emission defect,
-  necessary language or ownership semantics, an admitted conservative baseline,
-  or a named later optimisation. Do not defer direct emitter/IR-construction
-  defects merely because an optimiser could hide them. Do not remove call ABI,
-  numeric-context or lifetime operations without proving their obligations.
-- Record unresolved quality findings, owners, closure tests and intended steps
-  in the authoritative plan. Correct output alone does not close them. Use
-  structural assertions rather than brittle register-number snapshots where
-  possible; agree representative resource/performance budgets before claiming
-  replacement readiness, under the existing performance governance.
+- Set independent expectations before native comparisons. Use appropriate
+  dialects/modes only where the changed mechanism needs a control; distinguish
+  compiler and assembler optimisation. Classify disagreement in the new compiler,
+  native compiler, runtime or oracle; never copy a native defect for parity.
+- Separate metadata from instructions and caller work from helpers/libraries.
+  Inspect calls, copies, frames/registers, branches, allocations and context
+  setup. Line counts alone establish neither speed nor total cost.
+- Preserve truthful spans, clause/provenance and TRACE/error observations,
+  including control-entry mappings. Avoid repeated unchanged records/diagnostic
+  updates. Use stable logical source names, with deliberate source resolution,
+  rather than leaking checkout or temporary paths.
+- Fix direct construction/emission defects. Classify necessary ownership/ABI
+  work, admitted conservative costs and named later optimisation. Do not remove
+  numeric, call or lifetime operations without proving their obligations.
+- Give unresolved quality findings owners, closure checks and steps in the
+  authoritative plan. Prefer structural assertions to register snapshots.
+  Replacement readiness needs agreed resource/performance budgets under the
+  applicable governance; ordinary research correctness is not a speed claim.
 
-## Level L compiler delivery priority
+## Level L compiler delivery authority
 
-Adrian narrowed this delivery to Level C only on 19 October 2026.
-`research/level-l/compilers/PLAN.md` owns its coverage and acceptance. New B/G
-features, proper B self-hosting and combined replacement are outside this
-increment; retain their unverified criteria and existing consumer regressions.
-The native B seed builds the B implementation and Level L libraries. New
-compilation requests use Level L parsing, IR, transformation and emission and
-must not delegate to native source compiler services.
+Adrian narrowed this initiative to C on 19 October 2026. Its authoritative plan
+is `research/level-l/compilers/PLAN.md`. New B/G features, proper B self-hosting
+and combined replacement are outside this increment; retain their unverified
+criteria and existing consumer regressions. Native B builds the implementation
+and L libraries; new C requests use L parsing, IR, transformation and emission,
+never native source-compiler services.
 
 Complete C includes agreed instructions/BIFs, host contracts, diagnostics,
-conditions/TRACE and INTERPRET. Design the complete architecture before
-implementation approval; implement INTERPRET last. Review instructions one at
-a time with individual semantics, errors, RXAS quality and shared dependencies.
-Maintain independent Level L tests. Keep compiler policy, generic L services,
-shared B runtime/Unicode libraries and RXAS/VM infrastructure separately owned.
-Adrian approved the C-only plan and shared B Unicode extraction on 19 October
-2026. Preserve G/C interfaces and one algorithm/data owner; exact new public
-API and ISA contracts retain their decision gates.
+conditions/TRACE and, last, INTERPRET. Design the complete architecture first;
+deliver each instruction with necessary dependencies. Native C's implemented
+coverage and approved practical TRACE scope are the ceiling, not a correctness
+oracle. Keep independent L tests and native defects explicit. Compiler policy,
+generic L, shared B runtime/Unicode and RXAS/VM infrastructure have separate
+owners, preserved G/C interfaces and one algorithm/data owner.
 
-Retain language/API/platform decision gates and explicit exclusions. Inspect
-actual RXAS and helper work throughout; native C may be faulty or inefficient.
-The emitted-code rules and Level L research performance exception apply;
-production RXAS/VM performance edits retain their own verdict gate.
+Standing authority covers reviewed local commits for remaining agreed C
+instructions/features, stopping before INTERPRET without further user approval.
+Record exact contracts and obtain internal coordinator review before product
+edits; select reviews/checks through the lifecycle above. Necessary C/L/shared
+runtime and RXAS/VM interfaces are covered within that architecture. It does not
+authorize native C frontend edits, publication, new platform/host scope, a second
+runtime algorithm or unrelated native changes. Preserve explicit API/ISA,
+language and platform decision gates outside this authority; the user remains
+the final authority. Production performance edits retain their verdict gate.
 
-## Working Rules
+## Working and documentation rules
 
-- For tasks that change compiler logic, syntax, scoping, or architecture,
-  present an implementation plan before editing. Include the vision and intended
-  outcomes, numbered checkable acceptance criteria, and numbered implementation
-  steps, following the plan and session-continuity rules below.
-- Pause for user approval before making language-design decisions, syntax changes, or architectural shifts. The user is the final authority on language direction.
-- For complex bugs or crashes, start with a minimal reproducer in cREXX where practical before changing core C code.
-- Run focused tests frequently during compiler work. If a change causes regressions, stop, report them clearly, and distinguish expected from unintended fallout.
-- Once the required full testing has passed, do not repeat it if no code or
-  test/build input has changed. Verify that with the relevant diff or tree
-  hashes and reuse the retained evidence. A history-only merge or
-  documentation-only commit does not by itself invalidate completed testing.
-  Normal automatic publication workflows remain separate checks; use the
-  development-publication policy above to choose gates, and do not infer a
-  requirement to dispatch overnight assurance or repeat unchanged local QA.
-- Before registering or materially expanding an aggregate CTest that launches
-  nested builds, compilers, assemblers, linkers, VMs, or scenario matrices,
-  measure it in isolation in normal Debug. For B/Level L/research source-only
-  slices, use focused normal Debug qualification and reuse valid sanitizer
-  evidence for unchanged native inputs. Do not run or refresh sanitizers per
-  slice; any warranted new sanitizer measurement/qualification is consolidated
-  at final delivery, not an automatic campaign for unchanged native code.
-  Native product changes retain their applicable sanitizer requirements, and
-  actual first-party sanitizer findings retain all SAN obligations below.
-  Set explicit scheduling and generous timeout properties from the available
-  evidence; retain serial scheduling for nested aggregates. Do not inherit an
-  old timeout after materially increasing the workload or let nested aggregates
-  compete in the broad pool when load makes their deadlines nondeterministic.
-- In functional QA, use generous wall-clock limits as hang-protection backstops,
-  not incidental performance requirements. Avoid short nested or whole-workload
-  deadlines that make slower or busy GitHub runners fail correct work. Serialize
-  deadline-sensitive tests where practical, while retaining deliberate
-  concurrency inside ownership and worker tests. Keep explicit timeout or
-  cancellation-contract tests and isolated Release performance criteria intact.
-- When a broad run fails only through explicit CTest timeouts, inspect the log
-  first for sanitizer diagnostics and non-timeout failures, then replay the
-  unchanged timed-out tests once under their declared isolated scheduling. If
-  they pass, classify and repair the QA scheduling or timeout defect before
-  repeating a broad run. Do not create a new product defect or spend another
-  full-suite cycle on a timeout-only result unless the isolated test reproduces
-  a product failure or establishes a distinct mechanism.
-- Keep a discovered finding on the current issue unless it has a distinct
-  reproduced cause, affected component, repair, approval path, or shared
-  cross-cutting impact. Preserve separate reviewable commits where causes do
-  differ, but publish compatible commits together and use one combined
-  exact-head hosted qualification when that avoids redundant long-running
-  gates. Sanitizer worklist requirements below still apply to actual
-  first-party sanitizer findings.
-- Keep documentation current and enduring: architecture, contracts, user guides,
-  active plans/worklists, decisions and concise validation summaries. Update the
-  owning document in place; delete obsolete notes, completed handoffs, duplicate
-  reports and superseded plans after incorporating any lasting information.
-  This applies to every project and future initiative, including research,
-  performance and sanitizer work.
-- Logs, traces, raw samples, generated dumps, run receipts, per-run hash bundles
-  and scratch results are disposable. Use temporary or ignored build locations
-  while actively diagnosing or measuring, then delete them after extracting the
-  useful conclusions. Do not track, commit, archive elsewhere or retain them
-  "for evidence". An ignored directory is not a retention policy. Do not create
-  dated evidence/run directories or commit junk first to preserve it in Git.
-  Existing tracked junk should be removed as part of the relevant cleanup.
-- Record verification in the current owning document: revision or relevant
-  input identity, command, result, scope and limitations. Link to hosted runs
-  when relevant instead of downloading their logs into the tree. Reuse valid
-  results without keeping raw output. Maintained source, regression fixtures,
-  test oracles, example outputs used by tests/docs, licensed data and build
-  inputs remain legitimate assets; give each a named purpose and owner, rather
-  than relabelling an evidence dump as a fixture. Before deletion, check actual
-  references and move any real test input into its owning test/fixture directory.
-- Keep normal successful builds free of compiler warnings and unnecessary generated notices. Remove notices at their emitting source and fix warning/error causes. Do not hide command stdout/stderr, filter diagnostics, or use blanket warning suppression to make a build look clean. Avoid unnecessary generator work on unchanged inputs.
-- For native object providers, use the C RXPA factories/method bindings and
-  checked `SETOBJECTTYPE` service documented in `docs/ai-context/CREXX_LIBS.md`.
-  Do not add duplicate Rexx construction or forwarding classes when those C
-  bindings already implement the contract. Use `tests/rxpa/rxpa_objects.c` and
-  `lib/plugins/llama/typed.h` as executable examples; `rxpa_classdecl` is only a
-  metadata compilation fixture. Preserve Rexx classes that still own behavior.
-  When replacing a shim, remove its obsolete source/build entries and update
-  human and agent guides together; fold lasting conclusions into current docs
-  and delete obsolete notes.
-- Treat library development as an opportunity to validate the complete product
-  toolchain. Library changes should exercise `rxc`, `rxas`, `rxlink`, and
-  `rxvm`, and a library-discovered defect in any of those layers should gain a
-  focused regression test when it is fixed.
-- When correcting an inlining defect, preserve the supported optimized shape
-  by fixing its rewrite, ownership, or copyback mechanics. Retain an ordinary
-  call only when the required equivalence cannot be proved; do not use a broad
-  fail-closed guard as the final fix for a representable inline shape.
-- Treat source documentation tags as first-class code-adjacent assets during refactors. When rewriting or replacing `.crexx` classes, methods, plugins, or library surfaces, preserve existing `/** ... */` RexxDoc blocks and tags such as `@param`, `@parm`, `@return`, `@author`, examples, and notes wherever the documented API still exists. If behaviour, signatures, backing implementation, or return contracts change, update the tags in the same change instead of dropping them. Before large classlib or library refactors, compare relevant doc-tag coverage before and after; if tags are intentionally removed because an API is removed, call that out explicitly in the change summary.
+- Before compiler logic, syntax, scoping or architectural edits, record the
+  implementation plan described below. Ask about unapproved design changes;
+  do not repeat approval requests within existing authority. For complex
+  crashes/bugs, start with a minimal cREXX reproducer where practical.
+- Keep findings together unless a distinct reproduced cause, component, repair,
+  approval path or cross-cutting impact warrants separation. Keep distinct
+  repairs reviewable; compatible publication may share exact-head QA.
+- Keep owning architecture, contracts, guides, known limits and todo/done plans
+  current. Fold lasting conclusions into them; remove obsolete notes, duplicate
+  plans and completed handoffs. Do not retain result/timing tables, run reports,
+  logs, traces, dumps, samples, receipts or hash bundles in Git or another archive.
+  Ignored directories are not retention policies. Report verification in
+  conversation, with hosted links when useful; delete scratch after diagnosis.
+  Preserve maintained fixtures/oracles, referenced examples, licensed data and
+  build inputs with named purposes; check references before deleting assets.
+- Keep successful builds warning-free. Fix emitting sources and causes; do not
+  hide/filter diagnostics or blanket-suppress warnings/notices. Avoid needless
+  generator work on unchanged inputs.
+- Native object providers use C RXPA factories/method bindings and checked
+  `SETOBJECTTYPE` from `CREXX_LIBS.md`; examples are `tests/rxpa/rxpa_objects.c`
+  and `lib/plugins/llama/typed.h`. `rxpa_classdecl` is metadata-only. Do not add
+  duplicate construction/forwarding shims; preserve Rexx behavior owners. Remove
+  replaced shim/build entries and update human/agent guides together.
+- At library integration/delivery milestones, exercise a representative
+  compile/assemble/link/run consumer through `rxc`, `rxas`, `rxlink` and `rxvm`,
+  reusing unchanged prepared stages. Ordinary library edits use the development
+  checks above. A repaired toolchain defect needs a focused permanent regression.
+- Repair supported inlining rewrite/ownership/copyback shapes. Keep an ordinary
+  call only when equivalence cannot be proved; broad fail-closed guards are not
+  the final fix for a representable inline shape.
+- Preserve existing RexxDoc `/** ... */` blocks, parameters, returns, authors,
+  examples and notes when APIs survive. Update changed behavior/signatures in
+  the same edit. Compare tag coverage for large library refactors; explain
+  intentional removal when the API itself is removed.
 
-## Plans, Acceptance and Session Continuity
+## Plans, acceptance and continuity
 
-Every required implementation plan, and every plan for work spanning sessions,
-must contain all three of the following:
+Use the existing authoritative plan, written before implementation, with:
 
-1. **Vision and intended outcomes:** explain the problem, why the work matters,
-   and the complete intended end state from the user's perspective. Preserve
-   the requested capabilities, platforms, integration and delivery requirements,
-   constraints, and any explicitly agreed scope boundaries. A list of immediate
-   implementation tasks is not a substitute for the intended outcome.
-2. **Numbered checkable acceptance criteria:** give each criterion a stable ID
-   such as `AC-01`, an observable pass condition, and the test, inspection or
-   retained evidence needed to verify it. Together the criteria must cover the
-   full intended outcome, including required failure, lifecycle, packaging and
-   platform behavior where applicable. Keep unverified criteria visibly open.
-3. **Numbered implementation steps:** give each step a stable ID such as
-   `STEP-01`, identify the acceptance criteria it serves, and record dependencies
-   and applicable decision gates. Separate phased delivery from overall success.
+1. **Vision/outcomes:** the complete user outcome, capabilities, platforms,
+   integration/delivery, constraints and approved exclusions.
+2. **Stable numbered acceptance criteria:** observable pass conditions and
+   verification methods, covering failure, lifecycle and packaging/platforms
+   where applicable. Keep unverified criteria and later milestone QA open.
+3. **Stable numbered steps:** criteria served, dependencies and decision gates;
+   distinguish an increment/local commit from full initiative completion.
 
-Before implementation, record this plan in the appropriate repository planning
-or worklist file so it survives conversation compaction and session takeover.
-Reuse an existing authoritative plan where one exists; do not create competing
-scope records. Include its path in progress handoffs, and keep criterion/step
-status and evidence references current. Preserve IDs when updating the plan.
+Keep IDs and simple current todo/done status, not run history. Name the plan in
+handoffs; do not create competing scope records. After compaction/takeover, read
+AGENTS and the whole plan's vision/criteria, then reconcile checkout/context.
+Handoffs name accepted decisions, open criteria, blockers and next steps.
+Do not weaken, defer or reinterpret outcomes because of context loss, difficulty,
+time or partial delivery. Only explicit user scope changes alter acceptance;
+completion requires every criterion in the currently agreed scope to be verified.
 
-After compaction or at session takeover, read the repository instructions and
-the authoritative plan, including its vision and every acceptance criterion,
-before continuing implementation. Reconcile completed and outstanding work with
-the current checkout and retained evidence. Handoffs must identify the plan,
-accepted scope decisions, unmet criteria, blockers and next steps; they must not
-reduce the objective to the latest task or the easiest remaining subset.
+## Performance governance
 
-Do not silently remove, weaken, defer or reinterpret outcomes or acceptance
-criteria because of context loss, implementation difficulty, elapsed time or a
-partial implementation. Record explicit user-approved scope changes and their
-effect on acceptance. Until then, preserve the original requirement as open.
-Report phase completion separately from overall completion, and claim the
-overall outcome complete only when every acceptance criterion in the current
-explicitly agreed scope is verified. A scope revision does not itself satisfy
-the criteria that remain.
+Level L research, including `research/level-l/compilers`, has no formal
+performance completion/publication gate (Adrian, 15 October 2026). Do not require
+Release benchmarks, fixed sample counts, AC power or a performance verdict for
+ordinary research increments. Select functional/resource-limit/code-quality
+checks through the lifecycle. Label incidental timings; investigate pathological
+cost without automatically launching a benchmark campaign. This exception does
+not waive actual SAN findings or agreed production-replacement gates.
 
-## Performance Programme
+For performance work, read `performance/AGENTS.md`, `performance/ROADMAP.md`,
+`performance/PERFORMANCE-GOVERNANCE.md` and `performance/DECISIONS.md`. Keep only
+durable decisions/capability limits in HEAD; report measurements in conversation.
+Outside the research exception, an approved production optimisation remains
+provisional: after minimum focused correctness, freeze, build ordinary
+profiling-off Release, make the smallest decisive end-to-end comparison against
+a valid unchanged-input baseline, report it and stop for Adrian's verdict.
+Broad Debug/sanitizer/install proof, harness refinement and closeout follow that
+verdict, not precede it.
 
-### Level L research exception
+## Build and installation constraints
 
-For the Level L research project, including the experimental B-only C/G
-compilers under `research/level-l/compilers`, formal performance testing is not a
-completion or publication requirement. Adrian set this scope on 15 October
-2026. Do not gate research increments on a formal Release benchmark, prescribed
-sample counts, AC power, or a separate performance-verdict approval. Focused
-functional tests, explicit resource-limit checks and inspection of emitted-code
-quality remain required. Lightweight timings or counts may inform development;
-label their conditions and do not present them as formal performance claims.
-Investigate observed pathological cost without automatically launching a
-benchmark campaign. Source-only slices follow the consolidated sanitizer rule
-above; unchanged native inputs do not require a new ASan/LSan campaign. This
-exception does not waive actual sanitizer findings, native product requirements,
-measured CTest scheduling, or the later explicitly agreed production-replacement
-gates.
+- Linux defaults to `$HOME/.local`: `cmake --install cmake-build-release` needs
+  no sudo. Runtime bytecode/plugins/helpers, `libcrexxsaa.so` and static archives
+  intentionally share `bin/`; do not move archives without `crexx -native`
+  packaging proof. ELF `crexxsaa` uses `$ORIGIN` to find its adjacent library.
+- When broad Debug QA is selected, macOS ARM64 uses deliberate CTest parallelism
+  (typically 30); other Unix hosts normally at least 10 subject to resources.
+  Preserve the syntax-highlighter RESOURCE_LOCK and prove parallel stability
+  before removing it. Check memory/swap and concurrent VM-core compilation when
+  Release builds slow down. These notes do not commission a broad run.
+- Preserve shared `rxtvm_core_objects`/`rxbvm_core_objects`; `NTHREADED` belongs
+  only to the latter. `rxvm` is a symlink/copy, not a third core; MSVC builds
+  only rxbvm core. Preserve `rxvm_platform_objects` and the RXPA harness's one
+  `rxvm_platform_notls_objects`. Replacing sharing requires measured Release
+  build impact and appropriate Debug/Release correctness proof.
+- On Windows, do not overlap builds/tests in one tree. After interruption,
+  stop leftover processes before retrying generated artifacts; cleanup-lock
+  failures may need a serial retry. Shared-tree preparation is centrally owned.
 
-For performance-programme work, read `performance/AGENTS.md` and
-`performance/ROADMAP.md` before changing benchmarks, profiling automation,
-compiler/assembler optimisations, VM execution paths, or recorded performance
-evidence. Use `performance/PERFORMANCE-GOVERNANCE.md` for measurement rules and
-`performance/DECISIONS.md` for durable accepted/rejected choices. Keep the
-consolidated plans, durable decisions and current result summaries in HEAD.
-The documentation/output rules above apply; do not preserve raw run bundles.
+## Actual sanitizer findings and diagnostic output
 
-Outside the Level L research exception above, after an approved production performance edit, follow the mandatory first
-Release verdict in `performance/AGENTS.md` before doing broad closeout work.
-Once the minimum focused correctness checks needed for safe measurement pass,
-freeze implementation, build the ordinary profiling-off Release product, run
-the smallest decisive end-to-end comparison against retained valid baseline
-evidence, report it to Adrian, and stop for direction. The implementation
-remains provisional and revertable until that verdict is accepted. Full Debug
-CTest, sanitizer, install/package proof, harness refinement, follow-on PoCs,
-cleanup, and documentation polish come after this decision gate, not before it.
+Every first-party ASan/LSan or maintained sanitizer finding is a repository
+blocker, including independent/pre-existing findings. Before unrelated closeout,
+record `SAN-nnn` in `docs/SANITIZER-WORKLIST.md`: reproducer, concise diagnostic,
+revision, owner/next action and closure check; inspect then delete temporary logs.
+Never substitute a dated note or ownerless deferral.
 
-## Linux Install Notes
+No release/sanitizer-clean claim is allowed with open first-party SAN items.
+Only explicit user assignment of outstanding platform proof to a named release
+QA gate can close a bounded phase; list every open SAN item, repair evidence
+and owner. It does not close/downgrade the item. Closure requires a permanent
+regression, the same focused normal Debug and maintained-sanitizer command,
+and the broad platform gate in `CREXX_ASAN_TESTING.md`. Record unsupported
+capabilities such as Apple LSan and cover them on a supported platform.
 
-- The default CMake install prefix is the user prefix, `$HOME/.local`, so a
-  normal developer install should not require sudo:
-  `cmake --install cmake-build-release`.
-- The release install intentionally places runtime bytecode, plugins, helper
-  tools, `libcrexxsaa.so`, and static archives together under `bin/`. Do not
-  "tidy" installed `.a` files out of `bin` without retesting
-  `crexx -native`; native packaging depends on the installed static libraries
-  and `crexx_native_libs`.
-- On ELF platforms, `crexxsaa` is installed with `$ORIGIN` runpath so it can
-  resolve the adjacent `libcrexxsaa.so` without `LD_LIBRARY_PATH`.
+No first-party suppression, exclusion, supported-platform leak-off wrapper or
+time waiver without explicit user approval; approved exceptions remain open
+release blockers until repaired/requalified. Use `tools/asan-run.sh` and its
+owning guide for sanitizer build/test/status/kill actions; broad hand commands
+are allowed only when debugging/bypassing a broken runner. After sanitizer
+repairs run the focused normal command before the matching maintained command.
+For unattended work, reuse/request runner-prefix approval rather than stalling.
 
-## Build Performance Notes
-
-- Full Debug CTest performs much better with deliberate test-level
-  parallelism. On Adrian's macOS ARM64 development machine, `uname -srm`
-  currently reports `Darwin arm64` and `sysctl -n hw.logicalcpu` reports 10
-  CPUs, but broad validation works best with `ctest --test-dir
-  cmake-build-debug --parallel 30 --output-on-failure` or
-  `CTEST_PARALLEL_LEVEL=30`. The compiler syntax-highlighting tests are
-  serialized with a CTest `RESOURCE_LOCK` because they drive parser-thread
-  tooling; do not remove that lock without proving `ctest --parallel 30` remains
-  stable. On slower or unknown Unix-like hosts, prefer at least `--parallel 10`
-  for full or large CTest sweeps unless memory pressure or platform locking
-  suggests less. Keep focused CTest runs narrow by `-R` as usual.
-- On the 2026-06-17 Linux ARM64 VM, a clean `develop` Release build with
-  `--parallel $(nproc)` used 6 jobs and hit swap while compiling multiple
-  optimized `rxvmintp.c` variants. If Release builds look unexpectedly slow,
-  check memory pressure and the number of concurrent `rxvmintp.c` compiles
-  before assuming CTest or generated bytecode is the bottleneck.
-- The VM core build is intentionally shared through the internal CMake object
-  libraries `rxtvm_core_objects` and `rxbvm_core_objects`. Keep `NTHREADED`
-  confined to the portable `rxbvm` object variant. Product `rxvm` is a
-  compiler-selected symlink/copy target and must not compile a third core;
-  MSVC builds only `rxbvm_core_objects`.
-- VM OS/TLS support is intentionally shared through `rxvm_platform_objects`.
-  That target is compiled with the configured platform TLS backend. The RXPA
-  static-plugin harness VMs use `rxvm_platform_notls_objects` so their
-  historical no-TLS socket behavior remains explicit and is compiled only once.
-- Do not replace the object-library sharing with repeated per-target
-  `rxvmintp.c` or `rxvmsock.c` source lists unless you have measured the
-  Release build impact and validated Debug/Release CTest.
-- On Windows, avoid overlapping build and test invocations in the same build
-  tree. CTest fixtures and generated-runtime targets can rebuild and remove
-  `.rxbin`/`.exe` artifacts while other `ctest`, `ninja`, `cmake`, `rxc`,
-  `rxas`, `rxlink`, or VM processes still have them open, producing transient
-  "file can't be removed and still exist" failures. If a build/test run is
-  interrupted or times out, check for and stop leftover build/test processes
-  before retrying. For generated-runtime cleanup lock failures, retry the
-  relevant target after the processes are gone; use `--parallel 1` for the
-  retry when the lock appears tied to parallel cleanup.
-
-## Debugging Output Discipline
-
-- Treat every first-party ASan, LSan, or maintained sanitizer finding as a
-  repository-level blocker, even when it is independent of the change that
-  exposed it.  Before continuing unrelated closeout work, give the finding a
-  stable `SAN-nnn` entry in `docs/SANITIZER-WORKLIST.md` with its reproducer,
-  concise diagnostic, affected revision, owner/next action, and closure test.
-  Inspect temporary logs, summarize the finding in that entry, then delete the
-  logs. A separate dated note is not a valid disposition.
-- Do not describe a release candidate, release, or cross-platform sanitizer
-  pass as complete or sanitizer-clean while a first-party `SAN-nnn` item is
-  open. A bounded implementation phase may close only when Adrian explicitly
-  assigns the outstanding platform proof to a named later release-QA gate. The
-  phase record must name every open `SAN-nnn`, its current repair evidence and
-  its release-QA owner; the handoff does not close or downgrade the item and
-  does not support a sanitizer-clean or release-ready claim. "Pre-existing"
-  and "independent" identify attribution; they do not lower priority or permit
-  an ownerless deferral.
-- Close a `SAN-nnn` item only after retaining a permanent focused regression,
-  passing the same focused command in normal Debug and the maintained
-  sanitizer build, and completing the broad platform sanitizer gate required
-  by `docs/ai-context/CREXX_ASAN_TESTING.md`.  Unsupported platform facilities
-  such as Apple LeakSanitizer must be recorded as capability limits and covered
-  on a supported platform instead.
-- Do not add a sanitizer suppression, test exclusion, leak-off wrapper on a
-  supported platform, or time-bounded waiver for first-party code without the
-  user's explicit approval.  Any approved exception remains an open,
-  release-blocking `SAN-nnn` item until the underlying defect is repaired and
-  requalified.
-- For ASan/LSan builds or ctests, use `tools/asan-run.sh` and consult
-  `docs/ai-context/CREXX_ASAN_TESTING.md`. Do not hand-run broad sanitizer
-  commands unless the runner is broken or the task is specifically to debug the
-  runner.
-- After a sanitizer-related fix, validate the same focused build/test command
-  against the normal Debug build when it is available, then rerun the same
-  focused command against `cmake-build-debugasan` with the relevant sanitizer
-  options. This separates ordinary command/test breakage from sanitizer-only
-  findings.
-- For unattended sanitizer sessions, request or reuse a saved approval for the
-  `tools/asan-run.sh` command prefix, then keep build/test/status/kill actions
-  inside that runner so the session does not stall on permission prompts.
-- Redirect verbose or unbounded stdout/stderr to a temporary file with `mktemp`;
-  inspect focused slices with `rg`, `sed` or `tail`. This is mandatory for
-  verbose builds, `rxc -d*`, parser/fixed-point traces and syntax-highlighting
-  debug runs. Show only the path and relevant excerpts while diagnosing.
-  Delete task-created logs after recording the useful result in the current
-  plan/worklist; never copy them into source, evidence or archive directories.
+Redirect verbose/unbounded output (builds, `rxc -d*`, parser/fixed-point and
+syntax-highlighting traces) to `mktemp` files, inspect relevant excerpts and
+report conclusions. Do not filter away diagnostics or copy logs into evidence
+archives; delete task-created output after updating lasting contracts, limits
+or active SAN findings in their owning documents.

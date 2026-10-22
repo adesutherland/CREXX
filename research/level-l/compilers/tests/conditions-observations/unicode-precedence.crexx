@@ -1,0 +1,14 @@
+/* Native delayed fixtures lack a quoted Unicode first-label/trace-only case.
+ * The first μ is trace-only; the later callable duplicate cannot replace it.
+ */
+options levelc
+call on error name 'μ'
+nop
+exit 0
+do 1
+μ:
+  say 'UNREACHED trace-only handler'
+end
+μ:
+say 'UNREACHED later duplicate'
+return

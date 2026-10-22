@@ -1,0 +1,62 @@
+/* Direct B caller checks full results/status beyond the process exit byte. */
+options levelb
+import rexxvalue
+import rexxpool
+import rexxactivation
+import rexxclassicconfig
+import rexxclassiccontext
+import returnfixture
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  modes = .string[]; values = .string[]; statuses = .string[]
+  modes[1] = 'status'; values[1] = '7'; statuses[1] = '7'
+  modes[2] = 'status'; values[2] = '-9'; statuses[2] = '-9'
+  modes[3] = 'status'; values[3] = '9223372036854775807'; statuses[3] = values[3]
+  modes[4] = 'status'; values[4] = '-9223372036854775808'; statuses[4] = values[4]
+  modes[5] = 'status'; values[5] = '9223372036854775808'; statuses[5] = '0'
+  modes[6] = 'status'; values[6] = '-9223372036854775809'; statuses[6] = '0'
+  modes[7] = 'status'; values[7] = '1.5'; statuses[7] = '0'
+  modes[8] = 'status'; values[8] = 'text'; statuses[8] = '0'
+  modes[9] = 'empty'; values[9] = ''; statuses[9] = '0'
+  modes[10] = 'absent'; values[10] = ''; statuses[10] = '0'
+  modes[11] = 'é'; values[11] = ''; statuses[11] = '0'
+  modes[12] = 'private'; values[12] = ''; statuses[12] = '0'
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  activation = .rexxactivation..RexxActivationArguments
+  visible = .rexxpool..RexxVariablePool
+  context = .rexxclassiccontext..RexxClassicContext
+  returned = .rexxactivation..RexxActivationArguments
+  original = reference .rexxpool..RexxVariablePool
+  rebound = reference .rexxpool..RexxVariablePool
+  index = .int; expected = .string
+  do index = 1 to modes[0]
+    activation = .rexxactivation..RexxActivationArguments()
+    call activation.appendText(modes[index]); call activation.appendText(values[index])
+    visible = .rexxpool..RexxVariablePool()
+    context = .rexxclassiccontext..RexxClassicContext(reference activation,reference visible,reference config)
+    original = reference visible
+    returned = returnfixture..run(reference context,0)
+    rebound = context.pool()
+    call check(<refvalid>(rebound) & (rebound <refsame> original),'original pool remains live ' || index)
+    call check((returned.programReturnCode() as .string) == statuses[index],'full signed64 status ' || index)
+    call check(returned.hasReturnValue() = (modes[index] <> 'absent'),'presence is independent of empty text ' || index)
+    expected = values[index]
+    if modes[index] = 'é' then expected = 'é' || ('00'x as .string) || '雪'
+    if modes[index] = 'private' then expected = '1:secret'
+    call check(returned.returnValue().asString() == expected,'owned exact result after return ' || index)
+    if modes[index] = 'private' then do
+      call check(visible.symbolValue('SHARED').asString() == 'root:private','EXPOSE write survives private loop return')
+      call check(visible.symbolValue('COUNT').asString() == '1','RETURN expression evaluated exactly once')
+      call check(visible.symbolValue('LOCAL').asString() == 'LOCAL','unexposed local remains private')
+    end
+  end
+  say 'RETURN_HOST|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

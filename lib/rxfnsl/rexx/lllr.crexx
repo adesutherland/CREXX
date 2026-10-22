@@ -507,6 +507,22 @@ tables: class
     return _actions[key]
   grammar: method = .llcfg..productions
     return _cfg
+  /** Scalar queries retain the existing production and grammar authorities. */
+  productionlength: method = .int
+    arg production = .int
+    return _cfg.length(production)
+  productionlhs: method = .int
+    arg production = .int
+    return _cfg.lhs(production)
+  symbolkind: method = .int
+    arg symbol = .int
+    return _cfg.symbolkind(symbol)
+  symbollabel: method = .string
+    arg symbol = .int
+    return _cfg.label(symbol)
+  terminalname: method = .string
+    arg token = .int
+    return _cfg.terminalname(token)
   states: method = .int
     return _count
   canonicalstates: method = .int
@@ -525,6 +541,8 @@ tables: class
 /** Run a previously constructed table, retaining a source-owned derivation tree. */
 parser: class
   _tables = .tables
+  _borrowed = .int
+  _owner = reference .tables
   _input = .llcore..stream
   _tree = .llcore..tree
   _status = .int
@@ -540,17 +558,39 @@ parser: class
   _contexts = .binary
   *: factory
     arg compiled = .tables, input = .llcore..stream, fuel = 1000000
+    _borrowed = 0
+    empty_owner = reference .tables; _owner = empty_owner
     _tables = compiled; _input = input; _tree = .llcore..tree.from_source(input.source())
     _status = 0; _root = 0; _work = 0; _ran = 0; _fuel = fuel; _error = ''; _offset = 0
     _state = 0; _position = 0; _expected = ''
     return
+  /** Borrow prepared tables at a stable, unchanged location in this worker.
+   * The caller keeps the owner alive until its last reader ends. Copies of a
+   * reader retain this weak borrow, never a snapshot of the table payload. */
+  borrowed: factory
+    arg compiled = reference .tables, input = .llcore..stream, fuel = 1000000
+    _borrowed = 1; _owner = compiled
+    _input = input; _tree = .llcore..tree.from_source(input.source())
+    _status = 0; _root = 0; _work = 0; _ran = 0; _fuel = fuel; _error = ''; _offset = 0
+    _state = 0; _position = 0; _expected = ''
+    if tablesalive(_owner) = 0 then do
+      _status = 3; _error = 'LL_BORROW_OWNER: parser requires live initialized tables'
+    end
+    return
   run: method = .int
+    ownerref = reference _tables
+    if _borrowed then do
+      ownerref = _owner
+      if tablesalive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: parser requires live initialized tables'; return _status
+      end
+    end
+    tables = dereference ownerref
     if _ran then return _status
     _ran = 1
-    if _tables.status() <> 0 | _input.error() <> '' then do
-      _status = 3; _error = _tables.error() || _input.error(); return _status
+    if tables.status() <> 0 | _input.error() <> '' then do
+      _status = 3; _error = tables.error() || _input.error(); return _status
     end
-    cfg = _tables.grammar(); graph = cfg.source()
     states = .int[]; nodes = .int[]; states[1] = 1; top = 1; at = 0
     do forever
       _work = _work + 1
@@ -559,7 +599,7 @@ parser: class
       end
       symbol = _input.symbol(at)
       if symbol < 0 then symbol = 256
-      action = _tables.action(states[top],symbol)
+      action = tables.action(states[top],symbol)
       if action = 999999 then do
         _root = nodes[top]; return 0
       end
@@ -569,7 +609,7 @@ parser: class
         at = at + 1
       end
       else if action < 0 then do
-        p = -action; count = cfg.length(p); lhs = cfg.lhs(p); node = 0
+        p = -action; count = tables.productionlength(p); lhs = tables.productionlhs(p); node = 0
         start = _input.start(at); finish = start
         if count > 0 then do
           node = nodes[top - count + 1]; start = _tree.start(node); finish = _tree.finish(node)
@@ -578,9 +618,9 @@ parser: class
             node = _tree.add(2,'<production children>',start,finish,node,right)
           end
         end
-        node = _tree.add(graph.op(lhs),cfg.label(lhs),start,finish,node,0)
+        node = _tree.add(tables.symbolkind(lhs),tables.symbollabel(lhs),start,finish,node,0)
         top = top - count
-        destination = _tables.target(states[top],lhs)
+        destination = tables.target(states[top],lhs)
         if destination = 0 then do
           _status = 3; _error = 'invalid LR reduction destination'; return _status
         end
@@ -589,24 +629,16 @@ parser: class
       else do
         _status = 1; _offset = _input.start(at); expected = ''
         _state = states[top]; _position = at
-        call binresize _contexts,_tables.states()
+        call binresize _contexts,tables.states()
         do terminal = 0 to 256
           admitted = accepts(states,top,terminal)
           if admitted < 0 then do
+            if _status = 3 then return _status
             _status = 2; _error = lllimits..describe('parse.work',_fuel,_work); return _status
           end
           if admitted then do
             if expected <> '' then expected = expected || ', '
-            if terminal = 256 then expected = expected || 'end of input'
-            else do
-              name = 'token ' || terminal
-              do named = 1 to graph.size()
-                if graph.op(named) = 1 & graph.left(named) = terminal then do
-                  name = graph.label(named); leave
-                end
-              end
-              expected = expected || name
-            end
+            expected = expected || tables.terminalname(terminal)
           end
         end
         _expected = expected
@@ -619,23 +651,31 @@ parser: class
    * shift (or accept EOF), rather than merely having a table entry. */
   accepts: method = .int
     arg states = .int[], top = .int, symbol = .int
-    cfg = _tables.grammar()
+    ownerref = reference _tables
+    if _borrowed then do
+      ownerref = _owner
+      if tablesalive(ownerref) = 0 then do
+        _status = 3; _error = 'LL_BORROW_OWNER: parser requires live initialized tables'; return -1
+      end
+    end
+    tables = dereference ownerref
     do forever
       _work = _work + 1
       if _work > _fuel then return -1
-      action = _tables.action(states[top],symbol)
+      action = tables.action(states[top],symbol)
       if action > 0 then do
         <at..u8>(states[top] - 1) _contexts = 1
         return 1
       end
       if action = 0 then return 0
-      p = -action; top = top - cfg.length(p)
+      p = -action; top = top - tables.productionlength(p)
       if top < 1 then return 0
-      target = _tables.target(states[top],cfg.lhs(p))
+      target = tables.target(states[top],tables.productionlhs(p))
       if target = 0 then return 0
       top = top + 1; states[top] = target
     end
     return 0
+
   state: method = .int
     return _state
   position: method = .int
@@ -654,6 +694,13 @@ parser: class
     return _work
   error: method = .string
     return _error
+
+/** Validity precedes dereference; this scoped alias never escapes the call. */
+tablesalive: procedure = .int
+  arg owner = reference .tables
+  if <refvalid>(owner) = 0 then return 0
+  tables = dereference owner
+  return initialized(tables)
 
 /** LR admission is table construction performed by this plugin. */
 engine: class implements .llcap..backend

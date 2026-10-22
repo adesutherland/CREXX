@@ -1,0 +1,11 @@
+options levelc
+say 'before'
+do i=mark('S','bad-start') for mark('F',1.5) to mark('wrong',2)
+  say 'body'
+end
+say 'wrong after'
+exit 0
+mark: procedure
+  arg label,value
+  say label
+  return value

@@ -1,11 +1,10 @@
 # STEP05: cleaned IR and RXAS before and after optimisation
 
-These actual outputs were generated on 15 October 2026 from the Level B-only
-STEP05 implementation over develop `afcde7f6c2b2dcce6a8a6e89705457aafcac8344`.
-The before side includes the construction/emitter cleanup and disables the
-shared passes. The after side enables them. This supersedes the original
-proposal-only examples; the [current plan](../../PLAN.md) retains the
-historical design sketches.
+These retained walkthrough outputs illustrate the earlier STEP05 construction
+and transformation shapes. Their C schema predates the [current contract](../../doc/architecture.md#current-c-family-contract);
+G views retain the STEP05 output. The before
+side disables shared passes and the after side enables them. The
+[current plan](../../PLAN.md) tracks remaining compiler work.
 
 Use `options levelc` or `options levelg`, followed by:
 
@@ -19,10 +18,9 @@ else say 'no'
 | C | [source](branch-c.crexx) | [IR](branch-c.before.ir) | [IR](branch-c.after.ir) | [RXAS](branch-c.before.rxas) | [RXAS](branch-c.after.rxas) |
 | G | [source](branch-g.crexx) | [IR](branch-g.before.ir) | [IR](branch-g.after.ir) | [RXAS](branch-g.before.rxas) | [RXAS](branch-g.after.rxas) |
 
-All four outputs assembled with `rxas -n`, linked with source metadata and
-executed successfully, printing `yes`. G links `library.rxbin`; C also links
-`llctarget.rxbin` and `rxfnsc.rxbin`. The C runtime's normal class library remains
-available. The commands differ only by the compiler's `-n` switch:
+The source pair must print `yes`. G links `library.rxbin`; C additionally
+links `llctarget.rxbin`, `rxfnsc.rxbin`, `classlib.rxbin` and
+`rxunicode-core.rxbin`. The commands differ only by the compiler's `-n` switch:
 
 ```sh
 llrxc-g -n -i /path/to/bin -o before.rxas branch-g.crexx
@@ -54,19 +52,14 @@ join:
 
 The backend emits no jumps to the immediately following block. G's body therefore
 contains `numsci`, `load "yes"`, `say`, `load 0`, and `ret`. The complete files also
-retain the entry wrapper and source records. C retains its activation, pool,
-argument/numeric packets and condition handler. Only the exact literal truth
-and the unreachable arm disappear; no Classic numeric semantics are guessed.
+retain the entry wrapper and source records. C retains its borrowed context,
+stable owners, numeric installation and condition handlers. Its effectful truth
+check remains before the proved literal branch; only the unreachable arm and
+discard-safe work disappear. No contextual numeric evaluator is assumed.
 
-| Complete module | G before | G after | C before | C after |
-|---|---:|---:|---:|---:|
-| Executable instructions | 17 | 8 | 111 | 83 |
-| Calls | 1 | 1 | 13 | 9 |
-| RXAS bytes | 892 | 559 | 4,337 | 3,474 |
-| Body registers | 7 | 3 | 17 | 14 |
-| Source records | 11 | 7 | 13 | 9 |
-
-[Counts](shapes.json) exclude labels, metadata and external declarations;
-wrappers and cold handlers are included. These are code-shape observations,
-not execution-speed claims. Folded control retains derived source origins;
-remaining expression/error sites retain authored ranges and logical filenames.
+Classic's C v9 checked entry dispatch remains effectful after source branch
+folding. Its canonical setup/dispatch blocks preserve the context/entry slot
+loads through generic transformation. The source `if 1` branch disappears;
+entry-test branches remain. Permanent optimizer checks distinguish these by
+the condition producer rather than a total branch count. Source records retain
+logical filenames, authored ranges and derived origins for folded control.

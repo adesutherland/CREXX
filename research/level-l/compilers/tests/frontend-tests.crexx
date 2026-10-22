@@ -4,6 +4,8 @@ import rxfnsb
 import lltestfrontend
 import lltestparse
 import llcompilercontracts
+import llcparse
+import llcparseprogram
 import llast
 import llir
 
@@ -15,6 +17,19 @@ main: procedure = .int expose failures checks artifacts examples
     when 'syntax' then call syntax()
     when 'grammar' then call grammar()
     when 'mapping' then call mapping()
+    when 'nop' then call noptests()
+    when 'options' then call optionstests()
+    when 'options-refusals' then call optionrefusals()
+    when 'if' then call iftests()
+    when 'if-errors' then call iferrors()
+    when 'select' then call selecttests()
+    when 'do' then call dotests()
+    when 'do-literals' then call doliteraltests()
+    when 'leave' then call leavetests()
+    when 'leave-policy' then call leavepolicytests()
+    when 'iterate' then call iteratetests()
+    when 'parse' then call parsetests()
+    when 'arg' then call argtests()
     when 'calls' then call calls()
     when 'contracts' then call contracts()
     when 'optional' then call optionaltests()
@@ -67,13 +82,15 @@ syntax: procedure = .void
     call bad(language,'say (1 + 2' as .binary,'LL_COMPILER_SYNTAX:',"')'",10)
     call bad(language,"say 'broken" as .binary,'LL_COMPILER_SYNTAX:','unterminated quoted string',4)
     call bad(language,('say 1' || ('0A'x as .string) || '/* bad') as .binary,'LL_COMMENT:','unclosed nested comment',6)
-    call bad(language,'say @' as .binary,'LL_COMPILER_SYNTAX:','0x40',4)
+    if language = 'g' then call bad(language,'say @' as .binary,'LL_COMPILER_SYNTAX:','0x40',4)
+    else call bad(language,'say ~' as .binary,'LL_COMPILER_SYNTAX:','0x7E',4)
     call bad(language,'73617920FF'x as .binary,'LL_UTF8:','malformed UTF-8',4)
     call bad(language,'7361792000'x as .binary,'LL_COMPILER_SYNTAX:','0x00',4)
     call bad(language,('say ''α''' || ('0D0A'x as .string) || 'say 1 +') as .binary,'LL_COMPILER_SYNTAX:','number',17,'line 2, column 8')
     call bad(language,"say 'α' +" as .binary,'LL_COMPILER_SYNTAX:','number',10,'line 1, column 10')
     call bad(language,'interpret "say 1"' as .binary,'LL_COMPILER_PROFILE:','INTERPRET',0)
-    call bad(language,'select' as .binary,'LL_COMPILER_PROFILE:','SELECT',0)
+    if language = 'g' then call bad(language,'select' as .binary,'LL_COMPILER_PROFILE:','SELECT',0)
+    else call bad(language,'select' as .binary,'LL_COMPILER_SYNTAX:','expected',6)
   end
   call bad('c','numeric form wrong' as .binary,'LL_COMPILER_SYNTAX:','SCIENTIFIC',13)
   call bad('g','x = ' as .binary,'LL_COMPILER_SYNTAX:','number')
@@ -144,7 +161,16 @@ literals: procedure = .void
 
 grammar: procedure = .void expose examples
   call treechecks()
-  text = .string; source = .string
+  call noptests()
+  call optionstests()
+  call iftests()
+  call selecttests()
+  call dotests()
+  call leavetests()
+  call iteratetests()
+  call parsetests()
+  call argtests()
+  text = .string; source = .string; loopshape = .string
   do langindex = 1 to 2
     language = word('c g',langindex)
     do nameindex = 1 to 3
@@ -156,14 +182,928 @@ grammar: procedure = .void expose examples
     text = good(language,'if 1; then; say 1; else; say 2','if.no')
     text = good(language,'then=1; else=2; say then; say else; say 3','core.return')
     text = good(language,'if 1 then if 0 then say 1 else say 2','if.join')
-    text = good(language,'do; do while 1; if 1 then leave; iterate; end; end','while.test')
+    loopshape = 'while.test'; if language = 'c' then loopshape = 'crexx.c.while.truth'
+    text = good(language,'do; do while 1; if 1 then leave; iterate; end; end',loopshape)
     text = good(language,'if 1 then do; say 1; end' || ('0D0A'x as .string) || 'else say 2','if.no')
   end
   text = good('c','if = 2; then = 3; else = 4; say if then else','crexx.c.blank')
   text = good('c','say ''a'' ''b''; say ''a''''b''; say ''a''(2)','crexx.c.abut')
   text = good('c','x =; say x; say unknown','crexx.c.load')
-  call check(pos('name="UNKNOWN"',text) > 0,'Classic pool key visible in IR')
+  call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
+  return
+
+/** Source AST, single acquisition and immutable ordered PARSE packets. These
+ * assertions are independent of the shared runtime's matching algorithm. */
+parsetests: procedure = .void expose artifacts
+  parsed = .llcparse..parsed; tree = .llast..tree; node = .llast..node
+  sourcekind = .llast..node; templates = .llast..node; template = .llast..node
+  item = .llast..node; name = .llast..node; literal = .llast..node
+  request = .lltestfrontend..request; graph = .llir..module; operation = .llir..opview
+  packet = .llcparseprogram..checked; codec = .llir..intcodec
+  reads = .int; executions = .int; lengths = .int; i = .int; ordinals = .string; ignored = .string
+  source = "PaRsE UpPeR VaLuE ('α' 'β') WiTh . THEN END (upper) +(position) =0002 -0 '3A'x,,,"
+  parsed = .llcparse..parsed(source as .binary)
+  call check(parsed.status() = 0,'PARSE named AST accepts ordered contextual tokens: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    call check(node.kind() = 'Parse' & node.text('upper') = 'UpPeR','authored UPPER spelling retained')
+    sourcekind = node.child('source'); templates = node.child('templates')
+    call check(sourcekind.kind() = 'ParseSource' & sourcekind.text('kind') = 'VaLuE' & sourcekind.count('value') = 1,'VALUE owns exactly its expression')
+    call check(templates.count('items') = 4,'three commas retain trailing empty templates')
+    template = templates.child('items',1)
+    call check(template.count('items') = 8,'all ordered template items retained without concatenation')
+    item = template.child('items',2); name = item.child('name')
+    call check(item.kind() = 'ParseTarget' & name.text('spelling') = 'THEN','THEN remains a target')
+    item = template.child('items',3); name = item.child('name')
+    call check(name.text('spelling') = 'END','END remains a target')
+    item = template.child('items',5); name = item.child('operand')
+    call check(item.kind() = 'ParsePosition' & item.text('mode') = '+' & name.kind() = 'Name' & name.text('spelling') = 'position','dynamic position retains mode and raw Name')
+    call check(name.sourcetext() = 'position' & name.start() = <blen>(left(source,pos('position',source) - 1) as .binary),'dynamic Name keeps exact byte origin')
+    item = template.child('items',8); literal = item.child('value')
+    call check(item.kind() = 'ParseLiteral' & literal.text('spelling') = "'3A'x" & item.text('spelling') = "'3A'x",'static literal preserves decoded-owner child and spelling')
+  end
+  do sample = 1 to 10
+    select sample
+      when 1 then source = 'parse arg ,x,,y,'
+      when 2 then source = 'parse value with target'
+      when 3 then source = "parse value length(' a ') || 'b' with left right"
+      when 4 then source = 'parse var raw source with upper then end'
+      when 5 then source = 'parse arg else then end with upper'
+      when 6 then source = 'if 1 then if 0 then parse arg x else parse arg y'
+      when 7 then source = 'parse source; parse version; parse pull; parse linein'
+      when 8 then source = "parse value 'aa:bb' with . ':' (pattern) +(position) =9223372036854775807 -0000 rest"
+      when 9 then source = 'parse arg . .; parse var original'
+      otherwise source = "parse value 'α' with '0000'x '11110000'b ''"
+    end
+    ignored = good('c',source,'crexx.c.parse.execute','crexx.c.arguments.read')
+  end
+  source = 'parse arg ,first,,last,'
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'parse.crexx')
+  call check(request.status() = 0,'ARG omitted positions lower: ' || request.error())
+  if request.status() = 0 then do
+    graph = request.graph(); reads = 0; executions = 0; ordinals = ''; codec = .llir..intcodec()
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      if operation.name() = 'crexx.c.parse.source' then do
+        reads = reads + 1; ordinals = ordinals || (codec.format(operation.attribute('ordinal'))) || '|'
+        call check(operation.origin().first() = 0,'source acquisition anchors owning PARSE')
+      end
+      if operation.name() = 'crexx.c.parse.execute' then do
+        executions = executions + 1
+        packet = .llcparseprogram..checked(operation.attribute('program'),source as .binary,'parse.crexx',1,67108864)
+        call check(packet.status() = 0 & packet.clause() = 1,'packet validates original byte/scalar origins and instruction clause')
+        call check(packet.ordinal() = executions * 2,'packet preserves empty ARG ordinal gaps')
+      end
+    end
+    call check(reads = 2 & executions = 2 & ordinals = '2|4|','only selected ARG positions read; no missing-presence mutation')
+  end
+  source = 'parse var original ,after,,; parse value length(original) with'
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'parse.crexx')
+  call check(request.status() = 0,'empty first/final templates retain source effects: ' || request.error())
+  if request.status() = 0 then do
+    graph = request.graph(); loads = 0; executions = 0; lengths = 0
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      if operation.name() = 'crexx.c.load' then loads = loads + 1
+      if operation.name() = 'crexx.c.length' then lengths = lengths + 1
+      if operation.name() = 'crexx.c.parse.execute' then executions = executions + 1
+    end
+    call check(loads = 2 & lengths = 1 & executions = 5,'VAR loads once and VALUE call executes once even with empty templates')
+  end
+  call bad('c','parse' as .binary,'LL_COMPILER_SYNTAX:','25.12')
+  call bad('c','parse upper' as .binary,'LL_COMPILER_SYNTAX:','25.13')
+  call bad('c','parse external target' as .binary,'LL_COMPILER_SYNTAX:','25.12',6)
+  call bad('c','parse upper numeric target' as .binary,'LL_COMPILER_SYNTAX:','25.13',12)
+  call bad('c','parse lower arg target' as .binary,'LL_COMPILER_SYNTAX:','25.12',6)
+  call bad('c','parse var' as .binary,'LL_COMPILER_SYNTAX:','20.1')
+  call bad('c','parse var raw:' as .binary,'LL_COMPILER_SYNTAX:','38.1',13)
+  call bad('c','parse arg:' as .binary,'LL_COMPILER_SYNTAX:','38.1',9)
+  call bad('c',"parse value 'x'" as .binary,'LL_COMPILER_SYNTAX:','38.3')
+  call bad('c','parse value 1 + with x' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  call bad('c','parse value (1 +) with x' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  call bad('c','parse arg a +name' as .binary,'LL_COMPILER_SYNTAX:','38.2',13)
+  call bad('c','parse arg a +' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  call bad('c','parse arg a (x + 1)' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  call bad('c','parse arg a 1.5' as .binary,'LL_COMPILER_SYNTAX:','38.1',12)
+  call bad('c','exit 0; parse arg a 1e2' as .binary,'LL_COMPILER_SYNTAX:','38.1',20)
+  call bad('c','parse arg a 9223372036854775808' as .binary,'LL_COMPILER_LIMIT:','signed descriptor range',12)
+  call bad('c',"parse arg a 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',12)
+  call bad('c','parse arg a 1foo' as .binary,'LL_COMPILER_SYNTAX:','38.1',12)
+  call bad('c','parse arg ..' as .binary,'LL_COMPILER_SYNTAX:','38.1',10)
+  call bad('c','parse arg ..RC' as .binary,'LL_COMPILER_SYNTAX:','38.1',10)
+  call bad('c','parse arg .foo' as .binary,'LL_COMPILER_SYNTAX:','38.1',10)
+  ignored = good('c',"parse arg . . .RC stem.key 1 foo 1(foo) foo':'bar foo+1 1/**/tail",'crexx.c.parse.execute')
+  ignored = good('c','stem.key=2; x=.5; say x .RC stem.key','name="stem.key"')
+  ignored = good('c','if 1 then parse var else else nop','if.no')
+  ignored = good('c','if 1 then parse value else with a else nop','if.no')
+  ignored = good('c','if 1 then parse value (else) with (else) +(else) a else nop','if.no')
+  ignored = good('c','if 1 then do; parse arg else then end with upper; end else nop','if.no')
+  call bad('c','if 1 then parse var x else' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  call bad('c','if 1 then parse value else with (else + 1) else nop' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  request = .lltestfrontend..request('c','nop' as .binary,artifacts,'budget.crexx',144115188075855872)
+  call check(request.status() <> 0 & pos('LL_COMPILER_LIMIT: frontend byte budget',request.error()) = 1,'request rejects byte-budget multiplication overflow before parsing')
+  request = .lltestfrontend..request('c','nop' as .binary,artifacts,'budget.crexx',0)
+  call check(request.status() <> 0 & pos('LL_COMPILER_LIMIT: frontend byte budget',request.error()) = 1,'request rejects zero work/storage budget')
+  return
+
+/** ARG owns authored syntax and reuses the exact PARSE template program. */
+argtests: procedure = .void expose artifacts
+  i = .int
+  parsed = .llcparse..parsed; tree = .llast..tree; node = .llast..node
+  templates = .llast..node; template = .llast..node; item = .llast..node; name = .llast..node
+  request = .lltestfrontend..request; graph = .llir..module; operation = .llir..opview
+  packet = .llcparseprogram..checked; codec = .llir..intcodec()
+  source = "ArG . THEN END (upper) +(position) =0002 -0 '3A'x,,,"
+  parsed = .llcparse..parsed(source as .binary)
+  call check(parsed.status() = 0,'ARG named template AST: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    call check(node.kind() = 'CArg' & node.start() = 0 & node.finish() = <blen>(source as .binary),'authored ARG keeps complete instruction span')
+    templates = node.child('templates'); template = templates.child('items',1)
+    call check(templates.kind() = 'ParseTemplates' & templates.count('items') = 4,'ARG shares named templates and all trailing empty positions')
+    call check(template.kind() = 'ParseTemplate' & template.count('items') = 8,'ARG retains every ordered template item')
+    item = template.child('items',2); name = item.child('name')
+    call check(item.kind() = 'ParseTarget' & name.text('spelling') = 'THEN','ARG THEN remains raw target')
+    item = template.child('items',3); name = item.child('name')
+    call check(name.text('spelling') = 'END','ARG END remains raw target')
+    item = template.child('items',4); name = item.child('name')
+    call check(item.kind() = 'ParseVariablePattern' & name.text('spelling') = 'upper','ARG pattern name is not an UPPER token')
+    item = template.child('items',5); name = item.child('operand')
+    call check(item.kind() = 'ParsePosition' & item.text('mode') = '+' & name.text('spelling') = 'position','ARG dynamic position retains raw operand')
+    call check(name.sourcetext() = 'position' & name.start() = pos('position',source) - 1,'ARG dynamic operand has exact authored span')
+    walk = tree.walk('parents first')
+    do while walk.next()
+      item = walk.node()
+      call check(item.kind() <> 'ArgTarget' & item.kind() <> 'ParseSource','ARG has no retired target or fabricated source node')
+    end
+  end
+  source = '/*é*/' || ('0D0A'x as .string) || 'ArG 名 +(位置),,LAST'
+  parsed = .llcparse..parsed(source as .binary)
+  call check(parsed.status() = 0,'Unicode/CRLF ARG AST: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    template = node.child('templates').child('items',1); name = template.child('items',1).child('name')
+    call check(node.start() = 8 & node.finish() = <blen>(source as .binary),'ARG span follows exact multibyte comment and CRLF')
+    call check(name.start() = 12 & name.finish() = 15 & name.sourcetext() = '名','Unicode ARG target retains exact byte span')
+    request = .lltestfrontend..request('c',source as .binary,artifacts,'arg.crexx')
+    call check(request.status() = 0,'Unicode/CRLF ARG packet admission: ' || request.error())
+    if request.status() = 0 then do
+      graph = request.graph()
+      do i = 1 to graph.operations()
+        operation = graph.operation(i)
+        if operation.name() <> 'crexx.c.parse.execute' then iterate
+        packet = .llcparseprogram..checked(operation.attribute('program'),source as .binary,'arg.crexx',1,67108864)
+        call check(packet.status() = 0 & packet.clause() = 9,'ARG packet certifies original Unicode/CRLF byte/scalar positions')
+      end
+    end
+  end
+  source = 'arg ,first,,last,'
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'arg.crexx')
+  call check(request.status() = 0,'ARG omitted ordinals lower: ' || request.error())
+  if request.status() = 0 then do
+    graph = request.graph(); reads = 0; executions = 0; ordinals = ''
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      call check(operation.name() <> 'crexx.c.arguments.read' & operation.name() <> 'crexx.c.store','ARG has no scalar splitter/store lowering')
+      if operation.name() = 'crexx.c.parse.source' then do
+        reads = reads + 1; ordinals = ordinals || codec.format(operation.attribute('ordinal')) || '|'
+        call check(operation.origin().first() = 0 & operation.attribute('kind') = 'ARG' as .binary,'ARG source is raw and anchors owning clause')
+      end
+      if operation.name() = 'crexx.c.parse.execute' then do
+        executions = executions + 1; bytes = operation.attribute('program')
+        packet = .llcparseprogram..checked(bytes,source as .binary,'arg.crexx',1,67108864)
+        call check(packet.status() = 0 & packet.clause() = 1 & packet.ordinal() = executions * 2,'ARG packet validates exact source and ordinal gaps')
+        call check(<at..u16>(6) bytes = 1,'ARG implies only packet UPPER bit')
+      end
+    end
+    call check(reads = 2 & executions = 2 & ordinals = '2|4|','only nonempty ARG templates acquire/execute')
+  end
+  do sample = 1 to 10
+    select sample
+      when 1 then source = 'arg'
+      when 2 then source = 'arg,,, '
+      when 3 then source = 'arg . .; arg 1 1; arg (pattern) +(position)'
+      when 4 then source = 'arg else then end with upper arg'
+      when 5 then source = 'if 1 then if 0 then arg x else arg y'
+      when 6 then source = 'if 1 then arg else nop'
+      when 7 then source = 'if 1 then arg a,; else nop'
+      when 8 then source = 'if 1 then do; arg else then end with upper; end else nop'
+      when 9 then source = "arg '0000'x '11110000'b '' .RC stem.key"
+      otherwise source = 'arg = 1; say arg'
+    end
+    ignored = good('c',source,'core.return','crexx.c.arguments.read')
+    if sample <= 2 then call check(pos('crexx.c.parse.',ignored) = 0,'empty ARG has no acquisition/executor IR')
+  end
+  call bad('c','arg a +name' as .binary,'LL_COMPILER_SYNTAX:','38.2',7)
+  call bad('c','arg a +' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  call bad('c','arg a (x + 1)' as .binary,'LL_COMPILER_SYNTAX:','38.1')
+  call bad('c','arg a 1.5' as .binary,'LL_COMPILER_SYNTAX:','38.1',6)
+  call bad('c','exit 0; arg a 1e2' as .binary,'LL_COMPILER_SYNTAX:','38.1',14)
+  call bad('c','arg a 9223372036854775808' as .binary,'LL_COMPILER_LIMIT:','signed descriptor range',6)
+  call bad('c',"arg a 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',6)
+  call bad('c','arg a 1foo' as .binary,'LL_COMPILER_SYNTAX:','38.1',6)
+  call bad('c','arg ..' as .binary,'LL_COMPILER_SYNTAX:','38.1',4)
+  call bad('c','arg .foo' as .binary,'LL_COMPILER_SYNTAX:','38.1',4)
+  return
+
+/** LEAVE names are static raw symbols, with request-local STRICTC policy. */
+leavetests: procedure = .void expose artifacts
+  parsed = .llcparse..parsed; tree = .llast..tree; node = .llast..node
+  name = .llast..node; source = .string; ignored = .string; expected = .string
+  sample = .int; strict = .int
+  source = 'leave α.key'
+  parsed = .llcparse..parsed(source as .binary)
+  call check(parsed.status() = 0,'raw Unicode LEAVE syntax parses')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1); name = node.child('name')
+    call check(node.kind() = 'Leave' & node.start() = 0 & node.finish() = 12,'LEAVE instruction byte span')
+    call check(name.kind() = 'Name' & name.text('spelling') = 'α.key' & name.start() = 6 & name.finish() = 12,'optional raw name byte span')
+  end
+  parsed = .llcparse..parsed('leave' as .binary)
+  call check(parsed.status() = 0,'bare LEAVE parses')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    call check(node.kind() = 'Leave' & node.count('name') = 0,'bare LEAVE has no name')
+  end
+  call leavepolicytests()
+  do sample = 1 to 9
+    select sample
+      when 1 then source = 'do i=1 for 2; leave I; end'
+      when 2 then source = 'do i=1 for 2; do i=10 for 2; leave i; end; end'
+      when 3 then source = 'do a.key=1 for 2; key="x"; do j=1; leave A.KEY; end; end'
+      when 4 then source = 'do σ=1 for 2; leave Σ; end'
+      when 5 then source = 'do µ=1 for 2; leave µ; end'
+      when 6 then source = 'do i=1; do forever; do; select; when 1 then leave i; end; end; end; end'
+      when 7 then source = 'do else=1 for 2; leave else; end ELSE'
+      when 8 then source = 'do else=1 for 2; if 1 then do; leave else; end; end ELSE'
+      otherwise source = 'do i=1; if flag then leave i else nop; end'
+    end
+    ignored = good('c',source,'crexx.c.do.close')
+  end
+  do sample = 1 to 2
+    source = 'do else=1; if flag then leave else nop; end ELSE'
+    if sample = 2 then source = 'do i=1; if flag then leave; else nop; end'
+    parsed = .llcparse..parsed(source as .binary)
+    call check(parsed.status() = 0,'eligible inline/separated bare LEAVE ELSE parses ' || sample)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1).child('body').child('items',1)
+    name = node.child('yes')
+    call check(node.kind() = 'IfElse' & name.kind() = 'Leave' & name.count('name') = 0,'nearest ELSE keeps bare LEAVE ' || sample)
+  end
+  do sample = 1 to 10
+    expected = 'RXC-LC-28.1:'
+    select sample
+      when 1 then source = 'leave'
+      when 2 then source = 'leave Ghost'
+      when 3 then source = 'do; leave Ghost; end'
+      when 4 then do; source = 'do 1; leave Ghost; end'; expected = 'RXC-LC-28.3:'; end
+      when 5 then source = 'exit 0; leave Ghost'
+      when 6 then do; source = 'do 1; if 0 then leave Ghost; end'; expected = 'RXC-LC-28.3:'; end
+      when 7 then source = 'do caller=1; call p; leave; end; exit 0; p: procedure; leave caller'
+      when 8 then do; source = 'do µ=1; leave Μ; end'; expected = 'RXC-LC-28.3:'; end
+      when 9 then do; source = 'key="x"; do A.KEY=1; leave A.x; end'; expected = 'RXC-LC-28.3:'; end
+      otherwise do; source = 'do while 1; leave i; end'; expected = 'RXC-LC-28.3:'; end
+    end
+    call bad('c',source as .binary,'LL_COMPILER_FLOW:',expected)
+  end
+  do sample = 1 to 5
+    select sample
+      when 1 then source = 'leave i j'
+      when 2 then source = 'leave 1'
+      when 3 then source = 'leave (i)'
+      when 4 then source = 'leave i+1'
+      otherwise source = 'options levelc strictc; exit 0; leave i j'
+    end
+    call bad('c',source as .binary,'LL_COMPILER_SYNTAX:','expected')
+  end
+  ignored = good('c','do i=1 for 1; iterate i; end','crexx.c.do.advance')
+  return
+
+/** ITERATE retains its selected state and uses the ordinary DO end path. */
+iteratetests: procedure = .void expose artifacts
+  parsed = .llcparse..parsed; tree = .llast..tree; node = .llast..node
+  name = .llast..node; source = .string; ignored = .string; expected = .string
+  sample = .int
+  parsed = .llcparse..parsed('iterate α.key' as .binary)
+  call check(parsed.status() = 0,'raw Unicode ITERATE syntax parses')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1); name = node.child('name')
+    call check(node.kind() = 'Iterate' & node.start() = 0 & node.finish() = 14,'ITERATE instruction byte span')
+    call check(name.kind() = 'Name' & name.text('spelling') = 'α.key' & name.start() = 8 & name.finish() = 14,'ITERATE raw name byte span')
+  end
+  do sample = 1 to 4
+    select sample
+      when 1 then source = 'do i=1 for 2 until flag; do j=10 for 2; iterate I; end; end'
+      when 2 then source = 'do i=1 for 1; do I=10 for 2; iterate i; end; end'
+      when 3 then source = 'do A.KEY=1 for 2; key="y"; do forever; do j=10; iterate a.key; end; end; end'
+      otherwise source = 'do else=1 for 1; if flag then do; iterate else; end; end ELSE'
+    end
+    ignored = good('c',source,'crexx.c.do.advance')
+  end
+  do sample = 1 to 2
+    source = 'do else=1 for 1; if flag then iterate else nop; end ELSE'
+    if sample = 2 then source = 'do i=1 for 1; if flag then iterate; else nop; end'
+    parsed = .llcparse..parsed(source as .binary)
+    call check(parsed.status() = 0,'inline/separated bare ITERATE keeps ELSE ' || sample)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1).child('body').child('items',1)
+    name = node.child('yes')
+    call check(node.kind() = 'IfElse' & name.kind() = 'Iterate' & name.count('name') = 0,'nearest ELSE owns bare ITERATE ' || sample)
+  end
+  do sample = 1 to 4
+    expected = 'RXC-LC-28.2:'
+    select sample
+      when 1 then source = 'iterate'
+      when 2 then source = 'do; iterate Ghost; end'
+      when 3 then do; source = 'do 1; if 0 then iterate Ghost; end'; expected = 'RXC-LC-28.4:'; end
+      otherwise source = 'do caller=1; call p; leave; end; exit 0; p: procedure; iterate caller'
+    end
+    call bad('c',source as .binary,'LL_COMPILER_FLOW:',expected)
+  end
+  call bad('c','iterate i extra' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  call bad('c','options levelc strictc; exit 0; iterate i extra' as .binary,'LL_COMPILER_SYNTAX:','expected')
+  ignored = good('c','options levelc strictc; if 0 then iterate Ghost; exit 0; p: procedure; iterate','crexx.c.transfer.invalid')
+  return
+
+/* Select the policy boundary independently after a seed-only repair. */
+leavepolicytests: procedure = .void
+  parsed = .llcparse..parsed; source = .string; sample = .int; strict = .int; ignored = .string
+  do sample = 1 to 9
+    strict = 0
+    select sample
+      when 1 then do; source = 'options levelc strictc; nop'; strict = 1; end
+      when 2 then source = 'nop'
+      when 3 then do; source = 'options LEVELC STRICTC strictc; nop'; strict = 1; end
+      when 4 then source = "options 'strictc'; nop"
+      when 5 then source = 'nop; options strictc'
+      when 6 then source = 'options strictc(); exit 0; strictc: procedure; return 1'
+      when 7 then source = 'options levelc ſtrictc; nop'
+      when 8 then source = 'options levelc strictc comments_slash'
+      otherwise source = 'options levelc strictc; do'
+    end
+    parsed = .llcparse..parsed(source as .binary)
+    if sample < 8 then call check(parsed.status() = 0,'STRICTC request control parses ' || sample || ': ' || parsed.error())
+    else call check(parsed.status() <> 0,'failed request stays failed ' || sample)
+    call check(parsed.strictc() = strict,'STRICTC is request-local and zero on failure ' || sample)
+  end
+  ignored = good('c','options levelc strictc; if 0 then leave Ghost; exit 0; p: procedure; leave','crexx.c.transfer.invalid')
+  return
+
+/* Static refusal controls are also selectable after header admission changes. */
+optionrefusals: procedure = .void
+  do sample = 1 to 8
+    word = word('levelb levelg levell numeric_common comments_slash srcmap comments_nohash comments_nodash',sample)
+    source = 'options levelc ' || word
+    if sample = 7 then source = 'options comments_hash comments_nohash'
+    if sample = 8 then source = 'options comments_dash comments_nodash'
+    call bad('c',source as .binary,'LL_COMPILER_PROFILE:',word)
+  end
+  return
+
+/** Static DO retains raw header/END spelling and authored modifier order. */
+dotests: procedure = .void expose artifacts
+  parsed = .lltestparse..parsed; tree = .llast..tree; node = .llast..node
+  header = .llast..node; repetition = .llast..node; condition = .llast..node
+  ending = .llast..node; name = .llast..node; modifier = .llast..node
+  source = .string; ignored = .string; expected = .string; order = .string
+  sample = .int; i = .int; crlf = '0D0A'x as .string
+  source = 'Do α.key = 1 FoR 2 bY .5 To 3 UnTiL flag' || crlf || "say '漢🙂'" || crlf || 'EnD Α.KEY'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'Unicode/CRLF controlled DO parses: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    header = node.child('header'); repetition = header.child('repetition'); condition = header.child('condition'); ending = node.child('ending')
+    call check(node.kind() = 'CDo' & header.kind() = 'DoHeader' & repetition.kind() = 'DoControl' & condition.kind() = 'DoUntil' & ending.kind() = 'DoEnd','normalized DO header/condition/ending nodes')
+    call check(node.start() = 0 & node.finish() = <blen>(source as .binary) & node.sourcetext() = source,'full original UTF-8/CRLF DO extent')
+    name = repetition.child('name')
+    call check(name.text('spelling') = 'α.key' & name.start() = 3 & name.finish() = 9,'control spelling and byte span retained')
+    call check(repetition.count('modifiers') = 3,'all authored modifiers retained')
+    do i = 1 to 3
+      modifier = repetition.child('modifiers',i)
+      call check(modifier.kind() = 'DoModifier' & modifier.text('keyword') = word('FoR bY To',i),'modifier order/raw spelling ' || i)
+      call check(pos(modifier.text('keyword'),modifier.sourcetext()) = 1,'modifier span starts at authored keyword ' || i)
+    end
+    name = ending.child('name')
+    call check(name.text('spelling') = 'Α.KEY' & ending.finish() = <blen>(source as .binary),'END raw name/full extent retained')
+  end
+  do sample = 1 to 10
+    select sample
+      when 1 then do; source = 'do; ; end'; expected = ''; end
+      when 2 then do; source = 'do 2; nop; end'; expected = 'DoCount'; end
+      when 3 then do; source = 'do forever; leave; end'; expected = 'DoForever'; end
+      when 4 then do; source = 'do while 1; leave; end'; expected = ''; end
+      when 5 then do; source = 'do until 1; nop; end'; expected = ''; end
+      when 6 then do; source = 'do 2 while flag; nop; end'; expected = 'DoCount'; end
+      when 7 then do; source = 'do forever until flag; nop; end'; expected = 'DoForever'; end
+      when 8 then do; source = 'do i = 1 for 2; nop; end i'; expected = 'DoControl'; end
+      when 9 then do; source = 'do a.key = 1 to 2 while flag; nop; end A.KEY'; expected = 'DoControl'; end
+      otherwise do; source = 'do for=1 by 0 for 1 until flag; nop; end FOR'; expected = 'DoControl'; end
+    end
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'DO form parses ' || sample || ': ' || parsed.error())
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1); header = node.child('header')
+    call check(node.kind() = 'CDo','normalized CDo kind ' || sample)
+    if expected = '' then call check(header.count('repetition') = 0,'group/condition-only DO has no repetition child ' || sample)
+    else do
+      repetition = header.child('repetition')
+      call check(repetition.kind() = expected,'optional repetition kind ' || sample)
+    end
+    ignored = good('c',source,'core.return')
+  end
+  do sample = 1 to 6
+    order = word('to,by,for to,for,by by,to,for by,for,to for,to,by for,by,to',sample)
+    source = 'do i=1'
+    do i = 1 to 3
+      source = source || ' ' || word(changestr(',',order,' '),i) || ' 2'
+    end
+    source = source || '; nop; end I'
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'all six modifier permutations parse ' || order)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); repetition = tree.root().child('body').child('items',1).child('header').child('repetition')
+    do i = 1 to 3
+      modifier = repetition.child('modifiers',i)
+      call check(modifier.text('keyword') = word(changestr(',',order,' '),i),'permutation keeps written order ' || order || '/' || i)
+    end
+  end
+  ignored = good('c','if 1 then do 1; if 0 then nop else options; end else nop','crexx.c.do.new')
+  ignored = good('c','select; when 1 then do 1; options; end; otherwise; end','crexx.c.do.new')
+  ignored = good('c','do 2; do; select; when 1 then iterate; end; end; end','crexx.c.do.advance')
+  ignored = good('c','exit 0; p: procedure; do 2; return 1; end','crexx.c.do.close')
+  ignored = good('c','do σ=1 for 0; end Σ','crexx.c.do.start')
+  ignored = good('c','do µ=1 for 0; end µ','crexx.c.do.start')
+  ignored = good('c','if flag then do else=1 for 0; end ELSE else nop','crexx.c.do.start')
+  ignored = good('c','if flag then do else=1 for 0; end ELSE; else nop','crexx.c.do.start')
+  ignored = good('c','do else=1 for 0; end ELSE','crexx.c.do.start')
+  do sample = 1 to 2
+    source = 'if flag then do i=1 for 0; end else nop'
+    if sample = 2 then source = 'if flag then do else=1 for 0; end else nop'
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'ELSE before an ordinary arm remains the IF delimiter ' || sample)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    ending = node.child('yes').child('ending'); name = node.child('no')
+    call check(node.kind() = 'IfElse' & ending.count('name') = 0 & name.kind() = 'Nop','optional END name does not steal the IF arm ' || sample)
+  end
+  call bad('c','do µ=1 for 0; end Μ' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.2')
+  call bad('c','do i=1; end j' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.2')
+  call bad('c','exit 0; do i=1; end j' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.2')
+  call bad('c','do; end i' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.3')
+  call bad('c','do 2; end i' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-10.3')
+  do sample = 1 to 3
+    order = word('to by for',sample)
+    call bad('c',('do i=1 ' || order || ' 2 ' || order || ' 3; end i') as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-27.1')
+  end
+  do sample = 1 to 8
+    select sample
+      when 1 then source = 'do i=; end'
+      when 2 then source = 'do i=1 to; end'
+      when 3 then source = 'do i=1 by; end'
+      when 4 then source = 'do i=1 for; end'
+      when 5 then source = 'do while; end'
+      when 6 then source = 'do until; end'
+      when 7 then source = 'do 1; nop'
+      otherwise source = 'do forever 2; end'
+    end
+    call bad('c',source as .binary,'LL_COMPILER_SYNTAX:','expected')
+  end
+  call bad('c',"exit 0; do i='GG'x; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
+  call doliteraltests()
+  call bad('c','do 0; interpret "x"; end' as .binary,'LL_COMPILER_PROFILE:','INTERPRET')
+  return
+
+/* A closed body still validates its discarded UNTIL operand. */
+doliteraltests: procedure = .void
+  call bad('c',"do until 'GG'x; leave; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
+  return
+
+/** SELECT retains authored clauses while its ordinary arms keep their AST. */
+selecttests: procedure = .void expose artifacts
+  parsed = .lltestparse..parsed; tree = .llast..tree; node = .llast..node
+  first = .llast..node; second = .llast..node; fallback = .llast..node; body = .llast..node
+  outer = .llast..node; inner = .llast..node; request = .lltestfrontend..request
+  graph = .llir..module; op = .llir..opview; origin = .llir..origin
+  source = .string; prefix = .string; ignored = .string; arm = .string; expected = .string
+  sample = .int; i = .int; whenchecks = .int; missingchecks = .int
+  crlf = '0D0A'x as .string
+  prefix = 'SeLeCt' || crlf || "  WhEn '0' ThEn nop" || crlf
+  source = prefix || "  when '1' then say 'α漢🙂'" || crlf || '  OtHeRwIsE' || crlf || '    options' || crlf || '    nop' || crlf || 'EnD'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'Unicode/CRLF SELECT AST accepted: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    call check(node.kind() = 'CSelect' & node.count('clauses') = 3,'three ordered SELECT clauses')
+    call check(node.start() = 0 & node.finish() = <blen>(source as .binary) & node.sourcetext() = source,'whole authored SELECT extent retained')
+    if node.kind() = 'CSelect' & node.count('clauses') = 3 then do
+      first = node.child('clauses',1); second = node.child('clauses',2); fallback = node.child('clauses',3)
+      call check(first.kind() = 'CWhen' & second.kind() = 'CWhen' & fallback.kind() = 'COtherwise','WHEN order and final OTHERWISE retained')
+      call check(first.start() = 10 & second.start() = <blen>(prefix as .binary) + 2,'WHEN starts use original UTF-8 byte offsets')
+      prefix = prefix || "  when '1' then "
+      body = second.child('body')
+      call check(body.kind() = 'Say' & body.start() = <blen>(prefix as .binary),'Unicode arm retains its own byte start')
+      call check(pos("say 'α漢🙂'",body.sourcetext()) = 1,'Unicode arm text survives projection')
+      body = fallback.child('body')
+      call check(body.kind() = 'Sequence' & body.count('items') = 2,'OTHERWISE owns one full instruction Sequence')
+      first = body.child('items',1); second = body.child('items',2)
+      call check(first.kind() = 'COptions' & second.kind() = 'Nop','OTHERWISE body order and childless instructions retained')
+    end
+  end
+  do sample = 1 to 4
+    select sample
+      when 1 then source = 'select; when 0 then nop; otherwise; end'
+      when 2 then source = 'select' || crlf || 'when 0 then nop' || crlf || 'otherwise' || crlf || 'end'
+      when 3 then source = "select; when 0 then nop; otherwise say 'inline'; nop; end"
+      otherwise source = 'select; when 0 then nop; otherwise select; when 1 then nop; end; end'
+    end
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'empty/list/inline OTHERWISE parses ' || sample || ': ' || parsed.error())
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    fallback = node.child('clauses',2); body = fallback.child('body')
+    call check(fallback.kind() = 'COtherwise' & body.kind() = 'Sequence','OTHERWISE has exactly one Sequence ' || sample)
+    if sample <= 2 then call check(body.count('items') = 0,'empty OTHERWISE has no invented instruction ' || sample)
+    if sample = 3 then do
+      first = body.child('items',1); second = body.child('items',2)
+      call check(body.count('items') = 2 & first.kind() = 'Say' & second.kind() = 'Nop','same-clause first instruction stays in OTHERWISE list')
+    end
+    if sample = 4 then do
+      first = body.child('items',1)
+      call check(body.count('items') = 1 & first.kind() = 'CSelect','inline nested SELECT is ordinary first list instruction')
+    end
+    if sample <= 3 then ignored = good('c',source,'crexx.c.when.truth','crexx.c.select.missing')
+    else ignored = good('c',source,'crexx.c.select.missing')
+  end
+  source = 'if 1 then select; when 1 then if 0 then nop else options; end else nop'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'SELECT barrier restores outer IF and keeps inner nearest ELSE')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+    node = outer.child('yes'); first = node.child('clauses',1); inner = first.child('body'); body = outer.child('no')
+    call check(outer.kind() = 'IfElse' & node.kind() = 'CSelect' & inner.kind() = 'IfElse' & body.kind() = 'Nop','distinct inner and outer IF own their ELSE')
+    first = inner.child('yes'); second = inner.child('no')
+    call check(first.kind() = 'Nop' & second.kind() = 'COptions','inner WHEN arm retains optional instructions')
+  end
+  do sample = 1 to 5
+    select sample
+      when 1 then source = 'select=1; when=1; otherwise=2; end=3; else=1; say select when otherwise end; select; when when then options else; when else then nop; otherwise; end'
+      when 2 then source = 'do; select; when 1 then options; otherwise; end; end'
+      when 3 then source = 'do while 1; select; when 1 then leave; otherwise iterate; end; end'
+      when 4 then source = 'exit 0; p: procedure; select; when 1 then return 1; otherwise return 2; end'
+      otherwise source = 'select; when 1 then call p,; otherwise arg a,; end; exit 0; p: procedure; return'
+    end
+    ignored = good('c',source,'crexx.c.when.truth')
+  end
+  do sample = 1 to 14
+    select sample
+      when 1 then do; arm = 'return'; expected = 'Return'; end
+      when 2 then do; arm = 'exit'; expected = 'Exit'; end
+      when 3 then do; arm = 'say'; expected = 'Say'; end
+      when 4 then do; arm = 'options'; expected = 'COptions'; end
+      when 5 then do; arm = 'arg'; expected = 'CArg'; end
+      when 6 then do; arm = 'arg a,'; expected = 'CArg'; end
+      when 7 then do; arm = 'numeric digits'; expected = 'CNumeric'; end
+      when 8 then do; arm = 'numeric fuzz'; expected = 'CNumeric'; end
+      when 9 then do; arm = 'numeric form'; expected = 'CForm'; end
+      when 10 then do; arm = 'numeric form scientific'; expected = 'CForm'; end
+      when 11 then do; arm = 'numeric form engineering'; expected = 'CForm'; end
+      when 12 then do; arm = 'a='; expected = 'Assignment'; end
+      when 13 then do; arm = 'call else,'; expected = 'Invoke'; end
+      otherwise do; arm = 'drop else'; expected = 'CDrop'; end
+    end
+    source = 'select; when 1 then ' || arm || '; otherwise; end'
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'SELECT admits ordinary minimum arm ' || arm || ': ' || parsed.error())
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    first = node.child('clauses',1); body = first.child('body')
+    call check(body.kind() = expected,'ordinary arm AST retained ' || arm)
+  end
+  prefix = "say 'α漢🙂'" || crlf
+  source = prefix || 'sElEcT' || crlf || "when '0' then nop" || crlf || "when '1' then nop" || crlf || 'end'
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'select-span.crexx')
+  call check(request.status() = 0,'source-backed SELECT IR accepted: ' || request.error())
+  if request.status() = 0 then do
+    graph = request.graph(); whenchecks = 0; missingchecks = 0
+    call check(graph.error() = '','SELECT source IR verifies')
+    do i = 1 to graph.operations()
+      op = graph.operation(i); origin = op.origin()
+      if op.name() = 'crexx.c.when.truth' then do
+        whenchecks = whenchecks + 1
+        call check(origin.kind() = 'exact' & origin.last() - origin.first() = 4,'WHEN truth has exact keyword extent')
+        call check(binsubstr(origin.sourcebytes(),origin.first() + 1,4) = 'when' as .binary,'WHEN origin selects authored keyword')
+      end
+      if op.name() = 'crexx.c.select.missing' then do
+        missingchecks = missingchecks + 1
+        call check(origin.kind() = 'exact' & origin.first() = <blen>(prefix as .binary) & origin.last() - origin.first() = 6,'missing error has six-byte SELECT origin after Unicode/CRLF')
+        call check(origin.sourcebytes() = source as .binary,'missing error retains original full source')
+      end
+    end
+    call check(whenchecks = 2 & missingchecks = 1,'every authored WHEN and one absent-OTHERWISE fallback retained')
+  end
+  source = 'select; before:; when 0 then nop; between:; when 1 then nop; end'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'SELECT boundary labels retain source AST')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    first = node.child('clauses',1); second = node.child('clauses',3)
+    call check(node.count('clauses') = 4 & first.kind() = 'CLabel' & second.kind() = 'CLabel','labels remain ordered clauses, not discarded')
+    call check(first.text('name') = 'before' & second.text('name') = 'between','raw label spellings retained')
+  end
+  text = good('c',source,'crexx.c.when.truth')
+  call check(pos('name="BEFORE"',text) = 0 & pos('name="BETWEEN"',text) = 0,'SELECT observation labels never enter the callable map')
+  text = good('c','exit 0; select; before:; when 1 then nop; end','crexx.c.when.truth')
+  call bad('c','call before; exit 0; select; before:; when 1 then nop; end' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-16.3',0)
+  do sample = 1 to 14
+    select sample
+      when 1 then source = 'select 1; when 1 then nop; end'
+      when 2 then source = 'select; end'
+      when 3 then source = 'select; otherwise; end'
+      when 4 then source = 'select; when then nop; end'
+      when 5 then source = 'select; when 1 nop; end'
+      when 6 then source = 'select; when 1 then; end'
+      when 7 then source = 'select; when 1 then nop; say 2; end'
+      when 8 then source = 'select; when 0 then nop; otherwise; when 1 then nop; end'
+      when 9 then source = 'select; when 0 then nop; otherwise; otherwise; end'
+      when 10 then source = 'select; when 1 then nop;'
+      when 11 then source = 'select; when 1 then nop; end x'
+      when 12 then source = 'when 1 then nop'
+      when 13 then source = 'otherwise nop'
+      otherwise source = 'exit 0; select; when 1 then nop; otherwise; otherwise; end'
+    end
+    call bad('c',source as .binary,'LL_COMPILER_SYNTAX:','expected')
+  end
+  call bad('c','select; when 1 then nop; when 1d then nop; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c',"select; when 1 then nop; otherwise say 'GG'x; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
+  call bad('c','select; when 0 then interpret "x"; end' as .binary,'LL_COMPILER_PROFILE:','INTERPRET')
+  return
+
+/** IF owns only its nearest ELSE; arm instructions retain their own AST. */
+iftests: procedure = .void
+  parsed = .lltestparse..parsed; tree = .llast..tree; outer = .llast..node
+  inner = .llast..node; yes = .llast..node; no = .llast..node
+  source = .string; ignored = .string; arm = .string; expected = .string; sample = .int; separated = .int
+  source = 'if 1 then if 0 then nop else options'
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'nearest ELSE parses')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+    inner = outer.child('yes'); yes = inner.child('yes'); no = inner.child('no')
+    call check(outer.kind() = 'IfThen' & inner.kind() = 'IfElse','ELSE belongs to inner IF')
+    call check(yes.kind() = 'Nop' & no.kind() = 'COptions','admitted childless arms retained')
+    call check(outer.start() = 0 & outer.finish() = length(source) & inner.start() = 10,'original nested IF byte extents')
+  end
+  source = "if '1' then say 'α'" || ('0D0A'x as .string) || "else say 'β'"
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'Unicode CRLF IF tree accepted')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+    yes = outer.child('yes'); no = outer.child('no')
+    call check(outer.kind() = 'IfElse' & yes.start() = 12 & no.start() = 27,'branch offsets are original UTF-8 bytes')
+    call check(pos("say 'α'",yes.sourcetext()) = 1 & no.sourcetext() = "say 'β'",'authored branch texts retained')
+  end
+  do sample = 1 to 5
+    select sample
+      when 1 then source = 'if=1; then=2; else=3; if if then say then else say else'
+      when 2 then source = 'do; if 1; then; nop; else; options; end'
+      when 3 then source = 'do while 1; if 1 then leave else iterate; end'
+      when 4 then source = 'exit 0; p: procedure; arg flag; if flag then return 1 else return 2'
+      otherwise source = 'if 1 then exit 0 else exit 1; nop; options'
+    end
+    ignored = good('c',source,'crexx.c.truth')
+  end
+  /* Bare optional-value arms must not swallow their actual owner's ELSE. */
+  do sample = 1 to 3
+    arm = word('return exit say',sample)
+    do separated = 0 to 1
+      source = 'if 1 then ' || arm || ' else ' || arm || ' 2'
+      if separated then source = changestr(' else ',source,'; else ')
+      parsed = .lltestparse..parsed('c',source as .binary)
+      call check(parsed.status() = 0,'bare arm parses ' || arm || '/' || separated)
+      if parsed.status() = 0 then do
+        tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+        yes = outer.child('yes'); no = outer.child('no')
+        call check(outer.kind() = 'IfElse' & yes.count('value') = 0 & no.count('value') = 1,'bare arm preserves ELSE ownership ' || arm || '/' || separated)
+      end
+    end
+    ignored = good('c',arm || ' else','name="else"')
+    ignored = good('c','if 1 then nop; ' || arm || ' else','name="else"')
+  end
+  /* Existing optional/default forms complete at their own minimum, not at
+   * every '=' or comma in an arbitrary expression. No grammar is extended. */
+  do sample = 1 to 13
+    select sample
+      when 1 then do; arm = 'options'; expected = 'COptions'; end
+      when 2 then do; arm = 'arg'; expected = 'CArg'; end
+      when 3 then do; arm = 'arg a,'; expected = 'CArg'; end
+      when 4 then do; arm = 'numeric digits'; expected = 'CNumeric'; end
+      when 5 then do; arm = 'numeric fuzz'; expected = 'CNumeric'; end
+      when 6 then do; arm = 'numeric form'; expected = 'CForm'; end
+      when 7 then do; arm = 'numeric form scientific'; expected = 'CForm'; end
+      when 8 then do; arm = 'numeric form engineering'; expected = 'CForm'; end
+      when 9 then do; arm = 'a='; expected = 'Assignment'; end
+      when 10 then do; arm = 'call p'; expected = 'Invoke'; end
+      when 11 then do; arm = 'call p,'; expected = 'Invoke'; end
+      when 12 then do; arm = 'a=1=else'; expected = 'Assignment'; end
+      otherwise do; arm = 'call else'; expected = 'Invoke'; end
+    end
+    do separated = 0 to 1
+      source = 'if 1 then ' || arm || ' else nop'
+      if separated then source = 'if 1 then ' || arm || '; else nop'
+      parsed = .lltestparse..parsed('c',source as .binary)
+      call check(parsed.status() = 0,'optional arm minimum parses ' || arm || '/' || separated || ': ' || parsed.error())
+      if parsed.status() = 0 then do
+        tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+        yes = outer.child('yes'); no = outer.child('no')
+        call check(outer.kind() = 'IfElse' & yes.kind() = expected & no.kind() = 'Nop','optional arm owns exactly one ELSE ' || arm || '/' || separated)
+        if sample = 9 then call check(yes.count('value') = 0,'initial assignment equals permits empty RHS')
+        if sample = 12 then call check(yes.count('value') = 1,'relational equals keeps its ELSE Name operand')
+      end
+    end
+  end
+  ignored = good('c','numeric digits else; numeric fuzz else; a=else','name="else"')
+  ignored = good('c','if 1 then nop; options else; arg else','name="else"')
+  parsed = .lltestparse..parsed('c','call else' as .binary)
+  call check(parsed.status() = 0,'CALL target named ELSE remains identifier')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1)
+    call check(outer.kind() = 'Invoke' & outer.text('name') = 'else','CALL consumes its required target before completing')
+  end
+  parsed = .lltestparse..parsed('c','if 1 then return else if 0 then return else return 2' as .binary)
+  call check(parsed.status() = 0,'nested optional arm ownership accepted')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); outer = tree.root().child('body').child('items',1); inner = outer.child('no')
+    call check(outer.kind() = 'IfElse' & inner.kind() = 'IfElse','nested optional arms retain actual IF owners')
+  end
+  ignored = good('c','if 1 then nop; if 0 then return else return else','name="else"')
+  ignored = good('c','if else then nop','name="else"')
+  ignored = good('c','if 1 then if else then nop','name="else"')
+  call iferrors()
+  return
+
+iferrors: procedure = .void
+  call bad('c','if then nop' as .binary,'LL_COMPILER_SYNTAX:','THEN')
+  call bad('c','if 1 nop' as .binary,'LL_COMPILER_SYNTAX:','THEN')
+  call bad('c','if 1 then' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-14.3',5)
+  call bad('c','if 1 then nop else' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-14.4',14)
+  call bad('c','else nop' as .binary,'LL_COMPILER_SYNTAX:',"unexpected 'else'",0)
+  call bad('c','if 1 then call' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-19.2')
+  call bad('c','if 1 then numeric else nop' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-25.15')
+  call bad('c','if 1 then exit 0 else exit 1; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c','exit 0; p: procedure; if 1 then return else return 2; nop; options; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  return
+
+/** Header policy is request-local; every clause still has an operand AST. */
+optionstests: procedure = .void expose artifacts
+  parsed = .lltestparse..parsed; tree = .llast..tree; node = .llast..node
+  yes = .llast..node; no = .llast..node
+  walk = .llast..walk; source = .string; ignored = .string; required = .string; sample = .int
+  graph = .llir..module; operation = .llir..opview; names = .string; literals = .string
+  source = 'options LeVeLc NUMERIC_CLASSIC unknown; options; options (42); options ''α'''
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'OPTIONS expression/header AST accepted: ' || parsed.error())
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk('parents first'); count = 0; names = ''; literals = ''
+    do while walk.next()
+      node = walk.node()
+      if node.kind() = 'COptions' then do
+        count = count + 1
+        if count = 1 then call check(node.start() = 0 & pos('options LeVeLc',node.sourcetext()) = 1,'header keeps original byte extent')
+        if count = 2 then call check(node.count('value') = 0,'bare OPTIONS has no invented operand')
+      end
+      if node.kind() = 'Name' then names = names || node.text('spelling') || '|'
+      if node.kind() = 'Number' | node.kind() = 'String' then literals = literals || node.text('spelling') || '|'
+    end
+    call check(count = 4,'every OPTIONS clause retained')
+    call check(names = 'LeVeLc|NUMERIC_CLASSIC|unknown|','raw header words remain ordinary Names')
+    call check(literals = '42|''α''|','group and Unicode literal spelling retained')
+  end
+  do sample = 1 to 4
+    source = 'if 1 then options else options'
+    if sample > 2 then source = 'if 0 then options else options'
+    if sample % 2 = 0 then source = changestr('options else',source,'options; else')
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'inline/separated bare OPTIONS arms parse ' || sample)
+    if parsed.status() = 0 then do
+      tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+      call check(node.kind() = 'IfElse','bare OPTIONS does not swallow contextual ELSE ' || sample)
+      if node.kind() = 'IfElse' then do
+        yes = node.child('yes'); no = node.child('no')
+        call check(yes.kind() = 'COptions' & no.kind() = 'COptions' & yes.count('value') = 0 & no.count('value') = 0,'two childless OPTIONS arms ' || sample)
+      end
+    end
+  end
+  ignored = good('c','options else','name="else"')
+  ignored = good('c','if 1 then nop; options else','name="else"')
+  ignored = good('c','if 1 then nop; if 0 then options else options else','name="else"')
+  parsed = .lltestparse..parsed('c','if 1 then if 0 then options else options else say ''outer''' as .binary)
+  call check(parsed.status() = 0,'nested bare OPTIONS retains outer ELSE')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); node = tree.root().child('body').child('items',1)
+    yes = node.child('yes'); no = node.child('no')
+    call check(node.kind() = 'IfElse' & yes.kind() = 'IfElse' & no.kind() = 'Say','nested OPTIONS arms preserve the actual IF owners')
+  end
+  /* Each enabled request is followed by a default request in this process. */
+  do sample = 1 to 15
+    select sample
+      when 1 then source = 'options levelc CoMmEnTs_HaSh; # '' unterminated + // /*' || ('0A'x as .string) || 'say ''# literal'''
+      when 2 then source = '#v=3; say #v'
+      when 3 then source = 'options levelc comments_dash; say 2 -- '' broken + /*' || ('0A'x as .string) || 'say ''-- literal'''
+      when 4 then source = 'say 2 -- 1'
+      when 5 then source = 'options ''comments_hash''; #v=3; say #v'
+      when 6 then source = 'say 1; options comments_hash; #v=3; say #v'
+      when 7 then source = 'options levelc comments_hash comments_hash comments_nohead unknown comments_noslash'
+      when 8 then source = 'options levelc comments_nohash comments_nodash; #v=3; say #v; say 2 -- 1'
+      when 9 then source = 'options numeric_common(); exit 0; numeric_common: procedure; return 1'
+      when 10 then source = 'options levelg(); exit 0; levelg: procedure; return 1'
+      when 11 then source = 'options ''strictc''; options strictc; options ''srcmap''; options srcmap'
+      when 12 then source = 'options levelc commentſ_hash; #v=3; say #v'
+      when 13 then source = '/* leading /* nested */ */; options levelc numeric_classic'
+      when 14 then source = 'options ''x;y''; #v=3; say #v'
+      otherwise source = 'options levelg || ''x''; #v=3; say #v'
+    end
+    required = 'core.return'
+    if wordpos(sample as .string,'2 5 6 8 12 14 15') > 0 then required = 'name="#v"'
+    if sample = 4 then required = 'crexx.c.negative'
+    if sample = 9 | sample = 10 then required = 'crexx.c.call'
+    if sample = 11 then required = 'name="srcmap"'
+    ignored = good('c',source,required)
+    if sample = 8 then call check(pos('crexx.c.negative',ignored) > 0,'explicit NODASH keeps arithmetic minus tokens')
+  end
+  /* A bare header word is evaluated before, and again after, its assignment. */
+  request = .lltestfrontend..request('c','options levelc; levelc=''changed''; options levelc' as .binary,artifacts)
+  call check(request.status() = 0,'headerword can be assigned/read in the same request')
+  if request.status() = 0 then do
+    graph = request.graph(); names = ''
+    do i = 1 to graph.operations()
+      operation = graph.operation(i)
+      if operation.name() = 'crexx.c.load' | operation.name() = 'crexx.c.store' then names = names || operation.name() || ':' || (operation.attribute('name') as .string) || '|'
+    end
+    call check(names = 'crexx.c.load:levelc|crexx.c.store:levelc|crexx.c.load:levelc|','both OPTIONS Name reads surround the actual headerword assignment')
+  end
+  call optionrefusals()
+  source = 'options levelc comments_hash' || ('0D0A'x as .string) || '# ''α + junk' || ('0D0A'x as .string) || 'options ''β'''
+  parsed = .lltestparse..parsed('c',source as .binary)
+  call check(parsed.status() = 0,'Unicode CRLF comment source parses')
+  if parsed.status() = 0 then do
+    tree = parsed.ast(); walk = tree.walk('parents first'); found = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() <> 'String' then iterate
+      call check(node.sourcetext() = "'β'" & node.start() = <blen>(source as .binary) - 4,'original UTF-8 byte span after CRLF/comment')
+      found = found + 1
+    end
+    call check(found = 1,'comment junk has no invented quoted AST')
+  end
+  call bad('c',"options 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',8)
+  call bad('c',"exit 0; options ('2'b)" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
+  call bad('c','exit 0; options ((1d))' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c','6F7074696F6E7320FF'x as .binary,'LL_UTF8:','malformed UTF-8',8)
+  call bad('c',('options levelc comments_hash' as .binary) || ('0A23FF'x as .binary),'LL_UTF8:','malformed UTF-8')
+  parsed = .lltestparse..parsed('c','6F7074696F6E7320FF'x as .binary,4)
+  call check(pos('LL_COMPILER_LIMIT: source byte budget',parsed.error()) = 1,'source limit rejects before header/UTF-8 scanning')
+  return
+
+noptests: procedure = .void
+  parsed = .lltestparse..parsed; tree = .llast..tree; node = .llast..node
+  source = .string; walk = .llast..walk; ignored = .string; sample = .int
+  do sample = 1 to 7
+    select sample
+      when 1 then source = 'NoP'
+      when 2 then source = 'nop=3; say nop; nOp'
+      when 3 then source = 'if 1 then nop else NOP'
+      when 4 then source = 'if 1 then if 0 then nop else nop'
+      when 5 then source = 'do; nop; end'
+      when 6 then source = 'do while 0; nop; end'
+      otherwise source = 'exit 0; p: procedure; nop; return'
+    end
+    parsed = .lltestparse..parsed('c',source as .binary)
+    call check(parsed.status() = 0,'NOP placement parses ' || sample)
+    if parsed.status() <> 0 then iterate
+    tree = parsed.ast(); walk = tree.walk('parents first'); found = 0
+    do while walk.next()
+      node = walk.node()
+      if node.kind() <> 'Nop' then iterate
+      found = found + 1
+      call check(node.children() = 0,'NOP has no invented child/value')
+      if sample = 1 then call check(node.start() = 0 & node.finish() = 3 & node.sourcetext() = 'NoP','NOP exact authored byte span/case')
+    end
+    call check(found > 0,'authored Nop node found ' || sample)
+    ignored = good('c',source,'core.return','crexx.c.nop')
+  end
+  ignored = good('c','nop=3; say nop','name="nop"')
+  do sample = 1 to 6
+    tail = word('x quoted 1 (1) [x] then',sample); message = 'unexpected'
+    if sample = 2 then tail = "'x'"
+    if sample = 5 then message = '0x5B'
+    call bad('c',('nop ' || tail) as .binary,'LL_COMPILER_SYNTAX:',message,4,'line 1, column 5')
+  end
+  call bad('c','if 1 then nop x' as .binary,'LL_COMPILER_SYNTAX:','unexpected',14)
+  call bad('c','exit 0; nop x' as .binary,'LL_COMPILER_SYNTAX:','unexpected',12)
+  call bad('c','exit 0; nop; say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c','exit 0; do; nop; say 1d; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
+  call bad('c','exit 0; p: procedure; return; do; nop; say 1d; end' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
   return
 
 treechecks: procedure = .void
@@ -218,12 +1158,16 @@ mapping: procedure = .void
   text = good('c','say 0 & (1 / 0); say 1 | (1 / 0)','crexx.c.and','logical.rhs')
   text = good('c','numeric digits 3; numeric fuzz 1; numeric form engineering; numeric digits; numeric fuzz; numeric form; say digits()','crexx.c.numeric.form')
   call check(pos('crexx.c.numeric.digits',text) > 0 & pos('crexx.c.numeric.fuzz',text) > 0,'context setters explicit')
-  text = good('c','arg a /*comment*/, b; numeric /*one*/ form /*two*/ engineering; say a','form="ENGINEERING"')
-  call check(pos('name="A"',text) > 0 & pos('name="B"',text) > 0,'ARG names exclude comments')
+  text = good('c','arg a /*comment*/, b; numeric /*one*/ form /*two*/ engineering; say a','656E67696E656572696E67','form=')
+  parsed = .lltestparse..parsed('c','arg a /*comment*/, b' as .binary)
+  tree = parsed.ast(); templates = tree.root().child('body').child('items',1).child('templates')
+  first = templates.child('items',1); second = templates.child('items',2)
+  leftname = first.child('items',1).child('name'); rightname = second.child('items',1).child('name')
+  call check(templates.count('items') = 2 & first.count('items') = 1 & second.count('items') = 1 & leftname.text('spelling') == 'a' & rightname.text('spelling') == 'b' & pos('crexx.c.parse.execute',text) > 0,'raw ARG names exclude comments and select shared packet execution')
   text = good('c','say 01 == 1; say 1 = 1; say \0','crexx.c.strict')
   call bad('g','say unknown' as .binary,'LL_COMPILER_BIND:','unknown variable')
   call bad('g','leave' as .binary,'LL_COMPILER_FLOW:','surrounding loop')
-  call bad('c','iterate' as .binary,'LL_COMPILER_FLOW:','surrounding loop')
+  call bad('c','iterate' as .binary,'LL_COMPILER_FLOW:','RXC-LC-28.2: invalid ITERATE target')
   call bad('g','x=.int; x=.int' as .binary,'LL_COMPILER_BIND:','duplicate declaration')
   call bad('g','say 9223372036854775808' as .binary,'LL_', 'int64')
   call bad('c','say 1d' as .binary,'LL_COMPILER_PROFILE:','decimal suffix')
@@ -242,9 +1186,12 @@ calls: procedure = .void
   call bad('g','say f(,); exit 0; f: procedure = .int; arg n=.int,m=.int; return n' as .binary,'LL_COMPILER_CALL:','missing required typed argument')
   call bad('g','say p(); exit 0; p: procedure = .void; return' as .binary,'LL_COMPILER_CALL:','void routine used as a value')
   call bad('g','exit 0; p: procedure = .int; nop' as .binary,'LL_COMPILER_RETURN:','may finish without a value')
-  call bad('c','p: say 1' as .binary,'LL_COMPILER_PROFILE:','shared-pool labels')
-  call bad('c','say 1; p: procedure; return 2' as .binary,'LL_COMPILER_PROFILE:','fall-through')
-  call bad('c','say missing()' as .binary,'LL_COMPILER_CALL:','unknown Classic routine')
+  text = good('c','p: say 1','crexx.c.procedure.consume')
+  call check(pos('name="P"',text) > 0 & pos('function P',text) = 0,'shared label is a checked entry in one source body')
+  text = good('c','say 1; p: procedure; return 2','crexx.c.procedure.enter')
+  call check(pos('name="P"',text) > 0,'source-legal fall-through retains executed PROCEDURE guard')
+  text = good('c','say missing()','crexx.c.call.missing','crexx.c.call ')
+  call check(pos('crexx.c.requirevalue',text) > 0 & pos('name="MISSING"',text) > 0,'unresolved function retains reached failure and exact invocation identity')
   call bad('g','say length(''a'')' as .binary,'LL_COMPILER_IMPORT:','requires import')
   call bad('g','import nonexistent; say 1' as .binary,'LL_COMPILER_IMPORT:','cannot read nonexistent.rxbin')
   return

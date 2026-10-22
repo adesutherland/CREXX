@@ -1,0 +1,1109 @@
+/* cREXX License (MIT). Optional, bounded execution of admitted semantic IR. */
+options levelb
+namespace llirexecute expose value typehandler encodedtype request outcome handler registry plan token session result
+import rxfnsb
+import llir
+import llirservices
+import llirgraph
+import llireffects
+
+boot: initialiser expose serial
+  serial = 0
+  return
+nextidentity: procedure = .int expose serial
+  if serial = 9223372036854775807 then assembler signal "ERROR","LL_IR_EXEC_IDENTITY: identities exhausted"
+  serial = serial + 1
+  return serial
+bad: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** Immutable runtime carrier. A payload is a strongly owned immutable box,
+ * never a borrowed VM register or a serialized pointer. Its type service owns
+ * validation and its logical retained-byte charge. */
+value: class
+  _type = .string
+  _bits = .binary
+  _payload = .object
+  _haspayload = .int
+  *: factory
+    arg type = .string, bits = .binary, ?payload = .object
+    _type = type; _bits = bits; _haspayload = ?payload
+    if ?payload then _payload = payload
+    return
+  type: method = .string
+    return _type
+  bits: method = .binary
+    return _bits
+  haspayload: method = .int
+    return _haspayload
+  payload: method = .object
+    return _payload
+
+/** Trusted, pure value services. Materialization/check/charging must neither
+ * perform target effects nor mutate a published carrier or its payload. */
+typehandler: interface
+  materialize: method = .llirexecute..value
+    arg type = .string, bits = .binary
+  check: method = .string
+    arg item = .llirexecute..value
+  bytes: method = .int
+    arg item = .llirexecute..value
+
+/** Ordinary exact encodings reuse the schema's existing codec algorithm. */
+encodedtype: class implements .llirexecute..typehandler
+  _codec = .llir..typecodec
+  *: factory
+    arg codec = .llir..typecodec
+    _codec = codec
+    return
+  materialize: method = .llirexecute..value
+    arg type = .string, bits = .binary
+    return .llirexecute..value(type,bits)
+  check: method = .string
+    arg item = .llirexecute..value
+    if item.haspayload() then return 'encoded values cannot contain a live payload'
+    return _codec.check(item.bits())
+  bytes: method = .int
+    arg item = .llirexecute..value
+    bits = item.bits()
+    return <blen>(bits)
+
+/** A synchronous operation request owns its values. Its opview is valid only
+ * during dispatch; handlers must retain an origin/operation ID instead. */
+request: class
+  _operation = .llir..opview
+  _values = .object[]
+  _present = .int[]
+  _budget = .int
+  *: factory
+    arg operation = .llir..opview, values = .object[], present = .int[], budget = .int
+    _operation = operation; _values = values; _present = present; _budget = budget
+    return
+  operation: method = .llir..opview
+    return _operation
+  origin: method = .int
+    at = .llir..origin
+    at = _operation.origin()
+    return at.id()
+  size: method = .int
+    return _values[0]
+  at: method = .llirexecute..value
+    arg i = .int
+    return _values[i] as .llirexecute..value
+  present: method = .int
+    arg i = .int
+    return _present[i]
+  budget: method = .int
+    return _budget
+
+/** An operation completes, fails, or suspends. A failure carries exact opaque
+ * payload bytes and an owned logical origin; it is not a folding result. */
+outcome: class
+  _status = .string
+  _code = .string
+  _message = .string
+  _payload = .binary
+  _origin = .int
+  _values = .object[]
+  _present = .int[]
+  *: factory
+    arg status = 'normal', code = '', message = '', payload = ''x as .binary, origin = 0
+    _status = status; _code = code; _message = message; _payload = payload; _origin = origin
+    return
+  add: method = .void
+    arg item = .llirexecute..value, present = 1
+    i = _values[0] + 1; _values[i] = item as .object; _present[i] = present
+    return
+  status: method = .string
+    return _status
+  code: method = .string
+    return _code
+  message: method = .string
+    return _message
+  payload: method = .binary
+    return _payload
+  origin: method = .int
+    return _origin
+  size: method = .int
+    return _values[0]
+  at: method = .llirexecute..value
+    arg i = .int
+    return _values[i] as .llirexecute..value
+  present: method = .int
+    arg i = .int
+    return _present[i]
+
+/** One registered handler owns one mutable runtime service per session.
+ * External work/state budgets are its separate contract. Cleanup is called
+ * once on every terminal path, including cancellation and discard. */
+handler: interface
+  execute: method = .llirexecute..outcome
+    arg request = .llirexecute..request
+  cleanup: method = .void
+    arg reason = .string
+
+/** A sealed trusted capability registry. Named service ownership is separate
+ * from operation bindings, so multiple operations share one authoritative
+ * runtime pool/configuration rather than independent service copies. */
+registry: class
+  _sealed = .int
+  _error = .string
+  _manifest = .string
+  _typenames = .string[]
+  _types = .object[]
+  _handlernames = .string[]
+  _handlers = .object[]
+  _opnames = .string[]
+  _ophandlers = .string[]
+  _opcalls = .int[]
+  _effects = .object[]
+  _bounds = .int[]
+  *: factory
+    arg contract = .llir..contract
+    _sealed = 0; _error = ''
+    if initialized(contract) = 0 then do; _error = 'LL_IR_EXEC_REGISTRY: trusted contract is uninitialized'; return; end
+    if contract.error() <> '' then do; _error = contract.error(); return; end
+    data = dereference contract.data()
+    if data.sealed() = 0 then do; _error = 'LL_IR_EXEC_REGISTRY: trusted contract is not frozen'; return; end
+    _manifest = contract.manifest()
+    return
+  mutable: method = .int
+    if _sealed then do; _error = 'LL_IR_EXEC_REGISTRY: registry is sealed'; return 0; end
+    return _error = ''
+  type: method = .void
+    arg name = .string, service = .object
+    if mutable() = 0 then return
+    if name = '' | typeindex(name) > 0 | initialized(service) = 0 then do
+      _error = 'LL_IR_EXEC_TYPE: invalid or duplicate runtime type'; return
+    end
+    if service is .llirexecute..typehandler then do
+      i = _typenames[0] + 1; _typenames[i] = name; _types[i] = service
+    end
+    else _error = 'LL_IR_EXEC_TYPE: type service has the wrong interface'
+    return
+  handler: method = .void
+    arg name = .string, service = .object
+    if mutable() = 0 then return
+    if name = '' | handlerindex(name) > 0 | initialized(service) = 0 then do
+      _error = 'LL_IR_EXEC_HANDLER: invalid or duplicate runtime handler'; return
+    end
+    if service is .llirexecute..handler then do
+      i = _handlernames[0] + 1; _handlernames[i] = name; _handlers[i] = service
+    end
+    else _error = 'LL_IR_EXEC_HANDLER: service has the wrong interface'
+    return
+  operation: method = .void
+    arg name = .string, handlerName = .string, effects = .llireffects..summary, bytes = 4096
+    if mutable() = 0 then return
+    if name = '' | opindex(name) > 0 | handlerName = '' | bytes < 0 then do
+      _error = 'LL_IR_EXEC_OPERATION: invalid or duplicate binding'; return
+    end
+    i = _opnames[0] + 1; _opnames[i] = name; _ophandlers[i] = handlerName; _opcalls[i] = 0
+    _effects[i] = effects as .object; _bounds[i] = bytes
+    return
+  call: method = .void
+    arg name = .string, functionId = .int, effects = .llireffects..summary
+    if mutable() = 0 then return
+    if name = '' | opindex(name) > 0 | functionId < 1 then do
+      _error = 'LL_IR_EXEC_CALL: invalid or duplicate binding'; return
+    end
+    i = _opnames[0] + 1; _opnames[i] = name; _ophandlers[i] = ''; _opcalls[i] = functionId
+    _effects[i] = effects as .object; _bounds[i] = 0
+    return
+  seal: method = .int
+    _sealed = 1
+    do i = 1 to _opnames[0]
+      if _opcalls[i] = 0 & handlerindex(_ophandlers[i]) = 0 then _error = 'LL_IR_EXEC_HANDLER: operation has no registered handler'
+    end
+    return _error = ''
+  error: method = .string
+    return _error
+  matches: method = .int
+    arg contract = .llir..contract
+    return _error = '' & _manifest == contract.manifest()
+  typeindex: method = .int
+    arg name = .string
+    do i = 1 to _typenames[0]; if _typenames[i] == name then return i; end
+    return 0
+  handlerindex: method = .int
+    arg name = .string
+    do i = 1 to _handlernames[0]; if _handlernames[i] == name then return i; end
+    return 0
+  opindex: method = .int
+    arg name = .string
+    do i = 1 to _opnames[0]; if _opnames[i] == name then return i; end
+    return 0
+  typeservice: method = .object
+    arg i = .int
+    return _types[i]
+  service: method = .object
+    arg i = .int
+    return _handlers[i]
+  putservice: method = .void
+    arg i = .int, service = .object
+    _handlers[i] = service
+    return
+  handlers: method = .int
+    return _handlers[0]
+  effect: method = .llireffects..summary
+    arg i = .int
+    return _effects[i] as .llireffects..summary
+  target: method = .int
+    arg i = .int
+    return _opcalls[i]
+  binding: method = .int
+    arg i = .int
+    return handlerindex(_ophandlers[i])
+  bound: method = .int
+    arg i = .int
+    return _bounds[i]
+  usedbytes: method = .int
+    total = 0; i = .int; bits = .binary; summary = .llireffects..summary
+    bits = _manifest as .binary; total = total + <blen>(bits)
+    do i = 1 to _typenames[0]
+      bits = _typenames[i] as .binary; total = total + <blen>(bits) + 64
+    end
+    do i = 1 to _handlernames[0]
+      bits = _handlernames[i] as .binary; total = total + <blen>(bits) + 64
+    end
+    do i = 1 to _opnames[0]
+      bits = _opnames[i] as .binary; total = total + <blen>(bits) + 96
+      bits = _ophandlers[i] as .binary; total = total + <blen>(bits)
+      summary = _effects[i] as .llireffects..summary; total = total + summary.bytes()
+    end
+    return total
+
+/** Whole-module admission owns an immutable module and capability snapshot.
+ * Graph/effect/definite-assignment services remain the algorithm owners. The
+ * original owner is retained only for matches(), never for execution. Logical
+ * budgets do not bound VM allocation overhead, RSS, or uncooperative handlers.
+ * Work is a separate allowance for each shared preparation stage, rather than
+ * an aggregate instruction counter. External service state is host owned. */
+plan: class
+  _source = reference .llir..module
+  _revision = .int
+  _graph = .llir..module
+  _registry = .llirexecute..registry
+  _status = .string
+  _message = .string
+  _valueindex = .int[]
+  _slotindex = .int[]
+  _fnvalues = .int[]
+  _fnslots = .int[]
+  _opcode = .int[]
+  _aux = .int[]
+  _next = .int[]
+  _first = .int[]
+  _calls = .int[]
+  _handlers = .int[]
+  _bounds = .int[]
+  _summaries = .object[]
+  _constants = .object[]
+  _types = .object[]
+  _typenames = .string[]
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  *: factory
+    arg owner = reference .llir..module, registry = .llirexecute..registry, work = 1000000, bytes = 67108864
+    _source = owner; _registry = registry; _status = 'invalid'; _message = ''; _bytes = 0
+    if <refvalid>(owner) = 0 then do; _message = 'LL_IR_EXEC_OWNER: module expired'; return; end
+    borrowed = .llir..module; borrowed = dereference owner
+    _graph = borrowed; _revision = _graph.identity()
+    if _graph.error() <> '' then do; _message = _graph.error(); return; end
+    if work < 1 | bytes < 1 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: execution preparation budgets must be positive'; return; end
+    if _registry.seal() = 0 then do; _message = _registry.error(); return; end
+    _worklimit = work; _bytelimit = bytes; _status = 'building'
+    return
+  run: method = .void
+    if _status <> 'building' then return
+    _status = 'invalid'
+    do
+      call prepare(_worklimit,_bytelimit)
+    on signal as problem
+      _status = 'invalid'; _message = 'LL_IR_EXEC_PREPARATION: ' || problem.message()
+    end
+    return
+  prepare: method = .void
+    arg work = .int, bytes = .int
+    index = .llirgraph..index(reference _graph,work,bytes)
+    if index.valid() = 0 then do; _status = index.status(); _message = index.message(); return; end
+    store = dereference _graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
+    if _registry.matches(contract) = 0 then do; _message = 'LL_IR_EXEC_VERSION: graph does not match the trusted runtime contract'; return; end
+    f = .int; i = .int; op = .int; j = .int; v = .int; s = .int; t = .int; binding = .int; target = .int; count = .int
+    operation = .llir..opview; input = .llir..valuehandle; item = .llirexecute..value
+    summary = .llireffects..summary; fn = .llir..function; formaltype = .llir..typeid
+    type = .llir..typeid; runtime = .llirexecute..typehandler; constantsize = .int; empty = .object
+    /* Reserve maps, schema handles, source/IR and conservative local analysis
+     * working storage before constructing runtime values. */
+    _bytes = _graph.bytes()
+    if _bytes > bytes then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: owned IR exhausted'; return; end
+    metadata = _registry.usedbytes()
+    if metadata > bytes - _bytes then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: runtime registry metadata exhausted'; return; end
+    _bytes = _bytes + metadata
+    maps = index.values() * 16 + index.slots() * 16 + index.operations() * 96 + index.blocks() * 16 + index.functions() * 32 + schema.types() * 32
+    if maps > bytes - _bytes | index.usedbytes() > bytes - _bytes - maps then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: execution plan storage exhausted'; return
+    end
+    _bytes = _bytes + maps
+    do t = 1 to schema.types()
+      _typenames[t] = schema.typename(t)
+      _types[t] = empty
+      if t = 1 then iterate
+      binding = _registry.typeindex(_typenames[t])
+      if t = 2 then _types[t] = .llirexecute..encodedtype(.llir..boolcodec()) as .object
+      else if binding > 0 then _types[t] = _registry.typeservice(binding)
+    end
+    indexbytes = index.usedbytes()
+    model = .llireffects..model(reference _graph,'execution',1,work,bytes - _bytes - indexbytes)
+    if model.error() <> '' then do; _status = 'limit'; _message = model.error(); return; end
+    do f = 1 to index.functions()
+      fn = _graph.function(f); _fnvalues[f] = 0; _fnslots[f] = index.functionslots(f)
+      type = fn.resulttype()
+      if requiretype(type.id()) = 0 then return
+      do i = 1 to fn.arguments()
+        type = fn.argumenttype(i)
+        if requiretype(type.id()) = 0 then return
+      end
+      do i = 1 to index.functionslots(f)
+        s = index.functionslot(f,i); _slotindex[s] = i
+        if requiretype(store.get(5,s,2)) = 0 then return
+      end
+      do i = 1 to index.functionoperations(f)
+        op = index.functionoperation(f,i); operation = _graph.operation(op)
+        _opcode[op] = index.opcode(op); _aux[op] = store.get(3,op,12); _next[op] = index.nextop(op)
+        _calls[op] = 0; _handlers[op] = 0; _bounds[op] = 0
+        do j = 1 to operation.results()
+          input = operation.result(j); v = input.id(); type = input.type()
+          _fnvalues[f] = _fnvalues[f] + 1; _valueindex[v] = _fnvalues[f]
+          if requiretype(type.id()) = 0 then return
+        end
+        if _opcode[op] = 10 | (_opcode[op] > 10 & _opcode[op] <= 16) then do
+          _message = 'LL_IR_EXEC_CONTROL: unsupported core control ' || operation.name(); return
+        end
+        if _opcode[op] = 1 then do
+          input = operation.result(); type = input.type(); t = type.id(); runtime = _types[t] as .llirexecute..typehandler
+          item = runtime.materialize(_typenames[t],input.bytes())
+          _message = checkvalue(item,t)
+          if _message <> '' then return
+          if bin2x(item.bits()) <> bin2x(input.bytes()) then do; _message = 'LL_IR_EXEC_TYPE: constant materializer changed exact bits'; return; end
+          constantsize = valuebytes(item,t)
+          if constantsize < 0 | constantsize > bytes - _bytes - indexbytes - model.usedbytes() then do
+            _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: materialized constants exhausted'; return
+          end
+          _constants[op] = item as .object; _bytes = _bytes + constantsize
+        end
+        if _opcode[op] <= 16 then iterate
+        binding = _registry.opindex(operation.name())
+        if binding = 0 then do; _message = 'LL_IR_EXEC_CAPABILITY: no runtime binding for ' || operation.name(); return; end
+        summary = _registry.effect(binding)
+        if summary.complete() = 0 | summary.inputs() <> operation.inputs() | summary.results() <> operation.results() then do
+          _message = 'LL_IR_EXEC_EFFECT: incomplete or mismatched runtime summary'; return
+        end
+        if summary.transfer() <> 'none' then do; _message = 'LL_IR_EXEC_CONTROL: runtime transfer is unsupported'; return; end
+        do j = 1 to summary.inputs()
+          if summary.operandmode(j) <> 'value' then do; _message = 'LL_IR_EXEC_VALUE: borrowing or escaping operands are unsupported'; return; end
+        end
+        do j = 1 to summary.results()
+          if summary.availability(j) <> 'normal' then do; _message = 'LL_IR_EXEC_VALUE: conditional results are unsupported'; return; end
+        end
+        if summary.bytes() > bytes - _bytes - indexbytes - model.usedbytes() then do
+          _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: runtime effect metadata exhausted'; return
+        end
+        call model.put(op,summary); _summaries[op] = summary as .object
+        target = _registry.target(binding)
+        if target > 0 then do
+          if target > index.functions() then do; _message = 'LL_IR_EXEC_CALL: foreign function target'; return; end
+          fn = _graph.function(target)
+          if operation.inputs() > fn.arguments() then do; _message = 'LL_IR_EXEC_CALL: too many call arguments'; return; end
+          do j = 1 to fn.arguments()
+            if j <= operation.inputs() then do
+              input = operation.input(j); type = input.type(); formaltype = fn.argumenttype(j)
+              if type.id() <> formaltype.id() then do; _message = 'LL_IR_EXEC_CALL: argument type mismatch'; return; end
+            end
+            else if fn.optional(j) = 0 then do; _message = 'LL_IR_EXEC_CALL: missing required argument'; return; end
+          end
+          type = fn.resulttype(); count = type.id() <> 1
+          if operation.results() <> count then do; _message = 'LL_IR_EXEC_CALL: result arity mismatch'; return; end
+          if count then do
+            input = operation.result(); formaltype = input.type()
+            if type.id() <> formaltype.id() then do; _message = 'LL_IR_EXEC_CALL: result type mismatch'; return; end
+          end
+          _calls[op] = target
+        end
+        else do; _handlers[op] = _registry.binding(binding); _bounds[op] = _registry.bound(binding); end
+      end
+    end
+    do i = 1 to index.blocks(); _first[i] = index.firstop(i); end
+    if model.seal() = 0 then do; _message = model.error(); return; end
+    /* Definite assignment owns its lattice algorithm. Admit its conservative
+     * peak while index/model locals remain live; divide before multiplying
+     * potentially large block/slot counts. */
+    scratch = _graph.blocks() * 128 + store.count(7) * 32 + store.count(5) * 2
+    available = bytes - _bytes - indexbytes - model.usedbytes()
+    if scratch > available then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: initialization analysis scratch exhausted'; return; end
+    available = available - scratch
+    if store.count(5) > 0 then do
+      if _graph.blocks() > (available <idiv> 2) <idiv> store.count(5) then do
+        _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: initialization analysis lattice exhausted'; return
+      end
+    end
+    analysis = .llirservices..analysis
+    analysis = llirservices..analyse(reference _graph,work)
+    if analysis.status() <> 'ok' then do; _status = analysis.status(); _message = analysis.message(); return; end
+    if analysis.issues() > 0 then do; _message = 'LL_IR_EXEC_INITIALIZATION: ' || analysis.diagnostic(1); return; end
+    _status = 'ok'; _message = ''
+    return
+  requiretype: method = .int
+    arg t = .int
+    if t = 1 then return 1
+    if initialized(_types[t]) then return 1
+    _message = 'LL_IR_EXEC_CAPABILITY: no runtime type for ' || _typenames[t]
+    return 0
+  valid: method = .int
+    call run()
+    return _status = 'ok'
+  status: method = .string
+    call run()
+    return _status
+  message: method = .string
+    call run()
+    return _message
+  matches: method = .int
+    arg owner = reference .llir..module
+    if <refvalid>(_source) = 0 | <refvalid>(owner) = 0 then return 0
+    if (_source <refsame> owner) = 0 then return 0
+    graph = dereference owner
+    return graph.identity() = _revision
+  usedbytes: method = .int
+    call run()
+    return _bytes
+  functions: method = .int
+    return _graph.functions()
+  function: method = .llir..function
+    arg f = .int
+    return _graph.function(f)
+  operation: method = .llir..opview
+    arg op = .int
+    return _graph.operation(op)
+  opcode: method = .int
+    arg op = .int
+    return _opcode[op]
+  aux: method = .int
+    arg op = .int
+    return _aux[op]
+  next: method = .int
+    arg op = .int
+    return _next[op]
+  first: method = .int
+    arg block = .int
+    return _first[block]
+  entry: method = .int
+    arg f = .int
+    store = dereference _graph.storage()
+    return first(store.get(1,f,3))
+  valueindex: method = .int
+    arg v = .int
+    return _valueindex[v]
+  slotindex: method = .int
+    arg s = .int
+    return _slotindex[s]
+  values: method = .int
+    arg f = .int
+    return _fnvalues[f]
+  slots: method = .int
+    arg f = .int
+    return _fnslots[f]
+  target: method = .int
+    arg op = .int
+    return _calls[op]
+  bound: method = .int
+    arg op = .int
+    return _bounds[op]
+  summary: method = .llireffects..summary
+    arg op = .int
+    return _summaries[op] as .llireffects..summary
+  constant: method = .llirexecute..value
+    arg op = .int
+    return _constants[op] as .llirexecute..value
+  typename: method = .string
+    arg t = .int
+    return _typenames[t]
+  checkvalue: method = .string
+    arg item = .llirexecute..value, t = .int
+    if initialized(item) = 0 then return 'LL_IR_EXEC_TYPE: uninitialized runtime value'
+    if item.type() <> _typenames[t] then return 'LL_IR_EXEC_TYPE: runtime value type mismatch'
+    runtime = _types[t] as .llirexecute..typehandler
+    message = .string
+    do
+      message = runtime.check(item)
+    on signal as problem
+      message = problem.message()
+    end
+    if message <> '' then return 'LL_IR_EXEC_TYPE: ' || message
+    return ''
+  valuebytes: method = .int
+    arg item = .llirexecute..value, t = .int
+    runtime = _types[t] as .llirexecute..typehandler
+    amount = .int; amount = -1
+    do
+      amount = runtime.bytes(item)
+    on signal
+      amount = -1
+    end
+    return amount
+  dispatch: method = .llirexecute..outcome
+    arg op = .int, request = .llirexecute..request
+    binding = _handlers[op]; service = _registry.service(binding) as .llirexecute..handler
+    answer = .llirexecute..outcome
+    do
+      answer = service.execute(request)
+    on signal as problem
+      answer = .llirexecute..outcome('failure',problem.name(),problem.message(),''x as .binary,request.origin())
+    end
+    /* Explicit writeback preserves one mutable service, including mutations
+     * made before a handler reports or raises a failure. */
+    call _registry.putservice(binding,service as .object)
+    return answer
+  cleanup: method = .string
+    arg reason = .string
+    message = .string; message = ''
+    do i = 1 to _registry.handlers()
+      service = _registry.service(i) as .llirexecute..handler
+      do
+        call service.cleanup(reason)
+      on signal as problem
+        if message = '' then message = 'LL_IR_EXEC_CLEANUP: ' || problem.message()
+      end
+      call _registry.putservice(i,service as .object)
+    end
+    return message
+  service: method = .object
+    arg name = .string
+    i = _registry.handlerindex(name)
+    if i = 0 then do; call bad('LL_IR_EXEC_HANDLER: unknown service'); empty = .object; return empty; end
+    return _registry.service(i)
+
+/** A continuation names the original session storage as well as its serial
+ * and generation. Copying a token does not create a second right to resume. */
+token: class
+  _owner = reference .int
+  _identity = .int
+  _generation = .int
+  *: factory
+    arg owner = reference .int, identity = .int, generation = .int
+    _owner = owner; _identity = identity; _generation = generation
+    return
+  identity: method = .int
+    return _identity
+  generation: method = .int
+    return _generation
+  matches: method = .int
+    arg owner = reference .int, identity = .int, generation = .int
+    if <refvalid>(_owner) = 0 | <refvalid>(owner) = 0 then return 0
+    return (_owner <refsame> owner) & _identity = identity & _generation = generation
+
+/** Published results own their values and exact failure packet. */
+result: class
+  _status = .string
+  _message = .string
+  _code = .string
+  _payload = .binary
+  _origin = .int
+  _values = .object[]
+  _present = .int[]
+  _token = .llirexecute..token
+  _steps = .int
+  _depth = .int
+  _bytes = .int
+  *: factory
+    arg status = .string, message = '', code = '', payload = ''x as .binary, origin = 0, steps = 0, depth = 0, bytes = 0
+    _status = status; _message = message; _code = code; _payload = payload; _origin = origin
+    _steps = steps; _depth = depth; _bytes = bytes
+    return
+  add: method = .void
+    arg item = .llirexecute..value, present = 1
+    i = _values[0] + 1; _values[i] = item as .object; _present[i] = present
+    return
+  continuation: method = .void
+    arg token = .llirexecute..token
+    _token = token
+    return
+  status: method = .string
+    return _status
+  message: method = .string
+    return _message
+  code: method = .string
+    return _code
+  payload: method = .binary
+    return _payload
+  origin: method = .int
+    return _origin
+  size: method = .int
+    return _values[0]
+  at: method = .llirexecute..value
+    arg i = .int
+    return _values[i] as .llirexecute..value
+  present: method = .int
+    arg i = .int
+    return _present[i]
+  token: method = .llirexecute..token
+    return _token
+  steps: method = .int
+    return _steps
+  depth: method = .int
+    return _depth
+  usedbytes: method = .int
+    return _bytes
+
+/* A frame owns compact function-local SSA/slot cells and argument presence.
+ * Uninitialized slots are separate from an initialized empty value. */
+frame: class
+  _function = .int
+  _pc = .int
+  _caller = .int
+  _values = .object[]
+  _slots = .object[]
+  _arguments = .object[]
+  _present = .int[]
+  _valuebytes = .int[]
+  _slotbytes = .int[]
+  _argumentbytes = .int
+  _cells = .int
+  _bytes = .int
+  *: factory
+    arg function = .int, pc = .int, caller = .int, values = .int, slots = .int, arguments = .object[], present = .int[], argumentbytes = .int
+    _function = function; _pc = pc; _caller = caller; _arguments = arguments; _present = present
+    _cells = values + slots + arguments[0]; _argumentbytes = argumentbytes; _bytes = argumentbytes + _cells * 32
+    i = .int; empty = .object
+    do i = 1 to values; _values[i] = empty; _valuebytes[i] = 0; end
+    do i = 1 to slots; _slots[i] = empty; _slotbytes[i] = 0; end
+    return
+  function: method = .int
+    return _function
+  pc: method = .int
+    return _pc
+  advance: method = .void
+    arg pc = .int
+    _pc = pc
+    return
+  caller: method = .int
+    return _caller
+  cells: method = .int
+    return _cells
+  bytes: method = .int
+    return _bytes
+  value: method = .llirexecute..value
+    arg i = .int
+    return _values[i] as .llirexecute..value
+  hasvalue: method = .int
+    arg i = .int
+    return initialized(_values[i])
+  slot: method = .llirexecute..value
+    arg i = .int
+    return _slots[i] as .llirexecute..value
+  hasslot: method = .int
+    arg i = .int
+    return initialized(_slots[i])
+  argument: method = .llirexecute..value
+    arg i = .int
+    return _arguments[i] as .llirexecute..value
+  present: method = .int
+    arg i = .int
+    return _present[i]
+  valuebytes: method = .int
+    arg i = .int
+    return _valuebytes[i]
+  slotbytes: method = .int
+    arg i = .int
+    return _slotbytes[i]
+  putvalue: method = .void
+    arg i = .int, item = .llirexecute..value, bytes = .int
+    _bytes = _bytes - _valuebytes[i] + bytes; _valuebytes[i] = bytes; _values[i] = item as .object
+    return
+  putslot: method = .void
+    arg i = .int, item = .llirexecute..value, bytes = .int
+    _bytes = _bytes - _slotbytes[i] + bytes; _slotbytes[i] = bytes; _slots[i] = item as .object
+    return
+
+/** One run owns its graph/services, frames, PC and suspended output reservation.
+ * Fuel counts coordinator dispatches. An active copy is rejected by exact
+ * storage identity; ready copies can start independently with fresh serials. */
+session: class
+  _plan = .llirexecute..plan
+  _status = .string
+  _identity = .int
+  _anchor = .int
+  _self = reference .int
+  _generation = .int
+  _frames = .object[]
+  _depth = .int
+  _fuel = .int
+  _framelimit = .int
+  _valuelimit = .int
+  _bytelimit = .int
+  _steps = .int
+  _cells = .int
+  _bytes = .int
+  _pending = .int
+  _pendingcells = .int
+  _pendingbytes = .int
+  _activeop = .int
+  _activeorigin = .int
+  _cleaned = .int
+  _busy = .int
+  _last = .llirexecute..result
+  *: factory
+    arg plan = .llirexecute..plan, fuel = 100000, frames = 64, values = 100000, bytes = 67108864
+    _plan = plan; _status = 'ready'; _identity = 0; _anchor = 0; _generation = 0
+    _depth = 0; _fuel = fuel; _framelimit = frames; _valuelimit = values; _bytelimit = bytes
+    _steps = 0; _cells = 0; _bytes = _plan.usedbytes(); _pending = 0; _pendingcells = 0; _pendingbytes = 0; _activeop = 0; _activeorigin = 0; _cleaned = 0; _busy = 0
+    return
+  ownerlive: method = .int
+    if _status = 'ready' then return 1
+    if <refvalid>(_self) = 0 then return 0
+    here = reference _anchor
+    return _self <refsame> here
+  rejected: method = .llirexecute..result
+    arg message = .string
+    code = 'LL_IR_EXEC_REJECTED'; colon = pos(':',message)
+    if colon > 1 then code = left(message,colon - 1)
+    return .llirexecute..result('rejected',message,code,''x as .binary,0,_steps,_depth,_bytes)
+  status: method = .string
+    if ownerlive() = 0 then return 'rejected'
+    return _status
+  start: method = .llirexecute..result
+    arg fn = .int, values = .object[], present = .int[]
+    if ownerlive() = 0 then return rejected('LL_IR_EXEC_OWNER: active session was copied or expired')
+    if _status <> 'ready' then return rejected('LL_IR_EXEC_STATE: session has already started')
+    if _plan.valid() = 0 then return rejected(_plan.message())
+    if fn < 1 | fn > _plan.functions() then return rejected('LL_IR_EXEC_CALL: foreign function')
+    message = arguments(fn,values,present)
+    if message <> '' then return rejected(message)
+    _identity = nextidentity(); _anchor = _identity; _self = reference _anchor; _status = 'running'
+    if _fuel < 1 | _framelimit < 1 | _valuelimit < 1 | _bytelimit < _bytes then return finish('limit','LL_RESOURCE_LIMIT: invalid execution budgets')
+    if push(fn,0,values,present) = 0 then return finish('limit','LL_RESOURCE_LIMIT: initial frame exhausted')
+    return run()
+  arguments: method = .string
+    arg f = .int, values = .object[], present = .int[]
+    fn = .llir..function; fn = _plan.function(f)
+    type = .llir..typeid; item = .llirexecute..value
+    if values[0] > fn.arguments() | present[0] <> values[0] then return 'LL_IR_EXEC_CALL: argument/presence arity mismatch'
+    do i = 1 to fn.arguments()
+      has = 0
+      if i <= present[0] then has = present[i]
+      if has <> 0 & has <> 1 then return 'LL_IR_EXEC_CALL: invalid argument presence'
+      if has = 0 then do
+        if fn.optional(i) = 0 then return 'LL_IR_EXEC_CALL: required argument is absent'
+        iterate
+      end
+      if initialized(values[i]) = 0 then return 'LL_IR_EXEC_CALL: present argument is uninitialized'
+      if values[i] is .llirexecute..value then item = values[i] as .llirexecute..value
+      else return 'LL_IR_EXEC_CALL: argument is not a runtime value'
+      type = fn.argumenttype(i); message = _plan.checkvalue(item,type.id())
+      if message <> '' then return message
+    end
+    return ''
+  push: method = .int
+    arg f = .int, caller = .int, values = .object[], present = .int[]
+    fn = .llir..function; fn = _plan.function(f)
+    type = .llir..typeid; item = .llirexecute..value
+    argvalues = .object[]; presence = .int[]; argbytes = 0; empty = .object
+    cells = _plan.values(f) + _plan.slots(f) + fn.arguments()
+    if _depth >= _framelimit | cells > _valuelimit - _cells then return 0
+    if cells > (_bytelimit - _bytes) <idiv> 32 then return 0
+    do i = 1 to fn.arguments()
+      presence[i] = 0; argvalues[i] = empty
+      if i <= present[0] then presence[i] = present[i]
+      if presence[i] then do
+        item = values[i] as .llirexecute..value; type = fn.argumenttype(i); amount = _plan.valuebytes(item,type.id())
+        if amount < 0 | amount > _bytelimit - _bytes - cells * 32 - argbytes then return 0
+        argbytes = argbytes + amount; argvalues[i] = item as .object
+      end
+    end
+    next = .llirexecute..frame(f,_plan.entry(f),caller,_plan.values(f),_plan.slots(f),argvalues,presence,argbytes)
+    _depth = _depth + 1; _frames[_depth] = next as .object; _cells = _cells + cells; _bytes = _bytes + next.bytes()
+    return 1
+  run: method = .llirexecute..result
+    do
+      return execute()
+    on signal as problem
+      message = problem.message()
+      if message = '' then message = 'LL_IR_EXEC_RUNTIME: ' || problem.name() || ' at operation ' || _activeop
+      return finish('failure',message,problem.name(),''x as .binary,_activeorigin)
+    end
+    return rejected('LL_IR_EXEC_STATE: execution did not produce an outcome')
+  execute: method = .llirexecute..result
+    if ownerlive() = 0 then return rejected('LL_IR_EXEC_OWNER: active session was copied or expired')
+    if _busy then return rejected('LL_IR_EXEC_STATE: reentrant dispatch is unsupported')
+    if _status <> 'running' then do
+      if _status = 'ready' then return rejected('LL_IR_EXEC_STATE: session has not started')
+      return _last
+    end
+    current = .llirexecute..frame; operation = .llir..opview; input = .llir..valuehandle; type = .llir..typeid
+    item = .llirexecute..value; answer = .llirexecute..outcome; reply = .llirexecute..result
+    summary = .llireffects..summary; request = .llirexecute..request; continuation = .llirexecute..token
+    op = .int; opcode = .int; i = .int; index = .int; nextpc = .int; targetblock = .int; destination = .int; amount = .int; old = .int
+    message = .string; bits = .binary; target = .int; count = .int; at = .llir..origin
+    do while _status = 'running'
+      if _steps >= _fuel then return finish('limit','LL_RESOURCE_LIMIT: execution fuel exhausted')
+      current = _frames[_depth] as .llirexecute..frame; op = current.pc()
+      if op < 1 then return finish('failure','LL_IR_EXEC_PC: missing continuation')
+      _activeop = op; operation = _plan.operation(op); opcode = _plan.opcode(op); _steps = _steps + 1
+      at = operation.origin(); _activeorigin = at.id()
+      values = .object[]; presence = .int[]
+      do i = 1 to operation.inputs()
+        input = operation.input(i); index = _plan.valueindex(input.id())
+        if current.hasvalue(index) = 0 then return finish('failure','LL_IR_EXEC_VALUE: undefined SSA input')
+        item = current.value(index); values[i] = item as .object; presence[i] = 1
+      end
+      if opcode = 1 then do
+        answer = .llirexecute..outcome(); item = _plan.constant(op); call answer.add(item)
+        message = admit(op,answer,-1)
+        if message <> '' then return finish('limit',message)
+        call apply(op,answer)
+      end
+      else if opcode = 2 | opcode = 9 then do
+        index = _plan.aux(op)
+        if current.present(index) then item = current.argument(index)
+        else item = values[1] as .llirexecute..value
+        answer = .llirexecute..outcome(); call answer.add(item)
+        message = admit(op,answer,-1)
+        if message <> '' then return finish('limit',message)
+        call apply(op,answer)
+      end
+      else if opcode = 8 then do
+        index = _plan.aux(op); bits = '00'x as .binary
+        if current.present(index) then bits = '01'x as .binary
+        answer = .llirexecute..outcome(); call answer.add(.llirexecute..value('core.boolean',bits))
+        message = admit(op,answer,-1)
+        if message <> '' then return finish('limit',message)
+        call apply(op,answer)
+      end
+      else if opcode = 3 then do
+        index = _plan.slotindex(_plan.aux(op))
+        if current.hasslot(index) = 0 then return finish('failure','LL_IR_EXEC_INITIALIZATION: slot is uninitialized')
+        answer = .llirexecute..outcome(); call answer.add(current.slot(index))
+        message = admit(op,answer,-1)
+        if message <> '' then return finish('limit',message)
+        call apply(op,answer)
+      end
+      else if opcode = 4 then do
+        index = _plan.slotindex(_plan.aux(op)); input = operation.input(1); type = input.type(); item = values[1] as .llirexecute..value
+        amount = _plan.valuebytes(item,type.id()); old = current.slotbytes(index)
+        if amount < 0 | amount > _bytelimit - _bytes + old then return finish('limit','LL_RESOURCE_LIMIT: slot value storage exhausted')
+        call current.putslot(index,item,amount)
+        nextpc = _plan.next(op); call current.advance(nextpc)
+        _bytes = _bytes - old + amount; _frames[_depth] = current as .object
+      end
+      else if opcode = 5 | opcode = 6 then do
+        destination = 1
+        if opcode = 6 then do
+          item = values[1] as .llirexecute..value; bits = item.bits()
+          if item.type() <> 'core.boolean' | <blen>(bits) <> 1 then return finish('failure','LL_IR_EXEC_TYPE: branch requires an exact Boolean')
+          if <at..u8>(0) bits > 1 then return finish('failure','LL_IR_EXEC_TYPE: branch Boolean must be zero or one')
+          if <at..u8>(0) bits = 0 then destination = 2
+        end
+        targetblock = operation.successor(destination); nextpc = _plan.first(targetblock)
+        call current.advance(nextpc); _frames[_depth] = current as .object
+      end
+      else if opcode = 7 then do
+        reply = returning(op,values)
+        if reply.status() <> 'running' then return reply
+      end
+      else if _plan.target(op) > 0 then do
+        target = _plan.target(op); message = arguments(target,values,presence)
+        if message <> '' then return finish('failure',message)
+        if push(target,op,values,presence) = 0 then return finish('limit','LL_RESOURCE_LIMIT: call frame exhausted')
+      end
+      else do
+        amount = _plan.bound(op); count = operation.results()
+        if count > _valuelimit - _cells | amount > _bytelimit - _bytes then return finish('limit','LL_RESOURCE_LIMIT: runtime output reservation exhausted')
+        _pending = op; _pendingcells = count; _pendingbytes = amount; _cells = _cells + count; _bytes = _bytes + amount
+        request = .llirexecute..request(operation,values,presence,amount)
+        _busy = 1; answer = _plan.dispatch(op,request); _busy = 0
+        summary = _plan.summary(op)
+        message = packet(op,answer)
+        if message <> '' then return finish('failure',message)
+        if answer.status() = 'suspend' then do
+          if summary.resume() <> 'possible' | answer.size() <> 0 then return finish('failure','LL_IR_EXEC_PROTOCOL: undeclared or malformed suspension')
+          _status = 'suspended'; _generation = _generation + 1
+          at = operation.origin()
+          _last = boundaryresult('suspended',answer.message(),answer.code(),answer.payload(),at.id())
+          continuation = .llirexecute..token(reference _anchor,_identity,_generation)
+          call _last.continuation(continuation)
+          return _last
+        end
+        if answer.status() = 'failure' then do
+          if summary.failure() <> 'possible' | answer.size() <> 0 then return finish('failure','LL_IR_EXEC_PROTOCOL: undeclared or malformed runtime failure')
+          return failed(answer,op)
+        end
+        message = admit(op,answer,_pendingbytes)
+        if message <> '' then return finish('failure',message)
+        call releasepending(); call apply(op,answer)
+      end
+    end
+    return _last
+  admit: method = .string
+    arg op = .int, answer = .llirexecute..outcome, reservation = .int
+    if answer.status() <> 'normal' then return 'LL_IR_EXEC_PROTOCOL: expected a normal runtime result'
+    operation = .llir..opview; operation = _plan.operation(op)
+    input = .llir..valuehandle; type = .llir..typeid; item = .llirexecute..value
+    current = _frames[_depth] as .llirexecute..frame; total = 0; old = 0
+    if answer.size() <> operation.results() then return 'LL_IR_EXEC_PROTOCOL: runtime result arity mismatch'
+    do i = 1 to answer.size()
+      if answer.present(i) <> 1 then return 'LL_IR_EXEC_PROTOCOL: required runtime result is absent'
+      item = answer.at(i); input = operation.result(i); type = input.type()
+      message = _plan.checkvalue(item,type.id())
+      if message <> '' then return message
+      amount = _plan.valuebytes(item,type.id())
+      if amount < 0 | amount > _bytelimit - total then return 'LL_RESOURCE_LIMIT: invalid runtime value size'
+      total = total + amount; old = old + current.valuebytes(_plan.valueindex(input.id()))
+    end
+    if reservation >= 0 & total > reservation then return 'LL_IR_EXEC_PROTOCOL: handler exceeded its output bound'
+    available = _bytelimit - _bytes + old
+    if reservation > 0 then available = available + reservation
+    if total > available then return 'LL_RESOURCE_LIMIT: runtime values exhausted'
+    return ''
+  packet: method = .string
+    arg op = .int, answer = .llirexecute..outcome
+    if initialized(answer) = 0 then return 'LL_IR_EXEC_PROTOCOL: uninitialized operation outcome'
+    operation = .llir..opview; operation = _plan.operation(op); at = .llir..origin; at = operation.origin()
+    if answer.origin() <> 0 & answer.origin() <> at.id() then return 'LL_IR_EXEC_ORIGIN: foreign operation origin'
+    bits = answer.payload(); codebits = answer.code() as .binary; messagebits = answer.message() as .binary
+    size = <blen>(bits)
+    if size > _pendingbytes then return 'LL_IR_EXEC_PROTOCOL: control packet exceeded its bound'
+    if <blen>(codebits) > _pendingbytes - size then return 'LL_IR_EXEC_PROTOCOL: control packet exceeded its bound'
+    size = size + <blen>(codebits)
+    if <blen>(messagebits) > _pendingbytes - size then return 'LL_IR_EXEC_PROTOCOL: control packet exceeded its bound'
+    if answer.status() = 'normal' & size + <blen>(messagebits) > 0 then return 'LL_IR_EXEC_PROTOCOL: normal outcome contains a control packet'
+    return ''
+  apply: method = .void
+    arg op = .int, answer = .llirexecute..outcome
+    operation = .llir..opview; operation = _plan.operation(op)
+    input = .llir..valuehandle; type = .llir..typeid; item = .llirexecute..value
+    current = _frames[_depth] as .llirexecute..frame
+    do i = 1 to answer.size()
+      input = operation.result(i); type = input.type(); item = answer.at(i); index = _plan.valueindex(input.id())
+      amount = _plan.valuebytes(item,type.id()); old = current.valuebytes(index)
+      call current.putvalue(index,item,amount); _bytes = _bytes - old + amount
+    end
+    nextpc = _plan.next(op); call current.advance(nextpc); _frames[_depth] = current as .object
+    return
+  returning: method = .llirexecute..result
+    arg op = .int, values = .object[]
+    current = _frames[_depth] as .llirexecute..frame; caller = current.caller()
+    item = .llirexecute..value; answer = .llirexecute..outcome
+    resultbytes = .int; resultbytes = 0
+    fn = .llir..function; type = .llir..typeid
+    if _depth = 1 then do
+      if values[0] = 1 then do
+        item = values[1] as .llirexecute..value; fn = _plan.function(current.function()); type = fn.resulttype()
+        resultbytes = _plan.valuebytes(item,type.id())
+        if resultbytes < 0 then return finish('failure','LL_IR_EXEC_TYPE: invalid final result charge')
+      end
+      reply = finish('done','')
+      if reply.status() = 'done' & values[0] = 1 then do
+        _bytes = _bytes + resultbytes + 32
+        reply = boundaryresult('done','','',''x as .binary,0)
+        call reply.add(item)
+      end
+      _last = reply
+      return reply
+    end
+    /* Validate the caller's result contract before changing either frame.
+     * The returned carrier is already charged in the child, so transferring
+     * it after this check cannot exceed the retained-byte budget. */
+    answer = .llirexecute..outcome()
+    if values[0] = 1 then call answer.add(values[1] as .llirexecute..value)
+    operation = .llir..opview; operation = _plan.operation(caller)
+    input = .llir..valuehandle
+    if answer.size() <> operation.results() then return finish('failure','LL_IR_EXEC_CALL: return arity mismatch')
+    do i = 1 to answer.size()
+      item = answer.at(i); input = operation.result(i); type = input.type()
+      message = _plan.checkvalue(item,type.id())
+      if message <> '' then return finish('failure',message)
+      if _plan.valuebytes(item,type.id()) < 0 then return finish('failure','LL_IR_EXEC_TYPE: negative return size')
+    end
+    empty = .object
+    _bytes = _bytes - current.bytes(); _cells = _cells - current.cells(); _frames[_depth] = empty; _depth = _depth - 1
+    call apply(caller,answer)
+    return .llirexecute..result('running')
+  releasepending: method = .void
+    _cells = _cells - _pendingcells; _bytes = _bytes - _pendingbytes
+    _pending = 0; _pendingcells = 0; _pendingbytes = 0
+    return
+  failed: method = .llirexecute..result
+    arg answer = .llirexecute..outcome, op = .int
+    origin = answer.origin()
+    if origin = 0 then do
+      operation = .llir..opview; operation = _plan.operation(op); at = .llir..origin; at = operation.origin(); origin = at.id()
+    end
+    return finish('failure',answer.message(),answer.code(),answer.payload(),origin)
+  resume: method = .llirexecute..result
+    arg token = .llirexecute..token, outcome = .llirexecute..outcome
+    if ownerlive() = 0 then return rejected('LL_IR_EXEC_OWNER: active session was copied or expired')
+    if _status <> 'suspended' then return rejected('LL_IR_EXEC_STATE: session is not suspended')
+    if initialized(token) = 0 then return rejected('LL_IR_EXEC_TOKEN: uninitialized continuation')
+    if token.matches(reference _anchor,_identity,_generation) = 0 then return rejected('LL_IR_EXEC_TOKEN: foreign or consumed continuation')
+    message = packet(_pending,outcome)
+    if message <> '' then return rejected(message)
+    if outcome.status() = 'failure' then do
+      summary = _plan.summary(_pending)
+      if summary.failure() <> 'possible' | outcome.size() <> 0 then return rejected('LL_IR_EXEC_PROTOCOL: invalid resumed failure')
+      _generation = _generation + 1
+      return failed(outcome,_pending)
+    end
+    message = admit(_pending,outcome,_pendingbytes)
+    if message <> '' then return rejected(message)
+    op = _pending; _generation = _generation + 1; call releasepending(); call apply(op,outcome)
+    _status = 'running'
+    return run()
+  discard: method = .llirexecute..result
+    arg token = .llirexecute..token
+    if ownerlive() = 0 then return rejected('LL_IR_EXEC_OWNER: active session was copied or expired')
+    if _status <> 'suspended' then return rejected('LL_IR_EXEC_STATE: session is not suspended')
+    if initialized(token) = 0 then return rejected('LL_IR_EXEC_TOKEN: uninitialized continuation')
+    if token.matches(reference _anchor,_identity,_generation) = 0 then return rejected('LL_IR_EXEC_TOKEN: foreign or consumed continuation')
+    _generation = _generation + 1
+    return finish('discarded','')
+  cancel: method = .llirexecute..result
+    if ownerlive() = 0 then return rejected('LL_IR_EXEC_OWNER: active session was copied or expired')
+    if _busy then return rejected('LL_IR_EXEC_STATE: reentrant dispatch is unsupported')
+    if _status = 'ready' then do
+      _identity = nextidentity(); _anchor = _identity; _self = reference _anchor
+      return finish('cancelled','')
+    end
+    if _status <> 'running' & _status <> 'suspended' then return _last
+    _generation = _generation + 1
+    return finish('cancelled','')
+  boundaryresult: method = .llirexecute..result
+    arg status = .string, message = .string, code = .string, payload = .binary, origin = .int
+    return .llirexecute..result(status,message,code,payload,origin,_steps,_depth,_bytes)
+  finish: method = .llirexecute..result
+    arg status = .string, message = .string, code = '', payload = ''x as .binary, origin = 0
+    if code = '' then do
+      colon = pos(':',message)
+      if colon > 1 then code = left(message,colon - 1)
+    end
+    /* Callback reentry observes a terminal state and an invalidated token. */
+    _status = status; _generation = _generation + 1; _busy = 0; _last = boundaryresult(status,message,code,payload,origin)
+    if _cleaned = 0 then do
+      _cleaned = 1; cleanup = _plan.cleanup(status)
+      if cleanup <> '' & status <> 'failure' then do; status = 'failure'; message = cleanup; code = 'LL_IR_EXEC_CLEANUP'; end
+    end
+    call objectarraydrop _frames
+    _depth = 0; _cells = 0; _pending = 0; _pendingcells = 0; _pendingbytes = 0
+    packet = payload; codebits = code as .binary; messagebits = message as .binary
+    _bytes = _plan.usedbytes() + <blen>(packet) + <blen>(codebits) + <blen>(messagebits)
+    /* Fixed diagnostics may report an exhausted or invalid budget. Caller
+     * copies of published results have their own lifetime and are not charged
+     * repeatedly to this session. Handler packets were reserved before use. */
+    _status = status; _last = boundaryresult(status,message,code,payload,origin)
+    return _last
+  service: method = .object
+    arg name = .string
+    if ownerlive() = 0 then do; call bad('LL_IR_EXEC_OWNER: active session was copied or expired'); empty = .object; return empty; end
+    return _plan.service(name)

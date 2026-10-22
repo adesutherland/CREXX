@@ -1,0 +1,4 @@
+CLAUSE|pair=1|child=1|later=1
+CLAUSE|header=1|first=1|repeat=1|while=2
+CLAUSE|until-first=1|until-repeat=1|until=2
+CLAUSE|shadow=local-time|local-date|pauses=4

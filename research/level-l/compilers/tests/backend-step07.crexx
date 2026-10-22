@@ -7,7 +7,8 @@ import llir
 import lltestfamilies
 main: procedure = .int
   arg argv = .string[]
-  if argv[0] <> 4 then return 2
+  if argv[0] <> 4 & argv[0] <> 5 then return 2
+  if argv[0] = 5 then if argv[5] <> 'views' then return 2
   source = readbinary(argv[2]); failures = 0
   request = .lltestcompiler..request(argv[1],source,argv[3],argv[2])
   if request.status() <> 0 then do; say request.diagnostic(); return 1; end
@@ -15,6 +16,10 @@ main: procedure = .int
   if writebinary(argv[4] || '.ir',graph.dump() as .binary) <= 0 then failures = failures + 1
   if writebinary(argv[4] || '.selected.ir',selected.dump() as .binary) <= 0 then failures = failures + 1
   if writebinary(argv[4] || '.rxas',output.text() as .binary) <= 0 then failures = failures + 1
+  if argv[0] = 5 then do
+    say 'STEP07_VIEWS|failures=' || failures
+    return failures
+  end
   store = dereference graph.storage(); contract = dereference store.contract()
   restored = llir..loadbinary(contract,graph.binary())
   if restored.error() <> '' | restored.text() <> graph.text() then failures = failures + 1

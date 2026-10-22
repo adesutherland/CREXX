@@ -45,6 +45,7 @@
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
+#include "../interpreter/rxvmparse_bindings.h"
 #include "rxcp_val.h"
 #include "rxcp_util.h"
 #ifndef NUTF8
@@ -3090,6 +3091,43 @@ static int source_namespace_claimed_by_earlier_root(Context *context,
     return 0;
 }
 
+/* Core native declarations have no disk/provider dependency. Import an
+ * immutable DECL_ONLY table into this request; do not use the process-global
+ * callback lists, which are consumed by unrelated optional-provider imports.
+ * Mark the request before parsing synthesized declarations, since their type
+ * lookup can recursively ask for another import. */
+static void import_core_parse_cursor(Context *context) {
+    struct static_linked_metadata *metadata;
+    size_t i, count = 0;
+    metadata = calloc(rxvm_parse_cursor_binding_count, sizeof(*metadata));
+    if (!metadata) RX_PANIC_OOM("allocate core PARSE declarations",
+        rxvm_parse_cursor_binding_count * sizeof(*metadata), "rxparse");
+    for (i = 0; i < rxvm_parse_cursor_binding_count; ++i) {
+        const rxvm_parse_binding *binding = &rxvm_parse_cursor_bindings[i];
+        struct static_linked_metadata *entry;
+        if (binding->kind == RXVM_PARSE_BIND_FUNCTION) continue;
+        entry = &metadata[count++];
+        if (binding->kind == RXVM_PARSE_BIND_CLASS) {
+            entry->kind = "class"; entry->symbol = (char *)binding->symbol;
+            entry->option = "b"; entry->type = (char *)binding->type;
+        } else {
+            entry->kind = "member"; entry->owner = (char *)binding->symbol;
+            entry->member_kind = (char *)binding->member_kind;
+            entry->member = (char *)binding->member;
+            entry->type = (char *)binding->type; entry->args = (char *)binding->args;
+        }
+        if (count > 1) metadata[count - 2].next = entry;
+    }
+    import_rxpa_metadata_list(context, "statically-linked", metadata);
+    free(metadata);
+    for (i = 0; i < rxvm_parse_cursor_binding_count; ++i) {
+        const rxvm_parse_binding *binding = &rxvm_parse_cursor_bindings[i];
+        if (binding->kind != RXVM_PARSE_BIND_FUNCTION) continue;
+        (void)rximpf_provider_f(context, "statically-linked", (char *)binding->symbol,
+            "b", (char *)binding->type, (char *)binding->args, 0, 0, 0, "rxparse");
+    }
+}
+
 /* Load the next importable file */
 /* return 1 if a file was loaded, or 0 if no more files are available */
 static int load_another_file(Context *context) {
@@ -3099,6 +3137,11 @@ static int load_another_file(Context *context) {
     if (!context) return 0;
     master_context = context->master_context;
     if (!master_context) return 0;
+    if (!master_context->core_parse_metadata_loaded) {
+        master_context->core_parse_metadata_loaded = 1;
+        import_core_parse_cursor(context);
+        return 1;
+    }
 
     /* Load files from the importable_file_list */
     if (!master_context->importable_file_list) master_context->importable_file_list = rxfl_lst(master_context);

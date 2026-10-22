@@ -1230,10 +1230,18 @@ walker_result register_walker(walker_direction direction,
             case OP_DIV:
             case OP_IDIV:
             case OP_MOD:
-            case OP_CONCAT:
-            case OP_SCONCAT:
                 /* one or the other can be a constant - not both */
                 if (node->value_type != TP_BINARY && node->target_type != TP_BINARY) {
+                    if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                    else if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                }
+                break;
+
+            case OP_CONCAT:
+            case OP_SCONCAT:
+                /* Text concat accepts an immediate even when its result is
+                 * subsequently promoted into a binary destination. */
+                if (node->value_type != TP_BINARY) {
                     if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                     else if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
                 }

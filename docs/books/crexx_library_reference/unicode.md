@@ -6,7 +6,7 @@ extended grapheme clusters, and converts between `.string` text and `.binary`
 encoded bytes.
 
 ```rexx
-options levelg
+options levelb
 import rxfnsb
 import rxunicode
 
@@ -21,6 +21,27 @@ Importing `rxunicode` does not change ordinary string equality, codepoint
 indexing, Level B `upper` or `lower`, file I/O, or `.binary` semantics. Every
 potentially expensive or information-changing operation remains visible at the
 call site.
+
+## Library selection
+
+The 23 namespace procedures are implemented in Level B and available in
+`rxunicode-core.rxbin`. Their existing names, argument types, omitted-argument
+behavior and errors are unchanged. The `.graphemes` and `.graphemeiterator`
+classes remain Level G facilities, supplied by `rxfnsg.rxbin`; that aggregate
+also contains the same B procedures for existing G callers.
+
+For a B or C-only application, compile against an exact import directory
+containing the standalone core and its other required libraries. Link the
+core once. For a combined/G application, select the G aggregate instead:
+it already includes the Unicode members. Do not link both aggregates into
+one image; overlapping exports are rejected. The minimal B library and
+Level L bootstrap do not import this optional component.
+
+Classic C uses its existing BIF names and adapters in `rxfnsc`, preserving
+text/ordinal conversions and Classic error translation. Rebuild adapters and
+callers against their selected provider when changing a manually staged
+runtime; old bytecode autoload hints are not rewritten by installation.
+The ordinary installer remains a combined product.
 
 ## Text, bytes, and graphemes
 
@@ -403,7 +424,9 @@ this baseline.
 - Strict codec conversion failures signal `UNICODE_ERROR`.
 - Invalid grapheme arguments signal `INVALID_ARGUMENTS` or `OUT_OF_RANGE` as
   described above.
-- Corrupt generated data or an internal invariant failure signals `FAILURE`.
+- Prepared-data guards normally signal `FAILURE`; normalization also has
+  internal invariant paths that signal `UNICODE_ERROR`. No uniform conversion
+  of infrastructure failures is promised.
 - Public operations do not mutate their arguments or expose generated mapping
   tables.
 - `.string` is valid UTF-8 text; `.binary` remains arbitrary bytes. Codec

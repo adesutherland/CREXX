@@ -351,7 +351,7 @@ must therefore be explicit if this extension is retained.
 **Status: existing documented capability accepted by Adrian, 2026-09-18.**
 
 The language-band normalization certificates are real assertions. For example,
-`lib/rxfnsg/unicode/tools/unicode_d.crexx:1080–1086` reads a certificate and can
+`tools/unicode/unicode_d.crexx:1080–1086` reads a certificate and can
 return the source without running normalization; `1144–1147` sets certificates
 on a completed result. Trusted assembly may also set these bits through status
 instructions. RXAS does not prove the string content satisfies the assertion.

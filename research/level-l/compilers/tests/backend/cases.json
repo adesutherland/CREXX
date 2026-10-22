@@ -1,5 +1,13 @@
 [
   {
+    "name": "nop",
+    "level": "c",
+    "source": "nop-c.crexx",
+    "output": "variable\nbefore\nprivate\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
     "name": "pipeline",
     "level": "c",
     "source": "../../examples/step01/pipeline-c.crexx",
@@ -102,7 +110,7 @@
     "name": "numeric",
     "level": "c",
     "source": "numeric-c.crexx",
-    "output": "1\n0\n4\n0.33\n4\n0.3333\n1.000E+6\n1.000E+6\n9\n",
+    "output": "1\n0\n4\n100E+6\n0.33\n4\n0\n0.3333\n1.000E+8\n100.0E+6\n1.000E+8\n9\n",
     "error": "",
     "args": []
   },
@@ -248,6 +256,227 @@
     "source": "text-comparisons-c.crexx",
     "output": "1\n1\n0\n0\n0\n1\n1\n0\n",
     "error": "",
+    "args": []
+  },
+  {
+    "name": "options",
+    "level": "c",
+    "source": "options-c.crexx",
+    "output": "before\nMAIN\nIF\nBARE ELSE\nGROUP\nWHILE\nPRIVATE\n# -- quoted\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "options-error",
+    "level": "c",
+    "source": "options-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-42.3",
+    "args": []
+  },
+  {
+    "name": "options-result-error",
+    "level": "c",
+    "source": "options-result-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-45.1",
+    "args": []
+  },
+  {
+    "name": "if",
+    "level": "c",
+    "source": "if-c.crexx",
+    "output": "before\ncondition 1\nyes\ncondition 0\nno\nliteral\nnearest\nloop 2\n2 1\n\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "if-error",
+    "level": "c",
+    "source": "if-error-c.crexx",
+    "output": "before\ncondition\n",
+    "error": "RXC-LC-34.1",
+    "args": []
+  },
+  {
+    "name": "select",
+    "level": "c",
+    "source": "select-c.crexx",
+    "output": "before\nFIRST\nSECOND\npick\nnested\nempty\nloop 2\ntail 2\nno yes\ns w o e\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "select-when-error",
+    "level": "c",
+    "source": "select-when-error-c.crexx",
+    "output": "before\ncondition\n",
+    "error": "RXC-LC-34.2",
+    "error_line": 4,
+    "args": []
+  },
+  {
+    "name": "select-missing",
+    "level": "c",
+    "source": "select-missing-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-7.3",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do",
+    "level": "c",
+    "source": "do-c.crexx",
+    "output": "before\ncount\ncount\ncount\nlarge\nexponent\nforever 2\nwhile 0\nuntil 2\nto-suppressed 2\nfor-zero 5\nfor-final 1\nadvanced 2\nUNTIL-CHECK\nuntil-unstepped 1\nleave-unstepped 1\nmutated 13.0\ncompound 1.0 11\nouter 1\nouter 2\nselect-transfer 2\nFIRST SECOND parent\nunicode 2\nafter\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "do-scale",
+    "level": "c",
+    "source": "do-scale-c.crexx",
+    "output": "scale 1.00\nscale 2.00\nafter-scale 3.00\nfraction 0.500\nfraction 1.000\nfraction 1.500\nnegative 3\nnegative 2\nnegative 1\nzero-by 2\nzero-by 2\nzero-after 2\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "do-order",
+    "level": "c",
+    "source": "do-order-c.crexx",
+    "output": "S\nT\nB\nF\ncontrol 2\nS\nT\nF\nB\ncontrol 2\nS\nB\nT\nF\ncontrol 2\nS\nB\nF\nT\ncontrol 2\nS\nF\nT\nB\ncontrol 2\nS\nF\nB\nT\ncontrol 2\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "do-count-error",
+    "level": "c",
+    "source": "do-count-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-26.2",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-for-error",
+    "level": "c",
+    "source": "do-for-error-c.crexx",
+    "output": "before\nS\nF\n",
+    "error": "RXC-LC-26.3",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-to-error",
+    "level": "c",
+    "source": "do-to-error-c.crexx",
+    "output": "before\nS\nT\n",
+    "error": "RXC-LC-41.4",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-by-error",
+    "level": "c",
+    "source": "do-by-error-c.crexx",
+    "output": "before\nS\nB\n",
+    "error": "RXC-LC-41.5",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-start-error",
+    "level": "c",
+    "source": "do-start-error-c.crexx",
+    "output": "before\nS\nT\nB\nF\n",
+    "error": "RXC-LC-41.6",
+    "error_line": 4,
+    "args": []
+  },
+  {
+    "name": "do-while-error",
+    "level": "c",
+    "source": "do-while-error-c.crexx",
+    "output": "before\nW\n",
+    "error": "RXC-LC-34.3",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "do-until-error",
+    "level": "c",
+    "source": "do-until-error-c.crexx",
+    "output": "before\nbody\nU\n",
+    "error": "RXC-LC-34.4",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "leave",
+    "level": "c",
+    "source": "leave-c.crexx",
+    "output": "outer 1 10\nshadow 10\nshadow-final 11\nraw-tail 1 88 1\nunicode 1 1\nwrappers 1\nelse-name 1\nelse-group 1\ninline 1\nnamed-inline 1\n1 1\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "leave-strict-dead",
+    "level": "c",
+    "source": "leave-strict-dead-c.crexx",
+    "output": "before\nafter 2\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "leave-outside-error",
+    "level": "c",
+    "source": "leave-outside-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-28.1:",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "leave-missing-error",
+    "level": "c",
+    "source": "leave-missing-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-28.3:",
+    "error_line": 5,
+    "args": []
+  },
+  {
+    "name": "iterate",
+    "level": "c",
+    "source": "iterate-c.crexx",
+    "output": "body 1 10\ncheck 1\nbody 2 10\ncheck 2\nuntil-final 2 10\nfor 1 10\nfor 3 10\nfor-final 5 10\nshadow 10\nshadow 11\nafter-inner 12\nafter-outer 13\nraw-tail 1 90 10\ninline 2\n5 5\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "iterate-strict-dead",
+    "level": "c",
+    "source": "iterate-strict-dead-c.crexx",
+    "output": "before\nafter 2\n",
+    "error": "",
+    "args": []
+  },
+  {
+    "name": "iterate-outside-error",
+    "level": "c",
+    "source": "iterate-outside-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-28.2:",
+    "error_line": 3,
+    "args": []
+  },
+  {
+    "name": "iterate-missing-error",
+    "level": "c",
+    "source": "iterate-missing-error-c.crexx",
+    "output": "before\n",
+    "error": "RXC-LC-28.4:",
+    "error_line": 5,
     "args": []
   }
 ]

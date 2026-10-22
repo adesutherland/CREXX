@@ -1427,7 +1427,7 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_SCONCAT:
-                        if (node->value_type == TP_BINARY || node->target_type == TP_BINARY) break;
+                        if (node->value_type == TP_BINARY) break;
                         buffer_length =
                                 child1->node_string_length +
                                 child2->node_string_length + 1;
@@ -1450,7 +1450,7 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_CONCAT:
-                        if (node->value_type == TP_BINARY || node->target_type == TP_BINARY) break;
+                        if (node->value_type == TP_BINARY) break;
                         buffer_length =
                                 child1->node_string_length +
                                 child2->node_string_length;

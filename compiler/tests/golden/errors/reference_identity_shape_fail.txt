@@ -1,0 +1,4 @@
+Error in reference_identity_shape_fail.crexx @ 9:6 - #REFERENCE_TYPE_MISMATCH, "first <refsame> other_base"
+Error in reference_identity_shape_fail.crexx @ 10:6 - #REFERENCE_TYPE_MISMATCH, "first <refsame> other_extent"
+Error in reference_identity_shape_fail.crexx @ 11:6 - #REFERENCE_TYPE_MISMATCH, "first <refsame> other_rank"
+3 error(s) in source file

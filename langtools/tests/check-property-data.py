@@ -17,7 +17,7 @@ root = Path(__file__).resolve().parents[2]
 binary = a.build.resolve() / 'bin'
 out = scratch()
 out.mkdir(parents=True, exist_ok=True)
-raw = root / 'lib/rxfnsl/unicode/data/unicode-17.0.0'
+raw = root / 'lib/rxfnsb/unicode/data/unicode-17.0.0'
 expected = {}
 records = []
 

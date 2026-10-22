@@ -63,6 +63,7 @@
 #include "rxsignature.h"
 #include "rxvmlinkindex.h"
 #include "rxvmfile.h"
+#include "rxvmparse.h"
 #include <ctype.h>
 #include <limits.h>
 #include <locale.h>
@@ -513,631 +514,58 @@ static uint64_t rxvm_binary_read_le_bytes(const unsigned char *bytes, size_t off
     return result;
 }
 
-#define RXVM_PARSE_PLAN_MAGIC 0x50u
-#define RXVM_PARSE_PLAN_VERSION_FROZEN 1u
-#define RXVM_PARSE_PLAN_VERSION_DYNAMIC 2u
-#define RXVM_PARSE_PLAN_HEADER_SIZE_FROZEN 8u
-#define RXVM_PARSE_PLAN_HEADER_SIZE_DYNAMIC 12u
-#define RXVM_PARSE_PLAN_FLAG_CLASSIC_NUMERIC_ERROR 0x01u
-#define RXVM_PARSE_PLAN_FLAG_STORE 0x01u
-#define RXVM_PARSE_PLAN_FLAG_SKIP 0x01u
-#define RXVM_PARSE_PLAN_FLAG_CAPTURE 0x01u
+/* The whole opcode is a synchronous driver of the same checked event engine
+ * exposed by rxparse.cursor. Its external vector remains live until success;
+ * only result slots are written, and dropped spans allocate no strings. */
+static rxvm_parse_diagnostic rxvm_parse_plan_execute(value *result,
+                                                    value *source,
+                                                    const string_constant *plan) {
+    rxvm_parse_cursor *cursor;
+    rxvm_parse_diagnostic diagnostic;
+    size_t results, dynamics, slot, length;
+    const char *text;
+    int status, classic_numeric;
 
-#define RXVM_PARSE_PLAN_INVALID 0
-#define RXVM_PARSE_PLAN_OK 1
-#define RXVM_PARSE_PLAN_CONVERSION (-1)
-
-typedef struct rxvm_parse_plan_item {
-    unsigned char kind;
-    unsigned char flags;
-    size_t offset;
-    size_t next_offset;
-    const unsigned char *literal;
-    size_t literal_bytes;
-    size_t literal_chars;
-    rxinteger movement;
-    uint16_t operand_index;
-} rxvm_parse_plan_item;
-
-static int rxvm_parse_plan_header(const string_constant *plan,
-                                  unsigned char *version,
-                                  size_t *header_size,
-                                  uint16_t *item_count,
-                                  uint16_t *result_count,
-                                  uint16_t *dynamic_count) {
-    const unsigned char *bytes;
-    uint16_t encoded_header_size;
-
-    if (!plan || plan->string_len < RXVM_PARSE_PLAN_HEADER_SIZE_FROZEN) return 0;
-    bytes = (const unsigned char *)plan->string;
-    if (bytes[0] != RXVM_PARSE_PLAN_MAGIC) return 0;
-    *version = bytes[1];
-    encoded_header_size = (uint16_t)rxvm_binary_read_le_bytes(bytes, 2, 2);
-    if (*version == RXVM_PARSE_PLAN_VERSION_FROZEN) {
-        if (encoded_header_size != RXVM_PARSE_PLAN_HEADER_SIZE_FROZEN) return 0;
-        *dynamic_count = 0u;
-    } else if (*version == RXVM_PARSE_PLAN_VERSION_DYNAMIC) {
-        if (encoded_header_size != RXVM_PARSE_PLAN_HEADER_SIZE_DYNAMIC ||
-            plan->string_len < RXVM_PARSE_PLAN_HEADER_SIZE_DYNAMIC ||
-            (bytes[10] & ~RXVM_PARSE_PLAN_FLAG_CLASSIC_NUMERIC_ERROR) != 0u ||
-            bytes[11] != 0u) return 0;
-        *dynamic_count = (uint16_t)rxvm_binary_read_le_bytes(bytes, 8, 2);
-    } else {
-        return 0;
+    /* Section-mode v3 belongs only to the incremental cursor. Refuse before
+     * constructing state or changing the whole-opcode result vector. */
+    if (plan->string_len >= 2u && (unsigned char)plan->string[1] == 3u)
+        return rxvm_parse_diagnose(RXVM_PARSE_INVALID, 0);
+    cursor = rxvm_parse_create(source->string_value, source->string_length,
+                               (const unsigned char *)plan->string,
+                               plan->string_len, &status);
+    if (!cursor) return rxvm_parse_diagnose(status, 0);
+    results = rxvm_parse_result_count(cursor);
+    dynamics = rxvm_parse_external_count(cursor);
+    if (dynamics && (results > SIZE_MAX - dynamics ||
+                      result->num_attributes < results + dynamics)) {
+        status = RXVM_PARSE_INVALID;
+        goto done;
     }
-    *header_size = encoded_header_size;
-    *item_count = (uint16_t)rxvm_binary_read_le_bytes(bytes, 4, 2);
-    *result_count = (uint16_t)rxvm_binary_read_le_bytes(bytes, 6, 2);
-    return *item_count > 0;
-}
-
-static int rxvm_parse_plan_read_item(const string_constant *plan,
-                                     size_t offset,
-                                     rxvm_parse_plan_item *item) {
-    const unsigned char *bytes;
-    uint64_t movement;
-
-    if (!plan || !item || offset > plan->string_len ||
-        plan->string_len - offset < 2u) return 0;
-    bytes = (const unsigned char *)plan->string;
-    memset(item, 0, sizeof(*item));
-    item->kind = bytes[offset];
-    item->flags = bytes[offset + 1u];
-    item->offset = offset;
-    offset += 2u;
-
-    switch (item->kind) {
-        case 1:
-            if ((item->flags & ~RXVM_PARSE_PLAN_FLAG_STORE) != 0u) return 0;
-            break;
-        case 2:
-            if (item->flags != 0u || plan->string_len - offset < 8u) return 0;
-            item->literal_bytes = (size_t)rxvm_binary_read_le_bytes(bytes, offset, 4);
-            item->literal_chars = (size_t)rxvm_binary_read_le_bytes(bytes, offset + 4u, 4);
-            offset += 8u;
-            if (item->literal_bytes > plan->string_len - offset ||
-                item->literal_chars > item->literal_bytes) return 0;
-            item->literal = bytes + offset;
-            offset += item->literal_bytes;
-            break;
-        case 3:
-        case 4:
-        case 5:
-            if ((item->flags & ~RXVM_PARSE_PLAN_FLAG_SKIP) != 0u ||
-                plan->string_len - offset < 8u) return 0;
-            movement = rxvm_binary_read_le_bytes(bytes, offset, 8);
-            if (movement > (uint64_t)INT64_MAX) return 0;
-            item->movement = (rxinteger)movement;
-            offset += 8u;
-            break;
-        case 6:
-            if (item->flags != 0u) return 0;
-            break;
-        case 7:
-        case 8:
-        case 9:
-        case 10:
-            if ((item->flags & ~RXVM_PARSE_PLAN_FLAG_CAPTURE) != 0u ||
-                plan->string_len - offset < 2u) return 0;
-            item->operand_index =
-                    (uint16_t)rxvm_binary_read_le_bytes(bytes, offset, 2);
-            offset += 2u;
-            break;
-        default:
-            return 0;
-    }
-    item->next_offset = offset;
-    return 1;
-}
-
-/* Resolve a version-2 dynamic item without allocating or mutating its source
- * value. External operands occupy temporary result-vector slots after the
- * public results; completed-target references address an earlier result slot. */
-static int rxvm_parse_plan_resolve_item(rxvm_parse_plan_item *item,
-                                        value *result,
-                                        uint16_t result_count,
-                                        uint16_t dynamic_count,
-                                        unsigned char version) {
-    value *operand;
-    rxinteger movement;
-    size_t index;
-
-    if (item->kind < 7u || item->kind > 10u) return RXVM_PARSE_PLAN_OK;
-    if (version != RXVM_PARSE_PLAN_VERSION_DYNAMIC) return RXVM_PARSE_PLAN_INVALID;
-    if ((item->flags & RXVM_PARSE_PLAN_FLAG_CAPTURE) != 0u) {
-        if (item->operand_index >= result_count) return RXVM_PARSE_PLAN_INVALID;
-        index = item->operand_index;
-    } else {
-        if (item->operand_index >= dynamic_count) return RXVM_PARSE_PLAN_INVALID;
-        index = (size_t)result_count + item->operand_index;
-    }
-    if (index >= result->num_attributes) return RXVM_PARSE_PLAN_INVALID;
-    operand = result->attributes[index];
-
-    if (item->kind == 7u) {
-        item->kind = 2u;
-        item->flags = 0u;
-        item->literal = (const unsigned char *)operand->string_value;
-        item->literal_bytes = operand->string_length;
-#ifndef NUTF8
-        item->literal_chars = operand->string_chars;
-#else
-        item->literal_chars = operand->string_length;
-#endif
-        return RXVM_PARSE_PLAN_OK;
-    }
-
-    if (string2integer(&movement, operand->string_value, operand->string_length) ||
-        movement < 0) return RXVM_PARSE_PLAN_CONVERSION;
-    item->kind = (unsigned char)(item->kind - 5u);
-    item->flags = 0u;
-    item->movement = movement;
-    return RXVM_PARSE_PLAN_OK;
-}
-
-static size_t rxvm_parse_plan_source_chars(const value *source) {
-#ifndef NUTF8
-    return source->string_chars;
-#else
-    return source->string_length;
-#endif
-}
-
-static void rxvm_parse_plan_set_empty(value *target) {
-    set_string(target, "", 0);
-}
-
-static void rxvm_parse_plan_set_span(value *target,
-                                     const value *source,
-                                     size_t start,
-                                     size_t character_length) {
-    size_t byte_start;
-    size_t byte_end;
-
-    if (character_length == 0u) {
-        rxvm_parse_plan_set_empty(target);
-        return;
-    }
-    byte_start = rxvm_parse_byte_offset(source, start - 1u);
-    byte_end = rxvm_parse_byte_offset(source, start - 1u + character_length);
-    set_string(target, source->string_value + byte_start, byte_end - byte_start);
-#ifndef NUTF8
-    rxvm_value_set_string_chars_known(target, character_length);
-    mark_utf8_valid_count(target);
-#endif
-}
-
-static int rxvm_parse_plan_is_blank(const value *source, size_t position) {
-    size_t byte_offset = rxvm_parse_byte_offset(source, position - 1u);
-    return byte_offset < source->string_length &&
-           source->string_value[byte_offset] == ' ';
-}
-
-static size_t rxvm_parse_plan_find_literal(const value *source,
-                                           size_t start,
-                                           const rxvm_parse_plan_item *literal) {
-    size_t source_chars = rxvm_parse_plan_source_chars(source);
-    size_t start_offset;
-    const char *candidate;
-    const char *last;
-
-    if (literal->literal_bytes == 0u || start == 0u || start > source_chars) return 0u;
-    start_offset = rxvm_parse_byte_offset(source, start - 1u);
-    if (literal->literal_bytes > source->string_length - start_offset) return 0u;
-    candidate = source->string_value + start_offset;
-    last = source->string_value + source->string_length - literal->literal_bytes;
-    while (candidate <= last) {
-        candidate = (const char *)memchr(candidate, literal->literal[0],
-                                        (size_t)(last - candidate + 1));
-        if (!candidate) return 0u;
-        if (memcmp(candidate, literal->literal, literal->literal_bytes) == 0) {
-#ifndef NUTF8
-            size_t character_offset = 0;
-            if (utf8nvalid_count(source->string_value,
-                                 (size_t)(candidate - source->string_value),
-                                 &character_offset) != 0) return 0u;
-            return character_offset + 1u;
-#else
-            return (size_t)(candidate - source->string_value) + 1u;
-#endif
-        }
-        candidate++;
-    }
-    return 0u;
-}
-
-static int rxvm_parse_plan_equals_at(const value *source,
-                                     size_t start,
-                                     const rxvm_parse_plan_item *literal) {
-    size_t source_chars = rxvm_parse_plan_source_chars(source);
-    size_t byte_start;
-
-    if (start == 0u || literal->literal_chars > source_chars - (start - 1u)) return 0;
-    byte_start = rxvm_parse_byte_offset(source, start - 1u);
-    if (literal->literal_bytes > source->string_length - byte_start) return 0;
-    return literal->literal_bytes == 0u ||
-           memcmp(source->string_value + byte_start,
-                  literal->literal,
-                  literal->literal_bytes) == 0;
-}
-
-static size_t rxvm_parse_plan_apply_cursor(const value *source,
-                                           size_t cursor,
-                                           const rxvm_parse_plan_item *item) {
-    size_t source_chars = rxvm_parse_plan_source_chars(source);
-    size_t position;
-    size_t movement = (size_t)item->movement;
-    size_t room;
-
-    if (item->kind == 2) {
-        if (item->literal_bytes == 0u) return cursor;
-        position = rxvm_parse_plan_find_literal(source, cursor, item);
-        return position == 0u ? source_chars + 1u : position;
-    }
-    if (item->kind == 3) {
-        if (movement < 1u) return 1u;
-        if (movement > source_chars + 1u) return source_chars + 1u;
-        return movement;
-    }
-    if (item->kind == 4) {
-        room = source_chars + 1u - cursor;
-        if (movement > room) return source_chars + 1u;
-        return cursor + movement;
-    }
-    if (item->kind == 5) {
-        if (movement >= cursor) return 1u;
-        return cursor - movement;
-    }
-    if (item->kind == 6) {
-        position = cursor;
-        while (position <= source_chars && rxvm_parse_plan_is_blank(source, position)) position++;
-        return position;
-    }
-    return cursor;
-}
-
-static size_t rxvm_parse_plan_store_implicit(value *target,
-                                             int store,
-                                             const value *source,
-                                             size_t capture_start) {
-    size_t source_chars = rxvm_parse_plan_source_chars(source);
-    size_t first = capture_start;
-    size_t after;
-
-    while (first <= source_chars && rxvm_parse_plan_is_blank(source, first)) first++;
-    if (first > source_chars) {
-        if (store) rxvm_parse_plan_set_empty(target);
-        return source_chars + 1u;
-    }
-    after = first;
-    while (after <= source_chars && !rxvm_parse_plan_is_blank(source, after)) after++;
-    if (store) rxvm_parse_plan_set_span(target, source, first, after - first);
-    if (after <= source_chars) after++;
-    return after;
-}
-
-static void rxvm_parse_plan_store_word(value *target,
-                                       int store,
-                                       const value *source,
-                                       size_t field_start,
-                                       int raw) {
-    size_t source_chars = rxvm_parse_plan_source_chars(source);
-    size_t first = field_start;
-    size_t word_start;
-    size_t after;
-
-    if (first > source_chars) {
-        if (store) rxvm_parse_plan_set_empty(target);
-        return;
-    }
-    word_start = first;
-    while (word_start <= source_chars && rxvm_parse_plan_is_blank(source, word_start)) word_start++;
-    if (word_start > source_chars) {
-        if (store) rxvm_parse_plan_set_span(target, source, first, source_chars - first + 1u);
-        return;
-    }
-    after = word_start;
-    while (after <= source_chars && !rxvm_parse_plan_is_blank(source, after)) after++;
-    if (raw) {
-        while (after <= source_chars && rxvm_parse_plan_is_blank(source, after)) after++;
-        if (store) rxvm_parse_plan_set_span(target, source, first, after - first);
-    } else if (store) {
-        rxvm_parse_plan_set_span(target, source, word_start, after - word_start);
-    }
-}
-
-static size_t rxvm_parse_plan_store_literal(value *target,
-                                            int store,
-                                            const value *source,
-                                            size_t capture_start,
-                                            size_t cursor,
-                                            const rxvm_parse_plan_item *literal,
-                                            size_t *relative_anchor) {
-    size_t source_chars = rxvm_parse_plan_source_chars(source);
-    size_t position;
-
-    if (literal->literal_bytes == 0u) {
-        if (store) rxvm_parse_plan_set_empty(target);
-        return cursor;
-    }
-    position = rxvm_parse_plan_find_literal(source, cursor, literal);
-    if (position == 0u) {
-        if (store) {
-            if (capture_start > source_chars) rxvm_parse_plan_set_empty(target);
-            else rxvm_parse_plan_set_span(target, source, capture_start,
-                                          source_chars - capture_start + 1u);
-        }
-        return source_chars + 1u;
-    }
-    *relative_anchor = position;
-    if (store) rxvm_parse_plan_set_span(target, source, capture_start,
-                                        position - capture_start);
-    return position + literal->literal_chars;
-}
-
-static size_t rxvm_parse_plan_store_numeric(value *target,
-                                            int store,
-                                            const value *source,
-                                            size_t cursor,
-                                            size_t capture_start,
-                                            const rxvm_parse_plan_item *item,
-                                            size_t *relative_anchor) {
-    size_t source_chars = rxvm_parse_plan_source_chars(source);
-    size_t movement = (size_t)item->movement;
-    size_t position;
-    size_t room;
-    int from_literal_anchor = (item->kind == 4 || item->kind == 5) &&
-                              *relative_anchor > 0u;
-
-    if (from_literal_anchor) {
-        cursor = *relative_anchor;
-        *relative_anchor = 0u;
-    }
-
-    if (item->kind == 3) {
-        position = movement;
-        if (position < 1u) position = 1u;
-        if (position > source_chars + 1u) position = source_chars + 1u;
-    } else if (item->kind == 4) {
-        room = source_chars + 1u - cursor;
-        position = movement > room ? source_chars + 1u : cursor + movement;
-    } else {
-        position = movement >= cursor ? 1u : cursor - movement;
-    }
-
-    if (position <= capture_start) {
-        rxvm_parse_plan_store_word(target, store, source, capture_start,
-                                   item->kind == 5);
-        /* A backward control without a literal anchor starts the next field
-         * at the moved cursor. A literal anchor retains its capture start. */
-        if (item->kind != 5 || from_literal_anchor) position = capture_start;
-    } else if (store) {
-        rxvm_parse_plan_set_span(target, source, capture_start,
-                                 position - capture_start);
-    }
-    return position;
-}
-
-static int rxvm_parse_plan_apply_pre(const string_constant *plan,
-                                     value *result,
-                                     const value *source,
-                                     uint16_t result_count,
-                                     uint16_t dynamic_count,
-                                     unsigned char version,
-                                     size_t start_offset,
-                                     size_t end_offset,
-                                     unsigned char next_kind,
-                                     const rxvm_parse_plan_item *shared_item,
-                                     unsigned char shared_kind,
-                                     size_t *cursor,
-                                     size_t *relative_anchor) {
-    rxvm_parse_plan_item item;
-    rxvm_parse_plan_item next_item;
-    size_t offset = start_offset;
-    int pre_relative_anchor = 0;
-    int status;
-
-    if (shared_kind == 3u) {
-        *cursor = rxvm_parse_plan_apply_cursor(source, *cursor, shared_item);
-    } else if (shared_kind == 8u) {
-        size_t position;
-        if (shared_item->literal_chars >= *cursor) {
-            *cursor = rxvm_parse_plan_source_chars(source) + 1u;
-        } else {
-            position = *cursor - shared_item->literal_chars;
-            if (rxvm_parse_plan_equals_at(source, position, shared_item)) *cursor = position;
-            else *cursor = rxvm_parse_plan_source_chars(source) + 1u;
-        }
-    }
-
-    while (offset < end_offset) {
-        size_t position;
-        unsigned char following_kind = 0u;
-        int anchor_at_start;
-
-        if (!rxvm_parse_plan_read_item(plan, offset, &item) ||
-            item.next_offset > end_offset) return RXVM_PARSE_PLAN_INVALID;
-        status = rxvm_parse_plan_resolve_item(&item, result, result_count,
-                                              dynamic_count, version);
-        if (status != RXVM_PARSE_PLAN_OK) return status;
-        if (item.flags & RXVM_PARSE_PLAN_FLAG_SKIP) {
-            offset = item.next_offset;
-            continue;
-        }
-        if (item.next_offset < end_offset) {
-            if (!rxvm_parse_plan_read_item(plan, item.next_offset, &next_item) ||
-                next_item.next_offset > end_offset) return RXVM_PARSE_PLAN_INVALID;
-            status = rxvm_parse_plan_resolve_item(&next_item, result, result_count,
-                                                  dynamic_count, version);
-            if (status != RXVM_PARSE_PLAN_OK) return status;
-            following_kind = next_item.kind;
-        }
-        if (item.kind == 2) {
-            if (following_kind == 4u || following_kind == 5u) {
-                pre_relative_anchor = 1;
+    if (!dynamics) set_num_attributes(result, results);
+    for (;;) {
+        status = rxvm_parse_next(cursor);
+        if (status == RXVM_PARSE_FIELD) {
+            slot = rxvm_parse_slot(cursor);
+            if (slot) {
+                status = rxvm_parse_text(cursor, &text, &length);
+                if (status < 0) break;
+                set_string(result->attributes[slot - 1u], (char *)text, length);
             }
-            position = item.literal_bytes == 0u ? *cursor :
-                       rxvm_parse_plan_find_literal(source, *cursor, &item);
-            if (item.literal_bytes != 0u && position == 0u) {
-                *cursor = rxvm_parse_plan_source_chars(source) + 1u;
-            } else {
-                anchor_at_start = following_kind == 4u || following_kind == 5u;
-                if (!anchor_at_start &&
-                    (item.literal_bytes == 0u || item.literal[0] != ' ') &&
-                    next_kind == 4u) anchor_at_start = 1;
-                *relative_anchor = anchor_at_start ? position : 0u;
-                *cursor = anchor_at_start ? position : position + item.literal_chars;
-            }
-        } else {
-            *cursor = rxvm_parse_plan_apply_cursor(source, *cursor, &item);
-        }
-        offset = item.next_offset;
+        } else if (status == RXVM_PARSE_INPUT) {
+            value *operand = result->attributes[results + rxvm_parse_slot(cursor) - 1u];
+            status = rxvm_parse_supply(cursor, operand->string_value, operand->string_length);
+            if (status < 0) break;
+        } else break;
     }
-    if (offset != end_offset) return RXVM_PARSE_PLAN_INVALID;
-    if (pre_relative_anchor) *relative_anchor = 0u;
-    return RXVM_PARSE_PLAN_OK;
-}
-
-static int rxvm_parse_plan_execute(value *result,
-                                   value *source,
-                                   const string_constant *plan) {
-    unsigned char version;
-    size_t header_size;
-    uint16_t item_count;
-    uint16_t result_count;
-    uint16_t dynamic_count;
-    rxvm_parse_plan_item current;
-    rxvm_parse_plan_item next;
-    rxvm_parse_plan_item after;
-    rxvm_parse_plan_item shared_item;
-    size_t offset;
-    size_t pre_offset;
-    size_t cursor = 1u;
-    size_t capture_start = 0u;
-    size_t relative_anchor = 0u;
-    size_t output_index = 0u;
-    size_t pending_output = 0u;
-    unsigned int index;
-    int pending = 0;
-    int pending_store = 0;
-    int status;
-    unsigned char shared_kind = 0u;
-
-    if (!rxvm_parse_plan_header(plan, &version, &header_size, &item_count,
-                                &result_count, &dynamic_count)) {
-        return RXVM_PARSE_PLAN_INVALID;
-    }
-    offset = header_size;
-    pre_offset = header_size;
-    if (dynamic_count > 0u) {
-        size_t required = (size_t)result_count + dynamic_count;
-        if (result->num_attributes < required) return RXVM_PARSE_PLAN_INVALID;
-    } else {
-        set_num_attributes(result, result_count);
-    }
-
-    for (index = 0; index < item_count; index++) {
-        int next_exists;
-        int after_exists;
-
-        if (!rxvm_parse_plan_read_item(plan, offset, &current)) {
-            return RXVM_PARSE_PLAN_INVALID;
-        }
-        status = rxvm_parse_plan_resolve_item(&current, result, result_count,
-                                              dynamic_count, version);
-        if (status != RXVM_PARSE_PLAN_OK) return status;
-        next_exists = index + 1u < item_count;
-        after_exists = index + 2u < item_count;
-        if (next_exists) {
-            if (!rxvm_parse_plan_read_item(plan, current.next_offset, &next)) {
-                return RXVM_PARSE_PLAN_INVALID;
-            }
-        }
-        if (after_exists) {
-            if (!rxvm_parse_plan_read_item(plan, next.next_offset, &after)) {
-                return RXVM_PARSE_PLAN_INVALID;
-            }
-        }
-
-        if (current.kind == 1u) {
-            if (pending) {
-                cursor = rxvm_parse_plan_store_implicit(
-                        pending_store ? result->attributes[pending_output] : 0,
-                        pending_store, source, capture_start);
-                pending = 0;
-            }
-            if (next_exists) {
-                status = rxvm_parse_plan_resolve_item(&next, result, result_count,
-                                                      dynamic_count, version);
-                if (status != RXVM_PARSE_PLAN_OK) return status;
-            }
-            status = rxvm_parse_plan_apply_pre(plan, result, source,
-                                               result_count, dynamic_count, version,
-                                               pre_offset, current.offset,
-                                               next_exists ? next.kind : 0u,
-                                               &shared_item, shared_kind,
-                                               &cursor, &relative_anchor);
-            if (status != RXVM_PARSE_PLAN_OK) return status;
-            shared_kind = 0u;
-            pending_store = (current.flags & RXVM_PARSE_PLAN_FLAG_STORE) != 0u;
-            if (pending_store) {
-                if (output_index >= result_count) return 0;
-                pending_output = output_index++;
-            }
-            capture_start = cursor;
-            pending = 1;
-            pre_offset = current.next_offset;
-        } else if (!pending) {
-            /* Controls before a target are applied together when that target arrives. */
-        } else {
-            value *target = pending_store ? result->attributes[pending_output] : 0;
-            if (current.kind == 2u) {
-                cursor = rxvm_parse_plan_store_literal(target, pending_store, source,
-                                                       capture_start, cursor, &current,
-                                                       &relative_anchor);
-                if (next_exists && after_exists && next.kind == 1u) {
-                    status = rxvm_parse_plan_resolve_item(&after, result, result_count,
-                                                          dynamic_count, version);
-                    if (status != RXVM_PARSE_PLAN_OK) return status;
-                    if (after.kind == 4u) {
-                        shared_item = current;
-                        shared_kind = 8u;
-                    }
-                }
-            } else if (current.kind == 3u || current.kind == 4u || current.kind == 5u) {
-                cursor = rxvm_parse_plan_store_numeric(target, pending_store, source,
-                                                       cursor, capture_start, &current,
-                                                       &relative_anchor);
-                relative_anchor = 0u;
-                if (current.kind == 3u && next_exists && next.kind == 1u) {
-                    shared_item = current;
-                    shared_kind = 3u;
-                }
-            } else {
-                cursor = rxvm_parse_plan_store_implicit(target, pending_store,
-                                                        source, capture_start);
-            }
-            pending = 0;
-            capture_start = 0u;
-            pre_offset = current.next_offset;
-        }
-        offset = current.next_offset;
-    }
-
-    if (offset != plan->string_len) return RXVM_PARSE_PLAN_INVALID;
-    if (pending) {
-        size_t source_chars = rxvm_parse_plan_source_chars(source);
-        if (pending_store) {
-            if (capture_start > source_chars) rxvm_parse_plan_set_empty(result->attributes[pending_output]);
-            else rxvm_parse_plan_set_span(result->attributes[pending_output], source,
-                                          capture_start, source_chars - capture_start + 1u);
-        }
-    }
-    if (output_index != result_count) return RXVM_PARSE_PLAN_INVALID;
-    if (result->num_attributes != result_count) {
-        set_num_attributes(result, result_count);
-    }
-    return RXVM_PARSE_PLAN_OK;
+    if (status == RXVM_PARSE_DONE && result->num_attributes != results)
+        set_num_attributes(result, results);
+done:
+    classic_numeric = rxvm_parse_classic_numeric(cursor);
+    rxvm_parse_destroy(cursor);
+    if (status < 0) return rxvm_parse_diagnose(status, classic_numeric);
+    diagnostic.signal = RXSIGNAL_NONE;
+    diagnostic.message = "";
+    return diagnostic;
 }
 
 static uint64_t rxvm_binary_read_le(const value *buffer, size_t offset, size_t width) {
@@ -4628,6 +4056,7 @@ RX_INLINE stack_frame *frame_f(
     size_t pointer_bytes;
     size_t value_count;
     size_t value_bytes;
+    size_t identity_bytes;
     int i, j;
     size_t frame_size;
     value *value_buffer;
@@ -4719,8 +4148,10 @@ RX_INLINE stack_frame *frame_f(
             !rxvm_checked_size_mul(sizeof(value*), pointer_count, &pointer_bytes) ||
             !rxvm_checked_size_add(local_count, 1, &value_count) ||
             !rxvm_checked_size_mul(sizeof(value), value_count, &value_bytes) ||
+            !rxvm_checked_size_mul(sizeof(uint32_t), nominal_num_locals, &identity_bytes) ||
             !rxvm_checked_size_add(sizeof(stack_frame), pointer_bytes, &frame_size) ||
-            !rxvm_checked_size_add(frame_size, value_bytes, &frame_size)) {
+            !rxvm_checked_size_add(frame_size, value_bytes, &frame_size) ||
+            !rxvm_checked_size_add(frame_size, identity_bytes, &frame_size)) {
             return 0;
         }
 
@@ -4734,6 +4165,9 @@ RX_INLINE stack_frame *frame_f(
         this->baselocals = (value**)(this + 1);
         this->locals = this->baselocals + nominal_num_locals;
         value_buffer = (value*)(this->locals + nominal_num_locals);
+        /* value contains uint32_t members, so its array's end also aligns the
+         * identity array. Keep values at their existing alignment/offset. */
+        this->local_identity = (uint32_t*)(value_buffer + value_count);
 
         /* Link Locals */
 #ifdef CREXX_VM_PROFILING
@@ -4912,6 +4346,9 @@ RX_INLINE stack_frame *frame_f(
     this->has_reference_lifetimes = 0;
     this->is_interrupt_action = 0;
     this->caller_arg_base = UINT32_MAX;
+    /* Both complete frame extents were checked against INT_MAX above. Reset
+     * every active slot on reuse, including globals, a0 and incoming aliases. */
+    for (i = 0; i < num_locals; i++) this->local_identity[i] = (uint32_t)i;
 #ifdef CREXX_VM_PROFILING
     rxvm_profile_record_frame_phase(
             RXVM_PROFILE_FRAME_FINALIZE,
@@ -4973,9 +4410,10 @@ static void free_external_entry_arguments(stack_frame *frame) {
     }
 }
 
-/* Restore the active pointer permutation created by compiler call-window
- * swaps.  Call-window registers have unique base storage, so locating each
- * displaced base pointer identifies the source register for the inverse swap.
+/* Reverse canonical compiler call-window swaps using unique slot identities.
+ * LINK/UNLINK rebind a slot without changing its permutation identity; SWAP
+ * moves that identity with the binding. Value pointers can be duplicated or
+ * replace owned bases, so they cannot identify the inverse permutation.
  * Values are not copied or reset: arg expose and reference mutations survive. */
 static int rxvm_restore_call_argument_mapping(
         stack_frame *caller, size_t arg_base, size_t arg_count
@@ -4995,20 +4433,20 @@ static int rxvm_restore_call_argument_mapping(
 
     for (arg = 0; arg < arg_count; arg++) {
         size_t slot = arg_base + arg;
-        value *slot_base = caller->baselocals[slot];
-
-        if (!slot_base) return 0;
-        if (caller->locals[slot] == slot_base) continue;
+        if (caller->local_identity[slot] == slot) continue;
 
         for (source = 0; source < caller->number_locals; source++) {
-            if (caller->locals[source] == slot_base) break;
+            if (caller->local_identity[source] == slot) break;
         }
         if (source == caller->number_locals) return 0;
 
         {
             value *mapped = caller->locals[slot];
+            uint32_t identity = caller->local_identity[slot];
             caller->locals[slot] = caller->locals[source];
             caller->locals[source] = mapped;
+            caller->local_identity[slot] = caller->local_identity[source];
+            caller->local_identity[source] = identity;
 #ifdef CREXX_VM_PROFILING
             if (restored_slots) (*restored_slots)++;
 #endif
@@ -5573,8 +5011,13 @@ typedef int instructions;
 #define RXVM_SWAP_PAIR(first_, second_)                                        \
     do {                                                                       \
         value *swap_value__ = REG_OP(first_);                                  \
+        uint32_t swap_identity__ =                                             \
+                current_frame->local_identity[REG_IDX(first_)];                \
         REG_OP(first_) = REG_OP(second_);                                      \
         REG_OP(second_) = swap_value__;                                        \
+        current_frame->local_identity[REG_IDX(first_)] =                       \
+                current_frame->local_identity[REG_IDX(second_)];               \
+        current_frame->local_identity[REG_IDX(second_)] = swap_identity__;      \
         RXVM_INSTRUMENTATION_SWAP(current_frame, REG_IDX(first_),               \
                                   REG_IDX(second_));                            \
     } while (0)

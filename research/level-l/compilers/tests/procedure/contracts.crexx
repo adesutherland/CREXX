@@ -1,0 +1,336 @@
+/* cREXX License (MIT). Independent PROCEDURE AST/schema/IR admission oracles. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+import llcir
+import llcparse
+import llcrxas
+
+main: procedure = .int expose checks failures
+  arg argv = .string[]
+  if argv[0] <> 1 then return 2
+  checks = 0; failures = 0
+  mode = .int; graph = .llir..module
+  call astcontract()
+  call schemacontract()
+  do mode = 1 to 6
+    call forgedschema(argv[1],mode)
+  end
+  do mode = 1 to 30
+    graph = fixture(mode)
+    call check(graph.error() = '', 'generic fixture ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    accepted = mode = 1 | mode = 2 | mode = 11 | mode = 17 | mode = 29
+    diagnostic = ''
+    if mode = 13 | mode = 14 then diagnostic = 'call entry is not a positive declared ID'
+    call admission(argv[1],graph,accepted,'fresh ' || mode,diagnostic)
+    store = dereference graph.storage(); contract = dereference store.contract()
+    restored = llir..loadbinary(contract,graph.binary())
+    call check(restored.error() = '' & bincompare(graph.binary(),restored.binary()) = 0,'loaded fixture ' || mode)
+    if restored.error() = '' then call admission(argv[1],restored,accepted,'loaded ' || mode,diagnostic)
+    if mode <= 2 | mode = 17 then do
+      changed = llirservices..optimise(reference graph)
+      call check(changed.status() = 'keep' | changed.status() = 'changed','generic optimisation ' || mode)
+      if changed.status() = 'keep' | changed.status() = 'changed' then call admission(argv[1],changed.result(),1,'transformed ' || mode)
+    end
+  end
+  graph = fixture(1); saved = graph.binary()
+  selected = .llcrxas..compilation(graph,argv[1]); previous = selected.output(); previous_text = previous.text()
+  call check(selected.status() = 0 & previous.bytes() > 0,'owned output before limit control: ' || selected.error())
+  limited = .llcrxas..compilation(graph,argv[1],128); output = limited.output()
+  call check(limited.status() <> 0 & pos('LIMIT',limited.error()) > 0 & output.bytes() = 0,'bounded output refusal is empty')
+  call check(bincompare(saved,graph.binary()) = 0 & previous.text() == previous_text,'limit refusal preserves graph and previous owned output')
+  say 'PROCEDURE_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1
+  say 'FAIL|' || label
+  return
+
+astcontract: procedure = .void
+  source = 'p: procedure expose α a.key (names)' as .binary
+  parsed = .llcparse..parsed(source)
+  call check(parsed.status() = 0,'direct/indirect Unicode source parses: ' || parsed.error())
+  if parsed.status() <> 0 then return
+  tree = parsed.ast(); node = tree.root().child('body').child('items',2)
+  call check(node.kind() = 'CProcedure' & node.start() = 3 & node.finish() = 36,'complete PROCEDURE byte span')
+  exposes = node.child('exposes')
+  call check(exposes.kind() = 'ProcedureExposes' & exposes.count('items') = 3 & exposes.start() = 13 & exposes.finish() = 36,'ordered exposure list retains keyword and complete span')
+  direct = exposes.child('items',1); compound = exposes.child('items',2); indirect = exposes.child('items',3)
+  call check(direct.kind() = 'ProcedureExposeDirect' & direct.child('name').text('spelling') = 'α','first direct name retains Unicode spelling')
+  call check(direct.child('name').start() = 20 & direct.child('name').finish() = 22,'UTF8 name byte span is distinct from scalar length')
+  call check(compound.kind() = 'ProcedureExposeDirect' & compound.child('name').text('spelling') = 'a.key','compound remains a raw name')
+  call check(indirect.kind() = 'ProcedureExposeIndirect' & indirect.child('name').text('spelling') = 'names','indirect carrier retained as raw name')
+  call check(indirect.start() = 29 & indirect.finish() = 36 & indirect.child('name').start() = 30 & indirect.child('name').finish() = 35,'indirect item includes parentheses; Name does not')
+  bare = .llcparse..parsed('p: procedure' as .binary)
+  call check(bare.status() = 0,'bare PROCEDURE parses')
+  if bare.status() = 0 then do
+    plain = bare.ast().root().child('body').child('items',2)
+    call check(plain.count('exposes') = 0,'bare PROCEDURE has no invented empty list')
+  end
+  return
+
+schemacontract: procedure = .void
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); data = dereference contract.data()
+  version = 0; count = 0; i = .int
+  do i = 1 to data.familycount()
+    if data.familyname(i) = 'crexx.c' then version = data.version(i)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) = 'crexx.c.' then count = count + 1
+  end
+  call check(version = 22 & data.ops() = 88 & count = 5,'exact current C22/88-operation/five-type contract')
+  names = 'entry.test entry.invalid procedure.consume procedure.enter procedure.expose'
+  do i = 1 to 5
+    call check(data.opname(53 + i) = 'crexx.c.' || word(names,i),'append-only operation order ' || i)
+  end
+  call shape(contract,'entry.test','context:crexx.c.context entry:crexx.g.int64','value:core.boolean','id:crexx.g.int64 name:crexx.g.text','context','condition','returns')
+  call shape(contract,'entry.invalid','','','','none','condition','diverges')
+  call shape(contract,'procedure.consume','context:crexx.c.context','','','context','condition','returns')
+  call shape(contract,'procedure.enter','context:crexx.c.context','','','context','condition.resource','returns')
+  call shape(contract,'procedure.expose','context:crexx.c.context','','name:crexx.g.text indirect:core.boolean','context','condition.resource','returns')
+  call shape(contract,'call','arguments:crexx.c.arguments context:crexx.c.context','value:crexx.c.result','target:crexx.g.text entry:crexx.g.int64 function:core.boolean','context.output','condition','returns')
+  return
+
+shape: procedure = .void
+  arg contract = .llir..contract, name = .string, inputs = .string, outputs = .string, attributes = .string, state = .string, failure = .string, termination = .string
+  data = dereference contract.data(); descriptor = contract.operation('crexx.c.' || name); id = descriptor.id()
+  do kind = 1 to 3
+    expected = inputs
+    if kind = 2 then expected = outputs
+    if kind = 3 then expected = attributes
+    call check(data.arity(id,kind) = words(expected),name || ' field count ' || kind)
+    do field = 1 to words(expected)
+      actual = data.fieldname(id,kind,field) || ':' || data.typename(data.fieldtype(id,kind,field))
+      call check(actual = word(expected,field),name || ' ordered field ' || kind || '/' || field)
+    end
+  end
+  call check(data.effectvalue(id,1) = state & data.effectvalue(id,2) = failure & data.effectvalue(id,3) = termination,name || ' effects/failure/termination')
+  return
+
+/* A changed unused declaration must fail before instruction reachability. */
+forgedschema: procedure = .void
+  arg artifacts = .string, mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  canonical = registry.finish(); source = dereference canonical.data()
+  data = .llir..schema_data(); call data.bootstrap()
+  ignored = .int; i = .int; kind = .int; field = .int
+  do i = 2 to source.familycount()
+    version = source.version(i)
+    if mode = 1 & source.familyname(i) = 'crexx.c' then version = 11
+    ignored = data.addfamily(source.familyname(i),version)
+  end
+  do i = 3 to source.types()
+    ignored = data.addtype(source.typename(i),source.codec(i))
+  end
+  do i = 1 to source.ops()
+    name = source.opname(i)
+    declared = .llir..operation(reference data,data.addop(name))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field)
+        if mode = 4 & name = 'crexx.c.procedure.expose' & kind = 3 & field = 1 then spelling = 'wrongname'
+        type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    state = source.effectvalue(i,1); failure = source.effectvalue(i,2); termination = source.effectvalue(i,3)
+    if mode = 2 & name = 'crexx.c.procedure.enter' then state = 'none'
+    if mode = 3 & name = 'crexx.c.procedure.expose' then failure = 'none'
+    if mode = 5 & name = 'crexx.c.entry.invalid' then termination = 'returns'
+    if mode = 6 & name = 'crexx.c.entry.test' then state = 'none'
+    call declared.state(state); call declared.failure(failure); call declared.termination(termination)
+  end
+  ignored = data.freeze(); contract = .llir..contract(data)
+  builder = .llir..builder(contract); at = builder.synthetic('unused schema declaration')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  block = fn.block('entry'); call absent(block,contract,at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '', 'generic forged schema ' || mode)
+  backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  diagnostic = 'incompatible operation'
+  if mode = 1 then diagnostic = 'unsupported family version crexx.c'
+  call check(backend.status() <> 0 & output.bytes() = 0 & pos(diagnostic,backend.error()) > 0,'changed unused descriptor/version refuses before body protocol ' || mode || ': ' || backend.error())
+  call check(bincompare(saved,graph.binary()) = 0,'schema refusal preserves original graph ' || mode)
+  return
+
+admission: procedure = .void
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, diagnostic = ''
+  saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ' admitted: ' || backend.error())
+  else call check(backend.status() <> 0 & output.bytes() = 0,label || ' refuses malformed protocol: ' || backend.error())
+  if diagnostic <> '' then call check(pos(diagnostic,backend.error()) > 0,label || ' retains its specific refusal: ' || backend.error())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' preserves input')
+  return
+
+/* Deliberately generic-valid variants cross C's exact entry/procedure boundary.
+ * 1 private; 2 shared; 11 late enter (runtime error); 17 two units; and
+ * 29 a generated empty trailing-entry epilogue are accepted.
+ */
+fixture: procedure = .llir..module
+  arg mode = .int
+  value = .llir..valuehandle; transition_context = .llir..valuehandle; wrote = .llir..opview
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  file = builder.source('procedure-ir.crexx','procedure expose shared' as .binary)
+  authored = file.origin(0,23); name_origin = file.origin(17,23)
+  generated = builder.synthetic('procedure dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context'))
+  ignored = fn.argument(contract.type('crexx.g.int64'),mode = 16)
+  if mode = 15 then ignored = fn.argument(contract.type('crexx.g.int64'))
+  context_slot = fn.slot('$context',contract.type('crexx.c.context'))
+  entry_slot = fn.slot('$entry',contract.type('crexx.g.int64'))
+  first = fn.block('entry'); main = fn.block('main'); test = fn.block('entry1')
+  body = fn.block('body'); invalid = fn.block('invalid'); second_test = .llir..block
+  if mode = 18 | mode = 19 then second_test = fn.block('entry2')
+  call first.store(context_slot,first.readarg(1,generated),generated)
+  incoming = .llir..valuehandle
+  if mode = 16 then do
+    fallback = first.constant(contract.type('crexx.g.int64'),'0',generated)
+    incoming = first.readarg(2,generated,fallback)
+  end
+  else incoming = first.readarg(2,generated)
+  if mode = 22 then incoming = first.constant(contract.type('crexx.g.int64'),'0',generated)
+  call first.store(entry_slot,incoming,generated)
+  dispatch = fn.block('dispatch0'); call first.jump(dispatch,generated); first = dispatch
+  context = first.load(context_slot,generated); entry = first.load(entry_slot,generated)
+  dispatch_origin = generated; if mode = 25 then dispatch_origin = authored
+  draft = first.operation(contract.operation('crexx.c.entry.test'),dispatch_origin)
+  call draft.input('context',context); call draft.input('entry',entry)
+  integer = .llir..intcodec(); boolean = .llir..boolcodec()
+  call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  checked = draft.finish(); call first.branch(checked.result(),main,test,generated)
+  context = test.load(context_slot,generated); entry = test.load(entry_slot,generated)
+  if mode = 20 then context = test.readarg(1,generated)
+  if mode = 21 then context = test.constantbytes(contract.type('crexx.c.context'),'forged context' as .binary,generated)
+  id = '1'; if mode = 5 then id = '2'
+  name = 'PROBE'; if mode = 6 then name = ''
+  draft = test.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',context); call draft.input('entry',entry)
+  call draft.attribute('id',integer.parse(id)); call draft.attribute('name',name as .binary)
+  checked = draft.finish()
+  if mode = 18 | mode = 19 then do
+    call test.branch(checked.result(),body,second_test,generated)
+    context = second_test.load(context_slot,generated); entry = second_test.load(entry_slot,generated)
+    draft = second_test.operation(contract.operation('crexx.c.entry.test'),generated)
+    call draft.input('context',context); call draft.input('entry',entry)
+    call draft.attribute('id',integer.parse('2'))
+    name = 'PROBE'; if mode = 19 then name = 'lower'
+    call draft.attribute('name',name as .binary); checked = draft.finish()
+    call second_test.branch(checked.result(),body,invalid,generated)
+  end
+  else call test.branch(checked.result(),body,invalid,generated)
+  if mode = 13 | mode = 14 then do
+    /* Invalid entry identities must refuse before program-exit guard proof. */
+    arguments = main.operation(contract.operation('crexx.c.arguments.empty'),generated); packet = arguments.finish()
+    context = main.load(context_slot,generated)
+    draft = main.operation(contract.operation('crexx.c.call'),generated)
+    call draft.input('arguments',packet.result()); call draft.input('context',context)
+    call draft.attribute('target','$MAIN' as .binary)
+    id = '0'; if mode = 14 then id = '9'
+    call draft.attribute('entry',integer.parse(id)); call draft.attribute('function',boolean.parse('false'))
+    ignored_call = draft.finish()
+  end
+  call absent(main,contract,generated)
+  context = body.load(context_slot,authored)
+  if mode = 23 then do
+    selected = builder.source('fresh-select.crexx','select' as .binary)
+    draft = body.operation(contract.operation('crexx.c.select.missing'),selected.origin(0,6))
+    missing = draft.finish()
+  end
+  if mode = 24 then do
+    draft = body.operation(contract.operation('crexx.c.transfer.invalid'),authored)
+    call draft.attribute('code','28.1' as .binary); call draft.attribute('name',''x as .binary)
+    transferred = draft.finish()
+  end
+  if mode = 10 then do
+    value = body.constantbytes(contract.type('crexx.c.value'),'unconsumed semantic write' as .binary,authored)
+    draft = body.operation(contract.operation('crexx.c.store'),authored)
+    call draft.input('context',context); call draft.input('value',value)
+    call draft.attribute('name','early' as .binary); wrote = draft.finish()
+  end
+  if mode = 7 then call body.store(entry_slot,body.constant(contract.type('crexx.g.int64'),'1',generated),generated)
+  if mode = 8 then call body.store(context_slot,body.readarg(1,generated),generated)
+  if mode = 2 | mode = 4 | mode = 11 | mode = 27 then do
+    if mode = 4 then do
+      value = body.constantbytes(contract.type('crexx.c.value'),'early' as .binary,authored)
+      draft = body.operation(contract.operation('crexx.c.store'),authored)
+      call draft.input('context',context); call draft.input('value',value)
+      call draft.attribute('name','early' as .binary); wrote = draft.finish()
+    end
+    transition_context = context
+    if mode = 27 then transition_context = body.readarg(1,authored)
+    draft = body.operation(contract.operation('crexx.c.procedure.consume'),authored)
+    call draft.input('context',transition_context); consumed = draft.finish()
+  end
+  if mode <> 2 & mode <> 3 & mode <> 4 & mode <> 10 & mode <> 23 & mode <> 24 & mode <> 27 & mode <> 29 & mode <> 30 then do
+    transition_context = context
+    if mode = 26 then transition_context = body.readarg(1,authored)
+    draft = body.operation(contract.operation('crexx.c.procedure.enter'),authored)
+    call draft.input('context',transition_context); entered = draft.finish()
+  end
+  if mode <> 2 & mode <> 4 & mode <> 10 & mode <> 23 & mode <> 24 & mode <> 27 & mode <> 29 & mode <> 30 then do
+    name = 'shared'; if mode = 9 then name = '1bad'
+    if mode = 28 then context = body.readarg(1,name_origin)
+    call emitexpose(body,contract,context,name_origin,name)
+  end
+  if mode = 30 then do
+    draft = body.operation(contract.operation('crexx.c.return.absent'),generated)
+    returned = draft.finish(); call body.returnvalue(returned.result(),authored)
+  end
+  else call absent(body,contract,generated)
+  if mode = 12 then do
+    dead = fn.block('dead exposure'); context = dead.load(context_slot,authored)
+    call emitexpose(dead,contract,context,name_origin,'shared')
+    call absent(dead,contract,generated)
+  end
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated)
+  failed = draft.finish(); call absent(invalid,contract,generated)
+  if mode = 17 then do
+    secondary = builder.function('SECOND',contract.type('crexx.c.result'))
+    call secondary.exportas('proceduresecondary.run')
+    ignored = secondary.argument(contract.type('crexx.c.context'))
+    ignored = secondary.argument(contract.type('crexx.g.int64'))
+    secondary_context = secondary.slot('$context',contract.type('crexx.c.context'))
+    secondary_entry = secondary.slot('$entry',contract.type('crexx.g.int64'))
+    secondary_setup = secondary.block('secondary entry')
+    secondary_dispatch = secondary.block('secondary dispatch0')
+    secondary_body = secondary.block('secondary body')
+    secondary_invalid = secondary.block('secondary invalid')
+    call secondary_setup.store(secondary_context,secondary_setup.readarg(1,generated),generated)
+    call secondary_setup.store(secondary_entry,secondary_setup.readarg(2,generated),generated)
+    call secondary_setup.jump(secondary_dispatch,generated)
+    context = secondary_dispatch.load(secondary_context,generated); entry = secondary_dispatch.load(secondary_entry,generated)
+    draft = secondary_dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+    call draft.input('context',context); call draft.input('entry',entry)
+    call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+    checked = draft.finish(); call secondary_dispatch.branch(checked.result(),secondary_body,secondary_invalid,generated)
+    call absent(secondary_body,contract,generated)
+    draft = secondary_invalid.operation(contract.operation('crexx.c.entry.invalid'),generated)
+    failed = draft.finish(); call absent(secondary_invalid,contract,generated)
+  end
+  return builder.finish()
+
+emitexpose: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..valuehandle, at = .llir..origin, name = .string
+  draft = block.operation(contract.operation('crexx.c.procedure.expose'),at)
+  call draft.input('context',context); call draft.attribute('name',name as .binary)
+  boolean = .llir..boolcodec(); call draft.attribute('indirect',boolean.parse('false'))
+  exposed = draft.finish()
+  return
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  returned = draft.finish(); call block.returnvalue(returned.result(),at)
+  return

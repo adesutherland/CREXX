@@ -1,0 +1,88 @@
+options levelb
+namespace reference_source_qualified
+
+main: procedure = .int
+  value = .Item(4)
+  short_ref = reference .Item
+  short_ref = reference value
+  qualified_ref = reference .reference_source_qualified..Item
+  qualified_ref = short_ref
+  if (short_ref <refsame> qualified_ref) = 0 then return 1
+  call setQualified(short_ref,7)
+  call setShort(qualified_ref,9)
+  returned = mixedReturn(short_ref)
+  if <refvalid>(returned) = 0 then return 2
+  if (returned <refsame> short_ref) = 0 then return 3
+  borrowed = dereference returned
+  if borrowed.read() <> 9 then return 4
+  selected = mixedLeaves(short_ref,qualified_ref,1)
+  if (selected <refsame> short_ref) = 0 then return 5
+  selected = mixedLeaves(short_ref,qualified_ref,0)
+  if (selected <refsame> qualified_ref) = 0 then return 6
+  items = .Item[]
+  items[1] = .Item(12)
+  array_ref = reference .reference_source_qualified..Item[]
+  array_ref = reference items
+  call setArray(array_ref,15)
+  if items[1].read() <> 15 then return 7
+  returned_items = arrayIdentity(array_ref)
+  if (returned_items <refsame> array_ref) = 0 then return 9
+  call setArray(returned_items,16)
+  if items[1].read() <> 16 then return 10
+  expired = expiredReference()
+  if <refvalid>(expired) then return 8
+  say 'PASS: Qualified Reference Identity'
+  return 0
+
+mixedReturn: procedure = reference .reference_source_qualified..Item
+  arg value = reference .Item
+  return value
+
+mixedLeaves: procedure = reference .Item
+  arg short_ref = reference .Item, qualified_ref = reference .reference_source_qualified..Item, first = .boolean
+  return do
+    if first then leave with short_ref
+    leave with qualified_ref
+  end
+
+setQualified: procedure = .void
+  arg value = reference .reference_source_qualified..Item, next = .int
+  borrowed = dereference value
+  call borrowed.write(next)
+  return
+
+setShort: procedure = .void
+  arg value = reference .Item, next = .int
+  borrowed = dereference value
+  call borrowed.write(next)
+  return
+
+setArray: procedure = .void
+  arg values = reference .Item[], next = .int
+  borrowed = dereference values
+  call borrowed[1].write(next)
+  return
+
+arrayIdentity: procedure = reference .reference_source_qualified..Item[]
+  arg values = reference .Item[]
+  return values
+
+expiredReference: procedure = reference .reference_source_qualified..Item
+  value = .Item(77)
+  return reference value
+
+Item: class
+  number = .int
+
+  *: factory
+    arg value = .int
+    number = value
+    return
+
+  read: method = .int
+    return number
+
+  write: method = .void
+    arg value = .int
+    number = value
+    return

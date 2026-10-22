@@ -1,0 +1,396 @@
+/* cREXX License (MIT). Independent bounded IR execution expectations. */
+options levelb
+import rxfnsb
+import llir
+import llireffects
+import llirexecute
+
+main: procedure = .int
+  contract = makeschema(); graph = makegraph(contract)
+  failures = check(graph.error() = '', 'neutral graph verifies: ' || graph.error())
+  if graph.error() <> '' then return failures
+  registry = makeregistry(contract)
+  plan = .llirexecute..plan(reference graph,registry)
+  failures = failures + check(plan.valid(), 'neutral plan: ' || plan.message())
+  if plan.valid() = 0 then return failures
+  say 'execute_plan_logical_bytes=' || plan.usedbytes()
+  failures = failures + ordinary(plan) + continuations(plan) + failuresandlimits(plan)
+  failures = failures + preflight(contract,graph) + snapshots(contract,reference graph,plan)
+  say 'failures=' || failures
+  return failures
+
+/** The sum is 1+2+3=6; an omitted bias contributes four, present zero does not.
+ * Presence is observed independently of the computed value. Bytes have no text
+ * interpretation and include both NUL and invalid UTF-8. */
+ordinary: procedure = .int
+  arg plan = .llirexecute..plan
+  args = .object[]; present = .int[]
+  run = .llirexecute..session(plan); ignored = run.start(1,args,present); answer = run.run()
+  failures = integerresult(answer,10,'hand-derived loop with omitted bias')
+  say 'execute_first_steps=' || answer.steps() || ' execute_first_logical_bytes=' || answer.usedbytes()
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(service.events() = 'absent|cleanup.done' & service.cleanups() = 1, 'omission observation and once-only cleanup')
+  again = run.run(); service = run.service('demo') as .neutralhandler
+  failures = failures + check(again.status() = 'done' & service.cleanups() = 1, 'terminal run is idempotent')
+  args[1] = intvalue(0) as .object; present[1] = 1
+  run = .llirexecute..session(plan); ignored = run.start(1,args,present); answer = run.run()
+  failures = failures + integerresult(answer,6,'present zero retains original presence')
+  say 'execute_reused_plan_steps=' || answer.steps() || ' execute_reused_plan_logical_bytes=' || answer.usedbytes()
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(service.events() = 'present|cleanup.done', 'present observation differs from fallback')
+  args[1] = .llirexecute..value('independent.bytes','00FF41'x as .binary) as .object
+  run = .llirexecute..session(plan); ignored = run.start(2,args,present); answer = run.run()
+  failures = failures + check(answer.status() = 'done' & answer.size() = 1, 'exact byte argument/store/load/return')
+  if answer.status() = 'done' & answer.size() = 1 then do
+    value = answer.at(1)
+    failures = failures + check(value.type() = 'independent.bytes' & bin2x(value.bits()) = '00FF41' & answer.present(1), 'arbitrary bytes and result presence')
+  end
+  args[1] = .llirexecute..value('independent.bytes',''x as .binary) as .object
+  run = .llirexecute..session(plan); ignored = run.start(2,args,present); answer = run.run()
+  failures = failures + check(answer.status() = 'done' & answer.size() = 1 & answer.present(1), 'present empty binary remains a present result')
+  args = .object[]; present = .int[]
+  empty = .object; args[1] = empty; present[1] = 0; args[2] = intvalue(9) as .object; present[2] = 1
+  run = .llirexecute..session(plan); ignored = run.start(10,args,present); answer = run.run()
+  failures = failures + integerresult(answer,13,'top-level middle omission retains later required argument')
+  return failures
+
+/** Child computes 7+omitted(4)=11 and suspends. Completion 20 is added to its
+ * saved eleven, then the caller adds its saved three: 20+11+3=34. A resumed
+ * handler is not executed twice. Invalid completions do not consume the token. */
+continuations: procedure = .int
+  arg plan = .llirexecute..plan
+  args = .object[]; present = .int[]
+  run = .llirexecute..session(plan); ignored = run.start(3,args,present); answer = run.run()
+  failures = check(answer.status() = 'suspended' & answer.size() = 0 & answer.depth() = 2, 'nested call owns suspended frames')
+  if answer.status() <> 'suspended' then return failures
+  token = answer.token(); copiedtoken = token
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(service.events() = 'before|yield' & service.cleanups() = 0, 'effects precede suspension without cleanup')
+  malformed = .llirexecute..outcome('normal')
+  call malformed.add(.llirexecute..value('independent.bytes','AA'x as .binary))
+  rejected = run.resume(token,malformed)
+  failures = failures + check(rejected.status() = 'rejected', 'malformed resume refuses wrong result type')
+  current = run.run()
+  failures = failures + check(current.status() = 'suspended', 'malformed completion preserves valid suspension')
+  completion = .llirexecute..outcome('normal'); call completion.add(intvalue(20))
+  copiedrun = run; rejected = copiedrun.resume(token,completion)
+  failures = failures + check(rejected.status() = 'rejected' & pos('LL_IR_EXEC_OWNER',rejected.message()) > 0, 'copying active session does not copy execution authority')
+  foreign = .llirexecute..session(plan); ignored = foreign.start(3,args,present); pending = foreign.run()
+  rejected = foreign.resume(token,completion)
+  failures = failures + check(rejected.status() = 'rejected', 'foreign suspension rejects token')
+  discarded = foreign.discard(pending.token())
+  failures = failures + check(discarded.status() = 'discarded', 'foreign session retains its own discard authority')
+  expired = expiredpending(plan)
+  stranger = .llirexecute..session(plan); ignored = stranger.start(3,args,present); own = stranger.run()
+  rejected = stranger.resume(expired.token(),completion)
+  failures = failures + check(rejected.status() = 'rejected', 'token cannot outlive original session storage')
+  discarded = stranger.discard(own.token())
+  answer = run.resume(copiedtoken,completion)
+  if answer.status() = 'suspended' then answer = run.run()
+  failures = failures + integerresult(answer,34,'saved caller and child values survive suspension')
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(service.events() = 'before|yield|childafter|after|cleanup.done' & service.cleanups() = 1, 'effect order and one cleanup after resumption')
+  rejected = run.resume(token,completion)
+  failures = failures + check(rejected.status() = 'rejected', 'copied tokens consume the original suspension once')
+  run = .llirexecute..session(plan); ignored = run.start(3,args,present); pending = run.run()
+  failed = .llirexecute..outcome('failure','EXPECTED.RESUME','resumed failure','AA00FF'x as .binary,pending.origin())
+  answer = run.resume(pending.token(),failed)
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(answer.status() = 'failure' & answer.code() = 'EXPECTED.RESUME' & bin2x(answer.payload()) = 'AA00FF' & answer.origin() = pending.origin() & answer.size() = 0, 'resume failure retains payload and origin without a result')
+  failures = failures + check(service.events() = 'before|yield|cleanup.failure' & service.cleanups() = 1, 'resume failure skips both continuations and releases once')
+  run = .llirexecute..session(plan); ignored = run.start(3,args,present); pending = run.run()
+  answer = run.cancel(); rejected = run.resume(pending.token(),completion)
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(answer.status() = 'cancelled' & rejected.status() = 'rejected' & service.cleanups() = 1, 'cancelling suspension invalidates token and cleans once')
+  run = .llirexecute..session(plan); ignored = run.start(3,args,present); pending = run.run()
+  answer = run.discard(pending.token()); again = run.discard(pending.token())
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(answer.status() = 'discarded' & again.status() = 'rejected' & service.events() = 'before|yield|cleanup.discarded' & service.cleanups() = 1, 'discard consumes suspension and skips continuation')
+  return failures
+
+failuresandlimits: procedure = .int
+  arg plan = .llirexecute..plan
+  args = .object[]; present = .int[]; failures = 0
+  run = .llirexecute..session; ignored = .llirexecute..result; answer = .llirexecute..result; service = .neutralhandler
+  do fn = 5 to 7
+    run = .llirexecute..session(plan); ignored = run.start(fn,args,present); answer = run.run()
+    service = run.service('demo') as .neutralhandler
+    failures = failures + check(answer.status() = 'failure' & answer.size() = 0 & service.cleanups() = 1, 'terminal handler failure releases state ' || fn)
+    if fn = 5 then failures = failures + check(answer.code() = 'EXPECTED.FAIL' & bin2x(answer.payload()) = '00FE' & service.events() = 'fail|cleanup.failure', 'handler failure payload and no later effect')
+    if fn = 6 then failures = failures + check(service.events() = 'bad|cleanup.failure', 'malformed handler output terminalizes')
+    if fn = 7 then failures = failures + check(service.events() = 'raise|cleanup.failure', 'raised handler preserves mutated state for cleanup')
+  end
+  run = .llirexecute..session(plan,25); ignored = run.start(8,args,present); answer = run.run()
+  service = run.service('demo') as .neutralhandler
+  if answer.status() <> 'limit' then call diagnostic(answer,service)
+  failures = failures + check(answer.status() = 'limit' & answer.size() = 0 & service.events() = 'cleanup.limit', 'fuel terminates an otherwise endless graph')
+  run = .llirexecute..session(plan,1000,2); ignored = run.start(9,args,present); answer = run.run()
+  service = run.service('demo') as .neutralhandler
+  if answer.status() <> 'limit' then call diagnostic(answer,service)
+  failures = failures + check(answer.status() = 'limit' & service.events() = 'cleanup.limit', 'recursive calls obey frame limit without handler effects')
+  run = .llirexecute..session(plan,1000,1); ignored = run.start(3,args,present); answer = run.run()
+  service = run.service('demo') as .neutralhandler
+  if answer.status() <> 'limit' then call diagnostic(answer,service)
+  failures = failures + check(answer.status() = 'limit' & service.events() = 'cleanup.limit', 'child frame admission precedes child effects')
+  run = .llirexecute..session(plan,1000,64,1); ignored = run.start(1,args,present); answer = run.run()
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(answer.status() = 'limit' & service.events() = 'cleanup.limit', 'retained-cell limit precedes first effect')
+  run = .llirexecute..session(plan,1000,64,100000,plan.usedbytes() + 1); ignored = run.start(1,args,present); answer = run.run()
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(answer.status() = 'limit' & service.events() = 'cleanup.limit', 'logical byte admission precedes effects')
+  run = .llirexecute..session(plan); answer = run.cancel(); ignored = run.start(1,args,present); answer = run.run()
+  service = run.service('demo') as .neutralhandler
+  failures = failures + check(answer.status() = 'cancelled' & service.events() = 'cleanup.cancelled' & service.cleanups() = 1, 'cancel before start is terminal and once-only')
+  return failures
+
+preflight: procedure = .int
+  arg contract = .llir..contract, graph = .llir..module
+  run = .llirexecute..session; ignored = .llirexecute..result; answer = .llirexecute..result
+  registry = makeregistry(contract)
+  tiny = .llirexecute..plan(reference graph,registry,1)
+  failures = check(tiny.valid() = 0 & tiny.status() = 'limit', 'preflight work limit publishes no executable plan')
+  tiny = .llirexecute..plan(reference graph,registry,1000000,1)
+  failures = failures + check(tiny.valid() = 0 & tiny.status() = 'limit', 'resident plan byte limit')
+  foreigncontract = makeschema(2); foreigngraph = makegraph(foreigncontract)
+  mismatched = .llirexecute..plan(reference foreigngraph,registry)
+  failures = failures + check(foreigngraph.error() = '' & mismatched.valid() = 0, 'same names and arity cannot substitute a different semantic family version')
+  do mode = 1 to 2
+    unsupported = makegraph(contract,mode); rejected = .llirexecute..plan(reference unsupported,registry)
+    failures = failures + check(unsupported.error() = '' & rejected.valid() = 0, 'unreachable unsupported capability rejected ' || mode)
+    args = .object[]; present = .int[]
+    run = .llirexecute..session(rejected); ignored = run.start(1,args,present); answer = run.run()
+    service = run.service('demo') as .neutralhandler
+    failures = failures + check(answer.status() <> 'done' & pos('present|',service.events()) = 0 & pos('absent|',service.events()) = 0, 'unsupported preflight prevents earlier effects ' || mode)
+  end
+  throwingregistry = makeregistry(contract,'cleanup.throw')
+  cleanupplan = .llirexecute..plan(reference graph,throwingregistry)
+  run = .llirexecute..session(cleanupplan); args = .object[]; present = .int[]
+  ignored = run.start(1,args,present); answer = run.run()
+  first = run.service('demo') as .neutralhandler; last = run.service('sentinel') as .neutralhandler
+  failures = failures + check(answer.status() = 'failure' & answer.size() = 0 & first.cleanups() = 1 & last.cleanups() = 1, 'cleanup failure suppresses result and cannot skip later handlers')
+  zeroregistry = makeregistry(contract,'',0)
+  zeroplan = .llirexecute..plan(reference graph,zeroregistry)
+  run = .llirexecute..session(zeroplan); ignored = run.start(1,args,present); answer = run.run()
+  first = run.service('demo') as .neutralhandler
+  failures = failures + check(answer.status() = 'failure' & answer.size() = 0 & first.events() = 'absent|cleanup.failure', 'zero-byte output reservation rejects a positive handler result')
+  return failures
+
+snapshots: procedure = .int
+  arg contract = .llir..contract, graph_ref = reference .llir..module, plan = .llirexecute..plan
+  graph = dereference graph_ref
+  args = .object[]; present = .int[]
+  failures = check(plan.matches(graph_ref), 'plan source identity matches before replacement')
+  run = .llirexecute..session(plan); ignored = run.start(3,args,present); pending = run.run()
+  graph = llir..loadbinary(contract,graph.binary())
+  failures = failures + check(plan.valid() & plan.matches(graph_ref) = 0, 'owned plan survives caller module replacement')
+  completion = .llirexecute..outcome('normal'); call completion.add(intvalue(20))
+  answer = run.resume(pending.token(),completion)
+  if answer.status() = 'suspended' then answer = run.run()
+  failures = failures + integerresult(answer,34,'owned suspended plan survives source replacement')
+  ready = .llirexecute..session(plan); copied = ready
+  ignored = ready.start(1,args,present); first = ready.run()
+  ignored = copied.start(1,args,present); second = copied.run()
+  failures = failures + integerresult(first,10,'original ready session starts independently') + integerresult(second,10,'copied ready session gets independent authority')
+  return failures
+
+expiredpending: procedure = .llirexecute..result
+  arg plan = .llirexecute..plan
+  args = .object[]; present = .int[]
+  localrun = .llirexecute..session(plan); ignored = localrun.start(3,args,present)
+  return localrun.run()
+
+makeschema: procedure = .llir..contract
+  arg version = 1
+  schema = .llir..schema(); family = schema.family('independent',version)
+  integer = family.type('integer',.llir..intcodec() as .object)
+  bytes = family.type('bytes',.llir..bytescodec() as .object)
+  names = 'add leq present absent before after childafter yield fail bad raise callchild recurse unbound'
+  do i = 1 to words(names)
+    name = word(names,i); operation = family.operation(name)
+    if name = 'add' | name = 'leq' then do
+      call operation.input('left',integer); call operation.input('right',integer)
+    end
+    if name = 'yield' | name = 'callchild' then call operation.input('value',integer)
+    if name = 'leq' then call operation.output('value',schema.boolean())
+    else if wordpos(name,'add yield fail bad raise callchild recurse') > 0 then call operation.output('value',integer)
+    state = 'test.state'
+    if name = 'add' | name = 'leq' then state = 'none'
+    call operation.state(state); failure = 'none'
+    if wordpos(name,'yield fail bad raise callchild recurse') > 0 then failure = 'test.failure'
+    call operation.failure(failure); call operation.termination('returns')
+  end
+  return schema.finish()
+
+makeregistry: procedure = .llirexecute..registry
+  arg contract = .llir..contract, cleanupmode = '', scalarbound = 8
+  n = .int; sealed = .int
+  registry = .llirexecute..registry(contract)
+  call registry.type('core.boolean',.llirexecute..encodedtype(.llir..boolcodec()) as .object)
+  call registry.type('independent.integer',.llirexecute..encodedtype(.llir..intcodec()) as .object)
+  call registry.type('independent.bytes',.llirexecute..encodedtype(.llir..bytescodec()) as .object)
+  call registry.handler('demo',.neutralhandler(cleanupmode) as .object)
+  call registry.handler('sentinel',.neutralhandler() as .object)
+  names = 'add leq present absent before after childafter yield fail bad raise callchild recurse'
+  do i = 1 to words(names)
+    name = word(names,i); inputs = 0; results = 0
+    if name = 'add' | name = 'leq' then inputs = 2
+    if name = 'yield' | name = 'callchild' then inputs = 1
+    if wordpos(name,'add leq yield fail bad raise callchild recurse') > 0 then results = 1
+    summary = .llireffects..summary(inputs,results)
+    do n = 1 to inputs; call summary.operand(n,'value'); end
+    do n = 1 to results; call summary.result(n,'normal'); end
+    failure = 'none'; resume = 'none'
+    if wordpos(name,'yield fail bad raise callchild recurse') > 0 then failure = 'possible'
+    if name = 'yield' | name = 'callchild' then resume = 'possible'
+    call summary.control(failure,'none',resume)
+    if name <> 'add' & name <> 'leq' then call summary.write('test.state')
+    sealed = summary.seal()
+    if name = 'callchild' then call registry.call('independent.' || name,4,summary)
+    else if name = 'recurse' then call registry.call('independent.' || name,9,summary)
+    else do
+      bound = 256
+      if name = 'add' | name = 'leq' then bound = scalarbound
+      call registry.operation('independent.' || name,'demo',summary,bound)
+    end
+  end
+  sealed = registry.seal()
+  return registry
+
+makegraph: procedure = .llir..module
+  arg contract = .llir..contract, unsupported = 0
+  action = .llir..opview
+  draft = .llir..builder(contract); at = draft.synthetic('independent execution oracle')
+  integer = contract.type('independent.integer'); bytes = contract.type('independent.bytes')
+  fn = draft.function('sum',integer); formal = fn.argument(integer,1)
+  entry = fn.block('entry'); supplied = fn.block('supplied'); omitted = fn.block('omitted')
+  head = fn.block('head'); body = fn.block('body'); done = fn.block('done')
+  total = fn.slot('total',integer); index = fn.slot('index',integer); bias = fn.slot('bias',integer)
+  fallback = entry.constant(integer,'4',at); value = entry.readarg(1,at,fallback); call entry.store(bias,value,at)
+  zero = entry.constant(integer,'0',at); call entry.store(total,zero,at)
+  one = entry.constant(integer,'1',at); call entry.store(index,one,at)
+  has = entry.hasarg(1,at); call entry.branch(has,supplied,omitted,at)
+  call marker(supplied,contract,'present',at); call supplied.jump(head,at)
+  call marker(omitted,contract,'absent',at); call omitted.jump(head,at)
+  i = head.load(index,at); three = head.constant(integer,'3',at)
+  test = head.binary(contract.operation('independent.leq'),i,three,at); call head.branch(test,body,done,at)
+  t = body.load(total,at); i = body.load(index,at)
+  next = body.binary(contract.operation('independent.add'),t,i,at); call body.store(total,next,at)
+  one = body.constant(integer,'1',at); next = body.binary(contract.operation('independent.add'),i,one,at)
+  call body.store(index,next,at); call body.jump(head,at)
+  t = done.load(total,at); b = done.load(bias,at)
+  value = done.binary(contract.operation('independent.add'),t,b,at); call done.returnvalue(value,at)
+  fn = draft.function('bytes',bytes); formal = fn.argument(bytes)
+  entry = fn.block('entry'); saved = fn.slot('saved',bytes); value = entry.readarg(1,at)
+  call entry.store(saved,value,at); copied = entry.load(saved,at); call entry.returnvalue(copied,at)
+  fn = draft.function('parent',integer); entry = fn.block('entry'); saved = fn.slot('saved',integer)
+  three = entry.constant(integer,'3',at); call entry.store(saved,three,at)
+  seven = entry.constant(integer,'7',at); op = entry.operation(contract.operation('independent.callchild'),at)
+  call op.input('value',seven); invoked = op.finish(); answer = invoked.result(1)
+  call marker(entry,contract,'after',at); three = entry.load(saved,at)
+  value = entry.binary(contract.operation('independent.add'),answer,three,at); call entry.returnvalue(value,at)
+  fn = draft.function('child',integer); formal = fn.argument(integer); formal = fn.argument(integer,1)
+  entry = fn.block('entry'); saved = fn.slot('saved',integer)
+  value = entry.readarg(1,at); fallback = entry.constant(integer,'4',at); biasvalue = entry.readarg(2,at,fallback)
+  eleven = entry.binary(contract.operation('independent.add'),value,biasvalue,at); call entry.store(saved,eleven,at)
+  call marker(entry,contract,'before',at); op = entry.operation(contract.operation('independent.yield'),at)
+  call op.input('value',eleven); yielded = op.finish(); result = yielded.result(1)
+  call marker(entry,contract,'childafter',at); eleven = entry.load(saved,at)
+  value = entry.binary(contract.operation('independent.add'),result,eleven,at); call entry.returnvalue(value,at)
+  do n = 1 to 3
+    name = word('fail bad raise',n); fn = draft.function(name,integer); entry = fn.block('entry')
+    op = entry.operation(contract.operation('independent.' || name),at); action = op.finish(); value = action.result(1)
+    call marker(entry,contract,'after',at); call entry.returnvalue(value,at)
+  end
+  fn = draft.function('endless',contract.voidtype()); entry = fn.block('entry'); call entry.jump(entry,at)
+  fn = draft.function('recursive',integer); entry = fn.block('entry')
+  op = entry.operation(contract.operation('independent.recurse'),at); action = op.finish(); value = action.result(1)
+  call entry.returnvalue(value,at)
+  fn = draft.function('middle.presence',integer); formal = fn.argument(integer,1); formal = fn.argument(integer)
+  entry = fn.block('entry'); fallback = entry.constant(integer,'4',at)
+  first = entry.readarg(1,at,fallback); second = entry.readarg(2,at)
+  sum = entry.binary(contract.operation('independent.add'),first,second,at); call entry.returnvalue(sum,at)
+  if unsupported > 0 then do
+    fn = draft.function('unreachable.unsupported',contract.voidtype()); entry = fn.block('entry')
+    if unsupported = 1 then do
+      op = entry.operation(contract.operation('independent.unbound'),at); action = op.finish(); call entry.returnvoid(at)
+    end
+    else do
+      normal = fn.block('normal'); exceptional = fn.block('exceptional')
+      call entry.protect(normal,exceptional,at); call normal.returnvoid(at); call exceptional.returnvoid(at)
+    end
+  end
+  return draft.finish()
+
+marker: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, name = .string, at = .llir..origin
+  op = block.operation(contract.operation('independent.' || name),at); ignored = op.finish()
+  return
+
+neutralhandler: class implements .llirexecute..handler
+  _events = .string
+  _cleanups = .int
+  _mode = .string
+  *: factory
+    arg mode = ''
+    _events = ''; _cleanups = 0; _mode = mode
+    return
+  record: method = .void
+    arg event = .string
+    if _events <> '' then _events = _events || '|'
+    _events = _events || event
+    return
+  execute: method = .llirexecute..outcome
+    arg input = .llirexecute..request
+    operation = input.operation(); name = operation.name(); result = .llirexecute..outcome('normal')
+    if name = 'independent.add' | name = 'independent.leq' then do
+      a = input.at(1); b = input.at(2); left = a.bits(); right = b.bits()
+      x = <at..i64>(0) left; y = <at..i64>(0) right
+      if name = 'independent.add' then call result.add(intvalue(x + y))
+      else do
+        bit = '00'x as .binary
+        if x <= y then bit = '01'x as .binary
+        call result.add(.llirexecute..value('core.boolean',bit))
+      end
+      return result
+    end
+    event = substr(name,length('independent.') + 1); call record(event)
+    if event = 'yield' then return .llirexecute..outcome('suspend')
+    if event = 'fail' then return .llirexecute..outcome('failure','EXPECTED.FAIL','expected failure','00FE'x as .binary,input.origin())
+    if event = 'raise' then assembler signal "ERROR","independent raised handler"
+    if event = 'bad' then call result.add(.llirexecute..value('independent.integer','00'x as .binary))
+    return result
+  cleanup: method = .void
+    arg reason = .string
+    _cleanups = _cleanups + 1; call record('cleanup.' || reason)
+    if _mode = 'cleanup.throw' then assembler signal "ERROR","independent cleanup failure"
+    return
+  events: method = .string
+    return _events
+  cleanups: method = .int
+    return _cleanups
+
+intvalue: procedure = .llirexecute..value
+  arg number = .int
+  codec = .llir..intcodec(); bits = codec.parse(number as .string)
+  return .llirexecute..value('independent.integer',bits)
+
+integerresult: procedure = .int
+  arg answer = .llirexecute..result, expected = .int, description = .string
+  if answer.status() <> 'done' | answer.size() <> 1 then do
+    say 'RESULT' answer.status() answer.code() answer.message()
+    return check(0,description)
+  end
+  value = answer.at(1); bits = value.bits()
+  if <blen>(bits) <> 8 then return check(0,description || ' encoding')
+  return check(value.type() = 'independent.integer' & <at..i64>(0) bits = expected & answer.present(1),description)
+
+diagnostic: procedure = .void
+  arg answer = .llirexecute..result, service = .neutralhandler
+  say 'RESULT' answer.status() answer.code() answer.message() 'steps=' || answer.steps() 'events=' || service.events()
+  return
+
+check: procedure = .int
+  arg condition = .int, description = .string
+  if condition then return 0
+  say 'FAIL:' description
+  return 1

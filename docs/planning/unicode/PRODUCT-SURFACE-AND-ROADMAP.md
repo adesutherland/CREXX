@@ -19,6 +19,19 @@ The baseline is an explicit Level G service. It does not redefine `.string`,
 comparison, assignment, identifiers, source parsing, ordinary BIF indexes, or
 text I/O.
 
+## Shared Level B foundation
+
+During the 19 October C-only compiler design, Adrian suggested placing common
+Unicode capability in B for G and C. At the design baseline the executors
+were already B but packaged with the G facade; C still imports that facade. The
+[approved architecture](../../../research/level-l/compilers/doc/architecture.md#shared-unicode-foundation-in-level-b)
+extracts an independently selectable B runtime/API and one pinned-data owner,
+retains G's public functions/collections and C's Classic adapters, and keeps
+Level L bootstrap acyclic. Adrian approved extraction on 19 October 2026.
+The initial component preserves private ABI and current Unicode semantics/version;
+exact new public B facade signatures remain a contract gate. The compiler
+plan's CLC-STEP03 owns implementation and cross-consumer acceptance.
+
 ## Product boundary
 
 - Level B `.string` remains valid UTF-8 with codepoint-based operations.
@@ -168,8 +181,8 @@ provenance and must not borrow Unicode certificate bits or semantics.
 ## Prepared data boundary
 
 Pinned UCD inputs, sources, terms, and checksums are under
-`lib/rxfnsg/unicode/data/unicode-17.0.0/`. TUTOR-compatible legacy mapping
-inputs and their provenance are under `lib/rxfnsg/unicode/data/legacy/`.
+`lib/rxfnsb/unicode/data/unicode-17.0.0/`. TUTOR-compatible legacy mapping
+inputs and their provenance are under `lib/rxfnsb/unicode/data/legacy/`.
 
 The deterministic build emits these checked images:
 

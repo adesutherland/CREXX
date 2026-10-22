@@ -4,7 +4,8 @@ The foundation algorithms below are implemented in `llir` and `llirservices`.
 The source frontends and RXAS selection are implemented. Production IR
 optimisation remains planned. The [backend algorithm](backend.md#structures-and-algorithm)
 describes stable registers, checked call windows, literals, source mapping and atomic output.
-Each implemented stage carries its contract and decisive tests under [LLCOMP-AC15](../PLAN.md#numbered-acceptance-criteria).
+Each implemented stage follows the [representation contracts](architecture.md#representation-contracts)
+and records decisive checks against the [current acceptance criteria](../PLAN.md#c-first-delivery-milestone).
 
 ## Stages and evidence
 
@@ -136,13 +137,16 @@ and the accounting boundary of `bytes()` and `capacity()`.
   edge. Complete analysis requires registered, normally returning extensions
   with known state effects.
 - Definite assignment keeps two B*S byte matrices, rather than packed bit sets.
-  Non-entry reachable blocks start with their function's slots set. Each sweep
-  intersects predecessor outputs, then scans block operations to add stores.
-  The implementation finds predecessors by scanning the graph, giving a loose
-  bound O((B*S+1)*(B*S*(B+E)+N)) before descriptor and fact-publication costs.
-  The sets can lose at most B*S members, so the sweep terminates. A work budget
-  limits attempted scans; a preliminary lattice-size check bounds matrix
-  allocation. Loads are diagnosed at their position in the converged block.
+  Reachable exits start at their function's lattice top; entry transfer always
+  begins empty. A private O(B+E) predecessor index avoids whole-graph rescans.
+  A ring worklist holds at most B pending blocks and wakes successors only when
+  an exit set loses facts. Each set can lose at most S members, so the worklist
+  converges. Meets visit actual incoming edges; transfers walk the block's
+  operations. Sparse fact publication retains its separate quadratic cost below.
+  Checked work charges cover construction, transfer and publication; a division
+  check bounds matrix allocation before multiplication. Loads are diagnosed at
+  their position in the converged block. No new API, SSA form or liveness
+  allocator is introduced by this change.
 - Facts are sparse ordered arrays keyed by entity, ID and name. Lookup is a
   linear scan; storing M distinct facts can take O(M²) comparisons. Fact payload
   and key bytes have independent budgets. These foundations do not yet claim

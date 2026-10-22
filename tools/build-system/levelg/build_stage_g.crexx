@@ -341,6 +341,7 @@ main: procedure = .int
   base_imports = imports_root || "/base"
   library = bin_dir || "/library.rxbin"
   classlib = bin_dir || "/classlib.rxbin"
+  unicode_core = bin_dir || "/rxunicode-core.rxbin"
 
   if reset_import_root(cmake, base_imports) <> 0 then return 1
   if stage_import(cmake, base_imports, library, "library.rxbin") <> 0 then return 1
@@ -436,363 +437,17 @@ main: procedure = .int
   end
 
   if scope_name = "all" then do
-    command_target = crexx_stage_g_worker..command_target()
-    unicode_root = source_dir || "/../unicode"
-    unicode_tools_source = unicode_root || "/tools"
-    unicode_data_root = unicode_root || "/data"
-    unicode_work = work_root || "/unicode"
-    unicode_tools_work = unicode_work || "/tools"
-    unicode_imports = imports_root || "/unicode-tools"
-
-    level_l_runtime = bin_dir || "/rxfnsl.rxbin"
-    gennorm2_language = bin_dir || "/gennorm2_language.rxbin"
-    level_l_gennorm2_source = unicode_tools_source || "/level_l_gennorm2.crexx"
-    unicode_normprops_source = unicode_tools_source || "/unicode_normprops.crexx"
-    encoding_table_source = unicode_tools_source || "/encoding_table.crexx"
-    casefold_table_source = unicode_tools_source || "/casefold_table.crexx"
-    case_mapping_table_source = unicode_tools_source || "/case_mapping_table.crexx"
-    grapheme_table_source = unicode_tools_source || "/grapheme_table.crexx"
-
-    unicode_tool_base_imports = unicode_imports || "/base"
-    if prepare_import_root(cmake, unicode_tool_base_imports, library, "library.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    if stage_import(cmake, unicode_tool_base_imports, level_l_runtime, "rxfnsl.rxbin") <> 0 | stage_import(cmake, unicode_tool_base_imports, gennorm2_language, "gennorm2_language.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    level_l_gennorm2_key = action_key(tool_identity || ":level_l_gennorm2:-x", level_l_gennorm2_source, library, level_l_runtime, gennorm2_language)
-    unicode_normprops_key = action_key(tool_identity || ":unicode_normprops:-x", unicode_normprops_source, library)
-    encoding_table_key = action_key(tool_identity || ":encoding_table:-x", encoding_table_source, library)
-    casefold_table_key = action_key(tool_identity || ":casefold_table:-x", casefold_table_source, library)
-    case_mapping_table_key = action_key(tool_identity || ":case_mapping_table:-x", case_mapping_table_source, library)
-    grapheme_table_key = action_key(tool_identity || ":grapheme_table:-x", grapheme_table_source, library)
-
-    unicode_wave1 = .channelvalue[]
-    call queue_compile unicode_wave1, "level_l_gennorm2", level_l_gennorm2_source, unicode_tools_work || "/level_l_gennorm2", unicode_tool_base_imports, rxc, rxas, cmake, level_l_gennorm2_key, 0
-    call queue_compile unicode_wave1, "unicode_normprops", unicode_normprops_source, unicode_tools_work || "/unicode_normprops", unicode_tool_base_imports, rxc, rxas, cmake, unicode_normprops_key, 0
-    call queue_compile unicode_wave1, "encoding_table", encoding_table_source, unicode_tools_work || "/encoding_table", unicode_tool_base_imports, rxc, rxas, cmake, encoding_table_key, 0
-    call queue_compile unicode_wave1, "casefold_table", casefold_table_source, unicode_tools_work || "/casefold_table", unicode_tool_base_imports, rxc, rxas, cmake, casefold_table_key, 0
-    call queue_compile unicode_wave1, "case_mapping_table", case_mapping_table_source, unicode_tools_work || "/case_mapping_table", unicode_tool_base_imports, rxc, rxas, cmake, case_mapping_table_key, 0
-    call queue_compile unicode_wave1, "grapheme_table", grapheme_table_source, unicode_tools_work || "/grapheme_table", unicode_tool_base_imports, rxc, rxas, cmake, grapheme_table_key, 0
-    if run_task_wave(pool, worker_target, unicode_wave1, "U1 independent table tools") <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    level_l_gennorm2_bin = unicode_tools_work || "/level_l_gennorm2/level_l_gennorm2.rxbin"
-    unicode_normprops_bin = unicode_tools_work || "/unicode_normprops/unicode_normprops.rxbin"
-    encoding_table_bin = unicode_tools_work || "/encoding_table/encoding_table.rxbin"
-    casefold_table_bin = unicode_tools_work || "/casefold_table/casefold_table.rxbin"
-    case_mapping_table_bin = unicode_tools_work || "/case_mapping_table/case_mapping_table.rxbin"
-    grapheme_table_bin = unicode_tools_work || "/grapheme_table/grapheme_table.rxbin"
-
-    unicode_gennorm2_imports = unicode_imports || "/unicode_gennorm2"
-    generate_encoding_imports = unicode_imports || "/generate_encoding"
-    generate_casefold_imports = unicode_imports || "/generate_casefold"
-    generate_case_mapping_imports = unicode_imports || "/generate_case_mapping"
-    generate_grapheme_imports = unicode_imports || "/generate_grapheme"
-    if prepare_import_root(cmake, unicode_gennorm2_imports, library, "library.rxbin", level_l_gennorm2_bin, "level_l_gennorm2.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    if prepare_import_root(cmake, generate_encoding_imports, library, "library.rxbin", encoding_table_bin, "encoding_table.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    if prepare_import_root(cmake, generate_casefold_imports, library, "library.rxbin", casefold_table_bin, "casefold_table.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    if prepare_import_root(cmake, generate_case_mapping_imports, library, "library.rxbin", case_mapping_table_bin, "case_mapping_table.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    if prepare_import_root(cmake, generate_grapheme_imports, library, "library.rxbin", grapheme_table_bin, "grapheme_table.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    unicode_gennorm2_source = unicode_tools_source || "/unicode_gennorm2.crexx"
-    generate_encoding_source = unicode_tools_source || "/generate_encoding.crexx"
-    generate_casefold_source = unicode_tools_source || "/generate_casefold.crexx"
-    generate_case_mapping_source = unicode_tools_source || "/generate_case_mapping.crexx"
-    generate_grapheme_source = unicode_tools_source || "/generate_grapheme.crexx"
-    unicode_gennorm2_key = action_key(tool_identity || ":unicode_gennorm2:-x", unicode_gennorm2_source, library, level_l_gennorm2_bin)
-    generate_encoding_key = action_key(tool_identity || ":generate_encoding:-x", generate_encoding_source, library, encoding_table_bin)
-    generate_casefold_key = action_key(tool_identity || ":generate_casefold:-x", generate_casefold_source, library, casefold_table_bin)
-    generate_case_mapping_key = action_key(tool_identity || ":generate_case_mapping:-x", generate_case_mapping_source, library, case_mapping_table_bin)
-    generate_grapheme_key = action_key(tool_identity || ":generate_grapheme:-x", generate_grapheme_source, library, grapheme_table_bin)
-
-    unicode_wave2 = .channelvalue[]
-    call queue_compile unicode_wave2, "unicode_gennorm2", unicode_gennorm2_source, unicode_tools_work || "/unicode_gennorm2", unicode_gennorm2_imports, rxc, rxas, cmake, unicode_gennorm2_key, 0
-    call queue_compile unicode_wave2, "generate_encoding", generate_encoding_source, unicode_tools_work || "/generate_encoding", generate_encoding_imports, rxc, rxas, cmake, generate_encoding_key, 0
-    call queue_compile unicode_wave2, "generate_casefold", generate_casefold_source, unicode_tools_work || "/generate_casefold", generate_casefold_imports, rxc, rxas, cmake, generate_casefold_key, 0
-    call queue_compile unicode_wave2, "generate_case_mapping", generate_case_mapping_source, unicode_tools_work || "/generate_case_mapping", generate_case_mapping_imports, rxc, rxas, cmake, generate_case_mapping_key, 0
-    call queue_compile unicode_wave2, "generate_grapheme", generate_grapheme_source, unicode_tools_work || "/generate_grapheme", generate_grapheme_imports, rxc, rxas, cmake, generate_grapheme_key, 0
-    if run_task_wave(pool, worker_target, unicode_wave2, "U2 dependent generators") <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    unicode_gennorm2_bin = unicode_tools_work || "/unicode_gennorm2/unicode_gennorm2.rxbin"
-    generate_encoding_bin = unicode_tools_work || "/generate_encoding/generate_encoding.rxbin"
-    generate_casefold_bin = unicode_tools_work || "/generate_casefold/generate_casefold.rxbin"
-    generate_case_mapping_bin = unicode_tools_work || "/generate_case_mapping/generate_case_mapping.rxbin"
-    generate_grapheme_bin = unicode_tools_work || "/generate_grapheme/generate_grapheme.rxbin"
-
-    unicode_data_imports = unicode_imports || "/unicode_data"
-    if prepare_import_root(cmake, unicode_data_imports, library, "library.rxbin", unicode_gennorm2_bin, "unicode_gennorm2.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    unicode_data_source_tool = unicode_tools_source || "/unicode_data.crexx"
-    unicode_data_key = action_key(tool_identity || ":unicode_data:-x", unicode_data_source_tool, library, unicode_gennorm2_bin)
-    unicode_wave3 = .channelvalue[]
-    call queue_compile unicode_wave3, "unicode_data", unicode_data_source_tool, unicode_tools_work || "/unicode_data", unicode_data_imports, rxc, rxas, cmake, unicode_data_key, 0
-    if run_task_wave(pool, worker_target, unicode_wave3, "U3 normalization data tool") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    unicode_data_bin = unicode_tools_work || "/unicode_data/unicode_data.rxbin"
-
-    unicode_d_imports = unicode_imports || "/unicode_d"
-    exits_bin = bin_dir || "/rxcexits.rxbin"
-    if prepare_import_root(cmake, unicode_d_imports, library, "library.rxbin", unicode_gennorm2_bin, "unicode_gennorm2.rxbin", unicode_data_bin, "unicode_data.rxbin", unicode_normprops_bin, "unicode_normprops.rxbin", exits_bin, "rxcexits.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    unicode_d_source = unicode_tools_source || "/unicode_d.crexx"
-    unicode_d_key = action_key(tool_identity || ":unicode_d:exits", unicode_d_source, library, unicode_gennorm2_bin, unicode_data_bin, unicode_normprops_bin, exits_bin)
-    unicode_wave4 = .channelvalue[]
-    call queue_compile unicode_wave4, "unicode_d", unicode_d_source, unicode_tools_work || "/unicode_d", unicode_d_imports, rxc, rxas, cmake, unicode_d_key, 1
-    if run_task_wave(pool, worker_target, unicode_wave4, "U4 prepared normalization table") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    unicode_d_bin = unicode_tools_work || "/unicode_d/unicode_d.rxbin"
-
-    generate_normalization_imports = unicode_imports || "/generate_normalization"
-    if prepare_import_root(cmake, generate_normalization_imports, library, "library.rxbin", unicode_data_bin, "unicode_data.rxbin", unicode_normprops_bin, "unicode_normprops.rxbin", unicode_d_bin, "unicode_d.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    generate_normalization_source = unicode_tools_source || "/generate_normalization.crexx"
-    generate_normalization_key = action_key(tool_identity || ":generate_normalization:-x", generate_normalization_source, library, unicode_data_bin, unicode_normprops_bin, unicode_d_bin)
-    unicode_wave5 = .channelvalue[]
-    call queue_compile unicode_wave5, "generate_normalization", generate_normalization_source, unicode_tools_work || "/generate_normalization", generate_normalization_imports, rxc, rxas, cmake, generate_normalization_key, 0
-    if run_task_wave(pool, worker_target, unicode_wave5, "U5 normalization generator") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    generate_normalization_bin = unicode_tools_work || "/generate_normalization/generate_normalization.rxbin"
-
-    linked_generator_dir = unicode_work || "/linked-generators"
-    generated_source_dir = unicode_work || "/generated"
-    if make_directory(cmake, linked_generator_dir) <> 0 then do
-      call pool.close()
-      return 1
-    end
-    if make_directory(cmake, generated_source_dir) <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    encoding_generator_image = linked_generator_dir || "/encoding_generator.rxbin"
-    casefold_generator_image = linked_generator_dir || "/casefold_generator.rxbin"
-    case_mapping_generator_image = linked_generator_dir || "/case_mapping_generator.rxbin"
-    grapheme_generator_image = linked_generator_dir || "/grapheme_generator.rxbin"
-    normalization_generator_image = linked_generator_dir || "/normalization_generator.rxbin"
-
-    encoding_link_key = action_key("link-generator:encoding", rxlink, generate_encoding_bin, encoding_table_bin)
-    casefold_link_key = action_key("link-generator:casefold", rxlink, generate_casefold_bin, casefold_table_bin)
-    case_mapping_link_key = action_key("link-generator:case-mapping", rxlink, generate_case_mapping_bin, case_mapping_table_bin)
-    grapheme_link_key = action_key("link-generator:grapheme", rxlink, generate_grapheme_bin, grapheme_table_bin)
-    normalization_link_key = action_key("link-generator:normalization", rxlink, generate_normalization_bin, level_l_gennorm2_bin, unicode_gennorm2_bin, unicode_data_bin, unicode_normprops_bin, unicode_d_bin, level_l_runtime, gennorm2_language)
-
-    encoding_link_argv = .string[]
-    call arrayappend encoding_link_argv, rxlink
-    call arrayappend encoding_link_argv, "-s"
-    call arrayappend encoding_link_argv, "-o"
-    call arrayappend encoding_link_argv, linked_generator_dir || "/encoding_generator"
-    call arrayappend encoding_link_argv, generate_encoding_bin
-    call arrayappend encoding_link_argv, encoding_table_bin
-    casefold_link_argv = .string[]
-    call arrayappend casefold_link_argv, rxlink
-    call arrayappend casefold_link_argv, "-s"
-    call arrayappend casefold_link_argv, "-o"
-    call arrayappend casefold_link_argv, linked_generator_dir || "/casefold_generator"
-    call arrayappend casefold_link_argv, generate_casefold_bin
-    call arrayappend casefold_link_argv, casefold_table_bin
-    case_mapping_link_argv = .string[]
-    call arrayappend case_mapping_link_argv, rxlink
-    call arrayappend case_mapping_link_argv, "-s"
-    call arrayappend case_mapping_link_argv, "-o"
-    call arrayappend case_mapping_link_argv, linked_generator_dir || "/case_mapping_generator"
-    call arrayappend case_mapping_link_argv, generate_case_mapping_bin
-    call arrayappend case_mapping_link_argv, case_mapping_table_bin
-    grapheme_link_argv = .string[]
-    call arrayappend grapheme_link_argv, rxlink
-    call arrayappend grapheme_link_argv, "-s"
-    call arrayappend grapheme_link_argv, "-o"
-    call arrayappend grapheme_link_argv, linked_generator_dir || "/grapheme_generator"
-    call arrayappend grapheme_link_argv, generate_grapheme_bin
-    call arrayappend grapheme_link_argv, grapheme_table_bin
-    normalization_link_argv = .string[]
-    call arrayappend normalization_link_argv, rxlink
-    call arrayappend normalization_link_argv, "-s"
-    call arrayappend normalization_link_argv, "-o"
-    call arrayappend normalization_link_argv, linked_generator_dir || "/normalization_generator"
-    call arrayappend normalization_link_argv, generate_normalization_bin
-    call arrayappend normalization_link_argv, level_l_gennorm2_bin
-    call arrayappend normalization_link_argv, level_l_runtime
-    call arrayappend normalization_link_argv, gennorm2_language
-    call arrayappend normalization_link_argv, unicode_gennorm2_bin
-    call arrayappend normalization_link_argv, unicode_data_bin
-    call arrayappend normalization_link_argv, unicode_normprops_bin
-    call arrayappend normalization_link_argv, unicode_d_bin
-
-    unicode_link_wave = .channelvalue[]
-    call queue_command unicode_link_wave, "link encoding generator", linked_generator_dir, encoding_generator_image, linked_generator_dir || "/encoding.action.sha256", cmake, encoding_link_key, encoding_link_argv
-    call queue_command unicode_link_wave, "link case-fold generator", linked_generator_dir, casefold_generator_image, linked_generator_dir || "/casefold.action.sha256", cmake, casefold_link_key, casefold_link_argv
-    call queue_command unicode_link_wave, "link case-mapping generator", linked_generator_dir, case_mapping_generator_image, linked_generator_dir || "/case-mapping.action.sha256", cmake, case_mapping_link_key, case_mapping_link_argv
-    call queue_command unicode_link_wave, "link grapheme generator", linked_generator_dir, grapheme_generator_image, linked_generator_dir || "/grapheme.action.sha256", cmake, grapheme_link_key, grapheme_link_argv
-    call queue_command unicode_link_wave, "link normalization generator", linked_generator_dir, normalization_generator_image, linked_generator_dir || "/normalization.action.sha256", cmake, normalization_link_key, normalization_link_argv
-    if run_task_wave(pool, command_target, unicode_link_wave, "U6 link source generators") <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    unicode_17_root = unicode_data_root || "/unicode-17.0.0"
-    legacy_data_root = unicode_data_root || "/legacy"
-    casefold_data = unicode_17_root || "/CaseFolding.txt"
-    grapheme_property_data = unicode_17_root || "/auxiliary/GraphemeBreakProperty.txt"
-    emoji_data = unicode_17_root || "/emoji/emoji-data.txt"
-    derived_core_data = unicode_17_root || "/DerivedCoreProperties.txt"
-    unicode_data_file = unicode_17_root || "/UnicodeData.txt"
-    normalization_properties_data = unicode_17_root || "/DerivedNormalizationProps.txt"
-    special_casing_data = unicode_17_root || "/SpecialCasing.txt"
-    windows1252_data = legacy_data_root || "/CP1252-2.0.0.txt"
-    ibm437_data = legacy_data_root || "/CP437-2.0.0.txt"
-    ibm850_data = legacy_data_root || "/CP850-2.0.0.txt"
-    ibm1047_data = legacy_data_root || "/IBM1047.txt"
-
-    casefold_template = source_dir || "/unicode_casefold.crexx.in"
-    case_mapping_template = source_dir || "/unicode_case_mapping.crexx.in"
-    encoding_template = source_dir || "/unicode_codec.crexx.in"
-    grapheme_template = source_dir || "/unicode_grapheme.crexx.in"
-    normalization_template = unicode_tools_source || "/unicode_d.crexx"
-    generated_casefold = generated_source_dir || "/unicode_casefold.crexx"
-    generated_case_mapping = generated_source_dir || "/unicode_case_mapping.crexx"
-    generated_encoding = generated_source_dir || "/unicode_codec.crexx"
-    generated_grapheme = generated_source_dir || "/unicode_grapheme.crexx"
-    generated_normalization = generated_source_dir || "/unicode_normalization.crexx"
-
-    casefold_run_key = action_key("run-generator:casefold", rxbvm, casefold_generator_image, library, casefold_data, casefold_template)
-    case_mapping_run_key = action_key("run-generator:case-mapping", rxbvm, case_mapping_generator_image, library, unicode_data_file, special_casing_data, derived_core_data, case_mapping_template)
-    encoding_run_key = action_key("run-generator:encoding", rxbvm, encoding_generator_image, library, windows1252_data, ibm437_data, ibm850_data, ibm1047_data, encoding_template)
-    grapheme_run_key = action_key("run-generator:grapheme", rxbvm, grapheme_generator_image, library, grapheme_property_data, emoji_data, derived_core_data, grapheme_template)
-    normalization_run_key = action_key("run-generator:normalization", rxbvm, normalization_generator_image, library, unicode_data_file, normalization_properties_data, normalization_template)
-
-    casefold_run_argv = .string[]
-    call arrayappend casefold_run_argv, rxbvm
-    call arrayappend casefold_run_argv, casefold_generator_image
-    call arrayappend casefold_run_argv, library
-    call arrayappend casefold_run_argv, "-a"
-    call arrayappend casefold_run_argv, casefold_data
-    call arrayappend casefold_run_argv, casefold_template
-    call arrayappend casefold_run_argv, generated_casefold
-    case_mapping_run_argv = .string[]
-    call arrayappend case_mapping_run_argv, rxbvm
-    call arrayappend case_mapping_run_argv, case_mapping_generator_image
-    call arrayappend case_mapping_run_argv, library
-    call arrayappend case_mapping_run_argv, "-a"
-    call arrayappend case_mapping_run_argv, unicode_data_file
-    call arrayappend case_mapping_run_argv, special_casing_data
-    call arrayappend case_mapping_run_argv, derived_core_data
-    call arrayappend case_mapping_run_argv, case_mapping_template
-    call arrayappend case_mapping_run_argv, generated_case_mapping
-    encoding_run_argv = .string[]
-    call arrayappend encoding_run_argv, rxbvm
-    call arrayappend encoding_run_argv, encoding_generator_image
-    call arrayappend encoding_run_argv, library
-    call arrayappend encoding_run_argv, "-a"
-    call arrayappend encoding_run_argv, windows1252_data
-    call arrayappend encoding_run_argv, ibm437_data
-    call arrayappend encoding_run_argv, ibm850_data
-    call arrayappend encoding_run_argv, ibm1047_data
-    call arrayappend encoding_run_argv, encoding_template
-    call arrayappend encoding_run_argv, generated_encoding
-    grapheme_run_argv = .string[]
-    call arrayappend grapheme_run_argv, rxbvm
-    call arrayappend grapheme_run_argv, grapheme_generator_image
-    call arrayappend grapheme_run_argv, library
-    call arrayappend grapheme_run_argv, "-a"
-    call arrayappend grapheme_run_argv, grapheme_property_data
-    call arrayappend grapheme_run_argv, emoji_data
-    call arrayappend grapheme_run_argv, derived_core_data
-    call arrayappend grapheme_run_argv, grapheme_template
-    call arrayappend grapheme_run_argv, generated_grapheme
-    normalization_run_argv = .string[]
-    call arrayappend normalization_run_argv, rxbvm
-    call arrayappend normalization_run_argv, normalization_generator_image
-    call arrayappend normalization_run_argv, library
-    call arrayappend normalization_run_argv, "-a"
-    call arrayappend normalization_run_argv, unicode_data_file
-    call arrayappend normalization_run_argv, normalization_properties_data
-    call arrayappend normalization_run_argv, normalization_template
-    call arrayappend normalization_run_argv, generated_normalization
-
-    unicode_generate_wave = .channelvalue[]
-    call queue_command unicode_generate_wave, "generate case-fold source", linked_generator_dir, generated_casefold, generated_source_dir || "/casefold.action.sha256", cmake, casefold_run_key, casefold_run_argv
-    call queue_command unicode_generate_wave, "generate case-mapping source", linked_generator_dir, generated_case_mapping, generated_source_dir || "/case-mapping.action.sha256", cmake, case_mapping_run_key, case_mapping_run_argv
-    call queue_command unicode_generate_wave, "generate encoding source", linked_generator_dir, generated_encoding, generated_source_dir || "/encoding.action.sha256", cmake, encoding_run_key, encoding_run_argv
-    call queue_command unicode_generate_wave, "generate grapheme source", linked_generator_dir, generated_grapheme, generated_source_dir || "/grapheme.action.sha256", cmake, grapheme_run_key, grapheme_run_argv
-    call queue_command unicode_generate_wave, "generate normalization source", linked_generator_dir, generated_normalization, generated_source_dir || "/normalization.action.sha256", cmake, normalization_run_key, normalization_run_argv
-    if run_task_wave(pool, command_target, unicode_generate_wave, "U7 generate runtime sources") <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    product_exit_imports = imports_root || "/unicode-product-exits"
-    if prepare_import_root(cmake, product_exit_imports, exits_bin, "rxcexits.rxbin") <> 0 then do
-      call pool.close()
-      return 1
-    end
-    unicode_casefold_key = action_key(tool_identity || ":unicode_casefold:exits", generated_casefold, library, classlib, exits_bin)
-    unicode_case_mapping_key = action_key(tool_identity || ":unicode_case_mapping:exits", generated_case_mapping, library, classlib, exits_bin)
-    unicode_codec_key = action_key(tool_identity || ":unicode_codec:exits", generated_encoding, library, classlib, exits_bin)
-    unicode_grapheme_key = action_key(tool_identity || ":unicode_grapheme:exits", generated_grapheme, library, classlib, exits_bin)
-    unicode_normalization_key = action_key(tool_identity || ":unicode_normalization:exits", generated_normalization, library, classlib, exits_bin)
-    unicode_product_wave = .channelvalue[]
-    call queue_compile unicode_product_wave, "unicode_casefold", generated_casefold, members_root || "/unicode_casefold", base_imports || ";" || product_exit_imports, rxc, rxas, cmake, unicode_casefold_key, 1
-    call queue_compile unicode_product_wave, "unicode_case_mapping", generated_case_mapping, members_root || "/unicode_case_mapping", base_imports || ";" || product_exit_imports, rxc, rxas, cmake, unicode_case_mapping_key, 1
-    call queue_compile unicode_product_wave, "unicode_codec", generated_encoding, members_root || "/unicode_codec", base_imports || ";" || product_exit_imports, rxc, rxas, cmake, unicode_codec_key, 1
-    call queue_compile unicode_product_wave, "unicode_grapheme", generated_grapheme, members_root || "/unicode_grapheme", base_imports || ";" || product_exit_imports, rxc, rxas, cmake, unicode_grapheme_key, 1
-    call queue_compile unicode_product_wave, "unicode_normalization", generated_normalization, members_root || "/unicode_normalization", base_imports || ";" || product_exit_imports, rxc, rxas, cmake, unicode_normalization_key, 1
-    if run_task_wave(pool, worker_target, unicode_product_wave, "U8 private Unicode runtimes") <> 0 then do
-      call pool.close()
-      return 1
-    end
-
-    unicode_casefold_bin = members_root || "/unicode_casefold/unicode_casefold.rxbin"
-    unicode_case_mapping_bin = members_root || "/unicode_case_mapping/unicode_case_mapping.rxbin"
-    unicode_codec_bin = members_root || "/unicode_codec/unicode_codec.rxbin"
-    unicode_grapheme_bin = members_root || "/unicode_grapheme/unicode_grapheme.rxbin"
-    unicode_normalization_bin = members_root || "/unicode_normalization/unicode_normalization.rxbin"
+    -- The independently built B core owns all private Unicode executors.
     unicode_public_imports = imports_root || "/unicode-public"
-    if prepare_import_root(cmake, unicode_public_imports, unicode_casefold_bin, "unicode_casefold.rxbin", unicode_case_mapping_bin, "unicode_case_mapping.rxbin", unicode_codec_bin, "unicode_codec.rxbin", unicode_grapheme_bin, "unicode_grapheme.rxbin", unicode_normalization_bin, "unicode_normalization.rxbin") <> 0 then do
+    if prepare_import_root(cmake, unicode_public_imports, unicode_core, "rxunicode-core.rxbin") <> 0 then do
       call pool.close()
       return 1
     end
     unicode_source = source_dir || "/unicode.crexx"
-    unicode_key = action_key(tool_identity || ":unicode:-x", unicode_source, library, classlib, unicode_casefold_bin, unicode_case_mapping_bin, unicode_codec_bin, unicode_grapheme_bin, unicode_normalization_bin)
+    unicode_key = action_key(tool_identity || ":unicode:-x", unicode_source, library, classlib, unicode_core)
     unicode_public_wave = .channelvalue[]
     call queue_compile unicode_public_wave, "unicode", unicode_source, members_root || "/unicode", base_imports || ";" || unicode_public_imports, rxc, rxas, cmake, unicode_key, 0
-    if run_task_wave(pool, worker_target, unicode_public_wave, "U9 public Unicode facade") <> 0 then do
+    if run_task_wave(pool, worker_target, unicode_public_wave, "G4 public Unicode facade") <> 0 then do
       call pool.close()
       return 1
     end
@@ -806,13 +461,8 @@ main: procedure = .int
   names[3] = "packednumeric"
   next_name = 4
   if scope_name = "all" then do
-    names[next_name] = "unicode_casefold"
-    names[next_name + 1] = "unicode_case_mapping"
-    names[next_name + 2] = "unicode_codec"
-    names[next_name + 3] = "unicode_grapheme"
-    names[next_name + 4] = "unicode_normalization"
-    names[next_name + 5] = "unicode"
-    next_name = next_name + 6
+    names[next_name] = "unicode"
+    next_name = next_name + 1
   end
   names[next_name] = "httpcodec"
   names[next_name + 1] = "httpcore"
@@ -824,8 +474,21 @@ main: procedure = .int
     modules[i] = members_root || "/" || names[i] || "/" || names[i] || ".rxbin"
   end
 
+  if scope_name = "all" then do
+    call arrayappend modules, unicode_core
+    call arrayappend names, "unicode_casefold"
+    call arrayappend names, "unicode_case_mapping"
+    call arrayappend names, "unicode_codec"
+    call arrayappend names, "unicode_grapheme"
+    call arrayappend names, "unicode_normalization"
+    call arrayappend names, "unicode_api"
+  end
+
   link_key = action_key("link-tool:" || configuration, rxlink)
   do i = 1 to modules[0]
-    link_key = action_key(link_key || ":" || names[i], modules[i])
+    link_key = action_key(link_key || ":" || i, modules[i])
+  end
+  do i = 1 to names[0]
+    link_key = action_key(link_key || ":include:" || names[i])
   end
   return link_library(work_root, bin_dir, rxlink, cmake, configuration, modules, names, link_key)

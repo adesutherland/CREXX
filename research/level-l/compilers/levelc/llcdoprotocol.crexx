@@ -1,0 +1,460 @@
+/* cREXX License (MIT). Compiler-internal Classic DO admission and facts. */
+options levelb
+namespace llcdoprotocol expose checked
+import rxfnsb
+import llir
+import llscalar
+import llcsymbols
+import llcprocedureprotocol
+import llcsignalprotocol
+
+/** Read-only, once-only facts over a caller-owned checked graph. The caller
+ * keeps the graph alive; this internal service never publishes or mutates IR.
+ * All declarations are checked, but execution facts start only at real entries.
+ */
+checked: class
+  _graph = reference .llir..module
+  _store = reference .llir..arena
+  _identity = .int
+  _limit = .int
+  _budget = .int
+  _bytes = .int
+  _work = .int
+  _ready = .int
+  _error = .string
+  _offset = .int
+  _keymap = .stem
+  _intern = .stem
+  _controlled = .int[]
+  _constructors = .int[]
+  _functions = .int[]
+  _depths = .int[]
+  _owners = .int[]
+  _parts = .int[]
+  _uses = .int[]
+  _before = .int[]
+  _queue = .int[]
+  _nodeowners = .int[]
+  _parents = .int[]
+  _phases = .int[]
+  _masks = .int[]
+  _levels = .int[]
+  _cleanup = .int[]
+  _symbols = .llcsymbols..checked
+  _symbolready = .int
+  _textbytes = .int
+  _program = reference .llcprocedureprotocol..checked
+  _programbound = .int
+  _signal = reference .llcsignalprotocol..checked
+  _signalbound = .int
+  *: factory
+    arg graph = reference .llir..module, bytes = 67108864, work = 1000000
+    _graph = graph; _limit = bytes; _budget = work
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0; _programbound = 0
+    _keymap = .stem(); _intern = .stem()
+    return
+  /** Synchronous borrow of completed C entry/program-unwind facts. The caller
+   * retains the strong proof owner through status and every later fact query. */
+  withprogram: factory
+    arg graph = reference .llir..module, proof = reference .llcprocedureprotocol..checked, bytes = 67108864, work = 1000000
+    _graph = graph; _limit = bytes; _budget = work; _program = proof
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0; _programbound = 1
+    _keymap = .stem(); _intern = .stem()
+    return
+  /** Signal facts constrain successful jumps and the unique protected
+   * dispatcher. Ordinary stack propagation and close legality stay exact. */
+  withsignals: factory
+    arg graph = reference .llir..module, proof = reference .llcprocedureprotocol..checked, signals = reference .llcsignalprotocol..checked, bytes = 67108864, work = 1000000
+    _graph = graph; _limit = bytes; _budget = work; _program = proof; _signal = signals
+    _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _symbolready = 0; _programbound = 1; _signalbound = 1
+    _keymap = .stem(); _intern = .stem()
+    return
+  fail: method = .void
+    arg reason = .string, opid = 0
+    if _error <> '' then return
+    _error = 'LL_COMPILER_' || reason
+    if opid > 0 then do
+      graph = dereference _graph
+      _offset = graph.operation(opid).origin().first()
+    end
+    return
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; call fail('LIMIT: invalid DO admission dimensions'); return 0; end
+    if count > (_limit - _bytes) <idiv> width then do
+      call fail('LIMIT: DO admission exceeds output.bytes workspace'); return 0
+    end
+    _bytes = _bytes + count * width
+    return 1
+  charge: method = .int
+    arg count = 1
+    if count < 0 | count > _budget - _work then do
+      call fail('LIMIT: DO admission work budget exceeded'); return 0
+    end
+    _work = _work + count
+    return 1
+  status: method = .int
+    call run(); return _error <> ''
+  error: method = .string
+    call run(); return _error
+  offset: method = .int
+    call run(); return _offset
+  /** A completed borrow belongs only to its original live frozen graph. */
+  belongs: method = .int
+    arg graph_ref = reference .llir..module
+    call run()
+    if _error <> '' | <refvalid>(_graph) = 0 | <refvalid>(_store) = 0 | <refvalid>(graph_ref) = 0 then return 0
+    graph = dereference graph_ref; held = dereference _graph
+    return graph.error() = '' & held.error() = '' & held.identity() = _identity & graph.identity() = _identity
+  bytesused: method = .int
+    call run(); return _bytes
+  workused: method = .int
+    call run(); return _work
+  owners: method = .int
+    call run(); return _constructors[0]
+  owner: method = .int
+    arg opid = .int
+    call run(); return _owners[opid]
+  /** A handler transfer is already indexed by the completed SIGNAL proof.
+   * Clock admission borrows this scalar fact without a second owner table. */
+  handlertransfer: method = .int
+    arg opid = .int
+    call run(); if _error <> '' | _signalbound = 0 then return 0
+    signals = dereference _signal
+    return signals.owner(opid) > 0 & signals.transfer(opid)
+  function: method = .int
+    arg owner = .int
+    call run(); return _functions[owner]
+  controlled: method = .int
+    arg owner = .int
+    call run(); return _controlled[owner]
+  cleanup: method = .int
+    arg ordinal = .int
+    call run(); return _cleanup[ordinal]
+  /** Lexical admission shares the generated owner, not graph execution. */
+  symbol: method = .void
+    arg name = .string
+    if _error <> '' then return
+    if charge(length(name) + 1) = 0 then return
+    if _symbolready = 0 then do
+      _symbols = .llcsymbols..checked(_limit,_budget); _symbolready = 1
+    end
+    call _symbols.symbol(name)
+    if _symbols.error() <> '' then _error = _symbols.error()
+    return
+  text: method = .string
+    arg op = .llir..opview, name = .string
+    bytes = op.attribute(name)
+    _textbytes = <blen>(bytes)
+    if _textbytes > _limit - _bytes then do; call fail('LIMIT: DO attribute exceeds output.bytes workspace',op.id()); return ''; end
+    if charge(_textbytes + 1) = 0 then return ''
+    codec = .llscalar..textcodec()
+    message = codec.check(bytes)
+    if message <> '' then do; call fail('LOWERING: invalid DO attribute ' || name,op.id()); return ''; end
+    return bytes as .string
+  qualifiedkey: method = .string
+    arg fn = .int, key = .string, extent = .int
+    prefix = fn || ':'; size = length(prefix)
+    if extent > (_limit - _bytes) <idiv> 2 - size then do
+      call fail('LIMIT: DO key exceeds output.bytes workspace'); return ''
+    end
+    /* Charge the bytes traversed for construction and the following map
+     * lookup; a repeated reference to one long key is not constant work. */
+    if charge(extent + size) = 0 then return ''
+    if charge(extent + size) = 0 then return ''
+    return prefix || key
+  keyed: method = .int
+    arg name = .string
+    return wordpos(name,'crexx.c.do.new crexx.c.do.capture crexx.c.do.start crexx.c.do.entry crexx.c.do.advance crexx.c.do.close') > 0
+  /** Only the completed private SIGNAL closure can discard transient DO
+   * state. Structural core edges or similarly named raw operations cannot. */
+  conditionoperation: method = .int
+    arg op = .llir..opview
+    if _signalbound = 0 then return 0
+    signals = dereference _signal
+    if op.name() <> 'core.protect' then return signals.owner(op.id()) > 0
+    store = dereference _store
+    fn = store.get(2,op.blockid(),1)
+    return signals.protection(fn) = op.id()
+  /** Canonical stack nodes make merges/backedges identity comparisons. Each
+   * transfer interns at most two new nodes; map/table growth is charged first.
+   */
+  stack: method = .int
+    arg owner = .int, parent = .int, phase = .int, mask = .int
+    key = owner || ',' || parent || ',' || phase || ',' || mask
+    if charge(length(key) + 1) = 0 then return 0
+    found = _intern.get(key)
+    if found <> '' then return found as .int
+    if charge() = 0 then return 0
+    if reserve(64 + length(key),1) = 0 then return 0
+    id = _nodeowners[0] + 1
+    _nodeowners[id] = owner; _parents[id] = parent; _phases[id] = phase; _masks[id] = mask
+    level = 1
+    if parent > 0 then level = _levels[parent] + 1
+    _levels[id] = level
+    if charge(length(key) + 1) = 0 then return 0
+    call _intern.set(key,id as .string)
+    return id
+  run: method = .void
+    if _ready then return
+    _ready = 1
+    if <refvalid>(_graph) = 0 then do; call fail('LOWERING: DO graph owner is not live'); return; end
+    graph = dereference _graph
+    if graph.error() <> '' then do; _error = graph.error(); return; end
+    _identity = graph.identity()
+    if _limit < 1 | _budget < 1 then do; call fail('LIMIT: invalid DO admission budget'); return; end
+    _store = graph.storage(); store = dereference _store
+    if _programbound then do
+      if <refvalid>(_program) = 0 then do
+        call fail('LOWERING: program-exit proof owner is not live'); return
+      end
+      prepared = dereference _program
+      if prepared.status() then do; _error = prepared.error(); _offset = prepared.offset(); return; end
+      if prepared.belongs(_graph) = 0 then do
+        call fail('LOWERING: program-exit proof belongs to another graph'); return
+      end
+    end
+    if _signalbound then do
+      if <refvalid>(_signal) = 0 then do; call fail('LOWERING: SIGNAL proof owner is not live'); return; end
+      signalproof = dereference _signal
+      if signalproof.status() then do; _error = signalproof.error(); _offset = signalproof.offset(); return; end
+      if signalproof.belongs(_graph) = 0 then do; call fail('LOWERING: SIGNAL proof belongs to another graph'); return; end
+    end
+    op = .llir..opview; name = .string; key = .string; qualified = .string
+    opid = .int; fn = .int; i = .int; b = .int; n = .int; owner = .int; last = .int
+    part = .int; bit = .int; state = .int; phase = .int; mask = .int; parent = .int
+    nextstate = .int; target = .int; edge = .int; pending = .int; topowner = .int
+    if reserve(store.count(3),8) = 0 then return
+    if reserve(store.count(4),4) = 0 then return
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name()
+      if name = 'core.protect' | wordpos(name,'crexx.c.signal.capture crexx.c.signal.select crexx.c.signal.selected crexx.c.signal.deliver crexx.c.signal.handler.invalid crexx.c.signal.relay') > 0 then do
+        if conditionoperation(op) = 0 then do
+          call fail('LOWERING: protected condition control requires its completed SIGNAL proof',opid); return
+        end
+      end
+      if name = 'crexx.c.transfer.invalid' then do
+        code = text(op,'code'); if _error <> '' then return
+        if code \== '28.1' & code \== '28.2' & code \== '28.3' & code \== '28.4' then do
+          call fail('LOWERING: invalid transfer error code',opid); return
+        end
+        targetname = text(op,'name'); if _error <> '' then return
+        if targetname == '' & (code == '28.3' | code == '28.4') then do
+          call fail('LOWERING: named transfer error requires a name',opid); return
+        end
+        if targetname \== '' then call symbol(targetname)
+        if _error <> '' then do; _offset = op.origin().first(); return; end
+      end
+      do i = 1 to op.inputs()
+        if charge() = 0 then return
+        n = op.input(i).id(); _uses[n] = _uses[n] + 1
+      end
+      if name <> 'crexx.c.do.new' then iterate
+      key = text(op,'key'); if _error <> '' then return
+      if key = '' then do; call fail('LOWERING: empty DO state key',opid); return; end
+      keybytes = _textbytes; fn = store.get(2,store.get(3,opid,2),1)
+      qualified = qualifiedkey(fn,key,keybytes); if _error <> '' then return
+      if _keymap.get(qualified) <> '' then do; call fail('LOWERING: duplicate DO constructor key',opid); return; end
+      name = text(op,'name'); if _error <> '' then return
+      if name <> '' then call symbol(name)
+      if _error <> '' then do; _offset = op.origin().first(); return; end
+      if reserve(64 + keybytes,1) = 0 then return
+      owner = _constructors[0] + 1
+      _constructors[owner] = opid; _functions[owner] = fn; _controlled[owner] = name <> ''; _depths[owner] = 0
+      if charge(length(qualified) + 1) = 0 then return
+      call _keymap.set(qualified,owner as .string)
+    end
+    do opid = 1 to store.count(3)
+      if charge() = 0 then return
+      op = graph.operation(opid); name = op.name()
+      if keyed(name) = 0 then iterate
+      key = text(op,'key'); if _error <> '' then return
+      if key = '' then do; call fail('LOWERING: empty DO state key',opid); return; end
+      fn = store.get(2,store.get(3,opid,2),1)
+      qualified = qualifiedkey(fn,key,_textbytes); if _error <> '' then return
+      qualified = _keymap.get(qualified)
+      if qualified = '' then do; call fail('LOWERING: unknown DO state key',opid); return; end
+      owner = qualified as .int; _owners[opid] = owner
+      if name = 'crexx.c.do.capture' then do
+        key = text(op,'part'); if _error <> '' then return
+        part = wordpos(key,'start to by for repeat')
+        if part = 0 then do; call fail('LOWERING: invalid DO capture part',opid); return; end
+        if key \== word('start to by for repeat',part) then do
+          call fail('LOWERING: invalid DO capture part',opid); return
+        end
+        if (_controlled[owner] = 0 & part <> 5) | (_controlled[owner] & part = 5) then do
+          call fail('LOWERING: DO capture part disagrees with constructor mode',opid); return
+        end
+        bit = 1
+        do i = 2 to part; bit = bit * 2; end
+        _parts[opid] = bit
+      end
+    end
+    if _constructors[0] = 0 then return
+    if reserve(store.count(2),8) = 0 then return
+    do b = 1 to store.count(2)
+      if charge() = 0 then return
+      _before[b] = -1
+    end
+    head = 1; tail = 0
+    do fn = 1 to store.count(1)
+      if charge() = 0 then return
+      b = store.get(1,fn,3); _before[b] = 0; tail = tail + 1; _queue[tail] = b
+    end
+    do while head <= tail
+      b = _queue[head]; head = head + 1; state = _before[b]
+      opid = store.get(2,b,2); pending = 0; divergent = 0
+      do while opid > 0
+        if charge() = 0 then return
+        op = graph.operation(opid); name = op.name(); owner = _owners[opid]
+        phase = 0; mask = 0; parent = 0; topowner = 0
+        if state > 0 then do
+          phase = _phases[state]; mask = _masks[state]; parent = _parents[state]; topowner = _nodeowners[state]
+        end
+        neutral = 0; unwind = 0
+        if _programbound then do
+          program = dereference _program
+          neutral = program.programneutral(opid); unwind = program.programterminal(opid)
+        end
+        if neutral = 0 & phase = 2 & name <> 'core.jump' & name <> 'crexx.c.do.entry' & (name <> 'core.branch' | pending = 0) then do
+          call fail('LOWERING: DO Ready state requires entry',opid); return
+        end
+        if neutral = 0 & phase = 4 & name <> 'core.jump' & name <> 'crexx.c.do.close' then do
+          call fail('LOWERING: DO false entry requires close',opid); return
+        end
+        select
+          when name = 'core.protect' then do
+            /* Both successors start with setup-only state. The exceptional
+             * successor is consumed, and SIGNAL owns its private closure. */
+            if state <> 0 | pending <> 0 then do
+              call fail('LOWERING: protected entry requires empty DO state',opid); return
+            end
+          end
+          when name = 'crexx.c.signal.deliver' then do
+            /* Delivery abandons transient control, never the current private
+             * pool. Its natural jump is separately constrained below. */
+            state = 0; pending = 0
+          end
+          when name = 'crexx.c.signal.handler.invalid' | name = 'crexx.c.signal.relay' then do
+            /* The exceptional entry and any prior delivery are logically
+             * empty. Their possible resumed same-R returns are SIGNAL-owned,
+             * not program-root EXIT terminals or arbitrary stack resets. */
+            if state <> 0 | pending <> 0 then do
+              call fail('LOWERING: condition completion requires empty DO state',opid); return
+            end
+          end
+          when name = 'crexx.c.do.new' then do
+            if state > 0 & phase <> 3 then do; call fail('LOWERING: nested DO construction requires Body',opid); return; end
+            /* A key has one constructor and its block is transferred once.
+             * Its first input cannot contain this not-yet-constructed key.
+             * Re-entry is legal only if the exact input fact agrees at the
+             * backedge; an active-key input therefore refuses at that edge.
+             * No ancestor/alias search or repeatedly changing depth is needed. */
+            if _depths[owner] <> 0 then do; call fail('LOWERING: DO constructor has inconsistent entry facts',opid); return; end
+            _depths[owner] = 1
+            if state > 0 then _depths[owner] = _levels[state] + 1
+            state = stack(owner,state,1,0)
+          end
+          when name = 'crexx.c.do.capture' then do
+            if topowner <> owner | phase <> 1 then do; call fail('LOWERING: DO capture requires top Collect state',opid); return; end
+            bit = _parts[opid]
+            if (mask <idiv> bit) % 2 <> 0 then do; call fail('LOWERING: repeated DO capture',opid); return; end
+            if _controlled[owner] then do
+              if (bit = 1 & mask <> 0) | (bit <> 1 & mask % 2 = 0) then do
+                call fail('LOWERING: DO start must be captured first',opid); return
+              end
+            end
+            state = stack(owner,parent,1,mask + bit)
+          end
+          when name = 'crexx.c.do.start' then do
+            if topowner <> owner | phase <> 1 then do; call fail('LOWERING: DO start requires top Collect state',opid); return; end
+            if (_controlled[owner] = 0 & mask <> 16) | (_controlled[owner] & mask % 2 = 0) then do
+              call fail('LOWERING: incomplete DO captures',opid); return
+            end
+            state = stack(owner,parent,2,mask)
+          end
+          when name = 'crexx.c.do.entry' then do
+            if topowner <> owner | phase <> 2 then do; call fail('LOWERING: DO entry requires top Ready state',opid); return; end
+            last = store.get(2,b,3)
+            if store.get(3,opid,3) <> last | store.get(3,last,1) <> 6 then do
+              call fail('LOWERING: DO entry must directly control its branch',opid); return
+            end
+            n = op.result().id()
+            if store.operand(last,1) <> n | _uses[n] <> 1 then do
+              call fail('LOWERING: DO entry result must have one branch use',opid); return
+            end
+            pending = owner
+          end
+          when name = 'crexx.c.do.advance' then do
+            if topowner <> owner | phase <> 3 then do; call fail('LOWERING: DO advance requires top Body state',opid); return; end
+            state = stack(owner,parent,2,mask)
+          end
+          when name = 'crexx.c.do.close' then do
+            if topowner <> owner | (phase <> 3 & phase <> 4) then do; call fail('LOWERING: DO close requires top Body or FalseExit state',opid); return; end
+            state = parent
+          end
+          when name = 'core.return' then do
+            if state <> 0 & unwind = 0 then do; call fail('LOWERING: DO state remains active at return or EXIT',opid); return; end
+            divergent = 1; leave
+          end
+          when name = 'crexx.c.exit' then do
+            /* The paired return is the sole program-unwind terminal. The
+             * standalone checker retains its ordinary zero-stack rule. */
+            if _programbound = 0 then do
+              if state <> 0 then do; call fail('LOWERING: DO state remains active at return or EXIT',opid); return; end
+              divergent = 1; leave
+            end
+          end
+          when name = 'crexx.c.select.missing' | name = 'crexx.c.transfer.invalid' | name = 'crexx.c.entry.invalid' | name = 'crexx.c.signal.invalid' then do
+            divergent = 1; leave
+          end
+          when name = 'core.jump' then do
+            if _signalbound then do
+              signals = dereference _signal
+              if signals.transfer(opid) & state <> 0 then do
+                call fail('LOWERING: SIGNAL transfer requires empty DO state',opid); return
+              end
+            end
+          end
+          otherwise nop
+        end
+        if _error <> '' then return
+        opid = store.get(3,opid,3)
+      end
+      if divergent then iterate
+      opid = store.get(2,b,3)
+      do edge = 1 to store.get(3,opid,9)
+        if charge() = 0 then return
+        target = store.successor(opid,edge); nextstate = state
+        if pending then do
+          phase = 3; if edge = 2 then phase = 4
+          nextstate = stack(pending,_parents[state],phase,_masks[state])
+          if _error <> '' then return
+        end
+        if _before[target] = -1 then do
+          _before[target] = nextstate; tail = tail + 1; _queue[tail] = target
+        end
+        else if _before[target] <> nextstate then do
+          call fail('LOWERING: inconsistent DO state at merge or backedge',opid); return
+        end
+      end
+    end
+    /* Depth buckets order all owned registers for cold fatal cleanup without
+     * repeated sorting/scans. Unreachable declarations stay at depth zero. */
+    n = _constructors[0]
+    if reserve(n + 1,12) = 0 then return
+    heads = .int[]; links = .int[]; maximum = 0
+    do owner = 1 to n
+      if charge() = 0 then return
+      phase = _depths[owner]; maximum = max(maximum,phase)
+      links[owner] = heads[phase + 1]; heads[phase + 1] = owner
+    end
+    do phase = maximum to 0 by -1
+      owner = heads[phase + 1]
+      do while owner > 0
+        if charge() = 0 then return
+        _cleanup[_cleanup[0] + 1] = owner; owner = links[owner]
+      end
+    end
+    return

@@ -32,8 +32,9 @@ separate Release 1 obligations.
   codepoints.
 - `.binary` is arbitrary bytes. Only an explicit codec assigns an encoding.
 - Normalization, full case mapping, folding, and grapheme segmentation are
-  explicit Level G services and Classic adapters; none changes equality, assignment, or ordinary
-  BIF semantics.
+  explicit services backed by the shared B procedural API/runtime, Level G
+  collections and Classic adapters; none changes equality, assignment, or ordinary BIF
+  semantics.
 - Public Level G source contains no assembler. It delegates VM-adjacent work to
   the private Level B `_rxunicode` namespace.
 - Generated tables, numeric form selectors, build parsers, and executor
@@ -44,21 +45,23 @@ separate Release 1 obligations.
 
 Runtime surface and templates:
 
-- `lib/rxfnsg/rexx/unicode.crexx`: pure Level G facade, `.graphemes`, and
-  `.graphemeiterator`.
-- `lib/rxfnsg/unicode/tools/unicode_d.crexx`: private normalization executor
+- `lib/rxfnsb/unicode/rexx/unicode_api.crexx`: the existing 23 public
+  `rxunicode` procedures in Level B, preserving signatures and presence.
+- `lib/rxfnsg/rexx/unicode.crexx`: Level G `.graphemes` and
+  `.graphemeiterator`; its aggregate includes the B procedures once.
+- `tools/unicode/unicode_d.crexx`: private normalization executor
   source adapted by the product generator into the build-tree module.
-- `lib/rxfnsg/rexx/unicode_case_mapping.crexx.in`: private full default
+- `lib/rxfnsb/unicode/rexx/unicode_case_mapping.crexx.in`: private full default
   upper/lower executor template.
-- `lib/rxfnsg/rexx/unicode_casefold.crexx.in`: private case-fold executor
+- `lib/rxfnsb/unicode/rexx/unicode_casefold.crexx.in`: private case-fold executor
   template.
-- `lib/rxfnsg/rexx/unicode_grapheme.crexx.in`: private grapheme executor
+- `lib/rxfnsb/unicode/rexx/unicode_grapheme.crexx.in`: private grapheme executor
   template.
-- `lib/rxfnsg/rexx/unicode_codec.crexx.in`: private strict/replacement codec
+- `lib/rxfnsb/unicode/rexx/unicode_codec.crexx.in`: private strict/replacement codec
   template.
 
 Build-time table compilers and source generators live in
-`lib/rxfnsg/unicode/tools/`. Their paired entry points are:
+`tools/unicode/`. Their paired entry points are:
 
 - normalization: `unicode_data`, `unicode_normprops`, `unicode_gennorm2`,
   `level_l_gennorm2`, and `generate_normalization`;
@@ -69,9 +72,20 @@ Build-time table compilers and source generators live in
 
 Pinned inputs are under:
 
-- `lib/rxfnsg/unicode/data/unicode-17.0.0/` for UCD normalization, casing,
+- `lib/rxfnsb/unicode/data/unicode-17.0.0/` for UCD normalization, casing,
   folding, and segmentation data; and
-- `lib/rxfnsg/unicode/data/legacy/` for TUTOR-compatible single-byte mappings.
+- `lib/rxfnsb/unicode/data/legacy/` for TUTOR-compatible single-byte mappings.
+
+These are also the canonical raw inputs for the independent Level L property
+index, including `PropList.txt`. Level L reads the data directly using the
+minimal B library; it never imports the optional core or G facade.
+
+The public B member compiles after the five private members from their exact
+metadata, never from its own final image. C adapters stage only the standalone
+core's Unicode metadata; G retains the complete existing surface by explicitly
+selecting `unicode_api`. A linked image uses either core or the G aggregate,
+not both. See the [component contract](../../lib/rxfnsb/unicode/README.md#public-b-interface)
+for optional argument, provider and error boundaries.
 
 Every data directory carries `SOURCES.md` and `SHA256SUMS`. Generated runtime
 `.crexx` files are build-tree artifacts. Never edit or commit them.
@@ -226,7 +240,8 @@ C1 controls, matching the retained TUTOR mapping policy.
 - Public argument policy errors signal `INVALID_ARGUMENTS`.
 - Strict text/byte conversion failures signal `UNICODE_ERROR`.
 - Invalid indexed access signals `OUT_OF_RANGE` where documented.
-- Corrupt generated data and internal invariant failures signal `FAILURE`.
+- Prepared-data guards normally signal `FAILURE`; normalization retains some
+  internal `UNICODE_ERROR` paths. Preserve each family's actual propagation.
 
 Private fixed conditions use the source `SIGNAL` instruction and the ordinary
 compiler-exit lowering pipeline. Do not restore source-level `assembler signal`
@@ -242,19 +257,51 @@ cycle.
 
 ## Build and qualification
 
-The normal `rxfnsg` build verifies input hashes, compiles the Level B table
-tools, generates source constants with `rxbvm`, compiles the private modules,
-and links them with the public facade into `rxfnsg.rxbin`.
+The independently selectable `rxunicode_core` target verifies input hashes,
+compiles the existing B table tools, generates source constants with `rxbvm`,
+and links five private executors plus the public B `unicode_api` member into
+`rxunicode-core.rxbin`. The public member compiles from exact private-member
+metadata. `rxfnsg` compiles its retained classes against core and explicitly
+includes all six B members. Classic adapters use core metadata directly.
+The core has no G/C dependency, and its large tables never enter the minimal
+`library.rxbin`. G and standalone core are alternative providers per image.
+
+Minimal B builds the independent L bootstrap and gennorm2. Minimal B also
+supports classlib and certified compiler exits; the prepared prerequisites feed
+Unicode generation → private members → public B core → G classes/C adapters. The native B seed compiles the
+controller and the one shared compiler-sealed task worker, whose legacy source
+path remains under `tools/build-system/levelg/`; the worker is build
+infrastructure, not a G runtime dependency. Runtime programs need neither L
+nor generation tools. See `lib/rxfnsb/unicode/README.md` for component ownership.
+
+One producer owns the core, generated sources, member RXAS/RXBIN and table-tool
+outputs. A completion stamp prevents repeated work when linking preserves
+identical core bytes. A required successful producer invocation refreshes its
+declared artifact timestamps once; an unchanged subsequent build does no work.
+Deleting a declared output re-enters that producer. The controller also requires
+both member RXAS and RXBIN before accepting its existing action key. Raw data
+changes re-enter the pinned configure-time checksum gate before generation.
+
+The direct `ts_unicode_core` B fixture compiles and links during build
+preparation against only the minimal B library and private core metadata. Its
+four runtime-only CTest cells cover both engines and compiler/assembler modes
+with VM autoload disabled. It reuses focused expected-value rows from the
+unchanged conformance fixtures; it is packaging proof, not a new public API or
+replacement for full Unicode conformance. The companion `ts_unicode_public`
+fixture checks all 23 public entries and omitted/empty/default/error behavior
+with the same isolated closure. Compiled metadata checks require B23 and G23+2
+exports; the Classic provider regression reuses existing semantic fixtures
+under standalone, combined and static provider selection.
 
 Focused product qualification starts with:
 
 ```text
 cmake --build cmake-build-debug --parallel 10 --target \
   ts_unicode_normalization ts_unicode_case_mapping ts_unicode_casefold \
-  ts_unicode_grapheme ts_unicode_codec ts_fileio_binary
+  ts_unicode_grapheme ts_unicode_codec ts_fileio_binary ts_unicode_core ts_unicode_public
 
 ctest --test-dir cmake-build-debug --parallel 4 --output-on-failure \
-  -R 'ts_unicode_(normalization|case_mapping|casefold|grapheme|codec)|ts_fileio_binary'
+  -R 'ts_unicode_(normalization|case_mapping|casefold|grapheme|codec|core|public)|ts_fileio_binary'
 ```
 
 Every Unicode functional harness is compiled optimized and no-opt for both
@@ -285,9 +332,11 @@ they reject table attributes, repeated large literals, input copies, and
 separate UTF-8 decoding for `.string` algorithms. Shape checks protect the
 selected architecture but never replace conformance tests.
 
-After code and focused tests are unchanged, follow repository guidance for the
-full Debug, sanitizer, Release, install/package, and hosted gates. Do not repeat
-an unchanged expensive suite merely because documentation or history changed.
+Follow AGENTS.md for the relevant normal correctness, product, installation and
+publication gates. Overnight assurance remains separate unless explicitly
+required; an actual sanitizer finding retains its worklist and platform closure
+requirements. Do not repeat an unchanged expensive suite merely because
+documentation or history changed.
 
 ## Performance guardrails
 

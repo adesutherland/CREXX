@@ -1,14 +1,237 @@
-/* A source-preserving signal requires a VM-bound runtime event. */
-.globals=0
+/* SIGNALORIGIN uses ordinary owned payloads and one-shot bound source data. */
+.meta "signal_origin.payload"="b" ".unknown" .class
+.globals=8
 
-main() .locals=2
+main() .locals=18
+    load g4,0
+    load g5,0
+    call g2,make_payload()
+    sigpush "INVALID_ARGUMENTS"
     sigbr invalid_origin,"INVALID_ARGUMENTS"
-    load r0,"bad origin"
     load r1,"not an event"
-    signalorigin "OTHER",r0,r1
+    signalorigin "OTHER",g2,r1
     signal "FAILURE","invalid origin was accepted"
 
 invalid_origin:
-    sighalt "INVALID_ARGUMENTS"
+    sigpop "INVALID_ARGUMENTS"
     say "invalid-origin-rejected"
+    call1 r1,check_payload(),g2
+    brf failed,r1
+    /* Name validation wins even when the origin is also invalid. */
+    sigpush "INVALID_SIGNAL_CODE"
+    sigbr invalid_name,"INVALID_SIGNAL_CODE"
+    signalorigin "NOT_A_SIGNAL",g2,r1
+    signal "FAILURE","invalid signal name was accepted"
+
+invalid_name:
+    sigpop "INVALID_SIGNAL_CODE"
+    call1 r1,check_payload(),g2
+    brf failed,r1
+    say "invalid-name-rejected"
+    sigbrv string_origin,r0,"OTHER"
+    .srcstep 1 1 17 "signal_origin.rexx" 10 1 15 "original text"
+    signal "OTHER","original text"
+    signal "FAILURE","original signal did not branch"
+
+string_origin:
+    linkattr1 r1,r0,5
+    linkattr1 r2,r1,2
+    icopy g0,r2
+    unlink r2
+    linkattr1 r2,r1,3
+    icopy g1,r2
+    unlink r2
+    unlink r1
+    load r3,"replacement text"
+    sigbrv string_remap,r0,"CLASSIC_SYNTAX"
+    .srcstep 2 2 17 "signal_origin.rexx" 20 1 12 "string remap"
+    signalorigin "CLASSIC_SYNTAX",r3,r0
+    signal "FAILURE","remapped signal did not branch"
+
+string_remap:
+    call3 r1,check_origin(),r0,g0,g1
+    brf failed,r1
+    linkattr1 r1,r0,5
+    linkattr1 r2,r1,1
+    ieq r3,r2,28
+    unlink r2
+    brf failed,r3
+    linkattr1 r2,r1,4
+    seq r3,r2,"CLASSIC_SYNTAX"
+    unlink r2
+    brf failed,r3
+    linkattr1 r2,r1,5
+    seq r3,r2,"replacement text"
+    unlink r2
+    unlink r1
+    brf failed,r3
+    sigbrv typed_origin,r0,"OTHER"
+    .srcstep 3 3 17 "signal_origin.rexx" 30 1 15 "original typed"
+    signal "OTHER",g2
+    signal "FAILURE","typed original did not branch"
+
+typed_origin:
+    linkattr1 r1,r0,5
+    linkattr1 r2,r1,2
+    icopy g0,r2
+    unlink r2
+    linkattr1 r2,r1,3
+    icopy g1,r2
+    unlink r2
+    unlink r1
+    copy g6,r0
+    /* Same tag and destination as the bound origin being read. */
+    sigbrv typed_relay,r0,"OTHER"
+    .srcstep 4 4 17 "signal_origin.rexx" 40 1 12 "typed relay"
+    signalorigin "OTHER",g2,r0
+    signal "FAILURE","typed relay did not branch"
+
+typed_relay:
+    call3 r1,check_origin(),r0,g0,g1
+    brf failed,r1
+    linkattr1 r1,r0,5
+    linkattr1 r2,r1,5
+    copy g3,r2
+    unlink r2
+    unlink r1
+    null g2
+    null r0
+    call1 r1,check_payload(),g3
+    brf failed,r1
+    /* Payload and origin operands may be exactly the same register. */
+    sigbrv alias_relay,r0,"OTHER"
+    signalorigin "OTHER",g6,g6
+    signal "FAILURE","aliased relay did not branch"
+
+alias_relay:
+    call3 r1,check_origin(),r0,g0,g1
+    brf failed,r1
+    linkattr1 r1,r0,5
+    linkattr1 r2,r1,5
+    linkattr1 r3,r2,5
+    linkattr1 r4,r3,5
+    call1 r5,check_payload(),r4
+    unlink r4
+    unlink r3
+    unlink r2
+    unlink r1
+    brf failed,r5
+    /* Ignoring a relay consumes its source override too. */
+    sigignore "OTHER"
+    load r3,"ignored"
+    signalorigin "OTHER",r3,g6
+    sigbrv ordinary_after_relay,r0,"OTHER"
+    .srcstep 5 5 17 "signal_origin.rexx" 50 1 15 "ordinary fresh"
+    signal "OTHER","fresh"
+    signal "FAILURE","fresh ordinary signal did not branch"
+
+ordinary_after_relay:
+    linkattr1 r1,r0,5
+    linkattr1 r2,r1,2
+    linkattr1 r3,r1,3
+    ieq r4,r3,g1
+    brt failed,r4
+    metaloaddata r5,r2,r3
+    unlink r3
+    unlink r2
+    linkattr1 r6,r5,1
+    linkattr1 r7,r6,8
+    seq r4,r7,"ordinary fresh"
+    unlink r7
+    unlink r6
+    brf failed,r4
+    linkattr1 r2,r1,5
+    getattrs r3,r2
+    ieq r4,r3,0
+    brf failed,r4
+    seq r4,r2,"fresh"
+    unlink r2
+    unlink r1
+    brf failed,r4
+    /* SKIP resumes the relay continuation, not its diagnostic origin. */
+    sigcalla skip_event(),"OTHER"
+    call2 r1,relay_helper(),g3,g6
+    ieq r2,g4,1
+    brf failed,r2
+    ieq r2,g5,1
+    brf failed,r2
+    null g3
+    null g6
+    null r0
+    call1 r1,check_payload(),g7
+    brf failed,r1
+    say "PASS: Signal Origin Payload"
     ret 0
+
+failed:
+    signal "FAILURE","Signal Origin Payload assertion failed"
+    ret 1
+
+make_payload() .locals=2
+    setattrs r0,2
+    setobjtype r0,"signal_origin.payload"
+    linkattr1 r1,r0,1
+    load r1,7
+    unlink r1
+    linkattr1 r1,r0,2
+    load r1,"é\x00雪 "
+    unlink r1
+    ret r0
+
+check_payload() .locals=4
+    istype r0,a1,"signal_origin.payload"
+    brf bad_payload,r0
+    getattrs r1,a1
+    ieq r0,r1,2
+    brf bad_payload,r0
+    linkattr1 r1,a1,1
+    ieq r0,r1,7
+    unlink r1
+    brf bad_payload,r0
+    linkattr1 r1,a1,2
+    seq r0,r1,"é\x00雪 "
+    strlen r2,r1
+    unlink r1
+    brf bad_payload,r0
+    ieq r0,r2,4
+    ret r0
+bad_payload:
+    ret 0
+
+check_origin() .locals=4
+    linkattr1 r0,a1,5
+    linkattr1 r1,r0,2
+    ieq r2,r1,a2
+    unlink r1
+    brf bad_origin,r2
+    linkattr1 r1,r0,3
+    ieq r2,r1,a3
+    unlink r1
+    unlink r0
+    ret r2
+bad_origin:
+    ret 0
+
+relay_helper() .locals=0
+    .srcstep 6 6 17 "signal_origin.rexx" 60 1 13 "helper relay"
+    signalorigin "OTHER",a1,a2
+    inc g4
+    ret 0
+
+skip_event() .locals=4
+    inc g5
+    linkattr1 r0,a1,2
+    ieq r1,r0,g0
+    unlink r0
+    brf skip_failed,r1
+    linkattr1 r0,a1,3
+    ieq r1,r0,g1
+    unlink r0
+    brf skip_failed,r1
+    linkattr1 r0,a1,5
+    copy g7,r0
+    unlink r0
+    ret "__rxsignal_skip"
+skip_failed:
+    signal "FAILURE","SKIP lost original relay source"
+    ret "__rxsignal_fail"

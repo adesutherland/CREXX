@@ -1,0 +1,116 @@
+/* cREXX License (MIT). Independent C22 effect and context-identity contracts. */
+options levelb
+import rxfnsb
+import llir
+import llcir
+import llirgraph
+import llireffects
+import llceffects
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0; mode = .int
+  do mode = 1 to 5
+    call contexts(mode)
+  end
+  call effects()
+  say 'INFRASTRUCTURE_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+/** The binding identity is argument 1 even when the target is protected. Other
+ * modes independently violate rebind, initialization, entry or source rules. */
+contexts: procedure = .void
+  arg mode = .int
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  builder = .llir..builder(contract); at = builder.synthetic('C22 context identity')
+  context = contract.type('crexx.c.context'); fn = builder.function('identity',contract.voidtype())
+  ignored = fn.argument(context); ignored = fn.argument(contract.type('crexx.g.int64'))
+  first = fn.slot('first context',context); alias = fn.slot('alias context',context)
+  entry = fn.block('entry'); body = fn.block('body'); handler = fn.block('handler')
+  argument = entry.readarg(1,at)
+  if mode <> 3 & mode <> 4 then do
+    value = argument
+    if mode = 5 then value = entry.constantbytes(context,'foreign context' as .binary,at)
+    call entry.store(first,value,at)
+    if mode = 2 then call entry.store(first,argument,at)
+    loaded = entry.load(first,at); call entry.store(alias,loaded,at)
+  end
+  call entry.protect(body,handler,at)
+  if mode = 4 then call body.store(first,body.readarg(1,at),at)
+  readfirst = body.load(first,at)
+  readalias = body.load(alias,at)
+  call body.returnvoid(at); call handler.returnvoid(at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '','generic-valid context fixture ' || mode || ': ' || graph.error())
+  if graph.error() <> '' then return
+  index = .llirgraph..index(reference graph)
+  proof = .llceffects..checked(reference graph,reference index)
+  if mode = 1 then do
+    call check(proof.status() = 0,'immutable entry context admitted: ' || proof.error())
+    call check(index.pinnedfunction(fn.id()),'protect requires conservative liveness')
+    firstload = index.definition(readfirst.id()); aliasload = index.definition(readalias.id())
+    call check(proof.cell(first.id()) = first.id() & proof.cell(alias.id()) = first.id(),'both context slots have one admitted identity')
+    call check(proof.loadcell(firstload) = first.id() & proof.loadcell(aliasload) = first.id(),'context loads retain the same identity through protect')
+    argop = index.definition(argument.id())
+    call check(proof.argumentcell(argop) = first.id(),'argument and immutable slot share identity')
+    copy = graph; copiedindex = .llirgraph..index(reference copy)
+    foreign = .llceffects..checked(reference graph,reference copiedindex)
+    call check(foreign.status() <> 0 & proof.belongs(reference copy) = 0,'equal foreign owner cannot borrow identity proof')
+    limited = .llceffects..checked(reference graph,reference index,1)
+    call check(limited.status() <> 0 & proof.status() = 0,'local workspace failure does not poison valid proof')
+    replacement = llir..loadbinary(contract,saved); graph = replacement
+    call check(proof.status() <> 0 & proof.cell(first.id()) = 0 & proof.loadcell(firstload) = 0,'replaced owner invalidates every identity query')
+  end
+  else call check(proof.status() <> 0 & pos('LL_COMPILER_LOWERING:',proof.error()) = 1,'invalid context binding is refused ' || mode || ': ' || proof.error())
+  return
+
+/** Literal domain assertions cover the C adapter. Generic analysis cases own
+ * the solver; these stateful producers must never become pure by schema name. */
+effects: procedure = .void
+  policy = .llir..opview; completed = .llir..opview; arguments = .llir..opview; invoked = .llir..opview
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  builder = .llir..builder(contract); at = builder.synthetic('C22 effect boundaries')
+  context = contract.type('crexx.c.context'); fn = builder.function('effects',contract.voidtype())
+  ignored = fn.argument(context); block = fn.block('entry'); slot = fn.slot('context',context)
+  carrier = fn.slot('conditional result',contract.type('crexx.c.result'))
+  call block.store(slot,block.readarg(1,at),at)
+  before = block.load(slot,at); table = block.constantbytes(contract.type('crexx.g.text'),'' as .binary,at)
+  integer = .llir..intcodec()
+  draft = block.operation(contract.operation('crexx.c.call.policy'),at)
+  call draft.input('table',table); call draft.input('context',before)
+  call draft.attribute('condition',integer.parse('2')); call draft.attribute('handler',integer.parse('1'))
+  call draft.attribute('label',integer.parse('1')); call draft.attribute('name','P' as .binary); policy = draft.finish()
+  draft = block.operation(contract.operation('crexx.c.clause.complete'),at)
+  call draft.input('table',table); call draft.input('context',before); call draft.attribute('id',integer.parse('1')); completed = draft.finish()
+  call block.store(carrier,completed.result(),at)
+  draft = block.operation(contract.operation('crexx.c.arguments.empty'),at); arguments = draft.finish()
+  draft = block.operation(contract.operation('crexx.c.call.external'),at)
+  call draft.input('arguments',arguments.result()); call draft.input('context',before); call draft.attribute('target','SIGNED' as .binary); invoked = draft.finish()
+  after = block.load(slot,at); call block.returnvoid(at)
+  graph = builder.finish(); saved = graph.binary()
+  call check(graph.error() = '','generic-valid effects fixture: ' || graph.error())
+  if graph.error() <> '' then return
+  index = .llirgraph..index(reference graph); owned = .llceffects..checked(reference graph,reference index)
+  call check(owned.status() = 0,'C effect adapter admitted: ' || owned.error())
+  if owned.status() then return
+  model_ref = owned.effects(); model = dereference model_ref
+  call check(model.valid() & model.matches(reference graph) & model.profile() = 'crexx.c.C22','sealed effects bind exact C22 graph/profile')
+  domainindex = .int; domain = .string
+  do domainindex = 1 to 6
+    domain = 'crexx.c.' || word('pool alias numeric handlers observation callback',domainindex)
+    call check(model.reads(policy.id(),domain) & model.writes(policy.id(),domain),'handler policy invalidates ' || domain)
+    call check(model.reads(invoked.id(),domain) & model.writes(invoked.id(),domain),'external call invalidates ' || domain)
+  end
+  call check(model.availability(completed.id(),1) = 'conditional','false completion path does not initialize R')
+  call check(model.resume(completed.id()) = 'possible' & model.transfer(invoked.id()) = 'possible','completion and external calls retain resumption/transfer barriers')
+  firstop = index.definition(before.id()); lastop = index.definition(after.id())
+  preserved = .llireffects..proof(reference index,model_ref,'preserves',firstop,lastop,'crexx.c.pool')
+  call check(preserved.status() <> 'proved','C pool is not preserved across handler/callback boundaries')
+  call check(bincompare(saved,graph.binary()) = 0,'proof and model preserve exact source graph')
+  return

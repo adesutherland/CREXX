@@ -1,8 +1,8 @@
 # C/G PoC coverage and boundaries
 
 This is the Phase A coverage map for the [approved POC-01–10 profile](poc-scope.md).
-[PLAN.md](../PLAN.md) owns acceptance; the [current plan](../PLAN.md)
-records actual runs and input identities. A row establishes the admitted slice,
+[PLAN.md](../PLAN.md) owns active acceptance; this map describes the bounded
+PoC fixtures and their evidence limits. A row establishes the admitted slice,
 not full C/G language compatibility. The compiler and reusable services are
 Level B; grammars use Level L and RXAS output uses `llir.writer`.
 
@@ -22,7 +22,7 @@ those expectations. They are not consulted by either new compiler.
 | POC-05: loops | `backend/loops-*`, `calls-g`, new `poc/control-*`: zero/several iterations, nested loops, LEAVE/ITERATE and one-iteration early return | `while.test/body/after` blocks, explicit jumps; syntax/mapping checks reject LEAVE/ITERATE outside a loop | Existing loops plus new paired return from a loop, IR on/off. Post-test/counted/named loops remain outside this profile. |
 | POC-06: routines | `backend/calls-*`: factorial returns `720`, operand calls print in source order; new controls return from a loop | Typed G signatures; separate C label/PROCEDURE nodes and explicit activation/argument/result packets | Recursive calls, early return, G void/discard and C private-pool isolation; wrong arity, missing typed actuals, void-as-value, missing return and Classic fallthrough/label-only profiles fail explicitly. |
 | POC-07: Classic arguments | `backend/arguments-c`, `argv-c`, `calls-c`: omitted versus empty arguments, uppercase ARG, presence, RESULT clearing | Ordered explicit missing argument nodes and packet append/setresult operations | Existing expected output includes ARG count/presence and unset RESULT after valueless RETURN. No-value expression call is a runtime error. Optional/default/vararg G and EXPOSE source forms remain later. |
-| POC-08: numeric context | `backend/numeric-c`, numbers pair, new `poc/control-c`: inherited/restored context, form/reset and expression-valued DIGITS/FUZZ | Numeric snapshot operands and named settings; FORM/comment mapping regression | New setters each print once; DIGITS 4/FUZZ 1 makes `1.234 = 1.233` true, resetting FUZZ makes it false, resetting DIGITS restores 9. Existing cases cover call restoration, forms and invalid DIGITS/FUZZ. |
+| POC-08: numeric context | `backend/numeric-c`, numbers pair, new `poc/control-c`: inherited/restored context, form/reset and expression-valued DIGITS/FUZZ | Borrowed context operands and same-frame settings; FORM/comment mapping regression | New setters each print once; DIGITS 4/FUZZ 1 makes `1.234 = 1.233` true, resetting FUZZ makes it false, resetting DIGITS restores 9. Existing cases cover call restoration, forms and invalid DIGITS/FUZZ. |
 | POC-09: imports | Pipeline/evaluation and `frontend-tests` calls/contracts: G imported LENGTH, C LENGTH/ARG/DIGITS | Level B RXBIN reader checks actual type/member/callable/autoload data; no native metadata reader | Missing/foreign/truncated contracts and malformed signatures fail; installed commands use the explicit artifact directory. Generic imports/providers/classes are not implied by this narrow contract subset. |
 | POC-10: failures | Syntax/type/profile groups, `backend-tests`, `check-backend`, `check-provenance`, new walkthrough variants | Failed parse or recovered tree never yields a successful graph; invalid/foreign graphs and unknown target contracts are refused | Located source errors, reached/skipped division, non-Boolean Classic truth, conversion errors, budgets, output-write/rename failures and destination preservation. Full authored TRACE/condition handlers and recovery parity remain later. |
 
@@ -86,12 +86,14 @@ open: no local desktop run closes them. Full LLCOMP-AC12 remains open.
 
 ## Code quality and remaining work
 
-The [STEP05 full-module counts](../examples/step05/README.md) and
-[STEP06 walkthrough](../examples/step06/README.md) separate instructions,
-calls, frame registers, metadata and bytes. The earlier native B/G/C comparison
-is a dated control, not a current new-backend snapshot or an optimality target.
-Existing structural tests reject unused defaults, gratuitous call windows,
-entry fallthrough jumps, false authored provenance and physical source paths.
+The [STEP05 shape contracts](../examples/step05/README.md) and
+[STEP06 walkthrough](../examples/step06/README.md) preserve source/control
+structure, required dispatch, ownership and diagnostic provenance. Inspect
+complete callers, cold paths and linked helpers separately. Native B/G/C
+controls must use independent expected semantics and matching dialects; their
+excess code is not an acceptance target. Structural tests reject unused
+defaults, gratuitous call windows, redundant jumps, false authored provenance
+and physical source paths.
 
 | Remaining cost/limitation | Reason it is retained | Owner and later closure |
 |---|---|---|
@@ -105,14 +107,13 @@ The PoC demonstrates that Level L can host both deliberately different
 frontends, generic checked transformations and real target emission. Its useful
 shared outputs are the numeric IR/contracts, reconstruction and proof-aware
 passes, source index, owned failures and writer. STEP07A now extends those services with optional-input/export views and scalar
-call/module coverage. Its [contract](STEP07A-CONTRACTS.md) and
-[validation summary](../PLAN.md#step07a-validation) own the new coverage; the STEP06
-results above remain historical qualification for their exact inputs.
+call/module coverage. Its [contract and bounded qualification](STEP07A-CONTRACTS.md#acceptance-and-next-implementation-checks)
+own the new coverage; the STEP06 results above apply only to their exact inputs.
 The approved [C-first milestone](../PLAN.md#c-first-delivery-milestone) now
 prioritises complete Classic coverage, including pool exposure and wider forms,
-conditions/TRACE, hosts and STEP08 INTERPRET. Its full crosswalk remains open;
+conditions/TRACE, hosts and final CLC-STEP11 INTERPRET. Its full crosswalk remains open;
 this historical PoC map does not replace it. Proper B and G expansion are
 deferred, while existing G and independent Level L regression coverage remains
 required for shared changes. Adrian directed instruction-by-instruction review,
-starting with SAY; INTERPRET and its mechanism review are deferred until later
-and remain open for eventual C completion.
+starting with SAY; the complete architecture includes INTERPRET, whose mechanism approval and
+implementation remain the final C stage.

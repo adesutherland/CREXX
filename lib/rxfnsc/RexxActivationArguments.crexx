@@ -79,6 +79,10 @@ RexxActivationArguments: class
   condition_description = .string
   condition_extra = .string
   condition_instruction = .string
+  /* Physical fields sort by name: these late-sorting private names preserve
+   * existing ordinals. Appending declarations alone does not preserve layout. */
+  zz_entry_condition = .int
+  zz_suppression_condition = .int
 
   *: factory
     slot_count = 0
@@ -110,6 +114,8 @@ RexxActivationArguments: class
     condition_description = ""
     condition_extra = ""
     condition_instruction = ""
+    zz_entry_condition = 0
+    zz_suppression_condition = 0
     do index = 1 to 7
       signal_policy[index] = 0
     end
@@ -118,6 +124,8 @@ RexxActivationArguments: class
   /**
    * Copy the caller's Classic condition policy and last trapped condition
    * into a new invocation. Local changes are restored when it returns.
+   * Internal children inherit validated delayed suppression, but never the
+   * one-shot marker identifying an explicitly delivered external handler.
    * @param parent_ref the caller activation
    */
   inheritSignalPolicy: method = .void
@@ -135,6 +143,8 @@ RexxActivationArguments: class
     condition_extra = parent.currentConditionExtra()
     condition_instruction = parent.currentConditionInstruction()
     delayed_condition = parent.delayedConditionId()
+    zz_entry_condition = 0
+    zz_suppression_condition = parent.delayedSuppressionConditionId()
     state = .RexxAddressState
     assembler link state, address_state
     call state.copyFrom(parent.addressState())
@@ -330,14 +340,16 @@ RexxActivationArguments: class
     if negative then return 0 - result
     return result
 
-  /** FORM VALUE uses only the first translated character of its value. */
+  /** FORM VALUE uses only the first translated character of its value.
+   * @param value proposed form text
+   * @return Empty on success, or RXC-LC-33.3 without changing numeric state. */
   setNumericForm: method = .string
     arg value = .RexxValue
     text = value.asString()
     first = upper(left(text, 1))
     if first = "S" then numeric_form = 1
     else if first = "E" then numeric_form = 2
-    else return "RXC-LC-33.6: NUMERIC FORM must start with E or S; found " || text
+    else return "RXC-LC-33.3: NUMERIC FORM must start with E or S; found " || text
     return ""
 
   /** Keep command status shared across signed external Classic calls. */
@@ -394,10 +406,48 @@ RexxActivationArguments: class
     if has_program_root then return program_root_ref
     return reference self
 
-  /** Start a separate external Level C program on this fresh activation. */
+  /**
+   * Start a separate external Level C program on this fresh activation.
+   * New delayed suppression does not cross an ordinary external boundary.
+   * Preserve an explicit CALL-entry marker for condition-scope normalization.
+   */
   beginExternalProgram: method = .void
     has_program_root = 0
     program_exit_requested = 0
+    zz_suppression_condition = 0
+    return
+
+  /**
+   * Begin a provider-owned condition scope without retaining foreign handlers.
+   * A valid one-shot CALL entry keeps its delivered C/D/E/I and DELAY state;
+   * ordinary or stale entries start with no current condition. All policy,
+   * pending and dispatch state is cleared in either case. Numeric, ADDRESS,
+   * TRACE, arguments, completion and activation relationships are unchanged.
+   */
+  beginExternalConditionScope: method = .void
+    delivery = 0
+    if zz_entry_condition >= 2 & zz_entry_condition <= 5 &,
+       zz_entry_condition = current_condition & zz_entry_condition = delayed_condition &,
+       condition_instruction == "CALL" then delivery = zz_entry_condition
+    zz_entry_condition = 0
+    do index = 1 to 7
+      signal_policy[index] = 0
+    end
+    pending_condition = 0
+    pending_description = ""
+    pending_line = 0
+    dispatch_condition = 0
+    dispatch_description = ""
+    dispatch_line = 0
+    call_dispatch_error = ""
+    zz_suppression_condition = delivery
+    if delivery = 0 then do
+      current_condition = 0
+      condition_description = ""
+      condition_extra = ""
+      condition_instruction = ""
+      delayed_condition = 0
+    end
     return
 
   /**
@@ -485,10 +535,26 @@ RexxActivationArguments: class
   delayedConditionId: method = .int
     return delayed_condition
 
-  /** Mark the called handler's temporary condition without changing its caller. */
+  /**
+   * @return the suppressed CALL condition, 2..5, only while its delay is active
+   * A later trapped condition may change CONDITION data without ending delay.
+   */
+  delayedSuppressionConditionId: method = .int
+    if zz_suppression_condition < 2 | zz_suppression_condition > 5 then return 0
+    if zz_suppression_condition <> delayed_condition then return 0
+    return zz_suppression_condition
+
+  /**
+   * Mark the called handler's temporary condition without changing its caller.
+   * Valid IDs arm one explicit-entry marker; invalid IDs remain no-ops.
+   * @param condition Classic CALL condition ID 2..5
+   * @param description delivered condition description
+   */
   beginCallTrap: method = .void
     arg condition = .int, description = .string
     if condition < 2 | condition > 5 then return
+    zz_suppression_condition = 0
+    zz_entry_condition = condition
     delayed_condition = condition
     call recordCondition(condition, description, "", "CALL")
     return
@@ -504,6 +570,8 @@ RexxActivationArguments: class
     if condition < 1 | condition > 7 then return
     signal_policy[condition] = handler
     if delayed_condition = condition then delayed_condition = 0
+    if zz_entry_condition = condition then zz_entry_condition = 0
+    if zz_suppression_condition = condition then zz_suppression_condition = 0
     return
 
   /** Select a delayed CALL trap; negative policy distinguishes its mode. */
@@ -512,6 +580,8 @@ RexxActivationArguments: class
     if condition < 2 | condition > 5 | handler < 1 then return
     signal_policy[condition] = -handler
     if delayed_condition = condition then delayed_condition = 0
+    if zz_entry_condition = condition then zz_entry_condition = 0
+    if zz_suppression_condition = condition then zz_suppression_condition = 0
     return
 
   /** @return the selected CALL handler identity, or zero in another mode */
@@ -524,11 +594,16 @@ RexxActivationArguments: class
   /**
    * Queue a source-identified condition for clause-end CALL delivery.
    * A second ERROR, FAILURE or NOTREADY in its own handler is suppressed.
-   * @return true only if the active CALL policy accepted the event
+   * A normalized external handler can suppress its delayed event with no
+   * dispatchable policy. HALT retains the existing parent buffer path.
+   * @return true when queued or buffered; false also includes suppression
    */
   queueCallCondition: method = .boolean
     arg condition = .int, description = .string, line = .int
-    if callPolicy(condition) = 0 then return 0
+    if condition < 2 | condition > 5 then return 0
+    scope_ref = reference self
+    scope_owner = dereference scope_ref
+    if callPolicy(condition) = 0 & scope_owner.delayedSuppressionConditionId() <> condition then return 0
     if delayed_condition = condition then do
       if condition = 4 & has_parent_activation then do
         parent = dereference parent_activation_ref

@@ -1,0 +1,25 @@
+options levelb
+namespace reference_identity_variance_fail
+
+main: procedure = .int
+  value = .Item()
+  interface_value = value as .Readable
+  item_ref = reference value
+  interface_ref = reference interface_value
+  call takeInterface(item_ref)
+  if item_ref <refsame> interface_ref then return 1
+  return 0
+
+takeInterface: procedure = .void
+  arg value = reference .Readable
+  return
+
+Readable: interface
+  read: method = .int
+
+Item: class implements .Readable
+  *: factory
+    return
+
+  read: method = .int
+    return 1

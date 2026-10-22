@@ -54,6 +54,19 @@ changes: a linked image carries embedded metadata and can otherwise shadow a
 new standalone module even when that module was correctly rebuilt. The common
 foundation/library imports are staged separately.
 
+One pre-L0 producer prepares `llgenerate.crexx` with a private content stamp
+shared by all three stages. Its checked manifest covers maintained generator,
+frontend, SDK/property and build-transform sources plus already-built foundation
+libraries, seed tools and flags. Stable logical names/content hashes exclude
+host paths, timestamps and downstream stage outputs. New maintained modules
+must be added to the closure. Supported standalone builds use the same source
+preparation; compiling the unprepared source manually safely disables lexical
+reuse. This adds no SDK API or dependency back to research. See the
+[generation contract](generation-design.md#automated-stamp-and-bootstrap-closure).
+Grammar-only builds reuse capsules while generator artifacts stay unchanged.
+Post-commit version relinks may intentionally change seed identities/stamp and
+invalidate the cache; this is an artifact-identity boundary, not a lexical test.
+
 L0 generates L1's `llsyntax.rxas`; L1 generates L2's. Their RXAS files must be
 byte-for-byte identical before publication. A mismatch fails the build.
 Independent language/token controls remain essential: regeneration agreement
@@ -112,8 +125,10 @@ remain in place to detect changed sources or a missing image. This target
 ordering matters for parallel Make, which can otherwise copy the same L2
 recipe into independent consumers and run it twice. The Unix Makefiles
 `rxlang_bootstrap_build_order` regression exercises clean, missing-image,
-changed-input and no-op builds using the real declarations and instrumented
-stand-in tools; real compiler/bytecode qualification is separate.
+changed-input, module/foundation stamp invalidation, omitted-module refusal and
+no-op builds using real declarations and instrumented stand-in tools. Constant
+stand-in output proves scheduling, not changed downstream compiler bytes;
+real bootstrap fixed-point/compiler/bytecode qualification is separate.
 
 `generate.cmake` writes a temporary output and renames it only on success. A bad
 grammar returns nonzero, removes that temporary output and preserves the last

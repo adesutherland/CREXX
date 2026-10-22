@@ -1,0 +1,8 @@
+options levelc strictc
+say 'before'
+do outer=1 for 2
+  do inner=10 for 2
+    leave MiSsInG
+  end
+end
+say 'after'

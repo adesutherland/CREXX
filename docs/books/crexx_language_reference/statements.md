@@ -656,7 +656,7 @@ own policy without changing its caller's policy.
 `TRACE` enables or disables VM breakpoint-backed tracing for the current call
 frame and procedures called from it.
 
-Supported forms are:
+For Level B/G, supported forms are:
 
 ```rexx
 trace off
@@ -678,9 +678,21 @@ trace results to stderr
 trace llm to file "trace.jsonl"
 ```
 
+Classic Level C uses the
+[approved practical profile](../../ai-context/CREXX_TRACE_REQUIREMENTS.md):
+bare TRACE resets Normal; static options use their first letter (`RAS` selects
+Results), and VALUE/TRACE() share activation-local state. `!` inhibits commands,
+`?` reports interactive state without prompting, and nonzero numeric counts are
+validated without enacting skip/suppression. SCAN is rejected; Labels is quiet;
+source/value coverage is partial. ENV selects Error. B/G output and namespace
+extensions below are separate. The experimental B/Level L C compiler follows
+this same scope; its
+[conformance profile](../../../research/level-l/compilers/doc/levelc-conformance.md)
+records its presentation limits and remaining full-compiler qualification.
+
 The standard Rexx option letters `A`, `C`, `E`, `F`, `I`, `L`, `N`, `O`, and
 `R` are accepted, including a leading `?` prefix and signed integer settings.
-Options use a minimum-abbreviation rule: the spelling must be a left-prefix of
+In B/G, options use a minimum-abbreviation rule: the spelling must be a left-prefix of
 the full option word. For example, `TRACE R`, `TRACE RE`, `TRACE RES`,
 `TRACE RESULT`, and `TRACE RESULTS` all select Results, while `TRACE RAS` is
 invalid. The cRexx extensions use `AS` as the minimum abbreviation for `ASM`
@@ -784,7 +796,7 @@ tracing on at a compiled `TRACE ENV` marker without editing the source. If
 has an invalid value, `TRACE ENV` turns tracing off and emits a `+++` trace
 message naming the invalid value.
 
-TRACE is implemented as a certified compiler exit. It requires normal compiler
+In B/G, TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.
 

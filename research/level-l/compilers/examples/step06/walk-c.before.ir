@@ -1,30 +1,45 @@
 function $MAIN -> crexx.c.result
+  argument 1 crexx.c.context required
+  argument 2 crexx.g.int64 required
   entry.1:
-    %1 = crexx.c.pool.new @origin:2
-    core.store %1 slot:$pool @origin:2
-    %2 = core.argument argument:1 @origin:2
-    core.store %2 slot:$arguments @origin:2
-    %3 = core.argument argument:2 @origin:2
-    core.store %3 slot:$numeric @origin:2
-    %4 = core.constant 3031 : crexx.c.value @origin:11
-    crexx.c.say %4 @origin:4
-    %5 = core.constant 31 : crexx.c.value @origin:19
-    %6 = crexx.c.truth %5 @origin:12
-    core.branch %6 -> if.yes.2 -> if.no.3 @origin:12
-  if.yes.2:
-    %7 = core.constant 6F6B : crexx.c.value @origin:27
-    crexx.c.say %7 @origin:20
-    core.jump -> if.join.4 @origin:12
-  if.no.3:
-    %8 = core.constant 31 : crexx.c.value @origin:35
-    core.store %8 slot:$tmp.1 @origin:34
-    %9 = core.constant 30 : crexx.c.value @origin:36
-    %10 = core.load slot:$tmp.1 @origin:34
-    %11 = core.load slot:$numeric @origin:34
-    %12 = crexx.c.div %10 %9 %11 @origin:34
-    crexx.c.say %12 @origin:28
-    core.jump -> if.join.4 @origin:12
-  if.join.4:
-    %13 = crexx.c.return.absent @origin:2
-    core.return %13 @origin:2
+    %1 = core.argument argument:1 @origin:2
+    core.store %1 slot:$context @origin:2
+    %2 = core.argument argument:2 @origin:2
+    core.store %2 slot:$entry @origin:2
+    core.jump -> entry.dispatch.2 @origin:2
+  entry.dispatch.2:
+    %3 = core.load slot:$context @origin:2
+    %4 = core.load slot:$entry @origin:2
+    %5 = crexx.c.entry.test %3 %4 id="0" name="" @origin:2
+    core.branch %5 -> source.main.3 -> entry.next.4 @origin:2
+  source.main.3:
+    %7 = core.load slot:$context @origin:10
+    %8 = crexx.c.load %7 name="levelc" @origin:10
+    %9 = core.constant 3031 : crexx.c.value @origin:18
+    crexx.c.say %9 @origin:11
+    %10 = core.constant 31 : crexx.c.value @origin:26
+    %11 = core.load slot:$context @origin:19
+    %12 = crexx.c.truth %10 %11 @origin:19
+    %13 = core.constant true : core.boolean @origin:27
+    core.branch %13 -> if.yes.5 -> if.no.6 @origin:19
+  entry.next.4:
+    crexx.c.entry.invalid @origin:2
+    %6 = crexx.c.return.absent @origin:2
+    core.return %6 @origin:2
+  if.yes.5:
+    %14 = core.constant 6F6B : crexx.c.value @origin:35
+    crexx.c.say %14 @origin:28
+    core.jump -> if.join.7 @origin:19
+  if.no.6:
+    %15 = core.constant 31 : crexx.c.value @origin:43
+    core.store %15 slot:$tmp.1 @origin:42
+    %16 = core.constant 30 : crexx.c.value @origin:44
+    %17 = core.load slot:$tmp.1 @origin:42
+    %18 = core.load slot:$context @origin:42
+    %19 = crexx.c.div %17 %16 %18 @origin:42
+    crexx.c.say %19 @origin:36
+    core.jump -> if.join.7 @origin:19
+  if.join.7:
+    %20 = crexx.c.return.absent @origin:2
+    core.return %20 @origin:2
 

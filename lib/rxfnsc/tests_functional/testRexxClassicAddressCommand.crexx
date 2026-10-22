@@ -1,0 +1,287 @@
+/* In-process ADDRESS binding bridge; no operating-system command provider.
+ * RXAS review contract: borrowed response workers link their reference inputs
+ * and release scoped aliases; run passes references to its live request and
+ * response, not full-container copies in the descriptor loop. Its counted
+ * stem array remains owned across dispatch and copyback. The shared
+ * add_stem_binding_plan link preserves those owners across request copies.
+ */
+options levelb comments_dash
+import rxfnsb
+import _rxsysb
+import rexxclassicaddress
+import rexxactivation
+import rexxpool
+import rexxvalue
+
+return address_binding_tests()
+
+address_binding_tests: procedure = .int
+  errors = 0
+  calls = 0
+  call _reset_address_environments()
+  environment = .BindingEnvironment("BINDING-TEST")
+  call environment.observe(reference calls, reference errors)
+  call _register_address_environment("BINDING-TEST", environment)
+  parent = .RexxVariablePool(1)
+  pool = .RexxVariablePool(1)
+  activation = .RexxActivationArguments()
+  payload = "éµμ雪" || ('00'x as .string) || "tail "
+  call parent.setSymbolValue("ITEMS.", .RexxValue("default"))
+  call parent.setStemString("ITEMS", "0", "1")
+  call parent.setStemString("ITEMS", "1", "old")
+  call parent.setStemString("ITEMS", "9", "outside")
+  call parent.setStemString("ITEMS", "label", "named")
+  call pool.exposeSymbol("ITEMS.", reference parent)
+  call pool.setStemString("OTHER", "0", "1")
+  call pool.setStemString("OTHER", "1", "other old")
+  call pool.setString("SEED", "first")
+  call pool.setString("EMPTY", "not empty")
+  call pool.setString("RC", "old rc")
+  errors = errors + check(\pool.symbolHasValue("UNSET"), "UNSET begins unbound")
+
+  command = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "MERGE")
+  bad_kind = 0
+  do
+    call command.withBinding("SANDBOX", "not a descriptor")
+  on signal invalid_arguments as problem
+    bad_kind = problem.name() == "INVALID_ARGUMENTS"
+  end
+  errors = errors + check(bad_kind & calls = 0, "unsupported binding kind refuses without dispatch")
+  call command.withBinding(" var ", "UNSET")
+  call command.withBinding("VAR", "EMPTY")
+  call command.withBinding("VAR", "SEED")
+  call command.withBinding("VAR", "ITEMS.1")
+  call command.withBinding("STEM", "ITEMS")
+  call command.withBinding("STEM", "OTHER")
+  call command.withBinding("VAR", "RC")
+  response = command.run()
+  errors = errors + check(calls = 1 & command.syntaxError() == "", "real dispatch once")
+  errors = errors + check(\pool.symbolHasValue("UNSET"), "no VAR update leaves unset binding unset")
+  errors = errors + check(pool.symbolValue("EMPTY").asString() == "", "matched empty VAR commits")
+  errors = errors + check(pool.symbolValue("SEED").asString() == "first!", "VAR snapshot reaches provider")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "1").asString() == payload, "ordered VAR then STEM copyback follows EXPOSE")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "0").asString() == "2", "response count growth")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "2").asString() == "", "response empty tail materializes")
+  errors = errors + check(pool.stemSymbolValue("OTHER", "1").asString() == "other direct", "second strong stem survives dispatcher copies")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "9").asString() == "outside", "outside numeric tail preserved")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "label").asString() == "named", "nonnumeric literal tail preserved")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "missing").asString() == "default", "stem default preserved")
+  errors = errors + check(pool.symbolValue("RC").asString() == "7" & pool.symbolValue(".RC").asString() == "7", "status finalization follows binding RC update")
+  errors = errors + check(pool.symbolValue(".RS").asString() == "1" & command.conditionId() = 2, "ERROR condition status unchanged")
+
+  -- A retained plan snapshots again; it does not retain first-run values.
+  call pool.setString("SEED", "second")
+  response = command.run()
+  errors = errors + check(calls = 2 & pool.symbolValue("SEED").asString() == "second!", "repeat run takes fresh VAR snapshot")
+
+  reverse = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "MERGE")
+  call reverse.withBinding("STEM", "ITEMS")
+  call reverse.withBinding("VAR", "ITEMS.1")
+  response = reverse.run()
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "1").asString() == "scalar wins", "reverse descriptor order is observable through EXPOSE")
+
+  -- No response records: request mutation alone must copy the final count range.
+  direct = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "GROW")
+  call direct.withBinding("STEM", "ITEMS")
+  response = direct.run()
+  errors = errors + check(response.get_updated_binding_count() = 0, "direct growth has no response records")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "0").asString() == "3", "direct request growth count")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "3").asString() == payload, "direct growth exact Unicode NUL trailing blank")
+  direct = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "SHRINK")
+  call direct.withBinding("STEM", "ITEMS")
+  response = direct.run()
+  errors = errors + check(response.get_updated_binding_count() = 0, "direct shrink has no response records")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "0").asString() == "1", "direct shrink count")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "1").asString() == "shrunk", "direct shrink changed tail")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "3").asString() == payload, "shrink preserves old out-of-count cells")
+
+  before = calls
+  call pool.setStemString("BAD", "0", "bad")
+  invalid = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "GROW")
+  call invalid.withBinding("STEM", "BAD")
+  response = invalid.run()
+  errors = errors + check(calls = before & pos("54.1", invalid.syntaxError()) > 0, "invalid input count refuses before dispatch")
+  call pool.setStemString("BAD", "0", "-1")
+  response = invalid.run()
+  errors = errors + check(calls = before & pos("54.1", invalid.syntaxError()) > 0, "negative input count refuses before dispatch")
+  call pool.setStemString("BAD", "0", "9223372036854775808")
+  response = invalid.run()
+  errors = errors + check(calls = before & pos("54.1", invalid.syntaxError()) > 0, "unrepresentable input count is 54.1")
+  call pool.setStemString("BAD", "0", "1")
+  call pool.setStemString("BAD", "1", "untouched")
+  invalid = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "INVALID")
+  call invalid.withBinding("STEM", "BAD")
+  response = invalid.run()
+  errors = errors + check(pos("54.1", invalid.syntaxError()) > 0, "invalid final count is 54.1")
+  errors = errors + check(pool.stemSymbolValue("BAD", "0").asString() == "1" & pool.stemSymbolValue("BAD", "1").asString() == "untouched", "validate final count before any own stem writes")
+
+  -- WITH validation precedes binding validation; trace inhibition precedes both.
+  call pool.setStemString("BAD", "0", "bad")
+  invalid = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "GROW")
+  call invalid.withBinding("STEM", "BAD")
+  call invalid.withConnection("INPUT", "", "STEM", "INPUT.")
+  response = invalid.run()
+  errors = errors + check(pos("input stem", invalid.syntaxError()) > 0, "WITH input error retains precedence")
+  before = calls
+  call activation.setTraceOption("!N")
+  response = invalid.run()
+  errors = errors + check(calls = before & invalid.syntaxError() == "", "trace inhibition skips invalid snapshots and dispatch")
+  errors = errors + check(pool.symbolValue(".RS").asString() == "0", "trace inhibition normal status")
+  call activation.setTraceOption("!N")
+
+  empty_command = .RexxClassicAddressCommand(reference pool, reference activation, "CREXX", " ")
+  call empty_command.withBinding("VAR", "UNSET")
+  call empty_command.withBinding("STEM", "ITEMS")
+  response = empty_command.run()
+  errors = errors + check(response.get_rc() = 0 & empty_command.syntaxError() == "", "empty built-in command has initialized request owners")
+  errors = errors + check(\pool.symbolHasValue("UNSET"), "empty built-in leaves unset VAR unbound")
+  errors = errors + check(parent.stemSymbolValue("ITEMS", "1").asString() == "shrunk", "empty built-in retains counted snapshot")
+
+  redirected = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "REDIRECT")
+  call redirected.withConnection("OUTPUT", "REPLACE", "STEM", "LINES.")
+  call redirected.withConnection("ERROR", "REPLACE", "STEM", "ERRORS.")
+  call redirected.withBinding("VAR", "LINES.1")
+  response = redirected.run()
+  errors = errors + check(pool.stemSymbolValue("LINES", "0").asString() == "2", "WITH output counted lines preserved")
+  errors = errors + check(pool.stemSymbolValue("LINES", "1").asString() == "binding after output", "WITH output precedes binding copyback")
+  errors = errors + check(pool.stemSymbolValue("LINES", "2").asString() == "second", "WITH output remaining line preserved")
+  errors = errors + check(pool.stemSymbolValue("ERRORS", "1").asString() == "problem", "WITH error capture preserved")
+
+  normal = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "NORMAL")
+  response = normal.run()
+  errors = errors + check(response.get_rc() = 5 & normal.conditionId() = 0, "provider nonzero normal completion stays normal")
+  errors = errors + check(pool.symbolValue(".RS").asString() == "0", "normal provider status unchanged")
+  failed = .RexxClassicAddressCommand(reference pool, reference activation, "BINDING-TEST", "FAIL")
+  response = failed.run()
+  errors = errors + check(response.get_rc() = 9 & failed.conditionId() = 3, "provider FAILURE preserved")
+  errors = errors + check(pool.symbolValue(".RS").asString() == "-1", "FAILURE status unchanged")
+  errors = errors + address_notready_scope(reference pool,reference calls)
+  call _reset_address_environments()
+  if errors = 0 then say "PASS: Classic ADDRESS command bindings"
+  return errors <> 0
+
+/* '.' is an existing directory, not a readable/writable command stream file.
+ * These two real I/O failures need no generated file or new handler hook.
+ */
+address_notready_scope: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, calls_ref = reference .int
+  pool = dereference pool_ref
+  calls = dereference calls_ref
+  errors = 0
+  activation = .RexxActivationArguments
+  do mode = 0 to 2
+    activation = .RexxActivationArguments()
+    if mode = 1 then call activation.setSignalPolicy(5,9)
+    if mode = 2 then do
+      call activation.beginCallTrap(5,"delivered NOTREADY")
+      call activation.beginExternalProgram()
+      call activation.beginExternalConditionScope()
+      errors = errors + check(activation.signalPolicy(5) = 0 & activation.delayedSuppressionConditionId() = 5,"normalized NOTREADY has suppression without ordinal")
+    end
+    call pool.setString("RC","before input")
+    reading = .RexxClassicAddressCommand(reference pool,reference activation,"BINDING-TEST","NORMAL")
+    call reading.withConnection("INPUT","","STREAM",".")
+    before = calls
+    input_response = reading.run()
+    if mode = 0 then do
+      errors = errors + check(calls = before + 1 & reading.conditionId() = 0 & input_response.get_rc() = 5,"disabled input NOTREADY retains empty-input fallback and dispatch")
+    end
+    else do
+      errors = errors + check(calls = before & reading.conditionId() = 5 & reading.conditionDescription() == ".","enabled or suppressed input NOTREADY retains producer event before dispatch")
+      errors = errors + check(input_response.get_rc() = 0 & pool.symbolValue("RC").asString() == "before input","input failure retains early completion/status behavior")
+    end
+    writing = .RexxClassicAddressCommand(reference pool,reference activation,"BINDING-TEST","NORMAL")
+    call writing.withConnection("OUTPUT","REPLACE","STREAM",".")
+    before = calls
+    output_response = writing.run()
+    errors = errors + check(calls = before + 1 & output_response.get_rc() = 5,"output failure follows one provider dispatch")
+    if mode = 0 then errors = errors + check(writing.conditionId() = 0,"disabled output NOTREADY retains normal completion")
+    else errors = errors + check(writing.conditionId() = 5 & writing.conditionDescription() == ".","enabled or suppressed output NOTREADY retains producer event")
+    errors = errors + check(pool.symbolValue("RC").asString() == "5" & pool.symbolValue(".RC").asString() == "5" & pool.symbolValue(".RS").asString() == "0","output NOTREADY preserves provider RC and normal response status")
+  end
+  return errors
+
+check: procedure = .int
+  arg condition = .int, label = .string
+  if condition then return 0
+  say "FAIL:" label
+  return 1
+
+/* Existing request copies retain their shared counted stem owner. */
+BindingEnvironment: class implements .addressenvironment
+  _name = .string
+  _calls = reference .int
+  _errors = reference .int
+
+  *: factory
+    arg env_name = .string
+    _name = env_name
+    return
+
+  environment_name: method = .string
+    return _name
+
+  environment_id: method = .string
+    return _name
+
+  observe: method = .void
+    arg calls = reference .int, errors = reference .int
+    _calls = calls
+    _errors = errors
+    return
+
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    calls = dereference _calls
+    errors = dereference _errors
+    calls = calls + 1
+    mode = request.get_command()
+    payload = "éµμ雪" || ('00'x as .string) || "tail "
+    result = .addressresponse(0)
+    binding = .addressbinding
+    kind = .string
+    name = .string
+    if mode = "MERGE" then do
+      if calls = 1 then errors = errors + check(request.get_binding_count() = 7, "invalid kind left descriptor plan unchanged")
+      result = .addressresponse(7, "ERROR")
+      call result.add_updated_binding("var", "EMPTY", "EMPTY", "", "")
+      call result.add_updated_binding("var", "SEED", "SEED", request.get_binding_value("SEED") || "!", "")
+      call result.add_updated_binding("var", "ITEMS.1", "ITEMS.1", "scalar wins", "")
+      call result.add_updated_binding("var", "RC", "RC", "binding rc", "")
+      call result.add_updated_binding("stem", "ITEMS.0", "ITEMS", "2", "")
+      call result.add_updated_binding("stem", "ITEMS.1", "ITEMS", payload, "")
+      call result.add_updated_binding("stem", "ITEMS.2", "ITEMS", "", "")
+    end
+    if mode = "NORMAL" then return .addressresponse(5)
+    if mode = "FAIL" then return .addressresponse(9, "FAILURE")
+    if mode = "REDIRECT" then do
+      output_endpoint = request.get_stdout_endpoint()
+      error_endpoint = request.get_stderr_endpoint()
+      call output_endpoint.native_emit("first" || ('0A'x as .string) || "second" || ('0A'x as .string))
+      call error_endpoint.native_emit("problem" || ('0A'x as .string))
+      call output_endpoint.finish()
+      call error_endpoint.finish()
+      call result.add_updated_binding("var", "LINES.1", "LINES.1", "binding after output", "")
+      return result
+    end
+    do i = 1 to request.get_binding_count()
+      binding = request.get_binding(i)
+      kind = upper(binding.get_kind())
+      name = binding.get_internal_name()
+      if kind <> "STEM" then iterate
+      errors = errors + check(request.get_binding_stem_value(i, "0") <> "", "provider sees counted snapshot")
+      if name = "OTHER" then call request.set_binding_stem_value(i, "1", "other direct")
+      if mode = "GROW" then do
+        call request.set_binding_stem_value(i, "0", "3")
+        call request.set_binding_stem_value(i, "3", payload)
+      end
+      if mode = "SHRINK" then do
+        call request.set_binding_stem_value(i, "0", "1")
+        call request.set_binding_stem_value(i, "1", "shrunk")
+      end
+      if mode = "INVALID" then do
+        call request.set_binding_stem_value(i, "0", "-1")
+        call request.set_binding_stem_value(i, "1", "must not commit")
+      end
+    end
+    return result

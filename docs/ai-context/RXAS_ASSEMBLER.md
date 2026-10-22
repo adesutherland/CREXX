@@ -1307,10 +1307,13 @@ Signal support adds action-aware and dynamic-name forms:
   interrupt object as a Level B `.signal` value in `rSignal` before branching
 - `signal rName` raises a signal whose name is read from a string register
 - `signal rName,rPayload` raises a dynamic-name signal with a payload object
-- `signalorigin "NAME",rMessage,rSignal` raises with the message in the
-  string register and the module/address from a VM-bound `.runtime_signal`
-  created by `sigbrv`. An invalid origin raises `INVALID_ARGUMENTS`; ordinary
-  `signal` keeps its existing source and payload behavior
+- `signalorigin "NAME",rPayload,rSignal` raises with the complete typed value
+  in `rPayload` and module/address from a VM-bound `.runtime_signal` created by
+  `sigbrv`. Preserve attributes and explicit text/binary length, including NUL,
+  with ordinary register-payload SIGNAL copy semantics. The requested tag may
+  differ from the origin tag. Invalid names and origins retain their respective
+  `INVALID_SIGNAL_CODE`/`INVALID_ARGUMENTS` errors at the current instruction;
+  ordinary `signal` keeps its existing source and payload behavior
 
 Unknown dynamic names raise `INVALID_SIGNAL_CODE`. Literal `signal "NAME"`
 forms are still assembled directly against the static signal table.

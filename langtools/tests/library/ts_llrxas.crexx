@@ -1,0 +1,143 @@
+/* cREXX License (MIT). Independent optional RXAS target contract fixtures. */
+options levelb
+import rxfnsb
+import llrxas
+import llrxascatalog
+
+main: procedure = .int
+  failures = 0
+  mapping = .int[]; v = .int
+  catalog = .llrxascatalog..catalog()
+  failures = failures + check(catalog.version() = 'llrxas.catalog.v1','catalog profile')
+  failures = failures + check(catalog.fingerprint() <> '','catalog freshness identity')
+  loadop = catalog.find('load','RI'); copyop = catalog.find('icopy','RR')
+  failures = failures + check(loadop >= 0 & copyop >= 0,'canonical overload lookup')
+  failures = failures + check(catalog.find('load','RRRR') = -1 & catalog.find('inull','') = -1,'unknown/internal instructions refused')
+  failures = failures + check(catalog.kills(loadop,1) & catalog.reads(copyop,2),'canonical explicit effects')
+  failures = failures + check(catalog.writecomponents(loadop,1) = 1,'native integer component')
+  addop = catalog.find('iadd','RRR')
+  failures = failures + check(catalog.field(addop,15) = '2','native unknown signal stays unknown')
+
+  target = .llrxas..program(5,4)
+  call target.record('demo()','.locals=5 .expose=sample',7)
+  call target.candidate(1); call target.candidate(2)
+  call target.candidate(3); call target.candidate(4)
+  call target.record('load','r1,1',8)
+  call target.record('icopy','r2,r1',9)
+  call target.record('say','r2',10)
+  call target.record('load','r3,3',11)
+  call target.record('icopy','r4,r3',12)
+  call target.record('ret','r4',13)
+  result = target.finish()
+  if result.error() <> '' then say result.error()
+  failures = failures + check(result.valid(),'physical budget checked after reuse')
+  if result.valid() then do
+    failures = failures + check(result.locals() = 4,'frame follows live scalar demand')
+    failures = failures + check(result.assigned(1) = result.assigned(3),'dead scalar cells reused')
+    failures = failures + check(result.assigned(1) <> result.assigned(2),'same instruction endpoints interfere')
+    failures = failures + check(result.text(1) = 'demo() .locals=4 .expose=sample','header locals only rewritten')
+    failures = failures + check(result.records() = 8 & result.text(5) = 'null r1','new scalar lifetime clears stale components')
+    failures = failures + check(result.origin(5) = 11,'reset retains semantic origin')
+    do v = 0 to 4
+      mapping[v + 1] = result.assigned(v)
+    end
+    mapping[1] = 1
+    failures = failures + check(pos('fixed physical',target.validate(reference mapping,4)) > 0,'independent checker rejects a moved fixed cell')
+    mapping[1] = 0; mapping[3] = mapping[2]
+    failures = failures + check(pos('storage cells aliased',target.validate(reference mapping,4)) > 0,'independent checker rejects pinned alias corruption')
+  end
+
+  target = .llrxas..program(4,4)
+  call target.recordline('unknown_signal() .locals=4')
+  call target.candidate(1); call target.candidate(2); call target.candidate(3)
+  call target.recordline('load r1,1'); call target.recordline('load r2,2')
+  call target.recordline('iadd r3,r1,r2'); call target.recordline('ret r3')
+  result = target.finish()
+  failures = failures + check(result.valid(),'unknown-signal conservative program remains executable')
+  if result.valid() then failures = failures + check(result.assigned(1) <> result.assigned(2) & result.assigned(2) <> result.assigned(3),'unknown-signal operands retain distinct storage')
+
+  target = .llrxas..program(8,8)
+  call target.recordline('window_test() .locals=8')
+  call target.candidate(1); call target.candidate(2)
+  call target.recordline('load r1,4'); call target.recordline('say r1')
+  call target.recordline('load r2,5'); call target.recordline('say r2')
+  call target.window(5,3)
+  call target.recordline('load r5,1'); call target.recordline('copy r6,r2')
+  call target.recordline('settp r6,768'); call target.recordline('call r0,callee(),r5')
+  call target.recordline('null r6'); call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'count/argument call window accepted')
+  if result.valid() then do
+    failures = failures + check(result.assigned(6) = result.assigned(5) + 1 & result.assigned(7) = result.assigned(5) + 2,'whole call suffix remains contiguous')
+    do v = 0 to 7
+      mapping[v + 1] = result.assigned(v)
+    end
+    mapping[7] = mapping[6]
+    failures = failures + check(pos('window is not contiguous',target.validate(reference mapping,result.locals())) > 0,'independent checker rejects call window corruption')
+  end
+
+  target = .llrxas..program(4,4)
+  call target.recordline('trace_test() .locals=4')
+  call target.recordline('load r3,1',31)
+  call target.record('.traceevent','"L" 1 "R" "O" "o" 3 31 2 1 "r3,quoted" ""',31)
+  call target.recordline('say r3'); call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'TRACE local observation admitted')
+  if result.valid() then do
+    expected = '"L" 1 "R" "O" "o" ' || result.assigned(3) || ' 31 2 1 "r3,quoted" ""'
+    failures = failures + check(result.text(3) = '.traceevent ' || expected,'numeric TRACE location remapped, quoted bytes exact')
+  end
+
+  target = .llrxas..program(4,4)
+  call target.recordline('loop_test() .locals=4')
+  call target.candidate(1); call target.candidate(2)
+  call target.recordline('again:'); call target.recordline('load r1,1')
+  call target.recordline('icopy r2,r1'); call target.recordline('brt again,r2')
+  call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'backedge conservative profile')
+  if result.valid() then failures = failures + check(result.assigned(1) <> result.assigned(2),'loop storage remains distinct')
+
+  target = .llrxas..program(4,4)
+  call target.recordline('forward_entry() .locals=4')
+  call target.candidate(1); call target.candidate(3)
+  call target.recordline('load r1,1'); call target.recordline('icopy r2,r1')
+  call target.recordline('br skip_definition'); call target.recordline('load r3,3')
+  call target.recordline('skip_definition:'); call target.recordline('icopy r2,r3')
+  call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'forward-entry conservative profile')
+  if result.valid() then failures = failures + check(result.assigned(1) <> result.assigned(3),'bypassed first definition cannot expose stale reused storage')
+
+  target = .llrxas..program(3,3)
+  call target.recordline('identity_test() .locals=3')
+  call target.recordline('load 2,1'); call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'numeric indirect addressing admitted conservatively')
+  if result.valid() then failures = failures + check(result.assigned(2) = 2 & result.locals() = 3,'numeric addressing exact identity fallback')
+
+  target = .llrxas..program(3,2)
+  call target.recordline('fixed_test() .locals=3'); call target.fixed(2)
+  call target.recordline('load r2,1'); call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid() = 0 & result.records() = 0,'physical budget refusal is atomic')
+  failures = failures + check(left(result.error(),14) = 'LL_RXAS_LIMIT:','physical budget has a resource-limit identity')
+  target = .llrxas..program(3,3,1)
+  call target.recordline('fuel_test() .locals=3'); result = target.finish()
+  failures = failures + check(result.valid() = 0 & result.records() = 0,'work refusal is atomic')
+  target = .llrxas..program(3,3)
+  call target.recordline('invalid_test() .locals=3'); call target.recordline('not_an_instruction r1')
+  result = target.finish()
+  failures = failures + check(result.valid() = 0 & result.records() = 0,'unclassified instruction never publishes output')
+  target = .llrxas..program(3,3)
+  call target.fixed(-1); result = target.finish()
+  failures = failures + check(result.valid() = 0 & result.records() = 0,'invalid fixed identity is refused before array mutation')
+  if failures = 0 then say 'RXAS target checks passed'
+  say 'failures=' || failures
+  return failures
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL ' || message
+  return 1

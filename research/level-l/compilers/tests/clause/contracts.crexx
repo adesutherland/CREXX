@@ -1,0 +1,354 @@
+/* Tiny independent owner/clock controls; no clock algorithm or injected state. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+import llcir
+import llcrxas
+import llcprocedureprotocol
+import llcsignalprotocol
+import llcdoprotocol
+import llcclauseprotocol
+
+main: procedure = .int expose checks failures inspection
+  arg argv = .string[]
+  if argv[0] < 1 | argv[0] > 2 then return 2
+  checks = 0; failures = 0; inspection = ''
+  if argv[0] = 2 then inspection = argv[2]
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
+  call checkSchema(contract)
+  graph = .llir..module; loaded = .llir..module; mode = .int
+  accepted = .int; emitted = .int; expected = .int; ignored = .string; text = .string
+  do mode = 1 to 11
+    graph = fixture(contract,mode)
+    call check(graph.error() == '', 'generic-valid owner control ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    accepted = mode <= 3 | mode = 11
+    emitted = 0; if mode = 1 | mode = 11 then emitted = 1
+    text = admission(argv[1],reference graph,accepted,emitted,'owner-' || mode,mode = 4 | mode = 5)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '' & bincompare(graph.binary(),loaded.binary()) = 0,'owned exact load ' || mode)
+    if loaded.error() == '' then ignored = admission(argv[1],reference loaded,accepted,emitted,'loaded-' || mode,mode = 4 | mode = 5)
+    if mode = 1 | mode = 11 then do
+      changed = llirservices..optimise(reference graph)
+      call check(changed.status() == 'changed','real typed forwarding/dead pruning ' || mode || ': ' || changed.message())
+      if changed.status() == 'changed' then do
+        rewritten = changed.result()
+        call check(bincompare(graph.binary(),rewritten.binary()) <> 0,'changed bytes ' || mode)
+        expected = emitted; if mode = 11 then expected = 0
+        ignored = admission(argv[1],reference rewritten,1,expected,'changed-' || mode)
+      end
+    end
+  end
+  do mode = 1 to 4
+    graph = loopfixture(contract,mode)
+    call check(graph.error() == '', 'generic-valid loop control ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    expected = 2
+    ignored = admission(argv[1],reference graph,mode = 1 | mode = 3,expected,'loop-' || mode)
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '', 'loaded loop control ' || mode)
+    if loaded.error() == '' then ignored = admission(argv[1],reference loaded,mode = 1 | mode = 3,expected,'loaded-loop-' || mode)
+  end
+  graph = callfixture(contract)
+  call check(graph.error() == '', 'generic-valid protected CALL continuation: ' || graph.error())
+  if graph.error() == '' then do
+    ignored = admission(argv[1],reference graph,1,1,'call-continuation')
+    loaded = loadgraph(reference graph)
+    call check(loaded.error() == '', 'loaded protected continuation')
+    if loaded.error() == '' then ignored = admission(argv[1],reference loaded,1,1,'loaded-call-continuation')
+  end
+  graph = fixture(contract,1); call prooflimits(argv[1],reference graph)
+  say 'CLAUSE_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+checkSchema: procedure = .void
+  arg contract = .llir..contract
+  data = dereference contract.data(); version = 0; types = 0; i = .int
+  do i = 1 to data.familycount()
+    if data.familyname(i) == 'crexx.c' then version = data.version(i)
+  end
+  do i = 1 to data.types()
+    if left(data.typename(i),8) == 'crexx.c.' then types = types + 1
+  end
+  call check(version = 22 & types = 5 & data.ops() = 88,'C22/88/five-type schema')
+  opcode = contract.operation('crexx.c.clause.begin').id()
+  call check(data.arity(opcode,1) = 1 & data.fieldname(opcode,1,1) == 'context' & data.typename(data.fieldtype(opcode,1,1)) == 'crexx.c.context','begin has one C input')
+  call check(data.arity(opcode,2) = 0 & data.arity(opcode,3) = 1 & data.fieldname(opcode,3,1) == 'id' & data.typename(data.fieldtype(opcode,3,1)) == 'crexx.g.int64','void begin has one integer authored identity')
+  call check(data.effectvalue(opcode,1) == 'context.observation' & data.effectvalue(opcode,2) == 'condition.resource' & data.effectvalue(opcode,3) == 'returns','begin effects preserve observation and resource failure')
+  callback = data.callback(opcode,1)
+  call check((callback is .llir..evaluator) = 0,'begin has no evaluator')
+  return
+
+loadgraph: procedure = .llir..module
+  arg graph_ref = reference .llir..module
+  graph = dereference graph_ref; storage = dereference graph.storage(); contract = dereference storage.contract()
+  return llir..loadbinary(contract,graph.binary())
+
+admission: procedure = .string expose inspection
+  arg artifacts = .string, graph_ref = reference .llir..module, accepted = .int, expected = .int, label = .string, context_refusal = 0
+  graph = dereference graph_ref; saved = graph.binary()
+  selected = .llcrxas..compilation; output = .llir..output
+  entries = .llcprocedureprotocol..checked(graph_ref)
+  if context_refusal then do
+    reason = 'LL_COMPILER_LOWERING: entry dispatch uses a different bound slot'
+    call check(accepted = 0 & entries.status() <> 0 & entries.error() == reason,label || ' canonical-context refusal belongs to entry proof: ' || entries.error())
+    selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+    call check(selected.status() <> 0 & output.bytes() = 0 & selected.error() == reason,label || ' exact atomic canonical-context refusal: ' || selected.error())
+    call check(bincompare(saved,graph.binary()) = 0,label || ' immutable input after entry refusal')
+    return ''
+  end
+  call check(entries.status() = 0,label || ' entry/program proof: ' || entries.error())
+  if entries.status() <> 0 then return ''
+  loops = .llcdoprotocol..checked.withprogram(graph_ref,reference entries)
+  call check(loops.status() = 0,label || ' DO proof: ' || loops.error())
+  if loops.status() <> 0 then return ''
+  clauses = .llcclauseprotocol..checked(graph_ref,reference entries,reference loops)
+  status = clauses.status(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  if accepted then do
+    call check(status = 0 & clauses.belongs(graph_ref),label || ' completed owner proof: ' || clauses.error())
+    call check(selected.status() = 0 & output.bytes() > 0,label || ' selected output: ' || selected.error())
+    if status = 0 then do
+      arena_ref = graph.storage(); storage = dereference arena_ref; count = 0; opid = .int
+      do opid = 1 to storage.count(3)
+        op = .llir..opview(arena_ref,opid)
+        if op.name() == 'crexx.c.clause.begin' then count = count + clauses.emits(opid)
+        else call check(clauses.emits(opid) = 0,label || ' non-marker cannot emit reset ' || opid)
+      end
+      call check(count = expected,label || ' selected marker count ' || count || '/' || expected)
+    end
+    if selected.status() = 0 & inspection <> '' then do
+      bytes = output.text() as .binary
+      call check(writebinary(inspection || '/' || label || '.rxas',bytes) = <blen>(bytes),'publish only temporary accepted RXAS ' || label)
+    end
+  end
+  else do
+    call check(status <> 0 & pos('LL_COMPILER_LOWERING: clause-clock ',clauses.error()) = 1,label || ' owner-specific refusal: ' || clauses.error())
+    call check(selected.status() <> 0 & output.bytes() = 0 & pos('LL_COMPILER_LOWERING: clause-clock ',selected.error()) = 1,label || ' atomic selector refusal: ' || selected.error())
+  end
+  call check(bincompare(saved,graph.binary()) = 0,label || ' immutable input')
+  if accepted & selected.status() = 0 then return output.text()
+  return ''
+
+prooflimits: procedure = .void
+  arg artifacts = .string, graph_ref = reference .llir..module
+  graph = dereference graph_ref; saved = graph.binary()
+  entries = .llcprocedureprotocol..checked(graph_ref)
+  signals = .llcsignalprotocol..checked(graph_ref,reference entries)
+  loops = .llcdoprotocol..checked.withprogram(graph_ref,reference entries)
+  clauses = .llcclauseprotocol..checked(graph_ref,reference entries,reference loops)
+  call check(entries.status() = 0 & signals.status() = 0 & loops.status() = 0 & clauses.status() = 0,'adequate retained proofs complete: ' || clauses.error())
+  if entries.status() | signals.status() | loops.status() | clauses.status() then return
+  selected = .llcrxas..compilation.precheckedclauses(graph,reference entries,reference signals,reference loops,reference clauses,artifacts)
+  output = selected.output(); previous = output.text()
+  call check(selected.status() = 0 & output.bytes() > 0,'adequate borrowed selection: ' || selected.error())
+  smaller = .llcclauseprotocol..checked(graph_ref,reference entries,reference loops,clauses.bytesused() - 1)
+  call check(smaller.status() <> 0 & pos('LL_COMPILER_LIMIT: clause-clock ',smaller.error()) = 1,'actual workspace charge refuses one byte below')
+  lesswork = .llcclauseprotocol..checked(graph_ref,reference entries,reference loops,67108864,clauses.workused() - 1)
+  call check(lesswork.status() <> 0 & pos('LL_COMPILER_LIMIT: clause-clock ',lesswork.error()) = 1,'actual work charge refuses one unit below')
+  cap = max(entries.bytesused(),signals.bytesused(),loops.bytesused(),clauses.bytesused()) - 1
+  limited = .llcrxas..compilation.precheckedclauses(graph,reference entries,reference signals,reference loops,reference clauses,artifacts,cap)
+  empty = limited.output()
+  call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,'narrow selector refuses retained actual charges locally')
+  again = .llcrxas..compilation.precheckedclauses(graph,reference entries,reference signals,reference loops,reference clauses,artifacts)
+  repeated = again.output()
+  call check(again.status() = 0 & repeated.text() == previous & clauses.status() = 0 & clauses.belongs(graph_ref),'adequate reuse after narrow refusal preserves same proof')
+  call check(output.text() == previous & bincompare(saved,graph.binary()) = 0,'earlier output and input survive all limit failures')
+  loaded = loadgraph(graph_ref)
+  call check(loaded.error() == '' & clauses.belongs(reference loaded) = 0 & loops.belongs(reference loaded) = 0,'loaded identical bytes require their own clause/DO proof identities')
+  return
+
+/* 1 observed typed spill; 2 marker-only; 3 equivalent no marker;
+ * 4/5 wrong marker/observer C slot; 6 foreign source; 7 outside owner;
+ * 8 wrong head id; 9 dead earlier-K/later-seed self-cycle;
+ * 10 ordinary conditional bypass; 11 dead observed region to prune. */
+fixture: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  ignored = .llir..valuehandle
+  builder = .llir..builder(contract); first = "say 'TIME'()"
+  source = (first || ('0A'x as .string) || first) as .binary
+  file = builder.source('clause-ir.crexx',source); foreign = builder.source('clause-ir.crexx',source)
+  at = file.origin(0,length(first)); clock = file.origin(4,length(first)); generated = builder.synthetic('independent clock dispatch')
+  if mode = 6 then clock = foreign.origin(4,length(first))
+  if mode = 7 then clock = file.origin(length(first) + 5,<blen>(source))
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ordinal = fn.argument(contract.type('crexx.c.context')); ordinal = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  other = fn.slot('other context',contract.type('crexx.c.context')); spill = fn.slot('value spill',contract.type('crexx.c.value'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch'); main = fn.block('main'); invalid = fn.block('invalid')
+  body = main; bypass = .llir..block; condition = .llir..valuehandle
+  if mode >= 9 then do; body = fn.block('observed'); bypass = fn.block('bypass'); end
+  call setup.store(context,setup.readarg(1,generated),generated)
+  if mode = 4 | mode = 5 then call setup.store(other,setup.readarg(1,generated),generated)
+  call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  call dispatchcase(dispatch,contract,context,entry,0,'',main,invalid,generated)
+  call invalidcase(invalid,contract,generated); call consume(main,contract,context,at)
+  if mode = 9 then do
+    call absent(main,contract,at); call consume(body,contract,context,at); call absent(bypass,contract,at)
+    ignored = observe(body,contract,context,clock,0,spill)
+    call addBegin(body,contract,context,at,1)
+    call body.jump(body,at.derive()); return builder.finish()
+  end
+  if mode = 10 then do
+    call addBegin(main,contract,context,at,1)
+    condition = main.constant(contract.type('core.boolean'),'true',at)
+    call main.branch(condition,body,bypass,at.derive()); call absent(bypass,contract,at)
+  end
+  else if mode = 11 then do
+    condition = main.constant(contract.type('core.boolean'),'false',at)
+    call main.branch(condition,body,bypass,at.derive()); call absent(bypass,contract,at)
+  end
+  slot = context; if mode = 4 then slot = other
+  identity = 1; if mode = 8 then identity = 2
+  if mode <> 3 & mode <> 10 then call addBegin(body,contract,slot,at,identity)
+  slot = context; if mode = 5 then slot = other
+  if mode <> 2 & mode <> 3 then ignored = observe(body,contract,slot,clock,mode = 1,spill)
+  call absent(body,contract,at)
+  return builder.finish()
+
+/* 1 UNTIL prefix+first bottom; 2 header seed cannot license missing bottom;
+ * 3 shared WHILE predicate initial/backedge seeds; 4 missing backedge seed. */
+loopfixture: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  until_loop = mode <= 2
+  heading = "do I = 'TIME'() for 2 until 'TIME'()"
+  if until_loop = 0 then heading = "do I = 1 for 2 while 'TIME'()"
+  text = heading || ('0A'x as .string) || 'iterate' || ('0A'x as .string) || 'end'
+  builder = .llir..builder(contract); file = builder.source('clause-loop.crexx',text as .binary)
+  header = file.origin(0,length(heading)); initial = header
+  do_header = file.origin(3,length(heading))
+  if until_loop then initial = file.origin(0,pos('until',heading) - 1)
+  predicate = file.origin(lastpos("'TIME'()",heading) - 1,length(heading))
+  capture_at = file.origin(7,15); if until_loop = 0 then capture_at = file.origin(7,8)
+  payload = file.origin(length(heading) + 1,length(heading) + 8)
+  end_at = file.origin(length(text) - 3,length(text)); generated = builder.synthetic('independent loop dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ordinal = fn.argument(contract.type('crexx.c.context')); ordinal = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  spill = fn.slot('loop value',contract.type('crexx.c.value'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch'); main = fn.block('main'); invalid = fn.block('invalid')
+  head = fn.block('DO entry'); test = fn.block('predicate'); body = fn.block('body'); continuation = fn.block('iteration')
+  advance = fn.block('advance'); close = fn.block('close'); exhausted = fn.block('exhausted'); after = fn.block('after')
+  call setup.store(context,setup.readarg(1,generated),generated); call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  call dispatchcase(dispatch,contract,context,entry,0,'',main,invalid,generated); call invalidcase(invalid,contract,generated)
+  call consume(main,contract,context,header); call addBegin(main,contract,context,initial,1)
+  draft = main.operation(contract.operation('crexx.c.do.new'),do_header); call draft.input('context',main.load(context,do_header))
+  call draft.attribute('key','clock-loop' as .binary); call draft.attribute('name','I' as .binary); finished = draft.finish()
+  start = .llir..valuehandle
+  if until_loop then start = observe(main,contract,context,capture_at,0,spill)
+  else start = main.constantbytes(contract.type('crexx.c.value'),'1' as .binary,capture_at)
+  call capture(main,contract,'start',start,capture_at)
+  count = main.constantbytes(contract.type('crexx.c.value'),'2' as .binary,header); call capture(main,contract,'for',count,header)
+  call step(main,contract,'start',do_header); call main.jump(head,header.derive())
+  draft = head.operation(contract.operation('crexx.c.do.entry'),do_header); call draft.attribute('key','clock-loop' as .binary); entered = draft.finish()
+  if until_loop then call head.branch(entered.result(),body,exhausted,header.derive())
+  else call head.branch(entered.result(),test,exhausted,header.derive())
+  call step(exhausted,contract,'close',end_at); call exhausted.jump(after,end_at.derive())
+  call body.jump(continuation,payload.derive())
+  sampled = .llir..valuehandle; truth = .llir..opview
+  if until_loop then do
+    if mode = 1 then call addBegin(continuation,contract,context,header,1)
+    sampled = observe(continuation,contract,context,predicate,0,spill)
+    draft = continuation.operation(contract.operation('crexx.c.until.truth'),predicate)
+    call draft.input('value',sampled); call draft.input('context',continuation.load(context,predicate)); truth = draft.finish()
+    call continuation.branch(truth.result(),close,advance,predicate.derive())
+    call absent(test,contract,generated)
+  end
+  else do
+    sampled = observe(test,contract,context,predicate,0,spill)
+    draft = test.operation(contract.operation('crexx.c.while.truth'),predicate)
+    call draft.input('value',sampled); call draft.input('context',test.load(context,predicate)); truth = draft.finish()
+    call test.branch(truth.result(),body,close,predicate.derive())
+    if mode = 3 then call addBegin(continuation,contract,context,header,1)
+    call continuation.jump(advance,header.derive())
+  end
+  call step(advance,contract,'advance',end_at); call advance.jump(head,end_at.derive())
+  call step(close,contract,'close',header); call close.jump(after,header.derive())
+  call absent(after,contract,end_at)
+  return builder.finish()
+
+callfixture: procedure = .llir..module
+  arg contract = .llir..contract
+  text = "say P() || 'TIME'()"; builder = .llir..builder(contract); file = builder.source('clause-call.crexx',text as .binary)
+  at = file.origin(0,length(text)); call_at = file.origin(4,7); guard = call_at.derive(); clock = file.origin(11,length(text))
+  generated = builder.synthetic('independent call dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ordinal = fn.argument(contract.type('crexx.c.context')); ordinal = fn.argument(contract.type('crexx.g.int64'))
+  context = fn.slot('$context',contract.type('crexx.c.context')); entry = fn.slot('$entry',contract.type('crexx.g.int64'))
+  carrier = fn.slot('owned call result',contract.type('crexx.c.result')); spill = fn.slot('clock value',contract.type('crexx.c.value'))
+  setup = fn.block('setup'); dispatch = fn.block('dispatch0'); second = fn.block('dispatch1'); main = fn.block('main')
+  normal = fn.block('false continuation'); unwind = fn.block('private unwind'); callee = fn.block('callee'); invalid = fn.block('invalid')
+  call setup.store(context,setup.readarg(1,generated),generated); call setup.store(entry,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
+  call dispatchcase(dispatch,contract,context,entry,0,'',main,second,generated)
+  call dispatchcase(second,contract,context,entry,1,'P',callee,invalid,generated); call invalidcase(invalid,contract,generated)
+  call consume(main,contract,context,at); call addBegin(main,contract,context,at,1)
+  draft = main.operation(contract.operation('crexx.c.arguments.empty'),call_at); arguments = draft.finish()
+  draft = main.operation(contract.operation('crexx.c.call'),call_at); call draft.input('arguments',arguments.result()); call draft.input('context',main.load(context,call_at))
+  integer = .llir..intcodec(); boolean = .llir..boolcodec()
+  call draft.attribute('target','$MAIN' as .binary); call draft.attribute('entry',integer.parse('1')); call draft.attribute('function',boolean.parse('false')); called = draft.finish()
+  call main.store(carrier,called.result(),guard)
+  draft = main.operation(contract.operation('crexx.c.program.exiting'),guard); call draft.input('context',main.load(context,guard)); exiting = draft.finish()
+  call main.branch(exiting.result(),unwind,normal,guard)
+  call unwind.returnvalue(unwind.load(carrier,guard),guard)
+  result = normal.load(carrier,guard); ignored = observe(normal,contract,context,clock,0,spill); call normal.returnvalue(result,at)
+  call consume(callee,contract,context,at); call absent(callee,contract,at)
+  return builder.finish()
+
+addBegin: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, at = .llir..origin, identity = .int
+  draft = block.operation(contract.operation('crexx.c.clause.begin'),at); call draft.input('context',block.load(context,at))
+  codec = .llir..intcodec(); call draft.attribute('id',codec.parse(identity as .string)); finished = draft.finish()
+  return
+
+observe: procedure = .llir..valuehandle
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, at = .llir..origin, forward = .int, spill = .llir..slot
+  draft = block.operation(contract.operation('crexx.c.arguments.empty'),at); empty = draft.finish()
+  value = block.constantbytes(contract.type('crexx.c.value'),'L' as .binary,at)
+  if forward then do; call block.store(spill,value,at); value = block.load(spill,at); end
+  draft = block.operation(contract.operation('crexx.c.arguments.append'),at)
+  present = block.constant(contract.type('core.boolean'),'true',at)
+  call draft.input('arguments',empty.result()); call draft.input('value',value); call draft.input('present',present); appended = draft.finish()
+  draft = block.operation(contract.operation('crexx.c.bif'),at)
+  call draft.input('arguments',appended.result()); call draft.input('context',block.load(context,at)); call draft.attribute('name','TIME' as .binary)
+  called = draft.finish(); return called.result()
+
+capture: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, part = .string, value = .llir..valuehandle, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.do.capture'),at); call draft.input('value',value)
+  call draft.attribute('key','clock-loop' as .binary); call draft.attribute('part',part as .binary); finished = draft.finish()
+  return
+
+step: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, name = .string, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.do.' || name),at); call draft.attribute('key','clock-loop' as .binary); finished = draft.finish()
+  return
+
+consume: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.procedure.consume'),at); call draft.input('context',block.load(context,at)); finished = draft.finish()
+  return
+
+dispatchcase: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context = .llir..slot, entry = .llir..slot, identity = .int, name = .string, yes = .llir..block, no = .llir..block, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.entry.test'),at)
+  call draft.input('context',block.load(context,at)); call draft.input('entry',block.load(entry,at))
+  codec = .llir..intcodec(); call draft.attribute('id',codec.parse(identity as .string)); call draft.attribute('name',name as .binary)
+  tested = draft.finish(); call block.branch(tested.result(),yes,no,at)
+  return
+
+invalidcase: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.entry.invalid'),at); failed = draft.finish(); call absent(block,contract,at)
+  return
+
+absent: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, at = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.return.absent'),at); finished = draft.finish(); call block.returnvalue(finished.result(),at)
+  return

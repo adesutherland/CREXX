@@ -1,0 +1,245 @@
+/* cREXX License (MIT). Independent executable-IR flow and failure contracts. */
+options levelb
+import rxfnsb
+import llir
+import llirservices
+
+main: procedure = .int
+  failures = 0
+  do initialise = 0 to 1
+    failures = failures + cycle(initialise)
+  end
+  failures = failures + contracts() + emptylattice() + reorderedentry()
+  say 'failures=' || failures
+  return failures
+
+/** Both entry edges reach a cyclic region. The right entry bypasses the write
+ * on the left, so a is unsafe unless entry initialises it. Every route to done
+ * passes the right-hand write to b. A disconnected predecessor cannot alter
+ * either conclusion. The second function is an independent analysis root. */
+cycle: procedure = .int
+  arg initialise = .int
+  schema = .llir..schema(); family = schema.family('flowtest',1)
+  integer = family.type('integer',.llir..intcodec() as .object); contract = schema.finish()
+  draft = .llir..builder(contract); origin = draft.synthetic('two-entry cycle')
+  fn = draft.function('cycle',contract.voidtype())
+  entry = fn.block('entry'); left = fn.block('left'); right = fn.block('right')
+  done = fn.block('done'); dead = fn.block('dead')
+  a = fn.slot('a',integer); b = fn.slot('b',integer)
+  if initialise then do
+    zero = entry.constant(integer,'0',origin); call entry.store(a,zero,origin)
+  end
+  condition = entry.constant(contract.boolean(),'true',origin)
+  call entry.branch(condition,left,right,origin)
+  one = left.constant(integer,'1',origin); call left.store(a,one,origin)
+  call left.jump(right,origin)
+  righta = right.load(a,origin)
+  two = right.constant(integer,'2',origin); call right.store(b,two,origin)
+  again = right.constant(contract.boolean(),'false',origin)
+  call right.branch(again,left,done,origin)
+  donea = done.load(a,origin); doneb = done.load(b,origin); call done.returnvoid(origin)
+  deada = dead.load(a,origin)
+  three = dead.constant(integer,'3',origin); call dead.store(a,three,origin)
+  call dead.jump(right,origin)
+  other = draft.function('uncalled',contract.voidtype()); otherentry = other.block('entry')
+  othera = other.slot('a',integer); otherread = otherentry.load(othera,origin)
+  call otherentry.returnvoid(origin)
+  graph = draft.finish(); failures = check(graph.error() = '','cycle graph ' || initialise)
+  if graph.error() <> '' then do
+    say graph.error(); return failures
+  end
+  saved = graph.binary(); report = llirservices..analyse(reference graph)
+  failures = failures + check(report.status() = 'ok','cycle converges ' || initialise)
+  if report.status() <> 'ok' then do
+    say report.message(); return failures
+  end
+  failures = failures + check(report.issues() = 3 - 2 * initialise,'path-derived issue count ' || initialise)
+  facts = report.facts(); store = dereference graph.storage()
+  rightid = store.get(4,righta.id(),1); doneaid = store.get(4,donea.id(),1)
+  donebid = store.get(4,doneb.id(),1); deadid = store.get(4,deada.id(),1)
+  otherid = store.get(4,otherread.id(),1)
+  expected = '00'
+  if initialise then expected = '01'
+  failures = failures + check(bin2x(facts.get('operation',rightid,'definitely.assigned')) = expected,'right entry can bypass a write ' || initialise)
+  failures = failures + check(bin2x(facts.get('operation',doneaid,'definitely.assigned')) = expected,'cycle preserves a entry obligation ' || initialise)
+  failures = failures + check(bin2x(facts.get('operation',donebid,'definitely.assigned')) = '01','b assigned on every exit path')
+  failures = failures + check(bin2x(facts.get('operation',otherid,'definitely.assigned')) = '00','uncalled function starts independently')
+  failures = failures + check(bin2x(facts.get('block',otherentry.id(),'reachable')) = '01','every function entry is a root')
+  failures = failures + check(bin2x(facts.get('block',dead.id(),'reachable')) = '00','disconnected predecessor is unreachable')
+  failures = failures + check(facts.has('operation',deadid,'definitely.assigned') = 0,'unreachable loads have absent facts')
+  failures = failures + check(facts.has('operation',rightid,'reachable') = 0,'absent differs from explicit false')
+  failures = failures + check(facts.matches(reference graph),'facts match exact owner')
+  foreign = graph
+  failures = failures + check(facts.matches(reference foreign) = 0,'equal copied module is a foreign owner')
+  /* These budgets exercise failure during construction, propagation or final
+   * publication without relying on an implementation-specific work count. */
+  budgets = .int[]; budgets[1] = 1; budgets[2] = 32; budgets[3] = 128; budgets[4] = 256
+  failed = 0
+  do i = 1 to budgets[0]
+    limited = llirservices..analyse(reference graph,budgets[i])
+    if limited.status() = 'limit' then do
+      failed = failed + 1
+      failures = failures + unpublished(limited,'limited cycle ' || budgets[i])
+    end
+    else failures = failures + check(limited.status() = 'ok' & limited.issues() = report.issues(),'ample bounded cycle ' || budgets[i])
+  end
+  failures = failures + check(failed > 0,'resource failure exercised')
+  recovered = llirservices..analyse(reference graph)
+  failures = failures + check(recovered.status() = 'ok' & recovered.issues() = report.issues(),'analysis recovers after resource failure')
+  failures = failures + check(bin2x(graph.binary()) = bin2x(saved),'analysis preserves source module')
+  replacement = llir..loadbinary(contract,saved)
+  failures = failures + check(facts.matches(reference replacement) = 0,'reloaded revision cannot inherit facts')
+  graph = replacement
+  failures = failures + check(facts.valid() = 0,'replacing owner invalidates facts')
+  caught = 0; bits = .binary
+  do
+    bits = facts.get('block',1,'reachable')
+  on signal
+    caught = 1
+  end
+  failures = failures + check(caught,'stale fact read signals')
+  return failures
+
+contracts: procedure = .int
+  failures = 0; state = .string; continuation = .string; expected = .string
+  do mode = 1 to 5
+    state = 'none'; continuation = 'returns'; expected = 'ok'
+    if mode = 2 then do; state = 'unknown'; expected = 'unsupported'; end
+    if mode = 3 then do; continuation = 'unknown'; expected = 'unsupported'; end
+    if mode = 4 then do; continuation = 'transfer'; expected = 'unsupported'; end
+    if mode = 5 then do; continuation = 'diverges'; expected = 'unsupported'; end
+    schema = .llir..schema(); family = schema.family('flowtest',1); action = family.operation('observe')
+    call action.state(state); call action.failure('language'); call action.termination(continuation)
+    contract = schema.finish(); draft = .llir..builder(contract); origin = draft.synthetic('effect contract')
+    fn = draft.function('effects',contract.voidtype()); entry = fn.block('entry')
+    operation = entry.operation(action,origin); observed = operation.finish(); call entry.returnvoid(origin)
+    graph = draft.finish(); report = llirservices..analyse(reference graph)
+    failures = failures + check(report.status() = expected,'registered effect/control outcome ' || mode)
+    if expected = 'unsupported' then do
+      failures = failures + unpublished(report,'unsupported effect/control ' || mode)
+      if mode = 2 then failures = failures + check(pos('LL_IR_EFFECT',report.message()) > 0,'unknown state diagnostic')
+      else failures = failures + check(pos('LL_IR_CONTROL',report.message()) > 0,'unsupported continuation diagnostic')
+    end
+  end
+  return failures
+
+/** A slot-free graph still needs finite scheduling and complete block facts. */
+emptylattice: procedure = .int
+  schema = .llir..schema(); contract = schema.finish(); draft = .llir..builder(contract)
+  origin = draft.synthetic('empty lattice'); fn = draft.function('spin',contract.voidtype())
+  entry = fn.block('entry'); back = fn.block('back'); dead = fn.block('dead')
+  call entry.jump(back,origin); call back.jump(entry,origin); call dead.returnvoid(origin)
+  graph = draft.finish(); report = llirservices..analyse(reference graph)
+  failures = check(report.status() = 'ok' & report.issues() = 0,'slot-free cycle converges')
+  if report.status() = 'ok' then do
+    facts = report.facts()
+    failures = failures + check(facts.count() = 3,'slot-free graph publishes each block')
+    failures = failures + check(bin2x(facts.get('block',dead.id(),'reachable')) = '00','slot-free unreachable block')
+    /* Find the success boundary with at most twenty tiny analyses, without
+     * depending on an internal charge count. The last disconnected block's
+     * reachability fact is published after all other facts in this graph. */
+    saved = graph.binary(); low = 0; high = 1000000
+    do attempt = 1 to 20 while high - low > 1
+      midpoint = low + ((high - low) <idiv> 2)
+      bounded = llirservices..analyse(reference graph,midpoint)
+      if bounded.status() = 'ok' then high = midpoint
+      else if bounded.status() = 'limit' then low = midpoint
+      else do
+        failures = failures + check(0,'budget search returns only ok or limit')
+        return failures
+      end
+    end
+    failures = failures + check(high - low = 1,'bounded search locates adjacent failure and success')
+    bounded = llirservices..analyse(reference graph,high - 1)
+    failures = failures + check(bounded.status() = 'limit' & bounded.issues() = 0,'final publication budget failure has no partial diagnostics')
+    failures = failures + unpublished(bounded,'final publication boundary')
+    bounded = llirservices..analyse(reference graph,high)
+    failures = failures + check(bounded.status() = 'ok' & bounded.issues() = 0,'analysis recovers at minimum successful budget')
+    if bounded.status() = 'ok' then do
+      facts = bounded.facts()
+      failures = failures + check(facts.count() = 3,'minimum successful budget publishes every fact')
+      failures = failures + check(bin2x(facts.get('block',dead.id(),'reachable')) = '00','minimum successful budget retains final fact')
+    end
+    failures = failures + check(bin2x(graph.binary()) = bin2x(saved),'budget search preserves source module')
+  end
+  ample = llirservices..analyse(reference graph,9223372036854775807)
+  failures = failures + check(ample.status() = 'ok' & ample.issues() = 0,'maximum signed work budget stays finite')
+  do budget = -1 to 0
+    report = llirservices..analyse(reference graph,budget)
+    failures = failures + check(report.status() = 'limit','nonpositive work budget ' || budget)
+    failures = failures + unpublished(report,'nonpositive work budget ' || budget)
+  end
+  return failures
+
+/** Entry's first read remains unsafe even though every backedge has passed its
+ * store. Allocate entry second and select it through the checked saved form. */
+reorderedentry: procedure = .int
+  schema = .llir..schema(); family = schema.family('flowtest',1)
+  integer = family.type('integer',.llir..intcodec() as .object); contract = schema.finish()
+  draft = .llir..builder(contract); origin = draft.synthetic('reordered entry backedge')
+  fn = draft.function('reentry',contract.voidtype())
+  back = fn.block('back'); entry = fn.block('entry'); slot = fn.slot('x',integer)
+  first = entry.load(slot,origin); one = entry.constant(integer,'1',origin)
+  call entry.store(slot,one,origin); call entry.jump(back,origin)
+  later = back.load(slot,origin); call back.jump(entry,origin)
+  graph = draft.finish(); failures = check(graph.error() = '','reordered entry source graph')
+  if graph.error() <> '' then return failures
+  store = dereference graph.storage()
+  firstop = store.get(4,first.id(),1); laterop = store.get(4,later.id(),1)
+  entryid = entry.id(); saved = replacefield(graph.text(),'functions',1,3,'' || entryid)
+  graph = llir..loadtext(contract,saved)
+  failures = failures + check(graph.error() = '','reordered entry saved form verifies')
+  if graph.error() <> '' then return failures
+  store = dereference graph.storage()
+  failures = failures + check(entryid > 1 & store.get(1,1,3) = entryid,'entry follows its cyclic predecessor in block order')
+  savedbytes = graph.binary(); report = llirservices..analyse(reference graph)
+  failures = failures + check(report.status() = 'ok','slot-bearing entry backedge converges')
+  if report.status() <> 'ok' then return failures
+  failures = failures + check(report.issues() = 1,'only first invocation lacks assignment')
+  if report.issues() = 1 then failures = failures + check(report.operation(1) = firstop,'issue names the entry load')
+  facts = report.facts()
+  failures = failures + check(bin2x(facts.get('operation',firstop,'definitely.assigned')) = '00','backedge cannot initialise entry read')
+  failures = failures + check(bin2x(facts.get('operation',laterop,'definitely.assigned')) = '01','entry store reaches cyclic predecessor')
+  failures = failures + check(bin2x(graph.binary()) = bin2x(savedbytes),'reordered entry analysis preserves source module')
+  return failures
+
+/* Reuse the saved-text field replacement pattern from ts_llir.crexx. The
+ * public loader validates the result; no frozen arena is mutated. */
+replacefield: procedure = .string
+  arg text = .string, table = .string, row = .int, col = .int, replacement = .string
+  reader = .llir..textreader(text); out = .llir..writer(); countdown = 0
+  do while reader.left() > 0
+    line = reader.line()
+    if countdown > 0 then do
+      countdown = countdown - 1
+      if countdown = 0 then do
+        fixed = ''
+        do i = 1 to words(line)
+          if i > 1 then fixed = fixed || ' '
+          if i = col then fixed = fixed || replacement
+          else fixed = fixed || word(line,i)
+        end
+        line = fixed
+      end
+    end
+    else if word(line,1) = table then countdown = row
+    call out.line(line)
+  end
+  result = out.finish()
+  return result.text()
+
+unpublished: procedure = .int
+  arg report = .llirservices..analysis, description = .string
+  caught = 0; facts = .llirservices..facts
+  do
+    facts = report.facts()
+  on signal
+    caught = 1
+  end
+  return check(caught,'failed analysis publishes no facts: ' || description)
+
+check: procedure = .int
+  arg condition = .int, description = .string
+  if condition then return 0
+  say 'FAIL: ' || description
+  return 1
