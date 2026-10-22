@@ -476,6 +476,15 @@ instruction and 75 reference routes below remain open under their own criteria.
 
 ## Complete reference-obligation routing
 
+The [Group 2 proposal](architecture.md#group2-calls-host-proposal) and
+[G2-AC01–10 / STEP01–07](../PLAN.md#group2-calls-host-plan) route the remaining
+call/host portions below as one increment. They do not close these rows or
+approve product edits yet. The proposed ordinary typed/RXPA scalar interface
+extends CALL3; B/G exposed globals remain inaccessible to C and true reference
+values require explicit adapters. Proposed executable CALL bindings must use
+the same low-level process/byte-channel capabilities as ADDRESS; result/argument
+policy awaits approval. Dynamic Classic source invocation stays in STEP11.
+
 All 75 source obligation IDs are retained below. Every row is **open for the
 new compiler** until its own implementation/verification record exists. The
 [source appendix](../../../../docs/planning/release-1/levelc-reference-obligations.md)

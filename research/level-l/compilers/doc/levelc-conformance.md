@@ -46,7 +46,8 @@ into separate prerequisite or partial-profile deliveries.
 - [Static statement providers](architecture.md#call3-static-provider-contract)
   are explicit, signed and prepared by their owning B/G/C pipeline. External
   function expressions, late provider search/loading and general callback
-  integration remain deferred; native integration scope is not expanded.
+  integration are not implemented by that profile. The proposed Group 2
+  extension below requires approval before expanding it.
 - PARSE EXTERNAL and PARSE NUMERIC remain outside the current agreed source
   scope; their final Release 1 disposition remains explicit in LC-GAP-05.
 - ADDRESS retains authored raw resource symbols. The shared 54.1 message prints
@@ -58,6 +59,28 @@ into separate prerequisite or partial-profile deliveries.
   `1.20`, `1.2` and names with trailing blanks remain distinct. See the
   [language guide](../../../../docs/books/crexx_language_reference/statements.md#level-c-classic-signal)
   and [whole SIGNAL contract](architecture.md#signal-complete-contract).
+
+## Proposed calls and host extension
+
+[Group 2](architecture.md#group2-calls-host-proposal) is documented for approval;
+it is not implemented or qualified. It proposes metadata-guided ordinary scalar
+B/G/RXPA calls and external expressions, callee-owned defaults/ABI, runtime
+RexxValue conversion and exposed scalar temporaries whose updates are discarded.
+Adrian confirmed that B/G exposed globals are invisible/inaccessible to Level C
+callers and true reference values require explicit adapters. Arrays, arbitrary
+objects, methods/factories and task capabilities have no implicit scalar mapping.
+
+The complete proposed increment retains host invocation modes, exact argument
+presence and completion, live callback pool windows, configuration hooks,
+queue/stream/ADDRESS transport, real clock/HALT producers and context lifecycle.
+Adrian requires executable CALL to share exactly ADDRESS's low-level
+process/byte-channel capabilities. Proposed explicit process bindings retain
+host-defined result/argument semantics awaiting approval, while
+ordinary non-REXX typed/RXPA routines use their declared interfaces. Automatic
+Classic source invocation remains deferred to final INTERPRET. Current UTC-based
+TIME(E/R) is preserved. Any required new public API/ISA/platform disposition
+retains its exact approval gate. Formal compiler/platform/delivery QA remains
+open under [PLAN](../PLAN.md#group2-calls-host-plan).
 
 <a id="practical-trace-target"></a>
 
