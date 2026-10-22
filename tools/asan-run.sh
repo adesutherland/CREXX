@@ -45,7 +45,7 @@ Phases:
 Options:
   --build-dir DIR        Build directory. Default: cmake-build-debugasan.
   --profile PROFILE      full (default), weekly, native, affected, or daily.
-                         Daily uses the approved VM panel and explicit affected families; other profiles retain broad scope.
+                         Daily uses the fixed component memory panel; other profiles retain broad scope.
                          Full/weekly/native/affected reject external-fixture trees.
   --build-jobs N         Build parallelism. Default: 4.
   --build-target TARGET  Build only this target in --phase build. Repeatable.
@@ -277,18 +277,14 @@ run_ctest() {
     # Builds can regenerate CTest registration. Resolve fixture closure only
     # after that regeneration, never from the pre-build inventory.
     local effective_exclude="$exclude_regex"
-    local profile_exclude
-    profile_exclude=$(python3 "$script_dir/sanitizer-policy.py" exclude --profile "$profile" --build-dir "$build_dir")
-    if [[ -n "$profile_exclude" ]]; then
-        if [[ -n "$effective_exclude" ]]; then effective_exclude="($profile_exclude)|($effective_exclude)";
-        else effective_exclude=$profile_exclude; fi
-    fi
+    local effective_regex
+    effective_regex=$(python3 "$script_dir/sanitizer-policy.py" include --profile "$profile" --build-dir "$build_dir" --regex "$regex")
     local args=(--test-dir "$build_dir" --output-on-failure --no-tests=error)
     if [[ "$stop_on_failure" -eq 1 ]]; then
         args+=(--stop-on-failure)
     fi
-    if [[ -n "$regex" ]]; then
-        args+=(-R "$regex")
+    if [[ -n "$effective_regex" ]]; then
+        args+=(-R "$effective_regex")
     fi
     if [[ -n "$effective_exclude" ]]; then
         args+=(-E "$effective_exclude")
@@ -431,9 +427,11 @@ fixture_exclude_any=$fixture_exclude_any
 base_asan_options=$BASE_ASAN_OPTIONS
 EOF
 if [[ "${#build_targets[@]}" -gt 0 ]]; then
-    printf 'build_targets=' >> "$log_dir/run.env"
-    printf ' %q' "${build_targets[@]}" >> "$log_dir/run.env"
-    printf '\n' >> "$log_dir/run.env"
+    {
+        printf 'build_targets='
+        printf ' %q' "${build_targets[@]}"
+        printf '\n'
+    } >> "$log_dir/run.env"
 fi
 
 echo "ASan run directory: $log_dir"

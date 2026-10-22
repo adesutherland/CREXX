@@ -275,30 +275,48 @@ validation rejects sanitizer headers even in otherwise passing cells; the produc
 instrumented engine. The external SDK consumer inherits the owning sanitizer
 compiler/configuration/linker flags, including named Asan configurations.
 
-The approved VM-priority `daily` profile uses the exact reviewed weekly-only
-manifest in `tools/sanitizer-weekly-tests.json`, intersected with generated
-platform discovery. The Apple reference snapshot keeps 1,288 existing cases and
-moves 2,010 to weekly/affected; six bounded sustained-state VM cells bring daily
-to 1,294. These are reference counts, not another platform's count oracle or a
-wall-time promise. Unknown/new names stay daily. See [the owning scope and
-risk decision](../SANITIZER-WORKLIST.md#revised-vm-priority-daily-scope--qualified-scheduled-cadence-enabled).
-Full ordinary correctness is unchanged. Omitted producer/semantic/optimizer
-histories may first be detected weekly; no native branch/history equivalence is
-claimed. Closed producer SAN triggers remain weekly/affected, with original
-full closure intact; VM/provider SAN regressions remain daily.
+The approved `daily` component memory suite uses the explicit ownership/coverage
+panels in `tools/sanitizer-memory-tests.json`, intersected with actual platform
+discovery and closed over required setup/cleanup fixtures. VM/provider tests
+cover values/references, allocation failure, frames/unwind, loader/dispatch,
+workers/channels, native payloads, sessions and sustained ownership/teardown.
+Small native tool panels cover compiler AST/import/context lifetimes, assembler
+parser/SSA growth and linker pools/metadata/failure cleanup. Every known core
+memory regression has an explicit mapping; missing regression registration
+fails qualification. SAN-009 retains its existing separately owned native-
+inference scope; the core `ENABLE_LLAMA=OFF` boundary is unchanged.
 
-The scheduled policy is enabled following Adrian's approval and clean daily
-platform qualification. At **03:47 UTC daily**, the definition on `master`
-checks out current `develop`; Sunday selects weekly full original-producer
-assurance. Monday–Saturday always select the fixed VM-priority `daily` panel.
-Adrian's 22 October amendment removes automatic full/affected-family expansion:
-missing history, native/shared/build/control changes, unknown paths and changed
-toolchains/configurations never broaden daily membership. Changed inputs or a
-cache miss require fresh preparation and execution of the same selected profile.
-No prior broad baseline is required. Daily remains bounded assurance; omitted
-producer/semantic histories retain weekly/release coverage, and actual SAN
-findings retain their focused repair and full closure gates. Additional full
-coverage requires explicit manual dispatch or version-tag release qualification.
+Each tool stops at its own output: instrumented `rxc`/`rxc-c` emit RXAS,
+`rxas` emits bytecode, and `rxlink` emits a linked image. Tool errors retain
+their expected-error oracles and cannot mask a sanitizer diagnostic. The focused
+SAN-008 compiler regression covers source/RXAS/RXBIN/shared-image imports, both
+compiler modes and excess final subscripts one/zero without running a consumer.
+VM/provider tests use prepared bytecode and instrumented native executors; no
+compiler/assembler stage is added simply to qualify VM memory. Native parser/
+metadata unit tests keep their own component boundaries.
+The disassembler stops at RXAS. A tiny RXPP client covers its native precomp
+provider and stops at preprocessed source; it does not compile that output.
+
+General compiler/language/optimizer/application matrices remain in ordinary QA
+and explicit full assurance. New functional registrations do not silently expand
+the memory suite: add a named test only for a reviewed missing memory boundary
+or new sanitizer regression. Heavy Level L generation and exhaustive Unicode/
+RexxScript permutations are not substitutes for targeted VM memory cases.
+The existing sustained values/providers tests retain warmup, repeated batches,
+failure/recovery, resource plateau and final teardown. Their Level L application
+counterparts stay available in ordinary/explicit-full QA, outside this panel.
+
+At **03:47 UTC every day**, the definition on `master` checks out current
+`develop` and selects the same `daily` component memory profile, including
+Sunday. There is no automatic weekly full sweep or affected-family expansion.
+Missing history, changed paths/toolchains/configurations and cache misses require
+fresh selected preparation/execution, never a broader profile. No prior broad
+baseline is required. Manual dispatch defaults to this same memory suite; full
+coverage requires an explicit full choice or version-tag release qualification.
+Legacy explicit broad profile names retain their original complete scope.
+Actual SAN findings retain their focused repair and full closure gates.
+The focused job has a 120-minute hang backstop covering preparation and checks;
+explicit broad jobs retain 360 minutes. These are failure limits, not targets.
 Default manual dispatch from `master` also qualifies current `develop`, because this
 narrow rollout leaves master's released product sources unchanged. Explicit
 `source_ref`, branch-selected manual runs and version-tag source identity remain
@@ -340,6 +358,10 @@ runtime/provider paths and their original working directory. Explicit route
 guards reject donor VM/home/provider paths. Complex native/driver/embedding
 wrappers retain original instrumented producer commands and their residual cost;
 fewer CTest names alone do not remove that cost.
+The C RXPA object fixtures also transfer their complete RXAS/RXBIN/linked-image
+owner set from the ordinary donor. Their native declaration modules, runtime
+providers and concrete executors remain native-tree prerequisites and audited
+products; no native library crosses the fixture boundary.
 Split runtime producers depend on both `compiler_exit_bin` and its published
 `rxcexits.rxbin` before invoking `rxc`, including cold selective builds. The
 sustained harnesses place force-loaded static providers before RXPA/support

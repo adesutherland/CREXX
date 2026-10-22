@@ -112,15 +112,20 @@ component worklists.
 
 The approved sanitizer profile/preparation strategy is owned by
 `docs/SANITIZER-WORKLIST.md` and operated through
-`docs/ai-context/CREXX_ASAN_TESTING.md`. Full, weekly, release and SAN-closure
-proof retains the complete non-measurement scope and original instrumented
-producers. Daily proof is a distinct profile and cannot certify broad assurance.
-Adrian approved scheduled activation after clean platform qualification.
-The master workflow runs at 03:47 UTC daily, selecting the VM-priority profile
-Monday–Saturday and full original-producer assurance on Sundays. Missing history,
-native/build/control changes and changed toolchains never broaden daily scope;
-they invalidate incompatible reuse and require fresh selected execution. Full
-coverage otherwise requires an explicit request or version-tag qualification.
+`docs/ai-context/CREXX_ASAN_TESTING.md`. Adrian approved a component memory suite
+on 22 October: substantial targeted VM/provider ownership coverage, with small
+compiler, assembler and linker memory panels. Each producer stops at its own
+output; do not assemble/run compiler outputs or run assembler outputs merely
+to qualify producer memory. VM fixtures use ordinary producers. Preserve every
+known memory regression and cover named allocation/growth/error/teardown paths;
+functional registration alone does not add a sanitizer test. Avoid application
+workloads such as Level L compilation when targeted VM boundaries cover their
+native behavior. Ordinary functional QA remains complete.
+The master workflow runs this same `daily` memory profile at 03:47 UTC every
+day, including Sunday. History, source/build and toolchain changes invalidate
+incompatible reuse without broadening scope. Explicit full/release/SAN-closure
+proof retains the original complete non-measurement scope and instrumented
+producers; daily memory proof cannot certify that broader assurance.
 
 ## Emitted-code quality
 

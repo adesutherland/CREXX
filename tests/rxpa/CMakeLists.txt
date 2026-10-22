@@ -354,7 +354,10 @@ foreach(fixture IN ITEMS rxpa_objects rxpa_objects_class_only rxpa_objects_worke
             set(_object_flags -n)
         endif()
         set(_object_program "${CMAKE_CURRENT_BINARY_DIR}/${fixture}_${mode}")
-        add_custom_command(OUTPUT "${_object_program}-linked.rxbin"
+        # Only bytecode crosses the donor boundary. Native declaration and
+        # runtime provider targets remain prerequisites in the native tree.
+        crexx_add_fixture_command(OUTPUT "${_object_program}-linked.rxbin"
+                BYPRODUCTS "${_object_program}.rxas" "${_object_program}.rxbin"
                 COMMAND $<TARGET_FILE:rxc> --no-exe-import ${_object_flags}
                         -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
                         -o "${_object_program}" "${CMAKE_CURRENT_SOURCE_DIR}/${fixture}.crexx"

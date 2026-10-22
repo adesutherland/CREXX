@@ -7,7 +7,67 @@ sanitizer configurations.  Repository policy and closure requirements are in
 
 ## Sanitizer scope review and proposal — 20 October 2026
 
-### Daily cadence correction — 22 October 2026
+### Component memory assurance — approved 22 October 2026
+
+Adrian replaces the whole-panel sanitizer strategy with a coverage-designed
+memory suite. Both concrete VMs and native providers remain the main scope;
+small native compiler, assembler and linker panels cover their own allocation,
+growth, failure and teardown boundaries. Compiler tests stop at RXAS, assembler
+tests at bytecode and linker tests at a linked image. VM tests use ordinary
+prepared bytecode. General language/optimizer/application regression matrices
+remain in ordinary QA. Heavy Level L compilation is not a VM memory test when
+its native boundaries have targeted coverage. Preserve every known first-party
+memory reproducer, including compiler defects, and all existing SAN closure
+obligations. The same focused `daily` suite runs every scheduled day; remove
+Sunday's automatic full sweep. Full assurance remains explicit/release scope.
+This amendment supersedes the former daily manifest and weekly cadence below.
+
+Component preparation must remain warning-free on the current Apple SDK.
+Replace encountered deprecated formatting calls with bounded writes using the
+existing allocation sizes, preserving numeric and path output. Qualify the
+affected numeric, provider-loading, process and disassembler contracts before
+the matching maintained sanitizer checks; do not expand into functional QA.
+
+1. **MEMORY-AC01 — done:** maintain an explicit panel/ownership map for VM,
+   providers, compiler, assembler, linker and every SAN memory regression.
+   Inspect each command and required fixtures; replacing a broad regression
+   preserves its original failing boundary and meaningful expected-error oracle.
+2. **MEMORY-AC02 — done:** isolate producer stages and prepare only selected
+   prerequisites. Native tool tests cannot invoke downstream tools/VMs; VM
+   tests cannot route through ordinary VM/provider binaries. Preserve first-party
+   instrumentation, leak policy, fixture integrity and diagnostic failure guards.
+   Verify boundary and negative controls plus cold/warm selected discovery.
+3. **MEMORY-AC03 — done:** replace functional/application permutations with
+   the reviewed memory panel, retain sustained value/provider plateau and final
+   teardown checks, and remove the heavyweight Level L generator workload.
+   New memory regressions must join the panel; unknown functional tests do not
+   silently enlarge scheduled assurance. Ordinary/full tests remain registered.
+4. **MEMORY-AC04 — done:** every scheduled weekday selects the same `daily`
+   memory profile, independent of history or changed inputs. Explicit manual
+   and version-tag full scope and exact platform/profile-qualified reuse remain.
+   Verify actual workflow commands, all weekdays and rejection controls.
+5. **MEMORY-AC05 — todo:** qualify the selected panel in normal Debug, then
+   maintained Apple ASan and Linux ASan/LSan; inspect preparation/test costs and
+   require complete, diagnostic-free selected execution. Reuse unchanged product
+   proof and do not rerun the full functional sanitizer matrix. Publish candidate
+   hotfix for hosted qualification; promote to develop and the live master
+   workflow only when both focused platforms are green. Preserve unrelated work.
+
+1. **MEMORY-STEP01 — done (AC01–05):** reconcile hotfix with develop,
+   inspect known regressions, stage commands and existing measured costs; record
+   this plan and the exact component/ownership selection before implementation.
+2. **MEMORY-STEP02 — done (AC01–03), after STEP01:** implement focused producer
+   fixtures/regressions, explicit memory membership and selected preparation;
+   keep bytecode/provider lifecycle ownership independent of compiler semantics.
+3. **MEMORY-STEP03 — done (AC02–04), after STEP02:** update policy/workflow and
+   owning guides; exercise focused normal, boundary/negative and shell contracts,
+   then the matching maintained local sanitizer selection. Freeze tested inputs.
+4. **MEMORY-STEP04 — in progress (AC05), after STEP03:** commit/push hotfix, qualify
+   both focused hosted platforms, repair only affected failures, then publish
+   develop and the master workflow-only update. Report exact scope and limits;
+   delete temporary diagnostics and retain no timing/run archive in Git.
+
+### Earlier daily cadence correction — superseded by component memory assurance
 
 Adrian explicitly replaces the conservative daily escalation policy: scheduled
 Monday–Saturday assurance stays on the approved fixed VM/provider `daily`
@@ -52,28 +112,26 @@ changing the approved test manifest, fixture ownership or instrumentation.
    the master workflow-only update; verify effective cadence without dispatching
    another full run. Normal automatic CI remains a separate hosted result.
 
-**Status: VM-priority implementation and clean daily Linux/Apple qualification
-are complete. Adrian approved scheduled activation on 21 October 2026.**
+**Current status: component memory implementation, normal Debug and focused
+Apple ASan checks are complete. Fresh focused Linux/Apple hosted qualification
+and publication remain required by MEMORY-AC05. Earlier VM-priority platform
+proof does not qualify this new component selection.**
 
 The current rollout supersedes the earlier activation holds below. The narrow
 `master` exception changes only `.github/workflows/sanitizers.yml`; it does not
 promote product code or cut a release. At 03:47 UTC daily the workflow tests
-current `develop`, using the fixed VM-priority profile Monday–Saturday and
-weekly full original-producer scope on Sunday. The 22 October amendment removes
-automatic full fallback and affected-family expansion; changed inputs or missing
-proof require fresh execution of the same selected profile. Keep Linux leak checks,
+current `develop`. After MEMORY-AC05 is green, every scheduled day uses the same
+component memory panel, including known compiler/assembler/linker regressions.
+There is no Sunday full expansion. Changed inputs or missing proof require fresh
+execution of the same selected profile. Keep Linux leak checks,
 both platforms, scope-qualified reuse and all SAN closure rules intact.
-The original approved order was unchanged isolated Linux timeout diagnosis first, then the
-exact ten-cell daily reduction, separated fixture/native preparation and shared
-Classic preparation, qualified before activation. The existing scheduled policy
-remains effective until qualification and the separate master-workflow decision.
-See [measured results](#bounded-measurement-results) and the
-[current exact membership](#exact-existing-membership-approved).
-Implementation uses the existing synchronized hotfix checkout. Focused hosted
-qualification is authorized; no master activation or release promotion is
-authorized. The local Linux ARM64 VM has no configured usable SSH identity, so a
-dispatch-only Linux x64 replay route preserves the existing default/full route
-and checks out the original failed source commit for the first replay.
+The existing scheduled policy remains effective until qualification and the
+master workflow-only publication. Current membership and regression ownership
+are in [the component memory panel](../tools/sanitizer-memory-tests.json).
+Implementation uses the existing synchronized hotfix checkout. MEMORY-AC05
+authorizes focused hosted qualification, then develop publication and the
+master workflow-only update after both platforms pass; no release promotion is
+included.
 
 **20 October follow-up:** Adrian requested a wider test-strategy review for
 the direction in which tools/libraries are implemented in cREXX, native C
@@ -3961,19 +4019,21 @@ repair commit or worktree identity, exact final commands, and broad result.
 
 ## CI enforcement
 
-`.github/workflows/sanitizers.yml` currently runs full Linux x64 ASan/LSan
-and macOS arm64 ASan for version tags and default manual dispatch. Scheduled
-invocations resolve current `develop`, select fixed VM-focused daily scope
-Monday–Saturday and full weekly scope Sunday, and reuse only compatible
-platform/profile proof. Missing history or changed inputs never expand daily.
+`.github/workflows/sanitizers.yml` runs the component memory panel on Linux x64
+ASan/LSan and macOS arm64 ASan for scheduled and default manual requests.
+Scheduled invocations resolve current `develop` and select the same `daily`
+scope every day, including Sunday. Exact platform/profile proof may be reused;
+missing history or changed inputs never expand daily. Full coverage requires an
+explicit full request or version tag and retains original instrumented producers.
 Ordinary pushes and pull requests do not invoke this
 workflow; full sanitizer jobs are not universal develop publication gates.
 The explicit `normalization-linux` dispatch is an isolated diagnosis route and
 cannot write a broad-assurance marker. Linux build/test leaks stay enabled;
 Apple LeakSanitizer is unsupported.
 
-The effective scheduled definition belongs on `master`, with a 360-minute
-platform guard and the qualified daily/preparation policy enabled. Full weekly,
+The effective scheduled definition belongs on `master`, with a 120-minute
+memory-job hang guard (360 for explicit broad requests) and selected preparation.
+Explicit full,
 release and SAN closure scopes retain original instrumented producers. Hosted
 run links establish observed results; local policy or a stable
 job name alone does not establish successful execution or branch protection.

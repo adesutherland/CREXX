@@ -1,0 +1,7 @@
+/* SAN-008: imported array dimension metadata, with no application workload. */
+options levelb
+namespace memory_import expose Make grid
+
+Make: procedure = .void expose grid
+  grid = .int[-2 to 2, 1 to 3]
+  return

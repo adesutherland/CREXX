@@ -417,6 +417,10 @@ add_subdirectory(tests)
 add_subdirectory(driver crexx_driver)
 add_subdirectory(tools/rxbuild)
 
+if(BUILD_TESTING)
+    include(${CMAKE_SOURCE_DIR}/cmake/CrexxMemoryTests.cmake)
+endif()
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxWindowsUtf8.cmake)
 
 # These non-owning aggregate targets expose the product stages without
