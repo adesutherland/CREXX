@@ -69,6 +69,12 @@ foreach(_engine rxbvm rxtvm)
     "${_sustained_source}/test_sustained_vm.c"
     "${CMAKE_SOURCE_DIR}/interpreter/rxvml.c"
     $<TARGET_OBJECTS:${_engine}_core_objects>)
+  # Private VM headers expose C11 atomics. The interpreter directory's settings
+  # do not propagate to these targets, which are defined in langtools/tests.
+  target_compile_features(sustained_vm_${_engine} PRIVATE c_std_11)
+  if(MSVC)
+    target_compile_options(sustained_vm_${_engine} PRIVATE /experimental:c11atomics)
+  endif()
   target_include_directories(sustained_vm_${_engine} PRIVATE
     "${CMAKE_SOURCE_DIR}/interpreter" "${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin"
     "${CMAKE_SOURCE_DIR}/interpreter/rxvml" "${CMAKE_SOURCE_DIR}/assembler"

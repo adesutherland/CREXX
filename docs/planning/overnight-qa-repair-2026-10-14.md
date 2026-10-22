@@ -1,5 +1,53 @@
 # Overnight QA repair — 14 October 2026
 
+## 22 October continuation — MSVC sustained-VM harness compilation
+
+### Vision and intended outcomes
+
+Restore the overnight Windows MSVC correctness lane on the existing hotfix
+branch and publish the bounded repair to develop. The sustained-VM harness
+includes private VM headers and must declare their C11/atomic requirements
+on its own target, including when defined outside the interpreter directory.
+Keep runtime behavior, sustained workload/oracles, platform coverage and the
+approved sanitizer cadence unchanged. Preserve unrelated local work and
+private develop commits; this is a build repair, not release promotion.
+
+### Acceptance criteria
+
+1. **O22-AC01 — done:** identify the actual failing source and generated command
+   in the overnight MSVC job. The failure is compilation of
+   `test_sustained_vm.c` without C11 or the MSVC atomic option, before CTest;
+   the four other comprehensive platforms passed.
+2. **O22-AC02 — implemented; actual MSVC proof pending:** declare C11 and the MSVC atomic option on each sustained
+   harness target. Extend the existing real-MSVC preflight to require the
+   sustained harness command as well as both attached-provider commands;
+   each unchanged positive command compiles and removing only atomic support
+   fails with the expected diagnostic. Run that preflight during normal MSVC
+   publication before building the product as well as in overnight QA.
+3. **O22-AC03 — done:** refresh the existing normal Debug core build and affected
+   harness/fixtures, inspect generated commands, and pass the three existing
+   sustained scenarios on the switch VM. No native ownership algorithm changes
+   or new sanitizer campaign are required for target compile settings.
+4. **O22-AC04 — publication prepared; hosted status pending:** review and publish only this repair and its durable plan
+   on hotfix/develop. Verify remote identities, inspect normal automatic CI,
+   and use its targeted MSVC preflight to verify the actual Windows compiler.
+   Keep pending broad platform assurance explicit and remove task diagnostics.
+
+### Implementation steps
+
+1. **O22-STEP01 — done (AC01):** inspect the overnight jobs/log, read the owning
+   build declarations and preflight, synchronize hotfix with remote develop,
+   and record the bounded contract before implementation.
+2. **O22-STEP02 — done locally (AC02):** apply target-local C11/atomic settings following
+   the existing private-header consumer pattern and extend preflight discovery
+   with exact required-source counts.
+3. **O22-STEP03 — done (AC03), depends on STEP02:** reuse the prepared Debug tree,
+   rebuild current core plus affected prerequisites and run the three existing
+   switch-VM scenarios; inspect the final diff and generated commands.
+4. **O22-STEP04 — publication prepared (AC04), depends on STEP03:** publish the reviewed repair,
+   inspect the normal publication actual-MSVC preflight, verify refs and report
+   hosted status. Do not dispatch a full deep or sanitizer matrix for this target-only repair.
+
 ## Current baseline recovery — Windows fixture paths and Apple ticket transport
 
 ### Vision and intended outcomes

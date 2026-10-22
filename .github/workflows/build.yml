@@ -209,7 +209,9 @@ jobs:
         if: matrix.toolchain == 'msvc'
         shell: cmd
         run: |
-          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF ${{ matrix.cmake_args }}
+          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF ${{ matrix.cmake_args }}
+          if not "%errorlevel%"=="0" exit /b %errorlevel%
+          python scripts/ci-msvc-atomics-preflight.py "${{ runner.temp }}/build"
           if not "%errorlevel%"=="0" exit /b %errorlevel%
           cmake --build "${{ runner.temp }}/build" --target stage-product stage-optional sqlite sqlite_static vector vector_static --parallel ${{ matrix.build_jobs }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
