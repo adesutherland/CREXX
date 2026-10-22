@@ -8,10 +8,10 @@ on:
   workflow_dispatch:
     inputs:
       qualification:
-        description: Qualification scope (default retains both full platform jobs)
+        description: Component memory suite; full coverage requires an explicit choice
         type: choice
-        options: [full, daily, candidate, normalization-linux, services-linux, continuation-linux, identity-linux]
-        default: full
+        options: [daily, full, candidate, normalization-linux, services-linux, continuation-linux, identity-linux]
+        default: daily
       daily_platform:
         description: Manual daily retry platform (full assurance always retains both)
         type: choice
@@ -50,7 +50,7 @@ on:
         type: string
         default: ''
 
-# Qualified VM-priority cadence, activated by Adrian on 21 October 2026.
+# Component memory suite every day, approved by Adrian on 22 October 2026.
 # Scheduled definitions live on master; product inputs come from develop.
 env:
   SANITIZER_DAILY_ACTIVATED: 'true'
@@ -113,7 +113,7 @@ jobs:
           head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           event='tag' if os.environ['GITHUB_REF'].startswith('refs/tags/') else ('schedule' if os.environ['GITHUB_EVENT_NAME']=='schedule' else 'manual')
           from datetime import datetime, timezone
-          requested='daily' if os.environ.get('REQUESTED_SCOPE')=='daily' else 'full'
+          requested='daily' if os.environ.get('REQUESTED_SCOPE','') in ('','daily') else 'full'
           decision=policy.decide(event,os.environ['SANITIZER_DAILY_ACTIVATED']=='true',datetime.now(timezone.utc).isoweekday(),requested)
           rows=[{'name':'Linux x64 ASan/LSan','os':'ubuntu-24.04','platform':'linux','profile':decision['profile']},
                 {'name':'macOS arm64 ASan','os':'macos-15','platform':'macos','profile':decision['profile']}]
@@ -140,7 +140,7 @@ jobs:
     needs: assurance-gate
     if: inputs.qualification != 'normalization-linux' && inputs.qualification != 'services-linux' && inputs.qualification != 'identity-linux'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 360
+    timeout-minutes: ${{ matrix.profile == 'daily' && 120 || 360 }}
     env:
       CREXX_QA_AFFECTED_TESTS: '[]'
     strategy:
