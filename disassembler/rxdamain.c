@@ -152,11 +152,12 @@ int main(int argc, char *argv[]) {
     exe_path = exepath();
     if (location) {
         combined_location = malloc(strlen(location) + strlen(exe_path) + 5);
-        sprintf(combined_location, ".;%s;%s", location, exe_path);
+        snprintf(combined_location, strlen(location) + strlen(exe_path) + 5,
+                 ".;%s;%s", location, exe_path);
         location = combined_location;
     } else {
         combined_location = malloc(strlen(exe_path) + 5);
-        sprintf(combined_location, ".;%s", exe_path);
+        snprintf(combined_location, strlen(exe_path) + 5, ".;%s", exe_path);
         location = combined_location;
     }
     free(exe_path);

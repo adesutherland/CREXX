@@ -393,7 +393,8 @@ int load_rxvmplugin(char* dir, char *name) {
                       strlen(name) + strlen(".rxvmplugin") + 1, name);
         return -1;
     }
-    sprintf(file_name, "%s.rxvmplugin", name);
+    snprintf(file_name, strlen(name) + strlen(".rxvmplugin") + 1u,
+             "%s.rxvmplugin", name);
 
     exe_dir = exepath();
     if (dir) {
@@ -406,7 +407,8 @@ int load_rxvmplugin(char* dir, char *name) {
             rxvmplugin_memory_free(file_name);
             return -1;
         }
-        sprintf(combined_dir, "%s;%s", dir, exe_dir);
+        snprintf(combined_dir, strlen(dir) + strlen(exe_dir) + 2u,
+                 "%s;%s", dir, exe_dir);
     } else {
         combined_dir = rxvmplugin_memory_strdup(exe_dir);
         if (!combined_dir) {
@@ -444,9 +446,11 @@ int load_rxvmplugin(char* dir, char *name) {
         }
         if (full_file_name) {
 #ifdef _WIN32
-            sprintf(full_file_name, "%s\\%s", token, file_name);
+            snprintf(full_file_name, strlen(token) + strlen(file_name) + 2u,
+                     "%s\\%s", token, file_name);
 #else
-            sprintf(full_file_name, "%s/%s", token, file_name);
+            snprintf(full_file_name, strlen(token) + strlen(file_name) + 2u,
+                     "%s/%s", token, file_name);
 #endif
         }
 

@@ -2896,7 +2896,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
         if (!is_engineering) {
             // --- SCIENTIFIC NOTATION ---
             // The number has already been formatted in scientific notation by decimalExtract
-            sprintf(formatted_output, scientific_format, coefficient, exponent);
+            snprintf(formatted_output, output_buffer_size, scientific_format, coefficient, exponent);
             rxvm_value_set_string_length_known(
                     formatted_output_value,
                     strlen(formatted_output_value->string_value));
@@ -3031,7 +3031,9 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
     }
 
     // Add the exponent
-    sprintf(formatted_output, engineering_format, eng_exp);
+    snprintf(formatted_output,
+             output_buffer_size - (size_t)(formatted_output - formatted_output_value->string_value),
+             engineering_format, eng_exp);
     rxvm_value_set_string_length_known(
             formatted_output_value,
             strlen(formatted_output_value->string_value));
