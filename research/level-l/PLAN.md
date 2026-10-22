@@ -66,54 +66,6 @@ installed or cross-platform qualification is claimed. Cache reuse requires
 unchanged generator artifacts; normal version relinks can intentionally miss.
 
 
-## Proposed enhancement: reusable Unicode lexer construction
-
-**L-UNICODE-REUSE-01 — investigation commissioned on `hotfix2`; implementation
-retains the design gates below.**
-Determine whether generic Level L construction has avoidable cost worth
-changing, with one Unicode data/algorithm owner and preserved language
-matching, limits and diagnostic provenance. Unicode/UTF-8 being the cause is a
-hypothesis, and retaining the current implementation is a valid outcome. This complements LRUSE's complete
-main/shield lexer capsule; it does not weaken that artifact-identity contract.
-
-The current SDK already owns pinned property ranges (`llproperties`), interval
-algebra/UTF-8 byte-pattern lowering (`llcharset`) and source decoding
-(`llsource`). Generation expands scalar sets into a grammar-owned byte graph
-before `llregular` builds its NFA/DFA. That is distinct from decoding source at
-runtime. The final combined automaton depends on token rules, priority and
-longest matching; it cannot simply be replaced by one Unicode property DFA.
-Construction also executes through the shared VM reference/lifetime owner;
-large graph/record owners can make its storage-owner searches expensive. Phase
-profiling must distinguish that cost from Unicode expansion or determinization.
-Any owner-service repair remains VM-owned, with no competing L lifetime algorithm.
-
-### Investigation acceptance and implementation boundary
-
-- **L-UNICODE-REUSE-AC01 — bounded investigation complete:** attribute bounded
-  representative construction cost to property/set preparation, UTF-8 lowering,
-  combined NFA/DFA and parser work; distinguish shared VM owner costs and state
-  the limits of the observation. Incidental busy-host timings are not benchmarks.
-- **L-UNICODE-REUSE-AC02 — design review pending:** assess possible generic
-  construction changes against retaining the current design. Establish likely
-  benefit against complexity/maintenance before implementation, with exact equality,
-  priority/longest matching, spans, diagnostics and unchanged admission limits.
-  Keep the one shared Unicode data/algorithm owner and language policy boundary.
-- **L-UNICODE-REUSE-AC03 — implementation not started:** after coordinator
-  approval, exercise two independent lexers with independent token/span oracles,
-  cold/reused equivalence where reuse changes, collision/duplicate keys, Unicode
-  edges, malformed UTF-8, nullable rules and bounded failure/cleanup.
-- **L-UNICODE-REUSE-AC04 — later design gate:** any cross-request fragment or
-  complete-machine reuse has explicit immutable/versioned identity, logical
-  charging and stale/malformed/partial refusal. Unrelated relink survival needs
-  an approved semantic capability identity; current LRUSE admission stays intact.
-
-| Stable step / status | Outcome and closure check |
-|---|---|
-| **L-UNICODE-REUSE-STEP01 — bounded investigation complete on `hotfix2`** | Measure property loading/set algebra, UTF-8 lowering, combined NFA/DFA construction and a small independent parser-table control separately. The scratch probe uses full Unicode XID start/continue identifier sets and an independent ASCII name/space lexer; the Unicode run completes within its single cap. Combined DFA construction dominates; property/set preparation, lowering and NFA construction are small. The sample does not observe VM owner-tree work during DFA construction. The full C grammar/parser and DFA subphase attribution remain unprofiled; AC01. Approximate timings on a busy host are acceptable phase evidence, with no benchmark claim. |
-| **L-UNICODE-REUSE-STEP02 — todo; design gate** | Assess the bounded exact binary-key interner hypothesis in the shared `llregular` builder: DFA determinization dominates this representative run, but avoidable work and a worthwhile index benefit are not established. Retaining the current design is valid. Preserve canonical successor bytes, discovery IDs, limits and exact collision equality for any later change. Compare compact prefix-factored immutable byte-set fragments and optional scalar/class alphabet as larger choices only if evidence justifies them. The [owning design](../../langtools/doc/generation-design.md#unicode-construction-investigation) records the proposal; AC01/02. |
-| **L-UNICODE-REUSE-STEP03 — todo; design gate** | Specify semantic capability/version keys and dependency boundaries that can survive unrelated tool relinking while rejecting changed Unicode data, algorithms, encodings, set expressions and relevant options. Compare against current conservative executable/source stamp identity; do not silently relax existing cache admission. |
-| **L-UNICODE-REUSE-STEP04 — todo; after approval** | Implement the selected shared capability once, with two independent lexers sharing it. Check exact tokens, priority/longest match, invalid UTF-8, interval edges, spans, cold/reused equivalence, stale/malformed input, bounded atomic refusal and self-contained generated delivery. Use proportionate component checks; no production speed claim from construction counts alone. |
-
 ## Repository architecture and cleanup
 
 **Status: reorganisation and final naming/library-only refinement published.**
