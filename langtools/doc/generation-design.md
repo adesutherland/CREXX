@@ -183,3 +183,108 @@ in the generic plan, delete temporary diagnostics and preserve unrelated work.
 Implementation follows the approved contract and assigned ownership. After
 qualification, root clears scoped commits under Adrian's existing local-commit
 authority; push/publication remains a separate instruction.
+
+
+<a id="unicode-construction-investigation"></a>
+
+## Unicode construction investigation — proposed next increment
+
+The generic plan's `L-UNICODE-REUSE-01` investigation is commissioned on
+`hotfix2`; product implementation and new cache/alphabet contracts await
+coordinator review. This is an ordinary research development increment.
+Broader compiler/platform/sanitizer QA and publication are not part of it.
+
+The current separation is already reusable: `llproperties` supplies pinned
+packed Unicode intervals, `llcharset` owns interval algebra and scalar-to-UTF-8
+lowering, `llsource` validates each actual input, and `llregular` constructs the
+combined lexer. Runtime input validation is not rebuilding Unicode data. The
+combined accepting machine still depends on the author's regex composition,
+ordered rules, token IDs and longest-match policy.
+
+Scratch phase probes use full XID start/continue sets plus underscore for a
+Unicode identifier/space lexer, an independent ASCII name/space lexer and a
+small LR list grammar. On this representative Unicode graph, property loading,
+set union and UTF-8 lowering are small; determinization dominates. The current
+subset construction sorts each successor to canonical binary once, then scans
+all previously discovered subsets for exact equality. It also scans the NFA
+for every byte while deriving byte classes. A bounded native sample during
+DFA work did not observe the known VM storage-owner tree search; it does not
+prove that owner cost is absent from larger owners, frontend work or other
+phases. The full C grammar/parser and complete-generator lifecycle are not
+profiled by these probes. This run does not separately time byte-class
+partitioning, epsilon closure/sorting, subset lookup or final table filling;
+the exact-key index is a source-inspection hypothesis whose actual benefit is
+unmeasured. Phase localization does not prove avoidable work, establish UTF-8
+as the cause, or show that current construction is far from optimal. An index
+adds hashing, storage and maintenance; its likely benefit must justify that
+complexity before implementation. Keeping the current implementation is valid.
+This is decision evidence, not a formal benchmark or performance acceptance gate. Numeric timings belong in conversation, not this
+contract.
+
+### Possible bounded index slice — benefit not established
+
+If further proportionate evidence justifies a change, one small candidate is a
+private bounded exact binary-key index in the existing shared `llregular`
+construction owner for DFA subset identity. All user lexers would then use the
+same construction algorithm; there is no cross-lexer machine-cache promise.
+Current matching, runtime, canonical successor construction, closure ordering
+and byte alphabet remain the baseline. No product change is commissioned by
+this proposal.
+
+The candidate contract for coordinator review is:
+
+1. Build each canonical successor binary once. Compute its index hash once;
+   retain exact bytes as the identity. Hash/length agreement is only a candidate:
+   equality always compares the complete canonical bytes. Deliberate collisions
+   must neither merge distinct subsets nor lose duplicates.
+2. Lookup returns the existing discovery ID. On a miss, enforce the current
+   `dfa.states` and representation checks before publishing the next ID, append
+   that state exactly where the current algorithm does, then install the index
+   entry. Do not enumerate hash buckets to choose state order or acceptance.
+   NFA order, first-priority accepting rule, edges and generated state IDs remain
+   deterministic. No change to longest matching, byte spans or UTF-8 policy.
+3. Grow private index storage from actual admitted states, with overflow-safe
+   capacity/hash arithmetic, bounded probing and room for a terminating empty
+   bucket. Do not allocate in proportion to an arbitrarily large caller limit.
+   Index entries cannot outlive their builder; construction refusal exposes no
+   partial DFA. Existing NFA/DFA limits remain authoritative, including their
+   failure boundary; hash collisions are not a new state admission limit.
+4. Keep the first change local to `llregular` plus focused fixtures and owning
+   guidance. Do not simultaneously alter LR interning, Unicode data, the native
+   compiler, VM lifetime ownership, emitted image format or LRUSE identity.
+   A future second construction consumer may justify a shared SDK index owner;
+   that API decision is separate from this private implementation.
+
+Before product edits, review hashing/collision behavior and exact refusal
+order; inspect representative RXAS at the first implementation compile.
+Focused qualification should cover an independent
+small lexer and a Unicode lexer, priority/equal-length overlap, longest match,
+spans, nullable rejection, duplicate/colliding subset keys, lower NFA/DFA
+limits and cleanup after failure. Compare exact construction images or stable
+structural facts where those are independently justified. No speed claim
+follows from asymptotic reasoning alone.
+
+### Remaining reuse and alphabet gates
+
+- **Immutable property/set/lowered fragments:** sharing canonical packed input
+  or a lowering template is possible across lexers, but merely caching today's
+  property loads/lowered graph leaves the expensive combined determinization.
+  Compact prefix-factored byte-set fragments could reduce its input size; they
+  need a separate reviewed representation, provenance/occurrence mapping and
+  unchanged cold/reused logical-limit charging. Do not confuse graph DAG
+  sharing with NFA reuse: the current recursive fragment builder expands each
+  occurrence. Reusable accepting-machine pieces cannot carry author-specific
+  token/priority decisions into another lexer.
+- **Scalar/class alphabet:** potentially avoids UTF-8 byte expansion, but needs
+  a new or versioned NFA/DFA image/alphabet, shared strict decoding/classification
+  boundary, custom-set partitioning and exact original byte spans. Keep this
+  larger runtime/loader/generator choice at its own design gate; no duplicate
+  decoder/property algorithm and no C-specific policy belongs in generic L.
+- **Relink-tolerant persistence:** source/version intent alone cannot certify
+  bytes produced by changed native tools. A future semantic-capability manifest
+  must cover Unicode inputs, canonical set/encoding/algorithm/image versions,
+  relevant options and the actual producing implementation while excluding only
+  demonstrably irrelevant relink data. Define trusted producers, host integrity
+  checks and stale/malformed refusal before weakening executable fingerprints.
+  The current conservative LRUSE stamp, manifest and cold-miss behavior stay
+  unchanged in this investigation and in the proposed private-index slice.
