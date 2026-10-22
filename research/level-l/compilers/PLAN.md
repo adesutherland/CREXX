@@ -511,7 +511,10 @@ source is read-only; a demonstrated B seed defect may receive a separate repair.
   specialize earlier but is not a required parallel library-body format.
   First specify call/context, lifetime, module-body and source contracts, then
   prove local expansion and real imported-helper integration before migration.
-  Cross-module bodies require an explicit pre-link/link-time stage. This review
+  Cross-module bodies can be imported during compilation or collected by the
+  linker; a separate pre-link stage is not required. Prototype compiler-driven
+  conservative expansion followed by RXAS cleanup, keeping the target expansion
+  contract reusable by a later linker driver. This review
   authorizes no replacement inliner, new body format, B/G expansion or default
   switch. Repair the recorded native seed defects independently of that choice;
   no existing supported inlining shape is withdrawn as a workaround.

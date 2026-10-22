@@ -1514,7 +1514,7 @@ all expansion scaffolding or excess frame cells will disappear.
 |---|---|---|
 | Existing native AST | Already has typed binding, local/imported bodies, receiver/default/copyback rules and extensive maintained fixtures. | Tree cloning remains coupled to lexical scopes, symbol remapping and parent-expression/emitter lifetime rules. Repairing an admitted shape is still required. It is not the reusable boundary for the B/L compiler set. |
 | Semantic Level L IR | Explicit operands and identities can finish name/receiver binding before expansion. One transformation can serve compiled and interpreted consumers, with language-owned legality/context adapters. | No generic call interface or inliner exists yet. Current values are block-local; multi-block expansion needs explicit slot/continuation transport. Invocation-wide protection and cleanup cannot be copied into the caller without a scoped contract. Imported B helper bodies are not available in this representation today. |
-| RXAS / lowered target IR | Uses the executable body and already resolved register/attribute operations, supports independent producers, and exposes copies and machine constraints to existing RXAS proofs. | Needs call-frame expansion semantics, fresh labels/metadata, argument/base/global remapping, retained bodies and growth/allocation control. Assembly-only placement does not benefit runtime semantic IR execution. Cross-module scope naturally requires body delivery or a link-time stage. |
+| RXAS / lowered target IR | Uses the executable body and already resolved register/attribute operations, supports independent producers, and exposes copies and machine constraints to existing RXAS proofs. | Needs call-frame expansion semantics, fresh labels/metadata, argument/base/global remapping, accessible bodies and growth/allocation control. Assembly-only placement does not benefit runtime semantic IR execution. Cross-module bodies can be imported during compilation or collected at link time. |
 
 RXAS is where the different producers and existing library bodies come together,
 including independently authored DSLs. The proposed common boundary is therefore
@@ -1571,14 +1571,15 @@ also avoids a second, independently supplied inline implementation of each BIF.
 A hash can bind artifact identities; it does not prove semantic equivalence
 between independently supplied implementations.
 
-Same-module forward calls need retained procedure bodies before expansion.
-Cross-module bodies are available when the selected module set is collected,
-so common imported inlining needs an explicit pre-link/link-time stage or an
-equivalent body-input contract. It need not reparse RXAS text: assembled bytecode
-can be admitted into the same instruction representation under the canonical
-ISA. Native RXPA bodies and unresolved/dynamic callees remain opaque; expanding
-a bytecode caller can still retain such inner calls when their boundaries are
-represented correctly.
+An assembler that selects and expands calls itself needs retained procedure
+bodies or another body source for forward calls. Compiler-driven expansion can
+instead supply an already expanded caller to the existing procedure-at-a-time
+assembler. Cross-module bodies can be imported during compilation or collected
+when the linker selects modules. A separate pre-link stage is not a prerequisite.
+Assembled bytecode can be admitted into the same instruction representation under
+the canonical ISA without reparsing RXAS text. Native RXPA bodies and unresolved
+or dynamic callees remain opaque; expanding a bytecode caller can still retain
+such inner calls when their boundaries are represented correctly.
 
 Cross-module expansion must retain original global bindings, initializer and
 provider dependencies, and source identity. A callee's `gN` is not the caller's
@@ -1592,6 +1593,60 @@ owner and a deliberate migration, rather than maintaining separate general
 inliners for each source language. Broader semantic IR inlining can be added
 for an independent interpreted-consumer need; its missing call and scope
 interfaces are not prerequisites for this common target-level design.
+
+### Compiler-driven expansion and link-time optimization
+
+The representation and algorithm owner are separate from the phase that requests
+expansion. Both placements below can use one checked target expansion service.
+Neither is the current native AST template mechanism: today's `META_INLINE`
+payload contains compiler IR, not a ready-to-splice RXAS instruction body.
+
+| Driver | Proposed operation | Main tradeoff |
+|---|---|---|
+| Compiler / target emitter | Acquire a local or imported executable body, bind the call, allocate fresh private identities, and insert the body with conservative call-boundary glue into the caller's target records. Emit ordinary RXAS and let the assembler optimize the expanded procedure. | Preserves the existing compile/assemble workflow and exposes caller constants before RXAS cleanup. Needs a canonical imported-body reader and dependency/source remapping. A compiler's signature projection alone does not supply an instruction body. |
+| Linker | Resolve the selected module set and stable targets, import chosen bodies into callers through the same service, then run the shared machine optimizer on changed procedures before writing the image. | Sees the actual selected bytecode providers and works for producers that emitted ordinary calls. Adds optimization cost and instruction/analysis adapters to a linker that currently only selects/remaps; module-state and source boundaries still require explicit treatment. |
+
+For the first proposed feasibility increment, prefer compiler-driven conservative
+expansion and existing RXAS cleanup, including one real imported helper. Correct
+expanded RXAS must execute with assembler optimization disabled; the optimizer
+must not be required to repair an invalid expansion. Expand instruction records
+through the shared target service rather than teaching each frontend how to
+concatenate assembly strings. This can preserve the current streaming assembler
+and avoid a new mandatory link-time optimization stage.
+
+An imported expansion requires a stable target/body binding and ordinary build
+freshness. It must not assume that an unresolved, overrideable or dynamically
+selected provider is the body imported earlier. Retain needed module/global,
+initializer and provider dependencies even after the original call disappears.
+Already optimized bodies can still be expanded, but prior lowering may have
+discarded opportunities; no general recovery of higher-level information is
+promised.
+
+A later linker driver should invoke the same expansion and machine-proof owners,
+not duplicate assembler optimization in linker-specific rewrites. Interleave
+expansion and cleanup under explicit recursion, code-growth and work limits;
+do not recursively inline everything or iterate without a bound. Final body
+placement, addresses, relocations, graph indexes and observation metadata must be
+rebuilt after transformation. Link-time invocation can be integrated into the
+ordinary link command without an extra user-visible pre-link operation.
+
+Other toolchains demonstrate both body-delivery strategies. GCC documents
+[header-visible definitions for compile-time inlining](https://gcc.gnu.org/onlinedocs/gcc/Inline.html).
+Rust libraries carry [optional encoded MIR alongside compiled code and metadata](https://rustc-dev-guide.rust-lang.org/backend/libs-and-metadata.html),
+and its [inline guidance](https://std-dev-guide.rust-lang.org/policy/inline.html)
+describes making annotated bodies available to referencing codegen units.
+These are precedents for exposing a dependency body before final linking,
+not recommendations to import source ASTs into this design.
+
+At link time, [LLVM LTO](https://llvm.org/docs/LinkTimeOptimization.html) lets the
+linker resolve symbols and invoke the optimizer/code generator over bitcode;
+[ThinLTO](https://clang.llvm.org/docs/ThinLTO.html) uses a combined summary index
+and imports selected bodies into backend optimization. Microsoft's
+[/LTCG](https://learn.microsoft.com/en-us/cpp/build/reference/ltcg-link-time-code-generation?view=msvc-170)
+likewise has the linker invoke compiler optimization, including cross-module
+inlining. The reusable optimizer need not be implemented as part of symbol
+resolution itself. cREXX's executable virtual instructions offer a candidate
+common representation; they do not make the missing expansion contracts automatic.
 
 ### Tactical repairs and strategic follow-up
 
@@ -1615,18 +1670,19 @@ once their missing call-scope, module-body and expansion contracts are supplied.
 Proposed sequence for approval:
 
 1. Specify the RXAS bound-call/context, lifetime, presence, result/exit, module
-   and provenance contracts and where complete bodies are collected. Preserve
+   and provenance contracts and the compiler/imported-body acquisition path,
+   retaining a driver-neutral interface for later link-time use. Preserve
    current APIs, metadata and supported native shapes while this is designed.
 2. Repair the three recorded native seed defects in their owning paths with
    minimal reproducers and affected optimizer-mode/consumer checks.
-3. Prototype checked single-block local instruction-body expansion with an
-   independent handwritten/DSL-style producer, then scalar defaults, nested
-   calls and multi-return control. Inspect initial and simplified records,
-   register demand and source observations before expanding the profile.
-4. Prove representative existing imported B helpers through the selected
-   pre-link/link-time body collection path, retaining their actual module/global
-   identities and ordinary ABI. Do not require another semantic IR export or
-   full B self-hosting first.
+3. Prototype compiler-driven checked single-block local instruction-body
+   expansion with an independent handwritten/DSL-style producer, then scalar
+   defaults, nested calls and multi-return control. Inspect initial and simplified
+   records, register demand and source observations before expanding the profile.
+4. Prove representative existing imported B helpers through compile-time body
+   acquisition, retaining their actual module/global identities and ordinary ABI.
+   Assess the incremental value and cost of invoking the same service at link
+   time. Do not require another semantic IR export or full B self-hosting first.
 5. Extend supported scope/ownership/condition/TRACE boundaries deliberately,
    retain recursion and code-growth limits, then select migration and default
    policy from correctness, resource and code-quality evidence. Research
