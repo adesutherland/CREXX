@@ -482,8 +482,10 @@ call/host portions below as one increment. They do not close these rows or
 approve product edits yet. The proposed ordinary typed/RXPA scalar interface
 extends CALL3; B/G exposed globals remain inaccessible to C and true reference
 values require explicit adapters. Proposed executable CALL bindings must use
-the same low-level process/byte-channel capabilities as ADDRESS; result/argument
-policy awaits approval. Dynamic Classic source invocation stays in STEP11.
+the same low-level process/byte-channel capabilities as ADDRESS. Exit-status
+results and inherited stdout/stderr, without new CALL redirection syntax, are
+approved; binding/argument/failure policy remains proposed. Dynamic Classic
+source invocation stays in STEP11.
 
 All 75 source obligation IDs are retained below. Every row is **open for the
 new compiler** until its own implementation/verification record exists. The

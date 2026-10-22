@@ -175,9 +175,11 @@ generic metadata/VM/platform capabilities. It deliberately extends the current
 statement-only signed activation-provider profile to ordinary scalar typed and
 RXPA procedures and external expressions. B/G exposed globals are inaccessible
 to C; true reference values use explicit adapters, as confirmed by Adrian.
-Executable CALL is proposed through explicit process bindings, with its result
-convention awaiting clarification. Adrian requires exactly the same low-level
-process/byte-channel capabilities as ADDRESS; no second launcher. Automatic Classic source calls stay with
+Executable CALL is proposed through explicit process bindings. Adrian approved
+exit status as the result, with stdout/stderr inheriting the current host streams
+and no new CALL redirection syntax. He requires exactly the same low-level
+process/byte-channel capabilities as ADDRESS; no second launcher. Automatic
+Classic source calls stay with
 STEP11/INTERPRET. No new native frontend service, loader/search policy,
 unspecified native API/ISA or platform exclusion is implicitly approved.
 
@@ -202,7 +204,7 @@ does not close full compiler, delivery or platform acceptance.
 
 | Step / status | Scope, dependency and decision gate |
 |---|---|
-| **G2-STEP01 — proposed** | Approve complete architecture, scalar/void/default/vararg rules, process-backed CALL disposition and exact new-interface gates; independent coordinator review before product edits. AC01–10. |
+| **G2-STEP01 — proposed** | Approve complete architecture, scalar/void/default/vararg rules, explicit process-binding/argument/failure policy and exact new-interface gates; retain approved executable exit-status result/inherited streams. Independent coordinator review before product edits. AC01–10. |
 | **G2-STEP02 — todo** | Implement bounded generic metadata/manifest projection, explicit process binding admission and ordinary scalar typed/RXPA CALL/expression adaptation, reusing native ABI/runtime services; AC01/02. Exact B-facing projection/binding contract first. |
 | **G2-STEP03 — todo** | Complete activation and runtime-owned host request/result/export entry, modes/presence/completion and inherited/restored state; AC03/04/08. Prefer existing checked RXVML calls; demonstrate any missing outcome transport before new API approval. |
 | **G2-STEP04 — todo** | Integrate live callback pool windows and configured hook/trap/resource selection over existing owners; AC05/07/08. Exact window/reentry/expiry contract first. |

@@ -2665,13 +2665,14 @@ selection. An absent routine binding retains reached 43.1; a selected executable
 that is missing/unlaunchable retains the shared process-provider failure and
 diagnostic, not a fabricated missing-routine result.
 
-The executable CALL result convention is pending Adrian's answer: proposed
-default is present decimal exit-status text with stdout/stderr left as streams;
-the alternative captures stdout as the function result and needs explicit
-empty/no-output, encoding, bound and failure rules. CALL applies RESULT/.RESULT
-without implicitly assigning command RC/.RC/.RS. Nonzero exit status is an
-ordinary returned status under the proposed default; launch/cancel/resource
-failures retain the process provider's distinct outcomes.
+**Executable result convention approved by Adrian:** normal completion returns
+present decimal exit-status text. Stdout/stderr inherit the current host streams,
+normally the console or destinations established by host/OS redirection; neither
+stream is captured as the routine result. CALL adds no redirection operands or
+shell parsing. Existing ADDRESS redirection remains its separate explicit
+surface. CALL applies RESULT/.RESULT without implicitly assigning command
+RC/.RC/.RS. Nonzero exit status is an ordinary returned status;
+launch/cancel/resource failures retain the process provider's distinct outcomes.
 
 A compiled Classic executable is launched like any other executable: ordinary
 platform strings, environment/cwd and standard byte streams; it supplies no
@@ -2731,8 +2732,9 @@ supports Unix executable lookup with argv input and newline-delimited stdout
 results. Existing cREXX CALL contracts deliberately provide no OS-command
 fallback. The ordinary typed/RXPA bridge supplies one non-REXX routine interface;
 the explicit process binding above supplies another through exactly the ADDRESS
-low-level services. Its lookup, argument/omission, stdout/result, exit-status
-and failure semantics are part of this proposal for approval; automatic
+low-level services. Its exit-status result and inherited stdout/stderr are
+approved; binding lookup, argument/omission and failure rules remain part of
+the overall architecture proposal for approval. Automatic
 Classic source execution remains deferred to INTERPRET regardless.
 
 The proposed void expression policy, scalar/default/vararg rules and preservation of current

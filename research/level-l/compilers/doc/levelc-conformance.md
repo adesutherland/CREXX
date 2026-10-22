@@ -74,8 +74,10 @@ The complete proposed increment retains host invocation modes, exact argument
 presence and completion, live callback pool windows, configuration hooks,
 queue/stream/ADDRESS transport, real clock/HALT producers and context lifecycle.
 Adrian requires executable CALL to share exactly ADDRESS's low-level
-process/byte-channel capabilities. Proposed explicit process bindings retain
-host-defined result/argument semantics awaiting approval, while
+process/byte-channel capabilities. He approved exit status as the routine result,
+with stdout/stderr inheriting host streams, including host/OS redirection, and
+no new CALL redirection syntax. Explicit process bindings and argument/failure
+rules remain proposed, while
 ordinary non-REXX typed/RXPA routines use their declared interfaces. Automatic
 Classic source invocation remains deferred to final INTERPRET. Current UTC-based
 TIME(E/R) is preserved. Any required new public API/ISA/platform disposition
