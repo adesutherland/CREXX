@@ -1,0 +1,53 @@
+/* Current callable generator only; no research compiler service is imported. */
+options levelb
+namespace sustainedlevell expose prepare cycle cleanup
+import rxfnsb
+import llgenerate
+import lllimits
+import llfileoutput
+import rxfs
+
+prepare: procedure = .int expose source destination previous expectedrxas expectedgraph
+  arg specification = .string, output = .string
+  source = readbinary(specification); destination = output; previous = .binary
+  expectedrxas = .binary; expectedgraph = .binary
+  return 0
+
+cycle: procedure = .int expose source destination previous expectedrxas expectedgraph
+  arg mode = .string
+  request = .llgenerate..request
+  if mode = '0' then request = .llgenerate..request(source,'rxas','example.levell')
+  else if mode = '1' then request = .llgenerate..request(source,'graph','example.levell')
+  else if mode = '2' then request = .llgenerate..request(source,'rxas','example.levell',.lllimits..policy(),0,1)
+  else if mode = '3' then request = .llgenerate..request('invalid specification' as .binary,'rxas','broken.levell')
+  else if mode = '4' then request = .llgenerate..request(source,'invalid','example.levell')
+  else return 1
+  artifact = request.output()
+  if mode = '0' then do
+    if request.status() <> 0 | request.error() <> '' then return 2
+    if artifact.bytes() = 0 | pos('.globals=0',artifact.text()) = 0 then return 3
+    if pos('.expose=levell_example.language',artifact.text()) = 0 then return 4
+    if binlength(expectedrxas) = 0 then expectedrxas = artifact.text() as .binary
+    else if artifact.text() as .binary <> expectedrxas then return 5
+    if llfileoutput..publish(artifact,destination) <> '' then return 6
+    previous = artifact.text() as .binary
+    if readbinary(destination) <> previous then return 7
+  end
+  else if mode = '1' then do
+    if request.status() <> 0 | request.error() <> '' then return 8
+    if pos('ROOT|',artifact.text()) <> 1 | pos('NODE|',artifact.text()) = 0 then return 9
+    if pos('list',artifact.text()) = 0 then return 10
+    if binlength(expectedgraph) = 0 then expectedgraph = artifact.text() as .binary
+    else if artifact.text() as .binary <> expectedgraph then return 16
+  end
+  else do
+    if request.status() = 0 | artifact.bytes() <> 0 | request.error() = '' then return 11
+    if mode = '3' & pos('broken.levell',request.error()) = 0 then return 12
+    if mode = '4' & request.status() <> 2 then return 13
+    if llfileoutput..publish(artifact,destination) = '' then return 14
+    if readbinary(destination) <> previous then return 15
+  end
+  return 0
+
+cleanup: procedure = .int expose destination
+  return rxfs..delete(destination)

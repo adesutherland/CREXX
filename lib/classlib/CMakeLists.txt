@@ -209,7 +209,7 @@ foreach(_binfile IN LISTS CLSBINS)
         "${_class_dep_source}"
         "${_class_staged_source}")
   endforeach()
-  add_custom_command(
+  crexx_add_fixture_command(
     OUTPUT "${_binfile}"
     BYPRODUCTS
       "${_member_source}"
@@ -260,7 +260,7 @@ string(APPEND _classlib_control_text
 
 file(GENERATE OUTPUT ${_classlib_control_file} CONTENT "${_classlib_control_text}")
 
-add_custom_command(
+crexx_add_fixture_command(
   OUTPUT "${_classlib_link_image}"
   COMMAND ${CMAKE_COMMAND} -E make_directory "${_classlib_link_root}"
   COMMAND $<TARGET_FILE:rxlink> -c ${_classlib_control_file}

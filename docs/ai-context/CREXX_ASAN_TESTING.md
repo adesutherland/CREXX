@@ -180,6 +180,22 @@ isolated unchanged LL1 controls pass in Debug and Apple ASan. Keep all cells
 and their semantic/resource assertions enabled. Measurements and the repair
 disposition are recorded as SAN-QA-019 in the sanitizer worklist.
 
+The four `ts_unicode_normalization_*` cells likewise use `RUN_SERIAL`, retaining
+their 1200-second hang backstop and complete Unicode corpus. The unchanged Linux
+threaded cases pass isolated Debug in 24-25 seconds and ASan/LSan in 262-266
+seconds, after timing out at 1200 seconds in the eight-slot pool. This is a
+scheduling repair, not a reduced normalization scope; SAN-QA-020 records the
+focused and approved Linux original-producer qualification.
+
+The four `levell_services_*` cells use `RUN_SERIAL` and a 900-second functional
+hang guard. Their complete callable-generation/service/atomic-publication
+contract passes unchanged Linux isolation in 7 seconds ordinary Debug and
+118 seconds ASan/LSan, after one threaded cell exhausted the former pooled
+300-second limit. Keep all requests, independent expected results and the
+per-mode/VM output paths. SAN-QA-021 records the diagnosis and the explicitly
+approved bounded Linux qualification continuation; its focused receipt cannot
+publish a single-run broad-pass marker.
+
 For a stepwise full leak-clean loop after the tree is already built:
 
 ```sh
@@ -239,22 +255,163 @@ record that the command was validated only in the sanitizer tree.
 
 ## Overnight assurance and exceptional qualification
 
-`.github/workflows/sanitizers.yml` runs two non-optional full sanitizer jobs for
-each workflow invocation:
+The default manual/version-tag scope and currently effective scheduled policy
+retain two non-optional full jobs: Linux x64 ASan/LSan, with leak detection on
+during build and tests, and Apple arm64 ASan, with unsupported Apple LSan off.
+Both use fresh Debug trees, original instrumented producers and the complete
+non-measurement CTest set. Neither job is `continue-on-error`. Ordinary Windows
+and optional provider configurations retain their separate owning QA.
 
-* Linux x64 runs AddressSanitizer with LeakSanitizer enabled for both the build
-  and complete CTest phases.
-* macOS arm64 runs AddressSanitizer with leak detection disabled because the
-  Apple runtime does not provide supported LeakSanitizer coverage.
+`tools/asan-run.sh --profile full --phase full` is the maintained broad command.
+`weekly`, `native` and `affected` currently use that same complete scope and
+original generation. A tree ever populated from an external ordinary donor is
+rejected for these profiles, even after clearing its CMake option. Build-only,
+filtered, partial, rerun-failed, ordinary Debug or Linux leak-off results cannot
+certify broad sanitizer assurance. Empty selections fail. Both native source
+compile flags and final native product/provider symbols are audited before and
+after full test execution. Sanitizer builds append exact diagnostic FAIL
+expressions without replacing semantic PASS/FAIL oracles, and final JUnit
+validation rejects sanitizer headers even in otherwise passing cells; the product `rxvm` alias/copy must match the concrete
+instrumented engine. The external SDK consumer inherits the owning sanitizer
+compiler/configuration/linker flags, including named Asan configurations.
 
-Both jobs configure fresh Debug trees and invoke `tools/asan-run.sh --phase
-full`.  The instrumented build therefore executes generated-product tools such
-as `rxc`, `rxas`, and `rxlink` under the sanitizer before CTest starts.  Do not
-replace these jobs with a CTest-only step or mark either job
-`continue-on-error`.  Logs are uploaded even when a job fails so the first
-build-time or test-time report remains attributable.
+The approved `daily` component memory suite uses the explicit ownership/coverage
+panels in `tools/sanitizer-memory-tests.json`, intersected with actual platform
+discovery and closed over required setup/cleanup fixtures. VM/provider tests
+cover values/references, allocation failure, frames/unwind, loader/dispatch,
+workers/channels, native payloads, sessions and sustained ownership/teardown.
+Small native tool panels cover compiler AST/import/context lifetimes, assembler
+parser/SSA growth and linker pools/metadata/failure cleanup. Every known core
+memory regression has an explicit mapping; missing regression registration
+fails qualification. SAN-009 retains its existing separately owned native-
+inference scope; the core `ENABLE_LLAMA=OFF` boundary is unchanged.
 
-These full jobs are mandatory **when this workflow is invoked**; they are
+Each tool stops at its own output: instrumented `rxc`/`rxc-c` emit RXAS,
+`rxas` emits bytecode, and `rxlink` emits a linked image. Tool errors retain
+their expected-error oracles and cannot mask a sanitizer diagnostic. The focused
+SAN-008 compiler regression covers source/RXAS/RXBIN/shared-image imports, both
+compiler modes and excess final subscripts one/zero without running a consumer.
+VM/provider tests use prepared bytecode and instrumented native executors; no
+compiler/assembler stage is added simply to qualify VM memory. Native parser/
+metadata unit tests keep their own component boundaries.
+The disassembler stops at RXAS. A tiny RXPP client covers its native precomp
+provider and stops at preprocessed source; it does not compile that output.
+
+General compiler/language/optimizer/application matrices remain in ordinary QA
+and explicit full assurance. New functional registrations do not silently expand
+the memory suite: add a named test only for a reviewed missing memory boundary
+or new sanitizer regression. Heavy Level L generation and exhaustive Unicode/
+RexxScript permutations are not substitutes for targeted VM memory cases.
+The existing sustained values/providers tests retain warmup, repeated batches,
+failure/recovery, resource plateau and final teardown. Their Level L application
+counterparts stay available in ordinary/explicit-full QA, outside this panel.
+
+At **03:47 UTC every day**, the definition on `master` checks out current
+`develop` and selects the same `daily` component memory profile, including
+Sunday. There is no automatic weekly full sweep or affected-family expansion.
+Missing history, changed paths/toolchains/configurations and cache misses require
+fresh selected preparation/execution, never a broader profile. No prior broad
+baseline is required. Manual dispatch defaults to this same memory suite; full
+coverage requires an explicit full choice or version-tag release qualification.
+Legacy explicit broad profile names retain their original complete scope.
+Actual SAN findings retain their focused repair and full closure gates.
+The focused job has a 120-minute hang backstop covering preparation and checks;
+explicit broad jobs retain 360 minutes. These are failure limits, not targets.
+Default manual dispatch from `master` also qualifies current `develop`, because this
+narrow rollout leaves master's released product sources unchanged. Explicit
+`source_ref`, branch-selected manual runs and version-tag source identity remain
+unchanged; focused historical diagnostics should provide their owning source ref.
+
+Daily runtime preparation may use `-DCREXX_QA_FIXTURE_TREE=<ordinary-tree>`.
+Configure both fresh single-config Ninja trees with the same source, compiler,
+platform, options and explicit `CREXX_BUILD_TIMESTAMP`/`CREXX_BUILD_COMMIT`;
+add the maintained ASan flags only to the native tree. Then run:
+
+```sh
+python3 tools/sanitizer-fixtures.py prepare --build-dir <ordinary-tree> --profile daily --build-jobs 4
+tools/asan-run.sh --build-dir <native-tree> --profile daily --phase full --build-jobs 4 --test-jobs 8 --build-leaks on --leaks on
+```
+
+Use both leak options off only on Apple. Daily preparation freshly configures and
+discovers the actual fixture-closed selection, derives explicit per-owner/native
+child targets, and builds that union before sealing; it never falls back to ALL
+or `qa-prep`. Every selected owner must declare its prerequisites at configure
+time: cold CTest may omit an executable command until it exists, so executable
+paths are never an ownership fallback. Missing ownership fails in cold and warm
+trees alike. Other profiles retain ALL
+plus `qa-prep`. A mandatory validation target binds source/configuration,
+actual fetched dependency contents/commits and producer binaries once per build;
+each audited command copies/checks its whole output/byproduct owner set. Missing,
+partial, changed or unowned artifacts fail before consumers, and copy failure
+invalidates the complete destination owner set. Final validation rejects changed
+inputs. Mutating a local source/dependency tree during qualification invalidates
+proof. Seals/owner manifests are disposable operational build state.
+
+Only explicitly audited source/RXAS/RXBIN/generated-C commands use the donor.
+Mixed native-adapter and unknown generators keep original instrumented commands;
+there can still be instrumented preparation cost. Generated embedded C is
+compiled in the native tree. Every executed native VM, provider, archive, child
+executable and embedded host remains native-tree owned. Simple compiler runtime
+wrappers preserve their producer stdout/stderr and golden oracle through owned
+ordinary generated artifacts, then execute the instrumented VM with native
+runtime/provider paths and their original working directory. Explicit route
+guards reject donor VM/home/provider paths. Complex native/driver/embedding
+wrappers retain original instrumented producer commands and their residual cost;
+fewer CTest names alone do not remove that cost.
+The C RXPA object fixtures also transfer their complete RXAS/RXBIN/linked-image
+owner set from the ordinary donor. Their native declaration modules, runtime
+providers and concrete executors remain native-tree prerequisites and audited
+products; no native library crosses the fixture boundary.
+Split runtime producers depend on both `compiler_exit_bin` and its published
+`rxcexits.rxbin` before invoking `rxc`, including cold selective builds. The
+sustained harnesses place force-loaded static providers before RXPA/support
+archives so ELF linkers resolve provider references in their normal scan order.
+The complete/full profile retains original instrumented library generation,
+including the original SAN-008 trigger. This split claims runtime assurance,
+not donor-producer memory-safety proof.
+
+Expression and BIF audits share checked two-mode compile/assemble preparation
+through CTest setup fixtures. Each original runtime cell and independent oracle
+remains; linked consumers create only their required linked image under the
+same interprocess lock, with hash-owned atomic publication. Isolated `ctest -R`
+automatically includes setup; failed setup blocks consumers. Source/tool/library
+changes invalidate preparation. Other generic linked-test consumers are unchanged.
+
+The six sustained cells reuse each engine's explicit runtime/context across
+warmed three-batch value/reference (1,000 operations), provider failure/recovery
+(1,000) and Level L request (ten) scenarios. Internal logical ownership/capacity
+and provider/handle counters must plateau at comparable boundaries; final
+teardown checks ownership zero. The 2 MiB bound is only the empty central depot
+reserve, not total heap or RSS. Serial 1,800-second limits are hang backstops.
+
+Workflow dispatch `daily` runs the two clean revised daily platform jobs. The
+optional `daily_platform` selector defaults to `both`; use `linux` or `macos`
+only for an explicit manual daily retry when the other platform's unchanged
+proof remains valid. It cannot narrow full, candidate or scheduled assurance.
+Workflow command arrays remain nonempty under `set -u` for Apple Bash 3.2;
+optional selectors are appended to complete commands.
+The legacy `candidate` route additionally runs Linux original full and ordinary
+correctness; it is not the revised qualification request. The already-approved
+bounded original-producer continuation retains its explicit reused-cell union
+and focused-only marker. No fresh full run is implied by the daily gate.
+`normalization-linux` retains the original two-cell Debug then leak-on ASan
+replay route with optional `source_ref`; it cannot write broad assurance.
+
+Reusable success is keyed by platform/image, profile, preparation mode, source
+and dependency contents, effective flags/options, compiler/build-tool identities
+and runtime/leak policy. Equivalent full/weekly/native/affected requests reuse
+one broad scope; daily stays distinct. Native toolchain, dependency and host
+configuration changes invalidate incompatible reuse without changing the profile.
+Exact observed artifact/configuration identities are
+recorded separately. Canonical reuse normalizes relocated build/source paths
+and generated timestamp/commit/dirty presentation metadata, preserving semantic
+version inputs and channel. Manual/tag runs stay unconditional. Each successful
+platform scope is retained independently. Daily/focused results never certify
+broad assurance, and incomplete results cannot be reused as successful proof.
+Uploaded diagnostics and operational cache summaries are not committed evidence;
+extract useful findings into the worklist and delete local task logs.
+
+These full jobs are mandatory **when the full workflow scope is invoked**; they are
 not mandatory before every `develop` publication. Ordinary development changes
 can be integrated after the core build and appropriate functional tests pass,
 with relevant focused sanitizer checks when warranted. Full sanitizer assurance

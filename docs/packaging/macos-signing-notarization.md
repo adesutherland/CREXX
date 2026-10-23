@@ -208,6 +208,24 @@ normal end-user macOS installer. A notarized ZIP can still require online ticket
 lookup or quarantine workarounds because the ZIP itself is not the stapled
 installer container CREXX needs for offline Gatekeeper assessment.
 
+### Intel hosted-runner ticket transport
+
+GitHub tracks an Intel macOS runner networking defect in
+[actions/runner-images#14924](https://github.com/actions/runner-images/issues/14924):
+Apple accepts notarization, but the HTTP/3 CloudKit ticket connection can drop
+with `NSURLErrorDomain -1005` and stapler error 68. The existing helper already
+retries staple and validate independently four times, with 15/30/45-second
+delays. Repeated retries do not correct the affected transport path.
+
+The CI countermeasure is GitHub's UDP/443 packet-filter workaround,
+which forces ordinary HTTPS/TCP for ticket retrieval. The
+`scripts/prepare-macos-stapling-network.sh` refuses to change networking outside
+a disposable GitHub-hosted Intel Mac. Core and optional-plugin packaging use
+the same helper; developer, self-hosted and ARM hosts retain their networking.
+The disposable runner is destroyed at job completion. Keep the signature,
+accepted-notarization, staple, validate and Gatekeeper publication gates intact.
+Review and remove this workaround when GitHub resolves the upstream issue.
+
 ## Add Secrets With GitHub CLI
 
 From the repository root:

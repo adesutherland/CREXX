@@ -993,7 +993,7 @@ set_tests_properties(rxpa_utf_validation PROPERTIES LABELS "interpreter;rxpa;utf
 function(crexx_add_vm_expected_failure_test)
     set(options)
     set(oneValueArgs NAME RUNNER EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
-    set(multiValueArgs RXVM_ARGS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX TEST_LABELS)
+    set(multiValueArgs RXVM_ARGS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX TEST_LABELS PREP_TARGETS)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if(NOT CREXX_NAME OR NOT CREXX_RUNNER OR "${CREXX_EXPECTED_EXIT_CODE}" STREQUAL "")
@@ -1021,12 +1021,16 @@ function(crexx_add_vm_expected_failure_test)
     if(CREXX_TEST_LABELS)
         set_tests_properties(${CREXX_NAME} PROPERTIES LABELS "${CREXX_TEST_LABELS}")
     endif()
+    if(CREXX_PREP_TARGETS)
+        crexx_register_test_prep_targets(TESTS ${CREXX_NAME}
+                TARGETS ${CREXX_PREP_TARGETS})
+    endif()
 endfunction()
 
 function(crexx_add_vm_test)
     set(options)
     set(oneValueArgs NAME PASS_REGULAR_EXPRESSION EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
-    set(multiValueArgs RXVM_ARGS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
+    set(multiValueArgs RXVM_ARGS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX PREP_TARGETS)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if(CREXX_PASS_REGULAR_EXPRESSION AND NOT "${CREXX_EXPECTED_EXIT_CODE}" STREQUAL "")
@@ -1056,6 +1060,8 @@ function(crexx_add_vm_test)
                     PASS_REGULAR_EXPRESSION "${CREXX_PASS_REGULAR_EXPRESSION}")
         endif()
     endif()
+    crexx_register_test_prep_targets(TESTS ${CREXX_NAME}
+            TARGETS rxvm ${CREXX_PREP_TARGETS})
 endfunction()
 
 function(crexx_add_rxas_vm_binary SOURCE_NAME DESCRIPTION)
@@ -1090,7 +1096,7 @@ function(crexx_add_generated_jtable_matrix ALGORITHM DISPLAY_NAME)
     add_dependencies(run_${SOURCE_NAME} rxvm)
     crexx_add_vm_test(
             NAME rxasjumptable${ALGORITHM}sources
-            RXVM_ARGS ${SOURCE_NAME}
+            PREP_TARGETS run_${SOURCE_NAME} RXVM_ARGS ${SOURCE_NAME}
             PASS_REGULAR_EXPRESSION "PASS: Jump Table ${DISPLAY_NAME} Source Matrix")
 endfunction()
 
@@ -1147,6 +1153,8 @@ function(crexx_add_jtable_corruption_fixture NAME ALGORITHM MUTATION)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${NAME}_rxvm PROPERTIES
             LABELS "interpreter;rxas;jtable;corruption")
+    crexx_register_test_prep_targets(TESTS ${NAME}_rxvm
+            TARGETS run_${NAME} rxvm)
 endfunction()
 
 function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
@@ -1185,6 +1193,8 @@ function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${NAME} PROPERTIES LABELS "interpreter;rxas;utf")
+    # This wrapper assembles at runtime before launching the product VM.
+    crexx_register_test_prep_targets(TESTS ${NAME} TARGETS rxas rxvm)
 endfunction()
 
 function(crexx_add_rxas_assembly_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
@@ -1216,6 +1226,7 @@ function(crexx_add_rxas_assembly_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${NAME} PROPERTIES LABELS "interpreter;rxas;jtable")
+    crexx_register_test_prep_targets(TESTS ${NAME} TARGETS rxas)
 endfunction()
 
 # Value Tests
@@ -1251,7 +1262,7 @@ add_custom_target(run_tests_signals ALL DEPENDS tests_signals.rxbin)
 
 crexx_add_vm_test(
         NAME rxassignalstests
-        RXVM_ARGS tests_signals
+        PREP_TARGETS run_tests_signals RXVM_ARGS tests_signals
         EXPECTED_EXIT_CODE 30
         EXPECTED_FAILURE_DESCRIPTION "uncaught SIGNAL OTHER from tests_signals"
         REQUIRED_OUTPUT_REGEX
@@ -1299,7 +1310,7 @@ add_custom_target(run_tests_panic_source ALL DEPENDS tests_panic_source.rxbin)
 
 crexx_add_vm_test(
         NAME rxaspanicaddresstests
-        RXVM_ARGS tests_panic_source
+        PREP_TARGETS run_tests_panic_source RXVM_ARGS tests_panic_source
         EXPECTED_EXIT_CODE 6
         EXPECTED_FAILURE_DESCRIPTION "conversion panic with bytecode address"
         REQUIRED_OUTPUT_REGEX
@@ -1308,7 +1319,7 @@ crexx_add_vm_test(
 )
 crexx_add_vm_test(
         NAME rxaspanicsourcetests
-        RXVM_ARGS tests_panic_source
+        PREP_TARGETS run_tests_panic_source RXVM_ARGS tests_panic_source
         EXPECTED_EXIT_CODE 6
         EXPECTED_FAILURE_DESCRIPTION "conversion panic with source location"
         REQUIRED_OUTPUT_REGEX
@@ -1327,8 +1338,8 @@ add_custom_command(
 
 add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_address.rxbin)
 
-crexx_add_vm_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'.*breakpoint-tests-passed")
-crexx_add_vm_test(NAME rxasbreakpointtraceeventtests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target.*breakpoint-tests-passed")
+crexx_add_vm_test(NAME rxasbreakpointaddresstests PREP_TARGETS run_tests_breakpoint_address RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'.*breakpoint-tests-passed")
+crexx_add_vm_test(NAME rxasbreakpointtraceeventtests PREP_TARGETS run_tests_breakpoint_address RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target.*breakpoint-tests-passed")
 if(BUILD_TESTING)
     add_test(NAME rxvminstrumentedbreakpointtests
             COMMAND $<TARGET_FILE:rxvm_instrumented> tests_breakpoint_address
@@ -1349,78 +1360,78 @@ endif()
 
 # Instruction Sanity Tests - register flag partitioning
 crexx_add_rxas_vm_binary(tests_register_flags "register flag partitioning")
-crexx_add_vm_test(NAME rxasregisterflagtests RXVM_ARGS tests_register_flags PASS_REGULAR_EXPRESSION "PASS: Register Flag Partition")
+crexx_add_vm_test(NAME rxasregisterflagtests PREP_TARGETS run_tests_register_flags RXVM_ARGS tests_register_flags PASS_REGULAR_EXPRESSION "PASS: Register Flag Partition")
 
 # Instruction Sanity Tests - UTF status cache flags
 crexx_add_rxas_vm_binary(tests_utf_flags "UTF flag cache")
-crexx_add_vm_test(NAME rxasutfflagtests RXVM_ARGS tests_utf_flags PASS_REGULAR_EXPRESSION "PASS: UTF Flag Cache")
+crexx_add_vm_test(NAME rxasutfflagtests PREP_TARGETS run_tests_utf_flags RXVM_ARGS tests_utf_flags PASS_REGULAR_EXPRESSION "PASS: UTF Flag Cache")
 crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadlinetests tests_utf_freadline_boundary "UNICODE_ERROR")
 crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadcdpttests tests_utf_freadcdpt_boundary "UNICODE_ERROR")
 
 # Instruction Sanity Tests - bulk attribute insert/delete
 crexx_add_rxas_vm_binary(tests_attributes "attribute bulk insert/delete")
-crexx_add_vm_test(NAME rxasattributebulktests RXVM_ARGS tests_attributes PASS_REGULAR_EXPRESSION "PASS: Attribute Bulk Ops")
+crexx_add_vm_test(NAME rxasattributebulktests PREP_TARGETS run_tests_attributes RXVM_ARGS tests_attributes PASS_REGULAR_EXPRESSION "PASS: Attribute Bulk Ops")
 
 # Instruction Sanity Tests - reference values
 crexx_add_rxas_vm_binary(tests_references "reference value instructions")
-crexx_add_vm_test(NAME rxasreferencetests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "PASS: Reference RXAS Ops")
-crexx_add_vm_test(NAME rxasreferencecatchtests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid.*PASS: Reference RXAS Ops")
+crexx_add_vm_test(NAME rxasreferencetests PREP_TARGETS run_tests_references RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "PASS: Reference RXAS Ops")
+crexx_add_vm_test(NAME rxasreferencecatchtests PREP_TARGETS run_tests_references RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid.*PASS: Reference RXAS Ops")
 
 # PERF2-02 exact direct MKREF guards and mandatory fallback paths
 crexx_add_rxas_vm_binary(tests_perf2_reference_guards "PERF2-02 direct reference guards")
-crexx_add_vm_test(NAME rxasperf2referenceguardtests RXVM_ARGS tests_perf2_reference_guards PASS_REGULAR_EXPRESSION "PASS: PERF2-02 Reference Guards")
+crexx_add_vm_test(NAME rxasperf2referenceguardtests PREP_TARGETS run_tests_perf2_reference_guards RXVM_ARGS tests_perf2_reference_guards PASS_REGULAR_EXPRESSION "PASS: PERF2-02 Reference Guards")
 
 # PERF2-05 R2a private reference-descriptor materialization and fallbacks
 crexx_add_rxas_vm_binary(tests_perf2_partial_reference_materialization "PERF2-05 partial reference materialization")
-crexx_add_vm_test(NAME rxasperf2partialreferencetests RXVM_ARGS tests_perf2_partial_reference_materialization PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Partial Reference Materialization")
+crexx_add_vm_test(NAME rxasperf2partialreferencetests PREP_TARGETS run_tests_perf2_partial_reference_materialization RXVM_ARGS tests_perf2_partial_reference_materialization PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Partial Reference Materialization")
 
 # PERF2-05 R1a private exact local-reference relink and fallbacks
 crexx_add_rxas_vm_binary(tests_perf2_exact_relink "PERF2-05 exact reference relink")
-crexx_add_vm_test(NAME rxasperf2exactrelinktests RXVM_ARGS tests_perf2_exact_relink PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Exact Reference Relink")
+crexx_add_vm_test(NAME rxasperf2exactrelinktests PREP_TARGETS run_tests_perf2_exact_relink RXVM_ARGS tests_perf2_exact_relink PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Exact Reference Relink")
 
 # Instruction Sanity Tests - object initialization lifecycle
 crexx_add_rxas_vm_binary(tests_object_initialization "object initialization lifecycle instructions")
-crexx_add_vm_test(NAME rxasobjectinitializationtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "PASS: Object Initialization RXAS Ops")
-crexx_add_vm_test(NAME rxasobjectinitializationcatchtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "caught-object-not-initialized.*PASS: Object Initialization RXAS Ops")
+crexx_add_vm_test(NAME rxasobjectinitializationtests PREP_TARGETS run_tests_object_initialization RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "PASS: Object Initialization RXAS Ops")
+crexx_add_vm_test(NAME rxasobjectinitializationcatchtests PREP_TARGETS run_tests_object_initialization RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "caught-object-not-initialized.*PASS: Object Initialization RXAS Ops")
 
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
-crexx_add_vm_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30.*attr-source: signal other")
-crexx_add_vm_test(NAME rxassignalattrnametests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-name: OTHER.*attr-source: signal other")
-crexx_add_vm_test(NAME rxassignalattrpayloadtests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-payload: attr payload.*attr-source: signal other")
-crexx_add_vm_test(NAME rxassignalattrsourcetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-source: signal other")
+crexx_add_vm_test(NAME rxassignalattrcodetests PREP_TARGETS run_tests_signal_call_attrs RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30.*attr-source: signal other")
+crexx_add_vm_test(NAME rxassignalattrnametests PREP_TARGETS run_tests_signal_call_attrs RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-name: OTHER.*attr-source: signal other")
+crexx_add_vm_test(NAME rxassignalattrpayloadtests PREP_TARGETS run_tests_signal_call_attrs RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-payload: attr payload.*attr-source: signal other")
+crexx_add_vm_test(NAME rxassignalattrsourcetests PREP_TARGETS run_tests_signal_call_attrs RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-source: signal other")
 
 crexx_add_rxas_vm_binary(tests_signal_handler_modes "signal handler response modes")
-crexx_add_vm_test(NAME rxassignalmodeignoretests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok.*mode-ret-after")
-crexx_add_vm_test(NAME rxassignalmodebranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit.*mode-ret-after")
-crexx_add_vm_test(NAME rxassignalmodecallbranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload.*mode-ret-after")
-crexx_add_vm_test(NAME rxassignalmodereturntests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodeignoretests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok.*mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodebranchtests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit.*mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodecallbranchtests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload.*mode-ret-after")
+crexx_add_vm_test(NAME rxassignalmodereturntests PREP_TARGETS run_tests_signal_handler_modes RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ret-after")
 
 crexx_add_rxas_vm_binary(tests_signal_call_unwind "signal call-window mapping unwind")
-crexx_add_vm_test(NAME rxassignalcallunwindtests RXVM_ARGS tests_signal_call_unwind PASS_REGULAR_EXPRESSION "PASS: Signal Call Mapping Unwind")
+crexx_add_vm_test(NAME rxassignalcallunwindtests PREP_TARGETS run_tests_signal_call_unwind RXVM_ARGS tests_signal_call_unwind PASS_REGULAR_EXPRESSION "PASS: Signal Call Mapping Unwind")
 
 crexx_add_rxas_vm_binary(tests_signal_mask_bounds "signal mask boundary handling")
-crexx_add_vm_test(NAME rxassignalmaskotherignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-other-ignore-ok.*mask-tests-passed")
-crexx_add_vm_test(NAME rxassignalmaskbreakpointignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-breakpoint-ignore-ok.*mask-tests-passed")
+crexx_add_vm_test(NAME rxassignalmaskotherignoretests PREP_TARGETS run_tests_signal_mask_bounds RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-other-ignore-ok.*mask-tests-passed")
+crexx_add_vm_test(NAME rxassignalmaskbreakpointignoretests PREP_TARGETS run_tests_signal_mask_bounds RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-breakpoint-ignore-ok.*mask-tests-passed")
 
 crexx_add_rxas_vm_binary(tests_signal_silent_halt "signal silent halt response")
-crexx_add_vm_test(NAME rxassignalsilenthalttests RXVM_ARGS tests_signal_silent_halt)
+crexx_add_vm_test(NAME rxassignalsilenthalttests PREP_TARGETS run_tests_signal_silent_halt RXVM_ARGS tests_signal_silent_halt)
 
 crexx_add_rxas_vm_binary(tests_signal_frame_scope "signal frame handler table scope")
-crexx_add_vm_test(NAME rxassignalframescopechildtests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: from child.*frame-main-after")
-crexx_add_vm_test(NAME rxassignalframescopeparenttests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: after child ignore.*frame-main-after")
+crexx_add_vm_test(NAME rxassignalframescopechildtests PREP_TARGETS run_tests_signal_frame_scope RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: from child.*frame-main-after")
+crexx_add_vm_test(NAME rxassignalframescopeparenttests PREP_TARGETS run_tests_signal_frame_scope RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: after child ignore.*frame-main-after")
 
 crexx_add_rxas_vm_binary(tests_signal_nested_pending "nested pending signal delivery")
-crexx_add_vm_test(NAME rxassignalnestedpendingtests RXVM_ARGS tests_signal_nested_pending PASS_REGULAR_EXPRESSION "nested:outer-before>outer-after>inner>main-after")
+crexx_add_vm_test(NAME rxassignalnestedpendingtests PREP_TARGETS run_tests_signal_nested_pending RXVM_ARGS tests_signal_nested_pending PASS_REGULAR_EXPRESSION "nested:outer-before>outer-after>inner>main-after")
 
 crexx_add_rxas_vm_binary(tests_signal_actions "action-aware signal handlers")
-crexx_add_vm_test(NAME rxassignalactionskiptests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-skip-after.*action-dynamic-after")
-crexx_add_vm_test(NAME rxassignalactiondynamictests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-handler: dynamic payload.*action-dynamic-after")
+crexx_add_vm_test(NAME rxassignalactionskiptests PREP_TARGETS run_tests_signal_actions RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-skip-after.*action-dynamic-after")
+crexx_add_vm_test(NAME rxassignalactiondynamictests PREP_TARGETS run_tests_signal_actions RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-handler: dynamic payload.*action-dynamic-after")
 
 crexx_add_rxas_vm_binary(tests_signal_retry_retired "retired signal retry marker")
 crexx_add_vm_test(
         NAME rxassignalretryretiredtests
-        RXVM_ARGS tests_signal_retry_retired
+        PREP_TARGETS run_tests_signal_retry_retired RXVM_ARGS tests_signal_retry_retired
         EXPECTED_EXIT_CODE 30
         EXPECTED_FAILURE_DESCRIPTION "retired signal retry marker fails safely"
         REQUIRED_OUTPUT_REGEX
@@ -1429,23 +1440,23 @@ crexx_add_vm_test(
             "FAIL: retired retry marker resumed execution")
 
 crexx_add_rxas_vm_binary(tests_signal_pushpop "signal handler push/pop scope")
-crexx_add_vm_test(NAME rxassignalpushpoprestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-restored-ignore.*pushpop-after-restored-ignore")
-crexx_add_vm_test(NAME rxassignalpushpopbranchtests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-branch-hit.*pushpop-after-restored-ignore")
-crexx_add_vm_test(NAME rxassignalpushpophandlerrestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-after-restored-ignore")
+crexx_add_vm_test(NAME rxassignalpushpoprestoretests PREP_TARGETS run_tests_signal_pushpop RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-restored-ignore.*pushpop-after-restored-ignore")
+crexx_add_vm_test(NAME rxassignalpushpopbranchtests PREP_TARGETS run_tests_signal_pushpop RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-branch-hit.*pushpop-after-restored-ignore")
+crexx_add_vm_test(NAME rxassignalpushpophandlerrestoretests PREP_TARGETS run_tests_signal_pushpop RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-after-restored-ignore")
 
 crexx_add_rxas_vm_binary(tests_signal_branch_value "signal branch with bound value")
-crexx_add_vm_test(NAME rxassignalbrvrawtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-has-raw: 1.*brv-payload: value payload")
-crexx_add_vm_test(NAME rxassignalbrvnametests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER.*brv-payload: value payload")
-crexx_add_vm_test(NAME rxassignalbrvpayloadtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")
+crexx_add_vm_test(NAME rxassignalbrvrawtests PREP_TARGETS run_tests_signal_branch_value RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-has-raw: 1.*brv-payload: value payload")
+crexx_add_vm_test(NAME rxassignalbrvnametests PREP_TARGETS run_tests_signal_branch_value RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER.*brv-payload: value payload")
+crexx_add_vm_test(NAME rxassignalbrvpayloadtests PREP_TARGETS run_tests_signal_branch_value RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")
 
 crexx_add_rxas_vm_binary(tests_signal_origin "source-preserving signal validation")
-crexx_add_vm_test(NAME rxassignalorigininvalidtests RXVM_ARGS tests_signal_origin PASS_REGULAR_EXPRESSION "invalid-origin-rejected")
+crexx_add_vm_test(NAME rxassignalorigininvalidtests PREP_TARGETS run_tests_signal_origin RXVM_ARGS tests_signal_origin PASS_REGULAR_EXPRESSION "invalid-origin-rejected")
 set_tests_properties(rxassignalorigininvalidtests PROPERTIES
         CREXX_PREP_TARGETS "run_tests_signal_origin")
 
 # NR-09 large-instruction batch
 crexx_add_rxas_vm_binary(tests_nr09_superinstructions "NR-09 large instructions")
-crexx_add_vm_test(NAME rxasnr09superinstructiontests RXVM_ARGS tests_nr09_superinstructions PASS_REGULAR_EXPRESSION "PASS: NR-09 Superinstructions")
+crexx_add_vm_test(NAME rxasnr09superinstructiontests PREP_TARGETS run_tests_nr09_superinstructions RXVM_ARGS tests_nr09_superinstructions PASS_REGULAR_EXPRESSION "PASS: NR-09 Superinstructions")
 
 # Basic Instruction Tests
 add_custom_command(
@@ -1459,7 +1470,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_basic ALL DEPENDS tests_basic.rxbin)
 
-crexx_add_vm_test(NAME rxasbasictests RXVM_ARGS tests_basic)
+crexx_add_vm_test(NAME rxasbasictests PREP_TARGETS run_tests_basic RXVM_ARGS tests_basic)
 
 # The broad functional suite follows the product rxvm target.  Keep one small
 # explicit contract test per concrete engine so dispatch-specific build or
@@ -1471,6 +1482,8 @@ foreach(_crexx_concrete_vm IN LISTS CREXX_CONCRETE_VM_TARGETS)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(rxasdispatchcontract-${_crexx_concrete_vm} PROPERTIES
             LABELS "interpreter;rxas;dispatch")
+    crexx_register_test_prep_targets(TESTS rxasdispatchcontract-${_crexx_concrete_vm}
+            TARGETS ${_crexx_concrete_vm} run_tests_basic)
     crexx_label_concurrency_tests(SP02
             rxasdispatchcontract-${_crexx_concrete_vm})
 endforeach()
@@ -1604,12 +1617,12 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_int_math ALL DEPENDS tests_int_math.rxbin)
 
-crexx_add_vm_test(NAME rxasintmathtests RXVM_ARGS tests_int_math)
+crexx_add_vm_test(NAME rxasintmathtests PREP_TARGETS run_tests_int_math RXVM_ARGS tests_int_math)
 
 crexx_add_rxas_vm_binary(tests_int_contract "signed 64-bit integer contract")
 crexx_add_vm_test(
         NAME rxasintcontracttests
-        RXVM_ARGS tests_int_contract
+        PREP_TARGETS run_tests_int_contract RXVM_ARGS tests_int_contract
         PASS_REGULAR_EXPRESSION "PASS: Signed 64-bit Integer Contract")
 crexx_add_rxas_assembly_failure_regex(
         rxasintoverflowpositive tests_int_overflow_positive
@@ -1632,7 +1645,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_float_math ALL DEPENDS tests_float_math.rxbin)
 
-crexx_add_vm_test(NAME rxasfloatmathtests RXVM_ARGS tests_float_math)
+crexx_add_vm_test(NAME rxasfloatmathtests PREP_TARGETS run_tests_float_math RXVM_ARGS tests_float_math)
 
 # Float Constant Pool Format and Runtime Tests
 add_custom_command(
@@ -1645,7 +1658,7 @@ add_custom_command(
 
 add_custom_target(run_tests_float_pool ALL DEPENDS tests_float_pool.rxbin)
 
-crexx_add_vm_test(NAME rxasfloatpooltests RXVM_ARGS tests_float_pool)
+crexx_add_vm_test(NAME rxasfloatpooltests PREP_TARGETS run_tests_float_pool RXVM_ARGS tests_float_pool)
 
 add_executable(test_float_pool_format tests/test_float_pool_format.c)
 target_link_libraries(test_float_pool_format PRIVATE rxbin)
@@ -1666,7 +1679,7 @@ add_custom_command(
 
 add_custom_target(run_tests_compact_format ALL DEPENDS tests_compact_format.rxbin)
 
-crexx_add_vm_test(NAME rxascompactformattests RXVM_ARGS tests_compact_format)
+crexx_add_vm_test(NAME rxascompactformattests PREP_TARGETS run_tests_compact_format RXVM_ARGS tests_compact_format)
 
 add_executable(test_compact_format tests/test_compact_format.c)
 target_link_libraries(test_compact_format PRIVATE rxbin)
@@ -1688,7 +1701,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_string ALL DEPENDS tests_string.rxbin)
 
-crexx_add_vm_test(NAME rxasstringtests RXVM_ARGS tests_string)
+crexx_add_vm_test(NAME rxasstringtests PREP_TARGETS run_tests_string RXVM_ARGS tests_string)
 
 # Logic and Flow Instruction Tests
 add_custom_command(
@@ -1702,7 +1715,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_logic_flow ALL DEPENDS tests_logic_flow.rxbin)
 
-crexx_add_vm_test(NAME rxaslogicflowtests RXVM_ARGS tests_logic_flow)
+crexx_add_vm_test(NAME rxaslogicflowtests PREP_TARGETS run_tests_logic_flow RXVM_ARGS tests_logic_flow)
 
 # System and I/O Instruction Tests
 add_custom_command(
@@ -1716,17 +1729,17 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
 
-crexx_add_vm_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
+crexx_add_vm_test(NAME rxassystemiotests PREP_TARGETS run_tests_system_io RXVM_ARGS tests_system_io)
 
 # Binary buffer, I/O, and explicit slice instruction tests
 crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
-crexx_add_vm_test(NAME rxasbinaryslicetests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Explicit Slice")
+crexx_add_vm_test(NAME rxasbinaryslicetests PREP_TARGETS run_tests_binary RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Explicit Slice")
 # The authored RXAS uses fixed scratch filenames.  Keep repeated or overlapping
 # invocations from truncating those files.
 set_tests_properties(rxasbinaryslicetests PROPERTIES
         RESOURCE_LOCK rxas_binary_slice_scratch)
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
-crexx_add_vm_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
+crexx_add_vm_test(NAME rxasbinarymemorytests PREP_TARGETS run_tests_binary_memory RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
 
 # Gate F F1c executes the same local-channel image on both concrete VMs.
 add_custom_command(
@@ -1840,6 +1853,7 @@ foreach(_retired_process_opcode RANGE 466 471)
     crexx_add_vm_expected_failure_test(
             NAME retired_process_opcode_${_retired_process_opcode}_rxbvm
             RUNNER $<TARGET_FILE:rxbvm>
+            PREP_TARGETS rxbvm test_retired_process_opcode_bin
             RXVM_ARGS tests_retired_process_opcode_${_retired_process_opcode}
             EXPECTED_EXIT_CODE 10
             EXPECTED_FAILURE_DESCRIPTION "retired process opcode fails explicitly"
@@ -1851,6 +1865,7 @@ foreach(_retired_process_opcode RANGE 466 471)
         crexx_add_vm_expected_failure_test(
                 NAME retired_process_opcode_${_retired_process_opcode}_rxtvm
                 RUNNER $<TARGET_FILE:rxtvm>
+                PREP_TARGETS rxtvm test_retired_process_opcode_bin
                 RXVM_ARGS tests_retired_process_opcode_${_retired_process_opcode}
                 EXPECTED_EXIT_CODE 10
                 EXPECTED_FAILURE_DESCRIPTION "retired process opcode fails explicitly"
@@ -1874,20 +1889,20 @@ add_custom_command(
 add_custom_target(test_gate_f_channel_benchmark_bin ALL
         DEPENDS test_gate_f_channel_benchmark.rxbin)
 crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")
-crexx_add_vm_test(NAME rxasjumptabletests RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
+crexx_add_vm_test(NAME rxasjumptabletests PREP_TARGETS run_tests_jump_table RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
 crexx_add_rxas_vm_binary(tests_jump_table_linear_sources "linear jump table source matrix")
-crexx_add_vm_test(NAME rxasjumptablelinearsources RXVM_ARGS tests_jump_table_linear_sources PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Source Matrix")
+crexx_add_vm_test(NAME rxasjumptablelinearsources PREP_TARGETS run_tests_jump_table_linear_sources RXVM_ARGS tests_jump_table_linear_sources PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Source Matrix")
 crexx_add_generated_jtable_matrix(openhash OpenHash)
 crexx_add_generated_jtable_matrix(acph ACPH)
 crexx_add_generated_jtable_matrix(auto Auto)
 crexx_add_rxas_vm_binary(tests_jump_table_hash_edges "open-hash and ACPH jump table edge cases")
-crexx_add_vm_test(NAME rxasjumptablehashedges RXVM_ARGS tests_jump_table_hash_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Hash Edge Cases")
+crexx_add_vm_test(NAME rxasjumptablehashedges PREP_TARGETS run_tests_jump_table_hash_edges RXVM_ARGS tests_jump_table_hash_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Hash Edge Cases")
 crexx_add_rxas_vm_binary(tests_jump_table_auto_edges "auto jump table policy paths")
-crexx_add_vm_test(NAME rxasjumptableautoedges RXVM_ARGS tests_jump_table_auto_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Auto Policy Paths")
+crexx_add_vm_test(NAME rxasjumptableautoedges PREP_TARGETS run_tests_jump_table_auto_edges RXVM_ARGS tests_jump_table_auto_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Auto Policy Paths")
 crexx_add_rxas_vm_binary(tests_jump_table_rexx_strings "Rexx padded and numeric string jump tables")
-crexx_add_vm_test(NAME rxasjumptablerexxstrings RXVM_ARGS tests_jump_table_rexx_strings PASS_REGULAR_EXPRESSION "PASS: Jump Table Rexx String Ops")
+crexx_add_vm_test(NAME rxasjumptablerexxstrings PREP_TARGETS run_tests_jump_table_rexx_strings RXVM_ARGS tests_jump_table_rexx_strings PASS_REGULAR_EXPRESSION "PASS: Jump Table Rexx String Ops")
 crexx_add_rxas_vm_binary(tests_jump_table_boundaries "jump table syntax and value boundaries")
-crexx_add_vm_test(NAME rxasjumptableboundaries RXVM_ARGS tests_jump_table_boundaries PASS_REGULAR_EXPRESSION "PASS: Jump Table Boundaries")
+crexx_add_vm_test(NAME rxasjumptableboundaries PREP_TARGETS run_tests_jump_table_boundaries RXVM_ARGS tests_jump_table_boundaries PASS_REGULAR_EXPRESSION "PASS: Jump Table Boundaries")
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptalgorithm linear algorithm)
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptheader linear header)
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptlinearkey linear linear-key-offset)
@@ -1928,7 +1943,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_socket ALL DEPENDS tests_socket.rxbin)
 
-crexx_add_vm_test(NAME rxassockettests RXVM_ARGS tests_socket PASS_REGULAR_EXPRESSION "PASS: Core Socket Instructions")
+crexx_add_vm_test(NAME rxassockettests PREP_TARGETS run_tests_socket RXVM_ARGS tests_socket PASS_REGULAR_EXPRESSION "PASS: Core Socket Instructions")
 
 # Decimal Instruction Tests
 add_custom_command(
@@ -1942,9 +1957,9 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_decimal ALL DEPENDS tests_decimal.rxbin)
 
-crexx_add_vm_test(NAME rxasdecimaltests RXVM_ARGS tests_decimal)
-crexx_add_vm_test(NAME rxasdecimaltests-mc RXVM_ARGS -p rxvm_mc_decimal tests_decimal)
-crexx_add_vm_test(NAME rxasdecimaltests-db RXVM_ARGS -p rxvm_db_decimal tests_decimal)
+crexx_add_vm_test(NAME rxasdecimaltests PREP_TARGETS run_tests_decimal RXVM_ARGS tests_decimal)
+crexx_add_vm_test(NAME rxasdecimaltests-mc PREP_TARGETS run_tests_decimal mc_decimal_dynamic RXVM_ARGS -p rxvm_mc_decimal tests_decimal)
+crexx_add_vm_test(NAME rxasdecimaltests-db PREP_TARGETS run_tests_decimal db_decimal_dynamic RXVM_ARGS -p rxvm_db_decimal tests_decimal)
 
 # Conversion and Formatting Instruction Tests
 add_custom_command(
@@ -1958,7 +1973,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_conversion ALL DEPENDS tests_conversion.rxbin)
 
-crexx_add_vm_test(NAME rxasconversiontests RXVM_ARGS tests_conversion)
+crexx_add_vm_test(NAME rxasconversiontests PREP_TARGETS run_tests_conversion RXVM_ARGS tests_conversion)
 
 # Object and Attribute Instruction Tests
 add_custom_command(
@@ -1972,7 +1987,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_objects ALL DEPENDS tests_objects.rxbin)
 
-crexx_add_vm_test(NAME rxasobjecttests RXVM_ARGS tests_objects)
+crexx_add_vm_test(NAME rxasobjecttests PREP_TARGETS run_tests_objects RXVM_ARGS tests_objects)
 
 # Reflection and Introspection Instruction Tests
 add_custom_command(
@@ -1986,7 +2001,7 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_reflection ALL DEPENDS tests_reflection.rxbin)
 
-crexx_add_vm_test(NAME rxasreflectiontests RXVM_ARGS tests_reflection)
+crexx_add_vm_test(NAME rxasreflectiontests PREP_TARGETS run_tests_reflection RXVM_ARGS tests_reflection)
 
 # Interface dispatch instruction tests
 add_custom_command(
@@ -2012,9 +2027,9 @@ set_tests_properties(rxvm_link_index_fallback_context PROPERTIES
         TIMEOUT 90 LABELS "interpreter;interfaces;memory;regression"
         CREXX_PREP_TARGETS test_rxvmlinkindex)
 
-crexx_add_vm_test(NAME rxasinterfacetests RXVM_ARGS tests_interfaces PASS_REGULAR_EXPRESSION "PASS: Interface Dispatch Suite")
+crexx_add_vm_test(NAME rxasinterfacetests PREP_TARGETS run_tests_interfaces RXVM_ARGS tests_interfaces PASS_REGULAR_EXPRESSION "PASS: Interface Dispatch Suite")
 crexx_add_rxas_vm_binary(tests_selector_descriptors "descriptor selector contracts")
-crexx_add_vm_test(NAME rxasselectordescriptortests RXVM_ARGS tests_selector_descriptors PASS_REGULAR_EXPRESSION "PASS: Descriptor Selector Contracts")
+crexx_add_vm_test(NAME rxasselectordescriptortests PREP_TARGETS run_tests_selector_descriptors RXVM_ARGS tests_selector_descriptors PASS_REGULAR_EXPRESSION "PASS: Descriptor Selector Contracts")
 crexx_add_rxas_vm_failure_regex(rxasselectordescriptorbadmethod tests_selector_descriptor_bad_method "rxsig1\\|describe\\|\\.string\\|")
 crexx_add_rxas_vm_failure_regex(rxasselectordescriptorbadfactory tests_selector_descriptor_bad_factory "selector_bad_factory\\.shape")
 
@@ -2030,13 +2045,13 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_stress ALL DEPENDS tests_stress.rxbin)
 
-crexx_add_vm_test(NAME rxasstresstests RXVM_ARGS tests_stress)
+crexx_add_vm_test(NAME rxasstresstests PREP_TARGETS run_tests_stress RXVM_ARGS tests_stress)
 
 # Focused deterministic coverage for remaining RXAS instruction families
 crexx_add_rxas_vm_binary(tests_instruction_gaps "remaining deterministic instruction gaps")
-crexx_add_vm_test(NAME rxasinstructiongaptests RXVM_ARGS tests_instruction_gaps PASS_REGULAR_EXPRESSION "PASS: RXAS Instruction Gap Coverage")
+crexx_add_vm_test(NAME rxasinstructiongaptests PREP_TARGETS run_tests_instruction_gaps RXVM_ARGS tests_instruction_gaps PASS_REGULAR_EXPRESSION "PASS: RXAS Instruction Gap Coverage")
 crexx_add_rxas_vm_binary(tests_wide_operands "arbitrary operand pipeline")
-crexx_add_vm_test(NAME rxaswideoperandtests RXVM_ARGS tests_wide_operands PASS_REGULAR_EXPRESSION "PASS: Arbitrary Operand Pipeline")
+crexx_add_vm_test(NAME rxaswideoperandtests PREP_TARGETS run_tests_wide_operands RXVM_ARGS tests_wide_operands PASS_REGULAR_EXPRESSION "PASS: Arbitrary Operand Pipeline")
 
 # Re-entrancy Test
 add_custom_command(
@@ -2129,6 +2144,8 @@ function(crexx_configure_module_initializer_test TARGET_NAME)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${TARGET_NAME} PROPERTIES
             LABELS "interpreter;rcc-3;initializers")
+    crexx_register_test_prep_targets(TESTS ${TARGET_NAME}
+            TARGETS ${TARGET_NAME} test_module_initializer_bins)
 endfunction()
 
 add_executable(module_initializers-rxvml tests/test_module_initializers.c)
@@ -2197,6 +2214,8 @@ function(crexx_configure_program_generation_control TARGET_NAME)
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${TARGET_NAME} PROPERTIES
             LABELS "interpreter;perf3;gate-e;e4a;e4b")
+    crexx_register_test_prep_targets(TESTS ${TARGET_NAME}
+            TARGETS ${TARGET_NAME} test_program_generation_control_bins)
     crexx_label_concurrency_tests(SP01 ${TARGET_NAME})
 endfunction()
 
@@ -2507,6 +2526,24 @@ if(BUILD_TESTING AND
             crexx_label_concurrency_tests(SP08
                     ${TARGET_NAME}-sparse-progress-fallback)
         endif()
+        set(_crexx_worker_runtime_tests
+                ${TARGET_NAME}
+                ${TARGET_NAME}-doorbell-stress
+                ${TARGET_NAME}-sparse-owner
+                ${TARGET_NAME}-sparse-owner-stress
+                ${TARGET_NAME}-sparse-progress
+                ${TARGET_NAME}-native-return
+                ${TARGET_NAME}-e6-worker-topology-w8)
+        if(WIN32)
+            list(APPEND _crexx_worker_runtime_tests
+                    ${TARGET_NAME}-doorbell-fallback
+                    ${TARGET_NAME}-fallback
+                    ${TARGET_NAME}-fallback-stress
+                    ${TARGET_NAME}-sparse-progress-fallback)
+        endif()
+        crexx_register_test_prep_targets(TESTS ${_crexx_worker_runtime_tests}
+                TARGETS ${TARGET_NAME} test_persistent_worker_executor_bin
+                        test_persistent_worker_sparse_bin)
     endfunction()
 
     add_executable(persistent_worker_executor-rxvml
@@ -2632,22 +2669,74 @@ crexx_label_smoke_tests(
         compact_format_check
         reentrancy_check
         db_decimal_archive_link
-        PREP_TARGETS
-            crexxsaa_tool
-            test_rxpa_utf_validation
-            ts_regvalue_tester
-            run_tests_signals
-            run_tests_register_flags
-            run_tests_utf_flags
-            run_tests_references
-            run_tests_basic
-            run_tests_string
-            run_tests_decimal
-            run_tests_interfaces
-            test_compact_format
-            test_reentrancy
-            test_db_decimal_archive_link_bin
 )
+
+# Exact hand-written runtime/embedding preparation owners. Native libraries
+# and declared artifact dependencies remain on their existing owning targets.
+crexx_register_test_prep_targets(TESTS rxseqfileformat
+        TARGETS test_rxseqfile)
+crexx_register_test_prep_targets(TESTS crexx_address_unredirected_flush
+        TARGETS test_rxcrexxcmd_flush)
+crexx_register_test_prep_targets(TESTS rxspawn_posix_launch_diagnostic
+        TARGETS test_rxspawn_diagnostics)
+crexx_register_test_prep_targets(TESTS rxvm_product_entry_point
+        TARGETS rxvm ${CREXX_DEFAULT_VM_TARGET})
+crexx_register_test_prep_targets(TESTS rxvmstem_storage
+        TARGETS test_rxvmstem)
+crexx_register_test_prep_targets(TESTS rxvmstem_allocator_family
+        TARGETS test_rxvmstem_allocator_family)
+crexx_register_test_prep_targets(TESTS rxvmmemory_allocator
+        TARGETS test_rxvmmemory)
+crexx_register_test_prep_targets(TESTS rxvmworker_lifecycle
+        TARGETS test_rxvmworker)
+crexx_register_test_prep_targets(TESTS rxvmchannel_provider_registry
+        TARGETS test_rxvmchannel_registry)
+crexx_register_test_prep_targets(TESTS rxvmbyteendpoint_substrate
+        TARGETS test_rxvmbyteendpoint)
+crexx_register_test_prep_targets(TESTS rxvmchannel_byte_provider
+        TARGETS test_rxvmchannel_byte)
+crexx_register_test_prep_targets(TESTS rxvmactive_isolation
+        TARGETS test_rxvmactive)
+crexx_register_test_prep_targets(TESTS rxvmplugin_context_ownership
+        TARGETS test_rxvmplugin_context mc_decimal_dynamic)
+crexx_register_test_prep_targets(TESTS crexxsaa_cache_tool_location
+        TARGETS crexxsaa_tool)
+crexx_register_test_prep_targets(TESTS crexxsaa_cache_tool_clear
+        TARGETS crexxsaa_tool)
+crexx_register_test_prep_targets(TESTS rxpa_utf_validation
+        TARGETS test_rxpa_utf_validation)
+crexx_register_test_prep_targets(TESTS ts_regvalue_tester
+        TARGETS ts_regvalue_tester)
+crexx_register_test_prep_targets(TESTS test_jtable_policy
+        TARGETS test_jtable_policy)
+crexx_register_test_prep_targets(TESTS test_signal_mask
+        TARGETS test_signal_mask)
+crexx_register_test_prep_targets(TESTS float_pool_format_check
+        TARGETS test_float_pool_format)
+crexx_register_test_prep_targets(TESTS compact_format_check
+        TARGETS test_compact_format)
+crexx_register_test_prep_targets(TESTS reentrancy_check
+        TARGETS test_reentrancy)
+crexx_register_test_prep_targets(TESTS db_decimal_archive_link
+        TARGETS test_db_decimal_archive_link_bin)
+crexx_register_test_prep_targets(TESTS gate_f_channel_local_rxbvm
+        TARGETS rxbvm test_gate_f_channel_local_bin)
+crexx_register_test_prep_targets(TESTS gate_f_channel_local_rxtvm
+        TARGETS rxtvm test_gate_f_channel_local_bin)
+crexx_register_test_prep_targets(TESTS gate_f_channel_process_rxbvm
+        TARGETS rxbvm test_gate_f_channel_process_bin)
+crexx_register_test_prep_targets(TESTS gate_f_channel_process_rxtvm
+        TARGETS rxtvm test_gate_f_channel_process_bin)
+crexx_register_test_prep_targets(TESTS rxvmchannel_process_crash_replacement
+        TARGETS test_rxvmchannel_process test_gate_f_channel_process_bin rxvm)
+crexx_register_test_prep_targets(
+        TESTS rxpa_static_catalogue_replay rxpa_static_session_lifecycle
+              rxpa_session_factory_failure_rollback rxpa_session_manifest_fail_closed
+              rxpa_float_static_alias_binding rxpa_legacy_call_serialization
+              rxpa_process_reentrant_overlap rxpa_legacy_recursive_reentry
+              rxpa_branch_free_load_binding rxpa_bound_legacy_serialization
+              rxpa_legacy_transition_quiescence
+        TARGETS test_rxpa_concurrency)
 
 crexx_label_smoke_tests(rxvm_cli_input_failure_bytecode PREP_TARGETS rxbvm)
 if(TARGET rxtvm)

@@ -74,6 +74,11 @@ endfunction()
 # labels remain intact; this adds exactly one scheduling tier so CTest
 # selections do not have to infer intent from a component or test name.
 function(crexx_finalize_directory_qa_tiers)
+    # Test properties belong to their defining scope on our CMake 3.24 minimum.
+    # Apply sanitizer failure guards here, after the owner's declarations.
+    if(COMMAND crexx_apply_sanitizer_failure_guards)
+        crexx_apply_sanitizer_failure_guards()
+    endif()
     get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
     foreach(_crexx_test IN LISTS _crexx_tests)
         get_property(_crexx_labels TEST "${_crexx_test}" PROPERTY LABELS)
@@ -160,6 +165,15 @@ function(crexx_finalize_directory_qa_tiers)
                 message(FATAL_ERROR
                         "Measurement test ${_crexx_test} must declare RUN_SERIAL")
             endif()
+        endif()
+
+        # An isolated -R selection still validates any external ordinary
+        # fixtures before it can consume them. In original-producer trees the
+        # setup verifies that no external donor is configured.
+        if(NOT _crexx_tier STREQUAL "performance-measurement" AND
+           NOT _crexx_test STREQUAL "sanitizer_fixture_integrity")
+            set_property(TEST "${_crexx_test}" APPEND PROPERTY
+                    FIXTURES_REQUIRED qa-fixture-integrity)
         endif()
 
         get_property(_crexx_prep_targets TEST "${_crexx_test}" PROPERTY

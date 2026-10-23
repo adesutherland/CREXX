@@ -156,7 +156,7 @@ function(crexx_add_rexx_opt_matrix)
         list(APPEND _crexx_assemble_cmd ${_crexx_mode_rxas_flags} -o ${_crexx_output_base} ${_crexx_output_base})
 
         set(_crexx_artifact ${CREXX_WORKING_DIRECTORY}/${_crexx_output_base}.rxbin)
-        add_custom_command(
+        crexx_add_fixture_command(
                 OUTPUT ${_crexx_artifact}
                 BYPRODUCTS ${CREXX_WORKING_DIRECTORY}/${_crexx_output_base}.rxas
                 COMMAND ${_crexx_compile_cmd}
@@ -250,7 +250,7 @@ function(crexx_add_rxas_opt_matrix)
         list(APPEND _crexx_assemble_cmd ${_crexx_mode_rxas_flags} -o ${_crexx_output_base} ${CREXX_SOURCE})
 
         set(_crexx_artifact ${CREXX_WORKING_DIRECTORY}/${_crexx_output_base}.rxbin)
-        add_custom_command(
+        crexx_add_fixture_command(
                 OUTPUT ${_crexx_artifact}
                 COMMAND ${_crexx_assemble_cmd}
                 DEPENDS ${CREXX_ASSEMBLER_TARGET} ${CREXX_DEPENDS}

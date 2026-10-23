@@ -28,7 +28,7 @@ string(APPEND _library_control_text
 
 file(GENERATE OUTPUT ${_library_control_file} CONTENT "${_library_control_text}")
 
-add_custom_command(
+crexx_add_fixture_command(
         OUTPUT ${CMAKE_BINARY_DIR}/bin/library.rxbin
         COMMAND $<TARGET_FILE:rxlink> -c ${_library_control_file}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}

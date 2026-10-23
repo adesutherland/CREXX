@@ -1,0 +1,194 @@
+/*
+ * GLOBALV functional test.
+ *
+ * This test does not test concurrency.
+ * It exercises:
+ *
+ *   INIT
+ *   SET
+ *   SETL
+ *   GET
+ *   PUTL
+ *   LIST
+ *   STACK
+ *   GRPLIST
+ *   PURGE
+ */
+options levelg
+
+##EXTERNAL &syslib/rxglobalv_address.rxbin
+##cflags ndef nset niflink n1buf n2buf n3buf nvars nmaclist includes nosrcmap nmaclog
+
+namespace globalv_function_test
+
+import _rxsysb
+
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+
+  if condition then do
+    say "PASS:" label
+    return 0
+  end
+
+  say "FAIL:" label
+  return 1
+
+
+contains: procedure = .boolean
+  arg values = .string[], expected = .string
+
+  do i = 1 to values[0]
+    if pos(expected, values[i]) > 0 then
+      return 1
+  end
+
+  return 0
+
+
+main: procedure = .int
+  errors = 0
+  i = .int
+
+  say "=== GLOBALV functional test ==="
+  say
+
+
+  /*
+   * Initialise GLOBALV and remove groups from previous runs.
+   */
+  address globalv "INIT"
+  errors = errors + check(rc = 0, "INIT")
+
+  address globalv "SELECT BASIC PURGE"
+  address globalv "SELECT SECOND PURGE"
+  address globalv "SELECT PERSIST PURGE"
+
+
+  /*
+   * SET stores a value without embedded blanks.
+   */
+  address globalv "SELECT BASIC SET NUMBER 42"
+  errors = errors + check(rc = 0, "SET")
+
+  number = ""
+  address globalv "SELECT BASIC GET :number"
+
+  errors = errors + check(rc = 0, "GET after SET")
+  errors = errors + check(number = "42", "value returned by GET")
+
+
+  /*
+   * SETL stores a literal value which may contain blanks.
+   */
+  address globalv "SELECT BASIC SETL MESSAGE Hello from GLOBALV"
+  errors = errors + check(rc = 0, "SETL")
+
+  message = ""
+  address globalv "SELECT BASIC GET :message"
+
+  errors = errors + check(rc = 0, "GET after SETL")
+  errors = errors + check(message = "Hello from GLOBALV",
+                          "value containing blanks")
+
+
+  /*
+   * PUTL takes the value from a cREXX variable and stores it.
+   */
+  message = "Changed by cREXX"
+
+  address globalv "SELECT BASIC PUTL :message"
+  errors = errors + check(rc = 0, "PUTL")
+
+  message = ""
+  address globalv "SELECT BASIC GET :message"
+
+  errors = errors + check(rc = 0, "GET after PUTL")
+  errors = errors + check(message = "Changed by cREXX",
+                          "value written from cREXX")
+
+
+  /*
+   * LIST returns the contents of the selected group.
+   */
+  listing = .string[]
+
+  address globalv "SELECT BASIC LIST" output listing
+
+  errors = errors + check(rc = 0, "LIST")
+  errors = errors + check(listing[0] = 2, "LIST entry count")
+  errors = errors + check(contains(listing, "NUMBER"),
+                          "LIST contains NUMBER")
+  errors = errors + check(contains(listing, "Changed by cREXX"),
+                          "LIST contains changed value")
+
+
+  /*
+   * STACK returns the value of a named variable.
+   */
+  stack = .string[]
+
+  address globalv "SELECT BASIC STACK MESSAGE" output stack
+
+  errors = errors + check(rc = 0, "STACK")
+  errors = errors + check(stack[0] = 1, "STACK entry count")
+  errors = errors + check(stack[1] = "Changed by cREXX",
+                          "STACK value")
+
+
+  /*
+   * Create a second group.
+   */
+  address globalv "SELECT SECOND SETL OWNER Peter"
+  errors = errors + check(rc = 0, "create second group")
+
+  owner = ""
+  address globalv "SELECT SECOND GET :owner"
+
+  errors = errors + check(rc = 0, "GET from second group")
+  errors = errors + check(owner = "Peter",
+                          "value in second group")
+
+
+  /*
+   * GRPLIST returns the names of the existing groups.
+   */
+  groups = .string[]
+
+  address globalv "GRPLIST" output groups
+
+  errors = errors + check(rc = 0, "GRPLIST")
+  errors = errors + check(contains(groups, "BASIC"),
+                          "GRPLIST contains BASIC")
+  errors = errors + check(contains(groups, "SECOND"),
+                          "GRPLIST contains SECOND")
+
+
+  /*
+   * PURGE removes the selected group from active storage.
+   */
+  address globalv "SELECT SECOND PURGE"
+  errors = errors + check(rc = 0, "PURGE second group")
+
+  listing = .string[]
+  address globalv "SELECT SECOND LIST" output listing
+
+  errors = errors + check(rc = 0, "LIST after PURGE")
+  errors = errors + check(listing[0] = 0,
+                          "PURGE removes group contents")
+
+
+  say
+
+  if errors = 0 then do
+    say "PASS: GLOBALV functional test"
+    return 0
+  end
+
+  say "FAIL: GLOBALV functional test"
+  say "Errors =" errors
+  return 1
+
+
+exit main()

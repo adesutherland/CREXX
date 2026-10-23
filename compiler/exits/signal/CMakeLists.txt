@@ -71,6 +71,8 @@ function(crexx_add_signal_compile_fail_test TARGET_NAME SOURCE_FILE EXPECTED_REG
                     -DEXPECTED_REGEX=${EXPECTED_REGEX}
                     -P ${SIGNAL_COMPILE_FAIL_SCRIPT}
     )
+    crexx_register_test_prep_targets(TESTS ${TARGET_NAME}
+            TARGETS rxc compiler_exit_bin library)
 endfunction()
 
 crexx_add_signal_compile_fail_test(

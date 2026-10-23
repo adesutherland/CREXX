@@ -69,4 +69,6 @@ crexx_label_smoke_tests(
         PREP_TARGETS parser_tester rxas
 )
 
+crexx_register_test_prep_targets(TESTS test_rxas_02_edits TARGETS parser_tester rxas)
+
 crexx_finalize_directory_qa_tiers()

@@ -1,5 +1,101 @@
 # Overnight QA repair — 14 October 2026
 
+## 22 October continuation — MSVC sustained-VM harness compilation
+
+### Vision and intended outcomes
+
+Restore the overnight Windows MSVC correctness lane on the existing hotfix
+branch and publish the bounded repair to develop. The sustained-VM harness
+includes private VM headers and must declare their C11/atomic requirements
+on its own target, including when defined outside the interpreter directory.
+Keep runtime behavior, sustained workload/oracles, platform coverage and the
+approved sanitizer cadence unchanged. Preserve unrelated local work and
+private develop commits; this is a build repair, not release promotion.
+
+### Acceptance criteria
+
+1. **O22-AC01 — done:** identify the actual failing source and generated command
+   in the overnight MSVC job. The failure is compilation of
+   `test_sustained_vm.c` without C11 or the MSVC atomic option, before CTest;
+   the four other comprehensive platforms passed.
+2. **O22-AC02 — implemented; actual MSVC proof pending:** declare C11 and the MSVC atomic option on each sustained
+   harness target. Extend the existing real-MSVC preflight to require the
+   sustained harness command as well as both attached-provider commands;
+   each unchanged positive command compiles and removing only atomic support
+   fails with the expected diagnostic. Run that preflight during normal MSVC
+   publication before building the product as well as in overnight QA.
+3. **O22-AC03 — done:** refresh the existing normal Debug core build and affected
+   harness/fixtures, inspect generated commands, and pass the three existing
+   sustained scenarios on the switch VM. No native ownership algorithm changes
+   or new sanitizer campaign are required for target compile settings.
+4. **O22-AC04 — publication prepared; hosted status pending:** review and publish only this repair and its durable plan
+   on hotfix/develop. Verify remote identities, inspect normal automatic CI,
+   and use its targeted MSVC preflight to verify the actual Windows compiler.
+   Keep pending broad platform assurance explicit and remove task diagnostics.
+
+### Implementation steps
+
+1. **O22-STEP01 — done (AC01):** inspect the overnight jobs/log, read the owning
+   build declarations and preflight, synchronize hotfix with remote develop,
+   and record the bounded contract before implementation.
+2. **O22-STEP02 — done locally (AC02):** apply target-local C11/atomic settings following
+   the existing private-header consumer pattern and extend preflight discovery
+   with exact required-source counts.
+3. **O22-STEP03 — done (AC03), depends on STEP02:** reuse the prepared Debug tree,
+   rebuild current core plus affected prerequisites and run the three existing
+   switch-VM scenarios; inspect the final diff and generated commands.
+4. **O22-STEP04 — publication prepared (AC04), depends on STEP03:** publish the reviewed repair,
+   inspect the normal publication actual-MSVC preflight, verify refs and report
+   hosted status. Do not dispatch a full deep or sanitizer matrix for this target-only repair.
+
+## Current baseline recovery — Windows fixture paths and Apple ticket transport
+
+### Vision and intended outcomes
+
+Restore a publishable baseline on the existing hotfix/develop branches without
+changing product semantics, the approved sanitizer selection or schedule policy.
+Windows fixture ownership must accept a build rooted in a valid DOS short path
+and reject outputs outside that tree. Miniature diagnostic tests must select
+their generator explicitly. Apple installers retain notarization, stapling,
+ticket validation and Gatekeeper checks; address the Intel hosted-runner
+HTTP/3 transport failure with GitHub's documented TCP fallback, accepted by
+Adrian. Preserve private research and Python-removal drafts.
+
+### Acceptance criteria
+
+1. **B21-AC01 — local controls done; Windows execution todo:** normalize both fixture containment operands consistently;
+   forwarding, whole-owner failure and configuration registries pass on Windows
+   and in focused ordinary Debug / maintained Apple ASan controls. Retain
+   outside-tree rejection and original producer argument boundaries.
+2. **B21-AC02 — done:** the late-diagnostic fixture runs with an explicit Ninja
+   generator even when the host defaults to a multiconfig generator. Its
+   semantic-pass negative control still rejects late sanitizer diagnostics.
+3. **B21-AC03 — accepted; local controls done; hosted proof todo:** restrict the Apple transport workaround to disposable
+   GitHub-hosted Intel Mac packaging jobs. A controlled shell fixture verifies
+   the UDP/443 rule, enablement, platform restrictions and error propagation;
+   notarization/stapling gates and bounded retries remain mandatory.
+4. **B21-AC04 — todo:** publish compatible repairs, inspect actual Windows and
+   Intel Mac results and confirm dev-snapshot publication. Reuse unchanged
+   sanitizer proof; do not dispatch a new full sanitizer or deep matrix. Adrian's
+   subsequent schedule-activation request is owned by SCOPE-AC07 in the sanitizer
+   worklist; preserve that explicit workflow-only scope and remove task diagnostics.
+
+### Implementation steps
+
+1. **B21-STEP01 — done (AC01/02/03):** inspect the failed jobs and retained Windows
+   CTest diagnostics; compare fixture paths/generator handling and GitHub's
+   confirmed Intel HTTP/3 failure in actions/runner-images#14924.
+2. **B21-STEP02 — done locally (AC01/02):** repair containment normalization and pin the
+   miniature generator; run existing policy/ownership and late-failure controls
+   in ordinary Debug then maintained Apple ASan. Preserve native Windows proof
+   as a separate outstanding check.
+3. **B21-STEP03 — done locally; accepted by Adrian (AC03):** prepare a
+   runner-restricted Bash helper and controlled shell test; include the approved
+   network change at the Intel core/plugin packaging boundaries.
+4. **B21-STEP04 — todo (AC04), depends on STEP02 and the STEP03 decision:** push
+   the compatible repair set to hotfix/develop, monitor the normal publication
+   jobs lightly and reconcile occupied checkouts without publishing private work.
+
 ## 18 October continuation — binary-import registration and Windows service oracle
 
 ### Vision and intended outcomes

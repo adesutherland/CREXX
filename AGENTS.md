@@ -110,6 +110,23 @@ Do not download and retain a second copy of the logs. Required release and
 sanitizer proof still applies. Keep this publication policy here, not in
 component worklists.
 
+The approved sanitizer profile/preparation strategy is owned by
+`docs/SANITIZER-WORKLIST.md` and operated through
+`docs/ai-context/CREXX_ASAN_TESTING.md`. Adrian approved a component memory suite
+on 22 October: substantial targeted VM/provider ownership coverage, with small
+compiler, assembler and linker memory panels. Each producer stops at its own
+output; do not assemble/run compiler outputs or run assembler outputs merely
+to qualify producer memory. VM fixtures use ordinary producers. Preserve every
+known memory regression and cover named allocation/growth/error/teardown paths;
+functional registration alone does not add a sanitizer test. Avoid application
+workloads such as Level L compilation when targeted VM boundaries cover their
+native behavior. Ordinary functional QA remains complete.
+The master workflow runs this same `daily` memory profile at 03:47 UTC every
+day, including Sunday. History, source/build and toolchain changes invalidate
+incompatible reuse without broadening scope. Explicit full/release/SAN-closure
+proof retains the original complete non-measurement scope and instrumented
+producers; daily memory proof cannot certify that broader assurance.
+
 ## Emitted-code quality
 
 Compiler acceptance includes the quality of emitted code as well as correct
@@ -152,26 +169,28 @@ for a new broad benchmark or release-qualification run.
 
 ## Level L compiler delivery priority
 
-Adrian approved completing the new Level C compiler before proper Level B
-self-hosting on 16 October 2026. `research/level-l/compilers/PLAN.md` owns the C-first
-milestone, its coverage crosswalk and acceptance. Keep `LLCOMP-STEP07B` and its
-criteria open and deferred; preserve the eventual B/G/full-replacement scope.
-The existing native B seed builds the Level B compiler implementation and
-Level L libraries. Use Level L parsing, IR, transformation and emitter services;
-new compilation requests must not delegate to the native compiler.
+Adrian narrowed this delivery to Level C only on 19 October 2026.
+`research/level-l/compilers/PLAN.md` owns its coverage and acceptance. New B/G
+features, proper B self-hosting and combined replacement are outside this
+increment; retain their unverified criteria and existing consumer regressions.
+The native B seed builds the B implementation and Level L libraries. New
+compilation requests use Level L parsing, IR, transformation and emission and
+must not delegate to native source compiler services.
 
-Maintain current G behaviour and regressions when shared services change; G
-feature expansion is not a prerequisite for each C increment. Continue adding
-independent Level L tests for reusable services. Complete C includes the agreed
-Classic instruction/BIF and host contracts, diagnostics, conditions/TRACE and
-INTERPRET. Review and complete instructions one at a time, retaining their
-individual semantics, errors, RXAS-quality evidence and shared dependencies.
-Adrian deferred INTERPRET, including its mechanism review, until later on
-16 October 2026; it remains required for eventual complete C.
-Retain existing language/API/platform decision gates and explicit exclusions.
-Inspect actual RXAS for quality and efficiency throughout, including work hidden
-in helpers; native C output may be faulty or inefficient. The emitted-code
-rules above and the Level L research performance exception below both apply.
+Complete C includes agreed instructions/BIFs, host contracts, diagnostics,
+conditions/TRACE and INTERPRET. Design the complete architecture before
+implementation approval; implement INTERPRET last. Review instructions one at
+a time with individual semantics, errors, RXAS quality and shared dependencies.
+Maintain independent Level L tests. Keep compiler policy, generic L services,
+shared B runtime/Unicode libraries and RXAS/VM infrastructure separately owned.
+Adrian approved the C-only plan and shared B Unicode extraction on 19 October
+2026. Preserve G/C interfaces and one algorithm/data owner; exact new public
+API and ISA contracts retain their decision gates.
+
+Retain language/API/platform decision gates and explicit exclusions. Inspect
+actual RXAS and helper work throughout; native C may be faulty or inefficient.
+The emitted-code rules and Level L research performance exception apply;
+production RXAS/VM performance edits retain their own verdict gate.
 
 ## Working Rules
 
@@ -191,11 +210,17 @@ rules above and the Level L research performance exception below both apply.
   requirement to dispatch overnight assurance or repeat unchanged local QA.
 - Before registering or materially expanding an aggregate CTest that launches
   nested builds, compilers, assemblers, linkers, VMs, or scenario matrices,
-  measure it in isolation in normal Debug and the maintained sanitizer build.
-  Set explicit scheduling and timeout properties from that evidence. Do not
-  inherit an old timeout after materially increasing the test workload, and do
-  not let nested end-to-end aggregates compete in the broad pool when host load
-  can make their inner or outer deadlines nondeterministic.
+  measure it in isolation in normal Debug. For B/Level L/research source-only
+  slices, use focused normal Debug qualification and reuse valid sanitizer
+  evidence for unchanged native inputs. Do not run or refresh sanitizers per
+  slice; any warranted new sanitizer measurement/qualification is consolidated
+  at final delivery, not an automatic campaign for unchanged native code.
+  Native product changes retain their applicable sanitizer requirements, and
+  actual first-party sanitizer findings retain all SAN obligations below.
+  Set explicit scheduling and generous timeout properties from the available
+  evidence; retain serial scheduling for nested aggregates. Do not inherit an
+  old timeout after materially increasing the workload or let nested aggregates
+  compete in the broad pool when load makes their deadlines nondeterministic.
 - In functional QA, use generous wall-clock limits as hang-protection backstops,
   not incidental performance requirements. Avoid short nested or whole-workload
   deadlines that make slower or busy GitHub runners fail correct work. Serialize
@@ -311,8 +336,11 @@ functional tests, explicit resource-limit checks and inspection of emitted-code
 quality remain required. Lightweight timings or counts may inform development;
 label their conditions and do not present them as formal performance claims.
 Investigate observed pathological cost without automatically launching a
-benchmark campaign. This exception does not waive sanitizer findings, measured
-CTest scheduling, or the later explicitly agreed production-replacement gates.
+benchmark campaign. Source-only slices follow the consolidated sanitizer rule
+above; unchanged native inputs do not require a new ASan/LSan campaign. This
+exception does not waive actual sanitizer findings, native product requirements,
+measured CTest scheduling, or the later explicitly agreed production-replacement
+gates.
 
 For performance-programme work, read `performance/AGENTS.md` and
 `performance/ROADMAP.md` before changing benchmarks, profiling automation,

@@ -68,6 +68,7 @@ target_include_directories(test_rxas_flow_graph PRIVATE
         ../assembler ../binutils/include ${CMAKE_BINARY_DIR}/assembler)
 target_link_libraries(test_rxas_flow_graph PRIVATE rxaslib avl_tree platform)
 add_test(NAME rxas_flow_graph_contract COMMAND test_rxas_flow_graph)
+crexx_register_test_prep_targets(TESTS rxas_flow_graph_contract TARGETS test_rxas_flow_graph)
 set_tests_properties(rxas_flow_graph_contract PROPERTIES
         LABELS "rxas;optimizer;flow;metadata"
         TIMEOUT 30)
@@ -399,6 +400,12 @@ foreach(_binfile ${REXXTESTBINS})
    )
    set(_prev_dependency ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
+
+
+set_tests_properties(crexx_expected_failure_contract PROPERTIES CREXX_PREP_NONE TRUE)
+
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS rxinteger_contract TARGETS test_rxinteger_contract)
 
 crexx_finalize_directory_qa_tiers()
 

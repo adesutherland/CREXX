@@ -99,7 +99,7 @@ set(_crexx_build_worker_import_root
         "${_crexx_build_worker_root}/controller-imports")
 set(_crexx_build_worker_import
         "${_crexx_build_worker_import_root}/crexx_build_worker.rxbin")
-add_custom_command(
+crexx_add_fixture_command(
         OUTPUT
                 ${_crexx_build_worker_rxbin}
                 ${_crexx_build_worker_import}
@@ -138,7 +138,7 @@ add_custom_target(crexx_build_worker
 
 set(_crexx_driver_source_root "${CMAKE_CURRENT_BINARY_DIR}/sources/crexx")
 set(_crexx_driver_source "${_crexx_driver_source_root}/crexx.crexx")
-add_custom_command(
+crexx_add_fixture_command(
         BYPRODUCTS
                 ${CMAKE_CURRENT_BINARY_DIR}/crexx.rxbin
                 ${CMAKE_CURRENT_BINARY_DIR}/crexx_linked.rxbin

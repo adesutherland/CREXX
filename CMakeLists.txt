@@ -244,6 +244,7 @@ endif()
 include(CTest)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxQaTiers.cmake)
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxImportRoots.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxQaFixtures.cmake)
 
 # CREXX only uses re2c itself for scanner generation; do not build the
 # language alias binaries by default.
@@ -415,6 +416,10 @@ add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(driver crexx_driver)
 add_subdirectory(tools/rxbuild)
+
+if(BUILD_TESTING)
+    include(${CMAKE_SOURCE_DIR}/cmake/CrexxMemoryTests.cmake)
+endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxWindowsUtf8.cmake)
 
@@ -868,3 +873,5 @@ if(BUILD_TESTING)
             VERBATIM
             COMMENT "Running focused optimized/non-optimized correctness parity")
 endif()
+
+crexx_finalize_qa_fixtures()

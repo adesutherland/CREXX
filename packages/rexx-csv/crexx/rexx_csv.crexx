@@ -1,0 +1,434 @@
+/* rexx-csv, MIT License. Copyright (c) 2026 Adrian Sutherland.
+ * Shared format and resource contract: ../SPEC.md. See ../LICENSE.
+ */
+options levelb
+namespace rexx_csv expose csvrow csvdocument csvoutput csvparse csvwrite
+import rxfnsb
+
+/** Immutable row value. An empty row may be constructed but cannot be written. */
+csvrow: class
+  _values = .string[]
+
+  /** @param values borrowed dense one-based fields, copied into this row */
+  *: factory
+    arg expose values = .string[]
+    _values = values
+
+  /** @return number of fields */
+  field_count: method = .int
+    return _values[0]
+
+  /** @param column one-based field @return exact text @signal INVALID_ARGUMENTS */
+  field: method = .string
+    arg column = .int
+    if column < 1 | column > _values[0] then do
+      signal invalid_arguments "CSV field index out of range"
+      return ""
+    end
+    return _values[column]
+
+/** Immutable parse result with flat cells and row-end indexes. */
+csvdocument: class
+  _cells = .string[]
+  _ends = .int[]
+  _ok = .int
+  _code = .string
+  _record = .int
+  _field = .int
+  _limit = .string
+
+  /** @param text valid Unicode CSV text; fields and framing are not normalized */
+  *: factory
+    arg text = .string
+    source = text as .binary
+    cells = .string[]
+    ends = .int[]
+    code = ""
+    record = 0
+    column = 0
+    limit = ""
+    _ok = _csv_parse(source, cells, ends, code, record, column, limit)
+    if _ok = 1 then do
+      _cells = cells
+      _ends = ends
+      _code = ""
+      _record = 0
+      _field = 0
+      _limit = ""
+    end
+    else do
+      _code = code
+      _record = record
+      _field = column
+      _limit = limit
+    end
+
+  /** @return 1 on success, otherwise 0 */
+  ok: method = .int
+    return _ok
+
+  /** @return row count, or zero on failure */
+  row_count: method = .int
+    return _ends[0]
+
+  /** @param row one-based row @return field count, or -1 for invalid usage */
+  field_count: method = .int
+    arg row = .int
+    if row < 1 | row > _ends[0] then return -1
+    first = 0
+    if row > 1 then first = _ends[row - 1]
+    return _ends[row] - first
+
+  /** @param row one-based row @param column one-based field
+   * @return exact text @signal INVALID_ARGUMENTS for an invalid index/result
+   */
+  field: method = .string
+    arg row = .int, column = .int
+    count = field_count(row)
+    if count < 0 | column < 1 | column > count then do
+      signal invalid_arguments "CSV row or field index out of range"
+      return ""
+    end
+    first = 0
+    if row > 1 then first = _ends[row - 1]
+    return _cells[first + column]
+
+  /** @return independently owned row values; empty on failure */
+  rows: method = .csvrow[]
+    result = .csvrow[]
+    values = .string[]
+    first = 0
+    do row = 1 to _ends[0]
+      call arraydrop values
+      do cell = first + 1 to _ends[row]
+        values[cell - first] = _cells[cell]
+      end
+      result[row] = .csvrow(values)
+      first = _ends[row]
+    end
+    return result
+
+  /** @return stable error code, or empty on success */
+  error_code: method = .string
+    return _code
+  /** @return logical record, or zero for preflight/success */
+  error_record: method = .int
+    return _record
+  /** @return logical field, or zero for preflight/success */
+  error_field: method = .int
+    return _field
+  /** @return exceeded limit name, otherwise empty */
+  error_limit: method = .string
+    return _limit
+  /** @return human-readable diagnostic, or empty on success */
+  error: method = .string
+    return _csv_message(_code, _limit)
+
+/** Immutable canonical writer result. */
+csvoutput: class
+  _text = .string
+  _ok = .int
+  _code = .string
+  _record = .int
+  _field = .int
+  _limit = .string
+
+  /** @param rows borrowed dense row array; neither rows nor fields are mutated */
+  *: factory
+    arg expose rows = .csvrow[]
+    output = .binary
+    code = ""
+    record = 0
+    column = 0
+    limit = ""
+    _ok = _csv_write(rows, output, code, record, column, limit)
+    if _ok = 1 then do
+      _text = output as .string
+      _code = ""
+      _record = 0
+      _field = 0
+      _limit = ""
+    end
+    else do
+      _text = ""
+      _code = code
+      _record = record
+      _field = column
+      _limit = limit
+    end
+
+  /** @return 1 on success, otherwise 0 */
+  ok: method = .int
+    return _ok
+  /** @return complete canonical text, or empty on failure */
+  text: method = .string
+    return _text
+  /** @return stable error code, or empty on success */
+  error_code: method = .string
+    return _code
+  /** @return logical record, or zero on success */
+  error_record: method = .int
+    return _record
+  /** @return logical field, or zero on success; empty row uses zero */
+  error_field: method = .int
+    return _field
+  /** @return exceeded limit name, otherwise empty */
+  error_limit: method = .string
+    return _limit
+  /** @return human-readable diagnostic, or empty on success */
+  error: method = .string
+    return _csv_message(_code, _limit)
+
+/** @param text valid Unicode CSV @return immutable parse result */
+csvparse: procedure = .csvdocument
+  arg text = .string
+  return .csvdocument(text)
+
+/** @param rows borrowed dense row values @return immutable writer result */
+csvwrite: procedure = .csvoutput
+  arg expose rows = .csvrow[]
+  return .csvoutput(rows)
+
+/* Read-only source borrowing avoids copying the document for each span.
+ * State 0: field start, 1: unquoted, 2: quoted, 3: after closing quote.
+ * Only escaped quotes split spans. Ordinary data is never appended bytewise.
+ */
+_csv_parse: procedure = .int
+  arg expose source = .binary, expose cells = .string[], expose ends = .int[], expose code = .string, expose record = .int, expose column = .int, expose limit = .string
+  size = binlength(source)
+  if size > 16777216 then do
+    code = "E_LIMIT"
+    limit = "input_bytes"
+    return 0
+  end
+  p = 0
+  if size >= 3 then do
+    if <at..u8>(0) source = 239 & <at..u8>(1) source = 187 & <at..u8>(2) source = 191 then p = 3
+  end
+  if p = size then return 1
+  record = 1
+  column = 1
+  total = 1
+  state = 0
+  span = p
+  decoded = 0
+  value = .binary
+  next = .int
+  do forever
+    byte = -1
+    if p < size then byte = <at..u8>(p) source
+    if byte = 0 then do
+      code = "E_NUL"
+      return 0
+    end
+    if state = 2 then do
+      if byte = -1 then do
+        code = "E_UNCLOSED_QUOTE"
+        return 0
+      end
+      if byte = 34 then do
+        next = -1
+        if p + 1 < size then next = <at..u8>(p + 1) source
+        if next = 34 then do
+          decoded = decoded + 1
+          if decoded > 1048576 then do
+            code = "E_LIMIT"
+            limit = "field_bytes"
+            return 0
+          end
+          call _csv_append_span value, source, span, p - span + 1
+          p = p + 2
+          span = p
+        end
+        else do
+          call _csv_append_span value, source, span, p - span
+          state = 3
+          p = p + 1
+        end
+      end
+      else do
+        decoded = decoded + 1
+        if decoded > 1048576 then do
+          code = "E_LIMIT"
+          limit = "field_bytes"
+          return 0
+        end
+        p = p + 1
+      end
+      iterate
+    end
+    if state = 0 & byte = 34 then do
+      state = 2
+      p = p + 1
+      span = p
+      iterate
+    end
+    if byte = -1 | byte = 44 | byte = 10 | byte = 13 then do
+      step = 1
+      if byte = 13 then do
+        next = -1
+        if p + 1 < size then next = <at..u8>(p + 1) source
+        if next \= 10 then do
+          code = "E_RECORD_SEPARATOR"
+          return 0
+        end
+        step = 2
+      end
+      if state \= 3 then call _csv_append_span value, source, span, p - span
+      cells[total] = value as .string
+      call binclear value
+      decoded = 0
+      state = 0
+      p = p + step
+      span = p
+      if byte = 44 then do
+        column = column + 1
+        total = total + 1
+        if column > 1024 then do
+          code = "E_LIMIT"
+          limit = "fields_per_record"
+          return 0
+        end
+      end
+      else do
+        ends[record] = total
+        if byte = -1 | p >= size then return 1
+        record = record + 1
+        column = 1
+        total = total + 1
+        if record > 10000 then do
+          code = "E_LIMIT"
+          limit = "records"
+          return 0
+        end
+      end
+      if total > 100000 then do
+        code = "E_LIMIT"
+        limit = "total_fields"
+        return 0
+      end
+      iterate
+    end
+    if state = 3 then do
+      code = "E_AFTER_QUOTE"
+      return 0
+    end
+    if byte = 34 then do
+      code = "E_QUOTE"
+      return 0
+    end
+    state = 1
+    decoded = decoded + 1
+    if decoded > 1048576 then do
+      code = "E_LIMIT"
+      limit = "field_bytes"
+      return 0
+    end
+    p = p + 1
+  end
+  return 0
+
+_csv_append_span: procedure = .void
+  arg expose target = .binary, expose source = .binary, start = .int, count = .int
+  if count > 0 then call binappend target, <at..binary>(start, count) source
+  return
+
+_csv_write: procedure = .int
+  arg expose rows = .csvrow[], expose output = .binary, expose code = .string, expose record = .int, expose column = .int, expose limit = .string
+  total = 0
+  written = 0
+  quote = '22'x as .binary
+  comma = '2c'x as .binary
+  crlf = '0d0a'x as .binary
+  p = .int
+  do record = 1 to rows[0]
+    column = 1
+    if record > 10000 then do
+      code = "E_LIMIT"
+      limit = "records"
+      return 0
+    end
+    current = rows[record]
+    if initialized(current) = 0 then do
+      signal invalid_arguments "CSV writer requires initialized row values"
+      return 0
+    end
+    count = current.field_count()
+    if count = 0 then do
+      code = "E_EMPTY_ROW"
+      column = 0
+      return 0
+    end
+    do column = 1 to count
+      if column > 1024 then do
+        code = "E_LIMIT"
+        limit = "fields_per_record"
+        return 0
+      end
+      total = total + 1
+      if total > 100000 then do
+        code = "E_LIMIT"
+        limit = "total_fields"
+        return 0
+      end
+      data = current.field(column) as .binary
+      size = binlength(data)
+      quoted = 0
+      if size = 0 then quoted = 1
+      quotes = 0
+      do p = 0 to size - 1
+        byte = <at..u8>(p) data
+        if byte = 0 then do
+          code = "E_NUL"
+          return 0
+        end
+        if p >= 1048576 then do
+          code = "E_LIMIT"
+          limit = "field_bytes"
+          return 0
+        end
+        if byte = 34 then quotes = quotes + 1
+        if byte = 34 | byte = 44 | byte = 13 | byte = 10 then quoted = 1
+      end
+      if record = 1 & column = 1 & size >= 3 then do
+        if <at..u8>(0) data = 239 & <at..u8>(1) data = 187 & <at..u8>(2) data = 191 then quoted = 1
+      end
+      contribution = size + quotes + 2 * quoted
+      if column > 1 then contribution = contribution + 1
+      if column = count then contribution = contribution + 2
+      if written + contribution > 16777216 then do
+        code = "E_LIMIT"
+        limit = "output_bytes"
+        return 0
+      end
+      written = written + contribution
+      if column > 1 then call binappend output, comma
+      if quoted = 1 then call binappend output, quote
+      if quotes = 0 then call binappend output, data
+      else do
+        span = 0
+        do p = 0 to size - 1
+          if <at..u8>(p) data = 34 then do
+            call _csv_append_span output, data, span, p - span + 1
+            call binappend output, quote
+            span = p + 1
+          end
+        end
+        call _csv_append_span output, data, span, size - span
+      end
+      if quoted = 1 then call binappend output, quote
+      if column = count then call binappend output, crlf
+    end
+  end
+  return 1
+
+_csv_message: procedure = .string
+  arg code = .string, limit = .string
+  if code = "E_QUOTE" then return "Quote in an unquoted field"
+  if code = "E_AFTER_QUOTE" then return "Unexpected character after closing quote"
+  if code = "E_UNCLOSED_QUOTE" then return "Unclosed quoted field"
+  if code = "E_RECORD_SEPARATOR" then return "Lone CR outside quotes"
+  if code = "E_NUL" then return "NUL is not permitted in CSV text"
+  if code = "E_EMPTY_ROW" then return "A CSV row must contain at least one field"
+  if code = "E_LIMIT" then return "CSV resource limit exceeded: " || limit
+  return ""

@@ -1,0 +1,80 @@
+/* Focused GLOBALV ADDRESS facade contract. */
+options levelg
+
+namespace globalv_address_test
+
+import _rxsysb
+import rxfnsb
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  say "CHECK: " || label
+  if \condition then do
+    say "FAIL: GLOBALV " || label
+    return 1
+  end
+  return 0
+
+main: procedure = .int
+  errors = 0
+  listing = .string[]
+  groups = .string[]
+  stack = .string[]
+  color = .string
+  env = .addressenvironment
+  ignored = .int
+
+  address globalv "INIT"
+  errors = errors + check(rc = 0, "INIT")
+  errors = errors + check(addresscall("globalv", "id") = "rexx:GLOBALV", "ID")
+  errors = errors + check(addresscall("globalv", "name") = "GLOBALV", "NAME")
+
+  address globalv "SELECT TEST SETL COLOR Blue sky"
+  errors = errors + check(rc = 0, "SETL")
+  color = ""
+  address globalv "SELECT TEST GET :color"
+  errors = errors + check(rc = 0 & color = "Blue sky", "GET host binding")
+
+  color = "Green"
+  address globalv "SELECT TEST PUTL :color"
+  errors = errors + check(rc = 0, "PUTL host binding")
+  listing = .string[]
+  address globalv "SELECT TEST LIST" output listing
+  errors = errors + check(rc = 0 & listing.0 = 1 & pos("Green", listing[1]) > 0, "LIST")
+
+  stack = .string[]
+  address globalv "SELECT TEST STACK COLOR" output stack
+  errors = errors + check(rc = 0 & stack.0 = 1 & stack[1] = "Green", "STACK")
+  groups = .string[]
+  address globalv "GRPLIST" output groups
+  errors = errors + check(rc = 0 & groups.0 = 1 & groups[1] = "TEST", "GRPLIST")
+
+  address globalv "SELECT TEST SETS SESSION only"
+  errors = errors + check(rc = 0, "SETS")
+  address globalv "SELECT TEST SETP BOTH lasting and session"
+  errors = errors + check(rc = 0, "SETP")
+  address globalv "INIT"
+  errors = errors + check(rc = 0, "second INIT")
+  ignored = arraydrop(listing)
+  listing = .string[]
+  address globalv "SELECT TEST LIST" output listing
+  errors = errors + check(rc = 0 & listing.0 = 2, "INIT keeps lasting values")
+
+  address globalv "SELECT TEST PURGE"
+  errors = errors + check(rc = 0, "PURGE")
+  ignored = arraydrop(listing)
+  listing = .string[]
+  address globalv "SELECT TEST LIST" output listing
+  errors = errors + check(rc = 0 & listing.0 = 0, "PURGE removes group")
+
+  env = addressenv("globalv")
+  errors = errors + check(env.environment_name() = "GLOBALV", "environment object")
+
+  if errors <> 0 then do
+    say "FAIL: GLOBALV ADDRESS errors=" || errors
+    return 1
+  end
+  say "PASS: GLOBALV ADDRESS contract"
+  return 0
+
+exit main()

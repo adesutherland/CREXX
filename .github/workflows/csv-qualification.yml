@@ -1,0 +1,77 @@
+name: CSV qualification
+
+on:
+  push:
+    branches: [hotfix2, develop, master]
+    paths:
+      - packages/rexx-csv/**
+      - .github/workflows/csv-qualification.yml
+  pull_request:
+    branches: [develop, master]
+    paths:
+      - packages/rexx-csv/**
+      - .github/workflows/csv-qualification.yml
+  workflow_dispatch:
+    inputs:
+      runtime:
+        description: Runtime selection; all runs the full matrix
+        type: choice
+        options: [all, crexx, regina, oorexx, netrexx]
+        default: all
+      platform:
+        description: Hosted platform selection
+        type: choice
+        options: [all, ubuntu-24.04, windows-2025]
+        default: all
+      classic_group:
+        description: Classic contract group; a subset is a diagnostic, not full qualification
+        type: choice
+        options: [all, ownership, fields, counts, large, quotes]
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    name: ${{ matrix.runtime }} / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    # Classic's large Unicode/value contracts are slower than literal fixtures.
+    # This is hang protection, not a performance acceptance threshold.
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(inputs.platform != '' && inputs.platform != 'all' && format('["{0}"]', inputs.platform) || '["ubuntu-24.04", "windows-2025"]') }}
+        runtime: ${{ fromJSON(inputs.runtime != '' && inputs.runtime != 'all' && format('["{0}"]', inputs.runtime) || '["crexx", "regina", "oorexx", "netrexx"]') }}
+    env:
+      PYTHONUTF8: '1'
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONUNBUFFERED: '1'
+    steps:
+      - name: Preserve the source and fixture byte identities
+        shell: python
+        run: |
+          import subprocess
+          subprocess.run(['git', 'config', '--global', 'core.autocrlf', 'false'], check=True)
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-java@v5
+        if: matrix.runtime == 'netrexx'
+        with:
+          distribution: temurin
+          java-version: '26.0.1+8'
+      - name: Qualify fixtures, contracts and fresh source-package consumer
+        env:
+          CSV_RUNTIME: ${{ matrix.runtime }}
+          CSV_CLASSIC_GROUP: ${{ inputs.classic_group || 'all' }}
+        shell: python
+        run: |
+          import os, subprocess, sys
+          subprocess.run([sys.executable, 'packages/rexx-csv/tests/qualify_hosted.py',
+                          '--runtime', os.environ['CSV_RUNTIME'],
+                          '--classic-group', os.environ['CSV_CLASSIC_GROUP']], check=True)

@@ -35,14 +35,14 @@ foreach(stage RANGE 0 2)
     set(seed ON)
   else()
     math(EXPR previous "${stage} - 1")
-    add_custom_command(OUTPUT "${dir}/llsyntax.rxas"
+    crexx_add_fixture_command(OUTPUT "${dir}/llsyntax.rxas"
       COMMAND ${CMAKE_COMMAND} -DLEVEL_L_VM=$<TARGET_FILE:${_ll_vm}>
         -DLEVEL_L_BYTECODE=${_ll_root}/L${previous}/rxlang-linked.rxbin
         -DSPEC=${_ll_spec} -DOUTPUT=${dir}/llsyntax.rxas -DFORMAT=rxas
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate.cmake"
       DEPENDS ${_ll_vm} "${_ll_root}/L${previous}/rxlang-linked.rxbin"
         "${_ll_spec}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate.cmake" VERBATIM)
-    add_custom_command(OUTPUT "${dir}/llsyntax.rxbin"
+    crexx_add_fixture_command(OUTPUT "${dir}/llsyntax.rxbin"
       COMMAND $<TARGET_FILE:rxas> ${_ll_flags} "${dir}/llsyntax"
       DEPENDS rxas "${dir}/llsyntax.rxas" VERBATIM)
     set(syntax "${dir}/llsyntax.rxbin")
@@ -59,7 +59,7 @@ foreach(stage RANGE 0 2)
       -DSEED_SOURCE=${_ll_seed} -DOUTPUT=${dir}/source/llfront.crexx
       -P "${_ll_prepare}"
     DEPENDS "${_ll_front}" "${_ll_seed}" "${_ll_prepare}" VERBATIM)
-  add_custom_command(OUTPUT "${dir}/llfront.rxbin"
+  crexx_add_fixture_command(OUTPUT "${dir}/llfront.rxbin"
     COMMAND $<TARGET_FILE:rxc> ${_ll_flags} -x --no-exe-import
       -i "${_ll_front_imports}" -o "${dir}/llfront" "${dir}/source/llfront.crexx"
     COMMAND $<TARGET_FILE:rxas> ${_ll_flags} "${dir}/llfront"
@@ -73,7 +73,7 @@ foreach(stage RANGE 0 2)
     OUTPUT_VARIABLE _ll_driver_import_files
     FILES "${dir}/llfront.rxbin" ${syntax}
     DEPENDS "${dir}/llfront.rxbin" ${syntax})
-  add_custom_command(OUTPUT "${dir}/llgenerate.rxbin"
+  crexx_add_fixture_command(OUTPUT "${dir}/llgenerate.rxbin"
     COMMAND $<TARGET_FILE:rxc> ${_ll_flags} -x --no-exe-import
       -i "${_ll_root}/imports;${dir}/driver-imports" -o "${dir}/llgenerate" "${CMAKE_CURRENT_SOURCE_DIR}/rexx/llgenerate.crexx"
     COMMAND $<TARGET_FILE:rxas> ${_ll_flags} "${dir}/llgenerate"
@@ -82,7 +82,7 @@ foreach(stage RANGE 0 2)
   crexx_add_import_root(levell_service_imports_${stage}
     DIRECTORY "${dir}/service-imports" OUTPUT_VARIABLE _ll_service_import_files
     FILES "${dir}/llgenerate.rxbin" DEPENDS "${dir}/llgenerate.rxbin")
-  add_custom_command(OUTPUT "${dir}/rxlang-linked.rxbin"
+  crexx_add_fixture_command(OUTPUT "${dir}/rxlang-linked.rxbin"
     BYPRODUCTS "${dir}/rxlang.rxas" "${dir}/rxlang.rxbin"
     COMMAND $<TARGET_FILE:rxc> ${_ll_flags} -x --no-exe-import
       -i "${_ll_root}/imports;${dir}/driver-imports;${dir}/service-imports" -o "${dir}/rxlang" "${CMAKE_CURRENT_SOURCE_DIR}/rxlang.crexx"
@@ -103,7 +103,7 @@ add_custom_target(rxlang_bootstrap DEPENDS "${_ll_root}/verified.stamp")
 set(_ll_control "${_ll_root}/library.ctl")
 file(GENERATE OUTPUT "${_ll_control}" CONTENT
   "INPUT ${_ll_root}/L2/llfront.rxbin\nINPUT ${_ll_root}/L2/llsyntax.rxbin\nINPUT ${_ll_root}/L2/llgenerate.rxbin\nINCLUDE llfront\nINCLUDE llsyntax\nINCLUDE llgenerate\nPRESERVE INLINE\nOUTPUT ${CMAKE_BINARY_DIR}/bin/rxlanglib\n")
-add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin"
+crexx_add_fixture_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin"
   COMMAND $<TARGET_FILE:rxlink> -c "${_ll_control}"
   DEPENDS rxlink "${_ll_root}/verified.stamp" "${_ll_control}" VERBATIM)
 add_custom_target(rxlanglib ALL DEPENDS "${CMAKE_BINARY_DIR}/bin/rxlanglib.rxbin")

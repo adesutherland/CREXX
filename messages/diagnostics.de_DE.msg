@@ -153,6 +153,7 @@ RXPP_MACLIB_MISSING = Makrobibliothek wurde nicht gefunden oder ist nicht zugän
 RXPP_MACRO_EMPTY_BODY = Makro-Body ist leer oder die geschweiften Klammern fehlen: {name}.
 RXPP_MACRO_MISSING_RPAREN = Makrodefinition enthält keine schließende Klammer: {definition}.
 RXPP_MACRO_UNCLOSED = Makrodefinition ist nicht geschlossen: {name}.
+RXPP_MACRO_FORWARDING_POSITION = Benannter variadischer Weiterleitungsparameter muss am Ende von {macro}({arguments}) stehen.
 RXPP_MISSING_ENDIF = Kein passendes ##ENDIF nach Zeile {line} gefunden.
 RXPP_EXTERNAL_REQUIRES_MODULE = ##EXTERNAL erfordert einen Modulnamen.
 RXPP_NO_SOURCE_FILE = Keine Source-Datei angegeben.

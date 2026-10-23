@@ -1,0 +1,65 @@
+/* rexx-csv file consumer, MIT License; see ../LICENSE. */
+options binary
+import rexxcsv.Csv
+import java.nio.ByteBuffer
+import java.nio.file.Files
+import java.nio.file.OpenOption
+import java.nio.file.InvalidPathException
+import java.nio.charset.StandardCharsets
+import java.nio.charset.CodingErrorAction
+import java.nio.charset.CharacterCodingException
+import java.io.File
+import java.io.IOException
+class NetRexxDemo public final
+  method main(args = String[]) public static
+    do
+      run(args)
+    catch CharacterCodingException
+      say 'Invalid UTF-8 input'
+      System.exit(1)
+    catch IOException
+      say 'CSV file I/O failed'
+      System.exit(1)
+    catch InvalidPathException
+      say 'Invalid file path'
+      System.exit(1)
+    end
+
+  method run(args = String[]) private static signals IOException, CharacterCodingException
+    if args.length > 2 then do
+      say 'Usage: NetRexxDemo [input-file [output-file]]'
+      System.exit(1)
+      return
+    end
+    text = String 'name,city' || String(Character.toChars(10)) || '"Ada, Jr.",Montréal'
+    if args.length > 0 then do
+      input = File(args[0]).toPath()
+      if Files.size(input) > 16777216 then do
+        say 'E_LIMIT input_bytes'
+        System.exit(1)
+        return
+      end
+      bytes = Files.readAllBytes(input)
+      decoder = StandardCharsets.UTF_8.newDecoder()
+      decoder.onMalformedInput(CodingErrorAction.REPORT)
+      decoder.onUnmappableCharacter(CodingErrorAction.REPORT)
+      text = decoder.decode(ByteBuffer.wrap(bytes)).toString()
+    end
+    document = Csv.parse(text)
+    if \document.ok() then do
+      say document.errorCode() 'record' document.errorRecord() 'field' document.errorField()
+      System.exit(1)
+      return
+    end
+    output = Csv.write(document.rows())
+    if \output.ok() then do
+      say output.errorCode() output.error()
+      System.exit(1)
+      return
+    end
+    if args.length > 1 then do
+      /* All input decoding/parsing/writing checks precede opening the output. */
+      target = File(args[1]).toPath()
+      Files.write(target, output.text().getBytes(StandardCharsets.UTF_8), OpenOption[0])
+    end
+    say 'PASS: CSV example;' document.rowCount() 'rows'

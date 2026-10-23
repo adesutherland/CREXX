@@ -88,6 +88,18 @@ add_test(NAME rxpp_script_macro_exact_match
 set_tests_properties(rxpp_script_macro_exact_match PROPERTIES
         LABELS "preprocessor;macros;regression")
 
+add_test(NAME rxpp_variadic_forwarding
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DRXC_BIN=$<TARGET_FILE:rxc>
+             -DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rxpp_variadic_forwarding.rxpp
+             -DOUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/rxpp_variadic_forwarding.out.crexx
+             -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_variadic_forwarding.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_variadic_forwarding PROPERTIES
+        LABELS "preprocessor;macros;regression")
+
 add_test(NAME rxpp_loadmacro
          COMMAND ${CMAKE_COMMAND}
              -DRXPP_BIN=$<TARGET_FILE:rxpp>
@@ -185,6 +197,7 @@ crexx_label_smoke_tests(
         rxpp_srcmap
         rxpp_relative_include
         rxpp_script_macro_exact_match
+        rxpp_variadic_forwarding
         rxpp_loadmacro
         rxpp_mcall_depth
         rxpp_sh_tokens
@@ -193,7 +206,7 @@ crexx_label_smoke_tests(
 )
 crexx_register_test_prep_targets(
         TESTS rxpp_smoke rxpp_srcmap rxpp_relative_include
-              rxpp_script_macro_exact_match rxpp_loadmacro
+              rxpp_script_macro_exact_match rxpp_variadic_forwarding rxpp_loadmacro
               rxpp_mcall_depth
         TARGETS rxc)
 if(ENABLE_PARSER_MODE)

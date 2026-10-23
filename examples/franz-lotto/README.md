@@ -6,6 +6,17 @@ tips, draws without duplicate balls within each pool, sorts the results and
 writes a file only on explicit Save. Distinct tips may repeat by chance; the
 two Euro pools are independent. These are recreational programming examples.
 
+The procedural ANSI application is also available as one source-only RXPIP
+package, `crexx-lotto` 0.1.1. It includes the application, model, checks,
+Markdown instructions and MIT licence, and uses the complete Beta 3 core's
+`rxconsole` provider. See the [package guide](rxpip/lotto-README.md). Generate
+a new archive with `python3 examples/franz-lotto/package-rxpip.py OUTPUT.rxpkg`
+from the repository root. This prepares a local artifact; it does not publish
+it. RXPIP installation is supported, with foreground execution through the
+ordinary cREXX tools because RXPIP's current `run` captures child output.
+The package prominently credits Franz Marx for the original LottoV41 example;
+Adrian Sutherland provided the cREXX console adaptation and package preparation.
+
 - [cREXX ANSI](crexx/lotto.crexx): procedural Level B screen using the shipped
   `rxconsole` primitives, compatible with the released **1.0.0 Beta 3** tools.
 - [NetRexx Swing](netrexx/LottoWindow.nrx): desktop window with three exclusive

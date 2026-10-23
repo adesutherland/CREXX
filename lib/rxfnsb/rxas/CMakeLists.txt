@@ -30,7 +30,7 @@ set(RXXFNSB_RXAS_ARCHIVE "${RXXFNSB_RXAS_ARCHIVE}" PARENT_SCOPE)
 unset(_prev_target)
 foreach(_binfile ${RXASBINS})
   get_filename_component(_basename ${_binfile} NAME_WE)
-  add_custom_command(
+  crexx_add_fixture_command(
           COMMAND $<TARGET_FILE:rxas> -o ${_basename} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
           DEPENDS rxas ${_basename}.rxas ${_prev_target}
           OUTPUT ${_binfile}

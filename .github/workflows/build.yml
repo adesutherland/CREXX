@@ -209,7 +209,9 @@ jobs:
         if: matrix.toolchain == 'msvc'
         shell: cmd
         run: |
-          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF ${{ matrix.cmake_args }}
+          cmake -S . -DCREXX_BUILD_RESEARCH_COMPILERS=ON -G Ninja -B "${{ runner.temp }}/build" -DCMAKE_BUILD_TYPE=Release -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCREXX_QA_CTEST_JOBS=${{ matrix.test_jobs }} -DCREXX_VERSION_OVERRIDE="${{ needs.version.outputs.version }}" -DCREXX_BUILD_CHANNEL="${{ needs.version.outputs.channel }}" -DCREXX_BUILD_TIMESTAMP="${{ needs.version.outputs.timestamp }}" -DCREXX_BUILD_COMMIT="${{ needs.version.outputs.commit }}" -DCREXX_ALLOW_NETWORK_DOWNLOADS=ON -DENABLE_LLAMA=OFF ${{ matrix.cmake_args }}
+          if not "%errorlevel%"=="0" exit /b %errorlevel%
+          python scripts/ci-msvc-atomics-preflight.py "${{ runner.temp }}/build"
           if not "%errorlevel%"=="0" exit /b %errorlevel%
           cmake --build "${{ runner.temp }}/build" --target stage-product stage-optional sqlite sqlite_static vector vector_static --parallel ${{ matrix.build_jobs }}
           if not "%errorlevel%"=="0" exit /b %errorlevel%
@@ -474,7 +476,9 @@ jobs:
       - name: Check macOS installer stapling recovery
         if: matrix.platform == 'macos'
         shell: bash
-        run: python scripts/test-macos-stapling.py
+        run: |
+          python scripts/test-macos-stapling.py
+          bash scripts/test-macos-stapling-network.sh
 
       - name: Package and smoke the actual core ZIP
         shell: bash
@@ -704,6 +708,11 @@ jobs:
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait
+
+      - name: Use TCP for Intel Apple ticket requests
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.core_platform == 'macos-x86_64' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        shell: bash
+        run: bash scripts/prepare-macos-stapling-network.sh
 
       - name: Notarize and staple macOS installer
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
@@ -1310,6 +1319,11 @@ jobs:
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait
+
+      - name: Use TCP for Intel Apple ticket requests
+        if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.os == 'macos-15-intel' && steps.macos_signing.outputs.pkg_enabled == 'true'
+        shell: bash
+        run: bash scripts/prepare-macos-stapling-network.sh
 
       - name: Package, notarize and staple optional macOS plugin installer
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop') || (github.event_name == 'workflow_dispatch' && inputs.sign_candidate && startsWith(github.ref, 'refs/heads/temp/llama-release-'))) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'

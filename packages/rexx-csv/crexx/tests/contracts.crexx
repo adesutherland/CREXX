@@ -1,0 +1,273 @@
+/* rexx-csv boundary and binding tests. MIT; see ../../LICENSE. */
+options levelb
+import rxfnsb
+import rexx_csv
+
+lf = '0a'x
+crlf = '0d0a'x
+values = .string[]
+rows = .csvrow[]
+i = .int
+empty = csvparse("")
+emptyrows = empty.rows()
+
+/* B001/B002/B003: snapshot inputs, independent results, nested calls. */
+text = "one,two"
+first = csvparse(text)
+text = "changed"
+bad = csvparse('"unfinished')
+last = csvparse("three")
+call check_text "retained parse", first.field(1, 2), "two"
+call check_int "failure is atomic", bad.row_count(), 0
+call check_text "later success", last.field(1, 1), "three"
+values[1] = "original"
+one = .csvrow(values)
+values[1] = "changed"
+call check_text "row snapshot", one.field(1), "original"
+rows[1] = one
+written = csvwrite(rows)
+rows[1] = .csvrow(values)
+call check_text "writer snapshot", written.text(), "original" || crlf
+exported = first.rows()
+exported[1] = .csvrow(values)
+call check_text "export does not mutate parse", first.field(1, 1), "one"
+nested = csvparse(csvparse("retained").field(1, 1))
+call check_text "nested result", nested.field(1, 1), "retained"
+call check_int "bad row count", first.field_count(0), -1
+call check_int "bad later row count", first.field_count(2), -1
+
+ignored = .string
+caught = 0
+do
+  ignored = first.field(0, 1)
+on signal invalid_arguments
+  caught = 1
+end
+call check_int "invalid document index signal", caught, 1
+caught = 0
+do
+  ignored = one.field(0)
+on signal invalid_arguments
+  caught = 1
+end
+call check_int "invalid row index signal", caught, 1
+caught = 0
+do
+  ignored = bad.field(1, 1)
+on signal invalid_arguments
+  caught = 1
+end
+call check_int "failed parse access signal", caught, 1
+rows = emptyrows
+uninitialized = .csvrow
+rows[1] = uninitialized
+caught = 0
+do
+  badwrite = csvwrite(rows)
+on signal invalid_arguments
+  caught = 1
+end
+call check_int "uninitialized row signal", caught, 1
+
+/* B005: exact-byte boundary, invalid bytes never become CSV string input. */
+caught = 0
+do
+  invalid = 'ff'x as .binary
+  invalid_text = invalid as .string
+on signal unicode_error
+  caught = 1
+end
+call check_int "invalid UTF-8 rejected at string boundary", caught, 1
+say "PASS: cREXX result ownership, recovery, indices and UTF-8 boundary"
+
+/* L001/L002: inclusive byte bounds and multibyte units. */
+large = copies("a", 1048576)
+parsed = csvparse(large)
+call check_int "L001 accepted", parsed.ok(), 1
+call check_text "L001 preserved", parsed.field(1, 1), large
+call parse_error "L001 excess", large || "a", "field_bytes", 1, 1
+unicode = copies("é", 524288)
+parsed = csvparse(unicode)
+call check_int "L002 accepted", parsed.ok(), 1
+call check_text "L002 preserved", parsed.field(1, 1), unicode
+call parse_error "L002 excess", unicode || "a", "field_bytes", 1, 1
+call arraydrop values
+rows = emptyrows
+values[1] = large
+rows[1] = .csvrow(values)
+written = csvwrite(rows)
+call check_int "L007 field accepted", written.ok(), 1
+values[1] = large || "a"
+rows[1] = .csvrow(values)
+call write_error "L007 field excess", rows, "field_bytes", 1, 1
+values[1] = unicode || "a"
+rows[1] = .csvrow(values)
+call write_error "L007 multibyte excess", rows, "field_bytes", 1, 1
+
+/* L003: terminal LF does not add a phantom row. */
+text = copies("a" || lf, 10000)
+parsed = csvparse(text)
+call check_int "L003 accepted", parsed.ok(), 1
+call check_int "L003 records", parsed.row_count(), 10000
+call parse_error "L003 excess", text || "a" || lf, "records", 10001, 1
+call arraydrop values
+rows = emptyrows
+values[1] = "a"
+one = .csvrow(values)
+do i = 1 to 10000
+  rows[i] = one
+end
+written = csvwrite(rows)
+call check_int "L007 records accepted", written.ok(), 1
+rows[10001] = one
+call write_error "L007 records excess", rows, "records", 10001, 1
+
+/* L004: a trailing comma enters and counts an empty field. */
+text = copies(",", 1023)
+parsed = csvparse(text)
+call check_int "L004 accepted", parsed.ok(), 1
+call check_int "L004 width", parsed.field_count(1), 1024
+call parse_error "L004 excess", text || ",", "fields_per_record", 1, 1025
+call arraydrop values
+rows = emptyrows
+do i = 1 to 1024
+  values[i] = ""
+end
+rows[1] = .csvrow(values)
+written = csvwrite(rows)
+call check_int "L007 width accepted", written.ok(), 1
+values[1025] = ""
+rows[1] = .csvrow(values)
+call write_error "L007 width excess", rows, "fields_per_record", 1, 1025
+
+/* L005: total cells are a separate bound from width/record counts. */
+text = copies(copies(",", 99) || lf, 1000)
+parsed = csvparse(text)
+call check_int "L005 accepted", parsed.ok(), 1
+call check_int "L005 rows", parsed.row_count(), 1000
+call check_int "L005 last width", parsed.field_count(1000), 100
+call parse_error "L005 excess", text || lf, "total_fields", 1001, 1
+call arraydrop values
+rows = emptyrows
+do i = 1 to 100
+  values[i] = ""
+end
+one = .csvrow(values)
+do i = 1 to 1000
+  rows[i] = one
+end
+written = csvwrite(rows)
+call check_int "L007 total accepted", written.ok(), 1
+call arraydrop values
+values[1] = ""
+rows[1001] = .csvrow(values)
+call write_error "L007 total excess", rows, "total_fields", 1001, 1
+
+/* L006/L010: 16 MiB is checked before any parse-state error. */
+part = '"' || copies("a", 1048573) || '"'
+text = copies(part || ",", 15) || part || lf
+call check_int "L006 input bytes", binlength(text as .binary), 16777216
+parsed = csvparse(text)
+call check_int "L006 accepted", parsed.ok(), 1
+call check_int "L006 width", parsed.field_count(1), 16
+call parse_error "L006 excess", substr(text, 1, length(text) - 1) || crlf, "input_bytes", 0, 0
+call parse_error "L010 preflight first", '"' || copies("a", 16777216), "input_bytes", 0, 0
+
+/* L008: exact output byte bound, including commas and final CRLF. */
+call arraydrop values
+rows = emptyrows
+do i = 1 to 15
+  values[i] = large
+end
+values[16] = copies("a", 1048559)
+rows[1] = .csvrow(values)
+written = csvwrite(rows)
+call check_int "L008 accepted", written.ok(), 1
+call check_int "L008 output bytes", binlength(written.text() as .binary), 16777216
+parsed = csvparse(written.text())
+call check_int "L008 largest output parses", parsed.ok(), 1
+call check_int "L008 round-trip width", parsed.field_count(1), 16
+do i = 1 to 16
+  call check_text "L008 round-trip field", parsed.field(1, i), values[i]
+end
+values[16] = values[16] || "a"
+rows[1] = .csvrow(values)
+call write_error "L008 excess", rows, "output_bytes", 1, 16
+
+/* L009: escaped quotes change output bytes, not decoded field bytes. */
+call arraydrop values
+rows = emptyrows
+quoted = copies('"', 1048576)
+do i = 1 to 7
+  values[i] = quoted
+end
+values[8] = copies('"', 1048562) || "aaa"
+rows[1] = .csvrow(values)
+written = csvwrite(rows)
+call check_int "L009 quoted output accepted", written.ok(), 1
+call check_int "L009 quoted output bytes", binlength(written.text() as .binary), 16777216
+parsed = csvparse(written.text())
+call check_int "L009 largest quoted output parses", parsed.ok(), 1
+call check_int "L009 round-trip width", parsed.field_count(1), 8
+do i = 1 to 8
+  call check_text "L009 round-trip field", parsed.field(1, i), values[i]
+end
+values[8] = values[8] || "a"
+rows[1] = .csvrow(values)
+call write_error "L009 quoted output excess", rows, "output_bytes", 1, 8
+text = copies(crlf, 524288)
+parsed = csvparse('"' || text || '"')
+call check_int "L009 CRLF field accepted", parsed.ok(), 1
+call check_text "L009 CRLF preserved", parsed.field(1, 1), text
+call parse_error "L009 CRLF field excess", '"' || text || 'a"', "field_bytes", 1, 1
+call arraydrop values
+rows = emptyrows
+values[1] = text
+rows[1] = .csvrow(values)
+written = csvwrite(rows)
+call check_int "L009 CRLF writer accepted", written.ok(), 1
+call check_int "L009 CRLF output bytes", binlength(written.text() as .binary), 1048580
+values[1] = text || "a"
+rows[1] = .csvrow(values)
+call write_error "L009 CRLF writer excess", rows, "field_bytes", 1, 1
+
+say "PASS: L001-L010 resource boundaries (parser and writer)"
+exit 0
+
+parse_error: procedure = .void
+  arg label = .string, text = .string, limit = .string, record = .int, column = .int
+  result = csvparse(text)
+  call check_int label || " status", result.ok(), 0
+  call check_text label || " code", result.error_code(), "E_LIMIT"
+  call check_text label || " limit", result.error_limit(), limit
+  call check_int label || " record", result.error_record(), record
+  call check_int label || " field", result.error_field(), column
+  call check_int label || " atomic", result.row_count(), 0
+  return
+
+write_error: procedure = .void
+  arg label = .string, expose rows = .csvrow[], limit = .string, record = .int, column = .int
+  result = csvwrite(rows)
+  call check_int label || " status", result.ok(), 0
+  call check_text label || " code", result.error_code(), "E_LIMIT"
+  call check_text label || " limit", result.error_limit(), limit
+  call check_int label || " record", result.error_record(), record
+  call check_int label || " field", result.error_field(), column
+  call check_text label || " atomic", result.text(), ""
+  return
+
+check_int: procedure = .void
+  arg label = .string, actual = .int, expected = .int
+  if actual \= expected then do
+    say "FAIL" label "expected" expected "got" actual
+    exit 1
+  end
+  return
+
+check_text: procedure = .void
+  arg label = .string, actual = .string, expected = .string
+  if actual \== expected then do
+    say "FAIL" label "text differs"
+    exit 1
+  end
+  return

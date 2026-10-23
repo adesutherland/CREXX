@@ -265,3 +265,7 @@ endif()
 
 # Published products owned by this component.
 crexx_install_targets(platform)
+
+# Native owners must be known before their executables exist.
+crexx_register_test_prep_targets(TESTS platform_terminal_restore platform_terminal_disconnect
+    TARGETS platform_terminal_harness)

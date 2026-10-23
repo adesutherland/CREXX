@@ -1,0 +1,223 @@
+/*
+ * Level-G ADDRESS GLOBALV facade.
+ *
+ * The native rxglobalv provider owns the F 300 store and command semantics.
+ * This module owns cREXX ADDRESS response/output and host-variable binding
+ * behavior.  It is installed separately from library.rxbin.
+ */
+options levelg
+
+namespace rxglobalv_address expose globalvaddressenvironment
+
+import _rxsysb
+import rxfnsb
+import rxglobalv
+
+globalvaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _environment_name = .string
+  _environment_id = .string
+
+  *: match
+    arg env_name = .string
+    if _address_normalize_environment_name(env_name) = "GLOBALV" then return 100
+    return 0
+
+  *: factory
+    arg env_name = .string
+    _environment_name = _address_normalize_environment_name(env_name)
+    _environment_id = "rexx:" || _environment_name
+    return
+
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+    _environment_name = _address_normalize_environment_name(env_name)
+    _environment_id = instance_id
+    if _environment_id = "" then _environment_id = "rexx:" || _environment_name
+    return
+
+  environment_name: method = .string
+    return _environment_name
+
+  environment_id: method = .string
+    return _environment_id
+
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    original = strip(request.get_command())
+    if original = "" | upper(original) = "HELP" then do
+      return globalv_emit(request, "GLOBALV [SELECT group] SET|SETS|SETL|SETP name value" || "0a"x ||,
+                          "       GET|PUT|STACK|LIST|PURGE|GRPLIST" || "0a"x)
+    end
+
+    command = globalv_command_part(original)
+    verb = upper(word(command, 1))
+    if verb = "GET" then return _execute_get(request, original)
+    if verb = "PUT" | verb = "PUTS" | verb = "PUTL" | verb = "PUTP" then
+      return _execute_put(request, original)
+    return _execute_native(request, original)
+
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+    name = upper(request.get_function_name())
+    args = .string[]
+    command = .string
+    output = .string[]
+    rc = .int
+
+    if name = "ID" then return .addressfunctionresponse(0, _environment_id)
+    if name = "NAME" then return .addressfunctionresponse(0, _environment_name)
+    if name = "INIT" then command = "INIT"
+    else if name = "LIST" | name = "GRPLIST" | name = "PURGE" | name = "STACK" then do
+      command = name
+      if request.get_argument_count() > 0 then command = command || " " || request.get_argument(1)
+    end
+    else if name = "GET" then do
+      if request.get_argument_count() < 1 then return globalv_function_failure("GET requires a name")
+      command = "GET " || request.get_argument(1)
+    end
+    else if name = "SET" | name = "SETS" | name = "SETL" | name = "SETP" then do
+      if request.get_argument_count() < 2 then return globalv_function_failure(name || " requires name and value")
+      command = name || " " || request.get_argument(1) || " " || request.get_argument(2)
+    end
+    else return globalv_function_failure("Unknown GLOBALV function " || request.get_function_name())
+
+    rc = rxglobalv..command(command, output)
+    if rc <> 0 then return globalv_function_failure(name || " failed with rc=" || rc)
+    if name = "GET" then do
+      if output.0 < 1 then return .addressfunctionresponse(0, "")
+      return .addressfunctionresponse(0, output[1])
+    end
+    return .addressfunctionresponse(0, globalv_join_lines(output))
+
+  _execute_native: method = .addressresponse
+    arg request = .addressrequest, original = .string
+    output = .string[]
+    rc = rxglobalv..command(original, output)
+    if rc <> 0 then return globalv_command_failure(request, rc, output)
+    if output.0 > 0 then return globalv_emit_lines(request, output)
+    return .addressresponse(0)
+
+  _execute_get: method = .addressresponse
+    arg request = .addressrequest, original = .string
+    command = globalv_command_part(original)
+    group = globalv_command_group(original)
+    names = strip(substr(command, length(word(command, 1)) + 1))
+    marker = lastpos(" INTO ", upper(names))
+    target = ""
+    if marker > 0 then do
+      target = globalv_host_anchor_name(strip(substr(names, marker + 6)))
+      names = strip(substr(names, 1, marker - 1))
+      if target = "" then return globalv_request_failure(request, 24, "GET INTO requires a host-variable anchor")
+    end
+    if names = "" then return globalv_request_failure(request, 24, "GET requires a name")
+
+    response = .addressresponse(0)
+    emitted = ""
+    do i = 1 to words(names)
+      token = word(names, i)
+      anchor = globalv_host_anchor_name(token)
+      key = anchor
+      if key = "" then key = token
+      native_command = globalv_select_command(group, "GET " || key)
+      output = .string[]
+      rc = rxglobalv..command(native_command, output)
+      if rc <> 0 then return globalv_command_failure(request, rc, output)
+      value = ""
+      if output.0 > 0 then value = output[1]
+      if target <> "" | anchor <> "" then do
+        binding = target
+        if binding = "" then binding = anchor
+        call response.add_updated_binding("var", binding, binding, value, "")
+      end
+      else do
+        if emitted <> "" then emitted = emitted || "0a"x
+        emitted = emitted || value
+      end
+    end
+    if target = "" & emitted <> "" then return globalv_emit(request, emitted || "0a"x)
+    return response
+
+  _execute_put: method = .addressresponse
+    arg request = .addressrequest, original = .string
+    command = globalv_command_part(original)
+    group = globalv_command_group(original)
+    source_verb = upper(word(command, 1))
+    lifetime = "SET"
+    if source_verb = "PUTS" then lifetime = "SETS"
+    if source_verb = "PUTL" then lifetime = "SETL"
+    if source_verb = "PUTP" then lifetime = "SETP"
+    names = strip(substr(command, length(word(command, 1)) + 1))
+    if names = "" then return globalv_request_failure(request, 24, "PUT requires a name")
+    do i = 1 to words(names)
+      token = word(names, i)
+      key = globalv_host_anchor_name(token)
+      if key = "" then key = token
+      value = request.get_binding_value(key)
+      native_command = globalv_select_command(group, lifetime || " " || key || " " || value)
+      output = .string[]
+      rc = rxglobalv..command(native_command, output)
+      if rc <> 0 then return globalv_command_failure(request, rc, output)
+    end
+    return .addressresponse(0)
+
+globalv_command_part: procedure = .string
+  arg original = .string
+  if upper(word(original, 1)) = "SELECT" then return subword(original, 3)
+  return original
+
+globalv_command_group: procedure = .string
+  arg original = .string
+  if upper(word(original, 1)) = "SELECT" then return word(original, 2)
+  return ""
+
+globalv_select_command: procedure = .string
+  arg group = .string, command = .string
+  if group = "" then return command
+  return "SELECT " || group || " " || command
+
+globalv_host_anchor_name: procedure = .string
+  arg token = .string
+  if length(token) > 1 & left(token, 1) = ":" then return substr(token, 2)
+  if length(token) > 3 & left(token, 2) = "${" & right(token, 1) = "}" then
+    return substr(token, 3, length(token) - 3)
+  return ""
+
+globalv_command_failure: procedure = .addressresponse
+  arg request = .addressrequest, rc = .int, output = .string[]
+  response = .addressresponse(rc, "FAILURE")
+  do i = 1 to output.0
+    call response.add_diagnostic(output[i])
+  end
+  return response
+
+globalv_request_failure: procedure = .addressresponse
+  arg request = .addressrequest, rc = .int, message = .string
+  response = .addressresponse(rc, "FAILURE")
+  call response.add_diagnostic(message)
+  return response
+
+globalv_function_failure: procedure = .addressfunctionresponse
+  arg message = .string
+  response = .addressfunctionresponse(24, "", "FAILURE")
+  call response.add_diagnostic(message)
+  return response
+
+globalv_emit: procedure = .addressresponse
+  arg request = .addressrequest, text = .string
+  output = request.get_stdout_endpoint()
+  if output.native_emit(text) = 1 then call request.set_stdout_endpoint(output)
+  else say text
+  return .addressresponse(0)
+
+globalv_emit_lines: procedure = .addressresponse
+  arg request = .addressrequest, lines = .string[]
+  return globalv_emit(request, globalv_join_lines(lines) || "0a"x)
+
+globalv_join_lines: procedure = .string
+  arg lines = .string[]
+  result = ""
+  do i = 1 to lines.0
+    if result <> "" then result = result || "0a"x
+    result = result || lines[i]
+  end
+  return result
