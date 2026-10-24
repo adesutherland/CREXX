@@ -1092,10 +1092,19 @@ an explicit HANDLE_LIST for every redirection combination, including inherited
 standard streams; no valid streams means inheritance is disabled. Parent stream
 flags are never changed. Startup cleanup releases duplicates on every path.
 Legacy string/array and byte-endpoint redirects share pipe creation and cleanup.
-FOPEN creates private files atomically (Windows N, Linux e, Darwin O_CLOEXEC),
-so no sibling can capture a temporary file in an open-to-clear interval.
+FOPEN creates private files atomically (Windows N or exclusive descriptor flags,
+Linux e, Darwin O_CLOEXEC), so no sibling can capture a temporary file in an
+open-to-clear interval.
 Exclusive `wbx` must create an absent file, including paths containing spaces,
 without inheritance, and reject an existing file without changing its contents.
+On Windows, the standard exclusive forms `wx`, `wbx`, `w+x`, `wb+x` and `w+bx`
+use atomic exclusive, noninheritable CRT descriptor creation, then transfer the
+descriptor to a stream using the same mode without `x`. Binary and update
+semantics are retained; modes without `b` keep the CRT's default translation
+policy. Other `x`-bearing forms fail with `EINVAL` before opening. Failed stream
+creation closes the descriptor and preserves errno. Non-exclusive modes retain
+their existing CRT validation/extensions, and paths retain the existing narrow
+CRT filename boundary; this does not add a Unicode-path conversion policy.
 See `docs/planning/issue-701-resource-inheritance.md` for ownership and evidence.
 
 The certified ADDRESS exit and `_address.crexx` now adapt classic string/array

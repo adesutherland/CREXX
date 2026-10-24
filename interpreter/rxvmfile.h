@@ -7,7 +7,12 @@
 #include <string.h>
 #include <errno.h>
 #include "platform.h"
-#ifdef __APPLE__
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#include <share.h>
+#include <sys/stat.h>
+#elif defined(__APPLE__)
 #include <fcntl.h>
 #include <unistd.h>
 #endif
@@ -48,6 +53,34 @@ static FILE *rxvm_private_fopen(const char *path, const char *mode) {
     }
     return stream;
 #else
+#ifdef _WIN32
+    /* Some CRTs reject fopen's standard x mode. Own exclusivity and inheritance
+     * at descriptor creation; fdopen takes ownership only after it succeeds. */
+    if (strchr(mode, 'x')) {
+        const char *stream_mode;
+        int flags = _O_CREAT | _O_EXCL | _O_NOINHERIT;
+        int fd = -1, error, saved_errno;
+        FILE *stream;
+        if (!strcmp(mode, "wx")) stream_mode = "w";
+        else if (!strcmp(mode, "wbx")) stream_mode = "wb";
+        else if (!strcmp(mode, "w+x")) stream_mode = "w+";
+        else if (!strcmp(mode, "wb+x")) stream_mode = "wb+";
+        else if (!strcmp(mode, "w+bx")) stream_mode = "w+b";
+        else { errno = EINVAL; return NULL; }
+        flags |= strchr(stream_mode, '+') ? _O_RDWR : _O_WRONLY;
+        /* Omitted b retains the CRT's default translation policy. */
+        if (strchr(stream_mode, 'b')) flags |= _O_BINARY;
+        error = _sopen_s(&fd, path, flags, _SH_DENYNO, _S_IREAD | _S_IWRITE);
+        if (error) { errno = error; return NULL; }
+        stream = _fdopen(fd, stream_mode);
+        if (!stream) {
+            saved_errno = errno;
+            _close(fd);
+            errno = saved_errno;
+        }
+        return stream;
+    }
+#endif
     /* Put N/e before any ',ccs=...' encoding suffix. libc/CRT retains all
      * mode validation and text/binary/append/encoding behavior. */
     size_t length = strlen(mode);

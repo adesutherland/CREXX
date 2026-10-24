@@ -29,11 +29,12 @@ static FILE *checked_open(const char *path, const char *mode) {
 
 /* Each diagnostic uses a distinct absent path in our owned directory. Even the
  * nonexclusive CRT control must never overwrite the failed test's file. */
-static void exclusive_diagnostics(const char *path, int wrapper_errno) {
+static void exclusive_diagnostics(const char *path, const char *mode, int wrapper_errno) {
     static const char *modes[] = {"wbx", "wbxN", "wb", "wbx"};
     char probe[1100];
     size_t i;
-    fprintf(stderr, "exclusive create failed: %s wrapper errno=%d\n", path, wrapper_errno);
+    fprintf(stderr, "exclusive create failed: %s mode=%s wrapper errno=%d\n",
+            path, mode, wrapper_errno);
     for (i = 0; i < sizeof(modes) / sizeof(modes[0]); i++) {
         FILE *fp;
         int open_errno, result;
@@ -52,24 +53,34 @@ static void exclusive_diagnostics(const char *path, int wrapper_errno) {
     }
 }
 
-static void check_exclusive_new(const char *path) {
-    char contents[4];
+static void check_exclusive_new(const char *path, const char *mode) {
+    static const unsigned char binary[] = {'a', '\n', 0x1a, 0};
+    static const unsigned char text[] = {'s', 'a', 'f', 'e'};
+    const unsigned char *expected = strchr(mode, 'b') ? binary : text;
+    unsigned char contents[4];
     FILE *fp;
     size_t count;
     int open_errno, result, tail;
     errno = 0;
-    fp = rxvm_private_fopen(path, "wbx");
+    fp = rxvm_private_fopen(path, mode);
     open_errno = errno;
-    if (!fp) exclusive_diagnostics(path, open_errno);
+    if (!fp) exclusive_diagnostics(path, mode, open_errno);
     CHECK(fp != NULL, "exclusive mode creates an absent file");
     if (!fp) return;
     check_private(fp);
-    count = fwrite("safe", 1, 4, fp);
+    count = fwrite(expected, 1, sizeof(contents), fp);
     CHECK(count == 4, "exclusive file write");
+    if (strchr(mode, '+')) {
+        result = fseek(fp, 0, SEEK_SET);
+        CHECK(result == 0, "exclusive update rewind");
+        count = fread(contents, 1, sizeof(contents), fp);
+        CHECK(count == sizeof(contents) && !memcmp(contents, expected, sizeof(contents)),
+              "exclusive update reads the written bytes");
+    }
     result = fclose(fp);
     CHECK(result == 0, "exclusive file close");
 
-    fp = rxvm_private_fopen(path, "wbx");
+    fp = rxvm_private_fopen(path, mode);
     CHECK(fp == NULL, "exclusive mode rejects an existing file");
     if (fp) {
         result = fclose(fp);
@@ -79,7 +90,7 @@ static void check_exclusive_new(const char *path) {
     if (fp) {
         count = fread(contents, 1, sizeof(contents), fp);
         tail = fgetc(fp);
-        CHECK(count == sizeof(contents) && !memcmp(contents, "safe", sizeof(contents))
+        CHECK(count == sizeof(contents) && !memcmp(contents, expected, sizeof(contents))
               && tail == EOF, "exclusive rejection does not clobber bytes");
         result = fclose(fp);
         CHECK(result == 0, "exclusive verification close");
@@ -89,7 +100,9 @@ static void check_exclusive_new(const char *path) {
 }
 
 static void check_exclusive_paths(void) {
+    static const char *modes[] = {"wx", "wbx", "w+x", "wb+x", "w+bx"};
     char directory[1024], path[1060];
+    size_t i;
     int result;
 #ifdef _WIN32
     char root[MAX_PATH];
@@ -110,11 +123,39 @@ static void check_exclusive_paths(void) {
         return;
     }
 #endif
-    snprintf(path, sizeof(path), "%s/new.bin", directory);
-    check_exclusive_new(path);
+    for (i = 0; i < sizeof(modes) / sizeof(modes[0]); i++) {
+        snprintf(path, sizeof(path), "%s/new-%u.bin", directory, (unsigned)i);
+        check_exclusive_new(path, modes[i]);
+    }
     snprintf(path, sizeof(path), "%s/path with spaces.bin", directory);
-    check_exclusive_new(path);
+    check_exclusive_new(path, "wbx");
 #ifdef _WIN32
+    {
+        static const char *invalid[] = {"r+x", "ax", "wxx", "wbxjunk"};
+        FILE *fp;
+        int open_errno;
+        snprintf(path, sizeof(path), "%s/invalid.bin", directory);
+        for (i = 0; i < sizeof(invalid) / sizeof(invalid[0]); i++) {
+            errno = 0;
+            fp = rxvm_private_fopen(path, invalid[i]);
+            open_errno = errno;
+            CHECK(fp == NULL && open_errno == EINVAL, "invalid exclusive mode is rejected");
+            if (fp) {
+                result = fclose(fp);
+                CHECK(result == 0, "invalid-mode handle cleanup");
+            }
+        }
+        errno = 0;
+        fp = rxvm_private_fopen(path, "rb");
+        open_errno = errno;
+        CHECK(fp == NULL && open_errno == ENOENT, "invalid mode creates no file");
+        if (fp) {
+            result = fclose(fp);
+            CHECK(result == 0, "invalid-mode verification close");
+            result = remove(path);
+            CHECK(result == 0, "invalid-mode file cleanup");
+        }
+    }
     result = RemoveDirectoryA(directory) ? 0 : -1;
 #else
     result = rmdir(directory);
@@ -125,7 +166,6 @@ int main(void) {
     char path[1024];
     FILE *fp;
     long append_position;
-    int exclusive_opened, exclusive_errno;
 #ifdef _WIN32
     char root[MAX_PATH];
     GetTempPathA(sizeof(root), root);
@@ -154,17 +194,6 @@ int main(void) {
     if (!fp) return 2;
     CHECK(fseek(fp, 0, SEEK_END) == 0 && ftell(fp) == 6, "append retains bytes");
     fclose(fp);
-    errno = 0;
-    fp = fopen(path, "wbx");
-    exclusive_opened = fp != NULL;
-    exclusive_errno = errno;
-    if (fp) fclose(fp);
-    errno = 0;
-    fp = rxvm_private_fopen(path, "wbx");
-    CHECK((fp != NULL) == exclusive_opened &&
-          (fp != NULL || errno == exclusive_errno),
-          "exclusive mode retains host CRT capability and errno");
-    if (fp) fclose(fp);
     CHECK(remove(path) == 0, "file cleanup");
     fp = rxvm_private_fopen(path, "rb");
     CHECK(fp == NULL && errno == ENOENT, "failed open preserves errno");
