@@ -10,6 +10,7 @@ add_subdirectory(ui/text-inspector)
 add_subdirectory(franz-lotto)
 add_subdirectory(fortran)
 add_subdirectory(forth)
+add_subdirectory(php)
 
 add_custom_target(crexx-examples)
 add_dependencies(crexx-examples

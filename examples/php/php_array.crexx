@@ -1,0 +1,101 @@
+/* Phase 2 PHP array runtime foundation.
+ *
+ * Keys are kept in insertion order. Scalar values are stored as text at the
+ * PHP boundary; nested arrays are stored as php_array objects.
+ */
+options levelb
+import rxfnsb
+namespace php_runtime expose php_array
+
+php_array: class
+  keys_ = .string[]
+  values_ = .string[]
+  arrays_ = .object[]
+  kinds_ = .int[]
+  count_ = .int
+  next_index_ = .int
+
+  *: factory
+    count_ = 0
+    next_index_ = 0
+    return
+
+  _find: method = .int
+    arg key = .string
+    do index = 1 to count_
+      if keys_[index] = key then return index
+    end
+    return 0
+
+  _touch_numeric_key: method = .void
+    arg key = .string
+    if key = '' then return
+    if verify(key,'0123456789') <> 0 then return
+    numeric_key = key as .int
+    if numeric_key >= next_index_ then next_index_ = numeric_key + 1
+    return
+
+  set: method = .int
+    arg key = .string, value = .string
+    slot = _find(key)
+    if slot = 0 then do
+      count_ = count_ + 1
+      slot = count_
+      keys_[slot] = key
+    end
+    values_[slot] = value
+    kinds_[slot] = 0
+    call _touch_numeric_key key
+    return 0
+
+  setArray: method = .int
+    arg key = .string, value = .php_array
+    slot = _find(key)
+    if slot = 0 then do
+      count_ = count_ + 1
+      slot = count_
+      keys_[slot] = key
+    end
+    arrays_[slot] = value as .object
+    kinds_[slot] = 1
+    call _touch_numeric_key key
+    return 0
+
+  append: method = .int
+    arg value = .string
+    key = next_index_ || ''
+    call set key,value
+    return 0
+
+  appendArray: method = .int
+    arg value = .php_array
+    key = next_index_ || ''
+    call setArray key,value
+    return 0
+
+  get: method = .string
+    arg key = .string
+    slot = _find(key)
+    if slot = 0 | kinds_[slot] = 1 then return ''
+    return values_[slot]
+
+  getArray: method = .php_array
+    arg key = .string
+    slot = _find(key)
+    if slot = 0 | kinds_[slot] = 0 then return .php_array()
+    return arrays_[slot] as .php_array
+
+  has: method = .int
+    arg key = .string
+    if _find(key) > 0 then return 1
+    return 0
+
+  count: method = .int
+    return count_
+
+  keys: method = .string[]
+    result = .string[]
+    do index = 1 to count_
+      result[index] = keys_[index]
+    end
+    return result

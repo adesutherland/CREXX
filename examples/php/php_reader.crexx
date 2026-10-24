@@ -1,0 +1,182 @@
+/* Phase 1 PHP-to-cREXX source reader. */
+options levelb
+import rxfnsb
+import lllanguage
+import llsource
+import lltree
+import phpgrammar
+
+php_state: initialiser expose php_lines php_indent
+  php_lines = .string[]
+  php_indent = 0
+
+main: procedure = .int expose php_lines php_indent
+  arg argv = .string[]
+  if argv[0] <> 2 then do
+    say 'usage: php_reader source.php output.crexx'
+    return 2
+  end
+  source = .binary
+  do
+    source = readbinary(argv[1])
+  on signal
+    say 'PHP_IO: cannot read ' || argv[1]
+    return 2
+  end
+  request = .lllanguage..request(phpgrammar..language(),source)
+  status = request.parse()
+  if status <> 0 then do
+    say argv[1] || ': ' || llsource..diagnostic(source,request.offset(),'PHP_PARSE',request.error())
+    return status
+  end
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'PHP_TREE: ' || tree.error()
+    return 3
+  end
+  call emit_program tree,tree.root()
+  /* LINEOUT appends to existing files; a conversion must replace its output. */
+  call erasefile argv[2]
+  do index = 1 to php_lines[0]
+    call lineout argv[2],php_lines[index]
+  end
+  call lineout argv[2]
+  return 0
+
+emit_program: procedure = .void expose php_lines php_indent
+  arg tree = .lltree..view,node = .int
+  program = named_child(tree,node,'program')
+  if program = 0 then program = node
+  do index = 1 to tree.count(program)
+    child = tree.child(program,index)
+    if tree.name(child) = 'statement' then call emit_statement tree,child
+  end
+
+emit_statement: procedure = .void expose php_lines php_indent
+  arg tree = .lltree..view,wrapper = .int
+  statement = wrapper
+  if tree.name(statement) = 'statement' then statement = first_statement(tree,wrapper)
+  name = tree.name(statement)
+  select
+    when name = 'assignment.statement' then do
+      target = named_child(tree,statement,'variable')
+      value = named_child(tree,statement,'expression')
+      call emit_line variable_text(tree,target) || ' = ' || emit_expression(tree,value)
+    end
+    when name = 'echo.statement' then do
+      expression = named_child(tree,statement,'expression')
+      if expression <> 0 then call emit_line 'say ' || emit_expression(tree,expression)
+      tail = named_child(tree,statement,'echo.tail')
+      if tail <> 0 then call emit_echo_tail tree,tail
+    end
+    when name = 'if.statement' then do
+      condition = named_child(tree,statement,'expression')
+      block = named_child(tree,statement,'block')
+      call emit_line 'if ' || emit_expression(tree,condition) || ' then do'
+      php_indent = php_indent + 1
+      call emit_block tree,block
+      php_indent = php_indent - 1
+      call emit_line 'end'
+      alternative = named_child(tree,statement,'else.part')
+      if alternative <> 0 then do
+        call emit_line 'else do'
+        php_indent = php_indent + 1
+        call emit_block tree,named_child(tree,alternative,'block')
+        php_indent = php_indent - 1
+        call emit_line 'end'
+      end
+    end
+    when name = 'while.statement' then do
+      condition = named_child(tree,statement,'expression')
+      call emit_line 'do while ' || emit_expression(tree,condition)
+      php_indent = php_indent + 1
+      call emit_block tree,named_child(tree,statement,'block')
+      php_indent = php_indent - 1
+      call emit_line 'end'
+    end
+    otherwise call fail_tree 'unsupported statement',name
+  end
+
+emit_echo_tail: procedure = .void expose php_lines php_indent
+  arg tree = .lltree..view,node = .int
+  expression = named_child(tree,node,'expression')
+  if expression <> 0 then call emit_line 'say ' || emit_expression(tree,expression)
+  nested = named_child(tree,node,'echo.tail')
+  if nested <> 0 then call emit_echo_tail tree,nested
+
+emit_block: procedure = .void
+  arg tree = .lltree..view,block = .int
+  if block = 0 then return
+  do index = 1 to tree.count(block)
+    child = tree.child(block,index)
+    if tree.name(child) = 'statement' then call emit_statement tree,child
+  end
+
+emit_expression: procedure = .string
+  arg tree = .lltree..view,node = .int
+  if node = 0 then return ''
+  name = tree.name(node)
+  if name = 'variable' then return variable_text(tree,node)
+  if name = 'number' | name = 'string' then return tree.text(node)
+  if name = 'group' then return '(' || emit_expression(tree,tree.child(node,2)) || ')'
+  if name = 'unary' & tree.count(node) > 1 then return php_operator(tree.name(tree.child(node,1))) || emit_expression(tree,tree.child(node,2))
+  if tree.count(node) = 1 then return emit_expression(tree,tree.child(node,1))
+  result = emit_expression(tree,tree.child(node,1))
+  index = 2
+  do while index <= tree.count(node)
+    operator = tree.child(node,index)
+    operand = tree.child(node,index + 1)
+    if operand = 0 then leave
+    result = result || ' ' || php_operator(tree.name(operator)) || ' ' || emit_expression(tree,operand)
+    index = index + 2
+  end
+return result
+
+php_operator: procedure = .string
+  arg name = .string
+  select
+    when name = 'plus' then return '+'
+    when name = 'minus' then return '-'
+    when name = 'times' | name = 'multiply' then return '*'
+    when name = 'divide' then return '/'
+    when name = 'concat' then return '||'
+    when name = 'equals' then return '=='
+    when name = 'notequals' | name = 'not_equals' then return '<>'
+    when name = 'lt' | name = 'less' then return '<'
+    when name = 'gt' | name = 'greater' then return '>'
+    when name = 'le' | name = 'less_equal' then return '<='
+    when name = 'ge' | name = 'greater_equal' then return '>='
+    otherwise nop
+  end
+return name
+
+variable_text: procedure = .string
+  arg tree = .lltree..view,node = .int
+  text = tree.text(node)
+  if left(text,1) = '$' then return substr(text,2)
+return text
+
+emit_line: procedure = .void expose php_lines php_indent
+  arg text = .string
+  php_lines[php_lines[0] + 1] = copies('  ',php_indent) || text
+
+named_child: procedure = .int
+  arg tree = .lltree..view,parent = .int,name = .string
+  do index = 1 to tree.count(parent)
+    child = tree.child(parent,index)
+    if tree.name(child) = name then return child
+  end
+return 0
+
+first_statement: procedure = .int
+  arg tree = .lltree..view,parent = .int
+  do index = 1 to tree.count(parent)
+    child = tree.child(parent,index)
+    if right(tree.name(child),10) = '.statement' then return child
+  end
+return parent
+
+fail_tree: procedure = .void
+  arg message = .string,detail = .string
+  say 'PHP_READER: ' || message || ': ' || detail
+return
