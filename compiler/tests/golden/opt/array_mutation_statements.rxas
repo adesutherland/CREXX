@@ -44,7 +44,6 @@ main() .locals=7
    scopy r2,r4
    unlink r2
    .srcstep 6 6 17 "array_mutation_statements.crexx" 7 1 92 "say \"strings1=\" || strings[0] || \":\" || strings[1] || \":\" || strings[2] || \":\" || strings[3]"
-   .traceevent "C" 4 "R" "V" "r" 4 6 6 0 "strings" ""
    getattrs r3,r1,0
    itos r3
    .traceevent "V" 6 "R" "S" "r" 3 6 6 0 "strings" ""
@@ -78,7 +77,6 @@ main() .locals=7
    .traceevent "L" 4 "R" "I" "r" 6 7 7 0 "" ""
    delattrs1 r1,r6,1
    .srcstep 8 8 17 "array_mutation_statements.crexx" 10 1 71 "say \"strings2=\" || strings[0] || \":\" || strings[1] || \":\" || strings[2]"
-   .traceevent "C" 4 "R" "V" "r" 6 8 8 0 "strings" ""
    getattrs r5,r1,0
    itos r5
    .traceevent "V" 6 "R" "S" "r" 5 8 8 0 "strings" ""
@@ -127,7 +125,6 @@ main() .locals=7
    .traceevent "L" 4 "R" "I" "r" 5 11 11 0 "" ""
    delattrs1 r1,r6,r5
    .srcstep 12 12 17 "array_mutation_statements.crexx" 15 1 71 "say \"strings3=\" || strings[0] || \":\" || strings[1] || \":\" || strings[2]"
-   .traceevent "C" 4 "R" "V" "r" 6 12 12 0 "strings" ""
    getattrs r5,r1,0
    itos r5
    .traceevent "V" 6 "R" "S" "r" 5 12 12 0 "strings" ""
@@ -191,7 +188,6 @@ main() .locals=7
    delattrs1 r1,r6,r3
 l95arrayremoveend:
    .srcstep 17 17 17 "array_mutation_statements.crexx" 21 1 92 "say \"strings4=\" || strings[0] || \":\" || strings[1] || \":\" || strings[2] || \":\" || strings[3]"
-   .traceevent "C" 4 "R" "V" "r" 6 17 17 0 "strings" ""
    getattrs r5,r1,0
    itos r5
    .traceevent "V" 6 "R" "S" "r" 5 17 17 0 "strings" ""
@@ -223,7 +219,6 @@ l95arrayremoveend:
    .traceevent "V" 6 "R" "S" "r" 1 18 18 0 "strings" ""
    setattrs r1,0
    .srcstep 19 19 17 "array_mutation_statements.crexx" 24 1 29 "say \"strings5=\" || strings[0]"
-   .traceevent "C" 4 "R" "V" "r" 6 19 19 0 "strings" ""
    getattrs r5,r1,0
    itos r5
    .traceevent "V" 6 "R" "S" "r" 5 19 19 0 "strings" ""
@@ -284,7 +279,6 @@ l95arrayremoveend:
    delattrs1 r0,r6,r3
 l148arrayremoveend:
    .srcstep 26 26 17 "array_mutation_statements.crexx" 33 1 77 "say \"ints1=\" || ints[0] || \":\" || ints[1] || \":\" || ints[2] || \":\" || ints[3]"
-   .traceevent "C" 4 "R" "V" "r" 6 26 26 0 "ints" ""
    getattrs r5,r0,0
    itos r5
    .traceevent "V" 6 "R" "S" "r" 5 26 26 0 "ints" ""
@@ -323,7 +317,6 @@ l148arrayremoveend:
    .traceevent "L" 4 "R" "I" "r" 5 27 27 0 "" ""
    delattrs1 r0,r6,r5
    .srcstep 28 28 17 "array_mutation_statements.crexx" 36 1 41 "say \"ints2=\" || ints[0] || \":\" || ints[1]"
-   .traceevent "C" 4 "R" "V" "r" 6 28 28 0 "ints" ""
    getattrs r5,r0,0
    itos r5
    .traceevent "V" 6 "R" "S" "r" 5 28 28 0 "ints" ""
@@ -342,7 +335,6 @@ l148arrayremoveend:
    .traceevent "V" 6 "R" "I" "r" 0 29 29 0 "ints" ""
    setattrs r0,0
    .srcstep 30 30 17 "array_mutation_statements.crexx" 39 1 23 "say \"ints3=\" || ints[0]"
-   .traceevent "C" 4 "R" "V" "r" 6 30 30 0 "ints" ""
    getattrs r5,r0,0
    itos r5
    .traceevent "V" 6 "R" "S" "r" 5 30 30 0 "ints" ""

@@ -64,7 +64,6 @@ process() .locals=10
    .srcstep 16 16 17 "18_array_class_main.crexx" 18 9 22 "    arg items = .Item[]"
    .meta "18_array_class_main.process.items"="b" ".item[*]" a1
    .srcstep 17 17 17 "18_array_class_main.crexx" 19 5 44 "    say \"Inside process, Items.0 =\" items.0"
-   .traceevent "C" 4 "R" "V" "r" 3 17 17 0 "items" ""
    getattrs r4,a1,0
    itos r4
    .traceevent "V" 6 "R" "S" "r" 4 17 17 0 "items" ""
@@ -72,7 +71,6 @@ process() .locals=10
    .traceevent "O" 4 "R" "S" "r" 4 17 17 0 "" ""
    say r4
    .srcstep 19 19 17 "18_array_class_main.crexx" 20 5 19 "    if items.0 < 1 then return \"\""
-   .traceevent "C" 4 "R" "V" "r" 4 19 19 0 "items" ""
    getattrs r3,a1,0
    .traceevent "V" 6 "R" "I" "r" 3 19 19 0 "items" ""
    ilt r3,r3,1
@@ -109,7 +107,6 @@ l59iffalse:
    .traceevent "L" 4 "R" "I" "r" 4 25 25 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 4 25 25 0 "i" ""
    .srcstep 26 26 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
-   .traceevent "C" 4 "R" "V" "r" 6 0 0 0 "items" ""
    getattrs r7,a1,0
    .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "items" ""
 l70dostart:

@@ -33,10 +33,11 @@ main() .locals=6
    .traceevent "V" 6 "R" "S" "r" 1 5 5 0 "text" ""
    .traceevent "V" 6 "R" "S" "r" 1 5 5 0 "text" ""
    load r3,2
-   copy r5,r1
    settp r1,256
    swap r4,r1
-   settpcall r2,combine_text(),r3,r5,256
+   copy r5,r4
+   settp r5,256
+   call r2,combine_text(),r3
    swap r1,r4
    .traceevent "F" 4 "R" "S" "r" 2 5 5 0 "combine_text" ""
    say r2
