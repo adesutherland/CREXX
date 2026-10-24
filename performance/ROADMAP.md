@@ -16,7 +16,7 @@ ledgers and superseded runs are available in Git history.
 
 ## Current Position
 
-**QA-PERF-SMOKE-01 — approved routine scope; qualification pending.** Ordinary
+**QA-PERF-SMOKE-01 — bounded routine scope qualified; no performance verdict.** Ordinary
 correctness precedes timing. Explicit qualification keeps the 27 deterministic
 code-generation, runner self-test and stem-semantic cells in ordinary QA,
 alongside the existing 82 performance-related qualification cells. Their exact
@@ -64,11 +64,11 @@ Their producer explicitly owns `rxfnsc` and its published bytecode for TRACE's
 `RexxValue` metadata, plus published base-library freshness; executable-adjacent
 imports must not substitute for these preparation dependencies.
 
-1. **QA-PERF-AC01 — todo:** deterministic cells and guard controls participate
+1. **QA-PERF-AC01 — done:** deterministic cells and guard controls participate
    in the frozen ordinary baseline; original semantic oracles remain intact.
-2. **QA-PERF-AC02 — todo:** discovered smoke names/counts and cold preparation
+2. **QA-PERF-AC02 — done:** discovered smoke names/counts and cold preparation
    match explicit artifact, VM/provider and import owners; no ALL fallback.
-3. **QA-PERF-AC03 — todo:** after ordinary green, the selected profiling-off
+3. **QA-PERF-AC03 — done:** after ordinary green, the selected profiling-off
    Release smoke completes serially with every result guard, retaining platform,
    mode and product-only timing limits. No speed conclusion follows.
 
@@ -79,8 +79,8 @@ imports must not substitute for these preparation dependencies.
 3. **QA-PERF-STEP03 — done:** peer-review source, centrally check bounded guard
    negatives and preparation metadata, then freeze these source inputs for
    ordinary QA; serves AC01–02. Full baseline and cold Release preparation
-   remain open under those criteria.
-4. **QA-PERF-STEP04 — todo:** execute only the selected Release smoke after
+   are qualified under those criteria.
+4. **QA-PERF-STEP04 — done:** execute only the selected Release smoke after
    ordinary green, report its cost/limits and delete temporary output; serves AC03.
 
 **LEVELC-TARGET-01 — approved C-only infrastructure direction (19 October).** The

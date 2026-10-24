@@ -231,9 +231,9 @@ Steps:
    retryable cleanup contract before implementation.
 2. **HTTP-OWNER-STEP02 — done:** implement owner-local helpers and lifecycle
    regression, preserving all protocol and task algorithms (AC01–04).
-3. **HTTP-OWNER-STEP03 — todo:** independent source/RXAS review, focused normal
-   consumer checks, then the agreed frozen ordinary baseline. Sanitizer and
-   performance panels remain after that baseline (AC01–04).
+3. **HTTP-OWNER-STEP03 — done:** independent source/RXAS review, focused normal
+   consumer checks and the agreed frozen ordinary baseline (AC01–04). The bounded
+   post-baseline panels do not close release-wide sanitizer or platform criteria.
 
 The implemented architecture is:
 
