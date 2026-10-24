@@ -1,0 +1,120 @@
+@HTTP_OWNER_IMPLEMENTATION@
+
+/* Test-only continuation of http.crexx: private lifecycle boundaries stay
+ * private in the product. Compiled under the stable name
+ * ts_http_owner_lifecycle.crexx, without exporting diagnostic procedures. */
+
+http_owner_test_holder: class
+  _client = .httpclient
+  *: factory
+    _client = .httpclient.pooled("http://127.0.0.1:1", 1, 1, 1024)
+    return
+  copy_client: method = .httpclient
+    return _client
+  close: method = .void
+    call _client.close()
+    return
+
+http_owner_test_failure: class implements .taskwork
+  *: factory
+    return
+  run: method = .channelvalue
+    arg request = .channelvalue, context = .taskcontext
+    call raise "FAILURE", "HTTP owner child failure", ""
+    return .channelvalue.null_value()
+
+_http_owner_test_check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL: HTTP owner" label
+  return 1
+
+_http_owner_test_closed: procedure = .boolean
+  arg client = .httpclient
+  do
+    encoded = client.to_channel()
+  on signal channel_error as problem
+    return problem.name() = "CHANNEL_ERROR" & problem.code() = 26 & pos("closed", problem.message()) > 0
+  end
+  return 0
+
+main: procedure = .int expose _http_owner_states _http_owner_busy _http_owner_ingress_open _http_owner_pool_open _http_owner_scope_open _http_owner_pools
+  failures = 0
+  holder = .http_owner_test_holder()
+  client = holder.copy_client()
+  alias = client
+  stale = client
+  encoded = client.to_channel()
+  proxy = .httpclient.from_channel(encoded)
+  call proxy.close()
+  failures = failures + _http_owner_test_check(client.to_channel().encode() = encoded.encode(), "worker proxy close preserves controller")
+
+  /* Grow private pointer tables past their first block while a real scope
+   * already contains children. Empty slots require no workers or channels. */
+  empty_slots = .int[]
+  i = .int
+  do i = 1 to 9
+    empty_slots[i] = _http_owner_claim()
+  end
+  do i = 1 to empty_slots[0]
+    call _http_owner_close(empty_slots[i], _http_owner_generation(empty_slots[i]), 1)
+  end
+  call holder.close()
+  failures = failures + _http_owner_test_check(_http_owner_test_closed(alias), "copied containing-object client sees closed")
+  call alias.close()
+
+  fresh = .httpclient.pooled("http://127.0.0.1:1", 1, 1, 1024)
+  fresh_encoded = fresh.to_channel().encode()
+  call stale.close()
+  failures = failures + _http_owner_test_check(fresh.to_channel().encode() = fresh_encoded, "stale close cannot close recycled controller")
+  client = fresh
+  call fresh.close()
+  failures = failures + _http_owner_test_check(_http_owner_test_closed(client), "reassignment retains shared close state")
+  call client.close()
+
+  /* The ingress is genuinely open when the existing pool rejects zero
+   * workers. No production failure-injection switch is involved. */
+  slot = _http_owner_claim()
+  generation = _http_owner_generation(slot)
+  caught = 0
+  do
+    call _http_owner_open(slot, generation, 0, 1)
+  on signal channel_error as problem
+    caught = problem.name() = "CHANNEL_ERROR" & problem.code() = 26
+  end
+  failures = failures + _http_owner_test_check(caught & _http_owner_ingress_open[slot] & _http_owner_pool_open[slot] = 0 & _http_owner_scope_open[slot] = 0, "partial open owns only its ingress")
+  call _http_owner_close(slot, generation, 1)
+  failures = failures + _http_owner_test_check(_http_owner_states[slot] = 0 & _http_owner_busy[slot] = 0 & _http_owner_ingress_open[slot] = 0, "partial open cleanup releases slot")
+
+  next_slot = _http_owner_claim()
+  next_generation = _http_owner_generation(next_slot)
+  failures = failures + _http_owner_test_check(next_slot = slot & next_generation > generation, "closed slots reuse with new generation")
+  call _http_owner_open(next_slot, next_generation, 1, 1)
+  target = task .rxfnsg..http_owner_test_failure()
+  call _http_owner_submit(next_slot, next_generation, target)
+  call _http_owner_ready(next_slot, next_generation)
+  pool_view = _http_owner_pools[next_slot]
+  caught = 0
+  do
+    call _http_owner_close(next_slot, next_generation, 0)
+  on signal task_failure as problem
+    /* The provider publishes a failure summary, not the child signal payload. */
+    caught = problem.name() = "TASK_FAILURE" & problem.code() = 27 & problem.message() = "task execution failed status=9"
+  end
+  failures = failures + _http_owner_test_check(caught, "failed child relays original task failure")
+  failures = failures + _http_owner_test_check(_http_owner_states[next_slot] = 0 & _http_owner_busy[next_slot] = 0 & _http_owner_scope_open[next_slot] = 0 & _http_owner_pool_open[next_slot] = 0, "failed child still closes scope and pool")
+  if _http_owner_scope_open[next_slot] | _http_owner_pool_open[next_slot] then return 1
+  caught = 0
+  do
+    call pool_view.close()
+  on signal channel_error as problem
+    caught = problem.message() = "chanclose status=13"
+  end
+  failures = failures + _http_owner_test_check(caught, "copied pool capability confirms physical channel close")
+  call _http_owner_close(next_slot, next_generation, 0)
+
+  if failures <> 0 then return 1
+  say "PASS: HTTP stable controller lifecycle"
+  return 0
+
+exit main()

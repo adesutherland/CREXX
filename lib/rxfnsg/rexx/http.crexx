@@ -40,7 +40,210 @@ import _rxhttpcore
 
 _http_failure: procedure
   arg message = .string
-  call raise "HTTP_CHANNEL_ERROR", message, ""
+  call raise "CHANNEL_ERROR", message, ""
+  return
+
+/* Execution-local controller storage. Growth adds Value blocks without moving
+ * existing slots. Never copy or shrink these arrays while controllers live. */
+_http_owner_boot: initialiser expose _http_owner_generations _http_owner_states _http_owner_busy _http_owner_aborting _http_owner_ingress_open _http_owner_ingress_sealed _http_owner_pool_open _http_owner_scope_open _http_owner_ingresses _http_owner_pools _http_owner_scopes
+_http_owner_generations = .int[]
+_http_owner_states = .int[]
+_http_owner_busy = .int[]
+_http_owner_aborting = .int[]
+_http_owner_ingress_open = .int[]
+_http_owner_ingress_sealed = .int[]
+_http_owner_pool_open = .int[]
+_http_owner_scope_open = .int[]
+_http_owner_ingresses = .byteendpoint[]
+_http_owner_pools = .taskpool[]
+_http_owner_scopes = .taskscope[]
+return
+
+/* States: 0 free, 1 constructing, 2 open, 3 closing, 4 generation retired. */
+_http_owner_claim: procedure = .int expose _http_owner_generations _http_owner_states _http_owner_busy _http_owner_aborting _http_owner_ingress_open _http_owner_ingress_sealed _http_owner_pool_open _http_owner_scope_open _http_owner_ingresses _http_owner_pools _http_owner_scopes
+  /* Creation alone scans retained peak slots; proxy validation is constant
+   * time. One FREE-state write publishes reuse, without a multiwrite list. */
+  slot = 0
+  do candidate = 1 to _http_owner_states[0]
+    if _http_owner_states[candidate] = 0 then do
+      slot = candidate
+      leave
+    end
+  end
+  if slot = 0 then do
+    call _http_failure_if _http_owner_states[0] >= 65535, "HTTP controller slots are exhausted"
+    slot = _http_owner_states[0] + 1
+    _http_owner_states[slot] = 1
+    _http_owner_generations[slot] = 0
+  end
+  _http_owner_generations[slot] = _http_owner_generations[slot] + 1
+  _http_owner_states[slot] = 1
+  _http_owner_busy[slot] = 0
+  _http_owner_aborting[slot] = 0
+  _http_owner_ingress_open[slot] = 0
+  _http_owner_ingress_sealed[slot] = 0
+  _http_owner_pool_open[slot] = 0
+  _http_owner_scope_open[slot] = 0
+  empty_ingress = .byteendpoint
+  empty_pool = .taskpool
+  empty_scope = .taskscope
+  _http_owner_ingresses[slot] = empty_ingress
+  _http_owner_pools[slot] = empty_pool
+  _http_owner_scopes[slot] = empty_scope
+  return slot
+
+_http_owner_generation: procedure = .int expose _http_owner_generations
+  arg slot = .int
+  return _http_owner_generations[slot]
+
+_http_owner_require: procedure = .void expose _http_owner_generations _http_owner_states
+  arg slot = .int, generation = .int, state = .int
+  call _http_failure_if slot < 1 | slot > _http_owner_generations[0], "HTTP controller is closed"
+  call _http_failure_if _http_owner_generations[slot] <> generation, "HTTP controller is closed"
+  call _http_failure_if _http_owner_states[slot] <> state, "HTTP controller is closed or closing"
+  return
+
+_http_proxy_require_open: procedure = .void
+  arg closed = .boolean, slot = .int, generation = .int
+  call _http_failure_if closed, "HTTP client is closed"
+  if slot <> 0 then call _http_owner_require(slot, generation, 2)
+  return
+
+_http_owner_open: procedure = .void expose _http_owner_ingresses _http_owner_pools _http_owner_scopes _http_owner_ingress_open _http_owner_pool_open _http_owner_scope_open
+  arg slot = .int, generation = .int, connections = .int, admission = .int
+  call _http_owner_require(slot, generation, 1)
+  _http_owner_ingresses[slot] = .byteendpoint.memory(3, admission * 192)
+  _http_owner_ingress_open[slot] = 1
+  _http_owner_pools[slot] = .taskpool.local(connections, connections)
+  _http_owner_pool_open[slot] = 1
+  _http_owner_scopes[slot] = .taskscope.collectall(_http_owner_pools[slot], -1)
+  _http_owner_scope_open[slot] = 1
+  return
+
+_http_owner_ingress: procedure = .byteendpoint expose _http_owner_ingresses
+  arg slot = .int, generation = .int
+  call _http_owner_require(slot, generation, 1)
+  return _http_owner_ingresses[slot]
+
+_http_owner_submit: procedure = .void expose _http_owner_scopes
+  arg slot = .int, generation = .int, target = .tasktarget
+  call _http_owner_require(slot, generation, 1)
+  owner_reference = reference _http_owner_scopes[slot]
+  owner_scope = dereference owner_reference
+  child = owner_scope.submit(target, .channelvalue.null_value())
+  return
+
+_http_owner_ready: procedure = .void expose _http_owner_states
+  arg slot = .int, generation = .int
+  call _http_owner_require(slot, generation, 1)
+  _http_owner_states[slot] = 2
+  return
+
+/* The active-call guard is separate from persistent cleanup progress. A
+ * failed stage remains owned and can be retried; no successful stage repeats. */
+_http_owner_close: procedure = .void expose _http_owner_generations _http_owner_states _http_owner_busy _http_owner_aborting _http_owner_ingress_open _http_owner_ingress_sealed _http_owner_pool_open _http_owner_scope_open _http_owner_ingresses _http_owner_pools _http_owner_scopes
+  arg slot = .int, generation = .int, aborting = .boolean
+  if slot < 1 | slot > _http_owner_generations[0] then return
+  if _http_owner_generations[slot] <> generation then return
+  if _http_owner_states[slot] = 0 | _http_owner_states[slot] = 4 then return
+  if _http_owner_busy[slot] then return
+  /* A signal may arrive after acquisition but before its following flag write.
+   * Only constructing slots need this reconciliation; closed wrappers remain
+   * initialized, so a retry must instead trust its completed stage flags. */
+  if _http_owner_states[slot] = 1 then do
+    if initialized(_http_owner_ingresses[slot]) then _http_owner_ingress_open[slot] = 1
+    if initialized(_http_owner_pools[slot]) then _http_owner_pool_open[slot] = 1
+    if initialized(_http_owner_scopes[slot]) then _http_owner_scope_open[slot] = 1
+  end
+  failed = 0
+  first_problem = .signal
+  do
+    _http_owner_busy[slot] = 1
+    _http_owner_states[slot] = 3
+    if aborting then _http_owner_aborting[slot] = 1
+    if _http_owner_ingress_open[slot] & _http_owner_ingress_sealed[slot] = 0 then do
+      do
+        ingress_reference = reference _http_owner_ingresses[slot]
+        ingress = dereference ingress_reference
+        call ingress.half_close(2)
+        _http_owner_ingress_sealed[slot] = 1
+      on signal as problem
+        first_problem = problem
+        failed = 1
+        _http_owner_aborting[slot] = 1
+      end
+    end
+    if _http_owner_scope_open[slot] then do
+      do
+        scope_reference = reference _http_owner_scopes[slot]
+        owner_scope = dereference scope_reference
+        if _http_owner_aborting[slot] then call owner_scope.abort(.channelvalue.string_value("HTTP controller cleanup"))
+        else call owner_scope.finish()
+        _http_owner_scope_open[slot] = 0
+      on signal task_failure as problem
+        /* finish closes its scope before reporting a failed child. */
+        _http_owner_scope_open[slot] = 0
+        if failed = 0 then first_problem = problem
+        failed = 1
+      on signal as problem
+        if failed = 0 then first_problem = problem
+        failed = 1
+        _http_owner_aborting[slot] = 1
+      end
+    end
+    if _http_owner_scope_open[slot] = 0 & _http_owner_pool_open[slot] then do
+      do
+        pool_reference = reference _http_owner_pools[slot]
+        owner_pool = dereference pool_reference
+        call owner_pool.close()
+        _http_owner_pool_open[slot] = 0
+      on signal channel_error as problem
+        /* This exact wrapper check confirms a completed earlier close.
+         * Other failures, including uncertain native completion, retain
+         * ownership for retry or execution teardown. */
+        if problem.message() = "taskpool.close.closed status=1" then _http_owner_pool_open[slot] = 0
+        else do
+          if failed = 0 then first_problem = problem
+          failed = 1
+        end
+      on signal as problem
+        if failed = 0 then first_problem = problem
+        failed = 1
+      end
+    end
+    if _http_owner_ingress_open[slot] then do
+      do
+        final_ingress_reference = reference _http_owner_ingresses[slot]
+        final_ingress = dereference final_ingress_reference
+        call final_ingress.close()
+        _http_owner_ingress_open[slot] = 0
+      on signal channel_error as problem
+        if problem.message() = "byteendpoint.close.closed status=1" then _http_owner_ingress_open[slot] = 0
+        else do
+          if failed = 0 then first_problem = problem
+          failed = 1
+        end
+      on signal as problem
+        if failed = 0 then first_problem = problem
+        failed = 1
+      end
+    end
+    if _http_owner_scope_open[slot] = 0 & _http_owner_pool_open[slot] = 0 & _http_owner_ingress_open[slot] = 0 then do
+      empty_scope = .taskscope
+      empty_pool = .taskpool
+      empty_ingress = .byteendpoint
+      _http_owner_scopes[slot] = empty_scope
+      _http_owner_pools[slot] = empty_pool
+      _http_owner_ingresses[slot] = empty_ingress
+      if _http_owner_generations[slot] = 9223372036854775807 then _http_owner_states[slot] = 4
+      else _http_owner_states[slot] = 0
+    end
+    _http_owner_busy[slot] = 0
+  on signal as problem
+    _http_owner_busy[slot] = 0
+    call rxfnsb..signalrelay(problem)
+  end
+  if failed then call rxfnsb..signalrelay(first_problem)
   return
 
 /* These helpers own byte requests. On an observation miss, cancel and account
@@ -867,9 +1070,8 @@ httpclient: class implements ._httpclient_contract
   _retries = .int
   _ingress_reference = .channelvalue
   _ingress = .byteendpoint
-  _owner_pool = .taskpool
-  _owner_scope = .taskscope
-  _owns_pool = .boolean
+  _owner_slot = .int
+  _owner_generation = .int
   _closed = .boolean
 
   /** Create one bounded per-origin connection pool.
@@ -946,15 +1148,28 @@ httpclient: class implements ._httpclient_contract
     _request_bytes = policy.request_bytes()
     _redirects = policy.redirects()
     _retries = policy.retries()
-    _ingress = .byteendpoint.memory(3, admission * 192)
-    _ingress_reference = _ingress.provider_reference()
-    _owner_pool = .taskpool.local(connections, connections)
-    _owner_scope = .taskscope.collectall(_owner_pool, -1)
-    do index = 1 to connections
-      target = task .rxfnsg..httpconnectionowner(_origin, _host, _port, _tls, maximum_response, _dns_timeout, _connect_timeout, _tls_timeout, _request_timeout, _response_timeout, _header_count, _header_bytes, _request_bytes, _redirects, _retries, _ingress_reference)
-      child = _owner_scope.submit(target, .channelvalue.null_value())
+    _owner_slot = 0
+    _owner_generation = 0
+    cleanup_failed = .int
+    do
+      _owner_slot = _http_owner_claim()
+      _owner_generation = _http_owner_generation(_owner_slot)
+      call _http_owner_open(_owner_slot, _owner_generation, connections, admission)
+      _ingress = _http_owner_ingress(_owner_slot, _owner_generation)
+      _ingress_reference = _ingress.provider_reference()
+      do index = 1 to connections
+        target = task .rxfnsg..httpconnectionowner(_origin, _host, _port, _tls, maximum_response, _dns_timeout, _connect_timeout, _tls_timeout, _request_timeout, _response_timeout, _header_count, _header_bytes, _request_bytes, _redirects, _retries, _ingress_reference)
+        call _http_owner_submit(_owner_slot, _owner_generation, target)
+      end
+      call _http_owner_ready(_owner_slot, _owner_generation)
+    on signal as problem
+      do
+        if _owner_slot <> 0 then call _http_owner_close(_owner_slot, _http_owner_generation(_owner_slot), 1)
+      on signal
+        cleanup_failed = 1
+      end
+      call rxfnsb..signalrelay(problem)
     end
-    _owns_pool = 1
     _closed = 0
     return
 
@@ -983,7 +1198,8 @@ httpclient: class implements ._httpclient_contract
     _total_timeout = encoded.field("totalTimeout").as_integer()
     _ingress_reference = encoded.field("ingress")
     _ingress = .byteendpoint.from_reference(_ingress_reference)
-    _owns_pool = 0
+    _owner_slot = 0
+    _owner_generation = 0
     _closed = 0
     return
 
@@ -991,7 +1207,7 @@ httpclient: class implements ._httpclient_contract
    * @return canonical crexx.http.client record
    */
   to_channel: method = .channelvalue
-    call _http_failure_if _closed, "HTTP client is closed"
+    call _http_proxy_require_open(_closed, _owner_slot, _owner_generation)
     names = .string[]
     values = .channelvalue[]
     names[1] = "admission"
@@ -1060,6 +1276,7 @@ httpclient: class implements ._httpclient_contract
 
   _request: method = .httpresponse
     arg verb = .string, path = .string, body = .binary, headers = .httpheaders
+    call _http_proxy_require_open(_closed, _owner_slot, _owner_generation)
     call _http_failure_if http_method_valid(verb) = 0, "HTTP method must be an upper-case token of at most 32 characters"
     call _http_failure_if http_request_target_valid(path) = 0, "HTTP request target must be an origin-relative path of at most 8192 bytes without line breaks"
     call _http_failure_if headers.count() > _header_count, "HTTP request exceeds the configured header-count ceiling"
@@ -1119,6 +1336,7 @@ httpclient: class implements ._httpclient_contract
    */
   post_stream: task = .httpresponse
     arg path = .string, body = .httpbody, headers = .httpheaders, response_capacity = .int
+    call _http_proxy_require_open(_closed, _owner_slot, _owner_generation)
     call _http_failure_if http_request_target_valid(path) = 0, "HTTP request target must be an origin-relative path of at most 8192 bytes without line breaks"
     call _http_failure_if headers.count() > _header_count, "HTTP request exceeds the configured header-count ceiling"
     request_header_bytes = headers.bytes() + binlength(headers.content_type() as .binary)
@@ -1184,11 +1402,7 @@ httpclient: class implements ._httpclient_contract
   /** Close admission, join connection owners and release pool resources. */
   close: method = .void
     if _closed then return
-    if _owns_pool then do
-      call _ingress.half_close(2)
-      call _owner_scope.finish()
-      call _owner_pool.close()
-    end
+    if _owner_slot <> 0 then call _http_owner_close(_owner_slot, _owner_generation, 0)
     else call _ingress.close()
     _closed = 1
     return

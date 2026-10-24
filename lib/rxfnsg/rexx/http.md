@@ -25,6 +25,18 @@ or the general `.request(verb, path, binaryBody, headers)` task methods. Text
 callers use `response.body()`; binary callers use `response.body_bytes()`.
 Every client owns bounded task and socket resources and must be closed.
 
+Controlling-execution copies are small proxies for one private, stable
+controller. Its scope is anchored before children capture scope/channel
+references. Closing any controlling copy closes that controller; other copies
+then reject requests, and an old copy cannot close a later recycled controller.
+Worker `from_channel()` proxies still close only their local endpoint view.
+Dropping a proxy does not run a new destructor or join: explicit `close()` is
+required, with existing execution/channel teardown as the abandoned-owner
+fallback. Creation scans retained peak controller slots; requests use constant
+time slot/generation validation. No controller token enters the transfer record.
+Rejected client operations raise the existing `CHANNEL_ERROR` condition with
+the HTTP diagnostic; there is no separate HTTP signal code.
+
 The initial server is clear-text, buffered and deliberately bounded. A
 controller retains socket ownership and gives complete `.httprequest` values to
 sealed `.httpservice .taskwork` handlers. See [`httpserver.md`](httpserver.md)

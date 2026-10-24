@@ -20,6 +20,67 @@ set(RXFNSG_RPATH ${CMAKE_BINARY_DIR}/bin/rxfnsg)
 
 add_custom_target(testrxfnsg ALL)
 
+# One optimized product-VM contract. Existing HTTP/LLM consumers retain the
+# mode/engine boundaries; this fixture owns private cleanup and alias cases.
+# Compose the real implementation with its private control body, rather than
+# adding public diagnostic exports or production failure-injection arguments.
+set(_http_owner_source_dir "${CMAKE_CURRENT_BINARY_DIR}/http-owner-source")
+file(MAKE_DIRECTORY "${_http_owner_source_dir}")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/../rexx/http.crexx")
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/../rexx/http.crexx" HTTP_OWNER_IMPLEMENTATION)
+configure_file(ts_http_owner_lifecycle.crexx.in
+  "${_http_owner_source_dir}/ts_http_owner_lifecycle.crexx" @ONLY)
+unset(HTTP_OWNER_IMPLEMENTATION)
+set(_http_owner_program "${CMAKE_CURRENT_BINARY_DIR}/ts_http_owner_lifecycle")
+get_target_property(_http_owner_stage_g_root rxfnsg BINARY_DIR)
+set(_http_owner_stage_g_work "${_http_owner_stage_g_root}/stage-g/work")
+set(_http_owner_codec "${_http_owner_stage_g_work}/members/httpcodec/httpcodec.rxbin")
+set(_http_owner_core "${_http_owner_stage_g_work}/members/httpcore/httpcore.rxbin")
+crexx_add_fixture_command(
+  OUTPUT "${_http_owner_program}-linked.rxbin"
+  BYPRODUCTS "${_http_owner_program}.rxas" "${_http_owner_program}.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+    -i "${_http_owner_stage_g_work}/imports/base$<SEMICOLON>${_http_owner_stage_g_work}/imports/http-private"
+    -o "${_http_owner_program}" ts_http_owner_lifecycle.crexx
+  COMMAND $<TARGET_FILE:rxas> -o "${_http_owner_program}" "${_http_owner_program}"
+  COMMAND $<TARGET_FILE:rxlink> -o "${_http_owner_program}-linked" "${_http_owner_program}"
+    "${LIBRPATH}" "${CMAKE_BINARY_DIR}/bin/classlib" "${_http_owner_codec}" "${_http_owner_core}"
+  DEPENDS rxc rxas rxlink compiler_exit_bin library classlib rxfnsg
+    "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+    "${_http_owner_codec}" "${_http_owner_core}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/../rexx/http.crexx"
+    "${CMAKE_CURRENT_SOURCE_DIR}/ts_http_owner_lifecycle.crexx.in"
+    "${_http_owner_source_dir}/ts_http_owner_lifecycle.crexx"
+  WORKING_DIRECTORY "${_http_owner_source_dir}"
+  VERBATIM)
+add_custom_target(ts_http_owner_lifecycle_artifact
+  DEPENDS "${_http_owner_program}-linked.rxbin")
+add_dependencies(testrxfnsg ts_http_owner_lifecycle_artifact)
+add_dependencies(ts_http_owner_lifecycle_artifact rxvm)
+string(CONFIGURE [=[
+execute_process(COMMAND [==[@CREXX_RXVM_EXECUTABLE@]==] [==[@_http_owner_program@-linked]==]
+  WORKING_DIRECTORY [==[@CMAKE_CURRENT_BINARY_DIR@]==]
+  RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error)
+if(NOT result STREQUAL "0" OR NOT error STREQUAL "")
+  message(FATAL_ERROR "HTTP lifecycle failed (${result}): ${output}${error}")
+endif()
+string(REPLACE "\r\n" "\n" output "${output}")
+if(NOT output STREQUAL "PASS: HTTP stable controller lifecycle\n")
+  message(FATAL_ERROR "HTTP lifecycle output mismatch: ${output}")
+endif()
+message(STATUS "PASS: HTTP stable controller lifecycle")
+]=] _http_owner_runtime_content @ONLY)
+set(_http_owner_runtime_script "${CMAKE_CURRENT_BINARY_DIR}/ts_http_owner_lifecycle_runtime.cmake")
+file(GENERATE OUTPUT "${_http_owner_runtime_script}" CONTENT "${_http_owner_runtime_content}")
+add_test(NAME ts_http_owner_lifecycle COMMAND ${CMAKE_COMMAND} -P "${_http_owner_runtime_script}")
+set_tests_properties(ts_http_owner_lifecycle PROPERTIES
+  LABELS "http;ownership;levelg;library" TIMEOUT 120
+  CREXX_PREP_TARGETS "ts_http_owner_lifecycle_artifact;rxvm")
+
 # Local server fixture: measured VM legs in the common-driver harness are about
 # 5s Debug / 7s Apple ASan. Keep network-owner topology isolated, with a generous
 # hang backstop. This coverage remains enabled in llama-free core builds.

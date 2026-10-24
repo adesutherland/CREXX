@@ -97,6 +97,22 @@ admission, joins the connection owners and releases their pool. A client proxy
 reconstructed for a task closes only its local endpoint view. Close the request
 task pool separately, after every scope using it has closed.
 
+Ordinary copies of a controller-owned client refer to the same controller.
+Closing one closes it for every local copy; repeated close is harmless, while
+later requests and encoding through those copies fail. A stale copy cannot
+close a new client that reuses private controller storage. Copying or returning
+the client does not copy its live scope/task graph. The controller remains
+execution-owned until explicit close or execution teardown; merely dropping the
+last client variable does not perform an implicit join.
+
+Cleanup records completed stages and retains incomplete ownership after a
+failure. If cancellation interrupts a native close before its completion is
+known, the client stays closing and rejects requests; retry reports any remaining
+failure, and execution teardown remains the fallback. It never treats an
+unclassified channel error as successful cleanup.
+Client validation and closed-controller errors use `CHANNEL_ERROR` with an HTTP
+diagnostic message.
+
 `from_channel()` and `to_channel()` appear in the generated API because they
 are the exact compiler transfer contract. Ordinary callers use `pooled()`,
 `post()`, `post_stream()` and `close()`.

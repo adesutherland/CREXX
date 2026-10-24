@@ -181,6 +181,48 @@ frozen names and architectural positions are not mistaken for implementations.
 
 ## CONC-16 HTTP architecture decision
 
+### CONC-16-OWNER — stable HTTP controller storage
+
+Vision: retain the existing public HTTP client and transfer record while making
+its ordinary value copies small proxies for one execution-owned controller.
+Private typed arrays anchor each pool, scope and ingress before submission
+creates child back-references. Only private slot/generation tokens identify a
+controller; they never cross task transfer. Existing channel providers, task
+algorithms and explicit `close()` remain the resource owners. No strong-reference
+feature, native box, new provider, compiler change or VM/ISA service is required.
+
+- **HTTP-OWNER-AC01 — done:** factory returns, containing-object copies and
+  reassignment retain working scope/channel back-links; inspect representative
+  RXAS and run the existing affected HTTP/LLM consumers.
+- **HTTP-OWNER-AC02 — done:** local copies close one controller once; requests
+  and encoding reject closing/closed/stale tokens; stale close cannot affect a
+  recycled generation. Reuse is bounded by peak live controllers and the
+  existing channel-slot ceiling, with generation exhaustion retiring the slot.
+  HTTP validation uses canonical `CHANNEL_ERROR` and retains its diagnostic;
+  an unrecognized private signal name must not become `INVALID_SIGNAL_CODE`.
+- **HTTP-OWNER-AC03 — done:** constructor and close failures preserve the original
+  signal, attempt remaining safe cleanup and retain incomplete ownership for
+  retry/teardown. Persistent acquired/completed stages are separate from the
+  temporary recursive-close guard. `finish()` raising `TASK_FAILURE` means its
+  scope is already closed; pool cleanup still runs before relay. An interrupted
+  native close with uncertain completion retains a nonreusable closing entry
+  and reports its error; this does not promise atomic cancellation at every VM
+  instruction. Creation scans retained peak slots; request validation is O(1).
+- **HTTP-OWNER-AC04 — done:** worker `from_channel()` proxies remain nonowning,
+  close only their local endpoint, and preserve the exact transfer record.
+  Abandoned open controllers retain the documented explicit-close obligation;
+  existing execution/channel teardown is the fallback, not a new finalizer.
+
+Steps:
+
+1. **HTTP-OWNER-STEP01 — done:** source-review the bounded table/proxy and
+   retryable cleanup contract before implementation.
+2. **HTTP-OWNER-STEP02 — done:** implement owner-local helpers and lifecycle
+   regression, preserving all protocol and task algorithms (AC01–04).
+3. **HTTP-OWNER-STEP03 — todo:** independent source/RXAS review, focused normal
+   consumer checks, then the agreed frozen ordinary baseline. Sanitizer and
+   performance panels remain after that baseline (AC01–04).
+
 The implemented architecture is:
 
 - [x] retain one private, binary-oriented Level B request/response framing,
