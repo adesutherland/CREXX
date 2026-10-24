@@ -1,0 +1,23 @@
+/* Focused Phase 2 runtime smoke test. */
+options levelb
+import php_array
+import php_runtime
+
+items = .php_runtime..php_array()
+call items.append("A")
+call items.append("B")
+call items.set("name","Peter")
+call items.set("name","Harry")
+
+say items.count()
+say items.get("0")
+say items.get("name")
+keys = items.keys()
+say keys[1]
+say keys[2]
+say keys[3]
+
+addr = .php_runtime..php_array()
+call addr.set("city","Munich")
+call items.setArray("address",addr)
+say items.getArray("address").get("city")

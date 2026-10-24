@@ -1,0 +1,269 @@
+/*
+ * PHP Level L grammar - first procedural subset.
+ *
+ * Supported:
+ *   <?php
+ *   variable assignment
+ *   echo
+ *   if / else
+ *   while
+ *   arithmetic and comparisons
+ *
+ * Deliberately excluded:
+ *   arrays, functions, classes, namespaces, interpolation,
+ *   exceptions, references, includes, and web-server variables.
+ */
+
+options levell
+namespace phpgrammar
+
+phpopen: token
+phpclose: token
+variable: token
+identifier: token
+number: token
+string: token
+separator: token
+
+assign: token
+plus: token
+minus: token
+times: token
+divide: token
+concat: token
+
+equals: token
+notequals: token
+lt: token
+gt: token
+le: token
+ge: token
+
+open: token
+close: token
+lbrace: token
+rbrace: token
+comma: token
+
+ifword: token
+elseword: token
+whileword: token
+echoword: token
+
+comment: comments nested "/*" "*/"
+
+scan: lexer input utf8bytes
+
+  digit: charset = U+0030 to U+0039
+  letter: charset = U+0041 to U+005A |
+                   U+0061 to U+007A |
+                   U+005F
+
+  hspace: charset = U+0009 | U+000A | U+000D | U+0020
+
+  single.body: charset = U+0020 to U+0021 |
+                         U+0023 to U+0026 |
+                         U+0028 to U+007E |
+                         U+0009
+
+  double.body: charset = U+0020 to U+0021 |
+                         U+0023 to U+005B |
+                         U+005D to U+007E |
+                         U+0009
+
+  numeric: pattern =
+      (digit+ ("." digit*)? | "." digit+)
+      (("e" | "E") ("+" | "-")? digit+)?
+
+  name: pattern =
+      letter (letter | digit)*
+
+  varname: pattern =
+      "$" name
+
+  whitespace: rule = hspace+ then skip
+
+  php.open: rule = "<?php" then emit phpopen
+  php.close: rule = "?>" then emit phpclose
+
+  numeric.literal: rule = numeric then emit number
+  variable.literal: rule = varname then emit variable
+  name.literal: rule = name then emit identifier
+
+  single.literal:
+      rule = "'" single.body* "'" then emit string
+
+  double.literal:
+      rule = '"' double.body* '"' then emit string
+
+  separator.sign:
+      rule = ";" then emit separator
+
+  open.parenthesis:
+      rule = "(" then emit open
+
+  close.parenthesis:
+      rule = ")" then emit close
+
+  open.brace:
+      rule = "{" then emit lbrace
+
+  close.brace:
+      rule = "}" then emit rbrace
+
+  comma.sign:
+      rule = "," then emit comma
+
+  /*
+   * Longer operators must be recognised before their prefixes.
+   */
+  strict.equals:
+      rule = "==" then emit equals
+
+  not.equals:
+      rule = "!=" then emit notequals
+
+  less.equals:
+      rule = "<=" then emit le
+
+  greater.equals:
+      rule = ">=" then emit ge
+
+  assign.sign:
+      rule = "=" then emit assign
+
+  plus.sign:
+      rule = "+" then emit plus
+
+  minus.sign:
+      rule = "-" then emit minus
+
+  multiply.sign:
+      rule = "*" then emit times
+
+  divide.sign:
+      rule = "/" then emit divide
+
+  concat.sign:
+      rule = "." then emit concat
+
+  less.sign:
+      rule = "<" then emit lt
+
+  greater.sign:
+      rule = ">" then emit gt
+
+
+parse: parser semantics contextfree input tokens start program
+
+  program:
+      rule = phpopen statement* phpclose?
+
+  statement:
+      rule = assignment.statement
+            | echo.statement
+            | if.statement
+            | while.statement
+
+  assignment.statement:
+      rule = variable assign expression separator
+
+  echo.statement:
+      rule = echoword expression echo.tail separator
+
+  echo.tail:
+      rule = comma expression echo.tail
+            | ''
+
+  if.statement:
+      rule = ifword open expression close block else.part?
+
+  else.part:
+      rule = elseword block
+
+  while.statement:
+      rule = whileword open expression close block
+
+  block:
+      rule = lbrace statement* rbrace
+
+
+  /*
+   * Expression precedence.
+   */
+  expression:
+      rule = logical.or
+
+  logical.or:
+      rule = logical.and
+
+  logical.and:
+      rule = comparison
+
+  comparison:
+      rule = concatenation
+              ((equals | notequals | lt | gt | le | ge)
+               concatenation)*
+
+  concatenation:
+      rule = additive (concat additive)*
+
+  additive:
+      rule = multiplicative ((plus | minus) multiplicative)*
+
+  multiplicative:
+      rule = unary ((times | divide) unary)*
+
+  unary:
+      rule = (plus | minus) unary
+            | primary
+
+  primary:
+      rule = number.value
+            | string.value
+            | variable.value
+            | group.value
+
+  number.value:
+      rule = number
+
+  string.value:
+      rule = string
+
+  variable.value:
+      rule = variable
+
+  group.value:
+      rule = open expression close
+
+
+classify: tokenstage start 1
+
+word.if:
+  transform stage classify state 1
+  take identifier text "if"
+  emit ifword
+  next 1
+
+word.else:
+  transform stage classify state 1
+  take identifier text "else"
+  emit elseword
+  next 1
+
+word.while:
+  transform stage classify state 1
+  take identifier text "while"
+  emit whileword
+  next 1
+
+word.echo:
+  transform stage classify state 1
+  take identifier text "echo"
+  emit echoword
+  next 1
+
+word.other:
+  transform stage classify state 1
+  take any emit copy
+  next 1
