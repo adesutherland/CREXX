@@ -100,6 +100,26 @@ add_test(NAME rxpp_variadic_forwarding
 set_tests_properties(rxpp_variadic_forwarding PROPERTIES
         LABELS "preprocessor;macros;regression")
 
+add_test(NAME rxpp_unset
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_unset
+             -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_unset.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_unset PROPERTIES
+        LABELS "preprocessor;directives;regression")
+
+add_test(NAME rxpp_assert
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_assert
+             -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_assert.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_assert PROPERTIES
+        LABELS "preprocessor;directives;diagnostics;regression")
+
 add_test(NAME rxpp_loadmacro
          COMMAND ${CMAKE_COMMAND}
              -DRXPP_BIN=$<TARGET_FILE:rxpp>
@@ -178,6 +198,16 @@ add_test(NAME rxpp_diagnostics
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpp_diagnostics PROPERTIES LABELS "preprocessor;diagnostics")
 
+add_test(NAME rxpp_flow_stats
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rxpp_flow_stats.rxpp
+             -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+             -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_flow_stats
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_flow_stats.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_flow_stats PROPERTIES LABELS "preprocessor;diagnostics")
+
 add_test(NAME rxpp_diagnostic_catalogs
          COMMAND ${CMAKE_COMMAND}
              -DRXC_BIN=$<TARGET_FILE:rxc>
@@ -198,10 +228,13 @@ crexx_label_smoke_tests(
         rxpp_relative_include
         rxpp_script_macro_exact_match
         rxpp_variadic_forwarding
+        rxpp_unset
+        rxpp_assert
         rxpp_loadmacro
         rxpp_mcall_depth
         rxpp_sh_tokens
         rxpp_diagnostics
+        rxpp_flow_stats
         PREP_TARGETS rxpp
 )
 crexx_register_test_prep_targets(

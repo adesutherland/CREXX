@@ -1,6 +1,8 @@
 # cREXX diagnostic message catalog, English (US)
 # This file contains spelling overrides. Missing entries fall back to en_GB.
 
+RXPP_ASSERT_FAILED = RXPP assertion failed: {condition}: {message}
+
 RXPP_STREAM_HEADER = Invalid ##STREAM header: {directive}.
 RXPP_STREAM_MISSING_END = No matching ##END found for ##STREAM at line {line}.
 

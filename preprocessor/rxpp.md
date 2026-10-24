@@ -36,6 +36,7 @@ This document combines the functionality of the RXPP macro preprocessor and the 
   - [`##CFLAG values` (RXPP flags)](#cflag-values-rxpp-flags)
   - [`##SET var value`](#set-var-value)
   - [`##UNSET var`](#unset-var)
+  - [`##ASSERT condition, message`](#assert-condition-message)
   - [`##INCLUDE file`](#include-file)
   - [`##IF var`](#if-var)
   - [`##IFN var`](#ifn-var)
@@ -851,28 +852,57 @@ The detailed options and variable behavior are described below.
 `##CFLAG` sets RXPP's preprocessor flags from the source or external input during the earliest configuration pass, before normal preprocessing begins. These are RXPP options, not C compiler flags.
 The definition must be placed at the very beginning of the source file, before any other ## macro instructions appear.
 
-Use the following RXPP flags in `cflags` to control preprocessing behavior and diagnostic output:
+RXPP starts with this default flag set when the source contains no `##CFLAG`
+directive:
 
-| Option       | Description                                                                                                                                                 |
-|--------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **def**      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                                                 |
-| **set**      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                                               |
-| **iflink**   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                                                     |
-| **1buf**     | Displays the raw source input immediately after it is read from the file.                                                                                   |
-| **2buf**     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured.                            |
-| **3buf**     | Displays the final source buffer just before it is passed to the preprocessor.                                                                              |
-| **vars**     | Prints all defined variables, including internal variables and those set via `##SET`.                                                                       |
-| **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                                               |
-| **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.<br/>                                          |
-| **strictmacrocheck** | Prints warnings when a macro call does not satisfy all parameters defined by the macro template. Disable this option when using macros with optional parameters to suppress these warnings.<br/> |
-| **blockmacros** | Expands RXPP command macros, including facade-to-script-macro calls, while collecting free-form text blocks such as `##DATA` and `##DALIAS`. Disabled by default. |
-| **nblockmacros** | Explicitly disables macro expansion while collecting free-form text blocks. This is the default configuration. |
+```text
+ndef nset svars siflink n1buf n2buf n3buf n4buf nvars nparse
+strictmacrocheck nmaclog nblockmacros
+```
 
-If a specific flag is not set, the corresponding option is disabled by default. Alternatively, you can explicitly disable an option by prefixing the flag with n (e.g., nset, n1buf, etc.)
+An explicit `##CFLAG` replaces this entire set; it does not add to it. For
+example, `##CFLAG nosrcmap` disables source maps, but also means that default
+flags such as `strictmacrocheck` are no longer selected unless they are listed
+again.
+
+Flags are matched as exact words. There is no general `n`-prefix rule: names
+such as `ndef`, `nset`, `nosrcmap`, and `nblockmacros` have specific meanings.
+The `n1buf`, `n2buf`, `n3buf`, `n4buf`, `nvars`, `nmaclist`, `nmaclog`,
+`svars`, `siflink`, and `nparse` tokens are default/compatibility settings;
+the corresponding positive flag is enabled by adding its exact name.
+
+| Option | Description |
+| --- | --- |
+| `ndef` | Suppresses the original RXPP definition/directive comment after its expanded result has been emitted. |
+| `nset` | Suppresses the original `##SET`/`##UNSET` directive comment. |
+| `iflink` | In verbose mode, displays pass-2 links between `##IF`/`##IFN` and their matching boundaries. |
+| `1buf` | Displays the source buffer after pass 1. |
+| `2buf` | Displays the source buffer after pass 2. |
+| `3buf` | Displays the source buffer after pass 3, before writing. |
+| `4buf` | Displays the buffer after optional formatting and before writing. |
+| `format` | Applies the indentation-only formatter to the final output. |
+| `vars` | Prints the current preprocessor variables. |
+| `maclist` | Prints loaded macro definitions. |
+| `includes` | Prints included files and recorded `##BEGIN` information. |
+| `nosrcmap` / `no-srcmap` | Disables source-map emission in generated cREXX. |
+| `maclog` | Prints additional RexxScript macro results. |
+| `strictmacrocheck` | Warns when a macro call does not satisfy its declared parameters. Enabled by default. |
+| `macrotrace` | Prints compile-time traces for source and scripted macro expansion. |
+| `iftrace` | Prints whether each `##IF`/`##IFN` block is retained or skipped. |
+| `includetrace` | Prints include requests, resolved paths, and duplicate suppression. |
+| `timing` | Prints elapsed timing for RXPP processing stages. |
+| `flow` | Prints structured `RXPP-FLOW` records for pass boundaries, directives, conditional decisions, include resolution, macro expansion, and suppression events. |
+| `stats` | Prints a compact `RXPP-STATS` summary of preprocessing counts and output size. |
+| `blockmacros` | Expands command and facade-to-script macros while collecting free-form blocks such as `##DATA` and `##DALIAS`. Disabled by default. |
+| `nblockmacros` | Explicitly keeps free-form block contents literal. This is the default. |
+| `cmtblk` | Enables the long block-comment compaction behavior used while scanning comments. |
+| `parse` | Prints diagnostic information for generated `PARSE` handling. |
+| `trimparse` | Uses the trimmed-template mode for generated `PARSE` handling. |
 
 **Example:**
+
 ```rexx
-##cflags def set iflink nbuf 2buf 3buf vars nmaclist  /* set early stage RXPP flags */
+##CFLAG nosrcmap blockmacros macrotrace
 ```
 
 Use `blockmacros` when an embedded text block is intended to contain generated
@@ -991,6 +1021,22 @@ Removes a previously defined variable from the preprocessor context.
 ##UNSET DEBUG
 ```
 
+### `##ASSERT condition, message`
+
+Checks a compile-time RXPP variable and stops preprocessing when the assertion
+fails. A bare variable tests existence; `==` and `!=` compare its stored string
+value exactly.
+
+```rexx
+##ASSERT DEBUG, "DEBUG must be defined"
+##ASSERT platform == "windows 64", "This module requires Windows"
+```
+
+Assertions are compile-time diagnostics and are omitted from generated CREXX.
+Built-in variables are initialized by RXPP; user variables are created with
+`##SET`. Since `##IF` tests existence, use `##UNSET` rather than assigning a
+false-looking value when a variable should be absent.
+
 ### `##INCLUDE file`
 
 Includes the contents of an external file into the source at the point of invocation. Nested includes are supported. By default, the file is resolved relative to the current working directory. If the file resides elsewhere, a fully qualified path must be provided. Quotation marks around the filename are not required.
@@ -1025,9 +1071,10 @@ C:/project/lib/./math/../utils/functions.rxh → C:/project/lib/utils/functions.
 
 
 
-### `##IF var`
+### `##IF var` or `##IF var == value`
 
-Begins a conditional block that is processed only if the specified variable is defined in the preprocessor context. No evaluation of the variable’s content or value is performed—only its existence is checked.
+Begins a conditional block that is processed when the specified variable
+exists. Exact string comparisons with `==` and `!=` are also supported.
 **Example:**
 
 ```rexx
@@ -1036,11 +1083,12 @@ Begins a conditional block that is processed only if the specified variable is d
 ##ENDIF
 ```
 
-### `##IFN var`
+### `##IFN var` or `##IFN var == value`
 
 (Short for `IF NOT`)
 
-Begins a conditional block that is processed only if the specified variable is not defined in the preprocessor context. The variable’s content or value is not evaluated—only its absence is considered.
+Begins a conditional block using the inverse of the `##IF` condition. A bare
+name tests absence; comparisons are inverted.
 
 **Example:**
 

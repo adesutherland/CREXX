@@ -1,0 +1,9 @@
+##CFLAG flow stats nosrcmap
+options levelb
+##DEFINE DOUBLE(x) { x+x }
+##SET DEBUG 1
+##IF DEBUG
+say DOUBLE(2)
+##ELSE
+say "not selected"
+##ENDIF

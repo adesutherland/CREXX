@@ -1,0 +1,14 @@
+##SET DEBUG 1
+##ASSERT DEBUG, "DEBUG must be defined"
+##ASSERT DEBUG == "1", "DEBUG has the wrong value"
+##ASSERT DEBUG != "0", "DEBUG has the disabled value"
+##ASSERT platform != "", "RXPP platform is unavailable"
+##IF DEBUG == "1"
+say "value condition passed"
+##ELSE
+say "value condition failed"
+##END
+##IFN DEBUG == "0"
+say "inverted value condition passed"
+##END
+say "assertions passed"

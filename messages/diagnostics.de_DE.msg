@@ -144,6 +144,7 @@ RXC-LC-0 = Level-C-Diagnose.
 RXC-LC-IMPLICIT_ADDRESS = Impliziter ADDRESS-Befehl; setzen Sie den Befehlstext in Anführungszeichen oder verwenden Sie ADDRESS explizit.
 RXPP_ALREADY_SOURCE_MAPPED = Eingabe enthält bereits options srcmap: {file}.
 RXPP_ALREADY_SOURCE_MAPPED_HINT = Führen Sie rxc mit der generierten Source-Map-Ausgabe aus; rxpp nicht zweimal ausführen.
+RXPP_ASSERT_FAILED = RXPP-Assertion fehlgeschlagen: {condition}: {message}
 RXPP_BUILD_REQUIRED = Diese RXPP-Quelle erfordert rxbuild; führen Sie den zugehörigen .build-Plan aus: {file}.
 RXPP_EXPANSION_LIMIT = Maximale Makroexpansionsgrenze nach {count} überschritten.
 RXPP_MCALL_DEPTH = .mcall-Verschachtelungstiefe {depth} überschreitet im Makro {macro} das Limit {limit}.

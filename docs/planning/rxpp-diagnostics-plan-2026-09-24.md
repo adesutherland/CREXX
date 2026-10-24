@@ -55,3 +55,103 @@ are absent.
   generated CREXX output.
 - The existing CMake-based `rxpp_smoke` test script was not changed.
 - `git diff --check` passed.
+
+## Follow-up: `flow` and `stats` diagnostics (2026-10-23)
+
+### Vision and intended outcomes
+
+Make RXPP's own preprocessing decisions understandable without requiring a
+developer to compare large intermediate buffers manually. `##CFLAG stats`
+will report a compact end-of-run summary of the work performed. `##CFLAG
+flow` will report structured, compile-time-only events for the principal
+directive, conditional, include, macro, suppression, and pass-boundary
+decisions. Both controls are source-local and require no new RXPP command-line
+parameters. Neither may alter generated CREXX, runtime behavior, or existing
+diagnostics when absent.
+
+### Acceptance criteria
+
+- **AC-08**: [x] `stats` emits a stable `RXPP-STATS` summary only when selected,
+  covering pass completion and useful counts for directives, includes, macros,
+  suppressed lines, and generated output.
+- **AC-09**: [x] `flow` emits stable `RXPP-FLOW` records for pass boundaries and
+  the implemented directive/conditional/include/macro/suppression decisions,
+  with source location where available.
+- **AC-10**: [x] `flow` and `stats` never enter generated CREXX and do not alter
+  preprocessing results when absent or present.
+- **AC-11**: [x] Focused tests verify both flags, their exact-word behavior, and
+  the separation of diagnostics from generated output.
+- **AC-12**: [x] The RXPP user guide and language reference document the flags and
+  their diagnostic-only semantics.
+
+### Implementation steps
+
+- **STEP-05**: [x] Add shared counters and a small flow-emission helper gated by
+  exact-word `##CFLAG` checks. Serves AC-08 through AC-10.
+- **STEP-06**: [x] Instrument pass boundaries and existing directive, conditional,
+  include, macro, suppression, and output paths without changing decisions.
+  Serves AC-08 through AC-10.
+- **STEP-07**: [x] Add focused source/test-script coverage and run the RXPP build
+  plus focused tests. Serves AC-11.
+- **STEP-08**: [x] Update both RXPP references and retain the observed validation
+  command/results here. Serves AC-12.
+
+### Follow-up evidence
+
+- `cmake --build cmake-build-release --target rxpp --parallel 1` passed.
+- Focused `ctest` passed: `rxpp_smoke`, `rxpp_diagnostics`, and
+  `rxpp_flow_stats` (the required `sanitizer_fixture_integrity` prerequisite
+  also passed).
+- `rxpp_flow_stats` verified that `RXPP-FLOW` and `RXPP-STATS` remain outside
+  generated CREXX and that macro/conditional output is preserved.
+
+## Follow-up: compile-time `##ASSERT` (2026-10-24)
+
+### Vision and intended outcomes
+
+Allow an RXPP source file to validate its compile-time configuration before
+macro expansion and generated-source compilation proceed. `##ASSERT` will
+support the existing presence semantics for bare variables and exact string
+comparisons using `==` and `!=`. Failed assertions will produce a stable RXPP
+diagnostic and stop preprocessing; successful assertions and their messages
+will never enter generated CREXX.
+
+### Acceptance criteria
+
+- **AC-13**: [x] A bare `##ASSERT name, "message"` passes only when the RXPP
+  variable exists, including variables established with `##SET` and built-in
+  RXPP variables.
+- **AC-14**: [x] `##ASSERT name == "value", "message"` and `!=` compare the
+  current RXPP variable value exactly.
+- **AC-15**: [x] Failed assertions emit `RXPP_ASSERT_FAILED` and terminate
+  preprocessing; successful assertions are suppressed from generated CREXX.
+- **AC-16**: [x] Focused tests cover success, failure, `##UNSET`, built-in
+  `platform`, and generated-source separation without rebuilding the full
+  product in this phase.
+- **AC-17**: [x] RXPP references and diagnostic catalogs document the new
+  directive and its supported expression forms.
+- **AC-18**: [x] `##IF` and `##IFN` accept the same bare-name, `==`, and `!=`
+  condition forms as `##ASSERT`, while preserving bare-name existence tests.
+
+### Implementation steps
+
+- **STEP-09**: [x] Add `CMD_assert` and dispatch it during pass three so
+  preceding `##SET`/`##UNSET` directives are honored. Serves AC-13 through AC-15.
+- **STEP-10**: [x] Add focused CMake-script coverage and catalog entries.
+  Serves AC-13 through AC-17.
+- **STEP-11**: [x] Update RXPP references and record deferred build/test
+  commands for the user's ongoing full build. Serves AC-16 and AC-17.
+- **STEP-12**: [x] Share the condition evaluator between `##ASSERT`, `##IF`,
+  and `##IFN`, preserving compound conditions during `##ELSE` normalization.
+  Add focused coverage and documentation. Serves AC-18.
+
+### Current evidence
+
+- Source, tests, documentation, and diagnostic catalog edits are complete.
+- `git diff --check` passed for the touched paths.
+- RXPP rebuilt successfully after the final implementation changes.
+- Focused command: `ctest --test-dir cmake-build-release --parallel 1 -R
+  "^(rxpp_unset|rxpp_assert|rxpp_flow_stats)$" --output-on-failure`.
+- Result: 100% passed (4/4, including `sanitizer_fixture_integrity`) on
+  2026-10-24; this verifies ASSERT, IF/IFN value comparisons, UNSET behavior,
+  and flow/stats integration.
