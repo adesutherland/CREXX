@@ -178,6 +178,60 @@ selects the source-emission control. Set `CREXX_BIN_DIR` to the current product
 bin directory when using `build-local.sh`. CMake's generated-consumer and modern
 RexxScript CTests execute prebuilt programs, with no nested build/test matrix.
 
+The flow, condition, structured-flow and lowering fixtures load one immutable
+generated definition, then create a fresh owning request for every document.
+Their semantic, budget, error and lifetime checks retain all four parser
+backends, both consumer compiler/assembler modes and both concrete engines.
+The backend-independent `lowerdemo` helper has one shared preparation owner.
+`ts_lllowering_deep` runs the unchanged 2,000-node lowering control once with
+the optimized image on the product engine; `-a semantic` selects the other
+lowering checks, `-a deep` selects that control, and no argument runs both.
+The existing `ts_llast_{noopt,opt}_{rxbvm,rxtvm}` controls already exercise the
+same 2,000-deep walker and 1,000-wide tree. The corresponding `ts_llborrowed`
+and `ts_llsource` cells retain expired/copied-owner, source-index and resource
+boundaries; every small lowering mapping and cleanup case remains in its full
+matrix. Consumer modes vary the harness, not the already prepared SDK.
+Structured-flow serialization is required only for the maintained sanitizer
+contention case; ordinary scheduling uses representative resource observations.
+
+Ordinary flow and structured-flow cells select `-a semantic`: short repeated
+sequences and nested controls retain all backend/mode/engine paths, exact graph
+allowances and zero/one-short failures. `ts_llflow_resources` and
+`ts_llstructuredflow_resources` reuse the LL1 optimized image on the product
+engine for the original width 200/depth 40, loop depth 30 and every intermediate
+graph-allocation allowance. Reported sizes, completed sweeps and zero remaining
+checks guard that selection. No argument retains the complete original manual
+workload and output, including Earley's original bounded sizes; `-a resources`
+adds its scope observations. These are common post-parse graph/analysis controls,
+not parser-budget overrides. The generated AST matrix, origin/recovery matrix,
+3,000-item generated tree and AST depth/width controls retain their distinct
+parser/source/owner boundaries. Instrumented flow/structured-flow cells retain
+the full original workload, including SAN-QA-019's serial route, pending the
+separate native-memory scope review.
+
+The retained ordinary Earley cells in these four families reserve six CTest
+process slots because their dense parser/forest index has a large working set
+even for the small semantic inputs. This weight admits at most five such cells
+in the normal 30-slot pool; it does not start six threads or assert a speed
+budget. Other backends and the canonical resource entries keep their ordinary
+slot cost. Instrumented scheduling remains under its existing policy.
+
+`ts_llearley_budget` reuses the optimized Earley origins image on the product
+engine. Its private `-a earley-budget` route parses one clean flat record with
+fresh owning requests and policies sharing one definition. A monotone search
+bounded by the public default proves the exact clean-success allowance and
+the one-short `earley.cells` resource outcome; unrelated failures are rejected.
+Two recovery-API probes must preserve those outcomes without repairs or a
+valid partial AST. The bound permits 23 search requests under the current
+default, plus the default-success and two recovery probes. The external marker
+guards the selected route and boundary checks. All no-argument origins cases
+and their existing backend/mode/engine matrix remain unchanged.
+
+Callable-service consumers read prepared inputs and publish only to their own
+mode/engine-specific destination and sibling staging directory. Ordinary cells
+can share the test pool; the instrumented route retains its existing serial
+contention policy and all requests, oracles and hang-protection timeouts.
+
 
 ## Products and public services
 

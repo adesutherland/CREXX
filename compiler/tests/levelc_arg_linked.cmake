@@ -9,6 +9,12 @@ if(DEFINED NAME)
 else()
     set(base levelc_arg_linked)
 endif()
+if(DEFINED PREPARED_IMAGE)
+    if(NOT EXISTS "${PREPARED_IMAGE}")
+        message(FATAL_ERROR "Missing prepared Level C image ${PREPARED_IMAGE}; build ${PREP_TARGET}")
+    endif()
+    set(input_image "${PREPARED_IMAGE}")
+else()
 set(rxc_flags)
 if(NOOPT)
     list(APPEND rxc_flags -n)
@@ -31,9 +37,11 @@ execute_process(
 if(NOT result EQUAL 0)
     message(FATAL_ERROR "rxas failed: ${output}${error}")
 endif()
+    set(input_image "${base}.rxbin")
+endif()
 execute_process(
         COMMAND "${RXLINK}" -o "${base}_image.rxbin"
-                "${base}.rxbin" "${BINDIR}/library.rxbin"
+                "${input_image}" "${BINDIR}/library.rxbin"
                 "${BINDIR}/classlib.rxbin" "${BINDIR}/rxfnsc.rxbin"
         WORKING_DIRECTORY "${BUILD_DIR}"
         OUTPUT_VARIABLE output ERROR_VARIABLE error RESULT_VARIABLE result)

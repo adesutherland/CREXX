@@ -25,9 +25,9 @@ def digest(path):
 
 def control(path):
     rows = path.read_text().splitlines()
-    inputs = [Path(row[6:]) for row in rows if row.startswith('INPUT ')]
+    inputs = [Path(row[6:]).resolve() for row in rows if row.startswith('INPUT ')]
     selectors = [row[8:] for row in rows if row.startswith('INCLUDE ')]
-    outputs = [Path(row[7:]) for row in rows if row.startswith('OUTPUT ')]
+    outputs = [Path(row[7:]).resolve() for row in rows if row.startswith('OUTPUT ')]
     assert inputs and selectors and len(outputs) == 1, (path, 'incomplete control')
     assert len(inputs) == len(set(inputs)), (path, 'duplicate input producer')
     assert len(selectors) == len(set(selectors)), (path, 'duplicate selector')

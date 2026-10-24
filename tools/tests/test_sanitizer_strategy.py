@@ -270,6 +270,86 @@ endforeach()
         command('cmake', '--build', build, '--target', 'qa-runtime-sample-noopt', 'qa-runtime-sample-opt')
         self.assertTrue((build/'bin/rxcexits.rxbin').is_file())
 
+    @unittest.skipUnless(os.name != 'nt' and shutil.which('ninja'), 'Producer freshness fixture requires executable scripts and Ninja')
+    def test_runtime_producers_track_published_certified_exits(self):
+        source = self.root / 'exits source'; source.mkdir()
+        build = self.root / 'exits build'
+        # Use the maintained matrix helper and exact worker producer rule.
+        # The fake tools expose which published module each recipe observed.
+        (source / 'cmake').symlink_to(ROOT / 'cmake', target_is_directory=True)
+        definitions = (ROOT / 'interpreter/CMakeLists.txt').read_text()
+        worker = re.search(r'add_custom_command\(\s*OUTPUT test_persistent_worker_executor\.rxbin\s*'
+                           r'COMMAND \$<TARGET_FILE:rxc>.*?COMMENT "[^"]*"\)',
+                           definitions, re.S)
+        self.assertIsNotNone(worker)
+        producer = '''#!@PYTHON@
+from pathlib import Path
+import sys
+tool = Path(sys.argv[0]).name
+output = sys.argv[sys.argv.index('-o') + 1] if '-o' in sys.argv else sys.argv[-1]
+suffix = '.rxas' if tool == 'rxc' else '.rxbin'
+if not output.endswith(suffix):
+    output += suffix
+Path(output).write_bytes(Path('@BUILD@/bin/rxcexits.rxbin').read_bytes())
+with Path('@BUILD@/calls.txt').open('a') as calls:
+    calls.write(tool + '\\n')
+'''.replace('@PYTHON@', sys.executable).replace('@BUILD@', build.as_posix())
+        for tool in ('rxc', 'rxas', 'rxlink', 'rxvm', '_e5native'):
+            executable = source / tool
+            executable.write_text(producer); executable.chmod(0o755)
+        (source / 'sample.crexx').write_text('fixture source')
+        worker_source = source / 'tests/rexx/test_persistent_worker_executor.crexx'
+        worker_source.parent.mkdir(parents=True); worker_source.write_text('worker fixture source')
+        exits = source / 'exits.txt'; exits.write_text('first')
+        (source / 'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
+project(ProducerExitsFreshness NONE)
+enable_testing()
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+foreach(tool IN ITEMS rxc rxas rxlink rxvm _e5native)
+ add_executable(${tool} IMPORTED)
+ set_target_properties(${tool} PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/${tool}")
+endforeach()
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+ COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${CMAKE_SOURCE_DIR}/exits.txt" "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+ DEPENDS "${CMAKE_SOURCE_DIR}/exits.txt")
+add_custom_target(compiler_exit_bin DEPENDS "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin")
+function(crexx_schedule_directory_qa_tier_finalization)
+endfunction()
+include("${CMAKE_SOURCE_DIR}/cmake/CrexxQaFixtures.cmake")
+include("${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake")
+set(CREXX_RXVM_EXECUTABLE "$<TARGET_FILE:rxvm>")
+add_custom_target(sample_group)
+crexx_add_rexx_opt_matrix(NAME sample SOURCE "${CMAKE_SOURCE_DIR}/sample.crexx"
+ TARGET_GROUP sample_group RUNNER rxvm)
+@WORKER@
+add_custom_target(worker_image DEPENDS "${CMAKE_BINARY_DIR}/test_persistent_worker_executor.rxbin")
+'''.replace('@WORKER@', worker.group(0)))
+        command('cmake', '-S', source, '-B', build, '-G', 'Ninja')
+
+        def prepare():
+            command('cmake', '--build', build, '--target', 'sample_group', 'worker_image', '--parallel', '4')
+
+        images = [build / 'sample_noopt.rxbin', build / 'sample_opt.rxbin',
+                  build / 'test_persistent_worker_executor.rxbin']
+        prepare()
+        self.assertEqual([image.read_text() for image in images], ['first'] * 3)
+        calls = (build / 'calls.txt').read_text()
+        prepare()
+        self.assertEqual((build / 'calls.txt').read_text(), calls, 'Warm preparation must be a no-op')
+        exits.write_text('second')
+        prepare()
+        self.assertEqual([image.read_text() for image in images], ['second'] * 3)
+        self.assertEqual(len((build / 'calls.txt').read_text().splitlines()), 12)
+        images[0].unlink(); images[2].unlink()
+        prepare()
+        self.assertEqual([image.read_text() for image in images], ['second'] * 3)
+        self.assertEqual(len((build / 'calls.txt').read_text().splitlines()), 16)
+        (build / 'bin/rxcexits.rxbin').unlink()
+        prepare()
+        self.assertEqual([image.read_text() for image in images], ['second'] * 3)
+        self.assertEqual(len((build / 'calls.txt').read_text().splitlines()), 22)
+
+
     def workflow_block(self, name):
         workflow = (ROOT/'.github/workflows/sanitizers.yml').read_text().splitlines()
         start = workflow.index('      - name: ' + name)

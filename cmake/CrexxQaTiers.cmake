@@ -89,8 +89,10 @@ function(crexx_finalize_directory_qa_tiers)
         # Timing work is never part of a broad correctness pool.  A few
         # historical benchmarks carry an explicit smoke label as well as the
         # topical performance label; normalize those tests here instead of
-        # allowing the explicit smoke tier to override isolation.
-        if("performance" IN_LIST _crexx_labels)
+        # allowing the explicit smoke tier to override isolation. Deliberate
+        # qualification tests assert correctness without timing thresholds.
+        if("performance" IN_LIST _crexx_labels AND
+           NOT "qualification" IN_LIST _crexx_labels)
             foreach(_crexx_scheduling_label IN ITEMS
                     essential smoke comprehensive qualification stress
                     performance-measurement)
@@ -142,7 +144,7 @@ function(crexx_finalize_directory_qa_tiers)
                 # parallel correctness worker pool. Existing tests with the
                 # topical performance label therefore default to the isolated
                 # serial measurement tier unless they explicitly declare a
-                # qualification or stress tier above.
+                # qualification tier above.
                 set(_crexx_tier performance-measurement)
                 set_property(TEST "${_crexx_test}" PROPERTY RUN_SERIAL TRUE)
             elseif("qualification" IN_LIST _crexx_labels OR

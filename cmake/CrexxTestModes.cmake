@@ -130,7 +130,8 @@ function(crexx_add_rexx_opt_matrix)
             ${CREXX_SOURCE}
             ${CREXX_DEPENDS})
     if(CREXX_COMPILER_TARGET STREQUAL "rxc")
-        list(APPEND _crexx_compile_depends compiler_exit_bin)
+        list(APPEND _crexx_compile_depends compiler_exit_bin
+                "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin")
     endif()
 
     foreach(_crexx_mode IN ITEMS noopt opt)

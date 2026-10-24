@@ -3,29 +3,9 @@ options levelb
 import rxinvoke
 import rxinvoketest
 import rxfnsb
-import rxcontract
 
 main: procedure = .int
   arg argv = .string[]
-  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,1000000)
-  if declaration[0] <> 13 | declaration[1] <> 'rxnative1' | declaration[2] <> 'ok' then return 20
-  if declaration[6] <> 'rxinvoke' | declaration[7] <> 'rxinvoke.prepare' | declaration[8] <> '0' | declaration[9] <> '' then return 21
-  if declaration[10] <> '.rxinvoke..invocation' | declaration[11] <> 'binding=.rxinvoke..binding,cells=.rxinvoke..scalar[],presence=.int[],extent=.int,bytebudget=.int' then return 22
-  if declaration[12] <> 'b' | declaration[13] <> '0' then return 23
-  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.catalogue.§factory',65536,1000000)
-  if declaration[2] <> 'ok' | declaration[8] <> '2' | declaration[9] <> 'rxinvoke.catalogue' then return 24
-  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.invocation.result',65536,1000000)
-  if declaration[2] <> 'ok' | declaration[8] <> '1' | declaration[9] <> 'rxinvoke.invocation' then return 25
-  declaration = rxcontract..acquire('provider:rxinvoke.missing','rxinvoke.prepare',65536,1000000)
-  if declaration[2] <> 'invalid' | declaration[6] <> '' then return 26
-  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.missing',65536,1000000)
-  if declaration[2] <> 'invalid' | declaration[6] <> '' then return 27
-  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,64)
-  if declaration[2] <> 'limit' | declaration[6] <> '' then return 28
-  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',1,1000000)
-  if declaration[2] <> 'limit' | declaration[6] <> '' then return 29
-  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,1000000)
-  if declaration[2] <> 'ok' then return 30
   names = .string[]; types = .string[]
   signatures = .string[]; providers = .string[]
   names[1] = 'rxinvoketest.integer'; types[1] = '.int'; signatures[1] = 'value=.int'

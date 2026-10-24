@@ -47,6 +47,27 @@ main: procedure = .int expose checks failures
   call check(default_factory[2] == 'ok' & default_factory[8] == '2' & default_factory[9] == named_factory[9],'default native factory keeps kind and owner')
   method_declaration = rxcontract..acquire(argv[2],'rxpa_objects.box.read',65536,65536)
   call check(method_declaration[2] == 'ok' & method_declaration[8] == '1' & method_declaration[9] == named_factory[9],'native method remains distinct from factory')
+  /* The normal VM loads its mandatory native catalogue before this program.
+   * These queries inspect that owner without an optional invocation provider. */
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,1000000)
+  call check(declaration[0] = 13 & declaration[1] = 'rxnative1' & declaration[2] = 'ok','complete built-in declaration acquisition')
+  call check(declaration[6] = 'rxinvoke' & declaration[7] = 'rxinvoke.prepare' & declaration[8] = '0' & declaration[9] = '','built-in ordinary callable identity and owner')
+  call check(declaration[10] = '.rxinvoke..invocation' & declaration[11] = 'binding=.rxinvoke..binding,cells=.rxinvoke..scalar[],presence=.int[],extent=.int,bytebudget=.int','complete built-in result and arguments')
+  call check(declaration[12] = 'b' & declaration[13] = '0','built-in declaration flags and task')
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.catalogue.§factory',65536,1000000)
+  call check(declaration[2] = 'ok' & declaration[8] = '2' & declaration[9] = 'rxinvoke.catalogue','built-in factory retains kind and owner')
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.invocation.result',65536,1000000)
+  call check(declaration[2] = 'ok' & declaration[8] = '1' & declaration[9] = 'rxinvoke.invocation','built-in method retains kind and owner')
+  declaration = rxcontract..acquire('provider:rxinvoke.missing','rxinvoke.prepare',65536,1000000)
+  call check(declaration[2] = 'invalid' & declaration[6] = '','missing built-in provider has no partial declaration')
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.missing',65536,1000000)
+  call check(declaration[2] = 'invalid' & declaration[6] = '','missing built-in callable has no partial declaration')
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,64)
+  call check(declaration[2] = 'limit' & declaration[6] = '','built-in work limit is atomic')
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',1,1000000)
+  call check(declaration[2] = 'limit' & declaration[6] = '','built-in input limit is atomic')
+  declaration = rxcontract..acquire('provider:rxinvoke','rxinvoke.prepare',65536,1000000)
+  call check(declaration[2] = 'ok','built-in failure does not poison later acquisition')
   say 'CONTRACT_PROJECT|checks=' || checks || '|failures=' || failures
   return failures
 

@@ -21,6 +21,9 @@
 #endif
 
 static int failures = 0;
+static int reuse_parser_process = 0;
+/* Only main owns this connection. Per-case CodeBuffers borrow it. */
+static CommunicationFunctions *shared_parser_communication = NULL;
 
 static const char *syntax_error_source =
         "options levelb\n"
@@ -112,6 +115,29 @@ static void scan_buffer_for_leaf_diagnostics(CodeBuffer *cb, BufferDiagnosticMat
     }
 }
 
+static void expect_no_diagnostic(CodeBuffer *cb, char severity,
+                                 const char *message_substring, const char *message) {
+    TreeDiagnosticMatch tree_match;
+    BufferDiagnosticMatch buffer_match;
+
+    memset(&tree_match, 0, sizeof(tree_match));
+    tree_match.severity = severity;
+    tree_match.message_substring = message_substring;
+    cb_walk_tree_top_down(cb->parse_tree, collect_tree_diagnostic_matches, &tree_match);
+
+    memset(&buffer_match, 0, sizeof(buffer_match));
+    buffer_match.severity = severity;
+    buffer_match.message_substring = message_substring;
+    expect_true(enter_codeblock_critical_section() == 0, "stale scan should enter critical section");
+    scan_buffer_for_leaf_diagnostics(cb, &buffer_match);
+    expect_true(exit_codeblock_critical_section() == 0, "stale scan should exit critical section");
+    expect_true(tree_match.count == 0 && buffer_match.count == 0, message);
+}
+
+static void free_case_communication(CommunicationFunctions *comm) {
+    if (comm && comm != shared_parser_communication) free_stdio_communication_functions(comm);
+}
+
 static CodeBuffer *load_document_in_editor(const char *document_id,
                                            const char *source,
                                            CommunicationFunctions **comm_out) {
@@ -121,22 +147,25 @@ static CodeBuffer *load_document_in_editor(const char *document_id,
 
     if (comm_out) *comm_out = 0;
 
-    comm = create_stdio_communication_functions(RXC_SYNTAXHIGHLIGHT_CMD);
+    comm = reuse_parser_process ? shared_parser_communication :
+            create_stdio_communication_functions(RXC_SYNTAXHIGHLIGHT_CMD);
     expect_true(comm != 0, "stdio parser communication should be created");
     if (!comm) return 0;
 
     cb = create_code_buffer(comm, 0);
     expect_true(cb != 0, "editor code buffer should be created");
     if (!cb) {
-        free_stdio_communication_functions(comm);
+        free_case_communication(comm);
         return 0;
     }
+    /* A borrowed connection must not be freed/replaced by crash recovery. */
+    if (reuse_parser_process) cb_set_auto_relaunch(cb, 0);
 
-    load = create_initial_load(document_id, source);
+    load = create_initial_load(reuse_parser_process ? "editor_diagnostics.crexx" : document_id, source);
     expect_true(load != 0, "initial load should be created");
     if (!load) {
         free_code_buffer_with_ep_rules(cb);
-        free_stdio_communication_functions(comm);
+        free_case_communication(comm);
         return 0;
     }
 
@@ -146,18 +175,19 @@ static CodeBuffer *load_document_in_editor(const char *document_id,
     }
 
     expect_true(cb->parse_tree != 0 && cb->parse_tree->root != 0, "editor parse should populate a parse tree");
-    expect_true(cb->parse_tree != 0 && cb->parse_tree->root->type == PARSE_TREE_FILE,
+    expect_true(cb->parse_tree != 0 && cb->parse_tree->root != 0 &&
+                cb->parse_tree->root->type == PARSE_TREE_FILE,
                 "editor parse should produce a PARSE_TREE_FILE root");
 
     if (comm_out) *comm_out = comm;
-    else free_stdio_communication_functions(comm);
+    else free_case_communication(comm);
     return cb;
 }
 
 static void free_editor_parse(CodeBuffer *cb, CommunicationFunctions *comm) {
     if (editor_is_parsing_thread_active()) join_parser_thread();
     free_code_buffer_with_ep_rules(cb);
-    if (comm) free_stdio_communication_functions(comm);
+    free_case_communication(comm);
 }
 
 static void test_editor_receives_syntax_error_diagnostics(void) {
@@ -210,6 +240,10 @@ static void test_editor_receives_warning_diagnostics(void) {
     expect_true(exit_codeblock_critical_section() == 0, "buffer scan should exit critical section");
     expect_true(buffer_match.count > 0,
                 "warning document should expose warning severity/message on editor-visible characters");
+    if (reuse_parser_process) {
+        expect_no_diagnostic(cb, CB_ERROR, NULL,
+                             "warning reload should not retain the prior syntax error");
+    }
 
     free_editor_parse(cb, comm);
 }
@@ -239,6 +273,10 @@ static void test_editor_handles_incomplete_parse_exit(void) {
     expect_true(exit_codeblock_critical_section() == 0, "buffer scan should exit critical section");
     expect_true(buffer_match.count > 0,
                 "incomplete PARSE should expose its diagnostic on editor-visible characters");
+    if (reuse_parser_process) {
+        expect_no_diagnostic(cb, CB_WARNING, "NOT_IN_SAME_SCOPE",
+                             "incomplete PARSE reload should not retain the prior warning");
+    }
 
     free_editor_parse(cb, comm);
 }
@@ -268,18 +306,42 @@ static void test_editor_handles_bare_parse_exit(void) {
     expect_true(exit_codeblock_critical_section() == 0, "buffer scan should exit critical section");
     expect_true(buffer_match.count > 0,
                 "bare PARSE should expose a user-facing missing-arguments diagnostic on editor-visible characters");
+    if (reuse_parser_process) {
+        expect_no_diagnostic(cb, CB_ERROR, "PARSE INTO requires a target variable",
+                             "bare PARSE reload should not retain the prior PARSE INTO diagnostic");
+    }
 
     free_editor_parse(cb, comm);
 }
 
-int main(void) {
+int main(int argc, char **argv) {
+    if (argc == 2 && strcmp(argv[1], "--reuse-parser") == 0) reuse_parser_process = 1;
+    else if (argc != 1) {
+        fprintf(stderr, "usage: test_highlight_editor_diagnostics [--reuse-parser]\n");
+        return 2;
+    }
     editor_init();
+    if (reuse_parser_process) {
+        shared_parser_communication = create_stdio_communication_functions(RXC_SYNTAXHIGHLIGHT_CMD);
+        expect_true(shared_parser_communication != NULL, "shared parser communication should be created");
+        if (!shared_parser_communication) {
+            editor_free();
+            return 1;
+        }
+    }
 
     test_editor_receives_syntax_error_diagnostics();
     test_editor_receives_warning_diagnostics();
     test_editor_handles_incomplete_parse_exit();
     test_editor_handles_bare_parse_exit();
 
+    if (editor_is_parsing_thread_active()) {
+        expect_true(join_parser_thread() == 0, "aggregate parser thread should finish cleanly");
+    }
+    if (shared_parser_communication) {
+        free_stdio_communication_functions(shared_parser_communication);
+        shared_parser_communication = NULL;
+    }
     editor_free();
     return failures ? 1 : 0;
 }

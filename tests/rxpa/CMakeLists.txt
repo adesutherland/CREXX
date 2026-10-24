@@ -193,7 +193,7 @@ add_rxpa_provider_package(_rxpa_invoke_native
         OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/providers")
 foreach(_invoke_case core native values)
     set(_invoke_program "${CMAKE_CURRENT_BINARY_DIR}/rxpa_invocation_${_invoke_case}")
-    add_custom_command(OUTPUT "${_invoke_program}-linked.rxbin"
+    crexx_add_fixture_command(OUTPUT "${_invoke_program}-linked.rxbin"
         BYPRODUCTS "${_invoke_program}.rxas" "${_invoke_program}.rxbin"
         COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
             -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_BINARY_DIR}/bin/providers;${CMAKE_CURRENT_BINARY_DIR}/providers"
@@ -201,7 +201,8 @@ foreach(_invoke_case core native values)
         COMMAND $<TARGET_FILE:rxas> "${_invoke_program}"
         COMMAND $<TARGET_FILE:rxlink> -s -o "${_invoke_program}-linked" "${_invoke_program}"
             "${CMAKE_BINARY_DIR}/bin/library"
-        DEPENDS rxc rxas rxlink library compiler_exit_bin _rxpa_invoke_native llcontract
+        DEPENDS rxc rxas rxlink library compiler_exit_bin _rxpa_invoke_native
+            "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
             "${CMAKE_CURRENT_SOURCE_DIR}/rxpa_invocation_${_invoke_case}.crexx"
         VERBATIM)
     add_custom_target(rxpa_invocation_${_invoke_case}_artifact

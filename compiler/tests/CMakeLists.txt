@@ -5756,7 +5756,19 @@ add_levelc_invalid_compile_test(levelc_strictc_iterate_malformed_target
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
-
+    cmake_parse_arguments(_slice "" "PREPARED_IMAGE;PREP_TARGET" "" ${ARGN})
+    if(_slice_PREPARED_IMAGE)
+        if(NOT _slice_PREP_TARGET OR _slice_UNPARSED_ARGUMENTS)
+            message(FATAL_ERROR "${NAME}: prepared image requires its owner and producer flags belong to that owner")
+        endif()
+        set(_slice_program "${_slice_PREPARED_IMAGE}")
+        string(APPEND SCRIPT_CONTENT
+            "set(full_out \"\")\n"
+            "if(NOT EXISTS [=[${_slice_program}]=])\n"
+            "  message(FATAL_ERROR [=[Missing prepared Level C image; build ${_slice_PREP_TARGET}]=])\n"
+            "endif()\n")
+    else()
+        set(_slice_program "${NAME}.rxbin")
     string(APPEND SCRIPT_CONTENT
            "execute_process(\n"
            "    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${ARGN} -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
@@ -5781,9 +5793,10 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
            "if(NOT rxas_res EQUAL 0)\n"
            "  message(FATAL_ERROR \"rxas failed for ${NAME}.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
            "endif()\n")
+    endif()
     string(APPEND SCRIPT_CONTENT
            "execute_process(\n"
-           "    COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${NAME}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
+           "    COMMAND \"${CREXX_RXVM_EXECUTABLE}\" \"${_slice_program}\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
            "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
            "    OUTPUT_VARIABLE rxvm_out\n"
            "    ERROR_VARIABLE rxvm_err\n"
@@ -5803,6 +5816,10 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
              COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+    if(_slice_PREPARED_IMAGE)
+        crexx_register_test_prep_targets(TESTS ${NAME}
+            TARGETS ${_slice_PREP_TARGET} rxvm library classlib rxfnsc)
+    endif()
 endfunction()
 
 function(add_runtime_bytes_test NAME SOURCE_FILE EXPECTED_HEX LEVEL)
@@ -6480,12 +6497,36 @@ set(_levelc_call_resolution_expected
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
         "${_levelc_call_resolution_expected}")
 file(READ "${_levelc_call_resolution_expected}" _levelc_call_resolution_output)
+# One producer per compiler mode serves direct and linked CALL consumers.
+# As before, both use the assembler's normal optimisation policy.
+foreach(_call_mode IN ITEMS opt noopt)
+    set(_call_flags)
+    if(_call_mode STREQUAL "noopt")
+        set(_call_flags -n)
+    endif()
+    set(_call_base "${CMAKE_CURRENT_BINARY_DIR}/levelc-call-resolution/${_call_mode}")
+    set(_levelc_call_${_call_mode}_image "${_call_base}.rxbin")
+    crexx_add_fixture_command(OUTPUT "${_call_base}.rxbin"
+        BYPRODUCTS "${_call_base}.rxas"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/levelc-call-resolution"
+        COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin" ${_call_flags}
+            -o "${_call_base}" "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_resolution_result.rexx"
+        COMMAND $<TARGET_FILE:rxas> -o "${_call_base}.rxbin" "${_call_base}"
+        DEPENDS rxc rxas compiler_exit_bin library classlib rxfnsc
+            "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin" "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+            "${CMAKE_BINARY_DIR}/bin/classlib.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+            "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_resolution_result.rexx"
+        VERBATIM)
+    add_custom_target(levelc_call_resolution_${_call_mode}_artifact DEPENDS "${_call_base}.rxbin")
+endforeach()
 add_levelc_runtime_slice_test(levelc_call_resolution_result
         rexx_src/levelc_call_resolution_result.rexx
-        "${_levelc_call_resolution_output}")
+        "${_levelc_call_resolution_output}"
+        PREPARED_IMAGE "${_levelc_call_opt_image}" PREP_TARGET levelc_call_resolution_opt_artifact)
 add_levelc_runtime_slice_test(levelc_call_resolution_result_noopt
         rexx_src/levelc_call_resolution_result.rexx
-        "${_levelc_call_resolution_output}" -n)
+        "${_levelc_call_resolution_output}"
+        PREPARED_IMAGE "${_levelc_call_noopt_image}" PREP_TARGET levelc_call_resolution_noopt_artifact)
 foreach(_mode IN ITEMS opt noopt)
     add_test(NAME levelc_call_external_${_mode}
             COMMAND ${Python3_EXECUTABLE}
@@ -6922,11 +6963,13 @@ add_test(NAME levelc_call_resolution_result_linked
         -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_resolution_result.rexx
         -DBUILD_DIR=${CMAKE_CURRENT_BINARY_DIR}
         -DNAME=levelc_call_resolution_result_linked
+        -DPREPARED_IMAGE=${_levelc_call_opt_image}
+        -DPREP_TARGET=levelc_call_resolution_opt_artifact
         -DEXPECTED_FILE=${_levelc_call_resolution_expected}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/levelc_arg_linked.cmake)
 set_tests_properties(levelc_call_resolution_result_linked PROPERTIES
         LABELS "compiler;levelc"
-        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+        CREXX_PREP_TARGETS "levelc_call_resolution_opt_artifact;rxlink;rxvm;library;classlib;rxfnsc")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_whole.expected"
         "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_procedure_lifecycle.expected"
@@ -9236,8 +9279,16 @@ if (ENABLE_PARSER_MODE)
             LABELS "compiler;syntax_highlighting;stage5"
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-    add_test(NAME highlight_editor_diagnostics COMMAND test_highlight_editor_diagnostics)
+    set(_highlight_editor_args)
+    if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+        set(_highlight_editor_args --reuse-parser)
+    endif()
+    add_test(NAME highlight_editor_diagnostics COMMAND test_highlight_editor_diagnostics ${_highlight_editor_args})
     set_tests_properties(highlight_editor_diagnostics PROPERTIES LABELS "compiler;syntax_highlighting;stage5")
+    if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+        # Reserve memory slots for the measured parser footprint, not six threads.
+        set_tests_properties(highlight_editor_diagnostics PROPERTIES PROCESSORS 6)
+    endif()
 endif()
 
 file(GLOB_RECURSE RXC_DIAGNOSTIC_CATALOG_SCAN_SOURCES CONFIGURE_DEPENDS
@@ -9739,6 +9790,38 @@ foreach(_bif_mode IN ITEMS opt noopt)
         LABELS "compiler;levelg" TIMEOUT 240 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 endforeach()
 
+# A small real consumer/refusal check for the one shared fixture owner.
+add_test(NAME contract_fixture_contract
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/contract_fixture_contract.py
+        --bindir ${CMAKE_BINARY_DIR}/bin --work ${CMAKE_CURRENT_BINARY_DIR}/contract-fixture-control)
+set_tests_properties(contract_fixture_contract PROPERTIES
+    LABELS "compiler;qa-fixture" TIMEOUT 120
+    CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+
+# Ordinary consumers share preparations. Manual/instrumented commands retain
+# each original selected-mode producer invocation through the same generator.
+set(_clock_fixture_dir "${CMAKE_CURRENT_BINARY_DIR}/contract-fixtures/clock")
+set(_source_fixture_root "${CMAKE_CURRENT_BINARY_DIR}/contract-fixtures/source-data")
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+    add_test(NAME classic_clock_contract_prepare
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/classic_clock_contract.py
+            --bindir ${CMAKE_BINARY_DIR}/bin --fixture-dir "${_clock_fixture_dir}" --prepare)
+    set_tests_properties(classic_clock_contract_prepare PROPERTIES
+        FIXTURES_SETUP classic-clock RUN_SERIAL TRUE TIMEOUT 600
+        LABELS "compiler;levelc;comprehensive"
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    foreach(_source_level IN ITEMS b c g l)
+        add_test(NAME source_data_contract_${_source_level}_prepare
+            COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/source_data_contract.py
+                --bindir ${CMAKE_BINARY_DIR}/bin --level ${_source_level}
+                --fixture-dir "${_source_fixture_root}/${_source_level}" --prepare)
+        set_tests_properties(source_data_contract_${_source_level}_prepare PROPERTIES
+            FIXTURES_SETUP source-data-${_source_level} RUN_SERIAL TRUE TIMEOUT 600
+            LABELS "compiler;source;level${_source_level};comprehensive"
+            CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    endforeach()
+endif()
+
 # Prepare the two compiler modes once; retain all four runtime oracles.
 set(_bif_fixture_dir "${CMAKE_CURRENT_BINARY_DIR}/contract-fixtures/bif-reference")
 add_test(NAME levelc_bif_reference_audit_prepare
@@ -9795,26 +9878,47 @@ foreach(_closeout_mode IN ITEMS opt noopt linked_opt linked_noopt)
         set(_closeout_fixture_flags)
         if(_closeout_family STREQUAL "expression")
             set(_closeout_fixture_flags --fixture-dir "${_expression_fixture_dir}")
+        elseif(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+            set(_closeout_fixture_flags --fixture-dir "${_clock_fixture_dir}")
         endif()
         add_test(NAME ${_closeout_name} COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/classic_${_closeout_family}_contract.py
             --bindir ${CMAKE_BINARY_DIR}/bin ${_closeout_fixture_flags} ${_closeout_flags})
         if(_closeout_family STREQUAL "expression")
             set_property(TEST ${_closeout_name} APPEND PROPERTY FIXTURES_REQUIRED classic-expression)
+        elseif(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+            set_property(TEST ${_closeout_name} APPEND PROPERTY FIXTURES_REQUIRED classic-clock)
+        endif()
+        set(_closeout_runtime_serial TRUE)
+        if(_closeout_family STREQUAL "clock" AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+            set(_closeout_runtime_serial FALSE)
         endif()
         set_tests_properties(${_closeout_name} PROPERTIES
             LABELS "compiler;levelc;comprehensive"
-            RUN_SERIAL TRUE TIMEOUT 1200
+            RUN_SERIAL ${_closeout_runtime_serial} TIMEOUT 1200
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
     endforeach()
     foreach(_source_level IN ITEMS b c g l)
         set(_closeout_name source_data_contract_${_source_level}_${_closeout_mode})
+        set(_source_fixture_flags)
+        if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+            set(_source_fixture_flags --fixture-dir "${_source_fixture_root}/${_source_level}")
+        endif()
         add_test(NAME ${_closeout_name} COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/source_data_contract.py
-            --bindir ${CMAKE_BINARY_DIR}/bin --level ${_source_level} ${_closeout_flags})
+            --bindir ${CMAKE_BINARY_DIR}/bin --level ${_source_level} ${_source_fixture_flags} ${_closeout_flags})
+        if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+            set_property(TEST ${_closeout_name} APPEND PROPERTY FIXTURES_REQUIRED source-data-${_source_level})
+        endif()
+        set(_source_runtime_serial TRUE)
+        if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+            # Producers are setup-owned; consumers share only the per-root
+            # owner lock. Distinct prepared roots passed bounded parallel use.
+            set(_source_runtime_serial FALSE)
+        endif()
         set_tests_properties(${_closeout_name} PROPERTIES
             LABELS "compiler;source;level${_source_level};comprehensive"
-            RUN_SERIAL TRUE TIMEOUT 600
+            RUN_SERIAL ${_source_runtime_serial} TIMEOUT 600
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
     endforeach()
 endforeach()

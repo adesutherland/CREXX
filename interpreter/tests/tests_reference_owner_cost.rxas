@@ -1,0 +1,199 @@
+/*
+ * Reference lifetime ownership after an unrelated acyclic backing tree.
+ * The linked external target forces the generic MKREF path repeatedly.
+ */
+
+.globals=2
+
+main() .locals=20
+    setattrs r1,1024
+    linkattr1 r2,r1,1
+    setattrs r2,128
+    unlink r2
+    setattrs r1,1
+
+    setattrs r3,1
+    load r4,"external"
+    linktoattr1 1,r3,r4
+    load r5,1
+    load r9,0
+external_loop:
+    minlinkattr1 r6,r3,r5,0
+    mkref r7,r6
+    unlink r6
+    refvalid r8,r7
+    ieq r0,r8,1
+    brf fail_external_early,r0
+    iadd r9,r9,1
+    ilt r0,r9,64
+    brt external_loop,r0
+
+    endlife r3
+    refvalid r8,r7
+    ieq r0,r8,1
+    brf fail_external_root,r0
+    load r4,"updated"
+    deref r10,r7
+    seq r0,r10,"updated"
+    brf fail_external_value,r0
+    endlife r4
+    refvalid r8,r7
+    ieq r0,r8,0
+    brf fail_external_lifetime,r0
+
+    /* A helper borrows the caller's nested physical child through a1. */
+    setattrs r11,1
+    linkattr1 r12,r11,1
+    setattrs r12,1
+    linkattr1 r13,r12,1
+    load r13,"nested"
+    unlink r13
+    unlink r12
+    load r14,1
+    link r15,r11
+    call r16,borrowed_nested(),r14
+    unlink r15
+    refvalid r17,r16
+    ieq r0,r17,1
+    brf fail_borrowed_early,r0
+    deref r18,r16
+    seq r0,r18,"nested"
+    brf fail_borrowed_value,r0
+    endlife r11
+    refvalid r17,r16
+    ieq r0,r17,0
+    brf fail_borrowed_lifetime,r0
+
+    /* a0 is frame-owned even though the argument payload in a1 is borrowed. */
+    load r14,0
+    call r16,own_a0(),r14
+    refvalid r17,r16
+    ieq r0,r17,0
+    brf fail_a0_lifetime,r0
+    call r19,own_a0(),r14
+    refvalid r17,r16
+    ieq r0,r17,0
+    brf fail_recycled_lifetime,r0
+
+    /* A nested physical global child survives the borrowing helper's exit. */
+    setattrs g0,1
+    linkattr1 r12,g0,1
+    setattrs r12,1
+    linkattr1 r13,r12,1
+    load r13,"global-nested"
+    unlink r13
+    unlink r12
+    load r14,1
+    link r15,g0
+    call r16,borrowed_nested(),r14
+    unlink r15
+    refvalid r17,r16
+    ieq r0,r17,1
+    brf fail_global_early,r0
+    deref r18,r16
+    seq r0,r18,"global-nested"
+    brf fail_global_value,r0
+    endlife g0
+    refvalid r17,r16
+    ieq r0,r17,0
+    brf fail_global_lifetime,r0
+
+    /* A signal discards the borrowing frame after it stores the reference. */
+    setattrs r11,1
+    linkattr1 r12,r11,1
+    setattrs r12,1
+    linkattr1 r13,r12,1
+    load r13,"unwind-nested"
+    unlink r13
+    unlink r12
+    load r14,1
+    link r15,r11
+    sigbr unwind_caught,"INVALID_ARGUMENTS"
+    call r16,unwind_borrowed(),r14
+    br fail_missing_unwind
+unwind_caught:
+    unlink r15
+    refvalid r17,g1
+    ieq r0,r17,1
+    brf fail_unwind_early,r0
+    deref r18,g1
+    seq r0,r18,"unwind-nested"
+    brf fail_unwind_value,r0
+    endlife r11
+    refvalid r17,g1
+    ieq r0,r17,0
+    brf fail_unwind_lifetime,r0
+
+    say "PASS: Reference Owner Cost"
+    ret 0
+
+fail_external_early:
+    say "FAIL: external early lifetime"
+    ret 1
+fail_external_root:
+    say "FAIL: external root lifetime"
+    ret 1
+fail_external_value:
+    say "FAIL: external value"
+    ret 1
+fail_external_lifetime:
+    say "FAIL: external lifetime"
+    ret 1
+fail_borrowed_early:
+    say "FAIL: borrowed early lifetime"
+    ret 1
+fail_borrowed_value:
+    say "FAIL: borrowed value"
+    ret 1
+fail_borrowed_lifetime:
+    say "FAIL: borrowed lifetime"
+    ret 1
+fail_a0_lifetime:
+    say "FAIL: a0 lifetime"
+    ret 1
+fail_recycled_lifetime:
+    say "FAIL: recycled lifetime"
+    ret 1
+fail_global_early:
+    say "FAIL: global child early lifetime"
+    ret 1
+fail_global_value:
+    say "FAIL: global child value"
+    ret 1
+fail_global_lifetime:
+    say "FAIL: global child lifetime"
+    ret 1
+fail_missing_unwind:
+    say "FAIL: expected borrowing signal"
+    ret 1
+fail_unwind_early:
+    say "FAIL: unwound borrowed child early lifetime"
+    ret 1
+fail_unwind_value:
+    say "FAIL: unwound borrowed child value"
+    ret 1
+fail_unwind_lifetime:
+    say "FAIL: unwound borrowed child lifetime"
+    ret 1
+
+borrowed_nested() .locals=3
+    linkattr1 r1,a1,1
+    linkattr1 r2,r1,1
+    mkref r0,r2
+    unlink r2
+    unlink r1
+    ret r0
+
+own_a0() .locals=1
+    mkref r0,a0
+    ret r0
+
+unwind_borrowed() .locals=3
+    linkattr1 r1,a1,1
+    linkattr1 r2,r1,1
+    mkref r0,r2
+    copy g1,r0
+    unlink r2
+    unlink r1
+    signal "INVALID_ARGUMENTS","expected borrowing unwind"
+    ret r0

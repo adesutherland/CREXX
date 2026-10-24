@@ -8,7 +8,7 @@ foreach(case IN ITEMS instruction patterns unicode)
     set(source "${SOURCE_DIR}/levelc_arg_${case}.rexx")
     set(log "${BUILD_DIR}/levelc_arg_${case}_source_tree.log")
     execute_process(
-            COMMAND "${RXC}" -d1 -i "${BINDIR}" -o "levelc_arg_${case}_source_tree" "${source}"
+            COMMAND "${RXC}" -n -dp -i "${BINDIR}" -o "levelc_arg_${case}_source_tree" "${source}"
             WORKING_DIRECTORY "${BUILD_DIR}"
             OUTPUT_FILE "${log}"
             ERROR_FILE "${log}"

@@ -7,7 +7,17 @@ import llannotation
 import llflow
 import flowdemo
 
-main: procedure = .int
+main: procedure = .int expose language_definition
+  arg argv = .string[]
+  workload = .string
+  workload = 'full'
+  if argv[0] = 1 then workload = argv[1]
+  if argv[0] > 1 | (workload <> 'full' & workload <> 'semantic' & workload <> 'resources') then do
+    say 'usage: ts_llflow [full|semantic|resources]'
+    return 2
+  end
+  language_definition = flowdemo..language()
+  graph_sweeps = .int; graph_expected = .int; width = .int; depth = .int
   failures = 0; ok = .int; caught = .int; unused = .string; answer = .int
   tree = parseinput('if flag then x = 10; end; say x;')
   root = tree.root(); saynode = root.child('items',2); readnode = saynode.child('value')
@@ -95,10 +105,14 @@ main: procedure = .int
   failures = failures + check(result.witness(1) = 'From entry: Take the false branch of If on line 1. Reach this read without assigning x.','actual false-branch witness')
   count = graph.entries(); exact = flowdemo..execution(reference tree,count)
   failures = failures + check(exact.error() = '' & exact.entries() = count,'exact graph entry budget')
+  graph_sweeps = 0; graph_expected = count
   do allowance = 0 to count - 1
+    if workload = 'semantic' & allowance > 0 & allowance < count - 1 then iterate
     shortgraph = flowdemo..execution(reference tree,allowance)
     failures = failures + check(shortgraph.points() = 0 & pos('flow.entries',shortgraph.error()) > 0,'graph exhaustion boundary ' || allowance)
+    graph_sweeps = graph_sweeps + 1
   end
+  if workload <> 'semantic' then failures = failures + check(graph_sweeps = graph_expected,'complete graph budget sweep')
   short = flowdemo..execution(reference tree,count - 1)
   failures = failures + check(short.points() = 0 & pos('flow.entries',short.error()) > 0,'atomic graph exhaustion')
   caught = 0
@@ -170,8 +184,11 @@ main: procedure = .int
   end
   /* Keep the shared fixtures inside Earley's declared default chart budget;
    * the other backends also exercise larger ASTs with the same flow services. */
-  language = flowdemo..language(); width = 200; depth = 40
-  if language.backend() = 'earley' then do
+  width = 200; depth = 40
+  if workload = 'semantic' then do
+    width = 3; depth = 2
+  end
+  else if language_definition.backend() = 'earley' then do
     width = 20; depth = 8
   end
   wide = parseinput(copies('x = 1;',width) || 'say x;'); widegraph = flowdemo..execution(reference wide); wideinfo = widegraph.definiteassignment()
@@ -205,12 +222,13 @@ main: procedure = .int
   tree = rewritten
   failures = failures + check(pos('OWNER',result.error()) > 0 & pos('OWNER',notes.error()) > 0,'replaced AST invalidates properties and flow')
   failures = failures + check(pos('LL_AST_OWNER',delayedgraph.error()) > 0,'tree replacement before first graph query')
+  if workload = 'resources' then say 'FLOW_RESOURCES|width=' || width || '|depth=' || depth || '|graph_sweeps=' || graph_sweeps || '|remaining=' || (graph_expected - graph_sweeps) || '|failures=' || failures
   say 'failures=' || failures
   return failures
 
-parseinput: procedure = .llast..tree
+parseinput: procedure = .llast..tree expose language_definition
   arg source = .string
-  language = flowdemo..language(); request = .lllanguage..request(language,source as .binary)
+  request = .lllanguage..request(language_definition,source as .binary)
   if request.parse() <> 0 then do
     say 'PARSE FAILED:' request.error(); exit 1
   end

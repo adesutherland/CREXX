@@ -1,11 +1,10 @@
 """Standalone Classic compiler/import/assembly/link/runtime preservation."""
 import argparse
-import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
-import time
+import tempfile
 
 
 def main():
@@ -14,26 +13,30 @@ def main():
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--work', type=Path, required=True)
     args = parser.parse_args()
-    bindir, source, work = args.bindir.resolve(), args.source.resolve(), args.work.resolve()
-    work.mkdir(parents=True, exist_ok=True)
+    bindir, source = args.bindir.resolve(), args.source.resolve()
+    work_root = args.work.resolve()
+    work_root.mkdir(parents=True, exist_ok=True)
+    work = Path(tempfile.mkdtemp(prefix='parity-', dir=work_root))
     providers = work / 'providers É'
     providers.mkdir(exist_ok=True)
     fixtures = work / 'sources É'
     fixtures.mkdir(exist_ok=True)
     extension = '.exe' if os.name == 'nt' else ''
-    records = []
+    command_count = 0
 
     def run(label, argv, cwd, expected=0):
-        started = time.monotonic()
+        nonlocal command_count
+        command_count += 1
         result = subprocess.run(list(map(str, argv)), cwd=cwd, stdin=subprocess.DEVNULL,
                                 capture_output=True, timeout=600)
         log = cwd / (label + '.log')
         log.write_bytes(result.stdout + result.stderr)
-        records.append(dict(label=label, argv=list(map(str, argv)), rc=result.returncode,
-                            elapsed=time.monotonic()-started, log=str(log)))
         if result.returncode != expected:
             raise RuntimeError(f'{label}: expected {expected}, got {result.returncode}; {log}\n'
                                + (result.stdout+result.stderr)[-1800:].decode(errors='replace'))
+        if expected == 0 and result.stderr:
+            raise RuntimeError(f'{label}: unexpected successful-command diagnostic; {log}\n'
+                               + result.stderr[-1800:].decode(errors='replace'))
         return result.stdout.replace(b'\r\n', b'\n')
 
     def tool(name):
@@ -59,34 +62,41 @@ def main():
         mode = 'noopt' if noopt else 'opt'
         flags = ['-n'] if noopt else []
         for name in ('exact', 'typed', 'typed_g', 'levelc_procedure_unicode', 'levelc_expression_precedence'):
-            outputs = []
             images = []
+            lanes = []
+            provider_root = g_providers if name == 'typed_g' else providers
             for compiler in ('rxc', 'rxc-c'):
                 lane = work / mode / name / compiler
                 lane.mkdir(parents=True, exist_ok=True)
-                provider_root = g_providers if name == 'typed_g' else providers
                 extra = ['--import', 'levelc_call_alias', '-s', provider_root] if name.startswith('typed') else []
                 run('compile', [tool(compiler), *flags, '-i', bindir, *extra,
                                 '-o', lane/'program', fixtures/f'{name}.rexx'], lane)
+                images.append(lane/'program.rxas')
+                lanes.append(lane)
+            identical = images[0].read_bytes() == images[1].read_bytes()
+            # Share downstream work only after exact per-case equality. Different
+            # emissions retain both original runtime paths and output parity.
+            runtime_lanes = lanes[:1] if identical else lanes
+            outputs = []
+            for lane in runtime_lanes:
                 run('assemble', [tool('rxas'), *flags, lane/'program.rxas'], lane)
                 linked = lane/'linked.rxbin'
                 dependencies = [provider_root/'alias.rxbin'] if name.startswith('typed') else []
                 run('link', [tool('rxlink'), '-o', linked, lane/'program.rxbin', *dependencies,
                              bindir/'library.rxbin', bindir/'classlib.rxbin', bindir/'rxfnsc.rxbin'], lane)
-                outputs.append(run('run', [tool('rxvm'), linked], lane))
-                images.append(lane/'program.rxas')
-                if compiler == 'rxc-c' and (tool('rxtvm')).exists():
+                output = run('run', [tool('rxvm'), linked], lane)
+                outputs.append(output)
+                if ((identical or lane.name == 'rxc-c') and tool('rxtvm').exists()
+                        and tool('rxtvm').resolve() != tool('rxvm').resolve()):
                     threaded = run('threaded', [tool('rxtvm'), linked], lane)
-                    if threaded != outputs[-1]:
+                    if threaded != output:
                         raise RuntimeError(f'{mode}/{name}: portable/threaded output mismatch')
-            if images[0].read_bytes() != images[1].read_bytes():
-                raise RuntimeError(f'{mode}/{name}: assembly mismatch')
-            if outputs[0] != outputs[1]:
+                expected = {'exact': b'610062:v\n', 'typed': b'ALIAS-RESULT\n', 'typed_g': b'ALIAS-RESULT\n',
+                            'levelc_procedure_unicode': b'unicode=after\n'}.get(name)
+                if expected is not None and output != expected:
+                    raise RuntimeError(f'{mode}/{name}/{lane.name}: incorrect output {output!r}')
+            if len(outputs) == 2 and outputs[0] != outputs[1]:
                 raise RuntimeError(f'{mode}/{name}: runtime output mismatch')
-            expected = {'exact': b'610062:v\n', 'typed': b'ALIAS-RESULT\n', 'typed_g': b'ALIAS-RESULT\n',
-                        'levelc_procedure_unicode': b'unicode=after\n'}.get(name)
-            if expected is not None and outputs[1] != expected:
-                raise RuntimeError(f'{mode}/{name}: incorrect output {outputs[1]!r}')
 
     # A source-only RXAS dependency must keep the parent's opt-in discovery
     # policy when rxc-c asks the owning G compiler to materialize contracts.
@@ -113,7 +123,8 @@ def main():
         compiled.append(lane)
     run('helper-assemble', [tool('rxas'), helper], rxas_providers)
     run('rxas-provider-assemble', [tool('rxas'), rxas_providers/'alias.rxas'], rxas_providers)
-    for lane in compiled:
+    identical = (compiled[0]/'program.rxas').read_bytes() == (compiled[1]/'program.rxas').read_bytes()
+    for lane in (compiled[:1] if identical else compiled):
         run('assemble', [tool('rxas'), lane/'program.rxas'], lane)
         run('link', [tool('rxlink'), '-o', lane/'linked.rxbin', lane/'program.rxbin',
                      rxas_providers/'alias.rxbin', helper.with_suffix('.rxbin'),
@@ -132,8 +143,8 @@ def main():
             diagnostics.append((lane/'invalid.log').read_bytes())
         if diagnostics[0] != diagnostics[1]:
             raise RuntimeError('Classic source diagnostics differ between drivers')
-    (work/'results.json').write_text(json.dumps(records, indent=2)+'\n')
-    print(f'Classic standalone parity passes: {len(records)} tool commands; logs at {work}')
+    shutil.rmtree(work)
+    print(f'Classic standalone parity passes: {command_count} tool commands')
 
 
 if __name__ == '__main__':

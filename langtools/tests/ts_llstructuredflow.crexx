@@ -6,7 +6,17 @@ import llast
 import llflow
 import flowloops
 
-main: procedure = .int
+main: procedure = .int expose language_definition
+  arg argv = .string[]
+  workload = .string
+  workload = 'full'
+  if argv[0] = 1 then workload = argv[1]
+  if argv[0] > 1 | (workload <> 'full' & workload <> 'semantic' & workload <> 'resources') then do
+    say 'usage: ts_llstructuredflow [full|semantic|resources]'
+    return 2
+  end
+  language_definition = flowloops..language()
+  cyclic_sweeps = .int; cyclic_expected = .int; port_sweeps = .int; port_expected = .int; depth = .int
   failures = 0; allowance = .int
   failures = failures + scenario('while flag do x = 1; end; say x;',1,1,0,'zero iterations')
   failures = failures + scenario('repeat x = 1; until flag; say x;',0,1,1,'at least one iteration')
@@ -54,8 +64,9 @@ main: procedure = .int
     failures = failures + scenario('forever if flag then ' || a || ' else ' || b || ' end; end; say x;',reachable & assigned = 0,reachable,assigned,'loop path control ' || mask)
   end
 
-  language = flowloops..language(); depth = 30
-  if language.backend() = 'earley' then depth = 5
+  depth = 30
+  if workload = 'semantic' then depth = 2
+  else if language_definition.backend() = 'earley' then depth = 5
   failures = failures + scenario(copies('forever ',depth) || copies('break; end; ',depth) || 'x = 1; say x;',0,1,1,'deep nested loop targets')
 
   tree = parseinput('while flag do if other then break; else continue; end; end; say x;')
@@ -64,16 +75,24 @@ main: procedure = .int
   failures = failures + check(result.witness(1) = 'From entry: Take the false branch of While on line 1. Reach this read without assigning x.','zero-iteration witness')
   used = graph.entries(); exact = flowloops..execution(reference tree,used)
   failures = failures + check(exact.error() = '' & exact.entries() = used,'exact cyclic graph allowance')
+  cyclic_sweeps = 0; cyclic_expected = used
   do allowance = 0 to used - 1
+    if workload = 'semantic' & allowance > 0 & allowance < used - 1 then iterate
     small = flowloops..execution(reference tree,allowance)
     failures = failures + check(small.points() = 0 & pos('flow.entries',small.error()) > 0,'atomic cyclic graph boundary ' || allowance)
+    cyclic_sweeps = cyclic_sweeps + 1
   end
+  if workload <> 'semantic' then failures = failures + check(cyclic_sweeps = cyclic_expected,'complete cyclic graph budget sweep')
   sc = parseinput('if both(flag,either(other,set(x,1))) then return x; end; say x;')
   scgraph = flowloops..execution(reference sc); scused = scgraph.entries()
+  port_sweeps = 0; port_expected = scused
   do allowance = 0 to scused - 1
+    if workload = 'semantic' & allowance > 0 & allowance < scused - 1 then iterate
     scsmall = flowloops..execution(reference sc,allowance)
     failures = failures + check(scsmall.points() = 0 & pos('flow.entries',scsmall.error()) > 0,'atomic outcome-port boundary ' || allowance)
+    port_sweeps = port_sweeps + 1
   end
+  if workload <> 'semantic' then failures = failures + check(port_sweeps = port_expected,'complete outcome-port budget sweep')
   scexact = flowloops..execution(reference sc,scused)
   failures = failures + check(scexact.error() = '' & scexact.entries() = scused,'exact outcome-port allowance')
   exits = parseinput('forever break; end; say x;'); exitgraph = flowloops..execution(reference exits); exitresult = exitgraph.definiteassignment()
@@ -123,6 +142,7 @@ main: procedure = .int
     expected = 'LL_FLOW_CONTEXT: ' || kind || ' at line 2, byte 7: ' || operation || ' requires an enclosing loop'
     failures = failures + check(invalidgraph.error() = expected & invalidgraph.points() = 0,'located ' || operation || ' outside loop even when unreachable')
   end
+  if workload = 'resources' then say 'STRUCTURED_RESOURCES|depth=' || depth || '|cyclic_sweeps=' || cyclic_sweeps || '|cyclic_remaining=' || (cyclic_expected - cyclic_sweeps) || '|port_sweeps=' || port_sweeps || '|port_remaining=' || (port_expected - port_sweeps) || '|failures=' || failures
   say 'failures=' || failures
   return failures
 
@@ -141,9 +161,9 @@ scenario: procedure = .int
     failures = failures + check(pos('Reach this read without assigning ' || item.text('spelling') || '.',result.witness(i)) > 0,description || ' path witness')
   end
   return failures
-parseinput: procedure = .llast..tree
+parseinput: procedure = .llast..tree expose language_definition
   arg source = .string
-  language = flowloops..language(); request = .lllanguage..request(language,source as .binary)
+  request = .lllanguage..request(language_definition,source as .binary)
   if request.parse() <> 0 then do
     say 'PARSE FAILED:' request.error(); exit 1
   end

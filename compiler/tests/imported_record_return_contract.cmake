@@ -21,6 +21,18 @@ function(run_checked label)
   endif()
 endfunction()
 
+# Retain distinct engines; a compatibility symlink contributes no new VM cell.
+set(runtime_vms)
+set(runtime_identities)
+foreach(vm IN ITEMS "${RXVM}" "${RXBVM}")
+  file(REAL_PATH "${vm}" identity)
+  list(FIND runtime_identities "${identity}" existing_identity)
+  if(existing_identity EQUAL -1)
+    list(APPEND runtime_identities "${identity}")
+    list(APPEND runtime_vms "${vm}")
+  endif()
+endforeach()
+
 foreach(import_mode IN ITEMS source binary)
   foreach(compile_mode IN ITEMS noopt opt)
     if(compile_mode STREQUAL "noopt")
@@ -97,10 +109,10 @@ foreach(import_mode IN ITEMS source binary)
       )
     endforeach()
 
-    foreach(runner IN ITEMS RXVM RXBVM)
+    foreach(runner IN LISTS runtime_vms)
       foreach(level IN ITEMS levelb levelg)
         execute_process(
-          COMMAND "${${runner}}" "${LIBRARY}/library.rxbin"
+          COMMAND "${runner}" "${LIBRARY}/library.rxbin"
                   "${work}/imported_record_contract.rxbin"
                   "${work}/facade-${level}.rxbin"
                   "${work}/main-${level}.rxbin"
@@ -120,23 +132,27 @@ foreach(import_mode IN ITEMS source binary)
       endforeach()
     endforeach()
 
-    execute_process(
-      COMMAND "${RXC}" ${mode_flag} -i "${work}" -i "${LIBRARY}"
-              -o "${work}/wrong-type"
-              "${work}/imported_record_return_wrong_type.crexx"
-      WORKING_DIRECTORY "${work}"
-      OUTPUT_VARIABLE out
-      ERROR_VARIABLE err
-      RESULT_VARIABLE result
-    )
-    if(result EQUAL 0)
-      message(FATAL_ERROR
-        "${import_mode}/${compile_mode} wrong-record return unexpectedly compiled")
-    endif()
-    set(diagnostic "${out}${err}")
-    if(NOT diagnostic MATCHES "TYPE_MISMATCH")
-      message(FATAL_ERROR
-        "${import_mode}/${compile_mode} wrong-record return lacked TYPE_MISMATCH:\n${diagnostic}")
+    # Wrong-record admission fails before optimisation, once per source/binary
+    # envelope. Both positive compiler modes and B/G consumers remain above.
+    if(compile_mode STREQUAL "opt")
+      execute_process(
+        COMMAND "${RXC}" ${mode_flag} -i "${work}" -i "${LIBRARY}"
+                -o "${work}/wrong-type"
+                "${work}/imported_record_return_wrong_type.crexx"
+        WORKING_DIRECTORY "${work}"
+        OUTPUT_VARIABLE out
+        ERROR_VARIABLE err
+        RESULT_VARIABLE result
+      )
+      if(result EQUAL 0)
+        message(FATAL_ERROR
+          "${import_mode}/${compile_mode} wrong-record return unexpectedly compiled")
+      endif()
+      set(diagnostic "${out}${err}")
+      if(NOT diagnostic MATCHES "TYPE_MISMATCH")
+        message(FATAL_ERROR
+          "${import_mode}/${compile_mode} wrong-record return lacked TYPE_MISMATCH:\n${diagnostic}")
+      endif()
     endif()
   endforeach()
 endforeach()

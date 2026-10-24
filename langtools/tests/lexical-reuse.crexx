@@ -197,6 +197,12 @@ refusals: procedure = .void expose base capsule
   call failed(source as .binary,'fresh parser conflict',.lllimits..policy(),67108864,'LL_LR_ADMISSION:')
   source = changestr('root: rule = keyword | name',base,'root: rule = missing')
   call failed(source as .binary,'fresh source reference error')
+  source = changestr('name.lex: rule = letter+',base,'name.lex: rule = letter*')
+  call failed(source as .binary,'nullable lexical rule',.lllimits..policy(),67108864,'LL_NULLABLE_TOKEN:')
+  source = changestr('name.lex: rule = letter+',base,"recursive: pattern = 'a' recursive | 'b'" || ('0A'x as .string) || '  name.lex: rule = recursive')
+  call failed(source as .binary,'recursive lexical rule',.lllimits..policy(),67108864,'LL_LEX_RECURSION:')
+  source = changestr('parser start root backend lr1',base,'parser semantics ordered start root backend lr1')
+  call failed(source as .binary,'ordered semantics on CFG backend',.lllimits..policy(),67108864,'LL_BACKEND_CAPABILITY:')
   cold = .llgenerate..request(base as .binary,'rxas','reuse.rxl',.lllimits..policy(),1)
   do mode = 1 to 4
     candidate = 'invalid capsule' as .binary

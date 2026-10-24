@@ -18,16 +18,22 @@ The testing infrastructure consists of:
 
 ## 2. Running Tests
 
-For compiler work, the reliable regression gate is the compiler test subtree rather than a top-level regex filter.
+Select development checks for the changed mechanism under `AGENTS.md`: build
+its component and prerequisites, inspect representative RXAS, and run the
+affected value, error, state and cleanup contracts. Reuse unchanged prepared
+tools and images. Ordinary optimisation or inlining iterations do not require
+the whole compiler suite or every compiler/assembler/VM combination.
 
-To run the full compiler regression suite:
+The compiler subtree is the compiler-wide regression scope at an agreed
+integration milestone. Prepare the selected tests through the owning QA
+targets (`CREXX_PREP_TARGETS`) before invoking CTest. The repository-wide
+`qa-prep-comprehensive` target belongs to a complete ordinary baseline:
 
 ```bash
-cmake --build cmake-build-debug -j4
 ctest --test-dir cmake-build-debug/compiler/tests --output-on-failure
 ```
 
-This is the recommended gate for optimisation and inlining iterations because it covers:
+This scope covers:
 
 - compiler output golden tests in both `noopt` and `opt`
 - runtime golden tests in both `noopt` and `opt`
@@ -40,7 +46,8 @@ ctest --test-dir cmake-build-debug --output-on-failure
 ```
 
 For cREXX system work that touches libraries, BIFs, plugins, TRACE, or linked
-artifacts, use the focused system subsets before the full suite:
+artifacts, select relevant checks from these system subsets. They do not
+automatically commission a later full suite:
 
 ```bash
 # Rexx BIF/library functional tests
@@ -83,7 +90,11 @@ If you have verified that the new output is correct, you can automatically updat
 
 ### How to use `--update-gold`
 
-The easiest way to update all failing golden tests is to run the test commands with the flag added. Since `ctest` abstracts the command, you can find the command line by running `ctest -V`.
+Select the exact affected golden tests after reviewing their complete emitted
+RXAS against independent expectations. `ctest -N -V` shows their commands.
+Separate register/frame or truthful TRACE changes from material wrong values,
+control, state, ownership and required diagnostics. A passing runtime check
+alone does not justify a snapshot refresh.
 
 Example of manually updating a single golden file:
 
@@ -95,16 +106,10 @@ Example of manually updating a single golden file:
   ./compiler/rxc -n -o ./01_assign_noopt ../compiler/tests/rexx_src/01_assign.crexx
 ```
 
-### Batch Update
-
-If many tests fail due to a global change (like register renumbering), you can use a script to apply the update flag to all relevant tests. 
-
-Example (Linux/macOS):
-```bash
-ctest -R "_noopt|_opt" -VV | grep "crexx_test_driver" | sed 's/.*Test command: //; s/"//g; s/crexx_test_driver/crexx_test_driver --update-gold/' | bash
-```
-
-**Warning:** Always verify that the changes in the golden files are actually what you expect before committing them. Use `git diff` to review the changes in `compiler/tests/golden/`.
+Refresh only the reviewed snapshots, then inspect their diff and replay those
+affected tests. Do not automatically replace all failing goldens. Preserve
+runtime expectations and prefer stable structural assertions for operand,
+ownership and observation obligations over new register snapshots.
 
 ### BIF/library changes and import goldens
 
@@ -139,6 +144,138 @@ rather than treating every added provider method as a required golden update.
    - `add_crexx_compiler_test(NAME SOURCE)`: Adds both `_noopt` and `_opt` assembly comparison tests.
    - `add_crexx_run_test(NAME SOURCE)`: Adds a functional test that runs the program and compares its output.
    - `add_crexx_robustness_test(NAME MAIN_FILE [DEPS...])`: Adds a multi-file functional test verifying complex resolution scenarios.
-3. Run the test. It will fail because the golden file is missing.
-4. Use `--update-gold` (as described above) to create the initial golden file.
-5. Verify the created golden file and commit it.
+3. State the independent expected behavior and select meaningful normal,
+   negative and lifecycle observations before running the test. Choose modes
+   and engines for a named risk; the macros' historical defaults do not require
+   new nested matrices.
+4. Prepare once, review source and representative RXAS, and run the selected
+   checks. Use `--update-gold` only for a reviewed snapshot oracle.
+5. Keep the source, structural/runtime oracle and registration together.
+
+## 5. Scope, axes and shared preparation
+
+Compiler optimisation, assembler optimisation, import representation and VM
+dispatch are separate axes. A coupled `-n` flag does not establish an independent
+compiler/assembler matrix. Add a combination only when it crosses a distinct
+contract or closes an unresolved risk. Share identical isolated producer inputs
+between consumers and retain file-level freshness edges as well as producer
+targets. Distinct source/binary import roots must remain isolated during reuse.
+
+Frontend rejection precedes optimisation in `rxcpmain.c`. The global-import
+harnesses therefore check each independent malformed metadata, bounds,
+dimension and return-type envelope once, preserving every diagnostic oracle.
+Their successful source, RXAS, RXBIN, shared-pool, B/G and compiler-mode paths
+remain. `binary_global_import_types` additionally retains all four positive
+compiler/assembler combinations, including mixed modes, to cover metadata
+preservation through assembly and pool remapping.
+The six RXAS/RXBIN legacy explicit-caller fallback contracts run once in the
+opt/opt envelope; their difference is frontend type admission, while the main
+positives retain the transformed instruction and mixed-mode metadata proof.
+
+`levelc_call_resolution_result` and its noopt counterpart own two prepared
+compiler images using the existing default assembler policy. Direct and linked
+opt consumers share that same opt image and retain their exact output oracles.
+Missing preparation is an error naming its owner; the runtime consumer does
+not silently launch another producer. Other runtime-slice helper sites keep
+their original preparation route.
+
+`classic_frontend_parity` compiles both `rxc` and `rxc-c`, then compares their
+complete RXAS bytes. Exact equality permits one downstream assemble/link/run
+sequence; different emissions retain both runtime paths and output parity.
+Both compiler modes, B/G source brokers, Unicode paths and diagnostic parity
+remain. A genuinely distinct threaded engine retains its original control.
+Successful scratch is deleted; failure diagnostics remain transient for
+inspection and cleanup.
+
+Ordinary `highlight_editor_diagnostics` reuses one stdio parser connection and
+one logical document ID for four full reloads. Every reload still owns a fresh
+CodeBuffer, joins its asynchronous parser work and frees its buffer and rules.
+The aggregate owns the connection and closes it after all cases. Existing tree
+and editor-character diagnostic checks remain, with stale-diagnostic negatives
+between reloads. Manual no-argument and instrumented runs retain the original
+fresh-process-per-case workload. `highlight_cache` owns same-document warming
+and document/path invalidation; `stdio_shutdown_test`, `protocol_test` and the
+separate CLI cases retain transport and process boundaries. Keep the
+syntax-highlighter resource lock.
+
+The verified `levelc_{queue,implicit,call_resolution,return,address,select,
+procedure,exit,call_expression,signal,arg_template}_source_tree.cmake` checks
+observe authored RAW, canonical LEVELC_LOWERED, and where required FIXUP and
+SYMBOLS stages. They use existing `-n -dp` to preserve validation and those
+observations while avoiding unrelated optimisation and emission. Runtime
+opt/noopt pairs such as `levelc_call_resolution_result`,
+`levelc_call_expression_actuals`, `levelc_return_whole`, `levelc_select_instruction`
+and the ARG/SIGNAL suites continue to own executable behaviour; lowered-tree
+and code-generation contracts retain their separate assertions.
+
+`rxvm` is a compatibility alias for a concrete engine. Nested import harnesses
+run each canonical executable path once; distinct executables are retained.
+The explicit `rxasdispatchcontract-rxbvm` and `rxasdispatchcontract-rxtvm`
+contracts cover genuine engine dispatch. `metadata_contract_conformance`,
+`rxas_optimizer_metadata`, `rxas_exposed_global_bounds`, `rxlink_format_check`
+and `rxlink_core_provider_requirements` retain their metadata, assembler and
+linker boundary obligations. These checks complement the import positives;
+they do not replace their mixed-mode metadata proof.
+
+An agreed full functional baseline still requires failing cells to be repaired,
+inputs frozen, and the complete ordinary regression suite green once. The
+bounded component-memory and resource panels follow that gate under their
+owning guides; ordinary correctness does not require an instrumented functional
+matrix. Keep transient diagnostics in scratch, report conclusions in
+conversation and delete task-created logs after diagnosis.
+
+## 6. Shared byte-source and clock preparation
+
+`ContractFixture` remains the single preparation/cache owner for expression,
+BIF, source-data and clock contracts. Extend it with exact byte sources and
+outputs, explicit source filenames and auxiliary provider sources/flags.
+Source-data setup prepares both compiler modes once per B/C/G/L frontend;
+all sixteen direct/linked runtime cells remain. L continues to import its B
+provider. Clock setup likewise prepares two images for all four runtime cells.
+The assembler policy stays unchanged. No second cache or runtime algorithm is
+introduced, and no source byte, NUL, newline or diagnostic location is normalized
+away to gain reuse.
+
+Only ordinary CMake commands opt into these shared preparations. With no
+`--fixture-dir`, manual and instrumented commands use the same generator and
+helper's fresh route: each case invokes the original selected-mode compiler,
+assembler, optional linker and VM, without cache reuse. Instrumented scheduling
+stays unchanged pending the later sanitizer scope review. Text consumers keep
+their existing newline treatment; byte consumers compare raw output, with
+platform stream newlines constructed explicitly in each fixture expectation.
+Preparation identity includes native shared-library inputs as well as tool,
+library/plugin and generator bytes. Required RXAS/RXBIN/provider outputs are
+checked independently of a manifest's possibly incomplete artifact inventory.
+Cold preparation resets its owned generated-source tree; exact source-file
+inventory is checked before admission and publication so removed/renamed
+providers cannot remain undeclared import candidates.
+Ordinary prepared consumers use their per-root lock and private runtime state;
+they do not require a global serial slot. Cold setup remains serialized, and
+instrumented consumer scheduling retains its original policy.
+
+1. **CFT-AC01 — todo:** every existing source-data/clock value and byte oracle
+   remains; invalid NUL source is checked once per distinct frontend level with
+   its original filename/location requirement.
+2. **CFT-AC02 — done:** helper, producer source, tools, library/plugin inputs,
+   compiler mode and provider bytes/flags determine valid preparation. Missing,
+   partial or changed inputs/outputs are refused before runtime; publication and
+   cleanup retain the existing owner lock and atomic manifest boundary.
+3. **CFT-AC03 — done:** a tiny real string consumer preserves the old helper
+   route; exact-byte/provider consumers and independent missing-output/changed-
+   provider controls prove the new boundary without a full expression/BIF matrix.
+4. **CFT-AC04 — todo:** successful preparation exposes diagnostics, preserves
+   all named runtime cells and reuses valid images. Transient test scratch is
+   removed after diagnosis; prepared manifests remain only executable cache
+   validation inputs.
+
+1. **CFT-STEP01 — done:** record this bounded contract before helper edits.
+2. **CFT-STEP02 — done:** extend the existing helper, adapt source-data/clock
+   generators and register their setup ownership; serves CFT-AC01–04.
+3. **CFT-STEP03 — done:** independently review source, run the small helper
+   integration/refusal control and affected source-data/clock cells centrally.
+   Old expression/BIF setup keys will invalidate because the helper changed;
+   defer their complete setup to the agreed final ordinary suite unless a
+   directly observed compatibility risk requires an affected check earlier.
+4. **CFT-STEP04 — todo:** reuse the valid preparations and complete the agreed
+   final ordinary suite, including every retained runtime cell and the existing
+   expression/BIF setups; serves the remaining CFT-AC01 and CFT-AC04 gate.

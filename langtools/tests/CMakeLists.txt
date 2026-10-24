@@ -107,6 +107,11 @@ endforeach()
 
 # Compile the properties/flow lesson on each general backend. Tests execute
 # prelinked consumers; no CTest launches a compiler or nested matrix.
+set(_flow_runtime_workload semantic)
+if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+  # Keep the original instrumented workload until its native-scope review.
+  set(_flow_runtime_workload full)
+endif()
 set(_flow_spec "${CMAKE_SOURCE_DIR}/langtools/examples/flow/rules.rxl")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_flow_spec}")
 file(READ "${_flow_spec}" _flow_text)
@@ -154,14 +159,28 @@ foreach(_backend ll1 lr1 packrat earley)
     foreach(_vm rxtvm rxbvm)
       if(TARGET ${_vm})
         add_test(NAME ${_flow_name}_${_vm}
-          COMMAND $<TARGET_FILE:${_vm}> "${_flow_dir}/${_flow_name}-linked.rxbin")
+          COMMAND $<TARGET_FILE:${_vm}> "${_flow_dir}/${_flow_name}-linked.rxbin" -a ${_flow_runtime_workload})
         set_tests_properties(${_flow_name}_${_vm} PROPERTIES
           PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        if(_backend STREQUAL "earley" AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+          # Reserve memory admission slots for the dense Earley index;
+          # this is a CTest scheduling weight, not six execution threads.
+          set_tests_properties(${_flow_name}_${_vm} PROPERTIES PROCESSORS 6)
+        endif()
         crexx_register_test_prep_targets(TESTS ${_flow_name}_${_vm} TARGETS ${_flow_name} ${_vm})
       endif()
     endforeach()
   endforeach()
 endforeach()
+
+add_test(NAME ts_llflow_resources
+  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+    "${CMAKE_CURRENT_BINARY_DIR}/flow-ll1/ts_llflow_ll1_opt-linked.rxbin" -a resources)
+set_tests_properties(ts_llflow_resources PROPERTIES
+  PASS_REGULAR_EXPRESSION "FLOW_RESOURCES[|]width=200[|]depth=40[|]graph_sweeps=[1-9][0-9]*[|]remaining=0[|]failures=0"
+  FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:" TIMEOUT 300 LABELS "library;level-l;resource-limit")
+crexx_register_test_prep_targets(TESTS ts_llflow_resources
+  TARGETS ts_llflow_ll1_opt ${CREXX_DEFAULT_VM_TARGET})
 
 # Structured-flow consumers also run directly, without nested builds.
 set(_structured_flow_spec "${CMAKE_SOURCE_DIR}/langtools/examples/flow/loops.rxl")
@@ -211,18 +230,25 @@ foreach(_backend ll1 lr1 packrat earley)
     add_dependencies(testlangtools ${_structured_flow_name})
     foreach(_vm rxtvm rxbvm)
       if(TARGET ${_vm})
+        set(_structured_flow_runtime_args)
+        if(_flowcase STREQUAL "structuredflow")
+          set(_structured_flow_runtime_args -a ${_flow_runtime_workload})
+        endif()
         add_test(NAME ${_structured_flow_name}_${_vm}
-          COMMAND $<TARGET_FILE:${_vm}> "${_structured_flow_dir}/${_structured_flow_name}-linked.rxbin")
+          COMMAND $<TARGET_FILE:${_vm}> "${_structured_flow_dir}/${_structured_flow_name}-linked.rxbin" ${_structured_flow_runtime_args})
         set_tests_properties(${_structured_flow_name}_${_vm} PROPERTIES
           PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        if(_backend STREQUAL "earley" AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+          set_tests_properties(${_structured_flow_name}_${_vm} PROPERTIES PROCESSORS 6)
+        endif()
         if(_flowcase STREQUAL "structuredflow")
-          # The cyclic-analysis/resource-bound matrix is CPU intensive even
-          # though it executes prelinked bytecode. Eight competing ASan cells
-          # exceeded 300 seconds on hosted Linux; isolated LL1 controls take
-          # about 19 seconds on Apple ASan. Keep host contention out of the
-          # correctness verdict and leave a generous hang backstop (SAN-QA-019).
+          # SAN-QA-019 requires isolation under instrumentation. Ordinary
+          # consumers have private VM state and read-only prepared inputs.
           set_tests_properties(${_structured_flow_name}_${_vm} PROPERTIES
-            RUN_SERIAL TRUE TIMEOUT 900)
+            TIMEOUT 900)
+          if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+            set_tests_properties(${_structured_flow_name}_${_vm} PROPERTIES RUN_SERIAL TRUE)
+          endif()
         endif()
         crexx_register_test_prep_targets(TESTS ${_structured_flow_name}_${_vm} TARGETS ${_structured_flow_name} ${_vm})
       endif()
@@ -231,7 +257,35 @@ foreach(_backend ll1 lr1 packrat earley)
   endforeach()
 endforeach()
 
+add_test(NAME ts_llstructuredflow_resources
+  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+    "${CMAKE_CURRENT_BINARY_DIR}/structured-flow-ll1/ts_llstructuredflow_ll1_opt-linked.rxbin" -a resources)
+set_tests_properties(ts_llstructuredflow_resources PROPERTIES
+  PASS_REGULAR_EXPRESSION "STRUCTURED_RESOURCES[|]depth=30[|]cyclic_sweeps=[1-9][0-9]*[|]cyclic_remaining=0[|]port_sweeps=[1-9][0-9]*[|]port_remaining=0[|]failures=0"
+  FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:" TIMEOUT 900 LABELS "library;level-l;resource-limit")
+if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+  set_tests_properties(ts_llstructuredflow_resources PROPERTIES RUN_SERIAL TRUE)
+endif()
+crexx_register_test_prep_targets(TESTS ts_llstructuredflow_resources
+  TARGETS ts_llstructuredflow_ll1_opt ${CREXX_DEFAULT_VM_TARGET})
+
 # Checked target-schema lowering, using the same module as the worked example.
+# Its helper imports only the SDK, so one producer serves every parser backend.
+set(_lowering_example_dir "${CMAKE_CURRENT_BINARY_DIR}/lowering-shared")
+crexx_add_import_root(levell_lowering_example_imports
+  DIRECTORY "${_lowering_example_dir}/imports" OUTPUT_VARIABLE _lowering_example_imports
+  FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
+  DEPENDS library rxfnsl)
+crexx_add_fixture_command(OUTPUT "${_lowering_example_dir}/lowerdemo.rxbin"
+  BYPRODUCTS "${_lowering_example_dir}/lowerdemo.rxas"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${_lowering_example_dir}"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_lowering_example_dir}/imports"
+    -o "${_lowering_example_dir}/lowerdemo" "${CMAKE_SOURCE_DIR}/langtools/examples/lowering/lowering.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${_lowering_example_dir}/lowerdemo"
+  DEPENDS rxc rxas levell_lowering_example_imports ${_lowering_example_imports}
+    "${CMAKE_SOURCE_DIR}/langtools/examples/lowering/lowering.crexx"
+  VERBATIM)
+add_custom_target(levell_lowering_example DEPENDS "${_lowering_example_dir}/lowerdemo.rxbin")
 set(_lowering_spec "${CMAKE_SOURCE_DIR}/langtools/examples/lowering/unless.rxl")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_lowering_spec}")
 file(READ "${_lowering_spec}" _lowering_text)
@@ -254,17 +308,11 @@ foreach(_backend ll1 lr1 packrat earley)
     COMMAND $<TARGET_FILE:rxas> unlesslang
     DEPENDS rxas "${_lowering_provider}"
     WORKING_DIRECTORY "${_lowering_dir}" VERBATIM)
-  add_custom_command(OUTPUT "${_lowering_dir}/lowerdemo.rxbin"
-    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${CMAKE_BINARY_DIR}/bin"
-      -o lowerdemo "${CMAKE_SOURCE_DIR}/langtools/examples/lowering/lowering.crexx"
-    COMMAND $<TARGET_FILE:rxas> lowerdemo
-    DEPENDS rxc rxas rxfnsl "${CMAKE_SOURCE_DIR}/langtools/examples/lowering/lowering.crexx"
-    WORKING_DIRECTORY "${_lowering_dir}" VERBATIM)
   crexx_add_import_root(levell_lowering_${_backend}_imports
     DIRECTORY "${_lowering_dir}/imports" OUTPUT_VARIABLE _lowering_imports
     FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
-      "${_lowering_dir}/unlesslang.rxbin" "${_lowering_dir}/lowerdemo.rxbin"
-    DEPENDS library rxfnsl)
+      "${_lowering_dir}/unlesslang.rxbin" "${_lowering_example_dir}/lowerdemo.rxbin"
+    DEPENDS library rxfnsl levell_lowering_example)
   foreach(_flowcase lowering)
   foreach(_mode noopt opt)
     set(_lowering_flags)
@@ -277,7 +325,8 @@ foreach(_backend ll1 lr1 packrat earley)
         -i "${_lowering_dir}/imports"
         -o "${_lowering_name}" "${CMAKE_CURRENT_SOURCE_DIR}/ts_ll${_flowcase}.crexx"
       COMMAND $<TARGET_FILE:rxas> ${_lowering_flags} "${_lowering_name}"
-      COMMAND $<TARGET_FILE:rxlink> -s -o "${_lowering_name}-linked" "${_lowering_name}" unlesslang lowerdemo
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_lowering_name}-linked" "${_lowering_name}" unlesslang
+        "${_lowering_example_dir}/lowerdemo"
         "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
       DEPENDS rxc rxas rxlink rxfnsl levell_lowering_${_backend}_imports ${_lowering_imports} ts_ll${_flowcase}.crexx
       WORKING_DIRECTORY "${_lowering_dir}" VERBATIM)
@@ -286,15 +335,29 @@ foreach(_backend ll1 lr1 packrat earley)
     foreach(_vm rxtvm rxbvm)
       if(TARGET ${_vm})
         add_test(NAME ${_lowering_name}_${_vm}
-          COMMAND $<TARGET_FILE:${_vm}> "${_lowering_dir}/${_lowering_name}-linked.rxbin")
+          COMMAND $<TARGET_FILE:${_vm}> "${_lowering_dir}/${_lowering_name}-linked.rxbin" -a semantic)
         set_tests_properties(${_lowering_name}_${_vm} PROPERTIES
           PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
+        if(_backend STREQUAL "earley" AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+          set_tests_properties(${_lowering_name}_${_vm} PROPERTIES PROCESSORS 6)
+        endif()
         crexx_register_test_prep_targets(TESTS ${_lowering_name}_${_vm} TARGETS ${_lowering_name} ${_vm})
       endif()
     endforeach()
   endforeach()
   endforeach()
 endforeach()
+
+# The large raw-tree control never uses a generated parser. Existing AST
+# depth/width controls retain both modes and engines; reuse this one image.
+add_test(NAME ts_lllowering_deep
+  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+    "${CMAKE_CURRENT_BINARY_DIR}/lowering-lr1/ts_lllowering_lr1_opt-linked.rxbin" -a deep)
+set_tests_properties(ts_lllowering_deep PROPERTIES
+  PASS_REGULAR_EXPRESSION "deep nodes=2001 failures=0" FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+  TIMEOUT 300 LABELS "library;level-l;resource-limit")
+crexx_register_test_prep_targets(TESTS ts_lllowering_deep
+  TARGETS ts_lllowering_lr1_opt ${CREXX_DEFAULT_VM_TARGET})
 
 # Source origins and owned recovery inspection across parser backends.
 set(_origins_spec "${CMAKE_SOURCE_DIR}/langtools/examples/origins/records.rxl")
@@ -366,6 +429,16 @@ foreach(_backend ll1 lr1 packrat earley regional)
   endforeach()
 endforeach()
 
+# Exercise the public Earley chart allowance with the existing recovery-capable
+# image. No generator, nested compilation or additional backend/mode matrix.
+add_test(NAME ts_llearley_budget
+  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+    "${CMAKE_CURRENT_BINARY_DIR}/origins-earley/ts_llorigins_earley_opt-linked.rxbin" -a earley-budget)
+set_tests_properties(ts_llearley_budget PROPERTIES
+  PASS_REGULAR_EXPRESSION "EARLEY_BUDGET[|]minimum=[1-9][0-9]*[|]strict_gap=1[|]search_steps=[1-9][0-9]*[|]recovery_positive=0[|]recovery_short=2[|]failures=0"
+  FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:" TIMEOUT 300 LABELS "library;level-l;resource-limit")
+crexx_register_test_prep_targets(TESTS ts_llearley_budget
+  TARGETS ts_llorigins_earley_opt ${CREXX_DEFAULT_VM_TARGET})
 
 crexx_finalize_directory_qa_tiers()
 
@@ -491,11 +564,12 @@ foreach(_mode opt noopt)
       add_test(NAME levell_services_${_mode}_${_vm} COMMAND $<TARGET_FILE:${_vm}>
         "${_services}/${_mode}-linked.rxbin" -a "${_generated_spec}" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin" "${_services}/${_mode}-${_vm}.bin" "${_generated_grammar}" "${_services}/metadata-linked.rxbin" "${_services}/metadata-import.rxbin")
       set_tests_properties(levell_services_${_mode}_${_vm} PROPERTIES
-        # Callable generation is a substantial aggregate: unchanged Linux ASan
-        # passes isolated in 118s but exhausts 300s in the shared pool. Keep
-        # every request/oracle and use a generous functional hang backstop.
         PASS_REGULAR_EXPRESSION "TOOL_SERVICES[|]failures=0"
-        RUN_SERIAL TRUE TIMEOUT 900 LABELS "level-l;optimizer-parity")
+        TIMEOUT 900 LABELS "level-l;optimizer-parity")
+      if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+        # Preserve instrumented generation's established contention policy.
+        set_tests_properties(levell_services_${_mode}_${_vm} PROPERTIES RUN_SERIAL TRUE)
+      endif()
       crexx_register_test_prep_targets(TESTS levell_services_${_mode}_${_vm} TARGETS levell_services_${_mode} ${_vm})
       crexx_label_smoke_tests(levell_services_${_mode}_${_vm})
     endif()
@@ -511,7 +585,12 @@ set_tests_properties(rxlang_tinyexpr_binary_surface_smoke PROPERTIES
   PASS_REGULAR_EXPRESSION "TINYEXPR_BINARY_SURFACE[|]PASS" TIMEOUT 120 LABELS "level-l;smoke")
 crexx_register_test_prep_targets(TESTS rxlang_tinyexpr_binary_surface_smoke
   TARGETS rxlang_example_tinyexpr rxdas)
-add_test(NAME levell_repository_layout COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/check-layout.py")
+set(_layout_arguments)
+if(CREXX_BUILD_RESEARCH_COMPILERS)
+  list(APPEND _layout_arguments --research-compilers)
+endif()
+add_test(NAME levell_repository_layout COMMAND ${Python3_EXECUTABLE}
+  "${CMAKE_CURRENT_SOURCE_DIR}/check-layout.py" ${_layout_arguments})
 set_tests_properties(levell_repository_layout PROPERTIES PASS_REGULAR_EXPRESSION "LEVEL_L_LAYOUT[|]PASS" TIMEOUT 30 LABELS "level-l;essential")
 
 add_test(NAME levell_product_inventory COMMAND ${CMAKE_COMMAND}

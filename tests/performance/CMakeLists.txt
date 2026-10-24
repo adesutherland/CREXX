@@ -332,7 +332,7 @@ endforeach()
 add_custom_target(performance_binary_fastpath)
 crexx_add_rexx_opt_matrix(
         NAME binary_fastpath_compare
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/driverary_fastpath_compare.crexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_fastpath_compare.crexx
         TARGET_GROUP performance_binary_fastpath
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
@@ -350,7 +350,7 @@ add_custom_target(performance_binary_byvalue)
 foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rexx_opt_matrix(
             NAME binary_byvalue_compare_${_crexx_runner}
-            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/driverary_byvalue_compare.crexx
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_byvalue_compare.crexx
             TARGET_GROUP performance_binary_byvalue
             RUNNER ${_crexx_runner}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
@@ -478,7 +478,7 @@ set_tests_properties(postperf04_scalar_access_codegen PROPERTIES
 add_custom_target(performance_binary_packed_float)
 crexx_add_rexx_opt_matrix(
         NAME binary_packed_float_compare
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/driverary_packed_float_compare.crexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_packed_float_compare.crexx
         TARGET_GROUP performance_binary_packed_float
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin

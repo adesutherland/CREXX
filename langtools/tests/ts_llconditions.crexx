@@ -6,7 +6,8 @@ import llast
 import lllanguage
 import flowloops
 
-main: procedure = .int
+main: procedure = .int expose language_definition
+  language_definition = flowloops..language()
   failures = 0
   failures = failures + scenario('if 1 then x = 1; end; say x;',0,1,1)
   failures = failures + scenario('if 0 then say missing; else x = 1; end; say x;',0,1,1)
@@ -101,9 +102,9 @@ literals: procedure = .llflow..conditions
     if spelling = '1' then ok = facts.set(node,'true','Rule-language literal 1 is true')
   end
   return facts
-parseinput: procedure = .llast..tree
+parseinput: procedure = .llast..tree expose language_definition
   arg source = .string
-  request = .lllanguage..request(flowloops..language(),source as .binary)
+  request = .lllanguage..request(language_definition,source as .binary)
   if request.parse() <> 0 then do
     say request.error(); exit 1
   end

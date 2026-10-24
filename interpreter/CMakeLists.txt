@@ -1387,6 +1387,20 @@ crexx_add_vm_test(NAME rxasreferencecatchtests PREP_TARGETS run_tests_references
 crexx_add_rxas_vm_binary(tests_perf2_reference_guards "PERF2-02 direct reference guards")
 crexx_add_vm_test(NAME rxasperf2referenceguardtests PREP_TARGETS run_tests_perf2_reference_guards RXVM_ARGS tests_perf2_reference_guards PASS_REGULAR_EXPRESSION "PASS: PERF2-02 Reference Guards")
 
+crexx_add_rxas_vm_binary(tests_reference_owner_cost "bounded reference owner lifetime")
+foreach(_reference_vm rxbvm rxtvm)
+    if(TARGET ${_reference_vm})
+        add_test(NAME reference_owner_cost_${_reference_vm}
+                COMMAND $<TARGET_FILE:${_reference_vm}>
+                        "${CMAKE_CURRENT_BINARY_DIR}/tests_reference_owner_cost.rxbin")
+        set_tests_properties(reference_owner_cost_${_reference_vm} PROPERTIES
+                PASS_REGULAR_EXPRESSION "PASS: Reference Owner Cost"
+                TIMEOUT 90 LABELS "interpreter;reference;regression")
+        crexx_register_test_prep_targets(TESTS reference_owner_cost_${_reference_vm}
+                TARGETS ${_reference_vm} run_tests_reference_owner_cost)
+    endif()
+endforeach()
+
 # PERF2-05 R2a private reference-descriptor materialization and fallbacks
 crexx_add_rxas_vm_binary(tests_perf2_partial_reference_materialization "PERF2-05 partial reference materialization")
 crexx_add_vm_test(NAME rxasperf2partialreferencetests PREP_TARGETS run_tests_perf2_partial_reference_materialization RXVM_ARGS tests_perf2_partial_reference_materialization PASS_REGULAR_EXPRESSION "PASS: PERF2-05 Partial Reference Materialization")
@@ -2318,6 +2332,7 @@ if(BUILD_TESTING AND
                 COMMAND $<TARGET_FILE:rxas> test_persistent_worker_executor
                 DEPENDS tests/rexx/test_persistent_worker_executor.crexx
                         rxc rxas compiler_exit_bin _e5native
+                        "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                 COMMENT "Compiling PERF3-13 E5 native-doorbell control ...")
     endif()

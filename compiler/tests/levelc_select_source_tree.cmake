@@ -5,7 +5,7 @@ foreach(required RXC BINDIR SOURCE BUILD_DIR)
 endforeach()
 
 execute_process(
-        COMMAND "${RXC}" -d1 -i "${BINDIR}" -o levelc_select_source_tree "${SOURCE}"
+        COMMAND "${RXC}" -n -dp -i "${BINDIR}" -o levelc_select_source_tree "${SOURCE}"
         WORKING_DIRECTORY "${BUILD_DIR}"
         OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE result)
 if(NOT result EQUAL 0)

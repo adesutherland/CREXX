@@ -8,7 +8,21 @@ import lllanguage
 import unlesslang
 import lowerdemo
 
-main: procedure = .int
+main: procedure = .int expose language_definition
+  arg argv = .string[]
+  failures = .int
+  workload = 'full'
+  if argv[0] = 1 then workload = argv[1]
+  if argv[0] > 1 | (workload <> 'full' & workload <> 'semantic' & workload <> 'deep') then do
+    say 'usage: ts_lllowering [full|semantic|deep]'
+    return 2
+  end
+  if workload = 'deep' then do
+    failures = deeplowering()
+    say 'failures=' || failures
+    return failures
+  end
+  language_definition = unlesslang..language()
   failures = 0; tree = .llast..tree; lowered = .llast..tree; ok = .int
   do flag = 0 to 1
     tree = parseinput('unless flag do x = 10; end; say x;')
@@ -91,6 +105,12 @@ main: procedure = .int
   end
   lowered = pass.finish(); again = pass.finish()
   failures = failures + check(lowered.status() = 0 & pos('already finished',again.error()) > 0,'single finish')
+  if workload = 'full' then failures = failures + deeplowering()
+  say 'failures=' || failures
+  return failures
+
+deeplowering: procedure = .int
+  failures = 0
   /* A deep tree is walked with an explicit cursor stack, not recursive lowering. */
   schema = .llast..schema(); ok = schema.mapping('leaf','Leaf'); ok = schema.mapping('wrap','Wrap')
   ok = schema.field('wrap','value','inner','operand','one')
@@ -104,12 +124,12 @@ main: procedure = .int
   end
   lowered = pass.finish()
   failures = failures + check(lowered.status() = 0 & count = 2001,'deep lowering')
-  say 'failures=' || failures
+  say 'deep nodes=' || count || ' failures=' || failures
   return failures
 
-parseinput: procedure = .llast..tree
+parseinput: procedure = .llast..tree expose language_definition
   arg text = .string
-  request = .lllanguage..request(unlesslang..language(),text as .binary)
+  request = .lllanguage..request(language_definition,text as .binary)
   if request.parse() <> 0 then do
     say request.error(); exit 1
   end

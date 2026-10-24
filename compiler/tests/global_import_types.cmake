@@ -63,18 +63,22 @@ Read: procedure = .string expose S
         endif()
     endforeach()
 
-    # Keep scalar base types equal: a bounds mismatch must still be rejected.
-    set(work "${WORK_ROOT}/${mode}-mismatch")
-    file(MAKE_DIRECTORY "${work}")
-    file(WRITE "${work}/a.crexx" "options levelb\nnamespace global_bounds expose Set\nSet: procedure = .void expose grid\n  grid = .int[-2 to 2]\n  return\n")
-    file(WRITE "${work}/b.crexx" "options levelb\nnamespace global_bounds expose Set\nSet: procedure = .void expose grid\n  grid = .int[-1 to 1]\n  return\n")
-    execute_process(COMMAND "${RXC}" ${options} -i "${BIN}" a.crexx
-        WORKING_DIRECTORY "${work}" RESULT_VARIABLE result
-        OUTPUT_VARIABLE out ERROR_VARIABLE err TIMEOUT 60)
-    if(NOT "${result}" STREQUAL "2" OR
-        NOT "${out}${err}" MATCHES "TYPE_MISMATCH" OR
-        NOT "${out}${err}" MATCHES "grid")
-        message(FATAL_ERROR "${mode}: incompatible global bounds accepted or wrong diagnostic: ${result}\n${out}\n${err}")
+    # This type-admission error is reported before optimisation. The positive
+    # alone/sibling discovery and runtime paths retain both modes above.
+    if(mode STREQUAL "opt")
+        # Keep scalar base types equal: a bounds mismatch must still be rejected.
+        set(work "${WORK_ROOT}/${mode}-mismatch")
+        file(MAKE_DIRECTORY "${work}")
+        file(WRITE "${work}/a.crexx" "options levelb\nnamespace global_bounds expose Set\nSet: procedure = .void expose grid\n  grid = .int[-2 to 2]\n  return\n")
+        file(WRITE "${work}/b.crexx" "options levelb\nnamespace global_bounds expose Set\nSet: procedure = .void expose grid\n  grid = .int[-1 to 1]\n  return\n")
+        execute_process(COMMAND "${RXC}" ${options} -i "${BIN}" a.crexx
+            WORKING_DIRECTORY "${work}" RESULT_VARIABLE result
+            OUTPUT_VARIABLE out ERROR_VARIABLE err TIMEOUT 60)
+        if(NOT "${result}" STREQUAL "2" OR
+            NOT "${out}${err}" MATCHES "TYPE_MISMATCH" OR
+            NOT "${out}${err}" MATCHES "grid")
+            message(FATAL_ERROR "${mode}: incompatible global bounds accepted or wrong diagnostic: ${result}\n${out}\n${err}")
+        endif()
     endif()
 
 endforeach()

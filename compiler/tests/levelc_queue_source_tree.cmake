@@ -6,7 +6,7 @@ endforeach()
 
 set(log "${BUILD_DIR}/${NAME}_source_tree.log")
 execute_process(
-        COMMAND "${RXC}" -d1 -i "${BINDIR}" -o "${NAME}_source_tree" "${SOURCE}"
+        COMMAND "${RXC}" -n -dp -i "${BINDIR}" -o "${NAME}_source_tree" "${SOURCE}"
         WORKING_DIRECTORY "${BUILD_DIR}"
         OUTPUT_FILE "${log}" ERROR_FILE "${log}"
         RESULT_VARIABLE result)

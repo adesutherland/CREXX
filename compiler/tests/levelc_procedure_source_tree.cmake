@@ -6,7 +6,7 @@ endforeach()
 
 set(log "${BUILD_DIR}/levelc_procedure_source_tree.log")
 execute_process(
-        COMMAND "${RXC}" -d1 -i "${BINDIR}" -o levelc_procedure_source_tree "${SOURCE}"
+        COMMAND "${RXC}" -n -dp -i "${BINDIR}" -o levelc_procedure_source_tree "${SOURCE}"
         WORKING_DIRECTORY "${BUILD_DIR}"
         OUTPUT_FILE "${log}"
         ERROR_FILE "${log}"

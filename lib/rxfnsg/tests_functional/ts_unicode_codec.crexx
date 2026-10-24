@@ -5,8 +5,10 @@ import rxfnsb
 import rxunicode
 
 arg argv = .string[]
-if argv[0] \= 4 then do
-  say "usage: ts_unicode_codec CP1252 CP437 CP850 IBM1047"
+workload = "full"
+if argv[0] = 5 then workload = argv[5]
+if (argv[0] \= 4 & argv[0] \= 5) | (workload \= "full" & workload \= "boundary") then do
+  say "usage: ts_unicode_codec CP1252 CP437 CP850 IBM1047 [full|boundary]"
   return 2
 end
 
@@ -125,21 +127,29 @@ end
  * vectors above independently pin the byte layout; this exhaustive sweep
  * proves that there are no holes between those boundaries. */
 scalar_checks = 0
-scalar_batch_count = 0
-scalar_batch = ""
-do codepoint = 0 to 0x10FFFF
-  if codepoint >= 0xD800 & codepoint <= 0xDFFF then iterate
-  assembler appendchar scalar_batch,codepoint
-  scalar_batch_count = scalar_batch_count + 1
-  scalar_checks = scalar_checks + 1
-  if scalar_batch_count = 4096 then do
-    errors = errors + check_utf_batch(scalar_batch,codepoint)
-    scalar_batch = ""
-    scalar_batch_count = 0
+if workload = "full" then do
+  scalar_batch_count = 0
+  scalar_batch = ""
+  do codepoint = 0 to 0x10FFFF
+    if codepoint >= 0xD800 & codepoint <= 0xDFFF then iterate
+    assembler appendchar scalar_batch,codepoint
+    scalar_batch_count = scalar_batch_count + 1
+    scalar_checks = scalar_checks + 1
+    if scalar_batch_count = 4096 then do
+      errors = errors + check_utf_batch(scalar_batch,codepoint)
+      scalar_batch = ""
+      scalar_batch_count = 0
+    end
   end
+  if scalar_batch_count > 0 then errors = errors + check_utf_batch(scalar_batch,0x10FFFF)
+  errors = errors + check(scalar_checks = 1112064,"complete Unicode scalar count")
 end
-if scalar_batch_count > 0 then errors = errors + check_utf_batch(scalar_batch,0x10FFFF)
-errors = errors + check(scalar_checks = 1112064,"complete Unicode scalar count")
+
+/* Retain the full batch size on every engine/mode, using exact extrema whose
+ * byte layouts are independently pinned above. */
+boundary_batch = copies(boundary_text,409) || left(boundary_text,6)
+errors = errors + check(length(boundary_batch) = 4096,"boundary batch size")
+errors = errors + check_utf_batch(boundary_batch,0x10FFFF)
 
 all_bytes = .binary
 call binresize all_bytes,256
@@ -224,9 +234,10 @@ errors = errors + catches_invalid_decode_encoding()
 errors = errors + catches_invalid_predicate_encoding()
 
 if errors = 0 then do
-  say "Unicode scalars round-tripped in five UTF encodings:" scalar_checks
+  if workload = "full" then say "Unicode scalars round-tripped in five UTF encodings:" scalar_checks
+  else say "Unicode boundary batch in five UTF encodings:" length(boundary_batch)
   say "Independent legacy source relations:" 1024 * 3
-  say "PASS: rxunicode strict and replacement Unicode legacy codecs"
+  say "PASS: rxunicode strict and replacement Unicode legacy codecs" workload "scalars=" || scalar_checks
 end
 return errors <> 0
 

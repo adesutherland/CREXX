@@ -297,40 +297,61 @@ endforeach()
 add_custom_target(ts_unicode_codec)
 add_dependencies(testrxfnsg ts_unicode_codec)
 
-foreach(_unicode_codec_runner IN LISTS _math_numeric_runners)
-  crexx_add_rexx_opt_matrix(
-    LINKED_ALL_MODES
-    NAME "ts_unicode_codec_${_unicode_codec_runner}"
-    SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_codec.crexx"
-    TARGET_GROUP ts_unicode_codec
-    RUNNER "${_unicode_codec_runner}"
-    IMPORT_PATHS "${CMAKE_BINARY_DIR}/bin"
-    RXC_FLAGS -x
-    DEPENDS
-      library
-      classlib
-      rxfnsg
-      "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
-      "${RXUNICODE_WINDOWS1252_DATA}"
-      "${RXUNICODE_IBM437_DATA}"
-      "${RXUNICODE_IBM850_DATA}"
-      "${RXUNICODE_IBM1047_DATA}"
+crexx_add_import_root(unicode_codec_test_imports
+  DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/codec-imports" OUTPUT_VARIABLE _unicode_codec_imports
+  FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+    "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
+  DEPENDS library classlib rxfnsg)
+set(_unicode_codec_data
+  "${RXUNICODE_WINDOWS1252_DATA}" "${RXUNICODE_IBM437_DATA}"
+  "${RXUNICODE_IBM850_DATA}" "${RXUNICODE_IBM1047_DATA}")
+# Prepare each image once. CTests share it across engines and do no linking.
+foreach(_unicode_codec_mode IN ITEMS noopt opt)
+  set(_unicode_codec_flags)
+  if(_unicode_codec_mode STREQUAL "noopt")
+    set(_unicode_codec_flags -n)
+  endif()
+  set(_unicode_codec_base "${CMAKE_CURRENT_BINARY_DIR}/ts_unicode_codec_${_unicode_codec_mode}")
+  crexx_add_fixture_command(OUTPUT "${_unicode_codec_base}-linked.rxbin"
+    BYPRODUCTS "${_unicode_codec_base}.rxas" "${_unicode_codec_base}.rxbin"
+    COMMAND $<TARGET_FILE:rxc> ${_unicode_codec_flags} -x --no-exe-import
+      -i "${CMAKE_CURRENT_BINARY_DIR}/codec-imports" -o "${_unicode_codec_base}"
       "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_codec.crexx"
-    RUNTIME_ARGS
-      ${LIBRPATH}
-      ${CMAKE_BINARY_DIR}/bin/classlib
-      ${RXFNSG_RPATH}
-      -a
-      ${RXUNICODE_WINDOWS1252_DATA}
-      ${RXUNICODE_IBM437_DATA}
-      ${RXUNICODE_IBM850_DATA}
-      ${RXUNICODE_IBM1047_DATA}
-    TEST_LABELS
-      "library;unicode;codec;levelg;${_unicode_codec_runner}"
-    REQUIRED_OUTPUT_REGEX
-      "PASS: rxunicode strict and replacement Unicode legacy codecs"
-    FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+    COMMAND $<TARGET_FILE:rxas> ${_unicode_codec_flags} "${_unicode_codec_base}"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_unicode_codec_base}-linked" "${_unicode_codec_base}"
+      "${LIBRPATH}" "${CMAKE_BINARY_DIR}/bin/classlib" "${RXFNSG_RPATH}"
+    DEPENDS rxc rxas rxlink compiler_exit_bin unicode_codec_test_imports ${_unicode_codec_imports}
+      ${_unicode_codec_data} "${CMAKE_CURRENT_SOURCE_DIR}/ts_unicode_codec.crexx"
+    VERBATIM)
+  set(_unicode_codec_artifact "ts_unicode_codec_${_unicode_codec_mode}_artifact")
+  add_custom_target(${_unicode_codec_artifact} DEPENDS "${_unicode_codec_base}-linked.rxbin")
+  add_dependencies(ts_unicode_codec ${_unicode_codec_artifact})
+  _crexx_register_linked_opt_artifact(${_unicode_codec_artifact})
+  foreach(_unicode_codec_runner IN LISTS _math_numeric_runners)
+    set(_unicode_codec_test "ts_unicode_codec_${_unicode_codec_runner}_${_unicode_codec_mode}")
+    add_test(NAME ${_unicode_codec_test}
+      COMMAND $<TARGET_FILE:${_unicode_codec_runner}>
+        "${_unicode_codec_base}-linked.rxbin" -a ${_unicode_codec_data} boundary)
+    set_tests_properties(${_unicode_codec_test} PROPERTIES
+      LABELS "library;unicode;codec;levelg;optimizer-parity;${_unicode_codec_runner}"
+      TIMEOUT 600
+      PASS_REGULAR_EXPRESSION "PASS: rxunicode strict and replacement Unicode legacy codecs boundary"
+      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+    crexx_register_test_prep_targets(TESTS ${_unicode_codec_test}
+      TARGETS ${_unicode_codec_artifact} ${_unicode_codec_runner})
+    add_dependencies(ts_unicode_codec ${_unicode_codec_runner})
+  endforeach()
 endforeach()
+add_test(NAME ts_unicode_codec_full
+  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+    "${CMAKE_CURRENT_BINARY_DIR}/ts_unicode_codec_opt-linked.rxbin" -a ${_unicode_codec_data} full)
+set_tests_properties(ts_unicode_codec_full PROPERTIES
+  LABELS "library;unicode;codec;levelg;${CREXX_DEFAULT_VM_TARGET}"
+  TIMEOUT 1200
+  PASS_REGULAR_EXPRESSION "PASS: rxunicode strict and replacement Unicode legacy codecs full scalars=1112064"
+  FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+crexx_register_test_prep_targets(TESTS ts_unicode_codec_full
+  TARGETS ts_unicode_codec_opt_artifact ${CREXX_DEFAULT_VM_TARGET})
 
 add_custom_target(ts_unicode_normalization)
 add_dependencies(testrxfnsg ts_unicode_normalization)
@@ -365,11 +386,15 @@ foreach(_unicode_normalization_runner IN LISTS _math_numeric_runners)
   set_tests_properties(
     "ts_unicode_normalization_${_unicode_normalization_runner}_noopt"
     "ts_unicode_normalization_${_unicode_normalization_runner}_opt"
-    # Each complete Unicode corpus is CPU intensive. The unchanged threaded
-    # cells pass isolated Linux ASan/LSan in 262-266 seconds but exhausted the
-    # 1200-second limit in the eight-slot pool. Keep every assertion and give
-    # each cell the runner; the existing limit retains over 4x measured margin.
-    PROPERTIES RUN_SERIAL TRUE TIMEOUT 1200)
+    PROPERTIES TIMEOUT 1200)
+  if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+    # SAN-QA-020 requires isolation under instrumentation. Ordinary cells
+    # read shared immutable inputs and use private process/link state.
+    set_tests_properties(
+      "ts_unicode_normalization_${_unicode_normalization_runner}_noopt"
+      "ts_unicode_normalization_${_unicode_normalization_runner}_opt"
+      PROPERTIES RUN_SERIAL TRUE)
+  endif()
 endforeach()
 
 foreach(_binfile IN LISTS REXXBINS)

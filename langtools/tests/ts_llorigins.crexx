@@ -5,11 +5,20 @@ import llcore
 import llast
 import llrecover
 import lllanguage
+import lllimits
 import llsource
 import llflow
 import originlang
 
 main: procedure = .int
+  arg argv = .string[]
+  if argv[0] = 1 then do
+    if argv[1] = 'earley-budget' then return earley_budget()
+  end
+  if argv[0] <> 0 then do
+    say 'usage: ts_llorigins [earley-budget]'
+    return 2
+  end
   failures = 0; node = .llast..node; draft = .llast..draft; raw = .llcore..tree
   first = 'α = 1;'; prefix = first || '0d0a'x || 'bad = '
   source = prefix || ';' || '0d0a'x || 'say α;' || '0d0a'x || '@; z = 2;'
@@ -124,6 +133,87 @@ main: procedure = .int
   end
   say 'failures=' || failures
   return failures
+/* Find the public policy success boundary without duplicating parser charges.
+ * The default bounds the search (23 steps today); the baseline and two recovery
+ * probes are the only additional requests. Every attempt owns fresh state. */
+earley_budget: procedure = .int
+  language = .lllanguage..definition; defaults = .lllimits..policy
+  low = .int; high = .int; span = .int; maxsteps = .int; steps = .int
+  midpoint = .int; before = .int; status = .int
+  last_success = .int; last_failure = .int
+  recovery_positive = .int; recovery_short = .int
+  language = originlang..language()
+  if language.backend() <> 'earley' | language.sync() < 0 then return check(0,'Earley recovery definition required')
+  defaults = .lllimits..policy(); low = 1; high = defaults.limit('earley.cells')
+  if earley_attempt(language,high,0) <> 0 then return check(0,'default Earley budget must produce valid AST')
+  last_success = high; last_failure = 0; steps = 0; maxsteps = 0; span = high - 1
+  do while span > 0
+    maxsteps = maxsteps + 1; span = span <idiv> 2
+  end
+  do while low < high
+    if steps >= maxsteps then return check(0,'Earley budget search exceeded its default-derived bound')
+    before = high - low; midpoint = low + ((high - low) <idiv> 2)
+    status = earley_attempt(language,midpoint,0); steps = steps + 1
+    if status = 0 then do
+      high = midpoint; last_success = midpoint
+    end
+    else if status = 2 then do
+      low = midpoint + 1; last_failure = midpoint
+    end
+    else return check(0,'Earley budget search accepts only clean or chart-resource outcomes')
+    if high - low >= before then return check(0,'Earley budget interval must shrink')
+  end
+  /* Both strict boundary results were observed and checked during the search. */
+  if high <= 1 | last_success <> high | last_failure <> high - 1 then return check(0,'exact Earley positive and one-short boundary')
+  recovery_positive = earley_attempt(language,high,1)
+  recovery_short = earley_attempt(language,high - 1,1)
+  if recovery_positive <> 0 | recovery_short <> 2 then return check(0,'recovery must preserve clean and chart-resource outcomes')
+  say 'EARLEY_BUDGET|minimum=' || high || '|strict_gap=' || (last_success - last_failure) || '|search_steps=' || steps || '|recovery_positive=' || recovery_positive || '|recovery_short=' || recovery_short || '|failures=0'
+  return 0
+
+earley_attempt: procedure = .int
+  arg language = .lllanguage..definition, cells = .int, use_recovery = .int
+  limits = .lllimits..policy; source = .binary; status = .int
+  detail = .string; expected = .string; tree = .llast..tree
+  strict = .lllanguage..request; recovering = .llrecover..request
+  limits = .lllimits..policy(); source = 'x=1;' as .binary
+  if limits.set('earley.cells',cells) = 0 then do
+    say 'FAIL: invalid Earley test budget:' limits.error(); return 3
+  end
+  if use_recovery then do
+    /* The public zero argument selects the policy's repair allowance. Clean
+     * input must use none, and resource exhaustion must return before repair. */
+    recovering = .llrecover..request(language,source,0,limits)
+    status = recovering.run(); detail = recovering.error(); tree = recovering.ast()
+    if recovering.errors() <> 0 then do
+      say 'FAIL: clean Earley budget probe attempted recovery'; return 3
+    end
+  end
+  else do
+    strict = .lllanguage..request(language,source,limits)
+    status = strict.parse(); detail = strict.error(); tree = strict.ast()
+  end
+  if status = 0 then do
+    if detail <> '' | tree.status() <> 0 | tree.root().valid() = 0 then do
+      say 'FAIL: Earley positive budget did not publish a clean owned AST'; return 3
+    end
+    if tree.source() <> source | tree.root().kind() <> 'Program' | tree.root().count('items') <> 1 then do
+      say 'FAIL: Earley positive AST lost source or record'; return 3
+    end
+    if tree.root().child('items',1).text('name') <> 'x' | tree.root().child('items',1).child('value').text('spelling') <> '1' then do
+      say 'FAIL: Earley positive AST has wrong record value'; return 3
+    end
+    return 0
+  end
+  expected = 'LL_RESOURCE_LIMIT: earley.cells budget ' || cells || ', more required.'
+  if status <> 2 | pos(expected,detail) <> 1 then do
+    say 'FAIL: unrelated Earley outcome:' status detail; return 3
+  end
+  if tree.status() <= 1 | tree.root().valid() | tree.isrecovered() then do
+    say 'FAIL: Earley chart exhaustion published a clean/recovered partial AST'; return 3
+  end
+  return 2
+
 parseinput: procedure = .llast..tree
   arg source = .string
   request = .lllanguage..request(originlang..language(),source as .binary)

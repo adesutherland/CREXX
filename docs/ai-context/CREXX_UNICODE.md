@@ -325,8 +325,9 @@ ctest --test-dir cmake-build-debug --parallel 4 --output-on-failure \
   -R 'ts_unicode_(normalization|case_mapping|casefold|grapheme|codec|core|public)|ts_fileio_binary'
 ```
 
-Every Unicode functional harness is compiled optimized and no-opt for both
-`rxbvm` and `rxtvm`. Normalization consumes the complete Unicode 17
+Unicode functional controls retain optimized and no-opt consumer images on
+both `rxbvm` and `rxtvm`; these modes do not rebuild the already prepared Unicode
+product. Normalization consumes the complete Unicode 17
 `NormalizationTest.txt`, including all normative cross-form relations and
 unlisted-scalar identity. Graphemes consume every retained
 `GraphemeBreakTest.txt` record and exercise every public boundary consumer.
@@ -346,6 +347,28 @@ and pins maximal-subpart replacement behavior. ASCII and Latin-1 ranges are
 exhaustive. The four legacy mapping sources are parsed independently and all
 1,024 byte/codepoint relations are checked in both directions as well as by
 `isDecodable`; ordinary all-256-byte round trips remain as a second invariant.
+
+The codec owner prepares two linked images shared by the concrete engines.
+Four explicit `boundary` cells retain every exact vector, malformed/replacement,
+BOM, ASCII/Latin-1 and legacy-mapping assertion, plus a 4,096-scalar batch made
+from the retained width/surrogate/extrema vectors. `ts_unicode_codec_full` runs
+the complete scalar sweep once with the optimized image on the product engine.
+The four mapping-file arguments alone retain the full manual workload; an
+explicit fifth argument selects `full` or `boundary`.
+
+The scalar interior uses one prepared codec algorithm and shared
+STRCHAR/APPENDCHAR/typed-byte handlers in both VM cores; dispatch differs.
+Retained boundary cells therefore cross both modes and engines without
+repeating that exhaustive interior. The retained
+`ts_unicode_{core,public}_{rxbvm,rxtvm}_{opt,noopt}` cells cover caller/result
+lifetime, exposed/default/optional and error controls; `rxpa_utf_validation`
+and `rxvml_utf_boundaries` retain native strict
+byte/string boundaries. Independent compiler/assembler combinations remain in
+`float_constant_folding_contract` and `iterate_condition_cleanup_*`; they
+complement these ownership controls. Normalization retains every corpus and
+predicate in all four cells. Its global serialization applies only to maintained
+sanitizer builds; ordinary cells use private process/link paths and read-only
+inputs, with scheduling selected from representative resource observations.
 
 RXAS shape tests supplement semantic tests. They must retain one named constant,
 direct codepoint/table access, bounded state, and the appropriate result path;

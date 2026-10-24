@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import re
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -121,6 +124,71 @@ class CatalogueUnitTests(unittest.TestCase):
 
     def test_qa_classification_recognizes_explicit_qualification(self) -> None:
         self.assertEqual(catalogue.classify_test(["qualification", "performance"], "candidate"), "qualification")
+
+    def test_cmake_performance_tiers_preserve_correctness_qualification(self) -> None:
+        root = Path(__file__).resolve().parents[3]
+        with tempfile.TemporaryDirectory(prefix="crexx-qa-tiers-") as temporary:
+            source = Path(temporary) / "source"
+            build = Path(temporary) / "build"
+            source.mkdir()
+            (source / "CMakeLists.txt").write_text('''cmake_minimum_required(VERSION 3.24)
+project(PerformanceQaTiers NONE)
+enable_testing()
+include("${TIERS_MODULE}")
+add_test(NAME correctness COMMAND "${CMAKE_COMMAND}" -E true)
+set_tests_properties(correctness PROPERTIES
+  LABELS "performance;qualification" CREXX_PREP_TARGETS correctness_owner)
+add_test(NAME timing_smoke COMMAND "${CMAKE_COMMAND}" -E true)
+set_tests_properties(timing_smoke PROPERTIES
+  LABELS "performance;smoke" CREXX_PREP_TARGETS timing_owner)
+crexx_finalize_directory_qa_tiers()
+get_property(qualification GLOBAL PROPERTY CREXX_QA_PREP_QUALIFICATION_TARGETS)
+get_property(measurement GLOBAL PROPERTY CREXX_QA_PREP_MEASUREMENT_TARGETS)
+file(WRITE "${CMAKE_BINARY_DIR}/prep-tiers.txt" "${qualification}\\n${measurement}\\n")
+''', encoding="utf-8")
+            configured = subprocess.run(
+                ["cmake", "-S", str(source), "-B", str(build),
+                 "-DTIERS_MODULE=" + str(root / "cmake/CrexxQaTiers.cmake")],
+                text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            )
+            self.assertEqual(configured.returncode, 0, configured.stdout[-8000:])
+            discovery = subprocess.run(
+                ["ctest", "--test-dir", str(build), "--show-only=json-v1"],
+                text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            )
+            self.assertEqual(discovery.returncode, 0, discovery.stdout[-8000:])
+            tests = {test["name"]: {prop["name"]: prop["value"]
+                                   for prop in test["properties"]}
+                     for test in json.loads(discovery.stdout)["tests"]}
+            qualification = tests["correctness"]
+            self.assertIn("qualification", qualification["LABELS"])
+            self.assertNotIn("performance-measurement", qualification["LABELS"])
+            self.assertEqual(catalogue.classify_test(qualification["LABELS"], "correctness"), "qualification")
+            measurement = tests["timing_smoke"]
+            self.assertIn("performance-measurement", measurement["LABELS"])
+            self.assertNotIn("smoke", measurement["LABELS"])
+            self.assertTrue(measurement["RUN_SERIAL"])
+            self.assertEqual(catalogue.classify_test(measurement["LABELS"], "timing_smoke"), "measurement")
+            self.assertEqual((build / "prep-tiers.txt").read_text().splitlines(),
+                             ["correctness_owner", "timing_owner"])
+
+
+    def test_literal_performance_matrix_sources_exist(self) -> None:
+        root = Path(__file__).resolve().parents[3]
+        directory = root / "tests/performance"
+        definitions = (directory / "CMakeLists.txt").read_text(encoding="utf-8")
+        # The graph catalogue validates declared owners/dependencies, without
+        # requiring filesystem existence for their source inputs. Check literal
+        # workload owners before explicit measurement preparation reaches them.
+        sources = re.findall(
+            r"\bSOURCE\s+\$\{CMAKE_CURRENT_SOURCE_DIR\}/([^\s$]+\.crexx)\b",
+            definitions,
+        )
+        self.assertTrue(sources)
+        for source in sources:
+            with self.subTest(source=source):
+                self.assertTrue((directory / source).is_file(), source)
+
 
     def test_nested_build_detection_follows_cmake_scripts_but_allows_scratch_builds(self) -> None:
         with tempfile.TemporaryDirectory() as root:
