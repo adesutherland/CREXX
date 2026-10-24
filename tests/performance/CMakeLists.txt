@@ -890,18 +890,22 @@ foreach(_stable_path IN ITEMS trace-off address-same-static)
     else()
         set(_stable_name nr16_17_address_same_rxvm_opt)
     endif()
-    _crexx_register_runtime_test(
-            NAME ${_stable_name} RUNNER rxvm
-            PROGRAM nr16_17_stable_state_rxvm_opt
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-            RUNTIME_ARGS ${LIBRPATH} ${_perf_smoke_oracle_base} -a ${_stable_path} 10
-            TEST_LABELS "performance;trace;address;nr16;nr17;performance-smoke"
-            PREP_TARGETS nr16_17_stable_state_rxvm_opt_artifact rxvm rxlink
-            REQUIRED_OUTPUT_REGEX "PASS: NR-16/17 stable-state compare"
-                "(^|\n)mode=${_stable_path}(\r?\n|$)" "(^|\n)iterations=10(\r?\n|$)"
-                "(^|\n)checksum=55(\r?\n|$)"
-            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+    add_test(NAME ${_stable_name} COMMAND ${CMAKE_COMMAND}
+        "-DNR16_NAME=${_stable_name}" "-DNR16_MODE=${_stable_path}"
+        "-DNR16_RUNNER=${CREXX_RXVM_EXECUTABLE}" "-DNR16_RXLINK=$<TARGET_FILE:rxlink>"
+        "-DNR16_PROGRAM=${CMAKE_CURRENT_BINARY_DIR}/nr16_17_stable_state_rxvm_opt.rxbin"
+        "-DNR16_LIBRARY=${LIBRPATH}.rxbin" "-DNR16_ORACLE=${_perf_smoke_oracle_base}.rxbin"
+        "-DNR16_WORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/nr16_17_runtime.cmake")
+    set_tests_properties(${_stable_name} PROPERTIES
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        LABELS "performance;trace;address;nr16;nr17;performance-smoke;linked_opt"
+        CREXX_PREP_TARGETS "nr16_17_stable_state_rxvm_opt_artifact;rxvm;rxlink")
 endforeach()
+add_test(NAME nr16_17_output_guard_contract COMMAND ${CMAKE_COMMAND}
+    -P "${CMAKE_CURRENT_SOURCE_DIR}/nr16_17_output_contract.cmake")
+set_tests_properties(nr16_17_output_guard_contract PROPERTIES
+    LABELS "performance;qualification;qa-fixture" TIMEOUT 30 CREXX_PREP_NONE TRUE)
 
 # Explicit nonrepresentative smoke membership. Do not automatically add a new
 # timing workload, no-opt mode or alias merely because it has a similar label.

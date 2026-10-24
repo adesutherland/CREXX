@@ -55,6 +55,12 @@ reject nonfinite values, invalid counts and overflow-prone expectations. A tiny
 ordinary contract exercises the maintained predicates with correct and wrong
 results, NaN and infinities without executing timed kernels.
 
+The two short NR-16/17 paths use an owner-local positive checker: exit zero,
+empty stderr, the PASS marker and exact mode, ten iterations and checksum `55`
+are all required; FAIL/PANIC output is rejected. The linked runtime helper's
+failure-only regex checks do not guard these success paths. The source repair
+and one synthetic ordinary contract cover each refusal without timing kernels.
+
 1. **QA-PERF-AC01 — todo:** deterministic cells and guard controls participate
    in the frozen ordinary baseline; original semantic oracles remain intact.
 2. **QA-PERF-AC02 — todo:** discovered smoke names/counts and cold preparation
