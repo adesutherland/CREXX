@@ -1094,6 +1094,8 @@ flags are never changed. Startup cleanup releases duplicates on every path.
 Legacy string/array and byte-endpoint redirects share pipe creation and cleanup.
 FOPEN creates private files atomically (Windows N, Linux e, Darwin O_CLOEXEC),
 so no sibling can capture a temporary file in an open-to-clear interval.
+Exclusive `wbx` must create an absent file, including paths containing spaces,
+without inheritance, and reject an existing file without changing its contents.
 See `docs/planning/issue-701-resource-inheritance.md` for ownership and evidence.
 
 The certified ADDRESS exit and `_address.crexx` now adapt classic string/array

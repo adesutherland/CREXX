@@ -4,7 +4,7 @@ from collections import Counter
 import importlib.util
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 import shutil
 import subprocess
@@ -351,10 +351,24 @@ add_custom_target(worker_image DEPENDS "${CMAKE_BINARY_DIR}/test_persistent_work
         self.assertEqual(len((build / 'calls.txt').read_text().splitlines()), 22)
 
     @unittest.skipUnless(os.name != 'nt' and shutil.which('make'), 'Parallel owner fixture requires Unix Makefiles and executable scripts')
+    def test_level_l_sdk_make_producers_have_one_owner(self):
+        read_text = Path.read_text
+        def core_input(path, *args, **kwargs):
+            self.assertFalse(path.is_relative_to(ROOT/'research'), 'Core SDK check read research input')
+            return read_text(path, *args, **kwargs)
+        with patch.object(Path, 'read_text', core_input):
+            self._level_l_make_owner_contract(include_research=False)
+
+    @unittest.skipUnless(os.name != 'nt' and shutil.which('make'), 'Parallel owner fixture requires Unix Makefiles and executable scripts')
     def test_level_l_make_producers_have_one_owner(self):
-        # Use the maintained module graph and frontend/ll_compile declarations.
-        # Only tools, source contents and the unrelated Unicode generator are
-        # substituted; this qualifies graph ownership, not native memory.
+        if os.environ.get('CREXX_QA_RESEARCH_COMPILERS', 'OFF').upper() not in ('1', 'ON', 'TRUE', 'YES'):
+            self.skipTest('Research compiler ownership requires CREXX_BUILD_RESEARCH_COMPILERS=ON')
+        self._level_l_make_owner_contract(include_research=True)
+
+    def _level_l_make_owner_contract(self, include_research):
+        # Always use the maintained SDK graph. The optional research extension
+        # adds the original grammar/client graph without changing its oracles.
+        # Only tools, source contents and the Unicode generator are substituted.
         source=(self.root/'make-source').resolve(); source.mkdir()
         build=(self.root/'make-build').resolve()
         calls=(self.root/'make-calls').resolve()
@@ -368,39 +382,7 @@ add_custom_target(worker_image DEPENDS "${CMAKE_BINARY_DIR}/test_persistent_work
         (source/'unicode/Properties.cmake').write_text(
             'set(_ll_data_source "${CMAKE_CURRENT_SOURCE_DIR}/lludata.crexx")\n')
 
-        compiler=(ROOT/'research/level-l/compilers/CMakeLists.txt').read_text()
-        def declarations(begin,end):
-            self.assertEqual(compiler.count(begin),1)
-            start=compiler.index(begin)
-            self.assertEqual(compiler[start:].count(end),1)
-            return compiler[start:compiler.index(end,start)]
-        # This full head identifies the common loop immediately after the
-        # grammar declarations; later mode loops belong to other fixtures.
-        common_head='''foreach(_mode opt noopt)
-  set(_flags)
-  if(_mode STREQUAL "noopt")
-    set(_flags -n)
-  endif()
-  set(_common "${CMAKE_CURRENT_BINARY_DIR}/common/${_mode}")'''
-        frontend=declarations('function(ll_compile NAME SOURCE DIRECTORY)',
-                              '\n'+common_head)
-        common=declarations(common_head, '\n  set(_allhosts)')
-        research=source/'research'; research.mkdir()
-        (research/'levelc').mkdir()
-        (research/'levelc/levelc.rxl').write_text('fixture grammar\n')
-        (research/'common').mkdir()
-        for name in ('llscalar','llcompilercontracts'):
-            (research/'common'/(name+'.crexx')).write_text('fixture source\n')
-        (research/'client.crexx').write_text('fixture consumer\n')
-        (research/'CMakeLists.txt').write_text('set(_languages c)\n'+frontend+'\n'+common+'''
-  set(_dir "${CMAKE_CURRENT_BINARY_DIR}/clients/${_mode}")
-  ll_compile(client "${CMAKE_CURRENT_SOURCE_DIR}/client.crexx" "${_dir}"
-    ${_base} ${_shared} "${_front}/llcgrammar.rxbin")
-  add_custom_target(client_${_mode} ALL DEPENDS "${_dir}/client.rxbin")
-endforeach()
-''')
-        generator=source/'langtools/cmake'; generator.mkdir(parents=True)
-        shutil.copyfile(ROOT/'langtools/cmake/generate.cmake',generator/'generate.cmake')
+        research = self._level_l_make_research_fixture(source) if include_research else None
         producer=r'''#!@PYTHON@
 from pathlib import Path
 import os,sys,time
@@ -461,42 +443,84 @@ foreach(module IN ITEMS llrxastext llbinmeta)
   add_custom_target(${module})
 endforeach()
 add_subdirectory(sdk)
-add_subdirectory(research)
-'''.replace('@ROOT@',ROOT.as_posix()))
+@RESEARCH@
+'''.replace('@ROOT@',ROOT.as_posix()).replace('@RESEARCH@',
+        'add_subdirectory(research)' if include_research else ''))
         command('cmake','-S',source,'-B',build,'-G','Unix Makefiles')
         def prepare():
             command('cmake','--build',build,'--parallel','8')
         def events():
             return Counter(tuple(line.split('\t')) for line in calls.read_text().splitlines())
-        expected={('rxlink',str(build/'bin/rxfnsl.rxbin')),
-                  ('rxlang',str(research/'levelc/levelc.rxl')),
-                  ('rxas',str(build/'research/frontends/llcgrammar.rxbin'))}
+        expected={('rxlink',str(build/'bin/rxfnsl.rxbin'))}
+        if include_research:
+            expected.update({('rxlang',str(research/'levelc/levelc.rxl')),
+                             ('rxas',str(build/'research/frontends/llcgrammar.rxbin'))})
         for name in modules:
             expected.update({('rxc',str(build/'sdk'/(name+'.rxas'))),
                              ('rxas',str(build/'sdk'/(name+'.rxbin')))})
-        for mode in ('opt','noopt'):
-            for directory,name in ((f'common/{mode}','llscalar'),
-                                   (f'common/{mode}','llcompilercontracts'),
-                                   (f'clients/{mode}','client')):
-                expected.update({('rxc',str(build/'research'/directory/(name+'.rxas'))),
-                                 ('rxas',str(build/'research'/directory/(name+'.rxbin')))})
+        if include_research:
+            for mode in ('opt','noopt'):
+                for directory,name in ((f'common/{mode}','llscalar'),
+                                       (f'common/{mode}','llcompilercontracts'),
+                                       (f'clients/{mode}','client')):
+                    expected.update({('rxc',str(build/'research'/directory/(name+'.rxas'))),
+                                     ('rxas',str(build/'research'/directory/(name+'.rxbin')))})
         prepare()
         self.assertEqual(events(),Counter({event:1 for event in expected}))
         prepare()
         self.assertEqual(events(),Counter({event:1 for event in expected}))
         calls.write_text('')
         (build/'sdk/llcheck.rxbin').unlink()
-        (build/'research/frontends/llcgrammar.rxbin').unlink()
+        if include_research:
+            (build/'research/frontends/llcgrammar.rxbin').unlink()
         prepare()
         recovered=events()
         self.assertTrue(recovered)
         self.assertEqual(set(recovered.values()),{1})
-        for event in (('rxc',str(build/'sdk/llcheck.rxas')),
-                      ('rxas',str(build/'sdk/llcheck.rxbin')),
-                      ('rxlang',str(research/'levelc/levelc.rxl')),
-                      ('rxas',str(build/'research/frontends/llcgrammar.rxbin'))):
+        required=[('rxc',str(build/'sdk/llcheck.rxas')),
+                  ('rxas',str(build/'sdk/llcheck.rxbin'))]
+        if include_research:
+            required.extend([('rxlang',str(research/'levelc/levelc.rxl')),
+                             ('rxas',str(build/'research/frontends/llcgrammar.rxbin'))])
+        for event in required:
             self.assertEqual(recovered[event],1)
         self.assertNotIn(('rxc',str(build/'sdk/llir.rxas')),recovered)
+
+    def _level_l_make_research_fixture(self, source):
+        compiler=(ROOT/'research/level-l/compilers/CMakeLists.txt').read_text()
+        def declarations(begin,end):
+            self.assertEqual(compiler.count(begin),1)
+            start=compiler.index(begin)
+            self.assertEqual(compiler[start:].count(end),1)
+            return compiler[start:compiler.index(end,start)]
+        # This full head identifies the common loop immediately after the
+        # grammar declarations; later mode loops belong to other fixtures.
+        common_head='''foreach(_mode opt noopt)
+  set(_flags)
+  if(_mode STREQUAL "noopt")
+    set(_flags -n)
+  endif()
+  set(_common "${CMAKE_CURRENT_BINARY_DIR}/common/${_mode}")'''
+        frontend=declarations('function(ll_compile NAME SOURCE DIRECTORY)',
+                              '\n'+common_head)
+        common=declarations(common_head, '\n  set(_allhosts)')
+        research=source/'research'; research.mkdir()
+        (research/'levelc').mkdir()
+        (research/'levelc/levelc.rxl').write_text('fixture grammar\n')
+        (research/'common').mkdir()
+        for name in ('llscalar','llcompilercontracts'):
+            (research/'common'/(name+'.crexx')).write_text('fixture source\n')
+        (research/'client.crexx').write_text('fixture consumer\n')
+        (research/'CMakeLists.txt').write_text('set(_languages c)\n'+frontend+'\n'+common+'''
+  set(_dir "${CMAKE_CURRENT_BINARY_DIR}/clients/${_mode}")
+  ll_compile(client "${CMAKE_CURRENT_SOURCE_DIR}/client.crexx" "${_dir}"
+    ${_base} ${_shared} "${_front}/llcgrammar.rxbin")
+  add_custom_target(client_${_mode} ALL DEPENDS "${_dir}/client.rxbin")
+endforeach()
+''')
+        generator=source/'langtools/cmake'; generator.mkdir(parents=True)
+        shutil.copyfile(ROOT/'langtools/cmake/generate.cmake',generator/'generate.cmake')
+        return research
 
     def workflow_block(self, name):
         workflow = (ROOT/'.github/workflows/sanitizers.yml').read_text().splitlines()
@@ -882,7 +906,8 @@ crexx_finalize_qa_fixtures()
         command('git','-C',dependency,'add','provider.c')
         command('git','-C',dependency,'-c','user.name=Fixture','-c','user.email=fixture@example.invalid','commit','-qm','fixture')
         donor=self.root/'ordinary'; native=self.root/'native'
-        common={'CMAKE_HOME_DIRECTORY':str(source),'DSLSH_SOURCE_DIR':str(dependency),'CMAKE_BUILD_TYPE':'Debug'}
+        common={'CMAKE_HOME_DIRECTORY':str(source),'DSLSH_SOURCE_DIR':str(dependency),'CMAKE_BUILD_TYPE':'Debug',
+                'CREXX_BUILD_RESEARCH_COMPILERS':'OFF'}
         for build in (donor,native):
             (build/'bin').mkdir(parents=True)
             for name in ('rxc','rxas','rxlink'):
@@ -894,6 +919,9 @@ crexx_finalize_qa_fixtures()
         F.seal(donor); F.validate(native)
         F.json_write(native/F.CONFIG,{**common,'CREXX_QA_FIXTURE_TREE':str(donor),'CMAKE_C_FLAGS':'-DCHANGED=1'})
         with self.assertRaisesRegex(ValueError,'configuration keys=CMAKE_C_FLAGS'): F.validate(native)
+        F.json_write(native/F.CONFIG,{**common,'CREXX_QA_FIXTURE_TREE':str(donor),
+                                     'CREXX_BUILD_RESEARCH_COMPILERS':'ON'})
+        with self.assertRaisesRegex(ValueError,'configuration keys=CREXX_BUILD_RESEARCH_COMPILERS'): F.validate(native)
         F.json_write(native/F.CONFIG,{**common,'CREXX_QA_FIXTURE_TREE':str(donor)})
         (dependency/'provider.c').write_text('moving dependency branch changed contents')
         with self.assertRaisesRegex(ValueError,'dependency DSLSH_SOURCE_DIR fields=contents paths=.*provider.c'): F.validate(native)
@@ -940,6 +968,16 @@ crexx_finalize_qa_fixtures()
             F.native_closure(build)
 
     def test_shared_cache_identity_unowned_link_and_failure(self):
+        # Required names must use the same host spelling as manifest publication.
+        manifest={'cases':{'sample':{'providers':[{'filename':'provider.crexx'}]}}}
+        for path_type in (PurePosixPath, PureWindowsPath):
+            root=path_type('prepared')
+            products=[root / mode / 'sample' / (name + suffix)
+                      for mode in ('noopt', 'opt') for name in ('program', 'provider')
+                      for suffix in ('.rxas', '.rxbin')]
+            published={str(path.relative_to(root)) for path in products}
+            with patch.object(C, 'Path', path_type):
+                self.assertEqual(C.ContractFixture.required_artifacts(manifest), published)
         bindir=self.root/'bin'; bindir.mkdir()
         for name in ('rxc', 'rxas', 'rxlink', 'rxvm', 'library.rxbin', 'classlib.rxbin', 'rxfnsc.rxbin'):
             suffix='.exe' if os.name=='nt' and '.' not in name else ''

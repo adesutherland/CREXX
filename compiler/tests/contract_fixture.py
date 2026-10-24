@@ -125,7 +125,7 @@ class ContractFixture:
         for stem, signature in manifest['cases'].items():
             outputs = ['program', *(Path(provider['filename']).stem for provider in signature['providers'])]
             for mode in ('noopt', 'opt'):
-                required.update(f'{mode}/{stem}/{output}{suffix}'
+                required.update(str(Path(mode) / stem / (output + suffix))
                                 for output in outputs for suffix in ('.rxas', '.rxbin'))
         return required
 

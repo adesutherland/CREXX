@@ -91,6 +91,13 @@ make staging and aggregate consumers wait for that owner while preserving file
 freshness dependencies. Reuse the existing generated-grammar ownership pattern.
 Keep native producer algorithms and supported instrumentation unchanged.
 
+The core strategy always checks the maintained SDK module owners, cold and
+warm preparation and missing-module recovery without reading research compiler
+declarations. The original grammar/client ownership extension runs only when
+`CREXX_BUILD_RESEARCH_COMPILERS` is enabled; that option belongs to the fixture
+and qualification configuration identity. Core-only proof does not close the
+research grammar trigger or this item's original full/platform obligations.
+
 Closure: a permanent miniature parallel Make regression using the maintained
 owner declarations must fail without the ownership repair and prove exactly one
 production, warm no-op and missing-output recovery. Run its normal Debug command

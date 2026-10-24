@@ -249,8 +249,32 @@ with tempfile.TemporaryDirectory(prefix='crexx-lexical-reuse-') as temporary:
          f'-DWRAPPER={wrapper}'])
     run([args.cmake, '--build', build, '--parallel', '2'])
     before = len(observed())
-    run([args.cmake, '--build', build, '--parallel', '2'])
-    assert len(observed()) == before
+    warm = run([args.cmake, '--build', build, '--parallel', '2'])
+    after = len(observed())
+    diagnostic = None
+    if after != before:
+        files = {}
+        for path in (product, spec, Path(sys.executable), shim, wrapper):
+            state = {'exists': None, 'mtime_ns': None}
+            try:
+                state['exists'] = path.exists()
+                if state['exists']:
+                    state['mtime_ns'] = path.stat().st_mtime_ns
+            except OSError as error:
+                state['error'] = str(error)
+            files[str(path)] = state
+        generator = None
+        try:
+            entries = (build / 'CMakeCache.txt').read_text(encoding='utf-8').splitlines()
+            generator = next((line.split('=', 1)[1] for line in entries
+                              if line.startswith('CMAKE_GENERATOR:INTERNAL=')), None)
+        except (OSError, UnicodeError):
+            pass
+        build_output = ('stdout:\n' + warm.stdout.decode(errors='replace')
+                        + '\nstderr:\n' + warm.stderr.decode(errors='replace'))
+        diagnostic = {'before': before, 'after': after, 'generator': generator,
+                      'files': files, 'build_tail': '\n'.join(build_output.splitlines()[-60:])[-12000:]}
+    assert after == before, diagnostic
     Path(str(product) + '.lexer').unlink()
     Path(str(product) + '.lexer.manifest').unlink()
     run([args.cmake, '--build', build, '--parallel', '2'])
