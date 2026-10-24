@@ -689,9 +689,14 @@ else()
 endif()
 crexx_register_test_prep_targets(TESTS levell_lexical_reuse_service levell_lexical_reuse_unstamped
   TARGETS levell_lexical_reuse rxbvm)
+# Keep the nested producer contract on the owning generator and build driver.
+set(_lexical_cli_build_args --generator "${CMAKE_GENERATOR}")
+if(NOT "${CMAKE_MAKE_PROGRAM}" STREQUAL "")
+  list(APPEND _lexical_cli_build_args --make-program "${CMAKE_MAKE_PROGRAM}")
+endif()
 add_test(NAME rxlang_lexical_reuse_cli COMMAND ${Python3_EXECUTABLE}
   "${CMAKE_CURRENT_SOURCE_DIR}/check-lexical-reuse.py" --bin "${CMAKE_BINARY_DIR}/bin"
-  --cmake "${CMAKE_COMMAND}" --service-rxas "${_reuse}/llgenerate.rxas")
+  --cmake "${CMAKE_COMMAND}" --service-rxas "${_reuse}/llgenerate.rxas" ${_lexical_cli_build_args})
 set_tests_properties(rxlang_lexical_reuse_cli PROPERTIES
   PASS_REGULAR_EXPRESSION "LEXICAL_REUSE_CLI[|]commands=.*[|]failures=0" RUN_SERIAL TRUE TIMEOUT 1800 LABELS "level-l;essential")
 if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)

@@ -19,6 +19,8 @@ import time
 parser = argparse.ArgumentParser()
 parser.add_argument('--bin', type=Path, required=True)
 parser.add_argument('--cmake', default='cmake')
+parser.add_argument('--generator', help='CMake generator of the registering build')
+parser.add_argument('--make-program', help='Build driver of the registering build')
 parser.add_argument('--service-rxas', type=Path,
                     help='also inspect the prepared service export and buffer shapes')
 args = parser.parse_args()
@@ -244,9 +246,14 @@ with tempfile.TemporaryDirectory(prefix='crexx-lexical-reuse-') as temporary:
     (project / 'CMakeLists.txt').write_text(declarations, encoding='utf-8')
     build = work / 'build'
     product = work / 'build-generated.rxas'
-    run([args.cmake, '-S', project, '-B', build, f'-DPRODUCT={product}',
-         f'-DSPEC={spec}', f'-DHOST_VM={sys.executable}', f'-DHOST_IMAGE={shim}',
-         f'-DWRAPPER={wrapper}'])
+    configure = [args.cmake, '-S', project, '-B', build, f'-DPRODUCT={product}',
+                 f'-DSPEC={spec}', f'-DHOST_VM={sys.executable}', f'-DHOST_IMAGE={shim}',
+                 f'-DWRAPPER={wrapper}']
+    if args.generator:
+        configure.extend(['-G', args.generator])
+    if args.make_program:
+        configure.append(f'-DCMAKE_MAKE_PROGRAM:FILEPATH={args.make_program}')
+    run(configure)
     run([args.cmake, '--build', build, '--parallel', '2'])
     before = len(observed())
     warm = run([args.cmake, '--build', build, '--parallel', '2'])
