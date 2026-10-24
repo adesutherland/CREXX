@@ -305,6 +305,10 @@ crexx_add_import_root(unicode_codec_test_imports
 set(_unicode_codec_data
   "${RXUNICODE_WINDOWS1252_DATA}" "${RXUNICODE_IBM437_DATA}"
   "${RXUNICODE_IBM850_DATA}" "${RXUNICODE_IBM1047_DATA}")
+set(_unicode_codec_workload boundary)
+if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+  set(_unicode_codec_workload full)
+endif()
 # Prepare each image once. CTests share it across engines and do no linking.
 foreach(_unicode_codec_mode IN ITEMS noopt opt)
   set(_unicode_codec_flags)
@@ -331,27 +335,29 @@ foreach(_unicode_codec_mode IN ITEMS noopt opt)
     set(_unicode_codec_test "ts_unicode_codec_${_unicode_codec_runner}_${_unicode_codec_mode}")
     add_test(NAME ${_unicode_codec_test}
       COMMAND $<TARGET_FILE:${_unicode_codec_runner}>
-        "${_unicode_codec_base}-linked.rxbin" -a ${_unicode_codec_data} boundary)
+        "${_unicode_codec_base}-linked.rxbin" -a ${_unicode_codec_data} ${_unicode_codec_workload})
     set_tests_properties(${_unicode_codec_test} PROPERTIES
       LABELS "library;unicode;codec;levelg;optimizer-parity;${_unicode_codec_runner}"
       TIMEOUT 600
-      PASS_REGULAR_EXPRESSION "PASS: rxunicode strict and replacement Unicode legacy codecs boundary"
+      PASS_REGULAR_EXPRESSION "PASS: rxunicode strict and replacement Unicode legacy codecs ${_unicode_codec_workload}"
       FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
     crexx_register_test_prep_targets(TESTS ${_unicode_codec_test}
       TARGETS ${_unicode_codec_artifact} ${_unicode_codec_runner})
     add_dependencies(ts_unicode_codec ${_unicode_codec_runner})
   endforeach()
 endforeach()
-add_test(NAME ts_unicode_codec_full
-  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
-    "${CMAKE_CURRENT_BINARY_DIR}/ts_unicode_codec_opt-linked.rxbin" -a ${_unicode_codec_data} full)
-set_tests_properties(ts_unicode_codec_full PROPERTIES
-  LABELS "library;unicode;codec;levelg;${CREXX_DEFAULT_VM_TARGET}"
-  TIMEOUT 1200
-  PASS_REGULAR_EXPRESSION "PASS: rxunicode strict and replacement Unicode legacy codecs full scalars=1112064"
-  FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
-crexx_register_test_prep_targets(TESTS ts_unicode_codec_full
-  TARGETS ts_unicode_codec_opt_artifact ${CREXX_DEFAULT_VM_TARGET})
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+  add_test(NAME ts_unicode_codec_full
+    COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+      "${CMAKE_CURRENT_BINARY_DIR}/ts_unicode_codec_opt-linked.rxbin" -a ${_unicode_codec_data} full)
+  set_tests_properties(ts_unicode_codec_full PROPERTIES
+    LABELS "library;unicode;codec;levelg;${CREXX_DEFAULT_VM_TARGET}"
+    TIMEOUT 1200
+    PASS_REGULAR_EXPRESSION "PASS: rxunicode strict and replacement Unicode legacy codecs full scalars=1112064"
+    FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+  crexx_register_test_prep_targets(TESTS ts_unicode_codec_full
+    TARGETS ts_unicode_codec_opt_artifact ${CREXX_DEFAULT_VM_TARGET})
+endif()
 
 add_custom_target(ts_unicode_normalization)
 add_dependencies(testrxfnsg ts_unicode_normalization)

@@ -173,14 +173,16 @@ foreach(_backend ll1 lr1 packrat earley)
   endforeach()
 endforeach()
 
-add_test(NAME ts_llflow_resources
-  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
-    "${CMAKE_CURRENT_BINARY_DIR}/flow-ll1/ts_llflow_ll1_opt-linked.rxbin" -a resources)
-set_tests_properties(ts_llflow_resources PROPERTIES
-  PASS_REGULAR_EXPRESSION "FLOW_RESOURCES[|]width=200[|]depth=40[|]graph_sweeps=[1-9][0-9]*[|]remaining=0[|]failures=0"
-  FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:" TIMEOUT 300 LABELS "library;level-l;resource-limit")
-crexx_register_test_prep_targets(TESTS ts_llflow_resources
-  TARGETS ts_llflow_ll1_opt ${CREXX_DEFAULT_VM_TARGET})
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+  add_test(NAME ts_llflow_resources
+    COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+      "${CMAKE_CURRENT_BINARY_DIR}/flow-ll1/ts_llflow_ll1_opt-linked.rxbin" -a resources)
+  set_tests_properties(ts_llflow_resources PROPERTIES
+    PASS_REGULAR_EXPRESSION "FLOW_RESOURCES[|]width=200[|]depth=40[|]graph_sweeps=[1-9][0-9]*[|]remaining=0[|]failures=0"
+    FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:" TIMEOUT 300 LABELS "library;level-l;resource-limit")
+  crexx_register_test_prep_targets(TESTS ts_llflow_resources
+    TARGETS ts_llflow_ll1_opt ${CREXX_DEFAULT_VM_TARGET})
+endif()
 
 # Structured-flow consumers also run directly, without nested builds.
 set(_structured_flow_spec "${CMAKE_SOURCE_DIR}/langtools/examples/flow/loops.rxl")
@@ -257,17 +259,16 @@ foreach(_backend ll1 lr1 packrat earley)
   endforeach()
 endforeach()
 
-add_test(NAME ts_llstructuredflow_resources
-  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
-    "${CMAKE_CURRENT_BINARY_DIR}/structured-flow-ll1/ts_llstructuredflow_ll1_opt-linked.rxbin" -a resources)
-set_tests_properties(ts_llstructuredflow_resources PROPERTIES
-  PASS_REGULAR_EXPRESSION "STRUCTURED_RESOURCES[|]depth=30[|]cyclic_sweeps=[1-9][0-9]*[|]cyclic_remaining=0[|]port_sweeps=[1-9][0-9]*[|]port_remaining=0[|]failures=0"
-  FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:" TIMEOUT 900 LABELS "library;level-l;resource-limit")
-if(CREXX_QA_AUDIT_NATIVE_SOURCES)
-  set_tests_properties(ts_llstructuredflow_resources PROPERTIES RUN_SERIAL TRUE)
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+  add_test(NAME ts_llstructuredflow_resources
+    COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+      "${CMAKE_CURRENT_BINARY_DIR}/structured-flow-ll1/ts_llstructuredflow_ll1_opt-linked.rxbin" -a resources)
+  set_tests_properties(ts_llstructuredflow_resources PROPERTIES
+    PASS_REGULAR_EXPRESSION "STRUCTURED_RESOURCES[|]depth=30[|]cyclic_sweeps=[1-9][0-9]*[|]cyclic_remaining=0[|]port_sweeps=[1-9][0-9]*[|]port_remaining=0[|]failures=0"
+    FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:" TIMEOUT 900 LABELS "library;level-l;resource-limit")
+  crexx_register_test_prep_targets(TESTS ts_llstructuredflow_resources
+    TARGETS ts_llstructuredflow_ll1_opt ${CREXX_DEFAULT_VM_TARGET})
 endif()
-crexx_register_test_prep_targets(TESTS ts_llstructuredflow_resources
-  TARGETS ts_llstructuredflow_ll1_opt ${CREXX_DEFAULT_VM_TARGET})
 
 # Checked target-schema lowering, using the same module as the worked example.
 # Its helper imports only the SDK, so one producer serves every parser backend.
@@ -335,7 +336,7 @@ foreach(_backend ll1 lr1 packrat earley)
     foreach(_vm rxtvm rxbvm)
       if(TARGET ${_vm})
         add_test(NAME ${_lowering_name}_${_vm}
-          COMMAND $<TARGET_FILE:${_vm}> "${_lowering_dir}/${_lowering_name}-linked.rxbin" -a semantic)
+          COMMAND $<TARGET_FILE:${_vm}> "${_lowering_dir}/${_lowering_name}-linked.rxbin" -a ${_flow_runtime_workload})
         set_tests_properties(${_lowering_name}_${_vm} PROPERTIES
           PASS_REGULAR_EXPRESSION "failures=0" TIMEOUT 300 LABELS "library;level-l;optimizer-parity")
         if(_backend STREQUAL "earley" AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
@@ -350,14 +351,16 @@ endforeach()
 
 # The large raw-tree control never uses a generated parser. Existing AST
 # depth/width controls retain both modes and engines; reuse this one image.
-add_test(NAME ts_lllowering_deep
-  COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
-    "${CMAKE_CURRENT_BINARY_DIR}/lowering-lr1/ts_lllowering_lr1_opt-linked.rxbin" -a deep)
-set_tests_properties(ts_lllowering_deep PROPERTIES
-  PASS_REGULAR_EXPRESSION "deep nodes=2001 failures=0" FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
-  TIMEOUT 300 LABELS "library;level-l;resource-limit")
-crexx_register_test_prep_targets(TESTS ts_lllowering_deep
-  TARGETS ts_lllowering_lr1_opt ${CREXX_DEFAULT_VM_TARGET})
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+  add_test(NAME ts_lllowering_deep
+    COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}>
+      "${CMAKE_CURRENT_BINARY_DIR}/lowering-lr1/ts_lllowering_lr1_opt-linked.rxbin" -a deep)
+  set_tests_properties(ts_lllowering_deep PROPERTIES
+    PASS_REGULAR_EXPRESSION "deep nodes=2001 failures=0" FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    TIMEOUT 300 LABELS "library;level-l;resource-limit")
+  crexx_register_test_prep_targets(TESTS ts_lllowering_deep
+    TARGETS ts_lllowering_lr1_opt ${CREXX_DEFAULT_VM_TARGET})
+endif()
 
 # Source origins and owned recovery inspection across parser backends.
 set(_origins_spec "${CMAKE_SOURCE_DIR}/langtools/examples/origins/records.rxl")
@@ -675,10 +678,15 @@ add_test(NAME levell_lexical_reuse_service COMMAND $<TARGET_FILE:rxbvm>
   --no-autoload "${_reuse}/service-linked.rxbin" -a service)
 add_test(NAME levell_lexical_reuse_unstamped COMMAND $<TARGET_FILE:rxbvm>
   --no-autoload "${_reuse}/unstamped/linked.rxbin" -a unstamped)
-# Isolated Debug service 64s; CLI/cache panel 42 commands/30s. Source-only
-# qualification follows AGENTS.md; serialize these against other nested work.
+# Service probes use private requests and read-only inputs. Reserve ordinary
+# memory admission slots; retain the established instrumented isolation.
 set_tests_properties(levell_lexical_reuse_service levell_lexical_reuse_unstamped PROPERTIES
-  PASS_REGULAR_EXPRESSION "LEXICAL_REUSE[|].*[|]failures=0" RUN_SERIAL TRUE TIMEOUT 900 LABELS "level-l;essential")
+  PASS_REGULAR_EXPRESSION "LEXICAL_REUSE[|].*[|]failures=0" TIMEOUT 900 LABELS "level-l;essential")
+if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+  set_tests_properties(levell_lexical_reuse_service levell_lexical_reuse_unstamped PROPERTIES RUN_SERIAL TRUE)
+else()
+  set_tests_properties(levell_lexical_reuse_service levell_lexical_reuse_unstamped PROPERTIES PROCESSORS 6)
+endif()
 crexx_register_test_prep_targets(TESTS levell_lexical_reuse_service levell_lexical_reuse_unstamped
   TARGETS levell_lexical_reuse rxbvm)
 add_test(NAME rxlang_lexical_reuse_cli COMMAND ${Python3_EXECUTABLE}

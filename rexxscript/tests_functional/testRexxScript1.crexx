@@ -1,11 +1,24 @@
 /* cREXX License (MIT). Modern grammar/interpreter functional acceptance. */
 options levelb
 import rxfnsb
+import llast
 import rexxscript1
 import rexxscript1run
 
 main: procedure = .int expose failures cases
+  arg argv = .string[]
+  workload = .string; flat_nops = .int; flat_items = .int
+  workload = 'full'
+  if argv[0] = 1 then workload = argv[1]
+  if argv[0] > 1 | wordpos(workload,'full semantic resources') = 0 then do
+    say 'usage: testRexxScript1 [full|semantic|resources]'; return 2
+  end
   failures = 0; cases = 0
+  if workload = 'resources' then do
+    flat_items = flat_sequence(3000)
+    say 'REXXSCRIPT_RESOURCES|nops=3000|statements=' || flat_items || '|failures=' || failures
+    return failures
+  end
   call check('precedence','say 1+2*3; say -2**2; say 2**3**2','7|-4|512','')
   call check('division','say 5/2; say 5.0/2; say 7%3; say 7.5%2','2|2.5|1|1.5','')
   call check('numeric strings',"say '2'+3; say '2'/3",'5|0.666666666666667','')
@@ -48,7 +61,9 @@ main: procedure = .int expose failures cases
   call check('no goto','goto target','','RS_PARSE')
   call check('no classes','x: class','','RS_PARSE')
   call check('nested loop leave','x=0; do 2; do forever; x=x+1; leave; end; end; say x','2','')
-  call check('long flat source',copies('nop;',3000) || 'say 7','7','')
+  flat_nops = 3000
+  if workload = 'semantic' then flat_nops = 3
+  call check('long flat source',copies('nop;',flat_nops) || 'say 7','7','')
   call check('source nesting', 'say ' || copies('(',130) || '1' || copies(')',130),'','RS_DEPTH')
   call check('source byte limit',copies(' ',1048577),'','RS_PARSE_LIMIT')
   call check('undefined','say unknown','','RS_UNDEFINED')
@@ -91,6 +106,26 @@ main: procedure = .int expose failures cases
   say 'rexxscript1_cases=' || cases
   say 'rexxscript1_failures=' || failures
   return failures
+flat_sequence: procedure = .int expose failures cases
+  arg nops = .int
+  program = .rexxscript1..program; run = .rexxscript1run..execution
+  status = .int; items = .int; rc = .int; out = .string[]
+  program = .rexxscript1..program((copies('nop;',nops) || 'say 7') as .binary)
+  status = program.compile(); items = flat_statement_count(program)
+  run = .rexxscript1run..execution(program)
+  rc = run.run(); out = run.output(); cases = cases + 1
+  if status <> 0 | items <> nops + 1 | rc <> 0 | run.code() <> '' | out[0] <> 1 | out[1] <> '7' then do
+    say 'FAIL long flat source rc=' || rc || ' statements=' || items || ' code=' || run.code()
+    failures = failures + 1
+  end
+  return items
+/* Release the inspection copy before constructing the execution's own tree. */
+flat_statement_count: procedure = .int
+  arg expose program = .rexxscript1..program
+  tree = .llast..tree
+  tree = program.ast()
+  if tree.status() <> 0 | tree.root().valid() = 0 then return -1
+  return tree.root().child('body').count('items')
 check: procedure = .void
   arg name = .string, source = .string, expected = .string, code = .string
   call checkbytes(name,source as .binary,expected,code)

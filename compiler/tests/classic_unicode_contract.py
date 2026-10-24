@@ -2,7 +2,9 @@
 import argparse
 import json
 import os
+import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -381,6 +383,10 @@ return 0
     (invalid / 'main.crexx').write_text("options levelb\nimport bad\nsay letter()\n")
     output = run([a.bindir/'rxc','--no-exe-import','-i',a.bindir,'-o',invalid/'main',invalid/'main.crexx'],expected=2).decode()
     assert 'CONSTANT_OUTSIDE_ROUTINE' in output and 'bad.crexx @ 3:1' in output
-    print(f'PASS: Classic Unicode contract ({len(commands)} commands, {time.monotonic()-start:.2f}s); {work}')
-finally:
+except BaseException:
     (work / 'commands.json').write_text(json.dumps(commands, indent=2))
+    print(f'Classic Unicode failure diagnostics: {work}', file=sys.stderr)
+    raise
+else:
+    shutil.rmtree(work)
+    print(f'PASS: Classic Unicode contract ({len(commands)} commands, {time.monotonic()-start:.2f}s)')

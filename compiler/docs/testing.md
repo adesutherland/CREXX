@@ -250,8 +250,15 @@ Cold preparation resets its owned generated-source tree; exact source-file
 inventory is checked before admission and publication so removed/renamed
 providers cannot remain undeclared import candidates.
 Ordinary prepared consumers use their per-root lock and private runtime state;
-they do not require a global serial slot. Cold setup remains serialized, and
-instrumented consumer scheduling retains its original policy.
+they do not require a global serial slot. Ordinary cold setups, the Unicode
+aggregate and expression consumers reserve six CTest admission slots. This is
+a conservative scheduling estimate, not six native threads or a measured CLI
+RSS ceiling. Each harness launches native tools sequentially; its files are
+owned by its private root. BIF consumers retain one slot. Expression/BIF family
+locks prevent same-root consumers from launching together only to block on the
+interprocess owner lock. Instrumented routes retain their original whole-pool
+serial policy. The final frozen parallel ordinary run owns aggregate stability
+and resource observation; this policy does not claim that gate has passed.
 
 1. **CFT-AC01 — todo:** every existing source-data/clock value and byte oracle
    remains; invalid NUL source is checked once per distinct frontend level with

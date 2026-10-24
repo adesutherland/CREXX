@@ -205,9 +205,10 @@ workload and output, including Earley's original bounded sizes; `-a resources`
 adds its scope observations. These are common post-parse graph/analysis controls,
 not parser-budget overrides. The generated AST matrix, origin/recovery matrix,
 3,000-item generated tree and AST depth/width controls retain their distinct
-parser/source/owner boundaries. Instrumented flow/structured-flow cells retain
-the full original workload, including SAN-QA-019's serial route, pending the
-separate native-memory scope review.
+parser/source/owner boundaries. Instrumented flow, structured-flow and lowering
+cells retain their full original workloads, including SAN-QA-019's serial route,
+pending the separate native-memory scope review. The separate resource/deep
+entries are ordinary-only, avoiding duplicate full workloads under instrumentation.
 
 The retained ordinary Earley cells in these four families reserve six CTest
 process slots because their dense parser/forest index has a large working set
@@ -231,6 +232,13 @@ Callable-service consumers read prepared inputs and publish only to their own
 mode/engine-specific destination and sibling staging directory. Ordinary cells
 can share the test pool; the instrumented route retains its existing serial
 contention policy and all requests, oracles and hang-protection timeouts.
+
+Lexical-reuse service probes likewise use read-only prepared images and private
+request state. Their ordinary six-slot admission replaces whole-pool exclusion;
+instrumented isolation remains. The CLI cache/build control retains its separate
+serialization and its actual output/cache locking checks. The single service
+panel keeps fresh current-admission and independent cold/warm byte oracles for
+each distinct identity, malformed-capsule, budget and failure case.
 
 
 ## Products and public services

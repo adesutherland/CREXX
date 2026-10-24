@@ -9814,12 +9814,21 @@ set_tests_properties(contract_fixture_contract PROPERTIES
 # each original selected-mode producer invocation through the same generator.
 set(_clock_fixture_dir "${CMAKE_CURRENT_BINARY_DIR}/contract-fixtures/clock")
 set(_source_fixture_root "${CMAKE_CURRENT_BINARY_DIR}/contract-fixtures/source-data")
+# Ordinary nested tools reserve admission slots, not native threads. This is a
+# conservative scheduling estimate, not a measured CLI memory ceiling.
+set(_contract_nested_serial TRUE)
+set(_contract_nested_processors 1)
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+    set(_contract_nested_serial FALSE)
+    set(_contract_nested_processors 6)
+endif()
 if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
     add_test(NAME classic_clock_contract_prepare
         COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/classic_clock_contract.py
             --bindir ${CMAKE_BINARY_DIR}/bin --fixture-dir "${_clock_fixture_dir}" --prepare)
     set_tests_properties(classic_clock_contract_prepare PROPERTIES
-        FIXTURES_SETUP classic-clock RUN_SERIAL TRUE TIMEOUT 600
+        FIXTURES_SETUP classic-clock RUN_SERIAL ${_contract_nested_serial}
+        PROCESSORS ${_contract_nested_processors} TIMEOUT 600
         LABELS "compiler;levelc;comprehensive"
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
     foreach(_source_level IN ITEMS b c g l)
@@ -9828,7 +9837,8 @@ if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
                 --bindir ${CMAKE_BINARY_DIR}/bin --level ${_source_level}
                 --fixture-dir "${_source_fixture_root}/${_source_level}" --prepare)
         set_tests_properties(source_data_contract_${_source_level}_prepare PROPERTIES
-            FIXTURES_SETUP source-data-${_source_level} RUN_SERIAL TRUE TIMEOUT 600
+            FIXTURES_SETUP source-data-${_source_level} RUN_SERIAL ${_contract_nested_serial}
+            PROCESSORS ${_contract_nested_processors} TIMEOUT 600
             LABELS "compiler;source;level${_source_level};comprehensive"
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
     endforeach()
@@ -9840,7 +9850,8 @@ add_test(NAME levelc_bif_reference_audit_prepare
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/levelc_bif_reference_audit.py
         --bindir ${CMAKE_BINARY_DIR}/bin --fixture-dir "${_bif_fixture_dir}" --prepare)
 set_tests_properties(levelc_bif_reference_audit_prepare PROPERTIES
-    FIXTURES_SETUP classic-bif-reference RUN_SERIAL TRUE TIMEOUT 2400
+    FIXTURES_SETUP classic-bif-reference RUN_SERIAL ${_contract_nested_serial}
+    PROCESSORS ${_contract_nested_processors} TIMEOUT 2400
     LABELS "compiler;levelc;comprehensive"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 foreach(_bif_mode IN ITEMS opt noopt)
@@ -9860,8 +9871,11 @@ foreach(_bif_mode IN ITEMS opt noopt)
                 --bindir ${CMAKE_BINARY_DIR}/bin --fixture-dir "${_bif_fixture_dir}" ${_bif_runtime_flags})
         set_tests_properties(${_bif_name} PROPERTIES
             FIXTURES_REQUIRED classic-bif-reference
-            LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 600
+            LABELS "compiler;levelc" RUN_SERIAL ${_contract_nested_serial} PROCESSORS 1 TIMEOUT 600
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+        if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+            set_tests_properties(${_bif_name} PROPERTIES RESOURCE_LOCK classic-bif-reference)
+        endif()
     endforeach()
 endforeach()
 
@@ -9870,13 +9884,14 @@ add_test(NAME classic_expression_contract_prepare
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/classic_expression_contract.py
         --bindir ${CMAKE_BINARY_DIR}/bin --fixture-dir "${_expression_fixture_dir}" --prepare)
 set_tests_properties(classic_expression_contract_prepare PROPERTIES
-    FIXTURES_SETUP classic-expression RUN_SERIAL TRUE TIMEOUT 2400
+    FIXTURES_SETUP classic-expression RUN_SERIAL ${_contract_nested_serial}
+    PROCESSORS ${_contract_nested_processors} TIMEOUT 2400
     LABELS "compiler;levelc;comprehensive"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
 
-# LC-CLOSE: isolated Debug/ASan pilot measurements are recorded in the Level C
-# worklist. Keep these nested toolchain aggregates out of the broad worker pool;
-# the generous timeout protects against hangs and is not a performance target.
+# Same-root consumers retain owner locks. CTest family locks avoid scheduling
+# several blocked ordinary consumers that would each reserve admission slots.
+# Instrumented routes retain their established whole-pool isolation.
 foreach(_closeout_mode IN ITEMS opt noopt linked_opt linked_noopt)
     set(_closeout_flags)
     if(_closeout_mode MATCHES "noopt")
@@ -9901,13 +9916,14 @@ foreach(_closeout_mode IN ITEMS opt noopt linked_opt linked_noopt)
         elseif(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
             set_property(TEST ${_closeout_name} APPEND PROPERTY FIXTURES_REQUIRED classic-clock)
         endif()
-        set(_closeout_runtime_serial TRUE)
-        if(_closeout_family STREQUAL "clock" AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
-            set(_closeout_runtime_serial FALSE)
+        set(_closeout_runtime_processors 1)
+        if(_closeout_family STREQUAL "expression" AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+            set(_closeout_runtime_processors ${_contract_nested_processors})
+            set_tests_properties(${_closeout_name} PROPERTIES RESOURCE_LOCK classic-expression)
         endif()
         set_tests_properties(${_closeout_name} PROPERTIES
             LABELS "compiler;levelc;comprehensive"
-            RUN_SERIAL ${_closeout_runtime_serial} TIMEOUT 1200
+            RUN_SERIAL ${_contract_nested_serial} PROCESSORS ${_closeout_runtime_processors} TIMEOUT 1200
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
     endforeach()
     foreach(_source_level IN ITEMS b c g l)
@@ -9957,13 +9973,14 @@ foreach(_unicode_mode IN ITEMS noopt linked_opt linked_noopt)
         VERBATIM USES_TERMINAL)
 endforeach()
 
-# Exact workload measured: Debug 366 s and macOS ASan 745 s, including host
-# build contention. Preserve generous hang protection and isolate the aggregate.
+# The aggregate owns nested compiler/stream lifecycles with private outputs.
+# Ordinary admission uses the estimated slot policy above; instrumented runs
+# keep established isolation. Neither policy removes an oracle or producer.
 add_test(NAME classic_unicode_contract_opt COMMAND ${Python3_EXECUTABLE}
     ${CMAKE_CURRENT_SOURCE_DIR}/classic_unicode_contract.py --bindir ${CMAKE_BINARY_DIR}/bin)
 set_tests_properties(classic_unicode_contract_opt PROPERTIES
     LABELS "compiler;levelc;unicode;streams;comprehensive"
-    RUN_SERIAL TRUE TIMEOUT 1800
+    RUN_SERIAL ${_contract_nested_serial} PROCESSORS ${_contract_nested_processors} TIMEOUT 1800
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc;rxfnsg;cstream")
 
 add_executable(test_classic_stream_lifecycle src/test_classic_stream_lifecycle.c)

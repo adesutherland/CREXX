@@ -121,17 +121,33 @@ add_custom_command(OUTPUT "${_rs1_root}/testRexxScript1-linked.rxbin"
   DEPENDS rxc rxas rxlink rexxscript1_driver_imports ${_rs1_driver_imports} rxfnsg rexxscript1 ${_rs1_runtime_bins} tests_functional/testRexxScript1.crexx
   WORKING_DIRECTORY "${_rs1_root}" VERBATIM)
 add_custom_target(testrexxscript1 ALL DEPENDS "${_rs1_root}/testRexxScript1-linked.rxbin")
+set(_rs1_functional_args -a semantic)
+set(_rs1_scheduling PROCESSORS 6)
+if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+  set(_rs1_functional_args)
+  set(_rs1_scheduling RESOURCE_LOCK rexxscript1_functional)
+endif()
 foreach(_vm rxtvm rxbvm)
   if(TARGET ${_vm})
     add_test(NAME rexxscript1_${_vm}
-      COMMAND $<TARGET_FILE:${_vm}> "${_rs1_root}/testRexxScript1-linked.rxbin")
+      COMMAND $<TARGET_FILE:${_vm}> "${_rs1_root}/testRexxScript1-linked.rxbin" ${_rs1_functional_args})
     set_tests_properties(rexxscript1_${_vm} PROPERTIES
       PASS_REGULAR_EXPRESSION "rexxscript1_failures=0" TIMEOUT 600
-      RESOURCE_LOCK rexxscript1_functional LABELS "rexxscript;level-l")
+      ${_rs1_scheduling} LABELS "rexxscript;level-l")
     crexx_label_smoke_tests(rexxscript1_${_vm}
       PREP_TARGETS testrexxscript1 ${_vm})
   endif()
 endforeach()
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+  add_test(NAME rexxscript1_resources
+    COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}> "${_rs1_root}/testRexxScript1-linked.rxbin" -a resources)
+  set_tests_properties(rexxscript1_resources PROPERTIES
+    PASS_REGULAR_EXPRESSION "REXXSCRIPT_RESOURCES[|]nops=3000[|]statements=3001[|]failures=0"
+    FAIL_REGULAR_EXPRESSION "FAIL|PANIC:" TIMEOUT 600
+    ${_rs1_scheduling} LABELS "rexxscript;level-l;resource-limit")
+  crexx_register_test_prep_targets(TESTS rexxscript1_resources
+    TARGETS testrexxscript1 ${CREXX_DEFAULT_VM_TARGET})
+endif()
 # AST analysis/folding regressions are prebuilt; each CTest runs a single VM.
 foreach(_ast_mode opt noopt)
   set(_ast_flags)
@@ -155,7 +171,7 @@ foreach(_ast_mode opt noopt)
       add_test(NAME rexxscript_ast_${_ast_mode}_${_vm} COMMAND $<TARGET_FILE:${_vm}> "${_rs1_root}/${_ast_test}-linked.rxbin")
       set_tests_properties(rexxscript_ast_${_ast_mode}_${_vm} PROPERTIES
         PASS_REGULAR_EXPRESSION "rexxscript_ast_failures=0" TIMEOUT 600
-        RESOURCE_LOCK rexxscript1_functional LABELS "rexxscript;level-l;optimizer-parity")
+        ${_rs1_scheduling} LABELS "rexxscript;level-l;optimizer-parity")
       crexx_register_test_prep_targets(TESTS rexxscript_ast_${_ast_mode}_${_vm} TARGETS ${_ast_test} ${_vm})
     endif()
   endforeach()

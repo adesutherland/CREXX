@@ -114,7 +114,24 @@ records image representation, bounds and loader validation.
 
 Build `testrexxscript1` and `testlevell_generated`, then run the corresponding
 CTest names. They launch prebuilt bytecode directly on each available concrete
-VM. `tests_functional/build-review.sh opt|noopt [rxas|crexx]` supplies isolated
+VM. Ordinary `rexxscript1_{rxbvm,rxtvm}` cells select the semantic workload:
+all value, syntax, failure, source-depth/byte, fuel, cancellation, output and
+program-ownership checks remain, with a short repeated-statement input.
+`rexxscript1_resources` reuses the same optimized image on the product VM for
+the original 3,000-NOP sequence and final output, guarded by the actual 3,001
+AST statement count. No argument retains the full original manual workload;
+instrumented cells keep that full route until their separate memory-scope review.
+The SDK and interpreter are already prepared once. The generated-language
+tests retain the 3,000-item list on both engines; the four `ts_llast` cells
+retain tree depth/width and owner behavior. Both small RexxScript engine cells
+still execute loops, calls and cleanup, so the large application-size control
+needs one ordinary execution rather than an engine duplicate. The AST folding
+matrix retains its existing compiler/assembler modes and both engines.
+The separate resource entry is ordinary-only. Programs, grammar caches and
+execution state are process-private, so ordinary tests reserve six scheduling
+slots as a conservative memory allowance rather than lock the entire family.
+Instrumented tests retain the original family lock and full workload.
+`tests_functional/build-review.sh opt|noopt [rxas|crexx]` supplies isolated
 full-module parity builds. `check-scalar-conformance.py BIN WORK` compares the
 same 28 scalar expressions with the current Level G compiler in both compiler
 modes and VMs. After adopting develop `54f736804`, all observations agree.

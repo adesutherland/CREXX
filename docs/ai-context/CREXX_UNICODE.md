@@ -353,6 +353,8 @@ Four explicit `boundary` cells retain every exact vector, malformed/replacement,
 BOM, ASCII/Latin-1 and legacy-mapping assertion, plus a 4,096-scalar batch made
 from the retained width/surrogate/extrema vectors. `ts_unicode_codec_full` runs
 the complete scalar sweep once with the optimized image on the product engine.
+This extra full-sweep entry is ordinary-only. Instrumented codec cells retain
+their original full sweep in all four mode/engine cells, without a fifth copy.
 The four mapping-file arguments alone retain the full manual workload; an
 explicit fifth argument selects `full` or `boundary`.
 
