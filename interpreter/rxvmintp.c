@@ -142,7 +142,11 @@ static int rxvm_timezone_seconds(long *seconds) {
     return 0;
 }
 static int rxvm_localtime(const time_t *time_value, struct tm *result) {
+#ifdef _WIN32
+    return localtime_s(result, time_value) == 0 ? 0 : -1;
+#else
     return localtime_r(time_value, result) ? 0 : -1;
+#endif
 }
 #define RXVM_TZNAME tzname
 #endif

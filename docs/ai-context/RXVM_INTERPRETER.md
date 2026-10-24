@@ -1586,7 +1586,9 @@ single designated process-main OS target.
 arithmetic. A failed system sample, local-time conversion, timezone query or
 processor-clock query raises `FAILURE` rather than using uninitialized data.
 Local-time conversion uses caller-owned `struct tm` storage through
-`localtime_r`/`localtime_s`. Configured Classic clocks are owned by the shared
+`localtime_r`/`localtime_s`. Windows, including MinGW, selects `localtime_s`;
+POSIX targets select `localtime_r` independently of the compiler-specific clock
+backend. Configured Classic clocks are owned by the shared
 Classic host/runtime facade; the VM instructions introduce no clock-policy ABI.
 
 ### ADDRESS Environment Objects and Functions
