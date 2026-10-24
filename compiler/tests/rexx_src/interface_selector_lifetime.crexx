@@ -1,0 +1,46 @@
+options levelb
+namespace interface_selector_lifetime expose factory_calls call_order
+
+main: procedure = .int
+  factory_calls = .int
+  call_order = .string
+  factory_calls = 0
+  call_order = ""
+  current = .capability()
+  errors = check(current.valid() & current.name() = "ready", "method argument")
+  if factory_calls <> 1 | call_order <> "FV" then return 1
+  factory_calls = 0
+  call_order = ""
+  errors = errors + check(accept(.capability()), "factory argument")
+  if factory_calls <> 1 | call_order <> "FV" then return 1
+  errors = errors + check(\(0 = 1 & current.valid()), "short circuit")
+  if factory_calls <> 1 | call_order <> "FV" then return 1
+  if errors <> 0 then return 1
+  say "OK"
+  return 0
+
+check: procedure = .int
+  arg ok = .boolean, detail = .string
+  if ok then return 0
+  say "FAIL:" detail
+  return 1
+
+accept: procedure = .boolean
+  arg value = .capability
+  return value.valid()
+
+capability: interface
+  *: factory
+  valid: method = .boolean
+  name: method = .string
+
+ready_capability: class implements .capability
+  *: factory
+    factory_calls = factory_calls + 1
+    call_order = call_order || "F"
+    return
+  valid: method = .boolean
+    call_order = call_order || "V"
+    return 1 = 1
+  name: method = .string
+    return "ready"

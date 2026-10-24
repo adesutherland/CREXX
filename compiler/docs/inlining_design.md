@@ -1659,6 +1659,21 @@ focused native repairs while that compiler remains the build seed. Keep their
 maintained C/L consumers and introduce isolated owning regressions; withdrawing
 supported inlining shapes is not a repair.
 
+`B-SEED-OBJECT-ACTUAL` repairs the supported local-procedure binding for a
+read-only object formal receiving a computed object. **Implementation: done;
+qualification: todo.** The alias shortcut is valid only for an aliasable actual;
+a factory or function result instead uses the existing typed assignment into
+inline-owned formal storage. Evaluate the expression once before the cloned
+body, retain the value through its last use and release it with the inline
+scope. Direct variable aliases and `ARG EXPOSE` lvalue requirements stay intact.
+The selector/result remains disjoint from its live argc/argument window.
+Closure requires the existing interface fixture's values, factory/method
+observation order, exactly-once count and short-circuit effects in opt/noopt,
+plus structural rejection of surviving bare or namespace-qualified consumer
+calls. Matcher controls must reject missing snapshots, wrong counted targets
+and both residual-call spellings. Full ordinary baseline and the agreed bounded
+memory/measurement qualification remain open; this is no speed claim.
+
 The strategic repair is to expand already bound receiver, value/storage,
 call-context and exit identities at the common target boundary, reducing repeated
 reconstruction from source-tree position. That direction complements rather

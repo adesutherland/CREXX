@@ -3252,7 +3252,8 @@ static int inline_bind_call_arguments_impl(Context *context,
 
         if (inline_node_is_plain_object(formal_target) &&
             param_arg->is_const_arg &&
-            !inline_is_missing_actual(actual_arg)) {
+            !inline_is_missing_actual(actual_arg) &&
+            inline_is_supported_ref_actual(actual_arg)) {
             if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, clone_state)) {
                 INLINE_BIND_RETURN(0);
             }
@@ -3262,6 +3263,9 @@ static int inline_bind_call_arguments_impl(Context *context,
             continue;
         }
 
+        /* Computed read-only object actuals own a value rather than a caller
+         * locator. The ordinary assignment below evaluates them once and
+         * keeps their formal storage alive through the cloned inline body. */
         if (inline_readonly_value_formal_can_share_actual(param_arg,
                                                           formal_target,
                                                           actual_arg,

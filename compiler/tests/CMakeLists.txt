@@ -1653,6 +1653,16 @@ add_test(NAME nr06_codegen_contract
 set_tests_properties(nr06_codegen_contract PROPERTIES
         LABELS "compiler;performance")
 
+add_test(NAME call_window_lifetimes_codegen
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/call_window_lifetimes_codegen_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/call_window_lifetimes_codegen.cmake)
+set_tests_properties(call_window_lifetimes_codegen PROPERTIES
+        LABELS "compiler;calls;interfaces" CREXX_PREP_TARGETS rxc)
+
 add_test(NAME nr21_fixed_call_contract
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>
@@ -2481,6 +2491,8 @@ add_crexx_run_test(select_dispatch_mixed rexx_src/select_dispatch_mixed.crexx)
 add_crexx_run_test(select_dispatch_general rexx_src/select_dispatch_general.crexx)
 add_crexx_run_test(select_dispatch_strings rexx_src/select_dispatch_strings.crexx)
 add_crexx_run_test(repro_duplicate_call_argument rexx_src/repro_duplicate_call_argument.crexx)
+add_crexx_run_test(counted_call_expose_alias rexx_src/counted_call_expose_alias.crexx)
+add_crexx_run_test(interface_selector_lifetime rexx_src/interface_selector_lifetime.crexx)
 add_crexx_run_test(nr06_call_window_scalar rexx_src/nr06_call_window_scalar.crexx)
 add_crexx_run_test(13_stems rexx_src/13_stems.crexx)
 add_crexx_run_test(repro_multi_tail_stems rexx_src/repro_multi_tail_stems.crexx)

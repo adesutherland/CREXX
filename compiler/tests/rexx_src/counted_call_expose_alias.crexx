@@ -1,0 +1,58 @@
+options levelb
+namespace counted_call_expose_alias
+
+call_controls: procedure expose NO_INLINE
+  constant NO_INLINE = 0
+  return
+
+main: procedure = .int
+  first = "alpha"
+  second = "beta"
+  call expose_after first, second, first, 0
+  if first <> "alpha:beta" | second <> "beta" then return fail("expose after first input")
+
+  first = "alpha"
+  call expose_after first, second, second, 0
+  if first <> "alpha" | second <> "alpha:beta" then return fail("expose after second input")
+
+  first = "alpha"
+  second = "beta"
+  call expose_before first, first, second, 0
+  if first <> "alpha:beta" | second <> "beta" then return fail("expose before input")
+
+  first = "alpha"
+  call expose_after first, first, first, 0
+  if first <> "alpha:alpha" then return fail("two value snapshots")
+
+  first = "alpha"
+  if value_pair(first, first) <> "alpha:alpha" | first <> "alpha" then
+    return fail("repeated value inputs")
+  if ordinary("left", 1, 2, 3, "right") <> "left:right" then
+    return fail("ordinary counted call")
+  say "OK"
+  return 0
+
+expose_after: procedure = .void expose NO_INLINE
+  arg left = .string, right = .string, expose destination = .string, padding = .int
+  destination = "overwritten"
+  destination = left || ":" || right
+  return
+
+expose_before: procedure = .void expose NO_INLINE
+  arg expose destination = .string, left = .string, right = .string, padding = .int
+  destination = "overwritten"
+  destination = left || ":" || right
+  return
+
+value_pair: procedure = .string expose NO_INLINE
+  arg left = .string, right = .string
+  return left || ":" || right
+
+ordinary: procedure = .string expose NO_INLINE
+  arg left = .string, first = .int, second = .int, third = .int, right = .string
+  return left || ":" || right
+
+fail: procedure = .int
+  arg detail = .string
+  say "FAIL:" detail
+  return 1
