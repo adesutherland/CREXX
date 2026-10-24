@@ -118,7 +118,7 @@ emit_expression: procedure = .string
   name = tree.name(node)
   if name = 'variable' then return variable_text(tree,node)
   if name = 'number' | name = 'string' then return tree.text(node)
-  if name = 'group' then return '(' || emit_expression(tree,tree.child(node,2)) || ')'
+  if name = 'group.value' then return '(' || emit_expression(tree,tree.child(node,2)) || ')'
   if name = 'unary' & tree.count(node) > 1 then return php_operator(tree.name(tree.child(node,1))) || emit_expression(tree,tree.child(node,2))
   if tree.count(node) = 1 then return emit_expression(tree,tree.child(node,1))
   result = emit_expression(tree,tree.child(node,1))

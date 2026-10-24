@@ -1,0 +1,39 @@
+/* Real PHP reader expression procedures, composed without generating PHP grammar. */
+options levelb
+import rxfnsb
+import llcore
+import lltree
+
+main: procedure = .int
+  raw = .llcore..tree.from_source('((2+3))' as .binary)
+  two = raw.add(1,'number',2,3,0,0)
+  plus = raw.add(1,'plus',3,4,0,0)
+  three = raw.add(1,'number',4,5,0,0)
+  prefix = raw.add(2,'sequence',2,4,two,plus)
+  sequence = raw.add(2,'sequence',2,5,prefix,three)
+  sum = raw.add(5,'additive',2,5,sequence,0)
+  inner = make_group(raw,sum,1,6)
+  outer = make_group(raw,inner,0,7)
+  tree = .lltree..view(raw,outer)
+  if tree.error() <> '' then return fail(tree.error())
+  if tree.name(outer) <> 'group.value' | tree.count(outer) <> 3 then return fail('outer schema')
+  if tree.child(outer,2) <> inner | tree.count(inner) <> 3 then return fail('nested schema')
+  if emit_expression(tree,inner) <> '(2 + 3)' then return fail('group output')
+  if emit_expression(tree,outer) <> '((2 + 3))' then return fail('nested output')
+  say 'PHP_READER_GROUP|PASS'
+  return 0
+
+make_group: procedure = .int
+  arg expose raw = .llcore..tree, expression = .int, first = .int, last = .int
+  opening = raw.add(1,'open',first,first + 1,0,0)
+  closing = raw.add(1,'close',last - 1,last,0,0)
+  prefix = raw.add(2,'sequence',first,last - 1,opening,expression)
+  sequence = raw.add(2,'sequence',first,last,prefix,closing)
+  return raw.add(5,'group.value',first,last,sequence,0)
+
+fail: procedure = .int
+  arg detail = .string
+  say 'FAIL: PHP_READER_GROUP ' || detail
+  return 1
+
+@PHP_READER_EXPRESSION_PROCEDURES@

@@ -260,3 +260,18 @@ greater
        Processing order 1
        Processing order 2
        Processing order 3
+
+15. Named grouping-node correction
+    The named tree preserves the grammar's `group.value` rule, including its
+    ordered opening token, expression and closing token. The reader must retain
+    those parentheses rather than treating that node as a binary expression.
+
+- **PHP-GROUP-AC01 — todo:** the real reader emitter preserves a three-child
+  `group.value` and nested groups with exact parenthesized output. One optimized
+  product-VM synthetic-tree check uses the existing generic tree runtime; no PHP
+  grammar generation or language expansion is required.
+- **PHP-GROUP-STEP01 — todo:** match the authored node name and compose the
+  unchanged reader expression procedures into the owned regression fixture.
+- **PHP-GROUP-STEP02 — todo:** qualify that focused control, including a private
+  before-copy negative, then retain it in ordinary QA. This does not complete
+  the broader Phase 1 acceptance criteria above.

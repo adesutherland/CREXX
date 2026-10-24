@@ -64,8 +64,10 @@ PHP key-conversion rules, boolean/null/float keys, destructuring, spread
 operators, the full `array_*` library, sorting, serialisation, JSON conversion,
 mutation during iteration, or exact PHP notice/warning behavior.
 
-Because cREXX objects are mutable, assignment of an array variable has
-reference-like behavior in this phase; PHP copy-on-write is not promised.
+Ordinary cREXX object assignment copies the array value. `setArray()` stores a
+value copy and `getArray()` returns a value copy; mutating that returned value
+does not update its parent unless it is stored back explicitly. Shared aliases,
+PHP reference semantics and PHP copy-on-write compatibility are not promised.
 
 ## 5. Grammar and reader responsibilities
 
