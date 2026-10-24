@@ -174,6 +174,28 @@ transfer, mutation, iteration and destruction before syntax. Use Storage, List
 and a graph workload as equivalence/performance controls. Selection of a
 baseline does not automatically select every extension.
 
+**Explicit ownership candidate — deferred; implementation unselected.** A
+fresh, fully typed value could live in stable heap storage behind a small
+copyable owning handle: copying retains the owner, and the last strong release
+destroys its value. Keep self/back-links weak, resource shutdown separate from
+storage lifetime, and the initial owner context-affine. Preserve ordinary value
+copies and existing weak-reference lifetimes. This candidate excludes arbitrary
+local promotion, cycle collection and a general VM/native ownership service.
+Full typed construction and failed-construction cleanup, safe scoped access
+that pins the owner through normal and signal exits, and mutation/rebinding
+and identity rules remain open design requirements.
+
+HTTP controller lifetime and List's separate node arena motivate this question;
+the narrow stable-controller/small-proxy HTTP repair is independent. A future
+List diagnostic must use the generic owning capability and preserve its Rexx
+algorithm. Storage's wrapper/nested-array limitation remains a separate gap.
+Weak-reference lookup has not been established as the cause of slow benchmarks.
+Before implementation selection, define bounded allocation, handle-copy and
+last-release costs without bookkeeping on unrelated VM paths. The first
+ordinary profiling-off Release verdict must compare an equivalent consumer and
+control, guard unchanged arithmetic/control execution, and account separately
+for lifecycle and peak memory before Adrian decides on broader closeout.
+
 For Level L, define the minimum useful language-engineering library/tooling
 product. The current TinyExpr generated-output proof informs its design; it is
 not itself a generator or automatically the complete baseline. Decide the
