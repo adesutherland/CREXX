@@ -55,7 +55,7 @@ The following options are available (single and double dashes work for all optio
 : Display help on the usage of this tool. 
 
 `-version`
-: Display the version of this tool. This is the same as the compiler and interpretr version.
+: Display the version of this tool. This is the same as the compiler and interpreter version.
 
 `-exec`
 : Execute the compiled `.rxbin` under `rxvme` (default).
@@ -383,7 +383,7 @@ We will see the following output:
 
 ## Verbosity
 
-With the default verbosity level the tools behaves in the standard unix way where a lack of messages indicates success. This level can be increased gradually to a full explanation of everything that is done. The default is `--verbose0`, which gives no inidcation of what happened unless something went wrong. This is the way to run known-good programs without any overhead.
+With the default verbosity level the tools behaves in the standard unix way where a lack of messages indicates success. This level can be increased gradually to a full explanation of everything that is done. The default is `--verbose0`, which gives no indication of what happened unless something went wrong. This is the way to run known-good programs without any overhead.
 
 All verbosity level examples run the following short script:
 

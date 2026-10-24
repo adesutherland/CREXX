@@ -1,0 +1,157 @@
+options levelb comments_dash
+import data
+
+failures = 0
+strategy = .CollisionKeyStrategy()
+comparator = .KeyComparator()
+reverse = .ReverseKeyComparator()
+tree = .TreeMap(comparator)
+hash = .ObjectObjectHashMap(strategy)
+other_tree = .TreeMap(reverse)
+other_hash = .ObjectObjectHashMap(strategy)
+-- Deliberately use different insertion orders and values on the two sides.
+call tree.put(.MapKey("c", "left") as .object, .MapValue("left-c") as .object)
+call tree.put(.MapKey("a", "left") as .object, .MapValue("left-a") as .object)
+call tree.put(.MapKey("b", "left") as .object, .MapValue("left-b") as .object)
+call hash.put(.MapKey("c", "left") as .object, .MapValue("left-c") as .object)
+call hash.put(.MapKey("a", "left") as .object, .MapValue("left-a") as .object)
+call hash.put(.MapKey("b", "left") as .object, .MapValue("left-b") as .object)
+call other_tree.put(.MapKey("d") as .object, .MapValue("right-d") as .object)
+call other_tree.put(.MapKey("c") as .object, .MapValue("right-c") as .object)
+call other_tree.put(.MapKey("b") as .object, .MapValue("right-b") as .object)
+call other_hash.put(.MapKey("d") as .object, .MapValue("right-d") as .object)
+call other_hash.put(.MapKey("c") as .object, .MapValue("right-c") as .object)
+call other_hash.put(.MapKey("b") as .object, .MapValue("right-b") as .object)
+failures = failures + check_pair(tree as .Map, other_tree as .Map, "b", "c")
+failures = failures + check_pair(tree as .Map, other_hash as .Map, "b", "c")
+failures = failures + check_pair(hash as .Map, other_tree as .Map, "c", "b")
+failures = failures + check_pair(hash as .Map, other_hash as .Map, "c", "b")
+-- Concrete calls keep concrete return types.
+concrete_tree = tree.intersect(other_hash as .Map)
+failures = failures + check_int("tree first key", concrete_tree.size(), 2)
+first = concrete_tree.firstKey() as .MapKey
+if first.name() <> "b" then failures = failures + 1
+concrete_hash = hash.intersect(other_tree as .Map)
+failures = failures + check_int("hash type", concrete_hash is .ObjectObjectHashMap, 1)
+empty_tree = .TreeMap(comparator)
+empty_hash = .ObjectObjectHashMap(strategy)
+failures = failures + check_empty(tree as .Map, empty_hash as .Map)
+failures = failures + check_empty(hash as .Map, empty_tree as .Map)
+failures = failures + check_empty(empty_tree as .Map, hash as .Map)
+failures = failures + check_empty(empty_hash as .Map, tree as .Map)
+self_tree = tree.intersect(tree as .Map)
+self_hash = hash.intersect(hash as .Map)
+failures = failures + check_int("tree self", self_tree.size(), 3)
+failures = failures + check_int("hash self", self_hash.size(), 3)
+disjoint = .ObjectObjectHashMap(strategy)
+call disjoint.put(.MapKey("z") as .object, .MapValue("z") as .object)
+failures = failures + check_empty(tree as .Map, disjoint as .Map)
+failures = failures + check_empty(hash as .Map, disjoint as .Map)
+if failures <> 0 then do
+  say "Map intersect failures:" failures
+  exit 1
+end
+say "PASS: Map intersect"
+exit 0
+
+check_pair: procedure = .int
+  arg left = .Map, right = .Map, first_name = .string, second_name = .string
+  failures = 0
+  result = left.intersect(right)
+  failures = failures + check_int("intersection size", result.size(), 2)
+  keys = result.keyArray()
+  first = keys[1] as .MapKey
+  second = keys[2] as .MapKey
+  if first.name() <> first_name then failures = failures + 1
+  if second.name() <> second_name then failures = failures + 1
+  if first.marker() <> "left" then failures = failures + 1
+  if second.marker() <> "left" then failures = failures + 1
+  value = result.get(.MapKey("b") as .object) as .MapValue
+  if value.name() <> "left-b" then failures = failures + 1
+  if left is .TreeMap then failures = failures + check_int("tree result type", result is .TreeMap, 1)
+  else failures = failures + check_int("hash result type", result is .ObjectObjectHashMap, 1)
+  call result.remove(.MapKey("b") as .object)
+  call result.put(.MapKey("z") as .object, .MapValue("new") as .object)
+  failures = failures + check_int("left unchanged", left.size(), 3)
+  failures = failures + check_int("right unchanged", right.size(), 3)
+  failures = failures + check_int("left key remains", left.containsKey(.MapKey("b") as .object), 1)
+  failures = failures + check_int("right key remains", right.containsKey(.MapKey("b") as .object), 1)
+  failures = failures + check_int("left no new key", left.containsKey(.MapKey("z") as .object), 0)
+  return failures
+
+check_empty: procedure = .int
+  arg left = .Map, right = .Map
+  result = left.intersect(right)
+  return check_int("empty intersection", result.size(), 0)
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual <> expected then do
+    say label ": expected" expected "got" actual
+    return 1
+  end
+  return 0
+
+KeyComparator: class implements .Comparator
+  *: factory
+    return
+  compare: method = .int
+    arg left = .object, right = .object
+    a = left as .MapKey
+    b = right as .MapKey
+    if a.name() < b.name() then return -1
+    if a.name() > b.name() then return 1
+    return 0
+
+ReverseKeyComparator: class implements .Comparator
+  *: factory
+    return
+  compare: method = .int
+    arg left = .object, right = .object
+    a = left as .MapKey
+    b = right as .MapKey
+    if a.name() < b.name() then return 1
+    if a.name() > b.name() then return -1
+    return 0
+
+MapKey: class
+name_ = .string
+marker_ = .string
+
+  *: factory
+    arg name = .string, marker = "lookup"
+    name_ = name
+    marker_ = marker
+    return
+
+  name: method = .string
+    return name_
+
+  marker: method = .string
+    return marker_
+
+MapValue: class
+name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_
+
+CollisionKeyStrategy: class implements .ObjectKeyStrategy
+
+  *: factory
+    return
+
+  hash: method = .int
+    arg key = .object
+    return -7
+
+  equivalent: method = .boolean
+    arg left = .object, right = .object
+    left_key = left as .MapKey
+    right_key = right as .MapKey
+    return left_key.name() == right_key.name()

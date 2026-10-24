@@ -568,6 +568,40 @@ comparator_ = .Comparator
     return 0
 
   /**
+   * Returns a new TreeMap containing this map's entries also present in other.
+   * Membership uses other.containsKey(key), allowing any Map implementation.
+   * The result retains this map's comparator and key/value objects. Neither
+   * input is modified, and the objects are shared rather than cloned.
+   * Traversal uses O(log n) auxiliary space; k matches cost O(k log k) to insert,
+   * in addition to n membership lookups in other.
+   *
+   * @param other Map whose membership determines which entries are retained.
+   * @return .TreeMap New map of retained entries in this map's key order.
+   */
+  intersect: method = .TreeMap
+    arg other = .Map
+    result = .TreeMap(comparator_)
+    if count_ = 0 then return result
+    if other.size() = 0 then return result
+    stack = .int[]
+    top = 0
+    node = root_
+    do while node <> 0 | top > 0
+      do while node <> 0
+        top = top + 1
+        stack[top] = node
+        node = left_[node]
+      end
+      node = stack[top]
+      top = top - 1
+      if other.containsKey(keys_[node]) then do
+        call result.put(keys_[node], values_[node])
+      end
+      node = right_[node]
+    end
+    return result
+
+  /**
    * Tests whether this map contains a mapping for the specified key object.
    *
    * @param key Key object to test.

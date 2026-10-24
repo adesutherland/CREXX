@@ -211,6 +211,30 @@ free_ = .int[]
     count_ = count_ - 1
     return 0
 
+  /**
+   * Returns a new hash map containing this map's entries also present in other.
+   * Membership uses other.containsKey(key). The result retains this map's key
+   * strategy, insertion order, and key/value objects. Neither input is modified,
+   * and the objects are shared rather than cloned. Uses constant auxiliary
+   * space plus the result, and one membership lookup per receiver entry.
+   *
+   * @param other Map whose membership determines which entries are retained.
+   * @return .ObjectObjectHashMap New map containing the retained entries.
+   */
+  intersect: method = .ObjectObjectHashMap
+    arg other = .Map
+    result = .ObjectObjectHashMap(strategy_)
+    if count_ = 0 then return result
+    if other.size() = 0 then return result
+    slot = order_head_
+    do while slot <> 0
+      if other.containsKey(keys_[slot]) then do
+        call result.put(keys_[slot], values_[slot])
+      end
+      slot = order_next_[slot]
+    end
+    return result
+
   /** @return .int Number of mappings. */
   size: method = .int
     return count_
