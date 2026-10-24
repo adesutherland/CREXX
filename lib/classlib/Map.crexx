@@ -27,68 +27,79 @@ namespace data expose Map
 
 
 /**
-* The Map interface specifies an object that maps keys to values.
-* A map cannot contain duplicate keys; each key can map to at most one value.
-*/
+ * The Map interface specifies an object that maps keys to values.
+ * A map cannot contain duplicate keys; each key can map to at most one value.
+ */
 
 
 /**
-* Associates the specified value with the specified key in this map.
-*
-* @param key Key object to store.
-* @param value Object value to associate with the key.
-* @return .int 0 on success.
-*/
+ * Associates the specified value with the specified key in this map.
+ *
+ * @param key Key object to store.
+ * @param value Object value to associate with the key.
+ * @return .int 0 on success.
+ */
 Map: interface
   put: method = .int
     arg key = .object, value = .object
     
     /**
-    * Returns the value to which the specified key is mapped.
-    *
-    * @param key Key object to look up.
-    * @return .object Mapped object, or an uninitialized object if the key is absent.
-    */
+     * Returns the value to which the specified key is mapped.
+     *
+     * @param key Key object to look up.
+     * @return .object Mapped object, or an uninitialized object if the key is absent.
+     */
   get: method = .object
     arg key = .object
     
     /**
-    * Returns the number of key-value mappings in this map.
-    *
-    * @return .int Number of mappings.
-    */
+     * Returns the number of key-value mappings in this map.
+     *
+     * @return .int Number of mappings.
+     */
   size: method = .int
     
     /**
-    * Removes a mapping from this map.
-    *
-    * @param key Key object to remove.
-    * @return .int 0 if removed, 4 if the key was not present.
-    */
+     * Removes a mapping from this map.
+     *
+     * @param key Key object to remove.
+     * @return .int 0 if removed, 4 if the key was not present.
+     */
   remove: method = .int
     arg key = .object
 
     /**
-    * Tests whether this map contains a mapping for the specified key object.
-    *
-    * @param key Key object to test.
-    * @return .int 1 if present, 0 otherwise.
-    */
+     * Tests whether this map contains a mapping for the specified key object.
+     *
+     * @param key Key object to test.
+     * @return .int 1 if present, 0 otherwise.
+     */
   containsKey: method = .int
     arg key = .object
     
     /**
-    * Returns the keys in the concrete map's defined iteration order.
-    *
-    * @return .object[] Array of keys in map-defined order.
-    */
+     * Returns the keys in the concrete map's defined iteration order.
+     *
+     * @return .object[] Array of keys in map-defined order.
+     */
   keyArray: method = .object[]
     
     /**
-    * Returns the object values in the same order as keyArray().
-    *
-    * @return .object[] Array of object values in map-defined key order.
-    */
+     * Returns the object values in the same order as keyArray().
+     *
+     * @return .object[] Array of object values in map-defined key order.
+     */
   valueArray: method = .object[]
     
+   /**
+    * Returns a new map containing this map's entries whose keys occur in other.
+    * Membership is determined by other.containsKey(key). The result preserves
+    * this map's concrete type, key strategy/order, key objects, and value objects.
+    * Neither input is modified; key and value objects are shared, not cloned.
+    *
+    * @param other Map whose membership determines which entries are retained.
+    * @return .Map New map containing the retained entries.
+    */
+  intersect: method = .Map
+    arg other = .Map
     

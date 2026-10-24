@@ -1,0 +1,12 @@
+##CFLAG nosrcmap nset
+##MACRO OUTER
+    .mnote "outer compatibility path"
+    .mcall INNER
+##MEND
+
+##MACRO INNER
+    .mnote "inner compatibility path"
+    .gen say "nested source"
+##MEND
+
+##OUTER

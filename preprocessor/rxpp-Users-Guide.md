@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-RXPP is a **source-to-source pre-compiler** for CREXX (levelb) Rexx programs. It extends standard Rexx with compile-time features such as macros, conditional compilation, structured includes, stem handling, and syntactic conveniences. RXPP runs *before* execution and produces plain, valid CREXX Rexx output with no runtime dependency on RXPP itself.
+RXPP is a **source-to-source pre-compiler** for CREXX (levelb) Rexx programs. It extends standard Rexx with compile-time features such as macros, conditional compilation, structured includes, data-block generation, and syntactic conveniences. RXPP runs *before* execution and produces plain, valid CREXX Rexx output with no runtime dependency on RXPP itself.
 
 RXPP is intended for developers who want to structure larger Rexx programs cleanly while keeping the runtime environment simple and transparent.
 
@@ -349,480 +349,32 @@ In this form, each variable is expanded as a global array rather than a scalar v
 As with `##ARRAY`, `##GLOBAL` is resolved entirely during preprocessing. It exists to improve readability and maintainability of Rexx programs by grouping related declarations, not to introduce new runtime semantics.
 ```
 
-### 3.5 OO-style calls
+### 3.5 OO syntax
 
-```rexx
-map.put("a",1)
-x = map.get("a")
-```
+This topic is included because older RXPP code sometimes used preprocessing
+to simulate object-oriented operations or generate procedural equivalents.
+That was a source-generation convention, not an RXPP runtime feature.
 
-## 3.6 Stem expressions and dynamic tails
+OO syntax is part of standard CREXX. RXPP passes object and method
+expressions through to the compiler; it does not translate them into
+procedural calls.
 
-RXPP supports **stem paths with multiple tails**, where each tail segment can be either:
 
-- a **literal name** (`a.tail1.tail2.tail3`)
-- a **dynamic name** taken from a variable (`a.t1.t2.t3`)
-- a **computed tail** using `.( ... )` expressions (`Customer.(abc||4711).name`)
+## 3.6 Stems and arrays
 
-This allows stems to be used as *multi-dimensional associative structures* (tables or records), while preserving readable Rexx syntax.
+Stems are mentioned for the same historical reason: older RXPP-based code
+could use generated source to approximate stem-like operations. That approach
+must not be confused with the language implementation itself.
 
----
+Stems are ordinary CREXX language values. RXPP passes stem expressions through
+to the compiler; it does not reinterpret dotted names, evaluate computed tails,
+or rewrite assignments into `getstem`/`putstem` calls.
 
-### Constant tails (baseline)
-
-Literal tail names define a fixed structure:
-
-```rexx
-a.tail1.tail2.tail3 = "something"
-say a.tail1.tail2.tail3
-```
+Use the normal CREXX stem syntax and `.stem()` constructor described in the
+language reference. RXPP directives such as `##DATA` may generate arrays or
+stem data, but that is data-block generation rather than stem emulation.
 
 ---
-
-### Dynamic tails via variables
-
-If a tail segment matches a variable name, RXPP treats that segment as **dynamic**, meaning it is replaced with the *value* of that variable:
-
-```rexx
-t1 = "b"
-t2 = "c"
-t3 = "d"
-a.t1.t2.t3 = "v3"
-say a.t1.t2.t3
-```
-
-This enables table-style access patterns:
-
-```rexx
-customer = "IBM"
-Customer.customer.name = "International Business Machines"
-say Customer.customer.name
-```
-
----
-
-### Computed tail segments with `.( ... )`
-
-When a tail must be derived from an expression (concatenation, arithmetic, or function calls), RXPP supports **computed tail segments**:
-
-```rexx
-Customer.(abc||4711).name = "Microsoft"
-say Customer.(abc||4711).name
-```
-
-The expression inside `.( ... )` is evaluated first and then used as the effective stem segment.
-
----
-
-### Multiple stems in one statement
-
-RXPP can safely rewrite multiple stem expressions appearing in the same line:
-
-```rexx
-if List.(213+4711).(harry||rose) \= '' then say List.(213+4711).(harry||Mary)
-```
-
----
-
-### Join-style lookups (stem-to-stem indirection)
-
-A common pattern is storing a key in one stem and using it to access another stem (similar to a foreign-key join):
-
-```rexx
-Order.1001.cust = "IBM"
-custref = Order.1001.cust
-say Customer.custref.name
-```
-
----
-
-### Stem cardinality rules (important)
-
-By default, RXPP follows **CREXX stem semantics**:
-
-- A name with **one tail** (e.g. `a.b`) is treated as a **standard CREXX array access**.
-- A name is considered a **RXPP stem expression** only if it has **at least two tail segments**:
-
-```rexx
-/* CREXX array */
-a.b = 1
-
-/* RXPP stem */
-a.b.c = 2
-```
-
-This rule prevents accidental reinterpretation of ordinary CREXX arrays.
-
-#### Lifting the restriction with `##CFLAG dotisstem`
-
-The minimum-tail restriction can be relaxed explicitly:
-
-```rexx
-##CFLAG dotisstem
-```
-
-With this flag enabled, RXPP treats names with **a single tail** (`a.b`) as stem expressions as well. This is useful for projects that consistently use dotted names as associative keys.
-
-Use this flag carefully, as it changes how RXPP interprets dotted variable names globally.
-
----
-
-### Rules summary (what RXPP considers a valid stem)
-
-1. A stem consists of a **root** followed by one or more **tail segments** separated by dots.
-2. By default, RXPP recognizes a stem only if it has at least two tail segments; otherwise, the expression is interpreted as a standard CREXX array access.
-3. Each tail segment may be:
-    - a literal name
-    - a variable whose value is substituted dynamically
-    - a computed expression written as `.( expression )`
-4. Computed tail expressions may contain arithmetic, concatenation, function calls, and other stem references.
-5. Parentheses used for computed tails must be **balanced and unambiguous**.
-6. Bare parentheses immediately following a computed tail (e.g. `stem.(a)(b).x`) are **illegal** and rejected.
-7. RXPP evaluates computed tails **before** accessing the stem to ensure correct ordering.
-8. Multiple stem expressions in the same line are handled independently and safely.
-
----
-
-### Do / Don’t quick guide
-
-#### Do
-
-- Use stems to model tables and records
-- Use variables or computed expressions for dynamic keys
-- Inspect generated output when using complex expressions
-- Enable `##CFLAG dotisstem` only when your naming scheme requires it
-
-#### Don’t
-
-- Rely on ambiguous dot patterns
-- Use bare parentheses after computed tails
-- Assume single-tail names are stems unless `dotisstem` is set
-- Hide complex logic inside a single stem expression
-
----
-
-### Example: before and after expansion (conceptual)
-
-**Source:**
-
-```rexx
-Customer.customer.name = "IBM"
-```
-
-**After RXPP (conceptual):**
-
-```rexx
-src = putstem("Customer." || customer || ".name", "IBM")
-```
-
-(The exact generated code may vary, but RXPP always makes stem access explicit.)
-
----
-
-This section describes user-visible semantics only. Internal rewriting details are intentionally hidden from the user.
-
-
-## 3.7 FOR convenience
-
-RXPP provides a **C-style `FOR` loop** as a compile-time convenience. This construct is intended to offer a compact and familiar loop form for developers coming from C-like languages, while still compiling down to standard CREXX Rexx control flow.
-
-The `FOR` construct is rewritten entirely at **precompile time** and does not require any special runtime support.
-
----
-
-### Basic example
-
-```rexx
-FOR i=1; i<=10; i=i+1
-   say i
-END
-```
-
-This loop consists of three parts:
-
-1. **Initialization** (`i=1`)
-2. **Loop condition** (`i<=10`)
-3. **Iteration step** (`i=i+1`)
-
-These parts closely mirror the semantics of a C `for` loop.
-
----
-
-### Semantics
-
-At compile time, RXPP rewrites the `FOR` construct into an equivalent Rexx `DO FOREVER` loop with explicit initialization, condition checking, and iteration logic.
-
-Conceptually, the above example is transformed into logic similar to:
-
-```rexx
-i = 1
-do forever
-   if i > 10 then leave
-   say i
-   i = i + 1
-end
-```
-
-The exact generated code may differ slightly, but the execution semantics are equivalent.
-
----
-
-### Multiple statements in the loop body
-
-The loop body may contain multiple statements without requiring an explicit `DO / END` block:
-
-```rexx
-FOR idx=10; idx>=1; idx=idx-1
-   say "countdown:" idx
-   total = total + idx
-END
-```
-
----
-
-### Notes and guidelines
-
-- All three components of the `FOR` clause are required.
-- The loop condition is evaluated **before each iteration**.
-- `LEAVE` and `ITERATE` may be used inside the loop body to control execution.
-- Nesting of `FOR` loops is supported.
-
----
-
-### When to use FOR
-
-The `FOR` construct is particularly useful when:
-
-- Loop initialization, condition, and iteration are closely related
-- A compact, single-line loop definition improves readability
-- Porting logic from C or similar languages
-
-For more complex iteration patterns, native Rexx `DO` loops may still be preferable.
-
----
-
-As with all RXPP extensions, `FOR` exists only at compile time and is expanded into valid CREXX Rexx code before execution.
-
-
-
-### 3.8 SELECT / WHEN convenience
-
-RXPP provides a structured `SELECT / WHEN / OTHERWISE` control-flow construct as a **compile-time convenience**. It closely resembles the traditional Rexx `SELECT / WHEN / OTHERWISE` statement, but is implemented entirely by the RXPP precompiler.
-
-The construct improves readability for multi-branch conditional logic and avoids deeply nested `IF / THEN / ELSE` chains. It is expanded into standard CREXX Rexx code before execution and therefore requires **no special runtime support**.
-
----
-
-#### Basic example
-
-```rexx
-SELECT
-   WHEN x = 1 THEN say "one"
-   WHEN x = 2 THEN say "two"
-   OTHERWISE say "other"
-END
-```
-
-RXPP rewrites this construct into an equivalent sequence of `IF / THEN / ELSE` statements during precompilation.
-
----
-
-#### Multiple statements per branch
-
-Each `WHEN` or `OTHERWISE` branch may contain multiple statements using a `DO / END` block:
-
-```rexx
-SELECT
-   WHEN count = 0 THEN do
-      say "empty"
-      total = 0
-   end
-   WHEN count > 0 THEN do
-      say "items present"
-      total = count * price
-   end
-   OTHERWISE do
-      say "invalid"
-      total = -1
-   end
-END
-```
-
-#### Semantics
-
-- Conditions are evaluated **top to bottom**.
-- The **first matching `WHEN`** branch is executed.
-- If no `WHEN` matches, `OTHERWISE` is executed (if present).
-- Execution exits the `SELECT` block automatically after a matching branch.
-
----
-
-### Notes and guidelines
-
-- Conditions are evaluated **top to bottom**.
-- The first matching `WHEN` branch is taken.
-- `OTHERWISE` is optional but recommended for clarity.
-- Nesting of `SELECT` blocks is supported.
-
-The `SELECT / WHEN` construct is most useful when multiple related conditions must be expressed clearly without deeply nested `IF / ELSE` chains.
-
----
-
-As with all RXPP extensions, this construct exists only at compile time and is expanded into valid CREXX Rexx code before execution.
-
-
----
-
-#### Compile-time nature
-
-As with all RXPP control-flow extensions, `SELECT / WHEN` exists **only at compile time**. The RXPP precompiler expands the construct into valid CREXX Rexx code before execution.
-
-This ensures full compatibility with standard Rexx runtimes while allowing clearer, more expressive source code.
-
-
-### 3.9 SWITCH / CASE convenience
-
-RXPP provides a **C-style `SWITCH / CASE` control-flow construct** as a compile-time convenience. Unlike `SELECT / WHEN`, which is condition-based, `SWITCH / CASE` is **value-based**: a single controlling expression is evaluated once and then compared against multiple `CASE` values.
-
-As with all RXPP extensions, this construct is rewritten entirely at **precompile time** and translated into standard CREXX Rexx control flow. No special runtime support is required.
-
----
-
-#### Basic example
-
-```rexx
-SWITCH x
-   CASE 1 THEN say "one"
-   CASE 2 THEN say "two"
-   DEFAULT say "other"
-END
-```
-
-The controlling expression (`x`) is evaluated once. Each `CASE` compares its value against that result.
-
----
-
-#### Explicit case termination (`LEAVE`)
-
-Unlike C, RXPP does **not** implicitly terminate a `CASE` branch after execution.
-
-If execution reaches the end of a `CASE` branch **without a `LEAVE` statement**, processing will continue and the **next `CASE` condition will also be evaluated**.
-
-To prevent this, each `CASE` branch that should terminate the switch must explicitly use `LEAVE`.
-
-```rexx
-SWITCH code
-   CASE 1 THEN do
-      say "case one"
-      LEAVE
-   end
-   CASE 2 THEN do
-      say "case two"
-      LEAVE
-   end
-   DEFAULT do
-      say "default"
-   end
-END
-```
-
-This makes control flow explicit and avoids hidden fall-through semantics.
-At the same time, it allows multiple CASE labels to intentionally share a single action block, which is useful when different values should be handled in the same way without duplicating code.
-```rexx
-SWITCH status
-  CASE "OPEN"
-  CASE "PENDING"
-     say "Order is active"
-     LEAVE
-  CASE "CLOSED"
-     say "Order is closed"
-     LEAVE
-END
-```
-
-Here, both "OPEN" and "PENDING" are handled by the same rule through deliberate fall-through, and execution stops explicitly with LEAVE.
-
-As in C, CASE branches do not terminate automatically.
-This allows deliberate fall-through, but requires an explicit LEAVE to stop execution at the desired point.
-
----
-
-#### Multiple statements per CASE
-
-Each `CASE` branch may contain multiple statements:
-
-```rexx
-SWITCH status
-   CASE "OPEN" THEN do
-      say "processing"
-      result = 1
-      LEAVE
-   end
-   CASE "CLOSED" THEN do
-      say "already closed"
-      result = 0
-      LEAVE
-   end
-   DEFAULT do
-      say "unknown status"
-      result = -1
-   end
-END
-```
-
----
-
-#### Difference between SELECT / WHEN and SWITCH / CASE
-
-Although similar in appearance, the two constructs serve different purposes:
-
-- **SELECT / WHEN**
-   - Each `WHEN` contains an **independent condition**
-   - Conditions may differ in structure and complexity
-   - Best suited for **general conditional logic**
-
-- **SWITCH / CASE**
-   - A **single expression** is evaluated once
-   - Each `CASE` compares a value against that expression
-   - Requires explicit `LEAVE` to terminate a branch
-   - Best suited for **value dispatch** and enumerations
-
-In short:
-
-> Use **SELECT / WHEN** for conditions.
-> Use **SWITCH / CASE** for value-based dispatch.
-
----
-
-#### Notes and guidelines
-
-- `CASE` values are checked **top to bottom**.
-- If no `LEAVE` is executed, evaluation continues with the next `CASE`.
-- `DEFAULT` is optional but strongly recommended.
-- Nesting of `SWITCH` blocks is supported.
-
----
-
-As with all RXPP extensions, `SWITCH / CASE` exists only at compile time and is expanded into valid CREXX Rexx code before execution.
-
----
-
-
-## 4. Common Patterns and Practical Examples
-
-### 4.1 Use macros for clarity
-
-```rexx
-##DEFINE LOG(m) { say "[LOG] " || m }
-```
-
-### 4.2 Compile-time configuration
-
-```rexx
-##IF TRACE
-say "Tracing"
-##END
-```
 
 ### 4.3 Structured includes
 
@@ -832,15 +384,7 @@ RXPP provides two include mechanisms, ##INCLUDE and ##USE, which allow large Rex
 
 ##USE, on the other hand, appends the referenced source file to the end of the program, independent of where the directive appears. This is particularly helpful for including procedure or function definitions that do not need to be interleaved with the main execution path.
 
-By using ##USE, include files can be declared early in the source for clarity and documentation purposes, while still ensuring that their contents are placed in a suitable location in the final program. This helps keep the main program structure readable without imposing ordering constraints on the physical layout of the source files.### 4.4 OO syntax as sugar
-
-OO syntax improves readability but is rewritten into plain function calls.
-
-### 4.5 Stem handling
-
-RXPP rewrites complex stem access into explicit helper calls for correctness.
-
----
+By using ##USE, include files can be declared early in the source for clarity and documentation purposes, while still ensuring that their contents are placed in a suitable location in the final program. This helps keep the main program structure readable without imposing ordering constraints on the physical layout of the source files.
 
 ## 5. Debugging and Understanding RXPP Output
 
@@ -855,12 +399,6 @@ RXPP can preserve macro and directive lines as comments in the output.
 ### 5.3 Conditional issues
 
 If code disappears, check `##IF` conditions and compile-time variables.
-
-### 5.4 Stem warnings
-
-Warnings appear as comments and indicate ambiguous stem expressions.
-
----
 
 ## 6. Best Practices and Style Guidelines
 
@@ -880,7 +418,7 @@ Check token boundaries, argument counts, and macro type.
 Conditional compilation evaluated false.
 
 **Why do I see getstem/putstem?**  
-RXPP makes stem access explicit for correctness.
+`getstem` and `putstem` are runtime/plugin APIs, not code generated by RXPP.
 
 ---
 
@@ -982,6 +520,21 @@ the external modules instead of producing a linked member.
 ### `##SET` / `##UNSET`
 Set compile-time variables.
 
+### `##INFO` / `##WARN` / `##ERROR`
+Emit compile-time diagnostics. INFO and WARN continue preprocessing; ERROR
+stops preprocessing with status 8. The directives are not copied to generated
+source.
+
+```rexx
+##INFO "Using compatibility implementation"
+##WARN "This configuration is deprecated"
+##ERROR "This configuration is unsupported"
+```
+
+The corresponding output prefixes are `++RXPP-INFO`, `++RXPP-WARN`, and
+`++RXPP-ERROR`. Failed `##ASSERT` directives use
+`++RXPP-DIAG RXPP_ASSERT_FAILED`.
+
 RXPP also supplies these built-in compile-time variables. Use braces to
 expand them in source, macros, or `##DATA` content:
 
@@ -1034,28 +587,85 @@ Declare typed arrays.
 ### `##GLOBAL`
 Declare globals for namespace exposure.
 
-### `##STEM`
-Force stem rewrite.
-
 ---
+## Appendix B: Additional directives and behaviors (from legacy doc)
 ## Appendix B: Additional directives and behaviors (from legacy doc)
 This section documents a few directives and behaviors that exist in RXPP but were not fully described in the user-guide text above.
 ### `##CFLAG` (compiler / preprocessor behavior flags)
-`##CFLAG` sets internal behavior flags early, for example controlling whether RXPP keeps directive lines as comments, enables additional debug output, or relaxes stem detection rules.
-Example:
-```rexx
-##CFLAG dotisstem parse iflink
+`##CFLAG` sets RXPP behavior flags during the earliest configuration pass.
+It must appear at the beginning of the source, before other `##` directives.
+
+`##CFLAG` is the compile-time control surface for a pre-compilation. Its
+flags fall into three broad groups:
+
+- **Preprocessing behavior:** flags such as `format`, `blockmacros`,
+  `nosrcmap`, and `cmtblk` affect how RXPP interprets or emits source.
+- **Buffer and state inspection:** flags such as `1buf`, `2buf`, `3buf`,
+  `4buf`, `vars`, `maclist`, and `includes` show intermediate output or
+  preprocessing state.
+- **Diagnostics and logging:** flags such as `macrotrace`, `iftrace`,
+  `includetrace`, `timing`, `maclog`, and `strictmacrocheck` report what RXPP
+  did while compiling.
+
+The inspection and diagnostic flags affect RXPP's pre-compilation output only;
+they do not add runtime tracing or logging to the generated CREXX program.
+Flags in the first group may change the generated source, but RXPP remains a
+source-to-source tool and does not provide runtime implementations of the
+features it configures.
+
+When no `##CFLAG` is present, RXPP starts with:
+
+```text
+ndef nset svars siflink n1buf n2buf n3buf n4buf nvars nparse
+strictmacrocheck nmaclog nblockmacros
 ```
 
-Notable flags:
+An explicit `##CFLAG` replaces this complete set; it does not merge with the
+defaults. Flags are exact words, and there is no general `n`-prefix rule.
+The complete current flag table is maintained in the
+[cREXX language reference](../docs/books/crexx_language_reference/rxpp.md).
 
-- `dotisstem`: **By default, RXPP requires at least two tail segments to recognize a stem**, else it is interpreted as a CREXX array. Setting `dotisstem` relaxes that rule so a single tail can be treated as a stem.
-- `format`: Applies the indentation-only formatter to the final generated CREXX source before it is written. It is opt-in and does not change the default output path.
-- `4buf`: Prints the final buffer after optional formatting and before writing. `n4buf` is enabled by default, so this report is silent unless `4buf` is specified.
+The most commonly used flags are:
+
+- `ndef`, `nset`: suppress generated directive comments.
+- `1buf`, `2buf`, `3buf`, `4buf`: display successive RXPP buffers.
+- `format`: apply the indentation-only output formatter.
+- `vars`, `maclist`, `includes`: display preprocessing state.
+- `nosrcmap`: disable source-map emission.
+- `maclog`, `macrotrace`, `iftrace`, `includetrace`, `timing`: enable
+  diagnostics.
+- `flow`: emit structured `RXPP-FLOW` records for the major preprocessing
+  decisions and pass boundaries.
+- `stats`: emit a compact `RXPP-STATS` summary at the end of preprocessing.
+- `strictmacrocheck`: warn about macro argument mismatches; enabled by
+  default.
+- `blockmacros`: expand macros while collecting free-form blocks such as
+  `##DATA` and `##DALIAS`; disabled by default.
+- `nblockmacros`: explicitly keep free-form block contents literal.
+- `parse`, `trimparse`, `cmtblk`: enable the corresponding specialized
+  preprocessing behavior.
+
+`flow` and `stats` are diagnostic-only. Their output is written to RXPP's
+diagnostic stream and is never inserted into the generated CREXX source.
 
 ### `##DATA name [callback]` and `##END`
 
 `##DATA` captures all subsequent lines up to the matching `##END` directive and converts them into a cREXX string array.
+
+### `##ASSERT condition, message`
+
+Use `##ASSERT` to validate RXPP configuration before generated CREXX is
+compiled. A bare variable checks existence; `==` and `!=` compare a variable's
+stored string value exactly:
+
+```rexx
+##ASSERT DEBUG, "DEBUG must be defined"
+##ASSERT platform == "windows 64", "This module requires Windows"
+```
+
+Assertions are evaluated during preprocessing and are not emitted. RXPP
+initializes built-in variables such as `platform`, `sourcefile`, `outputfile`,
+and `rxpp_version`; project-specific switches should be created with `##SET`.
 
 ### `REXXSCRIPT RUN` and `END REXXSCRIPT`
 

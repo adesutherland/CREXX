@@ -1,0 +1,4 @@
+##CFLAG nosrcmap
+##INFO "Using compatibility implementation"
+##WARN "This configuration is deprecated"
+say "continued"

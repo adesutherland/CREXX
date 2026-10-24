@@ -633,6 +633,16 @@ rexxscriptcoreevaluator: class
            output_lines[output_count] = '@.mcall@'eval_value
            return 1
         end
+    if _starts_keyword(text, ".MNOTE") = 1 then do
+           expr = .string
+           expr = strip(substr(text, 7))
+           if expr == "" then return _set_error("missing_expression", "missing .MNOTE expression", stmtno, 1)
+           expr=_modify_var_symbol(expr)
+           if _eval_expression(expr, stmtno) = 0 then return 0
+           output_count = output_count + 1
+           output_lines[output_count] = '@.mnote@'eval_value
+           return 1
+        end
     if _starts_keyword(text, ".TAIL") = 1 then do
        expr = .string
        expr = strip(substr(text, 6))

@@ -10,8 +10,7 @@ Major responsibilities include:
 
 - Macro definition and expansion (fixed and variadic)
 - Conditional compilation (##IF / ##IFN / ##ELSE / ##END)
-- Structural rewrites (FOR, SELECT/CASE, OO syntax)
-- Stem access normalization (getstem / putstem rewriting)
+- Structural rewrite for the RXPP-specific `FOR` pseudo-construct
 - Controlled injection of generated code
 
 ---
@@ -68,7 +67,7 @@ which:
 
 ---
 
-### Pass 2: Conditional normalization + IF/ENDIF linking + OO create defs
+### Pass 2: Conditional normalization + IF/ENDIF linking
 
 `RXPPPassTwo()` performs:
 
@@ -78,11 +77,8 @@ which:
 
 - Construction of `aifblock[]`, mapping each `##IF / ##IFN` to its matching `##END`
 
-- OO prefix preparation:
-    - Rewrites `lhs = OOCREATE(prefix, ...)` into `lhs = <prefix>CREATE(...)`
-    - Stores `lhs_prefix = <prefix>` for later OO call translation
-
 ---
+
 
 ### Pass 3: Emit final output buffer
 
@@ -91,7 +87,6 @@ which:
 - Skips suppressed lines (`stype='X'`)
 - Emits preprocessor lines as comments based on `cflags` and `printgen_flags`
 - Expands macros via `expandRecursive()`
-- Applies OO translation via `ooTranslate()`
 - Writes final output using `writeall(outbuf, outfile)`
 - Writes typed linker manifest records via
   `linkerInfo(outfile, imported_funcs, external_modules, link_target)`
@@ -249,7 +244,7 @@ Parallel to `source[]`. Tags each line with a processing status, e.g.:
 - `I` include
 - `IF` / `IFN`
 - `X` suppressed
-- `PARSE`, `IMPORT`, `ARRAY`, `GLOBAL`, `STEM`
+- `PARSE`, `IMPORT`, `ARRAY`, `GLOBAL`
 - `noexp` reserved inserted line (skip further inspection)
 - `cmt` inside block comment
 
@@ -262,27 +257,21 @@ Parallel to `source[]`. Tags each line with a processing status, e.g.:
 
 - `aifblock[]`: maps `##IF / ##IFN` line numbers to matching `##END`
 
-### Stem expansion state
-
-- `stem_scount`: unique temporary counter
-- `stem_tempvar[]`: names of generated temporaries (`_tmp_rxpp_n`, `_expr_n`)
-- `rxpp_lrc`: last stem diagnostic message
-
----
-
 ## 4. Major subsystems
 
 ### Line parsing model (token-oriented, non-AST)
 
-RXPP does **not** construct or operate on a formal syntax tree. Instead, it uses a **token-oriented, context-aware line parsing model**.
+RXPP does **not** construct or operate on a formal syntax tree. Instead, it uses a
+token-oriented, context-aware line parsing model.
 
-Parsing is performed *line by line* and consists of:
+Parsing is performed line by line. RXPP scans source lines with quote-aware and
+parenthesis-aware helpers, identifies preprocessor directives and macro calls,
+and applies rule-specific transformations directly to those tokens.
 
-- Scanning a source line using quote-aware and parenthesis-aware helpers
-- Breaking the line into **tokens and substrings** (words, arguments, quoted strings, parenthesized expressions)
-- Applying rule-specific transformations directly to those tokens
+This parsing approach is pragmatic rather than grammatical: RXPP recognizes only
+the structure required for preprocessor constructs such as macros, directives,
+and control shorthands.
 
-This parsing approach is **pragmatic rather than grammatical**: RXPP only recognizes as much structure as is required to reliably identify precompiler constructs (macros, directives, stems, OO syntax, control shorthands).
 
 The model deliberately avoids:
 
@@ -303,7 +292,6 @@ Detected in `GetPreComp()` and dispatched via `CMD_*` handlers:
 - `##CFLAG` → `early_flag_pick_up`
 - `##ARRAY` → `CMD_array`
 - `##GLOBAL` → `CMD_global`
-- `##STEM` → `CMD_stem`
 - `##DATA / ##RELATION / ##INPUT / ##SYS*` → `CMD_data`
 - `##DALIAS` → `CMD_dalias`
 
@@ -364,43 +352,12 @@ Macro expansion includes:
 
 ---
 
-### C) OO call translation
-
-`ooTranslate()` rewrites:
-
-`object.method(args)` → `<prefix>METHOD(object, args)`
-
-where `<prefix>` is retrieved from `getvar(object'_prefix')`.
-
-Special handling exists for stem-like objects and GET/PUT calls.
-
----
-
-### D) Stem rewrite engine
-
-Triggered by:
-
-- Explicit `##STEM`
-- Automatic detection via `CMD_isstem`
-
-Pipeline:
-
-- Identify LHS / RHS
-- Extract RHS stems into temporary `getstem(...)` calls
-- Rewrite RHS to `_tmp_rxpp_n`
-- Rewrite LHS stems into `putstem(...)`
-- Pre-evaluate computed tails `. (expr)` via `_expr_n`
-
-This subsystem inserts new source lines dynamically and advances `lino` accordingly.
-
----
-
 ## 5. Procedure catalog (summary)
 
 ### Entry / passes
 
 - `RXPPPassOne` – load macros and source; extract in-file macros
-- `RXPPPassTwo` – normalize conditionals; build IF/ENDIF links; prep OO
+- `RXPPPassTwo` – normalize conditionals; build IF/ENDIF links
 - `RXPPPassThree` – expand and emit final output
 - `rxppinit` – initialize all global state
 
@@ -411,14 +368,14 @@ This subsystem inserts new source lines dynamically and advances `lino` accordin
 
 ### Source manipulation
 
-- `ReadSource`, `insert_source`, `insert_line`, `inject2Source`
+- `ReadSource`, `insert_source`, `inject2Source`
 - `writeline`, `linkerInfo`
 
 ### Directive handlers
 
 - `CMD_define`, `CMD_include`, `CMD_data`, `CMD_array`, `CMD_global`
 - `CMD_set`, `CMD_unset`
-- `CMD_select`, `CMD_when`, `CMD_case`, `CMD_for`
+- `CMD_for`
 
 ### Macro engine
 
@@ -433,17 +390,6 @@ This subsystem inserts new source lines dynamically and advances `lino` accordin
 ### Comment handling
 
 - `CommentDepth`, `CommentScan`
-
-### Stem engine
-
-- `CMD_stem`
-- `lhsStem`, `lhsnoStem`, `lhsisStem`
-- `splitRHS`, `ResolveStem`, `rewriteStemsInExpr`
-- `findStem`, `stemEndBySplit`, `replaceOnce`
-- `isStem`, `isStemCandidate`, `isStemNameChar`, `isPlainStemName`
-- `qextractall_dotparen_flat`, `matchParen`
-
----
 
 ## 6. Precomp interface expectations
 
@@ -482,7 +428,7 @@ RXPP relies on the native **`precomp`** module (C layer) for performance-critica
   Multi-pattern forward scan across `array[]`. Returns the line number of the next match after `pos` and sets `item` to indicate which pattern matched. Pass 2 depends on this for conditional normalization (##IF/##IFN/##ELSE/##END), so correctness under mutation is important.
 
 - **`ffind(expose array, pos, str1)` → `.int`**  
-  Single-pattern forward scan (lighter-weight than `fsearch`). Used for constructs like `OOCREATE(` scanning.
+  Single-pattern forward scan (lighter-weight than `fsearch`).
 
 - **`fpos(string, substring, offset)` → `.int`**  
   Substring position search with an offset. RXPP treats this as a reliable helper for “find token at/after position” style logic.
@@ -502,9 +448,6 @@ RXPP relies on the native **`precomp`** module (C layer) for performance-critica
 
 - **`safe_quote(string)` → `.string`**  
   Produces a Rexx-safe literal string for emission into generated code (used e.g. by `CMD_data`).
-
-- **`stemquote(path)` → `.string`**  
-  Converts a stem path into RXPP’s canonical quoted representation (e.g., representing dotted tails in a form suitable for `getstem()` / `putstem()` calls). The stem subsystem assumes this quoting is stable.
 
 #### Macro helpers and misc
 
@@ -538,7 +481,7 @@ The precomp interface is therefore part of RXPP’s **compatibility contract**: 
 
 - RXPP is pass-oriented and mutation-based
 - REXX encodes meaning; C encodes mechanics
-- Stem rewriting is the most complex and sensitive subsystem
+- Stem expressions are owned by the CREXX compiler and runtime
 - Comments serve as architectural contracts
 
 ---
@@ -551,12 +494,12 @@ The precomp interface is therefore part of RXPP’s **compatibility contract**: 
 RXPP is **functionally stable but architecturally fluid**.
 
 - The overall *pipeline structure* (three passes, mutable source buffer, directive-driven rewriting) is stable and has proven workable for complex transformations.
-- Core subsystems such as macro expansion, conditional handling, and OO call translation are mature and unlikely to change fundamentally.
-- The **stem rewrite engine** is newer and intentionally conservative: it favors correctness and traceability over minimal code generation. Expect refinements and simplifications as real-world usage increases.
+- Core subsystems such as macro expansion and conditional handling are mature and unlikely to change fundamentally.
+
 - Internal APIs rely heavily on *side effects* (global arrays, line insertion, shifting indices). This is by design but means that refactoring must be done carefully and incrementally.
 - Error handling is pragmatic rather than strict: RXPP prefers to emit warnings and continue where possible instead of aborting compilation.
 
-In short: RXPP should be considered **stable for development and experimentation**, but not yet frozen as a long-term compatibility contract. Internal procedures, especially those related to stem handling and parsing helpers, may still evolve as the design settles.
+In short: RXPP should be considered **stable for development and experimentation**, but not yet frozen as a long-term compatibility contract. Internal parsing helpers may still evolve as the design settles.
 
 ## 9. Design principles
 
@@ -604,7 +547,7 @@ Known limitations:
 - Limited error recovery: malformed constructs may produce odd expansions rather than precise diagnostics.
 - Macro expansion is textual by design; it does not understand semantic scopes.
 - Conditional logic (`##IF`) is evaluated against precompiler variables only, not runtime values.
-- Performance scales linearly with source size but can degrade with heavy macro nesting or aggressive stem rewriting.
+- Performance scales linearly with source size but can degrade with heavy macro nesting.
 
 Explicit non-goals:
 

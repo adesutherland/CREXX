@@ -1,0 +1,32 @@
+##CFLAG nosrcmap
+
+##DATA records capture_data
+first record
+second record
+##END
+
+##DATA legacy
+legacy record
+##END
+
+##RELATION relation_source capture_data
+relation line
+##END
+
+##PROGRAM program_source
+program line
+##END
+
+##LIBRARY library_source capture_data
+library line
+##END
+
+##STREAM relationship stream_source WITH capture_data
+stream line one
+stream line two
+##END
+
+capture_data: procedure = .void
+  arg rows = .string[]
+  if rows[0] <> 2 then exit 7
+return

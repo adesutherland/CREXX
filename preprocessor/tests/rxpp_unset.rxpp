@@ -1,0 +1,14 @@
+##CFLAG nosrcmap nset
+say "Platform: {platform}"
+say 'Generated on {date} at {time}'
+##SET PRINTGEN ON
+say "before={debug}"
+##UNSET DEBUG
+##UNSET PRINTGEN
+say "after={debug}"
+##IF DEBUG
+say "if-present"
+##ELSE
+say "if-absent"
+##END
+say "protected={printgen}"

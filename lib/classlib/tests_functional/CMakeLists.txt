@@ -31,6 +31,7 @@ set(REXXBINS
 #  testBag
   testConcurrency
   testDateTime
+  testMapIntersect
 )
 
 add_test(
