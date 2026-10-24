@@ -861,7 +861,8 @@ foreach(_crexx_runner IN ITEMS rxvm)
             TARGET_GROUP performance_nr16_17_stable_state
             RUNNER ${_crexx_runner}
             IMPORT_PATHS ${_perf_smoke_oracle_import_root} ${CMAKE_BINARY_DIR}/bin
-            DEPENDS ${_perf_smoke_oracle_deps} library compiler_exit_bin
+            DEPENDS ${_perf_smoke_oracle_deps} library "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                rxfnsc "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" compiler_exit_bin
             RUNTIME_ARGS ${_perf_smoke_oracle_base} ${LIBRPATH} -a control 10
             TEST_LABELS "performance;trace;address;calls;nr16;nr17"
     )

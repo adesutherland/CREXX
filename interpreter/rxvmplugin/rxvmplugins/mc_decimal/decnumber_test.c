@@ -45,7 +45,7 @@ static int do_decNumberFromInt64_test(char* test, int64_t value) {
     char buffer[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
 
-    sprintf(expected, "%lld", (long long)value);
+    snprintf(expected, sizeof(expected), "%lld", (long long)value);
     /* Get a malloced DecNumber */
     decNumber *dn = getNumber(digits);
 
@@ -144,7 +144,7 @@ static int do_decNumberFromUInt64_test(char* test, uint64_t value) {
     char buffer[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
 
-    sprintf(expected, "%llu", (unsigned long long)value);
+    snprintf(expected, sizeof(expected), "%llu", (unsigned long long)value);
     /* Get a malloced DecNumber */
     decNumber *dn = getNumber(digits);
 
@@ -206,10 +206,7 @@ int test_decNumberFromUInt64() {
 
 static int do_decNumberToInt64_test(char* test, int64_t value) {
     int digits = TEST_NUMBER_DIGITS;
-    char expected[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
-
-    sprintf(expected, "%lld", (long long)value);
 
     // Allocate memory for the context
     decContext* context = malloc(sizeof(decContext));
@@ -355,10 +352,7 @@ int test_decNumberToInt64() {
 
 static int do_decNumberToUInt64_test(char* test, uint64_t value) {
     int digits = 30;
-    char expected[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
-
-    sprintf(expected, "%llu", (unsigned long long)value);
 
     // Allocate memory for the context
     decContext* context = malloc(sizeof(decContext));
@@ -480,10 +474,7 @@ int test_decNumberToUInt64() {
 
 static int do_decNumberToInt32_test(char* test, int32_t value) {
     int digits = 30;
-    char expected[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
-
-    sprintf(expected, "%d", value);
 
     // Allocate memory for the context
     decContext* context = malloc(sizeof(decContext));
@@ -629,10 +620,7 @@ int test_decNumberToInt32() {
 
 static int do_decNumberToUInt32_test(char* test, uint32_t value) {
     int digits = 30;
-    char expected[TEST_NUMBER_BUFFER_SIZE];
     int error = 0;
-
-    sprintf(expected, "%u", value);
 
     // Allocate memory for the context
     decContext* context = malloc(sizeof(decContext));

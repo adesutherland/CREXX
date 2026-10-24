@@ -60,6 +60,9 @@ empty stderr, the PASS marker and exact mode, ten iterations and checksum `55`
 are all required; FAIL/PANIC output is rejected. The linked runtime helper's
 failure-only regex checks do not guard these success paths. The source repair
 and one synthetic ordinary contract cover each refusal without timing kernels.
+Their producer explicitly owns `rxfnsc` and its published bytecode for TRACE's
+`RexxValue` metadata, plus published base-library freshness; executable-adjacent
+imports must not substitute for these preparation dependencies.
 
 1. **QA-PERF-AC01 — todo:** deterministic cells and guard controls participate
    in the frozen ordinary baseline; original semantic oracles remain intact.
