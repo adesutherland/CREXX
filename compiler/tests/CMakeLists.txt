@@ -4391,6 +4391,16 @@ add_test(NAME inline_test_binary_class_attr_assign_shape
 set_tests_properties(inline_test_binary_class_attr_assign_shape PROPERTIES
         LABELS "compiler;inlining;binary;regression")
 add_crexx_run_test(gate_f_signal_names rexx_src/gate_f_signal_names.crexx)
+# Handler registration/unwinding is shared B/G emission, independent of the
+# optimiser. One G image complements the existing B signal controls.
+crexx_add_qa_runtime_case(signal_specific_catchall
+    "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/signal_specific_catchall.crexx"
+    opt _signal_priority_script _signal_priority_target)
+add_test(NAME signal_specific_catchall
+    COMMAND ${CMAKE_COMMAND} -P "${_signal_priority_script}")
+set_tests_properties(signal_specific_catchall PROPERTIES
+    LABELS "compiler;signals;regression;levelg" TIMEOUT 60
+    CREXX_PREP_TARGETS "${_signal_priority_target};rxvm")
 add_crexx_run_test(inline_test_class_methods rexx_src/inline_test_class_methods.crexx)
 
 # New Phase 2 Scoping Tests

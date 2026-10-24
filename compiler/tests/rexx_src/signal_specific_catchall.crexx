@@ -1,0 +1,56 @@
+options levelg
+import rxfnsb
+import _rxsysb
+namespace signal_specific_catchall
+
+return_through_handlers: procedure = .int
+  do
+    return 7
+  on signal task_failure as problem
+    return -1
+  on signal as problem
+    return -2
+  end
+  return -3
+
+main: procedure = .int
+  specific = 0
+  fallback = 0
+  i = .int
+  payload = "specific" || ('00'x as .string) || "payload"
+  do
+    do i = 1 to 2
+      do
+        if i = 1 then call raise "TASK_FAILURE", payload, ""
+        else call raise "CHANNEL_ERROR", "fallback payload", ""
+        return 1
+      on signal task_failure as problem
+        if problem.name() <> "TASK_FAILURE" | problem.code() <> 27 | problem.message() <> payload then return 2
+        specific = specific + 1
+      on signal as problem
+        if problem.name() <> "CHANNEL_ERROR" | problem.code() <> 26 | problem.message() <> "fallback payload" then return 3
+        fallback = fallback + 1
+      end
+    end
+    if specific <> 1 | fallback <> 1 then return 4
+    if return_through_handlers() <> 7 then return 5
+    do forever
+      do
+        leave
+      on signal task_failure as problem
+        return 6
+      on signal as problem
+        return 7
+      end
+    end
+    call raise "TASK_FAILURE", "outer restored", ""
+    return 8
+  on signal task_failure, channel_error as problem
+    if problem.name() <> "TASK_FAILURE" | problem.code() <> 27 | problem.message() <> "outer restored" then return 9
+    if specific <> 1 | fallback <> 1 then return 10
+    say "PASS: first matching signal handler and balanced unwind"
+    return 0
+  end
+  return 11
+
+exit main()

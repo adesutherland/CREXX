@@ -208,6 +208,34 @@ write through the link and corrupt attribute storage before `unlink` runs.
 `deferred_register_outer_if_lifetime` covers direct outer-`IF`, typed-loop, and
 loop-plus-`IF` shapes in both no-opt and optimized modes.
 
+## 4.4 Block Signal Handler Priority
+
+**SIGPRI vision:** block handlers select the first matching source clause.
+A trailing catch-all is a fallback; its expanded tags must not overwrite an
+earlier named handler or its bound signal object. RXAS signal instructions,
+signal identities and payload/origin transport stay unchanged.
+
+`SIGNAL_BLOCK` previously emitted a second registration for a named tag also
+present in a later catch-all, replacing the specific branch. Save each canonical
+tag once, register only its first source claimant, and restore that same unique
+sequence on ordinary completion, handler entry and RETURN/LEAVE unwinding.
+The shared name collector must deduplicate for control-flow unwinding as well.
+
+- **SIGPRI-AC01 — done:** one minimal Level G fixture selects a named
+  `TASK_FAILURE` handler and the catch-all for another condition, retaining both
+  bound names/codes and exact message payloads. Existing Level B signal controls
+  retain their behavior; one product VM is sufficient because RXVM is unchanged.
+- **SIGPRI-AC02 — done:** representative RXAS saves/registers each tag once;
+  early return and loop leave restore the enclosing handler correctly.
+- **SIGPRI-AC03 — done:** the unchanged mixed HTTP cleanup handlers complete
+  failed-child scope/pool cleanup and relay the original `TASK_FAILURE`.
+
+Steps: **SIGPRI-STEP01 — done:** establish source priority and restoration
+contract before the emitter change. **SIGPRI-STEP02 — done:** bounded emitter
+repair and permanent regression. **SIGPRI-STEP03 — done:** independent source
+and RXAS review, focused fixture/existing signal controls and HTTP replay;
+the final ordinary baseline remains a separate agreed gate.
+
 ## 5. Risk Registry
 
 | Risk | Description | Mitigation |

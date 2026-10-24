@@ -60,16 +60,29 @@ typedef struct signal_emit_names {
     size_t capacity;
 } signal_emit_names;
 
+static int signal_emit_names_contains(const signal_emit_names *names, const char *name) {
+    size_t i;
+    if (!names || !name) return 0;
+    for (i = 0; i < names->count; i++) {
+        if (strcmp(names->items[i], name) == 0) return 1;
+    }
+    return 0;
+}
+
 static void signal_emit_names_add(signal_emit_names *names, const char *name) {
+    char *copy;
     if (!names || !name) return;
+    if (signal_emit_names_contains(names, name)) return;
     if (names->count == names->capacity) {
         size_t new_capacity = names->capacity ? names->capacity * 2 : 8;
         char **new_items = realloc(names->items, sizeof(char*) * new_capacity);
-        if (!new_items) return;
+        if (!new_items) RX_PANIC_OOM("grow compiler signal names", sizeof(char*) * new_capacity, 0);
         names->items = new_items;
         names->capacity = new_capacity;
     }
-    names->items[names->count++] = strdup(name);
+    copy = strdup(name);
+    if (!copy) RX_PANIC_OOM("copy compiler signal name", strlen(name) + 1, 0);
+    names->items[names->count++] = copy;
 }
 
 static void signal_emit_names_free(signal_emit_names *names) {
@@ -630,6 +643,7 @@ void emit_flow(ASTNode *node, void *pl) {
 
         case SIGNAL_BLOCK: {
             signal_emit_names installed = {0};
+            signal_emit_names claimed = {0};
             ASTNode *handler;
             size_t handler_index;
 
@@ -646,6 +660,7 @@ void emit_flow(ASTNode *node, void *pl) {
 
                 signal_emit_collect_names(handler->child, &handler_names);
                 for (j = 0; j < (int)handler_names.count; j++) {
+                    if (signal_emit_names_contains(&installed, handler_names.items[j])) continue;
                     temp1 = mprintf("   sigpush \"%s\"\n", handler_names.items[j]);
                     output_append_text(node->output, temp1);
                     free(temp1);
@@ -671,6 +686,10 @@ void emit_flow(ASTNode *node, void *pl) {
                     int binding_register = binding ? binding->register_num : UNSET_REGISTER;
                     char binding_register_type = binding ? binding->register_type : 'r';
 
+                    /* A catch-all may expand a tag owned by an earlier clause.
+                     * First source match wins; never replace its binding. */
+                    if (signal_emit_names_contains(&claimed, handler_names.items[j])) continue;
+                    signal_emit_names_add(&claimed, handler_names.items[j]);
                     if (binding && binding->symbolNode && binding->symbolNode->symbol) {
                         binding_register = binding->symbolNode->symbol->register_num;
                         binding_register_type = binding->symbolNode->symbol->register_type;
@@ -696,6 +715,7 @@ void emit_flow(ASTNode *node, void *pl) {
                 handler = ast_nsib(handler);
                 handler_index++;
             }
+            signal_emit_names_free(&claimed);
 
             if (child1 && child1->output) output_concat(node->output, child1->output);
             if (child1 && child1->cleanup) output_concat(node->output, child1->cleanup);
