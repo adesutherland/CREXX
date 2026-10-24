@@ -97,6 +97,9 @@ declarations. The original grammar/client ownership extension runs only when
 `CREXX_BUILD_RESEARCH_COMPILERS` is enabled; that option belongs to the fixture
 and qualification configuration identity. Core-only proof does not close the
 research grammar trigger or this item's original full/platform obligations.
+Normal core/product, plugin, native parity and comprehensive CI explicitly
+select research compilers OFF; research-enabled qualification retains the
+original strict grammar/client ownership extension.
 
 Closure: a permanent miniature parallel Make regression using the maintained
 owner declarations must fail without the ownership repair and prove exactly one
