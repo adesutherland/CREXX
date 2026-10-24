@@ -181,6 +181,18 @@ frozen names and architectural positions are not mistaken for implementations.
 
 ## CONC-16 HTTP architecture decision
 
+Server fixture scheduling repair is done. The integration fixture reaches a
+common gate-release tail after every
+slow-client outcome, attempts both gate bytes and gate/socket cleanup, then
+relays any original signal. A wrong slow response remains a failure. Gate readers
+wait for that protocol completion; the intentional incomplete-request deadline,
+bounded slow socket I/O, client deadlines and CTest hang guard remain unchanged.
+This avoids turning a failed slow-client check into two missing requests and a
+server wait. The four ordinary positive cells use six scheduling slots for their
+nested pool topology, with independent ports and output paths; that weight is
+not a thread count. Instrumented scheduling retains global serialization. This
+harness repair changes no server API or request/response algorithm.
+
 ### CONC-16-OWNER — stable HTTP controller storage
 
 Vision: retain the existing public HTTP client and transfer record while making

@@ -532,13 +532,22 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     "ts_http_server_${_http_runner}_opt"
     PROPERTIES
       PASS_REGULAR_EXPRESSION "PASS: Level G HTTP server dispatched two bounded requests to task handlers"
-      # Each case creates request, client-owner and server-handler worker pools.
-      # Keep that topology isolated from compiler/runtime tests which launch
-      # their own child processes, while preserving parallel clients inside
-      # the tested VM.
-      RUN_SERIAL TRUE
       TIMEOUT 90
   )
+  # Protocol completion releases the gate even after a slow-client failure.
+  # Six scheduling slots bound the nested pool topology, not actual threads.
+  # Retain the existing instrumented scheduling policy.
+  if(CREXX_QA_AUDIT_NATIVE_SOURCES)
+    set_tests_properties(
+      "ts_http_server_${_http_runner}_noopt"
+      "ts_http_server_${_http_runner}_opt"
+      PROPERTIES RUN_SERIAL TRUE)
+  else()
+    set_tests_properties(
+      "ts_http_server_${_http_runner}_noopt"
+      "ts_http_server_${_http_runner}_opt"
+      PROPERTIES RUN_SERIAL FALSE PROCESSORS 6)
+  endif()
   crexx_label_concurrency_tests(SP07
     "ts_http_server_${_http_runner}_noopt"
     "ts_http_server_${_http_runner}_opt")
@@ -565,8 +574,7 @@ foreach(_http_runner IN LISTS _http_pooled_runners)
     "ts_http_server_failures_${_http_runner}_opt"
     PROPERTIES
       PASS_REGULAR_EXPRESSION "PASS: Level G HTTP server bounds unusable and failed handlers"
-      # Keep the negative server topology under the same CTest isolation as the
-      # positive server integration cases above.
+      # Negative handler/deadline cases retain their existing serial policy.
       RUN_SERIAL TRUE
       TIMEOUT 90
   )

@@ -71,7 +71,7 @@ server_client_request: class implements .taskwork
   run: method = .channelvalue
     arg ignored = .channelvalue, context = .taskcontext
     gate = .byteendpoint.from_encoded_reference(_gate_reference)
-    gate_completion = gate.start_read(1, 5000).wait(5000)
+    gate_completion = gate.start_read(1, -1).wait(-1)
     call gate.close()
     if gate_completion.succeeded() = 0 then return .channelvalue.string_value("HTTP test gate failed")
     client = .httpclient.from_channel(_client)
@@ -92,18 +92,59 @@ slow_client_request: class implements .taskwork
 
   run: method = .channelvalue
     arg ignored = .channelvalue, context = .taskcontext
-    socket = socketcreate()
-    if socket < 0 then return .channelvalue.integer_value(-1)
-    if sockettimeout(socket, 5000) <> 0 | socketconnect(socket, "127.0.0.1", _port) <> 0 then return .channelvalue.integer_value(-2)
-    response = socketrecv(socket, 4096)
-    drop_status = socketclose(socket)
-    if left(response, 12) <> "HTTP/1.1 408" then return .channelvalue.integer_value(-3)
-    gate = .byteendpoint.from_encoded_reference(_gate_reference)
-    gate_completion = gate.start_write("!!" as .binary, 5000).wait(5000)
-    if gate_completion.succeeded() then call gate.half_close(2)
-    call gate.close()
-    if gate_completion.succeeded() = 0 then return .channelvalue.integer_value(-4)
-    return .channelvalue.integer_value(408)
+    socket = -1
+    result = -1
+    failed = 0
+    first_problem = .signal
+    gate = .byteendpoint
+    do
+      socket = socketcreate()
+      if socket >= 0 then do
+        result = -2
+        if sockettimeout(socket, 5000) = 0 & socketconnect(socket, "127.0.0.1", _port) = 0 then do
+          response = socketrecv(socket, 4096)
+          result = -3
+          if left(response, 12) = "HTTP/1.1 408" then result = 408
+        end
+      end
+    on signal as problem
+      first_problem = problem
+      failed = 1
+    end
+
+    /* Release both readers even when the slow-client assertion fails. Each
+     * cleanup stage still runs if an earlier stage raised a signal. */
+    do
+      gate = .byteendpoint.from_encoded_reference(_gate_reference)
+      gate_completion = gate.start_write("!!" as .binary, -1).wait(-1)
+      if result = 408 then do
+        if gate_completion.succeeded() = 0 then result = -4
+        else if gate_completion.value().as_integer() <> 2 then result = -4
+      end
+    on signal as problem
+      if failed = 0 then first_problem = problem
+      failed = 1
+    end
+    do
+      if initialized(gate) then call gate.half_close(2)
+    on signal as problem
+      if failed = 0 then first_problem = problem
+      failed = 1
+    end
+    do
+      if initialized(gate) then call gate.close()
+    on signal as problem
+      if failed = 0 then first_problem = problem
+      failed = 1
+    end
+    do
+      if socket >= 0 then drop_status = socketclose(socket)
+    on signal as problem
+      if failed = 0 then first_problem = problem
+      failed = 1
+    end
+    if failed then call rxfnsb..signalrelay(first_problem)
+    return .channelvalue.integer_value(result)
 
 main: procedure = .int
   errors = protocol_checks()
