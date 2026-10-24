@@ -1,0 +1,34 @@
+/* Tiny ordinary guard checks; never enters a timing workload. */
+options levelb floats_binary
+import rxfnsb
+import perfsmokeoracles
+
+main: procedure = .int
+  failures = .int; checksum = .float; bits = .binary; nan = .float; infinity = .float
+  failures = 0; checksum = 86.643178900898052 * 4000.0
+  failures = failures + require(simple_ok(2380) & simple_ok(2381) = 0,'simple checksum')
+  failures = failures + require(complex_ok(3672,261205) & complex_ok(3673,261205) = 0 & complex_ok(3672,261206) = 0,'complex carry/checksum')
+  failures = failures + require(stats_ok(7.96875,4.924428900898052,72.75,1.0,checksum,4000,0.0),'statistics positive')
+  failures = failures + require(stats_ok(8.96875,4.924428900898052,72.75,1.0,checksum,4000,0.0) = 0,'wrong mean')
+  failures = failures + require(stats_ok(7.96875,5.924428900898052,72.75,1.0,checksum,4000,0.0) = 0,'wrong deviation')
+  failures = failures + require(stats_ok(7.96875,4.924428900898052,73.75,1.0,checksum,4000,0.0) = 0,'wrong covariance')
+  failures = failures + require(stats_ok(7.96875,4.924428900898052,72.75,0.0,checksum,4000,0.0) = 0,'wrong correlation')
+  failures = failures + require(stats_checksum_ok(checksum + 1.0,4000,0.0) = 0,'wrong accumulated checksum')
+  failures = failures + require(stats_checksum_ok(checksum,0,0.0) = 0 & stats_checksum_ok(checksum,9223372036854775807,0.0) = 0,'invalid count or unusable rounding allowance')
+  call binresize bits,8
+  <at..i64>(0) bits = 0x7ff8000000000000; nan = <at..f64>(0) bits
+  <at..i64>(0) bits = 0x7ff0000000000000; infinity = <at..f64>(0) bits
+  failures = failures + require(finite_float(0.0) & finite_float(1.7976931348623157e308) & finite_float(-1.7976931348623157e308),'finite boundaries')
+  failures = failures + require(finite_float(nan) = 0 & finite_float(infinity) = 0 & finite_float(-infinity) = 0,'nonfinite inputs')
+  failures = failures + require(stats_checksum_ok(nan,4000,0.0) = 0 & stats_checksum_ok(infinity,4000,0.0) = 0 & stats_checksum_ok(checksum,4000,nan) = 0,'nonfinite checksum/expectation cannot pass')
+  failures = failures + require(stats_checksum_ok(1.7976931348623157e308,2,0.0) = 0,'extreme wrong result without tolerance overflow')
+  failures = failures + require(triangular_ok(55,10) & triangular_ok(54,10) = 0 & triangular_ok(0,9223372036854775807) = 0,'triangular checksum and overflow bound')
+  failures = failures + require(stem_hits_ok(57183,64,20000) & stem_hits_ok(57184,64,20000) = 0 & stem_hits_ok(1,1,9223372036854775807) = 0,'stem hit checksum and overflow bound')
+  say 'PERFORMANCE_SMOKE_ORACLES|failures=' || failures
+  return failures
+
+require: procedure = .int
+  arg passed = .int, label = .string
+  if passed then return 0
+  say 'FAIL: performance smoke oracle' label
+  return 1

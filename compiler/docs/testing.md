@@ -224,7 +224,24 @@ owning guides; ordinary correctness does not require an instrumented functional
 matrix. Keep transient diagnostics in scratch, report conclusions in
 conversation and delete task-created logs after diagnosis.
 
-## 6. Shared byte-source and clock preparation
+## 6. Deterministic performance contracts
+
+Code-generation contracts, the superinstruction unit, performance-runner
+self-tests, RexxCPS register integrity and the stem-semantic matrix are ordinary
+qualification checks. Their topical `performance` label does not make them
+timing measurements. Each registration names its native/artifact prerequisites;
+compiler-script checks reserve six ordinary admission slots for their private,
+sequential child tools. They retain their original modes, engine and structural
+oracles. The pure performance-fixture oracle contract checks wrong results,
+NaN/infinities and count/overflow boundaries without running timed kernels.
+
+The routine measurement subset is owned by
+[`QA-PERF-SMOKE-01`](../../performance/ROADMAP.md#current-position). It runs only
+after ordinary green, independently of these deterministic checks. Existing
+full measurement registrations remain available; selecting a smoke does not
+authorize a portfolio or optimization verdict.
+
+## 7. Shared byte-source and clock preparation
 
 `ContractFixture` remains the single preparation/cache owner for expression,
 BIF, source-data and clock contracts. Extend it with exact byte sources and

@@ -1,6 +1,7 @@
 /* NR-16/17 observational stable-state workload. */
 options levelb comments_dash
 import rxfnsb
+import perfsmokeoracles
 
 arg argv = .string[]
 
@@ -95,6 +96,9 @@ end
 
 elapsed = time("us") - start
 if elapsed < 0 then elapsed = elapsed + 86400000000
+if mode == "control" | mode == "trace-off" | mode == "address-same-static" then do
+  if triangular_ok(checksum,iterations) = 0 then return fail("exact checksum")
+end
 trace off
 address crexx
 

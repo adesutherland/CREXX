@@ -2506,6 +2506,24 @@ if(BUILD_TESTING AND
                         # especially under sanitizer instrumentation.
                         RUN_SERIAL TRUE
                         TIMEOUT 120)
+                crexx_register_test_prep_targets(
+                        TESTS ${TARGET_NAME}-e6-scale-${_crexx_e6_workload}-w${_crexx_e6_workers}
+                        TARGETS ${TARGET_NAME} test_persistent_worker_executor_bin
+                                test_persistent_worker_sparse_bin)
+                # Routine smoke keeps the product embedding and the other
+                # actual dispatch engine, at serial/maximal worker counts.
+                if((_crexx_e6_workers EQUAL 1 OR _crexx_e6_workers EQUAL 8) AND
+                   (TARGET_NAME STREQUAL "persistent_worker_executor-rxvml" OR
+                    (CREXX_DEFAULT_VM_TARGET STREQUAL "rxbvm" AND
+                     TARGET_NAME STREQUAL "persistent_worker_executor-rxtvml") OR
+                    (CREXX_DEFAULT_VM_TARGET STREQUAL "rxtvm" AND
+                     TARGET_NAME STREQUAL "persistent_worker_executor-rxbvml")))
+                    set_property(TEST ${TARGET_NAME}-e6-scale-${_crexx_e6_workload}-w${_crexx_e6_workers}
+                            APPEND PROPERTY LABELS performance-smoke)
+                    set_property(GLOBAL APPEND PROPERTY CREXX_PERFORMANCE_SMOKE_TARGETS
+                            ${TARGET_NAME} test_persistent_worker_executor_bin
+                            test_persistent_worker_sparse_bin)
+                endif()
             endforeach()
         endforeach()
         if(WIN32)

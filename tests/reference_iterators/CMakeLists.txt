@@ -38,6 +38,12 @@ foreach(_crexx_runner IN ITEMS rxvm)
     endforeach()
 endforeach()
 
+# No source compiler participates in this hand-RXAS lane. The ordinary system
+# pair retains assembler-mode correctness; routine timing uses one opt image.
+set_property(TEST reference_iterator_perf_rxvm_opt APPEND PROPERTY LABELS performance-smoke)
+set_property(GLOBAL APPEND PROPERTY CREXX_PERFORMANCE_SMOKE_TARGETS
+        reference_iterator_perf_rxvm_opt_artifact rxvm rxlink)
+
 add_custom_target(reference_generated_contract ALL)
 foreach(_crexx_runner IN ITEMS rxvm)
     crexx_add_rxas_opt_matrix(

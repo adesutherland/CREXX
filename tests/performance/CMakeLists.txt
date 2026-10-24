@@ -5,6 +5,44 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 set(CLASSLIBRPATH ${CMAKE_BINARY_DIR}/bin/classlib)
 
+# One pure fixture-oracle owner, shared by the workload guards and tiny
+# ordinary wrong-result/nonfinite controls. It contains no timed kernel.
+set(_perf_smoke_oracle_base "${CMAKE_CURRENT_BINARY_DIR}/perfsmokeoracles")
+crexx_add_fixture_command(OUTPUT "${_perf_smoke_oracle_base}.rxbin"
+    BYPRODUCTS "${_perf_smoke_oracle_base}.rxas"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -o "${_perf_smoke_oracle_base}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/perf_smoke_oracles.crexx"
+    COMMAND $<TARGET_FILE:rxas> "${_perf_smoke_oracle_base}"
+    DEPENDS rxc rxas compiler_exit_bin "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+        "${CMAKE_CURRENT_SOURCE_DIR}/perf_smoke_oracles.crexx" VERBATIM)
+add_custom_target(performance_smoke_oracles DEPENDS "${_perf_smoke_oracle_base}.rxbin")
+crexx_add_import_root(performance_smoke_oracle_imports
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/imports/smoke-oracles"
+    OUTPUT_VARIABLE _perf_smoke_oracle_import_files
+    FILES "${_perf_smoke_oracle_base}.rxbin" DEPENDS performance_smoke_oracles)
+set(_perf_smoke_oracle_deps performance_smoke_oracle_imports ${_perf_smoke_oracle_import_files})
+set(_perf_smoke_oracle_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/smoke-oracles")
+set(_perf_smoke_oracle_check "${CMAKE_CURRENT_BINARY_DIR}/check_smoke_oracles")
+crexx_add_fixture_command(OUTPUT "${_perf_smoke_oracle_check}.rxbin"
+    BYPRODUCTS "${_perf_smoke_oracle_check}.rxas"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+        -i "${_perf_smoke_oracle_import_root};${CMAKE_BINARY_DIR}/bin"
+        -o "${_perf_smoke_oracle_check}" "${CMAKE_CURRENT_SOURCE_DIR}/check_smoke_oracles.crexx"
+    COMMAND $<TARGET_FILE:rxas> "${_perf_smoke_oracle_check}"
+    DEPENDS rxc rxas compiler_exit_bin "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+        library "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+        ${_perf_smoke_oracle_deps} "${CMAKE_CURRENT_SOURCE_DIR}/check_smoke_oracles.crexx" VERBATIM)
+add_custom_target(performance_smoke_oracle_contract_bin DEPENDS "${_perf_smoke_oracle_check}.rxbin")
+add_test(NAME performance_smoke_oracle_contract
+    COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}> "${_perf_smoke_oracle_check}.rxbin"
+        "${_perf_smoke_oracle_base}" "${LIBRPATH}")
+set_tests_properties(performance_smoke_oracle_contract PROPERTIES
+    LABELS "performance;qualification;qa-fixture" TIMEOUT 60
+    PASS_REGULAR_EXPRESSION "PERFORMANCE_SMOKE_ORACLES[|]failures=0"
+    FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+crexx_register_test_prep_targets(TESTS performance_smoke_oracle_contract
+    TARGETS performance_smoke_oracle_contract_bin ${CREXX_DEFAULT_VM_TARGET})
+
 # CREXXRAG-SHA256 retains the test-only A-versus-D capability decision gate.
 # It also provides the matched RXPA control used to confirm that the selected
 # production rx_hash provider has not materially changed that accepted path.
@@ -35,6 +73,7 @@ crexx_add_rexx_opt_matrix(
         NAME crexxrag_sha256_a_vs_d
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/crexxrag_sha256_a_vs_d.crexx
         TARGET_GROUP performance_crexxrag_sha256
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR}/imports/crexxrag_sha256 ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin crexxrag_sha256_imports
                 ${_crexxrag_sha256_import_files} _hash
@@ -52,8 +91,13 @@ crexx_add_rexx_opt_matrix(
         NAME inlining_simple
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_simple.crexx
         TARGET_GROUP performance_inline
-        DEPENDS library compiler_exit_bin
+        RUNNER rxvm
+        IMPORT_PATHS ${_perf_smoke_oracle_import_root}
+        DEPENDS ${_perf_smoke_oracle_deps} library compiler_exit_bin
+        RUNTIME_ARGS ${_perf_smoke_oracle_base}
         TEST_LABELS "performance;inlining"
+        REQUIRED_OUTPUT_REGEX "PASS: simple inlining smoke"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:"
 )
 
 add_custom_target(performance_reference_iterator)
@@ -147,6 +191,7 @@ foreach(_decimal_standard IN ITEMS common18 classic9)
             NAME ${_decimal_name}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/decimal/${_decimal_name}.crexx
             TARGET_GROUP performance_decimal_gate1
+            RUNNER rxvm
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             DEPENDS library compiler_exit_bin mc_decimal_dynamic db_decimal_dynamic
             RUNTIME_ARGS ${LIBRPATH} -a all 2 1
@@ -242,6 +287,7 @@ crexx_add_rexx_opt_matrix(
         NAME decimal_gate1_rexxcps_family
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rexxcps_family_controls.crexx
         TARGET_GROUP performance_decimal_gate1
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin mc_decimal_dynamic db_decimal_dynamic
         RUNTIME_ARGS ${LIBRPATH} -a decimal-string 2
@@ -317,6 +363,7 @@ crexx_add_rexx_opt_matrix(
         NAME stringtreemap_insert_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stringtreemap_insert_compare.crexx
         TARGET_GROUP performance_classlib_treemap
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library classlib compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} ${CLASSLIBRPATH}
@@ -334,6 +381,7 @@ crexx_add_rexx_opt_matrix(
         NAME binary_fastpath_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_fastpath_compare.crexx
         TARGET_GROUP performance_binary_fastpath
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH}
@@ -371,6 +419,7 @@ crexx_add_rexx_opt_matrix(
         NAME rxjson_parser_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxjson_parser_compare.crexx
         TARGET_GROUP performance_rxjson_parser
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH}
@@ -388,6 +437,7 @@ crexx_add_rexx_opt_matrix(
         NAME rxjson_numeric_materialization_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxjson_numeric_materialization_compare.crexx
         TARGET_GROUP performance_rxjson_numeric
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a 256 2
@@ -405,6 +455,7 @@ _crexx_register_runtime_test(
         PROGRAM rxjson_numeric_materialization_compare_noopt
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        PREP_TARGETS rxjson_numeric_materialization_compare_noopt_artifact rxbvm
         TEST_LABELS "performance;json;binary;cap01_j02"
 )
 _crexx_register_runtime_test(
@@ -413,6 +464,7 @@ _crexx_register_runtime_test(
         PROGRAM rxjson_numeric_materialization_compare_opt
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        PREP_TARGETS rxjson_numeric_materialization_compare_opt_artifact rxbvm rxlink
         TEST_LABELS "performance;json;binary;cap01_j02"
 )
 set_tests_properties(
@@ -428,6 +480,7 @@ crexx_add_rexx_opt_matrix(
         NAME postperf04_scalar_access_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/postperf04_scalar_access_compare.crexx
         TARGET_GROUP performance_postperf04_scalar_access
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a 256 2
@@ -445,6 +498,7 @@ _crexx_register_runtime_test(
         PROGRAM postperf04_scalar_access_compare_noopt
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        PREP_TARGETS postperf04_scalar_access_compare_noopt_artifact rxbvm
         TEST_LABELS "performance;scalar-access;postperf04"
 )
 _crexx_register_runtime_test(
@@ -453,6 +507,7 @@ _crexx_register_runtime_test(
         PROGRAM postperf04_scalar_access_compare_opt
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         RUNTIME_ARGS ${LIBRPATH} -a 256 2
+        PREP_TARGETS postperf04_scalar_access_compare_opt_artifact rxbvm rxlink
         TEST_LABELS "performance;scalar-access;postperf04"
 )
 set_tests_properties(
@@ -472,14 +527,19 @@ add_test(
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/check_postperf04_scalar_access_codegen.cmake
 )
 set_tests_properties(postperf04_scalar_access_codegen PROPERTIES
-        LABELS "performance;scalar-access;postperf04;codegen"
+        LABELS "performance;scalar-access;postperf04;codegen;qualification"
 )
+add_dependencies(performance_postperf04_scalar_access rxdas)
+crexx_register_test_prep_targets(TESTS postperf04_scalar_access_codegen
+        TARGETS postperf04_scalar_access_compare_noopt_artifact
+                postperf04_scalar_access_compare_opt_artifact rxdas)
 
 add_custom_target(performance_binary_packed_float)
 crexx_add_rexx_opt_matrix(
         NAME binary_packed_float_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_packed_float_compare.crexx
         TARGET_GROUP performance_binary_packed_float
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a 1000 2 packed-read
@@ -497,6 +557,7 @@ _crexx_register_runtime_test(
         PROGRAM binary_packed_float_compare_opt
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         RUNTIME_ARGS ${LIBRPATH} -a 1000 2 packed-read
+        PREP_TARGETS binary_packed_float_compare_opt_artifact rxbvm rxlink
         TEST_LABELS "performance;binary;packed;binary01"
 )
 set_tests_properties(binary_packed_float_compare_rxbvm_opt PROPERTIES
@@ -509,6 +570,7 @@ crexx_add_rexx_opt_matrix(
         NAME packed_numeric_class_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/packed_numeric_class_compare.crexx
         TARGET_GROUP performance_packed_numeric_class
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         RXC_FLAGS -x
         DEPENDS library classlib rxfnsg compiler_exit_bin
@@ -529,6 +591,7 @@ _crexx_register_runtime_test(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         RUNTIME_ARGS ${LIBRPATH} ${CLASSLIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg
                      -a 1000 2 wrapper-int-read
+        PREP_TARGETS packed_numeric_class_compare_opt_artifact rxbvm rxlink
         TEST_LABELS "performance;binary;packed;binary01;levelg"
 )
 set_tests_properties(packed_numeric_class_compare_rxbvm_opt PROPERTIES
@@ -580,9 +643,10 @@ crexx_add_rexx_opt_matrix(
         NAME rcc5f_rxstats_packed
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_packed.crexx
         TARGET_GROUP performance_rcc5f_rxstats
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library rxfnsg stats compiler_exit_bin
-        RUNTIME_ARGS $<TARGET_FILE:stats> ${LIBRPATH}
+        RUNNER rxvm
+        IMPORT_PATHS ${_perf_smoke_oracle_import_root} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ${_perf_smoke_oracle_deps} library rxfnsg stats compiler_exit_bin
+        RUNTIME_ARGS ${_perf_smoke_oracle_base} $<TARGET_FILE:stats> ${LIBRPATH}
                      ${CMAKE_BINARY_DIR}/bin/rxfnsg
         TEST_LABELS "performance;math;stats;packed;rcc5f"
         REQUIRED_OUTPUT_REGEX "PASS: RCC-5F packed statistics workload"
@@ -592,9 +656,10 @@ crexx_add_rexx_opt_matrix(
         NAME rcc5f_rxstats_boxed
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_boxed.crexx
         TARGET_GROUP performance_rcc5f_rxstats
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR}/imports/rcc5f ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library rcc5f_imports ${_rcc5f_import_files} compiler_exit_bin
-        RUNTIME_ARGS $<TARGET_FILE:_rcc5f_stats_boxed> ${LIBRPATH}
+        RUNNER rxvm
+        IMPORT_PATHS ${_perf_smoke_oracle_import_root} ${CMAKE_CURRENT_BINARY_DIR}/imports/rcc5f ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ${_perf_smoke_oracle_deps} library rcc5f_imports ${_rcc5f_import_files} compiler_exit_bin
+        RUNTIME_ARGS ${_perf_smoke_oracle_base} $<TARGET_FILE:_rcc5f_stats_boxed> ${LIBRPATH}
         TEST_LABELS "performance;math;stats;boxed;oracle;rcc5f"
         REQUIRED_OUTPUT_REGEX "PASS: RCC-5F boxed statistics oracle workload"
         FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
@@ -603,9 +668,10 @@ crexx_add_rexx_opt_matrix(
         NAME rcc5f_rxstats_direct
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc5f_rxstats_direct.crexx
         TARGET_GROUP performance_rcc5f_rxstats
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR}/imports/rcc5f ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library rxfnsg rcc5f_imports ${_rcc5f_import_files} compiler_exit_bin
-        RUNTIME_ARGS $<TARGET_FILE:_rcc5f_stats_direct> ${LIBRPATH}
+        RUNNER rxvm
+        IMPORT_PATHS ${_perf_smoke_oracle_import_root} ${CMAKE_CURRENT_BINARY_DIR}/imports/rcc5f ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ${_perf_smoke_oracle_deps} library rxfnsg rcc5f_imports ${_rcc5f_import_files} compiler_exit_bin
+        RUNTIME_ARGS ${_perf_smoke_oracle_base} $<TARGET_FILE:_rcc5f_stats_direct> ${LIBRPATH}
                      ${CMAKE_BINARY_DIR}/bin/rxfnsg
         TEST_LABELS "performance;math;stats;packed;direct-control;rcc5f"
         REQUIRED_OUTPUT_REGEX "PASS: RCC-5F direct statistics control"
@@ -614,15 +680,15 @@ crexx_add_rexx_opt_matrix(
 foreach(_rcc5f_variant IN ITEMS packed boxed direct)
     if(_rcc5f_variant STREQUAL "packed")
         set(_rcc5f_runtime_args $<TARGET_FILE:stats> ${LIBRPATH}
-                ${CMAKE_BINARY_DIR}/bin/rxfnsg)
+                ${CMAKE_BINARY_DIR}/bin/rxfnsg ${_perf_smoke_oracle_base})
         set(_rcc5f_pass "PASS: RCC-5F packed statistics workload")
     elseif(_rcc5f_variant STREQUAL "boxed")
         set(_rcc5f_runtime_args $<TARGET_FILE:_rcc5f_stats_boxed>
-                ${LIBRPATH})
+                ${LIBRPATH} ${_perf_smoke_oracle_base})
         set(_rcc5f_pass "PASS: RCC-5F boxed statistics oracle workload")
     else()
         set(_rcc5f_runtime_args $<TARGET_FILE:_rcc5f_stats_direct>
-                ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg)
+                ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsg ${_perf_smoke_oracle_base})
         set(_rcc5f_pass "PASS: RCC-5F direct statistics control")
     endif()
     _crexx_register_runtime_test(
@@ -631,7 +697,8 @@ foreach(_rcc5f_variant IN ITEMS packed boxed direct)
             PROGRAM rcc5f_rxstats_${_rcc5f_variant}_opt
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             RUNTIME_ARGS ${_rcc5f_runtime_args}
-            TEST_LABELS "performance;math;stats;rcc5f;rxbvm"
+            PREP_TARGETS rcc5f_rxstats_${_rcc5f_variant}_opt_artifact rxbvm rxlink
+        TEST_LABELS "performance;math;stats;rcc5f;rxbvm"
             REQUIRED_OUTPUT_REGEX ${_rcc5f_pass}
             FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
 endforeach()
@@ -672,6 +739,7 @@ crexx_add_rexx_opt_matrix(
         NAME rxvector01_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxvector01_compare.crexx
         TARGET_GROUP performance_rxvector01
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR}/imports/rxvector01 ${CMAKE_BINARY_DIR}/bin
         DEPENDS library rxfnsg vector rxvector01_imports
                 ${_rxvector01_import_files} compiler_exit_bin
@@ -686,6 +754,7 @@ crexx_add_rexx_opt_matrix(
         NAME tinyexpr_dispatch_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tinyexpr_dispatch_compare.crexx
         TARGET_GROUP performance_tinyexpr_dispatch
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_BINARY_DIR}/langtools/examples
         RXC_FLAGS -x
         DEPENDS library rxlang_example_tinyexpr compiler_exit_bin
@@ -705,6 +774,7 @@ crexx_add_rexx_opt_matrix(
         NAME jump_dispatch_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/jump_dispatch_compare.crexx
         TARGET_GROUP performance_jump_dispatch
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH}
@@ -722,6 +792,7 @@ crexx_add_rexx_opt_matrix(
         NAME runtime_interface_lookup_compare
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/runtime_interface_lookup_compare.crexx
         TARGET_GROUP performance_runtime_lookup
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH}
@@ -738,8 +809,13 @@ crexx_add_rexx_opt_matrix(
         NAME inlining_complex
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_complex.crexx
         TARGET_GROUP performance_inline
-        DEPENDS library compiler_exit_bin
+        RUNNER rxvm
+        IMPORT_PATHS ${_perf_smoke_oracle_import_root}
+        DEPENDS ${_perf_smoke_oracle_deps} library compiler_exit_bin
+        RUNTIME_ARGS ${_perf_smoke_oracle_base}
         TEST_LABELS "performance;inlining"
+        REQUIRED_OUTPUT_REGEX "PASS: complex inlining smoke"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:"
 )
 
 add_custom_target(performance_nr15_stem_semantics)
@@ -753,16 +829,16 @@ foreach(_crexx_runner IN ITEMS rxvm)
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             DEPENDS library compiler_exit_bin
             RUNTIME_ARGS ${LIBRPATH}
-            TEST_LABELS "performance;stem;nr15;semantics"
+            TEST_LABELS "performance;stem;nr15;semantics;qualification"
     )
     crexx_add_rexx_opt_matrix(
             NAME nr15_stem_access_${_crexx_runner}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr15_stem_access_compare.crexx
             TARGET_GROUP performance_nr15_stem_access
             RUNNER ${_crexx_runner}
-            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-            DEPENDS library compiler_exit_bin
-            RUNTIME_ARGS ${LIBRPATH}
+            IMPORT_PATHS ${_perf_smoke_oracle_import_root} ${CMAKE_BINARY_DIR}/bin
+            DEPENDS ${_perf_smoke_oracle_deps} library compiler_exit_bin
+            RUNTIME_ARGS ${_perf_smoke_oracle_base} ${LIBRPATH}
             TEST_LABELS "performance;stem;nr15"
     )
     foreach(_crexx_mode IN ITEMS noopt opt)
@@ -784,9 +860,9 @@ foreach(_crexx_runner IN ITEMS rxvm)
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/nr16_17_stable_state_compare.crexx
             TARGET_GROUP performance_nr16_17_stable_state
             RUNNER ${_crexx_runner}
-            IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
-            DEPENDS library compiler_exit_bin
-            RUNTIME_ARGS ${LIBRPATH} -a control 10
+            IMPORT_PATHS ${_perf_smoke_oracle_import_root} ${CMAKE_BINARY_DIR}/bin
+            DEPENDS ${_perf_smoke_oracle_deps} library compiler_exit_bin
+            RUNTIME_ARGS ${_perf_smoke_oracle_base} ${LIBRPATH} -a control 10
             TEST_LABELS "performance;trace;address;calls;nr16;nr17"
     )
     foreach(_crexx_mode IN ITEMS noopt opt)
@@ -796,5 +872,62 @@ foreach(_crexx_runner IN ITEMS rxvm)
         )
     endforeach()
 endforeach()
+
+foreach(_inline_mode IN ITEMS noopt opt)
+    set_tests_properties(inlining_simple_${_inline_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: simple inlining smoke"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+    set_tests_properties(inlining_complex_${_inline_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: complex inlining smoke"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+endforeach()
+
+# The old stable-state registration is the control lane. Exercise the two
+# advertised steady-state mechanisms with its same prepared optimized image.
+foreach(_stable_path IN ITEMS trace-off address-same-static)
+    if(_stable_path STREQUAL "trace-off")
+        set(_stable_name nr16_17_trace_off_rxvm_opt)
+    else()
+        set(_stable_name nr16_17_address_same_rxvm_opt)
+    endif()
+    _crexx_register_runtime_test(
+            NAME ${_stable_name} RUNNER rxvm
+            PROGRAM nr16_17_stable_state_rxvm_opt
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            RUNTIME_ARGS ${LIBRPATH} ${_perf_smoke_oracle_base} -a ${_stable_path} 10
+            TEST_LABELS "performance;trace;address;nr16;nr17;performance-smoke"
+            PREP_TARGETS nr16_17_stable_state_rxvm_opt_artifact rxvm rxlink
+            REQUIRED_OUTPUT_REGEX "PASS: NR-16/17 stable-state compare"
+                "(^|\n)mode=${_stable_path}(\r?\n|$)" "(^|\n)iterations=10(\r?\n|$)"
+                "(^|\n)checksum=55(\r?\n|$)"
+            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+endforeach()
+
+# Explicit nonrepresentative smoke membership. Do not automatically add a new
+# timing workload, no-opt mode or alias merely because it has a similar label.
+set(_performance_smoke_tests
+    inlining_simple_opt reference_iterator_compare_rxvm_opt
+    stringarraylist_iterator_compare_rxvm_opt stringtreemap_insert_compare_opt
+    binary_fastpath_compare_opt binary_byvalue_compare_rxvm_opt
+    rxjson_parser_compare_opt rxjson_numeric_materialization_compare_opt
+    postperf04_scalar_access_compare_opt binary_packed_float_compare_opt
+    packed_numeric_class_compare_opt rcc5f_rxstats_packed_opt
+    rcc5f_rxstats_boxed_opt rcc5f_rxstats_direct_opt rxvector01_compare_opt
+    tinyexpr_dispatch_compare_opt jump_dispatch_compare_opt
+    runtime_interface_lookup_compare_opt inlining_complex_opt
+    nr15_stem_access_rxvm_opt nr16_17_stable_state_rxvm_opt)
+add_custom_target(performance_smoke_prep)
+foreach(_performance_smoke_test IN LISTS _performance_smoke_tests)
+    set_property(TEST ${_performance_smoke_test} APPEND PROPERTY LABELS performance-smoke)
+    set_property(GLOBAL APPEND PROPERTY CREXX_PERFORMANCE_SMOKE_TARGETS
+            ${_performance_smoke_test}_artifact)
+endforeach()
+set_property(GLOBAL APPEND PROPERTY CREXX_PERFORMANCE_SMOKE_TARGETS rxvm rxlink)
+function(_crexx_finalize_performance_smoke_prep)
+    get_property(_smoke_targets GLOBAL PROPERTY CREXX_PERFORMANCE_SMOKE_TARGETS)
+    list(REMOVE_DUPLICATES _smoke_targets)
+    add_dependencies(performance_smoke_prep ${_smoke_targets})
+endfunction()
+cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" CALL _crexx_finalize_performance_smoke_prep)
 
 crexx_finalize_directory_qa_tiers()

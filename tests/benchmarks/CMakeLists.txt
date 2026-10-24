@@ -139,8 +139,11 @@ add_test(
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/check_rexxcps_decimal_registers.cmake
 )
 set_tests_properties(benchmark_rexxcps_decimal_register_integrity PROPERTIES
-        LABELS "benchmark;performance;decimal;optimizer-integrity;rexxcps-control"
+        LABELS "benchmark;performance;decimal;optimizer-integrity;rexxcps-control;qualification"
 )
+
+crexx_register_test_prep_targets(TESTS benchmark_rexxcps_decimal_register_integrity
+        TARGETS benchmark_rexxcps_levelb_opt_artifact)
 
 crexx_add_rexx_opt_matrix(
         NAME benchmark_rexxcps_levelb_opaque
@@ -178,10 +181,11 @@ crexx_add_rexx_opt_matrix(
         NAME nr03_evidence_tool_selftest
         SOURCE ${CMAKE_SOURCE_DIR}/performance/tools/run_evidence_bundle.crexx
         TARGET_GROUP language_benchmarks
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a --self-test
-        TEST_LABELS "benchmark;runner;performance"
+        TEST_LABELS "benchmark;runner;performance;qualification"
         REQUIRED_OUTPUT_REGEX "PASS: NR-03 evidence tool self-test"
         FORBIDDEN_OUTPUT_REGEX "ERROR:|FAIL:|PANIC:"
 )
@@ -190,10 +194,11 @@ crexx_add_rexx_opt_matrix(
         NAME nr10_cross_runtime_matrix_selftest
         SOURCE ${CMAKE_SOURCE_DIR}/performance/tools/run_cross_runtime_matrix.crexx
         TARGET_GROUP language_benchmarks
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a --self-test
-        TEST_LABELS "benchmark;runner;performance"
+        TEST_LABELS "benchmark;runner;performance;qualification"
         REQUIRED_OUTPUT_REGEX "PASS: compact cross-runtime matrix tool self-test"
         FORBIDDEN_OUTPUT_REGEX "ERROR:|FAIL:|PANIC:"
 )
@@ -202,10 +207,11 @@ crexx_add_rexx_opt_matrix(
         NAME nr10_lifecycle_tool_selftest
         SOURCE ${CMAKE_SOURCE_DIR}/performance/tools/run_lifecycle.crexx
         TARGET_GROUP language_benchmarks
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a --self-test
-        TEST_LABELS "benchmark;runner;performance"
+        TEST_LABELS "benchmark;runner;performance;qualification"
         REQUIRED_OUTPUT_REGEX "PASS: lifecycle tool self-test"
         FORBIDDEN_OUTPUT_REGEX "ERROR:|FAIL:|PANIC:"
 )
@@ -214,10 +220,11 @@ crexx_add_rexx_opt_matrix(
         NAME nr10_artifact_inventory_selftest
         SOURCE ${CMAKE_SOURCE_DIR}/performance/tools/inventory_performance_artifacts.crexx
         TARGET_GROUP language_benchmarks
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a --self-test
-        TEST_LABELS "benchmark;runner;performance"
+        TEST_LABELS "benchmark;runner;performance;qualification"
         REQUIRED_OUTPUT_REGEX "PASS: performance artifact inventory self-test"
         FORBIDDEN_OUTPUT_REGEX "ERROR:|FAIL:|PANIC:"
 )
@@ -226,10 +233,11 @@ crexx_add_rexx_opt_matrix(
         NAME perf3_fusion_inventory_selftest
         SOURCE ${CMAKE_SOURCE_DIR}/performance/tools/inventory_fusions.crexx
         TARGET_GROUP language_benchmarks
+        RUNNER rxvm
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a --self-test
-        TEST_LABELS "benchmark;runner;performance;fusion"
+        TEST_LABELS "benchmark;runner;performance;fusion;qualification"
         REQUIRED_OUTPUT_REGEX "PASS: fusion inventory tool self-test"
         FORBIDDEN_OUTPUT_REGEX "ERROR:|FAIL:|PANIC:"
 )
@@ -258,11 +266,6 @@ crexx_label_smoke_tests(
         benchmark_parse_frozen_opt
         benchmark_rexxcps_levelb_opt
         benchmark_rexxcps_levelb_opaque_opt
-        benchmark_runner_opt
-        nr03_evidence_tool_selftest_opt
-        nr10_cross_runtime_matrix_selftest_opt
-        nr10_lifecycle_tool_selftest_opt
-        nr10_artifact_inventory_selftest_opt
-        perf3_fusion_inventory_selftest_opt)
+        benchmark_runner_opt)
 
 crexx_finalize_directory_qa_tiers()

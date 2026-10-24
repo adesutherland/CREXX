@@ -1,6 +1,7 @@
 /* NR-15 observational stem/string-access workload. */
 options levelb comments_dash
 import rxfnsb
+import perfsmokeoracles
 
 arg argv = .string[]
 
@@ -133,6 +134,9 @@ select
 end
 
 elapsed = time("us") - start
+if mode == "get-hit" then do
+  if stem_hits_ok(checksum,size,iterations) = 0 then return fail("get-hit exact checksum")
+end
 if elapsed < 0 then elapsed = elapsed + 86400000000
 if checksum <= 0 then return fail("checksum")
 

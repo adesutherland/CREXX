@@ -1,0 +1,81 @@
+/* Pure fixture predicates; no timed work or production runtime algorithm. */
+options levelb floats_binary
+namespace perfsmokeoracles expose simple_ok complex_ok stats_ok stats_checksum_ok triangular_ok stem_hits_ok finite_float
+
+simple_ok: procedure = .int
+  arg checksum = .int
+  /* 20,000,000 additions of seven, reduced by 999,983. */
+  return checksum = 2380
+
+complex_ok: procedure = .int
+  arg carry = .int, checksum = .int
+  /* Two 5,000,000-step arithmetic progressions add 14, then 29.
+   * Carry residues are 1,207 and 3,672; the sum residue is 261,205.
+   * The kernel's final checksum bound makes that residue unique. */
+  return carry = 3672 & checksum = 261205
+
+finite_float: procedure = .int
+  arg value = .float
+  return value >= -1.7976931348623157e308 & value <= 1.7976931348623157e308
+
+close: procedure = .int
+  arg actual = .float, expected = .float, relative = .float
+  scale = .float; magnitude = .float; difference = .float
+  if finite_float(actual) = 0 | finite_float(expected) = 0 | finite_float(relative) = 0 then return 0
+  if relative < 0.0 | relative >= 1.0 then return 0
+  scale = actual; if scale < 0.0 then scale = -scale
+  magnitude = expected; if magnitude < 0.0 then magnitude = -magnitude
+  if magnitude > scale then scale = magnitude
+  if scale < 1.0 then scale = 1.0
+  /* Normalize before subtracting: opposite finite extremes cannot overflow. */
+  difference = actual / scale - expected / scale
+  return difference >= -relative & difference <= relative
+
+stats_checksum_ok: procedure = .int
+  arg checksum = .float, iterations = .int, offset = .float
+  count = .float; expected = .float; relative = .float
+  if iterations < 1 | finite_float(checksum) = 0 | finite_float(offset) = 0 then return 0
+  count = iterations as .float
+  expected = offset + 7.96875 + 4.924428900898052 + 72.75 + 1.0
+  /* Four additions per direct-control round, with a twofold rounding margin.
+   * Compare per-round values, avoiding an overflowing expected total. */
+  relative = (8.0 * count + 8.0) * 2.2204460492503131e-16
+  return close(checksum / count,expected,relative)
+
+stats_ok: procedure = .int
+  arg mean = .float, deviation = .float, covariance = .float, correlation = .float, ,
+      checksum = .float, iterations = .int, offset = .float
+  /* Fifteen full 0..16 cycles and one extra zero: sum=2040, squares=22440.
+   * With 256 samples, variance=24.25; y=3*x+7. */
+  return close(mean,offset + 7.96875,0.000000000001) & ,
+      close(deviation,4.924428900898052,0.000000000001) & ,
+      close(covariance,72.75,0.000000000001) & ,
+      close(correlation,1.0,0.000000000001) & ,
+      stats_checksum_ok(checksum,iterations,offset)
+
+triangular_ok: procedure = .int
+  arg checksum = .int, iterations = .int
+  left = .int; right = .int
+  if iterations < 1 | iterations > 4294967295 then return 0
+  left = iterations; right = iterations + 1
+  if left <mod> 2 = 0 then left = left <idiv> 2
+  else right = right <idiv> 2
+  return checksum = left * right
+
+stem_hits_ok: procedure = .int
+  arg checksum = .int, size = .int, iterations = .int
+  cycles = .int; tail = .int; expected = .int; index = .int
+  remaining = .int; digits = .int; occurrences = .int; width = .int
+  if size < 1 | iterations < 1 then return 0
+  cycles = iterations <idiv> size; tail = iterations <mod> size; expected = 0
+  do index = 1 to size
+    digits = 1; remaining = index
+    do while remaining >= 10
+      remaining = remaining <idiv> 10; digits = digits + 1
+    end
+    width = digits + 1; occurrences = cycles
+    if index <= tail then occurrences = occurrences + 1
+    if occurrences > ((9223372036854775807 - expected) <idiv> width) then return 0
+    expected = expected + occurrences * width
+  end
+  return checksum = expected

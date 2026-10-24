@@ -379,7 +379,8 @@ add_executable(test_rxcp_super_combiner test_rxcp_super_combiner.c)
 target_link_libraries(test_rxcp_super_combiner PRIVATE rxclib)
 target_include_directories(test_rxcp_super_combiner PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
 add_test(NAME rxcp_super_combiner COMMAND test_rxcp_super_combiner)
-set_tests_properties(rxcp_super_combiner PROPERTIES LABELS "compiler;performance;nr09")
+set_tests_properties(rxcp_super_combiner PROPERTIES LABELS "compiler;performance;nr09;qualification")
+crexx_register_test_prep_targets(TESTS rxcp_super_combiner TARGETS test_rxcp_super_combiner)
 
 # Compiler flags for optimization levels
 # Based on rxcpmain.c: -n is for No Optimising, and it's on by default.
@@ -1651,7 +1652,8 @@ add_test(NAME nr06_codegen_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr06_codegen_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr06_codegen_contract.cmake)
 set_tests_properties(nr06_codegen_contract PROPERTIES
-        LABELS "compiler;performance")
+        LABELS "compiler;performance;qualification")
+crexx_register_test_prep_targets(TESTS nr06_codegen_contract TARGETS rxc compiler_exit_bin library)
 
 add_test(NAME call_window_lifetimes_codegen
          COMMAND ${CMAKE_COMMAND}
@@ -1738,7 +1740,8 @@ add_test(NAME nr09_numeric_context_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr09_numeric_context_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_numeric_context_contract.cmake)
 set_tests_properties(nr09_numeric_context_contract PROPERTIES
-        LABELS "compiler;performance;numeric")
+        LABELS "compiler;performance;numeric;qualification")
+crexx_register_test_prep_targets(TESTS nr09_numeric_context_contract TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 
 add_test(NAME nr09_codegen_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1752,7 +1755,8 @@ add_test(NAME nr09_codegen_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr09_codegen_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_codegen_contract.cmake)
 set_tests_properties(nr09_codegen_contract PROPERTIES
-        LABELS "compiler;performance")
+        LABELS "compiler;performance;qualification")
+crexx_register_test_prep_targets(TESTS nr09_codegen_contract TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 
 add_test(NAME nr26_flow_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1765,7 +1769,8 @@ add_test(NAME nr26_flow_contract
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr26_flow_contract_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr26_flow_contract.cmake)
 set_tests_properties(nr26_flow_contract PROPERTIES
-        LABELS "compiler;performance;flow")
+        LABELS "compiler;performance;flow;qualification")
+crexx_register_test_prep_targets(TESTS nr26_flow_contract TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 
 add_test(NAME perf2_04_inline_assembler_effects
          COMMAND ${CMAKE_COMMAND}
@@ -1778,7 +1783,8 @@ add_test(NAME perf2_04_inline_assembler_effects
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/perf2_04_inline_assembler_effects_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_04_inline_assembler_effects.cmake)
 set_tests_properties(perf2_04_inline_assembler_effects PROPERTIES
-        LABELS "compiler;performance;inlining;perf2_04")
+        LABELS "compiler;performance;inlining;perf2_04;qualification")
+crexx_register_test_prep_targets(TESTS perf2_04_inline_assembler_effects TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 
 add_test(NAME perf2_04_inline_assembler_imports
          COMMAND ${CMAKE_COMMAND}
@@ -1792,7 +1798,8 @@ add_test(NAME perf2_04_inline_assembler_imports
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/perf2_04_inline_assembler_imports_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_04_inline_assembler_imports.cmake)
 set_tests_properties(perf2_04_inline_assembler_imports PROPERTIES
-        LABELS "compiler;performance;imports;inlining;perf2_04")
+        LABELS "compiler;performance;imports;inlining;perf2_04;qualification")
+crexx_register_test_prep_targets(TESTS perf2_04_inline_assembler_imports TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 
 add_test(NAME perf2_04_certified_call
          COMMAND ${CMAKE_COMMAND}
@@ -1810,7 +1817,8 @@ add_test(NAME perf2_04_certified_call
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/perf2_04_certified_call_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_04_certified_call.cmake)
 set_tests_properties(perf2_04_certified_call PROPERTIES
-        LABELS "compiler;performance;constants;imports;perf2_04")
+        LABELS "compiler;performance;constants;imports;perf2_04;qualification")
+crexx_register_test_prep_targets(TESTS perf2_04_certified_call TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 
 add_test(NAME perf2_05_partial_call
          COMMAND ${CMAKE_COMMAND}
@@ -1824,7 +1832,8 @@ add_test(NAME perf2_05_partial_call
                  -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/perf2_05_partial_call_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_05_partial_call.cmake)
 set_tests_properties(perf2_05_partial_call PROPERTIES
-        LABELS "compiler;performance;constants;inlining;perf2_05")
+        LABELS "compiler;performance;constants;inlining;perf2_05;qualification")
+crexx_register_test_prep_targets(TESTS perf2_05_partial_call TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 
 add_test(NAME perf2_07_v3_representation
          COMMAND ${CMAKE_COMMAND}
@@ -1838,7 +1847,8 @@ add_test(NAME perf2_07_v3_representation
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/perf2_07_v3_representation_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_07_v3_representation.cmake)
 set_tests_properties(perf2_07_v3_representation PROPERTIES
-        LABELS "compiler;interpreter;representation;reference;performance;perf2_07")
+        LABELS "compiler;interpreter;representation;reference;performance;perf2_07;qualification")
+crexx_register_test_prep_targets(TESTS perf2_07_v3_representation TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 
 add_test(NAME perf2_07_binary_byvalue_contract
          COMMAND ${CMAKE_COMMAND}
@@ -1856,7 +1866,8 @@ add_test(NAME perf2_07_binary_byvalue_contract
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/perf2_07_binary_byvalue_ws
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/perf2_07_binary_byvalue_contract.cmake)
 set_tests_properties(perf2_07_binary_byvalue_contract PROPERTIES
-        LABELS "compiler;interpreter;binary;inlining;performance;perf2_07")
+        LABELS "compiler;interpreter;binary;inlining;performance;perf2_07;qualification")
+crexx_register_test_prep_targets(TESTS perf2_07_binary_byvalue_contract TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library rxdas)
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
@@ -4263,7 +4274,8 @@ add_test(NAME inline_late_profitability_guard
                  -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_late_profitability_guard_ws
                  -P ${CMAKE_SOURCE_DIR}/cmake/CheckInlineLateProfitability.cmake)
 set_tests_properties(inline_late_profitability_guard PROPERTIES
-        LABELS "compiler;inlining;performance;regression")
+        LABELS "compiler;inlining;performance;regression;qualification")
+crexx_register_test_prep_targets(TESTS inline_late_profitability_guard TARGETS rxc rxas rxvm rxbvm compiler_exit_bin library)
 add_crexx_run_test(flow_copy_fixed_point_inline_result rexx_src/flow_copy_fixed_point_inline_result.crexx)
 add_test(
         NAME flow_copy_fixed_point_inline_result_contract
@@ -4275,7 +4287,26 @@ add_test(
                 -P ${CMAKE_CURRENT_SOURCE_DIR}/flow_copy_fixed_point_inline_result_contract.cmake
 )
 set_tests_properties(flow_copy_fixed_point_inline_result_contract
-                     PROPERTIES LABELS "compiler;flow;performance")
+                     PROPERTIES LABELS "compiler;flow;performance;qualification")
+crexx_register_test_prep_targets(TESTS flow_copy_fixed_point_inline_result_contract TARGETS rxc compiler_exit_bin library)
+
+# Ordinary child-tool admission; native-audit scheduling keeps its existing policy.
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+    set_tests_properties(
+        nr06_codegen_contract
+        nr09_numeric_context_contract
+        nr09_codegen_contract
+        nr26_flow_contract
+        perf2_04_inline_assembler_effects
+        perf2_04_inline_assembler_imports
+        perf2_04_certified_call
+        perf2_05_partial_call
+        perf2_07_v3_representation
+        perf2_07_binary_byvalue_contract
+        inline_late_profitability_guard
+        flow_copy_fixed_point_inline_result_contract
+        PROPERTIES PROCESSORS 6)
+endif()
 add_crexx_run_test(inline_test_ref_opt rexx_src/inline_test_ref_opt.crexx)
 add_crexx_run_test(inline_test_ref_indexed rexx_src/inline_test_ref_indexed.crexx)
 add_crexx_run_test(inline_test_ref_stem rexx_src/inline_test_ref_stem.crexx)

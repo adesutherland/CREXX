@@ -16,6 +16,64 @@ ledgers and superseded runs are available in Git history.
 
 ## Current Position
 
+**QA-PERF-SMOKE-01 — approved routine scope; qualification pending.** Ordinary
+correctness precedes timing. Explicit qualification keeps the 27 deterministic
+code-generation, runner self-test and stem-semantic cells in ordinary QA,
+alongside the existing 82 performance-related qualification cells. Their exact
+producer/native prerequisites remain owned by their registrations.
+
+The nonrepresentative routine smoke selects one optimized cell for each of the
+21 source workload families, the optimized hand-RXAS reference iterator, and
+two short TRACE/ADDRESS paths sharing the stable-state image. E6 selects spin
+and churn at one/eight workers on the product embedding and the other concrete
+engine: 32 cells on dual-engine hosts, 28 on a single-engine host. Timing is
+serial between processes; E6's internal concurrency remains intentional. The
+full measurement route retains all timing registrations (79 in the current
+dual-engine catalogue). Neither route is a portfolio,
+cross-runtime comparison or optimization verdict, and RexxCPS performance
+comparison is outside this mechanism smoke; its ordinary correctness controls
+remain registered.
+
+Omitted primary no-opt cells couple compiler/assembler modes, rather than
+providing an independent four-way producer matrix. Ordinary compiler contracts,
+float-folding and loop-cleanup controls retain the independent producer risks.
+The hand-RXAS no-opt omission is assembler-only and retains the ordinary
+reference-system pair. Nine secondary bytecode-VM timing cells are omitted:
+timing for those families is product-only; ordinary JSON projection, packed
+numeric, statistics/vector and reference controls retain both-engine correctness.
+E6 covers runtime/engine scheduling, not numerical throughput. Its duplicate
+product-concrete embedding and intermediate two/four-worker timings remain in
+the full route; ordinary embedding, sparse/native-return and eight-worker
+topology controls remain.
+
+Canonical kernels, data and arguments stay unchanged. Independent guards run
+outside timed regions: the fixed inlining loops require their arithmetic
+checksums; the 256-observation statistics fixture has mean `offset+7.96875`,
+sample variance `24.25`, covariance `72.75` and correlation `1`. Checksum
+tolerance accounts for repeated binary rounding, not elapsed speed. Guards
+reject nonfinite values, invalid counts and overflow-prone expectations. A tiny
+ordinary contract exercises the maintained predicates with correct and wrong
+results, NaN and infinities without executing timed kernels.
+
+1. **QA-PERF-AC01 — todo:** deterministic cells and guard controls participate
+   in the frozen ordinary baseline; original semantic oracles remain intact.
+2. **QA-PERF-AC02 — todo:** discovered smoke names/counts and cold preparation
+   match explicit artifact, VM/provider and import owners; no ALL fallback.
+3. **QA-PERF-AC03 — todo:** after ordinary green, the selected profiling-off
+   Release smoke completes serially with every result guard, retaining platform,
+   mode and product-only timing limits. No speed conclusion follows.
+
+1. **QA-PERF-STEP01 — done:** record the approved scope, axes and oracle
+   contracts here before owner-local fixture/registration edits.
+2. **QA-PERF-STEP02 — done:** implement owner-local classification, prerequisites,
+   shared pure fixture predicates and the explicit smoke selection; serves AC01–02.
+3. **QA-PERF-STEP03 — done:** peer-review source, centrally check bounded guard
+   negatives and preparation metadata, then freeze these source inputs for
+   ordinary QA; serves AC01–02. Full baseline and cold Release preparation
+   remain open under those criteria.
+4. **QA-PERF-STEP04 — todo:** execute only the selected Release smoke after
+   ordinary green, report its cost/limits and delete temporary output; serves AC03.
+
 **LEVELC-TARGET-01 — approved C-only infrastructure direction (19 October).** The
 [compiler architecture](../research/level-l/compilers/doc/architecture.md#optimisation-ownership)
 and [delivery plan](../research/level-l/compilers/PLAN.md#c-first-delivery-milestone)

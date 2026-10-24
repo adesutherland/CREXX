@@ -1,5 +1,6 @@
 /* Focused local-inlining benchmark: small multi-argument helper with modest control flow */
 options levelb
+import perfsmokeoracles
 
 iterations = 10000000
 
@@ -13,10 +14,15 @@ do i = 1 to iterations
     checksum = checksum - 999983
 end
 
+if complex_ok(carry,checksum) = 0 then do
+  say "FAIL: complex inlining carry/checksum" carry checksum
+  return 1
+end
 say "benchmark=inlining_complex"
 say "iterations="iterations
 say "carry="carry
 say "checksum="checksum
+say "PASS: complex inlining smoke"
 
 return 0
 

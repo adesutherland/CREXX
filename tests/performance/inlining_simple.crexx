@@ -1,5 +1,6 @@
 /* Focused local-inlining benchmark: tiny single-argument helper in a large loop */
 options levelb
+import perfsmokeoracles
 
 iterations = 20000000
 
@@ -11,9 +12,14 @@ do i = 1 to iterations
     checksum = checksum - 999983
 end
 
+if simple_ok(checksum) = 0 then do
+  say "FAIL: simple inlining checksum" checksum
+  return 1
+end
 say "benchmark=inlining_simple"
 say "iterations="iterations
 say "checksum="checksum
+say "PASS: simple inlining smoke"
 
 return 0
 
