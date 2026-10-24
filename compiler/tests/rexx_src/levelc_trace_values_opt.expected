@@ -28,6 +28,7 @@
        >L>   "a b"
     14 *-* say a b
        >V>   "a"
+       >V>   "b"
        >O>   "a b"
 a b
     15 *-* call child 'é'

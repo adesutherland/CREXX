@@ -118,7 +118,7 @@ say "=== Query with Error Handling Example ==="
 /* Print column headers */
   cols = odbc_columns()
   coln=""
-  do col = 1 to cols
+  do col = .int(1) to cols
      coln=coln||right(odbc_colname(col),16)" "
   end
   say coln
@@ -145,15 +145,15 @@ say "=== Query with Error Handling Example ==="
   /* Print column headers */
   cols = odbc_columns()
   coln=""
-  do col = 1 to cols
+  do col = .int(1) to cols
      coln=coln||right(odbc_colname(col),16)" "
   end
   say coln
   say copies('-',33)
   /* Fetch and display results */
   do while odbc_fetch() = 0
-     colx=''
-     do coli = 1 to cols
+     colx=.string('')
+     do coli = .int(1) to cols
         colx=colx||right(odbc_getcolumn(coli),16)" "
      end
      say  colx

@@ -18,9 +18,11 @@ typedef struct rxvm_parse_binding {
 } rxvm_parse_binding;
 
 /* Compiled DECL_ONLY from the same seven definitions as the runtime binding.
- * Immutable records are imported per compiler request, never registered in
- * process-global compiler callback lists. This is not an installed API. */
+ * Binutils owns the shared declaration objects. Immutable records are imported
+ * per compiler request and queried by the linker, never registered in global
+ * compiler callback lists. This is not an installed API. */
 extern const rxvm_parse_binding rxvm_parse_cursor_bindings[];
 extern const size_t rxvm_parse_cursor_binding_count;
+extern const char rxvm_parse_cursor_provider_id[];
 void rxvm_parse_cursor_init(void);
 #endif

@@ -178,14 +178,16 @@ static int unavailable_declaration(const char *artifact, const char *callable,
 static void check_optional_native_tail(void) {
     rxpa_host_services_v1 host;
     size_t boundary, prefix_size = offsetof(rxpa_host_services_v1, native_declaration);
+    size_t field_end = prefix_size + sizeof(host.native_declaration);
     rxpa_host_services_v1 *prefix = malloc(prefix_size);
     memset(&host, 0, sizeof(host)); host.struct_size = sizeof(host);
     host.abi_version = RXPA_HOST_SERVICES_ABI_V1; host.native_declaration = unavailable_declaration;
     CHECK(rxpa_host_has_native_declaration(&host));
     CHECK(!rxpa_host_has_native_declaration(NULL));
-    for (boundary = prefix_size; boundary < sizeof(host); ++boundary) {
+    for (boundary = prefix_size; boundary < field_end; ++boundary) {
         host.struct_size = boundary; CHECK(!rxpa_host_has_native_declaration(&host));
     }
+    host.struct_size = field_end; CHECK(rxpa_host_has_native_declaration(&host));
     host.struct_size = sizeof(host); host.abi_version = RXPA_HOST_SERVICES_ABI_V1 + 1u;
     CHECK(!rxpa_host_has_native_declaration(&host));
     host.abi_version = RXPA_HOST_SERVICES_ABI_V1;
@@ -195,6 +197,33 @@ static void check_optional_native_tail(void) {
         CHECK(!rxpa_host_has_native_declaration(prefix)); free(prefix);
     }
     host.native_declaration = NULL; CHECK(!rxpa_host_has_native_declaration(&host));
+}
+static int unavailable_resource_view(rxpa_attribute_value working_directory) {
+    (void)working_directory; return -1;
+}
+static void check_optional_resource_tail(void) {
+    rxpa_host_services_v1 host;
+    size_t boundary, prefix_size = offsetof(rxpa_host_services_v1, resource_view);
+    size_t field_end = prefix_size + sizeof(host.resource_view);
+    rxpa_host_services_v1 *prefix = malloc(prefix_size);
+    memset(&host, 0, sizeof(host)); host.struct_size = sizeof(host);
+    host.abi_version = RXPA_HOST_SERVICES_ABI_V1; host.resource_view = unavailable_resource_view;
+    CHECK(rxpa_host_has_resource_view(&host));
+    CHECK(!rxpa_host_has_resource_view(NULL));
+    CHECK(!rxpa_host_has_native_declaration(&host));
+    for (boundary = prefix_size; boundary < field_end; ++boundary) {
+        host.struct_size = boundary; CHECK(!rxpa_host_has_resource_view(&host));
+    }
+    host.struct_size = field_end; CHECK(rxpa_host_has_resource_view(&host));
+    host.abi_version = RXPA_HOST_SERVICES_ABI_V1 + 1u;
+    CHECK(!rxpa_host_has_resource_view(&host));
+    host.abi_version = RXPA_HOST_SERVICES_ABI_V1;
+    CHECK(prefix != NULL);
+    if (prefix) {
+        memcpy(prefix, &host, prefix_size); prefix->struct_size = prefix_size;
+        CHECK(!rxpa_host_has_resource_view(prefix)); free(prefix);
+    }
+    host.resource_view = NULL; CHECK(!rxpa_host_has_resource_view(&host));
 }
 typedef struct concurrent_case { const char *library, *fixture; int identity; } concurrent_case;
 #ifdef _WIN32
@@ -290,6 +319,7 @@ int main(int argc, char **argv) {
     }
     if (argc != 3) return 2;
     check_optional_native_tail();
+    check_optional_resource_tail();
     memset(&s, 0, sizeof(s)); ctx = rxvml_create(NULL, 0); s.other = rxvml_create(NULL, 0);
     CHECK(ctx && s.other); if (!ctx || !s.other) return 1;
     CHECK(rxvml_request_interrupt(ctx) == -1);

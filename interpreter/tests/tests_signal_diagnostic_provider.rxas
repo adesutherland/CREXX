@@ -1,0 +1,7 @@
+.globals=0
+
+prefix() .locals=0
+    ret
+
+probe() .locals=0 .expose=diagforeign.probe
+    ret

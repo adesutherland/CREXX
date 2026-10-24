@@ -557,6 +557,14 @@ struct stack_frame {
  * thread.  The TLS locator in rxvmactive.c contains no VM state: it only
  * identifies this context after the worker-affinity check has succeeded.
  */
+typedef struct rxvm_diagnostic_callout_scope {
+    struct rxvm_diagnostic_callout_scope *previous;
+    struct rxvm_context *context;
+    stack_frame *frame;
+    rxinteger module_number, address;
+    unsigned char has_callsite;
+} rxvm_diagnostic_callout_scope;
+
 typedef struct rxvm_active_state {
     void *rxvml_context;
     void *rxpa_context;
@@ -578,6 +586,8 @@ typedef struct rxvm_active_state {
     rxvm_invocation_boundary *invocation_boundary; /* Stack-scoped native entry. */
     value *invocation_fault_sink; /* Scoped checked-entry initializer failure. */
     proc_runtime *invocation_fault_entry; /* Exact initializer run owner. */
+    value *callback_diagnostic; /* This synchronous callback's private owner. */
+    rxvm_diagnostic_callout_scope *diagnostic_callout;
 } rxvm_active_state;
 
 /* Runtime context */
@@ -723,7 +733,18 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
                                   const char *method_descriptor,
                                   size_t argc,
                                   value **args,
-                                  value *result);
+                                  value *result,
+                                  value *diagnostic_out);
+
+/* Private signal-container ownership; never copies visible payload fields. */
+void rxvm_signal_diagnostic_copy(value *destination, const value *source);
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+void rxvm_signal_diagnostic_test_fail_after(size_t operations);
+void rxvm_signal_diagnostic_test_reset(void);
+int rxvm_signal_diagnostic_test_state(const value *container);
+size_t rxvm_signal_diagnostic_test_count(const value *container);
+size_t rxvm_signal_diagnostic_test_live_owners(void);
+#endif
 
 /* Function to call a native RXPA (CREXX Plugin Architecture) function */
 void rxvm_callfunc_direct(void* function, int args, value** argv,

@@ -190,6 +190,7 @@ crexx_add_fixture_command(
     "${CMAKE_BINARY_DIR}/bin/library"
     "${CMAKE_BINARY_DIR}/bin/classlib"
     "${CMAKE_BINARY_DIR}/bin/rxfnsc"
+    "${CMAKE_BINARY_DIR}/bin/rxunicode-core"
     "${CMAKE_BINARY_DIR}/bin/rexxscript"
   COMMAND $<TARGET_FILE:rxcpack> -o RexxScriptRunner RexxScriptRunner_linked
   DEPENDS
@@ -200,6 +201,8 @@ crexx_add_fixture_command(
     library
     classlib
     rxfnsc
+    rxunicode_core
+    "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin"
     rexxscript
     rexxscript_runner_imports
     ${REXXSCRIPT_RUNNER_IMPORT_FILES}
@@ -211,6 +214,10 @@ crexx_add_fixture_command(
 
 add_executable(rexxscript_cli "${REXXSCRIPT_RUNNER_C}")
 set_target_properties(rexxscript_cli PROPERTIES OUTPUT_NAME rexxscript)
+# The embedded rxfnsc image retains Classic stream and filesystem providers.
+# Load them before their VM/RXPA services for GNU archive link ordering.
+configure_linker_for_static_lib(rexxscript_cli cstream)
+configure_linker_for_static_lib(rexxscript_cli fs)
 target_link_libraries(rexxscript_cli rxvml rxpashim)
 add_dependencies(rexxscript_cli rxvme rxvml rxpa avl_tree platform)
 

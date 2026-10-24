@@ -172,7 +172,7 @@ int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
     } else {
         full_file_name = malloc(strlen(dir) + strlen(file_name) + 2u);
         if (!full_file_name) return -1;
-        sprintf(full_file_name, "%s/%s", dir, file_name);
+        snprintf(full_file_name, strlen(dir) + strlen(file_name) + 2u, "%s/%s", dir, file_name);
         free_full_file_name = 1;
     }
 
@@ -206,7 +206,7 @@ int rxpa_open_plugin(char *dir, char *file_name, rxpa_loaded_plugin *plugin) {
             if (free_full_file_name) free(full_file_name);
             return -1;
         }
-        sprintf(relative_path, "./%s", full_file_name);
+        snprintf(relative_path, strlen(full_file_name) + 3u, "./%s", full_file_name);
         if (free_full_file_name) free(full_file_name);
         full_file_name = relative_path;
         free_full_file_name = 1;

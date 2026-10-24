@@ -1046,6 +1046,7 @@ static Scope *inline_find_callsite_instance_scope(ASTNode *call_node) {
             (inline_callable_is_method(association) || association->node_type == FACTORY) &&
             node->scope) {
             ASTNode lookup_node;
+            Scope *scope;
             const char *name;
 
             name = association->node_type == FACTORY ? "\xc2\xa7" "factory" : "\xc2\xa7" "this";
@@ -1053,7 +1054,21 @@ static Scope *inline_find_callsite_instance_scope(ASTNode *call_node) {
             lookup_node.node_string = (char *)name;
             lookup_node.node_string_length = strlen(name);
 
-            if (sym_lrsv(node->scope, &lookup_node)) return node->scope;
+            /* A caller capture can live in a nested DO/IF scope without its
+             * own reserved instance symbol. Keep its explicit callable
+             * association authoritative before considering a generated
+             * callee block further up the AST. Only a scope owned by that
+             * callable (or its inline clone) can supply the instance. */
+            for (scope = node->scope; scope; scope = scope->parent) {
+                ASTNode *defining_node;
+
+                defining_node = scope->defining_node;
+                if (defining_node &&
+                    (defining_node == association ||
+                     defining_node->association == association) &&
+                    sym_lrsv(scope, &lookup_node)) return scope;
+                if (inline_node_is_callable_def(defining_node)) break;
+            }
         }
 
         node = node->parent;

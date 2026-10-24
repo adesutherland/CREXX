@@ -1,0 +1,16 @@
+/* Mandatory native bindings need the VM archive, with no provider archive. */
+options levelb
+import rxparse
+import rxinvoke
+
+main: procedure = .int
+  cursor = .rxparse..cursor('x:y','50020C0003000200010000000101070000000101'x as .binary)
+  if cursor.next() <> 2 then return 1
+  call cursor.supply(':')
+  if cursor.next() <> 1 | cursor.text() <> 'x' then return 2
+  if cursor.next() <> 1 | cursor.text() <> 'y' then return 3
+  call cursor.close()
+  scalar = rxinvoke..integer(42)
+  if scalar.asint() <> 42 then return 4
+  say 'CORE_NATIVE_PACKAGE_PASS'
+  return 0

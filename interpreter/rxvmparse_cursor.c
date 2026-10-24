@@ -1,5 +1,5 @@
 /* cREXX License (MIT). Mandatory core RXPA binding for the shared PARSE kernel.
- * The compiler builds this file DECL_ONLY through its private wrapper. Keep
+ * Binutils builds this file DECL_ONLY for the compiler/linker catalogue. Keep
  * the seven binding definitions below as the single signature owner. */
 #ifndef DECL_ONLY
 /* Native compilers provide metadata-only rxpa_* shims in the same process as
@@ -21,6 +21,7 @@
 #include "rxvmparse_bindings.h"
 
 #ifdef DECL_ONLY
+const char rxvm_parse_cursor_provider_id[] = RXPA_STRINGIFY(PLUGIN_ID);
 #define PARSE_CLASS(owner) { RXVM_PARSE_BIND_CLASS, owner, 0, 0, ".unknown", 0 },
 #define PARSE_FACTORY(fn, owner, type, args) \
     { RXVM_PARSE_BIND_MEMBER, owner, "factory", "*", type, args }, \

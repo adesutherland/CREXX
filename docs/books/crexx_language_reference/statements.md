@@ -612,6 +612,10 @@ the `DO` block. `ON SIGNAL` with no names catches all maskable signals.
 `AS name` binds the current `.signal` object; if `AS` is omitted, no signal
 object is available to that handler.
 
+The maskable set includes `CLASSIC_SYNTAX` and `CLASSIC_CONDITION` from the
+Classic runtime. Catch-all handlers retain their original payload and source
+origin, including when relayed through typed B cleanup code.
+
 The existing VM `CANCEL` event (code 18) is catchable for cleanup and relay,
 including by a catch-all block. Strong `KILL` remains uncatchable and uses native
 execution teardown. Catching cancellation does not provide general finally

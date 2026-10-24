@@ -3,6 +3,7 @@
 
 options levelb
 import rxpatests
+import rxfnsb
 
 say "RXPA String Tests"
 
@@ -18,6 +19,24 @@ result = ""
 call string_concat_ref "Hello, ", "World!", result
 if result \= "Hello, World!" then do
     say 'string_concat_ref() unexpectedly returned' result
+    return 1
+end
+
+# The native provider keeps a small stack path and allocates exact larger text.
+long_first = copies('L',700)
+long_second = copies('R',900)
+expected = long_first || long_second
+result = string_concat(long_first,long_second)
+if result \= expected then do
+    say 'string_concat() did not preserve the complete long result'
+    return 1
+end
+
+# Publishing through an exposed argument must finish reading an aliased input.
+result = long_first
+call string_concat_ref result,long_second,result
+if result \= expected then do
+    say 'string_concat_ref() did not preserve the aliased long input'
     return 1
 end
 

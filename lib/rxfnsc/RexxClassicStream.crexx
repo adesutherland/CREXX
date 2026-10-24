@@ -27,6 +27,7 @@ RexxClassicStream: class
   codec_error = .boolean
   zz_process_input_eof = .boolean
   zz_process_output_dirty = .boolean
+  zz_read_eof = .boolean
 
   *: factory
     arg name = .string, mode = .string, encoding = "", replacing = 0
@@ -42,6 +43,7 @@ RexxClassicStream: class
     stream_closed = 0
     zz_process_input_eof = 0
     zz_process_output_dirty = 0
+    zz_read_eof = 0
     transport = ._rxcstream..transport(name,mode)
     if \transport.ready() then last_error = "Stream could not be opened"
     else if mode <> "READ" & transport.positionable() then do
@@ -80,6 +82,10 @@ RexxClassicStream: class
 
   codecFailure: method = .boolean
     return codec_error
+
+  /** @return whether the last positive-count text read exhausted a ready input */
+  readEof: method = .boolean
+    return zz_read_eof
 
   error: method = .string
     return last_error
@@ -211,6 +217,7 @@ RexxClassicStream: class
     return
 
   close: method = .int
+    zz_read_eof = 0
     result = transport.close()
     stream_closed = 1
     if result <> 0 then last_error = "Stream close failed"
@@ -272,6 +279,7 @@ RexxClassicStream: class
   /** @return at most count codepoints; start is zero-based or -1 to continue */
   readCharacters: method = .string
     arg start = .int, count = .int
+    zz_read_eof = 0
     last_error = ""
     codec_error = 0
     if stream_closed | stream_mode = "WRITE" | stream_mode = "REPLACE" then do
@@ -280,6 +288,7 @@ RexxClassicStream: class
     end
     if zz_process_input_eof & start < 0 then do
       last_error = "End of stream"
+      zz_read_eof = count > 0 & transport.ready() <> 0
       return ""
     end
     if start >= 0 then zz_process_input_eof = 0
@@ -312,12 +321,16 @@ RexxClassicStream: class
       end
     end
     if last_error = "" then read_position = next_position + length(result)
-    if length(result) < count & last_error = "" then last_error = "End of stream"
+    if length(result) < count & last_error = "" then do
+      last_error = "End of stream"
+      zz_read_eof = count > 0 & transport.ready() <> 0
+    end
     return result
 
   /** @return one line without LF or its immediately preceding CR */
   readLine: method = .string
     arg start_line = .int, count = .int
+    zz_read_eof = 0
     last_error = ""
     codec_error = 0
     if stream_closed | stream_mode = "WRITE" | stream_mode = "REPLACE" then do
@@ -326,6 +339,7 @@ RexxClassicStream: class
     end
     if zz_process_input_eof & start_line < 0 then do
       last_error = "End of stream"
+      zz_read_eof = count > 0 & transport.ready() <> 0
       return ""
     end
     if start_line >= 0 then zz_process_input_eof = 0
@@ -363,7 +377,10 @@ RexxClassicStream: class
     if consumed > finish & right(result,1) = "0D"x as .string then result = left(result,max(0,length(result) - 1))
     if \transport.positionable() then pending_input = substr(contents,consumed + 1)
     read_position = next_position + consumed
-    if consumed = 0 then last_error = "End of stream"
+    if consumed = 0 then do
+      last_error = "End of stream"
+      zz_read_eof = count > 0 & transport.ready() <> 0
+    end
     return result
 
   linePosition: method = .int

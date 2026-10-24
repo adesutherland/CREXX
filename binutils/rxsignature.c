@@ -25,6 +25,7 @@
 #include "rxsignature.h"
 
 #include <ctype.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -353,4 +354,79 @@ int rx_sig_matches_contract(const rx_callable_signature *expected,
     }
 
     return 0;
+}
+
+static int provider_signature_punctuation(unsigned char ch) {
+    return ch == '=' || ch == ',' || ch == '[' || ch == ']' || ch == '*';
+}
+
+/* RXPA declarations are source-like text, while rxc emits canonical RXAS
+ * signature spelling.  Normalize only lexical trivia that has no signature
+ * meaning: whitespace around punctuation, runs of other whitespace, and the
+ * source shorthand [] for the canonical unbounded array shape [*]. */
+static char *provider_signature_canonical(const char *text) {
+    size_t input_length;
+    size_t input_index = 0u;
+    size_t output_index = 0u;
+    char *result;
+
+    if (!text) text = "";
+    input_length = strlen(text);
+    if (input_length > (SIZE_MAX - 1u) / 2u) {
+        return NULL;
+    }
+    result = malloc(input_length * 2u + 1u);
+    if (!result) {
+        return NULL;
+    }
+    while (input_index < input_length) {
+        unsigned char ch = (unsigned char)text[input_index];
+        if (isspace(ch)) {
+            size_t next = input_index + 1u;
+            while (next < input_length &&
+                   isspace((unsigned char)text[next])) next++;
+            if (output_index && next < input_length &&
+                !provider_signature_punctuation(
+                        (unsigned char)result[output_index - 1u]) &&
+                !provider_signature_punctuation(
+                        (unsigned char)text[next])) {
+                result[output_index++] = ' ';
+            }
+            input_index = next;
+            continue;
+        }
+        if (ch == '[') {
+            size_t next = input_index + 1u;
+            while (next < input_length &&
+                   isspace((unsigned char)text[next])) next++;
+            if (next < input_length && text[next] == ']') {
+                result[output_index++] = '[';
+                result[output_index++] = '*';
+                result[output_index++] = ']';
+                input_index = next + 1u;
+                continue;
+            }
+        }
+        result[output_index++] = (char)ch;
+        input_index++;
+    }
+    if (output_index && result[output_index - 1u] == ' ') output_index--;
+    result[output_index] = 0;
+    return result;
+}
+
+
+int rx_sig_provider_text_equal(const char *left, const char *right) {
+    char *canonical_left = provider_signature_canonical(left);
+    char *canonical_right = provider_signature_canonical(right);
+    int equal;
+    if (!canonical_left || !canonical_right) {
+        free(canonical_left);
+        free(canonical_right);
+        return -1;
+    }
+    equal = strcmp(canonical_left, canonical_right) == 0;
+    free(canonical_left);
+    free(canonical_right);
+    return equal;
 }

@@ -309,6 +309,17 @@ crexx_label_smoke_tests(
             rxlink
 )
 
+add_test(NAME rxlink_core_provider_requirements
+        COMMAND ${CMAKE_COMMAND}
+            -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+            -DRXLINK=$<TARGET_FILE:rxlink> -DRXDAS=$<TARGET_FILE:rxdas>
+            -DSOURCE=${CMAKE_SOURCE_DIR}/tests/rxpa/external_sdk/core_native_installed.crexx
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/core-provider-requirements
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/core_provider_requirements.cmake)
+set_tests_properties(rxlink_core_provider_requirements PROPERTIES
+        LABELS "linker;metadata;native;regression" TIMEOUT 60
+        CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxdas")
+
 crexx_finalize_directory_qa_tiers()
 
 # Published products owned by this component.

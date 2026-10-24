@@ -42,6 +42,17 @@ canonical artifact stem: native packaging prefers `<provider>.a`/`.lib` and
 falls back to the historical `<provider>_static.a`/`.lib` name. A native
 package therefore does not maintain a second hand-written provider list.
 
+Mandatory VM-core bindings (`rxparse` and `rxinvoke`) retain their provider
+identities in the linked `META_PROVIDER` records and link map. They do not
+appear in the external-archive projection. Binutils compiles the runtime
+owners' existing `DECL_ONLY` tables once for both compiler imports and linker
+classification; there is no second signature list or separate core-provider
+archive. The linker checks provider id, callable, options, result and ordered
+arguments against that catalogue. The shared RXPA signature equality retains
+argument names and modifiers while normalizing whitespace and `[]`/`[*]`.
+A claimed core id or callable with an unknown/conflicting contract fails
+linking. Ordinary external-provider requirements remain unchanged.
+
 ## Packaged bytecode autoload hints
 
 Selected `META_AUTOLOAD` records are runtime convenience metadata. `rxlink`

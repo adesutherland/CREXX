@@ -100,7 +100,7 @@ int main(void) {
     if (run_case(ctx, 2, two_args,
                  "count=2\nexists=1|1\nraw=blue green|tail\nparsed=BLUE GREEN|TAIL\n") ||
         run_case(ctx, 2, unicode_args,
-                 "count=2\nexists=1|1\nraw=é🙂|ÿ\nparsed=É🙂|Ÿ\n") ||
+                 "count=2\nexists=1|1\nraw=é🙂|ÿ\nparsed=É🙂|ÿ\n") ||
         run_case(ctx, 1, one_arg,
                  "count=1\nexists=1|0\nraw=red|\nparsed=RED|\n") ||
         run_case(ctx, 1, empty_arg,

@@ -390,7 +390,16 @@ RXVM_HANDLER(SIGNALORIGIN_STRING_REG_REG, VM_ADVANCE(3);
                                                     &source_address)) {
                     SET_SIGNAL(RXSIGNAL_INVALID_ARGUMENTS);
                 } else {
+                    value diagnostic = {0};
+                    /* Retain before copying the payload: both operands can
+                     * alias, including the handler's destination register. */
+                    rxvm_signal_diagnostic_copy(&diagnostic, op3R->attributes[4]);
+                    if (!diagnostic_has_owner(&diagnostic))
+                        diagnostic_mark(&diagnostic, &diagnostic_empty_ops);
                     SET_SIGNAL_PAYLOAD(signal_name, op2R);
+                    rxvm_signal_diagnostic_copy(&diagnostic_owners[signal_name], &diagnostic);
+                    diagnostic_owners[signal_name].int_value = 1;
+                    clear_value(&diagnostic);
                     last_interrupted_module[signal_name] = source_module;
                     last_interrupted_address[signal_name] = source_address;
                     origin_override[signal_name] = 1;
@@ -2967,7 +2976,7 @@ RXVM_HANDLER(MKREF_REG_REG, VM_ADVANCE(2);
                 }
 
                 if (current_frame_owner) current_frame->has_reference_lifetimes = 1;
-                else rxvm_mark_reference_lifetime_owner(current_frame, op2R);
+                else rxvm_mark_reference_lifetime_ancestors(current_frame);
                 clear_value_contents(op1R);
                 rxvm_reference_value_set_payload(op1R, cell);
             }

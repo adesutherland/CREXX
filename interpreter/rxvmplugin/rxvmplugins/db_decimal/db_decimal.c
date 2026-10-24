@@ -472,7 +472,8 @@ static const rxinteger int_powers_of_10[] = {
 };
 
 void decimalToInt(decplugin *plugin, const value *number, rxinteger *int_value) {
-    char coefficient[64];
+    /* Sign, two rounded integer digits, decimal point, fraction and NUL. */
+    char coefficient[LDBL_DIG + 4];
     rxinteger exponent;
     char* c = coefficient;
     size_t sig_digits;
@@ -798,13 +799,14 @@ static void trim_numeric_trailing_zeros(char *str) {
 /* Extract the coefficient, exponent and sign from a rxvmplugin number.
  * - `decimal` contains the float value.
  * - `coefficient' will store the coefficient as a string (or nan, inf, -inf).
- *    It must be allocated by the caller and should be at least
- *    getRequiredStringSize(plugin, decimal)
- *    bytes (too big but simple for the caller)
+ *    The callback contract requires getRequiredStringSize(plugin, decimal)
+ *    bytes. The normalized output needs at most getDigits(plugin) + 4 bytes,
+ *    including a sign, rounding to two integer digits and the NUL.
  * - `exponent` will store the exponent as an integer.
  * Normalized, round to context precision/digits, trim trailing zeros.
  */
-static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *exponent, value *decimal) {
+static void decimalExtract(decplugin *plugin, char *coefficient,
+                           rxinteger *exponent, value *decimal) {
 
     *exponent = 0;
     long double value = *(long double*)decimal->decimal_value;
@@ -853,7 +855,7 @@ static void decimalExtract(decplugin *plugin, char *coefficient, rxinteger *expo
     *exponent = exp;
 
     // Format the coefficient string with precision upto digits fractional digits
-    sprintf(coefficient, is_negative ? "-%.*Lf" : "%.*Lf", (int)((dbcontext*)(plugin->base.private_context))->digits - 1, coeff);
+    snprintf(coefficient, getDigits(plugin) + 4u, is_negative ? "-%.*Lf" : "%.*Lf", (int)((dbcontext*)(plugin->base.private_context))->digits - 1, coeff);
 
 
     // Logic to [re-]check for edge case where rounding the coefficient could change the exponent - we look at the string

@@ -35,18 +35,21 @@ usage() {
 Usage: tools/asan-run.sh [options]
 
 Phases:
-  --phase build          Full cmake build only.
-  --phase full           Full build, qa-prep, then full ctest. Default test leaks: on.
-  --phase ctest          Run ctest only. Use after the required qa-prep target.
+  --phase build          Build named targets, or prepare the selected profile.
+  --phase full           Prepare and test the selected profile. Broad profiles build ALL
+                         and qa-prep; daily builds only the declared memory-panel closure.
+                         Default test leaks: on.
+  --phase ctest          Run selected CTests after the profile's prerequisites.
   --phase focused-lsan   Build focused dependencies, then focused LSan tests.
   --phase rerun-failed   Run ctest --rerun-failed.
   --phase verify-native Verify built native source/object/provider instrumentation.
 
 Options:
   --build-dir DIR        Build directory. Default: cmake-build-debugasan.
-  --profile PROFILE      full (default), weekly, native, affected, or daily.
+  --profile PROFILE      full (legacy default), weekly, native, affected, or daily.
                          Daily uses the fixed component memory panel; other profiles retain broad scope.
                          Full/weekly/native/affected reject external-fixture trees.
+                         Always pass this explicitly: a bare invocation selects broad full.
   --build-jobs N         Build parallelism. Default: 4.
   --build-target TARGET  Build only this target in --phase build. Repeatable.
   --test-jobs N          CTest parallelism. Default: 8, except focused-lsan defaults to 1.
@@ -74,10 +77,10 @@ Options:
 
 Examples:
   tools/asan-run.sh --phase focused-lsan
-  tools/asan-run.sh --phase build --build-target test_highlight_editor_diagnostics
-  tools/asan-run.sh --phase full --test-jobs 8
-  tools/asan-run.sh --phase ctest --regex '^crexx_spaced_source_smoke$' --leaks on
-  tools/asan-run.sh --phase full --leaks on
+  tools/asan-run.sh --profile full --phase build --build-target test_highlight_editor_diagnostics
+  tools/asan-run.sh --profile daily --phase full --test-jobs 8  # after paired-tree preparation
+  tools/asan-run.sh --profile full --phase ctest --regex '^crexx_spaced_source_smoke$' --leaks on
+  tools/asan-run.sh --profile full --phase full --leaks on  # explicit broad gate only
 USAGE
 }
 

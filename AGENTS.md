@@ -104,6 +104,12 @@ are compiler auto-expose anchors; the environment owns their command meaning.
    overnight deep/stress/build-graph/full-sanitizer assurance unless expressly
    required. Production performance verdicts and actual SAN closure keep their
    separate explicit gates.
+   For an agreed full functional baseline, repair and replay failing cells,
+   freeze inputs, then run the complete ordinary regression suite once. Only
+   after that suite is green, run the bounded two-platform component-memory
+   sanitizer panel and any agreed small performance/resource screen. An actual
+   sanitizer finding may require earlier focused Debug and maintained-sanitizer
+   diagnosis, but does not commission an instrumented functional matrix.
 8. **Finish the increment when selected checks pass.** Report input identity,
    scope, outcomes and limits in conversation, commit authorized paths and move
    on. Do not add reassurance tests or close unverified initiative criteria.
@@ -118,6 +124,10 @@ runs every day, including Sunday; compiler/assembler/linker memory producers
 stop at their own output, and VM panels use ordinary producers. Daily assurance
 cannot certify full release/SAN-closure scope or replace original instrumented
 producers. Those guides own schedules, conservative fallback and runner details.
+After ordinary functional QA, do not rerun the whole functional matrix under
+ASan merely to repeat correctness proof. Select the owned native-memory panel
+and focused regressions; reserve full original-producer instrumentation for an
+explicit broad qualification or the existing actual-SAN closure gate.
 
 ## Emitted-code quality
 
@@ -267,6 +277,33 @@ verdict, not precede it.
 - On Windows, do not overlap builds/tests in one tree. After interruption,
   stop leftover processes before retrying generated artifacts; cleanup-lock
   failures may need a serial retry. Shared-tree preparation is centrally owned.
+
+## Agent models and escalation
+
+Adrian's current allocation applies to the primary coordinator and subagents:
+
+- **GPT-6 Sol Extra High** (`gpt-6-sol`, `xhigh`) coordinates work and owns
+  build/test execution, QA runs and diagnostics, including ASan/LSan, memory
+  ownership, signal unwinding, loaders and low-level VM debugging.
+- **GPT-6.1 Sol Extra High** (`gpt-6.1-sol`, `xhigh`) owns design, detailed
+  implementation and source review. These workers hand build/test execution
+  to the Sol 6 coordinator or execution worker, preserving central ownership
+  of shared preparation and valid results.
+- **GPT-6 Astra Extra High** (`gpt-6-astra`, `xhigh`) may be used for a
+  substantial blocker or key design decision only after Adrian explicitly
+  approves that escalation. Explain the question and why escalation is needed.
+
+Use models available under the account's configured access. Confirm eligibility
+before changing the execution/debugging allocation. If the client cannot change
+the active coordinator model, report that limit and preserve the chat, checkout,
+running processes and completed results for continuation with the requested model.
+
+The coordinator inspects its own and subagent failures for explicit cybersecurity
+rejections, distinguishing them from tool, build and test failures. Identify the
+affected role and action, report the restriction, preserve completed work and
+continue independent authorised work. Resolve rejected actions through supported
+access or approval channels; do not change models merely to bypass a security
+rejection or weaken task authorisation or safety requirements.
 
 ## Actual sanitizer findings and diagnostic output
 

@@ -12,8 +12,13 @@ set(RXFNSL_REXX_MODULES
 )
 
 set(RXFNSL_REXX_BINS)
+set(RXFNSL_REXX_TARGETS)
 foreach(_module IN LISTS RXFNSL_REXX_MODULES)
   list(APPEND RXFNSL_REXX_BINS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
+  # Independent Make import roots must wait for one canonical producer.
+  add_custom_target(rxfnsl_${_module}
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
+  list(APPEND RXFNSL_REXX_TARGETS rxfnsl_${_module})
 endforeach()
 
 set(_rxfnsl_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports")
@@ -57,10 +62,32 @@ foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
     set(_module_source "${_ll_data_source}")
   endif()
   set(_source_root "${CMAKE_CURRENT_BINARY_DIR}/source/${_basename}")
+  # Imported inline bodies and attribute types can refer to a dependency's
+  # own imports. Stage that declared closure, never the active output folder.
+  set(_module_dep_names ${RXFNSL_DEPS_${_basename}})
+  set(_pending_deps ${_module_dep_names})
+  while(_pending_deps)
+    list(POP_FRONT _pending_deps _dep)
+    foreach(_transitive IN LISTS RXFNSL_DEPS_${_dep})
+      if(NOT _transitive IN_LIST _module_dep_names)
+        list(APPEND _module_dep_names "${_transitive}")
+        list(APPEND _pending_deps "${_transitive}")
+      endif()
+    endforeach()
+  endwhile()
   set(_module_deps)
-  foreach(_dep IN LISTS RXFNSL_DEPS_${_basename})
+  set(_module_dep_targets)
+  foreach(_dep IN LISTS _module_dep_names)
     list(APPEND _module_deps "${CMAKE_CURRENT_BINARY_DIR}/${_dep}.rxbin")
+    list(APPEND _module_dep_targets rxfnsl_${_dep})
   endforeach()
+  set(_module_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/${_basename}")
+  crexx_add_import_root(rxfnsl_${_basename}_imports
+    DIRECTORY "${_module_import_root}"
+    OUTPUT_VARIABLE _module_import_files
+    FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" ${_module_deps}
+    DEPENDS library ${_module_dep_targets}
+    COMMENT "Staging deterministic Level L imports for ${_basename} ...")
   crexx_add_fixture_command(
     OUTPUT "${_binfile}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_source_root}"
@@ -69,15 +96,14 @@ foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
     COMMAND $<TARGET_FILE:rxc>
             ${_ll_flags} -x
             --no-exe-import
-            -i "${_rxfnsl_import_root};${CMAKE_CURRENT_BINARY_DIR}"
+            -i "${_module_import_root}"
             -o "${_basename}"
             "${_source_root}/${_basename}.crexx"
     COMMAND $<TARGET_FILE:rxas> ${_ll_flags} "${_basename}"
     DEPENDS
       "${_module_source}"
-      rxfnsl_imports
-      ${_module_deps}
-      ${_rxfnsl_import_files}
+      rxfnsl_${_basename}_imports
+      ${_module_import_files}
       rxc
       rxas
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -115,5 +141,5 @@ add_custom_target(rxfnsl ALL
   DEPENDS "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin"
 )
 
-add_dependencies(rxfnsl library)
+add_dependencies(rxfnsl library ${RXFNSL_REXX_TARGETS})
 set(RXFNSL_BASE_BINS "${RXFNSL_REXX_BINS}" PARENT_SCOPE)

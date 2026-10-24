@@ -451,7 +451,7 @@ int rxcp_import_report_write(Context *context) {
         RX_REPORT_OOM("malloc import report primary path", RX_OOM_UNKNOWN_SIZE, owner->file_name);
         return -1;
     }
-    sprintf(primary_path, "@primary-source/0/%s", owner->file_name ? owner->file_name : "unknown");
+    snprintf(primary_path, strlen(owner->file_name ? owner->file_name : "unknown") + 20, "@primary-source/0/%s", owner->file_name ? owner->file_name : "unknown");
 
     fputs("{\n  \"schema_version\": \"crexx.import-resolution-report/v1\",\n", file);
     fputs("  \"status\": \"observed\",\n  \"tool\": {\n    \"name\": \"rxc\",\n    \"version\": ", file);

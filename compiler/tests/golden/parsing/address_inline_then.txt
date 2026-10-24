@@ -171,6 +171,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
         NODE_REGISTER : "" (-1:-1) [Type: .unknown]
           INTEGER : "5" (-1:-1) [Type: .unknown]
           VAR_SYMBOL : "object" (-1:-1) [Type: .unknown]
+      DEFINE : "" (-1:-1) [Type: .unknown]
+        VAR_TARGET : "zz_stream_provider" (-1:-1) [Type: .unknown]
+        CLASS : ".addressbytestream" (-1:-1) [Type: .object]
+        NODE_REGISTER : "" (-1:-1) [Type: .unknown]
+          INTEGER : "6" (-1:-1) [Type: .unknown]
+          VAR_SYMBOL : "object" (-1:-1) [Type: .unknown]
       FACTORY : "none" (-1:-1) [Type: .unknown]
         VOID : ".void" (-1:-1) [Type: .void]
         ARGS : "" (-1:-1) [Type: .unknown]
@@ -218,6 +224,24 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
                   NOVAL : "" (-1:-1) [Type: .unknown]
                   NOVAL : "" (-1:-1) [Type: .unknown]
         NOP : "" (-1:-1) [Type: .unknown]
+      FACTORY : "input_stream" (-1:-1) [Type: .unknown]
+        VOID : ".void" (-1:-1) [Type: .void]
+        ARGS : "" (-1:-1) [Type: .unknown]
+          ARG : "" (-1:-1) [Type: .unknown]
+            VAR_TARGET : "provider" (-1:-1) [Type: .unknown]
+            CLASS : ".addressbytestream" (-1:-1) [Type: .object]
+        NOP : "" (-1:-1) [Type: .unknown]
+      FACTORY : "output_stream" (-1:-1) [Type: .unknown]
+        VOID : ".void" (-1:-1) [Type: .void]
+        ARGS : "" (-1:-1) [Type: .unknown]
+          ARG : "" (-1:-1) [Type: .unknown]
+            VAR_TARGET : "provider" (-1:-1) [Type: .unknown]
+            CLASS : ".addressbytestream" (-1:-1) [Type: .object]
+        NOP : "" (-1:-1) [Type: .unknown]
+      METHOD : "active" (-1:-1) [Type: .boolean]
+        CLASS : ".boolean" (-1:-1) [Type: .boolean]
+        ARGS : "" (-1:-1) [Type: .unknown]
+        NOP : "" (-1:-1) [Type: .unknown]
       METHOD : "has_input" (-1:-1) [Type: .boolean]
         CLASS : ".boolean" (-1:-1) [Type: .boolean]
         ARGS : "" (-1:-1) [Type: .unknown]
@@ -248,6 +272,27 @@ REXX_UNIVERSE : "" (0:1) [Type: .unknown]
         VOID : ".void" (-1:-1) [Type: .void]
         ARGS : "" (-1:-1) [Type: .unknown]
         NOP : "" (-1:-1) [Type: .unknown]
+  IMPORTED_FILE : "_rxsysb" (-1:-1) [Type: .unknown]
+    REXX_OPTIONS : "" (-1:-1) [Type: .unknown]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+      NAMESPACE : "" (-1:-1) [Type: .unknown]
+        LITERAL : "_rxsysb" (-1:-1) [Type: .unknown]
+    INTERFACE_DEF : "addressbytestream" (-1:-1) [Type: .unknown]
+      METHOD : "append_bytes" (-1:-1) [Type: .void]
+        VOID : ".void" (-1:-1) [Type: .void]
+        ARGS : "" (-1:-1) [Type: .unknown]
+          ARG : "" (-1:-1) [Type: .unknown]
+            VAR_TARGET : "bytes" (-1:-1) [Type: .unknown]
+            CLASS : ".binary" (-1:-1) [Type: .binary]
+        NOP : "" (-1:-1) [Type: .unknown]
+      METHOD : "finish" (-1:-1) [Type: .void]
+        VOID : ".void" (-1:-1) [Type: .void]
+        ARGS : "" (-1:-1) [Type: .unknown]
+        NOP : "" (-1:-1) [Type: .unknown]
+      METHOD : "input_snapshot" (-1:-1) [Type: .binary]
+        CLASS : ".binary" (-1:-1) [Type: .binary]
+        ARGS : "" (-1:-1) [Type: .unknown]
+        NOP : "" (-1:-1) [Type: .unknown]
 Scope [0]: Unnamed
   _rxsysb (Namespace) -> .unknown
   address_inline_then (Namespace) -> .unknown
@@ -260,6 +305,7 @@ Scope [0]: Unnamed
   Scope [1]: _rxsysb
     _address (Function) -> .int [EXPOSED]
     _noredir (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    addressbytestream (Class) -> .unknown [EXPOSED]
     addressredirect (Class) -> .unknown [EXPOSED]
     Scope [2]: _noredir
     Scope [2]: _address
@@ -274,17 +320,21 @@ Scope [0]: Unnamed
       _input (Variable) -> .binary
       _kind (Variable) -> .int
       _string_target (Variable) -> reference .string
+      active (Function) -> .boolean
       append_bytes (Function) -> .void
       captures_output (Function) -> .boolean
       finish (Function) -> .void
       has_input (Function) -> .boolean
       input_snapshot (Function) -> .binary
       native_emit (Function) -> .int
+      zz_stream_provider (Variable) -> .addressbytestream
       §factory.input_array (Function) -> .addressredirect
       §factory.input_binary (Function) -> .addressredirect
+      §factory.input_stream (Function) -> .addressredirect
       §factory.input_string (Function) -> .addressredirect
       §factory.none (Function) -> .addressredirect
       §factory.output_array (Function) -> .addressredirect
+      §factory.output_stream (Function) -> .addressredirect
       §factory.output_string (Function) -> .addressredirect
       Scope [3]: §factory.none
         §factory (Variable) -> .addressredirect
@@ -303,6 +353,14 @@ Scope [0]: Unnamed
       Scope [3]: §factory.output_array
         target (Variable) -> reference .string[*]
         §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.input_stream
+        provider (Variable) -> .addressbytestream
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.output_stream
+        provider (Variable) -> .addressbytestream
+        §factory (Variable) -> .addressredirect
+      Scope [3]: active
+        §this (Variable) -> .addressredirect
       Scope [3]: has_input
         §this (Variable) -> .addressredirect
       Scope [3]: captures_output
@@ -317,10 +375,23 @@ Scope [0]: Unnamed
         §this (Variable) -> .addressredirect
       Scope [3]: finish
         §this (Variable) -> .addressredirect
+      Scope [3]: active
+        §this (Variable) -> .addressredirect
       Scope [3]: has_input
         §this (Variable) -> .addressredirect
       Scope [3]: captures_output
         §this (Variable) -> .addressredirect
+    Scope [2]: addressbytestream
+      append_bytes (Function) -> .void
+      finish (Function) -> .void
+      input_snapshot (Function) -> .binary
+      Scope [3]: append_bytes
+        bytes (Variable) -> .binary
+        §this (Variable) -> .addressbytestream
+      Scope [3]: finish
+        §this (Variable) -> .addressbytestream
+      Scope [3]: input_snapshot
+        §this (Variable) -> .addressbytestream
 DEBUG_INLINE _noredir @ _address@library.rxbin - reject: procedure has no instruction list
 DEBUG_INLINE _address @ _address@library.rxbin - reject: procedure has no instruction list
 DEBUG_INLINE §factory.none @ _address@library.rxbin - reject: procedure has no instruction list
@@ -329,6 +400,8 @@ DEBUG_INLINE §factory.input_binary @ _address@library.rxbin - reject: procedure
 DEBUG_INLINE §factory.input_array @ _address@library.rxbin - reject: procedure has no instruction list
 DEBUG_INLINE §factory.output_string @ _address@library.rxbin - reject: procedure has no instruction list
 DEBUG_INLINE §factory.output_array @ _address@library.rxbin - reject: procedure has no instruction list
+DEBUG_INLINE §factory.input_stream @ _address@library.rxbin - reject: procedure has no instruction list
+DEBUG_INLINE §factory.output_stream @ _address@library.rxbin - reject: procedure has no instruction list
 DEBUG_INLINE input_snapshot @ _address@library.rxbin - reject: procedure has no instruction list
 DEBUG_INLINE append_bytes @ _address@library.rxbin - reject: procedure has no instruction list
 DEBUG_INLINE native_emit @ _address@library.rxbin - reject: procedure has no instruction list
@@ -436,6 +509,12 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
         NODE_REGISTER : "" (-1:-1) [Type: .unknown]
           CONSTANT : "5" (-1:-1) [Type: .int]
           VAR_SYMBOL : "object" (-1:-1) [Type: .unknown]
+      DEFINE : "" (-1:-1) [Type: .object]
+        VAR_TARGET : "zz_stream_provider" (-1:-1) [Type: .object]
+        CLASS : ".addressbytestream" (-1:-1) [Type: .object]
+        NODE_REGISTER : "" (-1:-1) [Type: .unknown]
+          CONSTANT : "6" (-1:-1) [Type: .int]
+          VAR_SYMBOL : "object" (-1:-1) [Type: .unknown]
       FACTORY : "none" (-1:-1) [Type: .void]
         VOID : ".void" (-1:-1) [Type: .void]
         ARGS : "" (-1:-1) [Type: .unknown]
@@ -483,6 +562,24 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
                   NOVAL : "" (-1:-1) [Type: .void]
                   NOVAL : "" (-1:-1) [Type: .void]
         NOP : "" (-1:-1) [Type: .void]
+      FACTORY : "input_stream" (-1:-1) [Type: .void]
+        VOID : ".void" (-1:-1) [Type: .void]
+        ARGS : "" (-1:-1) [Type: .unknown]
+          ARG : "" (-1:-1) [Type: .object]
+            VAR_TARGET : "provider" (-1:-1) [Type: .object]
+            CLASS : ".addressbytestream" (-1:-1) [Type: .object]
+        NOP : "" (-1:-1) [Type: .void]
+      FACTORY : "output_stream" (-1:-1) [Type: .void]
+        VOID : ".void" (-1:-1) [Type: .void]
+        ARGS : "" (-1:-1) [Type: .unknown]
+          ARG : "" (-1:-1) [Type: .object]
+            VAR_TARGET : "provider" (-1:-1) [Type: .object]
+            CLASS : ".addressbytestream" (-1:-1) [Type: .object]
+        NOP : "" (-1:-1) [Type: .void]
+      METHOD : "active" (-1:-1) [Type: .boolean]
+        CLASS : ".boolean" (-1:-1) [Type: .boolean]
+        ARGS : "" (-1:-1) [Type: .unknown]
+        NOP : "" (-1:-1) [Type: .void]
       METHOD : "has_input" (-1:-1) [Type: .boolean]
         CLASS : ".boolean" (-1:-1) [Type: .boolean]
         ARGS : "" (-1:-1) [Type: .unknown]
@@ -513,6 +610,27 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
         VOID : ".void" (-1:-1) [Type: .void]
         ARGS : "" (-1:-1) [Type: .unknown]
         NOP : "" (-1:-1) [Type: .void]
+  IMPORTED_FILE : "_rxsysb" (-1:-1) [Type: .void]
+    REXX_OPTIONS : "" (-1:-1) [Type: .void]
+      LITERAL : "levelb" (-1:-1) [Type: .unknown]
+      NAMESPACE : "" (-1:-1) [Type: .void]
+        LITERAL : "_rxsysb" (-1:-1) [Type: .unknown]
+    INTERFACE_DEF : "addressbytestream" (-1:-1) [Type: .void]
+      METHOD : "append_bytes" (-1:-1) [Type: .void]
+        VOID : ".void" (-1:-1) [Type: .void]
+        ARGS : "" (-1:-1) [Type: .unknown]
+          ARG : "" (-1:-1) [Type: .binary]
+            VAR_TARGET : "bytes" (-1:-1) [Type: .binary]
+            CLASS : ".binary" (-1:-1) [Type: .binary]
+        NOP : "" (-1:-1) [Type: .void]
+      METHOD : "finish" (-1:-1) [Type: .void]
+        VOID : ".void" (-1:-1) [Type: .void]
+        ARGS : "" (-1:-1) [Type: .unknown]
+        NOP : "" (-1:-1) [Type: .void]
+      METHOD : "input_snapshot" (-1:-1) [Type: .binary]
+        CLASS : ".binary" (-1:-1) [Type: .binary]
+        ARGS : "" (-1:-1) [Type: .unknown]
+        NOP : "" (-1:-1) [Type: .void]
 Scope [0]: Unnamed
   _rxsysb (Namespace) -> .unknown
   address_inline_then (Namespace) -> .unknown
@@ -525,6 +643,7 @@ Scope [0]: Unnamed
   Scope [1]: _rxsysb
     _address (Function) -> .int [EXPOSED]
     _noredir (Function) -> ._rxsysb..addressredirect [EXPOSED]
+    addressbytestream (Class) -> .unknown [EXPOSED]
     addressredirect (Class) -> .unknown [EXPOSED]
     Scope [2]: _noredir
     Scope [2]: _address
@@ -539,17 +658,21 @@ Scope [0]: Unnamed
       _input (Variable) -> .binary
       _kind (Variable) -> .int
       _string_target (Variable) -> reference .string
+      active (Function) -> .boolean
       append_bytes (Function) -> .void
       captures_output (Function) -> .boolean
       finish (Function) -> .void
       has_input (Function) -> .boolean
       input_snapshot (Function) -> .binary
       native_emit (Function) -> .int
+      zz_stream_provider (Variable) -> .addressbytestream
       §factory.input_array (Function) -> .addressredirect
       §factory.input_binary (Function) -> .addressredirect
+      §factory.input_stream (Function) -> .addressredirect
       §factory.input_string (Function) -> .addressredirect
       §factory.none (Function) -> .addressredirect
       §factory.output_array (Function) -> .addressredirect
+      §factory.output_stream (Function) -> .addressredirect
       §factory.output_string (Function) -> .addressredirect
       Scope [3]: §factory.none
         §factory (Variable) -> .addressredirect
@@ -568,6 +691,14 @@ Scope [0]: Unnamed
       Scope [3]: §factory.output_array
         target (Variable) -> reference .string[*]
         §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.input_stream
+        provider (Variable) -> .addressbytestream
+        §factory (Variable) -> .addressredirect
+      Scope [3]: §factory.output_stream
+        provider (Variable) -> .addressbytestream
+        §factory (Variable) -> .addressredirect
+      Scope [3]: active
+        §this (Variable) -> .addressredirect
       Scope [3]: has_input
         §this (Variable) -> .addressredirect
       Scope [3]: captures_output
@@ -582,8 +713,21 @@ Scope [0]: Unnamed
         §this (Variable) -> .addressredirect
       Scope [3]: finish
         §this (Variable) -> .addressredirect
+      Scope [3]: active
+        §this (Variable) -> .addressredirect
       Scope [3]: has_input
         §this (Variable) -> .addressredirect
       Scope [3]: captures_output
         §this (Variable) -> .addressredirect
+    Scope [2]: addressbytestream
+      append_bytes (Function) -> .void
+      finish (Function) -> .void
+      input_snapshot (Function) -> .binary
+      Scope [3]: append_bytes
+        bytes (Variable) -> .binary
+        §this (Variable) -> .addressbytestream
+      Scope [3]: finish
+        §this (Variable) -> .addressbytestream
+      Scope [3]: input_snapshot
+        §this (Variable) -> .addressbytestream
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

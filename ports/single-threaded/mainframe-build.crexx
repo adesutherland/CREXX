@@ -133,6 +133,11 @@ main: procedure = .int
     if tool="RXAS" then call arrayappend units,source||"/assembler/rxasmain.c"
   end
   if tool="RXLINK" then call arrayappend units,source||"/linker/rxlinkmain.c"
+  if tool="RXC" | tool="RXLINK" then do
+    call arrayappend units,source||"/binutils/rxcore_parse_decl.c"
+    call arrayappend units,source||"/binutils/rxcore_invoke_decl.c"
+  end
+  if tool="RXLINK" then call arrayappend units,source||"/binutils/rxcore_bindings.c"
   if personality="TSO" then do
     native="tso/application.c tso/io.c tso/signals.c tso/native-path.c tso/directory.c cms/text-codec.c cms/arithmetic.c"
     if tool="RXVM" then native=native||" tso/command.c command-text.c"

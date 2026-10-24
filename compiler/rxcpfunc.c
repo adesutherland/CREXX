@@ -3125,7 +3125,8 @@ static void import_core_parse_cursor(Context *context) {
         const rxvm_parse_binding *binding = &rxvm_parse_cursor_bindings[i];
         if (binding->kind != RXVM_PARSE_BIND_FUNCTION) continue;
         (void)rximpf_provider_f(context, "statically-linked", (char *)binding->symbol,
-            "b", (char *)binding->type, (char *)binding->args, 0, 0, 0, "rxparse");
+            "b", (char *)binding->type, (char *)binding->args, 0, 0, 0,
+            rxvm_parse_cursor_provider_id);
     }
 }
 
@@ -3158,7 +3159,8 @@ static void import_core_invocation(Context *context) {
         const rxvm_invoke_binding *binding = &rxvm_invoke_bindings[i];
         if (binding->kind != RXVM_INVOKE_BIND_FUNCTION) continue;
         (void)rximpf_provider_f(context, "statically-linked", (char *)binding->symbol,
-            "b", (char *)binding->type, (char *)binding->args, 0, 0, 0, "rxinvoke");
+            "b", (char *)binding->type, (char *)binding->args, 0, 0, 0,
+            rxvm_invoke_provider_id);
     }
 }
 

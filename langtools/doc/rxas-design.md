@@ -149,9 +149,14 @@ a program or authorize a caller-supplied map as executable output.
 
 Record construction and checks have bounded work. First-use buckets avoid a
 whole-frame scan for each instruction; the checker compares members sharing a
-physical cell. Dense interference can still require quadratic comparisons and
-may exhaust the request budget. A rejected request can leave a producer's
-previously published output intact.
+physical cell. Finalization indexes exact label spellings once, preserving the
+first target for repeated spellings and every label's storage boundary. Label
+index construction and branch lookup charge bounded key work rather than
+rescanning every label per branch. Dense interference can still require
+quadratic comparisons and may exhaust the request budget. Admission and
+finalization work failures retain their resource-limit identity; only a genuinely
+absent target has an unresolved-label record error. A rejected request can leave
+a producer's previously published output intact.
 
 ## Query the canonical instruction view
 

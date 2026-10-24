@@ -915,8 +915,8 @@ static int allocate_call_result_reg(ASTNode *node) {
 
         new_skipped = realloc(skipped, sizeof(int) * (skipped_count + 1));
         if (!new_skipped) {
-            if (skipped) free(skipped);
-            return reg;
+            RX_PANIC_OOM("realloc call-result register reservations",
+                         sizeof(int) * (skipped_count + 1), 0);
         }
 
         skipped = new_skipped;
@@ -955,6 +955,37 @@ static int defer_reg_return(ASTNode* node) {
         default: ;
     }
     return 0;
+}
+
+static int indexed_variable_helper_count(ASTNode *node) {
+    ASTNode *index;
+    int base;
+    int unlink_needed = 0;
+    int needs_extra_reg = 0;
+    int property_regs = 0;
+
+    if (!node || !node->child || !node->symbolNode ||
+        !node->symbolNode->symbol) return 0;
+
+    base = node->symbolNode->symbol->dim_base[ast_chdi(node->child)];
+    for (index = node->child; index && !needs_extra_reg; index = index->sibling) {
+        if (node->node_type == VAR_SYMBOL && index->node_type == NOVAL) {
+            if (unlink_needed &&
+                !node->symbolNode->symbol->dim_elements[ast_chdi(index)]) {
+                needs_extra_reg = 1;
+            }
+            break;
+        }
+        if (!(index->node_type == INTEGER || index->node_type == CONSTANT || base == 1)) {
+            needs_extra_reg = 1;
+        }
+        unlink_needed = 1;
+    }
+
+    if (symbol_is_class_attribute(node->symbolNode->symbol)) {
+        property_regs = class_attribute_is_complex(node->symbolNode->symbol) ? 2 : 1;
+    }
+    return needs_extra_reg + property_regs;
 }
 
 /* Assign registers */
@@ -1295,6 +1326,25 @@ walker_result register_walker(walker_direction direction,
                     }
                 }
 
+                if (child1 && node->parent->node_type != DEFINE) {
+                    /* The first linked dimension stays live while later
+                     * index expressions run. Reserve its result before their
+                     * temporaries and call windows can claim that storage. */
+                    if (child1->sibling) {
+                        node->register_num = get_reg(node->scope);
+                    }
+                    /* Array-attribute emission links the receiver before
+                     * evaluating any index. Its helpers therefore interfere
+                     * with every descendant, including an earlier nested
+                     * call result already recycled by the bottom-up walk. */
+                    if (node->symbolNode &&
+                        symbol_is_class_attribute(node->symbolNode->symbol)) {
+                        node->num_additional_registers = indexed_variable_helper_count(node);
+                        node->additional_registers = get_regs(node->scope,
+                                                              node->num_additional_registers);
+                    }
+                }
+
                 for (c=child1; c; c = c->sibling) {
                     if (is_constant(c)) c->register_num = DONT_ASSIGN_REGISTER; /* Don't assign register */
                 }
@@ -1482,57 +1532,19 @@ walker_result register_walker(walker_direction direction,
 
                 if (node->child) {
                     /* If it has a child it is an array element - so we need registers for the node */
-                    char unlink_needed = 0;
-                    int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
-                    node->register_num = get_reg(node->scope);
-
-                    /* Do we need a temporary register for making array parameters 1-base or for getting the array size */
-                    char needs_extra_reg = 0;
-                    c = node->child;
-                    while (c && !needs_extra_reg) {
-
-                        if (node->node_type == VAR_SYMBOL && c->node_type == NOVAL) {
-                            /* This is the logic for getting the number of elements in an array */
-                            /* This is last parameter - we may have done earlier parameters */
-
-                            if (unlink_needed) {
-                                /* The register of the attribute is linked so ... */
-                                unlink_needed = 0;   /* ... we will unlink it here */
-                                if (!(node->symbolNode->symbol->dim_elements[ast_chdi(c)])) {
-                                    /* For fixed arrays we just return the upperbound (taking into the base)
-                                     * But variable arrays the max array element we need to copy via the additional
-                                     * register so we can unlink correctly */
-                                    needs_extra_reg = 1;
-                                }
-                            }
-                            /* Should be no more dimensions so we are done */
-                            break;
-                        }
-
-                        /* This is the logic to get the register attribute for this parameter (child1) */
-                        /* Link Array element */
-                        if (!(c->node_type == INTEGER || c->node_type == CONSTANT || base == 1)) {
-                            /* Need to make it 1 base */
-                            needs_extra_reg = 1;
-                        }
-
-                        unlink_needed = 1; /* We will need to define a cleanup action to unlink */
-
-                        c = c->sibling;
+                    if (!child1->sibling) {
+                        node->register_num = get_reg(node->scope);
                     }
 
-                    char needs_prop_reg = 0;
-                    if (node->symbolNode && symbol_is_class_attribute(node->symbolNode->symbol)) {
-                        needs_prop_reg = class_attribute_is_complex(node->symbolNode->symbol) ? 2 : 1;
+                    if (!node->num_additional_registers) {
+                        node->num_additional_registers = indexed_variable_helper_count(node);
                     }
-
-                    if (needs_extra_reg || needs_prop_reg) {
-                        /* Yes we do need an additional register */
-                        node->num_additional_registers = needs_extra_reg + needs_prop_reg;
+                    if (node->num_additional_registers &&
+                        !symbol_is_class_attribute(node->symbolNode->symbol)) {
                         node->additional_registers = get_regs(node->scope, node->num_additional_registers);
-                        /* Array/property helpers may stay linked until the parent emits cleanup. */
-                        return_additional_regs_later(node);
                     }
+                    /* Array/property helpers may stay linked until the parent emits cleanup. */
+                    return_additional_regs_later(node);
 
                     /* Release child registers */
                     c = node->child;
@@ -1691,8 +1703,11 @@ walker_result register_walker(walker_direction direction,
             case MEMBER_CALL:
             case FUNCTION:
                 /* Set result temporary register */
-                if (node->register_num != DONT_ASSIGN_REGISTER)
-                    /* DONT_ASSIGN_REGISTER means that the register number will be set later (or is not needed) */
+                if (node->register_num != DONT_ASSIGN_REGISTER ||
+                    is_interface_member_call(node) || is_interface_factory_call(node))
+                    /* Dynamic selection writes this cell before DCALL reads
+                     * argc. Keep it outside the live call window even when a
+                     * parent would otherwise supply a deferred destination. */
                     node->register_num = allocate_call_result_reg(node);
 
                 /* Assign additional Registers for arguments if assignment was deferred  */

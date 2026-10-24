@@ -1,0 +1,13 @@
+if(NOT DEFINED RECV390_TEST)
+    message(FATAL_ERROR "RECV390_TEST is required")
+endif()
+execute_process(COMMAND "${RECV390_TEST}"
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error)
+if(NOT result EQUAL 0)
+    message(FATAL_ERROR "Directory formatter failed (${result}):\n${output}${error}")
+endif()
+string(REPLACE "\r\n" "\n" output "${output}")
+set(expected "ABCDEFGH 000001 1F 000102030405060708090A0B0C0D0E0F101112131415161718191A1B1C1D1E1F202122232425262728292A2B2C2D2E2F303132333435363738393A3B3C3D\n")
+if(NOT output STREQUAL expected OR NOT error STREQUAL "")
+    message(FATAL_ERROR "Directory text differs:\n${output}${error}")
+endif()

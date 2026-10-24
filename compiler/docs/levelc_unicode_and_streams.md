@@ -161,11 +161,19 @@ raise 40.39. NUL-bearing names raise 40.27. Transient input consumes records; a 
 record. Explicit transient positioning fails. CHARS/LINES on a transient stream
 are availability indicators rather than promises of an exact future count.
 
-EOF and OS failures record NOTREADY. Disabled traps return the ordinary partial
-read or unwritten count; enabled SIGNAL/CALL traps use the existing Classic
+Stream BIFs record EOF and OS failures as NOTREADY. Disabled traps return the
+ordinary partial read or unwritten count; enabled SIGNAL/CALL traps use the existing Classic
 source/condition machinery. Conversion errors take SYNTAX precedence. Invalid
 NUL-bearing path arguments are rejected with exact-length validation. QUALIFY
 uses the existing host filesystem qualification service.
+
+Queue-empty PULL and PARSE PULL acquire default text through the shared Config
+service. An exhausted configured input returns empty text on repeated reads;
+other stream failures and configured PULL/LINEIN hook conditions retain their
+existing NOTREADY transport. `RexxClassicStream.readEof()` reports only the most
+recent character/line read outcome: a positive-count exhausted read with a ready
+native transport. Each read and close resets that observation, so a zero-count
+read or a handle closed through an alias cannot be mistaken for ordinary EOF.
 
 ## Regression crosswalk
 

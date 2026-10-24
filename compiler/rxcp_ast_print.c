@@ -324,7 +324,7 @@ void pdot_scope(Symbol *symbol, void *payload) {
     char *clas;
 
     if (symbol->register_num >= 0)
-        sprintf(reg,"%c%d",symbol->register_type,symbol->register_num);
+        snprintf(reg, sizeof(reg),"%c%d",symbol->register_type,symbol->register_num);
     else
         reg[0] = 0;
 
@@ -585,12 +585,12 @@ walker_result pdot_walker_handler(walker_direction direction,
 
         if (node->register_num >= 0) {
             if (node->num_additional_registers)
-                sprintf(value_type_buffer,"\n%c%d, r%d-r%d",
+                snprintf(value_type_buffer, sizeof(value_type_buffer),"\n%c%d, r%d-r%d",
                         node->register_type, node->register_num,
                         node->additional_registers,
                         node->additional_registers + node->num_additional_registers - 1);
             else
-                sprintf(value_type_buffer,"\n%c%d", node->register_type, node->register_num);
+                snprintf(value_type_buffer, sizeof(value_type_buffer),"\n%c%d", node->register_type, node->register_num);
         }
         else
             value_type_buffer[0] = 0;

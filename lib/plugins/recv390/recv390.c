@@ -1352,7 +1352,9 @@ int  parsemem(int phase ) {
 
 int printdirmem() {
     int		entlen;
-    char	msg[101];
+    /* Member(8), TTR(7), indicator(3), separator(1), 62 hex bytes(124), NUL.
+     * This also covers the ISPF row with its existing bounded date text. */
+    char	msg[8 + 7 + 3 + 1 + 2 * (2 * 0x1f) + 1];
     char	work[sizeof(msg)];
     int		temp, i, scr;
     int		entispfstats;
@@ -1384,10 +1386,10 @@ int printdirmem() {
         ebcdic2ascii(work, 8);					// convert to ascii
         strcpy(msg, work);
         temp = getvbin((char *)&block[pos+8], 3);			// TTR
-        sprintf(work, " %.6X", temp);				// make display hex, use upper case letters
+        snprintf(work, sizeof(work), " %.6X", temp);				// make display hex, use upper case letters
         strcat(msg, work);
         temp = getvbin((char *)&block[pos+11], 1);			// Indicator byte
-        sprintf(work, " %.2X", temp);
+        snprintf(work, sizeof(work), " %.2X", temp);
         strcat(msg, work);
 
         if (!entispfstats) {						// not ISPF stats
@@ -1397,33 +1399,33 @@ int printdirmem() {
             temp = temp * 2;						// user data is counted in halfwords
             for (i = 0; i < temp; i++) {
                 scr = getvbin((char *)&block[pos+12+i], 1);
-                sprintf(work, "%.2X", scr);			// list userdata
+                snprintf(work, sizeof(work), "%.2X", scr);			// list userdata
                 strcat(msg, work);
             }
         } else {
             temp = getvbin((char *)&block[pos+12], 1);			// VERS
-            sprintf(work, " %.2d.", temp);
+            snprintf(work, sizeof(work), " %.2d.", temp);
             strcat(msg, work);
             temp = getvbin((char *)&block[pos+13], 1);			// MOD
-            sprintf(work, "%.2d", temp);
+            snprintf(work, sizeof(work), "%.2d", temp);
             strcat(msg, work);
 
             strcat(msg, ispfdate((char *)&block[pos]));			// Creation & modification dates
 
             temp = getvbin((char *)&block[pos+24], 1);			// modified HH time
-            sprintf(work, " %.2x", temp);
+            snprintf(work, sizeof(work), " %.2x", temp);
             strcat(msg, work);
             temp = getvbin((char *)&block[pos+25], 1);			// modified MM time
-            sprintf(work, ":%.2x", temp);
+            snprintf(work, sizeof(work), ":%.2x", temp);
             strcat(msg, work);
             temp = getvbin((char *)&block[pos+26], 2);			// Current # lines
-            sprintf(work, " %5d", temp);
+            snprintf(work, sizeof(work), " %5d", temp);
             strcat(msg, work);
             temp = getvbin((char *)&block[pos+28], 2);			// Initial # lines
-            sprintf(work, " %5d", temp);
+            snprintf(work, sizeof(work), " %5d", temp);
             strcat(msg, work);
             temp = getvbin((char *)&block[pos+30], 2);			// Modified # lines
-            sprintf(work, " %5d ", temp);
+            snprintf(work, sizeof(work), " %5d ", temp);
             strcat(msg, work);
             memset(work, 0, sizeof(work));
             memcpy(work, &block[pos+32], 8);
@@ -2240,7 +2242,6 @@ int jmmsnap( void *ptr, int len, int offset, char *title)
     char workchar;
     unsigned int  workint;
     char prtbuf[128];
-    char hdrbuf[128];
 
     //--------------------------------------------------------------------------
     //   Display user-supplied title
@@ -2251,8 +2252,7 @@ int jmmsnap( void *ptr, int len, int offset, char *title)
         prt(title);
         prt("\n");
     } else {
-        sprintf(hdrbuf, "<snap> %p.%d (0x%.4X) %s\n", ptr, len, len, title);
-        prt( hdrbuf );
+        printf("<snap> %p.%d (0x%.4X) %s\n", ptr, len, len, title);
     }
     snapshorthdr = 0;
     prtbuf[0] = '\0';
@@ -2264,11 +2264,11 @@ int jmmsnap( void *ptr, int len, int offset, char *title)
         //-----------------------------------------------------------------------
 
         if (showsnapaddr)
-            x = sprintf(prtbuf, "%.8lX %.4x  ",
+            x = snprintf(prtbuf, sizeof(prtbuf), "%.8lX %.4x  ",
                         (unsigned long)(intptr_t)((unsigned char *)ptr + i),
                         i + offset);
         else
-            x = sprintf(prtbuf, "%.4x  ", i + offset);
+            x = snprintf(prtbuf, sizeof(prtbuf), "%.4x  ", i + offset);
         for (j = 0; j < 16; j = j + 4) {
             for (k = 0; k < 4; k++) {
                 if (i+j+k < len) {
@@ -2276,7 +2276,7 @@ int jmmsnap( void *ptr, int len, int offset, char *title)
                     workint = workchar;
                     // following line of code is Intel-specific
                     memset(((char *)&workint)+1, 0, sizeof(workint) - 1);
-                    sprintf(&prtbuf[x], "%.2x", workint);
+                    snprintf(&prtbuf[x], sizeof(prtbuf) - (size_t)x, "%.2x", workint);
                 } else
                     memset(&prtbuf[x], ' ', 2);
                 x = x + 2;

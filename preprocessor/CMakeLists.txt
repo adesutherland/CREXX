@@ -27,6 +27,7 @@ set(RXFNSB_RXBIN ${CMAKE_BINARY_DIR}/bin/library.rxbin)
 set(CLASSLIB_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib.rxbin)
 set(CLASSLIB_NATIVE_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin)
 set(RXFNSC_RXBIN ${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin)
+set(RXUNICODE_CORE_RXBIN ${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin)
 set(REXXSCRIPT_RXBIN ${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin)
 
 # Include RXPA Build System
@@ -135,14 +136,16 @@ add_custom_command(
                 ${CLASSLIB_RXBIN}
                 ${CLASSLIB_NATIVE_RXBIN}
                 ${RXFNSC_RXBIN}
+                ${RXUNICODE_CORE_RXBIN}
                 ${REXXSCRIPT_RXBIN}
         DEPENDS
-                rxlink
+                rxlink rxunicode_core
                 ${RXPP_MEMBER_RXBIN}
                 ${RXFNSB_RXBIN}
                 ${CLASSLIB_RXBIN}
                 ${CLASSLIB_NATIVE_RXBIN}
                 ${RXFNSC_RXBIN}
+                ${RXUNICODE_CORE_RXBIN}
                 ${REXXSCRIPT_RXBIN}
         COMMENT "Link the private rxpp runtime image ..."
         VERBATIM)
@@ -176,12 +179,14 @@ add_executable(rxpp ${RXPP_GENERATED_C})
 # the filesystem and platform RXPA providers.  Since RXPP is packaged as a
 # standalone native executable, those providers must also be statically
 # available to the executable.
+# Its embedded rxfnsc image also requires the Classic stream transport.
 #
 
 configure_linker_for_static_lib(rxpp precomp)
 configure_linker_for_static_lib(rxpp fs)
 configure_linker_for_static_lib(rxpp _platform
         PROVIDER_ID rxplatform)
+configure_linker_for_static_lib(rxpp cstream)
 
 # Runtime libraries required by the packaged executable.
 #

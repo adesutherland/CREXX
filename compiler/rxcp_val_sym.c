@@ -916,7 +916,7 @@ walker_result build_symbols_walker(walker_direction direction,
                                     ASTNode *nr = ast_ft(context, NODE_REGISTER);
                                     char reg_str[16];
                                     ASTNode *idx = ast_ft(context, INTEGER);
-                                    sprintf(reg_str, "%d", next_free);
+                                    snprintf(reg_str, sizeof(reg_str), "%d", next_free);
                                     ast_copy_str(idx, reg_str);
                                     idx->int_value = next_free;
                                     nr->int_value = next_free; /* Set on both for robustness */

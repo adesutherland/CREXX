@@ -24,6 +24,8 @@ foreach(consumer_file IN ITEMS
         sdk_probe.crexx
         sdk_const_probe.cpp
         sdk_incremental_link.cmake
+        core_native_installed.crexx
+        core_classic_installed.rexx
         rx_hash_installed.crexx
         rxsqlite_installed.crexx
         rxsqlite_address_installed.crexx
@@ -207,6 +209,28 @@ set(rxas "${prefix}/bin/rxas${EXE_SUFFIX}")
 set(rxvm "${prefix}/bin/rxvm${EXE_SUFFIX}")
 set(rxbvm "${prefix}/bin/rxbvm${EXE_SUFFIX}")
 set(crexx "${prefix}/bin/crexx${EXE_SUFFIX}")
+
+foreach(core_source IN ITEMS core_native_installed.crexx core_classic_installed.rexx)
+    get_filename_component(core_stem "${core_source}" NAME_WE)
+    if(core_stem STREQUAL "core_native_installed")
+        set(core_expected "CORE_NATIVE_PACKAGE_PASS\n")
+    else()
+        set(core_expected "CORE_CLASSIC_PACKAGE_PASS\n")
+    endif()
+    run_checked("native-package installed mandatory core consumer ${core_stem}"
+            COMMAND "${crexx}" -native "${core_source}"
+            WORKING_DIRECTORY "${consumer_source}")
+    run_checked("run native-packaged mandatory core consumer ${core_stem}"
+            COMMAND "${consumer_source}/${core_stem}${EXE_SUFFIX}"
+            WORKING_DIRECTORY "${consumer_source}")
+    if(NOT last_stdout STREQUAL core_expected)
+        message(FATAL_ERROR "Mandatory core native output mismatch: ${last_stdout}")
+    endif()
+    file(READ "${consumer_source}/${core_stem}_linked.rxproviders" core_requirements)
+    if(core_requirements MATCHES "[\t](rxparse|rxinvoke)[\t]")
+        message(FATAL_ERROR "Mandatory core leaked into external archive requirements: ${core_requirements}")
+    endif()
+endforeach()
 
 foreach(mode IN ITEMS opt noopt)
     set(mode_flag)

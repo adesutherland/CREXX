@@ -347,7 +347,7 @@ int test_decimalToDouble() {
     // Test NaN
     plugin->decimalFromDouble(plugin, &input, NAN);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("nan", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -358,7 +358,7 @@ int test_decimalToDouble() {
     // Test Infinity
     plugin->decimalFromDouble(plugin, &input, INFINITY);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("inf", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -369,7 +369,7 @@ int test_decimalToDouble() {
     // Test -Infinity
     plugin->decimalFromDouble(plugin, &input, -INFINITY);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("-inf", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -380,7 +380,7 @@ int test_decimalToDouble() {
     // Test 0.0
     plugin->decimalFromDouble(plugin, &input, 0.0);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("0.000000", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -391,7 +391,7 @@ int test_decimalToDouble() {
     // Test -0.0
     plugin->decimalFromDouble(plugin, &input, -0.0);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("-0.000000", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -402,7 +402,7 @@ int test_decimalToDouble() {
     // Test 1.23456789
     plugin->decimalFromDouble(plugin, &input, 1.23456789);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("1.234568", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -717,7 +717,7 @@ int test_add() {
     // Test with a long double overflow
     // Make a string 2/3rds of max long double
     char bignum[32];
-    sprintf(bignum, "%Lg", LDBL_MAX / 3 * 2);
+    snprintf(bignum, sizeof(bignum), "%Lg", LDBL_MAX / 3 * 2);
     plugin->base.signal_number = 0;
     plugin->decimalFromString(plugin, &a, bignum);
     plugin->decimalFromString(plugin, &b, bignum);
@@ -886,10 +886,10 @@ int test_subtract() {
     // Test with a long double overflow
     // Make a string 2/3rds of max long double
     char bignum[32];
-    sprintf(bignum, "%Lg", LDBL_MAX / 3 * 2);
+    snprintf(bignum, sizeof(bignum), "%Lg", LDBL_MAX / 3 * 2);
     plugin->base.signal_number = 0;
     plugin->decimalFromString(plugin, &a, bignum);
-    sprintf(bignum, "-%Lg", LDBL_MAX / 3 * 2);
+    snprintf(bignum, sizeof(bignum), "-%Lg", LDBL_MAX / 3 * 2);
     plugin->decimalFromString(plugin, &b, bignum);
     // Check no signal in setting up the numbers
     if (plugin->base.signal_number != 0) {
@@ -1071,7 +1071,7 @@ int test_multiply() {
     // Test with a long double overflow
     // Make a string 2/3rds of max long double
     char bignum[32];
-    sprintf(bignum, "%Lg", LDBL_MAX / 3 * 2);
+    snprintf(bignum, sizeof(bignum), "%Lg", LDBL_MAX / 3 * 2);
     plugin->base.signal_number = 0;
     plugin->decimalFromString(plugin, &a, bignum);
     plugin->decimalFromString(plugin, &b, bignum);
@@ -1242,7 +1242,7 @@ int test_divide() {
     // Test with a long double overflow
     // Make a string 2/3rds of max long double
     char bignum[32];
-    sprintf(bignum, "%Lg", LDBL_MAX / 3 * 2);
+    snprintf(bignum, sizeof(bignum), "%Lg", LDBL_MAX / 3 * 2);
     plugin->base.signal_number = 0;
     plugin->decimalFromString(plugin, &a, bignum);
     plugin->decimalFromString(plugin, &b, "1.2344E-100");

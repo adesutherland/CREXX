@@ -29,3 +29,18 @@ target_include_directories(_recv390_static PRIVATE
 )
 
 crexx_install_targets(_recv390 _recv390_static)
+
+if(BUILD_TESTING)
+    add_executable(test_recv390_directory_max_userdata
+        tests/test_directory_max_userdata.c)
+    target_link_libraries(test_recv390_directory_max_userdata PRIVATE
+        _recv390_static rxpashim rxbvml)
+    add_test(NAME recv390_directory_max_userdata
+        COMMAND ${CMAKE_COMMAND}
+            "-DRECV390_TEST=$<TARGET_FILE:test_recv390_directory_max_userdata>"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/check_directory_max_userdata.cmake")
+    set_tests_properties(recv390_directory_max_userdata PROPERTIES
+        LABELS "unit;plugins;recv390;regression" TIMEOUT 30)
+    crexx_register_test_prep_targets(TESTS recv390_directory_max_userdata
+        TARGETS test_recv390_directory_max_userdata)
+endif()

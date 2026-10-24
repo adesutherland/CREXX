@@ -1,0 +1,276 @@
+/* Independent source observations for event-owned terminal diagnostics. */
+.globals=4
+
+main() .locals=10
+    /* rxvmmain passes only tokens following -a. Main receives that vector in
+     * a1, so its first attribute is the single requested mode. */
+    getattrs r1,a1
+    ieq r2,r1,1
+    brf invalid_mode,r2
+    linkattr1 r8,a1,1
+    copy g3,r8
+    unlink r8
+    seq r1,g3,"empty"
+    brt empty_origin,r1
+    seq r1,g3,"nested"
+    brt nested_origin,r1
+    seq r1,g3,"action"
+    brt action_origin,r1
+    seq r1,g3,"pseudo"
+    brt pseudo_origin,r1
+    seq r1,g3,"callstored"
+    brt call_store_origin,r1
+    seq r1,g3,"stored"
+    brt stored_origin,r1
+    seq r1,g3,"alias"
+    brt stored_origin,r1
+    seq r1,g3,"fresh"
+    brt stored_origin,r1
+invalid_mode:
+    say "invalid-mode REJECTED"
+    ret 64
+
+stored_origin:
+    sigbrv saved_a,r0,"OTHER"
+    .srcstep 1 1 17 "A-call.rexx" 11 2 8 "call A"
+    call cause_a()
+    signal "FAILURE","A did not branch"
+
+saved_a:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    copy g0,r0
+    copy g2,g0
+    null g0
+    sigbrv saved_b,r0,"OTHER"
+    .srcstep 2 2 17 "B-call.rexx" 22 2 8 "call B"
+    call cause_b()
+    signal "FAILURE","B did not branch"
+
+saved_b:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    /* A was copied and its first owner cleared before the same-tag B fault. */
+    linkattr1 r1,g2,5
+    linkattr1 r2,r1,1
+    ieq r3,r2,30
+    unlink r2
+    brf failed,r3
+    linkattr1 r2,r1,5
+    seq r3,r2,"A\x00tail"
+    copy r7,r2
+    unlink r2
+    brf failed,r3
+    linkattr1 r2,r1,3
+    copy r4,r2
+    unlink r2
+    unlink r1
+    linkattr1 r1,r0,5
+    linkattr1 r2,r1,3
+    ieq r3,r2,r4
+    unlink r2
+    unlink r1
+    brt failed,r3
+    seq r1,g3,"fresh"
+    brt fresh_origin,r1
+    say "stored-event PASS"
+    sighalt "OTHER"
+    seq r1,g3,"alias"
+    brt alias_origin,r1
+    .srcstep 3 3 17 "rethrow-site.rexx" 88 1 10 "rethrow A"
+    signalorigin "OTHER",r7,g2
+    signal "FAILURE","stored relay resumed"
+
+alias_origin:
+    .srcstep 3 3 17 "rethrow-site.rexx" 88 1 10 "rethrow A"
+    /* Both operands alias; retaining context must precede payload mutation. */
+    signalorigin "OTHER",g2,g2
+    signal "FAILURE","aliased relay resumed"
+
+fresh_origin:
+    sigignore "OTHER"
+    signalorigin "OTHER",r7,g2
+    sighalt "OTHER"
+    say "fresh-event PASS"
+    .srcstep 4 4 17 "fresh-origin.rexx" 71 3 8 "fresh"
+    signal "OTHER","fresh"
+    signal "FAILURE","fresh signal resumed"
+
+empty_origin:
+    sigbrv empty_saved,r0,"OTHER"
+    .srcstep 5 5 17 "empty-origin.rexx" 5 1 6 "empty"
+    signal "OTHER","empty"
+    signal "FAILURE","empty event did not branch"
+empty_saved:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    copy g2,r0
+    sighalt "OTHER"
+    say "empty-event PASS"
+    .srcstep 6 6 17 "empty-rethrow.rexx" 88 1 12 "relay empty"
+    call empty_relay()
+    signal "FAILURE","empty relay resumed"
+
+nested_origin:
+    sigbrv nested_saved,r0,"OTHER"
+    .srcstep 7 7 17 "nested-outer.rexx" 41 2 14 "call helper"
+    call nested_helper()
+    signal "FAILURE","nested event did not branch"
+nested_saved:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    copy g2,r0
+    sighalt "OTHER"
+    say "nested-event PASS"
+    .srcstep 8 8 17 "nested-rethrow.rexx" 89 1 12 "relay nested"
+    load r7,"nested"
+    signalorigin "OTHER",r7,g2
+    signal "FAILURE","nested relay resumed"
+
+action_origin:
+    sigcalla fail_action(),"OTHER"
+    .srcstep 9 9 17 "action-call.rexx" 51 2 14 "call action"
+    call cause_a()
+    signal "FAILURE","failed action resumed"
+
+pseudo_origin:
+    sigcalla pseudo_action(),"OTHER"
+    .srcstep 10 10 17 "pseudo-call.rexx" 98 2 10 "call raise"
+    call pseudo_raise()
+    signal "FAILURE","pseudo action resumed"
+
+call_store_origin:
+    sigcalla store_call_event(),"OTHER"
+    .srcstep 22 22 17 "call-handler-A.rexx" 91 2 10 "call A"
+    call cause_a()
+    sigbrv call_wrapper,r0,"OTHER"
+    .srcstep 23 23 17 "B-call.rexx" 22 2 8 "call B"
+    call cause_b()
+    signal "FAILURE","CALL stored event did not resume"
+call_wrapper:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    /* set_raw's normal copy shape, using a VM-bound wrapper from BRV. */
+    linkattr1 r1,r0,5
+    copy r1,g0
+    unlink r1
+    copy g2,r0
+    null g0
+    null r0
+    sighalt "OTHER"
+    say "call-event PASS"
+    .srcstep 24 24 17 "rethrow-site.rexx" 88 1 10 "rethrow A"
+    load r7,"A\x00tail"
+    signalorigin "OTHER",r7,g2
+    signal "FAILURE","CALL stored relay resumed"
+
+failed:
+    signal "FAILURE","diagnostic fixture raw event assertion failed"
+    ret 1
+
+cause_a() .locals=1
+    .srcstep 11 11 17 "cause-A.rexx" 31 1 12 "raise A"
+    load r0,"A\x00tail"
+    signal "OTHER",r0
+    ret
+
+cause_b() .locals=0
+    .srcstep 12 12 17 "cause-B.rexx" 32 1 12 "raise B"
+    signal "OTHER","B"
+    ret
+
+empty_relay() .locals=1
+    .srcstep 0 0 6 "" 0 0 0 ""
+    load r0,"empty"
+    signalorigin "OTHER",r0,g2
+    ret
+
+nested_helper() .locals=2
+    sigpush "OTHER"
+    sigbrv nested_caught,r0,"OTHER"
+    .srcstep 13 13 17 "nested-inner.rexx" 42 3 16 "call cause"
+    call cause_a()
+    signal "FAILURE","inner nested event did not branch"
+nested_caught:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    sigpop "OTHER"
+    load r1,"nested"
+    signalorigin "OTHER",r1,r0
+    ret
+
+fail_action() .locals=0
+    .srcstep 0 0 6 "" 0 0 0 ""
+    say "action-event PASS"
+    ret "__rxsignal_fail"
+
+store_call_event() .locals=0
+    .srcstep 0 0 6 "" 0 0 0 ""
+    copy g0,a1
+    ret "__rxsignal_skip"
+
+pseudo_action() .locals=0
+    sighalt "FAILURE"
+    .srcstep 14 14 17 "handler-call.rexx" 61 4 16 "call failure"
+    call handler_failure()
+    ret "__rxsignal_fail"
+
+pseudo_raise() .locals=0
+    .srcstep 25 25 17 "pseudo-edge.rexx" 99 1 11 "interrupt"
+    signal "OTHER","initial interruption"
+    ret
+
+handler_failure() .locals=0
+    .srcstep 15 15 17 "handler-cause.rexx" 62 1 12 "raise failure"
+    say "pseudo-event PASS"
+    signal "FAILURE","handler failure"
+    ret
+
+/* Native lifecycle tests use these ordinary exposed bodies, without main(). */
+native_a() .locals=1 .expose=signal_diag.save_a
+    sigbrv native_a_saved,r0,"OTHER"
+    .srcstep 16 16 17 "native-A-call.rexx" 73 2 9 "call A"
+    call cause_a()
+    signal "FAILURE","native A did not branch"
+native_a_saved:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    ret r0
+
+native_b() .locals=1 .expose=signal_diag.save_b
+    sigbrv native_b_saved,r0,"OTHER"
+    .srcstep 17 17 17 "native-B-call.rexx" 74 2 9 "call B"
+    call cause_b()
+    signal "FAILURE","native B did not branch"
+native_b_saved:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    ret r0
+
+native_relay() .locals=2 .expose=signal_diag.relay
+    sigbrv native_relay_saved,r0,"OTHER"
+    .srcstep 18 18 17 "native-rethrow.rexx" 75 1 8 "relay A"
+    load r1,"A\x00tail"
+    signalorigin "OTHER",r1,a1
+    signal "FAILURE","native relay did not branch"
+native_relay_saved:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    ret r0
+
+native_fresh() .locals=2 .expose=signal_diag.fresh
+    sigignore "OTHER"
+    load r1,"ignored"
+    signalorigin "OTHER",r1,a1
+    sigbrv native_fresh_saved,r0,"OTHER"
+    .srcstep 19 19 17 "native-fresh.rexx" 76 1 6 "fresh"
+    signal "OTHER","fresh"
+    signal "FAILURE","native fresh did not branch"
+native_fresh_saved:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    ret r0
+
+native_empty() .locals=1 .expose=signal_diag.empty
+    sigbrv native_empty_saved,r0,"OTHER"
+    .srcstep 20 20 17 "native-empty.rexx" 77 1 6 "empty"
+    signal "OTHER","empty"
+    signal "FAILURE","native empty did not branch"
+native_empty_saved:
+    .srcstep 0 0 6 "" 0 0 0 ""
+    ret r0
+
+native_unhandled() .locals=0 .expose=signal_diag.unhandled
+    .srcstep 21 21 17 "unavailable-call.rexx" 87 2 9 "call A"
+    call cause_a()
+    ret

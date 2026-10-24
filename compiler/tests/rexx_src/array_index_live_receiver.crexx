@@ -1,0 +1,80 @@
+options levelb
+
+store = .IndexStore()
+say store.read()
+call store.write(73)
+say store.first()
+say store.read()
+say store.readArgument()
+say store.readWindow()
+say store.readGrid()
+say store.checkLocal()
+say store.count()
+return 0
+
+IndexSelector: class
+  calls = .int
+
+  *: factory
+    calls = 0
+    return
+
+  fresh: method = .IndexSelector
+    calls = calls + 1
+    return .IndexSelector()
+
+  index: method = .int
+    calls = calls + 1
+    return 1
+
+  use: method = .int
+    arg other = .IndexSelector
+    calls = calls + 1
+    return other.index()
+
+  wide: method = .int
+    arg one = .int, two = .int, other = .IndexSelector, four = .int
+    calls = calls + 1
+    return other.index()
+
+  count: method = .int
+    return calls
+
+IndexStore: class
+  values = .int[]
+  grid = .int[,]
+  selector = .IndexSelector
+
+  *: factory
+    values[1] = 42
+    grid[1,1] = 91
+    selector = .IndexSelector()
+    return
+
+  read: method = .int
+    return values[selector.fresh().index()]
+
+  write: method = .void
+    arg value = .int
+    values[selector.fresh().index()] = value
+    return
+
+  first: method = .int
+    return values[1]
+
+  readArgument: method = .int
+    return values[selector.use(selector.fresh())]
+
+  readWindow: method = .int
+    return values[selector.wide(1,2,.IndexSelector(),4)]
+
+  readGrid: method = .int
+    return grid[selector.fresh().index(),selector.fresh().index()]
+
+  checkLocal: method = .int
+    local = .int[,]
+    local[1,1] = 19
+    return local[selector.fresh().index(),selector.fresh().index()]
+
+  count: method = .int
+    return selector.count()

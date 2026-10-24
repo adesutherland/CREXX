@@ -1,6 +1,8 @@
 // rxpa (plugin architecture) functional test procedures
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "crexxpa.h"    // crexx/pa - Plugin Architecture header file
 
 // Do not need to define functions for static linking to the compiler - only REXX declarations are needed
@@ -105,21 +107,41 @@ PROCEDURE(throw_signal_arg)
     RETURNSIGNAL(SIGNAL_ERROR, "This is an argument-window test signal")
 }
 
+/* Publish after both C-string prefixes have been copied: the destination may
+ * alias either input. Retain the original stack path for small results. */
+static const char *concat_strings(rxpa_attribute_value target,
+                                  const char *first, const char *second) {
+    char local[1024];
+    char *buffer = local;
+    size_t first_length = strlen(first);
+    size_t second_length = strlen(second);
+    size_t capacity;
+
+    if (second_length == SIZE_MAX || first_length > SIZE_MAX - second_length - 1u)
+        return "Concatenated string size overflows";
+    capacity = first_length + second_length + 1u;
+    if (capacity > sizeof(local)) {
+        buffer = malloc(capacity);
+        if (!buffer) return "Unable to allocate concatenated string";
+    }
+    memcpy(buffer, first, first_length);
+    memcpy(buffer + first_length, second, second_length + 1u);
+    SETSTRING(target, buffer);
+    if (buffer != local) free(buffer);
+    return NULL;
+}
+
 // string_concat
 PROCEDURE(string_concat)
 {
-    // buffer to hold the concatenated strings
-    char buffer[1024];
+    const char *error;
 
     /* This should never happen as the compiler will have spotted this error */
     /* However best practice is to check this as versions may have changed   */
     if( NUM_ARGS != 2) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "2 arguments expected")
 
-    // Concatenate the strings
-    sprintf(buffer, "%s%s", GETSTRING(ARG(0)), GETSTRING(ARG(1)));
-
-    // Set return
-    SETSTRING(RETURN, buffer);
+    error = concat_strings(RETURN, GETSTRING(ARG(0)), GETSTRING(ARG(1)));
+    if (error) RETURNSIGNAL(SIGNAL_FAILURE, error)
 
     // Set return and make sure the signal is reset/ok
     RESETSIGNAL
@@ -128,18 +150,14 @@ PROCEDURE(string_concat)
 // Concatenate two strings to a third argument
 PROCEDURE(string_concat_ref)
 {
-    // buffer to hold the concatenated strings
-    char buffer[1024];
+    const char *error;
 
     /* This should never happen as the compiler will have spotted this error */
     /* However best practice is to check this as versions may have changed   */
     if( NUM_ARGS != 3) RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "3 arguments expected")
 
-    // Concatenate the strings
-    sprintf(buffer, "%s%s", GETSTRING(ARG(0)), GETSTRING(ARG(1)));
-
-    // Set return
-    SETSTRING(ARG(2), buffer);
+    error = concat_strings(ARG(2), GETSTRING(ARG(0)), GETSTRING(ARG(1)));
+    if (error) RETURNSIGNAL(SIGNAL_FAILURE, error)
 
     // Make sure the signal is reset/ok
     RESETSIGNAL

@@ -344,15 +344,23 @@ program: class
     texts = .string[]; origins = .int[]; mapping = .int[]
     if _sealed then return .llrxas..allocation(texts,origins,mapping,0,'LL_RXAS_STATE: target already sealed')
     _sealed = 1
+    if _error <> '' then return .llrxas..allocation(texts,origins,mapping,0,_error)
     first = .int[]; last = .int[]; initial = .int[]; order = .int[]
-    arrivals = .int[]; following = .int[]; labels = .string[]; locations = .int[]
+    arrivals = .int[]; following = .int[]; labeltargets = .stem(); locations = .int[]
     loopstarts = .int[]; loopends = .int[]; members = .int[]; chain = .int[]; fixedat = .int[]
     item = .instruction; other = .instruction; i = .int; j = .int; k = .int; v = .int; w = .int
-    n = .int; physical = .int; locals = .int
+    n = .int; physical = .int; locals = .int; label = .string
     do i = 1 to _records[0]
       item = _records[i] as .instruction
       if item.kind() <> 'label' then iterate
-      n = labels[0] + 1; labels[n] = item.mnemonic(); locations[n] = i
+      label = item.mnemonic()
+      if charge(length(label) + 1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
+      /* Preserve the first target while retaining every storage boundary. */
+      if labeltargets.get(label) = '' then do
+        if charge(length(label) + 1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
+        call labeltargets.set(label,i as .string)
+      end
+      n = locations[0] + 1; locations[n] = i
     end
     do i = 1 to _records[0]
       item = _records[i] as .instruction
@@ -360,7 +368,7 @@ program: class
       do j = 1 to item.operands()
         v = item.local(j) + 1
         if v < 1 then iterate
-        if charge(1) = 0 then leave
+        if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
         if first[v] = 0 then do
           first[v] = i
           n = order[0] + 1; order[n] = v
@@ -373,12 +381,14 @@ program: class
       if opcode < 0 then iterate
       do j = 1 to item.operands()
         if _catalog.branch(opcode,j) = 0 then iterate
-        label = item.operand(j) || ':'; target = 0
-        do k = 1 to labels[0]
-          if charge(1) = 0 then leave
-          if labels[k] = label then do; target = locations[k]; leave; end
+        label = item.operand(j) || ':'
+        if charge(length(label) + 1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
+        targettext = labeltargets.get(label)
+        if targettext = '' then do
+          _error = 'LL_RXAS_RECORD: unresolved branch target'
+          return .llrxas..allocation(texts,origins,mapping,0,_error)
         end
-        if target = 0 then do; _error = 'LL_RXAS_RECORD: unresolved branch target'; leave; end
+        target = targettext as .int
         if target <= i & _identity = 0 & reuse then do
           n = loopstarts[0] + 1; loopstarts[n] = target; loopends[n] = i
         end
@@ -392,11 +402,11 @@ program: class
         /* A first textual definition need not dominate an entry after it.
          * Keep cross-block cells unique until a checked CFG proof is supplied. */
         do k = 1 to locations[0]
-          if charge(1) = 0 then leave
+          if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
           if first[v] < locations[k] & locations[k] <= last[v] then _pinned[v] = 1
         end
         do k = 1 to loopstarts[0]
-          if charge(1) = 0 then leave
+          if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
           if first[v] <= loopends[k] & last[v] >= loopstarts[k] then _pinned[v] = 1
         end
       end
@@ -412,7 +422,7 @@ program: class
         if _fixed[v] then do; mapping[v] = v - 1; fixedat[v] = 1; end
       end
       do k = 1 to order[0]
-        if charge(1) = 0 then leave
+        if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
         v = order[k]
         if v > _suffix | _candidates[v] = 0 | _pinned[v] | _fixed[v] then iterate
         physical = 0; found = 0
@@ -420,7 +430,7 @@ program: class
           found = fixedat[physical + 1] = 0
           w = members[physical + 1]
           do while w > 0 & found
-            if charge(1) = 0 then leave
+            if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
             if first[w] <= last[v] & first[v] <= last[w] then found = 0
             w = chain[w]
           end

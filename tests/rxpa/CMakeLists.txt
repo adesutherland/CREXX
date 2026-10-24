@@ -253,14 +253,21 @@ localize_test_plugin_output(_cri17_attached)
 add_rxpa_provider_package(_cri17_attached
         OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/providers")
 
+set(_cri17_attached_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/cri17_attached")
+crexx_add_import_root(cri17_attached_provider_imports
+        DIRECTORY "${_cri17_attached_import_root}"
+        OUTPUT_VARIABLE _cri17_attached_import_files
+        FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+                "$<TARGET_FILE_DIR:_cri17_attached>/rx_cri17provider.rxplugin"
+        DEPENDS library classlib _cri17_attached)
 add_custom_target(cri17_attached_provider_test ALL)
 crexx_add_rexx_opt_matrix(
         NAME cri17_attached_provider
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/cri17_attached_provider.crexx
         TARGET_GROUP cri17_attached_provider_test
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
-        RXC_FLAGS -x
-        DEPENDS library classlib _cri17_attached _cri17_attached_static
+        IMPORT_PATHS "${_cri17_attached_import_root}"
+        RXC_FLAGS -x --no-exe-import
+        DEPENDS cri17_attached_provider_imports ${_cri17_attached_import_files} _cri17_attached_static
         RUNTIME_ARGS
                 ${CMAKE_BINARY_DIR}/bin/library
                 ${CMAKE_BINARY_DIR}/bin/classlib
@@ -326,13 +333,21 @@ target_compile_definitions(cri17_attached_provider_control-rxbvml PRIVATE
 crexx_configure_cri17_attached_control(
         cri17_attached_provider_control-rxbvml)
 
+set(_rcc_provider_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/rcc_provider")
+crexx_add_import_root(rcc_provider_autoload_imports
+        DIRECTORY "${_rcc_provider_import_root}"
+        OUTPUT_VARIABLE _rcc_provider_import_files
+        FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                "$<TARGET_FILE_DIR:_rcc_provider>/rx_rcc_provider.rxplugin"
+        DEPENDS library compiler_exit_bin _rcc_provider)
 add_custom_target(rcc_provider_autoload_test ALL)
 crexx_add_rexx_opt_matrix(
         NAME rcc_provider_autoload
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rcc_provider.crexx
         TARGET_GROUP rcc_provider_autoload_test
-        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS library _rcc_provider _rcc_provider_static
+        IMPORT_PATHS "${_rcc_provider_import_root}"
+        RXC_FLAGS --no-exe-import
+        DEPENDS rcc_provider_autoload_imports ${_rcc_provider_import_files} _rcc_provider_static
         TEST_LABELS "rxpa;provider;autoload")
 # The optimized matrix deliberately stages the linked image under linked_opt/;
 # exercise the explicit trusted-path route for that isolated container.
@@ -468,6 +483,18 @@ foreach(engine IN ITEMS rxbvm rxtvm)
             ${CMAKE_SOURCE_DIR}/third_party/avl_tree ${CMAKE_SOURCE_DIR}/third_party/utf8 ${CMAKE_SOURCE_DIR}/interpreter/rxvml)
 endforeach()
 
+# Scan only declared metadata, never sibling RXBIN outputs being written by
+# parallel fixture producers. Stage the actual provider target, not its
+# undeclared POST_BUILD package copy, so a missing import is recoverable.
+set(_rxpa_object_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/rxpa_objects")
+crexx_add_import_root(rxpa_objects_imports
+        DIRECTORY "${_rxpa_object_import_root}"
+        OUTPUT_VARIABLE _rxpa_object_import_files
+        FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                "$<TARGET_FILE_DIR:_rxpa_objects>/rx_rxpa_objects.rxplugin"
+        DEPENDS library classlib compiler_exit_bin _rxpa_objects)
+
 # Individual VM regressions build their artifacts through the normal QA prep
 # targets. CTest itself launches one VM per case: no nested build or matrix.
 # The larger explicit toolchain/package scripts remain unregistered aggregates.
@@ -484,7 +511,7 @@ foreach(fixture IN ITEMS rxpa_objects rxpa_objects_class_only rxpa_objects_worke
         crexx_add_fixture_command(OUTPUT "${_object_program}-linked.rxbin"
                 BYPRODUCTS "${_object_program}.rxas" "${_object_program}.rxbin"
                 COMMAND $<TARGET_FILE:rxc> --no-exe-import ${_object_flags}
-                        -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
+                        -i "${_rxpa_object_import_root}"
                         -o "${_object_program}" "${CMAKE_CURRENT_SOURCE_DIR}/${fixture}.crexx"
                 COMMAND $<TARGET_FILE:rxas> -o "${_object_program}" "${_object_program}"
                 COMMAND $<TARGET_FILE:rxlink> -o "${_object_program}-linked" "${_object_program}"
@@ -492,6 +519,11 @@ foreach(fixture IN ITEMS rxpa_objects rxpa_objects_class_only rxpa_objects_worke
                         "${CMAKE_BINARY_DIR}/bin/classlib"
                         "${CMAKE_BINARY_DIR}/bin/rxfnsg"
                 DEPENDS rxc rxas rxlink compiler_exit_bin _rxpa_objects library classlib rxfnsg
+                        rxpa_objects_imports ${_rxpa_object_import_files}
+                        "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                        "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+                        "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+                        "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin"
                         "${CMAKE_CURRENT_SOURCE_DIR}/${fixture}.crexx"
                 VERBATIM)
         list(APPEND _object_artifacts "${_object_program}-linked.rxbin")
@@ -542,6 +574,23 @@ crexx_add_rexx_opt_matrix(
         REQUIRED_OUTPUT_REGEX
                 "PASS: RXPA CALLMETHOD invokes a cREXX object method"
         FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:")
+
+# Reuse the unstripped noopt image for independent callback source observations.
+foreach(_callback_diag_vm rxbvm rxtvm)
+    if(TARGET ${_callback_diag_vm})
+        set(_callback_diag_test callmethod_diagnostics_${_callback_diag_vm})
+        add_test(NAME ${_callback_diag_test} COMMAND ${CMAKE_COMMAND}
+                -DRUNNER=$<TARGET_FILE:${_callback_diag_vm}>
+                -DBINARY=${CMAKE_CURRENT_BINARY_DIR}/rxpa_callmethod_run_noopt.rxbin
+                -DPROVIDER=$<TARGET_FILE:_rxpa_callmethod>
+                -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/run_callmethod_diagnostics.cmake)
+        set_tests_properties(${_callback_diag_test} PROPERTIES TIMEOUT 90
+                LABELS "interpreter;rxpa;callback;signal;diagnostics;regression")
+        crexx_register_test_prep_targets(TESTS ${_callback_diag_test} TARGETS
+                ${_callback_diag_vm} rxpa_callmethod_run_noopt_artifact _rxpa_callmethod library)
+    endif()
+endforeach()
 
 # Compiler-facing signature validation fixture. The deliberately malformed
 # declarations are never invoked; they exercise import diagnostics alongside

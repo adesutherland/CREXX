@@ -190,6 +190,8 @@ static int rxvm_execute_initializer(struct rxvm_context *ctx,
     value *saved_ret;
     value *ret;
     proc_runtime *saved_fault_entry;
+    value *fault_sink;
+    int sink_was_empty, captured_fault;
     int rc;
 
     saved_proc = ctx->ext_proc;
@@ -209,9 +211,16 @@ static int rxvm_execute_initializer(struct rxvm_context *ctx,
     ctx->ext_args = 0;
     ctx->ext_ret = ret;
     saved_fault_entry = ctx->active.invocation_fault_entry;
-    if (ctx->active.invocation_fault_sink)
+    fault_sink = ctx->active.invocation_fault_sink;
+    sink_was_empty = fault_sink && !fault_sink->num_attributes;
+    if (fault_sink)
         ctx->active.invocation_fault_entry = procedure;
     rc = run(ctx, 0, 0);
+    /* Only this scoped run's new owned event replaces its generic summary.
+     * A pre-existing sink event does not witness this initializer's failure. */
+    captured_fault = sink_was_empty && ctx->active.invocation_fault_sink == fault_sink &&
+            ctx->active.invocation_fault_entry == procedure && ctx->ext_proc == procedure &&
+            fault_sink->num_attributes;
     /* SILENT_HALT normally returns zero. A captured initializer cancellation
      * still failed its initialization and must not publish READY state. */
     if (!rc && ctx->active.invocation_fault_sink &&
@@ -228,9 +237,10 @@ static int rxvm_execute_initializer(struct rxvm_context *ctx,
     value_free(ret);
 
     if (rc != 0) {
-        fprintf(stderr,
-                "ERROR: initializer %s failed in module %s (rc=%d)\n",
-                symbol ? symbol : "<unknown>", mod->name, rc);
+        if (!captured_fault)
+            fprintf(stderr,
+                    "ERROR: initializer %s failed in module %s (rc=%d)\n",
+                    symbol ? symbol : "<unknown>", mod->name, rc);
         return -1;
     }
     return 0;

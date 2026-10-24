@@ -9,11 +9,21 @@ All general Level L documentation and examples live here, alongside tool and
 library tests. `lib/rxfnsl/` contains only SDK implementation and required Unicode
 build data. Experimental compiler-specific material remains in research.
 
-Start with the comprehensive [Level L user guide](doc/user-guide.md) for a
-complete runnable language, authoring reference and consumer APIs. The
+Start with the [Level L user guide](doc/user-guide.md) for a complete runnable
+language, authoring reference and consumer APIs. The
+[architecture guide](doc/architecture.md) explains the packages, dependency
+direction, source/IR ownership and build/runtime pipelines. The
 [diagnostic assessment](doc/diagnostics.md) records error quality,
 the implemented recovery profiles and remaining work. This file focuses
 on generator implementation and qualification details.
+
+| Reference | Use it for |
+|---|---|
+| [Bootstrap](doc/bootstrap.md) | Native seed, L0/L1/L2, build dependencies and fixed-point publication. |
+| [Generation](doc/generation-design.md) | Pure generation, optional lexical capsules and atomic cache/output publication. |
+| [IR and analysis](doc/ir-design.md) | Checked IR, semantic services, facts, transformations and graph/effect proofs. |
+| [RXAS target](doc/rxas-design.md) | Canonical instruction metadata, selected records and register assignment. |
+| [IR execution](doc/execute-design.md) | Trusted runtime handlers, manifests, leases, frame lifetime and suspension. |
 
 Level L is reusable language-engineering infrastructure. RexxScript 1 is its
 first product consumer; the library has no dependency on RexxScript values,
@@ -251,7 +261,7 @@ stage and install component; neither SDK nor Level L imports them.
 Optional IR packages have separate targets and images:
 `rxfnsl_analysis` supplies [graphs and proofs](doc/ir-design.md),
 `rxfnsl_rxas` supplies [RXAS records and register assignment](doc/rxas-design.md),
-and `rxfnsl_execute` supplies the [bounded execution prototype](doc/execute-design.md).
+and `rxfnsl_execute` supplies [bounded IR execution](doc/execute-design.md).
 Select them through imports and linking; normal SDK installation delivers all
 four images. Building the individual `rxfnsl` target prepares only the core and
 its base dependency. Optional packages do not enter grammar bootstrap or static
@@ -266,15 +276,17 @@ targets merely because they ship with the SDK.
 
 The [RXAS guide](doc/rxas-design.md#construct-one-function) supplies a complete
 independent producer. Its emitted program runs without these SDK images. The
-[execution guide](doc/execute-design.md) describes the admitted prototype and
+[execution guide](doc/execute-design.md) describes the admitted control profile and
 continuation ownership; it does not promise a full Classic or RexxScript backend.
 
-`llgenerate..request(source, format, filename, limits, rxl, bytes)` accepts exact
+`llgenerate..request(source, format, filename, limits, rxl, bytes, ?lexical)` accepts exact
 binary source and returns `status()`, `error()` and owned `output()`. Defaults are
 `rxas`, `<source>`, a default Level L policy, `0` and 67108864. The service uses
 `llir.writer`, returns no partial artifact on error and has no CLI/stdout or file
 publication dependency. `llfront` and `llgenerate` are in `rxlanglib.rxbin`;
-link it alongside `rxfnsl.rxbin` and the B runtime library.
+link it alongside `rxfnsl.rxbin` and the B runtime library. The optional final
+binary opts into lexical construction reuse; omission keeps ordinary cold
+behavior. See the [service reference](doc/user-guide.md#callable-generation-service).
 
 The Level B helpers in `common/` are separately installed libraries:
 `llrxastext` escapes exact bytes and holds source-tagged instruction records;
@@ -283,10 +295,11 @@ The Level B helpers in `common/` are separately installed libraries:
 admission stays in the research compiler. `tests/services.crexx` is their
 independent consumer, including failed-output preservation.
 
-The locally qualified [selected-callable classification contract](doc/user-guide.md#selected-callable-classification)
-owns **LMC-AC01–06** and **LMC-STEP01–03**. It adds pool-local procedure/method/
-factory facts and an opt-in bounded owning catalogue with monotonic usage
-queries. Existing metadata APIs remain compatible; language ABI policy stays
+The [selected-callable classification API](doc/user-guide.md#selected-callable-classification)
+supplies pool-local procedure/method/factory facts and an opt-in bounded owning
+catalogue with monotonic usage queries. The
+[Level L plan](../research/level-l/PLAN.md#callable-metadata-helper-contracts)
+owns its acceptance criteria and implementation status. Existing metadata APIs remain compatible; language ABI policy stays
 with the consumer. Pure `llbinmeta..validname(name)` checks the existing metadata
 identifier byte alphabet without allocating a catalogue; bounded catalogue name
 checks reserve work before using the same utility. The independent

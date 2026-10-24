@@ -20,7 +20,6 @@ main() .locals=8
    say "Testing Array Intrinsics..."
    .srcstep 5 5 17 "val_magic_01.crexx" 7 1 8 "len = a[]"
    .meta "val_magic_01.main.len"="b" ".int" r3
-   .traceevent "C" 4 "R" "V" "r" 6 5 5 0 "a" ""
    load r7,10
    .traceevent "V" 6 "R" "I" "r" 7 5 5 0 "a" ""
    icopy r3,r7
@@ -44,7 +43,6 @@ main() .locals=8
 l28iffalse:
    .srcstep 11 11 17 "val_magic_01.crexx" 15 1 12 "len_b = b[0] /* Syntax candy for 1-based arrays: 0 means length */"
    .meta "val_magic_01.main.len_b"="b" ".int" r4
-   .traceevent "C" 4 "R" "V" "r" 7 11 11 0 "b" ""
    load r6,5
    .traceevent "V" 6 "R" "I" "r" 6 11 11 0 "b" ""
    icopy r4,r6
@@ -69,12 +67,11 @@ l51iffalse:
    .srcstep 17 17 17 "val_magic_01.crexx" 23 1 12 "len_c = c[1, ] /* Supporting arr[index, void] */"
    .meta "val_magic_01.main.len_c"="b" ".int" r5
    setattrs r2,3
-   linkattr1 r6,r2,1
-   .traceevent "C" 4 "R" "V" "r" 7 17 17 0 "c" ""
-   unlink r6
-   load r6,4
-   .traceevent "V" 6 "R" "I" "r" 6 17 17 0 "c" ""
-   icopy r5,r6
+   linkattr1 r7,r2,1
+   unlink r7
+   load r7,4
+   .traceevent "V" 6 "R" "I" "r" 7 17 17 0 "c" ""
+   icopy r5,r7
    .traceevent "A" 6 "R" "I" "r" 5 17 17 0 "len_c" ""
    .srcstep 18 18 17 "val_magic_01.crexx" 24 1 68 "say \"Length of c[3, 4] second dimension at index 1 (c[1, ]):\" len_c"
    itos r5

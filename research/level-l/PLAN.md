@@ -255,6 +255,38 @@ existing operation identities and metadata meaning during extraction. Any new
 public extension protocol beyond the already reviewed L services needs its
 own concrete API review; this is not authority for a new language design.
 
+### Callable metadata helper contracts
+
+`llbinmeta` supplies generic RXBIN metadata facts to independent tool consumers.
+Its accepted outcome is pool-local callable ownership classification, compatible
+attribute-register lookup and an optional bounded owning catalogue. Source
+parsing, provider execution and a consumer language's ABI admission remain with
+their owners. The [user guide](../../langtools/doc/user-guide.md#selected-callable-classification)
+owns the API, identifier, lifetime, selected-error and logical-budget contracts;
+[architecture](../../langtools/doc/architecture.md#tool-services-publication-and-build-lifecycle)
+owns the dependency and trust boundary.
+
+The existing local qualification is retained below; moving these contracts out
+of the user guide does not establish new hosted, platform or release proof.
+
+| Criterion / status | Observable contract and verification |
+|---|---|
+| **CMETA-AC01 — Done locally** | Attribute field 4 reads the full META_ATTR wire register index as decimal `-1` or `0..2147483647`, rather than a string-pool ID. The independent `metadata-attributes.crexx` fixture covers mapped/unmapped values and unsupported indices/record sizes. |
+| **CMETA-AC02 — Done locally** | Attribute fields 1–3 retain name/options/type behavior and the ordinary missing-field contract; register views derive from the complete type without an invented view field. The attribute fixture covers compatibility and import errors. |
+| **CMETA-AC03 — Done locally** | The independent metadata attribute consumer qualifies these contracts in complementary owning compiler/VM modes. This is metadata reading, not consumer ABI admission. |
+| **LMC-AC01 — Done locally** | Plain, class, exact factory and interface-default callables classify from the selected real row and pool. Imported prototypes, duplicate definitions and owner conflicts refuse; legacy lookup/field/factory behavior is preserved. |
+| **LMC-AC02 — Done locally** | Selected malformed/partial ownership refuses, unrelated opaque rows do not poison selections, and foreign-pool ownership is never joined. The independent classifier and small RXAS producers exercise selected record mutations. |
+| **LMC-AC03 — Done locally** | Strict full names preserve supported identifier bytes and metadata casing; pure and bounded catalogue name checks use one identifier validator. No source-language Unicode, type or name-resolution policy is added. |
+| **LMC-AC04 — Done locally** | Returned fields own their lifetime. Preparation/indexing and selected-row caching remain bounded; arbitrary misses do not grow retained state. Independent lifecycle controls cover catalogue/source expiry and owned results. |
+| **LMC-AC05 — Done locally** | Pre-copy input, preparation, index, selection and output-copy reservations exhaust without partial publication. Counters are monotonic and non-triggering; sequential catalogue groups given remaining allowances cannot exceed the host aggregate. Logical accounting is not a resident-memory cap. |
+| **LMC-AC06 — Done locally** | Independent B consumers qualify complementary compiler/VM modes. Source and emitted RXAS review cover scoped image aliases, avoided repeated image copies and the absence of new native/VM or compiler-policy dependencies. Metadata admission does not prove provider-code safety. |
+
+| Step / status | Criteria and retained scope |
+|---|---|
+| **LMC-STEP01 — Done** | Define the contract and independent acceptance criteria; LMC-AC01–06. |
+| **LMC-STEP02 — Done** | Factor the reader, bounded route, classifier and maintained fixtures; LMC-AC01–05. |
+| **LMC-STEP03 — Done locally** | Qualify complementary consumers, review actual RXAS and deliver the local dependency closure; LMC-AC01–06. Publication and broader delivery proof remain separate. |
+
 ### Build, install and consumer boundaries
 
 The intended dependency order is:

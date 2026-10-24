@@ -37,9 +37,13 @@ def control(path):
     return inputs, set(selectors), outputs[0]
 
 
-def imports(directory, originals):
+def imports(directory, originals, directories=()):
     expected = {path.name: path for path in originals}
-    actual = {path.name: path for path in directory.iterdir()}
+    entries = list(directory.iterdir())
+    actual = {path.name: path for path in entries if path.is_file()}
+    nested = {path.name for path in entries if path.is_dir()}
+    assert nested == set(directories), (directory, 'foreign module roots', sorted(nested), sorted(directories))
+    assert all(path.is_file() or path.is_dir() for path in entries), (directory, 'unsupported import entry')
     assert actual.keys() == expected.keys(), (directory, sorted(actual), sorted(expected))
     for name, original in expected.items():
         assert digest(actual[name]) == digest(original), (directory, name, 'stale staged import')
@@ -50,6 +54,33 @@ def source_imports(paths, allowed):
         names = set(re.findall(r'^\s*import\s+([A-Za-z0-9_]+)', path.read_text(), re.M | re.I))
         rejected = {name for name in names if name.lower() not in allowed}
         assert not rejected, (path, 'foreign source dependency', sorted(rejected))
+
+
+def core_dependencies():
+    owner = ROOT / 'lib/rxfnsl/rexx/CMakeLists.txt'
+    rows = re.findall(r'^set\((RXFNSL_REXX_MODULES|RXFNSL_DEPS_\w+)\s+([^)]*)\)',
+                      owner.read_text(), re.M)
+    declarations = dict(rows)
+    assert len(rows) == len(declarations), (owner, 'duplicate core declaration')
+    modules = set(declarations.pop('RXFNSL_REXX_MODULES').split())
+    direct = {name.removeprefix('RXFNSL_DEPS_'): set(values.split())
+              for name, values in declarations.items()}
+    assert (set(direct) <= modules and all(values <= modules for values in direct.values())), \
+        (owner, 'foreign core dependency')
+    closures = {}
+
+    def visit(module, active):
+        assert module not in active, (owner, 'cyclic core dependency', module)
+        if module not in closures:
+            dependencies = set(direct.get(module, ()))
+            for dependency in direct.get(module, ()):
+                dependencies.update(visit(dependency, active | {module}))
+            closures[module] = dependencies
+        return closures[module]
+
+    for module in modules:
+        visit(module, set())
+    return modules, closures
 
 
 def main():
@@ -70,7 +101,14 @@ def main():
     assert all(path.parent == sdk / 'rexx' for path in core_inputs)
     core_sources = list((ROOT / 'lib/rxfnsl/rexx').glob('*.crexx'))
     source_imports(core_sources, core | {'rxfnsb'})
-    imports(sdk / 'rexx/imports', [base])
+    declared, dependencies = core_dependencies()
+    assert core == declared, ('core image', 'declared module inventory', sorted(core), sorted(declared))
+    # Canonical modules have private sibling roots below the shared base root.
+    imports(sdk / 'rexx/imports', [base], directories=core)
+    for module in sorted(core):
+        originals = [base] + [sdk / 'rexx' / (name + '.rxbin')
+                              for name in sorted(dependencies[module])]
+        imports(sdk / 'rexx/imports' / module, originals)
 
     packages = (
         ('analysis', 'analysis.ctl', 'rxfnsl-analysis', {'llirgraph', 'llireffects'},

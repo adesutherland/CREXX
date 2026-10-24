@@ -108,6 +108,8 @@ int rxvm_callmethod(rxpa_attribute_value receiver,
                     rxpa_attribute_value signal) {
     rxvm_context *context = rxvm_active_context_current();
     int signal_code;
+    value diagnostic = {0};
+    rxvm_signal_diagnostic_copy((value *)signal, NULL);
 
     if (!context || argc < 0) {
         rxpa_callmethod_set_signal((value*)signal, SIGNAL_INVALID_ARGUMENTS,
@@ -121,7 +123,8 @@ int rxvm_callmethod(rxpa_attribute_value receiver,
             method_descriptor,
             (size_t)argc,
             (value**)args,
-            (value*)result);
+            (value*)result,
+            &diagnostic);
     if (signal_code != SIGNAL_NONE) {
         const char *message = "CALLMETHOD failed";
         if (signal_code == SIGNAL_FUNCTION_NOT_FOUND) {
@@ -133,7 +136,10 @@ int rxvm_callmethod(rxpa_attribute_value receiver,
         }
         rxpa_callmethod_set_signal((value*)signal, (rxsignal)signal_code,
                                    message);
+        rxvm_signal_diagnostic_copy((value *)signal, &diagnostic);
+        clear_value(&diagnostic);
         return -1;
     }
+    clear_value(&diagnostic);
     return 0;
 }

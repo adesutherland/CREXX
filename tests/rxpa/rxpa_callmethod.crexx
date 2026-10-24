@@ -3,18 +3,34 @@ namespace rxpa_callmethod_test
 import rxpa_callmethod
 
 main: procedure
+  arg argv = .string[]
   receiver = .callback_impl(10)
+  ignored = .int
+  if argv[0] > 0 then do
+    if argv[1] = 'terminal' then do
+      say 'CALLBACK_TERMINAL'
+      ignored = invoke_failure(receiver,0)
+      return
+    end
+    if argv[1] = 'replacement' then do
+      say 'CALLBACK_REPLACEMENT'
+      ignored = invoke_failure_replaced(receiver,0)
+      return
+    end
+    exit 2
+  end
 
   first = invoke(receiver, 7)
   second = invoke(receiver, 5)
   caught = 0
   do
     ignored = invoke_failure(receiver, 0)
-  on signal division_by_zero
-    caught = 1
+  on signal division_by_zero as problem
+    caught = problem.code() = 5 & problem.message() == 'CALLMETHOD failed' & problem.module() > 0 & problem.address() > 0
   end
+  recovered = invoke(receiver,0)
 
-  if first \= 17 | second \= 22 | receiver.total() \= 22 | caught \= 1 then do
+  if first \= 17 | second \= 22 | recovered \= 22 | receiver.total() \= 22 | caught \= 1 then do
     say "FAIL: RXPA CALLMETHOD result/state/signal contract:" first second receiver.total() caught
     exit 1
   end
@@ -37,7 +53,11 @@ callback_impl: class implements .callback
 
   fail: method = .int
     arg value = .int
-    return 1 / value
+    return innerfailure(value)
 
   total: method = .int
     return _total
+
+innerfailure: procedure = .int
+  arg value = .int
+  return 1 / value

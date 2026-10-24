@@ -56,6 +56,11 @@ while source acquisition, section normalization and live pool writes remain
 consumer policy. The shared VM kernel is mandatory core infrastructure, with
 no runtime template-source parser or optional/dynamically loaded plugin. See the
 [cursor API, lifecycle, errors and limits](RXVM_INTERPRETER.md#native-parse-cursor).
+Its `rxparse` native identity remains in callable metadata for exact runtime
+binding. As with mandatory `rxinvoke`, native packaging uses the VM archive;
+it does not require a `providers/rxparse` or `providers/rxinvoke` archive. The
+linker derives this distinction from the shared declaration-only catalogue,
+preserving provider/signature validation.
 Packed v3 adds cursor-only Classic sections; `parseplan` continues to admit only
 v1/v2. The same VM kernel owns matching/positions; no new callable is added.
 The shared `rexxclassicparse.execute(context=reference

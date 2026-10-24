@@ -2015,6 +2015,7 @@ void free_ast(Context *context) {
  * (it returns a null terminated string if there is no array part - still needs a free() */
 char *ast_astr(size_t dims, int* base, int* num_elements) {
     char* result;
+    size_t result_size;
     int i, c;
     if (!dims) {
         result = malloc(1);
@@ -2022,7 +2023,8 @@ char *ast_astr(size_t dims, int* base, int* num_elements) {
         return result;
     }
     /* Each dim could be "xxxx..xx to xxxx..xx," (each number upto 11 chars) = 11+11+5 = 27 chars plus 3 for the [, ], and terminator */
-    result = malloc((dims * 27) + 3);
+    result_size = (dims * 27) + 3;
+    result = malloc(result_size);
 
     result[0] = '[';
     c = 1;
@@ -2032,13 +2034,13 @@ char *ast_astr(size_t dims, int* base, int* num_elements) {
             result[c++] = '*';
         }
         else if (base[i] == 1) {
-            c += sprintf(result + c, "%d", num_elements[i]);
+            c += snprintf(result + c, result_size - (size_t)c, "%d", num_elements[i]);
         }
         else if (num_elements[i] == 0) {
-            c += sprintf(result + c, "%d to *", base[i]);
+            c += snprintf(result + c, result_size - (size_t)c, "%d to *", base[i]);
         }
         else {
-            c += sprintf(result + c, "%d to %d", base[i], base[i] + num_elements[i] - 1);
+            c += snprintf(result + c, result_size - (size_t)c, "%d to %d", base[i], base[i] + num_elements[i] - 1);
         }
 
         if (i + 1 != dims) {

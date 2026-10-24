@@ -1,0 +1,104 @@
+options levelb
+namespace inline_receiver_caller_field expose evaluations
+
+main: procedure = .int
+  evaluations = 0
+  session = .Session()
+  say session.direct(3)
+  say session.nested(3)
+  say session.nested(0)
+  say session.loop()
+  say session.sideEffect(1)
+  say evaluations
+  say session.sideEffect(0)
+  say evaluations
+  say session.factoryNested(2)
+  say session.factoryNested(0)
+  say session.planAt(3)
+  return 0
+
+nextIndex: procedure = .int expose evaluations
+  evaluations = evaluations + 1
+  return 2
+
+Plan: class
+  successors = .int[3]
+
+  *: factory
+    arg offset = .int
+    successors[1] = offset + 1
+    successors[2] = offset + 2
+    successors[3] = offset + 3
+    return
+
+  next: method = .int
+    arg op = .int
+    return successors[op]
+
+Frame: class
+  /* A wrong receiver owner still names a valid Plan, but gives 900-series
+   * values instead of the session's independently expected 40-series values. */
+  decoy = .Plan
+  position = .int
+
+  *: factory
+    arg initial = .int
+    decoy = .Plan(900)
+    position = initial
+    return
+
+  advance: method = .void
+    arg nextpc = .int
+    position = nextpc
+    return
+
+  pc: method = .int
+    return position
+
+Session: class
+  _plan = .Plan
+
+  *: factory
+    _plan = .Plan(40)
+    return
+
+  direct: method = .int
+    arg op = .int
+    current = .Frame(-1)
+    call current.advance(_plan.next(op))
+    return current.pc()
+
+  nested: method = .int
+    arg op = .int
+    current = .Frame(-1)
+    if op > 0 then do
+      call current.advance(_plan.next(op))
+    end
+    return current.pc()
+
+  loop: method = .int
+    current = .Frame(-1)
+    do op = 1 to 2
+      call current.advance(_plan.next(op))
+    end
+    return current.pc()
+
+  sideEffect: method = .int
+    arg active = .boolean
+    current = .Frame(-1)
+    if active then do
+      call current.advance(_plan.next(nextIndex()))
+    end
+    return current.pc()
+
+  factoryNested: method = .int
+    arg op = .int
+    current = .Frame(-1)
+    if op > 0 then do
+      current = .Frame(_plan.next(op))
+    end
+    return current.pc()
+
+  planAt: method = .int
+    arg op = .int
+    return _plan.next(op)

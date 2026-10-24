@@ -127,8 +127,6 @@ set(RXCP_BACKEND_SOURCES
     ../platform/rxinteger.c
     ../third_party/utf8/utf.h
     rxcpfunc.c
-    rxcp_parse_cursor_decl.c
-    rxcp_invoke_decl.c
     rxcp_import_report.c
     rxcp_import_report.h
     rxcp_project_dependencies.c
@@ -228,11 +226,14 @@ add_test(NAME classic_frontend_parity
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/classic_frontend_parity.py
         --bindir ${CMAKE_BINARY_DIR}/bin --source ${CMAKE_SOURCE_DIR}
         --work ${CMAKE_CURRENT_BINARY_DIR}/classic-frontend-parity)
-# Measured separately in Debug and maintained Apple ASan before registration.
-# This launches compiler/assembler/linker/VM commands; serialize the aggregate.
+# Every invocation owns a private scratch tree; instrumented runs retain isolation.
 set_tests_properties(classic_frontend_parity PROPERTIES
     LABELS "compiler;levelc;imports;comprehensive" RUN_SERIAL TRUE TIMEOUT 1800
     CREXX_PREP_TARGETS "rxc;rxc-c;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+    # Conservative admission slots, not a measured memory ceiling.
+    set_tests_properties(classic_frontend_parity PROPERTIES RUN_SERIAL FALSE PROCESSORS 6)
+endif()
 # These tests belong to the compiler directory, outside tests/'s finalizer.
 crexx_schedule_directory_qa_tier_finalization()
 endif()

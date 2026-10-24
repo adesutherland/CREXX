@@ -76,4 +76,9 @@ int rx_sig_matches_contract(const rx_callable_signature *expected,
                             const rx_callable_signature *actual,
                             const rx_callable_compare_options *options);
 
+/* RXPA metadata equality: retain argument names, types and modifiers while
+ * normalizing whitespace and the equivalent [] / [*] array spelling.
+ * Returns 1 for equal, 0 for unequal, -1 on allocation/size failure. */
+int rx_sig_provider_text_equal(const char *left, const char *right);
+
 #endif

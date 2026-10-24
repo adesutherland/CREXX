@@ -57,7 +57,7 @@ static Symbol *dereference_assignment_target(ASTNode *node) {
     return target->symbolNode->symbol;
 }
 
-static int is_interface_member_call(ASTNode *node) {
+int is_interface_member_call(ASTNode *node) {
     Symbol *fsym;
     SymbolNode *defsn;
     ASTNode *defnode;
@@ -76,7 +76,7 @@ static int is_interface_member_call(ASTNode *node) {
            defnode->parent->node_type == INTERFACE_DEF;
 }
 
-static int is_interface_factory_call(ASTNode *node) {
+int is_interface_factory_call(ASTNode *node) {
     Symbol *fsym;
     SymbolNode *defsn;
     ASTNode *defnode;
@@ -816,10 +816,9 @@ static int call_arguments_share_register(ASTNode *left, ASTNode *right) {
            left->register_num == right->register_num;
 }
 
-/* Select one argument to carry a shared source through the existing swap/
- * restore path. Other occurrences are copied into their call-frame slots
- * before any source register can be mutated. Prefer an occurrence already in
- * its destination slot; otherwise use the first occurrence. */
+/* The exposed occurrence must carry shared caller storage through swap/restore.
+ * Within the same passing mode, prefer an occurrence already in its call slot.
+ * Other occurrences are snapshotted from that primary slot after marshalling. */
 static ASTNode *call_argument_group_primary(ASTNode *first,
                                             ASTNode *argument,
                                             int first_destination) {
@@ -829,12 +828,27 @@ static ASTNode *call_argument_group_primary(ASTNode *first,
 
     for (current = first; current; current = current->sibling, destination++) {
         if (!call_arguments_share_register(current, argument)) continue;
-        if (!primary) primary = current;
+        if (!primary || (current->is_ref_arg && !primary->is_ref_arg)) {
+            primary = current;
+        } else if (current->is_ref_arg != primary->is_ref_arg) {
+            continue;
+        }
         if (current->register_type == 'r' && current->register_num == destination) {
-            return current;
+            primary = current;
         }
     }
     return primary;
+}
+
+static int call_argument_destination(ASTNode *first,
+                                     ASTNode *argument,
+                                     int first_destination) {
+    ASTNode *current;
+    int destination = first_destination;
+
+    for (current = first; current && current != argument;
+         current = current->sibling, destination++) {}
+    return destination;
 }
 
 void emit_expression(ASTNode *node, void *payload) {
@@ -873,6 +887,7 @@ void emit_expression(ASTNode *node, void *payload) {
                     !is_interface_member_call(node) &&
                     !is_interface_factory_call(node);
             int use_fixed_call = fixed_call_eligible(node);
+            int has_repeated_arguments = 0;
             /* Return Registers */
             ret_type = node->register_type;
             ret_num = node->register_num;
@@ -934,23 +949,15 @@ void emit_expression(ASTNode *node, void *payload) {
                 free(temp1);
             }
 
-            /* A repeated source register is not a permutation and cannot be
-             * marshalled by destructive swaps alone. Snapshot every
-             * non-primary occurrence into its final call-frame slot first. */
+            /* Repeated sources need snapshots after primary marshalling. A
+             * fused final swap would run too late for those snapshots. */
             n = child1;
-            i = node->additional_registers + 1;
             while (!use_fixed_call && n) {
                 ASTNode *primary = call_argument_group_primary(child1,
                                                                n,
                                                                node->additional_registers + 1);
-                if (primary && primary != n) {
-                    temp1 = mprintf("   copy r%d,%c%d\n",
-                                    i, n->register_type, n->register_num);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
+                if (primary && primary != n) has_repeated_arguments = 1;
                 n = n->sibling;
-                i++;
             }
 
             /* Now step through the arguments - marshalling them in order and
@@ -961,12 +968,14 @@ void emit_expression(ASTNode *node, void *payload) {
                 ASTNode *primary = call_argument_group_primary(child1,
                                                                n,
                                                                node->additional_registers + 1);
-                int staged_duplicate = primary && primary != n;
-                char marshalled_type = staged_duplicate ? 'r' : n->register_type;
-                int marshalled_num = staged_duplicate ? i : n->register_num;
-                int needs_swap = !staged_duplicate &&
-                                 (n->register_type != 'r' || n->register_num != i);
-                int can_fuse_this_prep = can_fuse_direct_call && !n->sibling;
+                int needs_swap = n->register_type != 'r' || n->register_num != i;
+                int can_fuse_this_prep = can_fuse_direct_call &&
+                                         !has_repeated_arguments && !n->sibling;
+                if (primary && primary != n) {
+                    n = n->sibling;
+                    i++;
+                    continue;
+                }
                 k = 0; /* 1 if we need to settp */
                 j = 0; /* The required value of settp */
 
@@ -988,8 +997,8 @@ void emit_expression(ASTNode *node, void *payload) {
                     k = 1; /* means we have to settp */
                 }
                 if (can_fuse_this_prep && (k || needs_swap)) {
-                    direct_prep_type = marshalled_type;
-                    direct_prep_num = marshalled_num;
+                    direct_prep_type = n->register_type;
+                    direct_prep_num = n->register_num;
                     direct_prep_flags = j;
                     direct_prep_window = i;
                     if (k && needs_swap) {
@@ -1003,8 +1012,8 @@ void emit_expression(ASTNode *node, void *payload) {
 
                 if (k && direct_prep_kind == DIRECT_CALL_PREP_NONE) { /* We need to settp */
                     temp1 = mprintf("   settp %c%d,%d\n",
-                                    marshalled_type,
-                                    marshalled_num,
+                                    n->register_type,
+                                    n->register_num,
                                     j);
                     output_append_text(node->output, temp1);
                     free(temp1);
@@ -1033,6 +1042,32 @@ void emit_expression(ASTNode *node, void *payload) {
                 }
 
                 n = n->sibling; i++;
+            }
+
+            /* A by-value occurrence may itself have been the shared source's
+             * original slot. Copy only after the primary has moved to its
+             * call slot, otherwise a later swap would discard that snapshot.
+             * Apply per-formal status after COPY, which copies value flags. */
+            n = child1;
+            i = node->additional_registers + 1;
+            while (!use_fixed_call && has_repeated_arguments && n) {
+                ASTNode *primary = call_argument_group_primary(child1,
+                                                               n,
+                                                               node->additional_registers + 1);
+                if (primary && primary != n) {
+                    int source = call_argument_destination(child1, primary,
+                                                           node->additional_registers + 1);
+                    temp1 = mprintf("   copy r%d,r%d\n", i, source);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (fixed_call_argument_status(n, &j)) {
+                        temp1 = mprintf("   settp r%d,%d\n", i, j);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                }
+                n = n->sibling;
+                i++;
             }
 
             /* Actual Call */

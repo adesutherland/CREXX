@@ -89,7 +89,8 @@ static void append_compound_trace_event(OutputFragment *output,
                                         unsigned int clause_id) {
     char *symbol_name;
 
-    if (!tail_node || tail_node->register_num < 0) return;
+    /* An omitted array-length selector has no resolved tail value to observe. */
+    if (!tail_node || tail_node->node_type == NOVAL || tail_node->register_num < 0) return;
     symbol_name = trace_symbol_name_malloc(compound_node);
     output_append_trace_event_register(output,
                                        RXBIN_TRACE_KIND_COMPOUND,

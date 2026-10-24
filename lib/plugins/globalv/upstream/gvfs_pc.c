@@ -95,7 +95,7 @@ static void dirs(void)
 #ifdef __wasi__
         strcpy(d, "globalv");       /* WASI: no users, no getuid */
 #else
-        sprintf(d, "globalv-%lu", (unsigned long)getuid());
+        snprintf(d, sizeof(d), "globalv-%lu", (unsigned long)getuid());
 #endif
         e = getenv("TMPDIR");
         join(sessdir, (e != NULL && *e) ? e : "/tmp", d);

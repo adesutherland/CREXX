@@ -37,7 +37,8 @@ static const char *signal_block_catch_all_names[] = {
         "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED", "RXBIN_CORRUPTION", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
         "INVALID_SIGNAL_CODE", "NOTREADY", "CANCEL", "QUIT", "TERM", "POSIX_INT",
         "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD",
-        "CHANNEL_ERROR", "TASK_FAILURE", "OTHER", 0
+        "CHANNEL_ERROR", "TASK_FAILURE", "CLASSIC_SYNTAX",
+        "CLASSIC_CONDITION", "OTHER", 0
 };
 
 /* A direct final BLOCK_EXPR exit is immediately followed by the block-end

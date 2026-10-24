@@ -49,6 +49,7 @@
 #include "rxcrexxcmd.h"
 #include "rxvmparse_bindings.h"
 #include "rxvminvoke.h"
+#include "rxsignature.h"
 
 // RXPA (Plugin Architecture) Support declarations  for this file
 
@@ -464,6 +465,8 @@ static int rxinimod_common(rxvm_context *context,
     context->active.invocation_boundary = 0;
     context->active.invocation_fault_sink = 0;
     context->active.invocation_fault_entry = 0;
+    context->active.callback_diagnostic = 0;
+    context->active.diagnostic_callout = 0;
     rxvmplugin_instance_set_init(&context->plugin_instances);
     context->rxpa_libraries = 0;
     context->rxpa_sessions = 0;
@@ -1476,73 +1479,11 @@ static const meta_func_constant *provider_module_function(
     return 0;
 }
 
-static int provider_signature_punctuation(unsigned char ch) {
-    return ch == '=' || ch == ',' || ch == '[' || ch == ']' || ch == '*';
-}
-
-/* RXPA declarations are source-like text, while rxc emits canonical RXAS
- * signature spelling.  Normalize only lexical trivia that has no signature
- * meaning: whitespace around punctuation, runs of other whitespace, and the
- * source shorthand [] for the canonical unbounded array shape [*]. */
-static char *provider_signature_canonical(const char *text) {
-    size_t input_length;
-    size_t input_index = 0u;
-    size_t output_index = 0u;
-    char *result;
-
-    if (!text) text = "";
-    input_length = strlen(text);
-    if (input_length > (SIZE_MAX - 1u) / 2u) {
-        RX_PANIC_OOM("canonicalize RXPA signature", input_length, text);
-    }
-    result = malloc(input_length * 2u + 1u);
-    if (!result) {
-        RX_PANIC_OOM("canonicalize RXPA signature",
-                     input_length * 2u + 1u, text);
-    }
-    while (input_index < input_length) {
-        unsigned char ch = (unsigned char)text[input_index];
-        if (isspace(ch)) {
-            size_t next = input_index + 1u;
-            while (next < input_length &&
-                   isspace((unsigned char)text[next])) next++;
-            if (output_index && next < input_length &&
-                !provider_signature_punctuation(
-                        (unsigned char)result[output_index - 1u]) &&
-                !provider_signature_punctuation(
-                        (unsigned char)text[next])) {
-                result[output_index++] = ' ';
-            }
-            input_index = next;
-            continue;
-        }
-        if (ch == '[') {
-            size_t next = input_index + 1u;
-            while (next < input_length &&
-                   isspace((unsigned char)text[next])) next++;
-            if (next < input_length && text[next] == ']') {
-                result[output_index++] = '[';
-                result[output_index++] = '*';
-                result[output_index++] = ']';
-                input_index = next + 1u;
-                continue;
-            }
-        }
-        result[output_index++] = (char)ch;
-        input_index++;
-    }
-    if (output_index && result[output_index - 1u] == ' ') output_index--;
-    result[output_index] = 0;
-    return result;
-}
-
-static int provider_signature_text_equal(const char *left,
-                                         const char *right) {
-    char *canonical_left = provider_signature_canonical(left);
-    char *canonical_right = provider_signature_canonical(right);
-    int equal = strcmp(canonical_left, canonical_right) == 0;
-    free(canonical_left);
-    free(canonical_right);
+/* Preserve the loader's fatal allocation policy around the shared lexical
+ * equality used by both runtime binding and native-package projection. */
+static int provider_signature_text_equal(const char *left, const char *right) {
+    int equal = rx_sig_provider_text_equal(left, right);
+    if (equal < 0) RX_PANIC_OOM("canonicalize RXPA signature", RX_OOM_UNKNOWN_SIZE, left);
     return equal;
 }
 

@@ -29,6 +29,14 @@ cannot satisfy an import. The runtime image is written under
 native compiler consumes it. Do not merge those directories or reintroduce a
 shared cleanup step: generated metadata and every intermediate have one owner.
 
+The standalone executable retains the native precomp, filesystem, platform and
+Classic stream providers through the RXPA static-link helper. Its embedded
+`rxfnsc` image requires `rxcstream` even when the input has no Classic stream
+operation. The linked bytecode also includes the standalone `rxunicode-core`
+image required by the Classic stream codecs. Keep the provider archives and
+bytecode dependencies in their respective link closures. The embedded entry
+does not configure a dynamic provider search directory.
+
 ## Pipeline Role
 
 For `.rxpp` input the supported pipeline is:

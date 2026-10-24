@@ -30,6 +30,7 @@
 #include "platform.h"
 #include "rxbin.h"
 #include "rxsignature.h"
+#include "../binutils/rxcore_bindings.h"
 
 typedef struct string_list {
     char **items;
@@ -84,6 +85,7 @@ typedef struct provider_requirement {
     char *args;
     char *module_name;
     uint32_t flags;
+    int mandatory_core;
 } provider_requirement;
 
 typedef struct provider_requirement_list {
@@ -292,6 +294,7 @@ static int append_provider_requirement(provider_requirement_list *list,
     copy.args = strdup(requirement->args);
     copy.module_name = strdup(requirement->module_name);
     copy.flags = requirement->flags;
+    copy.mandatory_core = requirement->mandatory_core;
     if (!copy.provider_id || !copy.symbol || !copy.type || !copy.args ||
         !copy.module_name) {
         free(copy.provider_id);
@@ -350,6 +353,7 @@ static int collect_provider_requirements(const module_list *modules,
                 const meta_func_constant *function =
                     module_function_metadata(module, symbol);
                 provider_requirement requirement;
+                enum rx_core_binding_class core_binding;
                 size_t prior;
 
                 if (!symbol || !*symbol ||
@@ -370,6 +374,21 @@ static int collect_provider_requirements(const module_list *modules,
                         ? info->selector_name : "<unnamed>";
                 requirement.flags = provider->flags;
                 if (!requirement.type || !requirement.args) return 0;
+                core_binding = rx_core_binding_classify(provider_id, symbol,
+                        module_string_constant(module, function->option),
+                        requirement.type, requirement.args);
+                if (core_binding == RX_CORE_BINDING_ERROR) {
+                    RX_REPORT_OOM("validate mandatory core provider signature",
+                                  RX_OOM_UNKNOWN_SIZE, symbol);
+                    return 0;
+                }
+                if (core_binding == RX_CORE_BINDING_CONFLICT) {
+                    fprintf(stderr,
+                            "ERROR: module %s has conflicting mandatory core provider contract: %s %s\n",
+                            requirement.module_name, provider_id, symbol);
+                    return 0;
+                }
+                requirement.mandatory_core = core_binding == RX_CORE_BINDING_MANDATORY;
 
                 for (prior = 0u; prior < requirements->count; prior++) {
                     provider_requirement *existing =
@@ -550,14 +569,16 @@ static char *rxlink_build_member_name(const char *owner, const char *member) {
 
 static char *rxlink_build_factory_proc_name(const char *owner, const char *factory) {
     const char *prefix = "\xC2\xA7" "factory";
+    size_t member_capacity;
     char *factory_member;
     char *name;
 
     if (!owner || !factory) return 0;
     if (strcmp(factory, "*") == 0) return rxlink_build_member_name(owner, prefix);
-    factory_member = malloc(strlen(prefix) + 1 + strlen(factory) + 1);
+    member_capacity = strlen(prefix) + 1 + strlen(factory) + 1;
+    factory_member = malloc(member_capacity);
     if (!factory_member) return 0;
-    sprintf(factory_member, "%s.%s", prefix, factory);
+    snprintf(factory_member, member_capacity, "%s.%s", prefix, factory);
     name = rxlink_build_member_name(owner, factory_member);
     free(factory_member);
     return name;
@@ -565,14 +586,16 @@ static char *rxlink_build_factory_proc_name(const char *owner, const char *facto
 
 static char *rxlink_build_match_proc_name(const char *owner, const char *factory) {
     const char *prefix = "\xC2\xA7" "match";
+    size_t member_capacity;
     char *match_member;
     char *name;
 
     if (!owner || !factory) return 0;
     if (strcmp(factory, "*") == 0) return rxlink_build_member_name(owner, prefix);
-    match_member = malloc(strlen(prefix) + 1 + strlen(factory) + 1);
+    member_capacity = strlen(prefix) + 1 + strlen(factory) + 1;
+    match_member = malloc(member_capacity);
     if (!match_member) return 0;
-    sprintf(match_member, "%s.%s", prefix, factory);
+    snprintf(match_member, member_capacity, "%s.%s", prefix, factory);
     name = rxlink_build_member_name(owner, match_member);
     free(match_member);
     return name;
@@ -2433,6 +2456,10 @@ static int write_provider_requirements_file(
     fprintf(fp, "CREXX-RXPA-REQUIREMENTS 1\n");
     for (i = 0u; i < requirements->count; i++) {
         const provider_requirement *requirement = &requirements->items[i];
+        /* The mandatory VM implementation supplies these exact contracts.
+         * Retain their identity in RXBIN/map metadata, but the packaging
+         * projection names only separately delivered provider archives. */
+        if (requirement->mandatory_core) continue;
         fprintf(fp, "%s\t%s\t%s\t%s\t%s\t%s\n",
                 (requirement->flags & RXBIN_PROVIDER_REQUIRED)
                     ? "required" : "optional",

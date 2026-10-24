@@ -1213,55 +1213,15 @@ static int rxvm_delete_attributes1_checked(value *array, rxinteger index, rxinte
     return rxvm_delete_attributes_checked(array, index - 1, count);
 }
 
-static int rxvm_reference_storage_in_value_tree(value *root, value *storage) {
-    size_t i;
-
-    if (!root || !storage) return 0;
-    if (root == storage) return 1;
-
-    if (root->unlinked_attributes) {
-        for (i = 0; i < rxvm_value_max_attributes(root); i++) {
-            if (rxvm_reference_storage_in_value_tree(root->unlinked_attributes[i], storage)) return 1;
-        }
-    }
-
-    return 0;
-}
-
-static stack_frame *rxvm_reference_lifetime_owner_frame(stack_frame *frame,
-                                                        value *storage) {
-    size_t i;
-
+static void rxvm_mark_reference_lifetime_ancestors(stack_frame *frame) {
+    /* A borrowed a1+ value can belong to any active ancestor, including a
+     * nested physical attribute. Each flagged frame releases only its own
+     * locals and a0 on exit, so marking the chain cannot expire a borrowed
+     * target early. It avoids searching every backing tree on each MKREF. */
     while (frame) {
-        if (frame->procedure) {
-            size_t locals = (size_t)frame->procedure->locals;
-            size_t globals = frame->procedure->binarySpace
-                             ? (size_t)frame->procedure->binarySpace->globals
-                             : 0;
-            size_t a0_index = locals + globals;
-
-            if (locals > frame->number_locals) locals = frame->number_locals;
-            for (i = 0; i < locals; i++) {
-                if (rxvm_reference_storage_in_value_tree(frame->baselocals[i], storage)) return frame;
-            }
-
-            if (a0_index < frame->number_locals &&
-                rxvm_reference_storage_in_value_tree(frame->baselocals[a0_index], storage)) {
-                return frame;
-            }
-        }
-
+        frame->has_reference_lifetimes = 1;
         frame = frame->parent;
     }
-
-    return 0;
-}
-
-static void rxvm_mark_reference_lifetime_owner(stack_frame *current_frame,
-                                               value *storage) {
-    stack_frame *owner_frame = rxvm_reference_lifetime_owner_frame(current_frame,
-                                                                   storage);
-    if (owner_frame) owner_frame->has_reference_lifetimes = 1;
 }
 
 static rxvm_ref_owner_kind rxvm_reference_owner_kind_for_storage(stack_frame *frame,
@@ -2270,9 +2230,7 @@ static void resolve_runtime_source_context(module *mod, size_t address, rxvm_sou
     }
 }
 
-static void print_runtime_source_line(const string_constant *source) {
-    const char *cursor = source->string;
-    size_t remaining = source->string_len;
+static void print_runtime_source_bytes(const char *cursor, size_t remaining) {
     while (remaining) {
         const char *nul = memchr(cursor, 0, remaining);
         size_t count = nul ? (size_t)(nul - cursor) : remaining;
@@ -2285,6 +2243,27 @@ static void print_runtime_source_line(const string_constant *source) {
             remaining--;
         }
     }
+}
+
+static void print_runtime_source_line(const string_constant *source) {
+    print_runtime_source_bytes(source->string, source->string_len);
+}
+
+static int runtime_procedure_contains(const module *mod,
+                                       const proc_runtime *procedure, size_t address) {
+    size_t index, end;
+    if (!mod || !procedure || procedure->binarySpace != &mod->segment ||
+        address < procedure->start || address >= mod->segment.inst_size)
+        return 0;
+    end = mod->segment.inst_size;
+    for (index = 0; index < mod->procedure_count; ++index) {
+        const proc_runtime *candidate = &mod->procedures[index];
+        size_t start;
+        if (candidate->binarySpace != &mod->segment) continue;
+        start = candidate->start;
+        if (start > procedure->start && start < end) end = start;
+    }
+    return address < end;
 }
 
 static void print_runtime_panic_location(rxvm_context *context, rxinteger module_number, rxinteger address) {
@@ -2319,8 +2298,8 @@ static void print_runtime_panic_location(rxvm_context *context, rxinteger module
     }
 }
 
-static void print_runtime_panic_caller_location(rxvm_context *context,
-                                                 const stack_frame *frame) {
+static int runtime_caller_address(const stack_frame *frame,
+                                  module **module_out, size_t *address_out) {
     const stack_frame *caller;
     module *mod;
     uintptr_t base;
@@ -2328,23 +2307,421 @@ static void print_runtime_panic_caller_location(rxvm_context *context,
     size_t byte_offset;
     size_t address;
 
-    if (!frame || !frame->parent || !frame->return_pc) return;
+    if (!frame || frame->is_interrupt || !frame->parent || !frame->return_pc) return 0;
     caller = frame->parent;
-    if (!caller->procedure || !caller->procedure->binarySpace) return;
+    if (!caller->procedure || !caller->procedure->binarySpace) return 0;
     mod = caller->procedure->binarySpace->module;
-    if (!mod || !mod->execution_image) return;
+    if (!mod || !mod->execution_image) return 0;
 
     base = (uintptr_t)mod->execution_image;
     return_address = (uintptr_t)frame->return_pc;
-    if (return_address <= base) return;
+    if (return_address <= base) return 0;
     byte_offset = (size_t)(return_address - base);
     if (byte_offset % sizeof(bin_code) != 0 ||
-        byte_offset / sizeof(bin_code) > mod->segment.inst_size) return;
+        byte_offset / sizeof(bin_code) > mod->segment.inst_size) return 0;
     address = byte_offset / sizeof(bin_code) - 1;
+    if (!runtime_procedure_contains(mod, caller->procedure, address)) return 0;
+    *module_out = mod;
+    *address_out = address;
+    return 1;
+}
+
+static void print_runtime_panic_caller_location(rxvm_context *context,
+                                                 const stack_frame *frame) {
+    module *mod;
+    size_t address;
+    if (!runtime_caller_address(frame, &mod, &address)) return;
 
     fprintf(stderr, "  called from:\n");
     print_runtime_panic_location(context, (rxinteger)mod->module_number,
                                  (rxinteger)address);
+}
+
+/* Diagnostic ownership is private to the raw container, never its payload.
+ * Snapshots use the process heap so their immutable copy owner holds no VM,
+ * frame, module or allocator pointer after an event has been retained. */
+typedef struct rxvm_diagnostic_entry {
+    rxinteger module_number;
+    size_t address, line, column;
+    size_t file_length, source_length;
+    char *module_name, *procedure_name, *file, *source;
+    unsigned char has_source;
+} rxvm_diagnostic_entry;
+
+typedef struct rxvm_diagnostic_owner {
+    volatile long references;
+    size_t count;
+    rxvm_diagnostic_entry entries[];
+} rxvm_diagnostic_owner;
+
+static void diagnostic_copy_native(void *, void *);
+static void diagnostic_finalize_native(void *);
+static const rxvm_native_payload_ops diagnostic_ops = {
+    "rxvm.signal.diagnostic", diagnostic_copy_native, diagnostic_finalize_native
+};
+static const rxvm_native_payload_ops diagnostic_empty_ops = {
+    "rxvm.signal.diagnostic.empty", diagnostic_copy_native, NULL
+};
+static const rxvm_native_payload_ops diagnostic_unavailable_ops = {
+    "rxvm.signal.diagnostic.unavailable", diagnostic_copy_native, NULL
+};
+
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXVM_DIAGNOSTIC_TEST_LOCAL
+#elif defined(_MSC_VER)
+#define RXVM_DIAGNOSTIC_TEST_LOCAL __declspec(thread)
+#else
+#define RXVM_DIAGNOSTIC_TEST_LOCAL __thread
+#endif
+static RXVM_DIAGNOSTIC_TEST_LOCAL size_t diagnostic_failure_after = SIZE_MAX;
+static volatile long diagnostic_live_owners;
+#undef RXVM_DIAGNOSTIC_TEST_LOCAL
+void rxvm_signal_diagnostic_test_fail_after(size_t operations) {
+    diagnostic_failure_after = operations;
+}
+void rxvm_signal_diagnostic_test_reset(void) { diagnostic_failure_after = SIZE_MAX; }
+#endif
+
+static int diagnostic_allocation_allowed(void) {
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+    if (diagnostic_failure_after != SIZE_MAX) {
+        if (!diagnostic_failure_after) return 0;
+        --diagnostic_failure_after;
+    }
+#endif
+    return 1;
+}
+
+static void *diagnostic_allocate(size_t size) {
+    return diagnostic_allocation_allowed() ? calloc(1u, size) : NULL;
+}
+
+static int diagnostic_has_owner(const value *container) {
+    return container && (container->native_payload_ops == &diagnostic_ops ||
+            container->native_payload_ops == &diagnostic_empty_ops ||
+            container->native_payload_ops == &diagnostic_unavailable_ops);
+}
+
+static rxvm_diagnostic_owner *diagnostic_owner(const value *container) {
+    rxvm_diagnostic_owner *owner = NULL;
+    if (container && container->native_payload_ops == &diagnostic_ops &&
+            container->binary_length == sizeof(owner) && container->binary_value)
+        memcpy(&owner, container->binary_value, sizeof(owner));
+    return owner;
+}
+
+static long diagnostic_atomic_load(volatile long *storage) {
+#if defined(CREXX_VM_SINGLE_THREADED)
+    return *storage;
+#elif defined(_WIN32)
+    return InterlockedCompareExchange(storage, 0, 0);
+#else
+    return __atomic_load_n(storage, __ATOMIC_ACQUIRE);
+#endif
+}
+
+static int diagnostic_atomic_change(volatile long *storage,
+                                        long *expected, long replacement) {
+#if defined(CREXX_VM_SINGLE_THREADED)
+    if (*storage != *expected) { *expected = *storage; return 0; }
+    *storage = replacement;
+    return 1;
+#elif defined(_WIN32)
+    long previous = InterlockedCompareExchange(storage, replacement, *expected);
+    if (previous == *expected) return 1;
+    *expected = previous;
+    return 0;
+#else
+    return __atomic_compare_exchange_n(storage, expected, replacement,
+                                       0, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE);
+#endif
+}
+
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+static void diagnostic_test_owner_change(long delta) {
+    long count = diagnostic_atomic_load(&diagnostic_live_owners);
+    do {
+        if ((delta > 0 && count == LONG_MAX) || (delta < 0 && count <= 0)) abort();
+    } while (!diagnostic_atomic_change(&diagnostic_live_owners, &count, count + delta));
+}
+size_t rxvm_signal_diagnostic_test_live_owners(void) {
+    return (size_t)diagnostic_atomic_load(&diagnostic_live_owners);
+}
+#endif
+
+static int diagnostic_retain(rxvm_diagnostic_owner *owner) {
+    long count = diagnostic_atomic_load(&owner->references);
+    do {
+        if (count <= 0 || count == LONG_MAX) return 0;
+    } while (!diagnostic_atomic_change(&owner->references, &count, count + 1));
+    return 1;
+}
+
+static void diagnostic_release(rxvm_diagnostic_owner *owner) {
+    long count;
+    size_t index;
+    if (!owner) return;
+    count = diagnostic_atomic_load(&owner->references);
+    do {
+        if (count <= 0) abort();
+    } while (!diagnostic_atomic_change(&owner->references, &count, count - 1));
+    if (count != 1) return;
+    for (index = 0; index < owner->count; ++index) {
+        free(owner->entries[index].module_name);
+        free(owner->entries[index].procedure_name);
+        free(owner->entries[index].file);
+        free(owner->entries[index].source);
+    }
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+    diagnostic_test_owner_change(-1);
+#endif
+    free(owner);
+}
+
+static void diagnostic_mark(value *container, const rxvm_native_payload_ops *ops) {
+    /* A zero-byte private marker needs no allocation, including during OOM. */
+    (void)set_native_payload(container, NULL, 0u, ops, 0u);
+}
+
+static void diagnostic_publish(value *container, rxvm_diagnostic_owner *owner) {
+    rxvm_memory_worker *previous;
+    int status = -1;
+    if (diagnostic_allocation_allowed()) {
+        /* This descriptor can outlive the source worker just like its
+         * immutable owner. Reuse the allocator's detached extent service. */
+        previous = rxvm_memory_enter(NULL);
+        status = set_native_payload(container, &owner, sizeof(owner), &diagnostic_ops, 0u);
+        rxvm_memory_leave(previous);
+    }
+    if (status) {
+        diagnostic_release(owner);
+        diagnostic_mark(container, &diagnostic_unavailable_ops);
+    }
+}
+
+void rxvm_signal_diagnostic_copy(value *destination, const value *source) {
+    rxvm_diagnostic_owner *owner;
+    if (!destination || destination == source) return;
+    owner = diagnostic_owner(source);
+    if (owner && diagnostic_retain(owner)) {
+        diagnostic_publish(destination, owner);
+    } else if (diagnostic_has_owner(source)) {
+        diagnostic_mark(destination,
+                source->native_payload_ops == &diagnostic_empty_ops
+                    ? &diagnostic_empty_ops : &diagnostic_unavailable_ops);
+    } else if (diagnostic_has_owner(destination)) {
+        clear_binary_payload(destination);
+    }
+}
+
+static void diagnostic_copy_native(void *destination, void *source) {
+    rxvm_signal_diagnostic_copy(destination, source);
+}
+
+static void diagnostic_finalize_native(void *container) {
+    diagnostic_release(diagnostic_owner(container));
+}
+
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+int rxvm_signal_diagnostic_test_state(const value *container) {
+    if (!diagnostic_has_owner(container)) return 0;
+    if (container->native_payload_ops == &diagnostic_unavailable_ops) return 3;
+    return diagnostic_owner(container) ? 2 : 1;
+}
+size_t rxvm_signal_diagnostic_test_count(const value *container) {
+    rxvm_diagnostic_owner *owner = diagnostic_owner(container);
+    return owner ? owner->count : 0u;
+}
+#endif
+
+typedef int (*diagnostic_visitor)(module *, const proc_runtime *, size_t, void *);
+
+static int diagnostic_visit_chain(const stack_frame *frame,
+                                   diagnostic_visitor visit, void *state) {
+    for (; frame && frame->parent; frame = frame->parent) {
+        module *mod;
+        size_t address;
+        if (runtime_caller_address(frame, &mod, &address) &&
+                !visit(mod, frame->parent->procedure, address, state)) return 0;
+    }
+    return 1;
+}
+
+static int diagnostic_frame_in_chain(const stack_frame *needle, const stack_frame *frame) {
+    for (; frame; frame = frame->parent) if (frame == needle) return 1;
+    return 0;
+}
+
+static int diagnostic_walk(rxvm_context *context, const stack_frame *frame,
+                            diagnostic_visitor visit, void *state) {
+    const rxvm_diagnostic_callout_scope *scope, *prior;
+    if (!diagnostic_visit_chain(frame, visit, state)) return 0;
+    for (scope = context->active.diagnostic_callout; scope; scope = scope->previous) {
+        int seen = diagnostic_frame_in_chain(scope->frame, frame);
+        if (scope->context != context || !scope->frame) continue;
+        for (prior = context->active.diagnostic_callout; prior != scope && !seen;
+                prior = prior->previous) {
+            if (prior->context == context)
+                seen = diagnostic_frame_in_chain(scope->frame, prior->frame);
+        }
+        if (seen) continue;
+        if (scope->has_callsite && scope->frame->procedure &&
+                scope->frame->procedure->binarySpace && scope->address >= 0) {
+            module *mod = scope->frame->procedure->binarySpace->module;
+            if (mod && (rxinteger)mod->module_number == scope->module_number &&
+                    runtime_procedure_contains(mod, scope->frame->procedure, (size_t)scope->address) &&
+                    !visit(mod, scope->frame->procedure, (size_t)scope->address, state)) return 0;
+        }
+        if (!diagnostic_visit_chain(scope->frame, visit, state)) return 0;
+    }
+    return 1;
+}
+
+static int diagnostic_count_entry(module *mod, const proc_runtime *procedure,
+                                   size_t address, void *state) {
+    size_t *count = state;
+    (void)mod; (void)procedure; (void)address;
+    if (*count == SIZE_MAX) return 0;
+    ++*count;
+    return 1;
+}
+
+static char *diagnostic_copy_bytes(const char *bytes, size_t length) {
+    char *copy;
+    if (length == SIZE_MAX || (!bytes && length)) return NULL;
+    copy = diagnostic_allocate(length + 1u);
+    if (copy && length) memcpy(copy, bytes, length);
+    return copy;
+}
+
+typedef struct diagnostic_build_state {
+    rxvm_diagnostic_owner *owner;
+    size_t index;
+} diagnostic_build_state;
+
+static int diagnostic_build_entry(module *mod, const proc_runtime *procedure,
+                                   size_t address, void *opaque) {
+    diagnostic_build_state *state = opaque;
+    rxvm_diagnostic_entry *entry = &state->owner->entries[state->index++];
+    rxvm_source_context source;
+    entry->module_number = (rxinteger)mod->module_number;
+    entry->address = address;
+    entry->module_name = diagnostic_copy_bytes(mod->name ? mod->name : "",
+                                               mod->name ? strlen(mod->name) : 0u);
+    entry->procedure_name = diagnostic_copy_bytes(procedure->name ? procedure->name : "",
+                                                   procedure->name ? strlen(procedure->name) : 0u);
+    resolve_runtime_source_context(mod, address, &source);
+    /* A preceding procedure's last source record is not this caller's source. */
+    {
+        int offset = mod->meta_head;
+        int found = 0;
+        while (offset != -1) {
+            const meta_entry *meta = (const meta_entry *)(mod->segment.const_pool + offset);
+            if (meta->address > address) break;
+            if (meta->base.type == META_SOURCE_STEP && meta->address >= procedure->start) found = 1;
+            offset = meta->next;
+        }
+        if (!found) memset(&source, 0, sizeof(source));
+    }
+    entry->line = source.line;
+    entry->column = source.column;
+    entry->has_source = source.source != NULL;
+    if (source.file) {
+        entry->file_length = source.file->string_len;
+        entry->file = diagnostic_copy_bytes(source.file->string, entry->file_length);
+    }
+    if (source.source) {
+        entry->source_length = source.source->string_len;
+        entry->source = diagnostic_copy_bytes(source.source->string, entry->source_length);
+    }
+    return entry->module_name && entry->procedure_name &&
+            (!source.file || entry->file) && (!source.source || entry->source);
+}
+
+static void diagnostic_capture(rxvm_context *context, const stack_frame *frame,
+                                value *container) {
+    size_t count = 0;
+    rxvm_diagnostic_owner *owner;
+    diagnostic_build_state state;
+    if (diagnostic_has_owner(container)) return;
+    if (!diagnostic_walk(context, frame, diagnostic_count_entry, &count) ||
+            count > (SIZE_MAX - sizeof(*owner)) / sizeof(owner->entries[0])) {
+        diagnostic_mark(container, &diagnostic_unavailable_ops);
+        return;
+    }
+    if (!count) { diagnostic_mark(container, &diagnostic_empty_ops); return; }
+    owner = diagnostic_allocate(sizeof(*owner) + count * sizeof(owner->entries[0]));
+    if (!owner) { diagnostic_mark(container, &diagnostic_unavailable_ops); return; }
+    owner->references = 1;
+    owner->count = count;
+#ifdef CREXX_VM_INSTRUMENTATION_TEST
+    diagnostic_test_owner_change(1);
+#endif
+    state.owner = owner; state.index = 0;
+    if (!diagnostic_walk(context, frame, diagnostic_build_entry, &state)) {
+        diagnostic_release(owner);
+        diagnostic_mark(container, &diagnostic_unavailable_ops);
+        return;
+    }
+    diagnostic_publish(container, owner);
+}
+
+static void print_runtime_diagnostic_callers(rxvm_context *context,
+                                             const stack_frame *frame,
+                                             const value *container) {
+    rxvm_diagnostic_owner *owner = diagnostic_owner(container);
+    size_t index;
+    if (!diagnostic_has_owner(container)) {
+        print_runtime_panic_caller_location(context, frame);
+        return;
+    }
+    if (container->native_payload_ops == &diagnostic_unavailable_ops) {
+        fputs("  diagnostic callers unavailable (allocation or retain failure)\n", stderr);
+        return;
+    }
+    if (!owner) return;
+    for (index = 0; index < owner->count; ++index) {
+        const rxvm_diagnostic_entry *entry = &owner->entries[index];
+        fputs("  called from:\n", stderr);
+        fprintf(stderr, "  at module %zu (%s) address %zu (0x%zx)\n",
+                (size_t)entry->module_number, entry->module_name, entry->address, entry->address);
+        if (entry->has_source) {
+            fputs("  source: ", stderr);
+            if (entry->file) { fwrite(entry->file, 1u, entry->file_length, stderr); fputc(':', stderr); }
+            fprintf(stderr, "%zu:%zu: ", entry->line, entry->column);
+            print_runtime_source_bytes(entry->source, entry->source_length);
+            fputc('\n', stderr);
+        }
+    }
+}
+
+static void diagnostic_callout_enter(rxvm_diagnostic_callout_scope *scope,
+                                      rxvm_context *context, stack_frame *frame,
+                                      rxinteger module_number, rxinteger address,
+                                      unsigned char has_callsite) {
+    scope->previous = context->active.diagnostic_callout;
+    scope->context = context; scope->frame = frame;
+    scope->module_number = module_number; scope->address = address;
+    scope->has_callsite = has_callsite;
+    context->active.diagnostic_callout = scope;
+}
+
+static void diagnostic_callout_leave(rxvm_diagnostic_callout_scope *scope) {
+    assert(scope->context->active.diagnostic_callout == scope);
+    scope->context->active.diagnostic_callout = scope->previous;
+}
+
+static int diagnostic_initialize(rxvm_context *context, module *caller,
+                                  proc_runtime *target, stack_frame *frame,
+                                  rxinteger address) {
+    rxvm_diagnostic_callout_scope scope;
+    int result;
+    diagnostic_callout_enter(&scope, context, frame,
+            caller ? (rxinteger)caller->module_number : 0, address, caller != NULL);
+    result = rxvm_ensure_callee_initialized(context, caller, target);
+    diagnostic_callout_leave(&scope);
+    return result;
 }
 
 static char *build_runtime_factory_proc_name(const char *class_name,
@@ -2411,11 +2788,13 @@ static char *build_runtime_match_proc_name(const char *class_name,
  * policy, retaining session/legacy reentry and an independent signal cell.
  * These synchronous callbacks are already inside the owning worker's run(). */
 static int run_with_signal(rxvm_context *context, int argc, char *argv[],
-                           int *callback_signal);
+                           int *callback_signal, value *diagnostic_out);
+static int run_external_diagnostic_status(rxvm_context *, int, char **, value *);
 
 static int invoke_runtime_native_member(rxvm_context *context,
                                          proc_runtime *procedure, int argc,
-                                         value **args, value *result) {
+                                         value **args, value *result,
+                                         value *diagnostic_out) {
     value *signal = value_f_in(context->worker.memory_worker);
     int signal_code;
     rxvm_invocation_boundary *saved_boundary = context->active.invocation_boundary;
@@ -2424,6 +2803,7 @@ static int invoke_runtime_native_member(rxvm_context *context,
     rxvm_call_native_procedure(procedure, argc, args, result, signal);
     context->active.invocation_boundary = saved_boundary;
     signal_code = (int)signal->int_value;
+    if (signal_code) rxvm_signal_diagnostic_copy(diagnostic_out, signal);
     value_free(signal);
     return signal_code;
 }
@@ -2464,7 +2844,7 @@ static int invoke_runtime_factory_match(rxvm_context *context,
 
     if (!match_proc->binarySpace) {
         native_failure = invoke_runtime_native_member(context, match_proc,
-                (int)argc, args, match_ret) != SIGNAL_NONE;
+                (int)argc, args, match_ret, NULL) != SIGNAL_NONE;
     } else {
         run(context, 0, dummy_argv);
     }
@@ -2799,7 +3179,7 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
                                   const char *method_descriptor,
                                   size_t argc,
                                   value **args,
-                                  value *result) {
+                                  value *result, value *diagnostic_out) {
     const char *class_name;
     size_t class_name_length;
     proc_runtime *method;
@@ -2815,6 +3195,7 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
     int initialization_rc;
     int run_status;
 
+    if (diagnostic_out) value_zero(diagnostic_out);
     if (!context || !receiver || !method_descriptor || !*method_descriptor ||
         !result || (argc && !args) || argc > (size_t)INT_MAX - 1u) {
         return SIGNAL_INVALID_ARGUMENTS;
@@ -2886,9 +3267,9 @@ int rxvm_invoke_method_descriptor(rxvm_context *context,
      * their loaded RXPA policy. Neither the integer result nor a cached integer
      * field in a non-integer result is an execution status. */
     run_status = method->binarySpace
-            ? rxvm_run_external_status(context, 0, dummy_argv)
+            ? run_external_diagnostic_status(context, 0, dummy_argv, diagnostic_out)
             : invoke_runtime_native_member(context, method, (int)argc + 1,
-                                            method_args, method_result);
+                                            method_args, method_result, diagnostic_out);
     if (run_status != 0) {
         context->ext_proc = saved_ext_proc;
         context->ext_argc = saved_ext_argc;
@@ -4594,11 +4975,12 @@ static void rxsignal_restore_branch_call_argument_mapping(
     (void)mapping_restored;
 }
 
-static void rxvm_checked_frame_fault(stack_frame *, unsigned char, rxinteger, rxinteger, value *);
+static void rxvm_checked_frame_fault(stack_frame *, unsigned char, rxinteger, rxinteger, value *, const value *);
 
 static stack_frame *rxsignal_unwind_to_frame(
         stack_frame *current, stack_frame *target,
-        unsigned char fault, rxinteger fault_module, rxinteger fault_address, value *fault_payload
+        unsigned char fault, rxinteger fault_module, rxinteger fault_address, value *fault_payload,
+        const value *diagnostic
 #ifdef CREXX_VM_PROFILING
         , rxvm_profile_state *profile
 #endif
@@ -4641,7 +5023,7 @@ static stack_frame *rxsignal_unwind_to_frame(
             rxvm_profile_frame_unwind_at(profile, discard, unwind_time_ns);
         }
 #endif
-        rxvm_checked_frame_fault(discard, fault, fault_module, fault_address, fault_payload);
+        rxvm_checked_frame_fault(discard, fault, fault_module, fault_address, fault_payload, diagnostic);
         free_frame(discard);
     }
 
@@ -4665,7 +5047,8 @@ static void rxsignal_populate_raw_interrupt(value *raw,
                                             unsigned char interrupt,
                                             rxinteger module,
                                             rxinteger address,
-                                            value *payload) {
+                                            value *payload,
+                                            const value *diagnostic) {
     value_zero(raw);
     set_num_attributes(raw, 5);
     raw->attributes[0]->int_value = (rxinteger)interrupt;
@@ -4673,6 +5056,7 @@ static void rxsignal_populate_raw_interrupt(value *raw,
     raw->attributes[2]->int_value = address;
     set_null_string(raw->attributes[3], interrupt_to_string(interrupt));
     move_value(raw->attributes[4], payload);
+    rxvm_signal_diagnostic_copy(raw, diagnostic);
 }
 
 static const RxGraphTypeRef rxvm_runtime_signal_type = {
@@ -4711,13 +5095,28 @@ static void rxsignal_populate_runtime_signal(value *dest, value *raw) {
 /* Preserve the existing runtime_signal representation and payload owner. */
 void rxvm_invoke_failure_event(value *event, int fault, int64_t fault_module,
                               int64_t fault_address, const value *fault_payload) {
+    rxvm_invoke_failure_event_with_diagnostic(event, fault, fault_module,
+                                             fault_address, fault_payload, NULL);
+}
+
+void rxvm_invoke_failure_event_with_diagnostic(value *event, int fault,
+        int64_t fault_module, int64_t fault_address, const value *fault_payload,
+        const value *diagnostic) {
     value raw = {0};
     set_num_attributes(&raw, 5);
     raw.attributes[0]->int_value = fault;
     raw.attributes[1]->int_value = (rxinteger)fault_module;
     raw.attributes[2]->int_value = (rxinteger)fault_address;
     set_null_string(raw.attributes[3], interrupt_to_string((unsigned char)fault));
-    if (fault_payload) copy_value(raw.attributes[4], (value *)fault_payload);
+    if (fault_payload) {
+        copy_value(raw.attributes[4], (value *)fault_payload);
+        /* A native signal cell can carry its immediate callback diagnostic
+         * beside the visible payload. That private carrier belongs only to
+         * the new raw container; ordinary payload values retain their owners. */
+        if (diagnostic == fault_payload)
+            rxvm_signal_diagnostic_copy(raw.attributes[4], NULL);
+    }
+    rxvm_signal_diagnostic_copy(&raw, diagnostic);
     rxsignal_populate_runtime_signal(event, &raw);
     clear_value(&raw);
 }
@@ -4725,10 +5124,11 @@ void rxvm_invoke_failure_event(value *event, int fault, int64_t fault_module,
 /* Capture only a transfer that actually crosses this target's owning frame. */
 static void rxvm_checked_frame_fault(stack_frame *frame, unsigned char fault,
                                     rxinteger fault_module, rxinteger fault_address,
-                                    value *fault_payload) {
+                                    value *fault_payload, const value *diagnostic) {
     value event = {0};
     if (!frame || !frame->invocation || !fault) return;
-    rxvm_invoke_failure_event(&event, fault, fault_module, fault_address, fault_payload);
+    rxvm_invoke_failure_event_with_diagnostic(&event, fault, fault_module,
+                                             fault_address, fault_payload, diagnostic);
     rxvm_invoke_fail(frame->invocation, &event);
     clear_value(&event);
 }
@@ -4737,45 +5137,53 @@ static void rxvm_checked_frame_fault(stack_frame *frame, unsigned char fault,
  * the initializer's own run can publish into this scoped failure destination. */
 static int rxvm_checked_initializer_fault(rxvm_context *context, int fault,
                                          int64_t origin_module, int64_t origin_address,
-                                         const value *payload) {
+                                         const value *payload, const value *diagnostic) {
     value *sink = context->active.invocation_fault_sink;
     if (!sink || !context->active.invocation_fault_entry ||
         context->ext_proc != context->active.invocation_fault_entry)
         return 0;
     if (!sink->num_attributes)
-        rxvm_invoke_failure_event(sink, fault, origin_module, origin_address, payload);
+        rxvm_invoke_failure_event_with_diagnostic(sink, fault, origin_module,
+                                                 origin_address, payload, diagnostic);
     return 1;
 }
 
 static int rxvm_checked_initialize(rxvm_context *context, module *caller,
                                   proc_runtime *target, value *event,
-                                  int64_t origin_module, int64_t origin_address) {
+                                  int64_t origin_module, int64_t origin_address,
+                                  stack_frame *frame) {
     value *previous_sink = context->active.invocation_fault_sink;
     proc_runtime *previous_entry = context->active.invocation_fault_entry;
     int status;
     context->active.invocation_fault_sink = event;
     context->active.invocation_fault_entry = NULL;
-    status = rxvm_ensure_callee_initialized(context, caller, target);
+    status = diagnostic_initialize(context, caller, target, frame, (rxinteger)origin_address);
     context->active.invocation_fault_sink = previous_sink;
     context->active.invocation_fault_entry = previous_entry;
     if (!status && !event->num_attributes) return 0;
     if (!event->num_attributes) {
-        value payload = {0};
+        value payload = {0}, diagnostic = {0};
         set_null_string(&payload, "Checked invocation initialization failed");
-        rxvm_invoke_failure_event(event, RXSIGNAL_FAILURE, origin_module, origin_address, &payload);
+        diagnostic_capture(context, frame, &diagnostic);
+        rxvm_invoke_failure_event_with_diagnostic(event, RXSIGNAL_FAILURE,
+                origin_module, origin_address, &payload, &diagnostic);
+        clear_value(&diagnostic);
         clear_value(&payload);
     }
     return -1;
 }
 
-static void rxvm_checked_entry_failure(rxvm_invocation *request, int fault,
+static void rxvm_checked_entry_failure(rxvm_context *context, stack_frame *frame,
+                                     rxvm_invocation *request, int fault,
                                      int64_t origin_module, int64_t origin_address,
                                      const char *message) {
-    value event = {0}, payload = {0};
+    value event = {0}, payload = {0}, diagnostic = {0};
     set_null_string(&payload, message);
-    rxvm_invoke_failure_event(&event, fault, origin_module, origin_address, &payload);
+    diagnostic_capture(context, frame, &diagnostic);
+    rxvm_invoke_failure_event_with_diagnostic(&event, fault, origin_module,
+                                             origin_address, &payload, &diagnostic);
     rxvm_invoke_fail(request, &event);
-    clear_value(&event); clear_value(&payload);
+    clear_value(&event); clear_value(&payload); clear_value(&diagnostic);
     rxvm_invoke_abandon(request); rxvm_invoke_unpin(request);
 }
 
@@ -4783,6 +5191,12 @@ void completely_free_frame(stack_frame *frame) {
     clear_frame(frame);
     (void)rxvm_memory_release(frame);
 }
+
+/* Bytecode initializer callouts use this one cold owner, in all handler
+ * placements. The initializer and checked-submission algorithms stay intact. */
+#define rxvm_ensure_callee_initialized(context_, caller_, target_) \
+    diagnostic_initialize((context_), (caller_), (target_), current_frame, \
+                          (rxinteger)VM_CANONICAL_INDEX(pc))
 
 // Function to set an interrupt
 void raise_signal(unsigned char signal) {
@@ -4813,10 +5227,12 @@ static RXVM_LABEL_OWNER_NOINLINE void rxsignal_raise_private_table_oom(
         stack_frame *frame,
         bin_code **interrupted_pc,
         bin_code *pc,
-        value **interrupt_object) {
+        value **interrupt_object,
+        value diagnostic_owners[RXSIGNAL_MAX]) {
     if (!frame->is_interrupt) *interrupted_pc = pc;
     rxvm_signal_pending_or(pending_interrupts,
                            rxsignal_mask(RXSIGNAL_FAILURE));
+    value_zero(&diagnostic_owners[RXSIGNAL_FAILURE]);
     value_zero(interrupt_object[RXSIGNAL_FAILURE]);
     set_null_string(interrupt_object[RXSIGNAL_FAILURE],
                     "Unable to allocate private interrupt table");
@@ -4828,6 +5244,7 @@ if ((signal)->base.signal_number > RXSIGNAL_NONE && (signal)->base.signal_number
 if (!current_frame->is_interrupt) interrupted_pc = pc; \
 rxvm_signal_pending_or(&pending_interrupts, \
         rxsignal_mask((signal)->base.signal_number)); \
+value_zero(&diagnostic_owners[(signal)->base.signal_number]); \
 value_zero(interrupt_object[(signal)->base.signal_number]); \
 set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.signal_string); \
 }
@@ -4836,12 +5253,14 @@ set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.s
 #define SET_SIGNAL(signal) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
 rxvm_signal_pending_or(&pending_interrupts, rxsignal_mask(signal)); \
+value_zero(&diagnostic_owners[(signal)]); \
 value_zero(interrupt_object[(signal)]);}
 
 // Macro to throw a signal with a message
 #define SET_SIGNAL_MSG(signal, message) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
 rxvm_signal_pending_or(&pending_interrupts, rxsignal_mask(signal)); \
+value_zero(&diagnostic_owners[(signal)]); \
 value_zero(interrupt_object[(signal)]); \
 set_null_string(interrupt_object[(signal)], (message));}
 
@@ -4849,6 +5268,7 @@ set_null_string(interrupt_object[(signal)], (message));}
 #define SET_SIGNAL_PAYLOAD(signal, payload) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
 rxvm_signal_pending_or(&pending_interrupts, rxsignal_mask(signal)); \
+value_zero(&diagnostic_owners[(signal)]); \
 copy_value(interrupt_object[(signal)], (payload));}
 
 #define SET_SIGNAL_FROM_NAME(name) \
@@ -4880,7 +5300,7 @@ do { \
 #endif
 
 // Macro and function to detect and throw a signal if a RXPA plugin-raised error is present
-#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) { if (!current_frame->is_interrupt) interrupted_pc = pc; interrupt_from_rxpa_signal(signal,interrupt_object); }
+#define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) { if (!current_frame->is_interrupt) interrupted_pc = pc; interrupt_from_rxpa_signal(signal,interrupt_object,diagnostic_owners); }
 
 static unsigned char rxvm_rxpa_signal_number(value *signal) {
     unsigned char code;
@@ -4891,7 +5311,8 @@ static unsigned char rxvm_rxpa_signal_number(value *signal) {
     return code==RXSIGNAL_MAX ? RXSIGNAL_OTHER : code;
 }
 
-void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_MAX]) {
+static void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_MAX],
+                                       value diagnostic_owners[RXSIGNAL_MAX]) {
     size_t int_num;
 
     if (signal->int_value < 1 || signal->int_value >= RXSIGNAL_MAX) {
@@ -4917,6 +5338,10 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
         }
     }
 
+    value_zero(&diagnostic_owners[int_num]);
+    rxvm_signal_diagnostic_copy(&diagnostic_owners[int_num], signal);
+    diagnostic_owners[int_num].int_value = diagnostic_has_owner(signal);
+
     // Set the interrupt
     {
         rxvm_context *context = rxvm_active_context_current();
@@ -4932,9 +5357,11 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
 
 /* A callback's outer caller still has the opportunity to handle this signal.
  * Record it separately from a numeric result and defer terminal diagnostics. */
-static int rxvm_capture_callback_signal(rxvm_context *context, int code) {
+static int rxvm_capture_callback_signal(rxvm_context *context, int code,
+                                        const value *diagnostic) {
     if (!context->active.callback_signal) return 0;
     *context->active.callback_signal = code;
+    rxvm_signal_diagnostic_copy(context->active.callback_diagnostic, diagnostic);
     return 1;
 }
 
@@ -4943,15 +5370,16 @@ if (is_interrupt && temp_frame->is_interrupt_action) { \
     rxsignal_handler_action action__ = rxsignal_read_handler_action(interrupt_action_value); \
     if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
         value *payload__ = rxsignal_handler_payload(temp_frame); \
-        if (!rxvm_capture_callback_signal(context, (int)is_interrupt) && \
-            !rxvm_checked_initializer_fault(context, is_interrupt, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt], payload__)) { \
+        diagnostic_capture(context, temp_frame, &diagnostic_owners[is_interrupt]); \
+        if (!rxvm_capture_callback_signal(context, (int)is_interrupt, &diagnostic_owners[is_interrupt]) && \
+            !rxvm_checked_initializer_fault(context, is_interrupt, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt], payload__, &diagnostic_owners[is_interrupt])) { \
             if (payload__ && payload__->string_length) { \
                 fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(payload__->string_length), payload__->string_value, interrupt_to_string(is_interrupt)); \
             } else { \
                 fprintf(stderr, "PANIC: (SIGNAL %s)\n", interrupt_to_string(is_interrupt)); \
             } \
             print_runtime_panic_location(context, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt]); \
-            print_runtime_panic_caller_location(context, temp_frame); \
+            print_runtime_diagnostic_callers(context, temp_frame, &diagnostic_owners[is_interrupt]); \
         } \
         value_zero(interrupt_action_value); \
         rc = (int)is_interrupt; \
@@ -4959,7 +5387,8 @@ if (is_interrupt && temp_frame->is_interrupt_action) { \
         RXVM_HANDLER_FINISH(); \
     } \
     value_zero(interrupt_action_value); \
-}
+} \
+if (is_interrupt) value_zero(&diagnostic_owners[is_interrupt]);
 
 #define IS_UNICODE_WHITESPACE(cp) ( \
     (cp) == 0x0009 || /* Tab */       \
@@ -5168,6 +5597,7 @@ typedef struct rxvm_handler_state {
     rxinteger *last_interrupted_address;
     rxinteger *last_interrupted_module;
     unsigned char *origin_override;
+    value *diagnostic_owners;
     stack_frame **current_frame;
     stack_frame **temp_frame;
     bin_space **current_binary_space;
@@ -5212,6 +5642,7 @@ typedef struct rxvm_handler_state {
     rxinteger *last_interrupted_address;
     rxinteger *last_interrupted_module;
     unsigned char *origin_override;
+    value *diagnostic_owners;
     stack_frame *current_frame;
     stack_frame *temp_frame;
     bin_space *current_binary_space;
@@ -5281,6 +5712,7 @@ typedef struct rxvm_handler_state {
         (state_).last_interrupted_address = last_interrupted_address;       \
         (state_).last_interrupted_module = last_interrupted_module;         \
         (state_).origin_override = origin_override;                         \
+        (state_).diagnostic_owners = diagnostic_owners;                     \
         (state_).current_frame = current_frame;                             \
         (state_).temp_frame = temp_frame;                                   \
         (state_).current_binary_space = current_binary_space;               \
@@ -5348,6 +5780,7 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #define last_interrupted_address (rxvm_state->last_interrupted_address)
 #define last_interrupted_module (rxvm_state->last_interrupted_module)
 #define origin_override (rxvm_state->origin_override)
+#define diagnostic_owners (rxvm_state->diagnostic_owners)
 #define current_frame (*rxvm_state->current_frame)
 #define temp_frame (*rxvm_state->temp_frame)
 #define current_binary_space (*rxvm_state->current_binary_space)
@@ -5375,6 +5808,7 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #define last_interrupted_address (rxvm_state->last_interrupted_address)
 #define last_interrupted_module (rxvm_state->last_interrupted_module)
 #define origin_override (rxvm_state->origin_override)
+#define diagnostic_owners (rxvm_state->diagnostic_owners)
 #define current_frame (rxvm_state->current_frame)
 #define temp_frame (rxvm_state->temp_frame)
 #define current_binary_space (rxvm_state->current_binary_space)
@@ -5445,6 +5879,7 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
 #define RXVM_SCOPED_NATIVE_CALL(procedure_, count_, args_, result_, signal_)     \
     do {                                                                        \
         rxvm_invocation_boundary boundary__ = {0};                              \
+        rxvm_diagnostic_callout_scope diagnostic_scope__;                       \
         rxvm_invocation *request__;                                            \
         proc_runtime *target__;                                                \
         boundary__.previous = context->active.invocation_boundary;             \
@@ -5455,8 +5890,11 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
         boundary__.origin_module = current_module->module_number;              \
         boundary__.origin_address = (int64_t)VM_CANONICAL_INDEX(pc);              \
         context->active.invocation_boundary = &boundary__;                     \
+        diagnostic_callout_enter(&diagnostic_scope__, context, current_frame, \
+                (rxinteger)boundary__.origin_module, (rxinteger)boundary__.origin_address, 1); \
         rxvm_call_native_procedure((procedure_), (count_), (args_),             \
                                    (result_), (signal_));                      \
+        diagnostic_callout_leave(&diagnostic_scope__);                          \
         context->active.invocation_boundary = boundary__.previous;             \
         request__ = boundary__.request;                                        \
         if (!request__) break;                                                 \
@@ -5469,13 +5907,17 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
         if (!target__->binarySpace) {                                           \
             rxvm_invocation_boundary *saved__ = context->active.invocation_boundary; \
             context->active.invocation_boundary = NULL;                        \
+            diagnostic_callout_enter(&diagnostic_scope__, context, current_frame, \
+                    (rxinteger)boundary__.origin_module, (rxinteger)boundary__.origin_address, 1); \
             rxvm_call_native_procedure(target__, (int)rxvm_invoke_count(request__), \
                     rxvm_invoke_arguments(request__), rxvm_invoke_return(request__), (signal_)); \
+            diagnostic_callout_leave(&diagnostic_scope__);                      \
             context->active.invocation_boundary = saved__;                     \
             if ((signal_)->int_value || (signal_)->string_length) {                        \
                 value event__ = {0};                                            \
-                rxvm_invoke_failure_event(&event__, rxvm_rxpa_signal_number((signal_)), \
-                        boundary__.origin_module, boundary__.origin_address, (signal_)); \
+                diagnostic_capture(context, current_frame, (signal_));        \
+                rxvm_invoke_failure_event_with_diagnostic(&event__, rxvm_rxpa_signal_number((signal_)), \
+                        boundary__.origin_module, boundary__.origin_address, (signal_), (signal_)); \
                 rxvm_invoke_fail(request__, &event__);                          \
                 clear_value(&event__);                                         \
             } else rxvm_invoke_complete(request__, 1);                          \
@@ -5485,11 +5927,15 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
         if (context->initialized_module_count != context->num_modules) {       \
             value entry_event__ = {0};                                         \
             if (rxvm_checked_initialize(context, current_module, target__, &entry_event__, \
-                    boundary__.origin_module, boundary__.origin_address)) {    \
+                    boundary__.origin_module, boundary__.origin_address, current_frame)) { \
                 value *raw__ = entry_event__.attributes[4];                    \
                 unsigned char code__ = (unsigned char)raw__->attributes[0]->int_value; \
                 rxvm_invoke_fail(request__, &entry_event__);                    \
                 SET_SIGNAL_PAYLOAD(code__, raw__->attributes[4]);               \
+                rxvm_signal_diagnostic_copy(&diagnostic_owners[code__], raw__); \
+                if (!diagnostic_has_owner(&diagnostic_owners[code__]))         \
+                    diagnostic_mark(&diagnostic_owners[code__], &diagnostic_empty_ops); \
+                diagnostic_owners[code__].int_value = 1;                       \
                 last_interrupted_module[code__] = raw__->attributes[1]->int_value; \
                 last_interrupted_address[code__] = raw__->attributes[2]->int_value; \
                 origin_override[code__] = 1;                                   \
@@ -5502,7 +5948,7 @@ rxvm_invoke_outlined_handler(rxvm_handler_function function,
         temp_frame = frame_f(target__, (int)rxvm_invoke_count(request__),       \
                              current_frame, next_pc, rxvm_invoke_return(request__)); \
         if (!temp_frame) {                                                      \
-            rxvm_checked_entry_failure(request__, RXSIGNAL_FAILURE,             \
+            rxvm_checked_entry_failure(context, current_frame, request__, RXSIGNAL_FAILURE, \
                     boundary__.origin_module, boundary__.origin_address, "Cannot allocate checked invocation frame"); \
             SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Cannot allocate checked invocation frame") \
             DISPATCH;                                                           \
@@ -5649,6 +6095,7 @@ rxvm_handler_inline_placements[RXVM_PRIVATE_R1_RELINK_REG_REG + 1] = {
 #undef last_interrupted_module
 #undef last_interrupted_address
 #undef origin_override
+#undef diagnostic_owners
 #undef interrupt_object
 #undef arguments_array
 #undef interrupt_action_value
@@ -5850,6 +6297,9 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
     /* Explicit origin for a source-preserving re-raise, scoped to this run. */
     unsigned char origin_override[RXSIGNAL_MAX] = {0};
+    /* A nonzero int field is a one-delivery witness restored from a particular
+     * event. The scan consumes it; fresh raises clear the cell before capture. */
+    value diagnostic_owners[RXSIGNAL_MAX] = {{0}};
 #if RXVM_HANDLER_USE_POINTER_FACADE
     stack_frame *current_frame = 0, *temp_frame;
 #else
@@ -5952,6 +6402,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
     handler_state.last_interrupted_address = last_interrupted_address;
     handler_state.last_interrupted_module = last_interrupted_module;
     handler_state.origin_override = origin_override;
+    handler_state.diagnostic_owners = diagnostic_owners;
     handler_state.current_frame = &current_frame;
     handler_state.temp_frame = &temp_frame;
     handler_state.current_binary_space = &current_binary_space;
@@ -6197,9 +6648,13 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                 last_interrupted_address[signal_code + 1] =
                         (rxinteger) VM_CANONICAL_INDEX(signal_pc);
             }
+            if (diagnostic_owners[signal_code + 1].int_value)
+                diagnostic_owners[signal_code + 1].int_value = 0;
+            else value_zero(&diagnostic_owners[signal_code + 1]);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
                 rxvm_signal_pending_and(&pending_interrupts, ~signal_mask);
+                value_zero(&diagnostic_owners[signal_code + 1]);
             } else {
                 last_interrupt = signal_code + 1;
                 break;
@@ -6230,16 +6685,21 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                                          current_module->module_number,
                                          VM_CANONICAL_INDEX(pc));
     interrupt_entry signal_handler = current_frame->interrupt_table[last_interrupt - 1];
+    /* CALL handlers can retain their raw argument and relay it later, just as
+     * BRV handlers retain the wrapper. Capture before either can publish it. */
+    diagnostic_capture(context, current_frame, &diagnostic_owners[last_interrupt]);
     switch (signal_handler.response) {
 
         case RXSIGNAL_RESPONSE_HALT:
             /* Halt */
             DEBUG("TRACE - INTR HANDLER -> HALT %s\n", interrupt_to_string(last_interrupt));
             /* Print error message to stderr */
-            if (!rxvm_capture_callback_signal(context, (int)last_interrupt) &&
+            if (!rxvm_capture_callback_signal(context, (int)last_interrupt,
+                                               &diagnostic_owners[last_interrupt]) &&
                 !rxvm_checked_initializer_fault(context, last_interrupt,
                     last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt])) {
+                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
+                    &diagnostic_owners[last_interrupt])) {
                 if (interrupt_object[last_interrupt]->string_length) {
                     fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(interrupt_object[last_interrupt]->string_length), interrupt_object[last_interrupt]->string_value, interrupt_to_string(last_interrupt));
                 } else {
@@ -6248,7 +6708,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                 print_runtime_panic_location(context,
                                              last_interrupted_module[last_interrupt],
                                              last_interrupted_address[last_interrupt]);
-                print_runtime_panic_caller_location(context, current_frame);
+                print_runtime_diagnostic_callers(context, current_frame, &diagnostic_owners[last_interrupt]);
             }
             rc = (int)last_interrupt;
             RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(last_interrupt,
@@ -6259,7 +6719,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
         case RXSIGNAL_RESPONSE_SILENT_HALT:
             rxvm_checked_initializer_fault(context, last_interrupt,
                     last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt]);
+                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
+                    &diagnostic_owners[last_interrupt]);
             /* Silent Halt */
             DEBUG("TRACE - INTR HANDLER -> SILENT HALT %s\n", interrupt_to_string(last_interrupt));
             rc = 0;
@@ -6277,7 +6738,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                     RXVM_PROFILE_UNWIND_STATE);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame,
                     last_interrupt, last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt]
+                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
+                    &diagnostic_owners[last_interrupt]
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
             {
@@ -6315,7 +6777,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                                             last_interrupt,
                                             last_interrupted_module[last_interrupt],
                                             last_interrupted_address[last_interrupt],
-                                            interrupt_object[last_interrupt]);
+                                            interrupt_object[last_interrupt],
+                                            &diagnostic_owners[last_interrupt]);
 
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
@@ -6328,18 +6791,26 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                 RXVM_INSTRUMENTATION_NATIVE_BEGIN(intr_function);
                 {
                     rxvm_invocation_boundary *saved_boundary = context->active.invocation_boundary;
+                    rxvm_diagnostic_callout_scope diagnostic_scope;
                     context->active.invocation_boundary = NULL;
+                    diagnostic_callout_enter(&diagnostic_scope, context, current_frame,
+                            (rxinteger)current_module->module_number,
+                            (rxinteger)VM_CANONICAL_INDEX(pc), 0);
                     rxvm_call_native_procedure(intr_function, 1, &interrupt_arg,
                                                0, signal_value);
+                    diagnostic_callout_leave(&diagnostic_scope);
                     context->active.invocation_boundary = saved_boundary;
                 }
                 RXVM_INSTRUMENTATION_NATIVE_END();
+                value_zero(&diagnostic_owners[last_interrupt]);
                 if (signal_value->int_value > RXSIGNAL_NONE && signal_value->int_value < RXSIGNAL_MAX) {
                     if (signal_value->string_length) {
                         SET_SIGNAL_MSG(signal_value->int_value, signal_value->string_value)
                     } else {
                         SET_SIGNAL(signal_value->int_value)
                     }
+                    rxvm_signal_diagnostic_copy(&diagnostic_owners[signal_value->int_value], signal_value);
+                    diagnostic_owners[signal_value->int_value].int_value = diagnostic_has_owner(signal_value);
                 }
                 RXVM_SELECTED_DISPATCH();
             } else {
@@ -6390,7 +6861,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                     RXVM_PROFILE_UNWIND_STATE);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame,
                     last_interrupt, last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt]
+                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
+                    &diagnostic_owners[last_interrupt]
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
             {
@@ -6400,6 +6872,7 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                 (void)stack_restored;
             }
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
+            value_zero(&diagnostic_owners[last_interrupt]);
             RXVM_SELECTED_DISPATCH();
 
         case RXSIGNAL_RESPONSE_BRANCH_VALUE:
@@ -6411,7 +6884,8 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                     RXVM_PROFILE_UNWIND_STATE);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame,
                     last_interrupt, last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt]
+                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
+                    &diagnostic_owners[last_interrupt]
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
             {
@@ -6424,15 +6898,19 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
                                             last_interrupt,
                                             last_interrupted_module[last_interrupt],
                                             last_interrupted_address[last_interrupt],
-                                            interrupt_object[last_interrupt]);
+                                            interrupt_object[last_interrupt],
+                                            &diagnostic_owners[last_interrupt]);
             rxsignal_populate_runtime_signal(current_locals[signal_handler.value_register], interrupt_arg);
+            value_zero(&diagnostic_owners[last_interrupt]);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             RXVM_SELECTED_DISPATCH();
 
         case RXSIGNAL_RESPONSE_RETURN:
             rxvm_checked_frame_fault(current_frame, last_interrupt,
                     last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt]);
+                    last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
+                    &diagnostic_owners[last_interrupt]);
+            value_zero(&diagnostic_owners[last_interrupt]);
             DEBUG("TRACE - INTR HANDLER -> RET %s\n", interrupt_to_string(last_interrupt));
             {
                 /* Where we return to */
@@ -6815,7 +7293,7 @@ START_OF_INSTRUCTIONS
 
     interrupt_table_oom:
         rxsignal_raise_private_table_oom(&pending_interrupts, current_frame, &interrupted_pc, pc,
-                                         interrupt_object);
+                                         interrupt_object, diagnostic_owners);
         RXVM_SELECTED_DISPATCH();
 
     interprt_finished:
@@ -6833,7 +7311,8 @@ START_OF_INSTRUCTIONS
     while (current_frame) {
         rxvm_checked_frame_fault(current_frame, last_interrupt,
                 last_interrupted_module[last_interrupt],
-                last_interrupted_address[last_interrupt], interrupt_object[last_interrupt]);
+                last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
+                &diagnostic_owners[last_interrupt]);
         temp_frame = current_frame->parent;
         if (context->ext_proc && !current_frame->parent) {
             free_external_entry_arguments(current_frame);
@@ -6880,6 +7359,7 @@ START_OF_INSTRUCTIONS
         size_t i;
         for (i = 0; i < RXSIGNAL_MAX; i++) {
             value_free(interrupt_object[i]);
+            clear_value(&diagnostic_owners[i]);
         }
     }
 
@@ -6907,6 +7387,7 @@ START_OF_INSTRUCTIONS
 
 #undef RXVM_SELECTED_TARGET
 #undef RXVM_SELECTED_DISPATCH
+#undef rxvm_ensure_callee_initialized
 
 #ifdef CREXX_VM_INSTRUMENTATION_TEST
 #undef vm_instrumentation
@@ -6931,6 +7412,7 @@ START_OF_INSTRUCTIONS
 #undef last_interrupted_module
 #undef last_interrupted_address
 #undef origin_override
+#undef diagnostic_owners
 #undef interrupt_object
 #undef arguments_array
 #undef interrupt_action_value
@@ -6945,13 +7427,15 @@ START_OF_INSTRUCTIONS
 #undef context
 
 static int run_with_signal(rxvm_context *context, int argc, char *argv[],
-                           int *callback_signal) {
+                           int *callback_signal, value *diagnostic_out) {
     rxvm_worker_transition_result transition;
     rxvm_context *previous_active_context;
     int *previous_callback_signal;
+    value *previous_diagnostic;
     int rc;
 
     if (callback_signal) *callback_signal = SIGNAL_NONE;
+    if (diagnostic_out) value_zero(diagnostic_out);
 
     transition = rxvm_worker_begin_execution(&context->worker);
 
@@ -6979,9 +7463,12 @@ static int run_with_signal(rxvm_context *context, int argc, char *argv[],
 
     previous_active_context = rxvm_active_context_enter(context);
     previous_callback_signal = context->active.callback_signal;
+    previous_diagnostic = context->active.callback_diagnostic;
     context->active.callback_signal = callback_signal;
+    context->active.callback_diagnostic = diagnostic_out;
     rc = rxvm_run_owned_core(context, argc, argv);
     context->active.callback_signal = previous_callback_signal;
+    context->active.callback_diagnostic = previous_diagnostic;
     rxvm_active_context_leave(previous_active_context);
     rxpa_compatibility_execution_leave(&context->rxpa_compatibility);
     if (rxvm_worker_end_execution(&context->worker) !=
@@ -6992,17 +7479,22 @@ static int run_with_signal(rxvm_context *context, int argc, char *argv[],
 }
 
 int run(rxvm_context *context, int argc, char *argv[]) {
-    return run_with_signal(context, argc, argv, NULL);
+    return run_with_signal(context, argc, argv, NULL, NULL);
 }
 
 int rxvm_run_capturing_signal(rxvm_context *context, int argc, char *argv[],
                               int *signal_out) {
-    return run_with_signal(context, argc, argv, signal_out);
+    return run_with_signal(context, argc, argv, signal_out, NULL);
 }
 
 int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]) {
+    return run_external_diagnostic_status(context, argc, argv, NULL);
+}
+
+static int run_external_diagnostic_status(rxvm_context *context, int argc,
+                                          char *argv[], value *diagnostic_out) {
     int signal = SIGNAL_NONE;
-    int status = run_with_signal(context, argc, argv, &signal);
+    int status = run_with_signal(context, argc, argv, &signal, diagnostic_out);
     if (signal != SIGNAL_NONE) return signal;
     /* RET historically publishes the physical integer field as process status,
      * even for a string/object return. Preserve run()'s process contract while

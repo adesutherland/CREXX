@@ -96,7 +96,7 @@ PROCEDURE(md5) {
     // Free dynamically allocated memory
     free(tmsg);
     for (i = 0; i < 16; i++) {
-        sprintf(result+i*2,"%02x", digest[i]);
+        snprintf(result+i*2, sizeof(result) - i * 2,"%02x", digest[i]);
     }
     RETURNSTR(result);
     PROCRETURN

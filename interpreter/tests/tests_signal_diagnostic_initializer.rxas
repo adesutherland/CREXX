@@ -1,0 +1,13 @@
+/* The native test's scoped initializer sink must capture this event silently. */
+.globals=0
+boot() .locals=0
+    .meta "signal_diag_initializer.boot"="b" ".void" boot() ""
+    .meta "signal_diag_initializer.boot"=".initializer" ".void" boot() ""
+    .srcstep 1 1 17 "initializer-call.rexx" 84 2 12 "call fail"
+    call failure()
+    ret
+failure() .locals=1
+    .srcstep 2 2 17 "initializer-cause.rexx" 85 1 12 "raise failure"
+    load r0,"initializer\x00event"
+    signal "OTHER",r0
+    ret

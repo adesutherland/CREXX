@@ -139,8 +139,9 @@ build succeeded.
 The seed retains first-error reporting. The proper readers now collect multiple
 syntax errors at lexically established declaration boundaries; bad UTF-8 and
 unclosed comments still stop source preparation. The current recovery and
-backend profiles are described in the user guide. The specification reader
-continues to use DFA/token-stage/LR throughout the bootstrap.
+backend profiles are described in the user guide. The generated specification
+readers use the DFA, declared token stage and LL(1) parser; the L0 seed remains
+the bounded handwritten reader described above.
 
 ## Unicode lowering and its correctness argument
 

@@ -288,7 +288,7 @@ int test_decimalToDouble() {
     // Test NaN
     plugin->decimalFromDouble(plugin, &input, NAN);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("nan", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -299,7 +299,7 @@ int test_decimalToDouble() {
     // Test Infinity
     plugin->decimalFromDouble(plugin, &input, INFINITY);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("inf", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -310,7 +310,7 @@ int test_decimalToDouble() {
     // Test -Infinity
     plugin->decimalFromDouble(plugin, &input, -INFINITY);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("-inf", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -321,7 +321,7 @@ int test_decimalToDouble() {
     // Test 0.0
     plugin->decimalFromDouble(plugin, &input, 0.0);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("0.000000", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -332,7 +332,7 @@ int test_decimalToDouble() {
     // Test -0.0
     plugin->decimalFromDouble(plugin, &input, -0.0);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("-0.000000", buffer) != 0) {
         printf("Error - ");
         errors++;
@@ -343,7 +343,7 @@ int test_decimalToDouble() {
     // Test 1.23456789
     plugin->decimalFromDouble(plugin, &input, 1.23456789);
     plugin->decimalToDouble(plugin, &input, &result);
-    sprintf(buffer, "%f", result);
+    snprintf(buffer, sizeof(buffer), "%f", result);
     if (strcmp("1.234568", buffer) != 0) {
         printf("Error - ");
         errors++;

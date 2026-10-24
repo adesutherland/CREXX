@@ -5,12 +5,19 @@ import rexxclassichost
 import rexxclassichostprotocol
 import rexxclassicconfig
 import rexxclassiccontext
+import rexxclassicstream
+import rexxclassicbifs
+import rexxclassicbifstream
 import rexxactivation
 import rexxpool
 import rexxvalue
 
 main: procedure = .int
+  arg test_args = .string[]
+  suffix = "manual"
+  if test_args[0] > 0 then suffix = test_args[1]
   errors = 0
+  errors = errors + inputEofContracts(suffix)
   ordinary_config = .RexxClassicConfig("UTF8")
   absent_context = .object
   call ordinary_config.bindHostContext(absent_context)
@@ -202,6 +209,177 @@ main: procedure = .int
   recovered_nested = attemptHost(cancelled,reference cancel_probe,1)
   errors = errors + check(recovered_nested.indicator() = "N" & cancel_probe.errors() = 0,"caught nested CANCEL restores the live outer callback")
   if errors = 0 then say "CLASSIC_HOST_OK"
+  return errors
+
+inputEofContracts: procedure = .int
+  arg suffix = .string
+  attempt = .int
+  errors = 0
+  path = "testRexxClassicHost." || suffix || ".tmp"
+  queue_name = "_CREXX_INPUT_EOF_" || suffix
+  payload = "queued" || ('00'x as .string) || "tail"
+  ignored = writebinary(path,"66697273740A0A6C617374"x as .binary)
+  stream = .RexxClassicStream(path,"READ","UTF-8")
+  errors = errors + check(\stream.readEof(),"new stream has no observed EOF")
+  text = stream.readLine(-1,1)
+  errors = errors + check(text == "first" & \stream.readEof() & stream.error() == "","first line is not EOF")
+  text = stream.readLine(-1,1)
+  errors = errors + check(text == "" & \stream.readEof() & stream.error() == "","physical empty line is not EOF")
+  text = stream.readLine(-1,1)
+  errors = errors + check(text == "last" & \stream.readEof() & stream.error() == "","unterminated last line is not an exhausted read")
+  do attempt = 1 to 2
+    text = stream.readLine(-1,1)
+    errors = errors + check(text == "" & stream.readEof() & stream.error() == "End of stream","repeated exhausted line reads retain typed EOF")
+  end
+  text = stream.readLine(0,0)
+  errors = errors + check(text == "" & \stream.readEof() & stream.error() == "","zero-count line reposition resets prior EOF")
+  text = stream.readCharacters(0,0)
+  errors = errors + check(text == "" & \stream.readEof() & stream.error() == "","zero-count reposition resets prior EOF")
+  text = stream.readCharacters(0,99)
+  errors = errors + check(text == "first" || ('0A0A'x as .string) || "last" & stream.readEof(),"partial character read retains text and typed EOF")
+  text = stream.readLine(0,1)
+  errors = errors + check(text == "first" & \stream.readEof(),"successful line reposition resets prior EOF")
+  text = stream.readLine(99,1)
+  ignored = stream.close()
+  errors = errors + check(\stream.readEof(),"close resets observed EOF")
+  config = .RexxClassicConfig("UTF8")
+  errors = errors + check(rxqueue("CREATE",queue_name) == "0","prepare isolated input queue")
+  call config.bindHostQueue(queue_name)
+  stream = .RexxClassicStream(path,"READ","UTF-8")
+  call config.storeStream("",1,stream)
+  slot = config.streamSlot("",1)
+  call config.queueText("")
+  call config.queueText(payload)
+  errors = errors + check(config.pullText() == "" & config.pullText() == payload & config.queuedCount() = 0,"empty and NUL queue values precede available input")
+  after = config.stream(slot)
+  errors = errors + check(after.readPosition() = 1 & \after.readEof(),"queued reads do not acquire available default input")
+  state = .RexxBifCallContext("LINEIN")
+  call state.setConfig(reference config)
+  value = rexxclassicbifstream..rexxclassicbif_linein(reference state)
+  errors = errors + check(value.asString() == "first" & state.conditionId() = 0,"LINEIN BIF reads the configured default")
+  errors = errors + check(config.lineinText() == "" & config.pullText() == "last","Config line and queue fallback share input position")
+  value = rexxclassicbifstream..rexxclassicbif_linein(reference state)
+  errors = errors + check(value.asString() == "" & state.conditionId() = 5 & \state.hasError(),"LINEIN BIF retains EOF condition transport")
+  do attempt = 1 to 2
+    errors = errors + check(config.pullText() == "" & config.lineinText() == "","configured EOF returns empty for repeated PULL and direct input")
+  end
+  before = config.stream(slot)
+  call config.queueText("")
+  call config.queueText(payload)
+  errors = errors + check(config.pullText() == "" & config.pullText() == payload & config.queuedCount() = 0,"empty and NUL queue values retain priority over EOF")
+  after = config.stream(slot)
+  errors = errors + check(before.readPosition() = after.readPosition() & after.readEof(),"queued reads preserve default stream position and observed EOF")
+  ignored = stream.close()
+  stream = .RexxClassicStream(path,"READ","UTF-8")
+  ignored_bytes = stream.processInput()
+  text = stream.readLine(-1,0)
+  errors = errors + check(text == "" & \stream.readEof(),"process EOF does not classify zero-count LINEIN as EOF")
+  text = stream.readCharacters(-1,0)
+  errors = errors + check(text == "" & \stream.readEof(),"process EOF does not classify zero-count CHARIN as EOF")
+  text = stream.readLine(-1,1)
+  errors = errors + check(text == "" & stream.readEof(),"positive line read observes process EOF")
+  text = stream.readCharacters(-1,1)
+  errors = errors + check(text == "" & stream.readEof(),"positive character read observes process EOF")
+  alias = stream
+  ignored = alias.close()
+  text = stream.readLine(-1,1)
+  errors = errors + check(text == "" & \stream.readEof() & stream.error() == "End of stream","closed alias cannot turn a retained line EOF into ordinary EOF")
+  text = stream.readCharacters(-1,1)
+  errors = errors + check(text == "" & \stream.readEof(),"closed alias cannot turn a retained character EOF into ordinary EOF")
+  call config.storeStream("",1,stream)
+  errors = errors + check(inputRefused(reference config) = 2,"closed alias after EOF retains direct and PULL NOTREADY")
+  stream = .RexxClassicStream(path,"BOTH","UTF-8")
+  text = stream.readLine(99,1)
+  errors = errors + check(stream.readEof(),"prepare EOF before a codec failure")
+  call stream.processOutput("FF"x as .binary)
+  text = stream.readLine(-1,1)
+  errors = errors + check(\stream.readEof() & stream.codecFailure(),"a later codec failure resets earlier EOF")
+  call config.storeStream("",1,stream)
+  errors = errors + check(inputRefused(reference config) = 2,"codec failure after EOF retains default input NOTREADY")
+  ignored = stream.close()
+  ignored = writebinary(path,"66697273740A0A6C617374"x as .binary)
+  do mode = 1 to 4
+    if mode = 1 then stream = .RexxClassicStream(path || ".missing/input","READ","UTF-8")
+    if mode = 2 then stream = .RexxClassicStream(path,"WRITE","UTF-8")
+    if mode = 3 then do
+      ignored = writebinary(path,"FF"x as .binary)
+      stream = .RexxClassicStream(path,"READ","UTF-8")
+    end
+    if mode = 4 then do
+      stream = .RexxClassicStream(path,"READ","UTF-8")
+      ignored = stream.close()
+    end
+    text = stream.readLine(-1,1)
+    errors = errors + check(text == "" & \stream.readEof() & stream.error() <> "","failed, unreadable, codec and closed reads are not EOF")
+    call config.storeStream("",1,stream)
+    errors = errors + check(inputRefused(reference config) = 2,"non-EOF default input retains direct and PULL NOTREADY")
+    if mode = 3 then do
+      value = rexxclassicbifstream..rexxclassicbif_linein(reference state)
+      errors = errors + check(state.errorCode() == "RXC-LC-23.1" & state.conditionId() = 0,"LINEIN BIF retains codec SYNTAX precedence")
+    end
+    ignored = stream.close()
+  end
+  errors = errors + inputHookContracts(reference config,payload)
+  errors = errors + check(rxqueue("DELETE",queue_name) == "0","remove isolated input queue")
+  call erasefile path
+  return errors
+
+inputRefused: procedure = .int
+  arg config_ref = reference .RexxClassicConfig
+  config = dereference config_ref
+  caught = 0
+  do mode = 1 to 2
+    do
+      if mode = 1 then text = config.lineinText()
+      else text = config.pullText()
+    on signal notready
+      caught = caught + 1
+    end
+  end
+  return caught
+
+inputHookContracts: procedure = .int
+  arg config_ref = reference .RexxClassicConfig, payload = .string
+  config = dereference config_ref
+  errors = 0
+  request = .RexxClassicHostRequest("COMMAND","input hook EOF boundary")
+  call request.setConfiguration(config)
+  activation = request.activation()
+  pool = request.pool()
+  selected = request.configuration()
+  context = .RexxClassicContext(reference activation,reference pool,reference selected)
+  scope = .RexxClassicHostScope(reference context,request)
+  call scope.enter()
+  call selected.queueText(payload)
+  call selected.registerHostHook("PULL",.ReplacingTrap())
+  errors = errors + check(selected.pullText() == " " & selected.queuedCount() = 1,"PULL hook replacement precedes queue and failed stream")
+  absent = .RexxClassicHostHook
+  call selected.registerHostHook("PULL",absent)
+  call selected.registerHostHook("LINEIN",.EmptyTrap())
+  errors = errors + check(selected.pullText() == payload & selected.pullText() == "","queued value precedes present-empty LINEIN replacement")
+  event = .runtime_signal
+  do
+    assembler signal "NOTREADY","End of stream"
+  on signal notready as problem
+    event = problem as .runtime_signal
+  end
+  probe = .HostProbe()
+  hook = .InputFailureHook(reference probe,event)
+  call selected.registerHostHook("PULL",hook)
+  call selected.registerHostHook("LINEIN",hook)
+  do mode = 1 to 2
+    caught = 0
+    do
+      if mode = 1 then text = selected.lineinText()
+      else text = selected.pullText()
+    on signal notready as problem
+      caught = problem.message() == event.message() & problem.module() == event.module() & problem.address() = event.address()
+    end
+    errors = errors + check(caught & \probe.savedValid() & staleRefused(probe.saved()),"hook EOF-looking NOTREADY retains exact origin and revokes callback window")
+  end
+  outcome = scope.finish(.RexxActivationArguments())
+  call scope.close()
+  errors = errors + check(outcome.indicator() == "N","caught input hook failures leave host scope reusable")
   return errors
 
 completionContracts: procedure = .int
@@ -464,6 +642,21 @@ ProbeHook: class implements .RexxClassicHostHook
     call probe.record(operation,values,presence,window)
     if operation = "EXTERNALROUTINE" then return .RexxClassicHostHookResult.returning(.RexxValue("é雪" || ('00'x as .string) || "tail "))
     return .RexxClassicHostHookResult.returning(.RexxValue(""))
+
+InputFailureHook: class implements .RexxClassicHostHook
+  probe_ref = reference .HostProbe
+  hook_failure = .runtime_signal
+  *: factory
+    arg probe = reference .HostProbe, problem = .runtime_signal
+    probe_ref = probe
+    hook_failure = problem
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    current_probe_ref = probe_ref
+    probe = dereference current_probe_ref
+    call probe.remember(window)
+    return .RexxClassicHostHookResult.failed(hook_failure)
 
 EmptyTrap: class implements .RexxClassicHostHook
   *: factory

@@ -343,12 +343,15 @@ for argument registers and preserves the frame-entry mapping needed when a
 nested call uses `a1...` as its call window. Ordinary
 return places the frame on the procedure recycler; full value teardown happens
 when recycled frames are drained. Because references are rare, frames carry a
-small flag that is set on the frame that owns referenced storage. A helper may
-execute `MKREF` against caller-owned receiver storage, so the VM finds and marks
-the owner frame rather than assuming the current frame owns the target. Only
-flagged frames run the reference-lifetime cleanup on return, invalidating
+small flag that enables reference-lifetime cleanup. A helper may execute
+`MKREF` against caller-owned receiver storage. For a fallback reference, the
+VM marks the active frame and its ancestors; it does not search every physical
+attribute tree to identify one owner. Only flagged frames run the
+reference-lifetime cleanup on return, invalidating
 frame-owned local and `a0` storage plus nested attribute storage without freeing
-reusable buffers. Lexical scopes that own local storage emit `endlife` for each
+reusable buffers. Incoming `a1+` pointers are borrowed and never released by
+the callee's frame cleanup; a linked global or external value retains its own
+lifetime. Lexical scopes that own local storage emit `endlife` for each
 storage-owning local before block metadata is closed and, when eligible, before
 the compiler returns those registers to the reuse pool. Register reuse is more
 conservative than lexical cleanup: arguments, `.ref` arguments,
@@ -521,6 +524,47 @@ once by dispatch; ordinary `signal` retains its current-instruction source.
 Opcode 660, operand encoding, flow and handler policy are unchanged. Level C
 uses this form for typed outward relay and a missing delivered handler's 16.1,
 retaining the causing event rather than the generated handler-entry location.
+
+#### Terminal caller-context transport
+
+The implementation contract is tracked by DIAG-AC01–06 in the
+[compiler plan](../../research/level-l/compilers/PLAN.md#baseline-terminal-diagnostic-repair);
+baseline qualification remains open. Raw condition provenance and
+terminal diagnostic context have separate purposes. Preserve the original
+code, payload and module/address; a relayed helper fault must still be able to
+show its original authored callers after those frames unwind.
+
+Capture the complete ordinary caller chain before first unwind, including
+suspended same-context native/initializer callouts. Validate canonical return
+addresses and reuse existing source resolution; signal-entry pseudo-call edges
+are not ordinary calls. The immutable detached snapshot owns its length-bearing
+names/source text and coordinates. It retains no live frame, module, worker,
+metadata or value pointer. Private diagnostic callout scopes are independent
+of checked-invocation authorization and restore on every exit.
+Both the snapshot and its value-side descriptor survive worker teardown;
+descriptor publication reuses the allocator's existing detached extent scope.
+
+The raw container's existing native-payload resource hooks own this context;
+the five raw attributes, payload value, public wrapper and value ABI stay
+unchanged. Copies and SIGNALORIGIN retain the particular event's context, with
+alias-safe transfer before payload mutation. Fresh signals replace it; handled,
+ignored and completed executions release pending owners. Explicit captured-empty
+and unavailable witnesses prevent a stored rethrow from acquiring a later stack.
+Size/retain checks and diagnostic allocation failure preserve the original
+signal, with no arbitrary truncation or diagnostic-induced replacement fault.
+
+Render only inside the existing HALT/fail-action reporter guards, after native
+callback and initializer capture decline. Print one PANIC and raw origin; the
+captured chain replaces the live-caller fallback. Recovered/hosted paths remain
+silent. The legacy CALLMETHOD bridge keeps its existing generic message and
+outer origin; its immediate private adapter may transfer only that callback's
+diagnostic owner after existing setters. Public code-only callback APIs gain no
+cached failure inference. Event-carrying checked calls retain their existing
+full-event behavior.
+The raw origin can coincide with a captured caller coordinate, particularly
+through CALLMETHOD; both roles remain visible without a duplicate PANIC.
+An initializer's newly captured owned event also replaces its generic loader
+failure summary; ordinary unowned initialization errors retain that summary.
 
 Address semantics matter. VM-raised fault signals stamp the faulting
 instruction address before dispatch advances. `BREAKPOINT` and native or

@@ -18,6 +18,7 @@
 #include "rxvminvoke.h"
 
 #ifdef DECL_ONLY
+const char rxvm_invoke_provider_id[] = RXPA_STRINGIFY(PLUGIN_ID);
 #define INV_CLASS(owner) { RXVM_INVOKE_BIND_CLASS, owner, 0, 0, ".unknown", 0 },
 #define INV_FACTORY(fn, owner, type, args) \
     { RXVM_INVOKE_BIND_MEMBER, owner, "factory", "*", type, args }, \

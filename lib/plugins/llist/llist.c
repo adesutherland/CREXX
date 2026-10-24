@@ -514,7 +514,7 @@ PROCEDURE(nextnode) {
     // Check if we've reached the end of the list
     if (currentEntry == NULL) {
         char endOfListMessage[32];
-        sprintf(endOfListMessage, "$END-OF-LLIST-%d$", (int)qname);
+        snprintf(endOfListMessage, sizeof(endOfListMessage), "$END-OF-LLIST-%d$", (int)qname);
         RETURNSTRX(endOfListMessage);
     }
 
@@ -544,7 +544,7 @@ PROCEDURE(currentnode) {
     // Check if the list is empty
     if (currentEntry == NULL) {
         char emptyListMsg[32];
-        sprintf(emptyListMsg, "$EMPTY-LLIST-%d$", (int)qname);
+        snprintf(emptyListMsg, sizeof(emptyListMsg), "$EMPTY-LLIST-%d$", (int)qname);
         RETURNSTRX(emptyListMsg);  // Return empty list marker
     }
 

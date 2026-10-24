@@ -1,5 +1,6 @@
 """Behavioral policy, CMake argument, owner-copy and shared-cache contracts."""
 import argparse
+from collections import Counter
 import importlib.util
 import json
 import os
@@ -51,7 +52,7 @@ class Strategy(unittest.TestCase):
             self.assertNotIn(name, P.MEMORY_TESTS)
         for names in P.MEMORY_REGRESSIONS.values():
             self.assertTrue(set(names) <= P.MEMORY_TESTS)
-        known=set(re.findall(r'^### (SAN-[0-9]+)\b',
+        known=set(re.findall(r'^#{2,3} (SAN-[0-9]+)\b',
                             (ROOT/'docs/SANITIZER-WORKLIST.md').read_text(encoding='utf-8'),re.MULTILINE))-{'SAN-009'}
         self.assertTrue(known <= P.MEMORY_REGRESSIONS.keys())
         invalid={'schema':1,'panels':{'one':{'boundary':'owned','tests':['duplicate','duplicate']}},'regressions':{}}
@@ -349,6 +350,153 @@ add_custom_target(worker_image DEPENDS "${CMAKE_BINARY_DIR}/test_persistent_work
         self.assertEqual([image.read_text() for image in images], ['second'] * 3)
         self.assertEqual(len((build / 'calls.txt').read_text().splitlines()), 22)
 
+    @unittest.skipUnless(os.name != 'nt' and shutil.which('make'), 'Parallel owner fixture requires Unix Makefiles and executable scripts')
+    def test_level_l_make_producers_have_one_owner(self):
+        # Use the maintained module graph and frontend/ll_compile declarations.
+        # Only tools, source contents and the unrelated Unicode generator are
+        # substituted; this qualifies graph ownership, not native memory.
+        source=(self.root/'make-source').resolve(); source.mkdir()
+        build=(self.root/'make-build').resolve()
+        calls=(self.root/'make-calls').resolve()
+        sdk=source/'sdk'; sdk.mkdir()
+        sdk_declarations=(ROOT/'lib/rxfnsl/rexx/CMakeLists.txt').read_text()
+        (sdk/'CMakeLists.txt').write_text(sdk_declarations)
+        modules=re.search(r'set\(RXFNSL_REXX_MODULES\s+([^)]*)\)',sdk_declarations).group(1).split()
+        for name in modules:
+            (sdk/(name+'.crexx')).write_text('fixture source\n')
+        (source/'unicode').mkdir()
+        (source/'unicode/Properties.cmake').write_text(
+            'set(_ll_data_source "${CMAKE_CURRENT_SOURCE_DIR}/lludata.crexx")\n')
+
+        compiler=(ROOT/'research/level-l/compilers/CMakeLists.txt').read_text()
+        def declarations(begin,end):
+            self.assertEqual(compiler.count(begin),1)
+            start=compiler.index(begin)
+            self.assertEqual(compiler[start:].count(end),1)
+            return compiler[start:compiler.index(end,start)]
+        # This full head identifies the common loop immediately after the
+        # grammar declarations; later mode loops belong to other fixtures.
+        common_head='''foreach(_mode opt noopt)
+  set(_flags)
+  if(_mode STREQUAL "noopt")
+    set(_flags -n)
+  endif()
+  set(_common "${CMAKE_CURRENT_BINARY_DIR}/common/${_mode}")'''
+        frontend=declarations('function(ll_compile NAME SOURCE DIRECTORY)',
+                              '\n'+common_head)
+        common=declarations(common_head, '\n  set(_allhosts)')
+        research=source/'research'; research.mkdir()
+        (research/'levelc').mkdir()
+        (research/'levelc/levelc.rxl').write_text('fixture grammar\n')
+        (research/'common').mkdir()
+        for name in ('llscalar','llcompilercontracts'):
+            (research/'common'/(name+'.crexx')).write_text('fixture source\n')
+        (research/'client.crexx').write_text('fixture consumer\n')
+        (research/'CMakeLists.txt').write_text('set(_languages c)\n'+frontend+'\n'+common+'''
+  set(_dir "${CMAKE_CURRENT_BINARY_DIR}/clients/${_mode}")
+  ll_compile(client "${CMAKE_CURRENT_SOURCE_DIR}/client.crexx" "${_dir}"
+    ${_base} ${_shared} "${_front}/llcgrammar.rxbin")
+  add_custom_target(client_${_mode} ALL DEPENDS "${_dir}/client.rxbin")
+endforeach()
+''')
+        generator=source/'langtools/cmake'; generator.mkdir(parents=True)
+        shutil.copyfile(ROOT/'langtools/cmake/generate.cmake',generator/'generate.cmake')
+        producer=r'''#!@PYTHON@
+from pathlib import Path
+import os,sys,time
+tool=Path(sys.argv[0]).name
+args=sys.argv[1:]
+if tool=='rxlang':
+    output=Path(args[0]).resolve()
+elif tool=='rxc':
+    output=Path(args[args.index('-o')+1]+'.rxas').resolve()
+    for directory in args[args.index('-i')+1].split(';'):
+        for imported in Path(directory).glob('*.rxbin'):
+            assert imported.read_text()=='complete\n', imported
+elif tool=='rxas':
+    stem=Path(args[-1])
+    assert Path(str(stem)+'.rxas').read_text()=='complete\n', stem
+    output=Path(str(stem)+'.rxbin').resolve()
+else:
+    control=Path(args[args.index('-c')+1]).read_text().splitlines()
+    for line in control:
+        if line.startswith('INPUT '):
+            imported=Path(line[6:])
+            assert imported.read_text()=='complete\n', imported
+    output=Path(next(line[7:] for line in control if line.startswith('OUTPUT '))+'.rxbin').resolve()
+lock=Path(str(output)+'.active')
+descriptor=os.open(lock,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
+os.close(descriptor)
+try:
+    descriptor=os.open(@CALLS@,os.O_WRONLY|os.O_CREAT|os.O_APPEND,0o600)
+    os.write(descriptor,(tool+'\t'+str(output)+'\n').encode())
+    os.close(descriptor)
+    # Keep simultaneous missing-output recipes observable on fast machines.
+    time.sleep(0.05)
+    if tool=='rxlang':
+        print('complete')
+    else:
+        output.write_text('complete\n')
+finally:
+    lock.unlink()
+'''.replace('@PYTHON@',sys.executable).replace('@CALLS@',repr(str(calls)))
+        for tool in ('rxc','rxas','rxlink','rxlang'):
+            executable=source/tool
+            executable.write_text(producer); executable.chmod(0o755)
+        (source/'CMakeLists.txt').write_text('''cmake_minimum_required(VERSION 3.24)
+project(LevelLOwnerContract NONE)
+include("@ROOT@/cmake/CrexxImportRoots.cmake")
+function(crexx_add_fixture_command)
+  add_custom_command(${ARGV})
+endfunction()
+foreach(tool IN ITEMS rxc rxas rxlink rxlang)
+  add_executable(${tool} IMPORTED)
+  set_target_properties(${tool} PROPERTIES IMPORTED_LOCATION "${CMAKE_SOURCE_DIR}/${tool}")
+endforeach()
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin" "${CMAKE_BINARY_DIR}/langtools/common")
+file(WRITE "${CMAKE_BINARY_DIR}/bin/library.rxbin" "complete\\n")
+add_custom_target(library)
+foreach(module IN ITEMS llrxastext llbinmeta)
+  file(WRITE "${CMAKE_BINARY_DIR}/langtools/common/${module}.rxbin" "complete\\n")
+  add_custom_target(${module})
+endforeach()
+add_subdirectory(sdk)
+add_subdirectory(research)
+'''.replace('@ROOT@',ROOT.as_posix()))
+        command('cmake','-S',source,'-B',build,'-G','Unix Makefiles')
+        def prepare():
+            command('cmake','--build',build,'--parallel','8')
+        def events():
+            return Counter(tuple(line.split('\t')) for line in calls.read_text().splitlines())
+        expected={('rxlink',str(build/'bin/rxfnsl.rxbin')),
+                  ('rxlang',str(research/'levelc/levelc.rxl')),
+                  ('rxas',str(build/'research/frontends/llcgrammar.rxbin'))}
+        for name in modules:
+            expected.update({('rxc',str(build/'sdk'/(name+'.rxas'))),
+                             ('rxas',str(build/'sdk'/(name+'.rxbin')))})
+        for mode in ('opt','noopt'):
+            for directory,name in ((f'common/{mode}','llscalar'),
+                                   (f'common/{mode}','llcompilercontracts'),
+                                   (f'clients/{mode}','client')):
+                expected.update({('rxc',str(build/'research'/directory/(name+'.rxas'))),
+                                 ('rxas',str(build/'research'/directory/(name+'.rxbin')))})
+        prepare()
+        self.assertEqual(events(),Counter({event:1 for event in expected}))
+        prepare()
+        self.assertEqual(events(),Counter({event:1 for event in expected}))
+        calls.write_text('')
+        (build/'sdk/llcheck.rxbin').unlink()
+        (build/'research/frontends/llcgrammar.rxbin').unlink()
+        prepare()
+        recovered=events()
+        self.assertTrue(recovered)
+        self.assertEqual(set(recovered.values()),{1})
+        for event in (('rxc',str(build/'sdk/llcheck.rxas')),
+                      ('rxas',str(build/'sdk/llcheck.rxbin')),
+                      ('rxlang',str(research/'levelc/levelc.rxl')),
+                      ('rxas',str(build/'research/frontends/llcgrammar.rxbin'))):
+            self.assertEqual(recovered[event],1)
+        self.assertNotIn(('rxc',str(build/'sdk/llir.rxas')),recovered)
 
     def workflow_block(self, name):
         workflow = (ROOT/'.github/workflows/sanitizers.yml').read_text().splitlines()

@@ -28,6 +28,14 @@ add_test(NAME ast_allocation_failure COMMAND test_ast_allocation)
 set_tests_properties(ast_allocation_failure PROPERTIES
         LABELS "unit;compiler;allocation" TIMEOUT 30 CREXX_PREP_TARGETS test_ast_allocation)
 
+add_executable(test_call_result_allocation test_call_result_allocation.c)
+target_include_directories(test_call_result_allocation PRIVATE ${symbol_test_includes})
+target_link_libraries(test_call_result_allocation PRIVATE rxclib)
+add_test(NAME call_result_allocation_failure COMMAND test_call_result_allocation)
+set_tests_properties(call_result_allocation_failure PROPERTIES
+        LABELS "unit;compiler;allocation;calls" TIMEOUT 30
+        CREXX_PREP_TARGETS test_call_result_allocation)
+
 add_executable(test_rxpa_allocation test_rxpa_allocation.c)
 target_include_directories(test_rxpa_allocation PRIVATE ${symbol_test_includes})
 target_link_libraries(test_rxpa_allocation PRIVATE rxclib)
@@ -283,11 +291,13 @@ add_test(NAME binary_global_import_types
 set_tests_properties(binary_global_import_types PROPERTIES
     LABELS "compiler;imports;regression"
     CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;rxvm;library;classlib"
-    # This matrix launches many complete compiler/assembler/linker/VM paths.
-    # Running it beside other aggregate tests can exhaust its outer timeout
-    # even though the unchanged matrix passes comfortably in isolation.
+    # Instrumented nested producers retain their established isolation.
     RUN_SERIAL TRUE
     TIMEOUT 900)
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+    # Private outputs; six slots are conservative admission, not native threads.
+    set_tests_properties(binary_global_import_types PROPERTIES RUN_SERIAL FALSE PROCESSORS 6)
+endif()
 
 set(_binary_concat_vms)
 set(_binary_concat_prep rxc rxas rxlink rxbvm library)
@@ -4346,6 +4356,19 @@ add_crexx_run_test(inline_test_array_return_temp rexx_src/inline_test_array_retu
 add_crexx_run_test(inline_test_block_expr_live_sibling rexx_src/inline_test_block_expr_live_sibling.crexx)
 add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_test_imported_bif_block_expr_lifetime.crexx)
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
+add_crexx_run_test(array_index_live_receiver rexx_src/array_index_live_receiver.crexx)
+set_tests_properties(array_index_live_receiver_run_noopt
+        array_index_live_receiver_run_opt PROPERTIES
+        LABELS "compiler;register-lifetime;regression")
+add_test(NAME array_index_live_receiver_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/array_index_live_receiver.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/array_index_live_receiver_shape_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_array_index_live_receiver_shape.cmake)
+set_tests_properties(array_index_live_receiver_shape PROPERTIES
+        LABELS "compiler;register-lifetime;regression"
+        TIMEOUT 60 CREXX_PREP_TARGETS "rxc")
 add_crexx_run_test(deferred_register_outer_if_lifetime
         rexx_src/deferred_register_outer_if_lifetime.crexx)
 add_crexx_run_test(short_circuit_linked_left
@@ -4401,6 +4424,52 @@ add_test(NAME signal_specific_catchall
 set_tests_properties(signal_specific_catchall PROPERTIES
     LABELS "compiler;signals;regression;levelg" TIMEOUT 60
     CREXX_PREP_TARGETS "${_signal_priority_target};rxvm")
+set(_seed_inline_receiver_vm rxbvm)
+if(CREXX_THREADED_VM_SUPPORTED)
+    set(_seed_inline_receiver_vm rxtvm)
+endif()
+# Authored signal origins require retained source metadata. The generic
+# optimized runtime helper deliberately strips it from its linked image.
+foreach(_classic_signal_mode IN ITEMS noopt opt)
+    add_test(NAME signal_classic_catchall_run_${_classic_signal_mode}
+             COMMAND ${CMAKE_COMMAND}
+                     -DMODE=${_classic_signal_mode}
+                     -DRXC=$<TARGET_FILE:rxc>
+                     -DRXAS=$<TARGET_FILE:rxas>
+                     -DRXLINK=$<TARGET_FILE:rxlink>
+                     -DRXBVM=$<TARGET_FILE:rxbvm>
+                     ${_inline_receiver_threaded_vm}
+                     -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+                     -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/signal_classic_catchall.crexx
+                     -DEXPECTED=${CMAKE_CURRENT_SOURCE_DIR}/golden/run/signal_classic_catchall.out
+                     -DWORK=${CMAKE_CURRENT_BINARY_DIR}/signal_classic_catchall_${_classic_signal_mode}_ws
+                     -P ${CMAKE_CURRENT_SOURCE_DIR}/run_signal_classic_catchall.cmake)
+    set_tests_properties(signal_classic_catchall_run_${_classic_signal_mode} PROPERTIES
+            LABELS "compiler;signals;control_flow;correctness"
+            TIMEOUT 120 CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxbvm;${_seed_inline_receiver_vm};library")
+endforeach()
+add_test(NAME signal_catchall_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/signal_catchall_shape.crexx
+                 -DIMPORT_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/signal_catchall_shape_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_signal_catchall_shape.cmake)
+set_tests_properties(signal_catchall_shape PROPERTIES
+        LABELS "compiler;signals;control_flow;correctness"
+        TIMEOUT 60 CREXX_PREP_TARGETS "rxc;library")
+add_test(NAME inline_receiver_caller_field
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:${_seed_inline_receiver_vm}>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_caller_field.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_caller_field_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_caller_field.cmake)
+set_tests_properties(inline_receiver_caller_field PROPERTIES
+        LABELS "compiler;linked_opt;receiver;regression"
+        TIMEOUT 120 CREXX_PREP_TARGETS "rxc;rxas;${_seed_inline_receiver_vm};rxbvm")
 add_crexx_run_test(inline_test_class_methods rexx_src/inline_test_class_methods.crexx)
 
 # New Phase 2 Scoping Tests
@@ -6541,10 +6610,10 @@ foreach(_exit_mode IN ITEMS opt noopt)
 endforeach()
 add_levelc_runtime_slice_test(levelc_call_expression_actuals
         rexx_src/levelc_call_expression_actuals.rexx
-        "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|Ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n")
+        "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n")
 add_levelc_runtime_slice_test(levelc_call_expression_actuals_noopt
         rexx_src/levelc_call_expression_actuals.rexx
-        "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|Ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n" -n)
+        "enter=AÉ🙂|2\nenter=AÉ🙂|1\nenter=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|0\nrelay=A||B\nleave=AÉ🙂|1\nrelay=A||B\nleave=AÉ🙂|2\norder=ABABAB\nrelay=É|ÿ|3\nedges=2||C|\norder=ABABABC\nempty=0\n" -n)
 set(_levelc_call_resolution_expected
         "${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_resolution_result.expected")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
@@ -6736,10 +6805,10 @@ add_levelc_runtime_slice_test(levelc_arg_dynamic_templates_noopt
         "parse=mn|op|\nliteral=AB|CD|\nposition=AB|CDEF|\ncapture=X|B:TAIL||\n" -n)
 add_levelc_runtime_slice_test(levelc_arg_unicode
         rexx_src/levelc_arg_unicode.rexx
-        "fields=AÉ|🙂B|Ÿ\nraw=aé🙂b|FF\nrepeat=AÉ🙂B\ndot=🙂\nfunction=É🙂\n")
+        "fields=AÉ|🙂B|ÿ\nraw=aé🙂b|FF\nrepeat=AÉ🙂B\ndot=🙂\nfunction=É🙂\n")
 add_levelc_runtime_slice_test(levelc_arg_unicode_noopt
         rexx_src/levelc_arg_unicode.rexx
-        "fields=AÉ|🙂B|Ÿ\nraw=aé🙂b|FF\nrepeat=AÉ🙂B\ndot=🙂\nfunction=É🙂\n" -n)
+        "fields=AÉ|🙂B|ÿ\nraw=aé🙂b|FF\nrepeat=AÉ🙂B\ndot=🙂\nfunction=É🙂\n" -n)
 add_levelc_runtime_slice_test(levelc_arg_patterns
         rexx_src/levelc_arg_patterns.rexx
         "pattern AB CD \nleading LEFT RIGHT\ntrailing AB:CD\nbare\n")
@@ -8576,12 +8645,34 @@ add_levelc_lowered_tree_shape_test(levelc_slice45_constant_symbols_tree_shape
         "RexxValue"
         "concat")
 
+# Host fixtures share only completed runtime/exit metadata. Special language
+# and provider contracts add their own exact roots below.
+set(_compiler_host_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/hosts/base")
+crexx_add_import_root(compiler_host_imports
+        DIRECTORY "${_compiler_host_import_root}"
+        OUTPUT_VARIABLE _compiler_host_import_files
+        FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+        DEPENDS library compiler_exit_bin)
+set(_compiler_host_g_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/hosts/levelg")
+crexx_add_import_root(compiler_host_g_imports
+        DIRECTORY "${_compiler_host_g_import_root}"
+        OUTPUT_VARIABLE _compiler_host_g_import_files
+        FILES "${CMAKE_BINARY_DIR}/bin/rxfnsg.rxbin" "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+        DEPENDS rxfnsg classlib)
+set(_compiler_host_c_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/hosts/levelc")
+crexx_add_import_root(compiler_host_c_imports
+        DIRECTORY "${_compiler_host_c_import_root}"
+        OUTPUT_VARIABLE _compiler_host_c_import_files
+        FILES "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+                "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin"
+        DEPENDS rxfnsc classlib rxunicode_core)
+
 # Bridge Connectivity Test
 add_custom_command(
         OUTPUT stub_plugin.rxbin
-        COMMAND $<TARGET_FILE:rxc> -n -o stub_plugin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -n -o stub_plugin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.crexx
         COMMAND $<TARGET_FILE:rxas> -o stub_plugin stub_plugin
-        DEPENDS rxc rxas compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/stub_plugin.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling stub_plugin.crexx ..."
 )
@@ -8609,27 +8700,27 @@ set(CREXX_LLM_DEMO_DIR "${CMAKE_SOURCE_DIR}/examples/llm")
 set(CREXX_NATIVE_KV_DEMO_DIR "${CMAKE_SOURCE_DIR}/examples/native/kv")
 add_custom_command(
         OUTPUT address_cms_provider.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_provider ${CREXX_CMS_DEMO_DIR}/cms_address_environment.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o address_cms_provider ${CREXX_CMS_DEMO_DIR}/cms_address_environment.crexx
         COMMAND $<TARGET_FILE:rxas> address_cms_provider
-        DEPENDS rxc rxas library compiler_exit_bin ${CREXX_CMS_DEMO_DIR}/cms_address_environment.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CREXX_CMS_DEMO_DIR}/cms_address_environment.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling cms_address_environment.crexx ..."
 )
 
 add_custom_command(
         OUTPUT address_cms_host.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_host.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o address_cms_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_host.crexx
         COMMAND $<TARGET_FILE:rxas> address_cms_host
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_host.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_cms_host.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling address_cms_host.crexx ..."
 )
 
 add_custom_command(
         OUTPUT address_cms_demo.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_cms_demo ${CREXX_CMS_DEMO_DIR}/cms_address_demo.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o address_cms_demo ${CREXX_CMS_DEMO_DIR}/cms_address_demo.crexx
         COMMAND $<TARGET_FILE:rxas> address_cms_demo
-        DEPENDS rxc rxas library compiler_exit_bin ${CREXX_CMS_DEMO_DIR}/cms_address_demo.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CREXX_CMS_DEMO_DIR}/cms_address_demo.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling cms_address_demo.crexx ..."
 )
@@ -8640,18 +8731,20 @@ add_dependencies(test_address_bridge address_cms_fixture_bin library)
 
 add_custom_command(
         OUTPUT address_llm_provider.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_llm_provider ${CREXX_LLM_DEMO_DIR}/llm_address_environment.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_g_import_root}" -o address_llm_provider ${CREXX_LLM_DEMO_DIR}/llm_address_environment.crexx
         COMMAND $<TARGET_FILE:rxas> address_llm_provider
-        DEPENDS rxc rxas library rxfnsg compiler_exit_bin ${CREXX_LLM_DEMO_DIR}/llm_address_environment.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_g_imports ${_compiler_host_g_import_files} ${CREXX_LLM_DEMO_DIR}/llm_address_environment.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling llm_address_environment.crexx ..."
 )
 
 add_custom_command(
         OUTPUT address_llm_host.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_llm_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_llm_host.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_g_import_root}" -o address_llm_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_llm_host.crexx
         COMMAND $<TARGET_FILE:rxas> address_llm_host
-        DEPENDS rxc rxas library rxfnsg compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_llm_host.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_g_imports ${_compiler_host_g_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_llm_host.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling address_llm_host.crexx ..."
 )
@@ -8676,9 +8769,9 @@ add_custom_target(address_llm_fixture_bin ALL DEPENDS address_llm_linked.rxbin)
 
 add_custom_command(
         OUTPUT native_kv_address_demo.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o native_kv_address_demo ${CREXX_NATIVE_KV_DEMO_DIR}/kv_address_demo.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o native_kv_address_demo ${CREXX_NATIVE_KV_DEMO_DIR}/kv_address_demo.crexx
         COMMAND $<TARGET_FILE:rxas> native_kv_address_demo
-        DEPENDS rxc rxas library compiler_exit_bin ${CREXX_NATIVE_KV_DEMO_DIR}/kv_address_demo.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CREXX_NATIVE_KV_DEMO_DIR}/kv_address_demo.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling kv_address_demo.crexx ..."
 )
@@ -8695,9 +8788,9 @@ add_dependencies(native_kv_address_demo native_kv_address_demo_bin library)
 
 add_custom_command(
         OUTPUT address_callback_host.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o address_callback_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o address_callback_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.crexx
         COMMAND $<TARGET_FILE:rxas> address_callback_host
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/address_callback_host.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling address_callback_host.crexx ..."
 )
@@ -8714,9 +8807,10 @@ add_dependencies(test_address_callback_host address_callback_host_bin library)
 
 add_custom_command(
         OUTPUT e2_active_context.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o e2_active_context ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/e2_active_context.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o e2_active_context ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/e2_active_context.crexx
         COMMAND $<TARGET_FILE:rxas> e2_active_context
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/e2_active_context.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/e2_active_context.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling e2_active_context.crexx ..."
 )
@@ -8735,9 +8829,9 @@ add_dependencies(test_e2_active_context e2_active_context_bin library)
 
 add_custom_command(
         OUTPUT say_bytes_host.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o say_bytes_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/say_bytes_host.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o say_bytes_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/say_bytes_host.crexx
         COMMAND $<TARGET_FILE:rxas> say_bytes_host
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/say_bytes_host.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/say_bytes_host.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling say_bytes_host.crexx ...")
 add_custom_target(say_bytes_host_bin DEPENDS say_bytes_host.rxbin)
@@ -8751,9 +8845,10 @@ add_dependencies(test_say_bytes_host say_bytes_host_bin library)
 
 add_custom_command(
         OUTPUT levelc_say_host_output.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_say_host_output ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_say_bytes.rexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_c_import_root}" -o levelc_say_host_output ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_say_bytes.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_say_host_output
-        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_say_bytes.rexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_c_imports ${_compiler_host_c_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_say_bytes.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling Level C SAY host output fixture ...")
 add_custom_target(levelc_say_host_output_bin DEPENDS levelc_say_host_output.rxbin)
@@ -8769,9 +8864,10 @@ add_dependencies(test_levelc_say_host_output levelc_say_host_output_bin library 
 
 add_custom_command(
         OUTPUT levelc_address_host_callback.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_address_host_callback ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_host_callback.rexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_c_import_root}" -o levelc_address_host_callback ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_host_callback.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_address_host_callback
-        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_host_callback.rexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_c_imports ${_compiler_host_c_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_address_host_callback.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling Level C ADDRESS host callback fixture ...")
 add_custom_target(levelc_address_host_callback_bin DEPENDS levelc_address_host_callback.rxbin)
@@ -8787,9 +8883,10 @@ add_dependencies(test_levelc_address_host_callback levelc_address_host_callback_
 
 add_custom_command(
         OUTPUT levelc_arg_host_entry.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_arg_host_entry ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_host_entry.rexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_c_import_root}" -o levelc_arg_host_entry ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_host_entry.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_arg_host_entry
-        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_host_entry.rexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_c_imports ${_compiler_host_c_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_arg_host_entry.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling levelc_arg_host_entry.rexx ...")
 add_custom_target(levelc_arg_host_entry_bin DEPENDS levelc_arg_host_entry.rxbin)
@@ -8805,16 +8902,24 @@ add_dependencies(test_levelc_arg_host_entry levelc_arg_host_entry_bin library rx
 
 add_custom_command(
         OUTPUT levelc_call_host_provider.rxbin
-        COMMAND $<TARGET_FILE:rxc> --levelc-routine -i ${CMAKE_BINARY_DIR}/bin -o levelc_call_host_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_host_provider.rexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import --levelc-routine -i "${_compiler_host_import_root}" -i "${_compiler_host_c_import_root}" -o levelc_call_host_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_host_provider.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_call_host_provider
-        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_host_provider.rexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_c_imports ${_compiler_host_c_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_host_provider.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling Level C CALL host provider ...")
+set(_compiler_host_classic_call_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/hosts/classic_call")
+crexx_add_import_root(compiler_host_classic_call_imports
+        DIRECTORY "${_compiler_host_classic_call_import_root}"
+        OUTPUT_VARIABLE _compiler_host_classic_call_import_files
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/levelc_call_host_provider.rxbin")
 add_custom_command(
         OUTPUT levelc_call_host_entry.rxbin
-        COMMAND $<TARGET_FILE:rxc> -s ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src -i ${CMAKE_BINARY_DIR}/bin -o levelc_call_host_entry ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_host_entry.rexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -s ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src -i "${_compiler_host_import_root}" -i "${_compiler_host_c_import_root}" -i "${_compiler_host_classic_call_import_root}" -o levelc_call_host_entry ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_host_entry.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_call_host_entry
-        DEPENDS rxc rxas library rxfnsc compiler_exit_bin levelc_call_host_provider.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_host_entry.rexx
+        DEPENDS rxc rxas compiler_host_classic_call_imports ${_compiler_host_classic_call_import_files}
+                compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_c_imports ${_compiler_host_c_import_files} levelc_call_host_provider.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_call_host_entry.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling Level C CALL host entry ...")
 add_custom_target(levelc_call_host_entry_bin DEPENDS levelc_call_host_provider.rxbin levelc_call_host_entry.rxbin)
@@ -8838,9 +8943,10 @@ endforeach()
 
 add_custom_command(
         OUTPUT levelc_return_status7.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_return_status7 ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_return_status7.rexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_c_import_root}" -o levelc_return_status7 ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_return_status7.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_return_status7
-        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_return_status7.rexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_c_imports ${_compiler_host_c_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_return_status7.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling Level C RETURN host entry ...")
 add_custom_target(levelc_return_status7_bin DEPENDS levelc_return_status7.rxbin)
@@ -8857,9 +8963,10 @@ add_dependencies(test_levelc_return_host_entry levelc_return_status7_bin library
 
 add_custom_command(
         OUTPUT levelc_exit_status7.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o levelc_exit_status7 ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_status7.rexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_c_import_root}" -o levelc_exit_status7 ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_status7.rexx
         COMMAND $<TARGET_FILE:rxas> levelc_exit_status7
-        DEPENDS rxc rxas library rxfnsc compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_status7.rexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files}
+                compiler_host_c_imports ${_compiler_host_c_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_exit_status7.rexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling Level C EXIT host entry ...")
 add_custom_target(levelc_exit_status7_bin DEPENDS levelc_exit_status7.rxbin)
@@ -8877,18 +8984,24 @@ add_dependencies(test_levelc_exit_host_entry levelc_exit_status7_bin library rxf
 
 add_custom_command(
         OUTPUT dynamic_load_provider.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o dynamic_load_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o dynamic_load_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.crexx
         COMMAND $<TARGET_FILE:rxas> dynamic_load_provider
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_provider.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling dynamic_load_provider.crexx ..."
 )
 
+set(_compiler_host_dynamic_load_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/hosts/dynamic_load")
+crexx_add_import_root(compiler_host_dynamic_load_imports
+        DIRECTORY "${_compiler_host_dynamic_load_import_root}"
+        OUTPUT_VARIABLE _compiler_host_dynamic_load_import_files
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/dynamic_load_provider.rxbin")
 add_custom_command(
         OUTPUT dynamic_load_host.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_BINARY_DIR}/bin -o dynamic_load_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_host.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_dynamic_load_import_root}" -o dynamic_load_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_host.crexx
         COMMAND $<TARGET_FILE:rxas> dynamic_load_host
-        DEPENDS rxc rxas library compiler_exit_bin dynamic_load_provider.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_host.crexx
+        DEPENDS rxc rxas compiler_host_dynamic_load_imports ${_compiler_host_dynamic_load_import_files}
+                compiler_host_imports ${_compiler_host_import_files} dynamic_load_provider.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_load_host.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling dynamic_load_host.crexx ..."
 )
@@ -8906,27 +9019,34 @@ add_dependencies(test_dynamic_load dynamic_load_fixture_bin library)
 
 add_custom_command(
         OUTPUT dynamic_interface_contract.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_contract ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_contract.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o dynamic_interface_contract ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_contract.crexx
         COMMAND $<TARGET_FILE:rxas> dynamic_interface_contract
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_contract.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_contract.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling dynamic interface contract ..."
 )
 
+set(_compiler_host_dynamic_interface_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/hosts/dynamic_interface")
+crexx_add_import_root(compiler_host_dynamic_interface_imports
+        DIRECTORY "${_compiler_host_dynamic_interface_import_root}"
+        OUTPUT_VARIABLE _compiler_host_dynamic_interface_import_files
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_contract.rxbin")
 add_custom_command(
         OUTPUT dynamic_interface_provider.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_provider.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_dynamic_interface_import_root}" -o dynamic_interface_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_provider.crexx
         COMMAND $<TARGET_FILE:rxas> dynamic_interface_provider
-        DEPENDS rxc rxas library compiler_exit_bin dynamic_interface_contract.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_provider.crexx
+        DEPENDS rxc rxas compiler_host_dynamic_interface_imports ${_compiler_host_dynamic_interface_import_files}
+                compiler_host_imports ${_compiler_host_import_files} dynamic_interface_contract.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_provider.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling dynamic interface provider ..."
 )
 
 add_custom_command(
         OUTPUT dynamic_interface_host.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -i "${_compiler_host_dynamic_interface_import_root}" -o dynamic_interface_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx
         COMMAND $<TARGET_FILE:rxas> dynamic_interface_host
-        DEPENDS rxc rxas library compiler_exit_bin dynamic_interface_contract.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx
+        DEPENDS rxc rxas compiler_host_dynamic_interface_imports ${_compiler_host_dynamic_interface_import_files}
+                compiler_host_imports ${_compiler_host_import_files} dynamic_interface_contract.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling dynamic interface host ..."
 )
@@ -8966,9 +9086,9 @@ target_include_directories(test_rxvml_utf_boundaries PRIVATE ${CMAKE_SOURCE_DIR}
 
 add_custom_command(
         OUTPUT crexxsaa_variables_host.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o crexxsaa_variables_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_variables_host.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o crexxsaa_variables_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_variables_host.crexx
         COMMAND $<TARGET_FILE:rxas> crexxsaa_variables_host
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_variables_host.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_variables_host.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling crexxsaa_variables_host.crexx ..."
 )
@@ -8992,16 +9112,16 @@ target_compile_definitions(test_crexxsaa_status PRIVATE
         CREXX_TEST_LIBRARY_RXBIN="${CMAKE_BINARY_DIR}/bin/library.rxbin"
         CREXX_TEST_RXC="$<TARGET_FILE:rxc>"
         CREXX_TEST_RXAS="$<TARGET_FILE:rxas>"
-        CREXX_TEST_IMPORT_DIR="${CMAKE_BINARY_DIR}/bin"
+        CREXX_TEST_IMPORT_DIR="${_compiler_host_import_root}"
         CREXX_TEST_CREXXSAA_EXIT7_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_exit7_hosted.crexx"
         CREXX_TEST_CREXXSAA_RETURN7_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_return7_hosted.crexx")
-add_dependencies(test_crexxsaa_status library crexxsaa rxc rxas compiler_exit_bin)
+add_dependencies(test_crexxsaa_status compiler_host_imports crexxsaa rxc rxas)
 
 add_custom_command(
         OUTPUT crexxsaa_arg_length_hosted.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o crexxsaa_arg_length_hosted ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_arg_length_hosted.crexx
+        COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_compiler_host_import_root}" -o crexxsaa_arg_length_hosted ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_arg_length_hosted.crexx
         COMMAND $<TARGET_FILE:rxas> crexxsaa_arg_length_hosted
-        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_arg_length_hosted.crexx
+        DEPENDS rxc rxas compiler_host_imports ${_compiler_host_import_files} ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_arg_length_hosted.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Compiling crexxsaa_arg_length_hosted.crexx ...")
 add_custom_target(crexxsaa_arg_length_hosted_bin DEPENDS crexxsaa_arg_length_hosted.rxbin)
@@ -9013,11 +9133,11 @@ target_compile_definitions(test_crexxsaa_arg_lengths PRIVATE
         CREXX_TEST_LIBRARY_RXBIN="${CMAKE_BINARY_DIR}/bin/library.rxbin"
         CREXX_TEST_RXC="$<TARGET_FILE:rxc>"
         CREXX_TEST_RXAS="$<TARGET_FILE:rxas>"
-        CREXX_TEST_IMPORT_DIR="${CMAKE_BINARY_DIR}/bin"
+        CREXX_TEST_IMPORT_DIR="${_compiler_host_import_root}"
         CREXX_TEST_ARG_SOURCE="${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/crexxsaa_arg_length_hosted.crexx"
         CREXX_TEST_ARG_MODULE="${CMAKE_CURRENT_BINARY_DIR}/crexxsaa_arg_length_hosted.rxbin"
         CREXX_TEST_ARG_CACHE="${CMAKE_CURRENT_BINARY_DIR}/crexxsaa-arg-length-cache")
-add_dependencies(test_crexxsaa_arg_lengths crexxsaa_arg_length_hosted_bin crexxsaa library rxc rxas compiler_exit_bin)
+add_dependencies(test_crexxsaa_arg_lengths crexxsaa_arg_length_hosted_bin compiler_host_imports crexxsaa rxc rxas)
 
 add_executable(test_source_provenance src/test_source_provenance.c)
 target_link_libraries(test_source_provenance PRIVATE rxclib)
@@ -9192,7 +9312,7 @@ add_levelc_runtime_syntax_signal_test(levelc_numeric_fuzz_huge
         rexx_src/levelc_numeric_fuzz_huge.rexx "33.1" "before\n"
         "levelc_numeric_fuzz_huge.rexx:4:1")
 add_levelc_runtime_syntax_signal_test(levelc_numeric_form_bad
-        rexx_src/levelc_numeric_form_bad.rexx "33.6" "before\n"
+        rexx_src/levelc_numeric_form_bad.rexx "33.3" "before\n"
         "levelc_numeric_form_bad.rexx:4:1")
 foreach(_trace_mode IN ITEMS opt noopt)
     if(_trace_mode STREQUAL "noopt")
@@ -9320,6 +9440,19 @@ add_test(NAME trace_stem_sugar
         -DRXVM_TIMEOUT=${TRACE_STEM_SUGAR_RXVM_TIMEOUT}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_stem_sugar.cmake)
 set_tests_properties(trace_stem_sugar PROPERTIES LABELS "compiler;stage4")
+
+add_test(NAME trace_array_lengths
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DRXAS=$<TARGET_FILE:rxas>
+        -DRXVM=${CREXX_RXVM_EXECUTABLE}
+        -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+        -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library
+        -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/trace_array_lengths.crexx
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/trace_array_lengths
+        -DRXVM_TIMEOUT=60
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_array_lengths.cmake)
+set_tests_properties(trace_array_lengths PROPERTIES LABELS "compiler;stage4" TIMEOUT 300)
 
 if (ENABLE_PARSER_MODE)
     add_test(NAME highlight_cache COMMAND test_highlight_cache)

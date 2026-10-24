@@ -5,6 +5,99 @@ sanitizer configurations.  Repository policy and closure requirements are in
 [`AGENTS.md`](../AGENTS.md) and
 [`CREXX_ASAN_TESTING.md`](ai-context/CREXX_ASAN_TESTING.md).
 
+Current operating rule: the scheduled and default manual `daily` profile is the
+fixed component-memory panel in [`sanitizer-memory-tests.json`](../tools/sanitizer-memory-tests.json),
+with ordinary prepared bytecode for VM memory tests. It does not run every
+functional test under instrumentation. Explicit `full`/version-tag and actual
+SAN-closure gates retain their separate broad obligations. The historical
+daily/weekly proposals and full-run findings below explain past decisions;
+they are not instructions to restore a weekly or Sunday full sweep.
+Recorded original triggers include broad preparation for SAN-001, SAN-003,
+SAN-004, SAN-007 and SAN-012, and broad CTest for SAN-005 and SAN-010. Other
+findings used focused or selected commands. This establishes value for explicit
+broad qualification, but does not establish that every functional permutation must
+run under ASan each night, or what a different targeted panel would have found.
+
+## SAN-014 — recv390 maximum directory user data overflows display buffer
+
+Status: **open**. Owner: Codex, approved develop baseline qualification.
+Affected revision: `62765ad7c5e1` with the reviewed baseline repairs and
+bounded-formatting warning cleanup. A legal 74-byte non-ISPF member entry
+contains 62 user-data bytes. Its complete display is 143 characters plus NUL,
+exceeding `printdirmem()`'s 101-byte `msg` buffer.
+
+Permanent reproducer: `recv390_directory_max_userdata`, exercising the actual
+provider and asserting exact complete output, consumed entry length and saved
+directory state. Normal Debug traps before output. The matching maintained
+Apple run reports `AddressSanitizer: stack-buffer-overflow`, a three-byte
+`strcat` write in `printdirmem` at `recv390.c:1401`, immediately past `msg`.
+
+Commands: build `test_recv390_directory_max_userdata`, then run
+`ctest --test-dir cmake-build-debug -R '^recv390_directory_max_userdata$'
+--output-on-failure`. The maintained match uses `tools/asan-run.sh
+--build-dir cmake-build-debugasan --phase build --profile full
+--build-target test_recv390_directory_max_userdata --build-jobs 4
+--build-leaks off --leaks off`, followed by its `--phase ctest --profile full
+--regex '^recv390_directory_max_userdata$' --test-jobs 1 --leaks off`.
+Apple LeakSanitizer is unavailable; supported Linux qualification retains leaks.
+
+Repair implemented: display capacity derives from the admitted eight-byte member,
+TTR, indicator and maximum user data, including NUL. Full output and parser
+semantics are preserved; that capacity also covers the existing bounded ISPF
+date display. The same normal Debug command and its maintained Apple match pass.
+Complete the original full baseline and applicable full Apple/Linux sanitizer gates. Keep
+the item open until those platform obligations pass; delete temporary logs
+after extracting this diagnostic.
+
+## SAN-QA-027 — full Apple preparation exposes warning closure
+
+Status: **open**. Owner: Codex, approved develop baseline qualification.
+Affected revision: `62765ad7c5e1` with the reviewed native seed/packaging repairs.
+The maintained full Apple build emits SDK `sprintf` deprecations in native
+tool, provider and test sources outside the daily panel, plus implicit-binding
+warnings in the ODBC fixture. No memory diagnostic has been established.
+
+Reproducer: the full original-producer Apple command under SAN-QA-026, with
+the current Apple SDK. Inspect all preparation diagnostics, including those
+before long grammar generation.
+
+Repair: replace the encountered deprecated calls at their owners using known
+allocated capacities and exact output, preserving allocation/error semantics;
+make the intended ODBC local bindings explicit. No diagnostic suppression,
+frontend behavior change, unrelated formatting sweep or provider algorithm
+change. Review coherent source, then qualify directly affected normal component
+checks before their maintained matches and warning-free full preparation.
+Complete the applicable full platform gates, retaining Linux leak detection.
+Delete temporary diagnostics after extracting lasting conclusions.
+
+## SAN-QA-026 — parallel Make duplicates Level L producers
+
+Status: **open**. Owner: Codex, approved develop baseline qualification.
+Affected revision: `62765ad7c5e1` with the reviewed native seed/packaging repairs.
+This is a preparation-graph finding; no ASan/LSan memory diagnostic or corrupted
+final artifact has been established.
+
+Reproducer: maintained full preparation with Unix Makefiles,
+`tools/asan-run.sh --build-dir cmake-build-debugasan --phase full --profile full
+--build-jobs 4 --test-jobs 8 --build-leaks off --leaks off`, on Apple where LSan
+is unsupported. Research C is explicitly enabled. The build executes
+`Generating frontends/llcgrammar.rxbin` twice: opt/noopt import consumers each
+own the same recipe. The generator's output lock ends before assembly.
+Canonical SDK modules also have repeated recipes in independent import roots:
+28 outputs have 46 recipes, including `llcheck`, `llast` and `llcfg`.
+
+Repair: assign one target owner to each selected grammar/canonical SDK module;
+make staging and aggregate consumers wait for that owner while preserving file
+freshness dependencies. Reuse the existing generated-grammar ownership pattern.
+Keep native producer algorithms and supported instrumentation unchanged.
+
+Closure: a permanent miniature parallel Make regression using the maintained
+owner declarations must fail without the ownership repair and prove exactly one
+production, warm no-op and missing-output recovery. Run its normal Debug command
+before the matching maintained command, then complete the original full
+preparation and the applicable full Apple/Linux sanitizer gates. Linux keeps
+leak detection enabled. Extract diagnostics and delete temporary logs; no archive.
+
 ## Sanitizer scope review and proposal — 20 October 2026
 
 ### Component memory assurance — approved 22 October 2026
@@ -120,7 +213,11 @@ Preserve all applicable permanent SAN regressions and existing broad closure
 gates pending explicit approval of any replacement. No native tool is retired
 by this review. Resolve the current failure rather than excluding it.
 
-### Revised VM-priority daily scope — qualified, scheduled cadence enabled
+### Historical VM-priority daily scope — superseded 22 October 2026
+
+This section records the earlier 20 October selection and its qualification.
+The approved component-memory amendment above replaced its membership and
+cadence. Use the current panel and sanitizer guide for execution.
 
 **Explicit approval, 20 October:** Adrian approved this VM-priority revision:
 1,288 existing Apple daily names plus six bounded sustained-state cells; 2,010
@@ -455,7 +552,8 @@ of source ownership, native/build changes or missing comparison history. Relevan
 ordinary correctness and emitted-code checks remain owned by development QA.
 Additional affected/native-tool qualification requires an explicit request;
 automatic daily scheduling does not restore omitted producer/semantic matrices.
-Sunday, explicit full requests and version tags retain original broad coverage.
+Sunday uses the same selected daily panel. Explicit full requests and version
+tags retain original broad coverage.
 Source/configuration/toolchain/dependency changes invalidate incompatible cached
 proof and cause fresh selected preparation/execution, never profile escalation.
 Platform/profile/preparation/leak-qualified reuse and strict actual selection/

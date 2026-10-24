@@ -1,0 +1,12 @@
+/* One simple handler makes registration and reverse restoration unambiguous. */
+options levelb
+import rxfnsb
+namespace signal_catchall_shape
+
+main: procedure = .int
+  do
+    marker = 1
+  on signal as problem
+    return 1
+  end
+  return 0

@@ -520,8 +520,9 @@ RexxClassicConfig: class
       assembler linkattr1 stream,streams,slot
       text = stream.readLine(-1,1)
       error = stream.error()
+      eof = stream.readEof()
       assembler unlink stream
-      if error <> "" then assembler signal "NOTREADY",error
+      if error <> "" & \eof then assembler signal "NOTREADY",error
       return text
     end
     return linein()

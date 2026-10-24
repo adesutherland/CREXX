@@ -1596,8 +1596,24 @@ interfaces are not prerequisites for this common target-level design.
 
 ### Compiler-driven expansion and link-time optimization
 
+**Unresolved design work.** The proposals below do not commission an expansion
+service, optimizer refactor, phase/default switch or new metadata/API contract.
+The separately approved native seed repairs preserve the present AST framework.
+
 The representation and algorithm owner are separate from the phase that requests
-expansion. Both placements below can use one checked target expansion service.
+expansion. The proposed reusable pair consists of two independent services:
+
+- **Target expansion:** a bound caller/callee contract and instruction bodies
+  produce a correct conservative expanded target graph with fresh private
+  identities, glue, dependencies and observations.
+- **Target optimization:** a target graph, canonical effects and checked facts
+  produce a validated simplified graph. Post-inlining cleanup is a supported
+  profile, while ordinary generated code can use the service without expansion.
+
+Compiler, assembler and linker adapters can orchestrate the same pair together
+or independently. Shared instruction/analysis owners remain below these drivers;
+neither service depends on a source frontend. Exact package boundaries, adapters,
+analysis ownership and invocation policy remain to be designed and approved.
 Neither is the current native AST template mechanism: today's `META_INLINE`
 payload contains compiler IR, not a ready-to-splice RXAS instruction body.
 
@@ -1648,16 +1664,67 @@ inlining. The reusable optimizer need not be implemented as part of symbol
 resolution itself. cREXX's executable virtual instructions offer a candidate
 common representation; they do not make the missing expansion contracts automatic.
 
+### Re-optimization and post-inlining performance: unresolved
+
+An optimizer that reaches a fixed point on one unchanged input has no further
+rewrites under that same model, but a bounded practical pass pipeline need not
+be idempotent. More importantly, independently optimized caller and callee
+bodies do not imply that their expansion is optimized. Binding an actual value,
+joining control flow and adding call-boundary glue create new facts and uses.
+Constant/presence propagation can remove callee branches, and a constant return
+can simplify code outside the inserted region. Correctness remains independent
+of whether cleanup is enabled.
+
+Previously simplified bodies may reduce copied input size and repeated local
+rewrites across consumers. This is an expected algorithmic opportunity, not a
+bound on optimizer elapsed time or a guarantee of equivalent final code versus
+expanding before optimization. Graph construction and alias/value/lifetime
+analysis may still scan the enlarged caller. Inlining increases register/block
+demand and can encounter current RXAS semantic-analysis scale bounds. Earlier
+lowering, heuristic choices and phase ordering can also change later opportunities.
+
+The proposed post-inlining profile starts with argument/result/context glue
+cleanup, constant/presence propagation and branch simplification, then propagates
+changes through dependent uses and control. Rebuild or correctly update required
+analyses; do not reuse facts merely because their source fragment was previously
+optimized. The first correctness baseline may analyze the entire changed caller.
+Incremental worklists, preserved analyses and summary caches need their own
+invalidation/version/binding contracts. Reconsider storage reuse after cleanup;
+retain actual ownership, signal and observation obligations in every rewrite.
+
+Open decisions include pass ordering, affected-region versus whole-caller
+analysis, interleaving expansion/cleanup, termination and work/growth budgets,
+body/summary freshness and the cost of driver adapters. Compare optimizer cost,
+peak resources and generated-program execution separately on representative
+local/imported/DSL cases before selecting a default. No benchmark campaign or
+production performance verdict is commissioned by recording this proposal.
+
 ### Tactical repairs and strategic follow-up
 
-`B-SEED-ALIAS` occurs in native no-opt indexed-receiver emission. It is not
-caused by AST inlining; moving the inliner cannot repair already incorrect
-receiver/index code. `B-SEED-INLINE-RECEIVER` is an AST inline binding defect and
-needs its own correct capture/remapping repair. `B-SEED-CLASSIC-CATCHALL` is a
-signal-tag emission omission, independent of the inlining layer. All three need
-focused native repairs while that compiler remains the build seed. Keep their
-maintained C/L consumers and introduce isolated owning regressions; withdrawing
-supported inlining shapes is not a repair.
+`B-SEED-ALIAS` was a register-interference defect in native indexed-receiver
+emission, independent of AST inlining. Its repair reserves live receiver and
+multidimensional link storage before descendant temporaries and call windows.
+`B-SEED-INLINE-RECEIVER` was an AST binding defect: its repair follows explicit
+caller callable provenance through lexical scopes before using a generated
+callee receiver. `B-SEED-CLASSIC-CATCHALL` was an independent signal-tag emission
+omission; its repair includes both admitted Classic tags in the balanced
+catch-all list. Isolated value, effect, origin/cleanup and RXAS regressions
+retain the supported shapes. Their broader baseline qualification remains in
+the authoritative compiler plan; the maintained C/L consumers remain intact.
+
+`B-SEED-CALL-WINDOW` covers two ordinary caller contracts independently of
+inlining. A repeated actual used by value and once by EXPOSE carries caller
+storage through the exposed occurrence's swap/restore path. Marshal shared
+sources once, then snapshot value occurrences from their primary call slots
+and establish each snapshot's argument status. Copying before the primary
+swap is insufficient when a value occurrence already occupies its own slot.
+Only duplicate-bearing counted calls materialize the final preparation before
+those snapshots; ordinary counted and fixed calls retain their existing fused
+paths. Interface method/factory selection writes an owned result register
+outside the live argc/argument window, even when an enclosing inline argument
+would otherwise propagate its destination. The selector cell becomes the call
+result; no separate selector scratch cell or ABI change is needed. The
+authoritative plan retains affected and broader baseline qualification.
 
 `B-SEED-OBJECT-ACTUAL` repairs the supported local-procedure binding for a
 read-only object formal receiving a computed object. **Implementation: done;
@@ -1688,8 +1755,10 @@ Proposed sequence for approval:
    and provenance contracts and the compiler/imported-body acquisition path,
    retaining a driver-neutral interface for later link-time use. Preserve
    current APIs, metadata and supported native shapes while this is designed.
-2. Repair the three recorded native seed defects in their owning paths with
-   minimal reproducers and affected optimizer-mode/consumer checks.
+2. Retain the separately approved native seed repairs and their isolated
+   regressions while evaluating the replacement design. Those tactical repairs
+   are implemented independently; their baseline qualification is not approval
+   to prototype or replace the inliner.
 3. Prototype compiler-driven checked single-block local instruction-body
    expansion with an independent handwritten/DSL-style producer, then scalar
    defaults, nested calls and multi-return control. Inspect initial and simplified

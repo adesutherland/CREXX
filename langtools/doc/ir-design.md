@@ -10,7 +10,7 @@ no cREXX frontend, runtime or instruction dependency. The separately selected
 [`rxfnsl-rxas` package](rxas-design.md) supplies instruction records and register
 assignment. Neither enters the core image or grammar bootstrap. Source-language
 policy stays in its frontend/adapters. The optional
-[`rxfnsl-execute` prototype](execute-design.md) coordinates bounded runtime
+[`rxfnsl-execute` package](execute-design.md) coordinates bounded runtime
 execution through trusted handlers; constant evaluators below do not execute
 effectful programs. Execution support does not imply that an arbitrary family
 or every structurally valid IR control is executable.

@@ -2,6 +2,7 @@
 #include "rxcpmain.h"
 #include "rxcp_frontend.h"
 #include "../../interpreter/rxvmparse_bindings.h"
+#include "../../interpreter/rxvminvoke.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,12 +29,22 @@ int main(void) {
             ++functions;
             function = rxcp_find_imported_function_exact(context, binding->symbol);
             if (!function || function->error_state ||
+                !function->provider_id || strcmp(function->provider_id, rxvm_parse_cursor_provider_id) ||
                 strcmp(function->type, binding->type) || strcmp(function->args, binding->args)) {
                 fprintf(stderr, "FAIL: request %d: %s\n", request, binding->symbol);
                 return 3;
             }
         }
         if (functions != 7 || rxcp_scan_imports(context)) return 4;
+        for (i = 0; i < rxvm_invoke_binding_count; ++i) {
+            const rxvm_invoke_binding *binding = &rxvm_invoke_bindings[i];
+            imported_func *function;
+            if (binding->kind != RXVM_INVOKE_BIND_FUNCTION) continue;
+            function = rxcp_find_imported_function_exact(context, binding->symbol);
+            if (!function || function->error_state || !function->provider_id ||
+                strcmp(function->provider_id, rxvm_invoke_provider_id) ||
+                strcmp(function->type, binding->type) || strcmp(function->args, binding->args)) return 5;
+        }
         fre_cntx(context);
     }
     puts("PARSE_CURSOR_IMPORTS|requests=3|callables=7|failures=0");

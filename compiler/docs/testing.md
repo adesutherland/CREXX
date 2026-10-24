@@ -271,7 +271,11 @@ they do not require a global serial slot. Ordinary cold setups, the Unicode
 aggregate and expression consumers reserve six CTest admission slots. This is
 a conservative scheduling estimate, not six native threads or a measured CLI
 RSS ceiling. Each harness launches native tools sequentially; its files are
-owned by its private root. BIF consumers retain one slot. Expression/BIF family
+owned by its private root. The same six-slot ordinary policy covers
+`binary_global_import_types`, `classic_frontend_parity` and both
+`sustained_vm_levell_*` engine cells: their mutable outputs and ownership counters
+are private to each invocation. Both sustained engine sequences remain intact.
+BIF consumers retain one slot. Expression/BIF family
 locks prevent same-root consumers from launching together only to block on the
 interprocess owner lock. Instrumented routes retain their original whole-pool
 serial policy. The final frozen parallel ordinary run owns aggregate stability

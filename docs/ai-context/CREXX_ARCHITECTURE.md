@@ -203,6 +203,13 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      on a loop back edge, so a captured control value must survive the call
      for the next iteration. Other calls retain the ordinary register-affinity
      selection and argument marshalling.
+   - Indexed class attributes reserve their receiver/property helpers before
+     allocating index expressions, because emission links the receiver first.
+     Multidimensional accesses also reserve the linked intermediate before later
+     indices. Nested call results and argument windows cannot reuse that live
+     storage; ordinary one-dimensional local arrays keep their existing path.
+     `array_index_live_receiver` checks values, once-only effects and structural
+     lifetime separation without fixed register snapshots.
    - Short-circuit `AND`/`OR` result-register donation checks each operand's
      cleanup lifetime independently. A linked left attribute must remain live
      through cleanup without preventing a computed right operand from receiving
@@ -233,6 +240,10 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      the call with a stable left operand, avoiding BLOCK_EXPR result-register
      aliasing without giving up the inline opportunity.
    - Inlining is implemented as AST tree surgery, not textual substitution.
+     Explicit caller callable provenance remains authoritative through nested
+     lexical blocks when capturing actuals. Reserved instance lookup follows
+     those lexical scopes before considering a generated foreign callee scope,
+     preserving method/factory expansion and once-only caller-field reads.
      The cloned body must preserve callee-local scopes, remap symbols, bind
      arguments exactly as a real call would, preserve source/debug metadata,
      and leave the downstream emitter with an ordinary validated tree. This is

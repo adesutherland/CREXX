@@ -1,0 +1,153 @@
+/* Explicit and catch-all Classic handlers retain values and authored origins. */
+options levelb
+import rxfnsb
+namespace signal_classic_catchall
+
+main: procedure = .int
+  caught = 0
+  original_module = 0
+  original_address = -1
+  bytes = '00ff807f00'x as .binary
+  text = 'é雪' || ('00'x as .string) || ' tail '
+  value = .ConditionPayload(91,text)
+
+  do
+    do
+      assembler signal 'CLASSIC_SYNTAX',bytes
+      return 1
+    on signal classic_syntax as explicit_syntax
+      if validSyntax(explicit_syntax,bytes) = 0 then return 2
+      caught = caught + 1
+      original_module = explicit_syntax.module()
+      original_address = explicit_syntax.address()
+      call rxfnsb..signalrelay(explicit_syntax)
+      return 3
+    end
+  on signal as caught_syntax
+    if validSyntax(caught_syntax,bytes) = 0 then return 4
+    if caught_syntax.module() <> original_module | caught_syntax.address() <> original_address then return 5
+    caught = caught + 1
+  end
+
+  do
+    do
+      assembler signal 'CLASSIC_SYNTAX',bytes
+      return 6
+    on signal as inner_syntax
+      if validSyntax(inner_syntax,bytes) = 0 then return 7
+      caught = caught + 1
+      original_module = inner_syntax.module()
+      original_address = inner_syntax.address()
+      call rxfnsb..signalrelay(inner_syntax)
+      return 8
+    end
+  on signal classic_syntax as relayed_syntax
+    if validSyntax(relayed_syntax,bytes) = 0 then return 9
+    if relayed_syntax.module() <> original_module | relayed_syntax.address() <> original_address then return 10
+    caught = caught + 1
+  end
+
+  do
+    do
+      assembler signal 'CLASSIC_CONDITION',value
+      return 11
+    on signal classic_condition as explicit_condition
+      if validCondition(explicit_condition,text) = 0 then return 12
+      caught = caught + 1
+      original_module = explicit_condition.module()
+      original_address = explicit_condition.address()
+      call rxfnsb..signalrelay(explicit_condition)
+      return 13
+    end
+  on signal as caught_condition
+    if validCondition(caught_condition,text) = 0 then return 14
+    if caught_condition.module() <> original_module | caught_condition.address() <> original_address then return 15
+    caught = caught + 1
+  end
+
+  do
+    do
+      assembler signal 'CLASSIC_CONDITION',value
+      return 16
+    on signal as inner_condition
+      if validCondition(inner_condition,text) = 0 then return 17
+      caught = caught + 1
+      original_module = inner_condition.module()
+      original_address = inner_condition.address()
+      call rxfnsb..signalrelay(inner_condition)
+      return 18
+    end
+  on signal classic_condition as relayed_condition
+    if validCondition(relayed_condition,text) = 0 then return 19
+    if relayed_condition.module() <> original_module | relayed_condition.address() <> original_address then return 20
+    caught = caught + 1
+  end
+
+  /* Normal and LEAVE exits must restore the outer Classic policy. */
+  do
+    do
+      caught = caught + 1
+    on signal
+      return 21
+    end
+    do index = 1 to 1
+      do
+        leave
+      on signal
+        return 22
+      end
+    end
+    if protectedReturn() <> 7 then return 23
+    assembler signal 'CLASSIC_SYNTAX',bytes
+    return 24
+  on signal classic_syntax as restored_syntax
+    if validSyntax(restored_syntax,bytes) = 0 then return 25
+    caught = caught + 1
+  end
+
+  if caught <> 10 then return 26
+  say 'PASS: Classic catch-all payload origin and cleanup'
+  return 0
+
+validSyntax: procedure = .int
+  arg problem = .signal, expected = .binary
+  if problem.name() \== 'CLASSIC_SYNTAX' | problem.code() <> 28 then return 0
+  if problem.module() <= 0 | problem.address() < 0 then return 0
+  if pos("assembler signal 'CLASSIC_SYNTAX'",problem.source()) = 0 then return 0
+  /* Copy the physical binary payload without a text conversion. */
+  payload = problem.payload()
+  bytes = ''x as .binary
+  assembler bcopy bytes,payload
+  if binlength(bytes) <> binlength(expected) then return 0
+  if bin2x(bytes) \== bin2x(expected) then return 0
+  return 1
+
+validCondition: procedure = .int
+  arg problem = .signal, expected = .string
+  if problem.name() \== 'CLASSIC_CONDITION' | problem.code() <> 29 then return 0
+  if problem.module() <= 0 | problem.address() < 0 then return 0
+  if pos("assembler signal 'CLASSIC_CONDITION'",problem.source()) = 0 then return 0
+  payload = problem.payload() as .ConditionPayload
+  if payload.number() <> 91 | payload.text() \== expected then return 0
+  return 1
+
+protectedReturn: procedure = .int
+  do
+    return 7
+  on signal
+    return 90
+  end
+  return 91
+
+ConditionPayload: class
+  _number = .int
+  _text = .string
+  *: factory
+    arg number = .int, text = .string
+    _number = number
+    _text = text
+    return
+  number: method = .int
+    return _number
+  text: method = .string
+    return _text

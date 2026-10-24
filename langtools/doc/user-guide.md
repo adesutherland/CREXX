@@ -11,6 +11,11 @@ You do not need parsing experience to begin. Read the overview, run the settings
 example, then add the features your language needs. The reference sections give
 exact declaration forms, runtime methods and error handling rules.
 
+The [architecture guide](architecture.md) explains package ownership, the build
+and runtime pipelines, source lifetimes and the boundaries between generic
+services and language implementations. Use it alongside this guide when
+embedding Level L or building a compiler.
+
 ## Contents
 
 - [Overview: from a language description to a useful program](#overview-from-a-language-description-to-a-useful-program)
@@ -28,9 +33,16 @@ exact declaration forms, runtime methods and error handling rules.
 - [Sparse AST properties and defaults](#add-sparse-properties-and-defaults)
 - [Flow mappings and definite assignment](#describe-execution-order-with-flow-mappings)
 - [Error messages and recovery](#error-messages-and-recovery)
+- [Intermediate representation and semantic services](#intermediate-representation-and-semantic-services)
+- [Graph analysis and checked effect proofs](#graph-analysis-and-checked-effect-proofs)
+- [Select RXAS instructions and assign registers](#select-rxas-instructions-and-assign-registers)
+- [Execute IR through trusted handlers](#execute-ir-through-trusted-handlers)
 - [Command line and build integration](#command-line-and-build-integration)
 - [Resource limits](#resource-limits)
-- [Intermediate representation and semantic services](#intermediate-representation-and-semantic-services)
+- [Tool libraries and callable generation](#level-l-tool-ownership-and-callable-generation)
+- [Callable metadata classification](#selected-callable-classification)
+- [Research C and G compilers](#research-c-and-g-compilers)
+- [Optional arguments and separate G modules](#optional-arguments-and-separate-g-modules)
 - [RexxScript: a larger example](#rexxscript-a-larger-example)
 - [Troubleshooting](#troubleshooting)
 - [Glossary](#glossary)
@@ -1410,10 +1422,8 @@ The generic additions use existing types and explicit weak references:
 | `lllr.tables.terminalname` | `token: .int` → `.string`; retain the existing parser's first matching terminal label, `token N` fallback and EOF `end of input`. |
 | `llcfg.productions.symbolkind`, `terminalname` | `symbol: .int` → `.int` / `token: .int` → `.string`; read the owned grammar directly, without returning or copying it. |
 
-The table queries delegate the existing CFG authority; move the parser's
-terminal-label lookup there rather than adding a second algorithm. Preserve
-terminal order, reduction labels and augmented-root behavior exactly. Existing
-production/symbol bounds and error behavior remain. The parser uses these
+The table queries delegate the existing CFG authority and preserve terminal
+order, reduction labels, augmented-root behavior, bounds and errors. The parser uses these
 queries during reductions and expected-token trials instead of value-returning
 `grammar()` / `source()` calls. Definition wrappers borrow their private fields;
 they add no public mutable-table reference getters. Scanner/parser owning and
@@ -2876,6 +2886,463 @@ The constructor accepts a maximum error count as its third argument and an
 optional `.lllimits..policy` as its fourth. With no explicit count, the default
 is 16. When both are supplied, the smaller error allowance applies.
 
+## Intermediate representation and semantic services
+
+An **intermediate representation**, or **IR**, describes a program as ordered
+operations and explicit transfers of control. It sits between the source
+language and the eventual output or executor. An AST might say “add these two
+expressions”; IR records which expression is evaluated first, which value each
+operation produces, and where execution continues.
+
+Use IR when your application needs checked compiler passes, control-flow
+analysis, a simpler target representation or execution through registered
+handlers. A settings reader can use its parse tree directly. An interpreter can
+walk an AST. Neither needs an IR merely because it uses Level L.
+
+```mermaid
+flowchart LR
+    T["Parsed tree / application AST"] --> F["Your language checks and IR construction"]
+    F --> I["Verified IR module"]
+    I --> A["Analysis and checked transformations"]
+    A --> B["Your target selection and emission"]
+    A --> E["Optional IR executor with your handlers"]
+```
+
+Level L supplies the reusable representation, verification and transformation
+services. Your frontend supplies language rules, variable binding and evaluation
+order; your semantic services supply the meaning of its operations. Parsing a
+document does not automatically create IR, and a valid IR module does not by
+itself supply an executable implementation of every operation.
+
+### Choose the required packages
+
+The core `rxfnsl.rxbin` image supplies parsing, trees, `llir` and
+`llirservices`. Optional facilities have their own images and build targets:
+
+| Task | Import | Link image | Build target |
+|---|---|---|---|
+| Construct, inspect, analyse or transform IR | `llir`, `llirservices` | `rxfnsl.rxbin` | `rxfnsl` |
+| Index IR control, loops or liveness | `llirgraph` | `rxfnsl-analysis.rxbin` | `rxfnsl_analysis` |
+| Describe effects and request checked proofs | `llireffects` | `rxfnsl-analysis.rxbin` | `rxfnsl_analysis` |
+| Inspect RXAS instructions or assign registers | `llrxascatalog`, `llrxas` | `rxfnsl-rxas.rxbin` | `rxfnsl_rxas` |
+| Run admitted IR with host-defined operations | `llirexecute` | `rxfnsl-execute.rxbin` | `rxfnsl_execute` |
+
+Analysis depends on core; execution depends on core and analysis. The RXAS
+package needs the B runtime but does not require core or analysis. All use
+`library.rxbin`. `stage-l-libraries` prepares all four SDK images; select only
+the modules your application uses when importing and linking. The
+[architecture package table](architecture.md#delivered-packages) also covers
+the generator and separately installed tool helpers.
+
+### Understand the pieces of an IR module
+
+| Term | Meaning |
+|---|---|
+| Module | A frozen collection of functions, constants and source origins. |
+| Function | One callable unit, with its arguments, result type, blocks and local slots. |
+| Block | An ordered sequence of operations with one final jump, branch, protect or return. The first block is the function's entry. |
+| Operation | An action with typed inputs, results and attributes, plus declared effects. |
+| Value | An immutable result of an operation. It can be used later in the same block. |
+| Slot | Typed mutable storage belonging to one function invocation. Loads and stores carry data between blocks. |
+| Edge | A possible transfer from one block to another in the same function. |
+| Origin | The source range or generated provenance associated with an operation. |
+
+For an expression `2+3`, a small language could construct:
+
+```text
+function sum -> demo.integer
+  entry:
+    %1 = core.constant 2 : demo.integer
+    %2 = core.constant 3 : demo.integer
+    %3 = demo.add %1 %2
+    core.return %3
+```
+
+The percent numbers identify values. They are not source variable names or VM
+registers. The two constants are produced before `demo.add`; its result feeds
+the return. `core` operations have Level L-defined structure. `demo.add` belongs
+to an application-defined **semantic family**, a named and versioned set of
+types and operations.
+
+### Register a language contract
+
+A **schema** collects the families your program understands. Each type has a
+codec that parses, checks and formats its exact constant bytes. Each operation
+declares its named input, result and attribute types, and its effect contract.
+Finishing the schema produces an immutable **contract** used to verify modules.
+
+This Level B code registers an integer type and a checked addition operation:
+
+```rexx
+import llir
+
+schema = .llir..schema()
+family = schema.family('demo',1)
+integer = family.type('integer',.llir..intcodec() as .object)
+add = family.operation('add')
+call add.input('left',integer)
+call add.input('right',integer)
+call add.output('value',integer)
+call add.state('none')
+call add.failure('overflow')
+call add.termination('returns')
+contract = schema.finish()
+```
+
+The family qualifies the local names as `demo.integer` and `demo.add`.
+`intcodec` represents a signed 64-bit integer; `boolcodec` and `bytescodec` are
+also available. Use a custom codec when your language has another value format.
+A codec describes constant representation, not the whole runtime value system.
+Check `contract.error()` before using the result.
+
+The declarations make three separate promises: addition has no mutable-state
+or output effect, it can fail with overflow, and it continues normally when it
+returns. These promises come from the language implementation. Level L does
+not deduce arithmetic, aliasing or I/O behavior from the operation's name.
+Unspecified effects remain `unknown`, which prevents services from assuming
+that the operation can be evaluated, removed or safely moved.
+
+Register additional semantic services before `schema.finish()` when needed:
+
+| Registration | Purpose |
+|---|---|
+| `add.verifier(service as .object)` | Implement `.llir..verification` to check relationships beyond the declared field types. |
+| `add.evaluator(service as .object)` | Implement `.llir..evaluator` to calculate exact constant results for safe inputs. |
+| `add.lowerer(service as .object)` | Implement `.llir..lowering` to replace the operation with an admitted fragment in another contract. |
+
+No evaluator or runtime handler is registered by the fragment above. It is
+sufficient to describe and structurally verify an addition; folding and
+execution need the corresponding trusted implementation. The independent
+[semantic-service fixture](../tests/library/ts_llirservices.crexx) contains
+complete examples of all three interfaces without a C or G dependency.
+
+### Construct and inspect a verified module
+
+With the valid `contract` above, construct the expression and retain its source:
+
+```rexx
+draft = .llir..builder(contract)
+source = draft.source('expression.txt','2+3' as .binary)
+at = source.origin(0,3)
+fn = draft.function('sum',contract.type('demo.integer'))
+entry = fn.block('entry')
+left = entry.constant(contract.type('demo.integer'),'2',at)
+right = entry.constant(contract.type('demo.integer'),'3',at)
+sum = entry.binary(contract.operation('demo.add'),left,right,at)
+call entry.returnvalue(sum,at)
+graph = draft.finish()
+if graph.error() <> '' then say graph.error()
+else say graph.dump()
+```
+
+Place the imports at module scope and the construction statements inside an
+ordinary Level B procedure. The source range `[0,3)` covers the three bytes of
+`2+3`; real frontends should attach each
+operation's appropriate range. `draft.synthetic(description)` creates an origin
+for generated material, and `origin.derive()` retains a contributing origin.
+Recovered source provenance cannot be published as a successful executable
+module.
+
+`constant(type,text,origin)` asks the type's codec to parse the literal text.
+Use `constantbytes(type,bits,origin)` when you already have an exact encoding.
+`binary` is a convenience for two inputs, one result and no attributes. Other
+operations use a named draft:
+
+```rexx
+operation = entry.operation(contract.operation('demo.add'),at)
+call operation.input('left',left)
+call operation.input('right',right)
+addition = operation.finish()
+sum = addition.namedresult('value')
+```
+
+This fragment replaces the `entry.binary(...)` line, before the return. Every
+declared input and attribute must be supplied once. Operation results use their
+declared names; an operation can have several results even though a function
+returns one value or `core.void`.
+
+`draft.finish()` verifies the whole module, including unreachable blocks, before
+publishing a frozen graph. It checks ownership, types, input order, block
+termination, edges, origins and registered semantic verifiers. A failure exposes
+an error instead of a partial successful module. Structural verification does
+not establish that every slot load is assigned; run flow analysis for that.
+
+Keep construction owners alive and unchanged while using their handles. Once
+the graph is frozen, read it through `function(id)`, `block(id)` and
+`operation(id)` views. `graph.dump()` is a readable display, not a saved interchange
+format. See [saved forms and origins](#save-ir-and-preserve-source-origins) below.
+
+### Carry state through branches and loops
+
+A value must be defined before its use in the same block. Even when one block
+always precedes another, passing its temporary directly into that other block
+is invalid. Store it in a function slot and load it where it is needed. Each
+invocation has its own slot storage; recursion does not share those cells.
+
+For example, a conditional assignment becomes this control graph:
+
+```text
+entry:  branch condition -> yes, no
+yes:    store answer, 2; jump join
+no:     store answer, 3; jump join
+join:   result = load answer; return result
+```
+
+A frontend creates the blocks before connecting them. The relevant builder
+calls are `fn.block(name)`, `fn.slot(name,type)`, `block.branch(...)`,
+`block.store(...)`, `block.jump(...)` and `block.load(...)`. The branch condition
+must have exactly `core.boolean`, available as `contract.boolean()`. A loop is a
+cycle of block edges; use slots for its changing state. There are no cross-block
+join values, often called phi nodes in other IR designs.
+
+Check the lowered graph with `llirservices`:
+
+```rexx
+import llirservices
+report = llirservices..analyse(reference graph)
+if report.status() <> 'ok' then say report.message()
+else do
+  do i = 1 to report.issues()
+    say report.operation(i) || ': ' || report.diagnostic(i)
+  end
+  facts = report.facts()
+end
+```
+
+`ok` means analysis completed, not that it found no issues. `issues()` counts
+loads that may read an unassigned slot. In the conditional example, the join is
+safe because both paths store `answer`. Removing either store makes the join's
+load a possible read before assignment. Analysis follows both Boolean edges,
+even for a literal condition; it does not use source-language truth rules to
+prune them. It iterates loops and treats every function entry as a root.
+
+Unknown state effects or incomplete continuation contracts can return
+`unsupported`; other unsuccessful statuses are `invalid` and `limit`. Inspect
+the status before taking facts. This analysis follows explicit IR operations;
+[AST flow mappings](#describe-execution-order-with-flow-mappings) instead analyse
+the source-shaped tree.
+
+`block.protect(normal,exceptional,origin)` declares the normal continuation and
+an exceptional entry for the remainder of one invocation. Both edges stay
+visible to analysis, pruning and renumbering. The host owns runtime exception
+binding and cleanup; a backend without that support must reject the declaration.
+The exceptional entry can rely on setup slots assigned before `protect`, not
+later stores in the normal body. See the [core contract](ir-design.md#invocation-protection).
+
+### Evaluate, transform and lower
+
+Analysis describes a graph. A **transformation** constructs a new graph with
+checked changes. A constant evaluator, for example, can prove that one instance
+of `demo.add` returns `5`, allowing its operation to be replaced with a constant.
+It must keep an overflowing instance for runtime handling unless the language
+contract provides another valid transformation.
+
+```rexx
+facts = .llirservices..facts(reference graph)
+answer = llirservices..evaluate(reference graph,operation_id,facts)
+change = llirservices..rewrite(reference graph,operation_id,facts)
+if change.status() = 'changed' then graph = change.result()
+else if change.status() <> 'keep' then say change.message()
+```
+
+Here `operation_id` identifies an extension operation in that graph.
+`evaluate` returns exact results without editing the graph. `rewrite` performs
+checked constant replacement and returns `changed`, `keep`, `invalid` or
+`limit`. `keep` is an ordinary refusal, including when no evaluator is registered;
+the schema example above therefore keeps its addition. An evaluator can return
+`constant`, `keep`, `invalid` or `limit`; the coordinator validates its result
+count, encodings and consumed facts. Effectful runtime handlers are not used
+for constant folding.
+
+`llirservices..optimise(reference graph)` batches same-block slot propagation,
+registered constant evaluation, constant Boolean branch selection, reachability
+and safe removal of unused operations. It is not a general source-language
+optimiser. Observable output, possible failure, divergence and unknown effects
+must be preserved unless the particular transformation has the required proof.
+`llirservices..lower(reference graph,target_contract)` instead invokes registered
+lowerers for operations absent from a target contract. The current lowering
+profile accepts pure, normally returning straight-line fragments without
+language failure; it does not admit arbitrary control or stateful replacement.
+
+Every successful transformation verifies its candidate before publishing it.
+Failure preserves the input. Use the returned old-to-new operation, value and
+block mappings when retaining IDs across a change; zero can denote a removed
+record. Do not assume an old number still identifies the same operation.
+
+Facts, views and analyses belong to an exact live owner and revision. After
+`graph = change.result()`, recreate them against the new graph. Copying an
+identical graph or comparing saved bytes does not transfer analysis authority.
+A caller can attach sparse facts with `.llirservices..facts(reference graph)`,
+but recording a fact states the caller's conclusion; it does not prove it.
+
+The [IR API reference](ir-design.md) owns the exact service interfaces,
+transformation mappings, supported control profiles and budgets. The
+[worked SAY example](../../research/level-l/compilers/examples/ir-demo.crexx)
+uses a separately registered G family: it folds arithmetic and conversion,
+retains the output effect, and prints the resulting constant `5`. Its final
+print is demonstration code, rather than a general IR executor or RXAS backend.
+
+### Save IR and preserve source origins
+
+Use `graph.text()` or `graph.binary()` for lossless saved forms. Reload with
+`llir..loadtext(contract,text)` or `llir..loadbinary(contract,bits)` and inspect
+the returned graph's error before using it. The host supplies a compatible
+registered contract: family versions, registration order, type and operation
+names, signatures and effects are part of its schema manifest. Saved IR cannot
+supply trusted callback code, and the host must version semantic changes that
+the manifest cannot detect.
+
+Source bytes and origins survive saved forms and checked transformations.
+Retained operations keep their origins; replacement operations derive origins
+from their contributors. Use stable logical source names for diagnostics.
+
+Builders and loaders default to 1,000,000 records/pool entries and 64 MiB of
+logical record/payload bytes. Analysis, facts and transformations have separate
+allowances. A `limit` result requires a retry with suitable resources or a
+smaller workload; it supplies no usable partial proof. Logical-byte accounting
+is not a process memory cap, and work budgets cannot interrupt an uncooperative
+host callback.
+
+### Graph analysis and checked effect proofs
+
+Use `llirgraph` when a tool needs indexed control-flow facts beyond the core
+analysis. Given an already checked frozen `graph`, keep it and the index in
+stable storage while using their borrowed results:
+
+```rexx
+import llirgraph
+index = .llirgraph..index(reference graph,1000000,67108864)
+if index.status() <> 'ok' then say index.message()
+else do
+  loops = index.loops()
+  live = index.liveness()
+  if live.status() = 'ok' then say live.slotin(block_id,slot_id)
+end
+```
+
+The index provides function/block membership, predecessor/successor lists,
+reachability, reverse postorder and dominators. Loop results describe strongly
+connected components, natural loops and irreducible control. Liveness describes
+slots at block boundaries and slots/values around operations. `block_id` and
+`slot_id` above are IDs from that same graph. Check each result's status before
+querying it; loop and liveness construction have their own retry allowances.
+
+A live result is tied to the original graph and index. Replacing or copying an
+owner does not create equivalent analysis authority, even if saved graph bytes
+match. Recreate analyses after accepting a transformation. Invocation protection
+or incomplete continuations conservatively pin storage; an incomplete liveness
+result cannot authorize reuse of that storage.
+
+`llireffects` adds structured summaries of state reads/writes, observations,
+allocation/release, operand borrowing/escape, result presence and
+failure/transfer/resume behavior. A sealed model records a language adapter's
+trusted semantic premises. A proof request then checks a particular conclusion,
+such as whether an interval preserves a state domain. Accept only
+`status()='proved'` with matching live owners. `unknown` supplies no permission
+to rewrite. A liveness fact, an arbitrary annotation and a checked effect proof
+answer different questions.
+
+The [analysis and proof reference](ir-design.md#optional-analysis-and-proof-services)
+gives the exact APIs. The independent
+[graph/effect fixture](../tests/library/ts_llirgraph.crexx) constructs non-C/G
+examples, including loops, protection, ownership and refused proofs.
+
+### Select RXAS instructions and assign registers
+
+A code generator can use `llrxas` without a source-language frontend. It submits
+already selected instructions and identifies eligible scalar temporaries:
+
+```rexx
+import llrxas
+target = .llrxas..program(5,4)
+call target.record('main()','.locals=5')
+call target.candidate(1,'integer')
+call target.candidate(3,'integer')
+```
+
+Here five bounds the virtual frame and four bounds the resulting physical
+frame. Submit the rest of the instructions, including all helper and cleanup
+work, then save the result with `allocation = target.finish()`. Check
+`allocation.valid()` before reading its `records()`, `text(i)`, `origin(i)` or
+assigned registers. Failure publishes no partial target. `finish(0)` checks/renders the physical identity
+profile rather than reusing cells.
+
+The allocator retains required managed-value lifetimes, fixed registers,
+contiguous argument windows and conservative exceptional-control constraints.
+Only admitted scalar lifetimes may share a cell. It inserts the required reset
+before a later occupant and independently checks the assignment. A smaller
+frame is not evidence of a faster program.
+
+Import `llrxascatalog` when querying canonical operand, control, component or
+signal metadata. Use `find(mnemonic,signature)` rather than storing opcode
+numbers. Unknown signal behavior remains conservative. This catalogue is built
+from the owning native instruction metadata; it does not infer source-language
+semantics.
+
+The [complete producer](rxas-design.md#construct-one-function) fills in the
+instructions, emits RXAS and runs through `rxas` and the VM. That emitted static
+program does not need the allocator package. The
+[RXAS reference](rxas-design.md) covers candidate restrictions, windows, budgets
+and the catalogue query surface.
+
+### Execute IR through trusted handlers
+
+`llirexecute` runs admitted generic IR with operation semantics supplied by the
+host. It does not select a source language or implement its values, BIFs or
+variable pool. Use this route when you need bounded execution, local IR calls,
+checked suspension or runtime operation adapters rather than an RXAS program.
+
+The application first constructs a frozen schema and registry. It registers
+pure type services, named handlers and sealed operation summaries. With that
+registry and a checked `graph`, execution follows this sequence:
+
+```rexx
+import llirexecute
+plan = .llirexecute..plan(reference graph,registry)
+if plan.valid() = 0 then say plan.message()
+else do
+  values = .object[]; present = .int[]
+  execution = .llirexecute..session(plan)
+  answer = execution.start(function_id,values,present)
+  say answer.status()
+end
+```
+
+This fragment assumes `function_id` names an argument-free function in that
+graph. The independent [execution example and fixture](../tests/library/ts_llirexecute.crexx)
+contains the complete schema, graphs, type services and handlers. Values passed
+to other functions are `.llirexecute..value` objects with matching entries in the
+presence array; omitted and present-empty values remain distinct.
+
+Plan admission checks the entire module before effects, including unreachable
+operations. Unsupported control, missing handlers, mismatched family versions
+or invalid effects refuse execution. A valid plan owns its graph snapshot. Each
+session owns its frames and handler state; use fresh sessions for independent
+runs. The optional session arguments set fuel, frame count, retained cells and
+logical bytes.
+
+`start()` runs to a boundary. `run()` returns the retained boundary; it does not
+complete a suspended operation. Results distinguish `done`, `failure`,
+`transferred`, `suspended`, `limit`, `cancelled`, `discarded` and `rejected`.
+Inspect status before reading successful results. A suspension supplies a token
+for one completion through `resume(token,outcome)` or release through
+`discard(token)`. Keep the original session alive and anchored. Copied, foreign,
+stale or consumed execution authority is rejected. `cancel()` also releases a
+suspended run.
+
+Executable manifests explicitly admit protection, invocation/transfer ports,
+conditional-result guards and local-call argument maps. Registered leases allow
+synchronous access to a host binding without turning that binding into a saved
+constant or exported result. Native event payloads, lifecycle callbacks and
+abort/cleanup have their own checked contracts. The
+[execution reference](execute-design.md) explains these advanced interfaces.
+
+Fuel is checked between operations. Trusted handlers remain responsible for
+bounded callback work and external resources, and the host must account for
+aggregate retention across sessions. Logical-byte allowances are not a process
+RSS cap. The Classic compiler owns INTERPRET's language semantics and host
+integration; the generic executor supplies the admitted execution mechanisms.
+
 ## Command line and build integration
 
 ### Build a program or reusable library
@@ -3100,179 +3567,195 @@ Reuse a language definition and create fresh requests for input documents.
 Avoid repeatedly copying complete tree views in visitor calls. These practices
 keep application overhead separate from the work of recognition.
 
-## Intermediate representation and semantic services
+## Level L tool ownership and callable generation
 
-An AST describes the constructs in a source program: an assignment, an IF, a
-call, or a literal. A compiler often needs a second representation that spells
-out the order of evaluation and the possible transfers of control. That is an
-**intermediate representation**, usually shortened to **IR**.
+`langtools/` owns Level L itself; `lib/rxfnsl/` owns the generic SDK.
+The tool library `rxlanglib.rxbin` supplies `llfront` and `llgenerate`, separately
+from `rxfnsl.rxbin`. Grammar-generated programs use only the SDK; hosts that
+compile specifications must explicitly import and link the tool library too.
+There is no dependency from either product into the experimental C/G compilers.
 
-Level L provides this through `llir` and `llirservices`. They use compact numeric
-records internally and give applications named operations, checked handles and
-readable dumps. You can use them with any language. Register its types and
-operation semantics in ordinary Level B code.
+`llbinmeta` reads callable contracts independently of the source compilers.
+A callable definition must point to its own procedure and reciprocal public
+export within the same pool. Imported prototypes do not become definitions
+when pools are merged. Genuine duplicate definitions remain ambiguous; private
+callables and malformed procedure/export references are rejected.
 
-### From a tree to ordered operations
+`catalog.field(12, attributeName, '', 4)` returns the META_ATTR register index
+as decimal text: `-1` is the unmapped sentinel and `0..2147483647` are mapped
+indices. This reads the existing full 64-bit wire field, not a string-pool ID.
+An unsupported index or selected record size returns empty and sets the existing
+`LL_RXBIN_IMPORT` diagnostic; a missing attribute returns empty under the ordinary
+field lookup contract. Fields 1–3 retain name/options/type semantics. Register
+views derive from the complete type; no separate view field is inferred.
 
-For `say 2+3`, a source tree could contain a Say node whose value is an Add node
-with two literal children. Its IR makes each step explicit:
+The [metadata attribute fixture](../tests/metadata-attributes.crexx) shows these
+field queries and their error cases.
 
-```text
-%1 = core.constant 2 : crexx.g.int64
-%2 = core.constant 3 : crexx.g.int64
-%3 = crexx.g.iadd %1 %2
-%4 = crexx.g.itext %3
-crexx.g.say %4
-core.return
-```
+### Selected callable classification
 
-The numbers identify immutable results. The addition's result feeds conversion
-to text; that result feeds SAY. The compiler registers what addition, conversion
-and output mean. Level L checks their input/result types and preserves their
-order. SAY carries an output effect, which prevents an optimiser from deleting
-it simply because it has no result value.
+Use `llbinmeta` classification to distinguish an exported procedure from a
+callable with a hidden class/interface owner, using RXBIN007 metadata. It does not parse source,
+execute provider code or decide a consumer language's allowed ABI.
 
-The [worked example](../../research/level-l/compilers/examples/ir-demo.crexx) constructs this graph, folds the
-addition and text conversion, displays both graphs, and prints `5` from the
-retained SAY argument. The compiler operation families live in a separate
-Level B library. The wrapper keeps its runtime imports external and supplies
-Level L when linking the program. From the repository root, using installed tools:
+`catalog.classify(name:.string)->.llbinmeta..callable` selects one real definition
+through the same pool-local procedure and reciprocal public-export checks as
+`lookup`. Imported prototypes are not definitions. Classification matches
+the whole name strictly under the existing metadata identity casing; it does
+not trim or pad names. Identifier bytes follow
+[metadata conformance](../../compiler/docs/metadata_conformance.md#record-envelope-and-responsibilities),
+including non-ASCII bytes and qualified names. Consumer language casing remains
+the consumer's responsibility.
 
-```sh
-crexx --library build/ir/semantics research/level-l/compilers/common/llscalar.crexx research/level-l/compilers/typed/lltir.crexx
-crexx --program build/ir/demo research/level-l/compilers/examples/ir-demo.crexx -i build/ir -l build/ir/semantics
-rxvm build/ir/demo
-```
+`llbinmeta..validname(name:.string)->.int` is the pure metadata identifier check,
+available without constructing or preparing a catalogue. It returns `1` for a
+nonempty byte spelling whose first byte is not a digit and whose bytes are ASCII
+letters/digits, non-ASCII bytes, `_!?$@#` or dots; otherwise it returns `0`.
+It neither folds nor trims names and does not impose per-component dot rules.
+`catalog.validname` reserves the same name extent against a bounded catalogue's
+work allowance before delegating to the same check. Consumer type and signature
+rules remain separate.
 
-### Blocks, slots and analysis
+The owned result adds `kind()->.string` and `owner()->.string`: `procedure` has
+an empty owner; `method` and `factory` name their qualified class/interface.
+An ordinary class method needs no `META_MEMBER`. A real interface default method
+needs the matching `method final` member. Exact `owner.§factory` and
+`owner.§factory.member` identify default and named factories; a factory marker
+without an owning header refuses. A similarly spelled `§factoryish` is not a
+marker. `META_IMPLEMENTS` does not own a callable. Conflicting or multiple
+matching owners refuse rather than choosing a prefix or record order.
+Header/member flag, type and argument fields are checked as valid string
+references without NUL; their language-specific grammar and ABI remain the
+consumer's responsibility. The callable signature comes from its selected
+`META_FUNC`, not a guessed string equivalence with a member declaration.
+The existing four-argument `callable` factory, `lookup` and `field` retain their
+contracts; their kind/owner values are empty. An additional
+`callable.classified(name,result,arguments,flags,kind,owner)` factory constructs
+owned fields, but arbitrary factory fields do not prove catalogue admission.
 
-A block is a sequence of operations ending in a branch, jump, protect or return.
-Branches join blocks into a graph; a loop is a cycle in that graph. A temporary
-value is local to its block. To carry a value across a branch, store it in a typed
-slot and load it in the destination block. A slot represents mutable local
-storage in one function invocation.
+Classification builds one immutable request-owned locator index. Every locator
+retains its pool and row identity. It associates headers and members only in the
+selected definition's pool, without inferring ownership from a dot count.
+A recoverable matching owner with malformed payload refuses the selected
+classification. A readable owner with unreadable member identity defers an
+owner-scoped error; readable owner/member with unreadable kind defers errors for
+both possible method/factory identities. Wholly unkeyable unrelated ownership
+records remain opaque. Selected errors return a failed callable without poisoning
+unrelated selections. Completed classification outcomes are cached by selected
+real row and pool: either success or a deterministic selected-data failure.
+Arbitrary missing names are not retained.
+The `read_image`/`records` helper wrappers invalidate the index and
+cache before mutating storage; a subsequent rebuild is charged again. Normal
+lazy preparation uses the reference workers directly.
 
-`llirservices..analyse(reference graph)` determines which blocks can be reached
-and whether each slot is assigned on every path to a load. At a join, a slot is
-definitely assigned only when all incoming paths assign it. Both Boolean branch
-edges are considered. The result explains a possible read before assignment
-with its operation ID. This supplements the AST flow mappings: AST mappings
-analyse the source-shaped tree, while IR analysis follows the explicitly lowered
-operations and graph.
+`catalog.bounded(image:reference .binary, bytes:.int, work:.int)` supplies required
+nonnegative allowances. The synchronous input borrow is checked before the one
+owned image copy, and is not retained. Zero is valid and exhausts at the first
+required reservation. `consumed()->.int` and `work()->.int` query counters without
+preparing the catalogue. `consumed` counts reserved logical payload bytes:
+owned image/expanded sections, integer vectors at eight bytes per cell, locator
+and cache payloads, retained text and returned owned fields. It never refunds
+space after failure or release. It is not a resident-memory or VM temporary
+accounting promise. Fixed catalogue control state and its bounded fixed failure
+diagnostic are exempt, so an exhausted allowance can still report failure;
+input-derived text and owned metadata results are charged. The existing
+`catalog(image,budget=16777216)` remains an
+unmetered legacy route; both counters return zero there.
 
-`block.protect(normal,exceptional,origin)` declares the normal continuation and
-an exceptional entry for the remainder of one invocation. Both edges stay
-visible to analysis, pruning and renumbering. The host owns runtime exception
-binding and cleanup; a backend without that support must reject the declaration.
-The exceptional entry can rely on setup slots assigned before `protect`, not
-later stores in the normal body. See the [core contract](ir-design.md#invocation-protection).
+One work unit is a byte scanned, copied, expanded or passed through text
+validation/casing, plus a structural header/record/candidate/link/cache visit or
+index/search comparison. Bulk operations reserve their whole byte extent before
+execution; this does not add a method call per byte. Compressed input and expanded
+output are both charged. Reserved work is not refunded after an early malformed
+input. Checked subtraction precedes every reservation. Preparation/indexing runs
+once; indexed selections and cached results still charge query and owned-copy
+work. No operation rearms the allowance.
 
-### Contracts make transformations checkable
+Exhaustion is sticky on that bounded catalogue and reports
+`LL_RESOURCE_LIMIT: metadata.bytes` or `metadata.work`; no partial index or
+selection is published. A dead input reference reports
+`LL_RXBIN_IMPORT: image owner is not live`. Envelope failures retain import
+diagnostics. Owned callable results survive source/catalogue expiry. A caller
+can group all selections for one artifact, debit the counters and owned snapshot
+copies from its aggregate allowance, release that catalogue, and pass the
+remaining allowances to the next; no shared mutable quota service is needed.
 
-A schema names types, operands, results, attributes and effects. A type codec
-checks exact constant bytes. An application can register a semantic verifier,
-a constant evaluator and a lowering service. These are Level B objects supplied
-by the host application.
+The [metadata classification fixture](../tests/metadata-classify.crexx) and
+its small RXAS producers demonstrate owner classification, selected-data errors,
+result lifetime and bounded queries. Metadata admission does not establish
+provider-code safety or a consumer's allowed calling convention.
 
-A constant evaluator can return a checked value, keep the original operation,
-report invalid input, or report that its work budget ran out. For example, a
-checked integer addition folds `2+3`; an overflowing addition is kept for
-runtime handling. Unknown effects grant no permission to fold an operation.
-
-A transformation builds a new module and verifies it before returning it.
-Failure preserves the original module. Analysis facts belong to one exact
-module revision; recompute them after accepting a rewrite. Source origins survive
-into new operations, including the distinction between authored, generated and
-recovered input.
-
-Use the [IR API reference](ir-design.md) for construction, semantic interfaces,
-analysis, checked replacement, target lowering, saved forms and the chunk-based
-text emitter. The example constructs IR directly; source-language frontends and
-target instruction selection are applications built on these services.
-
-## Compiling C/G source into shared IR
-
-The C/G frontend examples use Level L to scan, parse, build their source trees
-and construct verified IR. The compiler host modules are written in Level B.
-Classic retains dynamic pool names, exact literal spelling and NUMERIC context;
-G retains typed bindings, defaults and short-circuiting. Both use the same
-Level L graph and checked extension framework.
-
-For example:
+### Callable generation service
 
 ```rexx
-/* Classic */
-options levelc
-total = 2 + 3
-if total > 4 then say total
-else say 0
-```
-
-The G version selects `options levelg` and adds `total = .int` before the
-assignment. G lowers the sum to `crexx.g.int64.add` and stores a typed slot.
-Classic lowers it to `crexx.c.add` with an explicit borrowed context and stores
-the pool key `TOTAL`. Each lowers the IF expression, converts its result to a
-core Boolean and creates yes/no/join blocks. SAY remains an observable operation.
-
-A Level B consumer uses the reusable frontend service:
-
-```rexx
-request = .lltfrontend..request(source, artifacts, 'demo.crexx')
-if request.status() <> 0 then say request.diagnostic()
+import llgenerate
+import llir
+request = .llgenerate..request(source, 'rxas', 'lesson.levell')
+if request.status() <> 0 then say request.error()
 else do
-  graph = request.graph()
-  say graph.dump()
+  output = request.output()
+  say output.text()
 end
 ```
 
-Here `source` is `.binary`; `artifacts` names the directory containing the
-required runtime metadata images. Import `lltfrontend` and `llir` alongside
-`rxfnsb` in the host. Querying the request runs it once and retains an owned
-result. A failed request returns no successful graph. Error messages name the
-file and explain the category, line, Unicode column and exact byte offset, with
-a source excerpt and caret. Missing THEN/END, malformed expressions/calls,
-unterminated strings/comments and invalid encoding have regression coverage.
-These grammars stop at the first syntax error and accept no recovered input.
+Here source is `.binary`. Formats are `rxas`, `crexx` and `graph`; optional
+arguments are `limits=.lllimits..policy()`, `rxl=0`, `bytes=67108864`, and a
+trailing optional `lexical=.binary`.
+Set `rxl=1` for a short-form specification whose OPTIONS header is optional;
+the command selects this automatically for `.rxl` filenames. `filename` supplies
+the logical source name for diagnostics and does not open a file.
+Queries evaluate once. Output owns its chunks. Failed admission, generation or
+budget checks produce a diagnostic and no partial artifact. The service performs
+no file I/O or printing; the `rxlang` CLI is a consumer. See
+[tool documentation](../README.md) for bootstrap and helpers.
 
-For a built inspection consumer, from the repository root:
+Omit `lexical` for ordinary cold behavior without capsule work. Present empty
+binary opts into cold construction plus `lexical()` output; present owned bytes
+tries reuse of the complete main/outside-comment-shield DFA set. `reused()` is
+1 only on successful checked reuse; graph/error/disabled/cold requests return 0.
+`lexical()` owns its returned bytes and is empty on errors, graph requests or
+unprepared manual builds. Source/parser/policy/output checks always run on the
+current specification. The existing `bytes` cap bounds capsule/key work too;
+oversize/stale/malformed candidates miss without overriding ordinary limits.
+Persisted-byte integrity is the host's responsibility; the wrapper checks SHA256.
 
-```sh
-cmake-build-levell-integration/bin/rxbvm \
-  cmake-build-levell-integration/research/level-l/compilers/frontends/opt/frontend-probe-linked.rxbin \
-  -a g research/level-l/compilers/examples/step01/pipeline-g.crexx \
-  cmake-build-levell-integration/bin
-```
+<a id="compiling-cg-source-into-shared-ir"></a>
+<a id="compiling-cg-source-to-rxas"></a>
 
-Change `g` and the example filename to inspect Classic. See the
-[frontend API and admitted language profile](../../research/level-l/compilers/doc/frontends.md) and
-[paired walkthrough](../../research/level-l/compilers/doc/pipeline-walkthrough.md) for the complete
-source, actual generated trees/IR, calls, loops and numeric differences.
+## Research C and G compilers
 
-The frontend service ends at checked IR. The separate `llccompiler` or `llgcompiler` service
-continues through register assignment and RXAS selection. Its implementation is
-Level B code **using Level L's `llir.writer` emitter library**.
+The research compilers are applications of Level L. Their hosts are written in
+Level B and use Level L parsing, AST/IR, transformations and emission. Existing
+native tools remain the implementation seed and assemble/link their output.
+The explicitly selected commands are `llrxc-c` and `llrxc-g`; ordinary `rxc` and
+`rxc-c` retain their product roles.
 
-## Compiling C/G source to RXAS
+For Classic C, use the dedicated [compiler user guide](../../research/level-l/compilers/doc/levelc-user-guide.md)
+for building, options, complete examples, static providers, host integration,
+INTERPRET, Rexx source calls and the embedding API. The
+[C architecture overview](../../research/level-l/compilers/doc/architecture.md)
+explains the language/runtime boundary, while the
+[C plan](../../research/level-l/compilers/PLAN.md) records current compiler
+qualification and outstanding delivery work. Select this compiler explicitly;
+it is not the default compiler.
 
-The installed commands are `llrxc-g` and `llrxc-c`. They implement the
-[admitted profile](../../research/level-l/compilers/doc/poc-scope.md); ordinary `rxc` and `rxc-c`
-retain their existing product roles.
+Research products require `CREXX_BUILD_RESEARCH_COMPILERS=ON` and
+`stage-research-compilers`; normal `stage-product` supplies the SDK and tools.
+`CREXX_RESEARCH_LANGUAGES=C` or `G` selects one research language. Build-tree
+commands and packages live under
+`BUILD/research/level-l/compilers/products/`. The separate `ResearchCompilers`
+install component copies prepared products; installation does not build missing
+ones. The research stage also prepares the selected C dynamic-runtime image and
+the contract provider's native package required by that component.
 
-Research compilers are opt-in; normal `stage-product` provides the generic SDK
-and Level L tools. From the repository root:
+G retains its admitted scalar research profile. The [frontend reference](../../research/level-l/compilers/doc/frontends.md),
+[backend reference](../../research/level-l/compilers/doc/backend.md) and
+[paired walkthrough](../../research/level-l/compilers/doc/pipeline-walkthrough.md)
+describe its language and services. A G request uses `.lltfrontend..request` for
+checked IR and `.llgcompiler..request` for RXAS. Classic has its own frontend and
+compiler services; do not select C by passing a language flag to the G service.
 
-```sh
-cmake -S . -B cmake-build-debug -DCREXX_BUILD_RESEARCH_COMPILERS=ON
-cmake --build cmake-build-debug --target stage-product stage-research-compilers --parallel 8
-cmake --install cmake-build-debug --prefix '/tmp/crexx review'
-cmake --install cmake-build-debug --prefix '/tmp/crexx review' --component ResearchCompilers
-```
-
-Select only C or G with `-DCREXX_RESEARCH_LANGUAGES=C` or `G`.
-Build-tree commands and service packages live under
-`cmake-build-debug/research/level-l/compilers/products/`.
-Use the chosen prefix's `bin` directory for the following commands and imports.
-Installation copies built products; it does not build missing ones.
+For a prepared G installation:
 
 ```sh
 llrxc-g -i /path/to/bin -o demo.rxas demo-g.crexx
@@ -3281,80 +3764,14 @@ rxlink -o demo-linked demo.rxbin /path/to/bin/library.rxbin
 rxbvm demo-linked.rxbin
 ```
 
-For Classic, use `llrxc-c` and add `/path/to/bin/llctarget.rxbin`,
-`/path/to/bin/rxfnsc.rxbin` and `/path/to/bin/classlib.rxbin` to the link command.
-The collection library supplies the Classic variable pool; include it explicitly
-rather than depending on VM autoload from the compiler installation. The
-`llcompiler_c_only_*` regressions compile with native/typed compiler products
-absent and execute linked static images in a separate directory with autoload
-disabled. This verifies the bounded current profile, not complete C. Use VM `-a` followed by program
-arguments when needed. Keep linker debug metadata for runtime source locations;
-`rxlink -s` deliberately removes it. Assembler optimisation may also be enabled
-by omitting its `-n`. The C/G compilers enable shared IR optimisation by default;
-use `llrxc-g -n` or `llrxc-c -n` for the cleaned unoptimised control. The native
-B seed's `rxc -n`, the new compiler's `-n` and `rxas -n` control three separate
-stages. Use assembler `-n` when inspecting the new compiler's own effects.
+The compiler's `-n` disables its IR optimisation; `rxas -n` independently disables
+assembler optimisation. The native B seed's optimisation is a third stage.
+Preserve linker debug metadata when investigating source locations.
 
-Classic statement CALL can use explicit prebuilt providers. The `-i` directory
-must contain each selected `<artifact-stem>.rxbin` and the runtime images.
-For a C source provider, produce one ordinary void/frame export with `--routine`:
-
-```sh
-llrxc-c -i /path/to/artifacts --routine sample.run -o /path/to/artifacts/provider.rxas provider.crexx
-rxas /path/to/artifacts/provider.rxas
-llrxc-c -i /path/to/artifacts --provider provider sample.run -o main.rxas main.crexx
-```
-
-Repeat `--provider <artifact-stem> <fully-qualified-callable>` for more bindings;
-link the selected provider images into the application. Local labels and exact
-BIF names retain priority. Qualified A.run/B.run may coexist; an ambiguous short
-RUN refuses compilation. B/G providers are first built by their owning compiler.
-The C request reads checked binary metadata; it never compiles a provider source,
-searches at runtime or supplies external function expressions. Missing inventory
-fails43.1 when reached; a selected provider omitted from the linked image retains
-FUNCTION_NOT_FOUND. Routine output has no command main/status bridge and leading
-PROCEDURE remains17.1. See the
-[static-provider contract](../../research/level-l/compilers/doc/architecture.md#call3-static-provider-contract).
-
-Standalone Classic `PULL` uses the same templates as `PARSE UPPER PULL`. It
-acquires selected queue or fallback input once, including bare/empty-first forms;
-later comma templates receive empty text. Shared UPPER and live variable-pool
-writes remain in the existing executor. Configured NOTREADY, broader host
-behavior, conditions/TRACE and declared-platform closure remain open under the
-[PULL contract](../../research/level-l/compilers/doc/architecture.md#pull-contract).
-
-Classic `PUSH expression` and `QUEUE expression` convert an operand once and
-insert it at the front or tail of the selected queue; bare forms insert empty
-text. Text retains its case, Unicode and NUL bytes. `PARSE PULL` observes insertion
-without UPPER; standalone `PULL` applies UPPER. Selected queue state is shared by
-nested/private program roots, and `QUEUED()` does not consume entries. Wider
-host/condition/TRACE/platform closure remains open under the
-[queue contract](../../research/level-l/compilers/doc/architecture.md#queue-contract).
-
-Classic `ADDRESS` selects/swaps lasting environments or executes one transient
-command with ordered `WITH` resources and lexical VAR/counted-STEM anchors.
-An expression-only clause executes through the current environment and lasting
-connections, captured after its expression converts to command text. Both routes
-share the B command adapter. Operand EXIT skips construction and dispatch.
-Configured conditions/resumption, TRACE, native host/NUL transport and declared
-platforms retain their [separate gates](../../research/level-l/compilers/doc/architecture.md#address-c-command-contract).
-
-`llrxc-c` prints `RXC-LC-IMPLICIT_ADDRESS` warnings once to stderr for implicit
-commands whose classified head is not a literal string. Grouped strings and
-left-string concatenations suppress the warning; assignments and explicit
-instructions do not warn. Warnings do not change successful status or output
-publication. C frontend/service `warnings()` returns owned immutable records
-with severity/code/message, filename, exact byte bounds, scalar line/column and
-formatted text. An empty array denotes no collected warnings; completed records
-remain available after later lowering/backend failure and after request expiry.
-The getter prepares frontend work only, without emitting RXAS.
-
-A Level B host imports `llgcompiler` and `llir`, links `llgcompiler.rxbin`,
-`rxfnsl.rxbin` and `library.rxbin`, and uses the following G service. For C,
-import/link `llccompiler` and call its own request with the same arguments:
+A Level B host imports `llgcompiler` and uses its pure service:
 
 ```rexx
-request = .llgcompiler..request(source, artifacts, 'demo.crexx')
+request = .llgcompiler..request(source,artifacts,'demo.crexx')
 if request.status() <> 0 then say request.diagnostic()
 else do
   output = request.output()
@@ -3362,328 +3779,17 @@ else do
 end
 ```
 
-`source` is binary; `artifacts` names the target runtime-image directory.
-The request does not print, write files, exit or invoke another compiler.
-`output` is an owned `.llir..output`, with `text`, `bytes`, `error` and streaming
-support, and remains usable after the request. `graph()` retains the frontend
-IR; after successful status, `emissiongraph()` shows the graph sent to the
-backend. It is the same graph when optimisation is disabled.
-The optional budgets after the filename are source/semantic work, nesting,
-emitted bytes and registers per function, followed by `optimise=1`. Append zero
-to select the unoptimised path without changing earlier argument positions:
-
-```rexx
-request = .llgcompiler..request(source, artifacts, 'demo.crexx', 1000000, 512, 67108864, 65536, 0)
-```
-
-C requests additionally accept optional `providers:llcbindings.binding[]` and
-`routine_export:string` after these eight arguments. Import `llcbindings` to
-construct each explicit `(artifact, callable)` binding. The request owns its
-prepared selections; `graph()` lazily prepares the frontend too. The empty
-default performs no provider acquisition. The same byte/work ceilings bound
-aggregate provider acquisition and metadata selection.
-
-The work/byte budgets also protect the shared optimisation phase. Defaults and the complete API are in
-the [backend reference](../../research/level-l/compilers/doc/backend.md).
-
-The command writes a completed result through a claimed sibling staging
-directory and replaces the destination only after a successful write/close.
-An existing staging directory or failed compilation/write produces a diagnostic
-and preserves prior output. The [paired worked examples](../../research/level-l/compilers/examples/step04/README.md)
-show actual source, IR and RXAS, including Classic `say 01` printing `01` and G
-printing `1`. Classic keeps its numeric/argument/pool semantics; G keeps typed
-values and short-circuiting. A declared G decimal starts absent and displays
-`nan`, while integer/float/Boolean defaults are zero and text is empty.
-
-The current output retains distinct owned cells and runtime adapters, coalesces
-proved C context aliases, and reuses eligible plain scalar cells within one
-target block. The optional [IR analysis/proof](ir-design.md#optional-analysis-and-proof-services)
-and [RXAS target](rxas-design.md) packages can be used independently of these
-frontends. Shared Level L
-passes propagate proved private values, evaluate admitted constants, simplify
-Boolean branches and remove safe unused operations. G admits checked int64
-arithmetic/comparisons and canonical conversions. C retains the effectful runtime
-truth check; exact literal `0`/`1` separately supplies a derived Boolean branch
-fact so dead-arm pruning preserves context checks and errors. Classic arithmetic,
-mutable numeric context and variable
-pools keep runtime semantics. Both languages preserve effects and errors. See
-the [actual before/after example](../../research/level-l/compilers/examples/step05/README.md) and
-[generic Level L optimisation API](ir-design.md#optimise-a-frozen-module).
-
-Explicit operands do not construct spare defaults;
-bare SAY and declared-variable defaults remain. Frame planning uses selected
-instructions and hidden helper calls to reserve scratch and call space only
-when needed. Straight jumps to the next emitted block are omitted. Source records carry expression ranges and
-exact/generated provenance. Identical straight-path records are suppressed;
-different expressions and control-flow entries can still need records on the
-same line. These are metadata, not printed TRACE events. Clause ID zero means
-that authored clause grouping is not yet available.
-
-The CLI records the source basename. The service preserves a logical relative
-filename such as `examples/demo.crexx`, while absolute physical paths become
-basenames. This keeps checkout paths out of source metadata. The VM may still
-show the assembler's binary-module identity separately.
-
-For example, compile this once with `options levelc` and once with
-`options levelg`:
-
-```rexx
-options levelc
-say 1
-say 1 / 0
-```
-
-Both print `1`, then fail on line 3. G reports `DIVISION_BY_ZERO` at the expression.
-Classic reports `RXC-LC-42.3` with the authored expression's context and retains
-the original helper fault location. Classic still maintains a diagnostic
-location field because deeper frames unwind before its handler runs; unchanged
-updates are suppressed. Entry/generated context is labelled explicitly rather
-than presented as an exact authored line.
-
-Keep linker metadata for the original fault source. A stripped image falls back
-to module/address (Classic's retained context can still appear in its message).
-The supported relay covers existing fatal string-message conditions, not
-arbitrary condition payloads or complete backtraces. Clause grouping, full TRACE,
-and the other remaining quality work are recorded in the
-[current plan](../../research/level-l/PLAN.md).
-
-### Following a complete C/G compilation
-
-The [paired walkthrough](../../research/level-l/compilers/examples/step06/README.md) includes real
-source trees, frontend IR, optimised emission IR and RXAS. It also gives build,
-installed execution and view-regeneration commands. Use the same body with
-`options levelc` or `options levelg`:
-
-```rexx
-say 01
-if 1 then say 'ok'
-else say 1 / 0
-```
-
-C prints `01` then `ok`; G prints `1` then `ok`. Both source trees preserve the
-literal spelling `01`. C's semantic mapping keeps those bytes; G's maps them to
-the integer value 1. Both frontend IRs retain the division arm. Shared Level L
-optimisation proves the condition true and removes the unreachable arm from the
-emission graph. Both default and `-n` compilation execute correctly.
-
-Change `if 1` to `if 0`: division is reached and remains a runtime error, with
-line 4 source context. It is not a compile-time error just because its operands
-are constants. Remove `then` instead: compilation fails with
-`LL_COMPILER_SYNTAX`, and an existing output file is preserved. In this exact
-example the parser reports the unexpected ELSE on line 4, where THEN is still
-required; the diagnostic location is the detection point.
-
-The [profile map](../../research/level-l/compilers/doc/poc-coverage.md) gives the exact supported
-language, ownership/error tests and remaining boundaries. Compilation is Level
-B code using Level L libraries all the way through emission. Existing RXAS,
-linker and VM tools still process the result. Full C/G syntax, proper B
-self-hosting, arbitrary imports, full TRACE/condition handlers and INTERPRET
-are outside this admitted compiler slice.
-
-### Classic SAY and ordinal literals
-
-`llrxc-c` supports bare SAY and SAY with an expression. The expression is
-evaluated once before its line is written; a failed expression writes no line
-for that SAY. For example:
-
-```rexx
-options levelc
-say
-say 'hello'
-say '41 42'x
-say '01000011'b
-```
-
-This writes an empty line, `hello`, `AB`, then `C`. An adjacent `x` or `b`
-suffix is case-insensitive. Hex groups contain pairs of digits and binary groups
-contain groups of four bits; only the first group may be shorter. Empty
-literals are valid. Leading/trailing blanks, invalid digits or broken groups
-produce a located syntax diagnostic and leave an existing output file intact.
-Every decoded byte maps to the Unicode character with the same ordinal:
-`'80FF'x` is U+0080 followed by U+00FF; `'00'x` preserves NUL. `'C3A9'x` contains
-two characters and differs from ordinary `'é'`. No runtime decoder is emitted.
-
-`'41' x` remains a string followed by a blank and variable X; `'41'xyz` uses
-abuttal with variable XYZ. This adds no G literal syntax or general Classic BIF
-support. Full expression, host and TRACE coverage remains described by the
-[instruction review](../../research/level-l/compilers/doc/LEVELC-INSTRUCTION-REVIEW.md).
-
-### Classic variable symbols and DROP
-
-The C profile preserves raw variable spellings for reads, assignments, ARG
-destinations and DROP. Names start with a Unicode letter or `! ? _ @ # $`;
-later characters may also be ASCII digits or dots. Stems and arbitrary compound
-tails use the existing shared pool rules. Leading-digit and ordinary leading-dot
-constant symbols cannot be DROP targets; `.MN`, `.RESULT`, `.RC`, `.RS` and
-`.SIGL` are the admitted leading-dot variable exceptions. Combining marks and emoji are not variable-name letters,
-and names are not implicitly normalized. Micro-sign `µ` remains distinct from
-Greek `μ`/`Μ`. ARG still uppercases argument contents independently of the raw
-destination spelling. Routine/call names retain the ASCII-undotted profile and
-wider shapes receive an explicit diagnostic.
-
-```rexx
-options levelc
-µ = 'micro'
-victim = 'held'
-names = 'names victim'
-drop (names) µ
-say names victim µ
-```
-
-The output is `NAMES VICTIM µ`. A DROP list contains direct variable symbols
-or parenthesized single variable references. Items execute in source order;
-each indirect item captures its current value once, then the shared pool drops
-that captured subsidiary list in order. Dropping its carrier does not discard
-the remaining captured words. Invalid subsidiary words are skipped and later
-valid words continue. Lists use the borrowed configuration's Unicode and extra
-blanks. Direct source targets must be valid variables, even in unreachable
-source; `(a+1)` is an expression and is not an indirect DROP reference.
-
-DROP reuses scalar, stem, compound-tail and exposed-alias pool behavior. A
-dropped binding differs from an assigned empty value and a dropped stem removes
-its default and tails. The compiler emits one contextual operation and existing
-pool call per item; it does not split indirect words or substitute tails itself.
-Source EXPOSE, resumable conditions and full TRACE remain later compiler work.
-The [independent DROP fixtures](../../research/level-l/compilers/tests/drop/)
-own source, state, diagnostic, borrowed-alias and emitted-code expectations.
-
-### Classic assignment
-
-An assignment evaluates its expression once before the current variable pool
-resolves the target. A missing expression assigns empty text. The pool owns
-scalar replacement, compound-tail substitution and stem defaults; the compiler
-passes the raw target name and exact value to that shared implementation.
-
-```rexx
-options levelc
-key = 'b'
-items.key = 'old'
-items.key = items.key || '+'
-empty =
-say items.key || '|<' || empty || '>'
-```
-
-The output is `old+|<>`. Substituted tail contents keep their case and may
-contain Unicode, dots or NUL; these contents are values, not newly parsed source
-identifiers. A whole-stem assignment replaces its default and clears explicit
-or dropped tails. Assigning an individual tail restores a previously dropped
-binding. Assignment preserves the value's text and numeric representation.
-
-Private source routines have fresh pools. The [independent assignment
-fixtures](../../research/level-l/compilers/tests/assignment/) combine source-call
-ordering with a separate B-owned, prebound-context control;
-they do not establish source EXPOSE or shared-label behavior. Those forms,
-resumable conditions and full TRACE remain later compiler work.
-
-### Classic NOP
-
-NOP has no operand and leaves surrounding execution order unchanged. It can
-occupy the admitted main, IF/ELSE, group, WHILE and private-routine statement
-positions. The same word can still name a variable in assignment or expression
-context:
-
-```rexx
-options levelc
-nop = 'variable'
-NoP
-say nop
-```
-
-The output is `variable`. An extra token after the statement, as in `nop x`,
-is rejected even in unreachable source. An unobserved NOP adds no value,
-runtime helper or frame demand; its authored AST span remains available.
-SELECT/shared-label placements, exact Classic diagnostic identities and full
-clause/TRACE observations remain later compiler work.
-
-### Classic OPTIONS
-
-Every OPTIONS clause retains its ordinary optional expression. The operand is
-evaluated once where the clause is reached, including Name reads, arithmetic,
-calls and errors; bare OPTIONS has no operand. The current shared Classic
-processor recognizes no runtime words, so unknown/DBCS words and embedded NUL
-have no processor effect. The compiler omits the empty processor call and unused
-simple String/Number construction, while retaining operand effects and validation.
-
-Only a complete first nonempty clause made of OPTIONS and bare words selects
-file settings. `LEVELC` and `NUMERIC_CLASSIC` are accepted. Nested block comments
-remain enabled; `COMMENTS_HASH`/`COMMENTS_NOHASH` and
-`COMMENTS_DASH`/`COMMENTS_NODASH` select request-local line comments.
-`COMMENTS_NOSLASH` is accepted; slash comments, incompatible levels/numeric
-policy, conflicting switches and unsupported `SRCMAP` are rejected. `STRICTC`
-selects reached-only invalid LEAVE/ITERATE-target errors for this request; default C
-rejects source-provable invalid transfer targets even in dead source. Identical switches
-may repeat; quoted/later/call-shaped STRICTC stays an ordinary operand. Header
-words still have their ordinary expression evaluation.
-
-```rexx
-options levelc comments_hash
-# This line is a comment in this request.
-options 'unknown' || '00'x
-options probe()
-exit 0
-probe: procedure
-  say 'once'
-  return 'ignored'
-```
-
-The output is `once`. Quoted, operator-shaped and call-shaped first clauses,
-and all later OPTIONS clauses, do not select file settings. For example,
-`options levelg()` is an ordinary private function call when that routine is
-defined. Settings never leak into a later compilation request. Adding runtime
-words or effects to the shared processor requires compiler contract review and
-recompilation; complete header controls, source maps, conditions and TRACE
-remain later work under the [OPTIONS plan](../../research/level-l/compilers/PLAN.md#current-action-options).
-
-### Classic IF
-
-IF evaluates its condition once and executes only the selected instruction.
-ELSE belongs to the nearest open IF; a false condition without ELSE continues
-with the following statement. The condition must produce exact text `0` or `1`.
-For example, `'1.0'` raises Classic 34.1 before either arm executes.
-
-```rexx
-options levelc
-if '1' then say 'selected' else say 1/0
-if '0' then say 'not reached'
-```
-
-The output is `selected`; the unchosen division is never evaluated. Current
-main/group/WHILE/private-routine placements retain each arm instruction's own
-contract. Both terminating arms add no spare join/default-return path, and
-literal branch pruning retains the contextual truth check. Full DO,
-shared labels/EXPOSE, complete diagnostic identities, resumed conditions and
-TRACE remain later work in the [IF plan](../../research/level-l/compilers/PLAN.md#current-action-if).
-
-### Classic SELECT
-
-SELECT evaluates WHEN conditions in source order until the first exact text
-`1`, then executes only that instruction. Exact text `0` continues to the next
-WHEN. Later expressions and arms remain dormant after a match. OTHERWISE
-accepts an instruction list, including an empty list, and is optional and final.
-
-```rexx
-options levelc
-select
-  when '0' then say 1/0
-  when '1' then say 'selected'
-  otherwise
-    say 'fallback'
-    nop
-end
-```
-
-The output is `selected`. An invalid logical WHEN value, such as `'1.0'`, raises
-Classic 34.2 at WHEN before either its body or later code. With no true WHEN
-and no OTHERWISE, Classic 7.3 identifies the SELECT line. Nested SELECT and
-admitted main/group/WHILE/private-routine arms preserve ordinary loop transfers;
-SELECT itself creates no loop frame. Current generated C uses the fatal,
-nonresumable condition profile. Shared labels/fall-through/EXPOSE, complete
-expressions/DO, full diagnostic recovery and conditions/TRACE remain open in
-the [SELECT plan](../../research/level-l/compilers/PLAN.md#current-action-select).
+`source` is binary and `artifacts` is one explicit runtime/import directory.
+The optional trailing arguments are `budget=1000000`, `nesting=512`,
+`bytes=67108864`, `registers=65536` and `optimise=1`. The service neither prints
+nor publishes a file. `graph()` returns frontend IR; after successful compilation,
+`emissiongraph()` returns the graph selected for emission. Link the service
+package with core Level L and the B runtime. Exact closure and publication rules
+are in the [backend reference](../../research/level-l/compilers/doc/backend.md).
 
 ## Optional arguments and separate G modules
 
-STEP07A adds scalar optional arguments to `llrxc-g`, using existing G syntax:
+The G scalar profile supports literal defaults and presence queries:
 
 ```rexx
 options levelg
@@ -3695,126 +3801,33 @@ scale: procedure = .int
   return value * factor
 ```
 
-The output is `14`, then `21`. A literal default determines the scalar type.
-`?name = .int` declares an optional integer with its primitive zero default;
-string defaults are empty, Boolean/float defaults are zero and a primitive
-optional decimal retains the existing absent decimal value. `?name` in an
-expression tests original presence, even after assignment. A supplied empty
-string is present and undergoes the ordinary parameter conversion; it is not
-an omitted argument. Positional holes such as `f(,3)` are allowed only for
-optional formals. A required formal after an optional formal still needs its
-actual value.
-
-Classic retains its explicit equivalent:
-
-```rexx
-options levelc
-say scale(7)
-say scale(7,3)
-exit 0
-scale: procedure
-  arg value, factor
-  if \arg(2,'E') then factor = 2
-  return value * factor
-```
-
-The C call baseline can be checked independently of G using the existing
-examples and expected results:
-
-```sh
-cmake --build cmake-build-debug --target llcompiler_c_calls_measure
-```
-
-This runs the B/L C compiler image in a restricted host and its linked output
-in a separate compiler-free runtime, with bytecode autoload disabled. It checks
-argument holes versus empty strings, recursion, evaluation order, the current
-LENGTH/ARG/DIGITS bindings and rejection of incompatible Classic metadata.
-It does not establish complete ARG/CALL, shared-label activation, the remaining
-BIF bindings or full conditions/TRACE. The [C plan](../../research/level-l/compilers/PLAN.md#active-c-contract-baseline-increment)
-records the precise qualification boundary; INTERPRET is the final stage.
-
-The shared B runtime now exposes a borrowed execution bundle for direct hosts:
-
-```rexx
-import rexxactivation
-import rexxpool
-import rexxclassicconfig
-import rexxclassiccontext
-
-activation = .rexxactivation..RexxActivationArguments()
-pool = .rexxpool..RexxVariablePool(1)
-config = .rexxclassicconfig..RexxClassicConfig("UTF8")
-context = .rexxclassiccontext..RexxClassicContext(reference activation, reference pool, reference config)
-```
-
-Keep those three initialized owners in stable storage for the bundle's lifetime.
-Its `activation()`, `pool()` and `config()` methods return checked references;
-`bindPool(reference replacement)` changes only the receiving bundle's pool
-binding. Copying the bundle shares the owners but not later binding changes.
-Helpers that must observe rebinding take `reference context`. Invalid or expired
-references raise `REFERENCE_INVALID`; a rejected rebind preserves the old pool.
-
-Direct hosts import `llctarget` from `llctarget.rxbin` and use the
-[borrowed-context adapters](../../research/level-l/compilers/doc/architecture.md#checked-bif-reuse-and-target-compatibility-decision).
-They reuse existing BIFs and the host's character configuration. Numeric calls
-inherit the executing caller frame; `setting` updates stored activation state
-only, so a host installs validated settings in its own frame. Generated C does
-this at procedure entry and after each successful NUMERIC statement, preserving
-child inheritance and parent restoration. The direct fixture
-`research/level-l/compilers/tests/target-context.crexx` demonstrates the same
-boundary independently. Generated C uses one required context reference and one
-fresh result packet; caller-owned child activations/pools share the root UTF8
-configuration. The [current C-family contract](../../research/level-l/compilers/doc/architecture.md#current-c-family-contract)
-owns the research schema and target surface: rebuild earlier C images/IR;
-no legacy bridge is provided.
-NUMERIC FORM accepts fixed SCIENTIFIC/ENGINEERING, VALUE expression and bare
-scientific reset. VALUE may be omitted before a parenthesized or unary
-expression. DIGITS/FUZZ retain defaults 9/0. All three evaluate an operand once,
-validate through the shared setter and install only after success; configured
-conditions/LOSTDIGITS, TRACE and wider platform acceptance remain separate.
-Static SIGNAL accepts direct, decoded quoted and VALUE targets, with an implied
-VALUE before a parenthesized or unary expression. The selected Level C profile
-folds all target forms through shared Unicode casing and compares exact text;
-numeric-looking names, trailing blanks and embedded NUL remain distinct.
-Successful transfer updates SIGL/.SIGL and leaves active loop control while
-retaining the current invocation, arguments, pool and numeric settings. It
-cannot rearm PROCEDURE eligibility. The [static SIGNAL contract](../../research/level-l/compilers/doc/architecture.md#signal-static-contract)
-keeps ON/OFF, typed handlers, clause/TRACE and wider host/platform work separate.
-SELECT adds contextual WHEN truth and a shared no-match error bridge; the
-borrowed-context procedure ABI is unchanged. The
-[DO contract](../../research/level-l/compilers/doc/architecture.md#approved-do-contract)
-adds counted/controlled/FOREVER/WHILE/UNTIL forms, ordered once-only header
-captures and hidden frame-owned state delegated to shared `RexxDoState`.
-Grouping and state-free repetition allocate no DO state. END names compare
-authored symbols using shared Classic casing. LEAVE accepts an optional raw
-control name, resolves the innermost matching controlled loop within this
-routine and closes crossed states without end checks/steps or pool-name search.
-ITERATE accepts the same optional raw names, closes only crossed inner states
-and resumes the selected loop's UNTIL/advance/entry path, retaining its owner.
-Shared labels/EXPOSE and complete conditions/TRACE remain later work. The admitted DO
-forms have [focused local qualification](../../research/level-l/compilers/PLAN.md#current-do-proof);
-[named LEAVE proof](../../research/level-l/compilers/PLAN.md#current-leave-proof)
-covers static targets and request-local invalid-target policy.
-[Named ITERATE proof](../../research/level-l/compilers/PLAN.md#current-iterate-proof)
-covers selected-loop end work and default/STRICTC 28.2/28.4 errors.
-INTERPRET remains unimplemented,
-and the current fatal-condition profile remains nonresumable.
-
-Ordinary C text follows the agreed Unicode codepoint model, preserving codes
-0–255 through the fixed Latin-1 ordinal bridge. Modern SAY and BIF behavior is
-the delivery target. Further historical SAY processor/callback/byte-exact edge
-parity is deferred and unclaimed; existing useful controls remain.
+The expected output is `14`, then `21`. A literal default determines the scalar
+type. `?name = .int` declares an optional integer with its primitive zero
+default. Text defaults are empty, Boolean/float defaults are zero and an optional
+primitive decimal retains its absent decimal value. `?name` in an expression
+tests original presence even after assignment. A supplied empty string is
+present and receives the ordinary conversion. Positional holes such as `f(,3)`
+are allowed only for optional formals; a required later formal still needs a
+value.
 
 For separate G compilation, put `namespace scalelib expose scale` after the
-provider's OPTIONS line and keep only routine declarations. In the consumer,
-write `import scalelib` and call `scalelib..scale(7)`. Compile and assemble the
-provider first, supply its directory with `-i` when compiling the consumer,
-then link both RXBIN files with `library.rxbin`. See the
-[complete commands and actual IR/RXAS](../../research/level-l/compilers/examples/step07a/README.md).
-The provider owns the default; changing it only requires rebuilding the
-provider and relinking, not recompiling its callers.
+provider's OPTIONS line and keep only routine declarations. The consumer writes
+`import scalelib` and calls `scalelib..scale(7)`. Compile and assemble the provider,
+make its image available through `-i`, compile the caller, then link both images
+with `library.rxbin`. The provider owns the default: changing it requires
+rebuilding the provider and relinking, without recompiling callers. The
+[maintained module example](../../research/level-l/compilers/examples/step07a/README.md)
+gives complete commands and expected results.
 
-A Level B IR consumer can use the same generic facilities without C/G modules:
+Malformed imports, ambiguous/non-exported callables, missing required arguments,
+unsupported parameter types and invalid defaults produce located errors and
+preserve an existing output file. Arbitrary default expressions, references,
+classes, arrays, source imports and module initializers are outside this G
+profile. The [G call contract](../../research/level-l/compilers/doc/STEP07A-CONTRACTS.md)
+owns the precise profile; it does not limit the separately developed C compiler.
+
+Generic IR exposes the corresponding argument/presence operations independently
+of either compiler:
 
 ```rexx
 fn = builder.function('choose',integer)
@@ -3827,18 +3840,11 @@ value = entry.readarg(ordinal,origin,fallback)
 call entry.returnvalue(value,origin)
 ```
 
-A required formal uses `argument(integer)` and the two-argument `readarg`.
-`module.function(id)` exposes checked signature/export views. Optional fallback
-values are already evaluated in generic IR; the C/G slice admits only pure
-literal or primitive defaults. Saved IR writers use version 2, with checked
-version-1 reader compatibility. See the [IR reference](ir-design.md).
-
-Malformed imports, non-exported/ambiguous callables, missing required actuals,
-unsupported parameter types and invalid default forms produce located errors
-and preserve an existing output file. Arbitrary default expressions, references,
-classes, arrays, module initialisers, source imports and general Classic external
-loading remain outside this increment. Compiler code remains Level B and uses
-Level L's grammar, IR, transformation and writer libraries throughout.
+This fragment assumes the builder, type and source origin have already been
+created. A required formal uses `argument(integer)` and two-argument `readarg`.
+Generic fallback values have already been evaluated; a frontend chooses which
+source defaults to admit. Saved IR writers use version 2 with checked version-1
+reader compatibility. See the [IR reference](ir-design.md).
 
 ## RexxScript: a larger example
 
@@ -4048,7 +4054,10 @@ ambiguity, and the [calculator](../examples/calculator) shows evaluation.
 | Derivation | A way of applying grammar rules to recognize an input. |
 | DFA | Deterministic finite automaton: the state-table recognizer used by the lexer. |
 | Grammar | Rules describing how tokens form a valid document. |
+| IR | Intermediate representation: explicit typed operations, values and control used after parsing. |
+| Lease | A checked, invocation-bound capability for synchronous access to a host binding. |
 | Lexer | The component that recognizes tokens in source text or bytes. |
+| Logical-byte allowance | An API's declared payload/storage accounting limit, distinct from process memory usage. |
 | Lookahead | Inspecting upcoming input to decide what can match. |
 | NFA | Nondeterministic finite automaton: an intermediate lexical representation that can track several possible matches before it is converted to a DFA. |
 | Nullable | Able to match without consuming input. |
@@ -4056,187 +4065,14 @@ ambiguity, and the [calculator](../examples/calculator) shows evaluation.
 | Precedence | The relative binding strength of operators. |
 | Associativity | The grouping of operators at the same precedence, such as `(a-b)-c` for left associativity. |
 | Parse forest | A shared representation of competing derivations. |
+| Origin | A source or generated provenance record retained through transformations and execution. |
 | Parser | The component that matches tokens against grammar rules and builds their structure. |
+| Plan | A prepared executable IR snapshot admitted against trusted services before a session starts. |
 | Projection | A pass that constructs a smaller tree from selected parts of another tree. |
 | Recovery / resynchronization | Continuing after damaged input at a chosen boundary to find later errors or structure. |
+| Schema | The types, operation signatures, semantic family versions and declared effects used to check IR. |
 | Source span | A range in the original source; Level L trees and tokens use byte offsets. |
 | Start rule | The rule describing a complete parser input. |
 | Token | A recognized piece of input, with a kind and source range. |
 | Unicode scalar | A Unicode codepoint other than a surrogate; one matching unit in `input utf8`. |
 | Visitor / tree walk | Application code that visits tree nodes to inspect, validate, transform or execute them. |
-
-
-## Level L tool ownership and callable generation
-
-`langtools/` owns Level L itself; `lib/rxfnsl/` owns the generic SDK.
-The tool library `rxlanglib.rxbin` supplies `llfront` and `llgenerate`, separately
-from `rxfnsl.rxbin`. Grammar-generated programs use only the SDK; hosts that
-compile specifications must explicitly import and link the tool library too.
-There is no dependency from either product into the experimental C/G compilers.
-
-`llbinmeta` reads callable contracts independently of the source compilers.
-A callable definition must point to its own procedure and reciprocal public
-export within the same pool. Imported prototypes do not become definitions
-when pools are merged. Genuine duplicate definitions remain ambiguous; private
-callables and malformed procedure/export references are rejected.
-
-`catalog.field(12, attributeName, '', 4)` returns the META_ATTR register index
-as decimal text: `-1` is the unmapped sentinel and `0..2147483647` are mapped
-indices (**CMETA-AC01**). This reads the existing full 64-bit wire field, not a string-pool ID.
-An unsupported index or selected record size returns empty and sets the existing
-`LL_RXBIN_IMPORT` diagnostic; a missing attribute returns empty under the ordinary
-field lookup contract. Fields 1–3 retain name/options/type semantics (**CMETA-AC02**). Register
-views derive from the complete type; no separate view field is inferred.
-
-The independent [metadata attribute fixture](../tests/metadata-attributes.crexx)
-covers these contracts in complementary owning build/VM modes (**CMETA-AC03**).
-
-### Selected callable classification
-
-The locally qualified `llbinmeta` classification increment lets independent
-consumers distinguish an exported procedure from a callable with a hidden
-class/interface owner, using existing RXBIN007 facts. It does not parse source,
-execute provider code or decide a consumer language's allowed ABI.
-
-`catalog.classify(name:.string)->.llbinmeta..callable` selects one real definition
-through the same pool-local procedure and reciprocal public-export checks as
-`lookup`. Imported prototypes are not definitions. New classification matches
-the whole name strictly under the existing metadata identity casing; it does
-not trim or pad names. Identifier bytes follow
-[metadata conformance](../../compiler/docs/metadata_conformance.md#record-envelope-and-responsibilities),
-including non-ASCII bytes and qualified names. Consumer language casing remains
-the consumer's responsibility.
-
-`llbinmeta..validname(name:.string)->.int` is the pure metadata identifier check,
-available without constructing or preparing a catalogue. It returns `1` for a
-nonempty byte spelling whose first byte is not a digit and whose bytes are ASCII
-letters/digits, non-ASCII bytes, `_!?$@#` or dots; otherwise it returns `0`.
-It neither folds nor trims names and does not impose per-component dot rules.
-`catalog.validname` reserves the same name extent against a bounded catalogue's
-work allowance before delegating to this one check. LMC-AC03 covers utility and
-catalogue name checks through the independent name/formal-name controls;
-consumer type and signature rules remain separate.
-
-The owned result adds `kind()->.string` and `owner()->.string`: `procedure` has
-an empty owner; `method` and `factory` name their qualified class/interface.
-An ordinary class method needs no `META_MEMBER`. A real interface default method
-needs the matching `method final` member. Exact `owner.§factory` and
-`owner.§factory.member` identify default and named factories; a factory marker
-without an owning header refuses. A similarly spelled `§factoryish` is not a
-marker. `META_IMPLEMENTS` does not own a callable. Conflicting or multiple
-matching owners refuse rather than choosing a prefix or record order.
-Header/member flag, type and argument fields are checked as valid string
-references without NUL; their language-specific grammar and ABI remain the
-consumer's responsibility. The callable signature comes from its selected
-`META_FUNC`, not a guessed string equivalence with a member declaration.
-The existing four-argument `callable` factory, `lookup` and `field` retain their
-contracts; their kind/owner values are empty. An additional
-`callable.classified(name,result,arguments,flags,kind,owner)` factory constructs
-owned fields, but arbitrary factory fields do not prove catalogue admission.
-
-Classification builds one immutable request-owned locator index. Every locator
-retains its pool and row identity. It associates headers and members only in the
-selected definition's pool, without inferring ownership from a dot count.
-A recoverable matching owner with malformed payload refuses the selected
-classification. A readable owner with unreadable member identity defers an
-owner-scoped error; readable owner/member with unreadable kind defers errors for
-both possible method/factory identities. Wholly unkeyable unrelated ownership
-records remain opaque. Selected errors return a failed callable without poisoning
-unrelated selections. Completed classification outcomes are cached by selected
-real row and pool: either success or a deterministic selected-data failure.
-Arbitrary missing names are not retained.
-The existing `read_image`/`records` helper wrappers invalidate this new index and
-cache before mutating storage; a subsequent rebuild is charged again. Normal
-lazy preparation uses the reference workers directly.
-
-`catalog.bounded(image:reference .binary, bytes:.int, work:.int)` supplies required
-nonnegative allowances. The synchronous input borrow is checked before the one
-owned image copy, and is not retained. Zero is valid and exhausts at the first
-required reservation. `consumed()->.int` and `work()->.int` query counters without
-preparing the catalogue. `consumed` counts reserved logical payload bytes:
-owned image/expanded sections, integer vectors at eight bytes per cell, locator
-and cache payloads, retained text and returned owned fields. It never refunds
-space after failure or release. It is not a resident-memory or VM temporary
-accounting promise. Fixed catalogue control state and its bounded fixed failure
-diagnostic are exempt, so an exhausted allowance can still report failure;
-input-derived text and owned metadata results are charged. The existing
-`catalog(image,budget=16777216)` remains an
-unmetered legacy route; both counters return zero there.
-
-One work unit is a byte scanned, copied, expanded or passed through text
-validation/casing, plus a structural header/record/candidate/link/cache visit or
-index/search comparison. Bulk operations reserve their whole byte extent before
-execution; this does not add a method call per byte. Compressed input and expanded
-output are both charged. Reserved work is not refunded after an early malformed
-input. Checked subtraction precedes every reservation. Preparation/indexing runs
-once; indexed selections and cached results still charge query and owned-copy
-work. No operation rearms the allowance.
-
-Exhaustion is sticky on that bounded catalogue and reports
-`LL_RESOURCE_LIMIT: metadata.bytes` or `metadata.work`; no partial index or
-selection is published. A dead input reference reports
-`LL_RXBIN_IMPORT: image owner is not live`. Envelope failures retain import
-diagnostics. Owned callable results survive source/catalogue expiry. A caller
-can group all selections for one artifact, debit the counters and owned snapshot
-copies from its aggregate allowance, release that catalogue, and pass the
-remaining allowances to the next; no shared mutable quota service is needed.
-
-**LMC-AC01–06 are locally qualified.** The independent
-[metadata classification fixture](../tests/metadata-classify.crexx) and its tiny
-RXAS producers own the behavioral, lifecycle and logical-budget checks;
-actual reader/sort/cache RXAS is part of code review. This establishes the stated
-metadata boundary, not arbitrary provider-code validity or a resident-memory cap.
-
-1. **LMC-AC01:** plain, class, exact factory and interface-default callables
-   classify from the selected real row and pool; prototype/duplicate/owner
-   conflicts refuse; legacy lookup/field/factory results remain unchanged.
-2. **LMC-AC02:** selected malformed/partial ownership refuses, unrelated opaque
-   rows do not poison it, and foreign-pool ownership is never joined. Tiny RXAS
-   producers and scalar record mutations exercise these boundaries.
-3. **LMC-AC03:** strict full names preserve supported identifier bytes and
-   metadata casing; no language-specific Unicode or resolution algorithm is added.
-4. **LMC-AC04:** returned fields own their lifetime, while preparation/indexing
-   and selected-row caching remain bounded and misses do not grow retained state.
-5. **LMC-AC05:** pre-copy input, preparation, index, selection and output-copy
-   reservations exhaust atomically; counters are monotonic/non-triggering;
-   sequential groups passed remaining budgets cannot exceed the aggregate.
-6. **LMC-AC06:** independent B consumers pass in complementary compiler/VM modes;
-   readable RXAS confirms scoped image aliases, no repeated image copies and
-   no new native/VM service or compiler-policy dependency.
-
-Implementation steps: **LMC-STEP01 — complete:** contract and independent
-criteria (AC01–06); **LMC-STEP02 — complete:** factored reader, bounded route,
-classifier and fixtures (AC01–05); **LMC-STEP03 — complete:** complementary
-consumer qualification, actual RXAS review and local dependency delivery
-(AC01–06).
-
-### Callable generation service
-
-```rexx
-import llgenerate
-import llir
-request = .llgenerate..request(source, 'rxas', 'lesson.levell')
-if request.status() <> 0 then say request.error()
-else do
-  output = request.output()
-  say output.text()
-end
-```
-
-Here source is `.binary`. Formats are `rxas`, `crexx` and `graph`; optional
-arguments are `limits=.lllimits..policy()`, `rxl=0`, `bytes=67108864`, and a
-trailing optional `lexical=.binary`.
-Queries evaluate once. Output owns its chunks. Failed admission, generation or
-budget checks produce a diagnostic and no partial artifact. The service performs
-no file I/O or printing; the `rxlang` CLI is a consumer. See
-[tool documentation](../README.md) for bootstrap and helpers.
-
-Omit `lexical` for ordinary cold behavior without capsule work. Present empty
-binary opts into cold construction plus `lexical()` output; present owned bytes
-tries reuse of the complete main/outside-comment-shield DFA set. `reused()` is
-1 only on successful checked reuse; graph/error/disabled/cold requests return 0.
-`lexical()` owns its returned bytes and is empty on errors, graph requests or
-unprepared manual builds. Source/parser/policy/output checks always run on the
-current specification. The existing `bytes` cap bounds capsule/key work too;
-oversize/stale/malformed candidates miss without overriding ordinary limits.
-Persisted-byte integrity is the host's responsibility; the wrapper checks SHA256.

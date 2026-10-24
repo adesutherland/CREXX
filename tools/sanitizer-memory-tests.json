@@ -185,6 +185,13 @@
         "rxvmstem_allocator_family",
         "rxvmstem_storage",
         "rxvmworker_lifecycle",
+        "signal_diagnostic_faults",
+        "signal_diagnostic_import_rxbvm",
+        "signal_diagnostic_import_rxtvm",
+        "signal_diagnostic_ownership-rxbvml",
+        "signal_diagnostic_ownership-rxvml",
+        "signal_diagnostics_rxbvm",
+        "signal_diagnostics_rxtvm",
         "test_jtable_policy",
         "test_signal_mask",
         "ts_regvalue_tester",
@@ -196,6 +203,8 @@
       "tests": [
         "address_callback_host",
         "arrays_test_opt",
+        "callmethod_diagnostics_rxbvm",
+        "callmethod_diagnostics_rxtvm",
         "cipher_test_opt",
         "classic_stream_lifecycle",
         "crexxsaa_arg_lengths",
@@ -224,6 +233,7 @@
         "odbc_mock_prepared_rxtvm",
         "rcc_provider_autoload_opt",
         "rcc_provider_wrong_identity_rejected",
+        "recv390_directory_max_userdata",
         "recv390_test_opt",
         "rx_hash_rxbvm_opt",
         "rx_hash_rxtvm_opt",
@@ -494,6 +504,9 @@
     "SAN-013": [
       "native_raw_cms",
       "native_raw_tso"
+    ],
+    "SAN-014": [
+      "recv390_directory_max_userdata"
     ],
     "legacy-keyaccess": [
       "keyaccess_test_noopt",

@@ -1,14 +1,21 @@
 cmake_minimum_required(VERSION 3.24)
 
+set(_array_formatting_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/base")
+crexx_add_import_root(example_array_formatting_imports
+        DIRECTORY "${_array_formatting_import_root}"
+        OUTPUT_VARIABLE _array_formatting_import_files
+        FILES "${CMAKE_BINARY_DIR}/bin/library.rxbin"
+        DEPENDS library)
 set(_array_formatting_modules)
 foreach(_selector IN ITEMS arraydump arrayformat)
     set(_module "${CMAKE_CURRENT_BINARY_DIR}/${_selector}.rxbin")
     add_custom_command(
             OUTPUT "${_module}"
-            COMMAND $<TARGET_FILE:rxc> -x -i "${CMAKE_BINARY_DIR}/bin"
+            COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_array_formatting_import_root}"
                     -o "${_selector}" "${CMAKE_CURRENT_SOURCE_DIR}/${_selector}.crexx"
             COMMAND $<TARGET_FILE:rxas> -o "${_selector}" "${_selector}"
-            DEPENDS rxc rxas library "${CMAKE_CURRENT_SOURCE_DIR}/${_selector}.crexx"
+            DEPENDS rxc rxas example_array_formatting_imports ${_array_formatting_import_files}
+                    "${CMAKE_CURRENT_SOURCE_DIR}/${_selector}.crexx"
             BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/${_selector}.rxas"
             WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
             COMMENT "Building optimized ${_selector} function example")
@@ -26,15 +33,21 @@ add_custom_command(
 
 set(_array_formatting_program
     "${CMAKE_CURRENT_BINARY_DIR}/array_formatting_example.rxbin")
+set(_array_formatting_program_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/program")
+crexx_add_import_root(example_array_formatting_program_imports
+        DIRECTORY "${_array_formatting_program_import_root}"
+        OUTPUT_VARIABLE _array_formatting_program_import_files
+        FILES "${CREXX_ARRAY_FORMATTING_MODULE}")
 add_custom_command(
         OUTPUT "${_array_formatting_program}"
-        COMMAND $<TARGET_FILE:rxc> -x
-                -i "${CREXX_EXAMPLE_ARTIFACT_ROOT}/functions/array-formatting"
-                -i "${CMAKE_BINARY_DIR}/bin"
+        COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+                -i "${_array_formatting_program_import_root}"
+                -i "${_array_formatting_import_root}"
                 -o array_formatting_example
                 "${CMAKE_CURRENT_SOURCE_DIR}/array_formatting_example.crexx"
         COMMAND $<TARGET_FILE:rxas> -o array_formatting_example array_formatting_example
-        DEPENDS rxc rxas library "${CREXX_ARRAY_FORMATTING_MODULE}"
+        DEPENDS rxc rxas example_array_formatting_imports ${_array_formatting_import_files}
+                example_array_formatting_program_imports ${_array_formatting_program_import_files}
                 "${CMAKE_CURRENT_SOURCE_DIR}/array_formatting_example.crexx"
         BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/array_formatting_example.rxas"
         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"

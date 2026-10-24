@@ -32,6 +32,7 @@ typedef struct rxvm_invoke_binding {
 } rxvm_invoke_binding;
 extern const rxvm_invoke_binding rxvm_invoke_bindings[];
 extern const size_t rxvm_invoke_binding_count;
+extern const char rxvm_invoke_provider_id[];
 void rxvm_invoke_init(void);
 /* Loader-owned exact metadata/provider queries; no alternative policy here. */
 const char *rxvm_invoke_metadata_string(struct module *, size_t);
@@ -48,4 +49,6 @@ void rxvm_invoke_fail(rxvm_invocation *, const struct value *event);
 void rxvm_invoke_abandon(rxvm_invocation *);
 void rxvm_invoke_unpin(rxvm_invocation *);
 void rxvm_invoke_failure_event(struct value *, int, int64_t, int64_t, const struct value *);
+void rxvm_invoke_failure_event_with_diagnostic(struct value *, int, int64_t,
+        int64_t, const struct value *, const struct value *);
 #endif

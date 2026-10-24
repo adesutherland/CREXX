@@ -1474,6 +1474,78 @@ crexx_add_vm_test(NAME rxassignalorigininvalidtests PREP_TARGETS run_tests_signa
 set_tests_properties(rxassignalorigininvalidtests PROPERTIES
         CREXX_PREP_TARGETS "run_tests_signal_origin")
 
+crexx_add_rxas_vm_binary(tests_signal_diagnostics "event-owned terminal source context")
+crexx_add_rxas_vm_binary(tests_signal_diagnostic_initializer "scoped diagnostic initializer failure")
+crexx_add_rxas_vm_binary(tests_signal_diagnostic_import "local diagnostic across an imported start")
+crexx_add_rxas_vm_binary(tests_signal_diagnostic_provider "foreign diagnostic import provider")
+foreach(_diagnostic_vm rxbvm rxtvm)
+    if(TARGET ${_diagnostic_vm})
+        set(_diagnostic_test signal_diagnostics_${_diagnostic_vm})
+        add_test(NAME ${_diagnostic_test} COMMAND ${CMAKE_COMMAND}
+                -DRUNNER=$<TARGET_FILE:${_diagnostic_vm}>
+                -DBINARY=${CMAKE_CURRENT_BINARY_DIR}/tests_signal_diagnostics.rxbin
+                -DORIGIN_BINARY=${CMAKE_CURRENT_BINARY_DIR}/tests_signal_origin.rxbin
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_signal_diagnostics.cmake)
+        set_tests_properties(${_diagnostic_test} PROPERTIES TIMEOUT 180
+                LABELS "interpreter;signal;diagnostics;regression")
+        crexx_register_test_prep_targets(TESTS ${_diagnostic_test}
+                TARGETS ${_diagnostic_vm} run_tests_signal_diagnostics run_tests_signal_origin)
+        set(_import_test signal_diagnostic_import_${_diagnostic_vm})
+        add_test(NAME ${_import_test} COMMAND ${CMAKE_COMMAND}
+                -DRUNNER=$<TARGET_FILE:${_diagnostic_vm}>
+                -DCONSUMER=${CMAKE_CURRENT_BINARY_DIR}/tests_signal_diagnostic_import.rxbin
+                -DPROVIDER=${CMAKE_CURRENT_BINARY_DIR}/tests_signal_diagnostic_provider.rxbin
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_signal_diagnostic_import.cmake)
+        set_tests_properties(${_import_test} PROPERTIES TIMEOUT 90
+                LABELS "interpreter;signal;diagnostics;regression")
+        crexx_register_test_prep_targets(TESTS ${_import_test}
+                TARGETS ${_diagnostic_vm} run_tests_signal_diagnostic_import
+                        run_tests_signal_diagnostic_provider)
+    endif()
+endforeach()
+
+function(crexx_configure_signal_diagnostic_test target)
+    target_include_directories(${target} PRIVATE . ./rxvmplugin ./rxvml
+            ../assembler ../binutils/include ../rxpa ../platform
+            ../third_party/avl_tree ../third_party/utf8)
+    target_link_libraries(${target} Threads::Threads)
+    add_dependencies(${target} run_tests_signal_diagnostics run_tests_signal_diagnostic_initializer)
+    add_test(NAME ${target} COMMAND ${CMAKE_COMMAND}
+            -DRUNNER=$<TARGET_FILE:${target}>
+            -DBINARY=${CMAKE_CURRENT_BINARY_DIR}/tests_signal_diagnostics.rxbin
+            -DINITIALIZER=${CMAKE_CURRENT_BINARY_DIR}/tests_signal_diagnostic_initializer.rxbin
+            -DINSTRUMENTED=${ARGN}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_signal_diagnostic_native.cmake)
+    set_tests_properties(${target} PROPERTIES TIMEOUT 100
+            LABELS "interpreter;signal;diagnostics;ownership;regression")
+    crexx_register_test_prep_targets(TESTS ${target} TARGETS ${target}
+            run_tests_signal_diagnostics run_tests_signal_diagnostic_initializer)
+endfunction()
+
+add_executable(signal_diagnostic_ownership-rxbvml tests/test_signal_diagnostics.c)
+target_link_libraries(signal_diagnostic_ownership-rxbvml rxbvml)
+target_compile_definitions(signal_diagnostic_ownership-rxbvml PRIVATE NTHREADED=1)
+crexx_configure_signal_diagnostic_test(signal_diagnostic_ownership-rxbvml OFF)
+if(CREXX_THREADED_VM_SUPPORTED)
+    add_executable(signal_diagnostic_ownership-rxvml tests/test_signal_diagnostics.c)
+    target_link_libraries(signal_diagnostic_ownership-rxvml rxvml)
+    crexx_configure_signal_diagnostic_test(signal_diagnostic_ownership-rxvml OFF)
+endif()
+if(BUILD_TESTING)
+    # Reuse the maintained instrumented core; ordinary libraries own silence proof.
+    add_executable(signal_diagnostic_faults tests/test_signal_diagnostics.c rxvml.c
+            $<TARGET_OBJECTS:rxbvm_instrumented_core_objects>)
+    target_compile_definitions(signal_diagnostic_faults PRIVATE NTHREADED=1
+            CREXX_VM_INSTRUMENTATION_TEST=1)
+    target_link_libraries(signal_diagnostic_faults
+            rxvmplugin mc_decimal_manual avl_tree rxpa rxvmref rxbin)
+    crexx_enable_vm_platform(signal_diagnostic_faults)
+    if(CREXX_VM_PROFILING)
+        target_compile_definitions(signal_diagnostic_faults PRIVATE CREXX_VM_PROFILING=1)
+    endif()
+    crexx_configure_signal_diagnostic_test(signal_diagnostic_faults ON)
+endif()
+
 # NR-09 large-instruction batch
 crexx_add_rxas_vm_binary(tests_nr09_superinstructions "NR-09 large instructions")
 crexx_add_vm_test(NAME rxasnr09superinstructiontests PREP_TARGETS run_tests_nr09_superinstructions RXVM_ARGS tests_nr09_superinstructions PASS_REGULAR_EXPRESSION "PASS: NR-09 Superinstructions")

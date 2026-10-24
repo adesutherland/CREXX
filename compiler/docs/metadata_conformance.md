@@ -42,6 +42,14 @@ declaration's fields conform.
 | `META_INLINE` | Separately versioned optional compiler template | Use the independent inline decoder and its consistency checks. |
 | Source-step/TRACE records | Existing source/step identities | Preserve their existing debugger/runtime semantics. |
 
+Mandatory core native declarations are compiled from the runtime owners'
+`DECL_ONLY` tables into binutils and shared by the compiler and linker. Their
+provider identities remain ordinary `META_PROVIDER` runtime contracts. Only
+the linker's external-archive requirements projection excludes an exact core
+catalogue match; conflicting core ids, callables or signatures are errors.
+The shared `rxsignature` equality preserves argument names/modifiers and
+normalizes only the existing RXPA whitespace and `[]`/`[*]` spellings.
+
 Names use the existing identifier-byte spelling (letters, digits, non-ASCII
 bytes, `_ ! ? $ @ #`, with dots in qualified identities), with no leading digit.
 The `*` name is admitted only for a factory. Class/interface headers carry

@@ -6,7 +6,7 @@ import llrxascatalog
 
 main: procedure = .int
   failures = 0
-  mapping = .int[]; v = .int
+  mapping = .int[]; v = .int; i = .int
   catalog = .llrxascatalog..catalog()
   failures = failures + check(catalog.version() = 'llrxas.catalog.v1','catalog profile')
   failures = failures + check(catalog.fingerprint() <> '','catalog freshness identity')
@@ -97,6 +97,63 @@ main: procedure = .int
   result = target.finish()
   failures = failures + check(result.valid(),'backedge conservative profile')
   if result.valid() then failures = failures + check(result.assigned(1) <> result.assigned(2),'loop storage remains distinct')
+
+  target = .llrxas..program(1,1,8192)
+  call target.recordline('dense_targets() .locals=1')
+  do i = 1 to 128
+    call target.record('br','dense128')
+  end
+  do i = 1 to 128
+    call target.record('dense' || i || ':')
+  end
+  call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'dense forward targets fit bounded indexed work')
+  if result.valid() then failures = failures + check(result.records() = 258,'indexed lookup preserves selected records')
+
+  target = .llrxas..program(5,5)
+  call target.recordline('first_target() .locals=5')
+  call target.candidate(1); call target.candidate(3)
+  call target.recordline('again:'); call target.recordline('load r1,1')
+  call target.recordline('icopy r2,r1'); call target.recordline('br again')
+  call target.recordline('again:'); call target.recordline('load r3,3')
+  call target.recordline('icopy r4,r3'); call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'repeated label retains existing first-match lookup')
+  if result.valid() then failures = failures + check(result.assigned(1) <> result.assigned(3),'first-match backedge keeps overlapping storage distinct')
+
+  target = .llrxas..program(5,5)
+  call target.recordline('case_target() .locals=5')
+  call target.candidate(1); call target.candidate(3)
+  call target.recordline('Again:'); call target.recordline('load r1,1')
+  call target.recordline('icopy r2,r1'); call target.recordline('br again')
+  call target.recordline('again:'); call target.recordline('load r3,3')
+  call target.recordline('icopy r4,r3'); call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'label index retains exact case-sensitive spellings')
+  if result.valid() then failures = failures + check(result.assigned(1) = result.assigned(3),'different-case label does not invent a backward target')
+
+  target = .llrxas..program(1,1)
+  call target.recordline('missing_target() .locals=1')
+  call target.recordline('br absent')
+  result = target.finish()
+  failures = failures + check(result.valid() = 0 & result.records() = 0,'unresolved target refusal is atomic')
+  failures = failures + check(result.error() = 'LL_RXAS_RECORD: unresolved branch target','missing target retains record error identity')
+
+  /* Construction fits exactly; finalization has no work left for its index. */
+  target = .llrxas..program(1,1,38)
+  call target.recordline('fuel_branch() .locals=1')
+  call target.recordline('br later'); call target.recordline('later:')
+  result = target.finish()
+  failures = failures + check(result.valid() = 0 & result.records() = 0,'finish-time work refusal is atomic')
+  failures = failures + check(result.error() = 'LL_RXAS_LIMIT: target.work budget','finish-time work refusal is not replaced by missing target')
+
+  target = .llrxas..program(1,1,37)
+  call target.recordline('fuel_branch() .locals=1')
+  call target.recordline('br later'); call target.recordline('later:')
+  result = target.finish()
+  failures = failures + check(result.valid() = 0 & result.records() = 0,'admission work refusal is atomic with pending branch')
+  failures = failures + check(result.error() = 'LL_RXAS_LIMIT: target.work budget','pending branch cannot replace admission work error')
 
   target = .llrxas..program(4,4)
   call target.recordline('forward_entry() .locals=4')

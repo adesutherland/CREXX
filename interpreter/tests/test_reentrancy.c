@@ -38,8 +38,8 @@ int main() {
         char* args[2];
         int expected = i + (i * 2);
 
-        sprintf(val1, "%d", i);
-        sprintf(val2, "%d", i * 2);
+        snprintf(val1, sizeof(val1), "%d", i);
+        snprintf(val2, sizeof(val2), "%d", i * 2);
         args[0] = val1;
         args[1] = val2;
 

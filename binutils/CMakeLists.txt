@@ -10,6 +10,9 @@ add_library(rxbin STATIC
         rxbin.c
         rxbin007.c
         rxsignature.c
+        rxcore_bindings.c
+        rxcore_parse_decl.c
+        rxcore_invoke_decl.c
         rxcontract.c
         rxsha256.c
         rxgraph.c
@@ -25,6 +28,13 @@ target_include_directories(rxbin
 set_target_properties(rxbin PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(BUILD_TESTING)
+    add_executable(test_rxcore_bindings tests/test_rxcore_bindings.c)
+    target_link_libraries(test_rxcore_bindings PRIVATE rxbin)
+    add_test(NAME core_native_binding_catalogue COMMAND test_rxcore_bindings)
+    set_tests_properties(core_native_binding_catalogue PROPERTIES
+        LABELS "unit;binutils;metadata;native;regression" TIMEOUT 30
+        CREXX_PREP_TARGETS test_rxcore_bindings)
+
     add_executable(test_rxcontract tests/test_rxcontract.c)
     target_link_libraries(test_rxcontract PRIVATE rxbin)
     add_test(NAME metadata_contract_conformance COMMAND test_rxcontract)

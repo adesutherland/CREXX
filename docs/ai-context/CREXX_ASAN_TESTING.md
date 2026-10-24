@@ -3,6 +3,26 @@
 Use `tools/asan-run.sh` for AddressSanitizer and LeakSanitizer runs. Do not
 hand-run broad ASan builds or ctests unless the runner itself is broken.
 
+Select the test purpose before invoking the runner. Routine scheduled assurance
+uses the explicit `daily` component-memory profile: instrument the VM, native
+providers and small owning native-tool panels, and run their memory, lifetime,
+failure and teardown tests. Prepare VM bytecode with the ordinary qualified
+producers described below. Language conformance and application behavior belong
+to ordinary functional QA; rerunning that whole matrix under ASan is not the
+routine leak strategy. Add a sanitizer test to `daily` only for a reviewed native
+memory boundary or an actual first-party memory regression. The runner's legacy
+bare-command default is the broad `full` profile, so always pass `--profile`
+explicitly. Full original-producer assurance is reserved for an explicit
+release, SAN-closure or other agreed broad gate.
+
+At a full functional baseline, finish focused repairs and rerun their failing
+ordinary tests first. Freeze the candidate and pass the complete ordinary
+regression suite once before running the bounded two-platform `daily` memory
+panel. A targeted maintained sanitizer command is appropriate earlier only to
+diagnose or verify an actual native-memory finding; it does not turn the entire
+functional suite into an ASan suite. An open `SAN-nnn` item retains its separate
+full closure requirements and cannot be described as sanitizer-clean.
+
 The hosted core gate explicitly uses `ENABLE_LLAMA=OFF`. Adrian clarified on
 15 September 2026 that sanitizer QA covers first-party cREXX code, not upstream
 llama.cpp or CUDA. Do not add CUDA SDK/backend builds to this gate. Separate
@@ -54,10 +74,15 @@ track, copy or archive these logs; the root documentation/output rules apply.
 
 ```sh
 tools/asan-run.sh --phase focused-lsan
-tools/asan-run.sh --phase full --test-jobs 8
-tools/asan-run.sh --phase build --build-target test_highlight_editor_diagnostics
-tools/asan-run.sh --phase ctest --regex '^crexx_spaced_source_smoke$' --leaks on
+tools/asan-run.sh --profile full --phase full --test-jobs 8
+tools/asan-run.sh --profile full --phase build --build-target test_highlight_editor_diagnostics
+tools/asan-run.sh --profile full --phase ctest --regex '^crexx_spaced_source_smoke$' --leaks on
 ```
+
+The first and last commands are focused diagnostic examples. The second is an
+explicit broad qualification command; it is not the scheduled daily command.
+For daily preparation and execution, use the paired ordinary/native-tree
+commands under [Overnight assurance and exceptional qualification](#overnight-assurance-and-exceptional-qualification).
 
 The hosted full sanitizer lanes exclude only the `performance-measurement`
 label. Those tests assert timing relationships that ASan instrumentation and a
@@ -90,14 +115,14 @@ runs; use `--status` and `--kill` on the run directory instead.
 
 ## Leak Policy
 
-Build and test phases both use leak detection by default. The build invokes
-`rxc`, `rxas`, `rxlink`, packers, and generated helper tools many times, so
-build-time failures are part of the sanitizer surface and should be fixed rather
-than bypassed.
+Build and test phases both use leak detection by default. Instrumented native
+build-time failures in the selected profile are part of the sanitizer surface
+and should be fixed rather than bypassed. The following commands are for an
+explicit original-producer broad gate, not routine daily assurance:
 
 ```sh
-tools/asan-run.sh --phase build
-tools/asan-run.sh --phase full --leaks on
+tools/asan-run.sh --profile full --phase build
+tools/asan-run.sh --profile full --phase full --leaks on
 ```
 
 CTest commands should use leak detection for ownership work. `--phase full` and
@@ -148,12 +173,12 @@ Plugin initializers, procedures, and globals remain instrumented. Ordinary
 Debug, Release, Linux sanitizer, and Windows builds retain normal physical
 unload behavior.
 
-## Full Workflow
+## Explicit broad qualification
 
-For a proper full ASan/LSan check:
+Only when an explicit broad gate is required, run:
 
 ```sh
-tools/asan-run.sh --phase full --test-jobs 8
+tools/asan-run.sh --profile full --phase full --test-jobs 8
 ```
 
 This performs a full build, runs the explicit `qa-prep` build stage, then runs
@@ -255,12 +280,15 @@ record that the command was validated only in the sanitizer tree.
 
 ## Overnight assurance and exceptional qualification
 
-The default manual/version-tag scope and currently effective scheduled policy
-retain two non-optional full jobs: Linux x64 ASan/LSan, with leak detection on
-during build and tests, and Apple arm64 ASan, with unsupported Apple LSan off.
-Both use fresh Debug trees, original instrumented producers and the complete
-non-measurement CTest set. Neither job is `continue-on-error`. Ordinary Windows
-and optional provider configurations retain their separate owning QA.
+The current schedule and default manual dispatch run the same `daily` component
+memory suite on two non-optional platforms: Linux x64 ASan/LSan, with leak
+detection on during build and tests, and Apple arm64 ASan, with unsupported Apple
+LSan off. Daily uses selected instrumented native components and ordinary
+prepared bytecode for VM tests; it does not build and rerun the whole functional
+suite under ASan. Neither platform job is `continue-on-error`. Version tags and
+an explicit `full` dispatch retain the complete original-producer,
+non-measurement CTest gate. Ordinary Windows and optional provider configurations
+retain their separate owning QA.
 
 `tools/asan-run.sh --profile full --phase full` is the maintained broad command.
 `weekly`, `native` and `affected` currently use that same complete scope and
@@ -377,12 +405,14 @@ same interprocess lock, with hash-owned atomic publication. Isolated `ctest -R`
 automatically includes setup; failed setup blocks consumers. Source/tool/library
 changes invalidate preparation. Other generic linked-test consumers are unchanged.
 
-The six sustained cells reuse each engine's explicit runtime/context across
-warmed three-batch value/reference (1,000 operations), provider failure/recovery
-(1,000) and Level L request (ten) scenarios. Internal logical ownership/capacity
-and provider/handle counters must plateau at comparable boundaries; final
-teardown checks ownership zero. The 2 MiB bound is only the empty central depot
-reserve, not total heap or RSS. Serial 1,800-second limits are hang backstops.
+The four `daily` sustained cells reuse each engine's explicit runtime/context
+across warmed three-batch value/reference (1,000 operations) and provider
+failure/recovery (1,000) scenarios. The two Level L request counterparts (ten
+requests per batch) remain ordinary/explicit-full checks outside `daily`.
+Internal logical ownership/capacity and provider/handle counters must plateau at
+comparable boundaries; final teardown checks ownership zero. The 2 MiB bound is
+only the empty central depot reserve, not total heap or RSS. Serial 1,800-second
+limits are hang backstops.
 
 Workflow dispatch `daily` runs the two clean revised daily platform jobs. The
 optional `daily_platform` selector defaults to `both`; use `linux` or `macos`
@@ -411,12 +441,13 @@ broad assurance, and incomplete results cannot be reused as successful proof.
 Uploaded diagnostics and operational cache summaries are not committed evidence;
 extract useful findings into the worklist and delete local task logs.
 
-These full jobs are mandatory **when the full workflow scope is invoked**; they are
-not mandatory before every `develop` publication. Ordinary development changes
-can be integrated after the core build and appropriate functional tests pass,
-with relevant focused sanitizer checks when warranted. Full sanitizer assurance
-normally runs overnight on the current `develop` revision. Investigate and fix
-findings promptly, repeating the relevant deep scope when the repair requires it.
+Both broad platform jobs are mandatory **when explicit full qualification is
+invoked**; they are not mandatory before every `develop` publication. Ordinary
+development changes can be integrated after the core build and appropriate
+functional tests pass, with relevant focused sanitizer checks when warranted.
+Full sanitizer assurance does not run on the daily schedule. Investigate and fix
+actual findings promptly,
+repeating the relevant owning scope when the repair requires it.
 Do not manually dispatch this workflow or make its two job names universal
 `develop` branch requirements merely to publish an ordinary fix.
 
@@ -460,8 +491,10 @@ broad run had found a 10,000-byte successful-return leak in
 
 * Read `build.log`, `ctest.log`, or the current log through the runner status
   command. Avoid streaming broad build or ctest output directly.
-* When CTest reports missing `.rxbin` modules, rerun through `--phase full` or
-  `--phase build` before investigating source code.
+* When CTest reports missing `.rxbin` modules, rebuild the owning prerequisite
+  with `--phase build --profile <selected-profile> --build-target <owner>` and
+  rerun the affected test before investigating source code. Do not expand the
+  profile to cover a missing fixture.
 * Treat third-party tool leaks separately from CREXX-generated code, compiler,
   linker, and runtime leaks. Prefer a focused regex before adding suppressions.
 * If a leak is in a fetched dependency, keep any workaround tracked in this

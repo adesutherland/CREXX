@@ -122,6 +122,10 @@ function(crexx_register_sustained_vm_tests value_operations provider_operations 
       add_test(NAME ${_name} COMMAND $<TARGET_FILE:sustained_vm_${_engine}> ${_arguments})
       set_tests_properties(${_name} PROPERTIES RUN_SERIAL TRUE TIMEOUT ${hang_timeout}
         LABELS "interpreter;ownership;sustained-state")
+      if(_scenario STREQUAL "levell" AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+        # Each engine owns its output; slots are conservative resource admission.
+        set_tests_properties(${_name} PROPERTIES RUN_SERIAL FALSE PROCESSORS 6)
+      endif()
       crexx_register_test_prep_targets(TESTS ${_name}
         TARGETS sustained_vm_${_engine} sustained_vm_${_scenario}_bin _sustainedvm_static fs_static)
     endforeach()

@@ -135,6 +135,8 @@ void emit_proc(ASTNode *node, void *payload);
 
 void emit_flow(ASTNode *node, void *payload);
 void emit_expression(ASTNode *node, void *payload);
+int is_interface_member_call(ASTNode *node);
+int is_interface_factory_call(ASTNode *node);
 int is_constant(ASTNode* node);
 char* format_constant(ValueType type, ASTNode* node);
 char* type_to_prefix(ValueType value_type);

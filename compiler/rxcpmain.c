@@ -639,7 +639,7 @@ int rxcp_driver_main(int argc, char *argv[], const RxcpFrontend *frontend) {
                 RX_PANIC_OOM("malloc rxc binary import locations",
                              combined_import_locations_size, import_locations);
             }
-            sprintf(combined_import_locations, "%s;%s", user_import_locations, exe_path);
+            snprintf(combined_import_locations, combined_import_locations_size, "%s;%s", user_import_locations, exe_path);
             free(user_import_locations);
             import_locations = combined_import_locations;
         } else {
@@ -649,7 +649,7 @@ int rxcp_driver_main(int argc, char *argv[], const RxcpFrontend *frontend) {
                 RX_PANIC_OOM("malloc rxc binary import locations",
                              combined_import_locations_size, exe_path);
             }
-            sprintf(combined_import_locations, "%s", exe_path);
+            snprintf(combined_import_locations, combined_import_locations_size, "%s", exe_path);
             import_locations = combined_import_locations;
         }
         free(exe_path);
