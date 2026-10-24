@@ -275,6 +275,9 @@ owned by its private root. The same six-slot ordinary policy covers
 `binary_global_import_types`, `classic_frontend_parity` and both
 `sustained_vm_levell_*` engine cells: their mutable outputs and ownership counters
 are private to each invocation. Both sustained engine sequences remain intact.
+The two `levelc_trace_values_*` modes and `rxlang_lexical_reuse_cli` also reserve
+six ordinary slots for their private outputs. `rxlang_bootstrap_build_order`
+reserves eight for its existing parallel stand-in build in a private root.
 BIF consumers retain one slot. Expression/BIF family
 locks prevent same-root consumers from launching together only to block on the
 interprocess owner lock. Instrumented routes retain their original whole-pool

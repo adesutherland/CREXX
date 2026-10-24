@@ -9336,6 +9336,11 @@ foreach(_trace_mode IN ITEMS opt noopt)
     set_tests_properties(levelc_trace_values_${_trace_mode} PROPERTIES
             LABELS "compiler;levelc" RUN_SERIAL TRUE TIMEOUT 240
             CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxvm;library;classlib;rxfnsc")
+    if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+        # Mode-specific outputs; reserve ordinary nested-tool admission slots.
+        set_tests_properties(levelc_trace_values_${_trace_mode} PROPERTIES
+                RUN_SERIAL FALSE PROCESSORS 6)
+    endif()
 endforeach()
 add_levelc_invalid_compile_test(levelc_trace_scan_unsupported
         rexx_src/levelc_trace_scan_unsupported.rexx "RXC-LC-24.1")

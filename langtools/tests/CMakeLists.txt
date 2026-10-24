@@ -694,6 +694,10 @@ add_test(NAME rxlang_lexical_reuse_cli COMMAND ${Python3_EXECUTABLE}
   --cmake "${CMAKE_COMMAND}" --service-rxas "${_reuse}/llgenerate.rxas")
 set_tests_properties(rxlang_lexical_reuse_cli PROPERTIES
   PASS_REGULAR_EXPRESSION "LEXICAL_REUSE_CLI[|]commands=.*[|]failures=0" RUN_SERIAL TRUE TIMEOUT 1800 LABELS "level-l;essential")
+if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+  # Cache/publication controls own a private temporary root.
+  set_tests_properties(rxlang_lexical_reuse_cli PROPERTIES RUN_SERIAL FALSE PROCESSORS 6)
+endif()
 crexx_register_test_prep_targets(TESTS rxlang_lexical_reuse_cli TARGETS rxlang levell_lexical_service)
 
 # Bounded persistent-VM measurement targets; register after isolated Debug timing.

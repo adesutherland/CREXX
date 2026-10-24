@@ -181,6 +181,10 @@ if(UNIX AND NOT CREXX_LEVEL_L_STANDALONE)
     set_tests_properties(rxlang_bootstrap_build_order PROPERTIES
       PASS_REGULAR_EXPRESSION "LEVEL_L_BUILD_ORDER[|]PASS"
       RUN_SERIAL TRUE TIMEOUT 600 LABELS "level-l;cmake;optimizer-parity;comprehensive")
+    if(NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+      # Private stand-in build; account for its existing --parallel 8 workload.
+      set_tests_properties(rxlang_bootstrap_build_order PROPERTIES RUN_SERIAL FALSE PROCESSORS 8)
+    endif()
     crexx_schedule_directory_qa_tier_finalization()
   endif()
 endif()
