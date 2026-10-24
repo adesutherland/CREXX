@@ -183,6 +183,29 @@ function(localize_test_plugin_output target)
     )
 endfunction()
 
+# Native fixture compilers need declarations, never sibling fixture bytecode.
+# Keep normal certified exits and track both published inputs and producer targets.
+set(_rxpa_fixture_modules "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin")
+set(_rxpa_base_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/native-base")
+crexx_add_import_root(rxpa_base_fixture_imports
+        DIRECTORY "${_rxpa_base_import_root}" OUTPUT_VARIABLE _rxpa_base_import_files
+        FILES ${_rxpa_fixture_modules} DEPENDS library compiler_exit_bin)
+set(_rxpa_fixture_families dynlink callmethod functions classdecl)
+set(_rxpa_fixture_providers _rxpa_dynlink _rxpa_callmethod _testfuncs_dynamic _rxpa_classdecl)
+set(_rxpa_fixture_provider_names rx_rxpa_dynlink.rxplugin rx_rxpa_callmethod.rxplugin
+        rx_testfuncs_dynamic.rxplugin rx_rxpa_classdecl.rxplugin)
+foreach(_rxpa_import_index RANGE 0 3)
+    list(GET _rxpa_fixture_families ${_rxpa_import_index} _rxpa_import_family)
+    list(GET _rxpa_fixture_providers ${_rxpa_import_index} _rxpa_import_provider)
+    list(GET _rxpa_fixture_provider_names ${_rxpa_import_index} _rxpa_import_name)
+    set(_rxpa_${_rxpa_import_family}_import_root "${CMAKE_CURRENT_BINARY_DIR}/imports/native-${_rxpa_import_family}")
+    crexx_add_import_root(rxpa_${_rxpa_import_family}_fixture_imports
+            DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/imports/native-${_rxpa_import_family}"
+            OUTPUT_VARIABLE _rxpa_${_rxpa_import_family}_import_files
+            FILES ${_rxpa_fixture_modules} "$<TARGET_FILE_DIR:${_rxpa_import_provider}>/${_rxpa_import_name}"
+            DEPENDS library compiler_exit_bin ${_rxpa_import_provider})
+endforeach()
+
 # One normal producer per checked-call fixture. Extra engine coverage is for
 # the changed native frame/window mechanism, not a compiler-mode matrix.
 add_dynamic_plugin_target(_rxpa_invoke_native PROVIDER_ID rxinvoketest rxpa_invocation_native.c)
@@ -567,8 +590,10 @@ crexx_add_rexx_opt_matrix(
         NAME rxpa_callmethod_run
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_callmethod.crexx
         TARGET_GROUP rxpa_callmethod_run
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library _rxpa_callmethod
+        IMPORT_PATHS "${_rxpa_callmethod_import_root}"
+        RXC_FLAGS --no-exe-import
+        DEPENDS library _rxpa_callmethod rxpa_callmethod_fixture_imports
+            ${_rxpa_callmethod_import_files} ${_rxpa_fixture_modules}
         RUNTIME_ARGS rx_rxpa_callmethod ${CMAKE_BINARY_DIR}/bin/library
         TEST_LABELS "interpreter;rxpa;callback;classes;regression"
         REQUIRED_OUTPUT_REGEX
@@ -662,8 +687,10 @@ crexx_add_rexx_opt_matrix(
         NAME rxpa_dynlink_run
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.crexx
         TARGET_GROUP rxpa_dynlink_run
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library _rxpa_dynlink
+        IMPORT_PATHS "${_rxpa_dynlink_import_root}"
+        RXC_FLAGS --no-exe-import
+        DEPENDS library _rxpa_dynlink rxpa_dynlink_fixture_imports
+            ${_rxpa_dynlink_import_files} ${_rxpa_fixture_modules}
         RUNTIME_ARGS rx_rxpa_dynlink ${CMAKE_BINARY_DIR}/bin/library
 )
 
@@ -673,8 +700,10 @@ crexx_add_rexx_opt_matrix(
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.crexx
         TARGET_GROUP rxpa_staticlink_run
         COMPILER_TARGET rxc_staticlink
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library compiler_exit_bin
+        IMPORT_PATHS "${_rxpa_base_import_root}"
+        RXC_FLAGS --no-exe-import
+        DEPENDS library compiler_exit_bin rxpa_base_fixture_imports
+            ${_rxpa_base_import_files} ${_rxpa_fixture_modules}
         RUNNER testvm
         RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
 )
@@ -712,25 +741,25 @@ foreach(_mode IN ITEMS noopt opt)
 
     add_test(
             NAME rxpa_dynlink_compile_${_mode}
-            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_dynlink_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink
+            COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_rxpa_dynlink_import_root}" ${_mode_flag} -o rxpa_dynlink_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     add_test(
             NAME rxpa_staticlink_compile_${_mode}
-            COMMAND rxc_staticlink -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_staticlink_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink
+            COMMAND rxc_staticlink --no-exe-import -i "${_rxpa_base_import_root}" ${_mode_flag} -o rxpa_staticlink_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     add_test(
             NAME rxpa_classdecl_dynamic_compile_${_mode}
-            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_dynamic_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.crexx
+            COMMAND $<TARGET_FILE:rxc> --no-exe-import -i "${_rxpa_classdecl_import_root}" ${_mode_flag} -o rxpa_classdecl_dynamic_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.crexx
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     add_test(
             NAME rxpa_classdecl_static_compile_${_mode}
-            COMMAND $<TARGET_FILE:rxc_classdecl_static> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_static_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.crexx
+            COMMAND $<TARGET_FILE:rxc_classdecl_static> --no-exe-import -i "${_rxpa_base_import_root}" ${_mode_flag} -o rxpa_classdecl_static_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.crexx
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endforeach()
@@ -791,8 +820,10 @@ crexx_add_rexx_opt_matrix(
         NAME rxpa_callmethod_static_run
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_callmethod.crexx
         TARGET_GROUP rxpa_callmethod_static_run
-        IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-        DEPENDS library funcvm _rxpa_callmethod
+        IMPORT_PATHS "${_rxpa_callmethod_import_root}"
+        RXC_FLAGS --no-exe-import
+        DEPENDS library funcvm _rxpa_callmethod rxpa_callmethod_fixture_imports
+            ${_rxpa_callmethod_import_files} ${_rxpa_fixture_modules}
         RUNNER funcvm
         RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
         TEST_LABELS "interpreter;rxpa;callback;classes;static;regression"
@@ -842,8 +873,10 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             NAME rxpa_${_rexxtest}_dynamic
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
             TARGET_GROUP rxpa_${_rexxtest}_dynamic
-            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-            DEPENDS library funcvm _testfuncs_dynamic
+            IMPORT_PATHS "${_rxpa_functions_import_root}"
+            RXC_FLAGS --no-exe-import
+            DEPENDS library funcvm _testfuncs_dynamic rxpa_functions_fixture_imports
+                ${_rxpa_functions_import_files} ${_rxpa_fixture_modules}
             RUNTIME_ARGS rx_testfuncs_dynamic ${CMAKE_BINARY_DIR}/bin/library
             ${_runtime_expectations}
     )
@@ -860,8 +893,10 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             NAME rxpa_${_rexxtest}_static
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_rexxtest_source}
             TARGET_GROUP rxpa_${_rexxtest}_static
-            IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
-            DEPENDS library funcvm _testfuncs_dynamic
+            IMPORT_PATHS "${_rxpa_functions_import_root}"
+            RXC_FLAGS --no-exe-import
+            DEPENDS library funcvm _testfuncs_dynamic rxpa_functions_fixture_imports
+                ${_rxpa_functions_import_files} ${_rxpa_fixture_modules}
             RUNNER funcvm
             RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
             ${_runtime_expectations}
@@ -929,10 +964,10 @@ crexx_register_test_prep_targets(TESTS rxpa_process_reentrant_manifest rxpa_dyna
 crexx_register_test_prep_targets(TESTS rxpa_invalid_manifest_is_legacy
     TARGETS test_rxpa_concurrency _rxpa_invalid_manifest)
 foreach(_qa_mode noopt opt)
-    crexx_register_test_prep_targets(TESTS rxpa_dynlink_compile_${_qa_mode} TARGETS rxc _rxpa_dynlink library)
-    crexx_register_test_prep_targets(TESTS rxpa_classdecl_dynamic_compile_${_qa_mode} TARGETS rxc _rxpa_classdecl library)
-    crexx_register_test_prep_targets(TESTS rxpa_staticlink_compile_${_qa_mode} TARGETS rxc_staticlink library)
-    crexx_register_test_prep_targets(TESTS rxpa_classdecl_static_compile_${_qa_mode} TARGETS rxc_classdecl_static library)
+    crexx_register_test_prep_targets(TESTS rxpa_dynlink_compile_${_qa_mode} TARGETS rxc _rxpa_dynlink library rxpa_dynlink_fixture_imports)
+    crexx_register_test_prep_targets(TESTS rxpa_classdecl_dynamic_compile_${_qa_mode} TARGETS rxc _rxpa_classdecl library rxpa_classdecl_fixture_imports)
+    crexx_register_test_prep_targets(TESTS rxpa_staticlink_compile_${_qa_mode} TARGETS rxc_staticlink library rxpa_base_fixture_imports)
+    crexx_register_test_prep_targets(TESTS rxpa_classdecl_static_compile_${_qa_mode} TARGETS rxc_classdecl_static library rxpa_base_fixture_imports)
 endforeach()
 
 crexx_finalize_directory_qa_tiers()
