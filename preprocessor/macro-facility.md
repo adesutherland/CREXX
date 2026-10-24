@@ -248,6 +248,27 @@ generated call may use an explicit `##` prefix as well, for example
 a guard for `.mcall` nesting specifically; it does not classify other ways of
 generating RXPP source as nested `.mcall` calls.
 
+### `.mnote`
+
+`.mnote` evaluates a RexxScript expression and emits a generated CREXX comment
+without invoking another macro:
+
+```rexx
+##MACRO BUILD_TABLE
+    .mnote "Using compatibility implementation"
+    .gen say "generated source"
+##MEND
+```
+
+RXPP writes the note using the currently executing macro name:
+
+```text
+/* MNOTE ##BUILD_TABLE: Using compatibility implementation */
+```
+
+Nested scripted macros use the name of the macro that issued the note. The
+note does not change the macro result or invoke another macro.
+
 ### Factorial Macro
 
 The following macro calculates a factorial during macro expansion and generates the corresponding CREXX statements:

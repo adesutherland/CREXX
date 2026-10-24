@@ -520,6 +520,21 @@ the external modules instead of producing a linked member.
 ### `##SET` / `##UNSET`
 Set compile-time variables.
 
+### `##INFO` / `##WARN` / `##ERROR`
+Emit compile-time diagnostics. INFO and WARN continue preprocessing; ERROR
+stops preprocessing with status 8. The directives are not copied to generated
+source.
+
+```rexx
+##INFO "Using compatibility implementation"
+##WARN "This configuration is deprecated"
+##ERROR "This configuration is unsupported"
+```
+
+The corresponding output prefixes are `++RXPP-INFO`, `++RXPP-WARN`, and
+`++RXPP-ERROR`. Failed `##ASSERT` directives use
+`++RXPP-DIAG RXPP_ASSERT_FAILED`.
+
 RXPP also supplies these built-in compile-time variables. Use braces to
 expand them in source, macros, or `##DATA` content:
 

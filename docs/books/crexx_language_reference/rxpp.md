@@ -309,6 +309,24 @@ not already begin with it.
 while `.mcall` emits RXPP source for another preprocessing step. The explicit
 form `.mcall ##square 14` is also accepted.
 
+### `.mnote` inside a scripted macro
+
+`.mnote` evaluates a RexxScript expression and emits a generated CREXX comment
+without invoking another macro:
+
+```rexx
+##MACRO BUILD_TABLE
+    .mnote "Using compatibility implementation"
+    .gen say "generated source"
+##MEND
+```
+
+The generated comment is prefixed with the currently executing macro name:
+
+```text
+/* MNOTE ##BUILD_TABLE: Using compatibility implementation */
+```
+
 ## 🆕 Keyword Parameters in Macros
 
 RXPP now supports **keyword parameters** in macro definitions.  
@@ -1068,6 +1086,23 @@ CREXX. Built-in variables such as `platform`, `sourcefile`, `outputfile`, and
 `rxpp_version` are available automatically. User variables must be established
 with `##SET`; because `##IF` tests existence, use `##UNSET` rather than
 `##SET name 0` to make a variable absent.
+
+### `##INFO` / `##WARN` / `##ERROR`
+
+Emit an explicit compile-time diagnostic. `##INFO` and `##WARN` continue
+preprocessing; `##ERROR` terminates preprocessing with status 8. None of these
+directives appears in generated CREXX.
+
+```rexx
+##INFO "Using compatibility implementation"
+##WARN "This configuration is deprecated"
+##ERROR "This configuration is unsupported"
+```
+
+Messages use the RXPP diagnostic catalog and may use single or double quotes.
+INFO, WARN, and ERROR output uses the `++RXPP-INFO`, `++RXPP-WARN`, and
+`++RXPP-ERROR` prefixes. Failed assertions use
+`++RXPP-DIAG RXPP_ASSERT_FAILED`.
 
 ### `##INCLUDE file`
 

@@ -1037,6 +1037,23 @@ Built-in variables are initialized by RXPP; user variables are created with
 `##SET`. Since `##IF` tests existence, use `##UNSET` rather than assigning a
 false-looking value when a variable should be absent.
 
+### `##INFO` / `##WARN` / `##ERROR`
+
+Emit an explicit compile-time diagnostic. `##INFO` and `##WARN` allow
+preprocessing to continue; `##ERROR` stops preprocessing with status 8. The
+directives are always omitted from generated CREXX.
+
+```rexx
+##INFO "Using compatibility implementation"
+##WARN "This configuration is deprecated"
+##ERROR "This configuration is unsupported"
+```
+
+Messages are rendered through the RXPP diagnostic catalog and may be quoted
+with either single or double quotes. Their output prefixes are `++RXPP-INFO`,
+`++RXPP-WARN`, and `++RXPP-ERROR`; failed assertions use
+`++RXPP-DIAG RXPP_ASSERT_FAILED`.
+
 ### `##INCLUDE file`
 
 Includes the contents of an external file into the source at the point of invocation. Nested includes are supported. By default, the file is resolved relative to the current working directory. If the file resides elsewhere, a fully qualified path must be provided. Quotation marks around the filename are not required.

@@ -155,3 +155,84 @@ will never enter generated CREXX.
 - Result: 100% passed (4/4, including `sanitizer_fixture_integrity`) on
   2026-10-24; this verifies ASSERT, IF/IFN value comparisons, UNSET behavior,
   and flow/stats integration.
+
+## Follow-up: compile-time diagnostic directives (2026-10-24)
+
+### Vision and intended outcomes
+
+Give RXPP source authors explicit informational, warning, and fatal diagnostic
+directives for documenting or rejecting selected compile-time configurations.
+`##INFO` and `##WARN` continue preprocessing, while `##ERROR` terminates it.
+All three use the existing catalog-based diagnostic path, preserve source
+locations, and are omitted from generated CREXX.
+
+### Acceptance criteria
+
+- **AC-19**: [x] `##INFO "message"` emits an informational RXPP diagnostic and
+  preprocessing continues.
+- **AC-20**: [x] `##WARN "message"` emits a warning RXPP diagnostic and
+  preprocessing continues.
+- **AC-21**: [x] `##ERROR "message"` emits an error RXPP diagnostic and
+  preprocessing terminates with the established failure status.
+- **AC-22**: [x] Diagnostic directives are suppressed from generated CREXX and
+  have focused success/failure regression coverage.
+- **AC-23**: [x] RXPP references and all supported diagnostic catalogs document
+  `##INFO`, `##WARN`, and `##ERROR`.
+- **AC-24**: [ ] Explicit RXPP diagnostics use recognizable severity-specific
+  prefixes, with failed ASSERT diagnostics using `++RXPP-DIAG` and retaining
+  their stable diagnostic code.
+
+### Implementation steps
+
+- **STEP-13**: [x] Add a shared diagnostic-directive handler and pass-3
+  dispatch, including reserved-word registration. Serves AC-19 through AC-22.
+- **STEP-14**: [x] Add catalog entries, focused test coverage, and update RXPP
+  documentation. Serves AC-19 through AC-23.
+- **STEP-15**: [ ] Apply the agreed diagnostic output prefixes and verify them
+  in focused tests. Serves AC-24.
+
+### Current evidence
+
+- Scope and semantics approved by the user; implementation and validation open.
+- RXPP build completed successfully before validation.
+- Focused command: `ctest --test-dir cmake-build-release --parallel 1 -R
+  "^(rxpp_diagnostic_directives|rxpp_unset|rxpp_assert|rxpp_diagnostics|rxpp_flow_stats)$"
+  --output-on-failure`.
+- Result: 100% passed (6/6, including `sanitizer_fixture_integrity`) on
+  2026-10-24. This verifies INFO/WARN continuation, ERROR termination,
+  suppression from generated CREXX, localized diagnostic integration, and the
+  previously implemented ASSERT/UNSET/flow/stats behavior.
+- The diagnostic-prefix renderer/catalog cleanup was applied after that test
+  run; AC-24 remains open until the user reruns the focused validation.
+
+## Follow-up: scripted-macro `.mnote` (2026-10-24)
+
+### Vision and intended outcomes
+
+Allow RexxScript-backed RXPP macros to report compile-time notes as readable
+comments in generated CREXX. `.mnote` will evaluate one RexxScript expression
+and emit a valid generated comment `/* MNOTE ##<current-macro>: <message> */`. It will work alongside
+`.mcall`, preserve nested macro context by using the currently executing macro
+name, and leave macro return status and generated source unchanged.
+
+### Acceptance criteria
+
+- **AC-25**: [ ] RexxScript accepts `.mnote expression` at the same statement
+  level as `.mcall` and evaluates the expression using the current macro state.
+- **AC-26**: [ ] RXPP emits `/* MNOTE ##<macro>: <message> */` for each executed note,
+  using the currently executing macro name, including nested scripted macros.
+- **AC-27**: [ ] `.mnote` produces only its generated comment, no macro call or
+  status change, and missing expressions fail consistently with other output forms.
+- **AC-28**: [ ] Focused regression coverage and RexxScript/RXPP documentation
+  describe the new statement and its output behavior.
+
+### Implementation steps
+
+- **STEP-16**: [ ] Add a dedicated RexxScript note record and evaluator
+  statement beside `.mcall`, without treating it as generated output.
+- **STEP-17**: [ ] Consume note records in RXPP's scripted-macro expansion and
+  add focused tests/documentation. Serves AC-25 through AC-28.
+
+### Current evidence
+
+- Design approved by the user; implementation and validation open.

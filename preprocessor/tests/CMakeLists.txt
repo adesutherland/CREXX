@@ -88,6 +88,17 @@ add_test(NAME rxpp_script_macro_exact_match
 set_tests_properties(rxpp_script_macro_exact_match PROPERTIES
         LABELS "preprocessor;macros;regression")
 
+add_test(NAME rxpp_mnote
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/rxpp_mnote.rxpp
+             -DOUTPUT_FILE=${CMAKE_CURRENT_BINARY_DIR}/rxpp_mnote.out.crexx
+             -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_mnote.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_mnote PROPERTIES
+        LABELS "preprocessor;rexxscript;macros;regression")
+
 add_test(NAME rxpp_variadic_forwarding
          COMMAND ${CMAKE_COMMAND}
              -DRXPP_BIN=$<TARGET_FILE:rxpp>
@@ -118,6 +129,18 @@ add_test(NAME rxpp_assert
              -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_assert.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpp_assert PROPERTIES
+        LABELS "preprocessor;directives;diagnostics;regression")
+
+add_test(NAME rxpp_diagnostic_directives
+         COMMAND ${CMAKE_COMMAND}
+             -DRXPP_BIN=$<TARGET_FILE:rxpp>
+             -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_diagnostic_directives
+             -DOK_INPUT=${CMAKE_CURRENT_SOURCE_DIR}/rxpp_diagnostic_directives.rxpp
+             -DERROR_INPUT=${CMAKE_CURRENT_SOURCE_DIR}/rxpp_diagnostic_error.rxpp
+             -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+             -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_diagnostic_directives.cmake
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpp_diagnostic_directives PROPERTIES
         LABELS "preprocessor;directives;diagnostics;regression")
 
 add_test(NAME rxpp_loadmacro

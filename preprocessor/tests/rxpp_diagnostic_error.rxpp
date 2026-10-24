@@ -1,0 +1,5 @@
+##CFLAG nosrcmap
+##WARN "This configuration might be not correct"
+##INFO "This configuration is not recommended"
+##ERROR "This configuration is unsupported"
+say "must not be generated"

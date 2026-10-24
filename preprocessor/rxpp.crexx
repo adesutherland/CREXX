@@ -1520,7 +1520,21 @@ return rxpp_srcmap_span(source_base+relative_col,length(value),value)
  */
 rxpp_diag: procedure
   arg severity=.string,code=.string,name1='',value1='',name2='',value2='',name3='',value3=''
-  say rxpp_diag_text(code,name1,value1,name2,value2,name3,value3)
+  names=.string[]
+  values=.string[]
+  if name1\='' then do
+     names[names[0]+1]=name1
+     values[values[0]+1]=value1''
+  end
+  if name2\='' then do
+     names[names[0]+1]=name2
+     values[values[0]+1]=value2''
+  end
+  if name3\='' then do
+     names[names[0]+1]=name3
+     values[values[0]+1]=value3''
+  end
+  say rxpp_diag_render(code,names,values,severity)
 return
 
 rxpp_diag_text: procedure=.string
@@ -1542,14 +1556,14 @@ rxpp_diag_text: procedure=.string
 return rxpp_diag_render(code,names,values)
 
 rxpp_diag_render: procedure=.string
-  arg code=.string,names=.string[],values=.string[]
-  if rxpp_diag_mode()='raw' then return rxpp_diag_render_raw(code,names,values)
+  arg code=.string,names=.string[],values=.string[],severity=''
+  if rxpp_diag_mode()='raw' then return rxpp_diag_render_raw(code,names,values,severity)
 
   locale=rxpp_diag_effective_locale()
   template=rxpp_diag_cat_lookup(locale,code)
   if template='' & locale\='en_GB' then template=rxpp_diag_cat_lookup('en_GB',code)
-  if template='' then return rxpp_diag_render_raw(code,names,values)
-return rxpp_diag_render_template(code,template,names,values)
+  if template='' then return rxpp_diag_render_raw(code,names,values,severity)
+return rxpp_diag_render_template(code,template,names,values,severity)
 
 rxpp_diag_mode: procedure=.string
   mode=lower(strip(getenv('CREXX_DIAGNOSTICS')))
@@ -1584,8 +1598,9 @@ rxpp_diag_normalize_locale: procedure=.string
 return locale
 
 rxpp_diag_render_template: procedure=.string
-  arg code=.string,template=.string,names=.string[],values=.string[]
-  rendered=code': '
+  arg code=.string,template=.string,names=.string[],values=.string[],severity=''
+  rendered=rxpp_diag_prefix(code,severity)
+  if rendered='' then rendered=code': '
   cursor=1
   do forever
      open=pos('{',template,cursor)
@@ -1616,12 +1631,29 @@ rxpp_diag_render_template: procedure=.string
 return rendered
 
 rxpp_diag_render_raw: procedure=.string
-  arg code=.string,names=.string[],values=.string[]
-  rendered=code
+  arg code=.string,names=.string[],values=.string[],severity=''
+  rendered=rxpp_diag_raw_prefix(code,severity)
+  if rendered='' then rendered=code
   do i=1 to names[0]
      rendered=rendered' 'names[i]'="'rxpp_diag_escape(values[i])'"'
   end
 return rendered
+
+rxpp_diag_prefix: procedure=.string
+  arg code=.string,severity=''
+  if code='RXPP_INFO' then return '++RXPP-INFO: '
+  if code='RXPP_WARNING' then return '++RXPP-WARN: '
+  if code='RXPP_ERROR' then return '++RXPP-ERROR: '
+  if code='RXPP_ASSERT_FAILED' then return '++RXPP-DIAG RXPP_ASSERT_FAILED: '
+return ''
+
+rxpp_diag_raw_prefix: procedure=.string
+  arg code=.string,severity=''
+  if code='RXPP_INFO' then return '++RXPP-INFO RXPP_INFO: '
+  if code='RXPP_WARNING' then return '++RXPP-WARN RXPP_WARNING: '
+  if code='RXPP_ERROR' then return '++RXPP-ERROR RXPP_ERROR: '
+  if code='RXPP_ASSERT_FAILED' then return '++RXPP-DIAG RXPP_ASSERT_FAILED: '
+return ''
 
 rxpp_diag_escape: procedure=.string
   arg text=.string
@@ -1777,6 +1809,33 @@ rxpp_condition_eval: procedure=.int
   if defined then actual=getvar(name)
   if operator='==' then return defined & actual=expected
 return \defined | actual\=expected
+
+/* ------------------------------------------------------------------
+ * cmd_diagnostic: Emits an explicit compile-time informational, warning, or
+ * error diagnostic.  All three directives are suppressed from generated
+ * source; only ##ERROR terminates preprocessing.
+ * ------------------------------------------------------------------
+ */
+cmd_diagnostic: procedure
+  arg line_no=.int,incl=.string
+  command=.string
+  message=.string
+  first=.string
+  last=.string
+  command=upper(word(incl,1))
+  message=strip(substr(incl,length(word(incl,1))+1))
+  if length(message)>=2 then do
+     first=left(message,1)
+     last=right(message,1)
+     if (first='"' & last='"') | (first="'" & last="'") then message=substr(message,2,length(message)-2)
+  end
+  if command='##INFO' then call rxpp_diag 'info','RXPP_INFO','message',message
+  else if command='##WARN' then call rxpp_diag 'warning','RXPP_WARNING','message',message
+  else do
+     call rxpp_diag 'error','RXPP_ERROR','message',message
+     exit 8
+  end
+return
 
 /* ------------------------------------------------------------------
  * CMD_assert: Validates compile-time RXPP variables.  Bare names test
@@ -1994,7 +2053,7 @@ CMD_dalias: procedure
       end
 
       reserved = ' ADDRESS ARG BY CALL DO ELSE END EXIT IF IMPORT INTERPRET ITERATE LEAVE NOP NUMERIC OPTIONS OTHERWISE PARSE PROCEDURE PULL PUSH RETURN SAY SELECT SIGNAL THEN TRACE WHEN WHILE '
-      rxpp_reserved = ' ARRAY ASSERT BUILDDIR CFLAG COPYBLOCK DALIAS DATA DEFINE ELSE EMIT END EXTERNAL FOR FORTRAN GLOBAL IF IFN INCLUDE INPUT LIBRARY LINK LOADMACRO MACRO NORUN PROGRAM REXXSCRIPT RULE RXBUILD SET SYS USE UNSET '
+      rxpp_reserved = ' ARRAY ASSERT BUILDDIR CFLAG COPYBLOCK DALIAS DATA DEFINE ELSE EMIT END ERROR EXTERNAL FOR FORTRAN GLOBAL IF IFN INCLUDE INFO INPUT LIBRARY LINK LOADMACRO MACRO NORUN PROGRAM REXXSCRIPT RULE RXBUILD SET SYS USE UNSET WARN '
       if pos(' 'alias' ',reserved)>0 | pos(' 'alias' ',rxpp_reserved)>0 then do
          say 'RXPP error: invalid DALIAS name' alias '- reserved keyword'
          exit 8
@@ -2562,6 +2621,10 @@ expandLine:  procedure=.string
      call cmd_assert 9999,line
      return ''
   end
+  if ucmd = '##INFO' | ucmd = '##WARN' | ucmd = '##ERROR' then do
+     call cmd_diagnostic 9999,line
+     return ''
+  end
   ## if cmt='##' then return line
   ## if cmt='/*' then return line
   ## if pos('(',line,1)=0 then return line   ## if there is no "(" there can't be a macro call
@@ -2744,6 +2807,14 @@ newMacros:  procedure=.string
         end
         iterate
      end
+     /* RexxScript .MNOTE records use the private @.mnote@ marker.  Consume
+      * the record here before ordinary generated-line insertion so it can
+      * never become invalid CREXX source. */
+     if pos('@.mnote@', testline) > 0 then do
+        /* Turn the private record into valid generated CREXX. */
+        out[kk] = rxpp_mnote_line(line,macname)
+        iterate
+     end
      if left(testline, 7) = '@.main@' then do
         main_insert = main_insert + 1
         main_pos = pos('@.main@', line)
@@ -2765,6 +2836,11 @@ newMacros:  procedure=.string
   inew=linnum+1
   source_len=length(original_call)
   do kk=.int(1) to out[0]
+     /* Keep this check defensive: nested/script output can reach the
+      * insertion pass through a path that did not visit the first loop. */
+     if pos('@.mnote@',strip(out[kk],'L')) > 0 then
+        out[kk] = rxpp_mnote_line(out[kk],macname)
+     if out[kk] = '' then iterate
      if pos('@.tail@',out[kk])>0 then iterate
      if pos('@.section@',out[kk])>0 then iterate
      /*
@@ -2787,6 +2863,18 @@ newMacros:  procedure=.string
   end
   if suppress_call_comment then return ''
 return source[linnum]
+
+rxpp_mnote_line: procedure=.string
+  arg line=.string,macname=.string
+  p=pos('@.mnote@',line)
+  note=strip(substr(line,p+8))
+  if length(note)>=2 then do
+     if (left(note,1)='"' & right(note,1)='"') | (left(note,1)="'" & right(note,1)="'") then
+        note=substr(note,2,length(note)-2)
+  end
+  display_name=macname
+  if left(display_name,2)='##' then display_name=substr(display_name,3)
+return '/* MNOTE ##'upper(display_name)': 'note' */'
 
 add_section: procedure
    arg line=.string
