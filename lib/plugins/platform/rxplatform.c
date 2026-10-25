@@ -517,7 +517,7 @@ PROCEDURE(input)
         if (!pipe)
             RETURNSIGNAL(SIGNAL_FAILURE, "RXPLATFORM.INPUT dialog failed")
         response[0] = '\0';
-        (void)fgets(response, sizeof(response), pipe);
+        if (!fgets(response, sizeof(response), pipe)) response[0] = '\0';
         (void)pclose(pipe);
         response[strcspn(response, "\r\n")] = '\0';
         RETURNSTRX(response);
@@ -556,7 +556,13 @@ PROCEDURE(file)
 #else
     RETURNSIGNAL(SIGNAL_FAILURE, "RXPLATFORM.FILE is not implemented on this platform")
 #endif
-    pipe = popen(command, "r"); if (!pipe) RETURNSTRX(""); (void)fgets(result, sizeof(result), pipe); (void)pclose(pipe); result[strcspn(result, "\r\n")] = '\0'; RETURNSTRX(result); ENDPROC
+    pipe = popen(command, "r");
+    if (!pipe) RETURNSTRX("");
+    if (!fgets(result, sizeof(result), pipe)) result[0] = '\0';
+    (void)pclose(pipe);
+    result[strcspn(result, "\r\n")] = '\0';
+    RETURNSTRX(result);
+    ENDPROC
 }
 
 PROCEDURE(directory)
@@ -606,7 +612,7 @@ PROCEDURE(directory)
 #endif
     pipe = popen(command, "r");
     if (!pipe) RETURNSTRX("");
-    (void)fgets(result, sizeof(result), pipe);
+    if (!fgets(result, sizeof(result), pipe)) result[0] = '\0';
     (void)pclose(pipe);
     result[strcspn(result, "\r\n")] = '\0';
     RETURNSTRX(result);
