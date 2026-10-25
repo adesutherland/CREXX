@@ -29,15 +29,26 @@ import rxfnsb
 /**
  * A dynamic, ordered collection backed by an object array.
  *
- * This class stores object values and deliberately does not provide
- * equality-based helpers such as contains/indexOf. Those need an object
- * equality contract before they can be specified cleanly.
+ * Intersection uses an explicit comparator, then the receiver's stored
+ * comparator, then each receiver element's ObjectEquatable contract.
+ * No string or object-identity equality is assumed.
  */
 ArrayList: class implements .ObjectIterable
 size_ = .int
 val = .object[]
+comparator_ = .Comparator
 
+  /**
+   * Create an empty list, optionally defining its object equality policy.
+   * A comparator result of zero means equivalent. Without a comparator,
+   * intersection requires receiver elements implementing ObjectEquatable.
+   *
+   * @param comparator Optional comparator; an uninitialized value means absent.
+   * @return .ArrayList Empty list.
+   */
   *: factory
+    arg ?comparator = .Comparator
+    comparator_ = comparator
     size_ = 0
     return
 
@@ -166,6 +177,52 @@ val = .object[]
     item = val.index
     size_ = objectarraydelete(val, index, 1)
     return item
+
+  /**
+   * Return receiver elements having an equivalent element in other.
+   *
+   * Equality uses the supplied initialized comparator, otherwise this list's
+   * stored comparator, otherwise the receiver element's ObjectEquatable
+   * equivalent(other) method. The other list's comparator is not used.
+   * Receiver order and duplicates are preserved; each occurrence is retained
+   * once if any match exists. Inputs are unchanged and elements are not cloned.
+   * The result retains the effective comparator for subsequent intersections.
+   * Empty intersections require no element comparisons or equality contract.
+   * Takes O(n * m) comparisons and O(1) auxiliary space excluding the result.
+   *
+   * @param other List to test for equivalent elements.
+   * @param comparator Optional comparator overriding the stored policy.
+   * @return .ArrayList New list containing matching receiver elements.
+   * @signal INVALID_ARGUMENTS A comparison is needed but the receiver element
+   *         has neither an effective comparator nor ObjectEquatable.
+   */
+  intersect: method = .ArrayList
+    arg other = .ArrayList, ?comparator = .Comparator
+    effective = comparator
+    if initialized(effective) = 0 then effective = comparator_
+    result = .ArrayList(effective)
+    other_size = other.size()
+    if size_ = 0 | other_size = 0 then return result
+    use_comparator = initialized(effective)
+    equatable = .ObjectEquatable
+    matched = .boolean
+    do i = 1 to size_
+      item = val[i]
+      if use_comparator = 0 then do
+        if item is .ObjectEquatable then equatable = item as .ObjectEquatable
+        else signal invalid_arguments "ArrayList.intersect requires a comparator or ObjectEquatable receiver elements"
+      end
+      do j = 1 to other_size
+        candidate = other.get(j)
+        if use_comparator then matched = effective.compare(item, candidate) = 0
+        else matched = equatable.equivalent(candidate)
+        if matched then do
+          call result.add(item)
+          leave
+        end
+      end
+    end
+    return result
 
   /**
    * Returns the number of elements currently stored in the list.

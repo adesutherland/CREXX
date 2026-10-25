@@ -1,0 +1,94 @@
+options levelb comments_dash
+import data
+import rexx
+
+-- Comparator equality matches separately constructed Rexx objects by value.
+-- The lists do not need to be sorted; the result keeps the receiver's order.
+comparator = .RexxComparator()
+left = .ArrayList(comparator)
+right = .ArrayList()
+
+call left.add(.rexx("pear") as .object)
+call left.add(.rexx("apple") as .object)
+call left.add(.rexx("banana") as .object)
+call left.add(.rexx("apple") as .object)
+call left.add(.rexx("cherry") as .object)
+
+call right.add(.rexx("apple") as .object)
+call right.add(.rexx("pear") as .object)
+call right.add(.rexx("apple") as .object)
+
+result = left.intersect(right)
+say "Left:        " list_text(left)
+say "Right:       " list_text(right)
+say "Intersection:" list_text(result)
+
+failures = 0
+failures = failures + check_text("stored comparator", list_text(result), "pear|apple|apple")
+failures = failures + check_int("result size", result.size(), 3)
+failures = failures + check_text("left unchanged", list_text(left), "pear|apple|banana|apple|cherry")
+failures = failures + check_text("right unchanged", list_text(right), "apple|pear|apple")
+
+-- The no-argument factory still works: supply the comparator to intersect().
+plain = .ArrayList()
+call plain.add(.rexx("apple") as .object)
+call plain.add(.rexx("plum") as .object)
+explicit = plain.intersect(right, comparator)
+failures = failures + check_text("explicit comparator", list_text(explicit), "apple")
+
+-- A result inherits the comparator, so it supports further intersections.
+chained = result.intersect(right)
+failures = failures + check_text("inherited comparator", list_text(chained), "pear|apple|apple")
+
+-- Self-intersection preserves every receiver occurrence.
+self_result = left.intersect(left)
+failures = failures + check_text("self intersection", list_text(self_result), list_text(left))
+
+empty = .ArrayList()
+empty_result = left.intersect(empty)
+failures = failures + check_int("empty right", empty_result.size(), 0)
+empty_left_result = empty.intersect(left, comparator)
+failures = failures + check_int("empty left", empty_left_result.size(), 0)
+
+disjoint = .ArrayList()
+call disjoint.add(.rexx("orange") as .object)
+no_matches = left.intersect(disjoint)
+failures = failures + check_int("disjoint", no_matches.size(), 0)
+
+-- Modifying the result's membership does not change either input list.
+call result.clear()
+failures = failures + check_int("left size after result clear", left.size(), 5)
+failures = failures + check_int("right size after result clear", right.size(), 3)
+
+if failures <> 0 then do
+  say "FAIL: ArrayList Rexx intersection:" failures
+  exit 1
+end
+say "PASS: ArrayList Rexx intersection"
+exit 0
+
+list_text: procedure = .string
+  arg list = .ArrayList
+  text = ""
+  do i = 1 to list.size()
+    item = list.get(i) as .rexx
+    if i > 1 then text = text || "|"
+    text = text || item.stringvalue()
+  end
+  return text
+
+check_text: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual <> expected then do
+    say "FAIL:" label "expected [" || expected || "] got [" || actual || "]"
+    return 1
+  end
+  return 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual <> expected then do
+    say "FAIL:" label "expected" expected "got" actual
+    return 1
+  end
+  return 0
