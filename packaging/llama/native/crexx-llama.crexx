@@ -45,6 +45,7 @@ run: procedure = .int expose root transaction saved_from saved_to published dire
   arg argv = .string[]
   action = 'status'; backend = ''; stage = ''; activate = 0
   info = .string; payload = .string; names = .string[]
+  name_count = .int
   if argv[0] > 0 then action = argv[1]
   if action = '--help' | action = 'help' then do
     say 'crexx-llama status [--root DIR]'
