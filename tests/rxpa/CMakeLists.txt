@@ -94,7 +94,10 @@ add_custom_target(rxparse_cursor_core_artifact DEPENDS "${_parse_core}.rxbin")
 # Private host-failure injection compiles the actual binding source; no public
 # hook, extra provider or alternate cursor implementation enters the product.
 add_executable(test_parse_cursor_native EXCLUDE_FROM_ALL parse_cursor_native.c)
-target_compile_features(test_parse_cursor_native PRIVATE c_std_99)
+target_compile_features(test_parse_cursor_native PRIVATE c_std_11)
+if(MSVC)
+    target_compile_options(test_parse_cursor_native PRIVATE /experimental:c11atomics)
+endif()
 target_include_directories(test_parse_cursor_native PRIVATE
     ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
     ${CMAKE_SOURCE_DIR}/binutils/include ${CMAKE_SOURCE_DIR}/assembler
