@@ -145,6 +145,53 @@ class PackageSigningTests(unittest.TestCase):
                     module('refresh-package-manifests').update(root)
 
 
+class ResolverTests(unittest.TestCase):
+    def test_actual_deep_candidate_resolver(self):
+        workflow = (SCRIPTS.parent / '.github/workflows/deep-build.yml').read_text()
+        step = workflow.split('      - name: Resolve the commit to qualify\n', 1)[1].split('      - name:', 1)[0]
+        script = textwrap.dedent(step.split('        run: |\n', 1)[1])
+        event_sha, develop_sha = '1' * 40, 'a' * 40
+        master = 'refs/heads/master'
+        cases = [('schedule', master, develop_sha, 0, develop_sha),
+                 ('workflow_dispatch', master, develop_sha, 0, develop_sha)]
+        cases += [('workflow_dispatch', ref, develop_sha, 7, event_sha) for ref in
+                  ('refs/heads/develop', 'refs/heads/temp/candidate', 'refs/tags/v1.0.0')]
+        cases += [('workflow_dispatch', master, response, status, None) for response, status in
+                  ((develop_sha, 1), ('', 0), ('null', 0), ('   ', 0), ('not-a-commit', 0))]
+        with tempfile.TemporaryDirectory(prefix='crexx-deep-resolver-') as temp:
+            root = Path(temp) / 'resolver with spaces'; root.mkdir()
+            bindir = root / 'bin'; bindir.mkdir()
+            gh = bindir / 'gh'
+            gh.write_text('#!/bin/bash\nprintf "%s\\n" "$*" >> "$FAKE_CALLS"\n'
+                          'printf "%s\\n" "$FAKE_SHA"\nexit "$FAKE_RC"\n', newline='\n')
+            gh.chmod(0o755)
+            for index, (event, ref, response, status, expected) in enumerate(cases):
+                with self.subTest(event=event, ref=ref, response=response, status=status):
+                    output, summary, calls = [root / f'{name}-{index}' for name in ('output', 'summary', 'calls')]
+                    env = dict(os.environ, PATH=str(bindir) + os.pathsep + os.environ['PATH'],
+                               GITHUB_SHA=event_sha, GITHUB_REF=ref, GITHUB_EVENT_NAME=event,
+                               GITHUB_REPOSITORY='example/CREXX', GITHUB_OUTPUT=str(output),
+                               GITHUB_STEP_SUMMARY=str(summary), FAKE_CALLS=str(calls),
+                               FAKE_SHA=response, FAKE_RC=str(status))
+                    result = subprocess.run(['bash', '-c', script], env=env, capture_output=True,
+                                            text=True, timeout=10)
+                    if expected is None:
+                        self.assertNotEqual(result.returncode, 0)
+                        self.assertFalse(output.exists())
+                        self.assertFalse(summary.exists())
+                        continue
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertEqual(result.stderr, '')
+                    self.assertEqual(output.read_text(), f'target_sha={expected}\n')
+                    self.assertIn(expected, summary.read_text())
+                    self.assertIn(ref, summary.read_text())
+                    if event == 'schedule' or ref == master:
+                        self.assertEqual(calls.read_text().splitlines(), [
+                            'api --method GET repos/example/CREXX/git/ref/heads/develop --jq .object.sha'])
+                    else:
+                        self.assertFalse(calls.exists())
+
+
 class MatrixTests(unittest.TestCase):
     def test_deep_family_concurrency_keeps_independent_retries(self):
         workflow = (SCRIPTS.parent / '.github/workflows/deep-build.yml').read_text()

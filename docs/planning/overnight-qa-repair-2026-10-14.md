@@ -10,6 +10,10 @@ Manual `job_family=all` preserves platform-only comprehensive retries;
 `comprehensive` selects its platform matrix, while `release` and `books`
 require `platform=all`. Family/platform concurrency groups keep independent
 retries from replacing one another; the cancellation policy is unchanged.
+Scheduled runs and manual master dispatches resolve develop from the control
+workflow; other explicit candidate refs retain their event SHA, and the resolved
+candidate/control ref is reported before qualification with invalid resolution
+refused before checkout.
 
 1. **O25-AC01 — todo:** the existing graph audit accepts only existing tracked
    regular checkout inputs with zero-input phony fallback rules that are actual
