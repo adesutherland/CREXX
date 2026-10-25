@@ -1,0 +1,159 @@
+options levelb comments_dash
+import data
+
+failures = 0
+by_name = .NameComparator()
+by_group = .GroupComparator()
+all_equal = .AllComparator()
+a = .Item("a", "x")
+b = .Item("b", "y")
+left = .ArrayList()
+call left.add(a as .object)
+call left.add(b as .object)
+call left.add(a as .object)
+right = .ArrayList(all_equal)
+call right.add(.Item("a", "y") as .object)
+call right.add(.Item("a", "y") as .object)
+-- Fallback ignores the right list's comparator, keeps left duplicates only.
+fallback = left.intersect(right)
+failures = failures + check("fallback size", fallback.size(), 2)
+failures = failures + check_item("fallback first", fallback.get(1), "a", "x")
+failures = failures + check_item("fallback second", fallback.get(2), "a", "x")
+failures = failures + check("left unchanged", left.size(), 3)
+failures = failures + check("right unchanged", right.size(), 2)
+self_result = left.intersect(left)
+failures = failures + check("self intersection", self_result.size(), 3)
+empty = .ArrayList()
+failures = failures + check_empty(left.intersect(empty))
+failures = failures + check_empty(empty.intersect(left))
+disjoint = .ArrayList()
+call disjoint.add(.Item("z", "x") as .object)
+failures = failures + check_empty(left.intersect(disjoint))
+-- Stored group comparator overrides ObjectEquatable (which compares names).
+stored = .ArrayList(by_group)
+call stored.add(a as .object)
+call stored.add(b as .object)
+call stored.add(a as .object)
+group_result = stored.intersect(right)
+failures = failures + check("stored comparator", group_result.size(), 1)
+failures = failures + check_item("stored retained item", group_result.get(1), "b", "y")
+chained_group = group_result.intersect(right)
+failures = failures + check("stored policy inherited", chained_group.size(), 1)
+-- Explicit name comparator overrides stored group comparator and is inherited.
+override = stored.intersect(right, by_name)
+failures = failures + check("explicit override", override.size(), 2)
+chained_name = override.intersect(disjoint)
+failures = failures + check_empty(chained_name)
+-- Original stored comparator is not overwritten by an explicit override.
+still_group = stored.intersect(right)
+failures = failures + check("receiver policy unchanged", still_group.size(), 1)
+-- Bare optional comparator values count as absent.
+no_comparator = .Comparator
+bare_result = stored.intersect(right, no_comparator)
+failures = failures + check("bare comparator fallback", bare_result.size(), 1)
+-- Comparators allow objects without ObjectEquatable.
+plain = .ArrayList(all_equal)
+call plain.add(.Token() as .object)
+plain_right = .ArrayList()
+call plain_right.add(.Token() as .object)
+plain_result = plain.intersect(plain_right)
+failures = failures + check("plain comparator", plain_result.size(), 1)
+plain_explicit = plain_right.intersect(plain_right, all_equal)
+failures = failures + check("plain explicit comparator", plain_explicit.size(), 1)
+-- Missing policy is a named, actionable error, not string or identity equality.
+caught = 0
+do
+  invalid = plain_right.intersect(plain_right)
+on signal invalid_arguments as problem
+  if problem.name() = "INVALID_ARGUMENTS" then caught = 1
+end
+failures = failures + check("missing equality policy", caught, 1)
+-- Even an empty result retains its effective comparator.
+empty_policy = plain.intersect(empty)
+call empty_policy.add(.Token() as .object)
+empty_policy_result = empty_policy.intersect(plain_right)
+failures = failures + check("empty result policy inherited", empty_policy_result.size(), 1)
+failures = failures + check_empty(empty.intersect(plain_right))
+failures = failures + check_empty(plain_right.intersect(empty))
+call fallback.clear()
+failures = failures + check("result independently mutable", left.size(), 3)
+if failures <> 0 then do
+  say "ArrayList intersect failures:" failures
+  exit 1
+end
+say "PASS: ArrayList intersect"
+exit 0
+
+check: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual <> expected then do
+    say label ": expected" expected "got" actual
+    return 1
+  end
+  return 0
+
+check_empty: procedure = .int
+  arg list = .ArrayList
+  return check("empty intersection", list.size(), 0)
+
+check_item: procedure = .int
+  arg label = .string, value = .object, name = .string, group = .string
+  item = value as .Item
+  if item.name() <> name | item.group() <> group then do
+    say label ": wrong receiver item"
+    return 1
+  end
+  return 0
+
+Item: class implements .ObjectEquatable
+  name_ = .string
+  group_ = .string
+  *: factory
+    arg name = .string, group = .string
+    name_ = name
+    group_ = group
+    return
+  name: method = .string
+    return name_
+  group: method = .string
+    return group_
+  equivalent: method = .boolean
+    arg other = .object
+    if other is .Item then do
+      item = other as .Item
+      return name_ == item.name()
+    end
+    return 0
+
+NameComparator: class implements .Comparator
+  *: factory
+    return
+  compare: method = .int
+    arg left = .object, right = .object
+    a = left as .Item
+    b = right as .Item
+    if a.name() < b.name() then return -1
+    if a.name() > b.name() then return 1
+    return 0
+
+GroupComparator: class implements .Comparator
+  *: factory
+    return
+  compare: method = .int
+    arg left = .object, right = .object
+    a = left as .Item
+    b = right as .Item
+    if a.group() < b.group() then return -1
+    if a.group() > b.group() then return 1
+    return 0
+
+AllComparator: class implements .Comparator
+  *: factory
+    return
+  compare: method = .int
+    arg left = .object, right = .object
+    return 0
+
+Token: class
+  *: factory
+    return

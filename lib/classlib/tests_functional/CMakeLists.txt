@@ -32,6 +32,8 @@ set(REXXBINS
   testConcurrency
   testDateTime
   testMapIntersect
+  testArrayListIntersect
+  testArrayListRexxIntersect
 )
 
 add_test(
