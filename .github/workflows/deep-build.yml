@@ -9,10 +9,15 @@ on:
         description: Core platform to qualify (all for the complete Deep gate)
         type: choice
         default: all
-        options: [all, linux-x64, windows-mingw, windows-msvc, macos-arm64, macos-x86_64]
+        options: [all, windows, linux-x64, windows-mingw, windows-msvc, macos-arm64, macos-x86_64]
+      job_family:
+        description: Job family to retry (books/release require platform=all; all preserves platform-only retries)
+        type: choice
+        default: all
+        options: [all, comprehensive, release, books]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ inputs.job_family || 'all' }}-${{ inputs.platform || 'all' }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}
 
 permissions:
@@ -28,6 +33,10 @@ jobs:
       target_sha: ${{ steps.target.outputs.target_sha }}
       core_matrix: ${{ steps.matrix.outputs.core_matrix }}
       full_gate: ${{ steps.matrix.outputs.full_gate }}
+      run_comprehensive: ${{ steps.matrix.outputs.run_comprehensive }}
+      run_release: ${{ steps.matrix.outputs.run_release }}
+      run_books: ${{ steps.matrix.outputs.run_books }}
+      run_stress: ${{ steps.matrix.outputs.run_stress }}
 
     steps:
       - name: Resolve the commit to qualify
@@ -61,6 +70,7 @@ jobs:
         shell: bash
         env:
           SELECTED_PLATFORM: ${{ inputs.platform || 'all' }}
+          SELECTED_JOB_FAMILY: ${{ inputs.job_family || 'all' }}
         run: python scripts/ci-core-qa-matrix.py
 
       - name: Look for successful deep assurance of this develop commit
@@ -95,7 +105,7 @@ jobs:
   documents:
     name: Required Linux books
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.run_books == 'true'
     uses: ./.github/workflows/build-docs.yml
     with:
       commit: ${{ needs.assurance-gate.outputs.target_sha }}
@@ -105,7 +115,7 @@ jobs:
   comprehensive:
     name: Comprehensive ${{ matrix.name }}
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.run_comprehensive == 'true'
     runs-on: ${{ matrix.os }}
     timeout-minutes: 240
 
@@ -226,7 +236,7 @@ jobs:
   parallel-product:
     name: Release product jobs ${{ matrix.jobs }}
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.full_gate == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.run_release == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 240
 
@@ -280,12 +290,12 @@ jobs:
         run: |
           set -euo pipefail
           missing_log="${RUNNER_TEMP}/stage-product-missingdeps.log"
-          ninja -C "${RUNNER_TEMP}/deep-build" \
-            -t missingdeps stage-product | tee "$missing_log"
-          if grep -q '^Missing dep:' "$missing_log"; then
-            echo "Ninja found a generated output without an ordering dependency" >&2
-            exit 1
+          if [ "${{ matrix.jobs }}" = "1" ]; then
+            python tools/build-system/audit/capture_build_graph.py check-missingdeps --self-test
           fi
+          python tools/build-system/audit/capture_build_graph.py check-missingdeps \
+            --source "$GITHUB_WORKSPACE" --build "${RUNNER_TEMP}/deep-build" \
+            --target stage-product | tee "$missing_log"
 
       - name: Exercise incremental REXX change closure
         shell: bash
@@ -348,7 +358,7 @@ jobs:
   stress:
     name: Isolated Debug stress QA
     needs: assurance-gate
-    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.full_gate == 'true'
+    if: needs.assurance-gate.outputs.should_run == 'true' && needs.assurance-gate.outputs.run_stress == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 240
 
@@ -388,6 +398,7 @@ jobs:
     if: >-
       always() &&
       github.event_name == 'schedule' &&
+      needs.assurance-gate.outputs.full_gate == 'true' &&
       needs.assurance-gate.outputs.should_run == 'true' &&
       needs.comprehensive.result == 'success' &&
       needs.parallel-product.result == 'success' &&
