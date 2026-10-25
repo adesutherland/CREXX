@@ -1138,7 +1138,7 @@ C:/project/lib/./math/../utils/functions.rxh → C:/project/lib/utils/functions.
 
 
 
-### `##IF var` or `##IF var == value`
+### `##IF var`
 
 Begins a conditional block that is processed only if the specified variable is defined in the preprocessor context. No evaluation of the variable’s content or value is performed—only its existence is checked.
 The bare form tests existence. RXPP also supports exact string comparisons
@@ -1161,7 +1161,7 @@ with `==` and `!=`:
 ##ENDIF
 ```
 
-### `##IFN var` or `##IFN var == value`
+### `##IFN var`
 
 (Short for `IF NOT`)
 

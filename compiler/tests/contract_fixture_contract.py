@@ -71,7 +71,8 @@ with tempfile.TemporaryDirectory(prefix='contract-fixture-', dir=a.work) as temp
     must_refuse(consume, 'Missing/stale')
     manifest.write_bytes(manifest_bytes)
     partial = json.loads(manifest_bytes)
-    del partial['artifacts']['noopt/bytes/program.rxbin']
+    # Match the publisher's host-native relative-path keys.
+    del partial['artifacts'][str(image.relative_to(root / 'prepared'))]
     manifest.write_text(json.dumps(partial))
     must_refuse(consume, 'Missing/stale')
     manifest.write_bytes(manifest_bytes)

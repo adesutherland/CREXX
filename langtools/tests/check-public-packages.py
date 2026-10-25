@@ -71,6 +71,8 @@ def main():
     build = args.build.resolve()
     tools = build / 'bin'
     suffix = '.exe' if os.name == 'nt' else ''
+    # SAY uses native text-stream newlines; record contents remain exact.
+    newline = b'\r\n' if os.name == 'nt' else b'\n'
     commands = 0
     with tempfile.TemporaryDirectory(prefix='crexx-public-packages-') as temporary:
         work = Path(temporary)
@@ -130,7 +132,7 @@ def main():
         image = assemble_link(output, sorted(core.glob('*.rxbin')))
         isolated = runtime / 'core-client.rxbin'; shutil.copy2(image, isolated)
         actual = run([vm, '--no-autoload', isolated], cwd=runtime)
-        assert actual.stdout == b'CORE|1|1|1\n', ('independent core-only graph', actual.stdout)
+        assert actual.stdout == b'CORE|1|1|1' + newline, ('independent core-only graph', actual.stdout)
         isolated.unlink()
 
         # Each source uses a real public class. The core root cannot supply any
@@ -163,7 +165,7 @@ def main():
         target.with_suffix('.rxas').write_bytes(produced)
         image = assemble_link(target, ())
         actual = run([vm, '--no-autoload', image], cwd=runtime)
-        assert actual.stdout == b'1\n3\n', ('hand-derived static result', actual.stdout)
+        assert actual.stdout == b'1' + newline + b'3' + newline, ('hand-derived static result', actual.stdout)
         assert {path.name for path in runtime.iterdir()} == {
             vm.name, *dll_names, 'public-target.rxas', 'public-target.rxbin',
             'public-target-linked.rxbin'}, 'exact compiler/SDK-free target root'
