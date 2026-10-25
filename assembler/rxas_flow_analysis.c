@@ -13,6 +13,7 @@
 #include "rxas_flow_ssa.h"
 #include "rxas_flow_use.h"
 
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -79,7 +80,7 @@ static void *flow_analysis_calloc(RxasFlowStructuralAnalysis *analysis,
                                   size_t count, size_t size) {
     void *memory;
     if (!count) count = 1;
-    if (size && count > ((size_t)-1) / size) {
+    if (size && count > (size_t)PTRDIFF_MAX / size) {
         analysis->metrics.status = RXAS_FLOW_ANALYSIS_OUT_OF_MEMORY;
         return 0;
     }

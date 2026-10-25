@@ -781,6 +781,8 @@ Every structural query requires the graph epoch. The first successful result
 is cached until graph destruction; a failed deliberately small work budget may
 be retried with a larger budget. Allocation failure, invalid control or budget
 exhaustion leaves the analysis unavailable and cannot enable a rewrite.
+Structural allocation requests also reject byte sizes above `PTRDIFF_MAX`
+before allocation, using the same out-of-memory status.
 Deterministic `PERF3 flow-analysis*` and `PERF3 flow-loop` diagnostics expose
 work, retained-byte, reachability, predecessor, dominator-iteration, frontier,
 SCC, backedge and loop counters; dormant loop facts print as unavailable rather
