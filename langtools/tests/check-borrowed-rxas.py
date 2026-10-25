@@ -46,7 +46,7 @@ def callnames(body):
 
 
 def check(directory):
-    texts = {name: (directory / f"{name}.rxas").read_text()
+    texts = {name: (directory / f"{name}.rxas").read_text(encoding="utf-8")
              for name in ("lllanguage", "llmunch", "lllr", "llcfg")}
     code = {}
     for text in texts.values():

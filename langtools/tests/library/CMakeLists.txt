@@ -100,6 +100,9 @@ add_test(NAME levell_borrowed_rxas COMMAND ${Python3_EXECUTABLE}
 set_tests_properties(levell_borrowed_rxas PROPERTIES
   PASS_REGULAR_EXPRESSION "BORROWED_RXAS[|]PASS" TIMEOUT 30
   LABELS "library;level-l;optimizer-parity")
+# RXAS names are UTF-8 even when Python's default file encoding is not.
+set_property(TEST levell_borrowed_rxas APPEND PROPERTY ENVIRONMENT
+  "PYTHONUTF8=0" "PYTHONCOERCECLOCALE=0" "LC_ALL=C")
 crexx_register_test_prep_targets(TESTS levell_borrowed_rxas TARGETS rxfnsl)
 
 # Optional IR analyses, execution and RXAS constraints use one focused normal lane. These
