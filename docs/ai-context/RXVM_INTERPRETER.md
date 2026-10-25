@@ -1092,6 +1092,9 @@ an explicit HANDLE_LIST for every redirection combination, including inherited
 standard streams; no valid streams means inheritance is disabled. Parent stream
 flags are never changed. Startup cleanup releases duplicates on every path.
 Legacy string/array and byte-endpoint redirects share pipe creation and cleanup.
+POSIX child setup failures report the fixed stage/errno record with short-write
+and `EINTR` handling before `_exit(127)`; a fatal status-pipe failure retains
+that exit fallback, while the parent rejects a partially delivered record.
 FOPEN creates private files atomically (Windows N or exclusive descriptor flags,
 Linux e, Darwin O_CLOEXEC), so no sibling can capture a temporary file in an
 open-to-clear interval.

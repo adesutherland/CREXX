@@ -3815,9 +3815,16 @@ static const char *rxspawn_child_launch_context(int stage) {
 static void rxspawn_child_launch_fail(int status_fd, int stage,
                                       int error_number) {
     RXSPAWN_CHILD_LAUNCH_ERROR failure;
+    size_t sent = 0;
     failure.stage = stage;
     failure.error_number = error_number;
-    (void)write(status_fd, &failure, sizeof(failure));
+    while (sent < sizeof(failure)) {
+        ssize_t count = write(status_fd, (const char *)&failure + sent,
+                              sizeof(failure) - sent);
+        if (count > 0) sent += (size_t)count;
+        else if (count < 0 && errno == EINTR) continue;
+        else break;
+    }
     _exit(127);
 }
 #endif

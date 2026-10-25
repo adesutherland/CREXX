@@ -11,13 +11,16 @@
 #include <unistd.h>
 static int test_pipe(int handles[2]);
 static int test_fcntl(int fd, int cmd, ...);
+static ssize_t test_write(int fd, const void *data, size_t size);
 #define pipe test_pipe
 #define fcntl test_fcntl
+#define write test_write
 #endif
 #include RXSPAWN_TEST_SOURCE
 #ifndef _WIN32
 #undef pipe
 #undef fcntl
+#undef write
 #endif
 #include <stdint.h>
 
@@ -28,6 +31,14 @@ static int failures;
 #include <poll.h>
 
 static int observe_creation, creation_unlocked, fail_flag, created[2];
+static int report_fd = -1, report_step;
+static ssize_t test_write(int fd, const void *data, size_t size) {
+    if (report_fd >= 0 && fd == report_fd) {
+        if (report_step++ == 0) { errno = EINTR; return -1; }
+        if (report_step == 2 && size > 1) size = 1;
+    }
+    return write(fd, data, size);
+}
 static int test_pipe(int handles[2]) {
     int rc = pipe(handles);
     if (rc == 0 && observe_creation) {
@@ -81,6 +92,34 @@ static void private_pipe(int p[2]) {
     if (pipe(p) || fcntl(p[0], F_SETFD, FD_CLOEXEC) ||
             fcntl(p[1], F_SETFD, FD_CLOEXEC)) abort();
 }
+#ifndef RXSPAWN_TEST_BASELINE
+static void report_controls(void) {
+    RXSPAWN_CHILD_LAUNCH_ERROR report;
+    int p[2], status = 0;
+    pid_t child, waited;
+    size_t received = 0;
+    private_pipe(p);
+    child = fork();
+    if (child < 0) abort();
+    if (!child) {
+        close(p[0]); report_fd = p[1]; report_step = 0;
+        rxspawn_child_launch_fail(p[1], RXSPAWN_CHILD_CHDIR, ENOENT);
+    }
+    close(p[1]);
+    while (received < sizeof(report)) {
+        ssize_t count = read(p[0], (char *)&report + received, sizeof(report) - received);
+        if (count > 0) received += (size_t)count;
+        else if (count < 0 && errno == EINTR) continue;
+        else break;
+    }
+    close(p[0]);
+    do { waited = waitpid(child, &status, 0); } while (waited < 0 && errno == EINTR);
+    CHECK(received == sizeof(report) && report.stage == RXSPAWN_CHILD_CHDIR &&
+          report.error_number == ENOENT, "interrupted/short child report retains stage and errno");
+    CHECK(waited == child && WIFEXITED(status) && WEXITSTATUS(status) == 127,
+          "child report retains exit fallback");
+}
+#endif
 static void init_redirect(REDIRECT *r) {
     memset(r, 0, sizeof(*r));
     r->hRead = r->hWrite = -1;
@@ -127,6 +166,7 @@ int main(int argc, char **argv) {
     }
 #ifndef RXSPAWN_TEST_BASELINE
     creation_controls();
+    report_controls();
 #endif
     init_redirect(&owner_out);
     owner_out.receiver = &receiver;
