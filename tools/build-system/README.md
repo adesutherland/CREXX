@@ -52,6 +52,16 @@ The exporter writes:
 The projection is deliberately marked `observed-provisional-not-executable`.
 It documents and validates the CMake graph; it is not a second build system.
 
+`audit/capture_build_graph.py check-missingdeps --source SOURCE --build BUILD`
+checks Ninja's generated-input ordering for `stage-product` (or `--target`).
+It prints the original report and exempts only existing tracked regular source
+files, without symlink aliases, whose zero-input phony fallback is also an
+actual `RERUN_CMAKE` input. Catalog fingerprint/configure watches remain intact.
+Unknown reports and all unproved or real generated dependencies fail. Its
+`--self-test` uses private real-Ninja controls, including spaced paths, without
+compiling the product or retaining an evidence bundle. The existing capture
+command and its required arguments are unchanged.
+
 `audit/build-manifest.schema.json` documents the manifest contract. The catalogue
 records aggregate import roots and each `rxc` invocation separately, including
 ordered source and binary roots, allowed artifact kinds, automatic RXAS

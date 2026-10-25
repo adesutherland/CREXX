@@ -1,5 +1,40 @@
 # Overnight QA repair — 14 October 2026
 
+## 25 October continuation — core Deep QA contracts
+
+Restore the affected core Deep checks without publishing held research work,
+changing runtime behavior or weakening generated-file, portable-output and
+public-link assertions. Retain catalog fingerprint regeneration and the full
+scheduled gate; focused retries qualify only their selected job families.
+Manual `job_family=all` preserves platform-only comprehensive retries;
+`comprehensive` selects its platform matrix, while `release` and `books`
+require `platform=all`. Family/platform concurrency groups keep independent
+retries from replacing one another; the cancellation policy is unchanged.
+
+1. **O25-AC01 — todo:** the existing graph audit accepts only existing tracked
+   regular checkout inputs with zero-input phony fallback rules that are actual
+   CMake regeneration dependencies, including valid paths containing spaces.
+   Real generated missing edges and every unproved exception or alias fail.
+2. **O25-AC02 — todo:** the native PARSE boundary target declares its private
+   headers' C11/MSVC atomic requirements and retains all failure/lifetime checks.
+3. **O25-AC03 — todo:** host-native manifest keys and SAY newlines preserve exact
+   refusal/output assertions; the RXPP IF/IFN headings preserve their public
+   anchors and both supported syntax forms. Focused checks and affected hosted
+   comprehensive/book checks pass.
+4. **O25-AC04 — todo:** manual family selection preserves legacy platform-only
+   retries, both Windows toolchains, and the Release jobs 1/5/30 comparison.
+   Irrelevant platforms are rejected; partial runs never record full assurance.
+
+1. **O25-STEP01 — done:** inspect the failed owners, preserve unrelated inputs
+   and record these bounded contracts before implementation.
+2. **O25-STEP02 — done:** repair and peer-review the existing owners; extend the
+   existing audit CLI and clean selector tests without a second graph framework.
+3. **O25-STEP03 — done:** run the small real-Ninja classifier controls, native
+   boundary and portable/link checks through the execution coordinator.
+4. **O25-STEP04 — todo:** publish reviewed fixes and retry the affected books,
+   Windows comprehensive and Release graph families. Broader release/sanitizer
+   obligations remain separate and unchanged.
+
 ## 22 October continuation — MSVC sustained-VM harness compilation
 
 ### Vision and intended outcomes

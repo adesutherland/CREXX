@@ -146,6 +146,37 @@ class PackageSigningTests(unittest.TestCase):
 
 
 class MatrixTests(unittest.TestCase):
+    def test_deep_family_concurrency_keeps_independent_retries(self):
+        workflow = (SCRIPTS.parent / '.github/workflows/deep-build.yml').read_text()
+        self.assertIn("group: ${{ github.workflow }}-${{ github.ref }}-"
+                      "${{ inputs.job_family || 'all' }}-${{ inputs.platform || 'all' }}", workflow)
+        self.assertIn("cancel-in-progress: ${{ startsWith(github.ref, 'refs/heads/temp/llama-release-') }}",
+                      workflow)
+
+    def test_deep_job_families_cannot_claim_full_assurance(self):
+        ref = 'refs/heads/develop'
+        for family in ('all', 'comprehensive'):
+            rows, chosen = core_qa.select_jobs('windows', family, 'workflow_dispatch', ref)
+            self.assertEqual([row['toolchain'] for row in rows['include']], ['mingw', 'msvc'])
+            self.assertEqual({key for key, enabled in chosen.items() if enabled},
+                             {'run_comprehensive'})
+        for family in ('release', 'books'):
+            _, chosen = core_qa.select_jobs('all', family, 'workflow_dispatch', ref)
+            self.assertEqual({key for key, enabled in chosen.items() if enabled},
+                             {'run_' + family})
+            with self.assertRaises(ValueError):
+                core_qa.select_jobs('windows', family, 'workflow_dispatch', ref)
+        _, chosen = core_qa.select_jobs('all', 'comprehensive', 'workflow_dispatch', ref)
+        self.assertFalse(chosen['full_gate'])
+        for event in ('schedule', 'push'):
+            rows, chosen = core_qa.select_jobs('windows', 'books', event, ref)
+            self.assertEqual(len(rows['include']), 5)
+            self.assertTrue(all(chosen.values()))
+        _, chosen = core_qa.select_jobs('all', 'all', 'workflow_dispatch', ref)
+        self.assertTrue(all(chosen.values()))
+        with self.assertRaises(ValueError):
+            core_qa.select_jobs('all', 'unknown', 'workflow_dispatch', ref)
+
     def test_deep_subset_cannot_replace_ordinary_or_scheduled_full_gate(self):
         for event, ref in [('schedule', 'refs/heads/develop'),
                            ('push', 'refs/heads/develop'),
