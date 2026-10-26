@@ -34,6 +34,12 @@ does not commission another functional or sanitizer matrix.
    `prepare_only` flag and NULL callback-signal destination even in poisoned
    caller storage. Keep this independently reproduced initialization defect
    distinct from the still-unidentified hosted registration failure.
+6. **O26-AC06 — locally qualified; native Windows CI pending:** the native RXAS catalogue generator uses binary scratch
+   streams beside its requested output instead of relying on Windows CRT
+   `tmpfile()` permissions. Preserve emitted catalogue bytes, metadata fingerprints
+   and atomic final replacement. Clean owned scratch files on success and failure;
+   an unsuccessful generation preserves any existing final output. Qualify the
+   small generator and its affected consumer without another VM or compiler matrix.
 
 ### Implementation steps
 
@@ -48,6 +54,9 @@ does not commission another functional or sanitizer matrix.
 3. **O26-STEP03 — locally qualified; publication prepared (AC03/04), depends on STEP02:** freeze, review, run the
    affected checks and current core build, then publish the bounded repair and
    inspect normal CI without claiming full Deep or original-incident closure.
+4. **O26-STEP04 — locally qualified; publication prepared (AC06):** review Peter's Windows generator diagnosis,
+   repair only scratch-stream placement/cleanup, exercise denied-CRT-temp and
+   publication-failure controls, and publish as a separate compatible repair.
 
 ## 25 October continuation — core Deep QA contracts
 

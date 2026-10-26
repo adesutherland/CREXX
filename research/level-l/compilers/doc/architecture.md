@@ -4622,7 +4622,10 @@ record boundary. Existing quoting and RXBIN metadata owners remain unchanged.
 The build-time `generate-rxas-catalog.c` reads the owning native metadata APIs;
 freshness includes `rxops.h`, `rxopeffects.h`, `rxopsignals.h`, `rxdefs.h` and
 `rxopmeta.c`. It emits the checked B view, without duplicating component or
-signal algorithms or adding a native service to compile requests.
+signal algorithms or adding a native service to compile requests. Its binary
+row/key scratch streams live beside the requested output and are removed after
+use, including failed generation. The final catalogue is replaced only after
+all streams close successfully; an existing output survives a failed generation.
 
 The default allocation retains unique cell identity. `candidate(virtualRegister,kind='integer')`
 admits only proved plain integer/Boolean cells; `pin(virtualRegister)` wins.
