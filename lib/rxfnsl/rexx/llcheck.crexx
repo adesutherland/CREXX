@@ -19,6 +19,7 @@ analysis: class
   _follow = .int[]
   _reach = .int[]
   _valid = .int
+  _structured = .int
   _error = .string
   _cycle = .int
   _conflict = .int
@@ -39,14 +40,14 @@ analysis: class
     _revision = graph.revision(); _signature = graph.signature()
     _valid = 0; _error = ''; _cycle = 0; _conflict = 0; _witness = -1
     _predicate = 0; _ordered = 0; _union = 0; _emptyloop = 0; _limit = 0
-    _extended = 0
+    _extended = 0; _structured = 0
     return
 
-  /** Compute finite monotone approximations and exact graph reachability. */
-  run: method = .int
-    text = .binary
-    if _valid then return 1
-    i = .int; op = .int; a = .int; b = .int; symbol = .int; key = .int
+  /** Check representation and semantic flags without computing graph facts.
+   * The immutable snapshot shares this admission with the complete analysis. */
+  structure: method = .int
+    if _structured then return 1
+    i = .int; op = .int; a = .int; b = .int
     if _n = 0 | _root < 1 | _root > _n then do
       _error = 'invalid or empty root'; return 0
     end
@@ -86,6 +87,15 @@ analysis: class
       if op = 4 then _union = i
       if op >= 13 then _extended = i
     end
+    _structured = 1
+    return 1
+
+  /** Compute finite monotone approximations and exact graph reachability. */
+  run: method = .int
+    text = .binary
+    if _valid then return 1
+    if structure() = 0 then return 0
+    i = .int; op = .int; a = .int; b = .int; symbol = .int; key = .int
     changed = 1
     do while changed
       changed = 0

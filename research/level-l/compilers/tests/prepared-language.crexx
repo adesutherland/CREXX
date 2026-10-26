@@ -19,10 +19,19 @@ main: procedure = .int expose checks failures inspection emission_requests emiss
   if argc < 1 | argc > 2 then return 2
   inspection_imports = argv[1]
   checks = 0; failures = 0
+  if argc = 2 then do
+    if argv[2] == 'fault' then do
+      call failurechecks()
+      say 'C_PREPARED|checks=' || checks || '|failures=' || failures
+      return failures
+    end
+  end
   owner = reference .lllanguage..definition
   if argc = 2 then do
     owner = llclanguage..prepared()
-    call check(<refvalid>(owner) = 0,'failed initialization publishes no owner')
+    call check(<refvalid>(owner) = 0,'failed preparation publishes no owner')
+    repeated_failure = llclanguage..prepared()
+    call check(<refvalid>(repeated_failure) = 0,'repeated failed preparation publishes no partial owner')
     refused = .llcparse..parsed('nop' as .binary)
     call check(refused.status() = 3 & pos('LL_BORROW_OWNER:',refused.error()) = 1,'source refusal after failed preparation is atomic')
     call noemission('prepared.invalid-grammar-owner')
@@ -82,6 +91,54 @@ check: procedure = .void expose checks failures
   if passed then return
   failures = failures + 1; say 'FAIL|' || label
   return
+
+/* The original event and its payload outlive both construction stack frames. */
+failurechecks: procedure = .void
+  first_event = capturefailure()
+  call check(initialized(first_event),'first preparation throws an owned event')
+  if initialized(first_event) = 0 then return
+  repeated_event = capturefailure()
+  call check(initialized(repeated_event),'failed owner relays its cached event')
+  if initialized(repeated_event) = 0 then return
+  call check(first_event.name() == 'ERROR' & first_event.code() = 3,'recursive preparation retains its tag')
+  call check(repeated_event.name() == first_event.name() & repeated_event.code() = first_event.code(),'cached tag/code without reconstruction')
+  first_payload = first_event.payload(); repeated_payload = repeated_event.payload()
+  first_bytes = .binary; repeated_bytes = .binary
+  /* Scalar types are compile-time views, not object RTTI. Inspect the physical
+   * binary component without converting the generic transport into text. */
+  assembler bcopy first_bytes,first_payload
+  assembler bcopy repeated_bytes,repeated_payload
+  payload_sizes = <blen>(first_bytes) = 26 & <blen>(repeated_bytes) = 26
+  call check(payload_sizes,'cached payload retains its complete binary component')
+  if payload_sizes = 0 then return
+  matches = 1; byte = .int
+  if payload_sizes then do byte = 0 to 25
+    if <at..u8>(byte) first_bytes <> <at..u8>(byte) repeated_bytes then matches = 0
+  end
+  call check(matches,'cached payload retains exact NUL-bearing bytes')
+  text_only = 'typed' || ('00'x as .string) || 'tail'
+  projected = .binary
+  assembler bcopy projected,text_only
+  call check(<blen>(projected) = 0,'binary projection does not synthesize bytes from text')
+  call check(first_event.module() > 0 & first_event.address() >= 0,'original preparation event has runtime provenance')
+  call check(first_event.module() = <at..i64>(0) first_bytes & first_event.address() = <at..i64>(8) first_bytes,'first relay retains independently captured original module/PC')
+  call check(repeated_event.module() = first_event.module() & repeated_event.address() = first_event.address(),'cached relay retains original module/PC')
+  expected = '7479706564007461696c'x as .binary
+  matches = 1
+  do byte = 0 to <blen>(expected) - 1
+    if <at..u8>(16 + byte) first_bytes <> <at..u8>(byte) expected then matches = 0
+  end
+  call check(matches,'typed payload retains its NUL-bearing value')
+  return
+
+capturefailure: procedure = .runtime_signal
+  caught = .runtime_signal
+  do
+    ignored = llclanguage..prepared()
+  on signal as problem
+    caught = problem as .runtime_signal
+  end
+  return caught
 
 policies: procedure = .void
   /* The payload must be invalid when it is not masked as a comment. */

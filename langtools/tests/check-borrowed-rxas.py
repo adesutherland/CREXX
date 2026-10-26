@@ -47,7 +47,7 @@ def callnames(body):
 
 def check(directory):
     texts = {name: (directory / f"{name}.rxas").read_text(encoding="utf-8")
-             for name in ("lllanguage", "llmunch", "lllr", "llcfg")}
+             for name in ("lllanguage", "llmunch", "lllr", "llcfg", "llcheck")}
     code = {}
     for text in texts.values():
         code.update(routines(text))
@@ -88,6 +88,29 @@ def check(directory):
                     if read_op == "minlinkattr1" and len(read_args) == 4 and read_args[1] == array_reg:
                         return True
         return False
+
+    # Packed LR load needs the checked production representation; nullable/FIRST
+    # consumers retain one explicit, cached demand for complete graph facts.
+    require("llcheck.analysis.structure" in callnames(body("llcfg.productions.build"))
+            and "llcheck.analysis.run" not in callnames(body("llcfg.productions.build")),
+            "production layout must reuse structural admission without full analysis")
+    require("llcheck.analysis.structure" in callnames(body("llcheck.analysis.run")),
+            "full analysis must share the owning structural validator")
+    require("llcheck.analysis.run" in callnames(body("llcfg.productions.preparefacts")),
+            "CFG fact demand must retain the complete analysis")
+    ready_id = attribute("llcfg", "llcfg.productions", "_factsready")
+    for query in ("nullable", "first"):
+        name = "llcfg.productions." + query
+        lines = body(name); ops = instructions(lines)
+        demand = next((i for i, (_, args) in enumerate(ops)
+                       if any(arg.lstrip("§") == "llcfg.productions.preparefacts()" for arg in args)), None)
+        require(demand is not None, f"{query} must demand facts when cold")
+        require(any(op == "linkattr1" and len(args) == 3 and args[1:] == ("a1", ready_id)
+                    for op, args in ops[:demand])
+                and any(op == "brf" for op, _ in ops[:demand]),
+                f"{query} must guard fact preparation with its retained readiness field")
+        require("llcheck.analysis.run" not in callnames(lines),
+                f"{query} must not dispatch full analysis on every query")
 
     for module, cls, field, wrapper, factory in (
         ("lllanguage", "definition", "_dfa", "borrowedscanner", "llmunch.scanner.§factory.borrowed"),

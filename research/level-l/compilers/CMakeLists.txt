@@ -521,6 +521,29 @@ foreach(_mode opt noopt)
       crexx_register_test_prep_targets(TESTS ${_prepared_test}
         TARGETS llcompiler_c_prepared_${_mode} ${_prepared_vm})
     endforeach()
+    # One poisoned first-use owner, separate from the absent-grammar module.
+    if(_mode STREQUAL "opt" AND TARGET rxbvm)
+      ll_compile(prepared-failing-grammar "${CMAKE_CURRENT_SOURCE_DIR}/tests/prepared-failing-grammar.crexx"
+        "${_dir}" ${_base} "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llclanguage.rxbin")
+      set(_c_failing_inputs ${_c_invalid_inputs})
+      list(REMOVE_ITEM _c_failing_inputs "${_dir}/prepared-invalid-grammar.rxbin")
+      list(APPEND _c_failing_inputs "${_dir}/prepared-failing-grammar.rxbin")
+      add_custom_command(OUTPUT "${_dir}/prepared-language-failing-linked.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/prepared-language-failing-linked"
+          "${_dir}/prepared-language.rxbin" ${_c_failing_inputs}
+        DEPENDS rxlink "${_dir}/prepared-language.rxbin" ${_c_failing_inputs} VERBATIM)
+      add_custom_target(llcompiler_c_prepared_fault_opt
+        DEPENDS "${_dir}/prepared-language-failing-linked.rxbin" ${_c_contract_runtime})
+      set(_prepared_fault "llcompiler_c_prepared_fault_opt_rxbvm")
+      add_test(NAME ${_prepared_fault} COMMAND $<TARGET_FILE:rxbvm>
+        "${_dir}/prepared-language-failing-linked.rxbin" -a "${_dir}/context-contract-runtime" fault)
+      set_tests_properties(${_prepared_fault} PROPERTIES
+        PASS_REGULAR_EXPRESSION "C_PREPARED[|]checks=[0-9]+[|]failures=0"
+        TIMEOUT 300 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        LABELS "compiler;level-l;optimizer-parity")
+      crexx_register_test_prep_targets(TESTS ${_prepared_fault}
+        TARGETS llcompiler_c_prepared_fault_opt rxbvm)
+    endif()
     set(_prepared_shape "llcompiler_c_prepared_rxas_${_mode}")
     add_test(NAME ${_prepared_shape} COMMAND ${Python3_EXECUTABLE}
       "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-prepared-rxas.py"

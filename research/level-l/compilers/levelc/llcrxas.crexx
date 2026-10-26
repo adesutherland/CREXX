@@ -70,7 +70,7 @@ compilation: class
   _callbase = .int
   _scratch = .int
   _workbase = .int
-  _location = .int
+  _fatalpayload = .int
   _sizing = .int
   _needsscratch = .int
   _maxargs = .int
@@ -90,7 +90,6 @@ compilation: class
   _originclauses = .int[]
   _parsestate = .int
   _lastsource = .string
-  _lastlocation = .string
   _sourceline = .int
   _lastfaultline = .int
   _handlersactive = .int
@@ -134,7 +133,6 @@ compilation: class
   _cleanupresult = .int
   _savedevent = .int
   _savedtag = .int
-  _savedlocation = .int
   _cleanupnumber = .int
   _doprotocol = .llcdoprotocol..checked
   _clauseprotocol = .llcclauseprotocol..checked
@@ -1939,7 +1937,7 @@ compilation: class
       if _error <> '' then return
       _phase = 'entry'; _writer = .llir..writer(_limit)
       call _writer.line('.globals=' || _cataloguecount)
-      _origin = 0; _sizing = 0; _scratch = -1; _location = -1; _recordbytes = 0
+      _origin = 0; _sizing = 0; _scratch = -1; _fatalpayload = -1; _recordbytes = 0
       _locals = 16; _workbase = 1; _callbase = 12; _scratch = 0
       if _hostexport <> '' then do; _locals = 25; _callbase = 20; end
       _target = .llrxas..program(_locals,_reglimit,_targetwork)
@@ -2139,8 +2137,8 @@ compilation: class
     _savedpool = -1; _privatepool = -1; _poolcommitted = -1
     if entryfacts.hasprocedure(_fn) & entryfacts.dynamic(_fn) = 0 then do
       _savedpool = next; _privatepool = next + 1; _poolcommitted = next + 2
-      _cleanupresult = next + 3; _savedevent = next + 4; _savedtag = next + 5; _savedlocation = next + 6
-      next = next + 7
+      _cleanupresult = next + 3; _savedevent = next + 4; _savedtag = next + 5
+      next = next + 6
     end
     _dynamicscope = -1
     if entryfacts.dynamic(_fn) then do
@@ -2193,7 +2191,7 @@ compilation: class
      * therefore participate without a second arity table to maintain. */
     _typedcapacity = _typedmaximum[_fn]; _typedbase = next; next = next + _typedcapacity
     _phase = 'frame planning'; _workbase = next; next = next + 11
-    _scratch = next; _location = next + 1; _callbase = next + 2
+    _scratch = next; _fatalpayload = next + 1; _callbase = next + 2
     _maxargs = -1; _needsscratch = 0; _sizing = 1; _fallthrough = 0
     do; _maxargs = 2; _needsscratch = 1; end
     call installnumeric('a1')
@@ -2217,9 +2215,9 @@ compilation: class
     _sizing = 0; _cleanupnumber = 0
     _dynamicsites = emptysites; _dynamicbytes = 0
     if _error <> '' then return
-    _phase = 'frame limits'; _scratch = -1; _location = -1; _callbase = -1
+    _phase = 'frame limits'; _scratch = -1; _fatalpayload = -1; _callbase = -1
     if _needsscratch then do; _scratch = next; next = next + 1; end
-    do; _location = next; next = next + 1; end
+    do; _fatalpayload = next; next = next + 1; end
     if _maxargs >= 0 then do; _callbase = next; next = next + _maxargs + 1; end
     _locals = next
     _target = .llrxas..program(_locals,_reglimit,_targetwork)
@@ -2273,22 +2271,16 @@ compilation: class
     if _savedpool >= 0 then do
       call emit('null',reg(_privatepool)); call emit('load',reg(_poolcommitted) || ',0')
     end
-    do
-      filename = ''
-      firstop = store.get(2,store.get(1,_fn,3),2)
-      if firstop > 0 then filename = llcompilercontracts..sourcename(_graph.operation(firstop).origin().filename()) || ': '
-      call emit('load',reg(_location) || ',' || llrxastext..quote((filename || 'entering ' || _routine) as .binary))
-      if _captureowner < 0 then do
-        do i = 1 to words(_signals)
-          call emit('sigpush',llrxastext..quote(word(_signals,i) as .binary))
-        end
-        /* BRV delivery unwinds to its saved stack marker. All handlers must
-         * capture the same complete set of saved outer policies. */
-        do i = 1 to words(_signals)
-          call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || llrxastext..quote(word(_signals,i) as .binary))
-        end
-        call emit('load',reg(_handlersactive) || ',1')
+    if _captureowner < 0 then do
+      do i = 1 to words(_signals)
+        call emit('sigpush',llrxastext..quote(word(_signals,i) as .binary))
       end
+      /* BRV delivery unwinds to its saved stack marker. All handlers must
+       * capture the same complete set of saved outer policies. */
+      do i = 1 to words(_signals)
+        call emit('sigbrv','llerror' || _fn || '_' || i || ',r0,' || llrxastext..quote(word(_signals,i) as .binary))
+      end
+      call emit('load',reg(_handlersactive) || ',1')
     end
     call emit('numsci','18,1,2')
     if _captureowner < 0 then do
@@ -2307,7 +2299,7 @@ compilation: class
        * authored diagnostic state to restore between its own branches. Real
        * source/control entries still restore their independent mapping. */
       if cold = 0 | cold <> previouscold then do
-        _lastsource = ''; _lastlocation = ''; _lastfaultline = -1
+        _lastsource = ''; _lastfaultline = -1
       end
       previouscold = cold
       do while id > 0 & _error = ''
@@ -2315,14 +2307,14 @@ compilation: class
         /* Trace-only clause observations retain metadata at the reached
          * boundary, without reviving a lazy-clock operation or its context. */
         if _hastrace & op.name() = 'crexx.c.clause.begin' & clausefacts.erased(id) then do
-          call source(op.origin(),_parseclauses[id],0,1)
+          call source(op.origin(),_parseclauses[id],1)
         end
         if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 & op.name() <> 'crexx.c.source.map' then do
           anchor = entryfacts.programanchor(id); clause = _parseclauses[id]
           if anchor = 0 then anchor = signalfacts.sourceanchor(id)
           if anchor > 0 then clause = _parseclauses[anchor]
           query = 0; if entryfacts.programcall(id) > 0 then query = id
-          call source(op.origin(),clause,anchor,op.name() = 'crexx.c.clause.begin',query)
+          call source(op.origin(),clause,op.name() = 'crexx.c.clause.begin',query)
           if _captureowner >= 0 & signalfacts.owner(id) = 0 then call faultsite(op)
           call selectop(op,entry_ref,signal_ref,clause_ref,loop_ref)
           if _hastrace then call traceevent(op,clause)
@@ -2357,16 +2349,16 @@ compilation: class
       if _savedpool >= 0 then do
         call emit('copy',reg(_savedevent) || ',r0')
         call emit('copy',reg(_savedtag) || ',' || reg(_scratch))
-        call emit('copy',reg(_savedlocation) || ',' || reg(_location))
       end
       call exitcleanup(1)
       if _savedpool >= 0 then do
         call emit('copy','r0,' || reg(_savedevent))
         call emit('copy',reg(_scratch) || ',' || reg(_savedtag))
-        call emit('copy',reg(_location) || ',' || reg(_savedlocation))
-        call emit('null',reg(_savedevent)); call emit('null',reg(_savedlocation))
+        call emit('null',reg(_savedevent))
       end
-      call rawcondition('r0',reg(_location),5)
+      /* The cold relay payload is first defined from the original event after
+       * cleanup; authored source belongs to metadata, never a prefixed message. */
+      call rawcondition('r0',reg(_fatalpayload),5)
       call restorepolicies()
       call hostfailure('r0','r0','llhostfailure' || _fn)
       do i = 1 to words(_signals) - 1
@@ -2375,7 +2367,7 @@ compilation: class
       do i = words(_signals) to 1 by -1
         call emit('llraise' || _fn || '_' || i || ':')
         call emit('sighalt',llrxastext..quote(word(_signals,i) as .binary))
-        call emit('signalorigin',llrxastext..quote(word(_signals,i) as .binary) || ',' || reg(_location) || ',r0')
+        call emit('signalorigin',llrxastext..quote(word(_signals,i) as .binary) || ',' || reg(_fatalpayload) || ',r0')
         call emit('ret')
       end
     return
@@ -2474,7 +2466,7 @@ compilation: class
    * the last authored record of a preceding routine. */
   clearsource: method = .void
     call emit('.srcstep','0 0 6 "" 0 0 0 ""')
-    _lastsource = ''; _lastlocation = ''
+    _lastsource = ''
     return
   /** Reuse the existing request-local index for admission and source emission. */
   sourceindex: method = reference .llsource..index
@@ -2508,8 +2500,8 @@ compilation: class
     _phase = phase
     return reference _sourceindexes[sourceid]
   source: method = .void
-    arg origin = .llir..origin, clause = 0, diagnostic = 0, traceclause = 0, programquery = 0
-    key = .string; location = .string
+    arg origin = .llir..origin, clause = 0, traceclause = 0, programquery = 0
+    key = .string
     if origin.id() = 0 then do; call clearsource(); return; end
     kind = origin.kind(); querystep = 0
     /* The admitted query has its invoking call's exact source boundary.
@@ -2524,9 +2516,8 @@ compilation: class
       if kind = 'synthetic' then kind = 'derived'
     end
     if kind = 'synthetic' then do
-      key = '6 "" 0 0 0 ""'; location = 'generated code in ' || _routine
-      if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
-      call sourcerecord(key,location,clause)
+      key = '6 "" 0 0 0 ""'
+      call sourcerecord(key,clause)
       return
     end
     positions_ref = sourceindex(origin)
@@ -2562,41 +2553,19 @@ compilation: class
     end
     if _hastrace & traceclause & (flags <has> 64) = 0 then flags = flags + 64
     _sourceline = line
-    location = filename || ':' || line || ':' || column
-    if kind <> 'exact' then location = filename || ': generated code in ' || _routine
-    if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
     key = flags || ' ' || llrxastext..quote(filename as .binary) || ' ' || line || ' ' || column || ' ' || endcolumn || ' ' || llrxastext..quote(sourcetext)
-    if querystep > 0 then call sourcerecord(key,location,clause,traceclause,querystep)
-    else call sourcerecord(key,location,clause,traceclause)
+    if querystep > 0 then call sourcerecord(key,clause,querystep)
+    else call sourcerecord(key,clause)
     return
-  /** Proved mechanical unwind transport keeps its generated source record and
-   * uses its call/EXIT anchor for diagnostics. Reuse the existing source index. */
-  diagnosticlocation: method = .string
-    arg origin = .llir..origin
-    filename = llcompilercontracts..sourcename(origin.filename())
-    if origin.kind() <> 'exact' then return filename || ': generated code in ' || _routine
-    mapped = mappedorigin(origin)
-    if _error <> '' then return ''
-    if mapped.valid() then return llcompilercontracts..sourcename(mapped.filename()) || ':' || mapped.line() || ':' || mapped.column()
-    positions_ref = sourceindex(origin)
-    if _error <> '' then return ''
-    positions = dereference positions_ref
-    at = positions.position(origin.first())
-    if at.error() <> '' then do; call fail('SOURCE: ' || at.error()); return ''; end
-    return filename || ':' || at.line() || ':' || at.column()
-  /** A source anchor and diagnostic context are independent state. Equal line
-   * numbers alone are insufficient: range, flags and text also identify it. */
+  /** Equal line numbers alone do not identify a source anchor: clause, range,
+   * flags and text remain significant, including distinct query steps. */
   sourcerecord: method = .void
-    arg key = .string, location = .string, clause = 0, metadataonly = 0, presentation = 0
+    arg key = .string, clause = 0, presentation = 0
     identity = clause || ':' || key
     if identity <> _lastsource | presentation > 0 then do
       step = _origin; if presentation > 0 then step = presentation
       call emit('.srcstep',step || ' ' || clause || ' ' || key)
       _lastsource = identity
-    end
-    if metadataonly = 0 & location <> _lastlocation then do
-      call emit('load',reg(_location) || ',' || llrxastext..quote(location as .binary))
-      _lastlocation = location
     end
     return
   selectop: method = .void
@@ -2892,7 +2861,7 @@ compilation: class
   catalogueboot: method = .void
     arg signal_ref = reference .llcsignalprotocol..checked
     signals = dereference signal_ref; store = dereference _store
-    _origin = 0; _sizing = 0; _scratch = 0; _location = -1; _recordbytes = 0
+    _origin = 0; _sizing = 0; _scratch = 0; _fatalpayload = -1; _recordbytes = 0
     _locals = 24; _workbase = 1; _callbase = 16; _maxargs = 7
     _target = .llrxas..program(_locals,_reglimit,_targetwork); call _target.window(_callbase,8)
     call emit('llcatalogues()','.locals=24'); call clearsource()

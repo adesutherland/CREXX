@@ -167,12 +167,24 @@ accidentally become an adjacent call.
 ### Prepared language and request isolation
 
 A private [llclanguage](../levelc/llclanguage.crexx) module owns one immutable,
-validated generated definition per VM overlay/worker. Parser requests and
-symbol checks borrow its DFA/LR tables and production metadata. They retain
-their own bytes, comments, limits, tokens, trees and diagnostics. A changed
-grammar requires a new prepared owner; a failed source request does not poison
+validated generated definition per VM overlay/worker. Its initializer creates
+only lifecycle state. First use prepares a local definition and publishes it
+once after the existing scanner/parser checks; ready, failed and reentry states
+prevent partial publication or silent retries. A typed failure retains its
+original event. Parser requests and symbol checks borrow its DFA/LR tables and
+production metadata while retaining their own bytes, comments, limits, tokens,
+trees and diagnostics. Packed-table loading retains full identity, record and
+index validation. CFG layout uses the shared structural grammar validator;
+nullable/FIRST queries demand complete analysis once, while `llcheck.run()`
+retains all existing facts. A changed grammar requires a new prepared owner;
+a failed source request does not poison
 an existing one. No cross-worker mutable cache or public mutable grammar handle
 is exposed. C's `dfa.states=16384` generation allowance does not alter L defaults.
+
+Failure controls inspect the generic signal payload's physical binary component,
+exact bytes and original event identity. Primitive scalar views do not acquire
+class RTTI through `.object` transport; these checks use binary component access
+without text conversion and validate both lengths before indexed reads.
 
 <a id="group3-static-language-contract"></a>
 <a id="representation-contracts"></a>
@@ -430,6 +442,12 @@ result presence and captures the exact event only for a live owner. Without
 that boundary, unhandled C events retain terminal HALT relay with their tag,
 payload and origin. This is not general permission for an arbitrary outer host
 handler to skip and resume failed Classic execution.
+
+The cold fatal-payload carrier is first defined from the original event after
+cleanup. Source spans, clause/query identities and TRACE/error mapping remain in
+metadata and their existing scalar state; no eager diagnostic-location string or
+saved-location cell is maintained. Outward relay preserves the event's original
+tag, payload and origin without formatting a replacement message.
 
 ## Instruction execution
 

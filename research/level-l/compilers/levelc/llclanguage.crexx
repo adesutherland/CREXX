@@ -1,29 +1,51 @@
 /* cREXX License (MIT). Private, worker-local prepared C language owner. */
 options levelb
 namespace llclanguage expose prepared
+import rxfnsb
 import llcgrammar
 import lllanguage
 import llcore
 
-/** One anchored definition per mutable module overlay. Only this initializer
- * writes the owner. Readers receive weak references and must never mutate or
- * replace it; source/comment/limit state belongs to their own requests. */
-prepare: initialiser expose _definition _ready
-  _ready = 0
-  _definition = llcgrammar..language()
-  if initialized(_definition) = 0 then return
-  if _definition.backend() <> 'lr1' | _definition.hasparser() = 0 then return
-  scanner = _definition.borrowedscanner('' as .binary,'munch')
-  if scanner.run() <> 0 then return
-  parser = _definition.borrowedparser(.llcore..stream.tokens('' as .binary))
-  status = parser.run()
-  if status <> 0 & status <> 1 then return
-  _ready = 1
+/** Each mutable module overlay owns one stable definition. Construction is
+ * deferred until first use; only a completely checked local value is published.
+ * States are cold, preparing, ready and failed. No request can borrow a partial
+ * owner or retry a failed construction; typed failure retains its original event. */
+prepare: initialiser expose _definition _state _failure
+  _definition = .lllanguage..definition
+  _failure = .runtime_signal
+  _state = 0
   return
 
-/** Compiler-internal borrow; failed preparation publishes no usable owner.
- * The owning loaded grammar/module instance is never retargeted. */
-prepared: procedure = reference .lllanguage..definition expose _definition _ready
+/** Compiler-internal borrow. The owning loaded grammar/module instance is never
+ * retargeted; source/comment/limit state belongs to individual requests. */
+prepared: procedure = reference .lllanguage..definition expose _definition _state _failure
   absent = reference .lllanguage..definition
-  if _ready = 0 then return absent
+  if _state = 2 then return reference _definition
+  if _state = 3 then do
+    if initialized(_failure) then call rxfnsb..signalrelay(_failure)
+    return absent
+  end
+  if _state = 1 then do
+    detail = 'LL_BORROW_OWNER: recursive C language preparation'
+    assembler signal 'ERROR',detail
+    return absent
+  end
+  _state = 1
+  do
+    candidate = llcgrammar..language()
+    if initialized(candidate) = 0 then do; _state = 3; return absent; end
+    if candidate.backend() <> 'lr1' | candidate.hasparser() = 0 then do; _state = 3; return absent; end
+    scanner = candidate.borrowedscanner('' as .binary,'munch')
+    if scanner.run() <> 0 then do; _state = 3; return absent; end
+    parser = candidate.borrowedparser(.llcore..stream.tokens('' as .binary))
+    status = parser.run()
+    if status <> 0 & status <> 1 then do; _state = 3; return absent; end
+    _definition = candidate
+    _state = 2
+  on signal as problem
+    _failure = problem as .runtime_signal
+    _state = 3
+    call rxfnsb..signalrelay(_failure)
+    return absent
+  end
   return reference _definition

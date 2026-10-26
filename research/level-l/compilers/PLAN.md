@@ -168,6 +168,94 @@ from continuing into another context; source and control retain the same
 positions. Keep all simple, refusal, fatal and runtime assertions and
 registrations unchanged.
 
+## Selected interpreter cost follow-up
+
+The selected startup repair (**RCOST-01**) and removal of unused emitted location
+state (**RCOST-02**) are complete for their focused research checks. The completed
+C research closure and its documented limits remain unchanged; no G, VM/ISA or
+broad QA work is added.
+
+- **RCOST-AC01:** Reduce actual standalone `llrexx`/compiler `--run` preparation
+  before the first program result. DFA/LR automata are already generated at
+  build time; runtime materializes the definition and validates/indexes loaded
+  data. Lazy preparation for first parse, INTERPRET or a source call can avoid
+  unused initialization, but `llrexx` needs parsing immediately: merely moving
+  the same cost there is insufficient; reduce the remaining first-parse work.
+- **RCOST-AC02:** Preserve the one grammar/parser owner, exact source mapping,
+  state, diagnostics, resource limits, initialization failures and ownership/
+  cleanup. Reuse existing prepared products; the concrete startup mechanism
+  requires source review and coordinator clearance before edits.
+  No new snapshot format or native VM/ISA mechanism is selected.
+- **RCOST-AC03:** Remove location-string loads only after all-use proof shows
+  their values are overwritten before observation. Preserve source/control-entry
+  metadata, TRACE, caught CONDITION/SIGL, IR source identities and the original
+  typed payload/event through cleanup and outward relay; no replacement VM API.
+
+| Stable step | Current status and dependency |
+|---|---|
+| **RCOST-STEP01 — done** | Identify remaining first-parse preparation and compare lazy, existing build-time prepared and narrower forms; peer the bounded owner/failure contract; AC01–02. |
+| **RCOST-STEP02 — done** | The selected startup repair and focused real first-result, syntax, lifecycle and source-call checks are complete; AC01–02. |
+| **RCOST-STEP03 — done** | Proved-dead location state is removed; representative RXAS and existing fatal-relay/source/payload checks qualify the selected scope; AC03. |
+
+RCOST-01 reuses the single `llcheck` structural validator for root, grammar
+limits, clause kinds, child bounds, alphabet and semantic-profile flags. Its
+existing `run()` still computes the complete nullable/FIRST/FOLLOW, reachability
+and admission facts. CFG production layout needs only structural admission;
+nullable/FIRST demand the complete facts once, guarded by a retained readiness
+flag rather than an extra analysis-method call on each query. Packed LR/DFA
+identity, record validation and indexes remain unchanged.
+
+The private C owner initializes only its lifecycle state eagerly. First use
+constructs and checks a local definition, publishes it once into anchored module
+storage, and retains ready/failed/reentry states. Invalid definitions publish no
+borrow; an original typed preparation failure remains owned and is relayed on
+later requests. Mutable requests and task-worker overlays keep their existing
+ownership. Retain the existing scanner/parser readiness checks.
+
+Eager complete analysis repeats facts not needed by a loaded table. Laziness
+alone merely moves that cost to `llrexx`'s immediate first parse. A new prepared
+snapshot would add a format and owner; it is unselected. The chosen narrower
+checked layout removes unnecessary first-parse analysis while preserving the
+existing build-time LR construction's demand for full facts. Existing shared
+structural/full-fact controls, packed-image invalids and C cold/reuse/failure
+controls guard the contract; QA also checks the actual first result and syntax,
+source-call and interpreter lifecycle behavior without a new broad panel.
+
+The existing absent-grammar control traps a second construction attempt. One
+additional opt/rxbvm-only prepared-owner control forces actual reentry while
+preparing, retains that error's provenance in a typed NUL-bearing payload, and
+checks the cached event again after constructor locals have unwound. Compare
+exact tag, physical binary component/bytes and original module/address; a counter
+trap detects reconstruction. Separate fresh module instances cover absent and
+typed failures; no reset/debug API or failure matrix is introduced.
+
+RCOST-02 retains a private cold fatal-payload carrier in its existing role.
+Only obsolete eager location loads, diagnostic cache/formatting and the
+saved-location slot are removed. Source anchors, `.srcstep` flags/query identities,
+faultline, captureline and public `failuremessage` ABI remain unchanged. Existing PROCEDURE
+and SIGNAL structural checks retain original typed relay and full authored
+span/clause/flag checks without requiring discarded diagnostic strings.
+
+**RCOST-03 — future only:** Entry, numeric setup and transport simplification
+requires context/liveness/alias proof, exact numeric inheritance, argument
+presence/value ownership and preserved source/TRACE/error observations.
+
+**RCOST-04 — future only:** Signal-guard simplification requires transitive
+failure/effect proof, nested policy restoration, handler/resumption and cleanup
+equivalence. Neither opportunity authorizes implementation or a new panel.
+
+**RCOST-05 — proposal only:** Consider one generic Level L immutable prepared-
+definition schema, serializer and hydrator, reusing existing DFA/LR blobs and
+portable grammar/source IDs, CFG layout/index data, token and AST metadata.
+Keep process addresses, VM bindings and mutable request state outside the image.
+Preserve existing `language()`, reader and builder surfaces, value/borrow ownership,
+mutation, errors and resource contracts; an immutable base with per-owner writable
+overlays is a possible implementation where current APIs permit mutation.
+Versioned, bounded validation must complete before atomic publication, with failed
+loads publishing no usable owner. This is a shared L proposal, not a C-specific
+format or second parser algorithm. No new format/API, G implementation or work
+beyond RCOST-01/02 is selected; their current acceptance criteria are unchanged.
+
 ## Outside current C closure
 
 **G21 unread scalar writes** remains a generic/G forwarding opportunity only:

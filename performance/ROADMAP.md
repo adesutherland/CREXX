@@ -104,6 +104,18 @@ research retains its formal-performance exception. Exact public ISA/storage
 contracts and production performance edits require their existing approval;
 INTERPRET image-ownership work occurs only in the final implementation stage.
 
+**RCOST-01/02 — implemented and qualified by focused C research checks.** The
+[compiler plan](../research/level-l/compilers/PLAN.md#selected-interpreter-cost-follow-up)
+owns first-use grammar preparation, checked CFG layout with full facts on demand,
+and proved-dead location-state removal. Source/grammar equivalence, loaded-table
+validation, numeric/signal behavior, payload ownership and actual RXAS retain
+their focused checks. **RCOST-03/04 remain future only; RCOST-05 remains a proposal**
+for generic immutable prepared definitions, related to
+`PERF-COMPILER-01`/`PERF-RUNTIME-01`. The Level L formal-performance exception
+applies; this bounded research qualification establishes no general speed,
+Release, platform or production-performance verdict and selects no new VM
+mechanism or broad campaign.
+
 **LEVEL-L-EMISSION-01 — approved STEP05 cleanup (15 October).** The
 [compiler plan F5-STEP01](../research/level-l/compilers/PLAN.md)
 owns this bounded Level B change. Hypothesis: shared indexed source-position

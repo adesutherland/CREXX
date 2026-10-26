@@ -17,6 +17,7 @@ productions: class
   _max = .int
   _status = .int
   _built = .int
+  _factsready = .int
   _error = .string
   _lhs = .int[]
   _first = .int[]
@@ -28,12 +29,12 @@ productions: class
     if ?limits = 0 then limits = .lllimits..policy()
     _limits = limits
     _g = graph; _root = root; _facts = .llcheck..analysis(graph,root,limits)
-    _count = 0; _slots = 0; _max = 0; _status = 0; _error = ''; _built = 0
+    _count = 0; _slots = 0; _max = 0; _status = 0; _error = ''; _built = 0; _factsready = 0
     return
   build: method = .void
     if _built then return
     _built = 1; graph = _g; root = _root
-    if _facts.run() = 0 then do
+    if _facts.structure() = 0 then do
       _status = 3
       if _facts.limit() then _status = 4
       _error = _facts.error(); return
@@ -128,12 +129,29 @@ productions: class
     arg p = .int, at = .int
     if at < 0 | at >= _length[p] then return 0
     return _rhs[_first[p] + at]
+  /** Loaded tables need production layout only. Construction algorithms demand
+   * full facts once; repeated nullable/FIRST queries keep a scalar ready guard. */
+  preparefacts: method = .void
+    if _factsready then return
+    call build
+    if _status <> 0 then return
+    if _facts.run() = 0 then do
+      _status = 3
+      if _facts.limit() then _status = 4
+      _error = _facts.error(); return
+    end
+    _factsready = 1
+    return
   nullable: method = .int
     arg nt = .int
+    if _factsready = 0 then call preparefacts
+    if _status <> 0 then return 0
     if nt > _g.size() then nt = _root
     return _facts.nullable(nt)
   first: method = .int
     arg nt = .int, symbol = .int
+    if _factsready = 0 then call preparefacts
+    if _status <> 0 then return 0
     if nt > _g.size() then nt = _root
     return _facts.first(nt,symbol)
   label: method = .string

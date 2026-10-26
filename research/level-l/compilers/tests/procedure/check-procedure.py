@@ -77,6 +77,13 @@ def check_fatal_cleanup(text):
                         r'\s*null\s+\2\s*\n\s*null\s+\1\s*$', suffix, re.M)
     assert restored and capture and restored[0].start() < capture.start(), 'restore binding before copying the original raw payload'
     assert len({event, payload, tag, *capture.groups()}) == 5, 'raw payload transport uses separate borrowed and owned cells'
+    entry = re.search(r'^llf1\(\)', text, re.M)
+    before_payload = text[entry.start():start + capture.start()]
+    for row in before_payload.splitlines():
+        if row.lstrip().startswith('.'):
+            continue
+        operands = re.findall(r'\br\d+\b', row.split('"', 1)[0])
+        assert payload not in operands, ('cold payload is first defined by the original event, without eager location state', row)
     before_clear = suffix[:first_clear.start()]
     saved_events = re.findall(r'^\s*copy\s+([^,\n]+),' + re.escape(event) + r'\s*$', before_clear, re.M)
     saved_tags = re.findall(r'^\s*copy\s+([^,\n]+),' + re.escape(tag) + r'\s*$', before_clear, re.M)
@@ -306,6 +313,15 @@ def main():
                     assert len(calls(body, 'rexxpool.rexxvariablepool.exposeindirect')) == 1, 'one indirect exposure site'
                     assert len(calls(body, 'rexxclassiccontext.rexxclassiccontext.bindpool')) >= 2, 'normal binding install/restoration'
                     check_fatal_cleanup(text)
+                    payload = re.search(r'^\s*signalorigin\s+"CLASSIC_SYNTAX",(r\d+),', text, re.M)[1]
+                    entry = re.search(r'^llf1\(\)[^\n]*\n', text, re.M)
+                    stale = text[:entry.end()] + f'load {payload},"stale source location"\n' + text[entry.end():]
+                    try:
+                        check_fatal_cleanup(stale)
+                    except AssertionError:
+                        pass
+                    else:
+                        raise AssertionError('fatal payload guard admitted an eager location load')
                 else:
                     assert not factories, 'no private pool for label-free/shared body'
                     assert not calls(body, 'rexxpool.rexxvariablepool.inheritcommandstatus'), 'shared entry has no private status inheritance'

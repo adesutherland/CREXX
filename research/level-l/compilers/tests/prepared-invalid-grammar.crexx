@@ -3,6 +3,12 @@ options levelb
 namespace llcgrammar expose language
 import lllanguage
 
-language: procedure = .lllanguage..definition
+boot: initialiser expose constructions
+  constructions = 0
+  return
+
+language: procedure = .lllanguage..definition expose constructions
   absent = .lllanguage..definition
+  constructions = constructions + 1
+  if constructions > 1 then assembler signal 'FAILURE','failed grammar was constructed again'
   return absent

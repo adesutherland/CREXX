@@ -60,23 +60,19 @@ def exit_bypass(body, source):
 
 def generated_signal_mapping(body, source, search_owner, loop_owners):
     """Generated edges retain provenance and their authored mark's ownership."""
-    diagnostic_registers = set(re.findall(
-        r'^\s*load\s+(r\d+),"source-c\.crexx:(?:\d+:\d+| generated code[^"\n]*)"\s*$', body, re.M))
-    assert len(diagnostic_registers) == 1, 'one source diagnostic register is identified from actual locations'
-    diagnostic_register = diagnostic_registers.pop()
-    records = []; blocks = {}; current = None; diagnostic = None; block = None
+    assert not re.search(
+        r'^\s*load\s+r\d+,"source-c\.crexx:(?:\d+:\d+| (?:generated code|entering)[^"\n]*)"\s*$',
+        body, re.M), 'source metadata replaces unobserved eager location strings'
+    records = []; blocks = {}; current = None; block = None
     for row in body.splitlines():
         label = re.fullmatch(r'(llb\d+):', row.strip())
         if label:
-            block = label[1]; diagnostic = None; blocks[block] = []
+            block = label[1]; current = None; blocks[block] = []
         if row.lstrip().startswith('.srcstep '):
             fields = shlex.split(row)
             current = (int(fields[2]), int(fields[3]), fields[4],
                        int(fields[5]), int(fields[6]), int(fields[7]))
-        location = re.fullmatch(r'\s*load\s+' + re.escape(diagnostic_register) + r',"([^"\n]*)"\s*', row)
-        if location:
-            diagnostic = location[1]
-        entry = (row, current, diagnostic)
+        entry = (row, current)
         records.append(entry)
         if block is not None:
             blocks[block].append(entry)
@@ -87,20 +83,19 @@ def generated_signal_mapping(body, source, search_owner, loop_owners):
         matches = [entry for entry in records
                    if called(entry[0], MARK) and entry[1] is not None and entry[1][2:] == span]
         assert len(matches) == 1 and matches[0][1][0] > 0, ('one authored SIGNAL mark owns the generated segment', span)
-        return matches[0][1][0], span, f'source-c.crexx:{line}:{column}'
+        return matches[0][1][0], span
 
-    def check(entry, clause, span, location):
-        row, record, diagnostic = entry
+    def check(entry, clause, span):
+        row, record = entry
         assert record is not None and record[0] == clause and record[1] & 2, ('generated SIGNAL work keeps its owning nonzero clause and generated flags', row, record, clause)
         assert record[2:] == span, ('generated SIGNAL work retains the exact authored span', row, record, span)
-        assert diagnostic == location, ('generated SIGNAL work keeps the authored diagnostic through block entries', row, diagnostic, location)
 
-    clause, span, location = owning_mark(b'signal value CHOOSE()')
+    clause, span = owning_mark(b'signal value CHOOSE()')
     tests = []
     for index, entry in enumerate(records):
         match = re.match(r'\s*seq\s+(r\d+),' + re.escape(search_owner) + r',"', entry[0])
         if match:
-            check(entry, clause, span, location); tests.append((index, match[1]))
+            check(entry, clause, span); tests.append((index, match[1]))
     assert len(tests) >= 3, 'the VALUE search has independently mapped candidate tests'
     for index, result in tests:
         branch = None
@@ -109,26 +104,26 @@ def generated_signal_mapping(body, source, search_owner, loop_owners):
                 break
             conditional = re.fullmatch(r'\s*brt\s+(llb\d+),' + re.escape(result) + r'\s*', entry[0])
             if conditional:
-                check(entry, clause, span, location); branch = conditional[1]
+                check(entry, clause, span); branch = conditional[1]
             elif re.fullmatch(r'\s*br\s+llb\d+\s*', entry[0]):
-                check(entry, clause, span, location)
+                check(entry, clause, span)
         assert branch is not None, 'each strict search result keeps its mapped branch'
         for entry in blocks[branch]:
             if re.match(r'\s*(?:signal(?:origin)?\s|ret(?:\s|$))', entry[0]):
                 break
             if re.fullmatch(r'\s*null\s+' + re.escape(search_owner) + r'\s*', entry[0]) or re.fullmatch(r'\s*br\s+llb\d+\s*', entry[0]):
-                check(entry, clause, span, location)
+                check(entry, clause, span)
 
-    clause, span, location = owning_mark(b'signal CONTROL_DONE')
+    clause, span = owning_mark(b'signal CONTROL_DONE')
     start = next(index for index, entry in enumerate(records)
                  if called(entry[0], MARK) and entry[1][0] == clause and entry[1][2:] == span)
     released = []
     for entry in records[start + 1:]:
         release = re.fullmatch(r'\s*null\s+(r\d+)\s*', entry[0])
         if release and release[1] in loop_owners:
-            check(entry, clause, span, location); released.append(release[1])
+            check(entry, clause, span); released.append(release[1])
         if re.fullmatch(r'\s*br\s+llb\d+\s*', entry[0]):
-            check(entry, clause, span, location)
+            check(entry, clause, span)
             break
     assert released == list(reversed(loop_owners)), 'both loop releases retain the mapped SIGNAL transfer'
 

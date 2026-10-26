@@ -2,8 +2,8 @@
 """Keep C requests on the private prepared-language borrowing boundary.
 
 The independent L checker owns the downstream field/reader/CFG checks. This
-consumer check distinguishes the cold module initializer from parser/name hot
-paths without depending on register numbering or source/debug record counts.
+consumer check distinguishes the scalar module initializer and first-use
+preparation from parser/name hot paths without depending on register numbering or source/debug record counts.
 """
 from pathlib import Path
 import re
@@ -95,11 +95,32 @@ def check(directory):
     require(any('".initializer"' in line for line in prepare), 'owner preparation is not a module initializer')
     owners = [(name, target) for name, body in code.items() for target in calls(body)
               if target == 'llcgrammar.language']
-    require(owners == [('llclanguage.prepare', 'llcgrammar.language')], 'generated language must be constructed only once in the cold owner initializer')
+    require(not calls(prepare), 'module initialization must not prepare or analyze a grammar')
+    require(owners == [('llclanguage.prepared', 'llcgrammar.language')],
+            'one first-use path owns generated language construction')
     accessor = code['llclanguage.prepared']
-    require(any(op == 'mkref' and len(args) == 2 and re.fullmatch(r'g\d+', args[1])
-                for op, args in instructions(accessor)), 'prepared accessor must reference anchored module storage')
-    require(not calls(accessor), 'prepared accessor must not reconstruct or snapshot a definition')
+    rows = list(instructions(accessor))
+    joined = '\n'.join(accessor)
+    def global_cell(name):
+        match = re.search(r'\.meta "llclanguage\.' + name + r'"="b" "[^"]+" (g\d+)\b', joined)
+        require(match, f'missing anchored {name} cell')
+        return match[1]
+    definition = global_cell('_definition'); state = global_cell('_state')
+    factory = next(i for i, (_, args) in enumerate(rows) if 'llcgrammar.language()' in args)
+    parser = next(i for i, (_, args) in enumerate(rows) if any(arg.lstrip('§') == 'lllr.parser.run()' for arg in args))
+    publications = [i for i, (op, args) in enumerate(rows)
+                    if op == 'copy' and len(args) == 2 and args[0] == definition]
+    ready = [i for i, (op, args) in enumerate(rows) if op == 'load' and args == (state, '2')]
+    require(len(publications) == len(ready) == 1 and factory < parser < publications[0] < ready[0],
+            'publish the complete local owner only after scanner/parser checks, then mark ready')
+    require(any(op == 'load' and args == (state, '1') for op, args in rows[:factory]),
+            'first use must mark construction in progress before entering generated code')
+    require(any(op == 'mkref' and len(args) == 2 and args[1] == definition
+                for op, args in rows[:factory]), 'ready requests return the anchored owner before construction')
+    require(any(op == 'load' and args == (state, '3') for op, args in rows)
+            and 'rxfnsb.signalrelay' in calls(accessor)
+            and 'LL_BORROW_OWNER: recursive C language preparation' in joined,
+            'failed and reentrant preparation must not publish or retry a partial owner')
     for name in ('llcparse.parsed.§factory', 'llcparse.headerpolicy', 'llcsymbols.checked.recognize'):
         require(name in code, f'missing consumer {name}')
         targets = calls(code[name])

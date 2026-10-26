@@ -1,0 +1,31 @@
+/* cREXX License (MIT). Reentry/typed-failure owner double, never production. */
+options levelb
+namespace llcgrammar expose language
+import rxfnsb
+import lllanguage
+import llclanguage
+
+boot: initialiser expose constructions
+  constructions = 0
+  return
+
+language: procedure = .lllanguage..definition expose constructions
+  absent = .lllanguage..definition
+  constructions = constructions + 1
+  if constructions > 1 then assembler signal 'FAILURE','poisoned grammar was constructed again'
+  do
+    ignored = llclanguage..prepared()
+  on signal error as recursive_problem
+    original = recursive_problem as .runtime_signal
+    if original.name() == 'ERROR' & original.message() == 'LL_BORROW_OWNER: recursive C language preparation' then do
+      /* Typed bytes retain the independent original module/PC as well as NUL. */
+      payload = '00000000000000000000000000000000'x as .binary
+      <at..i64>(0) payload = original.module()
+      <at..i64>(8) payload = original.address()
+      payload = payload || ('7479706564007461696c'x as .binary)
+      assembler signalorigin 'ERROR',payload,original
+    end
+    else call rxfnsb..signalrelay(original)
+  end
+  assembler signal 'FAILURE','recursive preparation returned without failure'
+  return absent

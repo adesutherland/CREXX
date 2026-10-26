@@ -2,6 +2,8 @@
 options levelb
 import rxfnsb
 import llcore
+import llcheck
+import llcfg
 import llmunch
 import lllr
 import lllanguage
@@ -14,6 +16,7 @@ main: procedure = .int expose checks failures
   language = makelanguage()
   dfa = language.automaton(); tables = language.tables()
   call check(dfa.verify() = 1 & tables.status() = 0,'prepared packed owners')
+  call analysischecks(tables)
   inputs = .string[]; inputs[1] = 'a'; inputs[2] = 'ab'; inputs[3] = 'a b'
   inputs[4] = ''; inputs[5] = 'b'; inputs[6] = 'a a'; inputs[7] = 'abb'
   inputs[8] = 'a' || '00'x
@@ -157,6 +160,47 @@ main: procedure = .int expose checks failures
   call check(request_snapshot.parse() = 0,'owning request copy outlives constructor local')
   say 'BORROWED_READERS|checks=' || checks || '|failures=' || failures
   return failures
+
+/* The loaded path requires structural admission, not an eager fact lattice. */
+analysischecks: procedure = .void
+  arg tables = .lllr..tables
+  graph = makegrammar(); root = graph.size()
+  facts = .llcheck..analysis(graph,root)
+  call check(facts.structure() = 1 & facts.valid() = 0,'structural admission does not claim complete facts')
+  call check(facts.extended() = 4 & facts.ordered() = 0 & facts.predicate() = 0,'structural semantic flags')
+  call check(facts.run() = 1 & facts.valid() = 1,'full analysis remains available after structural admission')
+  call check(facts.nullable(4) = 1 & facts.nullable(root) = 0,'complete nullable facts')
+  call check(facts.first(root,1) = 1 & facts.first(root,2) = 0,'complete FIRST facts')
+  call check(facts.follow(1,2) = 1 & facts.follow(1,256) = 1,'complete FOLLOW facts')
+  call check(facts.cycle() = 0 & facts.conflict() = 0 & facts.run() = 1,'complete admission facts and repeated run')
+  cfg = .llcfg..productions(graph,root)
+  call check(cfg.status() = 0 & cfg.count() = 8,'checked production layout')
+  call check(cfg.nullable(4) = 1 & cfg.first(root,1) = 1 & cfg.first(root,2) = 0,'CFG demands full facts once')
+  retained = tables.grammar()
+  call check(retained.nullable(4) = 1 & retained.first(root,1) = 1,'loaded CFG retains full-fact query behavior')
+  damaged = .llcore..grammar
+  do invalid = 1 to 7
+    damaged = .llcore..grammar('contextfree')
+    select invalid
+      when 1 then nop
+      when 2 then node = damaged.add(17,0,0,'kind',1)
+      when 3 then node = damaged.add(1,256,0,'alphabet',1)
+      when 4 then node = damaged.add(11,9,8,'range',1)
+      when 5 then node = damaged.add(5,2,0,'child',1)
+      when 6 then node = damaged.add(2,1,2,'right',1)
+      otherwise node = damaged.add(8,1,0,'predicate',1)
+    end
+    rejected = .llcfg..productions(damaged,1)
+    expected = 3; if invalid = 7 then expected = 1
+    call check(rejected.status() = expected & rejected.error() <> '','structural/capability refusal ' || invalid)
+  end
+  tiny = .lllimits..policy(); ok = tiny.set('grammar.clauses',1)
+  limited = .llcfg..productions(graph,root,tiny)
+  call check(limited.status() = 4 & pos('grammar.clauses',limited.error()) > 0,'structural grammar limit preserved')
+  ordered = .llcore..grammar('ordered'); ordered_root = ordered.add(1,1,0,'alpha',1)
+  incompatible = .llcfg..productions(ordered,ordered_root)
+  call check(incompatible.status() = 1 & pos('LL_BACKEND_CAPABILITY:',incompatible.error()) = 1,'declared profile remains checked')
+  return
 
 makegrammar: procedure = .llcore..grammar
   arg label = 'Pair'
