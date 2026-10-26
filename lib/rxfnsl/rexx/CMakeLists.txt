@@ -6,7 +6,7 @@ if(CREXX_LEVEL_L_NOOPT)
 endif()
 
 set(RXFNSL_REXX_MODULES
-  lllimits lludata llproperties llir llirservices
+  lllimits llprepared lludata llproperties llir llirservices
   llcore llcheck llcap llcfg lllr llmunch llproject llstage llcharset
   llregular llcomments llsource llpeg llforest llearley llpratt llregional lllanguage llrecover lltree llast llannotation llflow
 )
@@ -32,26 +32,27 @@ crexx_add_import_root(rxfnsl_imports
 include("${CMAKE_CURRENT_SOURCE_DIR}/../unicode/Properties.cmake")
 
 set(RXFNSL_DEPS_llirservices llir)
+set(RXFNSL_DEPS_llcore llprepared)
 set(RXFNSL_DEPS_llproperties lludata llcharset)
 set(RXFNSL_DEPS_llcheck llcore lllimits)
 set(RXFNSL_DEPS_llcap llcore llcheck)
-set(RXFNSL_DEPS_llcfg llcore llcheck lllimits)
-set(RXFNSL_DEPS_lllr lllimits llcore llcheck llcap llcfg)
+set(RXFNSL_DEPS_llcfg llcore llcheck lllimits llprepared)
+set(RXFNSL_DEPS_lllr lllimits llcore llcheck llcap llcfg llprepared)
 set(RXFNSL_DEPS_llmunch lllimits llcore)
-set(RXFNSL_DEPS_llproject lllimits llcore)
-set(RXFNSL_DEPS_llstage lllimits llcore)
+set(RXFNSL_DEPS_llproject lllimits llcore llprepared)
+set(RXFNSL_DEPS_llstage lllimits llcore llprepared)
 set(RXFNSL_DEPS_llcharset llcore)
 set(RXFNSL_DEPS_llregular llcore llmunch lllimits)
 set(RXFNSL_DEPS_llpeg lllimits llcore llcheck llcap)
 set(RXFNSL_DEPS_llearley lllimits llcore llcfg llcheck llcap llforest)
 set(RXFNSL_DEPS_llpratt lllimits llcore llcheck llcap)
 set(RXFNSL_DEPS_llregional lllimits llcore llcfg llpratt lllr)
-set(RXFNSL_DEPS_lllanguage lllimits llcore lllr llpeg llearley llforest llpratt llregional llproject llmunch llstage llsource llcomments llast)
+set(RXFNSL_DEPS_lllanguage lllimits llcore lllr llpeg llearley llforest llpratt llregional llproject llmunch llstage llsource llcomments llast llprepared)
 set(RXFNSL_DEPS_llrecover lllimits llcore lllanguage llmunch llsource llast)
-set(RXFNSL_DEPS_llcomments llmunch lllimits)
+set(RXFNSL_DEPS_llcomments llmunch lllimits llprepared)
 set(RXFNSL_DEPS_llsource lllimits llcomments)
 set(RXFNSL_DEPS_lltree llcore lllimits)
-set(RXFNSL_DEPS_llast llcore lltree lllimits)
+set(RXFNSL_DEPS_llast llcore lltree lllimits llprepared)
 set(RXFNSL_DEPS_llannotation llast)
 set(RXFNSL_DEPS_llflow llast llsource)
 foreach(_binfile IN LISTS RXFNSL_REXX_BINS)

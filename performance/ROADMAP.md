@@ -109,12 +109,16 @@ INTERPRET image-ownership work occurs only in the final implementation stage.
 owns first-use grammar preparation, checked CFG layout with full facts on demand,
 and proved-dead location-state removal. Source/grammar equivalence, loaded-table
 validation, numeric/signal behavior, payload ownership and actual RXAS retain
-their focused checks. **RCOST-03/04 remain future only; RCOST-05 remains a proposal**
-for generic immutable prepared definitions, related to
+their focused checks. **RCOST-03/04 remain future only. RCOST-05 is implemented
+and locally qualified for the selected generic SDK/generator and C integration
+profile.** The [generic LDP plan](../research/level-l/PLAN.md#current-action-prepared-definitions)
+owns the prepared-definition contract and local-commit readiness, related to
 `PERF-COMPILER-01`/`PERF-RUNTIME-01`. The Level L formal-performance exception
-applies; this bounded research qualification establishes no general speed,
-Release, platform or production-performance verdict and selects no new VM
-mechanism or broad campaign.
+applies; this bounded Debug research qualification establishes no general
+startup-speed, peak-memory, Release, platform, SAN or production-performance
+verdict and selects no new VM mechanism or broad campaign. The plan's future-only
+LDP-FUTURE-01 retains hydration buffer-lifetime measurement as an opportunity,
+not additional implementation or qualification.
 
 **LEVEL-L-EMISSION-01 — approved STEP05 cleanup (15 October).** The
 [compiler plan F5-STEP01](../research/level-l/compilers/PLAN.md)

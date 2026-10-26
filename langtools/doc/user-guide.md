@@ -1391,6 +1391,51 @@ status = request.parse()
 `source` is `.binary`. The optional third constructor argument is a
 `.lllimits..policy`, described under [Resource limits](#resource-limits).
 
+### Save and load a prepared definition
+
+Generated scanner-only and nonregional LR1 modules embed one prepared image.
+Their public `NAMESPACE..language()` call stays the same. A host can also save
+and restore a supported definition through the SDK:
+
+```rexx
+language = levell_settings..language()
+image = language.image()
+restored = lllanguage..prepared(image)
+request = .lllanguage..request.borrowed(reference restored,source)
+status = request.parse()
+```
+
+Import `lllanguage` alongside the generated namespace. `image` is owned binary
+build data, not source text or native object memory. The default operation
+budget is 64 MiB of logical wire/copy/decoded storage and cold validation work;
+it does not promise a 64 MiB process. A different `bytes` argument changes that
+operation budget. `prepared()` also accepts an optional `.lllimits..policy` for
+connected artifact admission; request parsing/source budgets remain separate.
+
+The image preserves comments and custom shields, ordered stages, tokens and
+holes, projection/AST fields, authored diagnostics, raw grammar labels and
+revisions. Existing owned getters, mutations and borrowed-reader lifetimes keep
+their meanings. Ordinary mutable DFA/LR builders must first be frozen through
+the existing `loaded()` APIs; `image()` refuses them without changing them.
+Unsupported parser profiles retain their existing generated construction.
+
+For optional definition fields, `initialized()` alone is not a class-presence
+test: an untouched default slot can report initialized without holding a nominal
+object. Test the expected class before consuming optional metadata, for example
+`language.grammar() is .llcore..grammar`. This preserves ordinary getter state;
+a failed `prepared()` call instead returns an explicitly typed absent definition.
+The existing initialized-owner and borrowed-liveness checks still apply.
+
+Malformed data signals INVALID_ARGUMENTS with `LL_LANGUAGE_IMAGE:` detail;
+resource exhaustion signals OUT_OF_RANGE, and unsupported definition profiles
+signal ERROR. Handle failures before using the result. If a failure is handled
+or ignored, the procedure returns a typed absent definition and leaves earlier
+owners/results usable. Loading never silently switches recognition algorithms.
+See the [wire and trust contract](generation-design.md#prepared-definitions-ldp1).
+The [generic plan](../../research/level-l/PLAN.md#current-action-prepared-definitions)
+tracks selected qualification; this API description is not a platform or
+performance result.
+
 <a id="proposed-borrowed-language-requests"></a>
 
 ### Borrowed language requests
@@ -3559,8 +3604,9 @@ the generating host's default construction allowances.
 ### Storage in generated modules
 
 DFA and LR tables remain packed in the generated module. Runtime lookups read
-that storage directly. LR loading adds an index of its table rows; it does not
-expand every action into a separate object. Other parser backends retain the
+that storage directly. Prepared-definition loading validates the supplied exact
+LR row index; the ordinary LR loader derives that same index. Neither expands
+every action into a separate object. Other parser backends retain the
 grammar or operator data needed by their runtime algorithm.
 
 Reuse a language definition and create fresh requests for input documents.

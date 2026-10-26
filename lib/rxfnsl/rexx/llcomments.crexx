@@ -4,6 +4,56 @@ namespace llcomments expose rules processor
 import rxfnsb
 import llmunch
 import lllimits
+import llprepared
+
+admission: procedure = .string
+  arg name = .string, form = .string, opening = .string, closing = .string, keep = .int
+  if name = '' | wordpos(form,'line block nested') = 0 | opening = '' | (keep <> 0 & keep <> 1) then return 'LL_COMMENT_CONTRACT: require a named line/block/nested form, nonempty opener and keep flag 0 or 1'
+  if form <> 'line' & (closing = '' | opening == closing) then return 'LL_COMMENT_CONTRACT: block/nested delimiters must be nonempty and distinct'
+  if form = 'line' & (closing <> '' | pos('0A'x,opening) > 0 | pos('0D'x,opening) > 0) then return 'LL_COMMENT_CONTRACT: line comments have one opener without CR/LF and no closer'
+  return ''
+openerindex: procedure = .int
+  arg openings_ref = reference .binary[], opening = .string
+  if <refvalid>(openings_ref) = 0 then return 0
+  openings = dereference openings_ref
+  do i = 1 to openings[0]
+    if openings[i] = opening as .binary then return i
+  end
+  return 0
+
+/* Reserve cold validation comparisons before walking competing prefixes. */
+policywork: procedure = .int
+  arg budget_ref = reference .llprepared..budget, opening_ref = reference .binary[]
+  if <refvalid>(budget_ref) = 0 | <refvalid>(opening_ref) = 0 then return 0
+  budget = dereference budget_ref; opening = dereference opening_ref
+  if budget.take(opening[0],opening[0]) = 0 then return 0
+  do i = 1 to opening[0]
+    if budget.take(opening[0],<blen>(opening[i])) = 0 then return 0
+  end
+  return 1
+
+/* One ambiguity check serves mutable rules and prepared hydration. */
+policyerror: procedure = .string
+  arg names_ref = reference .string[], opening_ref = reference .binary[], custom_ref = reference .int[], shield_ref = reference .llmunch..automaton[]
+  if <refvalid>(names_ref) = 0 | <refvalid>(opening_ref) = 0 | <refvalid>(custom_ref) = 0 | <refvalid>(shield_ref) = 0 then return 'LL_COMMENT_CONTRACT: expired validation owner'
+  names = dereference names_ref; opening = dereference opening_ref
+  custom = dereference custom_ref; shield = dereference shield_ref
+  do i = 1 to names[0]
+    if custom[i] = 0 then do
+      c = <at..u8>(0) opening[i]
+      if c = 34 | c = 39 then return 'LL_COMMENT_CONTRACT: ' || names[i] || ' opener overlaps default quote shielding; declare an unambiguous outside pattern'
+    end
+    else do j = 1 to names[0]
+      state = 1; marker = opening[j]
+      do at = 0 to <blen>(marker) - 1
+        state = shield[i].target(state,shield[i].classof(<at..u8>(at) marker))
+        if state = 0 then leave
+        if shield[i].kind(state) <> 0 then return 'LL_COMMENT_CONTRACT: outside pattern for ' || names[i] || ' overlaps opener of ' || names[j]
+      end
+      if state > 0 then return 'LL_COMMENT_CONTRACT: outside pattern for ' || names[i] || ' shares an opener prefix with ' || names[j]
+    end
+  end
+  return ''
 
 /** Named lexical policies. A selected regular shielding pattern belongs to
  * that comment form; default shielding is Rexx single/double doubled quotes.
@@ -33,20 +83,12 @@ rules: class
     if _ready then do
       _error = 'LL_COMMENT_CONTRACT: comment policies are frozen'; return 0
     end
-    if name = '' | wordpos(form,'line block nested') = 0 | opening = '' | (keep <> 0 & keep <> 1) then do
-      _error = 'LL_COMMENT_CONTRACT: require a named line/block/nested form, nonempty opener and keep flag 0 or 1'; return 0
-    end
-    if form <> 'line' & (closing = '' | opening == closing) then do
-      _error = 'LL_COMMENT_CONTRACT: block/nested delimiters must be nonempty and distinct'; return 0
-    end
-    if form = 'line' & (closing <> '' | pos('0A'x,opening) > 0 | pos('0D'x,opening) > 0) then do
-      _error = 'LL_COMMENT_CONTRACT: line comments have one opener without CR/LF and no closer'; return 0
-    end
-    do i = 1 to _names[0]
-      if _open[i] = opening as .binary then do
-        _error = 'LL_COMMENT_CONTRACT: duplicate opener for ' || name || '; already owned by ' || _names[i] || ' at line ' || _lines[i] || ', byte ' || _bytes[i]
-        return 0
-      end
+    _error = admission(name,form,opening,closing,keep)
+    if _error <> '' then return 0
+    i = openerindex(reference _open,opening)
+    if i > 0 then do
+      _error = 'LL_COMMENT_CONTRACT: duplicate opener for ' || name || '; already owned by ' || _names[i] || ' at line ' || _lines[i] || ', byte ' || _bytes[i]
+      return 0
     end
     i = _names[0] + 1
     _names[i] = name; _forms[i] = form; _open[i] = opening as .binary; _close[i] = closing as .binary
@@ -71,28 +113,8 @@ rules: class
     if _error <> '' then return 0
     if _ready then return 1
     _ready = 1
-    do i = 1 to _names[0]
-      if _custom[i] = 0 then do
-        c = <at..u8>(0) _open[i]
-        if c = 34 | c = 39 then do
-          _error = 'LL_COMMENT_CONTRACT: ' || _names[i] || ' opener overlaps default quote shielding; declare an unambiguous outside pattern'; return 0
-        end
-      end
-      else do j = 1 to _names[0]
-        state = 1; marker = _open[j]
-        do at = 0 to <blen>(marker) - 1
-          state = step(i,state,<at..u8>(at) marker)
-          if state = 0 then leave
-          if accepting(i,state) then do
-            _error = 'LL_COMMENT_CONTRACT: outside pattern for ' || _names[i] || ' overlaps opener of ' || _names[j]; return 0
-          end
-        end
-        if state > 0 then do
-          _error = 'LL_COMMENT_CONTRACT: outside pattern for ' || _names[i] || ' shares an opener prefix with ' || _names[j]; return 0
-        end
-      end
-    end
-    return 1
+    _error = policyerror(reference _names,reference _open,reference _custom,reference _shield)
+    return _error = ''
   size: method = .int
     return _names[0]
   name: method = .string
@@ -127,6 +149,103 @@ rules: class
     return _shield[entry].kind(state) <> 0
   error: method = .string
     return _error
+
+  /** A snapshot preserves whether public validation already froze the rules. */
+  image: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    empty = .binary; i = .int
+    if _error <> '' then do; call llprepared..reject(3,_error); return empty; end
+    if <refvalid>(budget_ref) = 0 then do; call llprepared..reject(3,'expired prepared storage budget'); return empty; end
+    budget = dereference budget_ref
+    if policywork(budget_ref,reference _open) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+    do i = 1 to _names[0]
+      if _custom[i] then do
+        if _shield[i].packed() = 0 then do
+          call llprepared..reject(2,'mutable comment shielding is outside the prepared profile'); return empty
+        end
+      end
+    end
+    problem = policyerror(reference _names,reference _open,reference _custom,reference _shield)
+    if problem <> '' then do; call llprepared..reject(3,problem); return empty; end
+    out = .llprepared..writer(budget_ref)
+    call out.raw('4c434d54'x as .binary); call out.u32(1); call out.u32(_ready); call out.u32(_names[0])
+    do i = 1 to _names[0]
+      opening = _open[i]; closing = _close[i]
+      call out.text(_names[i]); call out.text(_forms[i])
+      call out.text((<at..binary>(0,<blen>(opening)) opening) as .string)
+      call out.text((<at..binary>(0,<blen>(closing)) closing) as .string)
+      call out.i64(_keep[i]); call out.i64(_lines[i]); call out.i64(_bytes[i]); call out.u32(_custom[i])
+      if _custom[i] then do
+        if budget.take(_shield[i].packed()) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+        call out.binary(_shield[i].image())
+      end
+    end
+    if out.status() <> 0 then do; call llprepared..reject(out.status(),out.error()); return empty; end
+    return out.finish()
+
+  /** Decode one owned section, then reuse the ordinary ambiguity authority. */
+  loaded: factory
+    arg data = .binary, budget_ref = reference .llprepared..budget, ?limits = .lllimits..policy
+    _ready = 0; _error = 'invalid prepared comment section'
+    if ?limits then do
+      if initialized(limits) = 0 then do; call llprepared..reject(3,'uninitialized prepared limits'); return; end
+      if limits.error() <> '' then do; _error = limits.error(); call llprepared..reject(3,_error); return; end
+    end
+    input = .llprepared..reader(data,budget_ref)
+    if input.expect('4c434d54'x as .binary) = 0 then do
+      _error = input.error(); call llprepared..reject(input.status(),_error); return
+    end
+    version = input.u32(); ready = input.u32(); count = input.u32()
+    if input.status() <> 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if version <> 1 | ready > 1 then do; call llprepared..reject(3,_error); return; end
+    if count > input.remaining() <idiv> 44 then do; call llprepared..reject(3,_error); return; end
+    if input.claim(count,256) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    names = .string[]; forms = .string[]; opens = .binary[]; closes = .binary[]
+    keeps = .int[]; lines = .int[]; bytes = .int[]; customs = .int[]; shields = .llmunch..automaton[]
+    _error = ''
+    do i = 1 to count
+      name = input.text(); form = input.text(); opening = input.text(); closing = input.text()
+      keep = input.i64(); line = input.i64(); byte = input.i64(); custom = input.u32()
+      if input.status() <> 0 then leave
+      _error = admission(name,form,opening,closing,keep)
+      if custom > 1 then _error = 'invalid prepared comment shielding flag'
+      if _error <> '' then leave
+      if input.claim(i,1 + 4 * length(opening)) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+      if openerindex(reference opens,opening) > 0 then _error = 'duplicate prepared comment opener'
+      if _error <> '' then leave
+      if custom then do
+        packed = input.binary()
+        if input.status() <> 0 then leave
+        /* Bound multiplication in the existing packed-DFA validator first. */
+        extent = <blen>(packed)
+        if extent < 1040 then do; _error = 'truncated prepared comment shielding'; leave; end
+        states = <at..i32>(4) packed; classes = <at..i32>(8) packed
+        if states < 1 | classes < 1 | classes > 256 then do; _error = 'invalid prepared shielding dimensions'; leave; end
+        if states > (extent - 1040) <idiv> (4 * (classes + 1)) then do; _error = 'invalid prepared shielding extent'; leave; end
+        if ?limits then do
+          if states > limits.limit('dfa.states') then do
+            _error = limits.exhausted('dfa.states',states); call llprepared..reject(4,_error); return
+          end
+        end
+        shield = .llmunch..automaton.loaded(packed)
+        if shield.verify() = 0 then do; _error = shield.error(); leave; end
+        shields[i] = shield
+      end
+      names[i] = name; forms[i] = form; opens[i] = opening as .binary; closes[i] = closing as .binary
+      keeps[i] = keep; lines[i] = line; bytes[i] = byte; customs[i] = custom
+    end
+    if input.finish() = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if _error = '' then do
+      if policywork(budget_ref,reference opens) = 0 then do
+        work_budget = dereference budget_ref
+        _error = work_budget.error(); call llprepared..reject(4,_error); return
+      end
+      _error = policyerror(reference names,reference opens,reference customs,reference shields)
+    end
+    if _error <> '' then do; call llprepared..reject(3,_error); return; end
+    _names = names; _forms = forms; _open = opens; _close = closes
+    _keep = keeps; _lines = lines; _bytes = bytes; _custom = customs; _shield = shields; _ready = ready
+    return
 
 /** A request owns scanning bytes while original source remains elsewhere.
  * Work charges dispatch/byte comparisons, masking and shielding transitions;

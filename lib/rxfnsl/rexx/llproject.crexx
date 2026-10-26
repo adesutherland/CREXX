@@ -3,6 +3,19 @@ options levelb
 namespace llproject expose schema projection
 import llcore
 import lllimits
+import llprepared
+
+admitted: procedure = .int
+  arg name = .string, kind = .int, arity = .int
+  return name <> '' & kind >= 1 & arity >= 0 & arity <= 2
+declaration: procedure = .int
+  arg names_ref = reference .string[], count = .int, name = .string
+  if <refvalid>(names_ref) = 0 then return 0
+  names = dereference names_ref
+  do i = 1 to count
+    if names[i] = name then return i
+  end
+  return 0
 
 /** Named productions to retain; unlisted structural wrappers are transparent.
  * Arity checks are obligations, not permission to truncate extra children.
@@ -18,7 +31,7 @@ schema: class
     return
   keep: method = .int
     arg name = .string, kind = .int, arity = .int
-    if name = '' | kind < 1 | arity < 0 | arity > 2 | index(name) > 0 then do
+    if admitted(name,kind,arity) = 0 | index(name) > 0 then do
       _error = 'invalid or duplicate tree projection declaration: ' || name; return 0
     end
     _size = _size + 1; _name[_size] = name; _kind[_size] = kind; _arity[_size] = arity
@@ -42,6 +55,52 @@ schema: class
     return _arity[rule]
   error: method = .string
     return _error
+
+  /** Owned prepared metadata; the operation-local budget never escapes. */
+  image: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    empty = .binary
+    if _error <> '' then do; call llprepared..reject(3,_error); return empty; end
+    out = .llprepared..writer(budget_ref)
+    call out.raw('4c50524a'x as .binary); call out.u32(1); call out.u32(_size)
+    do i = 1 to _size
+      call out.text(_name[i]); call out.i64(_kind[i]); call out.i64(_arity[i])
+    end
+    if out.status() <> 0 then do; call llprepared..reject(out.status(),out.error()); return empty; end
+    return out.finish()
+
+  /** Hydrate checked arrays directly, preserving declaration order and case. */
+  loaded: factory
+    arg data = .binary, budget_ref = reference .llprepared..budget
+    _size = 0; _error = 'invalid prepared projection section'
+    input = .llprepared..reader(data,budget_ref)
+    if input.expect('4c50524a'x as .binary) = 0 then do
+      _error = input.error(); call llprepared..reject(input.status(),_error); return
+    end
+    version = input.u32()
+    if input.status() <> 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if version <> 1 then do; call llprepared..reject(3,_error); return; end
+    count = input.u32()
+    if input.status() <> 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if count > input.remaining() <idiv> 20 then do; call llprepared..reject(3,_error); return; end
+    if input.claim(count,256) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    names = .string[]; kinds = .int[]; arities = .int[]
+    _error = ''
+    do i = 1 to count
+      name = input.text(); kind = input.i64(); arity = input.i64()
+      if input.status() <> 0 then leave
+      if admitted(name,kind,arity) = 0 then do
+        _error = 'invalid prepared projection declaration'; leave
+      end
+      if input.claim(i,1 + 4 * length(name)) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+      if declaration(reference names,i - 1,name) > 0 then _error = 'duplicate prepared projection declaration'
+      if _error <> '' then leave
+      names[i] = name; kinds[i] = kind; arities[i] = arity
+    end
+    if input.finish() = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if _error <> '' then do; call llprepared..reject(3,_error); return; end
+    _name = names; _kind = kinds; _arity = arities; _size = count
+    return
 
 /** Owned, bottom-up projection. Preserve source and origin for every kept node.
  * The map-entry budget is explicit; arbitrary transparent trees need not have

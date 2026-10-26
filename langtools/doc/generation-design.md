@@ -1,8 +1,122 @@
-# Level L generation: lexical construction reuse
+# Level L generation: prepared definitions and lexical construction reuse
 
-**APPROVED by Adrian; implemented and locally qualified.** The [generic Level L plan](../../research/level-l/PLAN.md#current-action-lexer-reuse)
-owns LRUSE acceptance and sequence. This contract belongs to `langtools`, not
-to a source-language compiler or the runtime SDK.
+The [generic Level L plan](../../research/level-l/PLAN.md) owns the acceptance
+and sequence for these two separate mechanisms. The selected scanner/nonregional
+LR1 prepared-definition profile is locally qualified under LDP; broader Level L
+acceptance remains open. Lexical construction reuse is locally qualified under
+LRUSE. This contract belongs to generic language tooling, not to one research
+source-language compiler.
+
+## Prepared definitions (LDP1)
+
+A supported generated `language()` embeds one complete data image and calls
+`lllanguage..prepared()`. RXAS uses a binary constant operand; generated Level B
+source uses a procedure-local named binary constant. Both formats use the same
+build-time definition constructor, encoder and runtime hydrator. They do not
+replay graph/schema/stage setters on every `language()` call. Properties, flow
+facades and their existing exports remain separate generated services.
+The RXAS call reserves all three physical formal slots, including both omitted
+optionals, and explicitly sets their presence flags using the native B ABI.
+
+Version 1 supports scanner-only and nonregional DFA/LR1 definitions. Main and
+custom shielding DFAs, and LR tables when present, must already be immutable
+owners from the existing `loaded()` APIs. Encoding a mutable table owner signals
+ERROR with `LL_LANGUAGE_IMAGE` detail; it does not change that owner's mutation
+behavior. Other parser backends keep their existing generation route. There is
+no implicit conversion of an unsupported profile or fallback after a malformed
+prepared image.
+
+The public operations are:
+
+- `definition.image(bytes=.int=67108864) -> .binary`: an owned image of the
+  supported definition; existing poisoned metadata cannot serialize success.
+- `lllanguage..prepared(image=.binary, ?limits=.lllimits..policy,
+  bytes=.int=67108864) -> .lllanguage..definition`: validate local candidates,
+  then publish one complete owner. This is a namespace procedure, not a factory.
+
+Failure signals INVALID_ARGUMENTS with an `LL_LANGUAGE_IMAGE:` message prefix;
+explicit resource exhaustion signals OUT_OF_RANGE, and an unsupported definition
+profile uses ERROR. Original typed owner failures retain their payload and
+origin. If a caller handles or ignores failure, `prepared()` returns a typed
+absent definition. It does not return a partial object or replace another owner.
+
+### Portable envelope and sections
+
+`LDP1` is a versioned data representation, not a native object-memory dump. All
+integers use portable little-endian encoding: unsigned 32-bit lengths, counts,
+IDs and flags; signed 64-bit grammar operands, revisions and scalar settings.
+Binary values have a `u32` byte length; text has the same framing and must be
+valid UTF-8, including length-bearing embedded NUL. Literal and character-set
+bytes remain binary. No process address, weak reference, executable state,
+request, native binding or global cache is serialized.
+
+The fixed 20-byte header is magic `LDP1`, version 1, total byte extent, profile
+(0 scanner, 1 LR1) and section count. Each 12-byte directory row is section ID,
+absolute byte offset and byte length. Rows are strictly ordered by ID, contiguous
+and exhaustive: no duplicate IDs, gaps, overlap or trailing bytes. Scanner
+images omit sections 2–5; every other section is present even when its metadata
+collection is empty.
+
+| ID | Owned section |
+|---|---|
+| 1 | Backend, encoding/Unicode, lexical/EOF/recovery settings and field presence. |
+| 2 | Grammar profile, exact raw labels, lines, operands, literal/set bytes and revision. |
+| 3 | Canonical CFG productions and RHS layout, bound to grammar/root identity. |
+| 4 | Existing immutable sparse LR image. |
+| 5 | Exact per-state LR action/goto row directory. |
+| 6 | Existing immutable main DFA image. |
+| 7 | Comment rules, freeze state, source coordinates and custom shielding DFAs. |
+| 8 | Ordered token stages, declaration order and original mutation limits. |
+| 9 | Token names, empty holes and original extent. |
+| 10 | Projection schema. |
+| 11 | AST mapping and ordered field schema. |
+| 12 | Authored diagnostics and context masks. |
+
+Small metadata sections carry their own magic/version and bulk-hydrate checked
+arrays. Grammar/CFG rows retain packed storage; existing mutation boundaries
+materialize only the affected owned value. Raw empty labels stay distinct from
+`label()`'s display fallback, and a revision is not inferred from clause count.
+A normal LR definition retains no nominal public `grammar()` object and keeps
+zero `root()`; its tables own the CFG/source grammar. Scanner definitions acquire no
+fabricated parser, operators or regional owner.
+
+### Validation, ownership and limits
+
+Lengths, minimum physical row sizes, integer arithmetic and the complete
+section directory are checked before allocation or indexed reads. One existing
+CFG expansion authority checks supplied productions/RHS/maxima against the
+source graph. The existing DFA/LR validators remain authoritative; a supplied
+LR directory must match every real sparse group, including empty rows. No
+supplied offset or signature substitutes for these checks. Validation establishes
+representation consistency, not artifact authenticity or independent proof that
+a producer chose the intended language.
+
+One operation-local checked budget is shared by all codecs. It reserves wire,
+owned-copy and logical decoded storage, plus bounded cold metadata-comparison
+work, before the corresponding allocation/traversal. It is not an RSS or elapsed
+time guarantee. Omitted policies use artifact dimensions rather than a parser
+request's default source-byte or construction-state allowances. Explicit policies
+retain connected grammar/CFG, DFA/LR and stage constraints. Recognition work and
+source acquisition remain governed by their existing request/host limits.
+Generation uses the SDK's default 64 MiB logical image budget independently of
+the generation request's `bytes` cap, which still belongs to emitted output text.
+The hexadecimal-size preflight and existing output writer enforce that text cap;
+increasing it does not automatically increase the prepared profile's storage cap.
+
+Every returned component owns its bytes/arrays. No budget, reader or
+constructor-local weak reference survives loading. Existing value getters,
+comment freeze state, case/order/duplicate rules and mutation errors retain their
+meaning. Borrowed readers still require an anchored live owner; loading does not
+create a new cache, ownership service or VM mechanism. The existing SDK and
+bootstrap source/stamp closure include the codec without a reverse compiler edge.
+
+## Lexical construction reuse
+
+**Implemented and locally qualified.** The
+[LRUSE plan](../../research/level-l/PLAN.md#current-action-lexer-reuse) owns its
+remaining wider acceptance boundary. A lexical reuse capsule is advisory build
+input; an LDP1 definition is the generated runtime artifact. Their failure and
+fallback rules are deliberately different.
 
 ## Intended outcome and ownership
 

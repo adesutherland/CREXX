@@ -185,7 +185,8 @@ broad QA work is added.
   state, diagnostics, resource limits, initialization failures and ownership/
   cleanup. Reuse existing prepared products; the concrete startup mechanism
   requires source review and coordinator clearance before edits.
-  No new snapshot format or native VM/ISA mechanism is selected.
+  RCOST-01/02 use existing formats and native VM/ISA mechanisms; RCOST-05 below
+  owns the separate generic prepared representation.
 - **RCOST-AC03:** Remove location-string loads only after all-use proof shows
   their values are overwritten before observation. Preserve source/control-entry
   metadata, TRACE, caught CONDITION/SIGL, IR source identities and the original
@@ -213,11 +214,11 @@ later requests. Mutable requests and task-worker overlays keep their existing
 ownership. Retain the existing scanner/parser readiness checks.
 
 Eager complete analysis repeats facts not needed by a loaded table. Laziness
-alone merely moves that cost to `llrexx`'s immediate first parse. A new prepared
-snapshot would add a format and owner; it is unselected. The chosen narrower
+alone merely moves that cost to `llrexx`'s immediate first parse. The narrower
 checked layout removes unnecessary first-parse analysis while preserving the
-existing build-time LR construction's demand for full facts. Existing shared
-structural/full-fact controls, packed-image invalids and C cold/reuse/failure
+existing build-time LR construction's demand for full facts. RCOST-05 separately
+owns the generic prepared representation. Existing shared structural/full-fact
+controls, packed-image invalids and C cold/reuse/failure
 controls guard the contract; QA also checks the actual first result and syntax,
 source-call and interpreter lifecycle behavior without a new broad panel.
 
@@ -244,17 +245,16 @@ presence/value ownership and preserved source/TRACE/error observations.
 failure/effect proof, nested policy restoration, handler/resumption and cleanup
 equivalence. Neither opportunity authorizes implementation or a new panel.
 
-**RCOST-05 — proposal only:** Consider one generic Level L immutable prepared-
-definition schema, serializer and hydrator, reusing existing DFA/LR blobs and
-portable grammar/source IDs, CFG layout/index data, token and AST metadata.
-Keep process addresses, VM bindings and mutable request state outside the image.
-Preserve existing `language()`, reader and builder surfaces, value/borrow ownership,
-mutation, errors and resource contracts; an immutable base with per-owner writable
-overlays is a possible implementation where current APIs permit mutation.
-Versioned, bounded validation must complete before atomic publication, with failed
-loads publishing no usable owner. This is a shared L proposal, not a C-specific
-format or second parser algorithm. No new format/API, G implementation or work
-beyond RCOST-01/02 is selected; their current acceptance criteria are unchanged.
+**RCOST-05 — implemented and locally qualified for the selected generic/C profile:** The
+[generic Level L plan](../PLAN.md#current-action-prepared-definitions) owns LDP1
+acceptance and local-commit readiness. Its scanner/nonregional LR1 profile reuses
+packed DFA/LR data and complete portable grammar/CFG/policy/schema metadata, preserving
+existing language()/builder/reader mutation, ownership, error and resource
+contracts. The shared serializer/hydrator excludes VM pointers and request state.
+RCOST-01/02 remain complete; RCOST-03/04 remain future only. No G feature or wider
+qualification is selected. The selected Debug checks establish no general
+startup-speed or peak-memory improvement, formal performance verdict, Release,
+platform or SAN qualification.
 
 ## Outside current C closure
 

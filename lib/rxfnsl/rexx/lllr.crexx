@@ -2,6 +2,7 @@
 options levelb
 namespace lllr expose items tables parser engine
 import llcfg
+import llprepared
 import llcore
 import llcheck
 import llcap
@@ -94,6 +95,87 @@ items: class
     call binresize result,count * 8
     return result
 
+/** One sparse-image validator serves ordinary and prepared loading. A supplied
+ * directory is checked against exact record groups, never trusted as an index. */
+imagecheck: class
+  _status = .int
+  _error = .string
+  _count = .int
+  _symbols = .int
+  _index = .binary
+  *: factory
+    arg image = .binary, cfg_ref = reference .llcfg..productions, ?directory = .binary
+    _status = 3; _error = 'invalid generated LR image'; _count = 0; _symbols = 0
+    if <refvalid>(cfg_ref) = 0 then return
+    cfg = dereference cfg_ref
+    extent = <blen>(image)
+    if extent < 12 then return
+    if <at..i32>(0) image <> 1279414833 then return
+    count = <at..i32>(4) image; symbols = <at..i32>(8) image
+    if count < 1 | count >= 999999 | symbols <> 256 + cfg.nonterminals() then return
+    if symbols < 1 | count > 2147483647 <idiv> max(257,symbols) then return
+    if (extent - 12) % 8 <> 0 then return
+    if cfg.status() <> 0 then do
+      _status = cfg.status(); _error = cfg.error(); return
+    end
+    if ?directory then do
+      if <blen>(directory) <> count * 16 then return
+      _index = directory
+    end
+    else call binresize _index,count * 16
+    previous = -1; offset = 12; group = 0; first = 0; records = 0
+    row = .int; column = .int; order = .int; desired = .int; slot = .int
+    do while offset < extent
+      key = <at..i32>(offset) image; value = <at..i32>(offset + 4) image; offset = offset + 8
+      if key > 0 then do
+        if key > count * 257 then return
+        if value <> 999999 & (value > count | value < -cfg.count()) then return
+        row = (key - 1) / 257; column = (key - 1) % 257
+        order = row * (257 + symbols) + column; desired = row * 2
+      end
+      else do
+        if key = 0 | -key > count * symbols | value < 0 | value > count then return
+        row = (-key - 1) / symbols; column = (-key - 1) % symbols
+        order = row * (257 + symbols) + 257 + column; desired = row * 2 + 1
+      end
+      if order <= previous | value = 0 then return
+      previous = order
+      do while group < desired
+        slot = group * 8
+        if ?directory then do
+          if <at..i32>(slot) _index <> first | <at..i32>(slot + 4) _index <> records then return
+        end
+        else do
+          <at..i32>(slot) _index = first; <at..i32>(slot + 4) _index = records
+        end
+        group = group + 1; first = 0; records = 0
+      end
+      if records = 0 then first = offset - 8
+      records = records + 1
+    end
+    do while group < count * 2
+      slot = group * 8
+      if ?directory then do
+        if <at..i32>(slot) _index <> first | <at..i32>(slot + 4) _index <> records then return
+      end
+      else do
+        <at..i32>(slot) _index = first; <at..i32>(slot + 4) _index = records
+      end
+      group = group + 1; first = 0; records = 0
+    end
+    _count = count; _symbols = symbols; _status = 0; _error = ''
+    return
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+  count: method = .int
+    return _count
+  symbols: method = .int
+    return _symbols
+  index: method = .binary
+    return _index
+
 tables: class
   _cfg = .llcfg..productions
   _states = .items[]
@@ -144,46 +226,45 @@ tables: class
     _cfg = .llcfg..productions(graph,root,_limits); _built = 1; _requested = 'lr1'
     _status = 3; _error = 'invalid generated LR image'; _merged = 0; _count = 0
     if identity <> graph.signature() || '|root=' || root then return
-    if <blen>(image) < 12 then return
-    if <at..i32>(0) image <> 1279414833 then return
-    count = <at..i32>(4) image; symbols = <at..i32>(8) image
-    /* A generated image is checked against its representation, not the
-     * generating host's default state budget. 999999 is the accept opcode. */
-    if count < 1 | count >= 999999 | symbols <> 256 + _cfg.nonterminals() then return
-    if symbols < 1 | count > 2147483647 <idiv> max(257,symbols) then return
-    if (<blen>(image) - 12) % 8 <> 0 then return
-    if _cfg.status() <> 0 then do
-      _error = _cfg.error(); return
+    checked = .imagecheck(image,reference _cfg)
+    if checked.status() <> 0 then do
+      _status = 3; _error = checked.error(); return
     end
-    _count = count; _canonical = count; _symbols = symbols; offset = 12
-    /* Keep the immutable packed image. Only a compact per-state directory is
-     * constructed; parsing does not expand it into boxed integer arrays. */
-    call binresize _imageindex,count * 16
-    previous = -1; row = .int; column = .int; order = .int; slot = .int
-    extent = <blen>(image)
-    do while offset < extent
-      key = <at..i32>(offset) image; value = <at..i32>(offset + 4) image; offset = offset + 8
-      if key > 0 then do
-        if key > count * 257 then return
-        if value <> 999999 & (value > count | value < -_cfg.count()) then return
-        row = (key - 1) / 257; column = (key - 1) % 257
-        order = row * (257 + symbols) + column; slot = row * 16
-      end
-      else do
-        if key = 0 | -key > count * symbols | value < 0 | value > count then return
-        row = (-key - 1) / symbols; column = (-key - 1) % symbols
-        order = row * (257 + symbols) + 257 + column; slot = row * 16 + 8
-      end
-      /* The writer orders states, then actions, then gotos. Reject duplicates
-       * and reordered records before using binary search in a loaded table. */
-      if order <= previous | value = 0 then return
-      previous = order
-      records = <at..i32>(slot + 4) _imageindex
-      if records = 0 then <at..i32>(slot) _imageindex = offset - 8
-      <at..i32>(slot + 4) _imageindex = records + 1
-    end
-    _image = image; _status = 0; _error = ''
+    _count = checked.count(); _canonical = _count; _symbols = checked.symbols()
+    _imageindex = checked.index(); _image = image; _status = 0; _error = ''
     return
+
+  /** Prepared CFG and directory retain the same sparse-image validation. */
+  prepared: factory
+    arg graph = .llcore..grammar, root = .int, layout = .binary, image = .binary, directory = .binary, budget_ref = reference .llprepared..budget, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy.artifact(graph.size())
+    _limits = limits
+    _cfg = .llcfg..productions.prepared(graph,root,layout,budget_ref,limits)
+    _built = 1; _requested = 'lr1'; _merged = 0; _count = 0
+    _status = 3; _error = 'invalid prepared LR image'
+    checked = .imagecheck(image,reference _cfg,directory)
+    if checked.status() <> 0 then do
+      _status = checked.status(); _error = checked.error(); return
+    end
+    _count = checked.count(); _canonical = _count; _symbols = checked.symbols()
+    _imageindex = checked.index(); _image = image; _status = 0; _error = ''
+    return
+
+  /** Immutable packed byte extent; zero denotes an ordinary table builder. */
+  packed: method = .int
+    return <blen>(_image)
+  /** Build-time image export can derive an index; prepared loading checks it. */
+  directory: method = .binary
+    absent = .binary
+    if status() <> 0 then return absent
+    if <blen>(_imageindex) > 0 then return _imageindex
+    serialized = image()
+    checked = .imagecheck(serialized,reference _cfg)
+    if checked.status() <> 0 then do
+      call llprepared..reject(checked.status(),checked.error()); return absent
+    end
+    return checked.index()
+
   image: method = .binary
     symbol = .int; value = .int
     out = .binary

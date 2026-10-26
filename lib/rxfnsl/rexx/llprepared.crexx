@@ -1,0 +1,201 @@
+/* cREXX License (MIT). Portable bounded prepared-definition codec. */
+options levelb
+namespace llprepared expose budget writer reader reject
+import rxfnsb
+
+/** Logical wire/copy/decoded storage reservation, not a resident-memory claim.
+ * References to this counter are operation-local and never escape in a result. */
+budget: class
+  _remaining = .int
+  _error = .string
+  *: factory
+    arg cap = .int
+    _remaining = cap; _error = ''
+    if cap < 0 then do
+      _remaining = 0; _error = 'LL_RESOURCE_LIMIT: prepared.bytes must be nonnegative'
+    end
+    return
+  take: method = .int
+    arg count = .int, width = 1
+    if _error <> '' then return 0
+    if count < 0 | width < 0 then do
+      _error = 'LL_RESOURCE_LIMIT: invalid prepared storage reservation'; return 0
+    end
+    if width = 0 then return 1
+    if count > _remaining <idiv> width then do
+      _error = 'LL_RESOURCE_LIMIT: prepared.bytes logical budget exhausted'; return 0
+    end
+    _remaining = _remaining - count * width
+    return 1
+  remaining: method = .int
+    return _remaining
+  error: method = .string
+    return _error
+
+/** Shared primitive encoding only; semantic rules stay with their owners. */
+writer: class
+  _budget = reference .budget
+  _data = .binary
+  _status = .int
+  _error = .string
+  *: factory
+    arg budget_ref = reference .budget
+    _budget = budget_ref; _status = 0; _error = ''
+    if <refvalid>(budget_ref) = 0 then do
+      _status = 3; _error = 'expired prepared storage budget'
+    end
+    return
+  raw: method = .void
+    arg data = .binary
+    if _status <> 0 then return
+    if <refvalid>(_budget) = 0 then do
+      _status = 3; _error = 'expired prepared storage budget'; return
+    end
+    owner = dereference _budget
+    if owner.take(<blen>(data)) = 0 then do
+      _status = 4; _error = owner.error(); return
+    end
+    assembler bappend _data,data
+    return
+  u32: method = .void
+    arg value = .int
+    if value < 0 | value > 4294967295 then do
+      _status = 3; _error = 'prepared u32 outside representation'; return
+    end
+    bits = '00000000'x as .binary
+    <at..u32>(0) bits = value
+    call raw(bits)
+    return
+  i64: method = .void
+    arg value = .int
+    bits = '0000000000000000'x as .binary
+    <at..i64>(0) bits = value
+    call raw(bits)
+    return
+  binary: method = .void
+    arg value = .binary
+    call u32(<blen>(value)); call raw(value)
+    return
+  text: method = .void
+    arg value = .string
+    call binary(value as .binary)
+    return
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+  finish: method = .binary
+    absent = .binary
+    if _status <> 0 then return absent
+    return _data
+
+/** All ranges and reservations precede allocation and reads. The reference
+ * keeps a shared counter, not a returned-data dependency on this reader. */
+reader: class
+  _budget = reference .budget
+  _data = .binary
+  _at = .int
+  _status = .int
+  _error = .string
+  *: factory
+    arg data = .binary, budget_ref = reference .budget
+    _budget = budget_ref; _at = 0; _status = 0; _error = ''
+    if <refvalid>(budget_ref) = 0 then do
+      _status = 3; _error = 'expired prepared storage budget'; return
+    end
+    owner = dereference budget_ref
+    if owner.take(<blen>(data)) = 0 then do
+      _status = 4; _error = owner.error(); return
+    end
+    _data = data
+    return
+  takebytes: method = .int
+    arg length = .int
+    if _status <> 0 then return -1
+    extent = <blen>(_data)
+    if length < 0 | length > extent - _at then do
+      _status = 3; _error = 'truncated prepared section'; return -1
+    end
+    start = _at; _at = _at + length
+    return start
+  claim: method = .int
+    arg count = .int, width = .int
+    if _status <> 0 then return 0
+    if <refvalid>(_budget) = 0 then do
+      _status = 3; _error = 'expired prepared storage budget'; return 0
+    end
+    owner = dereference _budget
+    if owner.take(count,width) = 0 then do
+      _status = 4; _error = owner.error(); return 0
+    end
+    return 1
+  u32: method = .int
+    at = takebytes(4)
+    if at < 0 then return 0
+    return <at..u32>(at) _data
+  i64: method = .int
+    at = takebytes(8)
+    if at < 0 then return 0
+    return <at..i64>(at) _data
+  raw: method = .binary
+    arg length = .int
+    result = .binary
+    at = takebytes(length)
+    if at < 0 then return result
+    if claim(length,1) = 0 then return result
+    call binresize result,length
+    assembler bcopy result,_data,at
+    return result
+  binary: method = .binary
+    length = u32()
+    return raw(length)
+  text: method = .string
+    text = .string
+    bits = binary()
+    if _status <> 0 then return text
+    if claim(<blen>(bits),4) = 0 then return text
+    do
+      text = (<at..binary>(0,<blen>(bits)) bits) as .string
+    on signal unicode_error
+      _status = 3; _error = 'invalid UTF8 in prepared text'
+    end
+    return text
+  count: method = .int
+    arg width = 256
+    count = u32()
+    if claim(count,width) = 0 then return 0
+    return count
+  expect: method = .int
+    arg magic = .binary
+    actual = raw(<blen>(magic))
+    if _status <> 0 then return 0
+    do byte = 0 to <blen>(magic) - 1
+      if <at..u8>(byte) actual <> <at..u8>(byte) magic then do
+        _status = 3; _error = 'invalid prepared section magic'; return 0
+      end
+    end
+    return 1
+  remaining: method = .int
+    return <blen>(_data) - _at
+  finish: method = .int
+    if _status <> 0 then return 0
+    if _at <> <blen>(_data) then do
+      _status = 3; _error = 'trailing prepared section bytes'; return 0
+    end
+    return 1
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+
+/** A handled signal returns to a caller that must return its absent result. */
+reject: procedure = .void
+  arg status = .int, detail = .string
+  message = detail
+  if left(message,18) <> 'LL_LANGUAGE_IMAGE:' then message = 'LL_LANGUAGE_IMAGE: ' || message
+  select status
+    when 4 then assembler signal 'OUT_OF_RANGE',message
+    when 2 then assembler signal 'ERROR',message
+    otherwise assembler signal 'INVALID_ARGUMENTS',message
+  end
+  return

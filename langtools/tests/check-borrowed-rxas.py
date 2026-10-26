@@ -45,7 +45,58 @@ def callnames(body):
             for arg in args if arg.endswith("()")}
 
 
+def linked_cfg_query(window, cfg, query):
+    """Exact scalar call ABI after linking the retained tables._cfg field."""
+    if len(window) != 7:
+        return False
+    (load, flags, bind, call, restore, unlink, argument) = window
+    if load[0] != "load" or len(load[1]) != 2 or load[1][1] != "2":
+        return False
+    count = load[1][0]
+    if not re.fullmatch(r"r[0-9]+", count):
+        return False
+    receiver = f"r{int(count[1:]) + 1}"
+    if flags != ("settp", (cfg, "256")) or bind != ("swap", (receiver, cfg)):
+        return False
+    if call[0] != "swapcall" or len(call[1]) != 5:
+        return False
+    _, target, actual_count, production, saved = call[1]
+    return (target.lstrip("§") == f"llcfg.productions.{query}()"
+            and actual_count == count
+            and saved == f"r{int(count[1:]) + 2}"
+            and restore == ("swap", (cfg, receiver))
+            and unlink == ("unlink", (cfg,))
+            and argument == ("swap", (production, saved)))
+
+
+def query_window_controls():
+    window = [("load", ("r4", "2")), ("settp", ("r2", "256")),
+              ("swap", ("r5", "r2")),
+              ("swapcall", ("r0", "§llcfg.productions.length()", "r4", "r7", "r6")),
+              ("swap", ("r2", "r5")), ("unlink", ("r2",)),
+              ("swap", ("r7", "r6"))]
+    require(linked_cfg_query(window, "r2", "length"), "linked CFG scalar control")
+    for position, replacement in (
+        (0, ("load", ("r4", "1"))),
+        (1, ("settp", ("r2", "0"))),
+        (2, ("swap", ("r5", "r3"))),
+        (3, ("swapcall", ("r0", "§foreign.length()", "r4", "r7", "r6"))),
+        (4, ("copy", ("r2", "r5"))),
+        (5, ("unlink", ("r3",))),
+        (6, ("swap", ("r7", "r9"))),
+    ):
+        bad = window.copy(); bad[position] = replacement
+        require(not linked_cfg_query(bad, "r2", "length"),
+                f"linked CFG scalar negative {position}")
+    bad = window.copy()
+    bad[3] = ("swapcall", ("r0", "§llcfg.productions.length()", "r4", "r7", "r9"))
+    bad[6] = ("swap", ("r7", "r9"))
+    require(not linked_cfg_query(bad, "r2", "length"),
+            "linked CFG scalar negative argument window")
+
+
 def check(directory):
+    query_window_controls()
     texts = {name: (directory / f"{name}.rxas").read_text(encoding="utf-8")
              for name in ("lllanguage", "llmunch", "lllr", "llcfg", "llcheck")}
     code = {}
@@ -62,7 +113,7 @@ def check(directory):
         return match[1]
 
     def inline_production_query(name, field):
-        """Prove the scalar array read is linked through retained tables/CFG."""
+        """Prove a scalar call/read is linked through retained tables/CFG."""
         match = re.search(rf'\.meta "{re.escape(name)}\.tables"="b" "[^"]+" ([ra]\d+)\b',
                           "\n".join(body(name)))
         if not match:
@@ -75,6 +126,9 @@ def check(directory):
             if op != "linkattr1" or len(args) != 3 or args[1:] != (table_reg, cfg_id):
                 continue
             cfg_reg = args[0]
+            query = {"_length": "length", "_lhs": "lhs"}[field]
+            if linked_cfg_query(ops[i + 1:i + 8], cfg_reg, query):
+                return True
             for j in range(i + 1, len(ops)):
                 next_op, next_args = ops[j]
                 if next_op in {"unlink", "unlinkn"} and cfg_reg in next_args:
@@ -151,8 +205,8 @@ def check(directory):
         calls = callnames(body(name))
         require("lllr.tables.grammar" not in calls and "llcfg.productions.source" not in calls,
                 f"{name} copies production/grammar metadata")
-        # The seed may inline scalar queries. Require the actual retained
-        # tables -> CFG -> scalar array link chain when the call disappears.
+        # The seed may inline the outer query or the entire scalar accessor.
+        # Both alternatives must follow the retained tables -> CFG link.
         require(all(f"lllr.tables.{query}" in calls or inline_production_query(name, field)
                     for query, field in (("productionlength", "_length"), ("productionlhs", "_lhs"))),
                 f"{name} must query retained production metadata")

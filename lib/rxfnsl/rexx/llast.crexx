@@ -5,6 +5,7 @@ import rxfnsb
 import llcore
 import lltree
 import lllimits
+import llprepared
 
 /* Direct Level B instruction keeps the bootstrap independent of exits. */
 badfield: procedure = .void
@@ -24,6 +25,86 @@ next_identity: procedure = .int expose ast_identity
   ast_identity = ast_identity + 1
   return ast_identity
 
+
+findmapping: procedure = .int
+  arg rules_ref = reference .string[], rule = .string
+  if <refvalid>(rules_ref) = 0 then return 0
+  rules = dereference rules_ref
+  do i = 1 to rules[0]
+    if rules[i] = lower(rule) then return i
+  end
+  return 0
+mappingadmitted: procedure = .int
+  arg rule = .string, kind = .string
+  return rule <> '' & kind <> ''
+firstkind: procedure = .int
+  arg kinds_ref = reference .string[], kind = .string
+  if <refvalid>(kinds_ref) = 0 then return 0
+  kinds = dereference kinds_ref
+  do i = 1 to kinds[0]
+    if lower(kinds[i]) = lower(kind) then return i
+  end
+  return 0
+findfield: procedure = .int
+  arg owners_ref = reference .int[], fields_ref = reference .string[], owner = .int, name = .string
+  if <refvalid>(owners_ref) = 0 | <refvalid>(fields_ref) = 0 then return 0
+  owners = dereference owners_ref; fields = dereference fields_ref
+  do i = 1 to fields[0]
+    if owners[i] = owner & fields[i] = lower(name) then return i
+  end
+  return 0
+fieldshape: procedure = .int
+  arg owner = .int, name = .string, mode = .string, card = .string
+  if owner = 0 | name = '' | wordpos(mode,'text capture operand') = 0 | wordpos(card,'one optional many some') = 0 then return 0
+  if mode = 'text' & card <> 'one' then return -1
+  return 1
+/* Bound cold case folding/comparison without changing public lookup loops. */
+schemawork: procedure = .int
+  arg budget_ref = reference .llprepared..budget, kinds_ref = reference .string[], fields_ref = reference .string[], modes_ref = reference .string[], cards_ref = reference .string[]
+  if <refvalid>(budget_ref) = 0 | <refvalid>(kinds_ref) = 0 | <refvalid>(fields_ref) = 0 | <refvalid>(modes_ref) = 0 | <refvalid>(cards_ref) = 0 then return 0
+  budget = dereference budget_ref; kinds = dereference kinds_ref; fields = dereference fields_ref
+  modes = dereference modes_ref; cards = dereference cards_ref; i = .int
+  do i = 1 to kinds[0]
+    if budget.take(kinds[0],1 + 4 * length(kinds[i])) = 0 then return 0
+  end
+  do i = 1 to fields[0]
+    if budget.take(kinds[0],2 + 4 * (length(fields[i]) + length(modes[i]) + length(cards[i]))) = 0 then return 0
+  end
+  return 1
+
+/* Preserve one ordered-field authority for public checks and bulk loading. */
+schemaerror: procedure = .string
+  arg rules_ref = reference .string[], kinds_ref = reference .string[], owners_ref = reference .int[], fields_ref = reference .string[], modes_ref = reference .string[], cards_ref = reference .string[], expose conflict = .int
+  if <refvalid>(rules_ref) = 0 | <refvalid>(kinds_ref) = 0 | <refvalid>(owners_ref) = 0 | <refvalid>(fields_ref) = 0 | <refvalid>(modes_ref) = 0 | <refvalid>(cards_ref) = 0 then return 'LL_AST_SCHEMA: expired validation owner'
+  rules = dereference rules_ref; kinds = dereference kinds_ref; owners = dereference owners_ref
+  fields = dereference fields_ref; modes = dereference modes_ref; cards = dereference cards_ref
+  do i = 1 to rules[0]
+    first = firstkind(kinds_ref,kinds[i])
+    if first = i then iterate
+    a = 1; b = 1
+    do forever
+      do while a <= fields[0]
+        if owners[a] = first then leave
+        a = a + 1
+      end
+      do while b <= fields[0]
+        if owners[b] = i then leave
+        b = b + 1
+      end
+      if a > fields[0] & b > fields[0] then leave
+      if a > fields[0] | b > fields[0] then do
+        conflict = i
+        return 'LL_AST_SCHEMA: conflicting fields for kind ' || kinds[i]
+      end
+      if fields[a] <> fields[b] | (modes[a] = 'text') <> (modes[b] = 'text') | cards[a] <> cards[b] then do
+        conflict = i
+        return 'LL_AST_SCHEMA: conflicting field ' || fields[b] || ' for kind ' || kinds[i]
+      end
+      a = a + 1; b = b + 1
+    end
+  end
+  return ''
+
 /** Declarative mappings. Field modes are text, capture, or operand; cardinality
  * is one, optional, many or some. Names are case-insensitive, kind spelling is
  * retained for display. No application expression executes in this schema. */
@@ -42,7 +123,7 @@ schema: class
     return
   mapping: method = .int
     arg rule = .string, kind = .string
-    if rule = '' | kind = '' | index(rule) > 0 then do
+    if mappingadmitted(rule,kind) = 0 | index(rule) > 0 then do
       _error = 'LL_AST_SCHEMA: invalid or duplicate mapping for ' || rule; return 0
     end
     slot = _rule[0] + 1; _rule[slot] = lower(rule); _kind[slot] = kind
@@ -50,10 +131,11 @@ schema: class
   field: method = .int
     arg rule = .string, name = .string, source = .string, mode = .string, card = .string
     owner = index(rule)
-    if owner = 0 | name = '' | wordpos(mode,'text capture operand') = 0 | wordpos(card,'one optional many some') = 0 then do
+    admission = fieldshape(owner,name,mode,card)
+    if admission = 0 then do
       _error = 'LL_AST_SCHEMA: invalid field ' || name || ' in ' || rule; return 0
     end
-    if mode = 'text' & card <> 'one' then do
+    if admission = -1 then do
       _error = 'LL_AST_SCHEMA: text field ' || name || ' requires one source'; return 0
     end
     do i = 1 to _field[0]
@@ -108,32 +190,87 @@ schema: class
     return _conflict
   /** All mappings of one kind must describe the same ordered field contract. */
   check: method = .int
-    do i = 1 to _rule[0]
-      first = kindindex(_kind[i])
-      if first = i then iterate
-      a = 1; b = 1
-      do forever
-        do while a <= _field[0]
-          if _owner[a] = first then leave
-          a = a + 1
-        end
-        do while b <= _field[0]
-          if _owner[b] = i then leave
-          b = b + 1
-        end
-        if a > _field[0] & b > _field[0] then leave
-        if a > _field[0] | b > _field[0] then do
-          _conflict = i
-          _error = 'LL_AST_SCHEMA: conflicting fields for kind ' || _kind[i]; return 0
-        end
-        if _field[a] <> _field[b] | (_mode[a] = 'text') <> (_mode[b] = 'text') | _card[a] <> _card[b] then do
-          _conflict = i
-          _error = 'LL_AST_SCHEMA: conflicting field ' || _field[b] || ' for kind ' || _kind[i]; return 0
-        end
-        a = a + 1; b = b + 1
-      end
-    end
+    conflict = _conflict
+    problem = schemaerror(reference _rule,reference _kind,reference _owner,reference _field,reference _mode,reference _card,conflict)
+    if problem <> '' then do; _error = problem; _conflict = conflict; end
     return _error = ''
+
+  image: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    empty = .binary; i = .int
+    if _error <> '' then do; call llprepared..reject(3,_error); return empty; end
+    if <refvalid>(budget_ref) = 0 then do; call llprepared..reject(3,'expired prepared storage budget'); return empty; end
+    budget = dereference budget_ref
+    if schemawork(budget_ref,reference _kind,reference _field,reference _mode,reference _card) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+    if check() = 0 then do; call llprepared..reject(3,_error); return empty; end
+    out = .llprepared..writer(budget_ref)
+    call out.raw('4c415354'x as .binary); call out.u32(1); call out.u32(_rule[0])
+    do i = 1 to _rule[0]
+      call out.text(_rule[i]); call out.text(_kind[i])
+    end
+    call out.u32(_field[0])
+    do i = 1 to _field[0]
+      call out.u32(_owner[i]); call out.text(_field[i]); call out.text(_source[i])
+      call out.text(_mode[i]); call out.text(_card[i])
+    end
+    if out.status() <> 0 then do; call llprepared..reject(out.status(),out.error()); return empty; end
+    return out.finish()
+
+  /** Preserve raw kind spelling and normalized lookup names without setters. */
+  loaded: factory
+    arg data = .binary, budget_ref = reference .llprepared..budget
+    _conflict = 0; _error = 'invalid prepared AST section'; i = .int
+    input = .llprepared..reader(data,budget_ref)
+    if input.expect('4c415354'x as .binary) = 0 then do
+      _error = input.error(); call llprepared..reject(input.status(),_error); return
+    end
+    version = input.u32()
+    if input.status() <> 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if version <> 1 then do; call llprepared..reject(3,_error); return; end
+    count = input.u32()
+    if input.status() <> 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if input.remaining() < 4 then do; call llprepared..reject(3,_error); return; end
+    if count > (input.remaining() - 4) <idiv> 8 then do; call llprepared..reject(3,_error); return; end
+    if input.claim(count,256) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    rules = .string[]; kinds = .string[]
+    owners = .int[]; fields = .string[]; sources = .string[]; modes = .string[]; cards = .string[]
+    _error = ''
+    do i = 1 to count
+      rule = input.text(); kind = input.text()
+      if input.status() <> 0 then leave
+      if input.claim(i,1 + 4 * length(rule)) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+      if mappingadmitted(rule,kind) = 0 | lower(rule) \== rule | findmapping(reference rules,rule) > 0 then do
+        _error = 'invalid prepared AST mapping'; leave
+      end
+      rules[i] = rule; kinds[i] = kind
+    end
+    if _error <> '' then do; call llprepared..reject(3,_error); return; end
+    fieldcount = input.u32()
+    if input.status() <> 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if fieldcount > input.remaining() <idiv> 20 then do; call llprepared..reject(3,_error); return; end
+    if input.claim(fieldcount,256) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    do i = 1 to fieldcount while _error = ''
+      owner = input.u32(); name = input.text(); source = input.text(); mode = input.text(); card = input.text()
+      if input.status() <> 0 then leave
+      if input.claim(i,1 + 4 * length(name)) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+      if owner > count | fieldshape(owner,name,mode,card) <> 1 | lower(name) \== name | lower(source) \== source | findfield(reference owners,reference fields,owner,name) > 0 then do
+        _error = 'invalid prepared AST field'; leave
+      end
+      owners[i] = owner; fields[i] = name; sources[i] = source; modes[i] = mode; cards[i] = card
+    end
+    if input.finish() = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    conflict = 0
+    if _error = '' then do
+      if schemawork(budget_ref,reference kinds,reference fields,reference modes,reference cards) = 0 then do
+        work_budget = dereference budget_ref
+        _error = work_budget.error(); call llprepared..reject(4,_error); return
+      end
+      _error = schemaerror(reference rules,reference kinds,reference owners,reference fields,reference modes,reference cards,conflict)
+    end
+    if _error <> '' then do; _conflict = conflict; call llprepared..reject(3,_error); return; end
+    _rule = rules; _kind = kinds; _owner = owners; _field = fields
+    _source = sources; _mode = modes; _card = cards
+    return
 
 /** Original-byte recovery records. A tree owns a value copy of these records.
  * The skipped interval and the narrower diagnostic range are kept separately.

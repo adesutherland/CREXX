@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Reusable generated-language definition and parse request. */
 options levelb
-namespace lllanguage expose definition request
+namespace lllanguage expose definition request prepared
 import rxfnsb
 import llcore
 import lllr
@@ -16,6 +16,16 @@ import llregional
 import llproject
 import llast
 import lllimits
+import llprepared
+
+/* One generated-profile configuration predicate serves encoding and loading. */
+configuration: procedure = .int
+  arg backend = .string, encoding = .string, eof = .int, sync = .int, hasparser = .int, root = .int, presence = .int
+  if backend = 'lr1' then do
+    if hasparser <> 1 then return 0
+  end
+  else if backend <> 'none' | hasparser <> 0 then return 0
+  return wordpos(encoding,'utf8 utf8bytes bytes') > 0 & eof >= -1 & eof <= 255 & sync >= -1 & sync <= 255 & root = 0 & presence = 0
 
 definition: class
   _dfa = .llmunch..automaton
@@ -91,6 +101,123 @@ definition: class
     _comments = .llcomments..rules()
     if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
+  /** Freeze the complete generated scanner/LR profile into one owned image. */
+  image: method = .binary
+    arg bytes = 67108864
+    absent = .binary; profile = 0
+    i = .int; size = .int; total = .int; cursor = .int; count = .int
+    if _backend = 'lr1' & _hasparser = 1 then profile = 1
+    else if _backend <> 'none' | _hasparser <> 0 then do
+      call llprepared..reject(2,'unsupported prepared definition profile'); return absent
+    end
+    if configuration(_backend,_encoding,_eof,_sync,_hasparser,_root,0) = 0 then do
+      call llprepared..reject(3,'invalid prepared definition configuration'); return absent
+    end
+    if ((_graph is .llcore..grammar) & initialized(_graph)) | ((_operators is .llpratt..operators) & initialized(_operators)) | ((_regional is .llregional..plan) & initialized(_regional)) | _root <> 0 then do
+      call llprepared..reject(2,'prepared profile requires generated definition fields'); return absent
+    end
+    if initialized(_comments) = 0 | initialized(_schema) = 0 | initialized(_ast) = 0 then do
+      call llprepared..reject(3,'absent prepared metadata owner'); return absent
+    end
+    if initialized(_dfa) = 0 then do; call llprepared..reject(3,'missing definition DFA'); return absent; end
+    if _dfa.packed() = 0 then do; call llprepared..reject(2,'mutable DFA is outside prepared profile'); return absent; end
+    if _dfa.verify() = 0 then do; call llprepared..reject(3,_dfa.error()); return absent; end
+    if profile then do
+      if initialized(_parser) = 0 then do; call llprepared..reject(3,'missing definition LR tables'); return absent; end
+      if _parser.status() <> 0 then do; call llprepared..reject(_parser.status(),_parser.error()); return absent; end
+      if _parser.packed() = 0 then do; call llprepared..reject(2,'mutable LR tables are outside prepared profile'); return absent; end
+    end
+    budget = .llprepared..budget(bytes)
+    if budget.take(_tokens[0],256) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+    if budget.take(_stages[0],256) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+    if budget.take(_diagnosticname[0],1024) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+    sections = .binary[]; config = .llprepared..writer(reference budget)
+    call config.raw('4c444546'x as .binary); call config.u32(1)
+    call config.text(_backend); call config.text(_encoding); call config.text(_unicodeversion)
+    call config.text(_open); call config.text(_close); call config.text(_malformed); call config.text(_unmatched)
+    call config.i64(_eof); call config.i64(_sync); call config.u32(_hasparser)
+    call config.i64(_root); call config.u32(0); call config.text(_expressionname)
+    sections[1] = config.finish()
+    if config.status() <> 0 then do; call llprepared..reject(config.status(),config.error()); return absent; end
+    if profile then do
+      if budget.take(_parser.packed()) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+      layout = _parser.grammar(); graph = layout.source()
+      sections[2] = graph.image(reference budget); sections[3] = layout.image(reference budget)
+      sections[4] = _parser.image()
+      if budget.take(_parser.states(),16) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+      sections[5] = _parser.directory()
+    end
+    if budget.take(_dfa.packed()) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+    sections[6] = _dfa.image(); sections[7] = _comments.image(reference budget)
+    passes = .llprepared..writer(reference budget)
+    call passes.raw('4c535453'x as .binary); call passes.u32(1); call passes.u32(_stages[0])
+    stage = .llstage..rules
+    do i = 1 to _stages[0]
+      stage = _stages[i]
+      if stage.error() <> '' then do; call llprepared..reject(3,stage.error()); return absent; end
+      call passes.binary(stage.image(reference budget))
+    end
+    sections[8] = passes.finish()
+    names = .llprepared..writer(reference budget)
+    call names.raw('4c544f4b'x as .binary); call names.u32(1); call names.u32(_tokens[0])
+    do i = 1 to _tokens[0]
+      call names.text(_tokens[i])
+    end
+    sections[9] = names.finish(); sections[10] = _schema.image(reference budget); sections[11] = _ast.image(reference budget)
+    diagnostics = .llprepared..writer(reference budget)
+    call diagnostics.raw('4c444941'x as .binary); call diagnostics.u32(1); call diagnostics.u32(_diagnosticname[0])
+    do i = 1 to _diagnosticname[0]
+      call diagnostics.text(_diagnosticname[i]); call diagnostics.text(_diagnosticrule[i])
+      call diagnostics.text(_diagnostictext[i]); call diagnostics.binary(_diagnosticmask[i])
+    end
+    sections[12] = diagnostics.finish()
+    if passes.status() <> 0 then do; call llprepared..reject(passes.status(),passes.error()); return absent; end
+    if names.status() <> 0 then do; call llprepared..reject(names.status(),names.error()); return absent; end
+    if diagnostics.status() <> 0 then do; call llprepared..reject(diagnostics.status(),diagnostics.error()); return absent; end
+    count = 8; if profile then count = 12
+    total = 20 + count * 12
+    do i = 1 to 12
+      if profile = 0 & i >= 2 & i <= 5 then iterate
+      size = <blen>(sections[i])
+      if size = 0 then do; call llprepared..reject(3,'empty required prepared section'); return absent; end
+      if size > 4294967295 - total then do; call llprepared..reject(4,'prepared image exceeds u32 extent'); return absent; end
+      total = total + size
+    end
+    output = .llprepared..writer(reference budget)
+    call output.raw('4c445031'x as .binary); call output.u32(1); call output.u32(total)
+    call output.u32(profile); call output.u32(count)
+    cursor = 20 + count * 12
+    do i = 1 to 12
+      if profile = 0 & i >= 2 & i <= 5 then iterate
+      size = <blen>(sections[i])
+      call output.u32(i); call output.u32(cursor); call output.u32(size)
+      cursor = cursor + size
+    end
+    do i = 1 to 12
+      if profile = 0 & i >= 2 & i <= 5 then iterate
+      call output.raw(sections[i])
+    end
+    if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return absent; end
+    if budget.error() <> '' then do; call llprepared..reject(4,budget.error()); return absent; end
+    return output.finish()
+
+  /** Internal atomic metadata install after every section has been checked. */
+  installprepared: method = .int
+    arg settings_ref = reference .string[], numbers_ref = reference .int[], comments_ref = reference .llcomments..rules, stages_ref = reference .llstage..rules[], tokens_ref = reference .string[], projection_ref = reference .llproject..schema, ast_ref = reference .llast..schema, names_ref = reference .string[], rules_ref = reference .string[], texts_ref = reference .string[], masks_ref = reference .binary[]
+    settings = dereference settings_ref; config_numbers = dereference numbers_ref
+    policies = dereference comments_ref; passes = dereference stages_ref; token_names = dereference tokens_ref
+    projection = dereference projection_ref; ast_schema = dereference ast_ref
+    diag_names = dereference names_ref; diag_rules = dereference rules_ref; diag_texts = dereference texts_ref; diag_masks = dereference masks_ref
+    if settings[0] <> 8 | config_numbers[0] <> 5 then return 0
+    if settings[1] <> _backend | config_numbers[3] <> _hasparser | config_numbers[4] <> 0 | config_numbers[5] <> 0 then return 0
+    if policies.error() <> '' | projection.error() <> '' | ast_schema.error() <> '' then return 0
+    if diag_names[0] <> diag_rules[0] | diag_names[0] <> diag_texts[0] | diag_names[0] <> diag_masks[0] then return 0
+    _unicodeversion = settings[3]; _malformed = settings[6]; _unmatched = settings[7]; _expressionname = settings[8]
+    _eof = config_numbers[1]; _sync = config_numbers[2]
+    _comments = policies; _stages = passes; _tokens = token_names; _schema = projection; _ast = ast_schema
+    _diagnosticname = diag_names; _diagnosticrule = diag_rules; _diagnostictext = diag_texts; _diagnosticmask = diag_masks
+    return 1
+
   usecomments: method = .void
     arg policies = .llcomments..rules
     _comments = policies
@@ -211,6 +338,165 @@ definition: class
     return _close
   stages: method = .llstage..rules[]
     return _stages
+
+/** Load one complete data-only definition. A handled failure returns absence,
+ * never the local candidate. No new factory-return convention is required. */
+prepared: procedure = .definition
+  arg image = .binary, ?limits = .lllimits..policy, bytes = 67108864
+  absent = .definition
+  item = .int; entry = .int; id = .int; first = .int; size = .int; cursor = .int; remaining = .int
+  extent = <blen>(image)
+  if bytes < 0 | extent > bytes then do; call llprepared..reject(4,'prepared image exceeds byte budget'); return absent; end
+  if ?limits then do
+    if initialized(limits) = 0 then do; call llprepared..reject(3,'absent explicit prepared policy'); return absent; end
+    if limits.error() <> '' then do; call llprepared..reject(3,limits.error()); return absent; end
+  end
+  explicit_limits = ?limits
+  do
+    budget = .llprepared..budget(bytes); input = .llprepared..reader(image,reference budget)
+    ok = input.expect('4c445031'x as .binary)
+    version = input.u32(); total = input.u32(); profile = input.u32(); count = input.u32()
+    if input.status() <> 0 then do; call llprepared..reject(input.status(),input.error()); return absent; end
+    remaining = input.remaining()
+    if version <> 1 | total <> extent | profile > 1 | count < 1 | count > 12 | count > remaining <idiv> 12 then do
+      call llprepared..reject(3,'invalid prepared envelope dimensions/version'); return absent
+    end
+    expected_count = 8; if profile then expected_count = 12
+    if count <> expected_count then do; call llprepared..reject(3,'prepared profile section count mismatch'); return absent; end
+    if input.claim(count,1024) = 0 then do; call llprepared..reject(input.status(),input.error()); return absent; end
+    offsets = .int[]; lengths = .int[]; previous = 0; cursor = 20 + count * 12
+    do entry = 1 to count
+      id = input.u32(); first = input.u32(); size = input.u32()
+      if id <= previous | id > 12 | first <> cursor | size < 1 | size > extent - cursor then do
+        call llprepared..reject(3,'invalid prepared section directory'); return absent
+      end
+      if profile = 0 & id >= 2 & id <= 5 then do; call llprepared..reject(3,'unexpected scanner parser section'); return absent; end
+      offsets[id] = first; lengths[id] = size; previous = id; cursor = cursor + size
+    end
+    if cursor <> extent then do; call llprepared..reject(3,'prepared directory does not consume image'); return absent; end
+    sections = .binary[]; section = .binary
+    do id = 1 to 12
+      if profile = 0 & id >= 2 & id <= 5 then iterate
+      if lengths[id] = 0 then do; call llprepared..reject(3,'missing prepared section'); return absent; end
+      if input.claim(lengths[id],1) = 0 then do; call llprepared..reject(input.status(),input.error()); return absent; end
+      call binresize section,lengths[id]
+      offset = offsets[id]
+      assembler bcopy section,image,offset
+      sections[id] = section
+    end
+    config = .llprepared..reader(sections[1],reference budget)
+    ok = config.expect('4c444546'x as .binary); config_version = config.u32()
+    settings = .string[]; config_numbers = .int[]
+    if config.claim(13,256) = 0 then do; call llprepared..reject(config.status(),config.error()); return absent; end
+    do item = 1 to 7
+      settings[item] = config.text()
+    end
+    config_numbers[1] = config.i64(); config_numbers[2] = config.i64(); config_numbers[3] = config.u32()
+    config_numbers[4] = config.i64(); config_numbers[5] = config.u32(); settings[8] = config.text()
+    if config.finish() = 0 then do; call llprepared..reject(config.status(),config.error()); return absent; end
+    expected_backend = 'none'; if profile then expected_backend = 'lr1'
+    if config_version <> 1 | settings[1] <> expected_backend | config_numbers[3] <> profile then do
+      call llprepared..reject(3,'invalid prepared definition field presence/profile'); return absent
+    end
+    if configuration(settings[1],settings[2],config_numbers[1],config_numbers[2],config_numbers[3],config_numbers[4],config_numbers[5]) = 0 then do
+      call llprepared..reject(3,'invalid prepared encoding/lexical settings'); return absent
+    end
+    machine_header = sections[6]; machine_extent = <blen>(machine_header)
+    if explicit_limits & machine_extent >= 1040 then do
+      if <at..i32>(0) machine_header = 1279542833 then do
+        machine_states = <at..i32>(4) machine_header
+        if machine_states > limits.limit('dfa.states') then do; call llprepared..reject(4,limits.exhausted('dfa.states',machine_states)); return absent; end
+      end
+    end
+    dfa = .llmunch..automaton.loaded(machine_header)
+    if dfa.verify() = 0 then do; call llprepared..reject(3,dfa.error()); return absent; end
+    if explicit_limits then do
+      if dfa.states() > limits.limit('dfa.states') then do; call llprepared..reject(4,limits.exhausted('dfa.states',dfa.states())); return absent; end
+    end
+    tables = .lllr..tables
+    if profile then do
+      graph = .llcore..grammar.prepared(sections[2],reference budget)
+      if ?limits = 0 then limits = .lllimits..policy.artifact(graph.size())
+      layout_header = sections[3]; layout_extent = <blen>(layout_header)
+      if layout_extent < 16 then do; call llprepared..reject(3,'truncated prepared CFG header'); return absent; end
+      root = <at..i64>(8) layout_header
+      lr_header = sections[4]; lr_extent = <blen>(lr_header)
+      if explicit_limits & lr_extent >= 12 then do
+        if <at..i32>(0) lr_header = 1279414833 then do
+          lr_states = <at..i32>(4) lr_header
+          if lr_states > limits.limit('lr.states') then do; call llprepared..reject(4,limits.exhausted('lr.states',lr_states)); return absent; end
+        end
+      end
+      tables = .lllr..tables.prepared(graph,root,sections[3],sections[4],sections[5],reference budget,limits)
+      if tables.status() <> 0 then do; call llprepared..reject(tables.status(),tables.error()); return absent; end
+      if explicit_limits then do
+        if tables.states() > limits.limit('lr.states') then do; call llprepared..reject(4,limits.exhausted('lr.states',tables.states())); return absent; end
+        if tables.grammar().maxrhs() > limits.limit('lr.rhs') then do; call llprepared..reject(4,limits.exhausted('lr.rhs',tables.grammar().maxrhs())); return absent; end
+      end
+    end
+    policies = .llcomments..rules
+    if explicit_limits then policies = .llcomments..rules.loaded(sections[7],reference budget,limits)
+    else policies = .llcomments..rules.loaded(sections[7],reference budget)
+    projection = .llproject..schema.loaded(sections[10],reference budget)
+    ast_schema = .llast..schema.loaded(sections[11],reference budget)
+    if policies.error() <> '' then do; call llprepared..reject(3,policies.error()); return absent; end
+    if projection.error() <> '' then do; call llprepared..reject(3,projection.error()); return absent; end
+    if ast_schema.error() <> '' then do; call llprepared..reject(3,ast_schema.error()); return absent; end
+    stages_input = .llprepared..reader(sections[8],reference budget)
+    ok = stages_input.expect('4c535453'x as .binary); stages_version = stages_input.u32(); stages_count = stages_input.u32()
+    if stages_input.status() <> 0 then do; call llprepared..reject(stages_input.status(),stages_input.error()); return absent; end
+    remaining = stages_input.remaining()
+    if stages_version <> 1 | stages_count > remaining <idiv> 4 then do; call llprepared..reject(3,'invalid prepared stage list'); return absent; end
+    if stages_input.claim(stages_count,256) = 0 then do; call llprepared..reject(stages_input.status(),stages_input.error()); return absent; end
+    passes = .llstage..rules[]; pass = .llstage..rules
+    do item = 1 to stages_count
+      packed_stage = stages_input.binary()
+      if stages_input.status() <> 0 then do; call llprepared..reject(stages_input.status(),stages_input.error()); return absent; end
+      pass = .llstage..rules.loaded(packed_stage,reference budget)
+      if pass.error() <> '' then do; call llprepared..reject(3,pass.error()); return absent; end
+      if explicit_limits then do
+        if pass.count() > limits.limit('stage.rules') then do; call llprepared..reject(4,limits.exhausted('stage.rules',pass.count())); return absent; end
+      end
+      passes[item] = pass
+    end
+    if stages_input.finish() = 0 then do; call llprepared..reject(stages_input.status(),stages_input.error()); return absent; end
+    token_input = .llprepared..reader(sections[9],reference budget)
+    ok = token_input.expect('4c544f4b'x as .binary); token_version = token_input.u32(); token_count = token_input.u32()
+    if token_input.status() <> 0 then do; call llprepared..reject(token_input.status(),token_input.error()); return absent; end
+    remaining = token_input.remaining()
+    if token_version <> 1 | token_count > remaining <idiv> 4 then do; call llprepared..reject(3,'invalid prepared token list'); return absent; end
+    if token_input.claim(token_count,256) = 0 then do; call llprepared..reject(token_input.status(),token_input.error()); return absent; end
+    token_names = .string[]
+    do item = 1 to token_count
+      token_names[item] = token_input.text()
+    end
+    if token_input.finish() = 0 then do; call llprepared..reject(token_input.status(),token_input.error()); return absent; end
+    diagnostic_input = .llprepared..reader(sections[12],reference budget)
+    ok = diagnostic_input.expect('4c444941'x as .binary); diagnostic_version = diagnostic_input.u32(); diagnostic_count = diagnostic_input.u32()
+    if diagnostic_input.status() <> 0 then do; call llprepared..reject(diagnostic_input.status(),diagnostic_input.error()); return absent; end
+    remaining = diagnostic_input.remaining()
+    if diagnostic_version <> 1 | diagnostic_count > remaining <idiv> 16 then do; call llprepared..reject(3,'invalid prepared diagnostic list'); return absent; end
+    if diagnostic_input.claim(diagnostic_count,1024) = 0 then do; call llprepared..reject(diagnostic_input.status(),diagnostic_input.error()); return absent; end
+    diag_names = .string[]; diag_rules = .string[]; diag_texts = .string[]; diag_masks = .binary[]
+    do item = 1 to diagnostic_count
+      diag_names[item] = diagnostic_input.text(); diag_rules[item] = diagnostic_input.text()
+      diag_texts[item] = diagnostic_input.text(); diag_masks[item] = diagnostic_input.binary()
+    end
+    if diagnostic_input.finish() = 0 then do; call llprepared..reject(diagnostic_input.status(),diagnostic_input.error()); return absent; end
+    /* Reserve the final owned component copy before constructing the candidate. */
+    if budget.take(extent) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+    candidate = .definition
+    if profile then candidate = .definition(dfa,tables,settings[2],settings[4],settings[5])
+    else candidate = .definition.scanner(dfa,settings[2],settings[4],settings[5])
+    installed = candidate.installprepared(reference settings,reference config_numbers,reference policies,reference passes,reference token_names,reference projection,reference ast_schema,reference diag_names,reference diag_rules,reference diag_texts,reference diag_masks)
+    if installed = 0 then do; call llprepared..reject(3,'prepared metadata did not install atomically'); return absent; end
+    return candidate
+  on signal as problem
+    original = problem as .runtime_signal
+    call rxfnsb..signalrelay(original)
+    return absent
+  end
+  return absent
 
 /** Lexing may be used independently; parsing also accepts a consumer-supplied
  * token stream. Original bytes remain owned by every resulting tree. */

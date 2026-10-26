@@ -1,0 +1,276 @@
+/* cREXX License (MIT). Independent small prepared-definition contracts. */
+options levelb
+import rxfnsb
+import llcore
+import llmunch
+import lllr
+import lllanguage
+import llcomments
+import llstage
+import llproject
+import llast
+import lllimits
+import llprepared
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  call codecs()
+  original = makelanguage()
+  image = original.image()
+  loaded = lllanguage..prepared(image)
+  call check(initialized(loaded),'complete LR owner publication')
+  if initialized(loaded) = 0 then return failures
+  call check(loaded.hasparser() = 1 & loaded.backend() = 'lr1' & (loaded.grammar() is .llcore..grammar) = 0 & loaded.root() = 0 & initialized(loaded.grammar()) = initialized(original.grammar()),'LR public default field kind and state stay unchanged')
+  call check(loaded.encoding() = 'utf8' & loaded.unicodeversion() = 'test-1' & loaded.opening() = '/*' & loaded.closing() = '*/','configuration text')
+  call check(loaded.malformed() = 'BAD_UTF8' & loaded.unmatched() = 'NO_TOKEN' & loaded.eof() = -1 & loaded.sync() = 2,'lexical and recovery settings')
+  call check(loaded.tokenname(0) = '' & loaded.tokenname(1) = 'alpha' & loaded.tokenname(2) = 'beta' & loaded.tokenname(5) = '' & loaded.tokenid('beta') = 2,'token holes and names')
+  call check(samebytes(image,loaded.image()),'complete canonical re-encoding including holes and diagnostics')
+  tables = loaded.tables(); graph = tables.grammar().source()
+  call check(graph.size() = 6 & graph.revision() = 8 & graph.rawlabel(1) = '' & graph.label(1) = 'clause.1','raw empty label and non-size revision')
+  call check(graph.line(1) = 11 & graph.line(6) = 99 & graph.signature() = makegrammar().signature(),'exact graph source identity')
+  call parsechecks(reference original,reference loaded)
+  stages = loaded.stages()
+  call check(stages[0] = 2 & stages[1].count() = 2 & stages[1].label(1) = '' & stages[1].choose(1,1,2,'a',2) = 1,'ordered stage rows including empty labels')
+  ok = stages[1].add('overflow',0,1,-1,1,-1,'',1,1)
+  call check(ok = 0 & pos('stage.rules',stages[1].error()) > 0,'stage mutation retains exact original limit')
+  comments = loaded.comments()
+  call check(comments.size() = 2 & comments.name(1) = 'notes' & comments.name(2) = 'notes' & comments.custom(1) = 1,'comment names may repeat and shielding survives')
+  call check(comments.step(1,1,39) = 2 & comments.accepting(1,2) = 1 & comments.line(1) = 17 & comments.byte(1) = 23,'custom DFA and comment source coordinates')
+  ok = comments.add('extra','line','--')
+  call check(ok = 1 & loaded.comments().size() = 2,'unfrozen loaded comment copy remains mutable and independent')
+  schema = loaded.schema(); ok = schema.keep('Other',7,0)
+  ast = loaded.astschema(); ok = ast.mapping('other','Other')
+  call check(loaded.schema().size() = 1 & loaded.astschema().size() = 1,'owned metadata getters do not mutate definition')
+  changed = graph; ok = changed.body(6,1); extra = changed.add(1,3,0,'extra',100)
+  call check(changed.revision() = 10 & graph.revision() = 8 & loaded.tables().grammar().source().revision() = 8,'packed grammar mutation materializes only its owner')
+  scanner = .lllanguage..definition.scanner(makedfa(),'utf8')
+  call scanner.token(1,'alpha'); call scanner.token(2,'beta')
+  scan_image = scanner.image(); scan_loaded = lllanguage..prepared(scan_image)
+  call check(initialized(scan_loaded),'complete scanner owner publication')
+  if initialized(scan_loaded) = 0 then return failures
+  call check(scan_loaded.hasparser() = 0 & (scan_loaded.tables() is .lllr..tables) = 0 & (scan_loaded.grammar() is .llcore..grammar) = 0 & initialized(scan_loaded.tables()) = initialized(scanner.tables()) & initialized(scan_loaded.grammar()) = initialized(scanner.grammar()),'scanner profile default parser/graph kind and state stay unchanged')
+  scan = .lllanguage..request.borrowed(reference scan_loaded,'a b' as .binary)
+  call check(scan.lex() = 0 & scan.tokens().size() = 2 & scan.tokens().start(1) = 2 & scan.tokens().finish(2) = 3,'scanner independent byte spans')
+  call metadatafailures()
+  call refusals(image,reference loaded)
+  say 'PREPARED_DEFINITION|checks=' || checks || '|failures=' || failures
+  return failures
+
+makegrammar: procedure = .llcore..grammar
+  graph = .llcore..grammar('contextfree')
+  alpha = graph.add(1,1,0,'',11)
+  alias = graph.add(1,1,0,'alias-alpha',12)
+  beta = graph.add(1,2,0,'beta',13)
+  optional = graph.add(15,beta,0,'optional-beta',14)
+  pair = graph.add(2,alpha,optional,'pair-body',15)
+  root = graph.add(5,pair,0,'Pair',99)
+  ok = graph.body(root,pair)
+  return graph
+
+makedfa: procedure = .llmunch..automaton
+  arg packed = 1
+  dfa = .llmunch..automaton(4,3)
+  ok = dfa.mapping(97,0); ok = dfa.mapping(98,1); ok = dfa.mapping(32,2); ok = dfa.mapping(10,2)
+  ok = dfa.transition(1,0,2); ok = dfa.transition(1,1,3); ok = dfa.transition(1,2,4); ok = dfa.transition(4,2,4)
+  ok = dfa.accepting(2,1); ok = dfa.accepting(3,2); ok = dfa.accepting(4,-1)
+  if packed then return .llmunch..automaton.loaded(dfa.image())
+  return dfa
+
+makelanguage: procedure = .lllanguage..definition
+  graph = makegrammar(); built = .lllr..tables(graph,6,'lr1')
+  call check(built.status() = 0,'independent LR construction')
+  parser = .lllr..tables.loaded(graph,6,built.image(),graph.signature() || '|root=6')
+  language = .lllanguage..definition(makedfa(),parser,'utf8','/*','*/')
+  call language.unicode('test-1'); call language.lexical('BAD_UTF8','NO_TOKEN',-1); call language.recovery(2)
+  call language.token(1,'alpha'); call language.token(2,'beta'); call language.token(5,'')
+  ok = language.keep('Pair',7,0); ok = language.astmap('Pair','Pair')
+  ok = language.astfield('Pair','spelling','','text','one')
+  comments = .llcomments..rules()
+  ok = comments.add('notes','nested','/*','*/',1,17,23)
+  shield = .llmunch..automaton(2,1); ok = shield.mapping(39,0)
+  ok = shield.transition(1,0,2); ok = shield.accepting(2,1)
+  frozen_shield = .llmunch..automaton.loaded(shield.image()); ok = comments.shielding(1,frozen_shield)
+  ok = comments.add('notes','line','#','',0,18,24)
+  call language.usecomments(comments)
+  stage = .llstage..rules(1,2)
+  ok = stage.add('',0,1,-1,1,-1,'a',1,1); ok = stage.add('',0,2,-1,1,-1,'b',2,1)
+  call language.addstage(stage)
+  empty_stage = .llstage..rules(1,0); call language.addstage(empty_stage)
+  mask = .binary; call binresize mask,parser.states()
+  do state = 0 to parser.states() - 1
+    <at..u8>(state) mask = 1
+  end
+  call language.diagnostic('PAIR_EXPECTED','Pair','need {expected}; saw {found}' || '00'x || 'tail',mask)
+  return language
+
+parsechecks: procedure = .void
+  arg before_ref = reference .lllanguage..definition, after_ref = reference .lllanguage..definition
+  before = dereference before_ref; after = dereference after_ref
+  first = .lllanguage..request.borrowed(after_ref,'a b' as .binary)
+  call check(first.parse() = 0 & first.tokens().size() = 2,'independent accepted LR text')
+  tokens = first.tokens()
+  call check(tokens.symbol(0) = 1 & tokens.symbol(1) = 2 & tokens.start(0) = 0 & tokens.finish(1) = 1 & tokens.start(1) = 2 & tokens.finish(2) = 3,'independent token kinds and half-open byte spans')
+  tree = first.tree(); ast = first.ast(); projection = first.projection()
+  call check(tree.label(first.root()) = 'Pair' & tree.start(first.root()) = 0 & tree.finish(first.root()) = 3,'independent reduction and source span')
+  call check(ast.status() = 0 & ast.root().kind() = 'Pair' & ast.root().text('spelling') = 'a b','independent AST text field')
+  call check(projection.run() = 0 & projection.tree().kind(projection.root()) = 7,'independent projection kind')
+  comment = .lllanguage..request.borrowed(after_ref,'a /*x*/ b' as .binary)
+  call check(comment.parse() = 0 & comment.tokens().start(1) = 8 & comment.tokens().finish(2) = 9,'comments preserve original byte spans')
+  inputs = .string[]; inputs[1] = 'a'; inputs[2] = 'ab'; inputs[3] = 'b'; inputs[4] = 'abb'; inputs[5] = ''
+  do i = 1 to inputs[0]
+    left = .lllanguage..request.borrowed(before_ref,inputs[i] as .binary)
+    right = .lllanguage..request.borrowed(after_ref,inputs[i] as .binary)
+    call check(left.parse() = right.parse() & left.offset() = right.offset() & left.error() == right.error(),'ordinary/prepared diagnostic agreement ' || i)
+  end
+  missing = .lllanguage..request.borrowed(after_ref,'b' as .binary)
+  call check(missing.parse() = 1 & missing.offset() = 0 & pos('PAIR_EXPECTED:',missing.error()) = 1 & pos('clause.1',missing.error()) > 0 & right(missing.error(),5) == ('00'x || 'tail'),'independent authored failure, NUL text and first-terminal fallback')
+  call check(ast.root().text('spelling') = 'a b','prior materialized result survives later requests')
+  return
+
+codecs: procedure = .void
+  shared = .llprepared..budget(12)
+  first = .llprepared..writer(reference shared); second = .llprepared..writer(reference shared)
+  call first.u32(4294967295); call second.i64(-9)
+  call check(shared.remaining() = 0 & first.status() = 0 & second.status() = 0,'two writers share one budget counter')
+  first_bytes = first.finish()
+  call first.raw('00'x as .binary)
+  call check(first.status() = 4 & shared.remaining() = 0,'shared writer exhaustion is sticky and bounded')
+  reads = .llprepared..budget(8)
+  reader1 = .llprepared..reader(first_bytes,reference reads)
+  reader2 = .llprepared..reader('01000000'x as .binary,reference reads)
+  call check(reader1.u32() = 4294967295 & reader2.u32() = 1 & reads.remaining() = 0,'two readers share constructor reservations')
+  reader3 = .llprepared..reader('00'x as .binary,reference reads)
+  call check(reader3.status() = 4 & reader3.finish() = 0,'shared reader exhaustion')
+  text_budget = .llprepared..budget(1024)
+  writer = .llprepared..writer(reference text_budget)
+  text = 'a' || '00'x || 'ceb1'x
+  call writer.text(text)
+  text_reader = .llprepared..reader(writer.finish(),reference text_budget)
+  call check(text_reader.text() == text & text_reader.finish() = 1,'length-bearing UTF8 text preserves NUL')
+  invalid_budget = .llprepared..budget(1024)
+  invalid = .llprepared..reader('02000000c0af'x as .binary,reference invalid_budget)
+  ignored = invalid.text()
+  call check(invalid.status() = 3 & invalid.finish() = 0,'malformed UTF8 field rejected')
+  return
+
+metadatafailures: procedure = .void
+  ignored = .binary
+  policies = .llcomments..rules(); ok = policies.add('line','line','#'); ok = policies.validate()
+  budget = .llprepared..budget(4096)
+  frozen = .llcomments..rules.loaded(policies.image(reference budget),reference budget)
+  ok = frozen.add('extra','line','--')
+  call check(ok = 0 & pos('frozen',frozen.error()) > 0,'comment freeze state round-trips')
+  poison = makelanguage(); bad = .llcomments..rules()
+  ok = bad.add('one','line','#'); ok = bad.add('two','line','#'); call poison.usecomments(bad)
+  caught = 0
+  do; ignored = poison.image(); on signal invalid_arguments; caught = 1; end
+  call check(caught,'poisoned comment owner cannot serialize success')
+  bad_ast = makelanguage(); ok = bad_ast.astmap('Pair','duplicate')
+  caught = 0
+  do; ignored = bad_ast.image(); on signal invalid_arguments; caught = 1; end
+  call check(caught,'poisoned AST schema cannot serialize success')
+  bad_stage = makelanguage(); stage = .llstage..rules(0); call bad_stage.addstage(stage)
+  caught = 0
+  do; ignored = bad_stage.image(); on signal invalid_arguments; caught = 1; end
+  call check(caught,'poisoned stage cannot serialize success')
+  mutable = .lllanguage..definition.scanner(makedfa(0),'utf8')
+  caught = 0
+  do; ignored = mutable.image(); on signal error; caught = 1; end
+  mutable_dfa = mutable.automaton(); ok = mutable_dfa.mapping(99,0)
+  call check(caught & ok = 1,'mutable DFA encoding refused without changing its public mutation behavior')
+  return
+
+/* The directory is data, never trusted offsets for a read before bounds. */
+section: procedure = .int
+  arg image = .binary, id = .int
+  if <blen>(image) < 20 then return 0
+  count = <at..u32>(16) image
+  if count > (<blen>(image) - 20) <idiv> 12 then return 0
+  do i = 0 to count - 1
+    at = 20 + i * 12
+    if <at..u32>(at) image = id then return <at..u32>(at + 4) image
+  end
+  return 0
+
+refusals: procedure = .void
+  arg image = .binary, prior_ref = reference .lllanguage..definition
+  bad = .binary; refused = .lllanguage..definition; absent_definition = .lllanguage..definition
+  at = .int; length = .int; rowbytes = .int; caught = .int
+  do mode = 1 to 14
+    bad = image
+    select mode
+      when 1 then <at..u8>(0) bad = 0
+      when 2 then <at..u32>(4) bad = 2
+      when 3 then <at..u32>(8) bad = 0
+      when 4 then <at..u32>(12) bad = 99
+      when 5 then <at..u32>(16) bad = 4294967295
+      when 6 then <at..u32>(32) bad = <at..u32>(20) bad
+      when 7 then <at..u32>(36) bad = <at..u32>(24) bad
+      when 8 then do
+        at = section(bad,9) + 12
+        /* Skip the intentionally empty token0; token1 starts with ASCII a. */
+        length = <at..u32>(at) bad; at = at + 4 + length
+        if <at..u32>(at) bad > 0 then <at..u8>(at + 4) bad = 255
+      end
+      when 9 then do
+        at = section(bad,7); <at..u32>(at + 8) bad = 2
+      end
+      when 10 then bad = <at..binary>(0,<blen>(image) - 1) image
+      when 11 then bad = image || ('00'x as .binary)
+      when 12 then do
+        at = section(bad,5); <at..i32>(at) bad = 2147483647
+      end
+      when 13 then do
+        /* LCFG root/signature precede dimensions and the packed row blob. */
+        at = section(bad,3) + 16; length = <at..u32>(at) bad
+        at = at + 4 + length + 12
+        rowbytes = <at..u32>(at) bad; at = at + 4
+        call check(rowbytes >= 16,'independent CFG first-row mutation exists')
+        if rowbytes >= 16 then <at..i64>(at) bad = 0
+      end
+      otherwise do
+        at = section(bad,3) + 16; length = <at..u32>(at) bad
+        at = at + 4 + length
+        slots = <at..u32>(at + 4) bad
+        <at..u32>(at + 8) bad = slots + 1
+      end
+    end
+    refused = absent_definition; caught = 0
+    do
+      refused = lllanguage..prepared(bad)
+    on signal invalid_arguments as problem
+      caught = pos('LL_LANGUAGE_IMAGE:',problem.message()) = 1
+    end
+    call check(caught & initialized(refused) = 0,'malformed image atomic refusal ' || mode)
+    prior = .lllanguage..request.borrowed(prior_ref,'ab' as .binary)
+    call check(prior.parse() = 0,'malformed image preserves prior owner ' || mode)
+  end
+  refused = absent_definition
+  assembler sigpush 'INVALID_ARGUMENTS'
+  assembler sigignore 'INVALID_ARGUMENTS'
+  refused = lllanguage..prepared(bad)
+  assembler sigpop 'INVALID_ARGUMENTS'
+  call check(initialized(refused) = 0,'ignored failure still returns absent definition')
+  limited = .lllanguage..definition; caught = 0
+  do
+    limited = lllanguage..prepared(image,,1)
+  on signal out_of_range as problem
+    caught = pos('LL_LANGUAGE_IMAGE:',problem.message()) = 1
+  end
+  call check(caught & initialized(limited) = 0,'explicit image budget failure is distinct and atomic')
+  return
+
+samebytes: procedure = .int
+  arg left = .binary, right = .binary
+  if <blen>(left) <> <blen>(right) then return 0
+  do byte = 0 to <blen>(left) - 1
+    if <at..u8>(byte) left <> <at..u8>(byte) right then return 0
+  end
+  return 1
+
+check: procedure = .void expose checks failures
+  arg condition = .int, label = .string
+  checks = checks + 1
+  if condition then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

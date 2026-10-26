@@ -79,6 +79,29 @@ foreach(_test llast llanalysis llir llirservices llirflow llsource lloptimise ll
 endforeach()
 
 
+# Prepared-definition format/ownership proof uses one small normal SDK lane.
+add_custom_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/ts_llprepared_opt-linked.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+    -i "${CMAKE_CURRENT_BINARY_DIR}/ast-imports"
+    -o ts_llprepared_opt "${CMAKE_CURRENT_SOURCE_DIR}/ts_llprepared.crexx"
+  COMMAND $<TARGET_FILE:rxas> ts_llprepared_opt
+  COMMAND $<TARGET_FILE:rxlink> -s -o ts_llprepared_opt-linked ts_llprepared_opt
+    "${CMAKE_BINARY_DIR}/bin/rxfnsl" "${CMAKE_BINARY_DIR}/bin/library"
+  DEPENDS rxc rxas rxlink rxfnsl levell_ast_test_imports ${_ast_imports} ts_llprepared.crexx
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+add_custom_target(ts_llprepared_opt
+  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/ts_llprepared_opt-linked.rxbin")
+add_dependencies(testrxfnsl ts_llprepared_opt)
+if(TARGET rxbvm)
+  add_test(NAME ts_llprepared_opt_rxbvm
+    COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/ts_llprepared_opt-linked.rxbin")
+  set_tests_properties(ts_llprepared_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "PREPARED_DEFINITION[|]checks=[0-9]+[|]failures=0"
+    TIMEOUT 300 LABELS "library;level-l")
+  crexx_register_test_prep_targets(TESTS ts_llprepared_opt_rxbvm TARGETS ts_llprepared_opt rxbvm)
+endif()
+
+
 # Read the already-built SDK RXAS; diagnostic noopt SDK builds intentionally
 # disable the inline resize shape checked here.
 if(NOT CREXX_LEVEL_L_NOOPT)

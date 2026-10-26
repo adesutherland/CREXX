@@ -76,6 +76,9 @@ automaton: class
     _image = data
     _error = ''
     return
+  /** Immutable packed byte extent; zero denotes a mutable builder. */
+  packed: method = .int
+    return <blen>(_image)
   image: method = .binary
     i = .int
     out = .binary

@@ -38,6 +38,7 @@ set(LL_GENERATOR_STAMP_SOURCES
   lib/rxfnsl/rexx/llmunch.crexx
   lib/rxfnsl/rexx/llpeg.crexx
   lib/rxfnsl/rexx/llpratt.crexx
+  lib/rxfnsl/rexx/llprepared.crexx
   lib/rxfnsl/rexx/llproject.crexx
   lib/rxfnsl/rexx/llproperties.crexx
   lib/rxfnsl/rexx/llrecover.crexx

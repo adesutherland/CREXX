@@ -4,6 +4,7 @@ namespace llcfg expose productions
 import llcore
 import llcheck
 import lllimits
+import llprepared
 
 /** Stable clause handles are nonterminals; terminals are -(symbol+1).
  * Production 1 is the augmented root. Original labels remain on each lhs.
@@ -18,6 +19,13 @@ productions: class
   _status = .int
   _built = .int
   _factsready = .int
+  _prepared = .int
+  _checking = .int
+  _rowdata = .binary
+  _rhsdata = .binary
+  _expected_count = .int
+  _expected_slots = .int
+  _expected_max = .int
   _error = .string
   _lhs = .int[]
   _first = .int[]
@@ -29,8 +37,81 @@ productions: class
     if ?limits = 0 then limits = .lllimits..policy()
     _limits = limits
     _g = graph; _root = root; _facts = .llcheck..analysis(graph,root,limits)
-    _count = 0; _slots = 0; _max = 0; _status = 0; _error = ''; _built = 0; _factsready = 0
+    _count = 0; _slots = 0; _max = 0; _status = 0; _error = ''; _built = 0; _factsready = 0; _prepared = 0; _checking = 0
     return
+  /** Packed layout is checked against the same expansion used by build(). */
+  prepared: factory
+    arg graph = .llcore..grammar, root = .int, data = .binary, budget_ref = reference .llprepared..budget, ?limits = .lllimits..policy
+    if ?limits = 0 then limits = .lllimits..policy.artifact(graph.size())
+    _limits = limits; _g = graph; _root = root; _facts = .llcheck..analysis(graph,root,limits)
+    _count = 0; _slots = 0; _max = 0; _status = 0; _error = ''; _built = 0
+    _factsready = 0; _prepared = 0; _checking = 0
+    decoded = .llprepared..reader(data,budget_ref)
+    ok = decoded.expect('4c434647'x as .binary); version = decoded.u32()
+    selected_root = decoded.i64(); identity = decoded.text()
+    count = decoded.count(0); slots = decoded.count(0); maximum = decoded.u32()
+    rows = decoded.binary(); rhs = decoded.binary()
+    if decoded.finish() = 0 then do
+      _status = decoded.status(); _error = decoded.error(); return
+    end
+    if version <> 1 | selected_root <> root | identity <> graph.signature() then do
+      _status = 3; _error = 'prepared CFG grammar/root identity mismatch'; return
+    end
+    row_extent = <blen>(rows); rhs_extent = <blen>(rhs)
+    if count < 1 | count > row_extent <idiv> 16 | slots > rhs_extent <idiv> 8 | maximum > slots then do
+      _status = 3; _error = 'invalid prepared CFG dimensions'; return
+    end
+    if row_extent <> count * 16 | rhs_extent <> slots * 8 then do
+      _status = 3; _error = 'prepared CFG extent mismatch'; return
+    end
+    if decoded.claim(maximum,256) = 0 then do
+      _status = decoded.status(); _error = decoded.error(); return
+    end
+    _rowdata = rows; _rhsdata = rhs
+    _expected_count = count; _expected_slots = slots; _expected_max = maximum; _prepared = 1
+    return
+
+  image: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    call build
+    absent = .binary
+    if _status <> 0 then do; call llprepared..reject(_status,_error); return absent; end
+    output = .llprepared..writer(budget_ref)
+    call output.raw('4c434647'x as .binary); call output.u32(1)
+    call output.i64(_root); call output.text(_g.signature())
+    call output.u32(_count); call output.u32(_slots); call output.u32(_max)
+    if _prepared then do
+      call output.binary(_rowdata); call output.binary(_rhsdata)
+    end
+    else do
+      rows = .llprepared..writer(budget_ref); rhs_output = .llprepared..writer(budget_ref)
+      do production = 1 to _count
+        call rows.i64(_lhs[production]); call rows.u32(_length[production]); call rows.u32(_first[production])
+      end
+      do item = 1 to _slots
+        call rhs_output.i64(_rhs[item])
+      end
+      call output.binary(rows.finish()); call output.binary(rhs_output.finish())
+      if rows.status() <> 0 then do; call llprepared..reject(rows.status(),rows.error()); return absent; end
+      if rhs_output.status() <> 0 then do; call llprepared..reject(rhs_output.status(),rhs_output.error()); return absent; end
+    end
+    if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return absent; end
+    return output.finish()
+
+  materialize: method = .void
+    if _prepared = 0 then return
+    do production = 1 to _count
+      at = (production - 1) * 16
+      _lhs[production] = <at..i64>(at) _rowdata
+      _length[production] = <at..u32>(at + 8) _rowdata
+      _first[production] = <at..u32>(at + 12) _rowdata
+    end
+    do item = 1 to _slots
+      _rhs[item] = <at..i64>((item - 1) * 8) _rhsdata
+    end
+    empty = .binary; _rowdata = empty; _rhsdata = empty; _prepared = 0
+    return
+
   build: method = .void
     if _built then return
     _built = 1; graph = _g; root = _root
@@ -46,6 +127,7 @@ productions: class
       if clause > 0 then detail = _facts.location(clause)
       _status = 1; _error = 'LL_BACKEND_CAPABILITY: ' || detail || '. A CFG backend requires contextfree choice without PEG predicates or ordered choice. Select a compatible backend or explicitly reformulate the rules; changing choice semantics can change the language.'; return
     end
+    _checking = _prepared
     ok = pair(graph.size() + 1,root,0)
     i = .int; j = .int; a = .int; b = .int; op = .int; child = .int
     emptyints = .int[]
@@ -69,8 +151,14 @@ productions: class
           ok = pair(i,-j - 1,0)
         end
         when 13 then do
-          text = graph.text(i); rhs = emptyints
-          do j = 0 to <blen>(text) - 1
+          text = graph.text(i); text_extent = <blen>(text)
+          if _checking then do
+            if text_extent > _expected_max | text_extent > _expected_slots - _slots then do
+              _status = 3; _error = 'prepared CFG literal exceeds claimed RHS layout'; _checking = 0; return
+            end
+          end
+          rhs = emptyints
+          do j = 0 to text_extent - 1
             byte = <at..u8>(j) text
             rhs[j + 1] = -byte - 1
           end
@@ -89,8 +177,14 @@ productions: class
           _status = 1; _error = _facts.location(i) || ': unsupported CFG clause (including explicit EOF assertion)'; return
         end
       end
-      if _status <> 0 then return
+      if _status <> 0 then do; _checking = 0; return; end
     end
+    if _checking then do
+      if _count <> _expected_count | _slots <> _expected_slots | _max <> _expected_max then do
+        _status = 3; _error = 'prepared CFG does not match canonical production layout'
+      end
+    end
+    _checking = 0
     return
   root: method = .int
     return _root
@@ -103,8 +197,32 @@ productions: class
   append: method = .int
     arg lhs = .int, rhs = .int[]
     if _status <> 0 then return 0
+    if _prepared & _checking = 0 then call materialize
     if _count >= _limits.limit('cfg.productions') then do
       _status = 4; _error = _limits.exhausted('cfg.productions',_count + 1); return 0
+    end
+    if _checking then do
+      if _count >= _expected_count then do
+        _status = 3; _error = 'prepared CFG lacks a canonical production'; return 0
+      end
+      at = _count * 16
+      actual_lhs = <at..i64>(at) _rowdata
+      actual_length = <at..u32>(at + 8) _rowdata
+      actual_first = <at..u32>(at + 12) _rowdata
+      if actual_lhs <> lhs | actual_length <> rhs[0] | actual_first <> _slots + 1 then do
+        _status = 3; _error = 'prepared CFG production differs from grammar'; return 0
+      end
+      if rhs[0] > _expected_slots - _slots then do
+        _status = 3; _error = 'prepared CFG RHS exceeds layout'; return 0
+      end
+      do item = 1 to rhs[0]
+        if <at..i64>((_slots + item - 1) * 8) _rhsdata <> rhs[item] then do
+          _status = 3; _error = 'prepared CFG RHS differs from grammar'; return 0
+        end
+      end
+      _count = _count + 1; _slots = _slots + rhs[0]
+      if rhs[0] > _max then _max = rhs[0]
+      return _count
     end
     _count = _count + 1; _lhs[_count] = lhs
     _first[_count] = _slots + 1; _length[_count] = rhs[0]
@@ -121,12 +239,27 @@ productions: class
     return _max
   lhs: method = .int
     arg p = .int
+    if _prepared then do
+      if p < 1 | p > _count then return 0
+      return <at..i64>((p - 1) * 16) _rowdata
+    end
     return _lhs[p]
   length: method = .int
     arg p = .int
+    if _prepared then do
+      if p < 1 | p > _count then return 0
+      return <at..u32>((p - 1) * 16 + 8) _rowdata
+    end
     return _length[p]
   rhs: method = .int
     arg p = .int, at = .int
+    if _prepared then do
+      if p < 1 | p > _count then return 0
+      size = <at..u32>((p - 1) * 16 + 8) _rowdata
+      if at < 0 | at >= size then return 0
+      first = <at..u32>((p - 1) * 16 + 12) _rowdata
+      return <at..i64>((first + at - 1) * 8) _rhsdata
+    end
     if at < 0 | at >= _length[p] then return 0
     return _rhs[_first[p] + at]
   /** Loaded tables need production layout only. Construction algorithms demand
@@ -172,7 +305,7 @@ productions: class
     return 'token ' || token
   location: method = .string
     arg p = .int
-    nt = _lhs[p]
+    nt = lhs(p)
     if nt > _g.size() then return '<root>'
     if _g.op(nt) = 5 then return _facts.location(nt)
     owners = ''; emptyints = .int[]

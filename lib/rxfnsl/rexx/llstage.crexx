@@ -4,6 +4,11 @@ namespace llstage expose rules transducer
 import rxfnsb
 import llcore
 import lllimits
+import llprepared
+
+admitted: procedure = .int
+  arg state = .int, first = .int, second = .int, take = .int, unless = .int, emit = .int, next = .int
+  return state >= 0 & first >= -1 & first <= 255 & second >= -1 & second <= 255 & take >= 1 & take <= 2 & unless >= -1 & unless <= 255 & emit >= -2 & emit <= 255 & next >= 1
 
 /** First matching declaration wins. State 0 is a wildcard; tokens are 0..255.
  * @param initial Initial positive finite context.
@@ -33,7 +38,7 @@ rules: class
     if _count >= _limit then do
       _error = lllimits..describe('stage.rules',_limit,_count + 1); return 0
     end
-    if state < 0 | first < -1 | first > 255 | second < -1 | second > 255 | take < 1 | take > 2 | unless < -1 | unless > 255 | emit < -2 | emit > 255 | next < 1 then do
+    if admitted(state,first,second,take,unless,emit,next) = 0 then do
       _error = 'invalid finite-state token declaration ' || name; return 0
     end
     _count = _count + 1; _label[_count] = name; _state[_count] = state
@@ -85,6 +90,57 @@ rules: class
   word: method = .string
     arg rule = .int
     return _word[rule]
+
+  /** Prepared declarations preserve first-match order and the mutation budget. */
+  image: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    empty = .binary
+    if _error <> '' then do; call llprepared..reject(3,_error); return empty; end
+    out = .llprepared..writer(budget_ref)
+    call out.raw('4c535447'x as .binary); call out.u32(1)
+    call out.i64(_initial); call out.i64(_limit); call out.u32(_count)
+    do i = 1 to _count
+      call out.text(_label[i]); call out.i64(_state[i]); call out.i64(_first[i]); call out.i64(_second[i])
+      call out.i64(_take[i]); call out.i64(_unless[i]); call out.text(_word[i])
+      call out.i64(_emit[i]); call out.i64(_next[i])
+    end
+    if out.status() <> 0 then do; call llprepared..reject(out.status(),out.error()); return empty; end
+    return out.finish()
+
+  /** No public setters are replayed and no reader/budget reference is retained. */
+  loaded: factory
+    arg data = .binary, budget_ref = reference .llprepared..budget
+    _initial = 1; _limit = 0; _count = 0; _error = 'invalid prepared token stage'
+    input = .llprepared..reader(data,budget_ref)
+    if input.expect('4c535447'x as .binary) = 0 then do
+      _error = input.error(); call llprepared..reject(input.status(),_error); return
+    end
+    version = input.u32(); initial = input.i64(); limit = input.i64(); count = input.u32()
+    if input.status() <> 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if version <> 1 | initial < 1 | (count > 0 & count > limit) then do
+      call llprepared..reject(3,_error); return
+    end
+    if count > input.remaining() <idiv> 64 then do; call llprepared..reject(3,_error); return; end
+    if input.claim(count,256) = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    labels = .string[]; states = .int[]; firsts = .int[]; seconds = .int[]
+    takes = .int[]; unlesses = .int[]; words = .string[]; emits = .int[]; nexts = .int[]
+    _error = ''
+    do i = 1 to count
+      label = input.text(); state = input.i64(); first = input.i64(); second = input.i64()
+      take = input.i64(); unless = input.i64(); word = input.text(); emit = input.i64(); next = input.i64()
+      if input.status() <> 0 then leave
+      if admitted(state,first,second,take,unless,emit,next) = 0 | upper(word) \== word then do
+        _error = 'invalid prepared token declaration'; leave
+      end
+      labels[i] = label; states[i] = state; firsts[i] = first; seconds[i] = second
+      takes[i] = take; unlesses[i] = unless; words[i] = word; emits[i] = emit; nexts[i] = next
+    end
+    if input.finish() = 0 then do; _error = input.error(); call llprepared..reject(input.status(),_error); return; end
+    if _error <> '' then do; call llprepared..reject(3,_error); return; end
+    _label = labels; _state = states; _first = firsts; _second = seconds
+    _take = takes; _unless = unlesses; _word = words; _emit = emits; _next = nexts
+    _initial = initial; _limit = limit; _count = count
+    return
 
 /** Output spans refer to original source, even when two tokens are merged.
  * Deleted trivia remains available in source(). Origins are input token indexes.

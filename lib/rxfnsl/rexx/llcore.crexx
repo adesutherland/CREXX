@@ -2,6 +2,7 @@
 options levelb
 namespace llcore expose grammar stream tree
 import rxfnsb
+import llprepared
 
 /** A revisioned grammar graph, independent of a parsing engine.
  * @param profile Declared recognition semantics: ordered, contextfree, pika or squirrel.
@@ -16,15 +17,117 @@ grammar: class
   _label = .string[]
   _line = .int[]
   _text = .binary[]
+  _records = .binary
+  _texts = .binary
+  _signature = .string
 
   *: factory
     arg profile = .string
-    _profile = profile; _size = 0; _revision = 1
+    _profile = profile; _size = 0; _revision = 1; _signature = ''
     return
+
+  /** Owner-local prepared rows. Semantic grammar admission remains llcheck's. */
+  prepared: factory
+    arg data = .binary, budget_ref = reference .llprepared..budget
+    _size = 0; _revision = 1; _profile = ''; _signature = ''
+    decoded = .llprepared..reader(data,budget_ref)
+    ok = decoded.expect('4c47524d'x as .binary); version = decoded.u32()
+    revision = decoded.i64(); count = decoded.count(0); profile = decoded.text()
+    if decoded.status() <> 0 then do
+      call llprepared..reject(decoded.status(),decoded.error()); return
+    end
+    if version <> 1 | revision < 1 then do
+      call llprepared..reject(3,'invalid grammar version/revision'); return
+    end
+    records = decoded.binary(); texts = decoded.binary()
+    if decoded.finish() = 0 then do
+      call llprepared..reject(decoded.status(),decoded.error()); return
+    end
+    record_extent = <blen>(records); text_extent = <blen>(texts)
+    if count > record_extent <idiv> 48 then do
+      call llprepared..reject(3,'grammar row count exceeds section'); return
+    end
+    if record_extent <> count * 48 then do
+      call llprepared..reject(3,'grammar row extent mismatch'); return
+    end
+    cursor = 0; label = .string
+    do row = 0 to count - 1
+      at = row * 48
+      first = <at..u32>(at + 32) records; size = <at..u32>(at + 36) records
+      if first <> cursor | size > text_extent - cursor then do
+        call llprepared..reject(3,'invalid grammar label range'); return
+      end
+      if decoded.claim(size,4) = 0 then do
+        call llprepared..reject(decoded.status(),decoded.error()); return
+      end
+      do
+        label = (<at..binary>(first,size) texts) as .string
+        if length(label) > size then do
+          call llprepared..reject(3,'invalid grammar label extent'); return
+        end
+      on signal unicode_error
+        call llprepared..reject(3,'invalid UTF8 grammar label'); return
+      end
+      cursor = cursor + size
+      first = <at..u32>(at + 40) records; size = <at..u32>(at + 44) records
+      if first <> cursor | size > text_extent - cursor then do
+        call llprepared..reject(3,'invalid grammar literal range'); return
+      end
+      cursor = cursor + size
+    end
+    if cursor <> text_extent then do
+      call llprepared..reject(3,'trailing grammar text bytes'); return
+    end
+    _profile = profile; _revision = revision; _size = count
+    _records = records; _texts = texts
+    return
+
+  /** Serialize raw labels/operands, never the display fallback or normalized IDs. */
+  image: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    output = .llprepared..writer(budget_ref)
+    rows = .llprepared..writer(budget_ref); texts = .llprepared..writer(budget_ref)
+    cursor = 0
+    do node = 1 to _size
+      call rows.i64(op(node)); call rows.i64(left(node)); call rows.i64(right(node)); call rows.i64(line(node))
+      label = rawlabel(node) as .binary; value = text(node)
+      call rows.u32(cursor); call rows.u32(<blen>(label)); call texts.raw(label)
+      cursor = cursor + <blen>(label)
+      call rows.u32(cursor); call rows.u32(<blen>(value)); call texts.raw(value)
+      cursor = cursor + <blen>(value)
+    end
+    call output.raw('4c47524d'x as .binary); call output.u32(1)
+    call output.i64(_revision); call output.u32(_size); call output.text(_profile)
+    call output.binary(rows.finish()); call output.binary(texts.finish())
+    absent = .binary
+    if rows.status() <> 0 then do; call llprepared..reject(rows.status(),rows.error()); return absent; end
+    if texts.status() <> 0 then do; call llprepared..reject(texts.status(),texts.error()); return absent; end
+    if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return absent; end
+    return output.finish()
+
+  /** A mutation materializes this owned value only; no shared writable base. */
+  materialize: method = .void
+    if <blen>(_records) = 0 then return
+    do node = 1 to _size
+      _op[node] = op(node); _a[node] = left(node); _b[node] = right(node)
+      _label[node] = rawlabel(node); _line[node] = line(node); _text[node] = text(node)
+    end
+    empty = .binary; _records = empty; _texts = empty
+    return
+
+  rawlabel: method = .string
+    arg node = .int
+    if <blen>(_records) = 0 then return _label[node]
+    if node < 1 | node > _size then return ''
+    at = (node - 1) * 48
+    first = <at..u32>(at + 32) _records; length = <at..u32>(at + 36) _records
+    return (<at..binary>(first,length) _texts) as .string
 
   /** Append a clause. Handles are stable, one based; mutations invalidate analyses. */
   add: method = .int
     arg op = .int, a = .int, b = .int, label = .string, line = .int
+    call materialize
+    _signature = ''
     _size = _size + 1
     _op[_size] = op; _a[_size] = a; _b[_size] = b
     _label[_size] = label; _line[_size] = line
@@ -35,8 +138,10 @@ grammar: class
   body: method = .int
     arg rule = .int, target = .int
     if rule < 1 | rule > _size then return 0
-    if _op[rule] <> 5 then return 0
+    if op(rule) <> 5 then return 0
     if target < 1 | target > _size then return 0
+    call materialize
+    _signature = ''
     _a[rule] = target; _revision = _revision + 1
     return 1
 
@@ -52,15 +157,28 @@ grammar: class
     return node
   text: method = .binary
     arg node = .int
-    return _text[node]
+    if <blen>(_records) = 0 then return _text[node]
+    bits = .binary
+    if node < 1 | node > _size then return bits
+    at = (node - 1) * 48
+    first = <at..u32>(at + 40) _records; length = <at..u32>(at + 44) _records
+    call binresize bits,length
+    assembler bcopy bits,_texts,first
+    return bits
   contains: method = .int
     arg node = .int, symbol = .int
     if symbol < 0 | symbol > 255 then return 0
-    text = _text[node]; found = 0
-    do i = 0 to <blen>(text) - 1
-      if <at..u8>(i) text = symbol then found = 1
+    members = .binary; inverted = .int; found = 0
+    if <blen>(_records) = 0 then do
+      members = _text[node]; inverted = _a[node]
     end
-    if _a[node] then return found = 0
+    else do
+      members = text(node); inverted = left(node)
+    end
+    do i = 0 to <blen>(members) - 1
+      if <at..u8>(i) members = symbol then found = 1
+    end
+    if inverted then return found = 0
     return found
 
   size: method = .int
@@ -77,44 +195,75 @@ grammar: class
       node = pending[count]; count = count - 1
       if node < 1 | node > _size then iterate
       if seen[node] then iterate
-      seen[node] = 1; op = _op[node]
-      if op = 2 | op = 3 | op = 4 then do
-        count = count + 1; pending[count] = _b[node]
+      seen[node] = 1
+      operation = .int; lhs = .int; rhs = .int
+      if <blen>(_records) = 0 then do
+        operation = _op[node]; lhs = _a[node]; rhs = _b[node]
       end
-      if (op >= 2 & op <= 9 & op <> 6) | op = 14 | op = 15 then do
-        count = count + 1; pending[count] = _a[node]
+      else do
+        at = (node - 1) * 48
+        operation = <at..i64>(at) _records
+        lhs = <at..i64>(at + 8) _records; rhs = <at..i64>(at + 16) _records
+      end
+      if operation = 2 | operation = 3 | operation = 4 then do
+        count = count + 1; pending[count] = rhs
+      end
+      if (operation >= 2 & operation <= 9 & operation <> 6) | operation = 14 | operation = 15 then do
+        count = count + 1; pending[count] = lhs
       end
     end
     return seen
   /** Exact canonical description for research certificate identity. */
   signature: method = .string
+    if _signature <> '' then return _signature
     out = length(_profile) || ':' || _profile || ';'
     do i = 1 to _size
-      out = out || _op[i] || ',' || _a[i] || ',' || _b[i] || ',' || _line[i] || ',' || length(_label[i]) || ':' || _label[i] || ';'
-      text = _text[i]
-      do j = 0 to <blen>(text) - 1
-        byte = <at..u8>(j) text
+      operation = .int; lhs = .int; rhs = .int; source_line = .int
+      label = .string; literal = .binary
+      if <blen>(_records) = 0 then do
+        operation = _op[i]; lhs = _a[i]; rhs = _b[i]; source_line = _line[i]
+        label = _label[i]; literal = _text[i]
+      end
+      else do
+        at = (i - 1) * 48
+        operation = <at..i64>(at) _records; lhs = <at..i64>(at + 8) _records
+        rhs = <at..i64>(at + 16) _records; source_line = <at..i64>(at + 24) _records
+        label = rawlabel(i); literal = text(i)
+      end
+      out = out || operation || ',' || lhs || ',' || rhs || ',' || source_line || ',' || length(label) || ':' || label || ';'
+      do j = 0 to <blen>(literal) - 1
+        byte = <at..u8>(j) literal
         out = out || byte || ','
       end
       out = out || ';'
     end
+    _signature = out
     return out
   op: method = .int
     arg node = .int
-    return _op[node]
+    if <blen>(_records) = 0 then return _op[node]
+    if node < 1 | node > _size then return 0
+    return <at..i64>((node - 1) * 48) _records
   left: method = .int
     arg node = .int
-    return _a[node]
+    if <blen>(_records) = 0 then return _a[node]
+    if node < 1 | node > _size then return 0
+    return <at..i64>((node - 1) * 48 + 8) _records
   right: method = .int
     arg node = .int
-    return _b[node]
+    if <blen>(_records) = 0 then return _b[node]
+    if node < 1 | node > _size then return 0
+    return <at..i64>((node - 1) * 48 + 16) _records
   label: method = .string
     arg node = .int
-    if _label[node] == '' then return 'clause.' || node
-    return _label[node]
+    label = rawlabel(node)
+    if label == '' then return 'clause.' || node
+    return label
   line: method = .int
     arg node = .int
-    return _line[node]
+    if <blen>(_records) = 0 then return _line[node]
+    if node < 1 | node > _size then return 0
+    return <at..i64>((node - 1) * 48 + 24) _records
 
 /** Original bytes plus a sequence of symbols and original byte spans.
  * The default factory supplies every byte, including NUL, as one symbol.

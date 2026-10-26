@@ -1,5 +1,101 @@
 # Level L language tooling research — 10 October 2026
 
+<a id="current-action-prepared-definitions"></a>
+
+## Current action: generic prepared definitions (LDP1)
+
+**The selected scanner/nonregional LR1 profile is locally qualified, including
+C integration and startup checks. Selected checks and owning docs are ready for
+the authorized local commit; broader Level L acceptance remains open.**
+RCOST-05 moves repeated generated-language construction into build-time prepared
+data. Version 1 covers scanner-only and nonregional DFA/LR1 definitions, including
+all policies and metadata used by those profiles. Other supported backends keep
+their existing constructor emission. Encoding requires existing immutable loaded
+main/shield DFA and LR tables; mutable builders are refused explicitly and stay
+unchanged. The generator freezes constructed machines through current loaded APIs
+before encoding. No C-specific image, G feature, VM/ISA or second parser algorithm
+is introduced.
+
+The portable versioned envelope contains checked lengths/section IDs, exact
+profile/grammar/root/raw labels/lines/literal and set bytes/revision, canonical
+CFG productions/RHS layout, current main/shield DFA and sparse LR blobs, exact LR
+row directory, encoding/Unicode and lexical/EOF/recovery settings, comment rules,
+ordered token stages, token holes/names, projection/AST schemas and diagnostic
+masks. Preserve nominal optional-field presence and existing getter representation:
+an ordinary LR definition keeps its existing absent `grammar()` and zero `root()`;
+its parser owns the grammar.
+No process address, binding, weak reference, mutable request or executable state
+is serialized. Canonical identity uses raw stored data, never display fallbacks.
+
+The generic `definition.image(bytes=67108864)` method produces owned data.
+`lllanguage..prepared(image,?limits,bytes=67108864)` is a namespace procedure,
+not a factory: it validates local candidates and returns a definition only on
+complete success. Refusal signals INVALID_ARGUMENTS with LL_LANGUAGE_IMAGE detail;
+explicit resource exhaustion signals OUT_OF_RANGE; unsupported image encoding
+uses ERROR with LL_LANGUAGE_IMAGE detail. Original typed owner failures are
+relayed unchanged. If a caller handles/ignores the failure, return an absent
+`.definition`, never a partially initialized result or continued indexed read.
+Omitted limits use artifact dimensions as existing loaded APIs do; explicit
+limits retain their connected constraints. A shared checked logical budget bounds
+wire/copy volume and decoded descriptors/strings before allocation; it is not an
+RSS guarantee and does not inherit a parser request's source-byte limit.
+Generation uses the default logical image budget separately from the existing
+output-text byte cap; the writer retains output-limit admission and diagnostics.
+
+Retain packed grammar/CFG sections where useful; existing mutation boundaries
+materialize only that owned value. Small metadata may bulk-hydrate into ordinary
+owned arrays. Do not replay per-row public setters or assume ordinary B values
+provide general copy-on-write. Each subowner owns its data; existing readers
+borrow anchored fields, not constructor-local storage. Public builders, mutators,
+owned getters, snapshots, errors and limits keep their meanings, including comment
+freeze state and exact declaration/case/order rules. One existing CFG expansion
+authority validates prepared rows; the LR validator checks the supplied directory
+against every actual sparse record. No duplicate semantic validator or bypass of
+DFA/LR checks is permitted. The borrowed-reader structural check admits the exact
+retained tables-to-CFG scalar call window when the outer query is inlined, with
+receiver/argument restoration and no owner copy; ordinary calls and fully inlined
+scalar reads retain their existing checks. Both generated source and RXAS call
+the same hydrator.
+RXAS reserves every formal argument slot, including omitted optionals, and sets
+their presence flags explicitly using the existing call ABI.
+Malformed prepared data never silently falls back to another runtime algorithm.
+
+| Stable acceptance criterion | Required observation |
+|---|---|
+| **LDP-AC01 — done** | Independent scanner/LR definitions round-trip all applicable fields and preserve tokens, byte spans, trees/ASTs, diagnostics and source identities against ordinary construction. |
+| **LDP-AC02 — done** | Version/profile/length/count/UTF8/reference/duplicate/order/directory and CFG-cross-consistency negatives fail before publication; complete input consumption and checked arithmetic precede allocation/indexing. Poisoned owner/schema/stage/policy errors cannot serialize success. |
+| **LDP-AC03 — done** | Current DFA/LR validation is shared; canonical CFG rows and exact LR offsets/counts agree. Raw labels, revision/signature, absent fields and all public mutation/owned-copy/borrowed-reader lifetimes remain correct. |
+| **LDP-AC04 — done** | One shared logical budget bounds encoded/decoded/copy work before allocation, with resource failure distinct from malformed input. No partial owner escapes even when a failure signal is handled. |
+| **LDP-AC05 — done** | Both generation formats use one prepared owner route for supported profiles; legacy constructors/modules and other backend generation remain compatible, with unchanged frontend/policy admission and failure publication. |
+| **LDP-AC06 — done** | Acyclic SDK/bootstrap dependency and stamp inventories include the codec; actual generated language() avoids the former graph/schema setter recipe. Inspect SDK and first small consumer RXAS before one C generation. |
+| **LDP-AC07 — done** | Frozen SDK/independent fixtures, small both-format/legacy consumers and selected C prepared/entry/dynamic/startup controls are qualified, with owning docs complete. Commit the reviewed scope locally; no push, broad matrix or production-performance claim. |
+
+| Stable step | Work and dependency |
+|---|---|
+| **LDP-STEP01 — done** | Coordinator/peer select the complete bounded profile, ownership, codec, failure and validation contract before product edits; AC01–07. |
+| **LDP-STEP02 — done** | Implement shared codec/budget, owner-local prepared sections/hydration and independent small fixtures; freeze SDK first for source/RXAS review and QA; AC01–04/06. |
+| **LDP-STEP03 — done** | Integrate the single encoder/hydrator into both generator formats and build inventories; qualify a small consumer before one actual C generation; AC05–06. |
+| **LDP-STEP04 — done** | Selected C integration/startup checks and owning docs are complete using unchanged valid results where applicable; reviewed paths are ready for the authorized local commit; AC07. |
+
+Product scope is `llprepared` (new), `llcore`, `llcfg`, `lllr`, `lllanguage` and
+owner-local bulk codecs in `llcomments`, `llstage`, `llproject`, `llast`, plus
+`lib/rxfnsl/rexx/CMakeLists.txt`, `langtools/cmake/generator-inputs.cmake` and `llgenerate`.
+Use existing generated/borrowed regression owners plus one independent prepared
+fixture and their direct registration/structural guards. Update the existing
+L architecture/generation/user references and compiler-plan cross-reference;
+do not add another plan or retained run report.
+
+This selected qualification establishes no general startup-speed, memory,
+Release, platform, sanitizer or production-performance claim. The existing
+Level L research exception does not close broader acceptance or actual SAN work.
+
+**LDP-FUTURE-01 — future only:** Owned outer-envelope and section buffers may
+remain live together during hydration and increase peak storage. Measure those
+lifetimes before selecting an optimization; preserve validation, atomic
+publication, budgets and owned-copy semantics. No additional implementation or
+qualification is commissioned.
+
+
 <a id="current-action-lexer-reuse"></a>
 
 ## Completed action: lexical construction reuse

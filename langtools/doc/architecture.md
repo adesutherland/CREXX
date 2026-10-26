@@ -97,8 +97,8 @@ not automatic fallbacks. See the [backend tutorial](user-guide.md#choose-a-backe
 
 Generation emits either RXAS loaders, readable Level B source or an inspection
 graph. A generated module exports `NAMESPACE..language()`, returning an
-`lllanguage..definition`. Loaders call public factories rather than embedding
-SDK object layouts. RXAS and RXLINK retain binary serialization and linking;
+`lllanguage..definition`. Loaders use public SDK operations rather than embedding
+native object layouts. RXAS and RXLINK retain binary serialization and linking;
 Level L has no direct RXBIN writer.
 
 ### Packed images and lexical reuse
@@ -109,6 +109,29 @@ sparse image with a per-state row directory. Runtime lookups borrow the retained
 image instead of expanding all cells or copying the image for every lookup.
 Public owning results may still copy; cREXX ordinary value copying is not a
 general copy-on-write facility.
+
+Supported scanner-only and nonregional DFA/LR1 modules embed a complete LDP1
+prepared definition. Both output formats call the same `lllanguage..prepared()`
+hydrator; runtime entry does not replay the former graph/metadata setter recipe.
+Other backend generation remains unchanged. The serializer requires already
+immutable DFA/LR owners and does not make ordinary mutable builders immutable.
+
+The prepared image includes raw grammar/revision and canonical CFG layout,
+existing DFA/LR tables and checked row directory, comments/shields, ordered
+stages, token holes, projection/AST schemas and diagnostic masks. Grammar/CFG
+storage stays packed until an existing mutation needs an owned materialization;
+small metadata bulk-hydrates arrays. Existing CFG/DFA/LR authorities validate the
+data before publication. A shared operation-local budget bounds logical storage
+and cold validation work; it is not a process-memory guarantee.
+
+Loading returns a new complete owner or signals and returns a typed absent
+result when failure is handled. It keeps existing getter absence, case/order,
+comment freeze, mutation and borrowed-lifetime contracts. It introduces neither
+runtime code generation nor a global definition cache. See the
+[representation and failure contract](generation-design.md#prepared-definitions-ldp1).
+Selected qualification remains tracked by the
+[LDP plan](../../research/level-l/PLAN.md#current-action-prepared-definitions),
+separately from platform, sanitizer and production claims.
 
 Lexical construction reuse is optional generation infrastructure. A request may
 supply a private capsule containing the entire main/shield DFA set. Exact
