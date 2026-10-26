@@ -133,7 +133,7 @@ main: procedure = .int
   root = input.add(5,'pair',0,1,capture,0)
   shared = .llast..tree(input,root,sharedschema)
   failures = failures + check(pos('LL_AST_SHARED',shared.error()) > 0 & shared.root().valid() = 0,'shared children refused')
-  failures = failures + lists()
+  failures = failures + lists() + projectionmemo()
   say 'ast_failures=' || failures
   return failures
 
@@ -149,6 +149,46 @@ temporary: procedure = .llast..node
   root = source.add(1,'leaf',0,1,0,0)
   tree = .llast..tree(source,root,contract)
   return tree.root()
+
+/* Repeated exact queries include misses, ring eviction and long-key prefixes. */
+projectionmemo: procedure = .int
+  edge = copies('q',128); long_a = edge || 'a'; long_b = edge || 'b'
+  contract = .llast..schema()
+  ok = contract.mapping('hit','Hit'); ok = contract.field('hit','spelling','','text','one')
+  ok = contract.mapping(edge,'Edge'); ok = contract.field(edge,'spelling','','text','one')
+  ok = contract.mapping(long_a,'LongA'); ok = contract.field(long_a,'spelling','','text','one')
+  ok = contract.mapping(long_b,'LongB'); ok = contract.field(long_b,'spelling','','text','one')
+  raw = memoinput(); root = raw.size(); first = .llast..tree(raw,root,contract)
+  failures = check(first.status() = 0,'bounded memo projection succeeds')
+  if first.status() <> 0 then return failures
+  /* Ten mapped raw nodes, each with one text field; all other nodes are
+   * transparent. Arena budgets count the discarded projection intermediates. */
+  failures = failures + check(first.entries() = 20 & first.root().kind() = 'LongB' & first.root().text('spelling') = 'x','repeated matches/misses, sixteen-slot eviction and 128/129-character keys preserve results')
+  ok = contract.mapping('miss17','Added'); ok = contract.field('miss17','spelling','','text','one')
+  again = .llast..tree(raw,root,contract)
+  failures = failures + check(again.status() = 0 & again.entries() = 22 & first.entries() = 20 & first.root().kind() = 'LongB','reprojection observes a former miss without changing the previous owned result')
+  other = .llast..schema(); ok = other.mapping('miss17','Independent'); ok = other.field('miss17','spelling','','text','one')
+  isolated = .llast..tree(raw,root,other)
+  failures = failures + check(isolated.status() = 0,'separate schema projection succeeds')
+  if isolated.status() = 0 then failures = failures + check(isolated.entries() = 2 & isolated.root().kind() = 'Independent' & isolated.root().text('spelling') = 'x','memoized IDs and zero results do not cross schema owners or projection calls')
+  return failures
+
+memoinput: procedure = .llcore..tree
+  raw = .llcore..tree.from_source('x' as .binary)
+  root = raw.add(1,'hit',0,1,0,0); root = raw.add(5,'hit',0,1,root,0)
+  root = raw.add(5,'miss',0,1,root,0); root = raw.add(5,'miss',0,1,root,0)
+  i = .int; j = .int
+  do i = 1 to 17
+    root = raw.add(5,'miss' || i,0,1,root,0)
+  end
+  root = raw.add(5,'hit',0,1,root,0); root = raw.add(5,'hit',0,1,root,0)
+  keys = .string[]; keys[1] = copies('q',128); keys[2] = keys[1] || 'a'; keys[3] = keys[1] || 'b'
+  do i = 1 to 3
+    do j = 1 to 2
+      root = raw.add(5,keys[i],0,1,root,0)
+    end
+  end
+  return raw
 
 lists: procedure = .int
   contract = .llast..schema()

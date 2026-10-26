@@ -2,19 +2,21 @@
 
 <a id="current-action-ir-schema-reads"></a>
 
-## Current action: sealed IR schema reads (LIR-SCHEMA-READ-01)
+## Completed increment: bounded source-interpreter startup repairs (LIR-SCHEMA-READ-01)
 
-**The first sealed-schema batch is locally qualified and committed; the
-residual startup investigation and broader Level L acceptance stay open.**
-Remove repeated whole-field scans from sealed generic LLIR contracts and avoid
-rebuilding their exact canonical manifest. Mutable schema builders retain their
+**The diagnosed startup defects and selected SDK/C integration, emitted-code
+and first-result checks and owning docs are complete. Delivery is limited to a
+reviewed local commit; broader Level L acceptance stays open.**
+Sealed generic LLIR contracts avoid repeated whole-field scans and rebuilding
+their exact canonical manifest. Mutable schema builders retain their
 current live reads, admission checks, status/errors and mutation surface. This
 selects no C schema cache, wire/ISA change, new parser/runtime algorithm, native
 optimizer change or broader platform/SAN/performance campaign.
-The selected startup loop continues through matched ordinary first-result and
-copy evidence, using a residual profile only when needed. Each further significant
-confirmed cost receives a bounded owner/repair contract here before product edits;
-the investigation does not close merely because this first schema batch passes.
+The bounded startup pass repaired the confirmed repeated schema reads/admission,
+receiver snapshots and consuming-pass lookup work described below. Matched
+ordinary first results and residual profiles qualify that selected scope. Further
+work requires a concrete new finding and a separately selected bounded contract,
+rather than an indefinite general optimization programme.
 Ordinary precompiled C startup is a separate contract: empty and hello programs
 must not acquire or initialize frontend/parser/IR-schema machinery before a
 dynamic feature such as INTERPRET or a source call is reached. Keep compile
@@ -44,7 +46,7 @@ or clone a complete schema for scalar/name/type reads.
 | **LIR-SCHEMA-READ-AC01 — done** | Independent interleaved operation/mode fields preserve mutable and sealed arity, original field IDs/names/types, invalid-query defaults and exact authored manifest bytes. |
 | **LIR-SCHEMA-READ-AC02 — done** | Repeated freeze/manifest reads and copied/returned contracts retain owned derived data; refused frozen mutations preserve usable status/read/cache state, and equal distinct owners remain compatible. |
 | **LIR-SCHEMA-READ-AC03 — done** | Actual SDK RXAS shows direct sealed reads and cached manifest reuse without whole-owner read snapshots or repeated field scans; existing public mutable read algorithms remain. |
-| **LIR-SCHEMA-READ-AC04 — todo** | Continue the bounded residual-cost loop after the qualified first batch until significant revealed startup and user-known issues are repaired or excluded by concrete evidence. Each selected repair retains focused correctness, emitted-code and matched first-result checks. Owning docs and reviewed local commits serve that loop; no push or formal Release/platform/SAN/general speed claim. |
+| **LIR-SCHEMA-READ-AC04 — done (bounded startup pass)** | The confirmed schema admission/read, receiver-copy and repeated lookup defects are repaired and selected-qualified through independent correctness, emitted-code, integration and matched first-result checks. Remaining checked-table/schema-admission work, correct owned copies and native image-loading boundaries are classified below. Owning docs are complete and delivery is local only; broader Level L, Release/platform/SAN and general performance claims remain open. |
 | **LIR-SCHEMA-READ-AC05 — done (source/closure proof)** | Ordinary precompiled empty/hello C closure excludes frontend/parser/IR-schema modules. Source and initializer inspection also shows linked dynamic facilities defer parser/schema construction until actual demand. This proof distinguishes AOT execution from compiler and source-interpreter latency; an explicit runtime-false INTERPRET execution control has not been run. Repair only a reproduced leak. |
 
 | Stable step | Work and dependency |
@@ -52,7 +54,7 @@ or clone a complete schema for scalar/name/type reads.
 | **LIR-SCHEMA-READ-STEP01 — done** | Save contract, preservation boundary and coordinator/peer design clearance before product edits; AC01–05. |
 | **LIR-SCHEMA-READ-STEP02 — done** | The single-owner sealed index/cache, independent existing SDK fixture, source peer and representative RXAS inspection are complete; AC01–03. |
 | **LIR-SCHEMA-READ-STEP03 — done (first batch)** | Selected SDK, C/COMMAND/dynamic, matched first-result and AOT source/closure checks are qualified. Owning docs and the reviewed local commit complete that increment, not the residual investigation; AC04–05. |
-| **LIR-SCHEMA-READ-STEP04 — todo** | Diagnose the current residual profile, select only confirmed significant startup or user-known issues, record each bounded repair contract, then implement and qualify it; AC04. |
+| **LIR-SCHEMA-READ-STEP04 — done (selected scope)** | Bucketed admission, scoped receiver/arena reads and local lookup reuse are qualified. Residual source/profile interpretation and enduring docs complete the bounded pass; delivery is limited to the reviewed local increment; AC04. |
 
 **STEP04 qualified increment: bucketed mutable field admission.** Before sealing,
 reuse each existing eight-byte `_fieldindex` row as a head for that operation and
@@ -95,18 +97,18 @@ same anchored arena, never a reference to a constructor or method local. Existin
 poisoned-module and frozen/refusal behavior remains. No caller changes, global
 cache, new ownership service or native optimizer change is selected.
 
-Extend the existing RXAS guard only for these changed normal paths, including
+The existing RXAS guard covers these changed normal paths, including
 copies through the actual receiver/store alias window and a bounded negative
 witness. Existing independent mutation, invalid/error, returned-owner and view-lifetime
 controls remain. Actual exported inline semantic payloads and attribute identities
 are unchanged; source-line relocation alone permits current consumer reuse.
 Selected SDK/integration and matched ordinary first-result/residual checks are
-qualified; owning docs are ready for the reviewed local alias commit. Further
+qualified; its reviewed local commit is complete. Further
 copy removal requires its own concrete source/profile evidence; owned returns
 and arbitrary getter copies are not presumed unnecessary.
 
-**STEP04 final selected named-cost batch: local lookup reuse.** After the alias
-checkpoint, the C `llcparse.parsed` factory lazily reuses the results of its
+**STEP04 qualified increment: local lookup reuse.** The C `llcparse.parsed`
+factory lazily reuses the results of its
 fixed-role literal token queries. A request-local integer array has one slot per
 exact literal role; zero means unknown, and a completed `tokenid()` result plus
 two represents both valid token zero and not-found minus one. Each role's first
@@ -114,9 +116,9 @@ use calls the existing language `tokenid()` authority with that exact literal;
 only a completed result is stored. There is no up-front resolution of all roles,
 module/global cache or returned cache state. Limit this change to the hot factory's
 literal sites; computed queries and cold diagnostic helpers stay unchanged.
-The existing prepared-RXAS checker must prove every numeric role maps to exactly
+The existing prepared-RXAS checker proves every numeric role maps to exactly
 one literal (and vice versa), with bounded role IDs and a conflicting-role negative
-witness. Inspect the actual helper and call windows for borrowed references and
+witness. Actual helper and call-window review confirms borrowed references and
 absence of definition snapshots. Public grammar, token equality/first-match and
 missing-token semantics are unchanged.
 
@@ -129,25 +131,41 @@ longer than 128 characters bypass storage; both key count and owned key length a
 bounded. The projection owns one stable contract during the call and invokes no
 mutation callback; no memo is stored in the schema, result or global state.
 Projection fields, order, spans and error behavior stay unchanged. The existing
-LLAST fixture must cover repeated found/not-found keys, strict-distinct queries,
+LLAST fixture covers repeated found/not-found keys, strict-distinct queries,
 replacement and long-key bypass through independent projected results.
 
-This is the final selected named-cost batch. Reuse the small SDK, C prepared/entry
-and dynamic consumers, unchanged C grammar, actual RXAS review and matched ordinary
-empty/hello plus INTERPRET first results. Diagnose remaining significant revealed
-costs to repair or exclude them with concrete evidence; do not extend this into an
-indefinite general optimizer programme. No new schema attributes, wire format,
-generic equality/hash algorithm, C grammar generation or test matrix is selected.
+The final lookup batch is qualified through the selected small SDK/AST, C prepared
+guard and integration/dynamic checks, actual RXAS review and matched ordinary
+hello first results with and without INTERPRET, plus an empty-source diagnostic
+profile. The unchanged C grammar is reused.
+No new schema attributes, wire format, generic equality/hash algorithm, C grammar
+generation or test matrix is selected.
 Source ownership adds `levelc/llcparse.crexx`, its existing
 `tests/check-prepared-rxas.py` guard, generic `llast.crexx` and the existing LLAST
 fixture; the owning C architecture guide records the local-use boundary.
 
-Product scope is `lib/rxfnsl/rexx/llir.crexx` and the existing
-`langtools/tests/library/ts_llir.crexx` fixture, with the existing
-`langtools/tests/check-borrowed-rxas.py` guard covering sealed direct-index and
-cached-return prefixes and anchored mutable bucket-head access while permitting
-mutable read fallbacks. Reuse unchanged generated grammar
-and prepared stages; no C grammar regeneration or new test matrix is selected.
+Selected products are `llir.crexx`, `llast.crexx` and C `llcparse.crexx`, with
+existing LLIR/LLAST fixtures and borrowed/prepared RXAS guards. Prepared stages
+and the generated C grammar are reused; no new test matrix is introduced.
+
+**Remaining costs and qualification limits.** Checked table access still validates
+row/column ranges and computes the selected row/column layout. Actual get/put and
+offset code borrows its table buffer without a table/owner snapshot. The current
+source interpreter still registers its IR schema through the existing exact name,
+type, operation and field admission authorities. These checked operations
+remain; this pass does not claim that every possible implementation is optimal.
+Publicly owned codec/service and return-value copies retain their contracts.
+
+Native RXBIN loading and process-local pointer/binding setup lie outside the VM
+procedure profile; they are not certified or optimized by these changes. Warm
+same-session comparisons do not establish cold-launch behavior or explain
+isolated slow first launches; native Release/platform loading qualification
+remains open. The frozen grammar owner retains its existing lazy section ownership and
+small scanner/parser checks. A maximum logical copied-payload size establishes
+neither repeated copying nor physical memory traffic or elapsed cost. Native image
+loading and the existing future entry/numeric/transport and signal-guard
+opportunities (RCOST-03/04) remain separately unselected. Broader Level L acceptance,
+platform/install, Release, SAN and production-performance qualification stay open.
 
 <a id="current-action-frozen-definitions"></a>
 

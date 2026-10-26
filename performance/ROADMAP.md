@@ -120,23 +120,20 @@ verdict and selects no new VM mechanism or broad campaign. The plan's future-onl
 LDP-FUTURE-01 retains hydration buffer-lifetime measurement as an opportunity,
 not additional implementation or qualification.
 
-**LIR-SCHEMA-READ-01 — first batch locally qualified; residual investigation open.** The
+**LIR-SCHEMA-READ-01 — implemented and locally qualified: bounded startup repairs.** The
 [generic Level L plan](../research/level-l/PLAN.md#current-action-ir-schema-reads)
-owns the implemented per-operation/mode ordered field-ID index and exact canonical
-manifest cache for sealed contracts. Mutable builders, field IDs/order, error
-behavior and equal-schema compatibility across distinct owners remain unchanged.
-Selected SDK, emitted-code and C/COMMAND/dynamic first-result checks are qualified
-with the existing frozen grammar; its reviewed local commit is complete.
-The residual startup loop remains open and selects further repairs only from
-concrete source/profile evidence. Bucketed mutable field admission is implemented and locally qualified using
-existing private storage, preserving loose name equality, refusal and declaration
-order. Scoped receiver/arena reads are implemented and locally qualified, ready
-for a reviewed local commit. The final selected named-cost batch reuses literal C
-layout token IDs lazily per request and exact AST projection queries in a bounded
-operation-local memo; original lookup authorities stay unchanged. Ordinary AOT source/closure
-proof stays separate
-from source-interpreter latency. No native/wire/ISA change or broader performance
-campaign is selected.
+owns the sealed field-ID index/canonical manifest cache, bucketed mutable field
+admission, scoped receiver/arena reads and local C/AST lookup reuse. Original
+lookup/admission authorities, mutable reads, IDs/order, errors and equal-schema
+compatibility across owners remain unchanged. Selected correctness, emitted-code,
+integration and matched first-result checks and owning docs are complete;
+delivery is local only. Broader Level L acceptance and
+formal Release/platform/SAN or general performance qualification stay open.
+Remaining checked-table/schema-registration work and correct owned copies retain
+their contracts. Native RXBIN loading is outside the VM procedure profile and
+remains separate, as do cold-launch/load variability and the existing future
+RCOST-03/04 opportunities. No new
+native/wire/ISA mechanism or broader performance campaign is selected.
 
 **LFP1 — implemented and locally qualified: trusted frozen generated definitions.** The
 [generic Level L plan](../research/level-l/PLAN.md#current-action-frozen-definitions)
@@ -372,10 +369,10 @@ are recorded here or appeared in the completed programme ledger:
   profile and reuse the graph/proof service; do not broaden an unsupported
   inline shape as a shortcut.
 - `LIR-SCHEMA-READ-01` (under `PERF-COMPILER-01`): the sealed index/cache
-  batch is implemented and locally qualified as described above. The existing
-  generic plan owns the open residual startup investigation; select the next
-  repair from a current profile, preserving mutable behavior and exact schema
-  compatibility. Source/bytecode profiler counts are diagnostic; recursive
+  repairs are implemented and locally qualified as described above. The existing
+  generic plan closes the diagnosed bounded startup pass; a new optimization
+  requires new concrete evidence and selection, preserving mutable behavior and
+  exact schema compatibility. Source/bytecode profiler counts are diagnostic; recursive
   logical copied bytes are not physical memory traffic. Build-time standard-C
   schema preparation remains a separate, unselected larger alternative.
 - `PERF-COMPILE-LATENCY-01`: Adrian proposed a lean no-optimizer assembler and

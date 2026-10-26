@@ -84,9 +84,10 @@ parsed: class
         end
       end
     end
-    id = language.tokenid('identifier'); sep = language.tokenid('separator')
-    opening = language.tokenid('open'); closing = language.tokenid('close')
-    colon = language.tokenid('colon'); equals = language.tokenid('assign'); comma = language.tokenid('comma')
+    roleids = .int[]; roleids_ref = reference roleids
+    id = tokenrole(language_ref,roleids_ref,1,'identifier'); sep = tokenrole(language_ref,roleids_ref,2,'separator')
+    opening = tokenrole(language_ref,roleids_ref,3,'open'); closing = tokenrole(language_ref,roleids_ref,4,'close')
+    colon = tokenrole(language_ref,roleids_ref,5,'colon'); equals = tokenrole(language_ref,roleids_ref,6,'assign'); comma = tokenrole(language_ref,roleids_ref,7,'comma')
     kind = .int; first = .int; last = .int; spelling = .string; i = .int; next = .int; emptyrhs = .int
     labelbyte = .int; gapbyte = .int
     /* Successful lexing owns comment masking. Filter only a visible physical
@@ -139,7 +140,7 @@ parsed: class
       /* Classic radix suffixes are whole adjacent symbols, not concatenated
        * variables. Keep the original bytes in one String token and let the
        * semantic mapper validate/decode them; G retains its own contract. */
-      if kind = language.tokenid('string') & next = id & layout.start(i + 1) = last then do
+      if kind = tokenrole(language_ref,roleids_ref,8,'string') & next = id & layout.start(i + 1) = last then do
         suffixend = layout.finish(i + 2)
         suffix = upper(binsubstr(source,last + 1,suffixend - last) as .string)
         if suffix = 'X' | suffix = 'B' then do
@@ -166,7 +167,7 @@ parsed: class
           end
         end
       end
-      labeltoken = kind = id | kind = language.tokenid('number') | kind = language.tokenid('typename') | kind = language.tokenid('constantname') | kind = language.tokenid('parsedot')
+      labeltoken = kind = id | kind = tokenrole(language_ref,roleids_ref,9,'number') | kind = tokenrole(language_ref,roleids_ref,10,'typename') | kind = tokenrole(language_ref,roleids_ref,11,'constantname') | kind = tokenrole(language_ref,roleids_ref,12,'parsedot')
       if labeltoken & next = colon & parsemode = '' then do
         /* A label is one authored lexical form. Generic comment masking
          * must not make a raw comment/newline/VT/FF gap look like its admitted
@@ -181,45 +182,45 @@ parsed: class
         if pos('+',rawlabel) > 0 | pos('-',rawlabel) > 0 then do
           _status = 1; _offset = layout.start(i + 1); _error = 'LL_COMPILER_SYNTAX: RXC-LC-13.1: invalid colon after signed-exponent label'; return
         end
-        kind = language.tokenid('labelname')
+        kind = tokenrole(language_ref,roleids_ref,13,'labelname')
       end
       /* Fixed environment tokens are not expression terms: no implicit join
        * may be inserted between an environment and its command expression. */
-      if addressmode = 'head' & kind = language.tokenid('string') then do
-        kind = language.tokenid('addressquoted'); addressmode = 'command'
+      if addressmode = 'head' & kind = tokenrole(language_ref,roleids_ref,8,'string') then do
+        kind = tokenrole(language_ref,roleids_ref,14,'addressquoted'); addressmode = 'command'
       end
-      if addressmode = 'head' & (kind = language.tokenid('number') | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot')) then do
-        kind = language.tokenid('addressenv'); addressmode = 'command'
+      if addressmode = 'head' & (kind = tokenrole(language_ref,roleids_ref,9,'number') | kind = tokenrole(language_ref,roleids_ref,11,'constantname') | kind = tokenrole(language_ref,roleids_ref,10,'typename') | kind = tokenrole(language_ref,roleids_ref,12,'parsedot')) then do
+        kind = tokenrole(language_ref,roleids_ref,15,'addressenv'); addressmode = 'command'
       end
-      if addressmode = 'head' & (kind = opening | kind = language.tokenid('plus') | kind = language.tokenid('minus') | kind = language.tokenid('not')) then do
-        ok = classified.synthetic(language.tokenid('addressvalue'),first); addressmode = 'value'
+      if addressmode = 'head' & (kind = opening | kind = tokenrole(language_ref,roleids_ref,16,'plus') | kind = tokenrole(language_ref,roleids_ref,17,'minus') | kind = tokenrole(language_ref,roleids_ref,18,'not')) then do
+        ok = classified.synthetic(tokenrole(language_ref,roleids_ref,19,'addressvalue'),first); addressmode = 'value'
       end
       /* Only a contextual FORM suffix can introduce dynamic numeric input.
        * Keep its token separate from PARSE VALUE's joined-stream state. */
       if after = 'FORM' & depth = 0 then do
-        if kind = id & spelling = 'VALUE' then kind = language.tokenid('numericvalue')
-        else if kind = opening | kind = language.tokenid('plus') | kind = language.tokenid('minus') | kind = language.tokenid('not') then do
-          ok = classified.synthetic(language.tokenid('numericvalue'),first)
+        if kind = id & spelling = 'VALUE' then kind = tokenrole(language_ref,roleids_ref,20,'numericvalue')
+        else if kind = opening | kind = tokenrole(language_ref,roleids_ref,16,'plus') | kind = tokenrole(language_ref,roleids_ref,17,'minus') | kind = tokenrole(language_ref,roleids_ref,18,'not') then do
+          ok = classified.synthetic(tokenrole(language_ref,roleids_ref,20,'numericvalue'),first)
         end
       end
       /* SIGNAL's static symbol is spelling, never a numeric expression. Its
        * VALUE marker is private and cannot activate PARSE expression state. */
       if wordpos(signalmode,'on.condition off.condition') > 0 & kind = id then do
         if wordpos(spelling,'SYNTAX ERROR FAILURE HALT NOTREADY NOVALUE LOSTDIGITS') > 0 then do
-          kind = language.tokenid('signalcondition')
+          kind = tokenrole(language_ref,roleids_ref,21,'signalcondition')
           if signalmode = 'on.condition' then signalmode = 'on.name'
           else signalmode = 'off.tail'
         end
       end
       else if signalmode = 'on.name' & kind = id & spelling = 'NAME' then do
-        kind = language.tokenid('signalhandlername'); signalmode = 'on.target'
+        kind = tokenrole(language_ref,roleids_ref,22,'signalhandlername'); signalmode = 'on.target'
       end
       else if signalmode = 'on.target' then do
         ownedelse = 0
         if kind = id & spelling = 'ELSE' & condition = 0 & term & ownercount > 0 then ownedelse = owners[ownercount] = 'if'
         if ownedelse = 0 then do
-          if labeltoken then do; kind = language.tokenid('signalname'); signalmode = 'on.tail'; end
-          else if kind = language.tokenid('string') then signalmode = 'on.tail'
+          if labeltoken then do; kind = tokenrole(language_ref,roleids_ref,23,'signalname'); signalmode = 'on.tail'; end
+          else if kind = tokenrole(language_ref,roleids_ref,8,'string') then signalmode = 'on.tail'
         end
       end
       if signalmode = 'head' & kind <> sep then do
@@ -227,31 +228,31 @@ parsed: class
         if kind = id & spelling = 'ELSE' & condition = 0 & term & ownercount > 0 then signalelse = owners[ownercount] = 'if'
         if signalelse then signalmode = ''
         else if kind = id & spelling = 'ON' then do
-          kind = language.tokenid('signalon'); signalmode = 'on.condition'
+          kind = tokenrole(language_ref,roleids_ref,24,'signalon'); signalmode = 'on.condition'
         end
         else if kind = id & spelling = 'OFF' then do
-          kind = language.tokenid('signaloff'); signalmode = 'off.condition'
+          kind = tokenrole(language_ref,roleids_ref,25,'signaloff'); signalmode = 'off.condition'
         end
         else if kind = id & spelling = 'VALUE' then do
-          kind = language.tokenid('signalvalue'); signalmode = 'value'
+          kind = tokenrole(language_ref,roleids_ref,26,'signalvalue'); signalmode = 'value'
         end
-        else if kind = opening | kind = language.tokenid('plus') | kind = language.tokenid('minus') | kind = language.tokenid('not') then do
-          ok = classified.synthetic(language.tokenid('signalvalue'),first); signalmode = 'value'
+        else if kind = opening | kind = tokenrole(language_ref,roleids_ref,16,'plus') | kind = tokenrole(language_ref,roleids_ref,17,'minus') | kind = tokenrole(language_ref,roleids_ref,18,'not') then do
+          ok = classified.synthetic(tokenrole(language_ref,roleids_ref,26,'signalvalue'),first); signalmode = 'value'
         end
-        else if labeltoken then do; kind = language.tokenid('signalname'); signalmode = 'tail'; end
-        else if kind = language.tokenid('string') then signalmode = 'tail'
+        else if labeltoken then do; kind = tokenrole(language_ref,roleids_ref,23,'signalname'); signalmode = 'tail'; end
+        else if kind = tokenrole(language_ref,roleids_ref,8,'string') then signalmode = 'tail'
       end
       /* CALL policy words are contextual; ordinary names outside this prefix
        * retain the established call/assignment/label classification. */
       if wordpos(callmode,'on.condition off.condition') > 0 & kind = id then do
         if wordpos(spelling,'ERROR FAILURE HALT NOTREADY') > 0 then do
-          kind = language.tokenid('callcondition')
+          kind = tokenrole(language_ref,roleids_ref,27,'callcondition')
           if callmode = 'on.condition' then callmode = 'on.name'
           else callmode = 'off.tail'
         end
       end
       else if callmode = 'on.name' & kind = id & spelling = 'NAME' then do
-        kind = language.tokenid('callhandlername'); callmode = 'on.target'
+        kind = tokenrole(language_ref,roleids_ref,28,'callhandlername'); callmode = 'on.target'
       end
       else if callmode = 'on.target' then do
         ownedelse = 0
@@ -259,41 +260,41 @@ parsed: class
         if ownedelse = 0 then do
           /* CALL NAME uses a variable symbol or string. Ordinary CALL and
            * SIGNAL retain their broader constant-label target contracts. */
-          if kind = id then do; kind = language.tokenid('callname'); callmode = 'on.tail'; end
-          else if kind = language.tokenid('string') then callmode = 'on.tail'
+          if kind = id then do; kind = tokenrole(language_ref,roleids_ref,29,'callname'); callmode = 'on.tail'; end
+          else if kind = tokenrole(language_ref,roleids_ref,8,'string') then callmode = 'on.tail'
         end
       end
       if callmode = 'head' & kind <> sep then do
         if kind = id & spelling = 'ON' then do
-          kind = language.tokenid('callon'); callmode = 'on.condition'
+          kind = tokenrole(language_ref,roleids_ref,30,'callon'); callmode = 'on.condition'
         end
         else if kind = id & spelling = 'OFF' then do
-          kind = language.tokenid('calloff'); callmode = 'off.condition'
+          kind = tokenrole(language_ref,roleids_ref,31,'calloff'); callmode = 'off.condition'
         end
         else callmode = ''
       end
       /* Static TRACE options are spelling, never a variable lookup or an
        * expression. VALUE alone enters the ordinary expression grammar. */
-      if tracemode = 'signed' & kind = language.tokenid('number') then tracemode = 'tail'
+      if tracemode = 'signed' & kind = tokenrole(language_ref,roleids_ref,9,'number') then tracemode = 'tail'
       else if tracemode = 'head' & kind <> sep then do
         ownedelse = 0
         if kind = id & spelling = 'ELSE' & condition = 0 & term & ownercount > 0 then ownedelse = owners[ownercount] = 'if'
         if ownedelse then tracemode = ''
         else if kind = id & spelling = 'VALUE' then do
-          kind = language.tokenid('tracevalue'); tracemode = 'value'
+          kind = tokenrole(language_ref,roleids_ref,32,'tracevalue'); tracemode = 'value'
         end
-        else if kind = language.tokenid('plus') | kind = language.tokenid('minus') then tracemode = 'signed'
-        else if labeltoken then do; kind = language.tokenid('traceoption'); tracemode = 'tail'; end
-        else if kind = language.tokenid('string') then tracemode = 'tail'
+        else if kind = tokenrole(language_ref,roleids_ref,16,'plus') | kind = tokenrole(language_ref,roleids_ref,17,'minus') then tracemode = 'signed'
+        else if labeltoken then do; kind = tokenrole(language_ref,roleids_ref,33,'traceoption'); tracemode = 'tail'; end
+        else if kind = tokenrole(language_ref,roleids_ref,8,'string') then tracemode = 'tail'
       end
       if kind = id then do
-        if next = colon & parsemode = '' then kind = language.tokenid('labelname')
+        if next = colon & parsemode = '' then kind = tokenrole(language_ref,roleids_ref,13,'labelname')
         else if proceduretail > 0 then do
           if proceduretail = 1 then do
             if spelling <> 'EXPOSE' then do
               _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-25.17: expected EXPOSE after PROCEDURE'; return
             end
-            kind = language.tokenid('exposeword'); proceduretail = 2
+            kind = tokenrole(language_ref,roleids_ref,34,'exposeword'); proceduretail = 2
           end
         end
         else if addressmode <> '' & depth = 0 then do
@@ -303,26 +304,26 @@ parsed: class
           end
           if ownedelse then do; word = 'ELSE'; addressmode = ''; end
           else if addressmode = 'resource' then do
-            kind = language.tokenid('addressresource'); addressmode = 'option'
+            kind = tokenrole(language_ref,roleids_ref,35,'addressresource'); addressmode = 'option'
           end
           else if spelling = 'WITH' then do
-            kind = language.tokenid('addresswith'); addressmode = 'option'
+            kind = tokenrole(language_ref,roleids_ref,36,'addresswith'); addressmode = 'option'
           end
           else if addressmode = 'head' then do
             if spelling = 'VALUE' then do
-              kind = language.tokenid('addressvalue'); addressmode = 'value'
+              kind = tokenrole(language_ref,roleids_ref,19,'addressvalue'); addressmode = 'value'
             end
-            else do; kind = language.tokenid('addressenv'); addressmode = 'command'; end
+            else do; kind = tokenrole(language_ref,roleids_ref,15,'addressenv'); addressmode = 'command'; end
           end
           else if wordpos(addressmode,'option kind typed') > 0 then do
             if wordpos(spelling,'INPUT OUTPUT ERROR') > 0 then do
-              kind = language.tokenid('addressoption'); addressmode = 'kind'; addressdirection = spelling
+              kind = tokenrole(language_ref,roleids_ref,37,'addressoption'); addressmode = 'kind'; addressdirection = spelling
             end
             else if wordpos(spelling,'APPEND REPLACE') > 0 & addressmode <> 'option' & addressdirection <> 'INPUT' then do
-              kind = language.tokenid('addressposition'); addressmode = 'typed'
+              kind = tokenrole(language_ref,roleids_ref,38,'addressposition'); addressmode = 'typed'
             end
             else if wordpos(spelling,'NORMAL STREAM STEM') > 0 & addressmode <> 'option' then do
-              kind = language.tokenid('addresskind'); addressmode = 'resource'
+              kind = tokenrole(language_ref,roleids_ref,39,'addresskind'); addressmode = 'resource'
               if spelling = 'NORMAL' then addressmode = 'option'
             end
           end
@@ -330,21 +331,21 @@ parsed: class
         else if parsemode <> '' then do
           if parsemode = 'source' | parsemode = 'header' then do
             if parsemode = 'header' & spelling = 'UPPER' then do
-              kind = language.tokenid('parseupper'); parsemode = 'source'
+              kind = tokenrole(language_ref,roleids_ref,40,'parseupper'); parsemode = 'source'
             end
             else if spelling = 'VALUE' then do
-              kind = language.tokenid('parsevalue'); parsemode = 'value'
+              kind = tokenrole(language_ref,roleids_ref,41,'parsevalue'); parsemode = 'value'
             end
             else if spelling = 'VAR' then do
-              kind = language.tokenid('parsevar'); parsemode = 'var'
+              kind = tokenrole(language_ref,roleids_ref,42,'parsevar'); parsemode = 'var'
             end
             else do
-              kind = language.tokenid('parsekind'); parsemode = 'template'
+              kind = tokenrole(language_ref,roleids_ref,43,'parsekind'); parsemode = 'template'
             end
           end
           else if parsemode = 'var' then parsemode = 'template'
           else if parsemode = 'value' & depth = 0 & spelling = 'WITH' then do
-            kind = language.tokenid('parsewith'); parsemode = 'template'
+            kind = tokenrole(language_ref,roleids_ref,44,'parsewith'); parsemode = 'template'
           end
           else if parsemode = 'template' & depth = 0 & spelling = 'ELSE' & ownercount > 0 then do
             if owners[ownercount] = 'if' then do; word = 'ELSE'; parsemode = ''; end
@@ -354,7 +355,7 @@ parsed: class
           if endname then nop
           else if previous = colon & spelling = 'PROCEDURE' then word = 'PROCEDURE'
           else if doheader & docondition = 0 & dofirst & next = equals then do
-            kind = language.tokenid('docontrol')
+            kind = tokenrole(language_ref,roleids_ref,45,'docontrol')
             ownercontrols[ownercount] = binsubstr(source,first + 1,last - first) as .string
           end
           else if doheader & docondition = 0 & next <> equals & wordpos(spelling,'TO BY FOR WHILE UNTIL') > 0 then word = spelling
@@ -392,17 +393,17 @@ parsed: class
        * Recognized instructions, labels and malformed symbol assignments keep
        * their prior ownership before a clause can become an implicit command. */
       if clause & word = '' & parsemode = '' & addressmode = '' & proceduretail = 0 & doheader = 0 then do
-        symbolhead = kind = id | kind = language.tokenid('number') | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot')
+        symbolhead = kind = id | kind = tokenrole(language_ref,roleids_ref,9,'number') | kind = tokenrole(language_ref,roleids_ref,11,'constantname') | kind = tokenrole(language_ref,roleids_ref,10,'typename') | kind = tokenrole(language_ref,roleids_ref,12,'parsedot')
         if symbolhead & kind <> id & next = equals then do
           _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-31.1: a value cannot be assigned to a constant symbol'; return
         end
-        expressionhead = symbolhead | kind = language.tokenid('string') | kind = opening | kind = language.tokenid('plus') | kind = language.tokenid('minus') | kind = language.tokenid('not')
+        expressionhead = symbolhead | kind = tokenrole(language_ref,roleids_ref,8,'string') | kind = opening | kind = tokenrole(language_ref,roleids_ref,16,'plus') | kind = tokenrole(language_ref,roleids_ref,17,'minus') | kind = tokenrole(language_ref,roleids_ref,18,'not')
         if expressionhead & (symbolhead & next = equals) = 0 then do
-          ok = classified.synthetic(language.tokenid('commandword'),first); commandseen = 1
+          ok = classified.synthetic(tokenrole(language_ref,roleids_ref,46,'commandword'),first); commandseen = 1
         end
       end
       if word = 'CALL' then do
-        callable = next = id | next = language.tokenid('number') | next = language.tokenid('string') | next = language.tokenid('typename') | next = language.tokenid('constantname') | next = language.tokenid('parsedot')
+        callable = next = id | next = tokenrole(language_ref,roleids_ref,9,'number') | next = tokenrole(language_ref,roleids_ref,8,'string') | next = tokenrole(language_ref,roleids_ref,10,'typename') | next = tokenrole(language_ref,roleids_ref,11,'constantname') | next = tokenrole(language_ref,roleids_ref,12,'parsedot')
         if callable = 0 then do
           _status = 1; _offset = first
           detail = 'CALL requires a symbol or string target; found end-of-clause'
@@ -416,7 +417,7 @@ parsed: class
        * Any authored label can open it, including an observation-only group
        * label; executed enclosing instructions still consume eligibility. */
       if word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' then procedureallowed = 0
-      if clause & kind <> sep & kind <> language.tokenid('labelname') then do
+      if clause & kind <> sep & kind <> tokenrole(language_ref,roleids_ref,13,'labelname') then do
         if word = 'PROCEDURE' & procedureallowed = 0 then do
           _status = 1; _offset = first; _error = 'LL_COMPILER_SYNTAX: RXC-LC-17.1: misplaced PROCEDURE'; return
         end
@@ -472,18 +473,18 @@ parsed: class
       if operandmode = 'assignment-head' & depth = 0 & kind = equals then do
         emptyrhs = 1; operandmode = 'assignment'
       end
-      if kind <> sep & kind <> colon & kind <> language.tokenid('labelname') then arm = word = 'THEN' | word = 'ELSE'
+      if kind <> sep & kind <> colon & kind <> tokenrole(language_ref,roleids_ref,13,'labelname') then arm = word = 'THEN' | word = 'ELSE'
       if word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' then do; operandmode = ''; addressmode = ''; signalmode = ''; callmode = ''; tracemode = ''; end
       clause = kind = sep | word = 'THEN' | word = 'ELSE' | word = 'OTHERWISE' | kind = colon
       if kind <> sep | condition = 0 then do
-        term = kind = id | kind = language.tokenid('number') | kind = language.tokenid('string') | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
+        term = kind = id | kind = tokenrole(language_ref,roleids_ref,9,'number') | kind = tokenrole(language_ref,roleids_ref,8,'string') | kind = tokenrole(language_ref,roleids_ref,11,'constantname') | kind = tokenrole(language_ref,roleids_ref,10,'typename') | kind = tokenrole(language_ref,roleids_ref,12,'parsedot') | kind = closing | word = 'END' | word = 'NOP' | word = 'LEAVE' | word = 'ITERATE'
         if emptyrhs | wordpos(word,'SAY PUSH QUEUE ADDRESS RETURN EXIT OPTIONS ARG PULL DIGITS FUZZ FORM SCIENTIFIC ENGINEERING') > 0 then term = 1
-        if kind = language.tokenid('numericvalue') | kind = language.tokenid('signalvalue') | kind = language.tokenid('signalname') | word = 'SIGNAL' then term = 1
-        if kind = language.tokenid('callon') | kind = language.tokenid('calloff') | kind = language.tokenid('callcondition') | kind = language.tokenid('callhandlername') | kind = language.tokenid('callname') then term = 1
-        if kind = language.tokenid('signalon') | kind = language.tokenid('signaloff') | kind = language.tokenid('signalcondition') | kind = language.tokenid('signalhandlername') then term = 1
-        if word = 'TRACE' | kind = language.tokenid('tracevalue') | kind = language.tokenid('traceoption') then term = 1
-        if kind = language.tokenid('addressenv') | kind = language.tokenid('addressquoted') | kind = language.tokenid('addressresource') then term = 1
-        if kind = language.tokenid('addresskind') & spelling = 'NORMAL' then term = 1
+        if kind = tokenrole(language_ref,roleids_ref,20,'numericvalue') | kind = tokenrole(language_ref,roleids_ref,26,'signalvalue') | kind = tokenrole(language_ref,roleids_ref,23,'signalname') | word = 'SIGNAL' then term = 1
+        if kind = tokenrole(language_ref,roleids_ref,30,'callon') | kind = tokenrole(language_ref,roleids_ref,31,'calloff') | kind = tokenrole(language_ref,roleids_ref,27,'callcondition') | kind = tokenrole(language_ref,roleids_ref,28,'callhandlername') | kind = tokenrole(language_ref,roleids_ref,29,'callname') then term = 1
+        if kind = tokenrole(language_ref,roleids_ref,24,'signalon') | kind = tokenrole(language_ref,roleids_ref,25,'signaloff') | kind = tokenrole(language_ref,roleids_ref,21,'signalcondition') | kind = tokenrole(language_ref,roleids_ref,22,'signalhandlername') then term = 1
+        if word = 'TRACE' | kind = tokenrole(language_ref,roleids_ref,32,'tracevalue') | kind = tokenrole(language_ref,roleids_ref,33,'traceoption') then term = 1
+        if kind = tokenrole(language_ref,roleids_ref,15,'addressenv') | kind = tokenrole(language_ref,roleids_ref,14,'addressquoted') | kind = tokenrole(language_ref,roleids_ref,35,'addressresource') then term = 1
+        if kind = tokenrole(language_ref,roleids_ref,39,'addresskind') & spelling = 'NORMAL' then term = 1
         if depth = 0 & kind = comma & wordpos(operandmode,'arg call') > 0 then term = 1
       end
       if kind = colon & next <> sep then do
@@ -494,7 +495,7 @@ parsed: class
     /* Normalize separators only after words have their contextual meanings.
      * A variable named THEN/ELSE must never consume the following clause. */
     normalized = .llcore..stream.tokens(source)
-    thenword = language.tokenid('thenword'); elseword = language.tokenid('elseword')
+    thenword = tokenrole(language_ref,roleids_ref,47,'thenword'); elseword = tokenrole(language_ref,roleids_ref,48,'elseword')
     depth = 0; previous = -1; work = 0
     do i = 0 to classified.size() - 1
       work = work + 1
@@ -523,20 +524,20 @@ parsed: class
     end
     joined = .llcore..stream.tokens(source)
     previous = -1; previousend = 0; previousstart = 0; beforeprevious = -1
-    number = language.tokenid('number'); string = language.tokenid('string')
-    callword = language.tokenid('callword'); signalword = language.tokenid('signalword'); dropword = language.tokenid('dropword'); dropping = 0; callpolicy = 0
-    parsing = 0; parsetemplate = 0; parsevarname = 0; dot = language.tokenid('parsedot')
+    number = tokenrole(language_ref,roleids_ref,9,'number'); string = tokenrole(language_ref,roleids_ref,8,'string')
+    callword = tokenrole(language_ref,roleids_ref,49,'callword'); signalword = tokenrole(language_ref,roleids_ref,50,'signalword'); dropword = tokenrole(language_ref,roleids_ref,51,'dropword'); dropping = 0; callpolicy = 0
+    parsing = 0; parsetemplate = 0; parsevarname = 0; dot = tokenrole(language_ref,roleids_ref,12,'parsedot')
     do i = 0 to normalized.size() - 1
       kind = normalized.symbol(i); first = normalized.start(i); last = normalized.finish(i + 1)
       if kind = sep | kind = thenword | kind = elseword then dropping = 0
-      if kind = sep | kind = thenword | kind = elseword | kind = language.tokenid('otherwiseword') then callpolicy = 0
-      if kind = language.tokenid('callon') | kind = language.tokenid('calloff') then callpolicy = 1
+      if kind = sep | kind = thenword | kind = elseword | kind = tokenrole(language_ref,roleids_ref,52,'otherwiseword') then callpolicy = 0
+      if kind = tokenrole(language_ref,roleids_ref,30,'callon') | kind = tokenrole(language_ref,roleids_ref,31,'calloff') then callpolicy = 1
       if kind = sep | kind = thenword | kind = elseword then do; parsing = 0; parsetemplate = 0; parsevarname = 0; end
-      if kind = language.tokenid('parseword') then do; parsing = 1; parsetemplate = 0; parsevarname = 0; end
-      if kind = language.tokenid('argword') | kind = language.tokenid('pullword') then do; parsing = 1; parsetemplate = 1; parsevarname = 0; end
-      if kind = language.tokenid('parsevalue') then do; parsing = 2; parsetemplate = 0; end
-      if kind = language.tokenid('parsevar') then parsevarname = 1
-      if kind = language.tokenid('parsekind') | kind = language.tokenid('parsewith') then do; parsing = 1; parsetemplate = 1; end
+      if kind = tokenrole(language_ref,roleids_ref,53,'parseword') then do; parsing = 1; parsetemplate = 0; parsevarname = 0; end
+      if kind = tokenrole(language_ref,roleids_ref,54,'argword') | kind = tokenrole(language_ref,roleids_ref,55,'pullword') then do; parsing = 1; parsetemplate = 1; parsevarname = 0; end
+      if kind = tokenrole(language_ref,roleids_ref,41,'parsevalue') then do; parsing = 2; parsetemplate = 0; end
+      if kind = tokenrole(language_ref,roleids_ref,42,'parsevar') then parsevarname = 1
+      if kind = tokenrole(language_ref,roleids_ref,43,'parsekind') | kind = tokenrole(language_ref,roleids_ref,44,'parsewith') then do; parsing = 1; parsetemplate = 1; end
       /* A constant symbol cannot become multiple template items merely
        * because this narrower lexer recognizes its numeric/dot prefix.
        * Punctuation delimits; comments/whitespace preserve an authored gap. */
@@ -547,18 +548,18 @@ parsed: class
         end
       end
 
-      leftterm = previous = id | previous = number | previous = string | previous = closing | previous = language.tokenid('constantname') | previous = language.tokenid('typename') | previous = language.tokenid('parsedot') | ('c' = 'g' & previous = language.tokenid('presence'))
-      rightterm = kind = id | kind = number | kind = string | kind = opening | kind = language.tokenid('constantname') | kind = language.tokenid('typename') | kind = language.tokenid('parsedot') | ('c' = 'g' & kind = language.tokenid('presence'))
-      target = previous = id | previous = number | previous = string | previous = language.tokenid('typename') | previous = language.tokenid('constantname') | previous = language.tokenid('parsedot')
+      leftterm = previous = id | previous = number | previous = string | previous = closing | previous = tokenrole(language_ref,roleids_ref,11,'constantname') | previous = tokenrole(language_ref,roleids_ref,10,'typename') | previous = tokenrole(language_ref,roleids_ref,12,'parsedot') | ('c' = 'g' & previous = tokenrole(language_ref,roleids_ref,56,'presence'))
+      rightterm = kind = id | kind = number | kind = string | kind = opening | kind = tokenrole(language_ref,roleids_ref,11,'constantname') | kind = tokenrole(language_ref,roleids_ref,10,'typename') | kind = tokenrole(language_ref,roleids_ref,12,'parsedot') | ('c' = 'g' & kind = tokenrole(language_ref,roleids_ref,56,'presence'))
+      target = previous = id | previous = number | previous = string | previous = tokenrole(language_ref,roleids_ref,10,'typename') | previous = tokenrole(language_ref,roleids_ref,11,'constantname') | previous = tokenrole(language_ref,roleids_ref,12,'parsedot')
       function = target & kind = opening & previousend = first
       if dropping = 0 & callpolicy = 0 & parsing <> 1 & leftterm & rightterm & function = 0 & beforeprevious <> callword & beforeprevious <> signalword then do
-        token = language.tokenid('abut')
-        if sourceblank(source,previousend,first,comments) then token = language.tokenid('blank')
+        token = tokenrole(language_ref,roleids_ref,57,'abut')
+        if sourceblank(source,previousend,first,comments) then token = tokenrole(language_ref,roleids_ref,58,'blank')
         ok = joined.synthetic(token,previousend)
       end
       if first = last then ok = joined.synthetic(kind,first)
       else ok = joined.append(kind,first,last)
-      if kind = dropword | kind = language.tokenid('exposeword') then dropping = 1
+      if kind = dropword | kind = tokenrole(language_ref,roleids_ref,34,'exposeword') then dropping = 1
       if parsevarname & kind = id then do; parsetemplate = 1; parsevarname = 0; end
       beforeprevious = previous; previous = kind; previousend = last; previousstart = first
     end
@@ -615,6 +616,19 @@ parsed: class
    * owner and never retains the reference after collecting owned plans. */
   sourcetokens: method = reference .llcore..stream
     return reference _sourcetokens
+
+/** Request-local fixed literal roles reuse the original token-name authority.
+ * A zero slot is unknown; result+2 preserves token zero and not-found minus one.
+ * Only the factory calls this helper with statically checked role/literal pairs.
+ */
+tokenrole: procedure = .int
+  arg language_ref = reference .lllanguage..definition, ids_ref = reference .int[], role = .int, name = .string
+  ids = dereference ids_ref; encoded = ids[role]
+  if encoded <> 0 then return encoded - 2
+  language = dereference language_ref
+  id = language.tokenid(name)
+  ids[role] = id + 2
+  return id
 
 /** Labels and separators cannot satisfy a required arm. Only decorate an LR
  * failure whose arm prefix reaches that failure without a real instruction;

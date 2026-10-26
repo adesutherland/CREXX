@@ -156,6 +156,12 @@ Keep each borrowed owner live and unchanged for the reader's lifetime. Packing
 does not turn ordinary B value assignment into copy-on-write or extend a weak
 reference's lifetime.
 
+AST projection can reuse completed schema lookups within that one construction.
+Its local memo has sixteen round-robin slots, stores exact original-label keys
+of at most 128 characters, and treats a zero result as a valid cached miss.
+Every uncached query still calls the schema's normal lookup authority. The memo
+does not survive in a schema or result and cannot grow with arbitrary input labels.
+
 Lexical construction reuse is optional generation infrastructure. A request may
 supply a private capsule containing the entire main/shield DFA set. Exact
 lexical identity, generator stamp and construction limits must match; all other

@@ -86,10 +86,54 @@ def delegates_symbol(body):
     return False
 
 
+def token_roles_consistent(pairs):
+    by_role, by_name = {}, {}
+    for role, name in pairs:
+        if not 1 <= role <= 58:
+            return False
+        if role in by_role and by_role[role] != name:
+            return False
+        if name in by_name and by_name[name] != role:
+            return False
+        by_role[role] = name; by_name[name] = role
+    return bool(pairs)
+
+
+def token_role_controls():
+    good = [(1, 'identifier'), (2, 'separator'), (1, 'identifier')]
+    require(token_roles_consistent(good), 'fixed token-role control')
+    for bad in ([*good, (1, 'string')], [*good, (3, 'identifier')],
+                [*good, (0, 'invalid')], [*good, (59, 'invalid')]):
+        require(not token_roles_consistent(bad), 'conflicting/out-of-range token-role negative')
+
+
+def check_token_roles():
+    token_role_controls()
+    source = (Path(__file__).resolve().parents[1] / 'levelc' / 'llcparse.crexx').read_text()
+    factory = source.split('parsed: class', 1)[1].split('  status: method', 1)[0]
+    pairs = [(int(role), name) for role, name in re.findall(
+        r"tokenrole\(\s*language_ref\s*,\s*roleids_ref\s*,\s*(\d+)\s*,\s*'([^']+)'\s*\)", factory)]
+    require(token_roles_consistent(pairs) and {role for role, _ in pairs} == set(range(1, 59)),
+            'each bounded C token role must map to one exact literal and vice versa')
+    require(not re.search(r"language\.tokenid\(\s*'", factory),
+            'hot literal token lookups must use their request-local roles')
+    require(factory.count('roleids = .int[]; roleids_ref = reference roleids') == 1,
+            'fixed token roles must have one request-local owner')
+
+
 def check(directory):
+    check_token_roles()
     code = {}
     for module in ('llclanguage', 'llcsymbols', 'llcparse', 'llcdoprotocol', 'llcprocedureprotocol'):
         code.update(routines((directory / f'{module}.rxas').read_text()))
+    require('llcparse.tokenrole' in code, 'missing private literal token-role helper')
+    role = code['llcparse.tokenrole']
+    require(calls(role).count('lllanguage.definition.tokenid') == 1
+            and not any(target.startswith('llcgrammar.') for target in calls(role)),
+            'token-role misses must retain one original token lookup authority')
+    require(any('"reference .lllanguage..definition" a1' in line for line in role)
+            and any('"reference .int[*]" a2' in line for line in role),
+            'token roles must borrow their request language and local cache')
     require('llclanguage.prepare' in code, 'missing private owner initializer')
     prepare = code['llclanguage.prepare']
     require(any('".initializer"' in line for line in prepare), 'owner preparation is not a module initializer')

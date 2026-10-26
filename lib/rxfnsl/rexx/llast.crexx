@@ -1072,6 +1072,8 @@ project: procedure = .llast..storage
   end
   raw = .int; lhs = .int; rhs = .int; current = .int; child = .int
   mapped = .int[]; counts = .int[]
+  memo_keys = .string[]; memo_values = .int[]; memo_count = 0; memo_next = 1
+  memo_slot = .int; memo_key = .string
   reachable = .int[]; pending = .int[]; top = 1; pending[top] = root
   do while top > 0
     raw = pending[top]; top = top - 1
@@ -1099,10 +1101,24 @@ project: procedure = .llast..storage
       cb = counts[rhs]
       if ca = 0 then one = mapped[rhs]
     end
-    rule = contract.index(source.label(raw))
+    memo_key = source.label(raw); memo_found = 0; rule = 0
+    do memo_slot = 1 to memo_count
+      if memo_keys[memo_slot] == memo_key then do
+        rule = memo_values[memo_slot]; memo_found = 1; leave
+      end
+    end
+    if memo_found = 0 then do
+      rule = contract.index(memo_key)
+      if length(memo_key) <= 128 then do
+        memo_keys[memo_next] = memo_key; memo_values[memo_next] = rule
+        if memo_count < 16 then memo_count = memo_count + 1
+        memo_next = memo_next + 1
+        if memo_next > 16 then memo_next = 1
+      end
+    end
     if rule = 0 then do
       counts[raw] = min(2,ca + cb); mapped[raw] = one
-      if counts[raw] = 1 & source.label(raw) = 'group' then call _store.cover(one,source.start(raw),source.finish(raw))
+      if counts[raw] = 1 & memo_key = 'group' then call _store.cover(one,source.start(raw),source.finish(raw))
       iterate
     end
     /* Parser derivations wrap binary productions differently. Read the

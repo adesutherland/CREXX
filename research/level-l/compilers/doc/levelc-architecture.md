@@ -162,6 +162,13 @@ comma at EOF remains authored syntax; a semicolon is not continuation. Original
 gaps remain available, so a spaced or continued function-like form cannot
 accidentally become an adjacent call.
 
+Literal token roles in the hot layout factory use a request-local lazy cache.
+Each fixed role resolves its exact name through the existing language lookup on
+first use; later identical queries reuse that result, including token zero or
+not found. Computed token queries and cold diagnostic helpers retain their
+original path. The cache does not resolve every role up front or survive the
+request, and adds no grammar/index format or cross-worker state.
+
 <a id="proposed-prepared-language-reuse"></a>
 
 ### Prepared language and request isolation
@@ -173,8 +180,9 @@ once after the existing scanner/parser checks; ready, failed and reentry states
 prevent partial publication or silent retries. A typed failure retains its
 original event. Parser requests and symbol checks borrow its DFA/LR tables and
 production metadata while retaining their own bytes, comments, limits, tokens,
-trees and diagnostics. Packed-table loading retains full identity, record and
-index validation. CFG layout uses the shared structural grammar validator;
+trees and diagnostics. Generated, build-validated data uses the explicit trusted
+compiled entry; external checked loading retains full identity, record and index
+validation. Generic CFG layout uses the shared structural grammar validator;
 nullable/FIRST queries demand complete analysis once, while `llcheck.run()`
 retains all existing facts. A changed grammar requires a new prepared owner;
 a failed source request does not poison
