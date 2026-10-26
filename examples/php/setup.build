@@ -1,0 +1,116 @@
+/* PHP Level L setup plan. Generated files belong below the build directory. */
+
+/* All generated grammar, reader, application, and intermediate files go
+ * below this project-local build directory.  Relative paths are resolved
+ * from the project root; the leading dot is part of the directory name.
+ */
+BUILD_DIR = ".crexx-build/php";
+
+/* Authored source inputs.  These paths are read from the repository and are
+ * never replaced by rxbuild.  Assignments only define reusable plan values;
+ * they have no effect until a later build phase references ${NAME}.
+ */
+GRAMMAR_SOURCE = "examples/php/grammar/php.levell";      /* this is the Level L grammar */
+ARRAY_SOURCE = "examples/php/php_array.crexx";           /* cREXX runtime support for PHP arrays; not PHP input */
+READER_SOURCE = "examples/php/php_reader.crexx";         /* this is the grammar reader rexx */
+APPLICATION_SOURCE = "examples/php/migration.php";       /* this is the application to migrate */
+FUNCTIONS_SOURCE = "examples/php/php-functions-sample.php"; /* function migration fixture */
+STRING_SOURCE = "examples/php/php-string-sample.php";       /* string functions fixture */
+NUMERIC_SOURCE = "examples/php/php-numeric-sample.php";     /* numeric functions fixture */
+
+/* Names of generated modules and the final application.  These are output
+ * basenames, not source paths; rxbuild places the corresponding .rxbin and
+ * intermediate files below BUILD_DIR.  Every COMPILE PROGRAM phase creates
+ * a separate reusable RXBIN module in that shared directory.
+ */
+GRAMMAR_OUTPUT = "phpgrammar";
+ARRAY_OUTPUT = "php_array";
+READER_OUTPUT = "php_reader";
+ARRAY_OUTPUT = "php_array";
+APPLICATION_OUTPUT = "migration";
+FUNCTIONS_OUTPUT = "php-functions-sample";
+STRING_OUTPUT = "php-string-sample";
+NUMERIC_OUTPUT = "php-numeric-sample";
+
+/* Compile the Level L PHP grammar and publish its generated grammar module. */
+COMPILE GRAMMAR
+  OUTPUT_DIR = "${BUILD_DIR}"
+  SOURCE = "${GRAMMAR_SOURCE}"
+  OUTPUT = "${GRAMMAR_OUTPUT}";
+
+/* Compile the cREXX PHP array runtime as a reusable program module.  Other
+ * runtime extensions can use additional COMPILE PROGRAM phases and outputs;
+ * they are collected in BUILD_DIR but are not merged at this point. */
+COMPILE PROGRAM
+  OUTPUT_DIR = "${BUILD_DIR}"
+  SOURCE = "${ARRAY_SOURCE}"
+  OUTPUT = "${ARRAY_OUTPUT}";
+
+/* Compile the PHP reader and make the generated grammar available through
+ * DEPENDS_ON.  The reader is the executable compiler for PHP source files.
+ */
+COMPILE READER
+  OUTPUT_DIR = "${BUILD_DIR}"
+  SOURCE = "${READER_SOURCE}"
+  DEPENDS_ON = "${GRAMMAR_OUTPUT}"
+  OUTPUT = "${READER_OUTPUT}";
+
+/* Run the reader against the PHP application, compile the generated cREXX
+ * source, and produce the final migration RXBIN.  COMPILE APPLICATION uses
+ * the modules in BUILD_DIR as compiler imports; it does not copy or merge
+ * those modules into one source file.  Generated cREXX selects the modules
+ * it needs with import statements.
+ */
+COMPILE APPLICATION
+  OUTPUT_DIR = "${BUILD_DIR}"
+  SOURCE = "${APPLICATION_SOURCE}"
+  DEPENDS_ON = "${GRAMMAR_OUTPUT}"
+  COMPILER = "${READER_OUTPUT}"
+  OUTPUT = "${APPLICATION_OUTPUT}";
+
+/* Compile the function migration fixture with the same grammar and reader.
+ * This keeps the normal setup plan's application check representative of
+ * both the original procedural subset and the function extension. */
+COMPILE APPLICATION
+  OUTPUT_DIR = "${BUILD_DIR}"
+  SOURCE = "${FUNCTIONS_SOURCE}"
+  DEPENDS_ON = "${GRAMMAR_OUTPUT}"
+  COMPILER = "${READER_OUTPUT}"
+  OUTPUT = "${FUNCTIONS_OUTPUT}";
+
+COMPILE APPLICATION
+  OUTPUT_DIR = "${BUILD_DIR}"
+  SOURCE = "${STRING_SOURCE}"
+  DEPENDS_ON = "${GRAMMAR_OUTPUT}"
+  COMPILER = "${READER_OUTPUT}"
+  OUTPUT = "${STRING_OUTPUT}";
+
+COMPILE APPLICATION
+  OUTPUT_DIR = "${BUILD_DIR}"
+  SOURCE = "${NUMERIC_SOURCE}"
+  DEPENDS_ON = "${GRAMMAR_OUTPUT}"
+  COMPILER = "${READER_OUTPUT}"
+  OUTPUT = "${NUMERIC_OUTPUT}";
+
+/* Execute the generated migration program from the build directory.
+ * This is the final step in the build process.
+*/
+RUN
+  WORK_DIR = "${BUILD_DIR}"
+  PROGRAM = "${APPLICATION_OUTPUT}"
+  STDIN = "";
+
+RUN
+  WORK_DIR = "${BUILD_DIR}"
+  PROGRAM = "${NUMERIC_OUTPUT}"
+  STDIN = "";
+
+RUN
+  WORK_DIR = "${BUILD_DIR}"
+  PROGRAM = "${STRING_OUTPUT}"
+  STDIN = "";
+
+RUN
+  WORK_DIR = "${BUILD_DIR}"
+  PROGRAM = "${FUNCTIONS_OUTPUT}"
+  STDIN = "";

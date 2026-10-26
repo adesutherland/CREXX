@@ -261,7 +261,73 @@ greater
        Processing order 2
        Processing order 3
 
-15. Named grouping-node correction
+15. Phase 3 — Functions
+    The first function slice adds user-defined procedural functions with scalar
+    parameters and expression returns. PHP declarations are emitted as ordinary
+    cREXX procedures; calls remain ordinary cREXX calls. Function declarations
+    are emitted before the generated top-level program so PHP declaration order
+    does not affect calls.
+
+    Supported first slice:
+    - `function name($arg1, $arg2) { ... }`;
+    - scalar parameters;
+    - `return expression;`;
+    - calls used in expressions, such as `name($value, 2)`.
+
+    Explicitly deferred: defaults, type hints, references, variadics, closures,
+    nested functions, generators, and built-in PHP functions.
+
+    - **PHP-FUNCTION-AC01:** a named function parses and becomes a cREXX
+      procedure with typed scalar arguments;
+    - **PHP-FUNCTION-AC02:** return expressions and calls produce the expected
+      result;
+    - **PHP-FUNCTION-AC03:** existing array and scalar migrations remain valid;
+    - **PHP-FUNCTION-AC04:** unsupported function forms remain outside the
+      grammar and produce a parse diagnostic.
+
+    The first implementation is in `php.levell` and `php_reader.crexx`, with
+    `php-functions-sample.php` as the focused migration fixture.
+
+16. Phase 4 — String functions
+    The first built-in string-function slice maps common PHP calls to existing
+    cREXX string functions and to two small PHP runtime adapters where the
+    conventions differ.
+
+    Supported functions:
+    - `strlen`, `strtoupper`, `strtolower`, `trim`, `ltrim`, `rtrim`, and
+      `strrev`;
+    - `substr` with non-negative start offsets;
+    - string-only `str_replace`;
+    - `strpos`, returning a zero-based integer or `-1` when absent.
+
+    PHP arrays as string-function arguments, PHP's `false`/`null` distinction,
+    negative `substr` offsets, and array replacement/search operands remain
+    deferred. The adapters are owned by `php_runtime`.
+
+    - **PHP-STRING-AC01:** supported string calls parse and generate readable
+      cREXX calls;
+    - **PHP-STRING-AC02:** case, length, trimming, reverse, substring,
+      replacement, and position results execute as documented;
+    - **PHP-STRING-AC03:** the existing scalar, function, and array samples
+      remain valid.
+
+    The focused fixture is `php-string-sample.php`.
+
+17. Phase 5 — Numeric functions
+    The first numeric slice supports scalar numeric arguments through existing
+    cREXX numeric functions and small PHP runtime adapters:
+    `abs`, `min`, `max`, `intval`, `floatval`, `round`, `ceil`, and `floor`.
+    PHP array arguments and exact PHP conversion of booleans, null, and invalid
+    numeric strings remain outside this slice.
+
+    - **PHP-NUMERIC-AC01:** supported numeric calls parse and generate cREXX;
+    - **PHP-NUMERIC-AC02:** integer conversion, floating conversion, extrema,
+      absolute value, rounding, ceiling, and floor execute correctly;
+    - **PHP-NUMERIC-AC03:** existing PHP samples remain valid.
+
+    The focused fixture is `php-numeric-sample.php`.
+
+18. Named grouping-node correction
     The named tree preserves the grammar's `group.value` rule, including its
     ordered opening token, expression and closing token. The reader must retain
     those parentheses rather than treating that node as a binary expression.

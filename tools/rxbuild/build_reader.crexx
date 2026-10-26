@@ -567,6 +567,11 @@ run_command: procedure = .int
   i = .int
   address crexx "run :argv[]" input input_lines output captured error errors
   result = rc
+  if result = 0 & label = 'execute' then do
+    do i = 1 to captured[0]
+      say captured[i]
+    end
+  end
   if result <> 0 then do
     say 'FAILED:' label 'rc=' || result
     do i = 1 to captured[0]
@@ -683,12 +688,13 @@ compile_application: procedure = .int
   say 'BUILD APPLICATION:' project_path(source)
   rc = run_command('application compiler',argv,input_lines)
   if rc <> 0 then return rc
+  say 'BUILD APPLICATION CREXX:' generated_source
 
   argv = .string[]
   argv[1] = tool('rxc')
   argv[2] = '--no-exe-import'
   argv[3] = '-i'
-  argv[4] = .rxfs..loadpath()
+  argv[4] = .rxfs..loadpath() || ';' || project_path(dir)
   argv[5] = '-o'
   argv[6] = project_path(dir) || '/' || output
   argv[7] = generated_source
@@ -795,13 +801,23 @@ ensure_project_directories: procedure = .int
 
 ensure_directory_tree: procedure = .int
   arg path = .string
+  rc = .int
   if path = '' then return 1
-  captured = .string[]
-  errors = .string[]
-  address crexx "mkdir -p :path" output captured error errors
-  if rc = 0 then return 0
+  if .rxfs..isdir(path) <> 0 then return 0
+  slash = lastpos('\',path)
+  alt_slash = lastpos('/',path)
+  if alt_slash > slash then slash = alt_slash
+  if slash > 0 then do
+    parent = left(path,slash - 1)
+    if parent <> '' & parent <> path & right(parent,1) <> ':' then do
+      rc = ensure_directory_tree(parent)
+      if rc <> 0 then return rc
+    end
+  end
+  rc = .rxfs..mkdir(path)
+  if rc = 0 | .rxfs..isdir(path) <> 0 then return 0
   say 'RXBUILD: cannot create directory ' || path
-  return 1
+  return rc
 
 ensure_directory: procedure = .int
   arg path = .string

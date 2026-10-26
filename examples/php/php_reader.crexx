@@ -6,9 +6,10 @@ import llsource
 import lltree
 import phpgrammar
 
-php_state: initialiser expose php_lines php_indent
+php_state: initialiser expose php_lines php_indent php_temp_id
   php_lines = .string[]
   php_indent = 0
+  php_temp_id = 0
 
 main: procedure = .int expose php_lines php_indent
   arg argv = .string[]
@@ -34,6 +35,11 @@ main: procedure = .int expose php_lines php_indent
     say 'PHP_TREE: ' || tree.error()
     return 3
   end
+  call emit_line 'options levelb'
+  call emit_line 'import rxfnsb'
+  call emit_line 'import php_array'
+  call emit_line 'import php_runtime'
+  call emit_line ''
   call emit_program tree,tree.root()
   /* LINEOUT appends to existing files; a conversion must replace its output. */
   call erasefile argv[2]
@@ -45,12 +51,60 @@ main: procedure = .int expose php_lines php_indent
 
 emit_program: procedure = .void expose php_lines php_indent
   arg tree = .lltree..view,node = .int
+  index = .int; child = .int; candidate = .int; function_count = .int
   program = named_child(tree,node,'program')
   if program = 0 then program = node
+  /* PHP permits declarations before or after calls.  Emit procedures first
+   * so the generated cREXX main body remains a simple top-level script. */
   do index = 1 to tree.count(program)
     child = tree.child(program,index)
+    if tree.name(child) = 'statement' then child = first_child(tree,child)
+    if tree.name(child) = 'function.declaration' then do
+      function_count = function_count + 1
+      call emit_function tree,child
+    end
+  end
+  php_indent = 0
+  if function_count > 0 then do
+    call emit_line 'main: procedure = .int'
+    php_indent = 1
+  end
+  do index = 1 to tree.count(program)
+    child = tree.child(program,index)
+    candidate = child
+    if tree.name(candidate) = 'statement' then candidate = first_child(tree,candidate)
+    if tree.name(candidate) = 'function.declaration' then iterate
     if tree.name(child) = 'statement' then call emit_statement tree,child
   end
+  if function_count > 0 then do
+    call emit_line 'return 0'
+    php_indent = 0
+  end
+
+emit_function: procedure = .void expose php_lines php_indent
+  arg tree = .lltree..view,node = .int
+  name_node = named_child(tree,node,'identifier')
+  if name_node = 0 then do
+    call fail_tree 'function without a name',tree.name(node)
+    return
+  end
+  call emit_line variable_text(tree,name_node) || ': procedure = .string'
+  parameters = named_child(tree,node,'parameters')
+  if parameters <> 0 then do
+    arg_line = 'arg '
+    do index = 1 to tree.count(parameters)
+      parameter = tree.child(parameters,index)
+      if tree.name(parameter) <> 'variable' then iterate
+      if right(arg_line,4) <> 'arg ' then arg_line = arg_line || ', '
+      arg_line = arg_line || variable_text(tree,parameter) || ' = .string'
+    end
+    if arg_line <> 'arg ' then call emit_line arg_line
+  end
+  call emit_line ''
+  php_indent = 1
+  call emit_block tree,named_child(tree,node,'block')
+  php_indent = 0
+  call emit_line ''
 
 emit_statement: procedure = .void expose php_lines php_indent
   arg tree = .lltree..view,wrapper = .int
@@ -59,9 +113,24 @@ emit_statement: procedure = .void expose php_lines php_indent
   name = tree.name(statement)
   select
     when name = 'assignment.statement' then do
-      target = named_child(tree,statement,'variable')
+      target_wrapper = named_child(tree,statement,'assignment.target')
+      target = first_child(tree,target_wrapper)
       value = named_child(tree,statement,'expression')
-      call emit_line variable_text(tree,target) || ' = ' || emit_expression(tree,value)
+      literal = descendant(tree,value,'array.literal')
+      if literal <> 0 then do
+        call emit_array_literal tree,variable_text(tree,target),literal
+      end
+      else if tree.name(target) = 'append.target' then do
+        base = variable_text(tree,tree.child(target,1))
+        call emit_line 'call ' || base || '.append(' || emit_expression(tree,value) || ')'
+      end
+      else if tree.name(target) = 'array.access' then do
+        parent = array_parent(tree,target)
+        index_node = tree.child(target,tree.count(target))
+        key = emit_expression(tree,tree.child(index_node,2))
+        call emit_line 'call ' || parent || '.set(' || key || ',' || emit_expression(tree,value) || ')'
+      end
+      else call emit_line variable_text(tree,target) || ' = ' || emit_expression(tree,value)
     end
     when name = 'echo.statement' then do
       expression = named_child(tree,statement,'expression')
@@ -94,6 +163,28 @@ emit_statement: procedure = .void expose php_lines php_indent
       php_indent = php_indent - 1
       call emit_line 'end'
     end
+    when name = 'foreach.statement' then do
+      collection = named_child(tree,statement,'variable')
+      target = named_child(tree,statement,'foreach.target')
+      target_value = tree.child(target,tree.count(target))
+      target_key = 0
+      if tree.count(target) = 3 then target_key = tree.child(target,1)
+      php_temp_id = php_temp_id + 1
+      index_name = '_php_index_' || php_temp_id
+      call emit_line 'do ' || index_name || ' = 1 to ' || variable_text(tree,collection) || '.count()'
+      php_indent = php_indent + 1
+      if target_key <> 0 then call emit_line variable_text(tree,target_key) || ' = ' || variable_text(tree,collection) || '.keyAt(' || index_name || ')'
+      if target_key <> 0 then call emit_line variable_text(tree,target_value) || ' = ' || variable_text(tree,collection) || '.getArray(' || variable_text(tree,collection) || '.keyAt(' || index_name || '))'
+      else call emit_line variable_text(tree,target_value) || ' = ' || variable_text(tree,collection) || '.get(' || variable_text(tree,collection) || '.keyAt(' || index_name || '))'
+      call emit_block tree,named_child(tree,statement,'block')
+      php_indent = php_indent - 1
+      call emit_line 'end'
+    end
+    when name = 'return.statement' then do
+      expression = named_child(tree,statement,'expression')
+      if expression = 0 then call emit_line 'return'
+      else call emit_line 'return ' || emit_expression(tree,expression)
+    end
     otherwise call fail_tree 'unsupported statement',name
   end
 
@@ -103,6 +194,41 @@ emit_echo_tail: procedure = .void expose php_lines php_indent
   if expression <> 0 then call emit_line 'say ' || emit_expression(tree,expression)
   nested = named_child(tree,node,'echo.tail')
   if nested <> 0 then call emit_echo_tail tree,nested
+
+emit_array_literal: procedure = .void expose php_lines php_indent php_temp_id
+  arg tree = .lltree..view,target_name = .string,literal = .int
+  items = .int; index = .int; item = .int; first = .int; second = .int
+  value_literal = .int; temporary = .string; key = .string
+  call emit_line target_name || ' = .php_runtime..php_array()'
+  items = named_child(tree,literal,'array.items')
+  if items = 0 then return
+  do index = 1 to tree.count(items)
+    item = tree.child(items,index)
+    if tree.name(item) <> 'array.item' then iterate
+    first = expression_child(tree,item,1)
+    second = expression_child(tree,item,2)
+    if second = 0 then do
+      value_literal = descendant(tree,first,'array.literal')
+      if value_literal <> 0 then do
+        php_temp_id = php_temp_id + 1
+        temporary = '_php_array_' || php_temp_id
+        call emit_array_literal tree,temporary,value_literal
+        call emit_line 'call ' || target_name || '.appendArray(' || temporary || ')'
+      end
+      else call emit_line 'call ' || target_name || '.append(' || emit_expression(tree,first) || ')'
+    end
+    else do
+      value_literal = descendant(tree,second,'array.literal')
+      key = emit_expression(tree,first)
+      if value_literal <> 0 then do
+        php_temp_id = php_temp_id + 1
+        temporary = '_php_array_' || php_temp_id
+        call emit_array_literal tree,temporary,value_literal
+        call emit_line 'call ' || target_name || '.setArray(' || key || ',' || temporary || ')'
+      end
+      else call emit_line 'call ' || target_name || '.set(' || key || ',' || emit_expression(tree,second) || ')'
+    end
+  end
 
 emit_block: procedure = .void
   arg tree = .lltree..view,block = .int
@@ -114,11 +240,71 @@ emit_block: procedure = .void
 
 emit_expression: procedure = .string
   arg tree = .lltree..view,node = .int
+  result = .string; index = .int; key = .string; argument = .int
+  name_node = .int; arguments = .int; arg1 = .int; arg2 = .int; arg3 = .int
+  function_name = .string
   if node = 0 then return ''
   name = tree.name(node)
   if name = 'variable' then return variable_text(tree,node)
   if name = 'number' | name = 'string' then return tree.text(node)
-  if name = 'group.value' then return '(' || emit_expression(tree,tree.child(node,2)) || ')'
+  if name = 'array.access' then do
+    result = variable_text(tree,tree.child(node,1))
+    do index = 2 to tree.count(node)
+      key = emit_expression(tree,tree.child(tree.child(node,index),2))
+      if index = tree.count(node) then result = result || '.get(' || key || ')'
+      else result = result || '.getArray(' || key || ')'
+    end
+    return result
+  end
+  if name = 'array.literal' then return '.php_runtime..php_array()'
+  if name = 'count.call' then do
+    argument = named_child(tree,node,'expression')
+    return emit_expression(tree,argument) || '.count()'
+  end
+  if name = 'function.call' then do
+    name_node = named_child(tree,node,'identifier')
+    arguments = named_child(tree,node,'arguments')
+    function_name = lower(tree.text(name_node))
+    arg1 = 0; arg2 = 0; arg3 = 0
+    if arguments <> 0 then do
+      arg1 = expression_child(tree,arguments,1)
+      arg2 = expression_child(tree,arguments,2)
+      arg3 = expression_child(tree,arguments,3)
+    end
+    if function_name = 'strlen' then return 'length(' || emit_expression(tree,arg1) || ')'
+    if function_name = 'strtoupper' then return 'upper(' || emit_expression(tree,arg1) || ')'
+    if function_name = 'strtolower' then return 'lower(' || emit_expression(tree,arg1) || ')'
+    if function_name = 'trim' then return 'strip(' || emit_expression(tree,arg1) || ',"B")'
+    if function_name = 'ltrim' then return 'strip(' || emit_expression(tree,arg1) || ',"L")'
+    if function_name = 'rtrim' then return 'strip(' || emit_expression(tree,arg1) || ',"T")'
+    if function_name = 'strrev' then return 'reverse(' || emit_expression(tree,arg1) || ')'
+    if function_name = 'abs' then return 'abs(' || emit_expression(tree,arg1) || ')'
+    if function_name = 'min' then return 'min(' || emit_function_arguments(tree,arguments) || ')'
+    if function_name = 'max' then return 'max(' || emit_function_arguments(tree,arguments) || ')'
+    if function_name = 'intval' then return '(' || emit_expression(tree,arg1) || ') as .int'
+    if function_name = 'floatval' then return '(' || emit_expression(tree,arg1) || ') as .float'
+    if function_name = 'round' then return '.php_runtime..php_round(' || emit_expression(tree,arg1) || ')'
+    if function_name = 'ceil' then return '.php_runtime..php_ceil(' || emit_expression(tree,arg1) || ')'
+    if function_name = 'floor' then return '.php_runtime..php_floor(' || emit_expression(tree,arg1) || ')'
+    if function_name = 'substr' then do
+      result = 'substr(' || emit_expression(tree,arg1) || ',(' || emit_expression(tree,arg2) || ') + 1'
+      if arg3 <> 0 then result = result || ',' || emit_expression(tree,arg3)
+      return result || ')'
+    end
+    if function_name = 'strpos' then return '.php_runtime..php_strpos(' || emit_expression(tree,arg1) || ',' || emit_expression(tree,arg2) || ')'
+    if function_name = 'str_replace' then return '.php_runtime..php_str_replace(' || emit_expression(tree,arg1) || ',' || emit_expression(tree,arg2) || ',' || emit_expression(tree,arg3) || ')'
+    result = function_name || '('
+    if arguments <> 0 then do
+      do index = 1 to tree.count(arguments)
+        child = tree.child(arguments,index)
+        if tree.name(child) <> 'expression' then iterate
+        if right(result,1) <> '(' then result = result || ', '
+        result = result || emit_expression(tree,child)
+      end
+    end
+    return result || ')'
+  end
+  if name = 'group' then return '(' || emit_expression(tree,tree.child(node,2)) || ')'
   if name = 'unary' & tree.count(node) > 1 then return php_operator(tree.name(tree.child(node,1))) || emit_expression(tree,tree.child(node,2))
   if tree.count(node) = 1 then return emit_expression(tree,tree.child(node,1))
   result = emit_expression(tree,tree.child(node,1))
@@ -131,6 +317,18 @@ emit_expression: procedure = .string
     index = index + 2
   end
 return result
+
+emit_function_arguments: procedure = .string
+  arg tree = .lltree..view,arguments = .int
+  result = .string; index = .int; child = .int
+  if arguments = 0 then return result
+  do index = 1 to tree.count(arguments)
+    child = tree.child(arguments,index)
+    if tree.name(child) <> 'expression' then iterate
+    if result <> '' then result = result || ', '
+    result = result || emit_expression(tree,child)
+  end
+  return result
 
 php_operator: procedure = .string
   arg name = .string
@@ -168,12 +366,46 @@ named_child: procedure = .int
   end
 return 0
 
-first_statement: procedure = .int
+first_child: procedure = .int
   arg tree = .lltree..view,parent = .int
+  if parent = 0 | tree.count(parent) = 0 then return 0
+return tree.child(parent,1)
+
+expression_child: procedure = .int
+  arg tree = .lltree..view,parent = .int,ordinal = .int
+  found = 0
   do index = 1 to tree.count(parent)
     child = tree.child(parent,index)
-    if right(tree.name(child),10) = '.statement' then return child
+    if tree.name(child) = 'expression' then do
+      found = found + 1
+      if found = ordinal then return child
+    end
   end
+return 0
+
+array_parent: procedure = .string
+  arg tree = .lltree..view,node = .int
+  result = variable_text(tree,tree.child(node,1))
+  do index = 2 to tree.count(node) - 1
+    index_node = tree.child(node,index)
+    key = emit_expression(tree,tree.child(index_node,2))
+    result = result || '.getArray(' || key || ')'
+  end
+return result
+
+descendant: procedure = .int
+  arg tree = .lltree..view,node = .int,name = .string
+  if node = 0 then return 0
+  if tree.name(node) = name then return node
+  do index = 1 to tree.count(node)
+    found = descendant(tree,tree.child(node,index),name)
+    if found <> 0 then return found
+  end
+return 0
+
+first_statement: procedure = .int
+  arg tree = .lltree..view,parent = .int
+  if tree.name(parent) = 'statement' then return first_child(tree,parent)
 return parent
 
 fail_tree: procedure = .void
