@@ -123,6 +123,27 @@ def shapes(text, source, disabled, target, lean_query):
     assert called(body, 'rexxclassicbiftrace.rexxclassicbif_trace_frame'), 'BIF retains its existing activation binding'
     assert re.search(r'^\s*metalinkpreg\s', text, re.M), 'generated handler reads event-named registers in the interrupted frame'
     assert re.search(r'^__rxtrace_handler\(\) \.locals=\d+', text, re.M) and not re.search(r'^\s*\.meta\s+"__rxtrace_handler"\s*=', text, re.M), 'private handler keeps its module-local body without a conflicting global callable descriptor'
+    handler = re.search(r'^__rxtrace_handler\(\) \.locals=\d+\n([\s\S]*?)(?=^\S+\(\) |\Z)', text, re.M)[1]
+    gates = [called(handler, name) for name in (
+        'rxfnsb._trace_current_mode', 'rxfnsb._trace_needs_breakpoints',
+        'rxfnsb._trace_should_trace_module', 'rxfnsb._trace_context_from_raw',
+        'rxfnsb.tracecontext.procedure', 'rxfnsb._trace_should_trace_context')]
+    assert all(len(items) == 1 for items in gates), 'one existing ordered mode/module/context gate chain'
+    mode, breakpoints, module, raw, procedure, full = [items[0] for items in gates]
+    assert [item.start() for item in (mode, breakpoints, module, raw, procedure, full)] == sorted(item.start() for item in (mode, breakpoints, module, raw, procedure, full)), 'ignored helpers are rejected before full context preparation'
+    receiver = re.search(r'^link (r\d+),' + re.escape(raw[1].strip()) + r'\nsettp \1,256\nload r\d+,1\n$', handler[raw.end():procedure.start()], re.M)
+    assert receiver, 'lazy procedure lookup mutates the same linked context'
+    procedure_end = handler.index('\n', procedure.end()) + 1
+    guard = handler[procedure_end:full.start()]
+    assert re.match(r'\s*unlink ' + receiver[1] + r'\nnull ' + receiver[1] + r'\n', guard), 'procedure receiver is released before helper rejection'
+    prefix = re.search(
+        r'^load (?P<start>r\d+),0\nload (?P<size>r\d+),10\n'
+        r'substring (?P<prefix>r\d+),' + re.escape(procedure[1].strip()) + r',(?P=start),(?P=size)\n'
+        r'req (?P<decision>r\d+),(?P=prefix),"llctarget\."\n'
+        r'brt __rxt_done,(?P=decision)\n', guard, re.M)
+    assert prefix, 'same case-sensitive ten-character helper set exits before source/content work'
+    assert re.fullmatch(r'copy (?P<argument>r\d+),' + re.escape(raw[1].strip()) + r'\nsettp (?P=argument),768\nload r\d+,1\n', guard[prefix.end():]), 'nonhelpers retain the same full controller check'
+    assert handler.rstrip().endswith('__rxt_done:\nret 0'), 'both rejection paths retain ordinary frame cleanup'
     assert '.traceevent ' in text and re.search(r'^\s*\.srcstep\s+\d+\s+[1-9]\d*\s', body, re.M), 'authored nonzero clause identities and retained semantic events'
     assert not re.search(r'^\s*(?:settp)?(?:swap)?call[1-4]?\s+[^\n]*llc(?:trace|clause|procedure|do)protocol', text, re.M | re.I), 'compiler proofs do not execute in the target'
     begins = called(body, 'rexxactivation.rexxactivationarguments.beginclausetime')

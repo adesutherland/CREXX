@@ -15,6 +15,7 @@ main: procedure = .int expose checks failures artifacts outputfile
   artifacts = argv[1]; checks = 0; failures = 0
   if argv[0] = 3 then do
     select argv[3]
+      when 'provenance' then call provenance()
       when 'nop' then call nopchecks(outputfile)
       when 'options' then call optionschecks(outputfile)
       when 'if' then call ifchecks(outputfile)

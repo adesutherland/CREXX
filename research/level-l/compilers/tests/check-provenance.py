@@ -40,7 +40,7 @@ started = time.monotonic()
 
 def run(label, command, expected=0):
     before = time.monotonic()
-    # The shared contracts image also runs the combined graph/shape fixture.
+    # The shared image selects provenance only; retain its generous hang guard.
     limit = 1800 if label == 'contracts' else 180
     result = subprocess.run([str(x) for x in command], cwd=work,
                             capture_output=True, timeout=limit)
@@ -117,7 +117,8 @@ def execute(level, assembly, label, mode, expected, strip=False):
 
 
 try:
-    result = run('contracts', [tool(args.vm), backend/'backend-tests-linked.rxbin', '-a', runtime])
+    result = run('contracts', [tool(args.vm), backend/'backend-tests-linked.rxbin',
+                               '-a', runtime, '', 'provenance'])
     assert b'failures=0' in result.stdout
     for level in ['c', 'g']:
         for name, output, line, column in [

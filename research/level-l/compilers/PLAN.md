@@ -27,14 +27,13 @@ acceptance below defines complete-C closure.
 Model allocation for coordination, design, implementation, execution and
 escalation follows the current policy in the repository's canonical `AGENTS.md`.
 
-The current emission-repair increment is local only. The selected registered
-research functional gate is done; commit the authorized increment locally.
-Its G-enabled shared/consumer cells do not establish full G qualification.
-Complete the fixed six representative
-RXAS review areas after that commit, reusing existing outputs where their inputs
-match. Map every registered group to its functional and representative review
-coverage; do not emit every internal scenario. This order does not close broader
-complete-C/baseline acceptance or authorize publication.
+The selected emission-repair increment is done for its local scope. The registered
+research functional gate, authorized local commit and fixed six representative
+RXAS review areas are done. Its G-enabled shared/consumer cells do not establish
+full G qualification. Preserve the registered functional coverage and reviewed
+producer/source identities without emitting every internal scenario. The bounded
+post-review cost repairs below do not close broader complete-C/baseline acceptance
+or authorize publication.
 
 ## Ordered instruction delivery
 
@@ -600,8 +599,8 @@ work/workspace and fall back to general compiled behavior on an unproved case.
 2. **CEP-P-STEP02 — todo:** report simpler/fewer-instruction evidence and any
    remaining unavoidable cost, keeping each proposed conformance compromise
    explicitly unselected until Adrian decides it.
-3. **CEP-P-STEP03 — in progress; functional gate done:** commit the frozen
-   authorized increment locally, then finish the fixed six representative
+3. **CEP-P-STEP03 — done for the selected research scope:** retain the registered
+   functional gate, authorized local commit and fixed six representative
    review areas under CEP-STEP03.
    Broader CFC, BQA, platform, sanitizer and publication gates retain their scope.
 
@@ -652,7 +651,7 @@ not establish installed delivery.
 | Stable step | Current status and dependency |
 |---|---|
 | **BQA-STEP01 — todo** | Finish the registered-test/requirements map and freeze the finite list of every missing approved baseline case and independent mode axis. Name later manual research gaps and their owners explicitly; BQA-AC01–03. |
-| **BQA-STEP02 — in progress; research functional gate done** | Preserve the reviewed emission repairs and completed registered research functional gate. Commit the authorized increment locally, then finish the fixed six representative RXAS areas. Keep every registered lane and its oracles; this bounded local sequence does not close the broader BQA-AC01–04 inventory, independent-axis or delivery requirements. |
+| **BQA-STEP02 — done for the selected research scope** | Preserve the reviewed emission repairs, completed registered research functional gate, authorized local commit and fixed six representative RXAS areas. Keep every registered lane and its oracles; this bounded local sequence does not close the broader BQA-AC01–04 inventory, independent-axis or delivery requirements. |
 | **BQA-STEP03 — todo** | Freeze the candidate, run `qa-prep-comprehensive` through its declared build graph and complete `qa-comprehensive` once. Report exact selected/passed/failed/timeout/not-run counts; BQA-AC05. |
 | **BQA-STEP04 — todo** | Complete Release build and installed/relocated consumers after functional green; BQA-AC06. |
 | **BQA-STEP05 — todo** | Run the existing maintained daily and full sanitizer suites, close or explicitly retain each SAN finding under its original-trigger/platform rule, then run `qa-measurement` with agreed C/L additions and the maintained language-benchmark portfolio serially on a quiet Release host; BQA-AC07/08. |
@@ -1313,15 +1312,32 @@ not establish installed delivery.
   meaning. Add no selector, transform, limit or target execution to collect them.
   **CEP-STEP02 — done:** retain the reviewed idle/cold-route, fresh-packet,
   immutable-catalogue and stable-profile repairs, selected checks and completed
-  registered research functional gate. Commit the frozen authorized increment
-  locally before CEP-STEP03; no lane is dropped.
-  **CEP-STEP03 — todo:** after that commit, finish exactly six representative
+  registered research functional gate and authorized local commit; no lane is dropped.
+  **CEP-STEP03 — done:** retain exactly six representative
   areas: typed/process external bindings; authored PARSE frontend source;
   nested dynamic/condition resumption; source-loaded expression/CALL arguments;
   actual noopt/IR-off C RETURN cleanup/calls; and existing G cleanup/control.
   Use the maintained selected cases and exact producer axes, reusing valid
   outputs and checks. No new helper, capture seam or mode matrix is required.
   Full CFC/BQA, platform, sanitizer and publication acceptance remains open.
+  **CEP-STEP04 — done for selected A/B cost repairs:** retain the existing
+  structural and focused checks; broader acceptance remains open.
+  - **TRACE helper rejection:** keep the exact mode/breakpoint/module gates,
+    lazy context owner and case-sensitive `llctarget.` helper set. Read its
+    procedure through the existing linked getter and apply the same prefix
+    rejection before `_trace_should_trace_context` prepares source/content.
+    Preserve nonhelper controller filters, source/value observations, interrupted
+    frame reads, receiver/context cleanup and `ret 0`. No new suppression,
+    runtime API or VM behavior is selected. The emitted ordering and unchanged
+    maintained TRACE check qualify this selected repair; no whole-panel restart.
+  - **Provenance wrapper:** select the existing `provenance()` group through
+    `backend-tests`' existing third-argument dispatch. Keep the full default
+    aggregate in that backend owner and retain every provenance source,
+    runtime and error case. The focused wrapper reuses the existing fixtures and oracles;
+    existing wrapper and unknown-selector controls qualify this selected repair.
+  - **G21 unread scalar writes — open opportunity only:** generic/G forwarding may
+    remove unread scalar transports only with proved liveness, all implicit
+    uses and source/TRACE observation obligations. No G code change is selected.
 - **C-CALL-PACKET-COST — separate C ownership repair:** ordinary CALL,
   expression/BIF/provider and source-resolver arguments currently append to a
   persistent whole packet by copying each growing prefix. Owner: C frontend,
