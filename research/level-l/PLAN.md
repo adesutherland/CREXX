@@ -76,12 +76,11 @@ cross-mode/operation admission, loose numeric duplicates (`1`/`01`), operation
 and field-table growth, refusal/poison, copy isolation and final exact manifest.
 Actual `field()` RXAS confirms a same-bucket walk without a whole-field scan or
 receiver snapshot. Selected SDK/C integration and matched first-result/residual
-checks are qualified; the reviewed bucket increment is ready for a local commit.
+checks and the reviewed local bucket commit are complete.
 The frozen C grammar is reused; no new registration or matrix is introduced.
 
-**STEP04 follow-on selected contract: scoped receiver reads.** After the bucket
-checkpoint is qualified and committed, remove the remaining observed same-owner
-snapshots in `schema_data.addfamily/addtype/addop/effect/service`. Reuse the
+**STEP04 qualified increment: scoped receiver reads.** Scoped aliases remove
+the observed same-owner snapshots in `schema_data.addfamily/addtype/addop/effect/service`. Reuse the
 operation-local `reference self`/dereference pattern already used by `field()`;
 call the existing `mutable()` authority, and the existing `typeindex()` or
 `opindex()` where required. No validation rule, duplicate comparison, status,
@@ -98,14 +97,50 @@ cache, new ownership service or native optimizer change is selected.
 
 Extend the existing RXAS guard only for these changed normal paths, including
 copies through the actual receiver/store alias window and a bounded negative
-witness. Retain existing independent mutation, invalid/error, returned-owner and
-view-lifetime controls. Compare actual exported inline bodies and attribute
-identities before selecting consumer reuse; recompile the declared affected
-metadata closure if semantic inline payloads changed. Sole QA reuses the frozen
-C grammar and selected SDK/integration checks, then matched ordinary first
-results and current residual profiles. Further copy removal requires its own
-concrete source/profile evidence; owned returns and arbitrary getter copies are
-not presumed unnecessary.
+witness. Existing independent mutation, invalid/error, returned-owner and view-lifetime
+controls remain. Actual exported inline semantic payloads and attribute identities
+are unchanged; source-line relocation alone permits current consumer reuse.
+Selected SDK/integration and matched ordinary first-result/residual checks are
+qualified; owning docs are ready for the reviewed local alias commit. Further
+copy removal requires its own concrete source/profile evidence; owned returns
+and arbitrary getter copies are not presumed unnecessary.
+
+**STEP04 final selected named-cost batch: local lookup reuse.** After the alias
+checkpoint, the C `llcparse.parsed` factory lazily reuses the results of its
+fixed-role literal token queries. A request-local integer array has one slot per
+exact literal role; zero means unknown, and a completed `tokenid()` result plus
+two represents both valid token zero and not-found minus one. Each role's first
+use calls the existing language `tokenid()` authority with that exact literal;
+only a completed result is stored. There is no up-front resolution of all roles,
+module/global cache or returned cache state. Limit this change to the hot factory's
+literal sites; computed queries and cold diagnostic helpers stay unchanged.
+The existing prepared-RXAS checker must prove every numeric role maps to exactly
+one literal (and vice versa), with bounded role IDs and a conflicting-role negative
+witness. Inspect the actual helper and call windows for borrowed references and
+absence of definition snapshots. Public grammar, token equality/first-match and
+missing-token semantics are unchanged.
+
+Generic AST `project()` uses a separate operation-local memo with exactly sixteen
+entries. Compare raw query strings using existing strict `==`; a miss always calls
+the original schema `index()` authority, including its folding, loose comparison,
+first match and zero/not-found behavior. Publish only a completed result, retain a
+valid-count independent of cached zero, and replace entries round-robin. Queries
+longer than 128 characters bypass storage; both key count and owned key length are
+bounded. The projection owns one stable contract during the call and invokes no
+mutation callback; no memo is stored in the schema, result or global state.
+Projection fields, order, spans and error behavior stay unchanged. The existing
+LLAST fixture must cover repeated found/not-found keys, strict-distinct queries,
+replacement and long-key bypass through independent projected results.
+
+This is the final selected named-cost batch. Reuse the small SDK, C prepared/entry
+and dynamic consumers, unchanged C grammar, actual RXAS review and matched ordinary
+empty/hello plus INTERPRET first results. Diagnose remaining significant revealed
+costs to repair or exclude them with concrete evidence; do not extend this into an
+indefinite general optimizer programme. No new schema attributes, wire format,
+generic equality/hash algorithm, C grammar generation or test matrix is selected.
+Source ownership adds `levelc/llcparse.crexx`, its existing
+`tests/check-prepared-rxas.py` guard, generic `llast.crexx` and the existing LLAST
+fixture; the owning C architecture guide records the local-use boundary.
 
 Product scope is `lib/rxfnsl/rexx/llir.crexx` and the existing
 `langtools/tests/library/ts_llir.crexx` fixture, with the existing
@@ -168,8 +203,9 @@ inlined self-count call. The RXAS guard covers these readers. Token lookup retai
 its decoder, loose equality, first-match order and ordinary direct-array branch;
 already folded stored AST rule names need no second `lower()`.
 Name lookup still scans and decodes candidate names to preserve exact loose
-equality. Further lookup-throughput acceleration is a future opportunity, not
-additional selected implementation or qualification.
+equality. The current STEP04 contract separately selects local exact-query reuse
+in C layout and AST projection; a generic indexed name-lookup algorithm remains
+a future opportunity, without changing this frozen representation.
 
 Frozen builder/mutation attempts signal existing ERROR with LL_FROZEN_DEFINITION
 detail, return the existing failure result if handled, and leave readable packed

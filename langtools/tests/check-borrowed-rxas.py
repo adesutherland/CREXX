@@ -88,6 +88,57 @@ def receiver_copy_controls():
             "foreign and released alias controls")
 
 
+def copies_anchored_store(ops, field):
+    """Follow only the module's actual anchored store/reference alias window."""
+    stores, references = set(), set()
+    for op, args in ops:
+        if op == "copy" and len(args) == 2:
+            if args[1] in stores:
+                return True
+            is_reference = args[1] in references
+            stores.discard(args[0]); references.discard(args[0])
+            if is_reference:
+                references.add(args[0])
+        elif op in {"unlink", "unlinkbr"} and args:
+            stores.discard(args[0]); references.discard(args[0])
+        elif op == "linkattr1" and len(args) == 3:
+            stores.discard(args[0]); references.discard(args[0])
+            if args[1:] == ("a1", field):
+                stores.add(args[0])
+        elif op == "mkref" and len(args) == 2:
+            is_store = args[1] in stores
+            stores.discard(args[0]); references.discard(args[0])
+            if is_store:
+                references.add(args[0])
+        elif op == "linkref" and len(args) == 2:
+            is_reference = args[1] in references
+            stores.discard(args[0]); references.discard(args[0])
+            if is_reference:
+                stores.add(args[0])
+    return False
+
+
+def anchored_store_controls():
+    direct = [("linkattr1", ("r2", "a1", "7"))]
+    alias = [*direct, ("mkref", ("r3", "r2")), ("unlink", ("r2",)),
+             ("linkref", ("r4", "r3"))]
+    require(not copies_anchored_store(alias, "7"), "anchored store borrow control")
+    require(copies_anchored_store([*direct, ("copy", ("r8", "r2"))], "7")
+            and copies_anchored_store([*alias, ("copy", ("r8", "r4"))], "7"),
+            "direct and dereferenced store-copy negatives")
+    copied_reference = [*direct, ("mkref", ("r3", "r2")),
+                        ("copy", ("r6", "r3")), ("linkref", ("r4", "r6"))]
+    require(not copies_anchored_store(copied_reference, "7")
+            and copies_anchored_store([*copied_reference, ("copy", ("r8", "r4"))], "7"),
+            "reference copies are permitted but preserve store ownership tracking")
+    require(not copies_anchored_store([*alias, ("unlink", ("r4",)),
+                                       ("copy", ("r8", "r4"))], "7")
+            and not copies_anchored_store([*direct, ("copy", ("r8", "r2"))], "8")
+            and not copies_anchored_store([("linkattr1", ("r2", "a2", "7")),
+                                          ("copy", ("r8", "r2"))], "7"),
+            "released aliases and unrelated owner/field controls")
+
+
 def flag_regions(body, field):
     """Fall-through bodies guarded by a scalar receiver field."""
     result = []
@@ -204,6 +255,7 @@ def query_window_controls():
 def check(directory):
     query_window_controls()
     receiver_copy_controls()
+    anchored_store_controls()
     sealed_read_controls()
     bucket_field_controls()
     texts = {name: (directory / f"{name}.rxas").read_text(encoding="utf-8")
@@ -225,6 +277,19 @@ def check(directory):
     require(bucket_field_safe(body("llir.schema_data.field"),
                               attribute("llir", "llir.schema_data", "_fieldindex")),
             "mutable field admission must use anchored bucket heads without owner copies or a full-table bound")
+    for method in ("addfamily", "addtype", "addop", "effect", "service"):
+        name = "llir.schema_data." + method
+        require(not copies_receiver(instructions(body(name))),
+                f"{name} copies its schema receiver through a scoped alias")
+    store = attribute("llir", "llir.module", "_store")
+    for method in ("error", "identity", "operations", "operation"):
+        name = "llir.module." + method
+        ops = instructions(body(name))
+        require(any(op == "linkattr1" and len(args) == 3
+                    and args[1:] == ("a1", store) for op, args in ops),
+                f"{name} must borrow its anchored store")
+        require(not copies_receiver(ops) and not copies_anchored_store(ops, store),
+                f"{name} copies its module or anchored arena")
     indexed = attribute("llir", "llir.schema_data", "_indexready")
     for query in ("arity", "fieldid"):
         name = "llir.schema_data." + query

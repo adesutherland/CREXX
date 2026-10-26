@@ -165,6 +165,12 @@ behavior. Copied or returned contracts own their index/cache values, without
 references into a builder's locals. Compatibility still compares exact manifest
 bytes across owners, rather than requiring the same owner identity; the index
 and cache do not change the wire format or public read/mutation surface.
+Registration calls its existing mutation and name-lookup authorities through a
+scoped receiver alias. Scalar module readers and operation-view construction
+likewise address the module's anchored arena without snapshotting that arena.
+Returned strings/scalars keep their owned-value contract, and an operation view
+continues to borrow the same arena with its existing identity/lifetime checks.
+These read aliases do not escape into persistent owner state.
 Private storage changes can still change `META_ATTR` slots used by imported
 inline templates. Restage current metadata and rebuild its declared consumer
 closure, including aggregate-image imports, before reusing linked consumers.

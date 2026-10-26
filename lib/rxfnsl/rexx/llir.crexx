@@ -293,7 +293,8 @@ schema_data: class
     return _error = ''
   addfamily: method = .int
     arg name = .string, version = .int
-    if mutable() = 0 then return 0
+    owner_ref = reference self; owner = dereference owner_ref
+    if owner.mutable() = 0 then return 0
     if validname(name) = 0 | version < 1 | version > 4294967295 then do
       call fail('LL_IR_SCHEMA: invalid family name or version'); return 0
     end
@@ -315,8 +316,9 @@ schema_data: class
     return _versions[i]
   addtype: method = .int
     arg name = .string, codec = .object
-    if mutable() = 0 then return 0
-    if validname(name) = 0 | typeindex(name) > 0 then do
+    owner_ref = reference self; owner = dereference owner_ref
+    if owner.mutable() = 0 then return 0
+    if validname(name) = 0 | owner.typeindex(name) > 0 then do
       call fail('LL_IR_SCHEMA: invalid or duplicate type ' || name); return 0
     end
     if (codec is .llir..typecodec) = 0 | initialized(codec) = 0 then do
@@ -340,8 +342,9 @@ schema_data: class
     return _codecs[i]
   addop: method = .int
     arg name = .string
-    if mutable() = 0 then return 0
-    if validname(name) = 0 | opindex(name) > 0 then do
+    owner_ref = reference self; owner = dereference owner_ref
+    if owner.mutable() = 0 then return 0
+    if validname(name) = 0 | owner.opindex(name) > 0 then do
       call fail('LL_IR_SCHEMA: invalid or duplicate operation ' || name); return 0
     end
     i = _ops[0] + 1; _ops[i] = name
@@ -425,7 +428,8 @@ schema_data: class
     return _names[i]
   effect: method = .void
     arg op = .int, which = .int, text = .string
-    if mutable() = 0 then return
+    owner_ref = reference self; owner = dereference owner_ref
+    if owner.mutable() = 0 then return
     if op < 1 | op > _ops[0] | validname(text) = 0 | which < 1 | which > 3 then do
       call fail('LL_IR_SCHEMA: invalid effect declaration'); return
     end
@@ -443,7 +447,8 @@ schema_data: class
     return _termination[op]
   service: method = .void
     arg op = .int, which = .int, service = .object
-    if mutable() = 0 then return
+    owner_ref = reference self; owner = dereference owner_ref
+    if owner.mutable() = 0 then return
     if op < 1 | op > _ops[0] | initialized(service) = 0 then do
       call fail('LL_IR_SCHEMA: uninitialised semantic service'); return
     end
@@ -1876,9 +1881,11 @@ module: class
     if _store.error() = '' then call verifyservices(reference _store)
     return
   error: method = .string
-    return _store.error()
+    store_ref = reference _store; store = dereference store_ref
+    return store.error()
   identity: method = .int
-    return _store.identity()
+    store_ref = reference _store; store = dereference store_ref
+    return store.identity()
   storage: method = reference .llir..arena
     return reference _store
   functions: method = .int
@@ -1893,12 +1900,14 @@ module: class
     if error() <> '' then return 0
     return _store.count(2)
   operations: method = .int
-    if error() <> '' then return 0
-    return _store.count(3)
+    store_ref = reference _store; store = dereference store_ref
+    if store.error() <> '' then return 0
+    return store.count(3)
   operation: method = .llir..opview
     arg id = .int
-    if error() <> '' then call bad(error())
-    return .llir..opview(reference _store,id)
+    store_ref = reference _store; store = dereference store_ref
+    if store.error() <> '' then call bad(store.error())
+    return .llir..opview(store_ref,id)
   block: method = .llir..block
     arg id = .int
     if error() <> '' then call bad(error())
