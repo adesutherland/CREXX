@@ -44,7 +44,7 @@ main: procedure = .int
   if restored.error() <> '' then say restored.error()
   failures = failures + check(restored.error() = '' & restored.text() = saved,'text round trip')
   failures = failures + check(pos('demo.add',graph.dump()) > 0,'named dump')
-  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments() + protection(c)
+  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments() + protection(c) + schemareads()
   say 'failures=' || failures
   return failures
 
@@ -119,6 +119,104 @@ check: procedure = .int
   if condition then return 0
   say 'FAIL: ' || description
   return 1
+
+/* Ordered signatures are independent of interleaving in the global field table. */
+schemareads: procedure = .int
+  data = schemareadstart(); mutable_copy = data
+  initial = schemareadprefix() || 'operation read.alpha unknown unknown unknown' || '0a'x || '1 left read.integer' || '0a'x || 'operation read.beta unknown unknown unknown' || '0a'x || '2 ready core.boolean' || '0a'x
+  failures = check(data.sealed() = 0 & data.error() = '' & data.arity(1,1) = 1 & data.fieldid(1,1,1) = 1 & data.arity(2,2) = 1 & data.fieldid(2,2,1) = 2 & data.manifest() == initial,'mutable initial schema reads and exact manifest')
+  call schemareadcomplete(reference data)
+  expected = schemareadprefix() || 'operation read.alpha none none returns' || '0a'x
+  expected = expected || '1 left read.integer' || '0a'x || '1 right core.boolean' || '0a'x || '2 result read.integer' || '0a'x || '3 flag core.boolean' || '0a'x
+  expected = expected || 'operation read.beta reads condition diverges' || '0a'x || '1 input read.integer' || '0a'x || '2 ready core.boolean' || '0a'x || '3 limit read.integer' || '0a'x
+  failures = failures + schemareadfields(reference data,'mutable')
+  failures = failures + check(data.manifest() == expected & mutable_copy.manifest() == initial & mutable_copy.arity(1,1) = 1,'late mutable fields update reads while value copy stays independent')
+  unsealed = .llir..contract(mutable_copy); unsealed_data = dereference unsealed.data()
+  boolean = .llir..typeid(unsealed_data.identity(),2)
+  call unsealed_data.field(1,3,'pending',boolean)
+  failures = failures + check(unsealed_data.sealed() = 0 & unsealed.manifest() \== initial & pos('3 pending core.boolean' || '0a'x,unsealed.manifest()) > 0 & mutable_copy.manifest() == initial,'unsealed contract manifest remains live in its own copied storage')
+  ok = data.freeze(); contract = .llir..contract(data)
+  failures = failures + check(ok & data.sealed() = 1 & contract.error() = '' & contract.manifest() == expected,'successful freeze preserves exact authored bytes')
+  failures = failures + schemareadfields(contract.data(),'sealed')
+  ok = data.freeze()
+  failures = failures + check(ok & data.manifest() == expected & contract.manifest() == expected,'successful freeze and cached manifest are idempotent')
+  copied = contract; descriptor = contract.operation('read.alpha'); caught = 0
+  do
+    call descriptor.attribute('forbidden',contract.boolean())
+  on signal error as frozen_problem
+    caught = pos('LL_IR_SCHEMA: contract is frozen',frozen_problem.message()) = 1
+  end
+  failures = failures + check(caught & contract.error() = '' & contract.manifest() == expected & copied.manifest() == expected,'frozen descriptor refusal preserves fields, status and copied cache')
+  data = .llir..schema_data()
+  failures = failures + schemareadfields(copied.data(),'copied after original storage replacement')
+  returned = schemareadowner()
+  failures = failures + check(returned.identity() <> copied.identity() & returned.error() = '' & returned.manifest() == expected & copied.manifest() == expected,'returned local owner and separate identity retain equal canonical manifests')
+  failures = failures + schemareadfields(returned.data(),'returned')
+  draft = .llir..builder(copied); at = draft.synthetic('schema read compatibility')
+  fn = draft.function('same',copied.voidtype()); entry = fn.block('entry')
+  integer = copied.type('read.integer'); number = entry.constant(integer,'2',at); flag = entry.constant(copied.boolean(),'true',at)
+  statement = entry.operation(copied.operation('read.alpha'),at)
+  call statement.input('left',number); call statement.input('right',flag); call statement.attribute('flag','01'x as .binary)
+  produced = statement.finish(); call entry.returnvoid(at); graph = draft.finish()
+  failures = failures + check(graph.error() = '' & produced.results() = 1,'interleaved signature constructs an independently typed operation')
+  if graph.error() = '' then do
+    restored = llir..loadbinary(returned,graph.binary())
+    failures = failures + check(restored.error() = '' & restored.text() == graph.text(),'equal manifest across different schema identities remains wire-compatible')
+  end
+  poison = schemareadstart(); integer = .llir..typeid(poison.identity(),3)
+  call poison.field(1,1,'left',integer)
+  prior_error = poison.error(); ok = poison.freeze()
+  failures = failures + check(ok = 0 & poison.sealed() = 1 & pos('duplicate operation field',prior_error) > 0 & poison.error() == prior_error & poison.arity(1,1) = 1 & poison.fieldid(2,2,1) = 2 & poison.fieldname(1,1,1) = 'left' & poison.fieldtype(1,1,1) = 3 & poison.manifest() == initial,'poisoned freeze retains original error and partial scan/manifest reads')
+  return failures
+
+schemareadprefix: procedure = .string
+  return 'LLIR-SCHEMA-1' || '0a'x || 'family core 1' || '0a'x || 'family read 2' || '0a'x || 'type core.void' || '0a'x || 'type core.boolean' || '0a'x || 'type read.integer' || '0a'x
+
+schemareadstart: procedure = .llir..schema_data
+  data = .llir..schema_data(); call data.bootstrap()
+  family = data.addfamily('read',2); integer_id = data.addtype('read.integer',.llir..intcodec() as .object)
+  alpha = data.addop('read.alpha'); beta = data.addop('read.beta')
+  integer = .llir..typeid(data.identity(),integer_id); boolean = .llir..typeid(data.identity(),2)
+  call data.field(alpha,1,'left',integer); call data.field(beta,2,'ready',boolean)
+  return data
+
+schemareadcomplete: procedure = .void
+  arg data_ref = reference .llir..schema_data
+  data = dereference data_ref
+  integer = .llir..typeid(data.identity(),3); boolean = .llir..typeid(data.identity(),2)
+  call data.field(1,3,'flag',boolean); call data.field(2,1,'input',integer)
+  call data.field(1,1,'right',boolean); call data.field(1,2,'result',integer); call data.field(2,3,'limit',integer)
+  call data.effect(1,1,'none'); call data.effect(1,2,'none'); call data.effect(1,3,'returns')
+  call data.effect(2,1,'reads'); call data.effect(2,2,'condition'); call data.effect(2,3,'diverges')
+  return
+
+schemareadowner: procedure = .llir..contract
+  data = schemareadstart(); call schemareadcomplete(reference data)
+  ok = data.freeze()
+  return .llir..contract(data)
+
+schemareadfields: procedure = .int
+  arg data_ref = reference .llir..schema_data, label = .string
+  data = dereference data_ref; failures = 0; i = .int; row = .string
+  failures = failures + check(data.arity(1,1) = 2 & data.arity(1,2) = 1 & data.arity(1,3) = 1 & data.arity(2,1) = 1 & data.arity(2,2) = 1 & data.arity(2,3) = 1,label || ' all three mode arities')
+  rows = .string[]
+  rows[1] = '1 1 1 1 left 3'; rows[2] = '1 1 2 5 right 2'; rows[3] = '1 2 1 6 result 3'
+  rows[4] = '1 3 1 3 flag 2'; rows[5] = '2 1 1 4 input 3'; rows[6] = '2 2 1 2 ready 2'; rows[7] = '2 3 1 7 limit 3'
+  op = .int; mode = .int; ordinal = .int
+  do i = 1 to rows[0]
+    row = rows[i]; op = word(row,1) as .int; mode = word(row,2) as .int; ordinal = word(row,3) as .int
+    failures = failures + check(data.fieldid(op,mode,ordinal) = (word(row,4) as .int) & data.fieldname(op,mode,ordinal) == word(row,5) & data.fieldtype(op,mode,ordinal) = (word(row,6) as .int),label || ' independent original global ID/name/type ' || i)
+  end
+  invalid = .string[]
+  invalid[1] = '0 1 1 0'; invalid[2] = '-1 1 1 0'; invalid[3] = '3 1 1 0'
+  invalid[4] = '1 0 1 0'; invalid[5] = '1 4 1 0'; invalid[6] = '1 1 0 2'
+  invalid[7] = '1 1 -1 2'; invalid[8] = '1 1 3 2'; invalid[9] = '2 3 2 1'
+  invalid[10] = '9223372036854775807 1 1 0'; invalid[11] = '1 9223372036854775807 1 0'; invalid[12] = '1 1 9223372036854775807 2'
+  do i = 1 to invalid[0]
+    row = invalid[i]; op = word(row,1) as .int; mode = word(row,2) as .int; ordinal = word(row,3) as .int
+    failures = failures + check(data.arity(op,mode) = (word(row,4) as .int) & data.fieldid(op,mode,ordinal) = 0 & data.fieldname(op,mode,ordinal) = '' & data.fieldtype(op,mode,ordinal) = 0,label || ' invalid query defaults ' || i)
+  end
+  return failures
 
 refusals: procedure = .int
   arg contract = .llir..contract, graph = .llir..module

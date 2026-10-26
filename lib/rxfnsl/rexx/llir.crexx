@@ -261,8 +261,14 @@ schema_data: class
   _evaluators = .object[]
   _verifiers = .object[]
   _lowerers = .object[]
+  _fieldindex = .binary
+  _fieldids = .binary
+  _indexready = .int
+  _manifest = .string
+  _manifestready = .int
   *: factory
     _identity = nextidentity(); _sealed = 0; _error = ''
+    _indexready = 0; _manifestready = 0; _manifest = ''
     _fields = .llir..table(4)
     return
   bootstrap: method = .void
@@ -369,6 +375,10 @@ schema_data: class
     return
   arity: method = .int
     arg op = .int, mode = .int
+    if _indexready then do
+      if op < 1 | op > _ops[0] | mode < 1 | mode > 3 then return 0
+      return <at..u32>(((op - 1) * 3 + mode - 1) * 8 + 4) _fieldindex
+    end
     count = 0
     do i = 1 to _fields.size()
       if _fields.get(i,1) = op & _fields.get(i,2) = mode then count = count + 1
@@ -376,6 +386,15 @@ schema_data: class
     return count
   fieldid: method = .int
     arg op = .int, mode = .int, ordinal = .int
+    count = .int
+    if _indexready then do
+      if op < 1 | op > _ops[0] | mode < 1 | mode > 3 | ordinal < 1 then return 0
+      at = ((op - 1) * 3 + mode - 1) * 8
+      count = <at..u32>(at + 4) _fieldindex
+      if ordinal > count then return 0
+      first = <at..u32>(at) _fieldindex
+      return <at..u32>((first + ordinal - 1) * 4) _fieldids
+    end
     count = 0
     do i = 1 to _fields.size()
       if _fields.get(i,1) = op & _fields.get(i,2) = mode then do
@@ -430,23 +449,73 @@ schema_data: class
     return _lowerers[op]
   freeze: method = .int
     _sealed = 1
+    if _error <> '' | _indexready then return _error = ''
+    /* Derive ordered global IDs once, keeping mutable/poisoned reads on the
+     * original field table. Publish owned buffers only after both are complete. */
+    index = .binary; ids = .binary
+    slots = _ops[0] * 3; fields = _fields.size()
+    call binresize index,slots * 8
+    call binresize ids,fields * 4
+    i = .int; at = .int; op = .int; mode = .int; count = .int; first = .int
+    do i = 0 to slots - 1
+      <at..u32>(i * 8) index = 0
+      <at..u32>(i * 8 + 4) index = 0
+    end
+    do i = 1 to fields
+      op = _fields.get(i,1); mode = _fields.get(i,2)
+      at = ((op - 1) * 3 + mode - 1) * 8 + 4
+      count = <at..u32>(at) index
+      <at..u32>(at) index = count + 1
+    end
+    first = 0
+    do i = 0 to slots - 1
+      at = i * 8; count = <at..u32>(at + 4) index
+      <at..u32>(at) index = first
+      <at..u32>(at + 4) index = 0
+      first = first + count
+    end
+    do i = 1 to fields
+      op = _fields.get(i,1); mode = _fields.get(i,2)
+      at = ((op - 1) * 3 + mode - 1) * 8
+      first = <at..u32>(at) index; count = <at..u32>(at + 4) index
+      <at..u32>((first + count) * 4) ids = i
+      <at..u32>(at + 4) index = count + 1
+    end
+    _fieldindex = index; _fieldids = ids; _indexready = 1
     return _error = ''
   manifest: method = .string
-    i = .int
+    if _manifestready then return _manifest
+    i = .int; mode = .int; j = .int; field = .int; count = .int; first = .int
+    field_name = .string; type_name = .string
     text = 'LLIR-SCHEMA-1' || '0a'x
-    do i = 1 to familycount()
+    do i = 1 to _families[0]
       text = text || 'family ' || _families[i] || ' ' || _versions[i] || '0a'x
     end
-    do i = 1 to types()
+    do i = 1 to _types[0]
       text = text || 'type ' || _types[i] || '0a'x
     end
-    do i = 1 to ops()
+    do i = 1 to _ops[0]
       text = text || 'operation ' || _ops[i] || ' ' || _states[i] || ' ' || _failures[i] || ' ' || _termination[i] || '0a'x
       do mode = 1 to 3
-        do j = 1 to arity(i,mode)
-          text = text || mode || ' ' || fieldname(i,mode,j) || ' ' || typename(fieldtype(i,mode,j)) || '0a'x
+        if _indexready then do
+          at = ((i - 1) * 3 + mode - 1) * 8
+          first = <at..u32>(at) _fieldindex; count = <at..u32>(at + 4) _fieldindex
+        end
+        else count = arity(i,mode)
+        do j = 1 to count
+          if _indexready then do
+            field = <at..u32>((first + j - 1) * 4) _fieldids
+            field_name = _names[field]; type = _fields.get(field,3); type_name = _types[type]
+          end
+          else do
+            field_name = fieldname(i,mode,j); type_name = typename(fieldtype(i,mode,j))
+          end
+          text = text || mode || ' ' || field_name || ' ' || type_name || '0a'x
         end
       end
+    end
+    if _indexready then do
+      _manifest = text; _manifestready = 1
     end
     return text
 

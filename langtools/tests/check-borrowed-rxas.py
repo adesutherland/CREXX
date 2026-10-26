@@ -61,6 +61,46 @@ def receiver_copy_controls():
     require(copies_receiver(bad), "packed scalar bound receiver-copy negative")
 
 
+def flag_regions(body, field):
+    """Fall-through bodies guarded by a scalar receiver field."""
+    result = []
+    for i, line in enumerate(body):
+        match = re.fullmatch(r"\s+linkattr1\s+(r[0-9]+),a1," + re.escape(field), line)
+        if not match:
+            continue
+        flag = match[1]
+        for j in range(i + 1, len(body)):
+            branch = re.fullmatch(r"\s+brf\s+(\S+)," + re.escape(flag), body[j])
+            if branch:
+                end = next((k for k in range(j + 1, len(body))
+                            if body[k] == branch[1] + ":"), None)
+                if end is not None:
+                    result.append(body[j + 1:end])
+                break
+            if instructions([body[j]]):
+                break
+    return result
+
+
+def sealed_read_safe(body):
+    scans = {"llir.schema_data.arity", "llir.schema_data.fieldid",
+             "llir.schema_data.fieldname", "llir.schema_data.fieldtype",
+             "llir.schema_data.manifest"}
+    return not copies_receiver(instructions(body)) and not scans.intersection(callnames(body))
+
+
+def sealed_read_controls():
+    body = ["   linkattr1 r2,a1,7", "   brf mutable,r2",
+            "   bgetu32 r4,r3,r5", "   ret r4", "mutable:",
+            "   copy r8,a1", "   call2 r9,§llir.schema_data.fieldid(),r8,r6"]
+    regions = flag_regions(body, "7")
+    require(len(regions) == 1 and sealed_read_safe(regions[0]),
+            "sealed scalar control permits mutable fallback")
+    for inserted in ("   copy r6,a1", "   call2 r9,§llir.schema_data.fieldid(),a1,r6"):
+        bad = [*regions[0][:-1], inserted, regions[0][-1]]
+        require(not sealed_read_safe(bad), "sealed read snapshot/scan negative")
+
+
 def linked_cfg_query(window, cfg, query):
     """Exact scalar call ABI after linking the retained tables._cfg field."""
     if len(window) != 7:
@@ -114,9 +154,10 @@ def query_window_controls():
 def check(directory):
     query_window_controls()
     receiver_copy_controls()
+    sealed_read_controls()
     texts = {name: (directory / f"{name}.rxas").read_text(encoding="utf-8")
              for name in ("lllanguage", "llmunch", "lllr", "llcfg", "llcheck",
-                          "llcore", "llcomments", "llstage", "llproject", "llast")}
+                          "llcore", "llcomments", "llstage", "llproject", "llast", "llir")}
     code = {}
     for text in texts.values():
         code.update(routines(text))
@@ -129,6 +170,28 @@ def check(directory):
         match = re.search(rf'\.meta "{re.escape(owner)}\.{field}"="b" "[^"]+" \.attr (\d+)\b', texts[module])
         require(match, f"missing owner field metadata {owner}.{field}")
         return match[1]
+
+    indexed = attribute("llir", "llir.schema_data", "_indexready")
+    for query in ("arity", "fieldid"):
+        name = "llir.schema_data." + query
+        regions = flag_regions(body(name), indexed)
+        require(len(regions) == 1 and sealed_read_safe(regions[0])
+                and not callnames(regions[0])
+                and any(op == "bgetu32" for op, _ in instructions(regions[0])),
+                f"{name} must read its sealed index without snapshots or scans")
+    for query in ("fieldname", "fieldtype"):
+        name = "llir.schema_data." + query
+        require(not copies_receiver(instructions(body(name))),
+                f"{name} snapshots its schema for a field read")
+    name = "llir.schema_data.manifest"
+    cached = flag_regions(body(name), attribute("llir", "llir.schema_data", "_manifestready"))
+    require(len(cached) == 1 and sealed_read_safe(cached[0])
+            and not callnames(cached[0])
+            and any(op == "ret" for op, _ in instructions(cached[0])),
+            "sealed manifest must return its complete cache without rebuilding")
+    rendered = flag_regions(body(name), indexed)
+    require(len(rendered) >= 2 and all(sealed_read_safe(region) for region in rendered),
+            "sealed manifest rendering must read global indexed fields without receiver snapshots")
 
     for method in ("tokenname", "tokenid", "stageat", "messagetext", "messagemask", "explain"):
         name = "lllanguage.definition." + method

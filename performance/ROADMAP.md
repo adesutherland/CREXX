@@ -120,6 +120,18 @@ verdict and selects no new VM mechanism or broad campaign. The plan's future-onl
 LDP-FUTURE-01 retains hydration buffer-lifetime measurement as an opportunity,
 not additional implementation or qualification.
 
+**LIR-SCHEMA-READ-01 — first batch locally qualified; residual investigation open.** The
+[generic Level L plan](../research/level-l/PLAN.md#current-action-ir-schema-reads)
+owns the implemented per-operation/mode ordered field-ID index and exact canonical
+manifest cache for sealed contracts. Mutable builders, field IDs/order, error
+behavior and equal-schema compatibility across distinct owners remain unchanged.
+Selected SDK, emitted-code and C/COMMAND/dynamic first-result checks are qualified
+with the existing frozen grammar; the reviewed batch is ready for a local commit.
+The residual startup loop remains open and selects further repairs only from
+concrete source/profile evidence. Ordinary AOT source/closure proof stays separate
+from source-interpreter latency. No native/wire/ISA change or broader performance
+campaign is selected.
+
 **LFP1 — implemented and locally qualified: trusted frozen generated definitions.** The
 [generic Level L plan](../research/level-l/PLAN.md#current-action-frozen-definitions)
 owns the explicit prevalidated path: packed reads and bounded wrapper creation,
@@ -353,21 +365,13 @@ are recorded here or appeared in the completed programme ledger:
   finalisation, hoisting, and late-inlining consumers. Start from a current
   profile and reuse the graph/proof service; do not broaden an unsupported
   inline shape as a shortcut.
-- `LIR-SCHEMA-READ-01` (under `PERF-COMPILER-01`): investigated startup
-  candidate; implementation is not selected. Repeated sealed-schema `arity`
-  and `fieldid` scans drive checked table reads; canonical manifest construction
-  repeats those queries, including registry compatibility checks. Hypothesis:
-  build ordered per-operation/mode field-ID lists once when sealing and retain
-  the exact canonical manifest, rather than repeat semantic scans. Keep mutable
-  builder validation, IDs, declaration order, bounds/errors and equal-schema
-  matching across different owners; owner identity is not compatibility.
-  Compare the current path, manifest-only caching and sealed-field indexing with
-  a cached manifest. Select through focused independent contracts and a matched
-  first-program/resource check; the Level L research exception applies, with no
-  production-performance claim. Build-time standard-C schema preparation is a
-  separate larger alternative. No new parser algorithm, ISA or wire format is
-  needed. Source/bytecode profiler counts are diagnostic;
-  recursive logical copied bytes are not physical memory traffic.
+- `LIR-SCHEMA-READ-01` (under `PERF-COMPILER-01`): the sealed index/cache
+  batch is implemented and locally qualified as described above. The existing
+  generic plan owns the open residual startup investigation; select the next
+  repair from a current profile, preserving mutable behavior and exact schema
+  compatibility. Source/bytecode profiler counts are diagnostic; recursive
+  logical copied bytes are not physical memory traffic. Build-time standard-C
+  schema preparation remains a separate, unselected larger alternative.
 - `PERF-COMPILE-LATENCY-01`: Adrian proposed a lean no-optimizer assembler and
   compiler-to-assembler handoff on 2026-10-07 as foundations for a compiled
   execution mode and possible later INTERPRET design. The first hypothesis is

@@ -1,5 +1,66 @@
 # Level L language tooling research — 10 October 2026
 
+<a id="current-action-ir-schema-reads"></a>
+
+## Current action: sealed IR schema reads (LIR-SCHEMA-READ-01)
+
+**The first sealed-schema batch is locally qualified and ready for its reviewed
+local commit; the residual startup investigation and broader Level L acceptance
+stay open.**
+Remove repeated whole-field scans from sealed generic LLIR contracts and avoid
+rebuilding their exact canonical manifest. Mutable schema builders retain their
+current live reads, admission checks, status/errors and mutation surface. This
+selects no C schema cache, wire/ISA change, new parser/runtime algorithm, native
+optimizer change or broader platform/SAN/performance campaign.
+The selected startup loop continues through matched ordinary first-result and
+copy evidence, using a residual profile only when needed. Each further significant
+confirmed cost receives a bounded owner/repair contract here before product edits;
+the investigation does not close merely because this first schema batch passes.
+Ordinary precompiled C startup is a separate contract: empty and hello programs
+must not acquire or initialize frontend/parser/IR-schema machinery before a
+dynamic feature such as INTERPRET or a source call is reached. Keep compile
+latency, source-interpreter first results and AOT execution measurements distinct.
+Source, emitted RXAS and link-closure proof suffice when those modules are absent;
+no AOT entry shortcut or setup change is selected without a concrete leak.
+
+`schema_data.freeze()` derives one owned per-(operation, mode) ordered list of
+original global field IDs from the existing field table. Sealed `arity()` and
+`fieldid()` use its counts and ordinal positions; field name/type reads retain
+their original authority. Mutable reads keep the existing scans. Modes, IDs,
+declaration order and out-of-range empty/zero behavior remain unchanged. Derived
+storage is owned and published only when complete; repeated freeze does not
+rebuild it. Poisoned/partial frozen schemas retain their old scan and manifest
+behavior. No references to builder or constructor locals escape.
+
+The canonical `LLIR-SCHEMA-1` text is cached only for sealed data. Mutable
+`manifest()` remains live after additions. Exact bytes and ordering remain the
+compatibility authority: independently created equal schemas still match even
+when owner identities differ. Frozen mutation refusals and copied/returned
+contract isolation remain unchanged. Inspect actual RXAS for receiver snapshots
+and repeated scans; optimization must not move the cost into self-count helpers
+or clone a complete schema for scalar/name/type reads.
+
+| Stable criterion | Selected proof |
+|---|---|
+| **LIR-SCHEMA-READ-AC01 — done** | Independent interleaved operation/mode fields preserve mutable and sealed arity, original field IDs/names/types, invalid-query defaults and exact authored manifest bytes. |
+| **LIR-SCHEMA-READ-AC02 — done** | Repeated freeze/manifest reads and copied/returned contracts retain owned derived data; refused frozen mutations preserve usable status/read/cache state, and equal distinct owners remain compatible. |
+| **LIR-SCHEMA-READ-AC03 — done** | Actual SDK RXAS shows direct sealed reads and cached manifest reuse without whole-owner read snapshots or repeated field scans; existing mutable algorithms remain. |
+| **LIR-SCHEMA-READ-AC04 — todo** | Continue the bounded residual-cost loop after the qualified first batch until significant revealed startup and user-known issues are repaired or excluded by concrete evidence. Each selected repair retains focused correctness, emitted-code and matched first-result checks. Owning docs and reviewed local commits serve that loop; no push or formal Release/platform/SAN/general speed claim. |
+| **LIR-SCHEMA-READ-AC05 — done (source/closure proof)** | Ordinary precompiled empty/hello C closure excludes frontend/parser/IR-schema modules. Source and initializer inspection also shows linked dynamic facilities defer parser/schema construction until actual demand. This proof distinguishes AOT execution from compiler and source-interpreter latency; an explicit runtime-false INTERPRET execution control has not been run. Repair only a reproduced leak. |
+
+| Stable step | Work and dependency |
+|---|---|
+| **LIR-SCHEMA-READ-STEP01 — done** | Save contract, preservation boundary and coordinator/peer design clearance before product edits; AC01–05. |
+| **LIR-SCHEMA-READ-STEP02 — done** | The single-owner sealed index/cache, independent existing SDK fixture, source peer and representative RXAS inspection are complete; AC01–03. |
+| **LIR-SCHEMA-READ-STEP03 — done (first batch)** | Selected SDK, C/COMMAND/dynamic, matched first-result and AOT source/closure checks are qualified. Owning docs are ready; commit the reviewed first batch locally. This completes that increment, not the residual investigation; AC04–05. |
+| **LIR-SCHEMA-READ-STEP04 — todo** | Diagnose the current residual profile, select only confirmed significant startup or user-known issues, record each bounded repair contract, then implement and qualify it; AC04. |
+
+Product scope is `lib/rxfnsl/rexx/llir.crexx` and the existing
+`langtools/tests/library/ts_llir.crexx` fixture, with the existing
+`langtools/tests/check-borrowed-rxas.py` guard covering sealed direct-index and
+cached-return prefixes while permitting mutable fallbacks. Reuse unchanged generated grammar
+and prepared stages; no C grammar regeneration or new test matrix is selected.
+
 <a id="current-action-frozen-definitions"></a>
 
 ## Completed increment: trusted frozen generated definitions (LFP1)

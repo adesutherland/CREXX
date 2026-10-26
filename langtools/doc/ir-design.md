@@ -153,6 +153,19 @@ looks up an already registered type, and `schema.boolean()`/`schema.voidtype()`
 provide the core handles without prematurely freezing the schema. The finished
 contract provides the corresponding read-only lookups.
 
+Mutable signature reads reflect each added field immediately. A successful
+freeze derives an owned index by operation and field mode, preserving original
+global field IDs and declaration order. Sealed arity/ordinal reads use that index;
+the exact canonical schema manifest is cached after its first complete rendering.
+Unsealed data and poisoned partial schemas retain their existing scan/manifest
+behavior. Copied or returned contracts own their index/cache values, without
+references into a builder's locals. Compatibility still compares exact manifest
+bytes across owners, rather than requiring the same owner identity; the index
+and cache do not change the wire format or public read/mutation surface.
+Private storage changes can still change `META_ATTR` slots used by imported
+inline templates. Restage current metadata and rebuild its declared consumer
+closure, including aggregate-image imports, before reusing linked consumers.
+
 The default state, failure and termination summaries are `unknown`.
 `state('none')` means no access to mutable state or observable output.
 `failure('none')` means no language failure; other named failure summaries retain
