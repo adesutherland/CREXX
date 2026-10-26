@@ -46,8 +46,24 @@ def callnames(body):
 
 
 def copies_receiver(ops):
-    return any(op == "copy" and len(args) == 2 and args[1] == "a1"
-               for op, args in ops)
+    # Follow the operation-local MKREF/LINKREF receiver window as well as a1.
+    # References themselves may be copied; copying the dereferenced owner may not.
+    receivers = {"a1"}
+    references = set()
+    for op, args in ops:
+        if op == "copy" and len(args) == 2 and args[1] in receivers:
+            return True
+        if op in {"unlink", "unlinkbr"} and args:
+            receivers.discard(args[0]); references.discard(args[0])
+        elif op == "mkref" and len(args) == 2:
+            references.discard(args[0])
+            if args[1] in receivers:
+                references.add(args[0])
+        elif op == "linkref" and len(args) == 2:
+            receivers.discard(args[0])
+            if args[1] in references:
+                receivers.add(args[0])
+    return False
 
 
 def receiver_copy_controls():
@@ -59,6 +75,17 @@ def receiver_copy_controls():
     require(not copies_receiver(window), "packed scalar bound control")
     bad = [("copy", ("r5", "a1")), *window]
     require(copies_receiver(bad), "packed scalar bound receiver-copy negative")
+    alias = [("mkref", ("r8", "a1")), ("linkref", ("r9", "r8"))]
+    require(not copies_receiver([*alias, ("copy", ("r10", "r8"))]),
+            "receiver reference may be copied without copying its owner")
+    require(copies_receiver([*alias, ("copy", ("r10", "r9"))]),
+            "scoped receiver alias-copy negative")
+    require(not copies_receiver([("mkref", ("r8", "a2")),
+                                 ("linkref", ("r9", "r8")),
+                                 ("copy", ("r10", "r9"))])
+            and not copies_receiver([*alias, ("unlink", ("r9",)),
+                                     ("copy", ("r10", "r9"))]),
+            "foreign and released alias controls")
 
 
 def flag_regions(body, field):
@@ -99,6 +126,29 @@ def sealed_read_controls():
     for inserted in ("   copy r6,a1", "   call2 r9,§llir.schema_data.fieldid(),a1,r6"):
         bad = [*regions[0][:-1], inserted, regions[0][-1]]
         require(not sealed_read_safe(bad), "sealed read snapshot/scan negative")
+
+
+def bucket_field_safe(body, index):
+    ops = instructions(body)
+    heads = {args[0] for op, args in ops if op == "linkattr1" and len(args) == 3
+             and args[1:] == ("a1", index)}
+    return (not copies_receiver(ops) and "llir.table.size" not in callnames(body)
+            and any(op == "bgetu32" and len(args) == 3 and args[1] in heads
+                    for op, args in ops)
+            and any(op == "bsetu32" and len(args) == 3 and args[0] in heads
+                    for op, args in ops))
+
+
+def bucket_field_controls():
+    body = ["   linkattr1 r2,a1,7", "   bgetu32 r3,r2,r4",
+            "   call3 r5,§llir.table.get(),r6,r3,r8", "   bsetu32 r2,r4,r9"]
+    require(bucket_field_safe(body, "7"), "anchored mutable bucket control")
+    for inserted in ("   copy r6,a1", "   call1 r5,§llir.table.size(),r6"):
+        require(not bucket_field_safe([inserted, *body], "7"),
+                "mutable bucket receiver-copy/full-table-count negative")
+    require(not bucket_field_safe(body, "8")
+            and not bucket_field_safe(body[:-1], "7"),
+            "mutable bucket foreign-field/missing-publication negative")
 
 
 def linked_cfg_query(window, cfg, query):
@@ -155,6 +205,7 @@ def check(directory):
     query_window_controls()
     receiver_copy_controls()
     sealed_read_controls()
+    bucket_field_controls()
     texts = {name: (directory / f"{name}.rxas").read_text(encoding="utf-8")
              for name in ("lllanguage", "llmunch", "lllr", "llcfg", "llcheck",
                           "llcore", "llcomments", "llstage", "llproject", "llast", "llir")}
@@ -171,6 +222,9 @@ def check(directory):
         require(match, f"missing owner field metadata {owner}.{field}")
         return match[1]
 
+    require(bucket_field_safe(body("llir.schema_data.field"),
+                              attribute("llir", "llir.schema_data", "_fieldindex")),
+            "mutable field admission must use anchored bucket heads without owner copies or a full-table bound")
     indexed = attribute("llir", "llir.schema_data", "_indexready")
     for query in ("arity", "fieldid"):
         name = "llir.schema_data." + query

@@ -126,9 +126,13 @@ owns the implemented per-operation/mode ordered field-ID index and exact canonic
 manifest cache for sealed contracts. Mutable builders, field IDs/order, error
 behavior and equal-schema compatibility across distinct owners remain unchanged.
 Selected SDK, emitted-code and C/COMMAND/dynamic first-result checks are qualified
-with the existing frozen grammar; the reviewed batch is ready for a local commit.
+with the existing frozen grammar; its reviewed local commit is complete.
 The residual startup loop remains open and selects further repairs only from
-concrete source/profile evidence. Ordinary AOT source/closure proof stays separate
+concrete source/profile evidence. Bucketed mutable field admission is implemented and locally qualified using
+existing private storage, preserving loose name equality, refusal and declaration
+order. The next selected increment removes observed receiver/arena snapshots
+through scoped aliases to the existing authorities. Ordinary AOT source/closure
+proof stays separate
 from source-interpreter latency. No native/wire/ISA change or broader performance
 campaign is selected.
 

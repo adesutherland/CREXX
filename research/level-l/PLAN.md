@@ -4,9 +4,8 @@
 
 ## Current action: sealed IR schema reads (LIR-SCHEMA-READ-01)
 
-**The first sealed-schema batch is locally qualified and ready for its reviewed
-local commit; the residual startup investigation and broader Level L acceptance
-stay open.**
+**The first sealed-schema batch is locally qualified and committed; the
+residual startup investigation and broader Level L acceptance stay open.**
 Remove repeated whole-field scans from sealed generic LLIR contracts and avoid
 rebuilding their exact canonical manifest. Mutable schema builders retain their
 current live reads, admission checks, status/errors and mutation surface. This
@@ -44,7 +43,7 @@ or clone a complete schema for scalar/name/type reads.
 |---|---|
 | **LIR-SCHEMA-READ-AC01 — done** | Independent interleaved operation/mode fields preserve mutable and sealed arity, original field IDs/names/types, invalid-query defaults and exact authored manifest bytes. |
 | **LIR-SCHEMA-READ-AC02 — done** | Repeated freeze/manifest reads and copied/returned contracts retain owned derived data; refused frozen mutations preserve usable status/read/cache state, and equal distinct owners remain compatible. |
-| **LIR-SCHEMA-READ-AC03 — done** | Actual SDK RXAS shows direct sealed reads and cached manifest reuse without whole-owner read snapshots or repeated field scans; existing mutable algorithms remain. |
+| **LIR-SCHEMA-READ-AC03 — done** | Actual SDK RXAS shows direct sealed reads and cached manifest reuse without whole-owner read snapshots or repeated field scans; existing public mutable read algorithms remain. |
 | **LIR-SCHEMA-READ-AC04 — todo** | Continue the bounded residual-cost loop after the qualified first batch until significant revealed startup and user-known issues are repaired or excluded by concrete evidence. Each selected repair retains focused correctness, emitted-code and matched first-result checks. Owning docs and reviewed local commits serve that loop; no push or formal Release/platform/SAN/general speed claim. |
 | **LIR-SCHEMA-READ-AC05 — done (source/closure proof)** | Ordinary precompiled empty/hello C closure excludes frontend/parser/IR-schema modules. Source and initializer inspection also shows linked dynamic facilities defer parser/schema construction until actual demand. This proof distinguishes AOT execution from compiler and source-interpreter latency; an explicit runtime-false INTERPRET execution control has not been run. Repair only a reproduced leak. |
 
@@ -52,13 +51,67 @@ or clone a complete schema for scalar/name/type reads.
 |---|---|
 | **LIR-SCHEMA-READ-STEP01 — done** | Save contract, preservation boundary and coordinator/peer design clearance before product edits; AC01–05. |
 | **LIR-SCHEMA-READ-STEP02 — done** | The single-owner sealed index/cache, independent existing SDK fixture, source peer and representative RXAS inspection are complete; AC01–03. |
-| **LIR-SCHEMA-READ-STEP03 — done (first batch)** | Selected SDK, C/COMMAND/dynamic, matched first-result and AOT source/closure checks are qualified. Owning docs are ready; commit the reviewed first batch locally. This completes that increment, not the residual investigation; AC04–05. |
+| **LIR-SCHEMA-READ-STEP03 — done (first batch)** | Selected SDK, C/COMMAND/dynamic, matched first-result and AOT source/closure checks are qualified. Owning docs and the reviewed local commit complete that increment, not the residual investigation; AC04–05. |
 | **LIR-SCHEMA-READ-STEP04 — todo** | Diagnose the current residual profile, select only confirmed significant startup or user-known issues, record each bounded repair contract, then implement and qualify it; AC04. |
+
+**STEP04 qualified increment: bucketed mutable field admission.** Before sealing,
+reuse each existing eight-byte `_fieldindex` row as a head for that operation and
+field mode. `addop()` extends and clears exactly its three heads. The private
+fourth `_fields` column links accepted fields backwards within their bucket;
+no schema attributes, metadata slots or wire fields are added. `field()` follows
+only that bucket, retaining the existing loose `=` name comparison and identical
+duplicate diagnostic. The existing mutability gate is called through a scoped
+receiver alias, without copying the schema or retaining that reference.
+Name/type/mode admission still precedes lookup. Publish a new head only after the accepted row, backlink and name are complete. Original
+global IDs/order, cross-mode and cross-operation names, numeric-equivalent name
+refusals, poisoned state and public mutable scan reads remain unchanged.
+Successful freeze replaces these temporary heads with the existing sealed
+ranges, while poisoned freeze keeps its old fallback behavior. The derived
+buffers and backlinks remain ordinary owned value state, including copies and
+returned builders. No global cache, new identity scheme or native change is
+selected.
+
+The existing SDK fixture independently covers interleaved buckets, same-name
+cross-mode/operation admission, loose numeric duplicates (`1`/`01`), operation
+and field-table growth, refusal/poison, copy isolation and final exact manifest.
+Actual `field()` RXAS confirms a same-bucket walk without a whole-field scan or
+receiver snapshot. Selected SDK/C integration and matched first-result/residual
+checks are qualified; the reviewed bucket increment is ready for a local commit.
+The frozen C grammar is reused; no new registration or matrix is introduced.
+
+**STEP04 follow-on selected contract: scoped receiver reads.** After the bucket
+checkpoint is qualified and committed, remove the remaining observed same-owner
+snapshots in `schema_data.addfamily/addtype/addop/effect/service`. Reuse the
+operation-local `reference self`/dereference pattern already used by `field()`;
+call the existing `mutable()` authority, and the existing `typeindex()` or
+`opindex()` where required. No validation rule, duplicate comparison, status,
+error or publication order changes. The mutators' ordinary owned state and
+caller-visible mutation behavior remain intact.
+
+In `module.error/identity/operations/operation`, bind a scoped reference to the
+receiver's anchored `_store` and call the existing arena reader through that
+alias. This removes the observed nested-arena snapshots without changing public
+owned scalar/string results. `operation()` still returns an opview borrowing that
+same anchored arena, never a reference to a constructor or method local. Existing
+poisoned-module and frozen/refusal behavior remains. No caller changes, global
+cache, new ownership service or native optimizer change is selected.
+
+Extend the existing RXAS guard only for these changed normal paths, including
+copies through the actual receiver/store alias window and a bounded negative
+witness. Retain existing independent mutation, invalid/error, returned-owner and
+view-lifetime controls. Compare actual exported inline bodies and attribute
+identities before selecting consumer reuse; recompile the declared affected
+metadata closure if semantic inline payloads changed. Sole QA reuses the frozen
+C grammar and selected SDK/integration checks, then matched ordinary first
+results and current residual profiles. Further copy removal requires its own
+concrete source/profile evidence; owned returns and arbitrary getter copies are
+not presumed unnecessary.
 
 Product scope is `lib/rxfnsl/rexx/llir.crexx` and the existing
 `langtools/tests/library/ts_llir.crexx` fixture, with the existing
 `langtools/tests/check-borrowed-rxas.py` guard covering sealed direct-index and
-cached-return prefixes while permitting mutable fallbacks. Reuse unchanged generated grammar
+cached-return prefixes and anchored mutable bucket-head access while permitting
+mutable read fallbacks. Reuse unchanged generated grammar
 and prepared stages; no C grammar regeneration or new test matrix is selected.
 
 <a id="current-action-frozen-definitions"></a>

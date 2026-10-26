@@ -346,6 +346,12 @@ schema_data: class
     end
     i = _ops[0] + 1; _ops[i] = name
     _states[i] = 'unknown'; _failures[i] = 'unknown'; _termination[i] = 'unknown'
+    /* Mutable rows hold per-mode heads; freeze replaces them with ranges. */
+    extent = i * 24
+    call binresize _fieldindex,extent
+    do at = extent - 24 to extent - 4 by 4
+      <at..u32>(at) _fieldindex = 0
+    end
     return i
   opindex: method = .int
     arg name = .string
@@ -360,18 +366,22 @@ schema_data: class
     return _ops[0]
   field: method = .void
     arg op = .int, mode = .int, name = .string, type = .llir..typeid
-    if mutable() = 0 then return
+    owner_ref = reference self; owner = dereference owner_ref
+    if owner.mutable() = 0 then return
     if op < 1 | op > _ops[0] | validname(name) = 0 | type.schemaid() <> _identity | type.id() < 2 | type.id() > _types[0] | mode < 1 | mode > 3 then do
       call fail('LL_IR_SCHEMA: invalid operation field ' || name); return
     end
-    i = .int
-    do i = 1 to _fields.size()
-      if _fields.get(i,1) = op & _fields.get(i,2) = mode & _names[i] = name then do
+    at = ((op - 1) * 3 + mode - 1) * 8
+    head = <at..u32>(at) _fieldindex; i = head
+    do while i > 0
+      if _names[i] = name then do
         call fail('LL_IR_SCHEMA: duplicate operation field ' || name); return
       end
+      i = _fields.get(i,4)
     end
     i = _fields.add(); call _fields.put(i,1,op); call _fields.put(i,2,mode)
-    call _fields.put(i,3,type.id()); _names[i] = name
+    call _fields.put(i,3,type.id()); call _fields.put(i,4,head); _names[i] = name
+    <at..u32>(at) _fieldindex = i
     return
   arity: method = .int
     arg op = .int, mode = .int

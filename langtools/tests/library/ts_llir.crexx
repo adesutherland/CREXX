@@ -44,7 +44,7 @@ main: procedure = .int
   if restored.error() <> '' then say restored.error()
   failures = failures + check(restored.error() = '' & restored.text() = saved,'text round trip')
   failures = failures + check(pos('demo.add',graph.dump()) > 0,'named dump')
-  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments() + protection(c) + schemareads()
+  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments() + protection(c) + schemareads() + schemabuckets()
   say 'failures=' || failures
   return failures
 
@@ -217,6 +217,51 @@ schemareadfields: procedure = .int
     failures = failures + check(data.arity(op,mode) = (word(row,4) as .int) & data.fieldid(op,mode,ordinal) = 0 & data.fieldname(op,mode,ordinal) = '' & data.fieldtype(op,mode,ordinal) = 0,label || ' invalid query defaults ' || i)
   end
   return failures
+
+/* Mutable head chains are private acceleration, never declaration order. */
+schemabuckets: procedure = .int
+  data = schemabucketowner()
+  failures = check(data.error() = '' & data.manifest() == schemabucketmanifest(),'cross-operation/mode same names and exact global declaration manifest')
+  if data.error() <> '' then return failures
+  failures = failures + check(data.arity(1,1) = 3 & data.fieldid(1,1,1) = 1 & data.fieldid(1,1,2) = 5 & data.fieldid(1,1,3) = 9 & data.fieldid(1,2,1) = 2 & data.fieldid(1,2,2) = 8 & data.fieldid(1,3,1) = 3 & data.fieldid(2,1,1) = 4 & data.fieldid(2,3,1) = 6 & data.fieldid(10,2,1) = 7,'operation-head and field-table growth retain original interleaved IDs')
+  copied = data; boolean = .llir..typeid(data.identity(),2)
+  call data.field(1,1,'primaryonly',boolean); call copied.field(1,1,'copyonly',boolean)
+  failures = failures + check(data.error() = '' & copied.error() = '' & data.fieldid(1,1,4) = 10 & copied.fieldid(1,1,4) = 10 & data.fieldname(1,1,4) = 'primaryonly' & copied.fieldname(1,1,4) = 'copyonly' & data.manifest() == schemabucketmanifest('primaryonly') & copied.manifest() == schemabucketmanifest('copyonly'),'copied returned mutable buckets and rows grow independently')
+  poisoned = data; saved = data.manifest()
+  call poisoned.field(1,1,'shared',boolean)
+  original_error = poisoned.error(); ok = poisoned.freeze()
+  failures = failures + check(ok = 0 & original_error == 'LL_IR_SCHEMA: duplicate operation field shared' & poisoned.error() == original_error & poisoned.arity(1,1) = 4 & poisoned.fieldid(1,1,5) = 0 & poisoned.fieldname(1,1,1) = 'shared' & poisoned.manifest() == saved & data.error() = '','duplicate walk reaches the oldest bucket member after growth and preserves prior data')
+  numeric_owner = schemabucketowner(); numeric_id = numeric_owner.addop('bucket.numeric'); numeric_boolean = .llir..typeid(numeric_owner.identity(),2)
+  call numeric_owner.field(numeric_id,1,'1',numeric_boolean); call numeric_owner.field(numeric_id,1,'01',numeric_boolean)
+  failures = failures + check(numeric_owner.error() == 'LL_IR_SCHEMA: duplicate operation field 01' & numeric_owner.arity(numeric_id,1) = 1 & numeric_owner.fieldid(numeric_id,1,1) = 10 & numeric_owner.fieldid(numeric_id,1,2) = 0 & numeric_owner.fieldname(numeric_id,1,1) == '1','bucket comparison preserves loose numeric name equality')
+  ok = data.freeze(); copy_ok = copied.freeze()
+  failures = failures + check(ok & copy_ok & data.error() = '' & copied.error() = '' & data.arity(1,1) = 4 & data.fieldid(1,1,4) = 10 & data.fieldid(2,3,1) = 6 & data.manifest() == schemabucketmanifest('primaryonly') & copied.manifest() == schemabucketmanifest('copyonly'),'sealing replaces temporary heads without changing ordered fields or manifest')
+  return failures
+
+schemabucketowner: procedure = .llir..schema_data
+  data = .llir..schema_data(); call data.bootstrap()
+  family = data.addfamily('bucket',1); first = data.addop('bucket.op1')
+  boolean = .llir..typeid(data.identity(),2); i = .int; next = .int
+  call data.field(first,1,'shared',boolean); call data.field(first,2,'shared',boolean); call data.field(first,3,'shared',boolean)
+  do i = 2 to 10
+    next = data.addop('bucket.op' || i)
+  end
+  call data.field(2,1,'shared',boolean); call data.field(1,1,'middle',boolean)
+  call data.field(2,3,'shared',boolean); call data.field(10,2,'shared',boolean)
+  call data.field(1,2,'extra',boolean); call data.field(1,1,'tail',boolean)
+  return data
+
+schemabucketmanifest: procedure = .string
+  arg extra = ''
+  text = 'LLIR-SCHEMA-1' || '0a'x || 'family core 1' || '0a'x || 'family bucket 1' || '0a'x || 'type core.void' || '0a'x || 'type core.boolean' || '0a'x
+  text = text || 'operation bucket.op1 unknown unknown unknown' || '0a'x || '1 shared core.boolean' || '0a'x || '1 middle core.boolean' || '0a'x || '1 tail core.boolean' || '0a'x
+  if extra <> '' then text = text || '1 ' || extra || ' core.boolean' || '0a'x
+  text = text || '2 shared core.boolean' || '0a'x || '2 extra core.boolean' || '0a'x || '3 shared core.boolean' || '0a'x
+  text = text || 'operation bucket.op2 unknown unknown unknown' || '0a'x || '1 shared core.boolean' || '0a'x || '3 shared core.boolean' || '0a'x
+  do i = 3 to 9
+    text = text || 'operation bucket.op' || i || ' unknown unknown unknown' || '0a'x
+  end
+  return text || 'operation bucket.op10 unknown unknown unknown' || '0a'x || '2 shared core.boolean' || '0a'x
 
 refusals: procedure = .int
   arg contract = .llir..contract, graph = .llir..module

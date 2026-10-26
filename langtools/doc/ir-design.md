@@ -153,7 +153,10 @@ looks up an already registered type, and `schema.boolean()`/`schema.voidtype()`
 provide the core handles without prematurely freezing the schema. The finished
 contract provides the corresponding read-only lookups.
 
-Mutable signature reads reflect each added field immediately. A successful
+Mutable signature reads reflect each added field immediately. Duplicate field
+admission visits only the same operation and mode, retaining loose name equality
+and original refusal behavior. Its temporary heads and backlinks are private
+owned builder state, and do not change field IDs or declaration order. A successful
 freeze derives an owned index by operation and field mode, preserving original
 global field IDs and declaration order. Sealed arity/ordinal reads use that index;
 the exact canonical schema manifest is cached after its first complete rendering.
