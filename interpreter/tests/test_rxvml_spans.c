@@ -225,6 +225,17 @@ static void check_optional_resource_tail(void) {
     }
     host.resource_view = NULL; CHECK(!rxpa_host_has_resource_view(&host));
 }
+static void check_context_initialization(void) {
+    rxvm_context context;
+    int *empty_callback_signal = NULL;
+    /* RXVML uses caller-allocated storage; defaults cannot depend on calloc. */
+    memset(&context, 0xa5, sizeof(context));
+    rxinimod(&context);
+    CHECK(context.prepare_only == 0);
+    CHECK(!memcmp(&context.active.callback_signal, &empty_callback_signal,
+            sizeof(empty_callback_signal)));
+    rxfremod(&context);
+}
 typedef struct concurrent_case { const char *library, *fixture; int identity; } concurrent_case;
 #ifdef _WIN32
 static DWORD WINAPI independent_context(void *userdata) {
@@ -235,12 +246,21 @@ static void *independent_context(void *userdata) {
     state s;
     rxvml_context *ctx;
     rxvml_value *text, *name, *result, *args[2];
+    int registration_rc;
     memset(&s, 0, sizeof(s)); s.concurrent = 1; s.identity = test->identity;
     ctx = rxvml_create(NULL, 0); CHECK(ctx != NULL);
     if (ctx) {
         CHECK(rxvml_load_module_file(ctx, test->library) > 0);
         CHECK(rxvml_load_module_file(ctx, test->fixture) > 0);
-        CHECK(!rxvml_address_register_callback_environment_spans(ctx, "SPANS", "independent", command_callback, function_callback, &s));
+        registration_rc = rxvml_address_register_callback_environment_spans(
+                ctx, "SPANS", "independent", command_callback, function_callback, &s);
+        if (registration_rc) {
+            const char *error = NULL;
+            rxvml_last_error(ctx, &error);
+            fprintf(stderr, "Independent context %d ADDRESS registration failed: %s\n",
+                    test->identity, error ? error : "unknown");
+        }
+        CHECK(!registration_rc);
         text = rxvml_value_new(ctx); name = rxvml_value_new(ctx);
         CHECK(!rxvml_set_str(text, input, sizeof(input))); CHECK(!rxvml_set_str(name, "result", 6));
         args[0] = text; args[1] = text;
@@ -318,6 +338,7 @@ int main(int argc, char **argv) {
         return failures ? 1 : 0;
     }
     if (argc != 3) return 2;
+    check_context_initialization();
     check_optional_native_tail();
     check_optional_resource_tail();
     memset(&s, 0, sizeof(s)); ctx = rxvml_create(NULL, 0); s.other = rxvml_create(NULL, 0);

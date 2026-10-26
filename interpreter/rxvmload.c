@@ -435,6 +435,7 @@ static int rxinimod_common(rxvm_context *context,
     context->ext_argc = 0;
     context->ext_args = 0;
     context->ext_ret = 0;
+    context->prepare_only = 0;
     context->interface_factories = 0;
     context->num_interface_factories = 0;
     context->interface_factory_capacity = 0;
@@ -462,6 +463,7 @@ static int rxinimod_common(rxvm_context *context,
     context->active.compatibility_interrupts = 0;
     context->active.external_mailbox_owner = 0;
     context->active.external_mailbox_claim = 0;
+    context->active.callback_signal = 0;
     context->active.invocation_boundary = 0;
     context->active.invocation_fault_sink = 0;
     context->active.invocation_fault_entry = 0;
