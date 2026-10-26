@@ -8,8 +8,8 @@ approved local programme are verified in the
 [historical development receipt](https://github.com/adesutherland/CREXX/blob/70e8c300f94c2c8e9698d5789491a8e8f80f3746/docs/qa/levelc-unicode-2026-10-09/README.md); wider
 Level C/Release 1 obligations retain their separate status.
 The later ordinary-case Latin-1 boundary below belongs to the
-[Group 3 plan](../../research/level-l/compilers/PLAN.md#group3-static-language-plan)
-and its focused qualification; the earlier receipt does not qualify that change.
+[Classic conformance profile](../../research/level-l/compilers/doc/levelc-conformance.md)
+and its maintained controls; the earlier receipt does not qualify that change.
 
 ## Ordinary values and byte compatibility
 

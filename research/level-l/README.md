@@ -6,9 +6,10 @@ owns experimental algorithms and the [new compiler programme](compilers/README.m
 not a second copy of the production libraries.
 
 [PLAN.md](PLAN.md) owns the accepted programme and current repository refactor.
-The [compiler plan](compilers/PLAN.md) and [Classic instruction ledger](compilers/doc/LEVELC-INSTRUCTION-REVIEW.md)
+The [compiler plan](compilers/PLAN.md) and [Classic conformance profile](compilers/doc/levelc-conformance.md#instruction-profile)
 own C-first delivery. Both research compilers are Level B consumers of Level L;
-proper B/self-hosting and INTERPRET remain later work.
+proper B/self-hosting remain separate work. Classic INTERPRET uses the implemented
+optional C frontend/IR runtime; its known limits and qualification are explicit.
 
 The broader research compares lexer/parser algorithms and shared structures.
 Read [SURFACE.md](SURFACE.md) for authored rules, [SEMANTICS.md](SEMANTICS.md)

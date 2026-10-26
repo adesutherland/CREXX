@@ -1350,6 +1350,58 @@ if("c" IN_LIST _languages AND TARGET rxbvm)
   crexx_register_test_prep_targets(TESTS llcompiler_c_dynamic_opt_rxbvm TARGETS
     llcompiler_llrxc-c_opt llcompiler_target_opt llcdynamic
     library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink rxbvm)
+  # Compact C-only interaction contrasts; the existing full default stays intact.
+  # Prepared products are read-only and each invocation owns private scratch.
+  foreach(_contrast compiler_noopt ir_off target_rxtvm assembler_noopt)
+    set(_compact_mode opt)
+    set(_compact_ir on)
+    set(_compact_vm rxbvm)
+    set(_compact_assembler opt)
+    set(_compact_cases live-once child-signal-resumes-group source-call-expression-arguments)
+    set(_compact_count 3)
+    if(_contrast STREQUAL "compiler_noopt")
+      set(_compact_mode noopt)
+    elseif(_contrast STREQUAL "ir_off")
+      set(_compact_ir off)
+    elseif(_contrast STREQUAL "target_rxtvm")
+      set(_compact_vm rxtvm)
+    else()
+      set(_compact_assembler noopt)
+      set(_compact_cases live-once authored-trace)
+      set(_compact_count 2)
+    endif()
+    if(TARGET ${_compact_vm})
+      set(_compact_test "llcompiler_c_dynamic_${_contrast}")
+      set(_compact_selectors)
+      foreach(_case IN LISTS _compact_cases)
+        list(APPEND _compact_selectors --only ${_case})
+      endforeach()
+      add_test(NAME ${_compact_test} COMMAND ${Python3_EXECUTABLE}
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/dynamic/check-dynamic.py"
+        --build "${CMAKE_BINARY_DIR}"
+        --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_compact_test}"
+        --mode ${_compact_mode} --ir ${_compact_ir} --vm ${_compact_vm}
+        --assembler ${_compact_assembler} ${_compact_selectors})
+      set_tests_properties(${_compact_test} PROPERTIES
+        PASS_REGULAR_EXPRESSION "DYNAMIC_C[|]checks=${_compact_count}[|]PASS"
+        TIMEOUT 1800 LABELS "level-l;levelc;compiler;component;levelc-interaction")
+      if(WIN32 OR CREXX_QA_AUDIT_NATIVE_SOURCES)
+        set_tests_properties(${_compact_test} PROPERTIES
+          RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend)
+      elseif(BUILD_TESTING)
+        set_tests_properties(${_compact_test} PROPERTIES
+          PROCESSORS ${_ll_private_nested_processors})
+      endif()
+      set(_compact_engines rxbvm)
+      if(NOT _compact_vm STREQUAL "rxbvm")
+        list(APPEND _compact_engines ${_compact_vm})
+      endif()
+      crexx_register_test_prep_targets(TESTS ${_compact_test} TARGETS
+        llcompiler_llrxc-c_${_compact_mode} llcompiler_target_${_compact_mode} llcdynamic
+        library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink
+        ${_compact_engines})
+    endif()
+  endforeach()
   add_test(NAME llcompiler_c_infrastructure_contracts_opt_rxbvm
     COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/backend/opt/infrastructure-contracts-linked.rxbin")
   set_tests_properties(llcompiler_c_infrastructure_contracts_opt_rxbvm PROPERTIES

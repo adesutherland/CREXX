@@ -15,13 +15,13 @@ This document describes the compiler's components, execution paths and contracts
 [user guide](levelc-user-guide.md) explains programming and command-line use;
 the [conformance profile](levelc-conformance.md) records accepted differences.
 [PLAN.md](../PLAN.md) owns acceptance and remaining work, and the
-[requirements ledger](levelc-requirements.md) supplies the detailed crosswalk.
+[conformance profile](levelc-conformance.md#instruction-profile) retains the instruction/BIF crosswalk.
 The separate [Level L architecture](../../../../langtools/doc/architecture.md)
 describes the reusable SDK, which has consumers other than Classic Rexx.
 
-The static and dynamic language profiles are implemented and have local
-component qualification. Complete-C, delivery and declared-platform acceptance
-remain open. Native `rxc-c` is a separate compiler: its fixtures are useful
+The static and dynamic language profiles described here are implemented. The
+conformance profile separates current behavior and known limits from unqualified
+delivery/platform capabilities; PLAN selects the bounded local research closure. Native `rxc-c` is a separate compiler: its fixtures are useful
 comparison inputs, but its results are not automatically correctness oracles.
 Native B builds this implementation; a C source request never delegates parsing,
 lowering or selection to a native source compiler. Default compiler replacement,
@@ -685,6 +685,9 @@ The generated private observer reads the interrupted VM frame directly through
 `metalinkpreg`; adding a wrapper at that read would inspect the wrong frame.
 It delegates formatting, escaping, output and mode state to shared services and
 restores the enclosing observer/controller on normal and abrupt exit.
+Mode, breakpoint and module gates run before context work. The existing
+case-sensitive `llctarget.` exclusion reads only lazy procedure metadata before
+the full controller source/content filter; other procedures retain that filter.
 
 Scalar metadata names actual live values after their producers: assignment/read
 records in R/I, literal/operator/prefix/function records in I. Shared PARSE
@@ -780,17 +783,19 @@ branches and labels. Each leaf explicitly refuses an unknown ID.
 The normal result cell is outside transient
 cleanup, while fatal close(event), SIGNAL transfer and each existing loop,
 command and private-pool owner retain their distinct cleanup obligations.
-The [baseline plan](../PLAN.md) retains qualification of this sharing repair.
-Generic VM reference-owner discovery and remaining construction costs retain
-their owners in that plan.
+The [plan](../PLAN.md) separates selected structural qualification from remaining
+construction costs and unselected optimization opportunities.
 The current implementation makes no claim of minimal frames or speed.
 Research quality checks inspect structure and independent behavior; production
 performance changes keep their separate governance.
 
-### Prepared immutable catalogues: first-slice contract
+<a id="prepared-immutable-catalogues-first-slice-contract"></a>
 
-CEP-P03 defines eager, private module data using existing `.globals=N`, `gN`
-operands and one `.initializer` metadata record. No VM, ISA or public image
+### Module-owned immutable catalogues
+
+The compiler prepares eager, private module data using existing `.globals=N`,
+`gN` operands and a same-symbol private META_FUNC/META_INITIALIZER pair with
+void result, zero arguments and one local procedure identity. No VM, ISA or public image
 format change is needed. The selector emits the initializer after existing
 application procedures, with a private qualified name and synthetic source.
 One fixed global array contains pure declaration rows; one further global per
@@ -829,93 +834,23 @@ Compiler admission charges the declaration payload once and every function's
 catalogue payload with checked dimensions in the existing resource envelope.
 Eager preparation also allocates unused function data and retains it until
 module teardown; allocation failure may therefore surface at initialization
-instead of first invocation. This explicit tradeoff is accepted for this slice.
-The slice does not select graph transcoding, cache-key changes, reachability
-specialization or execution-state adoption.
+instead of first invocation. This explicit eager-allocation tradeoff is part of the current implementation.
+Graph transcoding, cache-key changes, further reachability specialization and
+execution-state adoption are not implemented by this mechanism.
 
-### Guarded optimisation and fallback: design limits
+<a id="guarded-optimisation-and-fallback-design-limits"></a>
 
-The preferred direction is precise invalidation of affected facts, followed by
-small guarded specialisations with a general compiled path where they remove
-demonstrated work. A transfer into the existing IR executor remains a separate,
-unselected architecture proposal. The design review authorises no state-adoption
-API, JIT, epoch scheme or fallback prototype.
+### Unselected optimization directions
 
-For known facts `K`, dependencies `D(f)` and a conservative write set `W(o)`, use
-the bounded must-analysis transfer:
-
-```text
-K_out = (K_in minus {f | D(f) intersects W(o)}) union Gen(o)
-K_join = intersection of incoming facts
-```
-
-For a finite admitted fact set, monotone must-transfer and intersection converge
-under a descending worklist started at the top element: each fact can be removed
-at most once per program point. An explicit work/workspace cap declines optional
-specialization to the general compiled path, rather than failing required
-compilation. This introduces no runtime IR fuel or state-adoption mechanism.
-
-Unknown effects invalidate affected mutable facts, not immutable definitions.
-Writes alone are insufficient: observation, failure, transfer and borrow/lifetime
-effects also constrain removal and ordering. Context-reference identity,
-lexical labels and captured decisions can survive INTERPRET while pool bindings,
-numeric settings, handlers or TRACE state change. Relevant effect boundaries
-also include ordinary writes, EXPOSE/DROP, effectful BIFs, callbacks, calls,
-commands and condition delivery. A guard must establish its assumptions without
-consuming an event, invoking user code, adding authored observations or changing
-an error origin. A no-pending observation cannot suppress later HALT checks.
-Existing graph/session generations are not mutation epochs for these domains.
-
-A compiled-to-IR transfer needs a checked state relation at the chosen
-continuation: preserve the next operation and consumed clause observations,
-live values including unassigned/absent states, captured control decisions,
-activation/pool/EXPOSE owners, numeric and handler/TRACE state, active resources
-and exactly-once cleanup. Clause boundaries can retain DO/command owners and
-captured values; they are not automatically empty-state safepoints.
-`llirexecute.session.start` creates an entry frame and `resume` accepts its own
-suspended token. Neither currently adopts compiled state. A future interface
-would need checked maps, C-owned resource adapters and atomic adoption; an
-arbitrary PC or fabricated resume token is not such a contract. A one-way
-transfer for the remaining invocation is the bounded initial proposal.
-
-The current full-graph literal contains an LLIR-v2 semantic definition. Checked
-loading still needs a trusted contract, C admission, registry and executable
-manifest; it supplies neither live state nor capabilities. A fallback must
-retain the general semantic definition, not a graph whose meaning was removed
-under failed speculative assumptions. Sharing immutable definition storage is
-independent of approving execution-state adoption.
-
-Count executed instructions including helper calls, copies, allocations and
-dispatch, separately from static code and data. For general cost `a_j`, fast
-cost `f_j`, guard cost `g_j`, failure probability `p_j` and setup `U`, a guarded
-compiled region is useful only when:
-
-```text
-sum((1-p_j) * (a_j-f_j)) > (U_guarded-U_general) + sum(g_j)
-```
-
-For one-way IR fallback, let `D_j` be adoption/preparation cost, `I_j` the whole
-interpreter suffix, and `S_j` the probability execution reaches guard `j`
-without earlier fallback:
-
-```text
-S_1 = 1; S_(j+1) = S_j * (1-p_j)
-E_cost = U + sum(S_j * (g_j + (1-p_j)*f_j + p_j*(D_j+I_j)))
-```
-
-Sharing an entire cold call window remains an unselected observation tradeoff.
-COPY may allocate, MKREF establishes a checked weak owner, and NULL may finalize;
-moving those operations changes their static PC/source fault origins even if
-the actual CALL remains in a per-site island. A textual count of repeated setup
-and cleanup is therefore not a proved conformance-preserving saving. Exact
-source-equivalent groups may qualify separately; no such reduction is selected.
-
-Compare against the repaired compiled baseline. A rare failure can still make
-a long interpreted suffix expensive; guards, maps and retained definitions can
-also increase code/data size. Existing IR fuel/cell limits must not silently
-introduce a new failure into a formerly compiled suffix. The resource envelope,
-failed-adoption behavior and precise lost observations of any reduced profile
-remain explicit decisions in the compiler plan.
+INTERPRET invalidates affected mutable facts, not immutable definitions or every
+local freshness proof. Further guarded specialization would require exact
+invalidation, source/TRACE, ownership, failure and bounded-analysis proof, with
+the existing general compiled path preserved. The current IR executor does not
+adopt a compiled frame; no state-adoption API, JIT, mutation epoch or new VM
+service is selected. Moving COPY/MKREF/NULL into shared cold windows also needs
+proof of raw fault origins and finalization/borrow effects, even if CALL sites
+stay separate. [PLAN](../PLAN.md#emission-simplifications-and-conformance-choices)
+keeps these opportunities distinct from current implementation.
 
 <a id="dynamic-execution-strategy"></a>
 <a id="group4-execution-contract"></a>
@@ -1118,7 +1053,8 @@ The following layouts are deliberately precise because they cross independently
 validated boundaries. Ordinary implementation modules and subordinate
 [frontend](frontends.md), [IR](trees-and-ir.md) and [backend](backend.md) specs
 supply further detail. Acceptance progress and remaining work belong in
-[PLAN.md](../PLAN.md) and the [work packages](agent-work-packages.md).
+[PLAN.md](../PLAN.md); the [conformance profile](levelc-conformance.md)
+retains current language/qualification boundaries.
 
 ### Context and target ABI
 
@@ -1128,7 +1064,7 @@ validates before replacement. Parse observation opt-in is default off through
 `enableParseObservations(boolean)` / `parseObservations()`. The context borrows
 owners and does not extend their lifetime.
 
-`llctarget` currently has 38 exports. Its exact metadata is checked rather than
+`llctarget` currently has 39 exports. Its exact metadata is checked rather than
 inferred from short names or private fields. Representative contracts are:
 
 | Entry | Required arguments → result |
@@ -1136,6 +1072,7 @@ inferred from short names or private fields. Representative contracts are:
 | `binaryop` / `unaryop` | operation, operand(s), context → RexxValue |
 | `truth`, `whentruth`, `whiletruth`, `untiltruth` | value, context → int |
 | `setting` | operation, context, value → void; successful caller installs numeric frame |
+| `clausepending` | borrowed context → boolean; read pending CALL/program completion without consuming events |
 | `donew` | context, raw control name → owned RexxDoState |
 | `docapture`, `dostart`, `doentry`, `doadvance` | Borrow the stable state; shared DO owner performs its algorithm |
 | `parsesource` | context, kind, ordinal, caller_source, reference BIF source_state → RexxValue |
@@ -1338,9 +1275,10 @@ static target and optional dynamic runtime. The general SDK remains four images:
 only their own upstream closure. C runtime manifests exclude compiler/L images
 unless dynamic capability is selected.
 
-The declared qualification scope includes macOS ARM64/Intel, Linux, Windows
-MSVC/MinGW, applicable VMs and maintained CMS/TSO profiles. Local component
-checks do not establish installed/relocated, hosted, sanitizer or constrained
-platform proof. Complete-C acceptance, missing facilities and named code-quality
-work remain in [PLAN.md](../PLAN.md). This document defines how the implemented
-pieces fit together; it is not a record of unrun passes or release approval.
+Desktop, applicable-VM and maintained CMS/TSO capability contracts retain their
+separate owners. The current local C research closure does not establish
+installed/relocated, hosted, sanitizer or constrained-platform proof, nor silently
+exclude a platform. [Conformance](levelc-conformance.md#qualification-limits) and
+[PLAN](../PLAN.md) distinguish those unqualified outcomes from implemented
+behavior and known limitations. This architecture is not a record of unrun
+passes or release approval.

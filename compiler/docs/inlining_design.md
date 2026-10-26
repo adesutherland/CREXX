@@ -1432,8 +1432,8 @@ The local inlining design should be considered established when:
 
 **Separate architecture proposal; implementation and migration are not yet
 approved.** The current AST inliner and all its supported shapes retain their
-contracts above. The [Level L compiler plan](../../research/level-l/compilers/PLAN.md#outstanding-decisions-and-dependencies)
-tracks the decision alongside the reproduced native seed defects. This review
+contracts above. The [Level L compiler plan](../../research/level-l/compilers/PLAN.md#emission-simplifications-and-conformance-choices)
+retains future optimisation decisions outside the bounded C research closure. This review
 does not commission formal compiler QA or a production performance campaign.
 
 ### Present implementation

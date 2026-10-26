@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent dynamic C contracts in one prepared C-opt/IR-on/rxbvm lane.
+"""Independent dynamic C contracts with explicit compiler/IR/assembler/VM axes.
 
 The native fixtures retain their checked expectations; an empty INTERPRET
 selects the dynamic body ABI, and one unchanged recursive program runs as a
@@ -539,6 +539,10 @@ def main():
     parser.add_argument('--work', required=True, type=Path)
     parser.add_argument('--phase', choices=('all', 'preview', 'prepare', 'run'), default='all')
     parser.add_argument('--only', action='append', default=[], help='select named checks, including during preparation')
+    parser.add_argument('--mode', choices=('opt', 'noopt'), default='opt')
+    parser.add_argument('--ir', choices=('on', 'off'), default='on')
+    parser.add_argument('--vm', choices=('rxbvm', 'rxtvm'), default='rxbvm', help='application VM; compiler host remains rxbvm')
+    parser.add_argument('--assembler', choices=('opt', 'noopt'), default='opt')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[5]
     fixtures = Path(__file__).resolve().parent
@@ -563,14 +567,15 @@ def main():
     if args.phase == 'all':
         temporary = tempfile.TemporaryDirectory(prefix='dynamic-', dir=work)
         work = Path(temporary.name)
-    backend = build / 'research/level-l/compilers/backend/opt'
+    backend = build / 'research/level-l/compilers/backend' / args.mode
     suffix = '.exe' if os.name == 'nt' else ''
     app = work / 'application'; host = work / 'host'; runtime = work / 'runtime'; empty = work / 'tool-free PATH'
     for directory in (app, host, runtime, empty):
         directory.mkdir(exist_ok=True)
     env = dict(os.environ, PATH=str(empty), CREXX_TRACE_TO='stdout')
     env.pop('CREXX_PROVIDER_PATH', None); env.pop('CREXX_TRACE', None)
-    vm = app / ('rxbvm' + suffix); hostvm = host / vm.name
+    vm = app / (args.vm + suffix); hostvm = host / ('rxbvm' + suffix)
+    configuration = dict(mode=args.mode, ir=args.ir, vm=args.vm, assembler=args.assembler, compiler_vm='rxbvm')
     manifest = work / 'prepared.json'
 
     def tool(name):
@@ -604,8 +609,8 @@ def main():
                 origin = build / 'research/level-l/compilers/products'
             source = origin / (name + '.rxbin')
             shutil.copy2(source, runtime / source.name)
-        for directory in (app, host):
-            shutil.copy2(tool('rxbvm'), directory / vm.name)
+        for directory, engine in ((app, args.vm), (host, 'rxbvm')):
+            shutil.copy2(tool(engine), directory / (engine + suffix))
             providers = directory / 'providers'; providers.mkdir(exist_ok=True)
             for alias in ('rxfs', 'rxcstream', 'rxcontract', 'rx_fs', 'rx_cstream', 'rx_contract'):
                 for source in (build / 'bin' / (alias + '.rxplugin'), build / 'bin/providers' / (alias + '.rxplugin')):
@@ -626,7 +631,7 @@ def main():
         for case in cases:
             stem = case['stem']; source = work / (stem + '.rexx'); source.write_text(case['source'], encoding='utf-8')
             assembly = app / (stem + '.rxas')
-            fields = [str(source), str(assembly), stem + '.rexx', '', '', '1000000', '512', '67108864', '65536', '']
+            fields = [str(source), str(assembly), stem + '.rexx', '', '', '1000000', '512', '67108864', '65536', '0' if args.ir == 'off' else '']
             assert not any('|' in field or '\n' in field for field in fields)
             requests.append('|'.join(fields))
             inputs.add(source)
@@ -634,10 +639,15 @@ def main():
         log = work / 'compile-batch.log'
         print('DYNAMIC_BATCH|' + str(log), flush=True)
         with log.open('wb') as output:
-            compiled = subprocess.run([str(hostvm), '--no-autoload', str(worker), '-a', str(runtime), str(request_manifest), str(tool('rxas'))],
-                                      cwd=host, env=env, stdout=output, stderr=subprocess.STDOUT, timeout=14400)
+            command = [str(hostvm), '--no-autoload', str(worker), '-a', str(runtime), str(request_manifest), str(tool('rxas'))]
+            if args.assembler == 'noopt':
+                command.append('emit-only')
+            compiled = subprocess.run(command, cwd=host, env=env, stdout=output, stderr=subprocess.STDOUT, timeout=14400)
         diagnostic = log.read_bytes()
-        assert compiled.returncode == 0 and b'|PASS\n' in diagnostic and not DIAGNOSTIC.search(diagnostic), ('warm dynamic compiler', diagnostic[-10000:])
+        marker = b'GROUP3_EMISSION|requests=' + str(len(cases)).encode() + b'|EMISSION\n' if args.assembler == 'noopt' else b'|PASS\n'
+        assert compiled.returncode == 0 and marker in diagnostic and not DIAGNOSTIC.search(diagnostic), ('warm dynamic compiler', diagnostic[-10000:])
+        if args.assembler == 'noopt':
+            assert diagnostic.count(b'EMITTED|') == len(cases) and b'COMPILED|' not in diagnostic, 'emit-only worker leaves target assembly to the selected assembler'
         for case in cases:
             stem = case['stem']; assembly = app / (stem + '.rxas')
             text = assembly.read_text(encoding='utf-8')
@@ -648,20 +658,25 @@ def main():
             if stem == 'live-once':
                 assert 'llcdynamic.interpret' in text and 'lldynamic' in text, 'inline owner dispatcher and shared dynamic service'
                 assert not re.search(r'\bcall\s+[^,]+,(?:llccompiler|rxas|rxcc_parse)\.', text), 'application has no source compiler or assembler call'
+            if args.assembler == 'noopt':
+                run('assemble application ' + stem, [tool('rxas'), '-n', '-o', assembly.with_suffix('.rxbin'), assembly])
             case['image'] = str(link(stem, assembly.with_suffix('.rxbin'), static=case['static']))
             inputs.update((assembly, Path(case['image'])))
         # Hash the actual isolated execution snapshots. A later build elsewhere
         # neither replaces them nor changes which VM/provider qualified a case.
         inputs.add(worker)
+        inputs.update((backend / 'imports-llrxc-c').glob('*.rxbin'))
+        inputs.update(tool(name) for name in ('rxc', 'rxas', 'rxlink'))
         for directory in (runtime, app / 'providers', host / 'providers'):
             inputs.update(path for path in directory.rglob('*') if path.is_file())
         inputs.update((vm, hostvm))
         if os.name == 'nt':
             inputs.update(app.glob('*.dll')); inputs.update(host.glob('*.dll'))
-        manifest.write_text(json.dumps(dict(cases=cases, inputs={str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in inputs})))
+        manifest.write_text(json.dumps(dict(configuration=configuration, cases=cases, inputs={str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in inputs})))
         print('DYNAMIC_PREPARED|' + str(work), flush=True)
     if args.phase != 'prepare':
         prepared = json.loads(manifest.read_text())
+        assert prepared['configuration'] == configuration, ('changed prepared compiler/IR/assembler/VM axes', prepared['configuration'], configuration)
         known = {case['stem'] for case in prepared['cases']}
         assert set(args.only) <= known, ('known prepared cases', args.only)
         for path, digest in prepared['inputs'].items():

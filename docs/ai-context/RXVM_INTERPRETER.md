@@ -527,9 +527,10 @@ retaining the causing event rather than the generated handler-entry location.
 
 #### Terminal caller-context transport
 
-The implementation contract is tracked by DIAG-AC01–06 in the
-[compiler plan](../../research/level-l/compilers/PLAN.md#baseline-terminal-diagnostic-repair);
-baseline qualification remains open. Raw condition provenance and
+The [Classic architecture](../../research/level-l/compilers/doc/levelc-architecture.md#source-identity-inventory-and-diagnostics)
+describes how generated code uses this transport; its
+[known limitations](../../research/level-l/compilers/doc/levelc-conformance.md#qualification-limits)
+separate research checks from wider platform qualification. Raw condition provenance and
 terminal diagnostic context have separate purposes. Preserve the original
 code, payload and module/address; a relayed helper fault must still be able to
 show its original authored callers after those frames unwind.
@@ -2516,7 +2517,7 @@ Local constructorless static smoke and kernel-only NUTF8 tests do not establish
 real 31-bit/CMS/TSO/Windows runtime qualification. Apple LeakSanitizer is
 unsupported; Linux LeakSanitizer and hosted proof remain unverified. See the
 [owning contract](../../research/level-l/compilers/doc/levelc-architecture.md#proposed-parse-cursor-contract)
-and [local qualification](../../research/level-l/compilers/PLAN.md#parse-cursor-local-qualification).
+and [qualification limits](../../research/level-l/compilers/doc/levelc-conformance.md#qualification-limits).
 
 ### Pooled float operands
 

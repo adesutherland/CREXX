@@ -6,13 +6,12 @@ libraries; new C/G source compilation requests use their own frontends and
 selectors. Existing RXAS, RXLINK and VM tools assemble, link and execute their
 ahead-of-time output.
 
-The active delivery is the complete agreed Classic C compiler. Static language
-functionality, conditions and practical TRACE, calls and host integration, and
-STEP11 INTERPRET/Rexx source calls have locally qualified profiles. Full
-compiler, delivery and declared-platform acceptance remain open in
-[PLAN.md](PLAN.md). New B/G features, proper B self-hosting and default/native
-compiler replacement are outside this increment. Existing G consumers remain
-supported regressions.
+The active increment closes the agreed Classic C research profile using its
+existing instruction/BIF panel and compact interaction checks, with known defects
+and limitations recorded explicitly. [PLAN.md](PLAN.md) owns this bounded local
+acceptance; it commissions no release, platform, installation, sanitizer or
+performance campaign and no publication. New B/G work, self-hosting and default
+compiler replacement are outside scope; existing shared/G specifications remain.
 
 ## Start here
 
@@ -22,9 +21,8 @@ supported regressions.
 - [Level C architecture](doc/levelc-architecture.md): one account of components,
   source and IR flow, runtime state, static/dynamic execution, ownership and
   exact boundary contracts.
-- [Conformance profile](doc/levelc-conformance.md) and
-  [requirements ledger](doc/levelc-requirements.md): admitted behavior, accepted
-  differences and the full instruction/reference/BIF crosswalk.
+- [Conformance and known limitations](doc/levelc-conformance.md): admitted
+  instructions/BIFs, exact runtime bindings, accepted differences and known defects.
 - [Authoritative plan](PLAN.md): stable acceptance, decisions and remaining work.
 - [Level L user guide](../../../langtools/doc/user-guide.md): the reusable
   SDK/tools independently of these compiler consumers.
@@ -68,6 +66,19 @@ provider bindings, routine export and host export. The commands retain `-i`,
 API are retired. Follow the [C guide](doc/levelc-user-guide.md#compiler-options)
 or the [G sections of the Level L guide](../../../langtools/doc/user-guide.md)
 for their distinct interfaces.
+
+## Research checks
+
+The existing `^llcompiler_c_` CTest selector identifies the Classic panel; the
+four supplemental C-only cells carry `levelc-interaction`. They vary compiler
+build, semantic IR, assembler and application VM independently over maintained
+small cases. A direct `check-dynamic.py --only authored-trace` uses the current
+defaults as the TRACE control. The checker's default remains its full existing
+43-case workload; selecting a compact panel does not change those oracles.
+
+Reuse qualified baseline inputs and let the QA coordinator own preparation and
+execution. The plan records known limitations and future unqualified work; local
+C completion neither qualifies G nor switches the ordinary compiler.
 
 ## Implementation ownership
 

@@ -8,9 +8,11 @@ its built-in functions and the compatibility rules to consider when porting a
 program. INTERPRET and calls to Rexx source files use an additional runtime image.
 
 The compiler is experimental and is written in Level B using Level L language
-tools. Its implemented language and runtime profiles have passed local component
-checks; full conformance, installed delivery and declared-platform acceptance
-remain open. `llrxc-c` explicitly selects this implementation. The separate native
+tools. Its research acceptance uses the existing Classic instruction/BIF panel
+and compact interaction checks, with known defects and limitations recorded in
+[conformance](levelc-conformance.md). This is not installed/platform, sanitizer,
+release or production-replacement qualification. `llrxc-c` explicitly selects this
+implementation. The separate native
 `rxc-c` command is not an interchangeable spelling for it. Put `options levelc`
 at the start of your source to select the language.
 
@@ -806,7 +808,7 @@ clauses refresh it. Elapsed/reset state retains the current UTC-based contract.
 It is not a promise of a monotonic duration clock. Host clock/random and stream
 facilities can be replaced or restricted through configuration.
 
-The [binding inventory](levelc-requirements.md#exact-runtime-binding-inventory--clc-step01b)
+The [binding inventory](levelc-conformance.md#runtime-binding-inventory)
 links the complete name set to its owning runtime entries. These calling forms
 are a programmer's reference; exact edge-case argument/error rules remain with
 those implementations and the conformance profile.
@@ -938,10 +940,11 @@ not RSS or host-code timeout guarantees; the
 [architecture](levelc-architecture.md#implementation-interfaces-and-limits)
 explains their ownership.
 
-The [conformance profile](levelc-conformance.md) gives the detailed differences;
-[PLAN.md](../PLAN.md#c-first-delivery-milestone) keeps full reference/BIF,
-CLI/service, installed/relocated, lifecycle, sanitizer and declared-platform
-qualification open. Real Windows, supported Linux leak checking and constrained
-CMS/TSO/31-bit proof cannot be inferred from a macOS component run. The current
-research compiler remains explicitly selected, with replacement and release
-approval separate from language implementation.
+The [conformance profile](levelc-conformance.md) gives detailed differences and
+known defects; [PLAN.md](../PLAN.md#c-first-delivery-milestone) defines the selected
+C research closure. Broader reference conformance, installed/relocated delivery,
+declared platforms, sanitizers and production replacement remain unqualified
+future work, not additional tests commissioned by this guide. Real Windows,
+Linux leak checking and constrained CMS/TSO/31-bit behavior cannot be inferred
+from local component checks. The research compiler remains explicitly selected;
+release, default switching and publication require separate authority.

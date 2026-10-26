@@ -184,9 +184,9 @@ aggregate ownership across several sessions need their host's separate ledger.
 The independent neutral fixtures qualify this component profile. They do not
 establish the complete Classic instruction inventory, a live compiled caller's
 pool/labels/conditions, checked VM call windows, RexxScript migration or installed,
-platform and whole-compiler acceptance. Those remain with the
+platform or production acceptance. Classic integration belongs to the
 [dynamic execution architecture](../../research/level-l/compilers/doc/architecture.md#dynamic-execution-strategy)
-and [STEP11 plan](../../research/level-l/compilers/PLAN.md#dynamic-execution-plan).
+and its [conformance and known limitations](../../research/level-l/compilers/doc/levelc-conformance.md).
 Source frontends retain lexical/prepared-binding definition snapshots and reuse
 their own calling-contract owner; these records are neither generic L leases nor
 permission to load host code from saved IR.

@@ -8,8 +8,9 @@ or execution services. Applications supply the meaning of their language.
 This document explains how the parts fit together. The
 [user guide](user-guide.md) teaches their use; the linked design references own
 the detailed APIs and invariants. The [generic plan](../../research/level-l/PLAN.md)
-and [compiler plan](../../research/level-l/compilers/PLAN.md) own acceptance and
-outstanding delivery work. This architecture does not change their status.
+and [compiler plan](../../research/level-l/compilers/PLAN.md) own their respective
+scope and acceptance. The Classic research profile and its known limitations are
+distinct from later delivery, platform and production qualification.
 
 ## Ownership and dependency direction
 

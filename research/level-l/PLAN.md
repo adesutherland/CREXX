@@ -98,10 +98,12 @@ show VM storage-owner searches; that does not exclude their cost in other phases
 This section owns the repository/layout refactor. The compiler subplan moves to
 `research/level-l/compilers/PLAN.md` with its implementation. Work uses the main
 CLion `develop` checkout. B and G share the typed compiler core; Classic is
-independent. The active [C-only compiler plan](compilers/PLAN.md#c-first-delivery-milestone)
-now owns the approved 19 October architecture and delivery through final-stage
-INTERPRET, including a shared B Unicode foundation. B/G expansion is outside
-that delivery; this parent plan retains independent Level L obligations. CI
+independent. The [C-only compiler plan](compilers/PLAN.md#c-first-delivery-milestone)
+owns research closure through the Classic instruction/BIF panel, compact dynamic
+interactions and enduring user, architecture and known-limitations documents.
+INTERPRET is implemented through semantic IR. Broader delivery/platform assurance
+and B/G expansion remain outside that closure; this parent plan retains independent
+Level L obligations. CI
 monitoring remains paused. Approval covers the directory, service,
 build/install and cleanup changes below. Adrian authorised committing and pushing
 the completed work on 17 October 2026, followed by a whole-repository review.

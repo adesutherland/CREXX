@@ -163,16 +163,23 @@ criteria and existing consumer regressions. Native B builds the implementation
 and L libraries; new C requests use L parsing, IR, transformation and emission,
 never native source-compiler services.
 
-Complete C includes agreed instructions/BIFs, host contracts, diagnostics,
-conditions/TRACE and, last, INTERPRET. Design the complete architecture first;
-deliver each instruction with necessary dependencies. Native C's implemented
-coverage and approved practical TRACE scope are the ceiling, not a correctness
-oracle. Keep independent L tests and native defects explicit. Compiler policy,
+Research C closure uses the existing Classic instruction/BIF panel and a compact
+interaction panel, extending maintained Classic fixtures for INTERPRET and source
+calls. Known defects may remain explicitly recorded in the conformance and known
+limitations document. The user guide, architecture and conformance statement own
+the enduring C account; remove superseded C planning and review material after
+preserving its useful contracts. Broader delivery/platform qualification,
+optimisation, default replacement and release are future work, not prerequisites
+for this research closure. Actual SAN findings retain their worklist obligations.
+Native C's implemented coverage and approved practical TRACE scope are comparison
+inputs, not correctness oracles. Keep independent L tests and native defects
+explicit. Compiler policy,
 generic L, shared B runtime/Unicode and RXAS/VM infrastructure have separate
 owners, preserved G/C interfaces and one algorithm/data owner.
 
-Standing authority covers reviewed local commits for remaining agreed C
-instructions/features, stopping before INTERPRET without further user approval.
+Standing authority covers reviewed local commits for the agreed C research
+closure. INTERPRET and Rexx source calls are implemented under their approved
+same-frontend IR contract.
 Record exact contracts and obtain internal coordinator review before product
 edits; select reviews/checks through the lifecycle above. Necessary C/L/shared
 runtime and RXAS/VM interfaces are covered within that architecture. It does not

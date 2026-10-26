@@ -3735,8 +3735,10 @@ for building, options, complete examples, static providers, host integration,
 INTERPRET, Rexx source calls and the embedding API. The
 [C architecture overview](../../research/level-l/compilers/doc/levelc-architecture.md)
 explains the language/runtime boundary, while the
-[C plan](../../research/level-l/compilers/PLAN.md) records current compiler
-qualification and outstanding delivery work. Select this compiler explicitly;
+[conformance and known limitations](../../research/level-l/compilers/doc/levelc-conformance.md)
+states the research profile and unqualified capabilities. The
+[C plan](../../research/level-l/compilers/PLAN.md) owns the bounded Classic panel,
+compact interactions and local closure. Select this compiler explicitly;
 it is not the default compiler.
 
 Research products require `CREXX_BUILD_RESEARCH_COMPILERS=ON` and

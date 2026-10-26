@@ -158,7 +158,7 @@ contains one. The first group may be short; leading/trailing blanks and invalid
 digits/grouping fail with a located `LL_COMPILER_SYNTAX` diagnostic. A space,
 comment or longer identifier after the quote retains ordinary concatenation.
 G's admitted literal syntax is unchanged. Decoding adds no target operation or
-runtime helper call. See the [SAY instruction review](LEVELC-INSTRUCTION-REVIEW.md).
+runtime helper call. See the [Classic statement contract](levelc-architecture.md#variables-and-simple-statements).
 
 Each source unit receives required borrowed-context and integer-entry
 parameters. The caller owns a fresh activation and separate child bundle that
