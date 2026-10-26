@@ -353,6 +353,21 @@ are recorded here or appeared in the completed programme ledger:
   finalisation, hoisting, and late-inlining consumers. Start from a current
   profile and reuse the graph/proof service; do not broaden an unsupported
   inline shape as a shortcut.
+- `LIR-SCHEMA-READ-01` (under `PERF-COMPILER-01`): investigated startup
+  candidate; implementation is not selected. Repeated sealed-schema `arity`
+  and `fieldid` scans drive checked table reads; canonical manifest construction
+  repeats those queries, including registry compatibility checks. Hypothesis:
+  build ordered per-operation/mode field-ID lists once when sealing and retain
+  the exact canonical manifest, rather than repeat semantic scans. Keep mutable
+  builder validation, IDs, declaration order, bounds/errors and equal-schema
+  matching across different owners; owner identity is not compatibility.
+  Compare the current path, manifest-only caching and sealed-field indexing with
+  a cached manifest. Select through focused independent contracts and a matched
+  first-program/resource check; the Level L research exception applies, with no
+  production-performance claim. Build-time standard-C schema preparation is a
+  separate larger alternative. No new parser algorithm, ISA or wire format is
+  needed. Source/bytecode profiler counts are diagnostic;
+  recursive logical copied bytes are not physical memory traffic.
 - `PERF-COMPILE-LATENCY-01`: Adrian proposed a lean no-optimizer assembler and
   compiler-to-assembler handoff on 2026-10-07 as foundations for a compiled
   execution mode and possible later INTERPRET design. The first hypothesis is
