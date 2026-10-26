@@ -2,10 +2,12 @@
 
 <a id="level-c-user-guide"></a>
 
-Use `llrxc-c` to compile Classic Rexx source to RXAS, then assemble, link and run
-it on the cREXX VM. This guide covers that workflow, the language you can write,
+Use `llrexx` or `llrxc-c --run` to run a Classic Rexx source file directly.
+Use `llrxc-c` to compile source to RXAS, then assemble, link and run it on the
+cREXX VM. This guide covers both workflows, the language you can write,
 its built-in functions and the compatibility rules to consider when porting a
-program. INTERPRET and calls to Rexx source files use an additional runtime image.
+program. Compiled applications using INTERPRET or Rexx source calls link an
+additional runtime image; the interpreter image already contains that runtime.
 
 The compiler is experimental and is written in Level B using Level L language
 tools. Its research acceptance uses the existing Classic instruction/BIF panel
@@ -13,8 +15,8 @@ and compact interaction checks, with known defects and limitations recorded in
 [conformance](levelc-conformance.md). This is not installed/platform, sanitizer,
 release or production-replacement qualification. `llrxc-c` explicitly selects this
 implementation. The separate native
-`rxc-c` command is not an interchangeable spelling for it. Put `options levelc`
-at the start of your source to select the language.
+`rxc-c` command is not an interchangeable spelling for it. Plain Classic source
+is accepted; an explicit `options levelc` header also selects the language.
 
 Start with [build and installation](#building-and-installing) and the
 [first program](#compile-assemble-link-and-run). The language sections introduce
@@ -62,9 +64,64 @@ cmake --install cmake-build-debug --prefix '/tmp/crexx review' --component Resea
 Both installations copy prepared outputs; they do not build missing products.
 The base installation supplies commands, ordinary runtime and native providers;
 the opt-in ResearchCompilers component adds `llrxc-c`, `llccompiler.rxbin`,
-`llctarget.rxbin` and `llcdynamic.rxbin`. Keep those files together with their
+`llctarget.rxbin`, `llcdynamic.rxbin`, `llrexx` and `llrexx.rxbin`. Keep those files together with their
 base installation. A program using native services is not distributed simply
 by copying its one RXBIN file.
+
+## Run a source file directly
+
+The interpreter reads one exact file and executes its checked full-program IR:
+
+```sh
+crexx_bin='/tmp/crexx review/bin'
+"$crexx_bin/llrexx" hello.rexx first 'second argument'
+"$crexx_bin/llrxc-c" --run hello.rexx first 'second argument'
+"$crexx_bin/rxbvm" --no-autoload "$crexx_bin/llrexx.rxbin" -a hello.rexx first 'second argument'
+```
+
+These entrypoints share the same COMMAND bootstrap. They create no application
+RXAS, RXBIN or temporary compiled program, and need no compiler, assembler or
+linker executable on PATH. The RXBIN includes its frontend, IR executor and
+ordinary runtime; native provider/VM files retain their normal installation
+requirements. The packed `llrexx` launcher uses the same image.
+
+Each trailing OS argument is one present ARG position, as with a native compiled
+Classic command. Quoted empty arguments remain present; no arguments means zero
+positions. `parse arg first, second` reads two positions. Unicode is preserved;
+OS argv cannot contain embedded NUL. Tokens after the filename are data even
+when they begin with `-`. Put `--` before a filename beginning with `-`.
+
+Only file input is supported initially. The bounded regular-file reader accepts
+at most 64 MiB and does no suffix or PATH search. PULL and LINEIN retain stdin.
+Source calls use the acquired file's anchored directory and the existing source
+policy, even when the execution cwd differs. Source bytes are not prefixed with
+an OPTIONS header. Defaults remain UTF8, NUMERIC 9/0/SCIENTIFIC, TRACE N,
+ADDRESS CREXX and the current selected queue/streams.
+
+`--run` must be the compiler command's first switch. Run mode accepts only
+`[--] file [argument ...]`; compilation flags (`-i`, `-o`, `-n`, provider/export
+options) are not run options. Prepared provider declarations are empty in this
+first CLI; ordinary BIFs, configured source calls, ADDRESS CREXX and existing
+native services keep their existing owners. There is no interactive/source-stdin
+mode or implicit executable binding.
+
+Usage errors return 2 and direct source-input errors return 1. Normal RETURN or
+EXIT uses the existing COMMAND status rule: a present whole signed-64 integer
+value supplies the status; an absent or nonnumeric result supplies zero. The OS
+may narrow an exit status. Typed frontend/runtime failures retain their original
+condition/payload and VM status after cleanup. Frontend errors use authored source
+mapping. An unhandled IR runtime traceback can display a shared helper PC instead
+of the Rexx coordinate, including nested-source failures; caught SIGL and TRACE
+continue through their source-observation owners. No root filename is guessed
+for a child failure.
+
+A B host can import `llcdynamic` and `rexxclassichost`, construct a public
+`RexxClassicHostRequest('COMMAND', logicalName)`, append values/presence and call
+`llcdynamic..runprogram(sourceBytes, request, resourceBase)`. It returns an owned
+`RexxClassicHostResult` after closing engine and host owners, retaining the primary
+condition and first cleanup condition separately. The trusted physical resource
+base is distinct from the logical source name. Non-COMMAND requests are refused;
+unsupported static/invoke boundaries are explicit failures, never empty success.
 
 ## Compile, assemble, link and run
 
@@ -814,6 +871,8 @@ are a programmer's reference; exact edge-case argument/error rules remain with
 those implementations and the conformance profile.
 
 ## Compiler options
+
+`llrxc-c --run [--] file [argument ...]` selects the shared [interpreter](#run-a-source-file-directly). The options below apply to compilation.
 
 ```text
 llrxc-c [-n] -i runtime-images -o output.rxas

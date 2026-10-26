@@ -1,0 +1,61 @@
+/* cREXX License (MIT). Shared file-only Classic COMMAND entry. */
+options levelb
+namespace llcruncli expose run
+import rxfnsb
+import rxfs
+import llcdynamic
+import llcsource
+import rexxclassichost
+
+/** Parse the standalone and compiler run-mode argv identically.
+ * @param argv OS arguments after the launcher or the first --run switch.
+ * @return Existing COMMAND status; typed runtime events are relayed after cleanup.
+ */
+run: procedure = .int
+  arg argv = .string[]
+  first = 1
+  if argv[0] > 0 then do
+    if argv[1] == '--' then first = 2
+    else if left(argv[1],1) = '-' then do
+      call lineout 'stderr','LL_REXX_OPTIONS: run mode accepts only [--] file [argument ...]'
+      return 2
+    end
+  end
+  if first > argv[0] then do
+    call lineout 'stderr','Usage: llrexx [--] file [argument ...] (or llrxc-c --run [--] file [argument ...])'
+    return 2
+  end
+  filename = argv[first]
+  source = .llcsource..resolution
+  do
+    /* Native resource owner closes its descriptor before returning. The exact
+     * regular file is bounded; no suffix/PATH search or stdin is consumed. */
+    resource_view = llcsource..resourceview('')
+    roots = .string[]; suffixes = .string[]; suffixes[1] = ''
+    exact_view = .llcsource..view.configured(resource_view.cwd(),'',roots,1,resource_view.windows(),suffixes)
+    paths = .llcsource..candidates(exact_view,filename,filename,1,1)
+    if paths.error() <> '' | paths.size() <> 1 then do
+      call lineout 'stderr','LL_REXX_INPUT: ' || filename || ': invalid exact source locator'
+      return 1
+    end
+    resource = .rxfs..source(paths.at(1),67108864)
+    if resource.status() <> 1 then do
+      call lineout 'stderr','LL_REXX_INPUT: ' || filename || ': exact source resource unavailable (status ' || resource.status() || ', error ' || resource.errorcode() || ')'
+      return 1
+    end
+    source = .llcsource..resolution(1,paths.at(1),resource.bytes(),0,'',rxfs..windows())
+  on signal as input_problem
+    call lineout 'stderr','LL_REXX_INPUT: ' || filename || ': ' || input_problem.name() || ': ' || input_problem.message()
+    return 1
+  end
+  request = .rexxclassichost..RexxClassicHostRequest('COMMAND',filename)
+  call request.setQueue(rxqueue('QUERY'))
+  do index = first + 1 to argv[0]
+    call request.appendText(argv[index])
+  end
+  result = llcdynamic..runprogram(source.bytes(),request,source.base())
+  if result.hasCondition() then do
+    call rxfnsb..signalrelay(result.condition())
+    return 1
+  end
+  return result.commandStatus()

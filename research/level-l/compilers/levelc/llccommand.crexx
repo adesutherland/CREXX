@@ -1,0 +1,15 @@
+/* cREXX License (MIT). Public packed compiler/run-mode command. */
+options levelb
+import rxfnsb
+import llccompilecli
+import llcruncli
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] > 0 then do
+    if argv[1] == '--run' then do
+      run_arguments = .string[]
+      do run_index = 2 to argv[0]; call arrayappend run_arguments,argv[run_index]; end
+      return llcruncli..run(run_arguments)
+    end
+  end
+  return llccompilecli..run(argv)

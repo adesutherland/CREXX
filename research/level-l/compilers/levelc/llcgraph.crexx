@@ -75,6 +75,10 @@ request: class
   error: method = .string
     call prepare()
     return _front.error()
+  /** Preserve the frontend's owned mapped source diagnostic for execution. */
+  diagnostic: method = .string
+    call prepare()
+    return _front.diagnostic()
   offset: method = .int
     call prepare()
     return _front.offset()

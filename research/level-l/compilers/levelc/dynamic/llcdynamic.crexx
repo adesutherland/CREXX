@@ -3,7 +3,7 @@
  * It contains no AST evaluator, assembler, bytecode interpreter or BIF body.
  */
 options levelb numeric_classic
-namespace llcdynamic expose declaration catalogue scope contextbinding boundary interpret resolve resume condition checkpoint policy rootcompletion process linkchild unlinkchild registry owned packet boolean integer
+namespace llcdynamic expose declaration catalogue scope contextbinding boundary runprogram interpret resolve resume condition checkpoint policy rootcompletion process linkchild unlinkchild registry owned packet boolean integer
 import rxfnsb
 import rxjson
 import _rxsysb
@@ -874,7 +874,16 @@ scope: class
     return
   close: method = .void
     arg ?primary = .object
-    if _closed then return
+    cleanup = .object
+    if ?primary then cleanup = closeoutcome(primary)
+    else cleanup = closeoutcome()
+    if initialized(cleanup) & ?primary = 0 then call rxfnsb..signalrelay(cleanup as .runtime_signal)
+    return
+  /** Collect one owned cleanup event without erasing an outward condition. */
+  closeoutcome: method = .object
+    arg ?primary = .object
+    absent_cleanup = .object
+    if _closed then return absent_cleanup
     /* Revoke all new lease entry before any fallible cleanup. Preserve an
      * existing outward event while still releasing every crossed owner. */
     _closed = 1; _generation = _generation + 1
@@ -884,6 +893,9 @@ scope: class
         if ?primary then do
           do
             host_result = _sourcehost[1].failed(primary as .runtime_signal)
+            if host_result.hasCleanupCondition() then do
+              problem = host_result.cleanupCondition() as .object; failed = 1
+            end
           on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as host_problem
             problem = host_problem as .object; failed = 1
           end
@@ -896,8 +908,13 @@ scope: class
         end
       end
       do
-        if ?primary then call _sourcescope[1].close(primary)
-        else call _sourcescope[1].close()
+        child_cleanup = .object
+        if ?primary then child_cleanup = _sourcescope[1].closeoutcome(primary)
+        else child_cleanup = _sourcescope[1].closeoutcome()
+        if initialized(child_cleanup) then do
+          if failed = 0 then problem = child_cleanup
+          failed = 1
+        end
       on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_problem
         if failed = 0 then problem = cleanup_problem as .object
         failed = 1
@@ -926,8 +943,7 @@ scope: class
       _bindingtickets[binding] = 0
     end
     if _sharedbudget = 0 & _cacheready then ignored = _cache.close()
-    if failed & ?primary = 0 then call rxfnsb..signalrelay(problem as .runtime_signal)
-    return
+    return problem
 
 /** The executor lease retains this reference-owning binding only. Copies of a
  * replaceable RexxClassicContext value are never the authoritative context. */
@@ -2321,3 +2337,99 @@ externalarguments: procedure = .rexxactivation..RexxActivationArguments
   end
   if delivered > 0 then call child.beginCallTrap(delivered,description)
   return child
+
+/** Execute one true COMMAND program with an owned public host result.
+ * The locals anchor every borrowed runtime cell until engine and HostScope
+ * cleanup finish. This is the existing full-program IR coordinator, with no
+ * assembly/selection path and no interpreted-group or subroutine wrapper.
+ * @param source Exact source bytes, without a manufactured language header.
+ * @param request Public COMMAND arguments/configuration/resource request.
+ * @param resourceBase Trusted source directory for ordinary source calls.
+ * @return Detached completion, preserving primary and secondary cleanup events.
+ */
+runprogram: procedure = .rexxclassichost..RexxClassicHostResult
+  arg source = .binary, request = .rexxclassichost..RexxClassicHostRequest, resourceBase = ''
+  activation = .rexxactivation..RexxActivationArguments
+  pool = .rexxpool..RexxVariablePool
+  config = .rexxclassicconfig..RexxClassicConfig
+  context = .rexxclassiccontext..RexxClassicContext
+  host = .rexxclassichost..RexxClassicHostScope
+  owner = .llcdynamic..scope
+  result = .rexxclassichost..RexxClassicHostResult
+  problem = .runtime_signal
+  failed = 0; sourceIdentity = ''
+  do
+    if initialized(request) = 0 then assembler signal 'INVALID_ARGUMENTS','Classic program entry requires an initialized COMMAND request'
+    sourceIdentity = request.source()
+    if request.mode() <> 'COMMAND' then assembler signal 'INVALID_ARGUMENTS','Classic program entry requires a COMMAND host request'
+    activation = request.activation(); pool = request.pool(); config = request.configuration()
+    context = .rexxclassiccontext..RexxClassicContext(reference activation,reference pool,reference config)
+    host = .rexxclassichost..RexxClassicHostScope(reference context,request)
+    names = .string[]; entries = .int[]; definitions = .llcbindings..definition[]
+    front = .llcgraph..request.snapshot(source,'program',names,entries,'',definitions,sourceIdentity)
+    if front.status() then do
+      detail = front.diagnostic()
+      assembler signal 'CLASSIC_SYNTAX',detail
+    end
+    program = front.graph()
+    owner = .llcdynamic..scope(reference context,front.fingerprint(),front.names(),front.entries(),sourceIdentity,resourceBase)
+    call context.enableParseObservations(1)
+    call owner.setIR(program)
+    owner_ref = reference owner
+    group = owner.addgraph(program); graph_ref = owner.graph(group)
+    call owner.installInventory(group)
+    call host.enter()
+    services = registry(graph_ref,owner_ref,group); manifest = executionmanifest(graph_ref)
+    ledger = dereference owner.budget()
+    plan = .llirexecute..plan(graph_ref,services,1000000,ledger.available(),manifest)
+    answer = advance(owner_ref,owner.start(owner_ref,group,plan))
+    do while answer.kind() = 'signal'
+      answer = owner.signalstart(owner_ref,answer.entry())
+    end
+    if answer.kind() = 'failure' then call rxfnsb..signalrelay(answer.event() as .runtime_signal)
+    if wordpos(answer.kind(),'normal return exit') = 0 then do
+      boundary_message = 'Classic COMMAND cannot discharge boundary ' || answer.kind()
+      assembler signal 'NOT_IMPLEMENTED',boundary_message
+    end
+    completion = answer.result()
+    if answer.kind() = 'exit' then call activation.requestProgramExit(completion.returnValue(),completion.hasReturnValue())
+    result = host.finish(completion)
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as event
+    problem = event as .runtime_signal; failed = 1
+  end
+  if failed then do
+    if initialized(host) then result = host.failed(problem)
+    else result = .rexxclassichost..RexxClassicHostResult.failed(problem,sourceIdentity)
+  end
+  if initialized(owner) then do
+    do
+      owner_cleanup = .object
+      if result.hasCondition() then owner_cleanup = owner.closeoutcome(result.condition() as .object)
+      else owner_cleanup = owner.closeoutcome()
+      if initialized(owner_cleanup) then do
+        if result.hasCondition() then do
+          if result.hasCleanupCondition() = 0 then call result.recordCleanupCondition(owner_cleanup as .runtime_signal)
+        end
+        else if initialized(host) then result = host.failed(owner_cleanup as .runtime_signal)
+        else result = .rexxclassichost..RexxClassicHostResult.failed(owner_cleanup as .runtime_signal,sourceIdentity)
+      end
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as close_event
+      close_problem = close_event as .runtime_signal
+      if result.hasCondition() then do
+        if result.hasCleanupCondition() = 0 then call result.recordCleanupCondition(close_problem)
+      end
+      else result = .rexxclassichost..RexxClassicHostResult.failed(close_problem,sourceIdentity)
+    end
+  end
+  if initialized(host) then do
+    do
+      call host.close()
+    on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as cleanup_event
+      host_cleanup = cleanup_event as .runtime_signal
+      if result.hasCondition() then do
+        if result.hasCleanupCondition() = 0 then call result.recordCleanupCondition(host_cleanup)
+      end
+      else result = .rexxclassichost..RexxClassicHostResult.failed(host_cleanup,sourceIdentity)
+    end
+  end
+  return result

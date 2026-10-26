@@ -54,7 +54,7 @@ def package_shape(control):
             roots.add(value.strip().lower())
     assert {'llcgraph', 'llcfrontend', 'rxfnsl-execute'} <= inputs, ('dynamic frontend/executor inputs', inputs)
     assert {'llcgraph', 'llcfrontend', 'llirexecute'} <= roots, ('dynamic frontend/executor roots', roots)
-    forbidden = {'llcrxas', 'llccompiler', 'llrxc-c', 'llrxc-c-linked', 'llccli',
+    forbidden = {'llcrxas', 'llccompiler', 'llccompilecli', 'llccommand', 'llrxc-c', 'llrxc-c-linked', 'llccli',
                  'rxfnsl-rxas', 'llrxas', 'rxas', 'rxlink', 'rxc', 'rxc-c',
                  'rxcc_parse', 'rxcc', 'rxcp', 'rxclib', 'rxcc_lib'}
     assert not (inputs | roots) & forbidden, ('dynamic product contains selector/compiler/assembler', (inputs | roots) & forbidden)
@@ -533,11 +533,114 @@ def inventory(root):
     return cases, inputs
 
 
+def command_entry(args, root):
+    """One maintained COMMAND entry test; no source compiler/tool on runtime PATH."""
+    build = args.build.resolve(); args.work.mkdir(parents=True, exist_ok=True)
+    suffix = '.exe' if os.name == 'nt' else ''
+    products = build / 'research/level-l/compilers/products'
+    dynamic = build / 'research/level-l/compilers/dynamic/opt'
+    control = (dynamic / 'interpreter.ctl').read_text(encoding='utf-8')
+    inputs = {Path(row[6:]).stem.lower() for row in control.splitlines() if row.startswith('INPUT ')}
+    assert {'llrexx', 'llcruncli', 'llcdynamic', 'llcgraph', 'llcfrontend', 'rxfnsl-execute'} <= inputs
+    forbidden = {'llcrxas', 'llccompiler', 'llccompilecli', 'llccommand', 'llrxc-c', 'rxfnsl-rxas', 'llrxas', 'rxas', 'rxlink', 'rxc', 'rxc-c', 'rxcc_parse', 'rxcc', 'rxcp', 'rxclib', 'rxcc_lib'}
+    assert not inputs & forbidden and 'ROOT llrexx' in control, ('source-only COMMAND package', inputs)
+    assert not any(name.startswith(('llrxc-', 'rxcc_', 'rxcp_')) for name in inputs)
+    # Existing compile workers and bytecode CLI keep their original lean host.
+    backend = build / 'research/level-l/compilers/backend/opt'
+    lean = {path.stem.lower() for path in (backend / 'imports-llrxc-c').glob('*.rxbin')}
+    rich = {path.stem.lower() for path in (backend / 'imports-llccommand').glob('*.rxbin')}
+    assert {'llccompilecli', 'llccompiler', 'llcrxas', 'rexxclassicunicodeproperties'} <= lean
+    assert not lean & {'rxfnsc', 'classlib', 'rxunicode-core', 'llcdynamic', 'llcruncli', 'llcsource', 'rxfnsl-execute'}, ('compile-only imports', lean)
+    assert {'llccompilecli', 'llcruncli', 'rxfnsc', 'llcdynamic', 'rxfnsl-execute'} <= rich
+    assert 'rexxclassicunicodeproperties' not in rich, 'rich command has one consolidated Classic provider'
+    with tempfile.TemporaryDirectory(prefix='command-entry-', dir=args.work) as temporary:
+        work = Path(temporary); app = work / 'runtime'; app.mkdir()
+        sources = app / 'programs'; sources.mkdir(); cwd = app / 'separate cwd'; cwd.mkdir()
+        empty = work / 'tool-free PATH'; empty.mkdir()
+        copied = []
+        for origin in (build / 'bin' / ('rxbvm' + suffix), products / ('llrexx' + suffix),
+                       products / ('llrxc-c' + suffix), products / 'llrexx.rxbin',
+                       dynamic / 'dynamic-command-contracts-linked.rxbin'):
+            target = app / origin.name; shutil.copy2(origin, target); copied.append(target)
+        providers = app / 'providers'; providers.mkdir()
+        for alias in ('rxfs', 'rxcstream', 'rxcontract', 'rx_fs', 'rx_cstream', 'rx_contract'):
+            for origin in (build / 'bin' / (alias + '.rxplugin'), build / 'bin/providers' / (alias + '.rxplugin')):
+                if origin.exists():
+                    target = providers / origin.name; shutil.copy2(origin, target); copied.append(target)
+        if os.name == 'nt':
+            for origin in (build / 'bin').glob('*.dll'):
+                target = app / origin.name; shutil.copy2(origin, target); copied.append(target)
+        env = dict(os.environ, PATH=str(empty), CREXX_TRACE_TO='stdout')
+        env.pop('CREXX_PROVIDER_PATH', None); env.pop('CREXX_TRACE', None)
+        entries = {
+            'launcher': [app / ('llrexx' + suffix)],
+            'rxbin': [app / ('rxbvm' + suffix), '--no-autoload', app / 'llrexx.rxbin', '-a'],
+            'compiler-run': [app / ('llrxc-c' + suffix), '--run'],
+        }
+        checks = 0
+
+        def invoke(name, arguments, status=0, output=b'', *, stdin=b'', error=None):
+            nonlocal checks
+            completed = subprocess.run([str(item) for item in [*entries[name], *arguments]],
+                                       cwd=cwd, env=env, input=stdin, capture_output=True, timeout=180)
+            diagnostic = completed.stdout + completed.stderr
+            assert not DIAGNOSTIC.search(diagnostic), (name, diagnostic[-5000:])
+            assert completed.returncode == status, (name, arguments, completed.returncode, diagnostic[-6000:])
+            if error is None:
+                assert completed.stdout.replace(b'\r\n', b'\n') == output and not completed.stderr, (name, diagnostic)
+            else:
+                assert all(token in diagnostic for token in error), (name, diagnostic[-6000:])
+            checks += 1
+            return completed
+
+        def source(name, text):
+            path = sources / name; path.write_text(text, encoding='utf-8'); return path
+
+        argv = source('plain command.rexx', "parse source platform mode resource\nsay mode || '|' || arg() || '|[' || arg(1) || ']|[' || arg(2) || ']|[' || arg(3) || ']'\nreturn 0\n")
+        for name in entries:
+            invoke(name, [argv, '', 'λ雪', '--literal'], output='COMMAND|3|[]|[λ雪]|[--literal]\n'.encode())
+        zero = source('-zero.rexx', "say arg()\nreturn\n")
+        invoke('launcher', ['--', zero], output=b'0\n')
+        child = source('sourcechild.rexx', "parse source platform mode resource\nreturn mode || '|' || arg() || '|' || arg(2,'E') || '|' || arg(3,'E')\n")
+        nested = source('nested.rexx', "x=1\ninterpret 'x=x+1'\nsay F(3) || '|' || x\nsay sourcechild('A',,'')\nreturn 0\nF: procedure\narg n\nif n=0 then return 1\nreturn n*F(n-1)\n")
+        invoke('launcher', [nested], output=b'6|2\nFUNCTION|3|0|1\n')
+        caught = source('caught.rexx', "signal on syntax name caught\nsay 1/0\nsay 'wrong'\nexit 1\ncaught:\nsay 'caught|' || sigl\nexit 0\n")
+        invoke('rxbin', [caught], output=b'caught|2\n')
+        pull = source('stdin.rexx', "parse pull text\nsay '[' || text || ']'\nreturn 0\n")
+        invoke('launcher', [pull], stdin=b'input kept\n', output=b'[input kept]\n')
+        command = source('address.rexx', "address crexx 'echo COMMAND_ENTRY'\nreturn 0\n")
+        invoke('compiler-run', [command], output=b'COMMAND_ENTRY\n')
+        for name, content, status in (('return-status', 'return 7\n', 7),
+                                      ('exit-status', 'call P\nreturn 0\nP:\nexit 9\n', 9),
+                                      ('text-status', "return 'text'\n", 0)):
+            invoke('launcher', [source(name + '.rexx', content)], status)
+        syntax = source('syntax.rexx', 'if then\n')
+        invoke('launcher', [syntax], 28, error=[b'CLASSIC_SYNTAX', b'syntax.rexx', b'line 1'])
+        runtime = source('runtime-error.rexx', 'say 1/0\n')
+        invoke('compiler-run', [runtime], 28, error=[b'CLASSIC_SYNTAX'])
+        invoke('launcher', [sources / 'missing.rexx'], 1, error=[b'LL_REXX_INPUT'])
+        invoke('launcher', [], 2, error=[b'Usage: llrexx'])
+        invoke('compiler-run', ['-o', 'out.rxas', argv], 2, error=[b'LL_REXX_OPTIONS'])
+        result = subprocess.run([str(app / ('rxbvm' + suffix)), '--no-autoload',
+                                 str(app / 'dynamic-command-contracts-linked.rxbin')],
+                                cwd=cwd, env=env, capture_output=True, timeout=300)
+        assert result.returncode == 0 and re.fullmatch(rb'COMMAND_CONTRACTS\|checks=\d+\|failures=0\r?\n', result.stdout) and not result.stderr, ('owned COMMAND result controls', result.returncode, result.stdout, result.stderr)
+        checks += 1
+        assert not list(app.rglob('*.rxas')), 'source interpreter never publishes assembly'
+        assert set(app.rglob('*.rxbin')) == {app / 'llrexx.rxbin', app / 'dynamic-command-contracts-linked.rxbin'}, 'source interpreter never compiles temporary bytecode'
+        # Transient identity records bind the selected copies and authored source.
+        identity = {str(path.relative_to(work)): hashlib.sha256(path.read_bytes()).hexdigest()
+                    for path in copied + list(sources.glob('*.rexx'))}
+        (work / 'identity.json').write_text(json.dumps(identity, indent=2) + '\n')
+        assert checks == 17, ('complete COMMAND entry cases', checks)
+        print('COMMAND_ENTRY|checks=' + str(checks) + '|PASS', flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--build', required=True, type=Path)
     parser.add_argument('--work', required=True, type=Path)
-    parser.add_argument('--phase', choices=('all', 'preview', 'prepare', 'run'), default='all')
+    parser.add_argument('--phase', choices=('all', 'preview', 'prepare', 'run', 'entry'), default='all')
     parser.add_argument('--only', action='append', default=[], help='select named checks, including during preparation')
     parser.add_argument('--mode', choices=('opt', 'noopt'), default='opt')
     parser.add_argument('--ir', choices=('on', 'off'), default='on')
@@ -545,6 +648,11 @@ def main():
     parser.add_argument('--assembler', choices=('opt', 'noopt'), default='opt')
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[5]
+    if args.phase == 'entry':
+        if args.only or (args.mode, args.ir, args.vm, args.assembler) != ('opt', 'on', 'rxbvm', 'opt'):
+            parser.error('entry phase uses the fixed opt/rxbvm COMMAND product; no case or axis overrides')
+        command_entry(args, root)
+        return
     fixtures = Path(__file__).resolve().parent
     worker_source = fixtures.parent / 'group3/compile-fixtures.crexx'
     cases, inputs = inventory(root); inputs.add(worker_source)

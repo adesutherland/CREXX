@@ -425,6 +425,51 @@ The current implementation is spread across a small number of files:
 | `compiler/tests/src/test_source_semantics.c` | semantic sync and `identifier_id` coverage |
 | `compiler/tests/src/test_highlight_editor_diagnostics.c` | real editor-path diagnostics coverage |
 
+## Level L C frontend and browser integration (design only)
+
+This direction is unimplemented. The current delivered integration remains the
+native `rxc` parser mode described above. Highlighting and running source are
+separate capabilities: an editor adapter should reuse the Level L C frontend,
+without loading the RXAS selector, IR executor or application host services.
+A frontend supplied as B/L RXBIN still needs RXVM; it is not itself a native
+WebAssembly parser.
+
+`llcparse` owns C token classification, layout, grammar and source-map admission.
+An adapter must reuse that owner rather than introduce a highlighting grammar.
+Clean buffers can project the owned AST; semantic diagnostics can use the
+frontend's checks without executing source. The missing editor surface is an
+owned token/diagnostic snapshot for incomplete buffers. Today the executable
+C frontend rejects failed or recovered trees. Generic L flat-record recovery
+does not establish recovery for unfinished nested C constructs. Editor results
+must keep their failed/recovered classification and never authorize execution.
+
+DSLSH already offers `ParserFunction(CodeBuffer *)` and
+`create_inproc_communication_functions()` alongside stdio/TCP. An adapter can
+preserve its document/version, delta, noncommitting hypothesis and Unicode
+codepoint contracts while changing transport. Protocol stdout must remain
+separate from program output and TRACE. A native frontend-only adapter is the
+bounded first integration; it can exercise empty, incomplete, Unicode and
+multidocument buffers through the existing parser/editor boundary.
+
+THE's existing browser UI serves a native THE process over HTTP/WebSocket; it
+is not a WebAssembly port. A fully browser-local THE/RXVM host additionally
+needs an in-memory macro/ADDRESS bridge, browser driver and explicit resource
+policy. Long parsing or execution belongs off the UI thread. Keeping THE and
+the VM in one worker preserves synchronous callbacks but can block that editor
+worker; separate workers require an explicit asynchronous call contract.
+RXVM's current interrupt request is execution-owner-only, not a cross-thread
+cancellation API. Terminating a worker is a hard reset, not orderly cleanup.
+
+Emscripten's [threading model](https://emscripten.org/docs/porting/pthreads.html)
+requires COOP/COEP for pthread shared memory; a message-only worker need not
+select that model. Browser input, TRACE prompts and host calls may need an
+[asynchronous bridge](https://emscripten.org/docs/porting/asyncify.html).
+Files require an explicit [virtual filesystem and persistence policy](https://emscripten.org/docs/api_reference/Filesystem-API.html).
+Native providers must be compiled for that host or supplied as compatible
+[Wasm side modules](https://emscripten.org/docs/compiling/Dynamic-Linking.html),
+not copied from host `.so`, `.dll` or `.rxplugin` files. These host changes are
+separate from the current C research qualification and add no G development.
+
 ## Capability Gaps and Roadmap
 
 ### Available in DSLSH, not yet used by cREXX

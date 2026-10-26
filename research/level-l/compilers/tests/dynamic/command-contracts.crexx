@@ -1,0 +1,77 @@
+/* Independent true COMMAND root, detached-result and cleanup controls. */
+options levelb
+import rxfnsb
+import llcdynamic
+import rexxclassichost
+import rexxclassicconfig
+import rexxclassichostprotocol
+import rexxvalue
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  lf = '0A'x as .string; selected_queue = rxqueue('QUERY')
+  request = .rexxclassichost..RexxClassicHostRequest('COMMAND','owned-command.rexx')
+  call request.setQueue(selected_queue)
+  call request.appendText(''); call request.appendText('omitted',0); call request.appendText('λ雪')
+  source = "parse source platform mode resource" || lf || "return mode || '|' || arg() || '|' || arg(1,'E') || '|' || arg(2,'E') || '|' || arg(3) || '|' || resource"
+  result = llcdynamic..runprogram(source as .binary,request)
+  call check(result.hasCondition() = 0 & result.hasValue(),'COMMAND returns an owned value')
+  call check(result.value().asString() == 'COMMAND|3|1|0|λ雪|owned-command.rexx','exact COMMAND SOURCE and positional presence')
+  call check(result.commandStatus() = 0,'nonnumeric command result uses existing status zero')
+  plain = .rexxclassichost..RexxClassicHostRequest('COMMAND','plain.rexx'); call plain.setQueue(selected_queue)
+  result = llcdynamic..runprogram('return 7' as .binary,plain)
+  call check(result.commandStatus() = 7 & result.value().asString() == '7','whole return status survives cleanup')
+  result = llcdynamic..runprogram('nop' as .binary,plain)
+  call check(result.hasCondition() = 0 & result.hasValue() = 0 & result.commandStatus() = 0,'absent completion is not a manufactured value')
+  source = 'return F(3)' || lf || 'F: procedure' || lf || 'arg n' || lf || 'if n=0 then return 1' || lf || 'return n*F(n-1)'
+  result = llcdynamic..runprogram(source as .binary,plain)
+  call check(result.hasCondition() = 0 & result.commandStatus() = 6,'local IR recursion returns to COMMAND root')
+  source = "x=1; interpret 'x=x+1'; return x"
+  result = llcdynamic..runprogram(source as .binary,plain)
+  call check(result.hasCondition() = 0 & result.commandStatus() = 2,'INTERPRET resumes the actual full-program root')
+  source = 'call P' || lf || 'return 0' || lf || 'P:' || lf || 'exit 9'
+  result = llcdynamic..runprogram(source as .binary,plain)
+  call check(result.hasCondition() = 0 & result.commandStatus() = 9,'child EXIT reaches COMMAND completion owner')
+  result = llcdynamic..runprogram('if then' as .binary,plain)
+  call check(result.hasCondition(),'invalid source returns a detached typed condition')
+  if result.hasCondition() then do
+    syntax = result.condition()
+    call check(syntax.name() == 'CLASSIC_SYNTAX' & pos('plain.rexx:',syntax.message()) > 0 & pos('line 1',syntax.message()) > 0,'frontend retains authored filename and location')
+  end
+  invalid_request = .rexxclassichost..RexxClassicHostRequest
+  result = llcdynamic..runprogram('nop' as .binary,invalid_request)
+  call check(result.hasCondition() & result.condition().name() == 'INVALID_ARGUMENTS','uninitialized request cannot escape without owned failure')
+  wrong_mode = .rexxclassichost..RexxClassicHostRequest('FUNCTION','wrong-mode.rexx')
+  result = llcdynamic..runprogram('nop' as .binary,wrong_mode)
+  call check(result.hasCondition() & result.condition().name() == 'INVALID_ARGUMENTS','subroutine/function bootstrap is refused')
+  config = .rexxclassicconfig..RexxClassicConfig('UTF8'); hook = .CommandFault()
+  call config.registerHostHook('SAY',hook); call config.registerHostHook('TERMINATE',hook)
+  failing = .rexxclassichost..RexxClassicHostRequest('COMMAND','failure.rexx')
+  call failing.setQueue(selected_queue); call failing.setConfiguration(config)
+  result = llcdynamic..runprogram("say 'ignored'" as .binary,failing)
+  call check(result.hasCondition() & result.hasCleanupCondition(),'primary and TERMINATE cleanup failures remain separate')
+  if result.hasCondition() then do
+    primary = result.condition(); call check(primary.name() == 'CANCEL' & primary.message() == 'COMMAND primary','primary event survives cleanup')
+  end
+  if result.hasCleanupCondition() then do
+    secondary = result.cleanupCondition(); call check(secondary.name() == 'ERROR' & secondary.message() == 'COMMAND cleanup','first cleanup event survives owner teardown')
+  end
+  result = llcdynamic..runprogram('return 0' as .binary,plain)
+  call check(result.hasCondition() = 0 & result.commandStatus() = 0 & rxqueue('QUERY') == selected_queue,'subsequent invocation recovers and restores selected queue')
+  say 'COMMAND_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+check: procedure = .void expose checks failures
+  arg condition = .int, message = .string
+  checks = checks + 1
+  if condition = 0 then do; failures = failures + 1; say 'FAIL: ' || message; end
+  return
+
+CommandFault: class implements .RexxClassicHostHook
+  *: factory
+    return
+  invoke: method = .RexxClassicHostHookResult
+    arg operation = .string, values = .RexxValue[], presence = .int[], window = .RexxClassicHostPool
+    if operation == 'SAY' then assembler signal 'CANCEL','COMMAND primary'
+    if operation == 'TERMINATE' then assembler signal 'ERROR','COMMAND cleanup'
+    return .RexxClassicHostHookResult()

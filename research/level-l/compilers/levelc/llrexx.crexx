@@ -1,0 +1,6 @@
+/* cREXX License (MIT). Standalone Classic COMMAND interpreter. */
+options levelb
+import llcruncli
+main: procedure = .int
+  arg argv = .string[]
+  return llcruncli..run(argv)

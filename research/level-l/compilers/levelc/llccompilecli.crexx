@@ -1,0 +1,75 @@
+/* cREXX License (MIT). Shared compiler-only command implementation. */
+options levelb
+namespace llccompilecli expose run
+import rxfnsb
+import llccompiler
+import llcbindings
+import llcdiagnostics
+import llcompilercontracts
+import llfileoutput
+run: procedure = .int
+  arg argv = .string[]
+  artifacts = ''; output = ''; sourcefile = ''; i = 1; optimise = 1
+  providers = .llcbindings..binding[]; routine_export = ''; host_export = ''
+  do while i <= argv[0]
+    option = argv[i]
+    if option == '-i' | option == '-o' then do
+      if hasoperand(reference argv,i + 1) = 0 then do; call usage('missing value for ' || option); return 2; end
+      i = i + 1
+      if option == '-i' then artifacts = argv[i]
+      else output = argv[i]
+    end
+    else if option == '--provider' | option == '--native' | option == '--executable' then do
+      if hasoperand(reference argv,i + 1) = 0 then do; call usage('missing artifact stem for --provider'); return 2; end
+      if hasoperand(reference argv,i + 2) = 0 then do; call usage('missing qualified callable for --provider'); return 2; end
+      if option == '--native' then providers[providers[0] + 1] = .llcbindings..binding.native(argv[i + 1],argv[i + 2])
+      else if option == '--executable' then providers[providers[0] + 1] = .llcbindings..binding.process(argv[i + 1],argv[i + 2])
+      else providers[providers[0] + 1] = .llcbindings..binding(argv[i + 1],argv[i + 2])
+      i = i + 2
+    end
+    else if option == '--routine' | option == '--host' then do
+      if hasoperand(reference argv,i + 1) = 0 then do; call usage('missing qualified export for --routine'); return 2; end
+      i = i + 1
+      if option == '--host' then host_export = argv[i]
+      else routine_export = argv[i]
+    end
+    else if option == '-n' then optimise = 0
+    else if left(option,1) = '-' then do; call usage('unknown option ' || option); return 2; end
+    else if sourcefile <> '' then do; call usage('unexpected extra source ' || option); return 2; end
+    else sourcefile = option
+    i = i + 1
+  end
+  if sourcefile = '' | output = '' | artifacts = '' then do
+    call usage(); return 2
+  end
+  do
+    source = readbinary(sourcefile)
+    request = .llccompiler..request(source,artifacts,llcompilercontracts..sourcename(sourcefile,1),1000000,512,67108864,65536,optimise,providers,routine_export,host_export)
+    status = request.status(); warnings = request.warnings(); warning = .llcdiagnostics..warning
+    do i = 1 to warnings[0]
+      warning = warnings[i]; call lineout 'stderr',warning.text()
+    end
+    if status <> 0 then do; say request.diagnostic(); return 1; end
+    message = llfileoutput..publish(request.output(),output)
+    if message <> '' then do; say message; return 1; end
+  on signal as problem
+    say 'LL_COMPILER_INPUT: ' || sourcefile || ': ' || problem.name() || ': ' || problem.message()
+    return 1
+  end
+  return 0
+
+/* Recognized option tokens cannot silently become a missing operand. Other
+ * text is retained verbatim; the service owns provider/export validation. */
+hasoperand: procedure = .int
+  arg argv_ref = reference .string[], index = .int
+  argv = dereference argv_ref
+  if index > argv[0] then return 0
+  value = argv[index]
+  if value == '' then return 0
+  return value \== '-i' & value \== '-o' & value \== '-n' & value \== '--provider' & value \== '--native' & value \== '--executable' & value \== '--routine' & value \== '--host'
+
+usage: procedure = .void
+  arg reason = ''
+  if reason <> '' then say 'LL_COMPILER_OPTIONS: ' || reason
+  say 'Usage: llrxc-c [-n] -i runtime-images -o output.rxas [--provider artifact callable] [--native artifact callable] [--executable alias path] [--routine export | --host export] source.crexx'
+  return

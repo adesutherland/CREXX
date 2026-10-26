@@ -6,6 +6,8 @@ The research Classic Rexx compiler is a Level B program built on the reusable
 Level L language tools. Its command, `llrxc-c`, compiles source to RXAS; its
 `llccompiler` service offers the same compilation without command-line I/O.
 The ordinary assembler, linker and VM turn that output into a running program.
+`llrexx` / `llrexx.rxbin` and `llrxc-c --run` instead use the same full-program
+frontend/IR runtime directly through a true COMMAND host root.
 When the program executes INTERPRET or calls a Rexx source file, the same C
 frontend prepares semantic IR for the optional Level L executor instead.
 Both execution paths use the shared Classic runtime for values, variables,
@@ -91,7 +93,8 @@ the C compiler, then C applications. The independently selected products are:
 
 | Product | Role and runtime dependencies |
 |---|---|
-| `llrxc-c` | Packaged command adapter and compiler; reads a source file and publishes RXAS. |
+| `llrxc-c` | Packaged command adapter and compiler; publishes RXAS or delegates first-switch `--run` to the shared source-run CLI. |
+| `llrexx`, `llrexx.rxbin` | Shared source-run CLI and full-program COMMAND bootstrap with frontend/IR/ordinary runtime only; no selector, assembler, linker or native source compiler. |
 | `llccompiler.rxbin` | Reusable compile service with compiler-side dependencies. |
 | `llctarget.rxbin` | Thin runtime adaptation for generated C, alongside `library`, `rxfnsc`, `classlib` and `rxunicode-core`. |
 | `llcdynamic.rxbin` | Optional C frontend, semantic IR preparation/execution and dynamic adaptation. Excludes the RXAS selector, assembler, linker and native source frontends. |
@@ -891,6 +894,36 @@ They express inherited entry eligibility, INTERPRET expansion, owner transfers,
 lexical local calls and external resolution explicitly. Group normal completion
 is distinct from authored RETURN even where an absent packet serves as its
 transport. Quotation/source spelling is retained; it cannot be guessed from case.
+
+### Standalone COMMAND bootstrap
+
+`llccompilecli` owns the compilation parser/body. The established internal
+`llrxc-c-linked.rxbin` and `imports-llrxc-c` retain only compiler dependencies;
+compile workers do not acquire the COMMAND runtime. A separate `llccommand`
+main and private rich import/image root feed the public packed `llrxc-c`.
+`llcruncli` owns file-only CLI parsing shared by `llrexx` and the first-switch
+`llrxc-c --run` path. It uses the existing exact bounded filesystem resource
+reader, anchoring a physical source base through the execution resource view
+separately from the logical source identity. Each trailing OS argument is one
+present public host-request position; stdin remains available to the program.
+
+`llcdynamic.runprogram` admits an exact full-program `llcgraph` request before
+entering the public `RexxClassicHostScope`. Stable locals own activation, pool,
+configuration, context, HostScope and dynamic scope until teardown finishes.
+It installs the source inventory, sets IR, registers existing effect/lease/port
+services and uses the same execution manifest, plan, start/advance and SIGNAL
+landing machinery. Local calls and handlers stay full-program IR; no INTERPRET
+group or SUBROUTINE masquerades as the COMMAND root. Static/invoke boundaries
+without an admitted host discharge fail explicitly.
+
+The public result is detached after cleanup. Private `scope.closeoutcome` projects
+only the first owned cleanup event, including an active child's teardown, while
+existing `close` preserves its primary-aware suppression/relay behavior. The
+COMMAND result keeps an original primary condition plus its first cleanup event.
+No new runtime algorithm, native ownership service, wire format or VM opcode is
+involved. Frontend diagnostics delegate to the original mapped frontend owner;
+unhandled IR events retain their native helper-PC traceback as a documented
+presentation limit rather than fabricating a Rexx PC.
 
 ### The compiled and interpreted boundary
 

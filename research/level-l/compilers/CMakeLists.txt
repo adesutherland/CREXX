@@ -36,6 +36,10 @@ function(ll_compile NAME SOURCE DIRECTORY)
       list(APPEND _producers rxfnsl_execute)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
       list(APPEND _producers rxfnsc)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/classlib.rxbin")
+      list(APPEND _producers classlib)
+    elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin")
+      list(APPEND _producers rxunicode_core)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/lib/rxfnsc/members/RexxClassicUnicodeProperties/RexxClassicUnicodeProperties.rxbin")
       list(APPEND _producers rxfnsc_unicode_properties_member)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin")
@@ -64,6 +68,39 @@ function(ll_compile NAME SOURCE DIRECTORY)
       -o "${DIRECTORY}/${NAME}" "${SOURCE}"
     COMMAND $<TARGET_FILE:rxas> ${_flags} "${DIRECTORY}/${NAME}"
     DEPENDS rxc rxas ${_key}_imports ${_imports} "${SOURCE}" VERBATIM)
+endfunction()
+# Internal compiler bytecode keeps its compiler-only import contract. The public
+# packed C command gains source-run support in a separate image below.
+function(ll_command _language _mode _dir)
+  set(_cli "llrxc-${_language}")
+  set(_command_inputs ${ARGN})
+  ll_compile(${_cli} "${CMAKE_CURRENT_SOURCE_DIR}/level${_language}/${_cli}.crexx"
+    "${_dir}" ${_command_inputs} "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin")
+  set(_link_inputs ${_command_inputs})
+  if(_language STREQUAL "g")
+    # Preserve the existing G command's exact link-provider ordering.
+    list(REMOVE_ITEM _link_inputs ${_base})
+    list(APPEND _link_inputs ${_base})
+  endif()
+  add_custom_command(OUTPUT "${_dir}/${_cli}-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/${_cli}-linked"
+      "${_dir}/${_cli}" ${_link_inputs}
+    DEPENDS rxlink "${_dir}/${_cli}.rxbin" ${_link_inputs} VERBATIM)
+  add_custom_target(llcompiler_${_cli}_${_mode} ALL DEPENDS "${_dir}/${_cli}-linked.rxbin")
+  if(_mode STREQUAL "opt" AND _language STREQUAL "g")
+    add_custom_command(OUTPUT "${_dir}/${_cli}-launcher.c"
+      COMMAND $<TARGET_FILE:rxcpack> -o "${_dir}/${_cli}-launcher" "${_dir}/${_cli}-linked"
+      DEPENDS rxcpack "${_dir}/${_cli}-linked.rxbin" VERBATIM)
+    add_executable(${_cli} "${_dir}/${_cli}-launcher.c")
+    set_target_properties(${_cli} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${_products}")
+    configure_linker_for_static_lib(${_cli} fs)
+    if(_language STREQUAL "c")
+      configure_linker_for_static_lib(${_cli} llcontract PROVIDER_ID rxcontract)
+      configure_linker_for_static_lib(${_cli} cstream)
+    endif()
+    target_link_libraries(${_cli} rxvml rxpashim)
+    install(TARGETS ${_cli} RUNTIME DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+  endif()
 endfunction()
 set(_base "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
 set(_infrastructure "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin"
@@ -98,6 +135,9 @@ foreach(_language IN LISTS _languages)
     DEPENDS "${_front}/ll${_language}grammar.rxbin")
 endforeach()
 set(_ll_private_nested_tests)
+if(BUILD_TESTING)
+  math(EXPR _ll_private_nested_processors "${CREXX_QA_CTEST_JOBS} / 5 + 1")
+endif()
 foreach(_mode opt noopt)
   set(_flags)
   if(_mode STREQUAL "noopt")
@@ -152,11 +192,14 @@ foreach(_mode opt noopt)
     list(APPEND _host "${_langdir}/${_service}.rxbin")
     list(APPEND _allhosts ${_host})
     set(_cli "llrxc-${_language}")
-    ll_compile(${_cli} "${CMAKE_CURRENT_SOURCE_DIR}/level${_language}/${_cli}.crexx" "${_dir}" ${_base} ${_host} "${_io}" "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin")
-    add_custom_command(OUTPUT "${_dir}/${_cli}-linked.rxbin"
-      COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/${_cli}-linked" "${_dir}/${_cli}" ${_host} "${_io}" ${_base}
-      DEPENDS rxlink "${_dir}/${_cli}.rxbin" ${_host} "${_io}" ${_base} VERBATIM)
-    add_custom_target(llcompiler_${_cli}_${_mode} ALL DEPENDS "${_dir}/${_cli}-linked.rxbin")
+    if(_language STREQUAL "c")
+      ll_compile(llccompilecli "${CMAKE_CURRENT_SOURCE_DIR}/levelc/llccompilecli.crexx"
+        "${_langdir}" ${_base} ${_host} "${_io}" "${CMAKE_BINARY_DIR}/bin/rxfs.rxplugin")
+      set(_c_compiler_host ${_host} "${_langdir}/llccompilecli.rxbin")
+      ll_command(c ${_mode} "${_dir}" ${_base} ${_c_compiler_host} "${_io}")
+    else()
+      ll_command(${_language} ${_mode} "${_dir}" ${_base} ${_host} "${_io}")
+    endif()
     if(_mode STREQUAL "opt")
       set(_control "")
       foreach(_file IN LISTS _host)
@@ -179,17 +222,6 @@ foreach(_mode opt noopt)
         DEPENDS rxlink ${_host} "${_langdir}/service.ctl" VERBATIM)
       add_custom_target(${_service} ALL DEPENDS "${_products}/${_service}.rxbin")
       install(FILES "${_products}/${_service}.rxbin" DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
-      add_custom_command(OUTPUT "${_dir}/${_cli}-launcher.c"
-        COMMAND $<TARGET_FILE:rxcpack> -o "${_dir}/${_cli}-launcher" "${_dir}/${_cli}-linked"
-        DEPENDS rxcpack "${_dir}/${_cli}-linked.rxbin" VERBATIM)
-      add_executable(${_cli} "${_dir}/${_cli}-launcher.c")
-      set_target_properties(${_cli} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${_products}")
-      configure_linker_for_static_lib(${_cli} fs)
-      if(_language STREQUAL "c")
-        configure_linker_for_static_lib(${_cli} llcontract PROVIDER_ID rxcontract)
-      endif()
-      target_link_libraries(${_cli} rxvml rxpashim)
-      install(TARGETS ${_cli} RUNTIME DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
     endif()
   endforeach()
   if("c" IN_LIST _languages)
@@ -226,7 +258,60 @@ foreach(_mode opt noopt)
       "${CMAKE_BINARY_DIR}/bin/rxunicode-core.rxbin")
     list(FILTER _dynamic_runtime INCLUDE REGEX "\\.rxbin$")
     list(REMOVE_DUPLICATES _dynamic_runtime)
+    ll_compile(llcruncli "${CMAKE_CURRENT_SOURCE_DIR}/levelc/llcruncli.crexx"
+      "${_dynamic_dir}" ${_dynamic_inputs})
+    set(_c_command_inputs ${_base} ${_c_compiler_host} "${_io}")
+    list(REMOVE_ITEM _c_command_inputs "${_classic_names}")
+    foreach(_runtime_input IN LISTS _dynamic_runtime)
+      if(NOT _runtime_input IN_LIST _c_command_inputs)
+        list(APPEND _c_command_inputs "${_runtime_input}")
+      endif()
+    endforeach()
+    list(APPEND _c_command_inputs "${_dynamic_dir}/llcruncli.rxbin")
     if(_mode STREQUAL "opt")
+      # Only the packed public command links the interpreter. Existing bytecode
+      # CLI/worker hosts keep their lean providers and private metadata root.
+      ll_compile(llccommand "${CMAKE_CURRENT_SOURCE_DIR}/levelc/llccommand.crexx"
+        "${_dir}" ${_c_command_inputs})
+      add_custom_command(OUTPUT "${_dir}/llrxc-c-command-linked.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/llrxc-c-command-linked"
+          "${_dir}/llccommand.rxbin" ${_c_command_inputs}
+        DEPENDS rxlink "${_dir}/llccommand.rxbin" ${_c_command_inputs} VERBATIM)
+      add_custom_command(OUTPUT "${_dir}/llrxc-c-launcher.c"
+        COMMAND $<TARGET_FILE:rxcpack> -o "${_dir}/llrxc-c-launcher" "${_dir}/llrxc-c-command-linked"
+        DEPENDS rxcpack "${_dir}/llrxc-c-command-linked.rxbin" VERBATIM)
+      add_executable(llrxc-c "${_dir}/llrxc-c-launcher.c")
+      set_target_properties(llrxc-c PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${_products}")
+      configure_linker_for_static_lib(llrxc-c fs)
+      configure_linker_for_static_lib(llrxc-c cstream)
+      configure_linker_for_static_lib(llrxc-c llcontract PROVIDER_ID rxcontract)
+      target_link_libraries(llrxc-c rxvml rxpashim)
+      install(TARGETS llrxc-c RUNTIME DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+      ll_compile(llrexx "${CMAKE_CURRENT_SOURCE_DIR}/levelc/llrexx.crexx"
+        "${_dynamic_dir}" ${_dynamic_inputs} "${_dynamic_dir}/llcruncli.rxbin")
+      set(_interpreter_control "INPUT ${_dynamic_dir}/llrexx.rxbin\nINPUT ${_dynamic_dir}/llcruncli.rxbin\n")
+      foreach(_runtime_input IN LISTS _dynamic_runtime)
+        string(APPEND _interpreter_control "INPUT ${_runtime_input}\n")
+      endforeach()
+      string(APPEND _interpreter_control "ROOT llrexx\nOUTPUT ${_products}/llrexx\n")
+      file(GENERATE OUTPUT "${_dynamic_dir}/interpreter.ctl" CONTENT "${_interpreter_control}")
+      add_custom_command(OUTPUT "${_products}/llrexx.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -c "${_dynamic_dir}/interpreter.ctl"
+        DEPENDS rxlink classlib rxunicode_core "${_dynamic_dir}/llrexx.rxbin"
+          "${_dynamic_dir}/llcruncli.rxbin" ${_dynamic_runtime}
+          "${_dynamic_dir}/interpreter.ctl" VERBATIM)
+      add_custom_target(llcompiler_llrexx_opt DEPENDS "${_products}/llrexx.rxbin")
+      add_custom_command(OUTPUT "${_dynamic_dir}/llrexx-launcher.c"
+        COMMAND $<TARGET_FILE:rxcpack> -o "${_dynamic_dir}/llrexx-launcher" "${_products}/llrexx"
+        DEPENDS rxcpack "${_products}/llrexx.rxbin" VERBATIM)
+      add_executable(llrexx "${_dynamic_dir}/llrexx-launcher.c")
+      set_target_properties(llrexx PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${_products}")
+      configure_linker_for_static_lib(llrexx fs)
+      configure_linker_for_static_lib(llrexx cstream)
+      configure_linker_for_static_lib(llrexx llcontract PROVIDER_ID rxcontract)
+      target_link_libraries(llrexx rxvml rxpashim)
+      install(TARGETS llrexx RUNTIME DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+      install(FILES "${_products}/llrexx.rxbin" DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
       set(_dynamic_control "")
       foreach(_file IN LISTS _dynamic_inputs)
         if(_file MATCHES "rxplugin$")
@@ -264,6 +349,18 @@ foreach(_mode opt noopt)
     endif()
     add_custom_target(llcompiler_dynamic_${_mode}
       DEPENDS "${_dynamic_dir}/llcdynamic.rxbin")
+    if(_mode STREQUAL "opt")
+      ll_compile(dynamic-command-contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/dynamic/command-contracts.crexx"
+        "${_dynamic_dir}" ${_dynamic_inputs})
+      add_custom_command(OUTPUT "${_dynamic_dir}/dynamic-command-contracts-linked.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -o "${_dynamic_dir}/dynamic-command-contracts-linked"
+          "${_dynamic_dir}/dynamic-command-contracts.rxbin" ${_dynamic_runtime}
+        DEPENDS rxlink classlib rxunicode_core
+          "${_dynamic_dir}/dynamic-command-contracts.rxbin" ${_dynamic_runtime} VERBATIM)
+      add_custom_target(llcompiler_dynamic_command_opt
+        DEPENDS "${_dynamic_dir}/dynamic-command-contracts-linked.rxbin")
+    endif()
     foreach(_case source runtime coordinator binding-snapshot)
       set(_case_inputs ${_dynamic_inputs})
       set(_case_runtime ${_dynamic_runtime})
@@ -799,13 +896,14 @@ if("c" IN_LIST _languages)
           PASS_REGULAR_EXPRESSION "PARSE_FRONTEND[|]commands=[0-9]+[|]failures=0"
           TIMEOUT 600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
           LABELS "library;level-l;levelc;compiler-frontends;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
         crexx_register_test_prep_targets(TESTS ${_test} TARGETS
           llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
           library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_vm})
       endforeach()
     endforeach()
   endforeach()
-  # Isolated ARG: 29 nested commands in 121.816s opt/rxbvm/IR-off Debug.
+  # ARG keeps exact syntax/runtime oracles with one combined shape/control pair.
   # Pair compiler modes/VMs; unchanged shared-executor cross-cell proof is reused.
   # Windows has only rxbvm, so its noopt lane uses that available engine too.
   foreach(_mode opt noopt)
@@ -821,9 +919,10 @@ if("c" IN_LIST _languages)
         --work "${CMAKE_CURRENT_BINARY_DIR}/checks/${_test}"
         --mode ${_mode} --vm ${_arg_vm} --ir ${_ir})
       set_tests_properties(${_test} PROPERTIES
-        PASS_REGULAR_EXPRESSION "ARG[|]phase=all[|].*commands=29[|]failures=0"
+        PASS_REGULAR_EXPRESSION "ARG[|]phase=all[|].*commands=25[|]failures=0"
         TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;levelc;compiler-frontends;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
       crexx_register_test_prep_targets(TESTS ${_test} TARGETS
         llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
         library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_arg_vm})
@@ -894,6 +993,7 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "EXTERNAL_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_external_test})
     crexx_register_test_prep_targets(TESTS ${_external_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_call_external_contracts_${_mode} llcdynamic
@@ -920,6 +1020,7 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "RETURN_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_return_contracts_${_mode}
@@ -972,6 +1073,7 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "PULL_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_pull_vm})
@@ -998,6 +1100,7 @@ if("c" IN_LIST _languages)
         PASS_REGULAR_EXPRESSION "${_insertion_marker}_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
         TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
       crexx_register_test_prep_targets(TESTS ${_test} TARGETS
         llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
         llcompiler_queue_insertion_contracts_${_mode}
@@ -1024,6 +1127,7 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "ADDRESS_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_address_contracts_${_mode}
@@ -1075,6 +1179,7 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "COMMAND_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_command_contracts_${_mode}
@@ -1100,6 +1205,7 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "CLAUSE_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_clause_contracts_${_mode}
@@ -1165,6 +1271,7 @@ if("c" IN_LIST _languages)
     PASS_REGULAR_EXPRESSION "GROUP2_CHECK[|]PASS[|]cases=[0-9]+"
     TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
     LABELS "library;level-l;levelc;compiler-backend")
+  list(APPEND _ll_private_nested_tests ${_test})
   crexx_register_test_prep_targets(TESTS ${_test} TARGETS
     llcompiler_llrxc-c_opt llcompiler_target_opt llcompiler_call_external_contracts_opt llcdynamic
     library classlib rxfnsc rxunicode_core fs cstream llcontract _hash
@@ -1180,6 +1287,7 @@ if("c" IN_LIST _languages)
     PASS_REGULAR_EXPRESSION "GROUP3_STATIC[|]checks=[0-9]+[|]PASS"
     TIMEOUT 7200 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
     LABELS "library;level-l;levelc;compiler-backend")
+  list(APPEND _ll_private_nested_tests ${_test})
   crexx_register_test_prep_targets(TESTS ${_test} TARGETS
     llcompiler_llrxc-c_opt llcompiler_target_opt
     library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink rxbvm)
@@ -1196,13 +1304,6 @@ if("c" IN_LIST _languages)
   crexx_register_test_prep_targets(TESTS ${_test} TARGETS
     llcompiler_conditions_observations_opt llcompiler_llrxc-c_opt llcompiler_target_opt
     library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink rxbvm)
-  if(BUILD_TESTING AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
-    # Each selected cell has read-only prepared inputs or private scratch. At the configured named-QA budget,
-    # ceil(jobs/2) admits at most two; instrumented profiles keep serial/lock.
-    math(EXPR _ll_private_nested_processors "(${CREXX_QA_CTEST_JOBS} + 1) / 2")
-    set_tests_properties(${_ll_private_nested_tests} PROPERTIES
-      RUN_SERIAL FALSE PROCESSORS ${_ll_private_nested_processors} RESOURCE_LOCK "")
-  endif()
   # NUMERIC reuses one source image for settings, frame and operand-EXIT checks.
   # Complementary nested lanes are serialized with a generous hang guard.
   foreach(_mode opt noopt)
@@ -1224,6 +1325,7 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "NUMERIC_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_numeric_contracts_${_mode}
@@ -1249,6 +1351,7 @@ if("c" IN_LIST _languages)
     PASS_REGULAR_EXPRESSION "DROP[|]commands=[0-9]+[|]failures=0"
     TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
     LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+  list(APPEND _ll_private_nested_tests llcompiler_c_drop)
   crexx_register_test_prep_targets(TESTS llcompiler_c_drop TARGETS
     llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt
     llcompiler_c_drop_contracts_opt llcompiler_c_drop_contracts_noopt
@@ -1265,6 +1368,7 @@ if("c" IN_LIST _languages)
     PASS_REGULAR_EXPRESSION "ASSIGN[|]phase=all[|]commands=[0-9]+[|]failures=0"
     TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
     LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+  list(APPEND _ll_private_nested_tests llcompiler_c_assignment)
   crexx_register_test_prep_targets(TESTS llcompiler_c_assignment TARGETS
     llcompiler_llrxc-c_opt llcompiler_llrxc-c_noopt
     llcompiler_c_assignment_contracts_opt llcompiler_c_assignment_contracts_noopt
@@ -1310,6 +1414,7 @@ if("c" IN_LIST _languages)
           PASS_REGULAR_EXPRESSION "STEP07_C_ONLY[|]commands=${_commands}[|]failures=0"
           TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
           LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+        list(APPEND _ll_private_nested_tests ${_calls})
         crexx_register_test_prep_targets(TESTS ${_calls}
           TARGETS llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
             library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_vm})
@@ -1324,6 +1429,7 @@ if("c" IN_LIST _languages)
           PASS_REGULAR_EXPRESSION "SAY C-ONLY PASS: 32 commands"
           TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
           LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
+        list(APPEND _ll_private_nested_tests ${_test})
         crexx_register_test_prep_targets(TESTS ${_test}
           TARGETS llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
             library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_vm})
@@ -1347,9 +1453,21 @@ if("c" IN_LIST _languages AND TARGET rxbvm)
     PASS_REGULAR_EXPRESSION "DYNAMIC_C[|]checks=[0-9]+[|]PASS"
     TIMEOUT 18000 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
     LABELS "level-l;levelc;compiler;component")
+  list(APPEND _ll_private_nested_tests llcompiler_c_dynamic_opt_rxbvm)
   crexx_register_test_prep_targets(TESTS llcompiler_c_dynamic_opt_rxbvm TARGETS
     llcompiler_llrxc-c_opt llcompiler_target_opt llcdynamic
     library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink rxbvm)
+  add_test(NAME llcompiler_c_interpreter_command_opt_rxbvm COMMAND ${Python3_EXECUTABLE}
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/dynamic/check-dynamic.py"
+    --build "${CMAKE_BINARY_DIR}"
+    --work "${CMAKE_CURRENT_BINARY_DIR}/checks/llcompiler_c_interpreter_command_opt_rxbvm"
+    --phase entry)
+  set_tests_properties(llcompiler_c_interpreter_command_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "COMMAND_ENTRY[|]checks=[0-9]+[|]PASS"
+    TIMEOUT 1200 LABELS "level-l;levelc;compiler;component;levelc-interaction")
+  list(APPEND _ll_private_nested_tests llcompiler_c_interpreter_command_opt_rxbvm)
+  crexx_register_test_prep_targets(TESTS llcompiler_c_interpreter_command_opt_rxbvm TARGETS
+    llrexx llrxc-c llcompiler_llrxc-c_opt llcompiler_dynamic_command_opt rxbvm fs cstream llcontract)
   # Compact C-only interaction contrasts; the existing full default stays intact.
   # Prepared products are read-only and each invocation owns private scratch.
   foreach(_contrast compiler_noopt ir_off target_rxtvm assembler_noopt)
@@ -1385,13 +1503,7 @@ if("c" IN_LIST _languages AND TARGET rxbvm)
       set_tests_properties(${_compact_test} PROPERTIES
         PASS_REGULAR_EXPRESSION "DYNAMIC_C[|]checks=${_compact_count}[|]PASS"
         TIMEOUT 1800 LABELS "level-l;levelc;compiler;component;levelc-interaction")
-      if(WIN32 OR CREXX_QA_AUDIT_NATIVE_SOURCES)
-        set_tests_properties(${_compact_test} PROPERTIES
-          RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend)
-      elseif(BUILD_TESTING)
-        set_tests_properties(${_compact_test} PROPERTIES
-          PROCESSORS ${_ll_private_nested_processors})
-      endif()
+      list(APPEND _ll_private_nested_tests ${_compact_test})
       set(_compact_engines rxbvm)
       if(NOT _compact_vm STREQUAL "rxbvm")
         list(APPEND _compact_engines ${_compact_vm})
@@ -1414,6 +1526,7 @@ if("c" IN_LIST _languages AND TARGET rxbvm)
   set_tests_properties(llcompiler_c_infrastructure_opt_rxbvm PROPERTIES
     PASS_REGULAR_EXPRESSION "INFRASTRUCTURE_CONSUMERS[|].*[|]PASS"
     TIMEOUT 1800 RUN_SERIAL TRUE LABELS "level-l;compiler;component")
+  list(APPEND _ll_private_nested_tests llcompiler_c_infrastructure_opt_rxbvm)
   crexx_register_test_prep_targets(TESTS llcompiler_c_infrastructure_opt_rxbvm
     TARGETS llcompiler_conditions_observations_opt llcompiler_target_opt rxbvm)
 endif()
@@ -1458,6 +1571,20 @@ if("c" IN_LIST _languages AND TARGET rxbvm)
     TARGETS llcompiler_ir_execution rxbvm)
 endif()
 
+
+# Explicit audited C cells only: private mutable work/read-only prepared inputs.
+# floor(jobs/5)+1 admits at most four at j30; Windows/audit retain serial locks.
+# The four direct prepared-language VM tests and all G owners stay unchanged.
+if(BUILD_TESTING AND _ll_private_nested_tests)
+  if(WIN32 OR CREXX_QA_AUDIT_NATIVE_SOURCES)
+    set_tests_properties(${_ll_private_nested_tests} PROPERTIES
+      RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend)
+  else()
+    set_tests_properties(${_ll_private_nested_tests} PROPERTIES
+      RUN_SERIAL FALSE PROCESSORS ${_ll_private_nested_processors} RESOURCE_LOCK "")
+  endif()
+endif()
+
 add_test(NAME llcompiler_product_inventory COMMAND ${CMAKE_COMMAND}
   -DBUILD=${CMAKE_BINARY_DIR} -DSUFFIX=${CMAKE_EXECUTABLE_SUFFIX} -DRESEARCH=ON
   "-DLANGUAGES=${CREXX_RESEARCH_LANGUAGES}" -P "${CMAKE_SOURCE_DIR}/langtools/tests/check-products.cmake")
@@ -1467,7 +1594,7 @@ foreach(_language IN LISTS _languages)
   list(APPEND _selected ll${_language}compiler llrxc-${_language})
 endforeach()
 if("c" IN_LIST _languages)
-  list(APPEND _selected llctarget)
+  list(APPEND _selected llctarget llrexx)
 endif()
 crexx_register_test_prep_targets(TESTS llcompiler_product_inventory TARGETS ${_selected}
   rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute rxlang rxlanglib

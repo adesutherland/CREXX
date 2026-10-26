@@ -160,14 +160,18 @@ def main():
                     assembler, result.stdout, expected)
 
         if args.phase in ('all', 'shapes'):
-            pairs = (
-                ('main', "options levelc\nsay 'before'; arg; arg ,,,; say 'after'\nexit 0\n"),
-                ('if', 'options levelc\nif 1 then do; arg; arg ,,,; end; else do; arg; end\nexit 0\n'),
-                ('exit', 'options levelc\nexit 0; arg; arg ,,,\n'),
-                ('return', 'options levelc\ncall P\nexit 0\nP: procedure\nreturn 1; arg; arg ,,,\n'),
+            # Keep the CALL/RETURN pair isolated so earlier empty ARG metadata
+            # cannot renumber its private procedure guards. Compare exact shapes.
+            shapes = (
+                ('contexts', "options levelc\n"
+                 "say 'before'; arg; arg ,,,; say 'after'\n"
+                 "if 1 then do; arg; arg ,,,; end; else do; arg; end\n"
+                 "exit 0; arg; arg ,,,;\n"),
+                ('return', "options levelc\ncall P\nexit 0\nP: procedure\n"
+                 "return 1; arg; arg ,,,\n"),
             )
             source = work / 'arg-shape.crexx'
-            for name, content in pairs:
+            for name, content in shapes:
                 source.write_text(content, encoding='utf-8')
                 assembly = target / ('shape-' + name + '-arg.rxas')
                 compile_source(source, assembly)
@@ -179,9 +183,9 @@ def main():
                 compile_source(source, blank)
                 blank_text = blank.read_text(encoding='utf-8')
                 assert executable_shape(text, source.name) == executable_shape(blank_text, source.name), (
-                    'empty ARG adds executable/frame/dead-return work', name)
+                    name, 'empty ARG adds executable/frame/dead-return work')
                 assert not re.search(r'^\s*call\s+[^\n]*(?:llctarget\.parsesource|rexxclassicparse\.execute)\(\)',
-                                     text, re.M), name
+                                     text, re.M)
                 inspect(assembly, 'shape-' + name + '-arg')
                 inspect(blank, 'shape-' + name + '-blank')
 

@@ -90,15 +90,15 @@ obligations; a catalogue entry or unreachable call alone proves admission only.
 
 | Family | Existing owner and static integration contract | Independent fixture / boundary |
 |---|---|---|
-| BF01 | Shared character operations and direct BIF entries; exact text, scalar positions, padding and Classic C Latin-1 casing | `compiler/tests/rexx_src/levelc_bif_reference_audit.rexx`, `levelc_unicode_character_bifs.rexx`; Group 3 values, presence/errors and `classic-casing.crexx` with its independent all-256 checked oracle |
+| BF01 | Shared character operations and direct BIF entries; exact text, scalar positions, padding and Classic C Latin-1 casing | `compiler/tests/rexx_src/levelc_bif_reference_audit.rexx`, `levelc_unicode_character_bifs.rexx`; Classic language and BIFs values, presence/errors and `classic-casing.crexx` with its independent all-256 checked oracle |
 | BF02 | CharacterScan plus current Config; Unicode/configured blanks and word positions, no compiler splitter | The same maintained value/Unicode panels; `tests/group3/runtime-c.crexx` and `runtime-host.crexx` supply configured blanks |
-| BF03 | Shared values, numeric context and fixed ordinal bridge; signed64 WHOLE remains distinct from arbitrary-precision radix operands | `levelc_bif_numeric_context.rexx`, `levelc_bif_whole.rexx`, `levelc_bif_integer_limits.rexx`, `levelc_latin1_ordinals.rexx`, `levelc_literal_ordinals.rexx`; Group 3 all-ordinal, rounding/guard and error boundaries |
-| BF04 | Existing 23 adapters and pinned Unicode core; raw presence, exact codecs and Classic error transport | `levelc_unicode_services.rexx` and its checked expected output; Group 3 omission/replacement/high-scalar errors, reusing existing UCD qualification |
-| BF05 | Existing live activation/pool and executing numeric frame; VALUE/SYMBOL preserve compound/default/dropped states | Maintained reference/numeric/whole/pool-read fixtures; Group 3 shared-pool/stem and current host-context boundaries |
-| BF06 | Existing Config-selected queue count and acquisition owners | `levelc_bif_queued.rexx`; existing Group 2 queue selection/lifecycle proof remains owned there |
-| BF07 | Activation ADDRESS/CONDITION/TRACE entries, one generated English diagnostic catalog, Config source lines and C-owned provenance | `levelc_bif_errortext.rexx`, `levelc_bif_sourceline.rexx`; Group 3 newline/NUL/host inventory and SRCMAP fixtures, including `srcmap-contracts.crexx` |
-| BF08 | Existing eight Config/host stream adapters; checked positions, codecs, EOF/close and NOTREADY | Existing Unicode/stream controls and Group 3 eight-function language consumer; Group 2 retains its host transport/cleanup proof |
-| BF09 | Activation clause clock and Config RNG; no process-global state substitute | Maintained reference DATE/TIME conversions and `levelc_bif_config_lifecycle.rexx`; Group 3 configured host/RNG isolation, preserving Group 1/2 clock proof |
+| BF03 | Shared values, numeric context and fixed ordinal bridge; signed64 WHOLE remains distinct from arbitrary-precision radix operands | `levelc_bif_numeric_context.rexx`, `levelc_bif_whole.rexx`, `levelc_bif_integer_limits.rexx`, `levelc_latin1_ordinals.rexx`, `levelc_literal_ordinals.rexx`; Classic language and BIFs all-ordinal, rounding/guard and error boundaries |
+| BF04 | Existing 23 adapters and pinned Unicode core; raw presence, exact codecs and Classic error transport | `levelc_unicode_services.rexx` and its checked expected output; Classic language and BIFs omission/replacement/high-scalar errors, reusing existing UCD qualification |
+| BF05 | Existing live activation/pool and executing numeric frame; VALUE/SYMBOL preserve compound/default/dropped states | Maintained reference/numeric/whole/pool-read fixtures; Classic language and BIFs shared-pool/stem and current host-context boundaries |
+| BF06 | Existing Config-selected queue count and acquisition owners | `levelc_bif_queued.rexx`; existing Calls and host integration queue selection/lifecycle proof remains owned there |
+| BF07 | Activation ADDRESS/CONDITION/TRACE entries, one generated English diagnostic catalog, Config source lines and C-owned provenance | `levelc_bif_errortext.rexx`, `levelc_bif_sourceline.rexx`; Classic language and BIFs newline/NUL/host inventory and SRCMAP fixtures, including `srcmap-contracts.crexx` |
+| BF08 | Existing eight Config/host stream adapters; checked positions, codecs, EOF/close and NOTREADY | Existing Unicode/stream controls and Classic language and BIFs eight-function language consumer; Calls and host integration retains its host transport/cleanup proof |
+| BF09 | Activation clause clock and Config RNG; no process-global state substitute | Maintained reference DATE/TIME conversions and `levelc_bif_config_lifecycle.rexx`; Classic language and BIFs configured host/RNG isolation, preserving existing clock proof |
 
 The maintained sources/oracles are inputs, not inherited passes. Shared ABI and
 lifecycle proof can cover one call route without multiplying every mode/VM/host
@@ -382,6 +382,18 @@ universal language or host capability has been qualified:
 - Compiler and runtime work/storage limits are separate. Dynamic defaults and
   overflow/refusal rules are in the [architecture limits](levelc-architecture.md#implementation-interfaces-and-limits).
   They are logical accounting bounds, not an RSS ceiling or bound on hostile host code.
+- The standalone COMMAND interpreter and compiler `--run` path are file-only.
+  Source-stdin/interactive mode and CLI provider/export/optimization options are
+  unavailable. Existing logical work/storage caps apply; the file reader caps
+  source input at 64 MiB. OS arguments are separate present positions, not one
+  reconstructed shell tail. Non-COMMAND requests and unsupported static/invoke
+  boundaries fail explicitly.
+- Unhandled IR runtime exceptions retain the original typed event/payload and
+  native helper-PC traceback. That display can lack the authored Rexx coordinate,
+  including nested-source failures. Frontend syntax diagnostics retain authored
+  mapping; caught SIGL and TRACE use existing observation mappings. This is a
+  presentation limitation, not permission to relabel a child's line with its
+  root's filename.
 - Full G/B languages, proper B self-hosting, RexxScript migration and default
   compiler replacement are separate programmes; existing consumers remain intact.
 

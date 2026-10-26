@@ -136,7 +136,7 @@ class CatalogueUnitTests(unittest.TestCase):
                 required.update(name for name in leaves.split() if not name.startswith("stage-"))
         self.assertTrue(required)
         self.assertTrue(all(re.fullmatch(r"[A-Za-z0-9_-]+", name) for name in required))
-        c_payload = {"llccompiler", "llctarget", "llcdynamic", "llrxc-c"}
+        c_payload = {"llccompiler", "llctarget", "llcdynamic", "llrxc-c", "llrexx"}
         g_payload = {"llgcompiler", "llrxc-g"}
         with tempfile.TemporaryDirectory(prefix="crexx-stage-") as temporary:
             source = Path(temporary).resolve() / "source"

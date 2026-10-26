@@ -108,6 +108,66 @@ INTERPRET invalidates affected mutable facts, not all immutable facts or local
 freshness proofs. Further simplification must preserve errors, source/TRACE and
 ownership. No broad optimization or performance campaign is commissioned.
 
+## COMMAND interpreter and compiler run mode
+
+This authorized development increment adds a standalone `llrexx.rxbin`, its
+normal packed `llrexx` launcher, and `llrxc-c --run`. It does not expand language,
+platform, VM/ISA or native-provider contracts or replace another interpreter.
+Program input is a file initially; source-from-stdin and interactive input are
+future work. Ordinary program PULL/LINEIN keep stdin unchanged.
+
+| Stable criterion | Exact entry contract |
+|---|---|
+| **RCMD-AC01** | `llrexx [--] file [argument ...]` and `llrxc-c --run [--] file [argument ...]` use one shared source CLI implementation. `--run` is first-switch dispatch; existing compilation is unchanged. Run mode rejects compile-only metadata/output/provider/export/optimization switches. After the filename every token is program data. |
+| **RCMD-AC02** | Match native Classic command argv: each trailing OS argument becomes one present ARG position, preserving empty/Unicode text; no arguments means zero positions. Do not reconstruct a shell tail. The owned host request retains its existing length-bearing/NUL API, while OS argv cannot carry embedded NUL. Read exact source bytes without adding an OPTIONS header. |
+| **RCMD-AC03** | A source-only `llcdynamic.runprogram(source, COMMAND request, resourceBase)` facade returns an owned `RexxClassicHostResult`. Anchor request activation/pool/config/context, HostScope and root dynamic scope; use full-program `llcgraph`, setIR, inventory, registry/manifest, start and advance. Never masquerade as SUBROUTINE or interpret-group. |
+| **RCMD-AC04** | Pump admitted SIGNAL landings and full IR internal calls until normal/RETURN/EXIT/failure. Preserve numeric/TRACE/source and existing cleanup, close all owners before returning, and retain primary plus cleanup conditions. Unsupported static/invoke boundaries fail explicitly; never replace them with an empty success. |
+| **RCMD-AC05** | Usage errors return 2; direct source-file input errors return 1. Normal completion uses HostResult.commandStatus(), including existing absent/nonnumeric/whole-integer rules. After cleanup, typed frontend/runtime failures use existing signalrelay and VM diagnostics/status rather than becoming status zero or a new textual classifier. |
+| **RCMD-AC06** | Default COMMAND configuration remains UTF8, NUMERIC 9/0/SCIENTIFIC, TRACE N and ADDRESS CREXX with current streams/selected queue through public request settings. Prepared provider bindings are empty in this first CLI; BIFs, existing native facilities and configured source resolution retain their owners. Runtime source search gets the explicit program directory and existing policy, without PATH discovery. |
+| **RCMD-AC07** | The interpreter RXBIN contains only bootstrap, frontend/IR executor and ordinary runtime closure. It contains no RXAS selector, assembler, linker or native source compiler. The compiler command retains its compilation package, but --run calls the same facade and produces no RXAS/RXBIN or temporary compiled program. |
+
+| Stable step | Current status and dependency |
+|---|---|
+| **RCMD-STEP01 — done** | Coordinator and independent source review of this whole entry/CLI/package contract before product edits. |
+| **RCMD-STEP02 — done** | The source facade, shared CLI, standalone image/launcher and compiler dispatch use one runtime algorithm. Exact CMake/product dependencies and the owned cleanup projection are source-reviewed. |
+| **RCMD-STEP03 — done** | The maintained COMMAND entry and owned-result controls cover SOURCE/ARG, empty/Unicode arguments, plain source/labels/recursion, INTERPRET/source-child resumption, status, ADDRESS CREXX, typed/input failures and cleanup/recovery. Both entry spellings and the runtime-only package retain their checked contracts. |
+| **RCMD-STEP04 — done** | Representative entry RXAS, the agreed complete C panel and compact interactions, and enduring documentation are ready for the scoped local commit. Commit only authorized paths locally; no push or unrelated broad campaign. |
+
+Keep the existing compiler-only `llrxc-c-linked.rxbin` and `imports-llrxc-c`
+lean for internal compilation/worker consumers. `llccompilecli.run(argv)` owns
+one unchanged compilation parser/body; the lean main delegates only to it.
+A distinct `llccommand` main dispatches `--run` to `llcruncli` or compilation
+to that same service. Only its separate rich import root/image feeds the public
+packed `llrxc-c`. No ordinary compiler host acquires the COMMAND runtime or new
+native-provider requirements. The standalone interpreter has its own
+frontend/IR/ordinary-runtime closure.
+
+Keep cleanup projection private: `scope.closeoutcome(?primary)` returns an owned
+absent object or first cleanup event, including an active child's outcome.
+Existing `close(?primary)` retains its no-primary relay/primary suppression
+contract. The COMMAND facade records a returned cleanup event without erasing
+an existing primary condition; no event list, native ownership service or wire
+contract is added.
+
+Batch reviewed slow-runner repairs before that freeze. The explicitly audited
+44 private Python C cells, 24 existing weighted owner cells, four compact
+contrasts and the COMMAND entry use one ordinary Unix admission of `floor(CREXX_QA_CTEST_JOBS / 5) + 1` processors per heavy cell,
+bounding concurrency to four at the agreed 30-job setting. Their mutable
+artifacts remain private and prepared inputs read-only. Keep the four direct
+prepared-language VM cells serial. Preserve Windows and actual instrumented/
+native-audit serial/lock policy, other G registrations, and every workload,
+oracle, name, timeout and preparation edge; do not match future tests by regex.
+
+The ARG shape check combines main, IF and post-EXIT contexts into one source/
+blank pair and retains the original isolated CALL/RETURN pair. This reduces
+eight C compilations to four per lane while keeping exact executable-shape
+equality, including private labels and frame sizes, and the absence of parse-
+source/execute helpers. Equal-width blanks replace `arg ,,,` with seven spaces
+and `arg` with three spaces. Explicit clause delimiters prevent a comma template
+from continuing into another context; source and control retain the same
+positions. Keep all simple, refusal, fatal and runtime assertions and
+registrations unchanged.
+
 ## Outside current C closure
 
 **G21 unread scalar writes** remains a generic/G forwarding opportunity only:

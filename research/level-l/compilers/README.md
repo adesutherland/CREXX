@@ -6,7 +6,7 @@ libraries; new C/G source compilation requests use their own frontends and
 selectors. Existing RXAS, RXLINK and VM tools assemble, link and execute their
 ahead-of-time output.
 
-The active increment closes the agreed Classic C research profile using its
+The Classic C research profile uses its
 existing instruction/BIF panel and compact interaction checks, with known defects
 and limitations recorded explicitly. [PLAN.md](PLAN.md) owns this bounded local
 acceptance; it commissions no release, platform, installation, sanitizer or
@@ -54,10 +54,17 @@ selected C dynamic-runtime image and contract-provider package.
 
 | Product | Purpose |
 |---|---|
-| `llrxc-c`, `llccompiler.rxbin` | Classic C command and reusable compile service. |
+| `llrxc-c`, `llccompiler.rxbin` | Classic C command and reusable compile service; `llrxc-c --run` shares the interpreter. |
+| `llrexx`, `llrexx.rxbin` | File-only Classic COMMAND interpreter using the full-program C frontend/IR runtime. |
 | `llctarget.rxbin` | Runtime adapter for generated C applications. |
 | `llcdynamic.rxbin` | Optional same-C-frontend preparation and semantic IR execution. |
 | `llrxc-g`, `llgcompiler.rxbin` | Separate G command and compile service over the typed core. |
+
+Run a source file with `llrexx file.rexx [argument ...]` or
+`llrxc-c --run file.rexx [argument ...]`. Each trailing argument is one present
+Classic ARG position. The standalone image needs no assembler, linker or native
+source-compiler executable at runtime; [the C guide](doc/levelc-user-guide.md#run-a-source-file-directly)
+describes status, resources, source search and current limits.
 
 The services expose `request(source, artifacts, filename, budget, nesting,
 bytes, registers, optimise)` with defaults after source; C appends optional
@@ -75,6 +82,10 @@ build, semantic IR, assembler and application VM independently over maintained
 small cases. A direct `check-dynamic.py --only authored-trace` uses the current
 defaults as the TRACE control. The checker's default remains its full existing
 43-case workload; selecting a compact panel does not change those oracles.
+
+The maintained COMMAND-entry test joins that selector. Explicitly audited private
+C harnesses share a bounded ordinary-Unix concurrency budget; Windows and native
+audit profiles retain serial execution.
 
 Reuse qualified baseline inputs and let the QA coordinator own preparation and
 execution. The plan records known limitations and future unqualified work; local
