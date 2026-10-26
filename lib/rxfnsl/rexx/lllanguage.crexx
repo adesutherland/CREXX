@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Reusable generated-language definition and parse request. */
 options levelb
-namespace lllanguage expose definition request prepared
+namespace lllanguage expose definition request prepared compiled
 import rxfnsb
 import llcore
 import lllr
@@ -18,6 +18,38 @@ import llast
 import lllimits
 import llprepared
 
+/* Fixed envelope directory access; only the compiled header admits it. */
+frozenfirst: procedure = .int
+  arg owner_ref = reference .binary, id = .int, profile = .int, length = 0
+  data = dereference owner_ref
+  entry = id - 1
+  if profile = 0 & id > 1 then entry = id - 5
+  return <at..u32>(24 + entry * 12 + length * 4) data
+
+frozenheader: procedure = .void
+  arg output_ref = reference .llprepared..writer, magic = .binary, count = .int, auxiliary = .int, rows = .int, extra = .int, index = .int, pool = .int
+  output = dereference output_ref
+  call output.raw(magic); call output.u32(1); call output.u32(count); call output.u32(auxiliary)
+  call output.u32(rows); call output.u32(extra); call output.u32(index); call output.u32(pool)
+  return
+
+frozenstrings: procedure = .binary
+  arg values_ref = reference .string[], budget_ref = reference .llprepared..budget, magic = .binary
+  values = dereference values_ref; output = .llprepared..writer(budget_ref)
+  rows = .llprepared..writer(budget_ref); pool = .llprepared..writer(budget_ref)
+  cursor = 32 + values[0] * 8
+  call frozenheader(reference output,magic,values[0],0,32,0,0,cursor)
+  do i = 1 to values[0]
+    bytes = values[i] as .binary; size = <blen>(bytes)
+    call rows.u32(cursor); call rows.u32(size); call pool.raw(bytes); cursor = cursor + size
+  end
+  call output.raw(rows.finish()); call output.raw(pool.finish())
+  absent = .binary
+  if rows.status() <> 0 then do; call llprepared..reject(rows.status(),rows.error()); return absent; end
+  if pool.status() <> 0 then do; call llprepared..reject(pool.status(),pool.error()); return absent; end
+  if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return absent; end
+  return output.finish()
+
 /* One generated-profile configuration predicate serves encoding and loading. */
 configuration: procedure = .int
   arg backend = .string, encoding = .string, eof = .int, sync = .int, hasparser = .int, root = .int, presence = .int
@@ -28,6 +60,11 @@ configuration: procedure = .int
   return wordpos(encoding,'utf8 utf8bytes bytes') > 0 & eof >= -1 & eof <= 255 & sync >= -1 & sync <= 255 & root = 0 & presence = 0
 
 definition: class
+  _frozen = .int
+  _frozenconfig = .binary
+  _frozenstages = .binary
+  _frozentokens = .binary
+  _frozendiags = .binary
   _dfa = .llmunch..automaton
   _parser = .lllr..tables
   _graph = .llcore..grammar
@@ -101,9 +138,223 @@ definition: class
     _comments = .llcomments..rules()
     if opening <> '' then ok = _comments.add('nested','nested',opening,closing)
     return
+  /** Trusted generated data. All retained references are owning values. */
+  compiled: factory
+    arg source_ref = reference .binary, profile = .int
+    source = dereference source_ref
+    _frozen = 1; _hasparser = profile; _root = 0; _backend = 'none'
+    if profile then _backend = 'lr1'
+    first = frozenfirst(source_ref,1,profile); size = frozenfirst(source_ref,1,profile,1)
+    call binresize _frozenconfig,size
+    assembler bcopy _frozenconfig,source,first
+    first = frozenfirst(source_ref,8,profile); size = frozenfirst(source_ref,8,profile,1)
+    call binresize _frozenstages,size
+    assembler bcopy _frozenstages,source,first
+    first = frozenfirst(source_ref,9,profile); size = frozenfirst(source_ref,9,profile,1)
+    call binresize _frozentokens,size
+    assembler bcopy _frozentokens,source,first
+    first = frozenfirst(source_ref,12,profile); size = frozenfirst(source_ref,12,profile,1)
+    call binresize _frozendiags,size
+    assembler bcopy _frozendiags,source,first
+    _dfa = .llmunch..automaton.compiled(source_ref,frozenfirst(source_ref,6,profile),frozenfirst(source_ref,6,profile,1))
+    _comments = .llcomments..rules.compiled(source_ref,frozenfirst(source_ref,7,profile),frozenfirst(source_ref,7,profile,1))
+    _schema = .llproject..schema.compiled(source_ref,frozenfirst(source_ref,10,profile),frozenfirst(source_ref,10,profile,1))
+    _ast = .llast..schema.compiled(source_ref,frozenfirst(source_ref,11,profile),frozenfirst(source_ref,11,profile,1))
+    if profile then do
+      graph = .llcore..grammar.compiled(source_ref,frozenfirst(source_ref,2,profile),frozenfirst(source_ref,2,profile,1))
+      layout = .llcfg..productions.compiled(graph,source_ref,frozenfirst(source_ref,3,profile))
+      _parser = .lllr..tables.compiled(layout,source_ref,frozenfirst(source_ref,4,profile),frozenfirst(source_ref,4,profile,1),frozenfirst(source_ref,5,profile),frozenfirst(source_ref,5,profile,1))
+    end
+    return
+
+  configtext: method = .string
+    arg item = .int
+    if item < 1 | item > 8 then return ''
+    rows = <at..u32>(16) _frozenconfig; at = rows + (item - 1) * 8
+    first = <at..u32>(at) _frozenconfig; size = <at..u32>(at + 4) _frozenconfig
+    return llprepared..packedtext(reference _frozenconfig,first,size)
+  confignumber: method = .int
+    arg item = .int
+    if item < 1 | item > 5 then return 0
+    return <at..i64>(32 + (item - 1) * 8) _frozenconfig
+
+  stagecount: method = .int
+    if _frozen then return <at..u32>(8) _frozenstages
+    return _stages[0]
+  stageat: method = .llstage..rules
+    arg item = .int
+    if _frozen = 0 then return _stages[item]
+    absent = .llstage..rules
+    count = <at..u32>(8) _frozenstages
+    if item < 1 | item > count then return absent
+    at = 32 + (item - 1) * 8
+    first = <at..u32>(at) _frozenstages; size = <at..u32>(at + 4) _frozenstages
+    return .llstage..rules.compiled(reference _frozenstages,first,size)
+  tokencount: method = .int
+    if _frozen then return <at..u32>(8) _frozentokens
+    return _tokens[0]
+  messagecount: method = .int
+    if _frozen then return <at..u32>(8) _frozendiags
+    return _diagnosticname[0]
+  messagetext: method = .string
+    arg item = .int, field = .int
+    if _frozen = 0 then do
+      if field = 1 then return _diagnosticname[item]
+      if field = 2 then return _diagnosticrule[item]
+      return _diagnostictext[item]
+    end
+    count = <at..u32>(8) _frozendiags
+    if item < 1 | item > count then return ''
+    at = 32 + (item - 1) * 32 + (field - 1) * 8
+    first = <at..u32>(at) _frozendiags; size = <at..u32>(at + 4) _frozendiags
+    return llprepared..packedtext(reference _frozendiags,first,size)
+  messagemask: method = .binary
+    arg item = .int
+    if _frozen = 0 then return _diagnosticmask[item]
+    absent = .binary
+    count = <at..u32>(8) _frozendiags
+    if item < 1 | item > count then return absent
+    at = 32 + (item - 1) * 32 + 24
+    first = <at..u32>(at) _frozendiags; size = <at..u32>(at + 4) _frozendiags
+    return llprepared..packedbytes(reference _frozendiags,first,size)
+
+  /** Explicit compatibility export may rebuild v1; creation never calls it. */
+  frozenexport: method = .binary
+    arg bytes = .int
+    result = .definition
+    if _hasparser then result = .definition(_dfa,_parser,encoding(),opening(),closing())
+    else result = .definition.scanner(_dfa,encoding(),opening(),closing())
+    call result.usecomments(_comments); call result.unicode(unicodeversion())
+    call result.lexical(malformed(),unmatched(),eof()); call result.recovery(sync())
+    i = .int; ok = .int
+    do i = 1 to _schema.size()
+      ok = result.keep(_schema.name(i),_schema.kind(i),_schema.arity(i))
+    end
+    do i = 1 to _ast.size()
+      ok = result.astmap(_ast.rule(i),_ast.kind(i))
+    end
+    do i = 1 to _ast.fields()
+      ok = result.astfield(_ast.rule(_ast.owner(i)),_ast.name(i),_ast.source(i),_ast.mode(i),_ast.card(i))
+    end
+    do i = 1 to stagecount()
+      call result.addstage(stageat(i))
+    end
+    do i = 0 to tokencount() - 1
+      call result.token(i,tokenname(i))
+    end
+    do i = 1 to messagecount()
+      call result.diagnostic(messagetext(i,1),messagetext(i,2),messagetext(i,3),messagemask(i))
+    end
+    return result.image(bytes)
+
+  /** Validate through the checked path before producing trusted compiled data. */
+  frozenimage: method = .binary
+    arg bytes = 67108864
+    absent = .binary; wire = image(bytes)
+    if <blen>(wire) = 0 then return absent
+    checked = lllanguage..prepared(wire,,bytes)
+    if initialized(checked) = 0 then return absent
+    return checked.packfrozen(bytes)
+
+  /** Encoder-only row/pool construction. Never called by compiled(). */
+  packfrozen: method = .binary
+    arg bytes = .int
+    budget = .llprepared..budget(bytes); sections = .binary[]; absent = .binary; raw = .binary
+    profile = _hasparser; i = .int; size = .int; cursor = .int; total = .int
+    config = .llprepared..writer(reference budget)
+    rows = .llprepared..writer(reference budget); pool = .llprepared..writer(reference budget)
+    settings = .string[]
+    settings[1] = backend(); settings[2] = encoding(); settings[3] = unicodeversion()
+    settings[4] = opening(); settings[5] = closing(); settings[6] = malformed()
+    settings[7] = unmatched(); settings[8] = expressionname()
+    call frozenheader(reference config,'46444546'x as .binary,8,5,72,32,0,136)
+    call config.i64(eof()); call config.i64(sync()); call config.i64(_hasparser)
+    call config.i64(0); call config.i64(0)
+    cursor = 136
+    do i = 1 to 8
+      raw = settings[i] as .binary; size = <blen>(raw)
+      call rows.u32(cursor); call rows.u32(size); call pool.raw(raw); cursor = cursor + size
+    end
+    call config.raw(rows.finish()); call config.raw(pool.finish())
+    if rows.status() <> 0 then do; call llprepared..reject(rows.status(),rows.error()); return absent; end
+    if pool.status() <> 0 then do; call llprepared..reject(pool.status(),pool.error()); return absent; end
+    if config.status() <> 0 then do; call llprepared..reject(config.status(),config.error()); return absent; end
+    sections[1] = config.finish()
+    if profile then do
+      layout = _parser.grammar(); graph = layout.source()
+      sections[2] = graph.frozenimage(reference budget); sections[3] = layout.frozenimage(reference budget)
+      if budget.take(_parser.packed()) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+      sections[4] = _parser.image()
+      if budget.take(_parser.states(),16) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+      sections[5] = _parser.directory()
+    end
+    if budget.take(_dfa.packed()) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+    sections[6] = _dfa.image(); sections[7] = _comments.frozenimage(reference budget)
+    passes = .llprepared..writer(reference budget)
+    pass_rows = .llprepared..writer(reference budget); pass_pool = .llprepared..writer(reference budget)
+    count = stagecount(); cursor = 32 + count * 8
+    call frozenheader(reference passes,'46535453'x as .binary,count,0,32,0,0,cursor)
+    do i = 1 to count
+      stage = stageat(i); data = stage.frozenimage(reference budget); size = <blen>(data)
+      call pass_rows.u32(cursor); call pass_rows.u32(size); call pass_pool.raw(data); cursor = cursor + size
+    end
+    call passes.raw(pass_rows.finish()); call passes.raw(pass_pool.finish())
+    if pass_rows.status() <> 0 then do; call llprepared..reject(pass_rows.status(),pass_rows.error()); return absent; end
+    if pass_pool.status() <> 0 then do; call llprepared..reject(pass_pool.status(),pass_pool.error()); return absent; end
+    if passes.status() <> 0 then do; call llprepared..reject(passes.status(),passes.error()); return absent; end
+    sections[8] = passes.finish(); names = .string[]
+    do i = 0 to tokencount() - 1
+      names[i + 1] = tokenname(i)
+    end
+    sections[9] = frozenstrings(reference names,reference budget,'46544f4b'x as .binary)
+    sections[10] = _schema.frozenimage(reference budget); sections[11] = _ast.frozenimage(reference budget)
+    diagnostics = .llprepared..writer(reference budget)
+    diagnostic_rows = .llprepared..writer(reference budget); diagnostic_pool = .llprepared..writer(reference budget)
+    count = messagecount(); cursor = 32 + count * 32
+    call frozenheader(reference diagnostics,'46444941'x as .binary,count,0,32,0,0,cursor)
+    field = .int
+    do i = 1 to count
+      do field = 1 to 4
+        if field = 4 then raw = messagemask(i)
+        else raw = messagetext(i,field) as .binary
+        size = <blen>(raw)
+        call diagnostic_rows.u32(cursor); call diagnostic_rows.u32(size)
+        call diagnostic_pool.raw(raw); cursor = cursor + size
+      end
+    end
+    call diagnostics.raw(diagnostic_rows.finish()); call diagnostics.raw(diagnostic_pool.finish())
+    if diagnostic_rows.status() <> 0 then do; call llprepared..reject(diagnostic_rows.status(),diagnostic_rows.error()); return absent; end
+    if diagnostic_pool.status() <> 0 then do; call llprepared..reject(diagnostic_pool.status(),diagnostic_pool.error()); return absent; end
+    if diagnostics.status() <> 0 then do; call llprepared..reject(diagnostics.status(),diagnostics.error()); return absent; end
+    sections[12] = diagnostics.finish()
+    count = 8; if profile then count = 12
+    total = 20 + count * 12
+    do i = 1 to 12
+      if profile = 0 & i >= 2 & i <= 5 then iterate
+      size = <blen>(sections[i])
+      if size < 1 then do; call llprepared..reject(3,'empty frozen section after encoding refusal'); return absent; end
+      if size > 4294967295 - total then do; call llprepared..reject(4,'frozen image exceeds u32 extent'); return absent; end
+      total = total + size
+    end
+    output = .llprepared..writer(reference budget)
+    call output.raw('4c465031'x as .binary); call output.u32(1); call output.u32(total)
+    call output.u32(profile); call output.u32(count); cursor = 20 + count * 12
+    do i = 1 to 12
+      if profile = 0 & i >= 2 & i <= 5 then iterate
+      size = <blen>(sections[i]); call output.u32(i); call output.u32(cursor); call output.u32(size)
+      cursor = cursor + size
+    end
+    do i = 1 to 12
+      if profile = 0 & i >= 2 & i <= 5 then iterate
+      call output.raw(sections[i])
+    end
+    if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return absent; end
+    return output.finish()
+
   /** Freeze the complete generated scanner/LR profile into one owned image. */
   image: method = .binary
     arg bytes = 67108864
+    if _frozen then return frozenexport(bytes)
     absent = .binary; profile = 0
     i = .int; size = .int; total = .int; cursor = .int; count = .int
     if _backend = 'lr1' & _hasparser = 1 then profile = 1
@@ -204,6 +455,7 @@ definition: class
   /** Internal atomic metadata install after every section has been checked. */
   installprepared: method = .int
     arg settings_ref = reference .string[], numbers_ref = reference .int[], comments_ref = reference .llcomments..rules, stages_ref = reference .llstage..rules[], tokens_ref = reference .string[], projection_ref = reference .llproject..schema, ast_ref = reference .llast..schema, names_ref = reference .string[], rules_ref = reference .string[], texts_ref = reference .string[], masks_ref = reference .binary[]
+    if _frozen then return llprepared..frozenmutation('language definition')
     settings = dereference settings_ref; config_numbers = dereference numbers_ref
     policies = dereference comments_ref; passes = dereference stages_ref; token_names = dereference tokens_ref
     projection = dereference projection_ref; ast_schema = dereference ast_ref
@@ -220,24 +472,30 @@ definition: class
 
   usecomments: method = .void
     arg policies = .llcomments..rules
+    if _frozen then do; call llprepared..frozenmutation('language definition'); return; end
     _comments = policies
     return
   comments: method = .llcomments..rules
     return _comments
   unicode: method = .void
     arg version = .string
+    if _frozen then do; call llprepared..frozenmutation('language definition'); return; end
     _unicodeversion = version
     return
   unicodeversion: method = .string
+    if _frozen then return configtext(3)
     return _unicodeversion
   keep: method = .int
     arg name = .string, kind = .int, arity = .int
+    if _frozen then return llprepared..frozenmutation('language definition')
     return _schema.keep(name,kind,arity)
   astmap: method = .int
     arg rule = .string, kind = .string
+    if _frozen then return llprepared..frozenmutation('language definition')
     return _ast.mapping(rule,kind)
   astfield: method = .int
     arg rule = .string, name = .string, source = .string, mode = .string, card = .string
+    if _frozen then return llprepared..frozenmutation('language definition')
     return _ast.field(rule,name,source,mode,card)
   astschema: method = .llast..schema
     return _ast
@@ -245,32 +503,41 @@ definition: class
     return _schema
   recovery: method = .void
     arg sync = .int
+    if _frozen then do; call llprepared..frozenmutation('language definition'); return; end
     _sync = sync
     return
   sync: method = .int
+    if _frozen then return confignumber(2)
     return _sync
   lexical: method = .void
     arg malformed = .string, unmatched = .string, eof = .int
+    if _frozen then do; call llprepared..frozenmutation('language definition'); return; end
     _malformed = malformed; _unmatched = unmatched; _eof = eof
     return
   malformed: method = .string
+    if _frozen then return configtext(6)
     return _malformed
   unmatched: method = .string
+    if _frozen then return configtext(7)
     return _unmatched
   eof: method = .int
+    if _frozen then return confignumber(1)
     return _eof
   hasparser: method = .int
     return _hasparser
   addstage: method = .void
     arg stage = .llstage..rules
+    if _frozen then do; call llprepared..frozenmutation('language definition'); return; end
     _stages[_stages[0] + 1] = stage
     return
   token: method = .void
     arg id = .int, name = .string
+    if _frozen then do; call llprepared..frozenmutation('language definition'); return; end
     _tokens[id + 1] = name
     return
   diagnostic: method = .void
     arg name = .string, rule = .string, template = .string, mask = .binary
+    if _frozen then do; call llprepared..frozenmutation('language definition'); return; end
     i = _diagnosticname[0] + 1
     _diagnosticname[i] = name; _diagnosticrule[i] = rule
     _diagnostictext[i] = template; _diagnosticmask[i] = mask
@@ -279,7 +546,26 @@ definition: class
    * winner is chosen between authored messages. */
   explain: method = .string
     arg contexts = .binary, found = .string, expected = .string, fallback = .string
-    selected = 0
+    selected = 0; i = .int; state = .int; matches = .int
+    if _frozen then do
+      count = <at..u32>(8) _frozendiags
+      do i = 1 to count
+        at = 32 + (i - 1) * 32 + 24
+        first = <at..u32>(at) _frozendiags; size = <at..u32>(at + 4) _frozendiags; matches = 0
+        if <blen>(contexts) = size then do state = 0 to size - 1
+          if <at..u8>(state) contexts then do
+            if <at..u8>(first + state) _frozendiags = 0 then do; matches = 0; leave; end
+            matches = 1
+          end
+        end
+        if matches then do
+          if selected > 0 then return fallback
+          selected = i
+        end
+      end
+      if selected = 0 then return fallback
+      return messagetext(selected,1) || ': ' || llsource..message(messagetext(selected,3),found,expected,messagetext(selected,2))
+    end
     do i = 1 to _diagnosticname[0]
       mask = _diagnosticmask[i]; matches = 0
       if <blen>(contexts) = <blen>(mask) then do state = 0 to <blen>(mask) - 1
@@ -299,9 +585,24 @@ definition: class
     return _diagnosticname[selected] || ': ' || llsource..message(_diagnostictext[selected],found,expected,_diagnosticrule[selected])
   tokenname: method = .string
     arg id = .int
+    if _frozen then do
+      count = <at..u32>(8) _frozentokens
+      if id < 0 | id >= count then return ''
+      at = 32 + id * 8
+      first = <at..u32>(at) _frozentokens; size = <at..u32>(at + 4) _frozentokens
+      return llprepared..packedtext(reference _frozentokens,first,size)
+    end
     return _tokens[id + 1]
   tokenid: method = .int
     arg name = .string
+    i = .int
+    if _frozen then do
+      count = <at..u32>(8) _frozentokens
+      do i = 0 to count - 1
+        if tokenname(i) = name then return i
+      end
+      return -1
+    end
     do i = 1 to _tokens[0]
       if _tokens[i] = name then return i - 1
     end
@@ -327,17 +628,60 @@ definition: class
   operators: method = .llpratt..operators
     return _operators
   expressionname: method = .string
+    if _frozen then return configtext(8)
     return _expressionname
   region: method = .llregional..plan
     return _regional
   encoding: method = .string
+    if _frozen then return configtext(2)
     return _encoding
   opening: method = .string
+    if _frozen then return configtext(4)
     return _open
   closing: method = .string
+    if _frozen then return configtext(5)
     return _close
   stages: method = .llstage..rules[]
+    if _frozen then do
+      result = .llstage..rules[]
+      do item = 1 to stagecount()
+        result[item] = stageat(item)
+      end
+      return result
+    end
     return _stages
+
+/** Explicit trusted compiled entry: only fixed-size header admission. */
+compiled: procedure = .definition
+  arg image = .binary
+  absent = .definition; extent = <blen>(image)
+  if extent < 20 then do; call llprepared..reject(3,'truncated frozen header'); return absent; end
+  magic = <at..u32>(0) image; version = <at..u32>(4) image; total = <at..u32>(8) image
+  profile = <at..u32>(12) image; count = <at..u32>(16) image
+  expected = 8; if profile = 1 then expected = 12
+  if magic <> 827344460 | version <> 1 | total <> extent | profile > 1 | count <> expected then do
+    call llprepared..reject(3,'invalid frozen header'); return absent
+  end
+  cursor = 20 + count * 12
+  if extent < cursor then do; call llprepared..reject(3,'truncated frozen directory'); return absent; end
+  do entry = 0 to count - 1
+    at = 20 + entry * 12; id = entry + 1
+    if profile = 0 & entry > 0 then id = id + 4
+    actual = <at..u32>(at) image; first = <at..u32>(at + 4) image; size = <at..u32>(at + 8) image
+    if actual <> id | first <> cursor | size < 1 | size > extent - cursor then do
+      call llprepared..reject(3,'invalid frozen directory'); return absent
+    end
+    cursor = cursor + size
+  end
+  if cursor <> extent then do; call llprepared..reject(3,'frozen extent mismatch'); return absent; end
+  do
+    return .definition.compiled(reference image,profile)
+  on signal as problem
+    original = problem as .runtime_signal
+    call rxfnsb..signalrelay(original)
+    return absent
+  end
+  return absent
 
 /** Load one complete data-only definition. A handled failure returns absence,
  * never the local candidate. No new factory-return convention is required. */
@@ -619,9 +963,8 @@ request: class
       _status = 3; _error = 'LL_SOURCE_OWNER: invalid staged token source'; return _status
     end
     _tokens = tokens
-    stages = language.stages()
-    do i = 1 to stages[0]
-      stage = .llstage..transducer(stages[i],_tokens,_limits.limit('parse.work'))
+    do i = 1 to language.stagecount()
+      stage = .llstage..transducer(language.stageat(i),_tokens,_limits.limit('parse.work'))
       _status = stage.run()
       if _status <> 0 then do
         _error = stage.error(); return _status

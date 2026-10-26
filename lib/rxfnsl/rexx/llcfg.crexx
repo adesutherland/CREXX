@@ -21,6 +21,8 @@ productions: class
   _factsready = .int
   _prepared = .int
   _checking = .int
+  _frozen = .int
+  _frozenfacts = .binary
   _rowdata = .binary
   _rhsdata = .binary
   _expected_count = .int
@@ -71,6 +73,56 @@ productions: class
     _expected_count = count; _expected_slots = slots; _expected_max = maximum; _prepared = 1
     return
 
+  /** The generated layout was validated before encoding. */
+  compiled: factory
+    arg graph = .llcore..grammar, source_ref = reference .binary, first = .int
+    source = dereference source_ref
+    _g = graph
+    wire = first + <at..u32>(first + 8) source
+    facts_first = first + <at..u32>(first + 16) source; facts_bytes = <at..u32>(first + 20) source
+    call binresize _frozenfacts,facts_bytes
+    assembler bcopy _frozenfacts,source,facts_first
+    _root = <at..i64>(wire + 8) source
+    identity_bytes = <at..u32>(wire + 16) source
+    at = wire + 20 + identity_bytes
+    _count = <at..u32>(at) source; _slots = <at..u32>(at + 4) source; _max = <at..u32>(at + 8) source
+    row_bytes = <at..u32>(at + 12) source; at = at + 16
+    call binresize _rowdata,row_bytes
+    assembler bcopy _rowdata,source,at
+    at = at + row_bytes; rhs_bytes = <at..u32>(at) source; at = at + 4
+    call binresize _rhsdata,rhs_bytes
+    assembler bcopy _rhsdata,source,at
+    _status = 0; _error = ''; _built = 1; _factsready = 1
+    _prepared = 1; _checking = 0; _frozen = 1
+    return
+
+  /** Existing complete facts run only while encoding this read-ready data. */
+  frozenimage: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    absent = .binary; wire = image(budget_ref)
+    if <blen>(wire) = 0 then return absent
+    count = nonterminals()
+    if <refvalid>(budget_ref) = 0 then do; call llprepared..reject(3,'expired frozen encoding budget'); return absent; end
+    budget = dereference budget_ref
+    if budget.take(count,258) = 0 then do; call llprepared..reject(4,budget.error()); return absent; end
+    facts = .binary; call binresize facts,count * 258
+    do nt = 1 to count
+      at = (nt - 1) * 258
+      <at..u8>(at) facts = nullable(nt)
+      do symbol = 0 to 256
+        <at..u8>(at + 1 + symbol) facts = first(nt,symbol)
+      end
+    end
+    if _status <> 0 then do; call llprepared..reject(_status,_error); return absent; end
+    output = .llprepared..writer(budget_ref)
+    call output.raw('46434647'x as .binary); call output.u32(1)
+    call output.u32(32); call output.u32(<blen>(wire))
+    call output.u32(32 + <blen>(wire)); call output.u32(<blen>(facts))
+    call output.u32(count); call output.u32(0)
+    call output.raw(wire); call output.raw(facts)
+    if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return absent; end
+    return output.finish()
+
   image: method = .binary
     arg budget_ref = reference .llprepared..budget
     call build
@@ -99,6 +151,7 @@ productions: class
     return output.finish()
 
   materialize: method = .void
+    if _frozen then do; call llprepared..frozenmutation('CFG'); return; end
     if _prepared = 0 then return
     do production = 1 to _count
       at = (production - 1) * 16
@@ -196,6 +249,7 @@ productions: class
     return append(lhs,rhs)
   append: method = .int
     arg lhs = .int, rhs = .int[]
+    if _frozen then return llprepared..frozenmutation('CFG')
     if _status <> 0 then return 0
     if _prepared & _checking = 0 then call materialize
     if _count >= _limits.limit('cfg.productions') then do
@@ -268,6 +322,10 @@ productions: class
     if _factsready then return
     call build
     if _status <> 0 then return
+    if (_facts is .llcheck..analysis) = 0 then do
+      _limits = .lllimits..policy.artifact(_g.size())
+      _facts = .llcheck..analysis(_g,_root,_limits)
+    end
     if _facts.run() = 0 then do
       _status = 3
       if _facts.limit() then _status = 4
@@ -277,12 +335,22 @@ productions: class
     return
   nullable: method = .int
     arg nt = .int
+    if _frozen then do
+      if nt < 1 then return 0
+      if nt > _g.size() then nt = _root
+      return <at..u8>((nt - 1) * 258) _frozenfacts
+    end
     if _factsready = 0 then call preparefacts
     if _status <> 0 then return 0
     if nt > _g.size() then nt = _root
     return _facts.nullable(nt)
   first: method = .int
     arg nt = .int, symbol = .int
+    if _frozen then do
+      if nt < 1 | symbol < 0 | symbol > 256 then return 0
+      if nt > _g.size() then nt = _root
+      return <at..u8>((nt - 1) * 258 + 1 + symbol) _frozenfacts
+    end
     if _factsready = 0 then call preparefacts
     if _status <> 0 then return 0
     if nt > _g.size() then nt = _root
@@ -307,7 +375,7 @@ productions: class
     arg p = .int
     nt = lhs(p)
     if nt > _g.size() then return '<root>'
-    if _g.op(nt) = 5 then return _facts.location(nt)
+    if _g.op(nt) = 5 then return _g.label(nt) || ' (line ' || _g.line(nt) || ')'
     owners = ''; emptyints = .int[]
     do rule = 1 to _g.size()
       if _g.op(rule) <> 5 then iterate
@@ -330,7 +398,7 @@ productions: class
         owners = owners || _g.label(rule) || ' (line ' || _g.line(rule) || ')'
       end
     end
-    if owners = '' then return _facts.location(nt)
+    if owners = '' then return _g.label(nt) || ' (line ' || _g.line(nt) || ')'
     return owners
   status: method = .int
     call build

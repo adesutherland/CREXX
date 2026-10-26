@@ -51,10 +51,140 @@ main: procedure = .int expose checks failures
   call check(scan_loaded.hasparser() = 0 & (scan_loaded.tables() is .lllr..tables) = 0 & (scan_loaded.grammar() is .llcore..grammar) = 0 & initialized(scan_loaded.tables()) = initialized(scanner.tables()) & initialized(scan_loaded.grammar()) = initialized(scanner.grammar()),'scanner profile default parser/graph kind and state stay unchanged')
   scan = .lllanguage..request.borrowed(reference scan_loaded,'a b' as .binary)
   call check(scan.lex() = 0 & scan.tokens().size() = 2 & scan.tokens().start(1) = 2 & scan.tokens().finish(2) = 3,'scanner independent byte spans')
+  call frozenchecks(reference original)
   call metadatafailures()
   call refusals(image,reference loaded)
   say 'PREPARED_DEFINITION|checks=' || checks || '|failures=' || failures
   return failures
+
+/* The input image and encoder locals die before the returned definition is read. */
+compilelocal: procedure = .lllanguage..definition
+  arg owner_ref = reference .lllanguage..definition
+  owner = dereference owner_ref
+  data = owner.frozenimage()
+  return lllanguage..compiled(data)
+
+frozenchecks: procedure = .void
+  arg owner_ref = reference .lllanguage..definition
+  owner = dereference owner_ref; frozen = compilelocal(owner_ref)
+  call check(initialized(frozen),'trusted definition survives input-image teardown')
+  if initialized(frozen) = 0 then return
+  call parsechecks(owner_ref,reference frozen)
+  call check(samebytes(owner.image(),frozen.image()),'trusted explicit LDP1 export preserves all metadata and original comment readiness')
+  call check((frozen.grammar() is .llcore..grammar) = 0 & frozen.root() = 0 & initialized(frozen.grammar()) = initialized(owner.grammar()),'trusted optional field kind and state stay unchanged')
+  tables = frozen.tables(); ordinary_tables = owner.tables(); layout = tables.grammar(); graph = layout.source()
+  call check(graph.size() = 6 & graph.revision() = 8 & graph.op(1) = 1 & graph.left(1) = 1 & graph.rawlabel(1) = '' & graph.label(1) = 'clause.1' & graph.line(6) = 99 & graph.signature() == makegrammar().signature(),'frozen grammar reads retain raw identity and fallback separately')
+  call check(layout.root() = 6 & layout.nonterminals() = 7 & layout.count() = 8 & layout.maxrhs() = 2 & layout.nullable(4) = 1 & layout.nullable(6) = 0 & layout.first(6,1) = 1 & layout.first(6,2) = 0 & layout.nullable(999) = 0 & layout.first(999,1) = 1,'precomputed CFG nullable and FIRST facts, including root fallback')
+  call check(layout.location(1) = '<root>' & layout.location(3) = 'alias-alpha (line 12)' & layout.lhs(1) = 7 & layout.length(1) = 1 & layout.rhs(1,0) = 6,'packed CFG rows and source locations')
+  call check(tables.states() = ordinary_tables.states() & tables.canonicalstates() = ordinary_tables.canonicalstates() & tables.action(1,1) = ordinary_tables.action(1,1) & tables.action(1,2) = ordinary_tables.action(1,2) & tables.action(1,256) = ordinary_tables.action(1,256) & tables.target(1,6) = ordinary_tables.target(1,6),'precomputed LR action and goto directory reads')
+  comments = frozen.comments(); projection = frozen.schema(); ast = frozen.astschema(); stage = frozen.stageat(1)
+  call check(comments.size() = 2 & comments.name(1) = 'notes' & comments.form(1) = 'nested' & comments.keep(1) = 1 & comments.line(1) = 17 & comments.byte(1) = 23,'trusted comment rows and coordinates')
+  call check(samebytes(comments.opening(1),'/*' as .binary) & samebytes(comments.closing(1),'*/' as .binary) & comments.custom(1) = 1 & comments.step(1,1,39) = 2 & comments.accepting(1,2) = 1,'trusted comment bytes and direct shield transitions')
+  call check(stage.initial() = 1 & stage.count() = 2 & stage.word(1) = 'A' & stage.choose(1,1,2,'a',2) = 1 & stage.take(1) = 1 & stage.emit(1) = 1 & stage.next(1) = 1,'trusted stage first-match and fields')
+  call check(projection.index('Pair') = 1 & projection.kind(1) = 7 & projection.arity(1) = 0 & ast.frozenfieldcount(1) = 1 & ast.frozenfieldat(1,1) = 1,'trusted projection and AST field-ID reads')
+  i = .int; caught = .int; ok = .int
+  lrbytes = tables.image(); lrstates = tables.states(); lrcanonical = tables.canonicalstates(); caught = 0
+  do
+    call tables.putaction(1,1,7)
+  on signal error as lr_problem
+    caught = pos('LL_FROZEN_DEFINITION:',lr_problem.message()) = 1
+  end
+  call check(caught & tables.status() = 0 & tables.error() = '' & tables.states() = lrstates & tables.canonicalstates() = lrcanonical & samebytes(tables.image(),lrbytes),'frozen LR construction helper refuses without changing readable state')
+  assembler sigpush 'ERROR'
+  assembler sigignore 'ERROR'
+  call tables.mergecores()
+  assembler sigpop 'ERROR'
+  call check(tables.status() = 0 & tables.error() = '' & tables.states() = lrstates & tables.canonicalstates() = lrcanonical & samebytes(tables.image(),lrbytes),'ignored frozen LR merge preserves table and scalar state')
+  do i = 0 to 2 by 2
+    call check(projection.name(i) = '' & projection.kind(i) = 0 & projection.arity(i) = 0,'projection out-of-range defaults ' || i)
+    call check(ast.rule(i) = '' & ast.kind(i) = '' & ast.owner(i) = 0 & ast.name(i) = '' & ast.source(i) = '' & ast.mode(i) = '' & ast.card(i) = '' & ast.frozenfieldcount(i) = 0 & ast.frozenfieldat(i,1) = 0,'AST out-of-range defaults ' || i)
+  end
+  do i = 0 to 3 by 3
+    call check(comments.name(i) = '' & comments.form(i) = '' & <blen>(comments.opening(i)) = 0 & <blen>(comments.closing(i)) = 0 & comments.keep(i) = 0 & comments.line(i) = 0 & comments.byte(i) = 0 & comments.custom(i) = 0 & comments.step(i,1,39) = 0 & comments.accepting(i,1) = 0,'comment out-of-range defaults ' || i)
+    call check(stage.label(i) = '' & stage.word(i) = '' & stage.take(i) = 0 & stage.emit(i) = 0 & stage.next(i) = 0 & stage.field(i,'state') = 0 & stage.field(i,'first') = 0 & stage.field(i,'second') = 0 & stage.field(i,'unless') = 0,'stage out-of-range defaults ' || i)
+  end
+  do i = 1 to 7
+    caught = 0
+    do
+      select i
+        when 1 then ok = projection.keep('Other',8,0)
+        when 2 then ok = ast.mapping('other','Other')
+        when 3 then ok = ast.field('Pair','extra','','text','one')
+        when 4 then ok = comments.add('extra','line','--')
+        when 5 then ok = comments.shielding(1,makedfa())
+        when 6 then ok = stage.add('extra',0,1,-1,1,-1,'',1,1)
+        otherwise call frozen.token(9,'extra')
+      end
+    on signal error as mutation_problem
+      caught = pos('LL_FROZEN_DEFINITION:',mutation_problem.message()) = 1
+    end
+    call check(caught & comments.error() = '' & projection.error() = '' & ast.error() = '' & stage.error() = '','frozen mutation refuses without poisoning reads ' || i)
+  end
+  assembler sigpush 'ERROR'
+  assembler sigignore 'ERROR'
+  ok = projection.keep('Ignored',8,0)
+  assembler sigpop 'ERROR'
+  call check(ok = 0 & projection.size() = 1 & projection.name(1) = 'Pair' & samebytes(owner.image(),frozen.image()),'ignored mutation returns failure and preserves every export byte')
+  scanner = .lllanguage..definition.scanner(makedfa(),'utf8')
+  call scanner.token(1,'alpha'); call scanner.token(2,'beta')
+  frozen_scanner = compilelocal(reference scanner)
+  scan = .lllanguage..request.borrowed(reference frozen_scanner,'a b' as .binary)
+  call check(frozen_scanner.hasparser() = 0 & scan.lex() = 0 & scan.tokens().size() = 2 & scan.tokens().start(1) = 2 & samebytes(scanner.image(),frozen_scanner.image()),'trusted scanner profile and legacy export')
+  call frozenfields()
+  call frozengrammar()
+  return
+
+frozengrammar: procedure = .void
+  original = .llcore..grammar('contextfree')
+  literal = original.literal('0102'x as .binary,'',17)
+  members = original.characters('0102'x as .binary,0,'members',18)
+  pair = original.add(2,literal,members,'pair',19)
+  root = original.add(5,pair,0,'Root',99); ok = original.body(root,pair)
+  frozen = localgrammar(reference original)
+  call check(frozen.profile() = 'contextfree' & frozen.size() = 4 & frozen.revision() = 6 & frozen.rawlabel(1) = '' & frozen.label(1) = 'clause.1' & frozen.line(1) = 17 & frozen.signature() == original.signature(),'standalone grammar exact raw labels, revision and signature')
+  call check(frozen.op(1) = 13 & frozen.op(2) = 16 & frozen.left(2) = 0 & frozen.left(3) = 1 & frozen.right(3) = 2 & samebytes(frozen.text(1),'0102'x as .binary) & samebytes(frozen.text(2),'0102'x as .binary) & frozen.contains(2,1) & frozen.contains(2,3) = 0,'literal/set bytes and direct row reads survive local-image teardown')
+  return
+
+localgrammar: procedure = .llcore..grammar
+  arg owner_ref = reference .llcore..grammar
+  owner = dereference owner_ref
+  budget = .llprepared..budget(1048576); data = owner.frozenimage(reference budget)
+  return .llcore..grammar.compiled(reference data,0,<blen>(data))
+
+/* Interleave declarations; mappings sharing a kind still own distinct IDs. */
+frozenfields: procedure = .void
+  original = .llast..schema()
+  ok = original.mapping('alpha','Same'); ok = original.mapping('beta','Other'); ok = original.mapping('gamma','Same')
+  ok = original.field('alpha','first','','text','one')
+  ok = original.field('beta','flag','','text','one')
+  ok = original.field('gamma','first','','text','one')
+  ok = original.field('alpha','items','item','capture','many')
+  ok = original.field('gamma','items','different','operand','many')
+  call check(original.check() = 1 & original.frozenfieldcount(1) = -1,'independent shared-kind schema is admitted and mutable path stays separate')
+  frozen = localfields(reference original)
+  call check(frozen.size() = 3 & frozen.fields() = 5 & frozen.kindindex('same') = 1,'first kind lookup and global declaration count')
+  call check(frozen.frozenfieldcount(1) = 2 & frozen.frozenfieldat(1,1) = 1 & frozen.frozenfieldat(1,2) = 4 & frozen.frozenfieldcount(2) = 1 & frozen.frozenfieldat(2,1) = 2 & frozen.frozenfieldat(3,1) = 3 & frozen.frozenfieldat(3,2) = 5 & frozen.frozenfieldat(3,0) = 0 & frozen.frozenfieldat(3,3) = 0,'per-mapping lists preserve original interleaved global IDs')
+  do i = 1 to 5
+    call check(frozen.owner(i) = original.owner(i) & frozen.name(i) == original.name(i) & frozen.source(i) == original.source(i) & frozen.mode(i) = original.mode(i) & frozen.card(i) = original.card(i),'all global field metadata ' || i)
+  end
+  arena = .llast..storage('abc' as .binary,frozen)
+  alpha = arena.add(1,0,1); beta = arena.add(2,1,2); gamma = arena.add(3,2,3)
+  call check(arena.declaration(arena.field(alpha,'first')) = 1 & arena.declaration(arena.field(alpha,'items')) = 4 & arena.declaration(arena.field(beta,'flag')) = 2 & arena.declaration(arena.field(gamma,'first')) = 3 & arena.declaration(arena.field(gamma,'items')) = 5,'storage.add consumes each mapping list without merging kinds')
+  ok = arena.settext(alpha,'first','a'); ok = arena.settext(beta,'flag','b'); ok = arena.settext(gamma,'first','c')
+  call check(arena.seal(alpha) & arena.seal(beta) & arena.seal(gamma) & arena.text(gamma,'first') = 'c' & arena.count(alpha,'items') = 0 & arena.error() = '','ordinary per-input arena uses frozen definition without changing its own lifecycle')
+  call check(frozen.index('ALPHA') = 1 & frozen.index('GaMmA') = 3 & frozen.index('ALPHA ') = original.index('ALPHA '),'canonical stored rules retain case-folded loose lookup')
+  raw = .llcore..tree.from_source('a' as .binary); root = raw.add(1,'ALPHA',0,1,0,0)
+  mutable_tree = .llast..tree(raw,root,original); frozen_tree = .llast..tree(raw,root,frozen)
+  call check(mutable_tree.status() = 0 & frozen_tree.status() = 0 & frozen_tree.root().kind() = 'Same' & frozen_tree.root().text('first') = 'a' & frozen_tree.root().count('items') = 0 & frozen_tree.root().text('first') == mutable_tree.root().text('first'),'projection consumes interleaved per-mapping fields and preserves mutable result')
+  return
+
+localfields: procedure = .llast..schema
+  arg owner_ref = reference .llast..schema
+  owner = dereference owner_ref
+  budget = .llprepared..budget(1048576); data = owner.frozenimage(reference budget)
+  result = .llast..schema.compiled(reference data,0,<blen>(data))
+  call check(samebytes(owner.image(reference budget),result.image(reference budget)),'explicit AST schema export preserves declaration order and values')
+  return result
 
 makegrammar: procedure = .llcore..grammar
   graph = .llcore..grammar('contextfree')

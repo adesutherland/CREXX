@@ -120,6 +120,20 @@ verdict and selects no new VM mechanism or broad campaign. The plan's future-onl
 LDP-FUTURE-01 retains hydration buffer-lifetime measurement as an opportunity,
 not additional implementation or qualification.
 
+**LFP1 — implemented and locally qualified: trusted frozen generated definitions.** The
+[generic Level L plan](../research/level-l/PLAN.md#current-action-frozen-definitions)
+owns the explicit prevalidated path: packed reads and bounded wrapper creation,
+without hydration or full runtime validation; the checked external loader stays
+separate. Preserve source/read/ownership semantics, build-time validation and
+explicit frozen mutation refusals. Internal scalar count/bounds reads avoid
+whole-definition receiver copies, and AST projection uses the encoded
+per-mapping field lists without rebuilding indexes or hydrating arrays.
+The selected SDK, both generator formats, C integration and complete first-result
+checks are qualified. Name lookup retains candidate scans/decoding to preserve
+exact loose equality; further lookup-throughput acceleration remains future only.
+This establishes no general speed, Release, platform, SAN or production-performance
+claim, selects no new VM/ISA, and does not extend RCOST-03/04.
+
 **LEVEL-L-EMISSION-01 — approved STEP05 cleanup (15 October).** The
 [compiler plan F5-STEP01](../research/level-l/compilers/PLAN.md)
 owns this bounded Level B change. Hypothesis: shared indexed source-position

@@ -251,7 +251,7 @@ request: class
       end
     end
     if format = 'rxas' then do
-      if packedprofile then call preparedassembly(reference doc,reference prepared_image)
+      if packedprofile then call compiledassembly(reference doc,reference prepared_image)
       else call assembly(doc,table,dfa,shields,policies)
       return 0
     end
@@ -288,8 +288,8 @@ request: class
     end
     call line('language: procedure = .lllanguage..definition')
     if packedprofile then do
-      call line("  constant PREPARED_LANGUAGE = '" || bin2x(prepared_image) || "'x as .binary")
-      call line('  return lllanguage..prepared(PREPARED_LANGUAGE)')
+      call line("  constant FROZEN_LANGUAGE = '" || bin2x(prepared_image) || "'x as .binary")
+      call line('  return lllanguage..compiled(FROZEN_LANGUAGE)')
       call servicesource(doc)
       return 0
     end
@@ -361,9 +361,9 @@ request: class
     call servicesource(doc)
     return 0
 
-  /** Build exactly the old generated owner once, before either output format.
-   * Fresh comments and the generated stage limit preserve public mutability;
-   * only existing immutable DFA/LR image loaders freeze their table owners. */
+  /** Assemble mutable build-time inputs, then encode frozen generated data.
+   * Existing loaded APIs supply immutable DFA/LR owners; generated modules
+   * bind the trusted result without replaying these construction steps. */
   definitionimage: method = .binary
     arg doc_ref = reference .llfront..document, table_ref = reference .lllr..tables, dfa_ref = reference .llmunch..automaton, shields_ref = reference .binary[], policies_ref = reference .llcomments..rules
     empty = .binary; i = .int; ok = .int
@@ -417,7 +417,7 @@ request: class
         end
       end
       /* Output text and logical prepared storage have different budget owners. */
-      return definition.image()
+      return definition.frozenimage()
     on signal as problem
       call fail(problem.message())
       return empty
@@ -435,21 +435,18 @@ request: class
     end
     return
 
-  /** One immutable constant and one generic hydrator call, with no recipe. */
-  preparedassembly: method = .void
+  /** One immutable constant and one trusted loader call, with no hydration. */
+  compiledassembly: method = .void
     arg doc_ref = reference .llfront..document, image_ref = reference .binary
     doc = dereference doc_ref; image = dereference image_ref
     call assemblyclasses(doc_ref)
     call line('.globals=0')
-    call line('language() .locals=10 .expose=' || doc.module() || '.language')
+    call line('language() .locals=8 .expose=' || doc.module() || '.language')
     call line('  .meta ' || asmquote(doc.module() || '.language') || '="b" ".lllanguage..definition" language() ""')
     call asmload(7,'0x' || bin2x(image),256)
-    /* The physical window includes both omitted optional formals. */
-    call line('  settp r8,512')
-    call line('  settp r9,0')
-    call asmcall(4,'lllanguage.prepared',3)
+    call asmcall(4,'lllanguage.compiled',1)
     call line('  ret r4')
-    call asmimport('lllanguage.prepared')
+    call asmimport('lllanguage.compiled')
     call serviceassembly(doc)
     return
   quoted: method = .string

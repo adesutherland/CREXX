@@ -1,12 +1,103 @@
 # Level L language tooling research — 10 October 2026
 
+<a id="current-action-frozen-definitions"></a>
+
+## Completed increment: trusted frozen generated definitions (LFP1)
+
+**The selected SDK, generator, C integration and focused resource checks are
+qualified; the implementation and owning docs are complete. Delivery is limited
+to a reviewed local commit. Broader Level L acceptance stays open.** Generated scanner-only and nonregional DFA/LR1
+definitions use read-ready frozen data. The user selects prevalidated trusted
+compiled data:
+this path performs only a short version/profile/extent/directory header check,
+not runtime hydration, UTF-8/schema walks, index construction or full DFA/LR/CFG
+validation. This supersedes LDP1's validation requirement only for the explicit
+trusted entry. The checked external `lllanguage..prepared()` loader and existing
+mutable builders retain their current contracts and malformed-input atomicity.
+No G feature, VM/ISA or new ownership service is selected.
+
+`definition.frozenimage(bytes=67108864)` validates and encodes at build time;
+`lllanguage..compiled(image=.binary)` is the explicit one-image trusted entry.
+Generated source and RXAS call it directly, without an automatic unchecked
+fallback from `prepared()`. Passing arbitrary external bytes to `compiled()` is
+outside its contract. Header refusal uses existing INVALID_ARGUMENTS with
+LL_LANGUAGE_IMAGE detail and returns a typed absent definition if handled.
+
+LFP1 retains a 20-byte portable header and twelve fixed-ID offset/length directory
+slots (scanner profiles omit parser sections), using unsigned 32-bit offsets and
+counts and signed 64-bit semantic integers. It carries the complete definition:
+configuration; raw grammar/revision/canonical signature; canonical CFG rows;
+existing DFA/LR blobs and precomputed LR directory; comments/shields; stages;
+token holes; projection/AST schemas; diagnostics/masks. No addresses, references,
+request state or executable pointers are encoded. Main metadata sections use a
+32-byte magic/version/count/auxiliary-count/rows/auxiliary-rows/index/pool header,
+fixed rows and section-relative offset/length string/blob spans. Build-time
+encoding writes all offsets, owner field-ID lists and indexes. Existing name
+lookup equality/order can remain a linear read over packed rows; no new hash
+algorithm is required.
+
+Each subowner owns its individual packed subsection and a fixed number of scalar
+header values. Creation does not populate per-row arrays or retain weak references
+to constructor locals, and does not copy the full outer image into every child.
+Ordinary B values are not assumed to provide general copy-on-write. Readers borrow
+anchored receiver fields at operation time. Existing read APIs, out-of-range
+empty/zero results, source identities and absent-field behavior stay meaningful.
+Explicit collection-returning reads may construct their existing owned results;
+internal recognition reads packed stages and metadata directly. AST node creation
+and projection use precomputed per-mapping field-ID lists, preserving global
+field IDs and order; the mutable projection branch retains its existing scan.
+Comment-shield transitions read their enclosing section through llmunch-owned
+base-offset queries, without constructing or copying a DFA per lookup.
+Internal frozen token/stage/message count and bounds reads address the section's
+scalar header directly, without snapshotting the complete definition through an
+inlined self-count call. The RXAS guard covers these readers. Token lookup retains
+its decoder, loose equality, first-match order and ordinary direct-array branch;
+already folded stored AST rule names need no second `lower()`.
+Name lookup still scans and decodes candidate names to preserve exact loose
+equality. Further lookup-throughput acceleration is a future opportunity, not
+additional selected implementation or qualification.
+
+Frozen builder/mutation attempts signal existing ERROR with LL_FROZEN_DEFINITION
+detail, return the existing failure result if handled, and leave readable packed
+data unchanged. Existing mutable and checked-loaded variants stay separate.
+Owning guides must explain the selection: frozen compiled definitions serve
+ordinary parsing and read-only tree consumption; mutable builders and the
+existing analysis/rewrite owners serve construction and optimization. Per-input
+AST arenas keep their existing freeze/read/rewrite semantics; this increment
+does not introduce a new packed AST result arena.
+`image()` exports remain usable: rebuild the checked LDP1/component wire form only
+on that explicit export call, never during frozen creation. CFG nullable/FIRST
+and other genuinely computed queries retain their current semantics without
+hydrating all definition metadata as a side effect. Build-time validation reuses
+the checked owners; there is no second runtime parser/semantic algorithm.
+
+| Stable criterion | Selected proof |
+|---|---|
+| **LFP-AC01 — done** | Frozen creation uses only bounded header/wrapper work and native section copies: no per-row arrays, startup indexes, semantic validator calls or hidden signature/CFG reconstruction. SDK and generated RXAS inspection is complete. |
+| **LFP-AC02 — done** | Independent scanner/LR fixtures preserve every applicable read, token/span/AST/diagnostic/source result, direct field lists, public image exports and typed mutation refusals; mutable builders and checked external negatives remain valid. |
+| **LFP-AC03 — done** | Component bytes are owned and readers borrow stable anchored fields; copied/returned definitions and result trees survive constructor/request teardown with no expired references or whole-image child copies. |
+| **LFP-AC04 — done** | Both generator formats use the trusted path after normal build-time validation; unsupported backends and checked LDP1 consumers remain compatible. Build/stamp closure is acyclic and complete. |
+| **LFP-AC05 — done** | Sole QA qualified the small SDK, both-format consumer, frozen C generation and selected C/entry/dynamic plus complete hello first results with/without INTERPRET. Selected checks and owning docs are complete. Delivery is local only; no push, formal Release/platform/SAN or general speed claim is selected. |
+
+| Stable step | Work and dependency |
+|---|---|
+| **LFP-STEP01 — done** | Record exact trust/layout/API/lifetime contract and obtain coordinator/peer clearance before product edits; AC01–05. |
+| **LFP-STEP02 — done** | Packed core/metadata owners and independent SDK controls are selected-qualified; early SDK/RXAS source and structural review is complete before generator/C work; AC01–03. |
+| **LFP-STEP03 — done** | Both generator formats, direct dependencies and the frozen C generation are selected-qualified; AC04. |
+| **LFP-STEP04 — done** | Selected integration/first-result checks, enduring docs and preservation audit are complete; delivery is limited to a reviewed local commit; AC05. |
+
+Source ownership is llprepared/llcore/llcfg/lllr/llmunch/lllanguage and generator
+plus direct build/stamp owners; parallel metadata ownership is limited to
+llcomments/llstage/llproject/llast and the existing small SDK fixture. No new plan,
+retained run report, broad matrix, native VM change or second algorithm is added.
+
 <a id="current-action-prepared-definitions"></a>
 
-## Current action: generic prepared definitions (LDP1)
+## Completed increment: checked prepared definitions (LDP1)
 
-**The selected scanner/nonregional LR1 profile is locally qualified, including
-C integration and startup checks. Selected checks and owning docs are ready for
-the authorized local commit; broader Level L acceptance remains open.**
+**The selected scanner/nonregional LR1 profile, C integration, startup checks,
+owning docs and reviewed local commit are complete; broader Level L acceptance
+remains open.**
 RCOST-05 moves repeated generated-language construction into build-time prepared
 data. Version 1 covers scanner-only and nonregional DFA/LR1 definitions, including
 all policies and metadata used by those profiles. Other supported backends keep
@@ -68,14 +159,14 @@ Malformed prepared data never silently falls back to another runtime algorithm.
 | **LDP-AC04 — done** | One shared logical budget bounds encoded/decoded/copy work before allocation, with resource failure distinct from malformed input. No partial owner escapes even when a failure signal is handled. |
 | **LDP-AC05 — done** | Both generation formats use one prepared owner route for supported profiles; legacy constructors/modules and other backend generation remain compatible, with unchanged frontend/policy admission and failure publication. |
 | **LDP-AC06 — done** | Acyclic SDK/bootstrap dependency and stamp inventories include the codec; actual generated language() avoids the former graph/schema setter recipe. Inspect SDK and first small consumer RXAS before one C generation. |
-| **LDP-AC07 — done** | Frozen SDK/independent fixtures, small both-format/legacy consumers and selected C prepared/entry/dynamic/startup controls are qualified, with owning docs complete. Commit the reviewed scope locally; no push, broad matrix or production-performance claim. |
+| **LDP-AC07 — done** | Frozen SDK/independent fixtures, small both-format/legacy consumers and selected C prepared/entry/dynamic/startup controls, owning docs and reviewed local commit are complete; no push, broad matrix or production-performance claim. |
 
 | Stable step | Work and dependency |
 |---|---|
 | **LDP-STEP01 — done** | Coordinator/peer select the complete bounded profile, ownership, codec, failure and validation contract before product edits; AC01–07. |
 | **LDP-STEP02 — done** | Implement shared codec/budget, owner-local prepared sections/hydration and independent small fixtures; freeze SDK first for source/RXAS review and QA; AC01–04/06. |
 | **LDP-STEP03 — done** | Integrate the single encoder/hydrator into both generator formats and build inventories; qualify a small consumer before one actual C generation; AC05–06. |
-| **LDP-STEP04 — done** | Selected C integration/startup checks and owning docs are complete using unchanged valid results where applicable; reviewed paths are ready for the authorized local commit; AC07. |
+| **LDP-STEP04 — done** | Selected C integration/startup checks, owning docs and reviewed local commit are complete, using unchanged valid results where applicable; AC07. |
 
 Product scope is `llprepared` (new), `llcore`, `llcfg`, `lllr`, `lllanguage` and
 owner-local bulk codecs in `llcomments`, `llstage`, `llproject`, `llast`, plus

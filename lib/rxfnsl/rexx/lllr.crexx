@@ -177,6 +177,7 @@ imagecheck: class
     return _index
 
 tables: class
+  _trusted = .int
   _cfg = .llcfg..productions
   _states = .items[]
   _mergedstates = .items[]
@@ -248,6 +249,19 @@ tables: class
     end
     _count = checked.count(); _canonical = _count; _symbols = checked.symbols()
     _imageindex = checked.index(); _image = image; _status = 0; _error = ''
+    return
+
+  /** Trusted sparse bytes and row directory, without validator dispatch. */
+  compiled: factory
+    arg cfg = .llcfg..productions, source_ref = reference .binary, image_first = .int, image_bytes = .int, index_first = .int, index_bytes = .int
+    source = dereference source_ref
+    _cfg = cfg; _built = 1; _requested = 'lr1'; _merged = 0
+    call binresize _image,image_bytes
+    assembler bcopy _image,source,image_first
+    call binresize _imageindex,index_bytes
+    assembler bcopy _imageindex,source,index_first
+    _count = <at..i32>(4) _image; _symbols = <at..i32>(8) _image; _canonical = _count
+    _status = 0; _error = ''; _trusted = 1
     return
 
   /** Immutable packed byte extent; zero denotes an ordinary table builder. */
@@ -366,6 +380,7 @@ tables: class
    * Cache the grammar-only part once, and expand it once per item core in a
    * closure. Only the propagated lookahead depends on each LR(1) item. */
   prepareclosure: method = .void
+    if _trusted then do; call llprepared..frozenmutation('LR table'); return; end
     terminal = .int
     _suffixwidth = _cfg.maxrhs() + 1; entries = 0; emptyints = .int[]
     do p = 1 to _cfg.count()
@@ -397,6 +412,7 @@ tables: class
     return
   closure: method = .items
     arg set = .items
+    if _trusted then do; absent = .items; call llprepared..frozenmutation('LR table'); return absent; end
     ok = .int
     index = 1; expanded = .int[]
     do while index <= set.size()
@@ -428,6 +444,7 @@ tables: class
     return set
   intern: method = .int
     arg set = .items
+    if _trusted then return llprepared..frozenmutation('LR table')
     signature = set.signature(0)
     do i = 1 to _canonical
       if _signatures[i] = signature then return i
@@ -443,6 +460,7 @@ tables: class
     _states[_canonical] = set; _signatures[_canonical] = signature
     return _canonical
   buildactions: method = .void
+    if _trusted then do; call llprepared..frozenmutation('LR table'); return; end
     do state = 1 to _count
       /* Read the retained state directly: an inlined receiver snapshot must
        * not keep the entire mutable table shared across action writes. */
@@ -470,6 +488,7 @@ tables: class
     return
   putaction: method = .void
     arg state = .int, look = .int, value = .int
+    if _trusted then do; call llprepared..frozenmutation('LR table'); return; end
     key = (state - 1) * 257 + look + 1
     if _merged then old = _mergedactions[key]
     else old = _actions[key]
@@ -499,6 +518,7 @@ tables: class
     if value > 0 then return 'consuming the next token'
     return 'completing ' || _cfg.location(-value)
   mergecores: method = .void
+    if _trusted then do; call llprepared..frozenmutation('LR table'); return; end
     count = 0; state = .int; group = .int; current = .items
     do state = 1 to _canonical
       current = _states[state]; core = current.signature(1); group = 0

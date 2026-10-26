@@ -118,11 +118,17 @@ schema: class
   _card = .string[]
   _error = .string
   _conflict = .int
+  _packed = .binary
+  _mappingcount = .int
+  _declarationcount = .int
+  _fieldrows = .int
+  _indexbase = .int
   *: factory
     _error = ''; _conflict = 0
     return
   mapping: method = .int
     arg rule = .string, kind = .string
+    if <blen>(_packed) > 0 then return llprepared..frozenmutation('AST schema')
     if mappingadmitted(rule,kind) = 0 | index(rule) > 0 then do
       _error = 'LL_AST_SCHEMA: invalid or duplicate mapping for ' || rule; return 0
     end
@@ -130,6 +136,7 @@ schema: class
     return slot
   field: method = .int
     arg rule = .string, name = .string, source = .string, mode = .string, card = .string
+    if <blen>(_packed) > 0 then return llprepared..frozenmutation('AST fields')
     owner = index(rule)
     admission = fieldshape(owner,name,mode,card)
     if admission = 0 then do
@@ -149,40 +156,102 @@ schema: class
     return slot
   index: method = .int
     arg rule = .string
+    i = .int
+    if <blen>(_packed) > 0 then do
+      folded = lower(rule)
+      do i = 1 to _mappingcount
+        at = 32 + (i - 1) * 24 + 0
+        first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+        if llprepared..packedtext(reference _packed,first,length) = folded then return i
+      end
+      return 0
+    end
     do i = 1 to _rule[0]
       if _rule[i] = lower(rule) then return i
     end
     return 0
   kindindex: method = .int
     arg kind = .string
+    i = .int
+    if <blen>(_packed) > 0 then do
+      folded = lower(kind)
+      do i = 1 to _mappingcount
+        at = 32 + (i - 1) * 24 + 8
+        first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+        if lower(llprepared..packedtext(reference _packed,first,length)) = folded then return i
+      end
+      return 0
+    end
     do i = 1 to _kind[0]
       if lower(_kind[i]) = lower(kind) then return i
     end
     return 0
   size: method = .int
+    if <blen>(_packed) > 0 then return _mappingcount
     return _rule[0]
   fields: method = .int
+    if <blen>(_packed) > 0 then return _declarationcount
     return _field[0]
   rule: method = .string
     arg i = .int
+    if <blen>(_packed) > 0 then do
+      if i < 1 | i > _mappingcount then return ''
+      at = 32 + (i - 1) * 24 + 0
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedtext(reference _packed,first,length)
+    end
     return _rule[i]
   kind: method = .string
     arg i = .int
+    if <blen>(_packed) > 0 then do
+      if i < 1 | i > _mappingcount then return ''
+      at = 32 + (i - 1) * 24 + 8
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedtext(reference _packed,first,length)
+    end
     return _kind[i]
   owner: method = .int
     arg i = .int
+    if <blen>(_packed) > 0 then do
+      if i < 1 | i > _declarationcount then return 0
+      return <at..i64>(_fieldrows + (i - 1) * 40) _packed
+    end
     return _owner[i]
   name: method = .string
     arg i = .int
+    if <blen>(_packed) > 0 then do
+      if i < 1 | i > _declarationcount then return ''
+      at = _fieldrows + (i - 1) * 40 + 8
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedtext(reference _packed,first,length)
+    end
     return _field[i]
   source: method = .string
     arg i = .int
+    if <blen>(_packed) > 0 then do
+      if i < 1 | i > _declarationcount then return ''
+      at = _fieldrows + (i - 1) * 40 + 16
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedtext(reference _packed,first,length)
+    end
     return _source[i]
   mode: method = .string
     arg i = .int
+    if <blen>(_packed) > 0 then do
+      if i < 1 | i > _declarationcount then return ''
+      at = _fieldrows + (i - 1) * 40 + 24
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedtext(reference _packed,first,length)
+    end
     return _mode[i]
   card: method = .string
     arg i = .int
+    if <blen>(_packed) > 0 then do
+      if i < 1 | i > _declarationcount then return ''
+      at = _fieldrows + (i - 1) * 40 + 32
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedtext(reference _packed,first,length)
+    end
     return _card[i]
   error: method = .string
     return _error
@@ -190,6 +259,7 @@ schema: class
     return _conflict
   /** All mappings of one kind must describe the same ordered field contract. */
   check: method = .int
+    if <blen>(_packed) > 0 then return 1
     conflict = _conflict
     problem = schemaerror(reference _rule,reference _kind,reference _owner,reference _field,reference _mode,reference _card,conflict)
     if problem <> '' then do; _error = problem; _conflict = conflict; end
@@ -198,6 +268,7 @@ schema: class
   image: method = .binary
     arg budget_ref = reference .llprepared..budget
     empty = .binary; i = .int
+    if <blen>(_packed) > 0 then return exportcompiled(budget_ref)
     if _error <> '' then do; call llprepared..reject(3,_error); return empty; end
     if <refvalid>(budget_ref) = 0 then do; call llprepared..reject(3,'expired prepared storage budget'); return empty; end
     budget = dereference budget_ref
@@ -215,6 +286,111 @@ schema: class
     end
     if out.status() <> 0 then do; call llprepared..reject(out.status(),out.error()); return empty; end
     return out.finish()
+
+  /** Internal frozen field index; -1 selects the unchanged mutable path. */
+  frozenfieldcount: method = .int
+    arg rule = .int
+    if <blen>(_packed) = 0 then return -1
+    if rule < 1 | rule > _mappingcount then return 0
+    return <at..u32>(32 + (rule - 1) * 24 + 20) _packed
+  frozenfieldat: method = .int
+    arg rule = .int, ordinal = .int
+    if <blen>(_packed) = 0 then return 0
+    if rule < 1 | rule > _mappingcount then return 0
+    at = 32 + (rule - 1) * 24
+    count = <at..u32>(at + 20) _packed
+    if ordinal < 1 | ordinal > count then return 0
+    first = <at..u32>(at + 16) _packed
+    return <at..u32>(_indexbase + (first + ordinal - 1) * 4) _packed
+
+  /** Explicit LDP1 export reads packed rows without making mutable arrays. */
+  exportcompiled: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    empty = .binary; i = .int
+    out = .llprepared..writer(budget_ref)
+    call out.raw('4c415354'x as .binary); call out.u32(1); call out.u32(_mappingcount)
+    do i = 1 to _mappingcount
+      call out.text(rule(i)); call out.text(kind(i))
+    end
+    call out.u32(_declarationcount)
+    do i = 1 to _declarationcount
+      call out.u32(owner(i)); call out.text(name(i)); call out.text(source(i)); call out.text(mode(i)); call out.text(card(i))
+    end
+    if out.status() <> 0 then do; call llprepared..reject(out.status(),out.error()); return empty; end
+    return out.finish()
+
+  /** Validate once at encode time and emit rows plus ordered global field IDs. */
+  frozenimage: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    empty = .binary; i = .int; j = .int; k = .int; text = .binary
+    budget = dereference budget_ref
+    if <blen>(_packed) > 0 then do
+      if budget.take(<blen>(_packed)) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+      return _packed
+    end
+    if _error <> '' then do; call llprepared..reject(3,_error); return empty; end
+    if schemawork(budget_ref,reference _kind,reference _field,reference _mode,reference _card) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+    if check() = 0 then do; call llprepared..reject(3,_error); return empty; end
+    maps = _rule[0]; fields = _field[0]
+    if maps > (4294967295 - 32) <idiv> 24 then do; call llprepared..reject(4,'frozen AST mapping extent'); return empty; end
+    fieldrows = 32 + maps * 24
+    if fields > (4294967295 - fieldrows) <idiv> 44 then do; call llprepared..reject(4,'frozen AST field extent'); return empty; end
+    indexbase = fieldrows + fields * 40; base = indexbase + fields * 4
+    if budget.take(base) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+    rows = .binary; call binresize rows,base
+    <at..u32>(0) rows = 0x54534146; <at..u32>(4) rows = 1
+    <at..u32>(8) rows = maps; <at..u32>(12) rows = fields; <at..u32>(16) rows = 32
+    <at..u32>(20) rows = fieldrows; <at..u32>(24) rows = indexbase; <at..u32>(28) rows = base
+    pool = .llprepared..writer(budget_ref); cursor = base; ordinal = 0
+    at = .int; length = .int
+    do i = 1 to maps
+      at = 32 + (i - 1) * 24
+      do k = 1 to 2
+        if k = 1 then text = _rule[i] as .binary
+        else text = _kind[i] as .binary
+        length = <blen>(text)
+        if length > 4294967295 - cursor then do; call llprepared..reject(4,'frozen AST mapping text'); return empty; end
+        <at..u32>(at + (k - 1) * 8) rows = cursor; <at..u32>(at + (k - 1) * 8 + 4) rows = length
+        call pool.raw(text); cursor = cursor + length
+      end
+      first = ordinal
+      do j = 1 to fields
+        if _owner[j] = i then do
+          <at..u32>(indexbase + ordinal * 4) rows = j; ordinal = ordinal + 1
+        end
+      end
+      <at..u32>(at + 16) rows = first; <at..u32>(at + 20) rows = ordinal - first
+    end
+    do i = 1 to fields
+      at = fieldrows + (i - 1) * 40; <at..i64>(at) rows = _owner[i]
+      do k = 1 to 4
+        select k
+          when 1 then text = _field[i] as .binary
+          when 2 then text = _source[i] as .binary
+          when 3 then text = _mode[i] as .binary
+          otherwise text = _card[i] as .binary
+        end
+        length = <blen>(text)
+        if length > 4294967295 - cursor then do; call llprepared..reject(4,'frozen AST field text'); return empty; end
+        <at..u32>(at + 8 + (k - 1) * 8) rows = cursor; <at..u32>(at + 12 + (k - 1) * 8) rows = length
+        call pool.raw(text); cursor = cursor + length
+      end
+    end
+    output = .llprepared..writer(budget_ref); call output.raw(rows); call output.raw(pool.finish())
+    if pool.status() <> 0 then do; call llprepared..reject(pool.status(),pool.error()); return empty; end
+    if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return empty; end
+    return output.finish()
+
+  /** Trusted one-section copy and scalar header binding, with no schema walk. */
+  compiled: factory
+    arg source_ref = reference .binary, first = .int, extent = .int
+    source = dereference source_ref
+    call binresize _packed,extent
+    assembler bcopy _packed,source,first
+    _mappingcount = <at..u32>(8) _packed; _declarationcount = <at..u32>(12) _packed
+    _fieldrows = <at..u32>(20) _packed; _indexbase = <at..u32>(24) _packed
+    _error = ''; _conflict = 0
+    return
 
   /** Preserve raw kind spelling and normalized lookup names without setters. */
   loaded: factory
@@ -392,7 +568,7 @@ storage: class
     _entries = _entries + count; return 1
   add: method = .int
     arg rule = .int, start = .int, finish = .int, origin = 'exact'
-    i = .int
+    i = .int; slot = .int
     extent = <blen>(_source)
     if rule < 1 | rule > _schema.size() | start < 0 | finish < start | finish > extent then do
       call fail('LL_AST_NODE: invalid node kind or source range'); return 0
@@ -407,14 +583,23 @@ storage: class
       call fail('LL_AST_ORIGIN: recovered nodes require recovery records'); return 0
     end
     if _damage.affects(start,finish) then origin = 'recovered'
-    fields = 0
-    do i = 1 to _schema.fields()
-      if _schema.owner(i) = rule then fields = fields + 1
+    fields = _schema.frozenfieldcount(rule); packedfields = fields >= 0
+    if packedfields = 0 then do
+      fields = 0
+      do i = 1 to _schema.fields()
+        if _schema.owner(i) = rule then fields = fields + 1
+      end
     end
     if reserve(1 + fields) = 0 then return 0
     id = _rule[0] + 1; _rule[id] = rule; _start[id] = start; _finish[id] = finish; _offset[id] = start; _origin[id] = origin
     _first[id] = _declaration[0] + 1
-    do i = 1 to _schema.fields()
+    if packedfields then do
+      do i = 1 to fields
+        slot = _declaration[0] + 1; _declaration[slot] = _schema.frozenfieldat(rule,i)
+        _text[slot] = ''; _set[slot] = 0; _head[slot] = 0; _tail[slot] = 0; _count[slot] = 0
+      end
+    end
+    else do i = 1 to _schema.fields()
       if _schema.owner(i) <> rule then iterate
       slot = _declaration[0] + 1; _declaration[slot] = i
       _text[slot] = ''; _set[slot] = 0; _head[slot] = 0; _tail[slot] = 0; _count[slot] = 0
@@ -875,7 +1060,7 @@ walk: class
 /* Shared strict/recovered projection; the result owns its source and metadata. */
 project: procedure = .llast..storage
   arg source = .llcore..tree, root = .int, contract = .llast..schema, limit = .int, damage = .llast..damage
-  ok = .int
+  ok = .int; f = .int
   _store = .llast..storage(source.source(),contract,limit,damage)
   if _store.error() <> '' then return _store
   if contract.size() = 0 then do
@@ -949,8 +1134,14 @@ project: procedure = .llast..storage
     end
     created = _store.add(rule,source.start(raw),source.finish(raw))
     if created = 0 then leave
-    do f = 1 to contract.fields() while _store.error() = ''
-      if contract.owner(f) <> rule then iterate
+    fieldcount = contract.frozenfieldcount(rule); frozenfields = fieldcount >= 0
+    if frozenfields = 0 then fieldcount = contract.fields()
+    do ordinal = 1 to fieldcount while _store.error() = ''
+      if frozenfields then f = contract.frozenfieldat(rule,ordinal)
+      else do
+        f = ordinal
+        if contract.owner(f) <> rule then iterate
+      end
       name = contract.name(f); selector = contract.source(f); mode = contract.mode(f)
       if mode = 'operand' then do
         chosen = 0

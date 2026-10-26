@@ -20,6 +20,9 @@ grammar: class
   _records = .binary
   _texts = .binary
   _signature = .string
+  _frozen = .binary
+  _frozenrows = .int
+  _frozentext = .int
 
   *: factory
     arg profile = .string
@@ -82,6 +85,37 @@ grammar: class
     _records = records; _texts = texts
     return
 
+  /** Trusted generated rows and canonical text, with no grammar walk. */
+  compiled: factory
+    arg source_ref = reference .binary, first = .int, extent = .int
+    source = dereference source_ref
+    call binresize _frozen,extent
+    assembler bcopy _frozen,source,first
+    _size = <at..u32>(8) _frozen; _revision = <at..i64>(40) _frozen
+    _frozenrows = <at..u32>(12) _frozen; _frozentext = <at..u32>(16) _frozen
+    _signature = ''
+    return
+
+  /** Build-time checked wire export plus direct row/pool/signature offsets. */
+  frozenimage: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    absent = .binary
+    wire = image(budget_ref)
+    if <blen>(wire) < 24 then return absent
+    signature_bytes = signature() as .binary
+    profile_bytes = <at..u32>(20) wire
+    records_at = 48 + 28 + profile_bytes
+    texts_at = records_at + _size * 48 + 4
+    signature_at = 48 + <blen>(wire)
+    output = .llprepared..writer(budget_ref)
+    call output.raw('4647524d'x as .binary); call output.u32(1); call output.u32(_size)
+    call output.u32(records_at); call output.u32(texts_at)
+    call output.u32(72); call output.u32(profile_bytes)
+    call output.u32(signature_at); call output.u32(<blen>(signature_bytes)); call output.u32(0)
+    call output.i64(_revision); call output.raw(wire); call output.raw(signature_bytes)
+    if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return absent; end
+    return output.finish()
+
   /** Serialize raw labels/operands, never the display fallback or normalized IDs. */
   image: method = .binary
     arg budget_ref = reference .llprepared..budget
@@ -97,7 +131,7 @@ grammar: class
       cursor = cursor + <blen>(value)
     end
     call output.raw('4c47524d'x as .binary); call output.u32(1)
-    call output.i64(_revision); call output.u32(_size); call output.text(_profile)
+    call output.i64(_revision); call output.u32(_size); call output.text(profile())
     call output.binary(rows.finish()); call output.binary(texts.finish())
     absent = .binary
     if rows.status() <> 0 then do; call llprepared..reject(rows.status(),rows.error()); return absent; end
@@ -107,6 +141,7 @@ grammar: class
 
   /** A mutation materializes this owned value only; no shared writable base. */
   materialize: method = .void
+    if <blen>(_frozen) > 0 then do; call llprepared..frozenmutation('grammar'); return; end
     if <blen>(_records) = 0 then return
     do node = 1 to _size
       _op[node] = op(node); _a[node] = left(node); _b[node] = right(node)
@@ -117,6 +152,13 @@ grammar: class
 
   rawlabel: method = .string
     arg node = .int
+    first = .int
+    if <blen>(_frozen) > 0 then do
+      if node < 1 | node > _size then return ''
+      row = _frozenrows + (node - 1) * 48
+      first = _frozentext + <at..u32>(row + 32) _frozen; size = <at..u32>(row + 36) _frozen
+      return llprepared..packedtext(reference _frozen,first,size)
+    end
     if <blen>(_records) = 0 then return _label[node]
     if node < 1 | node > _size then return ''
     at = (node - 1) * 48
@@ -126,6 +168,7 @@ grammar: class
   /** Append a clause. Handles are stable, one based; mutations invalidate analyses. */
   add: method = .int
     arg op = .int, a = .int, b = .int, label = .string, line = .int
+    if <blen>(_frozen) > 0 then return llprepared..frozenmutation('grammar')
     call materialize
     _signature = ''
     _size = _size + 1
@@ -137,6 +180,7 @@ grammar: class
   /** Resolve a rule wrapper after forward references have been constructed. */
   body: method = .int
     arg rule = .int, target = .int
+    if <blen>(_frozen) > 0 then return llprepared..frozenmutation('grammar')
     if rule < 1 | rule > _size then return 0
     if op(rule) <> 5 then return 0
     if target < 1 | target > _size then return 0
@@ -147,16 +191,26 @@ grammar: class
 
   literal: method = .int
     arg text = .binary, label = .string, line = .int
+    if <blen>(_frozen) > 0 then return llprepared..frozenmutation('grammar')
     node = add(13,0,0,label,line)
     _text[node] = text
     return node
   characters: method = .int
     arg members = .binary, inverted = .int, label = .string, line = .int
+    if <blen>(_frozen) > 0 then return llprepared..frozenmutation('grammar')
     node = add(16,inverted,0,label,line)
     _text[node] = members
     return node
   text: method = .binary
     arg node = .int
+    first = .int
+    if <blen>(_frozen) > 0 then do
+      absent = .binary
+      if node < 1 | node > _size then return absent
+      row = _frozenrows + (node - 1) * 48
+      first = _frozentext + <at..u32>(row + 40) _frozen; size = <at..u32>(row + 44) _frozen
+      return llprepared..packedbytes(reference _frozen,first,size)
+    end
     if <blen>(_records) = 0 then return _text[node]
     bits = .binary
     if node < 1 | node > _size then return bits
@@ -169,7 +223,10 @@ grammar: class
     arg node = .int, symbol = .int
     if symbol < 0 | symbol > 255 then return 0
     members = .binary; inverted = .int; found = 0
-    if <blen>(_records) = 0 then do
+    if <blen>(_frozen) > 0 then do
+      members = text(node); inverted = left(node)
+    end
+    else if <blen>(_records) = 0 then do
       members = _text[node]; inverted = _a[node]
     end
     else do
@@ -186,6 +243,10 @@ grammar: class
   revision: method = .int
     return _revision
   profile: method = .string
+    if <blen>(_frozen) > 0 then do
+      first = <at..u32>(20) _frozen; size = <at..u32>(24) _frozen
+      return llprepared..packedtext(reference _frozen,first,size)
+    end
     return _profile
   /** Reachability is structural, independent of parser implementation. */
   reachable: method = .int[]
@@ -197,7 +258,10 @@ grammar: class
       if seen[node] then iterate
       seen[node] = 1
       operation = .int; lhs = .int; rhs = .int
-      if <blen>(_records) = 0 then do
+      if <blen>(_frozen) > 0 then do
+        operation = op(node); lhs = left(node); rhs = right(node)
+      end
+      else if <blen>(_records) = 0 then do
         operation = _op[node]; lhs = _a[node]; rhs = _b[node]
       end
       else do
@@ -216,6 +280,10 @@ grammar: class
   /** Exact canonical description for research certificate identity. */
   signature: method = .string
     if _signature <> '' then return _signature
+    if <blen>(_frozen) > 0 then do
+      first = <at..u32>(28) _frozen; size = <at..u32>(32) _frozen
+      return llprepared..packedtext(reference _frozen,first,size)
+    end
     out = length(_profile) || ':' || _profile || ';'
     do i = 1 to _size
       operation = .int; lhs = .int; rhs = .int; source_line = .int
@@ -241,16 +309,28 @@ grammar: class
     return out
   op: method = .int
     arg node = .int
+    if <blen>(_frozen) > 0 then do
+      if node < 1 | node > _size then return 0
+      return <at..i64>(_frozenrows + (node - 1) * 48 + 0) _frozen
+    end
     if <blen>(_records) = 0 then return _op[node]
     if node < 1 | node > _size then return 0
     return <at..i64>((node - 1) * 48) _records
   left: method = .int
     arg node = .int
+    if <blen>(_frozen) > 0 then do
+      if node < 1 | node > _size then return 0
+      return <at..i64>(_frozenrows + (node - 1) * 48 + 8) _frozen
+    end
     if <blen>(_records) = 0 then return _a[node]
     if node < 1 | node > _size then return 0
     return <at..i64>((node - 1) * 48 + 8) _records
   right: method = .int
     arg node = .int
+    if <blen>(_frozen) > 0 then do
+      if node < 1 | node > _size then return 0
+      return <at..i64>(_frozenrows + (node - 1) * 48 + 16) _frozen
+    end
     if <blen>(_records) = 0 then return _b[node]
     if node < 1 | node > _size then return 0
     return <at..i64>((node - 1) * 48 + 16) _records
@@ -261,6 +341,10 @@ grammar: class
     return label
   line: method = .int
     arg node = .int
+    if <blen>(_frozen) > 0 then do
+      if node < 1 | node > _size then return 0
+      return <at..i64>(_frozenrows + (node - 1) * 48 + 24) _frozen
+    end
     if <blen>(_records) = 0 then return _line[node]
     if node < 1 | node > _size then return 0
     return <at..i64>((node - 1) * 48 + 24) _records

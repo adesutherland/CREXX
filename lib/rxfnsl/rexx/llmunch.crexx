@@ -1,9 +1,27 @@
 /* cREXX License (MIT). Owned DFA scanning and reverse dynamic-programming control. */
 options levelb
-namespace llmunch expose automaton scanner
+namespace llmunch expose automaton scanner frozenstep frozenkind
 import llcore
 import lllimits
 import rxfnsb
+import llprepared
+
+/** Packed shield access belongs to the DFA owner, with a call-local alias. */
+frozenstep: procedure = .int
+  arg owner_ref = reference .binary, base = .int, state = .int, byte = .int
+  if byte < 0 | byte > 255 then return 0
+  data = dereference owner_ref
+  states = <at..i32>(base + 4) data; classes = <at..i32>(base + 8) data
+  if state < 1 | state > states then return 0
+  cls = <at..i32>(base + 16 + byte * 4) data
+  if cls < 0 | cls >= classes then return 0
+  return <at..i32>(base + 1040 + states * 4 + ((state - 1) * classes + cls) * 4) data
+frozenkind: procedure = .int
+  arg owner_ref = reference .binary, base = .int, state = .int
+  data = dereference owner_ref
+  states = <at..i32>(base + 4) data
+  if state < 1 | state > states then return 0
+  return <at..i32>(base + 1040 + (state - 1) * 4) data
 
 automaton: class
   _states = .int
@@ -13,6 +31,7 @@ automaton: class
   _accept = .int[]
   _error = .string
   _image = .binary
+  _trusted = .int
   *: factory
     arg states = .int, classes = .int
     _states = states; _classes = classes; _error = ''
@@ -76,6 +95,15 @@ automaton: class
     _image = data
     _error = ''
     return
+  /** Trusted generated subsection. No DFA walk or construction occurs. */
+  compiled: factory
+    arg source_ref = reference .binary, first = .int, extent = .int
+    source = dereference source_ref
+    call binresize _image,extent
+    assembler bcopy _image,source,first
+    _states = <at..i32>(4) _image; _classes = <at..i32>(8) _image
+    _error = ''; _trusted = 1
+    return
   /** Immutable packed byte extent; zero denotes a mutable builder. */
   packed: method = .int
     return <blen>(_image)
@@ -99,6 +127,7 @@ automaton: class
     return out
   mapping: method = .int
     arg byte = .int, cls = .int
+    if _trusted then return llprepared..frozenmutation('DFA')
     if <blen>(_image) <> 0 then do
       _error = 'generated DFA image is immutable'; return 0
     end
@@ -108,6 +137,7 @@ automaton: class
     _map[byte + 1] = cls; return 1
   transition: method = .int
     arg state = .int, cls = .int, target = .int
+    if _trusted then return llprepared..frozenmutation('DFA')
     if <blen>(_image) <> 0 then do
       _error = 'generated DFA image is immutable'; return 0
     end
@@ -117,6 +147,7 @@ automaton: class
     _edges[(state - 1) * _classes + cls + 1] = target; return 1
   accepting: method = .int
     arg state = .int, kind = .int
+    if _trusted then return llprepared..frozenmutation('DFA')
     if <blen>(_image) <> 0 then do
       _error = 'generated DFA image is immutable'; return 0
     end

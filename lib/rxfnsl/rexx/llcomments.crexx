@@ -71,6 +71,9 @@ rules: class
   _shield = .llmunch..automaton[]
   _error = .string
   _ready = .int
+  _packed = .binary
+  _size = .int
+  _exportready = .int
   *: factory
     _ready = 0
     _error = ''
@@ -79,6 +82,7 @@ rules: class
   add: method = .int
     arg name = .string, form = .string, opening = .string, closing = '', keep = 0, line = 0, byte = 0
     i = .int
+    if <blen>(_packed) > 0 then return llprepared..frozenmutation('comment rules')
     if _error <> '' then return 0
     if _ready then do
       _error = 'LL_COMMENT_CONTRACT: comment policies are frozen'; return 0
@@ -96,6 +100,7 @@ rules: class
     return 1
   shielding: method = .int
     arg entry = .int, dfa = .llmunch..automaton
+    if <blen>(_packed) > 0 then return llprepared..frozenmutation('comment shielding')
     if _error <> '' then return 0
     if _ready then do
       _error = 'LL_COMMENT_CONTRACT: comment policies are frozen'; return 0
@@ -110,42 +115,100 @@ rules: class
    * at the same position. Markers inside a completed string remain permitted.
    */
   validate: method = .int
+    if <blen>(_packed) > 0 then return 1
     if _error <> '' then return 0
     if _ready then return 1
     _ready = 1
     _error = policyerror(reference _names,reference _open,reference _custom,reference _shield)
     return _error = ''
   size: method = .int
+    if <blen>(_packed) > 0 then return _size
     return _names[0]
   name: method = .string
     arg entry = .int
+    if <blen>(_packed) > 0 then do
+      if entry < 1 | entry > _size then return ''
+      at = 32 + (entry - 1) * 72 + 0
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedtext(reference _packed,first,length)
+    end
     return _names[entry]
   form: method = .string
     arg entry = .int
+    if <blen>(_packed) > 0 then do
+      if entry < 1 | entry > _size then return ''
+      at = 32 + (entry - 1) * 72 + 8
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedtext(reference _packed,first,length)
+    end
     return _forms[entry]
   opening: method = .binary
     arg entry = .int
+    if <blen>(_packed) > 0 then do
+      empty = .binary
+      if entry < 1 | entry > _size then return empty
+      at = 32 + (entry - 1) * 72 + 16
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedbytes(reference _packed,first,length)
+    end
     return _open[entry]
   closing: method = .binary
     arg entry = .int
+    if <blen>(_packed) > 0 then do
+      empty = .binary
+      if entry < 1 | entry > _size then return empty
+      at = 32 + (entry - 1) * 72 + 24
+      first = <at..u32>(at) _packed; length = <at..u32>(at + 4) _packed
+      return llprepared..packedbytes(reference _packed,first,length)
+    end
     return _close[entry]
   keep: method = .int
     arg entry = .int
+    if <blen>(_packed) > 0 then do
+      if entry < 1 | entry > _size then return 0
+      return <at..i64>(32 + (entry - 1) * 72 + 32) _packed
+    end
     return _keep[entry]
   line: method = .int
     arg entry = .int
+    if <blen>(_packed) > 0 then do
+      if entry < 1 | entry > _size then return 0
+      return <at..i64>(32 + (entry - 1) * 72 + 40) _packed
+    end
     return _lines[entry]
   byte: method = .int
     arg entry = .int
+    if <blen>(_packed) > 0 then do
+      if entry < 1 | entry > _size then return 0
+      return <at..i64>(32 + (entry - 1) * 72 + 48) _packed
+    end
     return _bytes[entry]
   custom: method = .int
     arg entry = .int
+    if <blen>(_packed) > 0 then do
+      if entry < 1 | entry > _size then return 0
+      return <at..i64>(32 + (entry - 1) * 72 + 56) _packed
+    end
     return _custom[entry]
   step: method = .int
     arg entry = .int, state = .int, byte = .int
+    if <blen>(_packed) > 0 then do
+      if entry < 1 | entry > _size then return 0
+      at = 32 + (entry - 1) * 72
+      if <at..i64>(at + 56) _packed = 0 then return 0
+      base = <at..u32>(at + 64) _packed
+      return llmunch..frozenstep(reference _packed,base,state,byte)
+    end
     return _shield[entry].target(state,_shield[entry].classof(byte))
   accepting: method = .int
     arg entry = .int, state = .int
+    if <blen>(_packed) > 0 then do
+      if entry < 1 | entry > _size then return 0
+      at = 32 + (entry - 1) * 72
+      if <at..i64>(at + 56) _packed = 0 then return 0
+      base = <at..u32>(at + 64) _packed
+      return llmunch..frozenkind(reference _packed,base,state) <> 0
+    end
     return _shield[entry].kind(state) <> 0
   error: method = .string
     return _error
@@ -154,6 +217,7 @@ rules: class
   image: method = .binary
     arg budget_ref = reference .llprepared..budget
     empty = .binary; i = .int
+    if <blen>(_packed) > 0 then return exportcompiled(budget_ref)
     if _error <> '' then do; call llprepared..reject(3,_error); return empty; end
     if <refvalid>(budget_ref) = 0 then do; call llprepared..reject(3,'expired prepared storage budget'); return empty; end
     budget = dereference budget_ref
@@ -182,6 +246,88 @@ rules: class
     end
     if out.status() <> 0 then do; call llprepared..reject(out.status(),out.error()); return empty; end
     return out.finish()
+
+  /** Explicit checked-format export; never called by trusted creation. */
+  exportcompiled: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    empty = .binary; budget = dereference budget_ref
+    out = .llprepared..writer(budget_ref)
+    call out.raw('4c434d54'x as .binary); call out.u32(1); call out.u32(_exportready); call out.u32(_size)
+    do i = 1 to _size
+      opening_bytes = opening(i); closing_bytes = closing(i)
+      call out.text(name(i)); call out.text(form(i))
+      call out.text((<at..binary>(0,<blen>(opening_bytes)) opening_bytes) as .string)
+      call out.text((<at..binary>(0,<blen>(closing_bytes)) closing_bytes) as .string)
+      call out.i64(keep(i)); call out.i64(line(i)); call out.i64(byte(i)); call out.u32(custom(i))
+      if custom(i) then do
+        at = 32 + (i - 1) * 72
+        first = <at..u32>(at + 64) _packed; length = <at..u32>(at + 68) _packed
+        if budget.take(length) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+        call out.binary(llprepared..packedbytes(reference _packed,first,length))
+      end
+    end
+    if out.status() <> 0 then do; call llprepared..reject(out.status(),out.error()); return empty; end
+    return out.finish()
+
+  /** Prevalidated immutable policy rows and owned shield blobs, built once. */
+  frozenimage: method = .binary
+    arg budget_ref = reference .llprepared..budget
+    empty = .binary; i = .int; j = .int; length = .int; text = .binary
+    budget = dereference budget_ref
+    if <blen>(_packed) > 0 then do
+      if budget.take(<blen>(_packed)) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+      return _packed
+    end
+    if _error <> '' then do; call llprepared..reject(3,_error); return empty; end
+    if policywork(budget_ref,reference _open) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+    problem = policyerror(reference _names,reference _open,reference _custom,reference _shield)
+    if problem <> '' then do; call llprepared..reject(3,problem); return empty; end
+    count = _names[0]
+    if count > (4294967295 - 32) <idiv> 72 then do; call llprepared..reject(4,'frozen comments extent'); return empty; end
+    base = 32 + count * 72
+    if budget.take(base) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+    rows = .binary; call binresize rows,base
+    <at..u32>(0) rows = 0x544d4346; <at..u32>(4) rows = 1; <at..u32>(8) rows = count; <at..u32>(12) rows = _ready
+    <at..u32>(16) rows = 32; <at..u32>(28) rows = base
+    pool = .llprepared..writer(budget_ref); cursor = base
+    do i = 1 to count
+      at = 32 + (i - 1) * 72
+      do j = 1 to 4
+        select j
+          when 1 then text = _names[i] as .binary
+          when 2 then text = _forms[i] as .binary
+          when 3 then text = _open[i]
+          otherwise text = _close[i]
+        end
+        length = <blen>(text)
+        if length > 4294967295 - cursor then do; call llprepared..reject(4,'frozen comments text extent'); return empty; end
+        <at..u32>(at + (j - 1) * 8) rows = cursor; <at..u32>(at + (j - 1) * 8 + 4) rows = length
+        call pool.raw(text); cursor = cursor + length
+      end
+      <at..i64>(at + 32) rows = _keep[i]; <at..i64>(at + 40) rows = _lines[i]
+      <at..i64>(at + 48) rows = _bytes[i]; <at..i64>(at + 56) rows = _custom[i]
+      if _custom[i] then do
+        length = _shield[i].packed()
+        if length = 0 then do; call llprepared..reject(2,'mutable shielding outside frozen profile'); return empty; end
+        if length > 4294967295 - cursor then do; call llprepared..reject(4,'frozen shielding extent'); return empty; end
+        if budget.take(length) = 0 then do; call llprepared..reject(4,budget.error()); return empty; end
+        <at..u32>(at + 64) rows = cursor; <at..u32>(at + 68) rows = length
+        call pool.raw(_shield[i].image()); cursor = cursor + length
+      end
+    end
+    output = .llprepared..writer(budget_ref); call output.raw(rows); call output.raw(pool.finish())
+    if pool.status() <> 0 then do; call llprepared..reject(pool.status(),pool.error()); return empty; end
+    if output.status() <> 0 then do; call llprepared..reject(output.status(),output.error()); return empty; end
+    return output.finish()
+
+  /** One section copy; no comment validation or shield object construction. */
+  compiled: factory
+    arg source_ref = reference .binary, first = .int, extent = .int
+    source = dereference source_ref
+    call binresize _packed,extent
+    assembler bcopy _packed,source,first
+    _size = <at..u32>(8) _packed; _exportready = <at..u32>(12) _packed; _ready = 1; _error = ''
+    return
 
   /** Decode one owned section, then reuse the ordinary ambiguity authority. */
   loaded: factory

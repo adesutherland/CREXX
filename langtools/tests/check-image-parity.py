@@ -31,6 +31,45 @@ def prepared_call_shape(text):
     return image
 
 
+def compiled_call_shape(text):
+    """Trusted entry has one supplied image formal and no runtime hydration."""
+    entry = re.search(r'^language\(\) \.locals=(\d+) \.expose=\S+\n(.*?)(?=^\S+\(\).*\.expose=|\Z)',
+                      text, re.M | re.S)
+    assert entry, 'compiled language entry'
+    locals_count = int(entry[1])
+    ops = [(match[1], tuple(part.strip() for part in match[2].split(',')))
+           for match in re.finditer(r'^\s+([a-z][a-z0-9]*)\s+(.+)$', entry[2], re.M)]
+    assert [op for op, _ in ops] == ['load', 'settp', 'load', 'call', 'ret'], 'compiled wrapper instructions'
+    result, target, count_reg = ops[3][1]
+    assert target.lstrip('§') == 'lllanguage.compiled()', 'compiled target'
+    assert re.fullmatch(r'r[0-9]+', count_reg), 'compiled count register'
+    count = int(count_reg[1:]); image_reg = f'r{count + 1}'
+    assert locals_count > count + 1, 'compiled image window outside frame'
+    assert re.fullmatch(r'r[0-9]+', result) and int(result[1:]) < locals_count, 'compiled return frame'
+    assert ops[0][1][0] == image_reg and re.fullmatch(r'0x[0-9a-fA-F]+', ops[0][1][1]), 'compiled image operand'
+    assert ops[1][1] == (image_reg, '256') and ops[2][1] == (count_reg, '1'), 'compiled formal presence/count'
+    assert ops[4][1] == (result,), 'compiled owned return'
+    image = bytes.fromhex(ops[0][1][1][2:])
+    assert image.startswith(b'LFP1'), 'compiled image magic'
+    return image
+
+
+def compiled_window_controls():
+    valid = ('language() .locals=8 .expose=control.language\n'
+             '  load r7,0x4c465031\n  settp r7,256\n'
+             '  load r6,1\n  call r4,§lllanguage.compiled(),r6\n  ret r4\n')
+    assert compiled_call_shape(valid) == b'LFP1'
+    for old, new in (('.locals=8', '.locals=7'), ('load r6,1', 'load r6,3'),
+                     ('settp r7,256', 'settp r7,0'), ('load r7,0x', 'load r5,0x'),
+                     ('lllanguage.compiled()', 'lllanguage.prepared()'), ('ret r4', 'ret r3')):
+        try:
+            compiled_call_shape(valid.replace(old, new))
+        except AssertionError:
+            pass
+        else:
+            raise AssertionError('compiled window negative: ' + old)
+
+
 def prepared_window_controls():
     valid = ('language() .locals=10 .expose=control.language\n'
              '  load r7,0x4c445031\n  settp r7,256\n  settp r8,512\n'
@@ -48,6 +87,7 @@ def prepared_window_controls():
 
 
 prepared_window_controls()
+compiled_window_controls()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('rxas', type=Path)
@@ -56,6 +96,18 @@ parser.add_argument('receipt', type=Path)
 args = parser.parse_args()
 assembly = args.rxas.read_text(encoding="utf-8")
 source = args.source.read_text(encoding="utf-8")
+if re.search(r'call r[0-9]+,§?lllanguage\.compiled\(\),r[0-9]+', assembly):
+    image = compiled_call_shape(assembly)
+    constant = re.search(r"^  constant (\w+) = '([0-9A-Fa-f]+)'x as \.binary$", source, re.M)
+    assert constant and bytes.fromhex(constant[2]) == image, 'frozen source/RXAS image parity'
+    assert re.search(r'^  return lllanguage\.\.compiled\(' + re.escape(constant[1]) + r'\)$', source, re.M), 'trusted source entry'
+    assert len(image) >= 20 and struct.unpack_from('<I', image, 4)[0] == 1
+    assert struct.unpack_from('<I', image, 8)[0] == len(image)
+    profile = struct.unpack_from('<I', image, 12)[0]
+    assert profile in (0, 1)
+    print(f'emission_image_pairs={1 + profile}; byte_identical=true')
+    raise SystemExit(0)
+
 if re.search(r'call r[0-9]+,§?lllanguage\.prepared\(\),r[0-9]+', assembly):
     image = prepared_call_shape(assembly)
     constant = re.search(r"^  constant (\w+) = '([0-9A-Fa-f]+)'x as \.binary$", source, re.M)

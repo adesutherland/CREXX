@@ -1,7 +1,28 @@
 /* cREXX License (MIT). Portable bounded prepared-definition codec. */
 options levelb
-namespace llprepared expose budget writer reader reject
+namespace llprepared expose budget writer reader reject packedtext packedbytes frozenmutation
 import rxfnsb
+
+/** A scalar view over an anchored packed owner; no reference escapes. */
+packedtext: procedure = .string
+  arg owner_ref = reference .binary, first = .int, size = .int
+  if size = 0 then return ''
+  data = dereference owner_ref
+  return (<at..binary>(first,size) data) as .string
+
+/** Explicit owned binary result; normal packed lookups read their owner. */
+packedbytes: procedure = .binary
+  arg owner_ref = reference .binary, first = .int, size = .int
+  data = dereference owner_ref; result = .binary
+  call binresize result,size
+  assembler bcopy result,data,first
+  return result
+
+frozenmutation: procedure = .int
+  arg owner = .string
+  detail = 'LL_FROZEN_DEFINITION: cannot mutate ' || owner
+  assembler signal 'ERROR',detail
+  return 0
 
 /** Logical wire/copy/decoded storage reservation, not a resident-memory claim.
  * References to this counter are operation-local and never escape in a result. */

@@ -110,28 +110,51 @@ image instead of expanding all cells or copying the image for every lookup.
 Public owning results may still copy; cREXX ordinary value copying is not a
 general copy-on-write facility.
 
-Supported scanner-only and nonregional DFA/LR1 modules embed a complete LDP1
-prepared definition. Both output formats call the same `lllanguage..prepared()`
-hydrator; runtime entry does not replay the former graph/metadata setter recipe.
-Other backend generation remains unchanged. The serializer requires already
-immutable DFA/LR owners and does not make ordinary mutable builders immutable.
+Supported scanner-only and nonregional DFA/LR1 generation uses a trusted frozen
+LFP1 definition. Both output formats call `lllanguage..compiled()` after normal
+build-time validation. Runtime creation checks only its short fixed envelope,
+owns the individual packed sections, and binds scalar headers. It does not
+hydrate metadata arrays, rebuild indexes or repeat semantic validation. Other
+backend generation remains unchanged. This selected implementation is subject
+to the [LFP qualification scope](../../research/level-l/PLAN.md#current-action-frozen-definitions).
 
-The prepared image includes raw grammar/revision and canonical CFG layout,
-existing DFA/LR tables and checked row directory, comments/shields, ordered
-stages, token holes, projection/AST schemas and diagnostic masks. Grammar/CFG
-storage stays packed until an existing mutation needs an owned materialization;
-small metadata bulk-hydrates arrays. Existing CFG/DFA/LR authorities validate the
-data before publication. A shared operation-local budget bounds logical storage
-and cold validation work; it is not a process-memory guarantee.
+The image carries raw grammar/revision/signature, canonical CFG rows and computed
+facts, DFA/LR tables and row directory, comments/shields, ordered stages, token
+holes, projection/AST schemas and diagnostics. Readers decode fixed rows and
+length-bearing spans. AST schemas include per-mapping lists of original global
+field IDs; node construction uses those lists without scanning every declaration.
+Comment shielding reads its enclosing packed section without a temporary DFA.
+Frozen mutations signal ERROR with `LL_FROZEN_DEFINITION` and leave the data
+readable. Mutable builders and their existing mutation paths stay separate.
 
-Loading returns a new complete owner or signals and returns a typed absent
-result when failure is handled. It keeps existing getter absence, case/order,
-comment freeze, mutation and borrowed-lifetime contracts. It introduces neither
-runtime code generation nor a global definition cache. See the
-[representation and failure contract](generation-design.md#prepared-definitions-ldp1).
-Selected qualification remains tracked by the
-[LDP plan](../../research/level-l/PLAN.md#current-action-prepared-definitions),
-separately from platform, sanitizer and production claims.
+The checked external LDP1 route remains `definition.image()` followed by
+`lllanguage..prepared()`. It validates complete candidates under a shared logical
+budget before publication, and bulk-hydrates small metadata where required.
+Trusted `compiled()` is not a substitute for this admission boundary when bytes
+come from an external or untrusted source. Explicit `image()` export from a
+frozen definition rebuilds the checked wire form only when requested. See the
+[two representation contracts](generation-design.md#trusted-frozen-definitions-lfp1).
+
+Each returned component owns its subsection; no constructor-local weak reference
+or full outer image is retained in every child. Ordinary value getters can still
+copy their owned results. Anchor a definition and use borrowed requests to share
+it across input documents. This adds no ownership service or global cache.
+
+### Select immutable data and mutable workspaces
+
+Immutability describes permitted operations; packing describes storage. They are
+separate choices, and not every immutable result has a packed representation.
+
+| Task | Owner and representation | Mutation boundary |
+|---|---|---|
+| Ordinary generated parsing | Trusted frozen packed definition and schemas; anchored borrowed readers | No builder mutation; create another definition to change the language. |
+| Read parsed application trees | Existing per-input AST arena, frozen when published | Read handles borrow that result; this is not a new packed AST arena. |
+| Construct a language or schema | Existing mutable grammar, DFA/LR and metadata builders | Mutators run during construction; validate and encode before publishing frozen data. |
+| Analyse or optimize a program | Existing annotations, facts, IR and rewrite/draft owners | Store analysis separately or publish a new rewritten tree; do not edit a frozen definition/result. |
+
+Keep each borrowed owner live and unchanged for the reader's lifetime. Packing
+does not turn ordinary B value assignment into copy-on-write or extend a weak
+reference's lifetime.
 
 Lexical construction reuse is optional generation infrastructure. A request may
 supply a private capsule containing the entire main/shield DFA set. Exact

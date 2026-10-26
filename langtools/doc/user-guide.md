@@ -1391,11 +1391,42 @@ status = request.parse()
 `source` is `.binary`. The optional third constructor argument is a
 `.lllimits..policy`, described under [Resource limits](#resource-limits).
 
+### Choose a definition or a workspace
+
+Generated scanner-only and nonregional LR1 modules use a trusted frozen packed
+definition by default. Their `NAMESPACE..language()` API stays the same. Create
+one anchored definition and use borrowed requests for successive documents;
+there is no need to copy the definition or rebuild it for every input.
+
+| You need to… | Choose… |
+|---|---|
+| Parse documents using a generated language | Its frozen definition and read-only schema APIs. |
+| Read a parsed application tree | The existing immutable per-input AST result arena and its borrowed node handles. This arena is not a new packed tree format. |
+| Build a different grammar/schema | Mutable construction owners, then validate and encode a new definition. |
+| Analyse or transform a program | Separate annotations/facts/IR, or drafts that produce a new rewritten tree. |
+
+Frozen definition mutation signals ERROR with `LL_FROZEN_DEFINITION:` detail;
+handling that error leaves the original data readable. The `frozenimage()`
+encoder creates the trusted representation after build-time validation:
+
+```rexx
+trusted = language.frozenimage()
+restored = lllanguage..compiled(trusted)
+```
+
+Use `compiled()` only for those prevalidated compiled artifacts. Its startup
+checks cover the short header, not arbitrary external data. For file/network
+images requiring validation, use `image()` and `prepared()` below. The trusted
+route owns individual packed sections and does not hydrate metadata or build
+indexes at startup. Explicit value/collection getters can still copy; packing
+does not imply copy-on-write. Borrowed owners must remain live and unchanged.
+See [the representation and trust contract](generation-design.md#trusted-frozen-definitions-lfp1)
+and [selected qualification](../../research/level-l/PLAN.md#current-action-frozen-definitions).
+
 ### Save and load a prepared definition
 
-Generated scanner-only and nonregional LR1 modules embed one prepared image.
-Their public `NAMESPACE..language()` call stays the same. A host can also save
-and restore a supported definition through the SDK:
+A host can save and restore a supported definition through the checked SDK
+route, including an explicit export from a frozen generated definition:
 
 ```rexx
 language = levell_settings..language()
@@ -1414,9 +1445,10 @@ connected artifact admission; request parsing/source budgets remain separate.
 
 The image preserves comments and custom shields, ordered stages, tokens and
 holes, projection/AST fields, authored diagnostics, raw grammar labels and
-revisions. Existing owned getters, mutations and borrowed-reader lifetimes keep
-their meanings. Ordinary mutable DFA/LR builders must first be frozen through
-the existing `loaded()` APIs; `image()` refuses them without changing them.
+revisions. Checked-loaded owners retain their existing mutation and
+borrowed-reader lifetimes; trusted frozen owners refuse mutation instead of
+materializing mutable arrays. Ordinary mutable DFA/LR builders must first be
+frozen through the existing `loaded()` APIs; `image()` refuses them without changing them.
 Unsupported parser profiles retain their existing generated construction.
 
 For optional definition fields, `initialized()` alone is not a class-presence
@@ -1493,8 +1525,9 @@ expired storage, not mutation or rebinding of a still-live owner. Borrowed
 factories and owner-dependent operations refuse an empty, expired or live but
 uninitialized owner with status 3 and an
 `LL_BORROW_OWNER:` diagnostic, without reading it or publishing partial output.
-Ordinary direct method-receiver guards remain unchanged. There is no generic
-freeze or mutation-detection mechanism and no cross-worker sharing. Reader methods take
+Ordinary direct method-receiver guards remain unchanged. Borrowing does not
+freeze a mutable owner or detect its later mutation, and adds no cross-worker
+sharing. Reader methods take
 scoped live aliases; they do not store self-references into an owning wrapper
 that may subsequently be returned or copied. Copying a borrower retains weak
 borrows; it does not snapshot the heavy owner. Sources, token streams, policies,
@@ -1512,6 +1545,8 @@ definition for its metadata; expiry does not retroactively invalidate results.
 | `backend()` | Selected parser implementation; a composed expression language reports `regional`. |
 | `encoding()` | Lexical input profile. |
 | `unicodeversion()` | Unicode property-data version recorded in the definition. |
+| `image(bytes=67108864)` | Explicit owned checked LDP1 export from a supported definition, including a trusted frozen one. |
+| `frozenimage(bytes=67108864)` | Validate and encode trusted read-ready LFP1 data at build time. |
 
 Metadata retains the spelling of declared names. Use that spelling, including
 case, for string lookups such as `tokenid()` and comparisons with tree labels.
@@ -3604,9 +3639,10 @@ the generating host's default construction allowances.
 ### Storage in generated modules
 
 DFA and LR tables remain packed in the generated module. Runtime lookups read
-that storage directly. Prepared-definition loading validates the supplied exact
-LR row index; the ordinary LR loader derives that same index. Neither expands
-every action into a separate object. Other parser backends retain the
+that storage directly. Trusted generated definitions retain precomputed metadata,
+facts and indexes without startup hydration. Checked `prepared()` loading
+validates the supplied exact LR row index; the ordinary LR loader derives that
+same index. Neither expands every action into a separate object. Other parser backends retain the
 grammar or operator data needed by their runtime algorithm.
 
 Reuse a language definition and create fresh requests for input documents.

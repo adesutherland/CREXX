@@ -246,8 +246,8 @@ failure/effect proof, nested policy restoration, handler/resumption and cleanup
 equivalence. Neither opportunity authorizes implementation or a new panel.
 
 **RCOST-05 — implemented and locally qualified for the selected generic/C profile:** The
-[generic Level L plan](../PLAN.md#current-action-prepared-definitions) owns LDP1
-acceptance and local-commit readiness. Its scanner/nonregional LR1 profile reuses
+[generic Level L plan](../PLAN.md#current-action-prepared-definitions) owns the
+qualified LDP1 checked transport contract. Its scanner/nonregional LR1 profile reuses
 packed DFA/LR data and complete portable grammar/CFG/policy/schema metadata, preserving
 existing language()/builder/reader mutation, ownership, error and resource
 contracts. The shared serializer/hydrator excludes VM pointers and request state.
@@ -255,6 +255,15 @@ RCOST-01/02 remain complete; RCOST-03/04 remain future only. No G feature or wid
 qualification is selected. The selected Debug checks establish no general
 startup-speed or peak-memory improvement, formal performance verdict, Release,
 platform or SAN qualification.
+
+The approved [LFP1 follow-on](../PLAN.md#current-action-frozen-definitions) makes
+generated definitions trusted, frozen packed data behind the existing read API.
+Validation and indexing happen at build time; `lllanguage..compiled()` performs
+only a short header check and binds owned packed sections, with no hydration.
+The checked `prepared()` loader remains for external LDP1 images, and mutable
+builders remain the construction path. Per-input AST result storage is unchanged.
+The generic plan owns the selected focused checks and local delivery; this adds
+no G feature or wider qualification.
 
 ## Outside current C closure
 

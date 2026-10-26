@@ -45,6 +45,22 @@ def callnames(body):
             for arg in args if arg.endswith("()")}
 
 
+def copies_receiver(ops):
+    return any(op == "copy" and len(args) == 2 and args[1] == "a1"
+               for op, args in ops)
+
+
+def receiver_copy_controls():
+    # A packed scalar bound reads an anchored field, not a value-copy of the
+    # complete definition. This is the former inlined self-count regression.
+    window = [("linkattr1", ("r2", "a1", "7")),
+              ("load", ("r3", "8")), ("bgetu32", ("r4", "r2", "r3")),
+              ("unlink", ("r2",))]
+    require(not copies_receiver(window), "packed scalar bound control")
+    bad = [("copy", ("r5", "a1")), *window]
+    require(copies_receiver(bad), "packed scalar bound receiver-copy negative")
+
+
 def linked_cfg_query(window, cfg, query):
     """Exact scalar call ABI after linking the retained tables._cfg field."""
     if len(window) != 7:
@@ -97,8 +113,10 @@ def query_window_controls():
 
 def check(directory):
     query_window_controls()
+    receiver_copy_controls()
     texts = {name: (directory / f"{name}.rxas").read_text(encoding="utf-8")
-             for name in ("lllanguage", "llmunch", "lllr", "llcfg", "llcheck")}
+             for name in ("lllanguage", "llmunch", "lllr", "llcfg", "llcheck",
+                          "llcore", "llcomments", "llstage", "llproject", "llast")}
     code = {}
     for text in texts.values():
         code.update(routines(text))
@@ -111,6 +129,16 @@ def check(directory):
         match = re.search(rf'\.meta "{re.escape(owner)}\.{field}"="b" "[^"]+" \.attr (\d+)\b', texts[module])
         require(match, f"missing owner field metadata {owner}.{field}")
         return match[1]
+
+    for method in ("tokenname", "tokenid", "stageat", "messagetext", "messagemask", "explain"):
+        name = "lllanguage.definition." + method
+        ops = instructions(body(name))
+        require(not copies_receiver(ops), f"{name} copies its complete metadata owner")
+        require(any(op == "bgetu32" for op, _ in ops),
+                f"{name} must read its packed scalar bound directly")
+        require(not {"lllanguage.definition.tokencount", "lllanguage.definition.stagecount",
+                     "lllanguage.definition.messagecount"}.intersection(callnames(body(name))),
+                f"{name} dispatches a self-count query")
 
     def inline_production_query(name, field):
         """Prove a scalar call/read is linked through retained tables/CFG."""
@@ -142,6 +170,22 @@ def check(directory):
                     if read_op == "minlinkattr1" and len(read_args) == 4 and read_args[1] == array_reg:
                         return True
         return False
+
+    # Trusted generated factories may copy fixed sections/header scalars only.
+    # Checked external loaders keep the semantic validators below.
+    forbidden = ("llcheck.analysis.", "llprepared.reader.", "llprepared.writer.",
+                 "llprepared.budget.", "lllr.imagecheck.")
+    for name in ("lllanguage.compiled", "lllanguage.definition.§factory.compiled",
+                 "llcore.grammar.§factory.compiled", "llcfg.productions.§factory.compiled",
+                 "lllr.tables.§factory.compiled", "llmunch.automaton.§factory.compiled",
+                 "llcomments.rules.§factory.compiled", "llstage.rules.§factory.compiled",
+                 "llproject.schema.§factory.compiled", "llast.schema.§factory.compiled"):
+        calls = callnames(body(name))
+        require(not any(target.startswith(forbidden)
+                        or target.endswith((".image", ".frozenimage", ".prepared", ".loaded", ".build", ".preparefacts"))
+                        for target in calls), f"{name} hydrates or validates compiled data")
+        require(not any(op == "minlinkattr1" for op, _ in instructions(body(name))),
+                f"{name} constructs row arrays")
 
     # Packed LR load needs the checked production representation; nullable/FIRST
     # consumers retain one explicit, cached demand for complete graph facts.

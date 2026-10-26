@@ -1,22 +1,74 @@
-# Level L generation: prepared definitions and lexical construction reuse
+# Level L generation: frozen and prepared definitions, lexical construction reuse
 
 The [generic Level L plan](../../research/level-l/PLAN.md) owns the acceptance
-and sequence for these two separate mechanisms. The selected scanner/nonregional
-LR1 prepared-definition profile is locally qualified under LDP; broader Level L
+and sequence for these separate mechanisms. Trusted frozen generated definitions
+are the selected LFP implementation increment; its qualification remains tracked
+there. The checked scanner/nonregional LR1 prepared-definition profile is locally qualified under LDP; broader Level L
 acceptance remains open. Lexical construction reuse is locally qualified under
 LRUSE. This contract belongs to generic language tooling, not to one research
 source-language compiler.
 
+## Trusted frozen definitions (LFP1)
+
+Generated scanner-only and nonregional DFA/LR1 modules embed read-ready LFP1 data
+and call `lllanguage..compiled(image=.binary)`. Both source and RXAS output use the
+same build-time constructor and encoder. The RXAS call reserves its complete
+physical formal window; source uses a procedure-local named binary constant.
+Auxiliary property/flow/services and other parser backends keep their existing
+generation route.
+
+`definition.frozenimage(bytes=.int=67108864)` performs normal checked admission
+at encode time, then writes all fixed rows, offsets, signatures, CFG nullable/FIRST
+facts, LR directories and AST field lists. Existing immutable loaded main/shield
+DFA and LR owners are required. `compiled()` consumes only these trusted,
+prevalidated artifacts: a short magic/version/profile/extent/fixed-directory
+check precedes native section copies and scalar binding. It does not perform
+runtime UTF-8/schema/CFG/DFA/LR validation, hydrate per-row arrays or construct
+indexes. Arbitrary external bytes are outside this entry's contract; use the
+checked [LDP1 loader](#prepared-definitions-ldp1) for them.
+
+LFP1 uses the same portable little-endian `u32`/`i64` conventions and twelve
+section IDs listed below, with magic `LFP1` in the 20-byte header. Scanner images
+omit IDs 2–5. Grammar includes its exact canonical signature; CFG includes
+precomputed facts. Text and blob pools use section-relative `u32 offset,length`
+spans, with no pointers or executable state. Main metadata sections have a
+32-byte magic/version/count/auxiliary/rows/auxiliary-rows/index/pool header:
+
+| Section | Read-ready layout |
+|---|---|
+| Comments (`FCMT`) | 72-byte rows and owned shield blobs. Auxiliary header preserves the original checked-export ready flag; compiled rules are always frozen. |
+| Stages (`FSTG`) | Initial state/limit then 72-byte rows, preserving first-match order and word normalization. |
+| Projection (`FPRJ`) | 24-byte name/kind/arity rows. |
+| AST schema (`FAST`) | 24-byte mapping rows, 40-byte field rows and per-mapping `u32` field-ID lists. IDs retain global declaration order; mappings sharing a kind remain distinct. |
+
+Construction owns each component's individual subsection, not another full
+outer image per child. Accessors borrow anchored fields while reading. No weak
+reference into encoder/constructor locals survives. Collection-returning and
+explicit export APIs may still make their ordinary owned copies; B values are
+not assumed to be copy-on-write. No per-input AST arena packing is introduced.
+
+Frozen builder attempts signal ERROR with `LL_FROZEN_DEFINITION:` detail and,
+if handled, return the existing failure result without poisoning readable data.
+Header refusal signals INVALID_ARGUMENTS with `LL_LANGUAGE_IMAGE:` detail and
+returns a typed absent definition if handled. Trust does not add a new malformed
+input guarantee beyond that header. Explicit `image()` reads the frozen getters
+and reconstructs the checked LDP1 form when requested, preserving original raw
+labels, revision, token holes, metadata order and comment-export readiness.
+
+Use frozen definitions for repeated parsing, immutable result arenas for tree
+consumption, and separate mutable builders/drafts, annotations and IR for
+construction or analysis. Rewrites publish a new tree. Immutability and packed
+storage are distinct; selecting one does not imply the other.
+
 ## Prepared definitions (LDP1)
 
-A supported generated `language()` embeds one complete data image and calls
-`lllanguage..prepared()`. RXAS uses a binary constant operand; generated Level B
-source uses a procedure-local named binary constant. Both formats use the same
-build-time definition constructor, encoder and runtime hydrator. They do not
-replay graph/schema/stage setters on every `language()` call. Properties, flow
-facades and their existing exports remain separate generated services.
-The RXAS call reserves all three physical formal slots, including both omitted
-optionals, and explicitly sets their presence flags using the native B ABI.
+The checked SDK data route is `definition.image()` followed by
+`lllanguage..prepared()`. It remains available for external data and explicit
+exports independently of generated modules' trusted entry. The loader does not
+replay public graph/schema/stage setters; it validates local candidates and
+hydrates owned storage before publishing. A direct RXAS call reserves all three
+physical formal slots, including both omitted optionals, and explicitly sets
+their presence flags using the native B ABI.
 
 Version 1 supports scanner-only and nonregional DFA/LR1 definitions. Main and
 custom shielding DFAs, and LR tables when present, must already be immutable
@@ -115,7 +167,8 @@ bootstrap source/stamp closure include the codec without a reverse compiler edge
 **Implemented and locally qualified.** The
 [LRUSE plan](../../research/level-l/PLAN.md#current-action-lexer-reuse) owns its
 remaining wider acceptance boundary. A lexical reuse capsule is advisory build
-input; an LDP1 definition is the generated runtime artifact. Their failure and
+input; LFP1 is the trusted generated runtime artifact, while LDP1 is its checked
+external/export counterpart. Their failure and
 fallback rules are deliberately different.
 
 ## Intended outcome and ownership
