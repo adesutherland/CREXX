@@ -6,6 +6,8 @@ portable one-second commands distinguish equality/freshness, with no speed
 threshold. Shared deterministic DATE/TIME conversion tests remain their owner.
 """
 import argparse
+import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -42,16 +44,71 @@ def mapped_calls(body, symbol):
     return [(row, at) for row, at in mapped_rows(body) if called(row, symbol)]
 
 
+# DIAG-CQUERY gives a proved internal-call EXIT query its own presentation ID.
+# Match only its existing saved-activation window, including receiver cleanup
+# and the result-controlled unwind edge; do not admit arbitrary call lookahead.
+INTERNAL_QUERY = re.compile(
+    r'linkref (?P<receiver>r\d+),(?P<activation>r\d+)\n'
+    r'swap (?P=receiver),(?P<argument>r\d+)\n'
+    r'load (?P<count>r\d+),1\nsettp (?P=argument),256\n'
+    r'call (?P<result>r\d+),rexxactivation\.rexxactivationarguments\.programexitrequested\(\),(?P=count)\n'
+    r'swap (?P=receiver),(?P=argument)\nnull (?P=argument)\n'
+    r'unlink (?P=receiver)\nnull (?P=activation)\n'
+    r'brt (?P<unwind>llb\d+),(?P=result)')
+
+
 def no_repeated_source(body):
+    rows = body.splitlines()
+    records = {n: shlex.split(row) for n, row in enumerate(rows)
+               if row.lstrip().startswith('.srcstep ')}
+    steps = [int(fields[1]) for fields in records.values()]
+    queries = {}
+    for n in records:
+        window = INTERNAL_QUERY.fullmatch('\n'.join(rows[n + 1:n + 11]))
+        if window and re.search(r'^' + window['unwind'] + r':\s*$', body, re.M):
+            queries[n] = window
+    ordinary_max = max((int(fields[1]) for n, fields in records.items()
+                        if n not in queries), default=0)
     previous = None
-    for row in body.splitlines():
+    for n, row in enumerate(rows):
         if re.fullmatch(r'llb\d+:\s*', row):
             previous = None  # A real control entry may restore the same mapping.
-        elif row.lstrip().startswith('.srcstep '):
-            fields = shlex.split(row)
-            key = tuple(fields[2:])  # Origin IDs can differ for one source span.
-            assert previous != key, 'no mechanically repeated unchanged source record inside one block'
+        elif n in records:
+            fields = records[n]; key = tuple(fields[2:])
+            if previous == key:
+                step = int(fields[1])
+                assert (n in queries and fields[3] in ('34', '98') and
+                        step > ordinary_max and steps.count(step) == 1), (
+                    'no mechanical duplicate; only a unique derived internal EXIT-query presentation')
             previous = key
+
+
+def source_cache_controls():
+    # These checker controls reject false query exceptions, independently of
+    # the selected raw graph. The window is register-independent.
+    mapping = '.srcstep 3 0 34 "call.crexx" 1 1 4 "P()"\n'
+    query = mapping.replace('.srcstep 3 ', '.srcstep 31 ')
+    window = ('linkref r8,r7\nswap r8,r12\nload r11,1\nsettp r12,256\n'
+              'call r9,rexxactivation.rexxactivationarguments.programexitrequested(),r11\n'
+              'swap r8,r12\nnull r12\nunlink r8\nnull r7\nbrt llb2,r9\n')
+    valid = mapping + 'copy r3,r4\n' + query + window + 'llb2:\n'
+    no_repeated_source(valid)
+    no_repeated_source(valid.replace(' 34 ', ' 98 '))
+    for invalid in (
+        mapping + 'copy r3,r4\n' + mapping,
+        valid.replace('.srcstep 31 ', '.srcstep 0 '),
+        valid.replace('.srcstep 31 ', '.srcstep 3 '),
+        valid + mapping + query + window + 'llb2:\n',
+        valid.replace(' 34 ', ' 17 '),
+        valid.replace(query, query + 'call r6,foreign(),r11\n'),
+        valid.replace(query, query + mapping),
+        valid.replace(query, query + 'llb3:\n'),
+    ):
+        try:
+            no_repeated_source(invalid)
+        except AssertionError:
+            continue
+        raise AssertionError('source-cache control admitted a forged duplicate')
 
 
 def shapes(text, source, target):
@@ -115,7 +172,17 @@ def shapes(text, source, target):
     assert len(called(body, 'llctarget.untiltruth')) == 1, 'first/repeated UNTIL reuse one semantic predicate'
     no_repeated_source(body)
     definitions = re.findall(r'^\S+\([^\n]*\s\.locals=\d+[^\n]*\.expose=(llctarget\.[^\s]+)\s*$', target, re.M)
-    assert len(definitions) == len(set(definitions)) == 36, 'no new target export or clock helper'
+    assert len(definitions) == len(set(definitions)) == 39, 'target API including clausepending'
+    assert set(definitions) == {'llctarget.' + name for name in (
+        'literal', 'poolnew', 'poolread', 'poolwrite', 'binaryop', 'unaryop',
+        'truth', 'sayvalue', 'sayconfigured', 'setting', 'digits', 'arguments',
+        'mainargs', 'append', 'countargs', 'existsarg', 'present', 'absent',
+        'emptyreturn', 'bifarguments', 'missing', 'missingconfigured',
+        'requirevalue', 'setresult', 'status', 'lengthvalue', 'failuremessage',
+        'whentruth', 'selectmissing', 'donew', 'docapture', 'dostart', 'doentry',
+        'doadvance', 'whiletruth', 'untiltruth', 'invalidtransfer', 'parsesource',
+        'clausepending',
+    )}, ('exact target export inventory', definitions)
 
 
 def normalized_mapping(text):
@@ -132,6 +199,7 @@ def normalized_mapping(text):
 
 
 def raw_shapes(directory):
+    source_cache_controls()
     marker = (directory / 'owner-2.rxas').read_text()
     plain = (directory / 'owner-3.rxas').read_text()
     assert normalized_mapping(marker) == normalized_mapping(plain), 'K-free begin plus exclusive C load have no executable/getter/COPY/source/diagnostic side effect'
@@ -152,9 +220,12 @@ def main():
     parser.add_argument('--mode', choices=('opt', 'noopt'), default='opt')
     parser.add_argument('--vm', choices=('rxbvm', 'rxtvm'), default='rxbvm')
     parser.add_argument('--ir', choices=('on', 'off'), default='on')
-    parser.add_argument('--phase', choices=('all', 'source', 'host', 'contracts', 'shapes'), default='all')
+    parser.add_argument('--phase', choices=('all', 'emit', 'source', 'host', 'contracts', 'shapes'), default='all')
     parser.add_argument('--inspect', type=Path)
     args = parser.parse_args()
+    emit = args.phase == 'emit'
+    if emit and args.inspect is None:
+        parser.error('--phase emit requires --inspect')
     fixtures = Path(__file__).resolve().parent; build = args.build.resolve()
     backend = build / 'research/level-l/compilers/backend' / args.mode
     suffix = '.exe' if os.name == 'nt' else ''
@@ -177,10 +248,14 @@ def main():
                 shutil.copy2(dll, directory / dll.name)
             providers = directory / 'providers'; providers.mkdir()
             for plugin in plugins:
-                shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
+                filename = plugin + '.rxplugin'
+                source = build / 'bin' / filename
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / filename
+                shutil.copy2(source, providers / filename)
             return directory, vm
 
-        host, host_vm = stage('C compiler host', ('rxfs',))
+        host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
         application, target_vm = stage('static application', ('rxfs', 'rxcstream'))
         compiler = host / 'llrxc-c-linked.rxbin'; shutil.copy2(backend / compiler.name, compiler)
         empty_path = work / 'empty PATH'; empty_path.mkdir()
@@ -198,25 +273,84 @@ def main():
             return completed
 
         def inspect(path, name):
-            if args.inspect:
+            if args.inspect and not emit:
                 args.inspect.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(path, args.inspect / f'{name}-{args.mode}-{args.ir}-{args.vm}.rxas')
 
-        if args.phase in ('all', 'source', 'host', 'shapes'):
+        # Emit-only capture stays local to this recipe and never replaces a tool.
+        def emission_hash(path):
+            return hashlib.sha256(path.read_bytes()).hexdigest()
+
+        if emit:
+            emission_owner = 'clause'
+            emission_dir = args.inspect.resolve() / f'{emission_owner}-{args.mode}-{args.ir}-{args.vm}'
+            emission_dir.mkdir(parents=True)  # Refuse reuse of an earlier collection.
+            emission_records = []
+            emission_derived_records = []
+            emission_started = []
+
+        def emission_start(source):
+            if emit:
+                case = source.stem
+                assert case not in emission_started, ('duplicate request identity', case)
+                emission_started.append(case)
+                print(f'START|{emission_owner}.{case}')
+
+        def emission_finish(source, output, completed, *, refused=False):
+            case = source.stem
+            assert case in emission_started and not any(row['case'] == case for row in emission_records)
+            assert (completed.returncode != 0) == refused
+            data = source.read_bytes()
+            (emission_dir / (case + '.source')).write_bytes(data)
+            (emission_dir / (case + '.stdout')).write_bytes(completed.stdout)
+            (emission_dir / (case + '.stderr')).write_bytes(completed.stderr)
+            record = dict(case=case, logical=source.name, source_sha256=hashlib.sha256(data).hexdigest(),
+                          argv=completed.args, status=completed.returncode,
+                          stdout_sha256=hashlib.sha256(completed.stdout).hexdigest(),
+                          stderr_sha256=hashlib.sha256(completed.stderr).hexdigest(),
+                          disposition='REFUSAL' if refused else 'EMITTED')
+            if refused:
+                # The owner has already checked exact diagnostics and the prior-output sentinel.
+                (emission_dir / (case + '.previous')).write_bytes(output.read_bytes())
+                record['previous_sha256'] = emission_hash(output)
+            else:
+                assert output.stat().st_size > 0
+                shutil.copyfile(output, emission_dir / (case + '.rxas'))
+                record['rxas_sha256'] = emission_hash(output)
+            emission_records.append(record)
+            print(f"{record['disposition']}|{emission_owner}.{case}")
+
+        def emission_derived(base, exported):
+            assert len(emission_derived_records) == 0
+            assert emission_hash(base) == next(row['rxas_sha256'] for row in emission_records if row['disposition'] == 'EMITTED')
+            shutil.copyfile(exported, emission_dir / 'entry-export.rxas')
+            emission_derived_records.append(dict(case='entry-export', base_sha256=emission_hash(base),
+                                                 rxas_sha256=emission_hash(exported), transform='existing-entry-export'))
+            print(f'DERIVED|{emission_owner}.entry-export')
+
+        def export_entry(text):
+            exported = application / 'source-exported.rxas'
+            text, headers = re.subn(r'^(llf1\(\) \.locals=\d+)(\s*)$', r'\1 .expose=clausefixture.run\2', text, count=1, flags=re.M)
+            text, metadata = re.subn(r'^(\s*\.meta )"llprogram\.\$MAIN"(?==)', r'\1"clausefixture.run"', text, count=1, flags=re.M)
+            assert headers == metadata == 1, 'one test-only exported entry0, no production ABI change'
+            exported.write_text(text, encoding='utf-8'); inspect(exported, 'clause-exported')
+            return exported
+
+        if args.phase in ('all', 'emit', 'source', 'host', 'shapes'):
             source = work / 'source-c.crexx'; data = (fixtures / source.name).read_bytes()
             source.write_bytes(data if args.mode == 'opt' else data.replace(b'\n', b'\r\n'))
             assembly = application / 'source.rxas'
-            run('one C source compile', [host_vm, '--no-autoload', compiler, '-a', *(['-n'] if args.ir == 'off' else []),
+            emission_start(source)
+            compiled = run('one C source compile', [host_vm, '--no-autoload', compiler, '-a', *(['-n'] if args.ir == 'off' else []),
                                         '-i', runtime, '-o', assembly, source], silent=True, cwd=host)
             inspect(assembly, 'clause-source'); text = assembly.read_text()
             assert str(work) not in text and str(build) not in text, 'stable logical source identity'
             shapes(text, source, (backend / 'llctarget.rxas').read_text())
-            if args.phase != 'shapes':
-                exported = application / 'source-exported.rxas'
-                text, headers = re.subn(r'^(llf1\(\) \.locals=\d+)(\s*)$', r'\1 .expose=clausefixture.run\2', text, count=1, flags=re.M)
-                text, metadata = re.subn(r'^(\s*\.meta )"llprogram\.\$MAIN"(?==)', r'\1"clausefixture.run"', text, count=1, flags=re.M)
-                assert headers == metadata == 1, 'one test-only exported entry0, no production ABI change'
-                exported.write_text(text, encoding='utf-8'); inspect(exported, 'clause-exported')
+            if emit:
+                emission_finish(source, assembly, compiled)
+                emission_derived(assembly, export_entry(text))
+            if args.phase != 'shapes' and not emit:
+                exported = export_entry(text)
                 run('exported source assemble', [tool('rxas'), *(['-n'] if args.mode == 'noopt' else []), exported], silent=True)
                 imports = work / 'B caller imports'; imports.mkdir()
                 for provider in runtime.glob('*.rxbin'):
@@ -247,6 +381,26 @@ def main():
             raw_shapes(raw)
             for path in raw.glob('*.rxas'):
                 inspect(path, 'clause-raw-' + path.stem)
+        if emit:
+            assert len(emission_records) == 0 + 1 and len(emission_started) == 0 + 1
+            assert sum(row['disposition'] == 'EMITTED' for row in emission_records) == 1
+            assert sum(row['disposition'] == 'REFUSAL' for row in emission_records) == 0
+            assert len(emission_derived_records) == 1
+            identity = dict(kind='EMISSION_ONLY', owner=emission_owner, mode=args.mode,
+                            producer_vm=args.vm, semantic_ir=args.ir, dialect='C',
+                            adapter_sha256=emission_hash(Path(__file__)),
+                            entry_sha256=emission_hash(fixtures / ('check-' + emission_owner + '.py')),
+                            compiler_sha256=emission_hash(compiler), vm_sha256=emission_hash(host_vm),
+                            shape_inputs={'llctarget.rxas': emission_hash(backend / 'llctarget.rxas')},
+                            imports={path.name: emission_hash(path) for path in sorted(runtime.glob('*.rxbin'))},
+                            providers={path.name: emission_hash(path) for path in sorted((host / 'providers').glob('*')) if path.is_file()},
+                            host_libraries={path.name: emission_hash(path) for path in sorted(host.glob('*.dll'))},
+                            bindings=[], routine_export='', host_export='',
+                            limits=dict(frontend_bytes='1000000', nesting='512', output_bytes='67108864', registers='65536'),
+                            requests=emission_records, derived=emission_derived_records)
+            (emission_dir / 'identity.json').write_text(json.dumps(identity, indent=2) + '\n', encoding='utf-8')
+            print(f'{emission_owner.upper()}_EMISSION|mode={args.mode}|vm={args.vm}|ir={args.ir}|requests={len(emission_records)}|derived=1|EMISSION')
+            return
     print(f'CLAUSE_CHECK|mode={args.mode}|vm={args.vm}|ir={args.ir}|phase={args.phase}|commands={commands}|PASS')
 
 

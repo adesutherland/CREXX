@@ -64,7 +64,8 @@ main: procedure = .int expose checks failures contract artifacts
       call check(found = 1 & pos('crexx.c.truth',after.dump()) > 0,'literal branch proof retains effectful C truth')
     end
     call check(after.blocks() < before.blocks(),level || ' dead branch removed')
-    call check(oracle(before) = 'yes;' & oracle(after) = 'yes;',level || ' independent source/optimised IR oracle')
+    sourceanswer = oracle(before); optimisedanswer = oracle(after)
+    call check(sourceanswer = 'yes;' & optimisedanswer = 'yes;',level || ' independent source/optimised IR oracle: ' || sourceanswer || ' / ' || optimisedanswer)
     unoptimised = raw.output(); optimised = opt.output()
     call check(optimised.bytes() < unoptimised.bytes(),level || ' smaller RXAS')
     remaining = 0; dispatch = 0; storage = dereference after.storage()
@@ -128,7 +129,8 @@ fold: procedure = .void expose contract
 
 /** Tiny separate oracle for the documented C/G branch demonstration. It has no
  * evaluator calls and rejects unadmitted operations instead of guessing. C
- * entry activation/context construction is inert for this literal-only case. */
+ * entry activation/context construction is inert for this literal-only case.
+ * Its clause begins have no DATE/TIME observer or handler checkpoint. */
 oracle: procedure = .string
   arg graph = .llir..module
   store = dereference graph.storage(); values = .binary[]; slots = .binary[]
@@ -176,6 +178,7 @@ oracle: procedure = .string
           when 'crexx.g.say' then output = output || (values[store.operand(op,1)] as .string) || ';'
           when 'crexx.c.arguments.empty' then nop
           when 'crexx.c.return.absent' then nop
+          when 'crexx.c.clause.begin' then nop
           otherwise return 'UNSUPPORTED:' || name
         end
       end

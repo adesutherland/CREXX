@@ -205,7 +205,12 @@ def check_provider_shape(text):
     blocks = re.findall(r'^llb\d+:\n([\s\S]*?)(?=^llb\d+:|\Z)', body.group(), re.M)
     semantic = [block for block in blocks if ','+direct+'(),' in block]
     assert len(semantic) == 1, 'one straight-line DROP semantic block'
-    assert not re.search(r'^br(?:t|f)? |^b(?:eq|ne|lt|le|gt|ge) ', semantic[0], re.M), 'unexpected normal DROP list loop'
+    # A return restores this frame's condition policies through one forward
+    # guard. Admit only that terminal sigpop/reset suffix, never list control.
+    effects = re.sub(r'^brf (llpolicies\d+_\d+_done),(r\d+)\n'
+                     r'(?:sigpop "[A-Z_]+"\n)+load \2,0\n\1:\n(?=ret r\d+\n?$)',
+                     '', semantic[0], flags=re.M)
+    assert not re.search(r'^br(?:t|f)? |^b(?:eq|ne|lt|le|gt|ge) ', effects, re.M), 'unexpected normal DROP list loop'
     assert ',llctarget.poolnew(),' not in body.group() and '.bindpool(),' not in body.group(), 'supplied shared entry adds no private pool'
 
 

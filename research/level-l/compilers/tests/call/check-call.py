@@ -34,6 +34,36 @@ def named_call(text, name):
                      r'§?' + re.escape(name) + r'\(\)(?:,|\s*$)', text, re.M)
 
 
+def bif_checks(text):
+    """Every direct BIF checks its context and raises after releasing aliases."""
+    call = r'^[ \t]*(?:settp)?(?:swap)?call[1-4]?[ \t]+'
+    entries = list(re.finditer(call + r'[^,\n]+,§?'
+                              r'(rexxclassicbif[a-z0-9]+\.rexxclassicbif_[a-z0-9_]+)\(\)', text, re.M))
+    assert entries, 'direct BIF error-check paths are present'
+    context = r'§?rexxclassicbifs\.rexxbifcallcontext\.'
+    for index, entry in enumerate(entries):
+        end = entries[index + 1].start() if index + 1 < len(entries) else len(text)
+        tail = text[entry.end():end]
+        branch = re.search(r'^[ \t]*brf[ \t]+(llbifcheck\d+_\d+_ready),(r\d+)[ \t]*$', tail, re.M)
+        assert branch, ('direct BIF has a guarded error path', entry[1])
+        guard = re.search(call + r'(r\d+),' + context + r'haserror\(\)', tail[:branch.start()], re.M)
+        assert guard and guard[1] == branch[2], ('BIF error flag controls its normal continuation', entry[1])
+        links = list(re.finditer(r'^[ \t]*link[ \t]+(r\d+),(r\d+)[ \t]*$', tail[:guard.start()], re.M))
+        assert links, ('BIF error check retains its context alias', entry[1])
+        receiver, owner = links[-1].groups()
+        ready = re.search(r'^' + re.escape(branch[1]) + r':[ \t]*$', tail[branch.end():], re.M)
+        assert ready, ('BIF error guard reaches its own continuation', entry[1])
+        error = tail[branch.end():branch.end() + ready.start()]
+        detail = re.search(call + r'(r\d+),' + context + r'errordetail\(\)', error, re.M)
+        assert detail, ('BIF error reads the shared context detail', entry[1])
+        cleanup = (r'^[ \t]*unlink[ \t]+' + re.escape(receiver) + r'[ \t]*\n'
+                   r'[ \t]*null[ \t]+' + re.escape(owner) + r'[ \t]*\n'
+                   r'[ \t]*null[ \t]+r\d+[ \t]*\n'
+                   r'[ \t]*signal[ \t]+"CLASSIC_SYNTAX",' + re.escape(detail[1]) + r'[ \t]*\n'
+                   r'[ \t]*ret[ \t]*\s*\Z')
+        assert re.search(cleanup, error[detail.end():], re.M), ('BIF releases aliases before raising its exact error detail', entry[1])
+
+
 def transport_clause(text, source):
     """Re-entry may repeat records; the authored MARK span keeps its clause."""
     data = source.read_bytes()
@@ -49,8 +79,44 @@ def transport_clause(text, source):
     assert clauses and clauses[0] > 0 and len(set(clauses)) == 1, ('nested actual transport retains its admitted exact-span clause', clauses)
 
 
+def shared_dispatch(text):
+    """Cold control shares one owner frame; authored call windows stay local."""
+    body = unit(text)
+    assert re.findall(r'^(\w+)_dispatch:$', body, re.M) == ['lldispatch1'], 'one same-frame boundary loop'
+    assert len(re.findall(r'^llterminal1:$', body, re.M)) == 1, 'one normal invocation epilogue'
+    closes = re.findall(r'^\s*call\s+[^,\n]+,llcdynamic\.scope\.close\(\)', body, re.M)
+    assert len(closes) == 3, ('one normal close and two distinct fatal close paths', len(closes))
+    guards = re.findall(r'^sigbrv lldispatch1_childfailure,r0,"([^"]+)"$', body, re.M)
+    assert len(guards) == 25 and len(set(guards)) == 25, 'one complete child signal guard set'
+    assert len(text.splitlines()) <= 40000, 'bounded maintained CALL target records'
+    assert len(text.encode('utf-8')) <= 1600000, 'bounded maintained CALL target bytes'
+    record = None
+    sites = {}
+    for line in body.splitlines():
+        if line.startswith('.srcstep '):
+            record = line
+        match = re.fullmatch(r'(ll(?:complete|condition|dynamic)\d+_\d+(?:_dynamic)?)_(linkchild|local|resume|failure):', line)
+        if match:
+            assert record and '"source-c.crexx"' in record, ('authored boundary call stub', line, record)
+            prior = sites.setdefault(match[1], record)
+            assert prior == record, ('link, child and resume keep the same source', line, prior, record)
+    assert len(sites) == 129, ('all admitted source call/checkpoint sites remain', len(sites))
+
+
 def shapes(text, helper_text):
     body = unit(text)
+    shared_dispatch(text)
+    assert not named_call(body, 'llctarget.append'), 'fresh source builders have no persistent-prefix helper'
+    seeds = re.findall(r'^\s*call\s+(r\d+),llctarget\.arguments\(\),r\d+\s*$', body, re.M)
+    mutations = list(re.finditer(r'^\s*call\s+[^,\n]+,rexxactivation\.rexxactivationarguments\.append\(\),r\d+\s*$', body, re.M))
+    assert seeds and mutations and len(seeds) == len(set(seeds)), 'one distinct fixed owner per fresh seed'
+    for mutation in mutations:
+        aliases = list(re.finditer(r'^\s*link\s+(r\d+),(r\d+)\s*$', body[:mutation.start()], re.M))
+        assert aliases and aliases[-1][2] in seeds, 'append borrows its fresh seed owner'
+        receiver = aliases[-1][1]
+        tail = body[mutation.end():]
+        next_call = re.search(r'^\s*call\s+', tail, re.M)
+        assert re.search(r'^\s*unlink\s+' + receiver + r'\s*$', tail[:next_call.start()] if next_call else tail, re.M), 'append releases receiver before later work'
     assert named_call(body, 'llctarget.lengthvalue'), 'admitted one-argument LENGTH specialization'
     assert named_call(routine(helper_text, 'llctarget.lengthvalue'),
                       'rexxclassicbiflength.rexxclassicbif_length'), 'LENGTH helper uses shared named entry'
@@ -60,7 +126,7 @@ def shapes(text, helper_text):
                  'rexxclassicbifarg.rexxclassicbif_arg'):
         assert named_call(body, name), ('selected shared named BIF', name)
     assert 'rexxclassicbif_call' not in text, 'no legacy runtime text dispatcher'
-    assert named_call(body, 'rexxclassicbifs.rexxclassicbif_checked'), 'shared checked-error builder'
+    bif_checks(body)
     assert named_call(body, 'llctarget.bifarguments'), 'one shared BIF operand/context transport'
     transport = routine(helper_text, 'llctarget.bifarguments')
     for kind, spelling in (('RexxValue[]', r'reference \.rexxvalue(?:\.\.rexxvalue)?\[\*\]'),
@@ -104,6 +170,9 @@ def main():
         for name in libraries:
             provider = backend if name == 'llctarget' else build / 'bin'
             shutil.copy2(provider / (name + '.rxbin'), runtime / (name + '.rxbin'))
+        # Unresolved names retain automatic source lookup, including dead calls.
+        dynamic = runtime / 'llcdynamic.rxbin'
+        shutil.copy2(build / 'research/level-l/compilers/products/llcdynamic.rxbin', dynamic)
         dlls = tuple((build / 'bin').glob('*.dll')) if os.name == 'nt' else ()
 
         def tool(name):
@@ -116,11 +185,15 @@ def main():
                 shutil.copy2(dll, directory / dll.name)
             providers = directory / 'providers'; providers.mkdir()
             for plugin in plugins:
-                shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
+                filename = plugin + '.rxplugin'
+                source = build / 'bin' / filename
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / filename
+                shutil.copy2(source, providers / filename)
             return directory, vm
 
-        host, host_vm = stage('C compiler host', ('rxfs',))
-        application, target_vm = stage('static application', ('rxfs', 'rxcstream'))
+        host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
+        application, target_vm = stage('CALL application', ('rxfs', 'rxcstream', 'rxcontract'))
         compiler = host / 'llrxc-c-linked.rxbin'; shutil.copy2(backend / compiler.name, compiler)
         empty_path = work / 'empty PATH'; empty_path.mkdir()
         env = dict(os.environ, PATH=str(empty_path)); env.pop('CREXX_PROVIDER_PATH', None)
@@ -152,7 +225,7 @@ def main():
             run(name + ' assemble', [tool('rxas'), *(['-n'] if args.mode == 'noopt' else []), assembly], silent=True)
             output = application / (name + '-linked')
             run(name + ' link', [tool('rxlink'), '-o', output, assembly.with_suffix('.rxbin'),
-                                *(runtime / (library + '.rxbin') for library in libraries)], silent=True)
+                                *(runtime / (library + '.rxbin') for library in libraries), dynamic], silent=True)
             return output.with_suffix('.rxbin')
 
         if args.phase in ('all', 'source', 'shapes'):
@@ -208,9 +281,11 @@ def main():
             cases = (
                 ('bare', 'call', b'19.2'),
                 ('dead-malformed', 'if 0 then call +', b'19.2'),
-                ('policy-on', 'call on error', b'PROFILE'),
-                ('policy-off', 'call off error', b'PROFILE'),
+                ('policy-on', 'call on syntax', b'25.1'),
+                ('policy-off', 'call off syntax', b'25.2'),
                 ('grouped-target', 'do\nINNER:\nnop\nend\ncall INNER', b'16.3'),
+                ('constant-dot-left', "say (.foo 'x')", b'50.1'),
+                ('constant-dot-right', "say ('x' .foo)", b'50.1'),
             )
             output = application / 'prior.rxas'; prior = b'unchanged prior output\n'; output.write_bytes(prior)
             for name, text, code in cases:

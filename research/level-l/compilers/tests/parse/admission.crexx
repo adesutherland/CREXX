@@ -6,12 +6,23 @@ import llcir
 import llcrxas
 import llcparseprogram
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished inspection_imports
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
+  inspection_imports = argv[1]
   checks = 0; failures = 0
   do mode = 1 to 13
     call fixture(argv[1],mode)
+  end
+  if inspection <> '' then do
+    expected = 13 * 2
+    call check(emission_requests = expected & emission_finished = expected,'complete parse-admission emission inventory')
+    say 'EMISSION|owner=PARSE_ADMISSION|requests=' || emission_requests || '|finished=' || emission_finished || '|failures=' || failures
   end
   say 'PARSE_ADMISSION|checks=' || checks || '|failures=' || failures
   return failures
@@ -97,7 +108,10 @@ fixture: procedure = .void
 
 admitted: procedure = .void
   arg artifacts = .string, graph = .llir..module, mode = .int, lane = .string
+  caseid = 'parse-admission.' || lane || '-' || mode
+  call emissionstart(caseid)
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish(caseid,reference graph,reference output,mode = 1 | mode = 12,backend.status(),backend.error())
   if mode = 1 | mode = 12 then call check(backend.status() = 0 & output.bytes() > 0,lane || ' valid program admitted: ' || backend.error())
   else do
     expected = 'PARSE'
@@ -129,3 +143,38 @@ entrybody: procedure = .llir..block
   draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
   call invalid.returnvalue(operation.result(),at)
   return body
+
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished inspection_imports
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string, bytes = 67108864, registers = 65536
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  say 'REQUEST|' || caseid || '|imports=' || inspection_imports || '|output.bytes=' || (bytes as .string) || '|registers=' || (registers as .string)
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return

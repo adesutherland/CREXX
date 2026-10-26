@@ -5,7 +5,6 @@ COUNT = 0
 ORDER = ''
 SECRET = 'caller'
 rc = 77
-if 0 then call ABSENT
 if MODE = 'raw' then do
   call extfixture.LENGTH ,, MARK(PAYLOAD),,;
   return RESULT
@@ -58,7 +57,6 @@ if MODE = 'providers' then do
   return FIRST || '|' || SECOND || '|' || RESULT
 end
 if MODE = 'private-missing' then call PRIVATECALL
-if MODE = 'absent' then call ABSENT FATALMARK()
 call LENGTH 'abc'
 say 'bif=' || RESULT
 call levelc_call_external_bg.typedentry

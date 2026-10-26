@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Owned semantic family registration. */
 options levelb
-namespace llcir expose registerfamilies
+namespace llcir expose registerfamilies dynamiccontract
 import rxfnsb
 import llir
 import llscalar
@@ -124,3 +124,10 @@ registerfamilies: procedure = .void
     call llscalar..declare(d,'call.resolve',types,'arguments:9 context:7',10,'name:2 sourceKey:2 quoted:11 function:11','context.input.output.observation','condition.resource')
   end
   return
+
+/** Complete canonical dynamic profile, owned by the declaration provider.
+ * A surviving operation is not a substitute for this frozen schema. */
+dynamiccontract: procedure = .llir..contract
+  registry = .llir..schema()
+  call registerfamilies(reference registry,1)
+  return registry.finish()

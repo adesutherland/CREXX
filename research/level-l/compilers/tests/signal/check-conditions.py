@@ -35,10 +35,19 @@ def unit(text):
 
 def shapes(text, source, target):
     body = unit(text)
-    pushes = list(re.finditer(r'^\s*sigpush\s+"([^"\n]+)"\s*$', body, re.M))
+    all_pushes = list(re.finditer(r'^\s*sigpush\s+"([^"\n]+)"\s*$', body, re.M))
+    pushes = [item for item in all_pushes if item[1] != 'BREAKPOINT']
     installs = list(re.finditer(r'^\s*sigbrv\s+[^,\n]+,[^,\n]+,"([^"\n]+)"\s*$', body, re.M))
-    assert pushes and installs and {item[1] for item in pushes} == {item[1] for item in installs}, 'save and branch-install the same source-frame signal tags'
-    assert max(item.start() for item in pushes) < min(item.start() for item in installs), 'save every outer policy before any branch handler snapshots the stack'
+    assert pushes and installs and {item[1] for item in pushes} == {item[1] for item in installs}, 'save and branch-install the same source-frame condition tags'
+    assert max(item.start() for item in pushes) < min(item.start() for item in installs), 'save every outer condition policy before any branch handler snapshots the stack'
+    observer_pushes = [item for item in all_pushes if item[1] == 'BREAKPOINT']
+    observer_installs = list(re.finditer(r'^\s*sigcall\s+([^,\n]+),"BREAKPOINT"\s*$', body, re.M))
+    observer_pops = list(re.finditer(r'^\s*sigpop\s+"BREAKPOINT"\s*$', body, re.M))
+    assert len(observer_pushes) == 1, 'save the outer BREAKPOINT observer once'
+    assert observer_installs and all(item[1] == '__rxtrace_handler()' for item in observer_installs), 'install only the private TRACE observer for BREAKPOINT'
+    assert observer_pops, 'restore the outer BREAKPOINT observer'
+    assert observer_pushes[0].start() < min(item.start() for item in installs), 'save the observer before branch handlers capture their stack marker'
+    assert all(observer_pushes[0].start() < item.start() for item in observer_installs + observer_pops), 'observer installation and restoration follow its save'
     assert called(body, 'rexxactivation.rexxactivationarguments.setsignalpolicy'), 'source ON/OFF uses the existing activation policy owner'
     assert called(body, 'rexxclassicbifs.rexxclassic_signal_event_id'), 'one shared typed-event validator is reused'
     assert called(body, 'rexxclassicbifs.rexxclassic_signal_record_at_line'), 'handler state/SIGL/catalog recording stays shared through the additive source adapter'
@@ -52,7 +61,17 @@ def shapes(text, source, target):
     assert not called(body, 'llctarget.status') and not re.search(r'^\s*exit\s', body, re.M), 'source frame returns full optional completion'
     assert not called(body, 'rexxactivation.rexxactivationarguments.beginclausetime'), 'clock-free condition unit gains no lazy-reset calls'
     definitions = re.findall(r'^\S+\([^\n]*\s\.locals=\d+[^\n]*\.expose=(llctarget\.[^\s]+)\s*$', target, re.M)
-    assert len(definitions) == len(set(definitions)) == 36, 'whole SIGNAL adds no target export'
+    assert len(definitions) == len(set(definitions)) == 39, 'target API including clausepending'
+    assert set(definitions) == {'llctarget.' + name for name in (
+        'literal', 'poolnew', 'poolread', 'poolwrite', 'binaryop', 'unaryop',
+        'truth', 'sayvalue', 'sayconfigured', 'setting', 'digits', 'arguments',
+        'mainargs', 'append', 'countargs', 'existsarg', 'present', 'absent',
+        'emptyreturn', 'bifarguments', 'missing', 'missingconfigured',
+        'requirevalue', 'setresult', 'status', 'lengthvalue', 'failuremessage',
+        'whentruth', 'selectmissing', 'donew', 'docapture', 'dostart', 'doentry',
+        'doadvance', 'whiletruth', 'untiltruth', 'invalidtransfer', 'parsesource',
+        'clausepending',
+    )}, ('exact target export inventory', definitions)
     data = source.read_bytes()
     for needle in (b'NV_WRITE = LIVE_UNSET', b'parse value \'left:right=tail\'', b'do CONTROL =', b'LD_WRITE = 1234'):
         _, line, _ = source_position(data, needle)
@@ -93,10 +112,14 @@ def main():
                 shutil.copy2(dll, directory / dll.name)
             providers = directory / 'providers'; providers.mkdir()
             for plugin in plugins:
-                shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
+                name = plugin + '.rxplugin'
+                source = build / 'bin' / name
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / name
+                shutil.copy2(source, providers / name)
             return directory, vm
 
-        host, host_vm = stage('C compiler host', ('rxfs',))
+        host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
         application, target_vm = stage('static application', ('rxfs', 'rxcstream'))
         compiler = host / 'llrxc-c-linked.rxbin'; shutil.copy2(backend / compiler.name, compiler)
         empty_path = work / 'empty PATH'; empty_path.mkdir()
@@ -175,6 +198,11 @@ def main():
                 common = [str(provider_line), str(work / 'uncreated directory' / 'missing input'), *(str(line) for line in lines)]
                 if args.phase in ('all', 'source', 'host'):
                     expected = (fixtures / 'conditions-c.expected').read_bytes().replace(b'\r\n', b'\n')
+                    for record, observation in (
+                            (b'COND|address-error=1\n', b'       +++   RC=-3 MISSING-SIGNAL-ENV missing\n'),
+                            (b'COND|address-failure=1\n', b'       +++   RC=19 CONDITION-TEST failure\n')):
+                        assert expected.count(record) == 1, ('one command-condition observation anchor', record)
+                        expected = expected.replace(record, observation + record)
                     for mode in ('normal', 'exit-handler'):
                         completed = run('SIGNAL ' + mode, [target_vm, '--no-autoload', linked.with_suffix('.rxbin'), '-a', mode, *common], cwd=application)
                         actual = completed.stdout.replace(b'\r\n', b'\n'); prefix = expected if mode == 'normal' else b''

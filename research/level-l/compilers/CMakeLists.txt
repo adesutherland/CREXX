@@ -48,6 +48,10 @@ function(ll_compile NAME SOURCE DIRECTORY)
       list(APPEND _producers fs)
     elseif(_file STREQUAL "${CMAKE_BINARY_DIR}/bin/providers/rxcontract.rxplugin")
       list(APPEND _producers llcontract)
+    elseif(_file STREQUAL "${_front}/llcgrammar.rxbin")
+      list(APPEND _producers llcompiler_c_grammar)
+    elseif(_file STREQUAL "${_front}/llggrammar.rxbin")
+      list(APPEND _producers llcompiler_g_grammar)
     endif()
   endforeach()
   list(REMOVE_DUPLICATES _producers)
@@ -89,7 +93,11 @@ foreach(_language IN LISTS _languages)
       -P "${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake"
     COMMAND $<TARGET_FILE:rxas> "${_front}/ll${_language}grammar"
     DEPENDS rxlang rxas "${_spec}" "${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake" VERBATIM)
+  # Opt/noopt consumers share this grammar, including its assembly step.
+  add_custom_target(llcompiler_${_language}_grammar
+    DEPENDS "${_front}/ll${_language}grammar.rxbin")
 endforeach()
+set(_ll_private_nested_tests)
 foreach(_mode opt noopt)
   set(_flags)
   if(_mode STREQUAL "noopt")
@@ -116,9 +124,13 @@ foreach(_mode opt noopt)
       set(_parts ir language symbols bifs bindings srcmap diagnostics parseprogram procedureprotocol signalprotocol doprotocol clauseprotocol commandprotocol parse frontend graph traceemit callemit effects rxas)
     endif()
     foreach(_part IN LISTS _parts)
-      # Parsing/frontend modules keep their core-only closure. Target/proof
-      # support enters only at its first actual consumer and stays downstream.
-      if(_part STREQUAL "traceemit" OR (_language STREQUAL "g" AND _part STREQUAL "rxas"))
+      # Optional packet facts reuse neutral analysis. Target RXAS support still
+      # enters after the frontend-only closure, at its first actual consumer.
+      if(_language STREQUAL "c" AND _part STREQUAL "procedureprotocol")
+        list(APPEND _host "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin")
+      elseif(_part STREQUAL "traceemit")
+        list(APPEND _host "${CMAKE_BINARY_DIR}/bin/rxfnsl-rxas.rxbin")
+      elseif(_language STREQUAL "g" AND _part STREQUAL "rxas")
         list(APPEND _host ${_infrastructure})
       endif()
       set(_module "${_prefix}${_part}")
@@ -188,7 +200,6 @@ foreach(_mode opt noopt)
 
     set(_dynamic_dir "${CMAKE_CURRENT_BINARY_DIR}/dynamic/${_mode}")
     set(_dynamic_inputs ${_base} ${_c_frontend_host}
-      "${CMAKE_BINARY_DIR}/bin/rxfnsl-analysis.rxbin"
       "${CMAKE_BINARY_DIR}/bin/rxfnsl-execute.rxbin"
       "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
       "${_dir}/llctarget.rxbin"
@@ -576,7 +587,9 @@ foreach(_mode opt noopt)
           -a "${_dir}/context-contract-runtime")
         set_tests_properties(${_contracts_test} PROPERTIES
           PASS_REGULAR_EXPRESSION "C_CONTEXT_CONTRACTS[|]checks=[0-9]+[|]failures=0"
-          TIMEOUT 300 LABELS "level-l;levelc;compiler-backend;optimizer-parity")
+          TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+          LABELS "level-l;levelc;compiler-backend;optimizer-parity")
+        list(APPEND _ll_private_nested_tests ${_contracts_test})
         crexx_register_test_prep_targets(TESTS ${_contracts_test}
           TARGETS llcompiler_c_context_contracts_${_mode} llcompiler_target_${_mode} rxfnsc ${_vm})
       endif()
@@ -660,7 +673,7 @@ foreach(_mode opt noopt)
         endforeach()
         # Isolated opt/rxbvm CORE: 42 commands in 34.361s. The checkpoint-only
         # phase qualifies its added lifecycle control without replaying others.
-        # Serialize nested tool use; 600s is a generous hang guard.
+        # Private nested tools use bounded ordinary admission; retain the hang guard.
         set(_test "llcompiler_c_parse_core_${_mode}_${_vm}")
         add_test(NAME ${_test} COMMAND ${Python3_EXECUTABLE}
           "${CMAKE_CURRENT_SOURCE_DIR}/tests/parse/check-core.py"
@@ -674,6 +687,7 @@ foreach(_mode opt noopt)
         crexx_register_test_prep_targets(TESTS ${_test} TARGETS
           llcompiler_c_parse_core_${_mode} library classlib rxfnsc rxunicode_core
           compiler_exit_bin fs cstream rxc rxas rxlink ${_vm})
+        list(APPEND _ll_private_nested_tests ${_test})
       endif()
     endforeach()
   endif()
@@ -744,9 +758,10 @@ foreach(_mode opt noopt)
           # IF adds 44s Debug, SELECT 50s, DO 66s, PARSE 65.86s and ARG 28.7s measured
           # components. PARSE's focused selector remains available without a
           # duplicate CTest registration; grammar already invokes it.
-          # Serialize the expanded grammar workload with a generous hang guard.
+          # Bound the private grammar workload with the ordinary admission below.
           set_tests_properties(${_test} PROPERTIES TIMEOUT 900
             RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend)
+          list(APPEND _ll_private_nested_tests ${_test})
         endif()
         crexx_register_test_prep_targets(TESTS ${_test} TARGETS llcompiler_frontend-tests_${_mode} ${_vm})
       endif()
@@ -786,7 +801,7 @@ if("c" IN_LIST _languages)
           LABELS "library;level-l;levelc;compiler-frontends;optimizer-parity")
         crexx_register_test_prep_targets(TESTS ${_test} TARGETS
           llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-          library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
+          library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_vm})
       endforeach()
     endforeach()
   endforeach()
@@ -811,12 +826,12 @@ if("c" IN_LIST _languages)
         LABELS "library;level-l;levelc;compiler-frontends;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_test} TARGETS
         llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-        library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_arg_vm})
+        library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_arg_vm})
     endforeach()
   endforeach()
   # Complementary lanes cover both host/IR modes and available VM engines.
-  # Each launches nested tools and direct-host probes, so serialize the whole
-  # aggregate. The timeout is a generous hang guard, not a speed criterion.
+  # Private nested tools use the bounded ordinary admission policy below.
+  # The timeout is a generous hang guard, not a speed criterion.
   foreach(_mode opt noopt)
     set(_procedure_vm rxbvm)
     set(_procedure_ir on)
@@ -836,13 +851,14 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "PROCEDURE[|]phase=all[|].*commands=[0-9]+[|]failures=0"
       TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_procedure_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_procedure_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_procedure_vm})
   endforeach()
   # Complementary host/IR/assembler/VM lanes retain independent CALL oracles.
-  # Serialize nested tools; this generous deadline protects against hangs.
+  # Bound independent nested tools below; this deadline protects against hangs.
   foreach(_mode opt noopt)
     set(_call_vm rxbvm)
     set(_call_ir on)
@@ -862,10 +878,11 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "CALL_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-      llcompiler_call_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_call_vm})
+      llcompiler_call_contracts_${_mode} llcdynamic
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_call_vm})
     # Explicit owning B/G preparation stays outside the staged C request host.
     set(_external_test "llcompiler_c_call_external_${_mode}_${_call_ir}_${_call_vm}")
     add_test(NAME ${_external_test} COMMAND ${Python3_EXECUTABLE}
@@ -879,8 +896,8 @@ if("c" IN_LIST _languages)
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
     crexx_register_test_prep_targets(TESTS ${_external_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-      llcompiler_call_external_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_call_vm})
+      llcompiler_call_external_contracts_${_mode} llcdynamic
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_call_vm})
   endforeach()
   # RETURN shares one source compilation across source, cleanup and B-host
   # controls in each complementary lane. Keep nested tools serialized.
@@ -906,10 +923,10 @@ if("c" IN_LIST _languages)
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_return_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_return_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_return_vm})
   endforeach()
   # EXIT shares one source image across full-result/lifetime host controls.
-  # Complementary lanes include independent raw admission; serialize nested tools.
+  # Complementary lanes include independent raw admission with bounded admission.
   foreach(_mode opt noopt)
     set(_exit_vm rxbvm)
     set(_exit_ir on)
@@ -929,10 +946,11 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "EXIT_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_exit_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_exit_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_exit_vm})
   endforeach()
   # Bare PULL still acquires input; reuse one source image across host/shape checks.
   foreach(_mode opt noopt)
@@ -956,7 +974,7 @@ if("c" IN_LIST _languages)
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_pull_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_pull_vm})
   endforeach()
   # Each insertion source image serves queue/EXIT/host checks; share one raw probe.
   foreach(_instruction push queue)
@@ -983,7 +1001,7 @@ if("c" IN_LIST _languages)
       crexx_register_test_prep_targets(TESTS ${_test} TARGETS
         llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
         llcompiler_queue_insertion_contracts_${_mode}
-        library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_insertion_vm})
+        library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_insertion_vm})
     endforeach()
   endforeach()
   # Explicit ADDRESS reuses one source image for state, bindings and cleanup.
@@ -1009,7 +1027,7 @@ if("c" IN_LIST _languages)
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_address_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_address_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_address_vm})
   endforeach()
   # Required label arms share one source image for entry/host/error checks.
   foreach(_mode opt noopt)
@@ -1031,10 +1049,11 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "LABEL_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_label_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_label_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_label_vm})
   endforeach()
   # Implicit commands and owned warnings share the explicit command lifecycle.
   foreach(_mode opt noopt)
@@ -1059,7 +1078,7 @@ if("c" IN_LIST _languages)
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_command_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_command_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_command_vm})
   endforeach()
   # Begin-only clock witnesses use one source/host execution per cell.
   foreach(_mode opt noopt)
@@ -1084,7 +1103,7 @@ if("c" IN_LIST _languages)
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_clause_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_clause_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_clause_vm})
   endforeach()
   # Complete practical TRACE uses one component lane. The runner can select
   # other modes for later formal QA; registration does not commission a matrix.
@@ -1098,11 +1117,12 @@ if("c" IN_LIST _languages)
     PASS_REGULAR_EXPRESSION "TRACE_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
     TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
     LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;trace")
+  list(APPEND _ll_private_nested_tests ${_trace_test})
   crexx_register_test_prep_targets(TESTS ${_trace_test} TARGETS
     llcompiler_llrxc-c_opt llcompiler_target_opt llcompiler_trace_contracts_opt
-    library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink rxbvm)
+    library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink rxbvm)
   # One whole-SIGNAL runner owns retained static, condition and native controls.
-  # Two complementary nested cells serialize all toolchain work; the generous
+  # Two complementary private cells use bounded ordinary admission; their
   # timeout is hang protection, not a performance acceptance threshold.
   foreach(_mode opt noopt)
     set(_signal_vm rxbvm)
@@ -1123,11 +1143,12 @@ if("c" IN_LIST _languages)
       PASS_REGULAR_EXPRESSION "SIGNAL_CONDITIONS_CHECK[|].*phase=all[|].*commands=[0-9]+[|]PASS"
       TIMEOUT 7200 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
       LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;optimizer-parity;signal")
+    list(APPEND _ll_private_nested_tests ${_test})
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_signal_contracts_${_mode} llcompiler_signal_conditions_contracts_${_mode}
       run_tests_signal_origin
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_signal_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_signal_vm})
   endforeach()
   # Conditions/observations is one complete development increment. Reuse one
   # prepared compiler, native fixtures and immutable expected outputs, on one VM.
@@ -1145,7 +1166,7 @@ if("c" IN_LIST _languages)
     TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
     LABELS "library;level-l;levelc;compiler-backend")
   crexx_register_test_prep_targets(TESTS ${_test} TARGETS
-    llcompiler_llrxc-c_opt llcompiler_target_opt llcompiler_call_external_contracts_opt
+    llcompiler_llrxc-c_opt llcompiler_target_opt llcompiler_call_external_contracts_opt llcdynamic
     library classlib rxfnsc rxunicode_core fs cstream llcontract _hash
     g2_process_fixture address_argv_fixture test_rxvml_spans rxc rxas rxlink rxbvm)
   # The static language/BIF crosswalk is deliberately one prepared component
@@ -1171,9 +1192,17 @@ if("c" IN_LIST _languages)
     PASS_REGULAR_EXPRESSION "CONDITIONS_OBSERVATIONS[|].*PASS"
     TIMEOUT 1800 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
     LABELS "library;level-l;levelc;compiler-frontends;compiler-backend;conditions")
+  list(APPEND _ll_private_nested_tests ${_test})
   crexx_register_test_prep_targets(TESTS ${_test} TARGETS
     llcompiler_conditions_observations_opt llcompiler_llrxc-c_opt llcompiler_target_opt
-    library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink rxbvm)
+    library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink rxbvm)
+  if(BUILD_TESTING AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+    # Each selected cell has read-only prepared inputs or private scratch. At the configured named-QA budget,
+    # ceil(jobs/2) admits at most two; instrumented profiles keep serial/lock.
+    math(EXPR _ll_private_nested_processors "(${CREXX_QA_CTEST_JOBS} + 1) / 2")
+    set_tests_properties(${_ll_private_nested_tests} PROPERTIES
+      RUN_SERIAL FALSE PROCESSORS ${_ll_private_nested_processors} RESOURCE_LOCK "")
+  endif()
   # NUMERIC reuses one source image for settings, frame and operand-EXIT checks.
   # Complementary nested lanes are serialized with a generous hang guard.
   foreach(_mode opt noopt)
@@ -1198,7 +1227,7 @@ if("c" IN_LIST _languages)
     crexx_register_test_prep_targets(TESTS ${_test} TARGETS
       llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
       llcompiler_numeric_contracts_${_mode}
-      library classlib rxfnsc rxunicode_core fs cstream rxc rxas rxlink ${_numeric_vm})
+      library classlib rxfnsc rxunicode_core fs cstream llcontract rxc rxas rxlink ${_numeric_vm})
   endforeach()
   add_custom_target(llcompiler_c_drop_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-drop.py"
@@ -1247,14 +1276,14 @@ if("c" IN_LIST _languages)
       --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/c-only-measure"
       --mode opt --vm rxbvm --c-only
     DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
-      fs cstream rxas rxlink rxbvm
+      fs cstream llcontract rxas rxlink rxbvm
     USES_TERMINAL VERBATIM)
   add_custom_target(llcompiler_c_calls_measure
     COMMAND ${CMAKE_COMMAND} -E time ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-step07.py"
       --build "${CMAKE_BINARY_DIR}" --work "${CMAKE_CURRENT_BINARY_DIR}/c-calls-measure"
       --mode opt --vm rxbvm --c-only
     DEPENDS llcompiler_llrxc-c_opt llcompiler_target_opt library classlib rxfnsc rxunicode_core
-      fs cstream rxas rxlink rxbvm
+      fs cstream llcontract rxas rxlink rxbvm
     USES_TERMINAL VERBATIM)
   # C calls: 145 commands in the representative cell, 68 in the other cells;
   # existing 110-command Debug baseline 96s; focused SELECT metadata adds
@@ -1283,7 +1312,7 @@ if("c" IN_LIST _languages)
           LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
         crexx_register_test_prep_targets(TESTS ${_calls}
           TARGETS llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-            library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
+            library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_vm})
         # 32 commands: isolated Debug 19s, maintained Apple ASan 55s. Serialize
         # nested tools; 900s is a generous hang guard, not a performance criterion.
         set(_test "llcompiler_c_only_${_mode}_${_vm}")
@@ -1297,7 +1326,7 @@ if("c" IN_LIST _languages)
           LABELS "library;level-l;levelc;compiler-backend;optimizer-parity")
         crexx_register_test_prep_targets(TESTS ${_test}
           TARGETS llcompiler_llrxc-c_${_mode} llcompiler_target_${_mode}
-            library classlib rxfnsc rxunicode_core fs cstream rxas rxlink ${_vm})
+            library classlib rxfnsc rxunicode_core fs cstream llcontract rxas rxlink ${_vm})
       endif()
     endforeach()
   endforeach()

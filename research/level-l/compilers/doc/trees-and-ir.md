@@ -84,7 +84,7 @@ as an uninitialised C-language variable.
 Classic DO uses `CDo(header:DoHeader, body:Sequence, ending:DoEnd)` for all
 grouping and repetitive forms. Optional repetition/condition children, raw
 control/END names and ordered modifiers follow the
-[approved DO schema](architecture.md#approved-do-contract); G's Block/While
+[approved DO schema](levelc-architecture.md#approved-do-contract); G's Block/While
 schema is unchanged.
 
 | Kind | Fields |
@@ -98,7 +98,7 @@ schema is unchanged.
 CArg reuses the existing ParseTemplate and Parse* item shapes; `ArgTarget`
 and `CArg.items` are absent. Its complete authored instruction span, every
 template/item span and empty boundary remain exact, without a fabricated UPPER
-or ParseSource token. The [approved ARG contract](architecture.md#proposed-arg-contract)
+or ParseSource token. The [approved ARG contract](levelc-architecture.md#proposed-arg-contract)
 also retires the scalar read operation/export in C v8/53 operations and the
 33-export target. The plan tracks instruction status and remaining shared work.
 
@@ -106,14 +106,14 @@ CLabel and CProcedure remain separate nodes. One source-unit body has a checked
 entry0 for main and positive first-occurrence label entries; adjacent labels,
 fall-through and shared pools do not require PROCEDURE. Group labels are
 observation-only. An executed PROCEDURE privately binds that activation and
-applies ordered EXPOSE. See the [shared-entry contract](architecture.md#proposed-procedure-contract).
+applies ordered EXPOSE. See the [shared-entry contract](levelc-architecture.md#proposed-procedure-contract).
 
 Ordinary CALL retains `Invoke(name,arguments)` and `Call(name,arguments)`;
 `InvokeQuoted`/`CallQuoted` preserve raw literal spelling and distinguish local
 bypass. Constant-symbol expression nodes retain spelling and lower to shared
 whole-name-cased literal text. Names never become G locals or typed defaults.
-The [CALL contract](architecture.md#call-contract) owns required-result identity
-and direct BIF binding within the [current C family](architecture.md#current-c-family-contract);
+The [CALL contract](levelc-architecture.md#call-contract) owns required-result identity
+and direct BIF binding within the [current C family](levelc-architecture.md#current-c-family-contract);
 dynamic/provider/handler scope stays explicit. EXIT uses an owned presence packet
 and visible program-root guard branches before caller result observations.
 

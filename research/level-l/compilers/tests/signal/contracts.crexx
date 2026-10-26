@@ -11,12 +11,23 @@ import llcprocedureprotocol
 import llcsignalprotocol
 import llcrxas
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
   checks = 0; failures = 0
-  call sourcecontracts(argv[1]); call raw(argv[1])
-  say 'SIGNAL_CONTRACTS|checks=' || checks || '|failures=' || failures
+  call sourcecontracts(argv[1]); call raw(argv[1]); call profilecontracts(argv[1])
+  call noemission('signal.parse-schema')
+  if inspection <> '' then do
+    expected = 3 + 28 * 2 + 2 + 2 + 4 + 2 + 1 + 1 + 2 + 4 + 2 + 1
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit SIGNAL emission inventory')
+    say 'SIGNAL_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'SIGNAL_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -86,16 +97,21 @@ bad: procedure = .void
 
 sourcecase: procedure = .void
   arg artifacts = .string, source = .string, accepted = .int, label = .string
+  caseid = 'signal.source-' || changestr(' ',label,'-'); call emissionstart(caseid)
   request = .llcfrontend..request(source as .binary,artifacts,'signal-source.crexx')
   if accepted then do
     call check(request.status() = 0,label || ': ' || request.error())
     if request.status() = 0 then do
       graph = request.graph(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+      call emissionfinish(caseid,reference graph,reference output,1,selected.status(),selected.error())
       call check(selected.status() = 0 & output.bytes() > 0,label || ' selects: ' || selected.error())
       call check(pos('CSIG3',output.text()) = 0,label || ' has no executable table data')
     end
   end
-  else call check(request.status() <> 0 & pos('16.2',request.error()) > 0,label || ': ' || request.error())
+  else do
+    call check(request.status() <> 0 & pos('16.2',request.error()) > 0,label || ': ' || request.error())
+    call frontendfinish(caseid,source as .binary,1,request.status(),request.error())
+  end
   return
 
 raw: procedure = .void
@@ -157,7 +173,9 @@ loadgraph: procedure = .llir..module
 
 admission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, source_error = .int
+  caseid = 'signal.' || changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,selected.status(),selected.error())
   if accepted then do
     call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
     call check(pos('CSIG3',output.text()) = 0,label || ' erases compile-time table')
@@ -181,15 +199,21 @@ prooflimits: procedure = .void
   if entries.status() <> 0 | signals.status() <> 0 then return
   cap = max(entries.bytesused(),signals.bytesused()) - 1
   call check(cap >= 128 & entries.workused() > 0 & signals.workused() > 0,'actual admission cost is available without a quota API')
+  call emissionstart('signal.prechecked-valid')
   valid = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts)
   owned = valid.output(); previous = owned.text()
+  call emissionfinish('signal.prechecked-valid',reference graph,reference owned,1,valid.status(),valid.error())
   call check(valid.status() = 0 & owned.bytes() > 0,'completed proof selects normally')
+  call emissionstart('signal.prechecked-narrow')
   narrow = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts,cap)
   empty = narrow.output()
+  call emissionfinish('signal.prechecked-narrow',reference graph,reference empty,0,narrow.status(),narrow.error())
   call check(narrow.status() <> 0 & pos('LL_COMPILER_LIMIT:',narrow.error()) = 1 & empty.bytes() = 0,'narrower request cannot reuse more expensive cached proofs: ' || narrow.error())
   call check(entries.status() = 0 & signals.status() = 0 & owned.text() == previous,'local narrow failure preserves proofs and earlier output')
+  call emissionstart('signal.prechecked-reused')
   again = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts)
   result = again.output()
+  call emissionfinish('signal.prechecked-reused',reference graph,reference result,1,again.status(),again.error())
   call check(again.status() = 0 & result.text() == previous,'later valid proof reuse remains usable')
   source_text = ''
   do i = 1 to 16
@@ -201,10 +225,12 @@ prooflimits: procedure = .void
   end
   source_text = source_text || ' return 0'
   saved = graph.binary()
+  call emissionstart('signal.frontend-work-limit')
   bounded = .llcfrontend..request(source_text as .binary,artifacts,'signal-limit.crexx',4096)
   call check(bounded.status() <> 0 & pos('LL_COMPILER_LIMIT: frontend SIGNAL construction work budget exceeded',bounded.error()) = 1,'low-work source refuses during bounded SIGNAL construction: ' || bounded.error())
   failed_graph = bounded.graph()
   call check(failed_graph.error() <> '' & owned.text() == previous & bincompare(saved,graph.binary()) = 0,'construction refusal publishes no graph and preserves earlier input/output')
+  call frontendfinish('signal.frontend-work-limit',source_text as .binary,1,bounded.status(),bounded.error())
   changing = graph
   changed_entries = .llcprocedureprotocol..checked(reference changing)
   changed_signals = .llcsignalprotocol..checked(reference changing,reference changed_entries)
@@ -215,8 +241,10 @@ prooflimits: procedure = .void
   live_graph = reference changing; live_entries = reference changed_entries; live_signals = reference changed_signals
   call check(<refvalid>(live_graph) & <refvalid>(live_entries) & <refvalid>(live_signals),'replaced graph cell and completed proof objects remain live')
   call check(changed_entries.belongs(reference changing) = 0 & changed_signals.belongs(reference changing) = 0,'cached indices cannot follow replacement of their original graph cell')
+  call emissionstart('signal.prechecked-replaced-owner')
   rejected = .llcrxas..compilation.prechecked(changing,reference changed_entries,reference changed_signals,artifacts)
   rejected_output = rejected.output()
+  call emissionfinish('signal.prechecked-replaced-owner',reference changing,reference rejected_output,0,rejected.status(),rejected.error())
   call check(rejected.status() <> 0 & pos('LL_COMPILER_LOWERING:',rejected.error()) = 1 & rejected_output.bytes() = 0,'prechecked replacement identity refuses without output: ' || rejected.error())
   call check(changed_entries.status() = 0 & changed_signals.status() = 0 & entries.belongs(reference graph) & signals.belongs(reference graph) & owned.text() == previous & bincompare(saved,graph.binary()) = 0,'replacement refusal leaves both proof states and original input/output intact')
   return
@@ -387,3 +415,158 @@ stalecontract: procedure = .llir..contract
     call declared.state(source.effectvalue(i,1)); call declared.failure(source.effectvalue(i,2)); call declared.termination(source.effectvalue(i,3))
   end
   ignored = data.freeze(); return .llir..contract(data)
+
+/* Generic pruning may remove the final dynamic operation, but not the stable
+ * schema under which authored clause completion was constructed. */
+profilecontracts: procedure = .void
+  arg artifacts = .string
+  source = "options levelc" || ('0A'x as .string) || "exit 0" || ('0A'x as .string) || "interpret 'say 1'" || ('0A'x as .string)
+  call emissionstart('signal.profile-source')
+  request = .llcfrontend..request(source as .binary,artifacts,'dead-dynamic.crexx')
+  call check(request.status() = 0,'dead INTERPRET is fully validated before pruning: ' || request.error())
+  if request.status() <> 0 then return
+  call frontendfinish('signal.profile-source',source as .binary,0,request.status(),request.error())
+  original = request.graph(); original_bytes = original.binary()
+  change = llirservices..optimise(reference original)
+  call check(change.status() == 'changed','dead dynamic operation is actually pruned: ' || change.message())
+  if change.status() \== 'changed' then return
+  graph = change.result(); saved = graph.binary()
+  entries = .llcprocedureprotocol..checked(reference graph)
+  call check(graph.error() == '' & entries.status() = 0,'pruned graph has valid fresh entry proof: ' || graph.error() || entries.error())
+  if graph.error() <> '' | entries.status() <> 0 then return
+  call check(entries.dynamic(1) = 0,'surviving operation witness is absent, not used as the language profile')
+  completions = 0; dynamic_ops = 0; i = .int
+  do i = 1 to graph.operations()
+    name = graph.operation(i).name()
+    if name == 'crexx.c.clause.complete' then completions = completions + 1
+    if left(name,16) == 'crexx.c.dynamic.' then dynamic_ops = dynamic_ops + 1
+  end
+  call check(completions > 0 & dynamic_ops = 0,'authored completions survive without a dynamic operation')
+  signals = .llcsignalprotocol..checked(reference graph,reference entries)
+  call check(signals.status() = 0 & signals.belongs(reference graph),'complete canonical profile admits fresh pruned proof: ' || signals.error())
+  if signals.status() <> 0 then return
+  call noemission('signal.profile-pruned-fresh')
+  loaded = loadgraph(reference graph)
+  loaded_entries = .llcprocedureprotocol..checked(reference loaded)
+  loaded_signals = .llcsignalprotocol..checked(reference loaded,reference loaded_entries)
+  call check(loaded.error() == '' & loaded_entries.status() = 0 & loaded_signals.status() = 0 & loaded_signals.belongs(reference loaded),'binary reload gets its own admitted profile proof: ' || loaded.error() || loaded_entries.error() || loaded_signals.error())
+  call check(signals.belongs(reference loaded) = 0,'profile proof cannot follow a byte-identical graph with another identity')
+  call noemission('signal.profile-pruned-loaded')
+  storage = dereference graph.storage(); canonical = dereference storage.contract()
+  do mode = 1 to 4
+    forged = forgedprofile(canonical,mode)
+    altered = graph.text(); old_header = 'schema ' || bin2x(canonical.manifest() as .binary) || ('0A'x as .string)
+    new_header = 'schema ' || bin2x(forged.manifest() as .binary) || ('0A'x as .string)
+    position = pos(old_header,altered)
+    call check(position > 0,'exact canonical manifest exists before profile substitution ' || mode)
+    if position = 0 then iterate
+    altered = left(altered,position - 1) || new_header || substr(altered,position + length(old_header))
+    invalid_graph = llir..loadtext(forged,altered)
+    invalid_entries = .llcprocedureprotocol..checked(reference invalid_graph)
+    call check(forged.error() == '' & invalid_graph.error() == '' & invalid_entries.status() = 0,'wrong unused profile remains generically valid ' || mode || ': ' || forged.error() || invalid_graph.error() || invalid_entries.error())
+    if invalid_graph.error() <> '' | invalid_entries.status() <> 0 then iterate
+    invalid_signals = .llcsignalprotocol..checked(reference invalid_graph,reference invalid_entries)
+    call check(invalid_signals.status() <> 0 & pos('LL_COMPILER_LOWERING:',invalid_signals.error()) = 1,'full profile rejects wrong version/effect/field/arity ' || mode || ': ' || invalid_signals.error())
+    call noemission('signal.profile-forged-' || mode)
+  end
+  narrow_bytes = .llcsignalprotocol..checked(reference graph,reference entries,signals.bytesused() - 1)
+  call check(narrow_bytes.status() <> 0 & pos('LL_COMPILER_LIMIT:',narrow_bytes.error()) = 1,'canonical profile workspace is a required checked budget: ' || narrow_bytes.error())
+  call noemission('signal.profile-byte-budget')
+  narrow_work = .llcsignalprotocol..checked(reference graph,reference entries,67108864,signals.workused() - 1)
+  call check(narrow_work.status() <> 0 & pos('LL_COMPILER_LIMIT:',narrow_work.error()) = 1,'canonical profile work is a required checked budget: ' || narrow_work.error())
+  call noemission('signal.profile-work-budget')
+  call check(bincompare(saved,graph.binary()) = 0 & bincompare(original_bytes,original.binary()) = 0 & signals.status() = 0,'profile/refusal/budget checks preserve graph bytes and the earlier valid proof')
+  return
+
+/* Mutate declarations unused by the surviving graph, so a generic verifier
+ * cannot hide a false profile admission behind an unrelated operation error. */
+forgedprofile: procedure = .llir..contract
+  arg canonical = .llir..contract, mode = .int
+  source = dereference canonical.data(); data = .llir..schema_data(); call data.bootstrap()
+  i = .int; kind = .int; field = .int; ignored = .int
+  do i = 2 to source.familycount()
+    version = source.version(i)
+    if mode = 1 & source.familyname(i) == 'crexx.c.dynamic' then version = version + 1
+    ignored = data.addfamily(source.familyname(i),version)
+  end
+  do i = 3 to source.types()
+    ignored = data.addtype(source.typename(i),source.codec(i))
+  end
+  do i = 1 to source.ops()
+    declared = .llir..operation(reference data,data.addop(source.opname(i)))
+    do kind = 1 to 3
+      do field = 1 to source.arity(i,kind)
+        spelling = source.fieldname(i,kind,field); type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
+        if mode = 3 & source.opname(i) == 'crexx.c.dynamic.interpret' & kind = 1 & field = 1 then spelling = 'foreignsource'
+        if kind = 1 then call declared.input(spelling,type)
+        else if kind = 2 then call declared.output(spelling,type)
+        else call declared.attribute(spelling,type)
+      end
+    end
+    if mode = 4 & source.opname(i) == 'crexx.c.dynamic.interpret' then do
+      extra_type = .llir..typeid(data.identity(),source.typeindex('crexx.g.int64'))
+      call declared.attribute('foreign',extra_type)
+    end
+    state = source.effectvalue(i,1)
+    if mode = 2 & source.opname(i) == 'crexx.c.dynamic.interpret' then state = 'none'
+    call declared.state(state); call declared.failure(source.effectvalue(i,2)); call declared.termination(source.effectvalue(i,3))
+  end
+  ignored = data.freeze(); return .llir..contract(data)
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return
+
+/* Frontend-only cases retain exact loop/source bytes without inventing RXAS. */
+frontendfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, source = .binary, refused = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  accepted = (status <> 0) = refused
+  call check(accepted,caseid || ' frontend disposition matches its existing oracle: ' || diagnostic)
+  if accepted = 0 then return
+  written = writebinary(inspection || '/' || caseid || '.source',source) = <blen>(source)
+  call check(written,caseid || ' exact temporary frontend source export')
+  if written = 0 then return
+  if refused then say 'REFUSAL|' || caseid || '|' || diagnostic
+  else say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return

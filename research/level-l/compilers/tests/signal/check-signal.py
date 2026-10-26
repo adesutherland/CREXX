@@ -143,7 +143,17 @@ def shapes(text, source, target):
     assert not called(body, 'llctarget.status') and not re.search(r'^\s*exit\s', body, re.M), 'same unit keeps owned completion'
     assert not called(body, 'rexxclassicconfig.rexxclassicconfig.§factory'), 'SIGNAL does not construct configuration or activation'
     definitions = re.findall(r'^\S+\([^\n]*\s\.locals=\d+[^\n]*\.expose=(llctarget\.[^\s]+)\s*$', target, re.M)
-    assert len(definitions) == len(set(definitions)) == 36, 'unchanged target export surface'
+    assert len(definitions) == len(set(definitions)) == 39, 'target API including clausepending'
+    assert set(definitions) == {'llctarget.' + name for name in (
+        'literal', 'poolnew', 'poolread', 'poolwrite', 'binaryop', 'unaryop',
+        'truth', 'sayvalue', 'sayconfigured', 'setting', 'digits', 'arguments',
+        'mainargs', 'append', 'countargs', 'existsarg', 'present', 'absent',
+        'emptyreturn', 'bifarguments', 'missing', 'missingconfigured',
+        'requirevalue', 'setresult', 'status', 'lengthvalue', 'failuremessage',
+        'whentruth', 'selectmissing', 'donew', 'docapture', 'dostart', 'doentry',
+        'doadvance', 'whiletruth', 'untiltruth', 'invalidtransfer', 'parsesource',
+        'clausepending',
+    )}, ('exact target export inventory', definitions)
     assert called(body, 'rexxclassiccontext.rexxclassiccontext.bindpool'), 'private activation has existing checked restoration'
     _, line, _ = source_position(data, b'signal value CHOOSE()')
     conversions = at_line(body, STRING, line); folded = at_line(body, UPPER, line); marks = at_line(body, MARK, line)
@@ -230,10 +240,14 @@ def main():
                 shutil.copy2(dll, directory / dll.name)
             providers = directory / 'providers'; providers.mkdir()
             for plugin in plugins:
-                shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
+                name = plugin + '.rxplugin'
+                source = build / 'bin' / name
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / name
+                shutil.copy2(source, providers / name)
             return directory, vm
 
-        host, host_vm = stage('C compiler host', ('rxfs',))
+        host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
         application, target_vm = stage('static application', ('rxfs', 'rxcstream'))
         compiler = host / 'llrxc-c-linked.rxbin'; shutil.copy2(backend / compiler.name, compiler)
         empty_path = work / 'empty PATH'; empty_path.mkdir()

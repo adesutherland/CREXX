@@ -129,7 +129,17 @@ def shapes(text, source, target):
     assert not called(body, '_rxsysb._address_dispatch_request'), 'request snapshots and dispatch stay in the shared B adapter'
     assert not called(body, 'llctarget.status') and not re.search(r'^\s*exit\s', body, re.M), 'source frame retains full completion'
     definitions = re.findall(r'^\S+\([^\n]*\s\.locals=\d+[^\n]*\.expose=(llctarget\.[^\s]+)\s*$', target, re.M)
-    assert len(definitions) == len(set(definitions)) == 36, ('unchanged target export surface', definitions)
+    assert len(definitions) == len(set(definitions)) == 39, ('target API including clausepending', definitions)
+    assert set(definitions) == {'llctarget.' + name for name in (
+        'literal', 'poolnew', 'poolread', 'poolwrite', 'binaryop', 'unaryop',
+        'truth', 'sayvalue', 'sayconfigured', 'setting', 'digits', 'arguments',
+        'mainargs', 'append', 'countargs', 'existsarg', 'present', 'absent',
+        'emptyreturn', 'bifarguments', 'missing', 'missingconfigured',
+        'requirevalue', 'setresult', 'status', 'lengthvalue', 'failuremessage',
+        'whentruth', 'selectmissing', 'donew', 'docapture', 'dostart', 'doentry',
+        'doadvance', 'whiletruth', 'untiltruth', 'invalidtransfer', 'parsesource',
+        'clausepending',
+    )}, ('exact target export inventory', definitions)
     owners = command_cleanup(body, constructors, runs, prefix)
     operand_exit_bypass(body, source.read_bytes(), prefix)
     lasting_clause(body, source.read_bytes())
@@ -195,10 +205,14 @@ def main():
                 shutil.copy2(dll, directory / dll.name)
             providers = directory / 'providers'; providers.mkdir()
             for plugin in plugins:
-                shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
+                filename = plugin + '.rxplugin'
+                source = build / 'bin' / filename
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / filename
+                shutil.copy2(source, providers / filename)
             return directory, vm
 
-        host, host_vm = stage('C compiler host', ('rxfs',))
+        host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
         application, target_vm = stage('static application', ('rxfs', 'rxcstream'))
         compiler = host / 'llrxc-c-linked.rxbin'; shutil.copy2(backend / compiler.name, compiler)
         empty_path = work / 'empty PATH'; empty_path.mkdir()
@@ -273,7 +287,10 @@ def main():
                 run('B host link', [tool('rxlink'), '-c', control], silent=True)
                 if args.phase in ('all', 'host'):
                     completed = run('pure provider and owned context controls', [target_vm, '--no-autoload', linked.with_suffix('.rxbin')], cwd=application)
-                    assert re.fullmatch(rb'ADDRESS_HOST\|checks=\d+\|failures=0\r?\n', completed.stdout) and not completed.stderr, (completed.stdout, completed.stderr)
+                    observations = (b'       +++   RC=7 BRIDGE-TEST plan :SCALAR :ITEMS[] ${SCALAR} :EMPTY :UNSET\n'
+                                    b'       +++   RC=-3 __ADDRESS_UNREGISTERED__ not dispatched by an OS\n')
+                    stdout = completed.stdout.replace(b'\r\n', b'\n')
+                    assert re.fullmatch(re.escape(observations) + rb'ADDRESS_HOST\|checks=\d+\|failures=0\n', stdout) and not completed.stderr, (completed.stdout, completed.stderr)
                 if args.phase in ('all', 'fatal'):
                     rows = source.read_text().splitlines()
                     cases = (('late', b'17.1', rows.index('LATEPROCEDURE:') + 2),

@@ -8,13 +8,20 @@ import llcrxas
 import llcparse
 import llast
 
-main: procedure = .int expose checks failures inspection
+main: procedure = .int expose checks failures inspection emission_directory emission_imports emission_requests emission_finished
   arg argv = .string[]
-  if argv[0] < 1 | argv[0] > 2 then return 2
+  argc = argv[0]; emission_directory = ''; emission_requests = 0; emission_finished = 0
+  if argc >= 3 then do
+    if argv[argc - 1] \== 'emit-only' | argv[argc] == '' then return 2
+    emission_directory = argv[argc]; argc = argc - 2
+  end
+  if argc < 1 | argc > 2 then return 2
   checks = 0; failures = 0
-  inspection = ''; if argv[0] = 2 then inspection = argv[2]
+  inspection = ''; if argc = 2 then inspection = argv[2]
+  emission_imports = argv[1]
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
   contract = registry.finish(); call schema(contract); call sourcecontract()
+  call noemission('address.schema'); call noemission('address.source-ast')
   graph = .llir..module; loaded = .llir..module; mode = .int
   do mode = 1 to 16
     graph = fixture(contract,mode)
@@ -52,6 +59,11 @@ main: procedure = .int expose checks failures inspection
     loaded = loadgraph(reference graph)
     call check(loaded.error() == '', 'loaded protected command continuation: ' || loaded.error())
     if loaded.error() == '' then call admission(argv[1],loaded,1,'loaded protected command continuation','')
+  end
+  if emission_directory <> '' then do
+    expected = 16 * 2 + 1 + 2 + 2 + 7 + 2
+    call check(emission_requests = expected & emission_finished = expected,'complete ADDRESS emission inventory')
+    say 'EMISSION|owner=ADDRESS_CONTRACTS|requests=' || emission_requests || '|finished=' || emission_finished || '|failures=' || failures
   end
   say 'ADDRESS_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
@@ -146,6 +158,8 @@ loadgraph: procedure = .llir..module
 
 admission: procedure = .void expose inspection
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string, capture = 0
+  caseid = 'address.' || changestr(' ',label,'-')
+  call emissionstart(caseid)
   saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
   if accepted then call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
   else do
@@ -154,15 +168,18 @@ admission: procedure = .void expose inspection
     call check(selected.status() <> 0 & output.bytes() = 0 & pos(prefix,selected.error()) = 1 & pos(reason,selected.error()) > 0,label || ' cause-specific atomic refusal: ' || selected.error())
   end
   call check(bincompare(saved,graph.binary()) = 0,label || ' input unchanged')
+  call emissionfinish(caseid,reference graph,reference output,accepted,selected.status(),selected.error())
   if accepted & selected.status() = 0 then do
     if capture & inspection <> '' then do
       bytes = output.text() as .binary
       call check(writebinary(inspection || '/protected-command.rxas',bytes) = <blen>(bytes),'write temporary protected command RXAS for active review')
     end
     previous = output.text()
+    call emissionstart(caseid || '-output-128')
     limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
     call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,label || ' bounded output failure')
     call check(output.text() == previous & bincompare(saved,graph.binary()) = 0,label || ' limit preserves prior owned output and graph')
+    call emissionfinish(caseid || '-output-128',reference graph,reference empty,0,limited.status(),limited.error(),128)
   end
   return
 
@@ -318,4 +335,47 @@ absent: procedure = .void
   arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
   draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
   call block.returnvalue(finished.result(),origin)
+  return
+
+emissionstart: procedure = .void expose emission_directory emission_requests
+  arg caseid = .string
+  if emission_directory == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose emission_directory emission_finished emission_imports
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string, bytes = 67108864, registers = 65536, api = 'selector'
+  if emission_directory == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  say 'REQUEST|' || caseid || '|imports=' || emission_imports || '|output.bytes=' || (bytes as .string) || '|registers=' || (registers as .string) || '|api=' || api
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(emission_directory || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(emission_directory || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose emission_directory emission_finished
+  arg caseid = .string
+  if emission_directory == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
   return

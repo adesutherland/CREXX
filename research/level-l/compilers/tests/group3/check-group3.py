@@ -82,10 +82,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--build', required=True, type=Path)
     parser.add_argument('--work', required=True, type=Path)
-    parser.add_argument('--phase', choices=('all', 'preview', 'prepare', 'run'), default='all')
+    parser.add_argument('--phase', choices=('all', 'preview', 'prepare', 'run', 'emit'), default='all')
     parser.add_argument('--reuse-c', action='append', default=[])
     parser.add_argument('--skip-check', action='append', default=[])
+    parser.add_argument('--emit-case', action='append', default=[], help='Select maintained request stems only in --phase emit')
+    parser.add_argument('--ir', choices=('on', 'off'), help='Semantic IR selection only for --phase emit (default: on)')
     args = parser.parse_args()
+    emit_only = args.phase == 'emit'
+    if args.ir and not emit_only:
+        parser.error('--ir requires --phase emit')
+    semantic_ir = args.ir or 'on'
+    if args.emit_case and not emit_only:
+        parser.error('--emit-case requires --phase emit')
+    if emit_only and args.reuse_c:
+        parser.error('--phase emit compiles current requests; --reuse-c is functional preparation only')
     if args.skip_check and args.phase != 'run':
         parser.error('--skip-check requires a prepared --phase run')
     root = Path(__file__).resolve().parents[5]
@@ -96,6 +106,9 @@ def main():
     if args.phase == 'all':
         temporary = tempfile.TemporaryDirectory(prefix='group3-', dir=work)
         work = Path(temporary.name)
+    if emit_only:
+        # Keep emission inputs/products apart from functional preparation.
+        work = work / 'emission'; work.mkdir(exist_ok=True)
     backend = build / 'research/level-l/compilers/backend/opt'
     suffix = '.exe' if os.name == 'nt' else ''
     runtime = work / 'runtime'; app = work / 'application'; host = work / 'host'; empty = work / 'empty PATH'
@@ -158,7 +171,8 @@ def main():
         if stem in args.reuse_c:
             assert not refusal and assembly.exists(), ('reviewed prepared C assembly', stem)
             return assembly
-        fields = [str(sourcefile), str(assembly), logical or sourcefile.name, host_export, refusal, *(str(value) for value in limits), '']
+        fields = [str(sourcefile), str(assembly), logical or sourcefile.name, host_export, refusal,
+                  *(str(value) for value in limits), str(int(semantic_ir == 'on')) if emit_only else '']
         assert len(fields) == 10 and not any('|' in value or '\n' in value for value in fields)
         requests.append((stem, '|'.join(fields)))
         return assembly
@@ -329,16 +343,31 @@ def main():
                 if 'ERROR_PANEL_OK' not in source:
                     observed.update(name.upper() for name in re.findall(r'\b([A-Za-z][A-Za-z0-9]*)\s*\(', source))
             assert set(BIFS) <= observed, ('missing per-name positive source', sorted(set(BIFS) - observed))
+        selected = set()
+        if emit_only:
+            known = {stem for stem, _ in requests}
+            selected = set(args.emit_case) or known
+            assert selected <= known, ('unknown emission request', sorted(selected - known))
+            requests = [item for item in requests if item[0] in selected]
+            negatives = [item for item in negatives if item[0] in selected]
         worker = bcompile(fixtures / 'compile-fixtures.crexx', 'compile-group3', compiler=True)
         worker = link('compile-group3', worker, compiler=True)
         request_manifest = work / 'compile.manifest'; request_manifest.write_text(''.join(row + '\n' for _, row in requests))
         log = work / 'compile-batch.log'
         print('GROUP3_BATCH|' + str(log), flush=True)
         with log.open('wb') as output:
-            result = subprocess.run([str(hostvm), '--no-autoload', str(worker), '-a', str(runtime), str(request_manifest), str(tool('rxas'))],
+            result = subprocess.run([str(hostvm), '--no-autoload', str(worker), '-a', str(runtime), str(request_manifest), str(tool('rxas')), *(['emit-only'] if emit_only else [])],
                                     cwd=host, env=env, stdout=output, stderr=subprocess.STDOUT, timeout=7200)
         diagnostic = log.read_bytes()
-        assert result.returncode == 0 and b'|PASS\n' in diagnostic, ('warm compiler batch', diagnostic[-10000:])
+        if emit_only:
+            marker = f'GROUP3_EMISSION|requests={len(requests)}|EMISSION'.encode()
+            rows = diagnostic.replace(b'\r\n', b'\n').splitlines()
+            assert result.returncode == 0 and rows.count(marker) == 1, ('warm emission batch', diagnostic[-10000:])
+            emitted = [('EMITTED|' + row.split('|')[2]).encode() for _, row in requests if not row.split('|')[4]]
+            assert sorted(row for row in rows if row.startswith(b'EMITTED|')) == sorted(emitted), 'exact emitted requests'
+            assert not any(row.startswith((b'COMPILED|', b'GROUP3_FIXTURES|')) for row in rows), 'emission is not assembly qualification'
+        else:
+            assert result.returncode == 0 and b'|PASS\n' in diagnostic, ('warm compiler batch', diagnostic[-10000:])
         assert not re.search(rb'Warning in |warning:|#WARNING|Sanitizer|runtime error:', diagnostic), diagnostic[-5000:]
         for stem, assembly, code, offset, contains in negatives:
             assert assembly.read_bytes() == b'previous output\n', ('atomic previous output', stem)
@@ -350,8 +379,30 @@ def main():
                 assert row.startswith(prefix + str(offset).encode() + b'|'), (stem, row)
             for part in contains:
                 assert part.encode() in row, (stem, row, part)
-        source_shapes((app / 'simple-constant.rxas').read_text(), simple=True)
-        source_shapes((app / 'effectful-preview.rxas').read_text())
+        if not emit_only or 'simple-constant' in selected:
+            source_shapes((app / 'simple-constant.rxas').read_text(), simple=True)
+        if not emit_only or 'effectful-preview' in selected:
+            source_shapes((app / 'effectful-preview.rxas').read_text())
+        if emit_only:
+            requests_identity = []
+            for stem, row in requests:
+                fields = row.split('|'); source, output = Path(fields[0]), Path(fields[1])
+                if not fields[4]:
+                    assert output.stat().st_size > 0, ('emitted RXAS is nonempty', stem)
+                requests_identity.append(dict(stem=stem, row=row, source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
+                                              rxas_sha256=hashlib.sha256(output.read_bytes()).hexdigest(), refusal=bool(fields[4])))
+            expected_starts = [('START|' + row.split('|')[2]).encode() for _, row in requests]
+            assert [row for row in rows if row.startswith(b'START|')] == expected_starts, 'exact ordered request records'
+            expected_refusals = [row.split('|')[2].encode() for _, row in requests if row.split('|')[4]]
+            assert sorted(row.split(b'|', 2)[1] for row in rows if row.startswith(b'REFUSAL|')) == sorted(expected_refusals), 'exact refusal records'
+            identity = dict(kind='EMISSION', compiler_mode='opt', semantic_ir=semantic_ir, producer_vm='rxbvm', requests=requests_identity,
+                            worker_sha256=hashlib.sha256(worker.read_bytes()).hexdigest(),
+                            vm_sha256=hashlib.sha256(hostvm.read_bytes()).hexdigest(),
+                            seed_tools={name: hashlib.sha256(tool(name).read_bytes()).hexdigest() for name in ('rxc', 'rxas', 'rxlink')},
+                            imports={path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in runtime.iterdir() if path.is_file() and path.suffix in ('.rxbin', '.rxplugin')})
+            (work / 'emission.json').write_text(json.dumps(identity), encoding='utf-8')
+            print('GROUP3_EMISSION|requests=' + str(len(requests_identity)) + '|EMISSION|' + str(work), flush=True)
+            return
         for stem, assembly, oracle in pending:
             checks.append(dict(stem=stem, image=str(link(stem, assembly.with_suffix('.rxbin'))), expected=oracle, argv=[]))
             if stem == 'effectful-preview':

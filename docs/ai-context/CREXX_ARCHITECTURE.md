@@ -113,7 +113,7 @@ component is `ResearchCompilers`, excluded from normal installation, including
 stale experimental products left in an incremental build. Normal CI explicitly
 selects both research compilers so their regressions continue to run.
 See [tool documentation](../../langtools/README.md), the
-[compiler architecture](../../research/level-l/compilers/doc/architecture.md)
+[compiler architecture](../../research/level-l/compilers/doc/levelc-architecture.md)
 and [programme plan](../../research/level-l/PLAN.md). This changes ownership,
 not the native compiler's production routing or the agreed language scope.
 

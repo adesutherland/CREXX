@@ -3,7 +3,7 @@
  * It contains no AST evaluator, assembler, bytecode interpreter or BIF body.
  */
 options levelb numeric_classic
-namespace llcdynamic expose scope contextbinding boundary interpret resolve resume condition checkpoint policy rootcompletion process linkchild unlinkchild registry owned packet boolean integer
+namespace llcdynamic expose declaration catalogue scope contextbinding boundary interpret resolve resume condition checkpoint policy rootcompletion process linkchild unlinkchild registry owned packet boolean integer
 import rxfnsb
 import rxjson
 import _rxsysb
@@ -84,6 +84,172 @@ parentfor: procedure = reference .llcdynamic..scope expose children
   end
   return absent
 
+/** Checked logical retained payload accounting, not an RSS bound. */
+catalogueamount: procedure = .int
+  arg total = .int, count = .int, width = 1
+  if total < 0 | count < 0 | width < 1 then assembler signal 'INVALID_ARGUMENTS','Invalid immutable catalogue dimensions'
+  if count > (9223372036854775807 - total) <idiv> width then assembler signal 'OUT_OF_RANGE','Immutable catalogue payload exceeds int64'
+  return total + count * width
+
+/** Pure compiler-selected metadata. Construction acquires no live target.
+ * @param callable Canonical selected target.
+ * @param alias Selected unambiguous basename, or empty.
+ * @param kind typed, classic or process.
+ * @param result Exact metadata result type.
+ * @param arguments Exact metadata argument text.
+ * @param provider Existing native-provider identity, possibly empty.
+ * @param projection Complete existing metadata-owner signature projection.
+ */
+declaration: class
+  _ready = .int
+  _callable = .string
+  _alias = .string
+  _kind = .string
+  _signature = .llcompilercontracts..signature
+  _names = .string[]
+  _results = .string[]
+  _arguments = .string[]
+  _providers = .string[]
+  _bytes = .int
+  *: factory
+    arg callable = .string, alias = .string, kind = .string, result = .string, arguments = .string, provider = .string, projection = .string[]
+    _ready = 0
+    if callable = '' | wordpos(kind,'typed classic process') = 0 then assembler signal 'INVALID_ARGUMENTS','Invalid immutable Classic declaration'
+    _callable = callable; _alias = alias; _kind = kind
+    _bytes = 256
+    _bytes = catalogueamount(_bytes,<blen>(callable as .binary),4)
+    _bytes = catalogueamount(_bytes,<blen>(alias as .binary),4)
+    _bytes = catalogueamount(_bytes,<blen>(kind as .binary),4)
+    if kind <> 'process' then do
+      _signature = .llcompilercontracts..signature.projected(projection)
+      if _signature.error() <> '' then assembler signal 'INVALID_ARGUMENTS','Invalid immutable Classic signature projection'
+      if _signature.name() \== callable | _signature.result() \== result then assembler signal 'INVALID_ARGUMENTS','Immutable Classic signature differs from its declaration'
+      _bytes = catalogueamount(_bytes,512)
+      _bytes = catalogueamount(_bytes,<blen>(_signature.name() as .binary),4)
+      _bytes = catalogueamount(_bytes,<blen>(_signature.result() as .binary),4)
+      _bytes = catalogueamount(_bytes,<blen>(_signature.flags_text() as .binary),4)
+      do i = 1 to _signature.arguments()
+        _bytes = catalogueamount(_bytes,256)
+        _bytes = catalogueamount(_bytes,<blen>(_signature.paramname(i) as .binary),4)
+        _bytes = catalogueamount(_bytes,<blen>(_signature.type(i) as .binary),4)
+        _bytes = catalogueamount(_bytes,<blen>(_signature.defaultkind(i) as .binary),4)
+        _bytes = catalogueamount(_bytes,<blen>(_signature.defaultliteral(i) as .binary),4)
+      end
+    end
+    if kind = 'typed' then do
+      _names[1] = callable; _results[1] = result; _arguments[1] = arguments; _providers[1] = provider
+      _bytes = catalogueamount(_bytes,4,64)
+      _bytes = catalogueamount(_bytes,<blen>(callable as .binary),4)
+      _bytes = catalogueamount(_bytes,<blen>(result as .binary),4)
+      _bytes = catalogueamount(_bytes,<blen>(arguments as .binary),4)
+      _bytes = catalogueamount(_bytes,<blen>(provider as .binary),4)
+    end
+    _ready = 1
+    return
+  ready: method = .int
+    return _ready
+  bytes: method = .int
+    if _ready = 0 then assembler signal 'INVALID_ARGUMENTS','Immutable Classic declaration is not ready'
+    return _bytes
+  /** Live capabilities and reservations belong only to the published scope. */
+  install: method = .void
+    arg owner_ref = reference .llcdynamic..scope
+    if _ready = 0 then assembler signal 'INVALID_ARGUMENTS','Immutable Classic declaration is not ready'
+    owner = dereference owner_ref
+    if owner.findbinding(_callable) > 0 then return
+    if _kind = 'typed' then do
+      live_catalogue = .rxinvoke..catalogue(_names,_results,_arguments,_providers)
+      capability = .rxinvoke..binding(live_catalogue,1)
+      call owner.bind(_callable,capability,_signature)
+      if _alias <> '' then call owner.bind(_alias,capability,_signature)
+    end
+    else if _kind = 'classic' then do
+      call owner.route(_callable,_callable,_kind,_signature)
+      if _alias <> '' then call owner.route(_alias,_callable,_kind,_signature)
+    end
+    else do
+      call owner.route(_callable,_callable,_kind)
+      if _alias <> '' then call owner.route(_alias,_callable,_kind)
+    end
+    return
+
+/** Immutable definition anchored in a never-replaced module global.
+ * Reference arguments are borrowed only after their owning array is complete.
+ * Owned getters are compatibility snapshots; internal matching never copies
+ * the full fingerprint or returns a mutable reference to module data.
+ */
+catalogue: class
+  _ready = .int
+  _fingerprint = .string
+  _names = .string[]
+  _entries = .int[]
+  _source = .string
+  _declarations = reference .llcdynamic..declaration[]
+  _bytes = .int
+  *: factory
+    arg fingerprint = .string, names = .string[], entries = .int[], sourceIdentity = .string, declarationsRef = reference .llcdynamic..declaration[]
+    _ready = 0
+    if fingerprint = '' | names[0] <> entries[0] | <refvalid>(declarationsRef) = 0 then assembler signal 'INVALID_ARGUMENTS','Invalid immutable Classic catalogue'
+    i = .int
+    declarations = dereference declarationsRef
+    do i = 1 to declarations[0]
+      if initialized(declarations[i]) = 0 then assembler signal 'INVALID_ARGUMENTS','Uninitialized immutable Classic declaration'
+      if declarations[i].ready() = 0 then assembler signal 'INVALID_ARGUMENTS','Unready immutable Classic declaration'
+    end
+    _bytes = catalogueamount(256,<blen>(fingerprint as .binary),4)
+    _bytes = catalogueamount(_bytes,<blen>(sourceIdentity as .binary),4)
+    _bytes = catalogueamount(_bytes,names[0],64)
+    do i = 1 to names[0]
+      _bytes = catalogueamount(_bytes,<blen>(names[i] as .binary),4)
+    end
+    _fingerprint = fingerprint; _names = names; _entries = entries; _source = sourceIdentity
+    _declarations = declarationsRef
+    _ready = 1
+    return
+  ready: method = .int
+    return _ready & <refvalid>(_declarations)
+  require: method = .void
+    if ready() = 0 then assembler signal 'REFERENCE_INVALID','Immutable Classic catalogue is unavailable'
+    return
+  bytes: method = .int
+    call require()
+    return _bytes
+  fingerprint: method = .string
+    call require()
+    return _fingerprint
+  names: method = .string[]
+    call require()
+    return _names
+  entries: method = .int[]
+    call require()
+    return _entries
+  source: method = .string
+    call require()
+    return _source
+  entry: method = .int
+    arg name = .string
+    call require()
+    do i = 1 to _names[0]; if _names[i] == name then return _entries[i]; end
+    return -1
+  matchesfingerprint: method = .int
+    arg fingerprint_ref = reference .string
+    call require()
+    fingerprint = dereference fingerprint_ref
+    return _fingerprint == fingerprint
+  matches: method = .int
+    arg other_ref = reference .llcdynamic..catalogue
+    call require()
+    other = dereference other_ref
+    return other.matchesfingerprint(reference _fingerprint)
+  install: method = .void
+    arg owner_ref = reference .llcdynamic..scope
+    call require()
+    declarations = dereference _declarations
+    do i = 1 to declarations[0]
+      call declarations[i].install(owner_ref)
+    end
+    return
+
 /** Stable owner anchored in the compiled caller's frame. Session cleanup owns
  * group state only; close() is reserved for the actual Classic invocation exit.
  */
@@ -93,6 +259,8 @@ scope: class
   _identity = .int
   _generation = .int
   _closed = .int
+  _prepared = .int
+  _catalogue = reference .llcdynamic..catalogue
   _fingerprint = .string
   _names = .string[]
   _entries = .int[]
@@ -143,7 +311,7 @@ scope: class
   _sourcehost = .rexxclassichost..RexxClassicHostScope[]
   *: factory
     arg context = reference .rexxclassiccontext..RexxClassicContext, fingerprint = .string, names = .string[], entries = .int[], sourceIdentity = '', resourceBase = ''
-    _context = context; _fingerprint = fingerprint; _names = names; _entries = entries
+    _context = context; _fingerprint = fingerprint; _names = names; _entries = entries; _prepared = 0
     _source = sourceIdentity; _base = resourceBase; _identity = nextidentity(); _generation = 1; _closed = 0; _groups = 0
     _configgeneration = 1; _sourceenabled = 1; _sharedbudget = 0; _isIR = 0; _signalentry = -1; _sourceactive = 0; _cacheready = 0; _conditionline = 0; _checkpointwaiting = 0
     if <refvalid>(context) = 0 | names[0] <> entries[0] | fingerprint = '' then assembler signal 'INVALID_ARGUMENTS','Invalid Classic dynamic invocation catalogue'
@@ -154,7 +322,33 @@ scope: class
     bundle = dereference context; parent_ref = parentfor(bundle.activation())
     if <refvalid>(parent_ref) then do
       parent = dereference parent_ref; _budgetref = parent.budget(); _cacheref = parent.cacheowner(); _sharedbudget = 1
-      if parent.fingerprint() == _fingerprint then do
+      if parent.matchesfingerprint(reference _fingerprint) then do
+        _bindingnames = parent.bindingnames(); _bindings = parent.bindings(); _bindingids = parent.bindingids(); _definitions = parent.definitions()
+        do binding = 1 to _bindingnames[0]; _bindingtickets[binding] = 0; end
+      end
+      _roots = parent.sourceRoots(); _sourceenabled = parent.sourceEnabled(); _configgeneration = parent.sourceGeneration()
+    end
+    return
+  /** Only immutable definition data is borrowed. Binding is a later operation
+   * on the scope after the generated caller has published its owning cell. */
+  prepared: factory
+    arg contextRef = reference .rexxclassiccontext..RexxClassicContext, catalogueRef = reference .llcdynamic..catalogue, resourceBase = ''
+    if <refvalid>(catalogueRef) = 0 then assembler signal 'REFERENCE_INVALID','Immutable Classic catalogue owner is expired'
+    definition = dereference catalogueRef
+    if initialized(definition) = 0 then assembler signal 'INVALID_ARGUMENTS','Immutable Classic catalogue is not initialized'
+    if definition.ready() = 0 then assembler signal 'INVALID_ARGUMENTS','Immutable Classic catalogue is not ready'
+    _context = contextRef; _catalogue = catalogueRef; _prepared = 1
+    _source = definition.source(); _base = resourceBase; _identity = nextidentity(); _generation = 1; _closed = 0; _groups = 0
+    _configgeneration = 1; _sourceenabled = 1; _sharedbudget = 0; _isIR = 0; _signalentry = -1; _sourceactive = 0; _cacheready = 0; _conditionline = 0; _checkpointwaiting = 0
+    if <refvalid>(contextRef) = 0 then assembler signal 'INVALID_ARGUMENTS','Invalid Classic dynamic invocation catalogue'
+    _invocation = .rexxclassicinvocation..RexxClassicInvocation(contextRef)
+    do condition = 1 to 7; _policytickets[condition] = 0; end
+    _budget = .llcdynamicbudget..ledger(67108864)
+    absent_value_20 = .llcdynamicbudget..cache; _cache = absent_value_20
+    bundle = dereference contextRef; parent_ref = parentfor(bundle.activation())
+    if <refvalid>(parent_ref) then do
+      parent = dereference parent_ref; _budgetref = parent.budget(); _cacheref = parent.cacheowner(); _sharedbudget = 1
+      if parent.matchesdefinition(_catalogue) then do
         _bindingnames = parent.bindingnames(); _bindings = parent.bindings(); _bindingids = parent.bindingids(); _definitions = parent.definitions()
         do binding = 1 to _bindingnames[0]; _bindingtickets[binding] = 0; end
       end
@@ -163,7 +357,7 @@ scope: class
     return
   child: factory
     arg context = reference .rexxclassiccontext..RexxClassicContext, fingerprint = .string, names = .string[], entries = .int[], parent = reference .llcdynamic..scope, sourceIdentity = '', resourceBase = ''
-    _context = context; _fingerprint = fingerprint; _names = names; _entries = entries
+    _context = context; _fingerprint = fingerprint; _names = names; _entries = entries; _prepared = 0
     _source = sourceIdentity; _base = resourceBase; _identity = nextidentity(); _generation = 1; _closed = 0; _groups = 0
     _configgeneration = 1; _sourceenabled = 1; _sharedbudget = 1; _isIR = 0; _signalentry = -1; _sourceactive = 0; _cacheready = 0; _conditionline = 0; _checkpointwaiting = 0
     if <refvalid>(context) = 0 | <refvalid>(parent) = 0 | names[0] <> entries[0] | fingerprint = '' then assembler signal 'INVALID_ARGUMENTS','Invalid Classic dynamic child catalogue'
@@ -174,6 +368,59 @@ scope: class
     do binding = 1 to _bindingnames[0]; _bindingtickets[binding] = 0; end
     _roots = parent_owner.sourceRoots(); _sourceenabled = parent_owner.sourceEnabled(); _configgeneration = parent_owner.sourceGeneration()
     return
+  bindcatalogue: method = .void
+    call check(_generation)
+    if _prepared = 0 | <refvalid>(_catalogue) = 0 then assembler signal 'REFERENCE_INVALID','Immutable Classic catalogue owner is expired'
+    definition = dereference _catalogue
+    call definition.install(reference self)
+    return
+  matchesdefinition: method = .int
+    arg catalogueRef = reference .llcdynamic..catalogue
+    call check(_generation)
+    definition = dereference catalogueRef
+    if definition.ready() = 0 then assembler signal 'REFERENCE_INVALID','Immutable Classic catalogue is unavailable'
+    if _prepared then do
+      held = dereference _catalogue
+      if held.ready() = 0 then assembler signal 'REFERENCE_INVALID','Immutable Classic catalogue is unavailable'
+      if _catalogue <refsame> catalogueRef then return 1
+      return held.matches(catalogueRef)
+    end
+    return definition.matchesfingerprint(reference _fingerprint)
+  matchesfingerprint: method = .int
+    arg fingerprintRef = reference .string
+    call check(_generation)
+    if _prepared then do
+      definition = dereference _catalogue
+      return definition.matchesfingerprint(fingerprintRef)
+    end
+    fingerprint = dereference fingerprintRef
+    return _fingerprint == fingerprint
+  fingerprint: method = .string
+    if _prepared then do
+      definition = dereference _catalogue
+      return definition.fingerprint()
+    end
+    return _fingerprint
+  names: method = .string[]
+    if _prepared then do
+      definition = dereference _catalogue
+      return definition.names()
+    end
+    return _names
+  entries: method = .int[]
+    if _prepared then do
+      definition = dereference _catalogue
+      return definition.entries()
+    end
+    return _entries
+  entry: method = .int
+    arg name = .string
+    if _prepared then do
+      definition = dereference _catalogue
+      return definition.entry(name)
+    end
+    do i = 1 to _names[0]; if _names[i] == name then return _entries[i]; end
+    return -1
   check: method = .void
     arg generation = .int
     if _closed | generation <> _generation | <refvalid>(_context) = 0 then assembler signal 'REFERENCE_INVALID','Classic dynamic owner is stale or closed'
@@ -185,12 +432,6 @@ scope: class
     return _identity
   generation: method = .int
     return _generation
-  fingerprint: method = .string
-    return _fingerprint
-  names: method = .string[]
-    return _names
-  entries: method = .int[]
-    return _entries
   source: method = .string
     return _source
   resourceBase: method = .string
@@ -290,10 +531,6 @@ scope: class
     return _configgeneration
   sourceEnabled: method = .int
     return _sourceenabled
-  entry: method = .int
-    arg name = .string
-    do i = 1 to _names[0]; if _names[i] == name then return _entries[i]; end
-    return -1
   budget: method = reference .llcdynamicbudget..ledger
     call check(_generation)
     return budgetraw()

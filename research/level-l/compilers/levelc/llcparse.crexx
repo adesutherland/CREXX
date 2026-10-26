@@ -1171,15 +1171,15 @@ signalmessage: procedure = .string
   prefix_text = 'LL_COMPILER_SYNTAX: '
   return prefix_text || 'RXC-LC-35.1: invalid SIGNAL expression; ' || substr(fallback,length(prefix_text) + 1)
 
-/** Only classified completion/insertion/ADDRESS instructions own 35.1. Variables,
- * labels and quoted/function names cannot activate it; lexical and PARSE
- * failures win. */
+/** Only classified completion/insertion/ADDRESS/INTERPRET instructions own
+ * 35.1. Variables, labels and quoted/function names cannot activate it;
+ * lexical and PARSE failures win. */
 completionmessage: procedure = .string
   arg language_ref = reference .lllanguage..definition, tokens_ref = reference .llcore..stream, offset_ref = reference .int, fallback = .string
   language = dereference language_ref; tokens = dereference tokens_ref; offset = dereference offset_ref
   i = .int
   active = ''; previouskind = -1; previousstart = 0; failedkind = -1
-  separator = language.tokenid('separator'); returnword = language.tokenid('returnword'); exitword = language.tokenid('exitword'); pushword = language.tokenid('pushword'); queueword = language.tokenid('queueword'); addressword = language.tokenid('addressword')
+  separator = language.tokenid('separator'); returnword = language.tokenid('returnword'); exitword = language.tokenid('exitword'); pushword = language.tokenid('pushword'); queueword = language.tokenid('queueword'); addressword = language.tokenid('addressword'); interpretword = language.tokenid('interpretword')
   do i = 0 to tokens.size() - 1
     first = tokens.start(i)
     if first > offset then leave
@@ -1190,6 +1190,7 @@ completionmessage: procedure = .string
     else if kind = pushword then active = 'PUSH'
     else if kind = queueword then active = 'QUEUE'
     else if kind = addressword then active = 'ADDRESS'
+    else if kind = interpretword then active = 'INTERPRET'
     else if kind = separator | kind = language.tokenid('thenword') | kind = language.tokenid('elseword') | kind = language.tokenid('otherwiseword') then do
       if first < offset then active = ''
     end

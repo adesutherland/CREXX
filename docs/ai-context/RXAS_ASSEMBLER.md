@@ -129,6 +129,7 @@ already loaded module set has linked.
 Module initialization uses a dedicated `META_INITIALIZER` record:
 
 ```rxas
+.meta "example.boot"="b" ".void" boot() ""
 .meta "example.boot"=".initializer" ".void" boot() ""
 ```
 
@@ -139,6 +140,9 @@ argument signature, and a local bytecode procedure. It stores the symbol and
 procedure as typed constant-pool references rather than treating the label as
 an exported callable. Multiple records are valid and their metadata-chain order
 is execution order. RXBIN 007 writers set the initializer feature bit.
+The linker requires the matching ordinary callable metadata above, with the
+same symbol, local procedure, `.void` result and empty argument list. Neither
+record exposes the procedure as a public callable.
 
 The serialized `expose_head` chain includes both `EXPOSE_REG_CONST` and
 `EXPOSE_PROC_CONST` records. Runtime linking and other module-local walkers now

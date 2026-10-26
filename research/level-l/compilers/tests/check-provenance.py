@@ -40,8 +40,10 @@ started = time.monotonic()
 
 def run(label, command, expected=0):
     before = time.monotonic()
+    # The shared contracts image also runs the combined graph/shape fixture.
+    limit = 1800 if label == 'contracts' else 180
     result = subprocess.run([str(x) for x in command], cwd=work,
-                            capture_output=True, timeout=180)
+                            capture_output=True, timeout=limit)
     (work/(label+'.stdout')).write_bytes(result.stdout)
     (work/(label+'.stderr')).write_bytes(result.stderr)
     records.append(dict(label=label, command=[str(x) for x in command],
@@ -80,11 +82,27 @@ def compile_source(level, source, name):
             value = row.split(',', 1)[1]
             assert value != last_location, (name, 'redundant location update', row)
             last_location = value
-    # Records carry honest unknown clause IDs; ranges/flags are checked below
-    # and in the B service tests. IDs and register numbers are not golden text.
-    for row in text.splitlines():
-        if row.startswith('.srcstep '):
-            assert row.split()[2] == '0', row
+    # C source-construct groups can include generated helpers with cleared
+    # coordinates. Every positive synthetic group must also have an authored
+    # anchor; G and explicit no-source records have no clause identity.
+    source_records = [row for row in text.splitlines() if row.startswith('.srcstep ')]
+    authored_clauses = {row.split()[2] for row in source_records
+                        if int(row.split()[3]) & 1 and row.split()[2] != '0'}
+    for row in source_records:
+        fields = row.split()
+        if level == 'g' or fields[1] == '0':
+            assert fields[2] == '0', row
+        if int(fields[3]) & 4:
+            assert row.split(' ', 4)[4] == '"" 0 0 0 ""', row
+            if fields[2] != '0':
+                assert fields[2] in authored_clauses, row
+    if level == 'c' and name == 'nested-c':
+        data = source.read_bytes()
+        needle = b'descend(3)'
+        assert data.count(needle) == 1
+        clause = data.index(needle) + 1
+        assert re.search(r'\.srcstep \d+ '+str(clause)+r' 17 "nested-c\.crexx" 2 5 15 "say descend\(3\)"', text), text
+        assert re.search(r'\.srcstep \d+ '+str(clause)+r' 6 "" 0 0 0 ""', text), text
     return assembly
 
 
@@ -114,6 +132,14 @@ try:
             text = assembly.read_text()
             if name == 'unicode':
                 assert re.search(r'\.srcstep \d+ 0 17 "unicode-'+level+r'\.crexx" 3 5 10 "say 1 / 0"', text), text
+                if level == 'c':
+                    data = source.read_bytes()
+                    needle = b'say 1 / 0'
+                    assert data.count(needle) == 1
+                    # Clause IDs are the statement's zero-based byte start + 1,
+                    # including the fixture's CRLF and earlier UTF-8 bytes.
+                    clause = data.index(needle) + 1
+                    assert re.search(r'\.srcstep \d+ '+str(clause)+r' 17 "unicode-c\.crexx" 3 1 10 "say 1 / 0"', text), text
             for mode in ['noopt', 'opt']:
                 result = execute(level, assembly, stem+'-'+mode, mode, (28 if level == 'c' else 5) if line else 0)
                 assert result.stdout.replace(b'\r\n', b'\n') == output.encode(), (stem, result.stdout)
@@ -148,26 +174,30 @@ try:
         outputs.append(compile_source('g', source, root).read_bytes())
     assert outputs[0] == outputs[1]
 
-    # Exercise all four dispatch arms, including an error before the first
-    # authored operation, and assert the original fault anchor survives. This
-    # does not claim general condition-object payload or handler semantics.
+    # Exercise four installed fatal dispatch arms before the first authored
+    # operation. Raw payloads and fault anchors survive unchanged; the generated
+    # caller has no authored source. This does not claim general condition-object
+    # payload or handler semantics.
     source = work/'entry.crexx'
     source.write_text('options levelc\nsay 1\n')
     original = compile_source('c', source, 'entry').read_text()
     for signal, status in [('CLASSIC_SYNTAX', 28), ('DIVISION_BY_ZERO', 5),
                            ('CONVERSION_ERROR', 6), ('INVALID_ARGUMENTS', 7)]:
+        assert original.count('llb1:\n') == 1
+        prologue = original.split('llb1:\n', 1)[0]
+        assert re.search(r'^sigbrv [^,\n]+,r[0-9]+,"'+signal+r'"$', prologue, re.MULTILINE), signal
         assembly = work/(signal+'.rxas')
         marker = '.srcstep 900 0 17 "bound-fault.rexx" 7 3 8 "  fault"\n'
         injected = 'llb1:\n'+marker+'signal "'+signal+'","original-message"\n'
-        assert original.count('llb1:\n') == 1
         assembly.write_text(original.replace('llb1:\n', injected))
         for mode in ['noopt', 'opt']:
             result = execute('c', assembly, signal+'-'+mode, mode, status)
             assert not result.stdout
             error = result.stderr.decode(errors='replace')
-            assert 'entry.crexx: entering $MAIN: original-message' in error, error
-            assert f'(SIGNAL {signal})' in error, error
-            assert 'source: bound-fault.rexx:7:3:' in error, error
+            assert error.splitlines()[0] == f'PANIC: original-message (SIGNAL {signal})', error
+            fault = error.split('  called from:', 1)[0]
+            assert '  source: bound-fault.rexx:7:3:   fault' in fault.splitlines(), error
+            assert 'entry.crexx' not in error, error
             assert 'source: llctarget.crexx:' not in error, error
     print('PROVENANCE_E2E|failures=0')
 finally:

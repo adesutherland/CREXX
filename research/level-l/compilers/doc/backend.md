@@ -1,10 +1,15 @@
 # C/G IR to RXAS
 
-The STEP04 backend completes the unoptimised executable path for the
-[admitted C/G profile](poc-scope.md). `llrxc-c` and `llrxc-g` are separately
-selected commands. The existing `rxc`, `rxc-c` and wrapper routes remain the
-production routes. STEP05 supplies shared IR optimisation before this backend; full replacement and
-INTERPRET retain their later gates in [PLAN.md](../PLAN.md).
+The backend emits RXAS for the current [Classic C profile](levelc-conformance.md)
+and the admitted typed G profile. `llrxc-c` and `llrxc-g` are separately selected
+commands. The existing `rxc`, `rxc-c` and wrapper routes retain their product
+roles. Optional shared IR optimisation precedes selection. STEP11 locally
+delivers same-frontend C INTERPRET and Rexx source calls through a separate IR
+execution route; it does not assemble runtime source. Full compiler,
+delivery/platform acceptance and replacement retain their gates in
+[PLAN.md](../PLAN.md). See the [C user guide](levelc-user-guide.md) for current
+commands and the [dynamic architecture](levelc-architecture.md#dynamic-execution-strategy)
+for the compiled/IR bridge. Earlier STEP04/05 examples retain their stated profiles.
 
 ## Ownership and public surface
 
@@ -29,13 +34,18 @@ budgets, not a combined memory/CPU cap. These are protection limits,
 not throughput promises. Exhaustion fails the request and exposes no partial
 successful output. Register budgets below 16 are invalid.
 
-C additionally appends optional `providers:llcbindings.binding[]` and
-`routine_export:string` after those eight arguments. Bindings select prebuilt
-ordinary void/frame exports; routine output supplies one such wrapper. Empty
-defaults avoid provider work. The request anchors checked selections before
+C additionally appends optional `providers:llcbindings.binding[]`,
+`routine_export:string` and `host_export:string` after those eight arguments.
+Bindings select prebuilt Classic activation-packet exports, admitted ordinary
+scalar B/G/RXPA procedures or explicit executable routes. Routine output supplies
+a signed Classic wrapper; host output supplies a typed
+`RexxClassicHostRequest -> RexxClassicHostResult` wrapper. The two export modes
+are mutually exclusive. Empty defaults avoid provider work. The request anchors
+checked selections before
 borrowed frontend/backend work, including a `graph()`-first request. See the
-[static-provider contract](architecture.md#call3-static-provider-contract) and
-[CLI guide](../../../../langtools/doc/user-guide.md#compiling-cg-source-to-rxas).
+[static-provider contract](levelc-architecture.md#call3-static-provider-contract),
+[Group 2 scalar/host contract](levelc-architecture.md#group2-calls-host-proposal) and
+[CLI guide](levelc-user-guide.md#compiler-options).
 
 `status`, `error`, `offset`, `diagnostic` and `output` evaluate the request once.
 `graph` retains frontend inspection; `emissiongraph` evaluates the request and
@@ -47,8 +57,10 @@ Classic target runtime are absent from that service package.
 The request owns its frontend and backend;
 the backend owns the frozen graph and the completed Level L output. A returned
 output owns its chunks independently and survives the request. Requests share
-no mutable compiler state. Repeated independent requests are tested; concurrent
-service use and interpreted-code lifetime are later qualification work.
+no mutable compiler state. Repeated independent requests have maintained
+controls; full concurrent-service qualification remains open. STEP11 supplies
+bounded interpreted-source/IR/frame ownership for its locally qualified profile;
+full dynamic and delivery/platform proof remains in PLAN.
 
 An advanced caller can pass a frozen graph to
 `.llcrxas..compilation(graph, artifacts, bytes, registers)` for C, or the corresponding `.lltrxas..compilation(...)` for the typed core. It exposes
@@ -92,19 +104,25 @@ select conservative storage. A pinned cell retains unique identity but can move
 as a whole before execution; ABI-fixed cells retain their index. Initial reuse
 clears stale components without moving an object finalization point. No component
 packing, speculative cross-block reuse or pressure spilling is implemented.
+C supplies a combined target-work allowance of `output.bytes + 1000000`.
+Record admission charges less than the selected-text byte bound already
+enforced by C; the existing million-work allowance remains for finalization.
+The addition is checked before constructing any target. Generic `llrxas`
+defaults are unchanged, and dense allocation can still exhaust finite work;
+the output/register limits and atomic refusal remain independent constraints.
 Jumps to the next emitted block fall through, retaining its label
 and resetting source/context state at that entry.
 Classic counted/controlled DO adds one hidden owner per static key, outside
 IR values and the call window. Owners initialize before fallible setup; helper
 calls borrow them synchronously, and normal/transfer/fatal exits clear them in
-the [approved lifetime order](architecture.md#approved-do-contract).
+the [approved lifetime order](levelc-architecture.md#approved-do-contract).
 Grouping and state-free repetition add no DO owner.
 A local call targets an internal `llfN` label; a block targets `llbN`. Source
 identifiers never become assembler labels. Recursive calls receive independent
 VM frames. G local calls are checked against the callee's exact IR signature;
 Classic source units use required `(context, entry)` parameters and return a
 fresh result-presence packet. Internal calls select positive checked entries in
-one shared source body; see the [current C ABI](architecture.md#proposed-procedure-contract).
+one shared source body; see the [current C ABI](levelc-architecture.md#proposed-procedure-contract).
 
 Supplied arguments are copied into the private window with flag 768; omitted
 optional positions get flag 512 without constructing a placeholder value. The call
@@ -122,12 +140,25 @@ applies the returned presence packet to RESULT/.RESULT and drops both when no
 value is returned. Authored bare RETURN checks function kind at the callee;
 an expression receiving EOF absence fails44.1 at its invoking target.
 Direct BIFs borrow metadata-checked raw argument vectors synchronously and use
-the existing named entries and checked-error builder; the
-[CALL contract](architecture.md#call-contract) owns the exact interfaces.
+the existing named entries. Generated callers inspect the shared context's
+error flag and detail, release temporary aliases, then raise Classic SYNTAX at
+the authored call site; successful calls retain condition delivery. Runtime
+helpers may use the existing checked-error wrapper. The
+[CALL contract](levelc-architecture.md#call-contract) owns the exact interfaces.
 Main forwards VM `-a` arguments as an ordered presence packet.
 
+The optional dynamic profile preserves the C body ABI and adds an
+invocation-owned scope plus a finite inline dispatcher at resumable boundaries.
+The shared dynamic service returns checked requests for compiled calls,
+normal completion, owner RETURN/SIGNAL/EXIT or failure; only the selector maps
+those requests to actual VM destinations. A suspended IR group resumes once
+after its call completes. Runtime groups use the frontend-only `llcgraph` route
+and neutral L executor, so the optional dynamic runtime contains no RXAS selector.
+The [STEP11 contract](levelc-architecture.md#dynamic-execution-strategy) owns persistent
+handler/private-pool state, source lookup, resource budgets and mixed-frame cleanup.
+
 `rxfnsl-analysis` supplies the neutral indexed graph and structured effect/proof
-services; the C-owned `llceffects` adapter retains C22 context identity and effect
+services; the C-owned `llceffects` adapter retains C context identity and effect
 premises. The existing once-bound entry-context check proves which slots/loads
 denote argument 1. Those aliases share one cell, so redundant load/store copies
 and result registers are absent even with semantic optimization off. Pool,
@@ -242,7 +273,7 @@ The current [condition/observation profile](levelc-conformance.md) owns the
 configured producers, typed payload/origin transport, authored SIGNAL and delayed
 CALL handlers, clause checkpoints and cleanup. Fatal formatting retains the
 original event and authored context. Default unhandled C events remain
-nonresumable; wider host producers/platforms and INTERPRET keep their named
+nonresumable; full host/platform and LC-87 dynamic proof retain their named
 qualification gates. Allocation preserves these contracts and changes no public
 condition object, IR format or VM API.
 
@@ -255,6 +286,7 @@ is not evaluated in either compiler mode.
 
 Research delivery is explicitly selected. Follow [the build/install guide](../README.md).
 `stage-product` owns SDK/tool products; `stage-research-compilers` owns the
-selected compiler services, commands and Classic adapter. Research installation
+selected compiler services, commands, Classic adapter and optional dynamic
+runtime, with their required package dependencies. Research installation
 uses `--component ResearchCompilers` after base installation. Old combined and
 stale compiler outputs are excluded from the broad base-bin installation.

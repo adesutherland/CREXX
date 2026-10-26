@@ -65,9 +65,9 @@ nopchecks: procedure = .void expose artifacts
       call check(withnop.status() = 0 & without.status() = 0,'valid NOP/control pair ' || sample || '/' || optimise || ': ' || withnop.error() || ' / ' || without.error())
       if withnop.status() <> 0 | without.status() <> 0 then iterate
       graph = withnop.graph(); other = without.graph()
-      call check(irshape(graph) = irshape(other),'NOP adds no source IR operation/value/block/slot ' || sample || '/' || optimise)
+      call check(irshape(graph) = irshape(other),'NOP adds only source clause markers/context transport ' || sample || '/' || optimise)
       graph = withnop.emissiongraph(); other = without.emissiongraph()
-      call check(irshape(graph) = irshape(other),'NOP adds no selected IR operation/value/block/slot ' || sample || '/' || optimise)
+      call check(irshape(graph) = irshape(other),'NOP adds only selected clause markers/context transport ' || sample || '/' || optimise)
       output = withnop.output(); blank = without.output()
       if inspect <> '' & optimise = 0 & (sample = 2 | sample = 4) then do
         written = writebinary(inspect || '-' || sample || '-nop.rxas',output.text() as .binary)
@@ -103,9 +103,9 @@ optionschecks: procedure = .void expose artifacts
       call check(withoptions.status() = 0 & without.status() = 0,'valid OPTIONS/control pair ' || sample || '/' || optimise || ': ' || withoptions.error() || ' / ' || without.error())
       if withoptions.status() <> 0 | without.status() <> 0 then iterate
       graph = withoptions.graph(); other = without.graph()
-      call check(irshape(graph) = irshape(other),'OPTIONS adds no source IR value/helper/block/slot ' || sample || '/' || optimise)
+      call check(irshape(graph) = irshape(other),'OPTIONS adds only source clause markers/context transport ' || sample || '/' || optimise)
       graph = withoptions.emissiongraph(); other = without.emissiongraph()
-      call check(irshape(graph) = irshape(other),'OPTIONS adds no selected IR value/helper/block/slot ' || sample || '/' || optimise)
+      call check(irshape(graph) = irshape(other),'OPTIONS adds only selected clause markers/context transport ' || sample || '/' || optimise)
       output = withoptions.output(); blank = without.output()
       call check(execshape(output.text(),'options-shape.crexx') = execshape(blank.text(),'options-shape.crexx'),'OPTIONS adds no instruction/frame/default/dead return ' || sample || '/' || optimise)
       call check(pos('applyoptions',output.text()) = 0,'no empty processor/config-conversion call ' || sample || '/' || optimise)
@@ -500,14 +500,58 @@ sourcepackets: procedure = .int
   call check(closures = 1,'one required generated invalid-entry closure')
   return count
 
+/** These source pairs contain no DATE/TIME BIF. Retained clause begins are
+ * therefore observation metadata, erased with their exclusively used context
+ * loads before selection. Check that exact shape independently, then compare
+ * every remaining operation/value/block/slot with canonical value numbering. */
 irshape: procedure = .string
   arg graph = .llir..module
-  value = .llir..valuehandle
+  value = .llir..valuehandle; op = .llir..opview; producer = .llir..opview
+  uses = .int[]; beginuses = .int[]; erased = .int[]; values = .int[]; contexts = .int[]
+  i = .int; input = .int
   data = dereference graph.storage()
-  text = data.count(1) || '/' || data.count(2) || '/' || data.count(3) || '/' || data.count(4) || '/' || data.count(5)
   do i = 1 to graph.operations()
-    op = graph.operation(i); text = text || '|' || op.name() || ':' || op.inputs() || ':' || op.results() || ':' || op.successors()
-    do input = 1 to op.inputs(); value = op.input(input); text = text || ',' || value.id(); end
+    op = graph.operation(i)
+    do input = 1 to op.inputs()
+      value = op.input(input); uses[value.id()] = uses[value.id()] + 1
+      if op.name() = 'crexx.c.clause.begin' then beginuses[value.id()] = beginuses[value.id()] + 1
+    end
+    if op.name() = 'core.store' then do
+      producer = graph.operation(data.get(4,op.input(1).id(),1))
+      if producer.name() = 'core.argument' then if data.get(3,producer.id(),12) = 1 then contexts[data.get(2,op.blockid(),1)] = data.get(3,i,12)
+    end
+  end
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() <> 'crexx.c.clause.begin' then iterate
+    call check(op.inputs() = 1 & op.results() = 0 & op.successors() = 0,'clause marker has only its context input')
+    origin = op.origin(); bits = op.attribute('id'); identity = <at..i64>(0) bits
+    call check(origin.kind() = 'exact' & origin.last() > origin.first() & identity = origin.first() + 1,'clause marker retains its exact authored owner')
+    producer = graph.operation(data.get(4,op.input(1).id(),1))
+    call check(producer.name() = 'core.load' & producer.blockid() = op.blockid(),'clause marker borrows a local context load')
+    call check(data.get(3,producer.id(),12) = contexts[data.get(2,op.blockid(),1)],'clause marker uses the bound argument-one context')
+    erased[i] = 1
+  end
+  operations = 0; count = 0
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() = 'core.load' then do
+      value = op.result()
+      if uses[value.id()] > 0 & uses[value.id()] = beginuses[value.id()] then erased[i] = 1
+    end
+    if erased[i] = 0 then operations = operations + 1
+  end
+  do i = 1 to data.count(4)
+    if erased[data.get(4,i,1)] then iterate
+    count = count + 1; values[i] = count
+  end
+  text = data.count(1) || '/' || data.count(2) || '/' || operations || '/' || count || '/' || data.count(5)
+  do i = 1 to graph.operations()
+    if erased[i] then iterate
+    op = graph.operation(i); text = text || '|' || op.name() || ':' || op.blockid() || ':' || op.inputs() || ':' || op.results() || ':' || op.successors()
+    do input = 1 to op.inputs(); value = op.input(input); text = text || ',' || values[value.id()]; end
+    do result = 1 to op.results(); value = op.result(result); text = text || ';' || values[value.id()] || ':' || value.type().id(); end
+    do edge = 1 to op.successors(); text = text || '>' || op.successor(edge); end
     if op.name() = 'core.constant' then do; value = op.result(); text = text || ':' || bin2x(value.bytes()); end
   end
   return text

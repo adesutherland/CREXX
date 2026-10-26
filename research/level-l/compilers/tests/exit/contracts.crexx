@@ -8,12 +8,18 @@ import llcrxas
 import llcprocedureprotocol
 import llcdoprotocol
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished
   arg argv = .string[]
   mode = .int; graph = .llir..module; accepted = .int
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
   checks = 0; failures = 0
   call schemacontract()
+  call noemission('exit.schema-contract')
   do mode = 1 to 5
     call forgedschema(argv[1],mode)
   end
@@ -45,6 +51,7 @@ main: procedure = .int expose checks failures
     call check(tinybytes.status() <> 0 & left(tinybytes.error(),18) == 'LL_COMPILER_LIMIT:','bounded program proof workspace')
     call check(recovered.status() = 0,'fresh proof recovers after independent limit failures: ' || recovered.error())
   end
+  call noemission('exit.proof-owners-and-budgets')
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
   contract = registry.finish(); graph = emptyunit(contract)
   call check(graph.error() = '', 'generic-valid empty source-unit control: ' || graph.error())
@@ -56,17 +63,28 @@ main: procedure = .int expose checks failures
     transformed = llirservices..optimise(reference graph)
     call check(transformed.status() = 'keep' | transformed.status() = 'changed','generic empty-unit transform')
     if transformed.status() = 'keep' | transformed.status() = 'changed' then call admission(argv[1],transformed.result(),1,'transformed empty unit')
+    call emissionstart('exit.prior-output')
     saved = graph.binary(); backend = .llcrxas..compilation(graph,argv[1])
     previous = backend.output(); previous_text = previous.text()
+    call emissionfinish('exit.prior-output',reference graph,reference previous,1,backend.status(),backend.error())
+    call emissionstart('exit.limited-output')
     limited = .llcrxas..compilation(graph,argv[1],128); output = limited.output()
+    call emissionfinish('exit.limited-output',reference graph,reference output,0,limited.status(),limited.error())
     call check(backend.status() = 0 & previous.bytes() > 0,'independent prior owned output')
     call check(limited.status() <> 0 & output.bytes() = 0 & pos('LIMIT',limited.error()) > 0,'bounded atomic output refusal')
     call check(bincompare(saved,graph.binary()) = 0 & previous.text() == previous_text,'failed output leaves graph and earlier output unchanged')
-    malformed = guardfixture(5); rejected = .llcrxas..compilation(malformed,argv[1]); refused = rejected.output()
+    malformed = guardfixture(5); call emissionstart('exit.prior-after-malformed')
+    rejected = .llcrxas..compilation(malformed,argv[1]); refused = rejected.output()
+    call emissionfinish('exit.prior-after-malformed',reference malformed,reference refused,0,rejected.status(),rejected.error())
     call check(rejected.status() <> 0 & refused.bytes() = 0 & pos('program-exit ',rejected.error()) > 0,'guard refusal publishes no partial output')
     call check(previous.text() == previous_text,'guard refusal preserves earlier owned output')
   end
-  say 'EXIT_CONTRACTS|checks=' || checks || '|failures=' || failures
+  if inspection <> '' then do
+    expected = 5 * 2 + 25 * 2 + 2 + 3 * 2 + 10 * 2 + 3 + 3 + 2
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit EXIT emission inventory')
+    say 'EXIT_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'EXIT_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -179,7 +197,9 @@ absent: procedure = .void
 
 admission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  caseid = 'exit.' || changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,backend.status(),backend.error())
   if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ': ' || backend.error())
   else call check(backend.status() <> 0 & output.bytes() = 0 & (pos('unsupported family version crexx.c',backend.error()) > 0 | pos('incompatible operation',backend.error()) > 0),label || ' precise schema refusal: ' || backend.error())
   call check(bincompare(saved,graph.binary()) = 0,label || ' preserves input')
@@ -198,7 +218,9 @@ rawcase: procedure = .void
 
 rawadmission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string, cleanup = 0
+  caseid = 'exit.' || changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,backend.status(),backend.error())
   if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ': ' || backend.error())
   else call check(backend.status() <> 0 & output.bytes() = 0 & pos('LL_COMPILER_LOWERING: ' || reason,backend.error()) > 0,label || ' precise refusal: ' || backend.error())
   if accepted & cleanup & backend.status() = 0 then call nopoolshape(output.text())
@@ -507,3 +529,46 @@ expiredproof: procedure = reference .llcprocedureprotocol..checked
   local = .llcprocedureprotocol..checked(graph_ref)
   call check(local.status() = 0,'local proof before its owner expires')
   return reference local
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return

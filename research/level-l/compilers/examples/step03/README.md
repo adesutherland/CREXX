@@ -6,7 +6,7 @@ and `frontend-probe` Level B consumers, as described in the
 [frontend manual](../../doc/frontends.md). The [walkthrough](../../doc/pipeline-walkthrough.md)
 explains the same outputs. No optimisation pass or RXAS backend ran here.
 
-The pipeline/evaluation Classic IR views use the [current C contract](../../doc/architecture.md#current-c-family-contract): generated
+The pipeline/evaluation Classic IR views use the [current C contract](../../doc/levelc-architecture.md#current-c-family-contract): generated
 parameter setup and checked main/label dispatch lead into one source-unit body.
 The C source trees retain COptions and its header Name expression. DO uses
 normalized CDo/DoWhile and contextual while.truth. The pipeline calls
@@ -17,7 +17,7 @@ bytes. LENGTH's result is a runtime contract, not a byte-span calculation.
 The current pipeline CArg owns ParseTemplates/ParseTemplate/ParseTarget rather
 than scalar ArgTarget children. Its IR uses raw `parse.source` plus an immutable
 UPPER packet for `parse.execute`; the activation's original argument is retained.
-The [ARG contract](../../doc/architecture.md#proposed-arg-contract) defines
+The [ARG contract](../../doc/levelc-architecture.md#proposed-arg-contract) defines
 its source, schema and emission requirements. These tree/IR probes themselves do not
 assemble or execute output.
 

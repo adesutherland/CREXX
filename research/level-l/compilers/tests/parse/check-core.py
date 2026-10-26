@@ -197,9 +197,14 @@ def checkpoint_run(args, scratch, base, tool):
     result = run([str(args.vm), '--no-autoload', str(linked.with_suffix('.rxbin')),
                   '-a', 'reference'], success=False, diagnostics=True)
     assert 'PARSE_C_REFERENCE_INVALID|before' in result, result
-    assert 'PANIC: core-parse-c:1:1: Classic pool reference is not live (SIGNAL REFERENCE_INVALID)' in result, result
+    assert re.findall(r'^PANIC:.*$', result, re.MULTILINE) == [
+        'PANIC: Classic pool reference is not live (SIGNAL REFERENCE_INVALID)'], result
     assert re.search(r'at module \d+ \(RexxClassicContext\) address [1-9]\d*', result), result
     assert re.search(r'source: RexxClassicContext\.crexx:\d+:\d+:', result), result
+    # Generic VM diagnostics preserve the payload and render authored callers separately.
+    assert re.search(r'^  called from:\n'
+                     r'  at module \d+ \([^\n]+\) address [1-9]\d* \(0x[0-9a-f]+\)\n'
+                     r'  source: core-parse-c:1:1: parse linein x$', result, re.MULTILINE), result
     assert 'UNREACHED' not in result and 'Assertion failed' not in result, result
 
 

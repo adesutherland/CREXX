@@ -13,9 +13,15 @@ import llcrxas
 import llcparse
 import llast
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished inspection_imports
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
+  inspection_imports = argv[1]
   checks = 0; failures = 0
   registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
   call schema(contract); call contextual()
@@ -43,7 +49,13 @@ main: procedure = .int expose checks failures
     end
   end
   graph = fixture(contract,1); call limits(argv[1],reference graph)
-  say 'CONDITIONS_OBSERVATIONS_CONTRACTS|checks=' || checks || '|failures=' || failures
+  call noemission('conditions-observations.ast-schema')
+  if inspection <> '' then do
+    expected = 13 * 2 + 2 + 3 + 2
+    call check(emission_requests = expected & emission_finished = expected,'complete conditional-observation emission inventory')
+    say 'CONDITIONS_OBSERVATIONS_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'CONDITIONS_OBSERVATIONS_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 /* The maintained native keyword-variable fixture has CALL assignment but no
@@ -105,7 +117,9 @@ admission: procedure = .void
   graph = dereference graph_ref; previous = graph.binary()
   entries = .llcprocedureprotocol..checked(graph_ref)
   signals = .llcsignalprotocol..checked(graph_ref,reference entries)
+  caseid = 'conditions-observations.' || label; call emissionstart(caseid)
   selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,selected.status(),selected.error())
   if accepted then do
     call check(entries.status() = 0 & signals.status() = 0,label || ' source-owned proof: ' || entries.error() || signals.error())
     call check(selected.status() = 0 & output.bytes() > 0,label || ' nonempty output: ' || selected.error())
@@ -134,10 +148,17 @@ limits: procedure = .void
   less = .llcsignalprotocol..checked(graph_ref,reference entries,67108864,signals.workused() - 1)
   call check(small.status() <> 0 & pos('LL_COMPILER_LIMIT:',small.error()) = 1,'one byte below actual policy workspace refuses')
   call check(less.status() <> 0 & pos('LL_COMPILER_LIMIT:',less.error()) = 1,'one work unit below actual policy work refuses')
+  call noemission('conditions-observations.required-proof-limits')
+  call emissionstart('conditions-observations.prior-output')
   good = .llcrxas..compilation(graph,artifacts); output = good.output(); saved = output.text()
+  call emissionfinish('conditions-observations.prior-output',reference graph,reference output,1,good.status(),good.error())
+  call emissionstart('conditions-observations.limited-128')
   limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+  call emissionfinish('conditions-observations.limited-128',reference graph,reference empty,0,limited.status(),limited.error(),128)
   call check(good.status() = 0 & limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,'output-limit refusal preserves prior owned output')
+  call emissionstart('conditions-observations.reused-output')
   again = .llcrxas..compilation(graph,artifacts); repeated = again.output()
+  call emissionfinish('conditions-observations.reused-output',reference graph,reference repeated,1,again.status(),again.error())
   call check(again.status() = 0 & repeated.text() == saved & output.text() == saved & bincompare(previous,graph.binary()) = 0,'normal selection recovers after narrow limits')
   loaded = loadgraph(graph_ref)
   call check(signals.belongs(reference loaded) = 0,'byte-identical loaded graph cannot borrow another admission identity')
@@ -263,4 +284,48 @@ absent: procedure = .void
   arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
   draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
   call block.returnvalue(finished.result(),origin)
+  return
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished inspection_imports
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string, bytes = 67108864, registers = 65536
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  say 'REQUEST|' || caseid || '|imports=' || inspection_imports || '|output.bytes=' || (bytes as .string) || '|registers=' || (registers as .string)
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
   return

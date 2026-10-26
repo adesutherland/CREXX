@@ -77,7 +77,7 @@ The same executor owns distribution and observation order; shared
 and generated scalar TRACE. Disabled bundles make no trace-state calls and retain
 the all-dot fast path; observed dots allocate no RexxValue. LLM retains its
 existing partial event scope. Complete instruction/delivery and real platform
-proof retain their [integration gates](../../research/level-l/compilers/doc/architecture.md#proposed-c-parse-integration).
+proof retain their [integration gates](../../research/level-l/compilers/doc/levelc-architecture.md#proposed-c-parse-integration).
 
 - `lib/rxfnsg/rexx/integer.crexx` and `decimal.crexx` (Level-G standard
   integer and decimal mathematics authored in Level B)
@@ -124,8 +124,8 @@ Callers own fresh child activations and bundles, borrowing current pool/config;
 only an executed PROCEDURE creates a private pool. Numeric adapters inherit VM
 settings and generated C installs validated activation settings in its frame.
 Earlier research C images/IR must be rebuilt; there is no compatibility bridge.
-See the [current C contract](../../research/level-l/compilers/doc/architecture.md#current-c-family-contract)
-and [CALL binding contract](../../research/level-l/compilers/doc/architecture.md#call-contract).
+See the [current C contract](../../research/level-l/compilers/doc/levelc-architecture.md#current-c-family-contract)
+and [CALL binding contract](../../research/level-l/compilers/doc/levelc-architecture.md#call-contract).
 
 The CMake build treats each `rxfnsc` member as an isolated source compilation.
 Its own source and only its declared transitive `rxfnsc` source dependencies

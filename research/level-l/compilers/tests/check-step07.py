@@ -194,6 +194,7 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False, bif_onl
         config+'.§factory': (ft, '?profile=.string'),
         a+'.numericdigits': ('.int', ''), a+'.numericfuzz': ('.int', ''),
         a+'.numericform': ('.int', ''),
+        a+'.append': ('.void', 'value=.rexxvalue,exists=.boolean'),
         a+'.inheritsignalpolicy': ('.void', 'caller=reference '+at),
         a+'.begininternalfunction': ('.void', ''),
         a+'.begininternalcall': ('.void', ''), a+'.enterprocedure': ('.void', ''),
@@ -208,6 +209,7 @@ def classic_metadata(select_only=False, do_only=False, leave_only=False, bif_onl
         'rexxclassicconditionevent.rexxclassicconditionevent.§factory':
             ('.rexxclassicconditionevent..rexxclassicconditionevent', 'condition=.int,description=.string'),
         pool+'.inheritcommandstatus': ('.void', 'caller=reference '+pt),
+        pool+'.setcalltrapsigl': ('.void', 'line=.int'),
         'rexxclassicbifnumeric.rexxclassicbif_digits':
             ('.rexxvalue..rexxvalue', 'context=reference .rexxbifcallcontext'),
         'rexxclassicbifabs.rexxclassicbif_abs':
@@ -350,6 +352,59 @@ def classic_construction(text, name):
             assert literals[line] == expected, ('explicit NUMERIC/EXIT value', line, literals[line])
 
 
+def classic_packets(text, body):
+    seeds = list(re.finditer(r'^call (r\d+),llctarget\.arguments\(\),r\d+$', body, re.M))
+    owners = {seed[1]: seed.start() for seed in seeds}
+    assert seeds and len(seeds) == len(owners), 'distinct owned fresh packet seeds'
+    assert not re.search(r'^call [^\n]*llctarget\.append\(\)', body, re.M), 'fresh builders never copy persistent prefixes'
+    target = 'rexxactivation.rexxactivationarguments.append'
+    mutations = re.findall(r'^call [^\n]*' + re.escape(target) + r'\(\)', body, re.M)
+    # Each direct method borrows its fixed seed, copies the actual value and
+    # Boolean presence, then restores/releases every call-window reference.
+    windows = list(re.finditer(
+        r'^link (?P<receiver>r\d+),(?P<owner>r\d+)\n'
+        r'copy (?P<valuearg>r\d+),r\d+\nicopy (?P<presentarg>r\d+),r\d+\n'
+        r'swap (?P=receiver),(?P<receiverarg>r\d+)\nload (?P<count>r\d+),3\n'
+        r'settp (?P=receiverarg),256\nsettp (?P=valuearg),768\nsettp (?P=presentarg),768\n'
+        r'call r\d+,' + re.escape(target) + r'\(\),(?P=count)\n'
+        r'swap (?P=receiver),(?P=receiverarg)\nnull (?P=receiverarg)\n'
+        r'null (?P=valuearg)\nnull (?P=presentarg)\nunlink (?P=receiver)$', body, re.M))
+    assert mutations and len(windows) == len(mutations), 'all fresh appends retain exact value/presence/receiver windows'
+    for window in windows:
+        assert window['owner'] in owners and owners[window['owner']] < window.start(), 'append receiver borrows its preceding fresh seed owner'
+        base = int(window['count'][1:])
+        assert [int(window[field][1:]) for field in ('receiverarg', 'valuearg', 'presentarg')] == [base + 1, base + 2, base + 3], 'contiguous receiver/value/presence arguments'
+    assert re.search(r'^\s*\.meta "' + re.escape(target) + r'"="b" "\.void" ' +
+                     re.escape(target) + r'\(\) "value=\.rexxvalue,exists=\.boolean"$', text, re.M), 'existing mutating append Boolean ABI'
+
+
+def classic_packet_controls():
+    seed = 'call r3,llctarget.arguments(),r20\n'
+    window = ('link r8,r3\ncopy r22,r4\nicopy r23,r5\nswap r8,r21\nload r20,3\n'
+              'settp r21,256\nsettp r22,768\nsettp r23,768\n'
+              'call r9,rexxactivation.rexxactivationarguments.append(),r20\n'
+              'swap r8,r21\nnull r21\nnull r22\nnull r23\nunlink r8\n')
+    metadata = (' .meta "rexxactivation.rexxactivationarguments.append"="b" ".void" '
+                'rexxactivation.rexxactivationarguments.append() "value=.rexxvalue,exists=.boolean"\n')
+    body = seed + window
+    classic_packets(body + metadata, body)
+    for bad_body, bad_metadata in (
+        (body + 'call r6,llctarget.append(),r20\n', metadata),
+        (body.replace('icopy r23', 'copy r23'), metadata),
+        (body.replace('copy r22', 'move r22'), metadata),
+        (body.replace('link r8,r3', 'link r8,r7'), metadata),
+        (body.replace('unlink r8\n', ''), metadata),
+        (seed + body, metadata),
+        (window + seed, metadata),
+        (body, metadata.replace('exists=.boolean', 'exists=.int')),
+    ):
+        try:
+            classic_packets(bad_body + bad_metadata, bad_body)
+        except AssertionError:
+            continue
+        raise AssertionError('fresh-packet control admitted an invalid append')
+
+
 def classic_shape(text, name):
     # One checked unit owns every source label. Packet presence, numeric
     # inheritance and the independent runtime outputs retain their old checks.
@@ -364,21 +419,21 @@ def classic_shape(text, name):
               'numeric-fatal': ('INVALID',)}[name]
     identities = re.findall(r'^beq llprocedure1_\d+_match,[^,\n]+,(\d+)$', text, re.M)
     assert identities == [str(i) for i in range(len(labels) + 1)], ('dense integer dispatch', identities)
-    helpers = {'scale': ('arguments', 'append', 'existsarg'),
-               'presence': ('arguments', 'append', 'existsarg'),
-               'calls': ('arguments', 'append', 'existsarg'),
-               'pipeline': ('arguments', 'append', 'lengthvalue'),
+    helpers = {'scale': ('arguments', 'existsarg'),
+               'presence': ('arguments', 'existsarg'),
+               'calls': ('arguments', 'existsarg'),
+               'pipeline': ('arguments', 'lengthvalue'),
                'numeric': ('digits', 'setting'), 'argv': ('parsesource', 'countargs'),
                'numeric-fatal': ('setting',)}[name]
     for helper in helpers:
         assert re.search(r'^call [^\n]*llctarget\.'+helper+r'\(\)', text, re.M), helper
-    if 'append' in helpers:
-        assert re.search(r'\.meta "llctarget\.append"=[^\n]*present=\.int', text)
     assert not re.search(r'\.expose=llprogram\.', text), 'unit became a public source entry'
     assert 'llctarget2' not in text and 'contextnew' not in text, 'obsolete C target bridge'
     bodies = {match[1]: match[2] for match in re.finditer(
         r'^(main|llf\d+)\(\) \.locals=\d+([^\n]*\n[\s\S]*?)(?=^(?:main|llf\d+)\(\) \.locals=|\Z)', text, re.M)}
     assert set(bodies) == {'main', 'llf1'}, bodies.keys()
+    if name in ('scale', 'presence', 'calls', 'pipeline'):
+        classic_packets(text, bodies['llf1'])
     config_factory = 'rexxclassicconfig.rexxclassicconfig.§factory'
     bundle_factory = 'rexxclassiccontext.rexxclassiccontext.§factory'
     pool_getter = 'rexxclassiccontext.rexxclassiccontext.pool'
@@ -468,6 +523,8 @@ def classic_shape(text, name):
 
 
 try:
+    if a.c_only:
+        classic_packet_controls()
     if a.bif_metadata:
         classic_metadata(bif_only=True)
         print(f'BIF_METADATA|commands={len(records)}|failures=0')

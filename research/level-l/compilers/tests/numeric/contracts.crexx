@@ -8,11 +8,22 @@ import llir
 import llirservices
 import llcrxas
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished inspection_imports
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
+  inspection_imports = argv[1]
   checks = 0; failures = 0
-  call sourcecontracts(); call raw(argv[1])
+  call sourcecontracts(); call noemission('numeric.parser-ast'); call raw(argv[1])
+  if inspection <> '' then do
+    expected = 8 * 2 + 1 + 2 + 5 + 2
+    call check(emission_requests = expected & emission_finished = expected,'complete numeric emission inventory')
+    say 'EMISSION|owner=NUMERIC_CONTRACTS|requests=' || emission_requests || '|finished=' || emission_finished || '|failures=' || failures
+  end
   say 'NUMERIC_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
@@ -106,33 +117,34 @@ raw: procedure = .void
     callback = data.callback(id,1)
     call check((callback is .llir..evaluator) = 0,'numeric setting has no evaluator ' || i)
   end
+  call noemission('numeric.schema')
   graph = .llir..module; loaded = .llir..module; mode = .int
   do mode = 1 to 8
     graph = fixture(contract,mode)
     call check(graph.error() == '', 'generic-valid numeric control ' || mode || ': ' || graph.error())
     if graph.error() <> '' then iterate
     reason = 'NUMERIC'; if mode >= 2 & mode <= 4 then reason = 'slot'
-    call admission(artifacts,graph,mode = 1 | mode = 8,'fresh numeric ' || mode,reason)
+    call admission(artifacts,graph,mode = 1 | mode = 8,'fresh numeric ' || mode,reason,'numeric.fresh-' || mode)
     loaded = loadgraph(reference graph)
     call check(loaded.error() == '' & bincompare(graph.binary(),loaded.binary()) = 0,'owned loaded numeric ' || mode)
-    if loaded.error() == '' then call admission(artifacts,loaded,mode = 1 | mode = 8,'loaded numeric ' || mode,reason)
+    if loaded.error() == '' then call admission(artifacts,loaded,mode = 1 | mode = 8,'loaded numeric ' || mode,reason,'numeric.loaded-' || mode)
     if mode = 8 then do
       change = llirservices..optimise(reference graph)
       call check(change.status() == 'changed','typed numeric spill really transforms')
       if change.status() == 'changed' then do
         rewritten = change.result()
         call check(bincompare(graph.binary(),rewritten.binary()) <> 0,'numeric transformed input bytes differ')
-        call admission(artifacts,rewritten,1,'transformed numeric spill','')
+        call admission(artifacts,rewritten,1,'transformed numeric spill','','numeric.transformed-spill')
       end
     end
   end
   old = stalecontract(contract); graph = fixture(old,1)
   call check(graph.error() == '', 'prior C16 remains generic-valid')
   if graph.error() == '' then do
-    call admission(artifacts,graph,0,'prior C16','unsupported family version crexx.c')
+    call admission(artifacts,graph,0,'prior C16','unsupported family version crexx.c','numeric.prior-C16')
     loaded = loadgraph(reference graph)
     call check(loaded.error() == '', 'loaded prior C16 remains generic-valid')
-    if loaded.error() == '' then call admission(artifacts,loaded,0,'loaded prior C16','unsupported family version crexx.c')
+    if loaded.error() == '' then call admission(artifacts,loaded,0,'loaded prior C16','unsupported family version crexx.c','numeric.loaded-prior-C16')
   end
   return
 
@@ -142,11 +154,16 @@ loadgraph: procedure = .llir..module
   return llir..loadbinary(contract,graph.binary())
 
 admission: procedure = .void
-  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string
+  arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string, caseid = .string
+  call emissionstart(caseid)
   saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,selected.status(),selected.error())
   if accepted then do
     call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
-    previous = output.text(); limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+    previous = output.text()
+    call emissionstart(caseid || '-output-128')
+    limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+    call emissionfinish(caseid || '-output-128',reference graph,reference empty,0,limited.status(),limited.error(),128)
     call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,label || ' bounded atomic output failure')
     call check(previous == output.text(),label || ' prior output stays owned')
   end
@@ -223,3 +240,46 @@ stalecontract: procedure = .llir..contract
     call declared.state(source.effectvalue(i,1)); call declared.failure(source.effectvalue(i,2)); call declared.termination(source.effectvalue(i,3))
   end
   ignored = data.freeze(); return .llir..contract(data)
+
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished inspection_imports
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string, bytes = 67108864, registers = 65536
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  say 'REQUEST|' || caseid || '|imports=' || inspection_imports || '|output.bytes=' || (bytes as .string) || '|registers=' || (registers as .string)
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return

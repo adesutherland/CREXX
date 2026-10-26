@@ -1,7 +1,7 @@
 # Level C implementation work packages
 
 The [plan](../PLAN.md#c-first-delivery-milestone) owns acceptance/status;
-[architecture](architecture.md) owns contracts and [requirements](levelc-requirements.md)
+[architecture](levelc-architecture.md) owns contracts and [requirements](levelc-requirements.md)
 owns the crosswalk. This file assigns ownership. It does not commission product
 work, tests, automation or branches. The repository
 [AGENTS.md](../../../../AGENTS.md#development-testing-and-delivery-lifecycle)
@@ -10,11 +10,12 @@ matrices or duplicate its publication/sanitizer rules.
 
 ## Coordination model
 
-Adrian requested an Astra Extra High coordinator and GPT-6.1 Sol Extra High
-workers (`model=gpt-6.1-sol`, `reasoning_effort=xhigh`); do not silently substitute
-a requested model. The coordinator owns contract/interface decisions, review,
-scheduling, acceptance validation and commit/publication authority within current
-user scope. Sol workers implement, integrate, document, build and clean up.
+The repository's [agent model policy](../../../../AGENTS.md#agent-models-and-escalation)
+owns coordinator, design/implementation, execution and approved escalation model
+selection; do not silently substitute a requested model. The coordinator owns
+contract/interface decisions, review, scheduling, acceptance validation and
+commit/publication authority within current user scope. Workers implement,
+integrate, document, execute assigned checks and clean up within those roles.
 The coordinator validates worker results rather than duplicating execution.
 
 Use synchronized existing `develop`, preserving unrelated work. No new branches
@@ -60,7 +61,7 @@ checks during development does not remove later milestone obligations.
 
 The [detailed STEP11 plan](../PLAN.md#dynamic-execution-plan) owns the selected
 IR route, criteria, dependencies and todo/done status. The
-[architecture](architecture.md#dynamic-execution-strategy) defines the concrete
+[architecture](levelc-architecture.md#dynamic-execution-strategy) defines the concrete
 control/call/resource/search contracts approved for this increment. Implementation
 is locally qualified under the selected component profile. These assignments do not authorize
 another QA campaign or close the formal compiler/platform/delivery gates.
@@ -84,7 +85,7 @@ unchanged native tools do not trigger a new sanitizer campaign for C/L edits.
 ## Group 2 ownership
 
 The [Group 2 plan](../PLAN.md#group2-calls-host-plan) and
-[contract](architecture.md#group2-calls-host-proposal) own the calls/host increment.
+[contract](levelc-architecture.md#group2-calls-host-proposal) own the calls/host increment.
 WP-05/06 own Classic name resolution, static admission and value adaptation;
 WP-03/07 own activation, request/completion, callback windows and configured
 resources. WP-09 owns additive embedding spans/interrupt ingress and the thin
@@ -101,7 +102,7 @@ increment; INTERPRET stays last.
 ## Group 3 ownership
 
 The [static Group 3 plan](../PLAN.md#group3-static-language-plan) and
-[contract](architecture.md#group3-static-language-contract) commission one
+[contract](levelc-architecture.md#group3-static-language-contract) commission one
 complete static language increment, locally qualified for its admitted static
 profile. WP-05 owns source/header/classification,
 expressions, dead-source diagnostics and C24 IR integration. WP-03 owns the
@@ -127,10 +128,10 @@ increment, with their existing acceptance and decision gates preserved.
 ## Group 4 ownership
 
 The [Group 4 plan](../PLAN.md#group4-infrastructure-plan) and
-[architecture](architecture.md#group4-infrastructure-proposal) own approved
+[architecture](levelc-architecture.md#group4-infrastructure-proposal) own approved
 STEP01–08, including the
-[bounded execution contract](architecture.md#group4-execution-contract) and
-[package/C closure contract](architecture.md#group4-package-closure-contract).
+[bounded execution contract](levelc-architecture.md#group4-execution-contract) and
+[package/C closure contract](levelc-architecture.md#group4-package-closure-contract).
 The reviewed contract does not commission new ISA work, language migrations
 or INTERPRET.
 WP-02 owns shared graph/analysis/proof and optional execution coordination;
@@ -160,35 +161,35 @@ acceptance and ownership boundaries; current statuses belong to PLAN.
 
 ### CALL and completion
 
-The [CALL contract](architecture.md#call-contract) owns CCALL-AC01–07 and
+The [CALL contract](levelc-architecture.md#call-contract) owns CCALL-AC01–07 and
 CALL1–4. The serial C integrator owns grammar/frontend/IR/admission/selector/
 target and shared docs/CMake; independent writers own assigned `tests/call`
 fixtures, and review remains read-only. CALL2/3 use the
-[CEXT contract](architecture.md#call3-static-provider-contract) and generic
+[CEXT contract](levelc-architecture.md#call3-static-provider-contract) and generic
 classifier; preserve prepared-language reuse and existing B algorithms.
 Delayed CALL4 remains open after condition/clause foundations. Existing local
-[RETURN](architecture.md#return-contract) RRET-AC01–05 and
-[EXIT](architecture.md#exit-contract) CEXIT-AC01–05 retain packet/result cleanup;
+[RETURN](levelc-architecture.md#return-contract) RRET-AC01–05 and
+[EXIT](levelc-architecture.md#exit-contract) CEXIT-AC01–05 retain packet/result cleanup;
 wider completion CEXIT-AC06 stays open. Their fixture directories have independent
 owners; no incidental grammar/runtime/ISA changes are authorized by those packets.
 
 ### Queues, ADDRESS and NUMERIC
 
-[PULL](architecture.md#pull-contract), [PUSH](architecture.md#push-contract) and
-[QUEUE](architecture.md#queue-contract) have delivered local AC01–04 routes and
+[PULL](levelc-architecture.md#pull-contract), [PUSH](levelc-architecture.md#push-contract) and
+[QUEUE](levelc-architecture.md#queue-contract) have delivered local AC01–04 routes and
 open shared host/observation/platform AC05. C production/schema/docs belong to
 the integrator; independent fixtures use `tests/pull`, `tests/push` and neutral
 `tests/queue-insertion`. Existing B owns queue/configuration algorithms.
 
-The [ADDRESS bridge](architecture.md#address-b-binding-bridge) owns the closed
+The [ADDRESS bridge](levelc-architecture.md#address-b-binding-bridge) owns the closed
 shared-B `_address.crexx`/`RexxClassicAddress.crexx` foundation. The
-[C ADDRESS contract](architecture.md#address-c-command-contract) owns parser,
+[C ADDRESS contract](levelc-architecture.md#address-c-command-contract) owns parser,
 keyed proof and selector integration. Independent fixtures are `tests/address`
 and `tests/command`; CADDR-AC08 and full LC-I-20/21 keep their shared obligations.
 
-The [FORM correction](architecture.md#numeric-form-diagnostic-prerequisite)
+The [FORM correction](levelc-architecture.md#numeric-form-diagnostic-prerequisite)
 owns the completed activation-validator diagnostic change. The
-[NUMERIC contract](architecture.md#numeric-c-contract) assigns C source/schema/
+[NUMERIC contract](levelc-architecture.md#numeric-c-contract) assigns C source/schema/
 selector to the integrator and `tests/numeric` to its independent writer;
 NUM-C-AC01–06 are delivered; CCOND integrates admitted observations, while
 AC07 retains wider numeric/expression, host and platform scope.
@@ -196,12 +197,12 @@ These packets do not commission another numeric or host algorithm.
 
 ### Labels, clauses and external condition scope
 
-[CLABEL](architecture.md#label-arm-prerequisite) AC01–05/STEP01–03 are complete.
+[CLABEL](levelc-architecture.md#label-arm-prerequisite) AC01–05/STEP01–03 are complete.
 Its grammar/classifier/frontend ownership is serial; independent expectations
 live in `tests/labels` and the named CALL grouped-label controls. Preserve
 required-arm ownership, DO/SELECT depth, first-label resolution and natural
-node landings. [Clause clocks](architecture.md#clause-clock-contract) and the
-[external B condition scope](architecture.md#external-condition-b-prerequisite)
+node landings. [Clause clocks](levelc-architecture.md#clause-clock-contract) and the
+[external B condition scope](levelc-architecture.md#external-condition-b-prerequisite)
 are delivered foundations. CCOND below owns delivered delayed CALL and authored
 completion; broader host/platform acceptance retains its owner. Former
 prerequisite source leases are closed.
@@ -210,7 +211,7 @@ prerequisite source leases are closed.
 
 ### SIGNAL
 
-[Whole SIGNAL](architecture.md#signal-complete-contract) CSIGNAL-AC01–07 and
+[Whole SIGNAL](levelc-architecture.md#signal-complete-contract) CSIGNAL-AC01–07 and
 STEP01–03 are complete: direct/quoted/VALUE, seven-condition ON/OFF, real
 producers, visible exceptional flow, same-frame cleanup and typed payload/origin.
 SIGNAL introduced C20 with 85 operations, five C types and 36 target exports;
@@ -230,7 +231,7 @@ into unfinished micro-deliveries.
 
 ### TRACE
 
-The [complete practical contract](architecture.md#trace-complete-contract)
+The [complete practical contract](levelc-architecture.md#trace-complete-contract)
 owns the completed CTRACE-AC01–07/STEP01–03 and LC-I-24. One frontend/IR writer owns
 `levelc.rxl`, `llcparse`, `llcfrontend` and `llcir`; one selector writer owns
 `llcrxas` and the private host-only `llctraceemit`. Independent fixtures and
@@ -244,7 +245,7 @@ complete-C/platform/delivery QA remains a later milestone.
 
 ### Conditions and observations
 
-The [whole Group 1 contract](architecture.md#conditions-observations-complete-contract)
+The [whole Group 1 contract](levelc-architecture.md#conditions-observations-complete-contract)
 owns CCOND-AC01–08 and STEP01–03. Sol 6.1 Extra High workers have disjoint
 frontend/schema/protocol, shared-runtime/selector, and independent fixture
 assignments; the integrator owns cross-boundary review, CMake, enduring docs,
@@ -266,16 +267,16 @@ Formal whole-compiler/platform/delivery QA follows feature completion.
 
 ### PROCEDURE and prepared-language reuse
 
-The [PROCEDURE contract](architecture.md#proposed-procedure-contract) owns
+The [PROCEDURE contract](levelc-architecture.md#proposed-procedure-contract) owns
 CPROC-AC01–07; local AC01–06 are delivered and AC07/full LC-I-12 remain open.
-The [current family](architecture.md#current-c-family-contract) owns version and
+The [current family](levelc-architecture.md#current-c-family-contract) owns version and
 inventory, superseding older packet counts. The integrator owns grammar/
 frontend/schema/private admission/selector and needed DO integration. Independent
 fixtures use `tests/procedure` plus assigned existing consumer selectors.
 Shared B algorithms, native C, generic L and VM changes require their own
 explicit interface/path assignment.
 
-[Prepared-language reuse](architecture.md#proposed-prepared-language-reuse)
+[Prepared-language reuse](levelc-architecture.md#proposed-prepared-language-reuse)
 CPREP-AC01–05 and STEP01–03 are delivered. Assigned generic L ownership covers
 `lllanguage`, `llmunch`, `lllr`, `llcfg` and borrowed-reader controls. The C
 integrator owns private initialization, parser/header/name and CLI/service/build
@@ -287,7 +288,7 @@ fallback is authorized.
 
 ### ARG
 
-The [ARG contract](architecture.md#proposed-arg-contract) retains
+The [ARG contract](levelc-architecture.md#proposed-arg-contract) retains
 `CArg(templates:ParseTemplates)`, the shared UPPER packet/executor and complete
 raw argument presence. Local implementation is delivered; ARG-AC05/full LC-I-11
 and all CFC obligations retain their shared boundaries. The integrator owns
@@ -302,7 +303,7 @@ known eager-operand limitation does not change independent expected state.
 
 ### PARSE
 
-The [PARSE contract](architecture.md#proposed-c-parse-integration) owns
+The [PARSE contract](levelc-architecture.md#proposed-c-parse-integration) owns
 CPARSE-AC01–08 and STEP01–05. The finite integration is delivered; complete
 observations and declared delivery/platform obligations remain open. ARG/PULL
 acceptance and last-stage INTERPRET are separate. Preserve the v3 cursor-only

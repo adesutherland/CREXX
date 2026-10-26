@@ -3733,7 +3733,7 @@ The explicitly selected commands are `llrxc-c` and `llrxc-g`; ordinary `rxc` and
 For Classic C, use the dedicated [compiler user guide](../../research/level-l/compilers/doc/levelc-user-guide.md)
 for building, options, complete examples, static providers, host integration,
 INTERPRET, Rexx source calls and the embedding API. The
-[C architecture overview](../../research/level-l/compilers/doc/architecture.md)
+[C architecture overview](../../research/level-l/compilers/doc/levelc-architecture.md)
 explains the language/runtime boundary, while the
 [C plan](../../research/level-l/compilers/PLAN.md) records current compiler
 qualification and outstanding delivery work. Select this compiler explicitly;

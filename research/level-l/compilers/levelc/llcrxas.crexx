@@ -65,6 +65,8 @@ compilation: class
   _fn = .int
   _registers = .int[]
   _slots = .int[]
+  _packetregisters = .int[]
+  _packetowners = .int[]
   _callbase = .int
   _scratch = .int
   _workbase = .int
@@ -149,6 +151,7 @@ compilation: class
   _target = .llrxas..program
   _candidates = .int[]
   _recordbytes = .int
+  _targetwork = .int
   _writer = .llir..writer
   _output = .llir..output
   _callstarts = .int[]
@@ -171,7 +174,16 @@ compilation: class
   _dynamicevent = .int
   _dynamicpool = .int
   _dynamicconfig = .int
+  _dynamiccontinuation = .int
+  _dynamicsites = .string[]
+  _dynamicbytes = .int
+  _terminalvalue = .int
+  _terminalpresent = .int
   _dynamicbindings = .int[]
+  _catalogueglobals = .int[]
+  _cataloguecount = .int
+  _definitionrows = .int
+  _definitionhex = .string
   *: factory
     arg graph = .llir..module, artifacts = .string, bytes = 67108864, registers = 65536
     _graph = graph; _path = artifacts; _limit = bytes; _reglimit = registers
@@ -249,6 +261,13 @@ compilation: class
     end
     call _target.record(mnemonic,operands,_origin)
     return
+  /** Record admission is bounded by selected-text bytes. Preserve the
+   * existing finalization allowance after admitting that complete text. */
+  targetwork: method = .int
+    if _limit > 9223372036853775807 then do
+      call fail('LIMIT: output budget exceeds target work range'); return 0
+    end
+    return _limit + 1000000
   reg: method = .string
     arg index = .int
     if _sizing then do
@@ -1371,7 +1390,7 @@ compilation: class
     if route = 'process' then _maxargs = max(_maxargs,5)
     _locals = _callbase + _maxargs + 1
     _sizing = 0; _origin = 0
-    _target = .llrxas..program(_locals,_reglimit,1000000)
+    _target = .llrxas..program(_locals,_reglimit,_targetwork)
     call _target.window(_callbase,_maxargs + 1)
     call emit('__rxexternal_' || ordinal || '()','.locals=' || _locals)
     call clearsource()
@@ -1743,6 +1762,8 @@ compilation: class
       if _graph.error() <> '' then do; _error = _graph.error(); return; end
 
       if _limit < 1 | _reglimit < 16 | _reglimit > 2147483647 then do; call fail('LIMIT: invalid output or register budget'); return; end
+      _targetwork = targetwork()
+      if _error <> '' then return
       _store = _graph.storage(); store = dereference _store; contract = dereference store.contract(); _schema = contract
       _phase = 'graph index'
       _index = .llirgraph..index(reference _graph,1000000,_limit)
@@ -1789,6 +1810,7 @@ compilation: class
       end
       if entryfacts.belongs(reference _graph) = 0 then do; call fail('LOWERING: entry proof belongs to another graph'); return; end
       if entryfacts.bytesused() > _limit | entryfacts.workused() > _limit then do; call fail('LIMIT: prechecked entry admission exceeds selection budget'); return; end
+      packetfacts = entryfacts.preparepackets(reference _index,_limit,_limit)
       if _dynamicprofile & _bound then do
         if <refvalid>(_providers) = 0 then do; call fail('IMPORT: dynamic provider owner expired'); return; end
         dynamicproviders = dereference _providers; dynamicneeded = 0
@@ -1913,12 +1935,14 @@ compilation: class
           if known <> '' then _parseclauses[i] = known as .int
         end
       end
+      _phase = 'immutable catalogue admission'; call catalogueplan(entry_ref,signal_ref)
+      if _error <> '' then return
       _phase = 'entry'; _writer = .llir..writer(_limit)
-      call _writer.line('.globals=0')
+      call _writer.line('.globals=' || _cataloguecount)
       _origin = 0; _sizing = 0; _scratch = -1; _location = -1; _recordbytes = 0
       _locals = 16; _workbase = 1; _callbase = 12; _scratch = 0
       if _hostexport <> '' then do; _locals = 25; _callbase = 20; end
-      _target = .llrxas..program(_locals,_reglimit,1000000)
+      _target = .llrxas..program(_locals,_reglimit,_targetwork)
       call _target.window(_callbase,_locals - _callbase)
       if store.text(store.get(1,1,1)) = '$MAIN' then do
         if _export = '' then do
@@ -1991,6 +2015,10 @@ compilation: class
         call _writer.append(reference helper)
         if _writer.error() <> '' then do; _error = _writer.error(); return; end
       end
+      if _cataloguecount > 0 then do
+        _phase = 'immutable catalogue initializer'; call catalogueboot(signal_ref)
+        if _error <> '' then return
+      end
       do i = 1 to _names[0]
         signature = _signatures[i]
         call _writer.line(_names[i] || '() .expose=' || _names[i])
@@ -2037,16 +2065,25 @@ compilation: class
     loop_ref = loopproof(); loopfacts = dereference loop_ref
     clause_ref = clauseproof(); clausefacts = dereference clause_ref
     i = .int; b = .int; id = .int; blockindex = .int; op = .llir..opview
-    slotindex = .int; contextcell = .int; valuetype = .string
+    slotindex = .int; contextcell = .int; valuetype = .string; packetroot = .int
     anchor = .int; clause = .int; commandowner = .int; ownerregister = .int; canonicalname = .int; nameid = .int
     store = dereference _store; blocks = .int[]
     _signals = 'CLASSIC_SYNTAX DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OBJECT_NOT_INITIALIZED REFERENCE_INVALID UNICODE_ERROR OUT_OF_RANGE FAILURE'
     if _hasexternal[_fn] | _hostexport <> '' then _signals = caughtsignals()
     _phase = 'slot allocation'; next = 1; _cleanupnumber = 0
+    emptypackets = .int[]; _packetregisters = emptypackets; _packetowners = emptypackets
+    emptysites = .string[]; _dynamicsites = emptysites; _dynamicbytes = 0
     do slotindex = 1 to _index.functionslots(_fn)
       i = _index.functionslot(_fn,slotindex)
       _slots[i] = -1; contextcell = _contextproof.cell(i)
-      if _signalslots[i] = 0 & (contextcell = 0 | contextcell = i) then do; _slots[i] = next; next = next + 1; end
+      packetroot = entryfacts.packetslot(i)
+      if packetroot > 0 then do
+        if _packetregisters[packetroot] = 0 then do
+          _packetregisters[packetroot] = next; _packetowners[_packetowners[0] + 1] = next; next = next + 1
+        end
+        _slots[i] = _packetregisters[packetroot]
+      end
+      else if _signalslots[i] = 0 & (contextcell = 0 | contextcell = i) then do; _slots[i] = next; next = next + 1; end
     end
     do slotindex = 1 to _index.functionslots(_fn)
       i = _index.functionslot(_fn,slotindex); contextcell = _contextproof.cell(i)
@@ -2063,9 +2100,16 @@ compilation: class
         if signalfacts.erased(id) = 0 & signalfacts.nametransport(id) = 0 & clausefacts.erased(id) = 0 & op.name() <> 'crexx.c.source.map' then do
           do r = 1 to op.results()
             nameid = op.result(r).id()
+            packetroot = entryfacts.packetroot(nameid)
             contextcell = _contextproof.loadcell(id)
             if contextcell = 0 then contextcell = _contextproof.argumentcell(id)
-            if contextcell > 0 then _registers[nameid] = _slots[contextcell]
+            if packetroot > 0 then do
+              if _packetregisters[packetroot] = 0 then do
+                _packetregisters[packetroot] = next; _packetowners[_packetowners[0] + 1] = next; next = next + 1
+              end
+              _registers[nameid] = _packetregisters[packetroot]
+            end
+            else if contextcell > 0 then _registers[nameid] = _slots[contextcell]
             else do
               _registers[nameid] = next; next = next + 1
               valuetype = typename(op.result(r).type().id())
@@ -2103,7 +2147,8 @@ compilation: class
       _dynamicscope = next; _dynamicboundary = next + 1; _dynamickind = next + 2; _dynamicentry = next + 3
       _dynamicarguments = next + 4; _dynamicreturned = next + 5; _dynamicbundle = next + 6; _dynamicticket = next + 7
       _dynamictarget = next + 8; _dynamicevent = next + 9; _dynamicpool = next + 10; _dynamicconfig = next + 11
-      next = next + 12
+      _dynamiccontinuation = next + 12; _terminalvalue = next + 13; _terminalpresent = next + 14
+      next = next + 15
       _signals = caughtsignals()
     end
     _parsestate = -1
@@ -2165,14 +2210,19 @@ compilation: class
         id = store.get(3,id,3)
       end
     end
+    if _dynamicscope >= 0 then do
+      call normalterminalbody()
+      call dynamicbody(entry_ref,signal_ref)
+    end
     _sizing = 0; _cleanupnumber = 0
+    _dynamicsites = emptysites; _dynamicbytes = 0
     if _error <> '' then return
     _phase = 'frame limits'; _scratch = -1; _location = -1; _callbase = -1
     if _needsscratch then do; _scratch = next; next = next + 1; end
     do; _location = next; next = next + 1; end
     if _maxargs >= 0 then do; _callbase = next; next = next + _maxargs + 1; end
     _locals = next
-    _target = .llrxas..program(_locals,_reglimit,1000000)
+    _target = .llrxas..program(_locals,_reglimit,_targetwork)
     if _callbase >= 0 then call _target.window(_callbase,_locals - _callbase)
     do i = 1 to _candidates[0]
       call _target.candidate(_candidates[i],'integer')
@@ -2205,6 +2255,7 @@ compilation: class
     do i = 1 to _dofatal[0]
       call emit('null',reg(_doowners[_dofatal[i]]))
     end
+    call packetcleanup()
     do i = 1 to _commandcleanup[0]
       commandowner = _commandcleanup[i]; ownerregister = _commandowners[commandowner]
       call emit('null',reg(ownerregister))
@@ -2216,6 +2267,8 @@ compilation: class
     if _dynamicscope >= 0 then do
       call emit('null',reg(_dynamicscope)); call emit('load',reg(_dynamicticket) || ',0')
       call emit('null',reg(_dynamicboundary)); call emit('null',reg(_dynamicevent))
+      call emit('load',reg(_dynamiccontinuation) || ',0')
+      call emit('null',reg(_terminalvalue)); call emit('load',reg(_terminalpresent) || ',0')
     end
     if _savedpool >= 0 then do
       call emit('null',reg(_privatepool)); call emit('load',reg(_poolcommitted) || ',0')
@@ -2268,7 +2321,8 @@ compilation: class
           anchor = entryfacts.programanchor(id); clause = _parseclauses[id]
           if anchor = 0 then anchor = signalfacts.sourceanchor(id)
           if anchor > 0 then clause = _parseclauses[anchor]
-          call source(op.origin(),clause,anchor,op.name() = 'crexx.c.clause.begin')
+          query = 0; if entryfacts.programcall(id) > 0 then query = id
+          call source(op.origin(),clause,anchor,op.name() = 'crexx.c.clause.begin',query)
           if _captureowner >= 0 & signalfacts.owner(id) = 0 then call faultsite(op)
           call selectop(op,entry_ref,signal_ref,clause_ref,loop_ref)
           if _hastrace then call traceevent(op,clause)
@@ -2277,7 +2331,14 @@ compilation: class
       end
     end
     call fatalbody()
+    if _dynamicscope >= 0 then do
+      _origin = 0; call clearsource()
+      call normalterminalbody()
+      call dynamicbody(entry_ref,signal_ref)
+    end
     call flush()
+    _sourceworkspace = _sourceworkspace - _dynamicbytes
+    _dynamicbytes = 0; _dynamicsites = emptysites
     return
   fatalbody: method = .void
       i = .int
@@ -2330,6 +2391,8 @@ compilation: class
       call emit('unlink',reg(_workbase)); call emit('unlink',reg(_workbase + 1))
     end
     if fatal & _dynamicscope >= 0 then do
+      call emit('load',reg(_dynamiccontinuation) || ',0')
+      call emit('null',reg(_terminalvalue)); call emit('load',reg(_terminalpresent) || ',0')
       symbol = imported('llcdynamic','llcdynamic.unlinkchild','.void','.int')
       call argcopy(1,reg(_dynamicticket)); call invoke('',symbol,1); call emit('load',reg(_dynamicticket) || ',0')
     end
@@ -2345,11 +2408,18 @@ compilation: class
     do i = 1 to _signalcleanup[0]
       nameid = _signalcleanup[i]; call emit('null',reg(_registers[nameid]))
     end
+    call packetcleanup()
+    return
+  /** Unpublished argument owners never include a completed return carrier. */
+  packetcleanup: method = .void
+    do packetindex = 1 to _packetowners[0]
+      call emit('null',reg(_packetowners[packetindex]))
+    end
     return
   exitcleanup: method = .void
     arg fatal = 0, program = 0
     i = .int; commandowner = .int; ownerregister = .int; nameid = .int; prefix = .string; symbol = .string
-    if _savedpool < 0 & _dynamicscope < 0 & fatal = 0 & program = 0 then return
+    if _savedpool < 0 & _dynamicscope < 0 & fatal = 0 & program = 0 then do; call packetcleanup(); return; end
     call transientcleanup(fatal)
     if _dynamicscope >= 0 then do
       symbol = imported('llcdynamic','llcdynamic.unlinkchild','.void','.int')
@@ -2377,6 +2447,28 @@ compilation: class
     call emit('load',reg(_poolcommitted) || ',0')
     call emit(prefix || '_done:')
     call emit('null',reg(_savedpool)); call emit('null',reg(_privatepool)); call emit('null',reg(_cleanupresult))
+    return
+  /** Dynamic bodies have one identical normal exit inventory. The retained
+   * result lies outside that inventory, and fatal close(event) stays separate. */
+  normalterminal: method = .void
+    arg value = ''
+    call emit('load',reg(_dynamiccontinuation) || ',0')
+    if value = '' then do
+      call emit('null',reg(_terminalvalue)); call emit('load',reg(_terminalpresent) || ',0')
+    end
+    else do
+      call emit('copy',reg(_terminalvalue) || ',' || value)
+      call emit('load',reg(_terminalpresent) || ',1')
+    end
+    call emit('br','llterminal' || _fn)
+    return
+  normalterminalbody: method = .void
+    call emit('llterminal' || _fn || ':')
+    call exitcleanup()
+    call restorepolicies()
+    call emit('brf','llterminal' || _fn || '_absent,' || reg(_terminalpresent))
+    call emit('ret',reg(_terminalvalue))
+    call emit('llterminal' || _fn || '_absent:'); call emit('ret')
     return
   /** Explicit no-source anchor prevents generated entries/handlers inheriting
    * the last authored record of a preceding routine. */
@@ -2416,10 +2508,21 @@ compilation: class
     _phase = phase
     return reference _sourceindexes[sourceid]
   source: method = .void
-    arg origin = .llir..origin, clause = 0, diagnostic = 0, traceclause = 0
+    arg origin = .llir..origin, clause = 0, diagnostic = 0, traceclause = 0, programquery = 0
     key = .string; location = .string
     if origin.id() = 0 then do; call clearsource(); return; end
-    kind = origin.kind()
+    kind = origin.kind(); querystep = 0
+    /* The admitted query has its invoking call's exact source boundary.
+     * Its operation ID distinguishes queries sharing an IR origin; reserve
+     * presentation IDs beyond every origin without changing the frozen graph. */
+    if programquery > 0 then do
+      query_store = dereference _store
+      if query_store.count(9) > 4294967295 - programquery then do
+        call fail('LIMIT: program-exit query source-step identity exceeds RXAS metadata range'); return
+      end
+      querystep = query_store.count(9) + programquery
+      if kind = 'synthetic' then kind = 'derived'
+    end
     if kind = 'synthetic' then do
       key = '6 "" 0 0 0 ""'; location = 'generated code in ' || _routine
       if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
@@ -2429,7 +2532,7 @@ compilation: class
     positions_ref = sourceindex(origin)
     if _error <> '' then return
     positions = dereference positions_ref
-    store = dereference _store; sourceid = store.get(9,origin.id(),1)
+    source_store = dereference _store; sourceid = source_store.get(9,origin.id(),1)
     bytes_ref = reference _sourcebytes[sourceid]; bytes = dereference bytes_ref
     at = positions.position(origin.first())
     if at.error() <> '' then do; call fail('SOURCE: ' || at.error()); return; end
@@ -2463,7 +2566,8 @@ compilation: class
     if kind <> 'exact' then location = filename || ': generated code in ' || _routine
     if diagnostic > 0 then location = diagnosticlocation(_graph.operation(diagnostic).origin())
     key = flags || ' ' || llrxastext..quote(filename as .binary) || ' ' || line || ' ' || column || ' ' || endcolumn || ' ' || llrxastext..quote(sourcetext)
-    call sourcerecord(key,location,clause,traceclause)
+    if querystep > 0 then call sourcerecord(key,location,clause,traceclause,querystep)
+    else call sourcerecord(key,location,clause,traceclause)
     return
   /** Proved mechanical unwind transport keeps its generated source record and
    * uses its call/EXIT anchor for diagnostics. Reuse the existing source index. */
@@ -2483,10 +2587,11 @@ compilation: class
   /** A source anchor and diagnostic context are independent state. Equal line
    * numbers alone are insufficient: range, flags and text also identify it. */
   sourcerecord: method = .void
-    arg key = .string, location = .string, clause = 0, metadataonly = 0
+    arg key = .string, location = .string, clause = 0, metadataonly = 0, presentation = 0
     identity = clause || ':' || key
-    if identity <> _lastsource then do
-      call emit('.srcstep',_origin || ' ' || clause || ' ' || key)
+    if identity <> _lastsource | presentation > 0 then do
+      step = _origin; if presentation > 0 then step = presentation
+      call emit('.srcstep',step || ' ' || clause || ' ' || key)
       _lastsource = identity
     end
     if metadataonly = 0 & location <> _lastlocation then do
@@ -2535,6 +2640,7 @@ compilation: class
         if dest <> reg(_slots[slot]) then call emit('copy',dest || ',' || reg(_slots[slot]))
       end
       when name = 'core.store' then do
+        if entryfacts.packettransport(id) > 0 then return
         slot = store.get(3,id,12); dest = reg(_slots[slot])
         if dest <> input(op) then call emit('copy',dest || ',' || input(op))
       end
@@ -2562,10 +2668,16 @@ compilation: class
         if op.successor(2) <> _fallthrough then call emit('br','llb' || op.successor(2))
       end
       when name = 'core.return' then do
-        call exitcleanup(0,entryfacts.programterminal(op.id()))
-        call restorepolicies()
-        if op.inputs() then call emit('ret',input(op))
-        else call emit('ret')
+        if _dynamicscope >= 0 then do
+          if op.inputs() then call normalterminal(input(op))
+          else call normalterminal()
+        end
+        else do
+          call exitcleanup(0,entryfacts.programterminal(op.id()))
+          call restorepolicies()
+          if op.inputs() then call emit('ret',input(op))
+          else call emit('ret')
+        end
       end
       otherwise do
         if left(name,8) = 'crexx.c.' then call classic(op,substr(name,9),entry_ref,signal_ref,loop_ref)
@@ -2578,7 +2690,7 @@ compilation: class
     symbol = .string
     v = '.rexxvalue..rexxvalue'; a = '.rexxactivation..rexxactivationarguments'; p = '.rexxpool..rexxvariablepool'
     contexttype = 'reference@.rexxclassiccontext..rexxclassiccontext'
-    if left(name,8) = 'dynamic.' then do; call dynamicoperation(op,substr(name,9),entry_ref,signal_ref); return; end
+    if left(name,8) = 'dynamic.' then do; call dynamicoperation(op,substr(name,9)); return; end
     if wordpos(name,'entry.test entry.invalid procedure.consume procedure.enter procedure.expose') > 0 then do; call procedureoperation(op,name); return; end
     if wordpos(name,'signal.policy call.policy signal.capture signal.select signal.selected signal.deliver signal.handler.invalid signal.relay') > 0 then do; call conditionoperation(op,name,signal_ref); return; end
     if name = 'clause.complete' then do; call clausecomplete(op); return; end
@@ -2624,7 +2736,18 @@ compilation: class
         call argcopy(1,input(op,2)); call argcopy(2,input(op)); call invoke('',symbol,2)
       end
       when name = 'arguments.empty' then call adapter(op,'arguments',a,'')
-      when name = 'arguments.append' then call adapter(op,'append',a,a || ' ' || v || ' .int')
+      when name = 'arguments.append' then do
+        appendfacts = dereference entry_ref
+        if appendfacts.consumingappend(op.id()) = 0 then call adapter(op,'append',a,a || ' ' || v || ' .int')
+        else do
+          call emit('link',reg(_workbase + 1) || ',' || input(op))
+          symbol = member('rexxactivation.rexxactivationarguments','append','.void',v || ' .boolean')
+          call argcopy(2,input(op,2))
+          /* Same integer conversion as the persistent helper's Boolean cast. */
+          call emit('icopy',reg(_callbase + 3) || ',' || input(op,3))
+          call invoke('',symbol,3,reg(_workbase + 1)); call emit('unlink',reg(_workbase + 1))
+        end
+      end
       when name = 'arguments.count' then call adapter(op,'countargs',v,contexttype)
       when name = 'arguments.exists' then call adapter(op,'existsarg',v,contexttype || ' ' || v || ' ' || v)
       when name = 'digits' then call adapter(op,'digits',v,contexttype)
@@ -2680,103 +2803,178 @@ compilation: class
       otherwise call fail('LOWERING: unsupported Classic operation ' || name)
     end
     return
-  /** Every dynamic body owns one stable invocation scope. Immutable catalogue
-   * rows contain source identities, never VM addresses or a borrowed pool. */
+  /** Logical pure payload and vector dimensions, not aggregate VM/RSS. */
+  cataloguecharge: method = .void
+    arg count = .int, width = 1
+    if _error <> '' then return
+    if count < 0 | width < 1 then do; call fail('LIMIT: invalid immutable catalogue dimension'); return; end
+    if count > (_limit - _sourceworkspace) <idiv> width then do
+      call fail('LIMIT: immutable catalogue payload exceeds output.bytes envelope'); return
+    end
+    _sourceworkspace = _sourceworkspace + count * width
+    return
+  /** Plan immutable owners; required frontend admission never invokes this. */
+  catalogueplan: method = .void
+    arg entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked
+    facts = dereference entry_ref; signals = dereference signal_ref; store = dereference _store
+    fn = .int; i = .int; field = .int; argument = .int; fields = .string[]
+    do fn = 1 to store.count(1)
+      if facts.dynamic(fn) then do
+        _cataloguecount = _cataloguecount + 1; _catalogueglobals[fn] = _cataloguecount
+      end
+    end
+    if _cataloguecount = 0 then return
+    if _cataloguecount > _reglimit - 1 | _reglimit < 24 then do
+      call fail('REGISTER: immutable catalogue globals or initializer exceed budget'); return
+    end
+    _cataloguecount = _cataloguecount + 1
+    call cataloguecharge(_cataloguecount,64)
+    if _error <> '' then return
+    image = _graph.binary(); extent = <blen>(image)
+    if extent > (_limit - _sourceworkspace) <idiv> 2 then do; call fail('LIMIT: immutable definition identity exceeds envelope'); return; end
+    call cataloguecharge(extent,2); _definitionhex = bin2x(image)
+    if _bound then do
+      providers = dereference _providers
+      _definitionrows = providers.count(); call cataloguecharge(_definitionrows,8)
+      if _error <> '' then return
+      do i = 1 to providers.count()
+        /* Bound the runtime owner's cached logical payload field by field.
+         * The projection/vector charges below additionally cover compiler
+         * scratch; they do not replace the retained declaration allowance. */
+        call cataloguecharge(256)
+        callable = providers.callable(i); alias = substr(callable,lastpos('.',callable) + 1)
+        if alias = callable | providers.find(alias) <> i then alias = ''
+        call cataloguecharge(<blen>(callable as .binary),4); call cataloguecharge(<blen>(alias as .binary),4)
+        kind = providers.kind(i); call cataloguecharge(<blen>(kind as .binary),4)
+        if kind <> 'process' then do
+          declaration = providers.signature(i); resulttype = declaration.result()
+          arguments = providers.rawarguments(i); provider = providers.provider(i)
+          call cataloguecharge(512)
+          call cataloguecharge(<blen>(declaration.name() as .binary),4)
+          call cataloguecharge(<blen>(resulttype as .binary),4)
+          call cataloguecharge(<blen>(declaration.flags_text() as .binary),4)
+          do argument = 1 to declaration.arguments()
+            call cataloguecharge(256)
+            call cataloguecharge(<blen>(declaration.paramname(argument) as .binary),4)
+            call cataloguecharge(<blen>(declaration.type(argument) as .binary),4)
+            call cataloguecharge(<blen>(declaration.defaultkind(argument) as .binary),4)
+            call cataloguecharge(<blen>(declaration.defaultliteral(argument) as .binary),4)
+          end
+          if kind = 'typed' then do
+            call cataloguecharge(4,64)
+            call cataloguecharge(<blen>(callable as .binary),4)
+            call cataloguecharge(<blen>(resulttype as .binary),4)
+            call cataloguecharge(<blen>(arguments as .binary),4)
+            call cataloguecharge(<blen>(provider as .binary),4)
+          end
+        end
+        fields = providers.projection(i); call cataloguecharge(fields[0],8)
+        do field = 1 to fields[0]; call cataloguecharge(<blen>(fields[field] as .binary)); end
+        if providers.status() then do; _error = providers.error(); return; end
+        if _error <> '' then return
+      end
+    end
+    sourceidentity = ''
+    if _graph.operations() > 0 then sourceidentity = llcompilercontracts..sourcename(_graph.operation(1).origin().filename())
+    do fn = 1 to store.count(1)
+      if _catalogueglobals[fn] = 0 then iterate
+      call cataloguecharge(256)
+      call cataloguecharge(length(fn as .string) + 1,4); call cataloguecharge(length(_definitionhex),4)
+      call cataloguecharge(<blen>(sourceidentity as .binary),4); call cataloguecharge(signals.labels(fn),64)
+      if _error <> '' then return
+      do i = 1 to signals.labels(fn)
+        label = signals.labelname(fn,i); call cataloguecharge(<blen>(label as .binary),4)
+      end
+      if _error <> '' then return
+    end
+    return
+  /** The loader owns publication and teardown of failed partial global data. */
+  catalogueboot: method = .void
+    arg signal_ref = reference .llcsignalprotocol..checked
+    signals = dereference signal_ref; store = dereference _store
+    _origin = 0; _sizing = 0; _scratch = 0; _location = -1; _recordbytes = 0
+    _locals = 24; _workbase = 1; _callbase = 16; _maxargs = 7
+    _target = .llrxas..program(_locals,_reglimit,_targetwork); call _target.window(_callbase,8)
+    call emit('llcatalogues()','.locals=24'); call clearsource()
+    call emit('.meta','"llprogram.$CATALOGUES"="b" ".void" llcatalogues() ""')
+    call emit('.meta','"llprogram.$CATALOGUES"=".initializer" ".void" llcatalogues() ""')
+    receiver = reg(_workbase + 1); names = reg(_workbase + 2); entries = reg(_workbase + 3)
+    ready = reg(_workbase + 6)
+    i = .int; fn = .int; count = .int
+    if _definitionrows > 0 then call cataloguerows()
+    else call emit('setattrs','g0,0')
+    if _error <> '' then return
+    sourceidentity = ''
+    if _graph.operations() > 0 then sourceidentity = llcompilercontracts..sourcename(_graph.operation(1).origin().filename())
+    do fn = 1 to store.count(1)
+      if _catalogueglobals[fn] = 0 then iterate
+      count = signals.labels(fn)
+      call emit('setattrs',names || ',' || count); call emit('setattrs',entries || ',' || count)
+      do i = 1 to count
+        call emit('linkattr1',receiver || ',' || names || ',' || i)
+        call emit('load',receiver || ',' || llrxastext..quote(signals.labelname(fn,i) as .binary)); call emit('unlink',receiver)
+        call emit('linkattr1',receiver || ',' || entries || ',' || i)
+        call emit('load',receiver || ',' || signals.labelentry(fn,i)); call emit('unlink',receiver)
+      end
+      symbol = dynamicmember('catalogue','§factory','.llcdynamic..catalogue','.string .string[*] .int[*] .string reference@.llcdynamic..declaration[*]')
+      call argtext(1,fn || ':' || _definitionhex); call argcopy(2,names); call argcopy(3,entries)
+      call argtext(4,sourceidentity); call argcopy(5,'g0',1)
+      call invoke('g' || _catalogueglobals[fn],symbol,5)
+      call emit('link',receiver || ',g' || _catalogueglobals[fn]); symbol = dynamicmember('catalogue','ready','.int')
+      call invoke(ready,symbol,1,receiver); call emit('unlink',receiver); call emit('brf','llcatalogues_invalid,' || ready)
+      call emit('null',names); call emit('null',entries)
+    end
+    call emit('ret'); call emit('llcatalogues_invalid:')
+    call emit('signal','"INVALID_ARGUMENTS","Incomplete Classic immutable module catalogue"'); call emit('ret')
+    call flush()
+    return
+  /** Build rows while the provider borrow remains in this exact scope. */
+  cataloguerows: method = .void
+    providers = dereference _providers
+    receiver = reg(_workbase + 1); projection = reg(_workbase + 4)
+    row = reg(_workbase + 5); ready = reg(_workbase + 6)
+    i = .int; field = .int; fields = .string[]; count = providers.count()
+    call emit('setattrs','g0,' || count)
+    do i = 1 to count
+      callable = providers.callable(i); alias = substr(callable,lastpos('.',callable) + 1)
+      if alias = callable | providers.find(alias) <> i then alias = ''
+      kind = providers.kind(i); resulttype = ''; arguments = ''; provider = ''
+      fields = providers.projection(i)
+      if kind <> 'process' then do
+        declaration = providers.signature(i); resulttype = declaration.result()
+        arguments = providers.rawarguments(i); provider = providers.provider(i)
+      end
+      if providers.status() then do; _error = providers.error(); return; end
+      call emit('setattrs',projection || ',' || fields[0])
+      do field = 1 to fields[0]
+        call emit('linkattr1',receiver || ',' || projection || ',' || field)
+        call emit('load',receiver || ',' || llrxastext..quote(fields[field] as .binary)); call emit('unlink',receiver)
+      end
+      symbol = dynamicmember('declaration','§factory','.llcdynamic..declaration','.string .string .string .string .string .string .string[*]')
+      call argtext(1,callable); call argtext(2,alias); call argtext(3,kind); call argtext(4,resulttype)
+      call argtext(5,arguments); call argtext(6,provider); call argcopy(7,projection); call invoke(row,symbol,7)
+      call emit('link',receiver || ',' || row); symbol = dynamicmember('declaration','ready','.int')
+      call invoke(ready,symbol,1,receiver); call emit('unlink',receiver); call emit('brf','llcatalogues_invalid,' || ready)
+      call emit('linkattr1',receiver || ',g0,' || i); call emit('copy',receiver || ',' || row); call emit('unlink',receiver)
+      call emit('null',row); call emit('null',projection)
+    end
+    return
+  /** A scope borrows complete globals; native capabilities bind only after
+   * the scope reaches its final caller-owned address. */
   dynamicenter: method = .void
     arg entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked
-    facts = dereference signal_ref; receiver = reg(_workbase + 1)
-    names = reg(_workbase + 2); entries = reg(_workbase + 3)
-    count = facts.labels(_fn); i = .int
-    call emit('setattrs',names || ',' || count); call emit('setattrs',entries || ',' || count)
-    do i = 1 to count
-      call emit('linkattr1',receiver || ',' || names || ',' || i)
-      call emit('load',receiver || ',' || llrxastext..quote(facts.labelname(_fn,i) as .binary)); call emit('unlink',receiver)
-      call emit('linkattr1',receiver || ',' || entries || ',' || i)
-      call emit('load',receiver || ',' || facts.labelentry(_fn,i)); call emit('unlink',receiver)
+    if _catalogueglobals[_fn] < 1 then do; call fail('LOWERING: dynamic body lacks its module catalogue'); return; end
+    symbol = dynamicmember('scope','§factory.prepared','.llcdynamic..scope','reference@.rexxclassiccontext..rexxclassiccontext reference@.llcdynamic..catalogue .string','001')
+    call argcopy(1,'a1'); call argcopy(2,'g' || _catalogueglobals[_fn],1)
+    call invoke(reg(_dynamicscope),symbol,2)
+    if _definitionrows > 0 then do
+      call emit('link',reg(_workbase + 1) || ',' || reg(_dynamicscope))
+      symbol = dynamicmember('scope','bindcatalogue','.void')
+      call invoke('',symbol,1,reg(_workbase + 1)); call emit('unlink',reg(_workbase + 1))
     end
-    sourceidentity = ''; store = dereference _store
-    if _graph.operations() > 0 then sourceidentity = llcompilercontracts..sourcename(_graph.operation(1).origin().filename())
-    /* Exact immutable definition bytes avoid a second fingerprint algorithm.
-     * They are shared VM constants and remain subject to output/cache bounds. */
-    fingerprint = _fn || ':' || bin2x(_graph.binary())
-    symbol = dynamicmember('scope','§factory','.llcdynamic..scope','reference@.rexxclassiccontext..rexxclassiccontext .string .string[*] .int[*] .string .string','000011')
-    call argcopy(1,'a1'); call argtext(2,fingerprint); call argcopy(3,names); call argcopy(4,entries)
-    call argtext(5,sourceidentity); call argtext(6,''); call invoke(reg(_dynamicscope),symbol,6)
-    call emit('null',names); call emit('null',entries)
-    if _bound then call dynamicbindings()
-    return
-  dynamicbindings: method = .void
-    if <refvalid>(_providers) = 0 then do; call fail('IMPORT: dynamic provider owner expired'); return; end
-    providers = dereference _providers; receiver = reg(_workbase + 1)
-    names = reg(_workbase + 2); results = reg(_workbase + 3); arguments = reg(_workbase + 4); identities = reg(_workbase + 5)
-    catalogue = reg(_workbase + 6); capability = reg(_workbase + 7); projection = reg(_workbase + 8); signature = reg(_workbase + 9)
-    i = .int; field = .int; fields = .string[]
-    do i = 1 to providers.count()
-      bindingdone = 'lldynamicbinding_' || _fn || '_' || i
-      callable = providers.callable(i)
-      call emit('link',receiver || ',' || reg(_dynamicscope))
-      symbol = dynamicmember('scope','findbinding','.int','.string')
-      call argtext(2,callable); call invoke(capability,symbol,2,receiver); call emit('unlink',receiver)
-      call emit('igt',reg(_workbase + 10) || ',' || capability || ',0')
-      call emit('brt',bindingdone || ',' || reg(_workbase + 10))
-      if providers.kind(i) <> 'typed' then do
-        route = providers.kind(i); routecount = 4
-        if route = 'classic' then do
-          fields = providers.projection(i); call dynamicprojection(fields,projection,signature)
-          routecount = 5
-        end
-        symbol = dynamicmember('scope','route','.void','.string .string .string .llcompilercontracts..signature','0011')
-        call emit('link',receiver || ',' || reg(_dynamicscope))
-        call argtext(2,callable); call argtext(3,callable); call argtext(4,route)
-        if routecount = 5 then call argcopy(5,signature)
-        call invoke('',symbol,routecount,receiver)
-        alias = substr(callable,lastpos('.',callable) + 1)
-        if alias <> callable & providers.find(alias) = i then do
-          call argtext(2,alias); call argtext(3,callable); call argtext(4,route)
-          if routecount = 5 then call argcopy(5,signature)
-          call invoke('',symbol,routecount,receiver)
-        end
-        call emit('unlink',receiver); call emit(bindingdone || ':'); iterate
-      end
-      fields = providers.projection(i); declaration = providers.signature(i); callable = providers.callable(i)
-      call dynamicvector(names,callable); call dynamicvector(results,declaration.result())
-      call dynamicvector(arguments,providers.rawarguments(i)); call dynamicvector(identities,providers.provider(i))
-      symbol = imported('rxinvoke','rxinvoke.catalogue.§factory','.rxinvoke..catalogue','.string[*] .string[*] .string[*] .string[*]')
-      call argcopy(1,names); call argcopy(2,results); call argcopy(3,arguments); call argcopy(4,identities); call invoke(catalogue,symbol,4)
-      symbol = imported('rxinvoke','rxinvoke.binding.§factory','.rxinvoke..binding','.rxinvoke..catalogue .int')
-      call argcopy(1,catalogue); call emit('load',reg(_callbase + 2) || ',1'); call invoke(capability,symbol,2)
-      call dynamicprojection(fields,projection,signature)
-      symbol = dynamicmember('scope','bind','.void','.string .rxinvoke..binding .llcompilercontracts..signature')
-      call emit('link',receiver || ',' || reg(_dynamicscope))
-      call argtext(2,callable); call argcopy(3,capability); call argcopy(4,signature); call invoke('',symbol,4,receiver)
-      alias = substr(callable,lastpos('.',callable) + 1)
-      if alias <> callable & providers.find(alias) = i then do
-        call argtext(2,alias); call argcopy(3,capability); call argcopy(4,signature); call invoke('',symbol,4,receiver)
-      end
-      call emit('unlink',receiver); call emit(bindingdone || ':')
-    end
-    do field = 2 to 9; call emit('null',reg(_workbase + field)); end
-    return
-  /** Serialize the metadata owner's projection without reparsing its ABI. */
-  dynamicprojection: method = .void
-    arg fields = .string[], projection = .string, signature = .string
-    receiver = reg(_workbase + 1)
-    call emit('setattrs',projection || ',' || fields[0])
-    do field = 1 to fields[0]
-      call emit('linkattr1',receiver || ',' || projection || ',' || field)
-      call emit('load',receiver || ',' || llrxastext..quote(fields[field] as .binary)); call emit('unlink',receiver)
-    end
-    symbol = imported('llcdynamic','llcompilercontracts.signature.§factory.projected','.llcompilercontracts..signature','.string[*]')
-    call argcopy(1,projection); call invoke(signature,symbol,1)
-    return
-  dynamicvector: method = .void
-    arg destination = .string, value = .string
-    receiver = reg(_workbase + 1)
-    call emit('setattrs',destination || ',1'); call emit('linkattr1',receiver || ',' || destination || ',1')
-    call emit('load',receiver || ',' || llrxastext..quote(value as .binary)); call emit('unlink',receiver)
     return
   dynamicoperation: method = .void
-    arg op = .llir..opview, name = .string, entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked
+    arg op = .llir..opview, name = .string
     symbol = .string
     if name = 'group.entry' | name = 'expansion.begin' then return
     if _dynamicscope < 0 then do; call fail('LOWERING: dynamic operation has no invocation owner'); return; end
@@ -2805,51 +3003,34 @@ compilation: class
     else do; call fail('LOWERING: group-only owner operation reached compiled selector'); return; end
     destination = ''
     if name = 'call.resolve' then destination = result(op)
-    call dynamicdispatch(destination,'lldynamic' || _fn || '_' || op.id(),entry_ref,signal_ref)
+    call dynamicdispatch(destination,'lldynamic' || _fn || '_' || op.id())
     return
-  /** This loop stays in the owning compiled frame. Child routines use ordinary
-   * call windows; native failures resume the exact pending IR continuation. */
+  /** Every site keeps its original source on link/call/resume windows. Only
+   * these bounded stubs repeat; protocol control and terminal work are shared. */
   dynamicdispatch: method = .void
-    arg destination = .string, prefix = .string, entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked
-    entries = dereference entry_ref; signals = dereference signal_ref
-    receiver = reg(_workbase + 1); kind = reg(_dynamickind); boundary = reg(_dynamicboundary)
-    index = .int; entry = .int; target = .int; symbol = .string
-    call emit(prefix || '_dispatch:')
-    call emit('link',receiver || ',' || boundary)
-    symbol = dynamicmember('boundary','kind','.string'); call invoke(kind,symbol,1,receiver)
-    symbol = dynamicmember('boundary','entry','.int'); call invoke(reg(_dynamicentry),symbol,1,receiver)
-    symbol = dynamicmember('boundary','result','.rexxactivation..rexxactivationarguments'); call invoke(reg(_dynamicreturned),symbol,1,receiver)
-    call emit('unlink',receiver)
-    do index = 1 to 6
-      state = word('normal invoke return exit signal failure',index)
-      call emit('seq',reg(_workbase + 7) || ',' || kind || ',' || llrxastext..quote(state as .binary))
-      call emit('brt',prefix || '_' || state || ',' || reg(_workbase + 7))
+    arg destination = .string, prefix = .string
+    site = _dynamicsites[0] + 1; extent = length(prefix) + 64
+    /* Planning needs only call arities. Charge the emitted temporary index in
+     * the same aggregate workspace as any later source-index construction. */
+    if _sizing = 0 then do
+      if extent > (_limit - _sourceworkspace) <idiv> 2 then do
+        call fail('LIMIT: dynamic continuation index exceeds output.bytes workspace'); return
+      end
+      _sourceworkspace = _sourceworkspace + extent * 2
+      _dynamicbytes = _dynamicbytes + extent * 2; _dynamicsites[site] = prefix
     end
-    /* Static policies are still handled by their finite existing dispatcher. */
-    call emit('seq',reg(_workbase + 7) || ',' || kind || ',"static"')
-    call emit('brt',prefix || '_done,' || reg(_workbase + 7))
-    call emit('signal','"ERROR","Unknown Classic dynamic boundary kind"')
-    call emit(prefix || '_normal:')
-    if destination <> '' then call emit('copy',destination || ',' || reg(_dynamicreturned))
-    call installnumeric('a1'); if _hastrace then call tracesync('a1')
-    call emit('br',prefix || '_done')
-    call emit(prefix || '_invoke:')
-    call emit('link',receiver || ',' || boundary)
-    symbol = dynamicmember('boundary','arguments','.rexxactivation..rexxactivationarguments'); call invoke(reg(_dynamicarguments),symbol,1,receiver)
-    symbol = dynamicmember('boundary','target','.string'); call invoke(reg(_dynamictarget),symbol,1,receiver)
-    call emit('unlink',receiver)
+    shared = 'lldispatch' || _fn; symbol = .string; index = .int
+    call emit('load',reg(_dynamiccontinuation) || ',' || site)
+    call emit('br',shared || '_dispatch')
+    call emit(prefix || '_linkchild:')
     symbol = imported('llcdynamic','llcdynamic.linkchild','.int','reference@.rexxactivation..rexxactivationarguments reference@.llcdynamic..scope')
     call argcopy(1,reg(_dynamicarguments),1); call argcopy(2,reg(_dynamicscope),1); call invoke(reg(_dynamicticket),symbol,2)
-    do index = 1 to words(_signals); call emit('sigpush',llrxastext..quote(word(_signals,index) as .binary)); end
-    do index = 1 to words(_signals); call emit('sigbrv',prefix || '_childfailure,r0,' || llrxastext..quote(word(_signals,index) as .binary)); end
+    call emit('br',shared || '_protected')
+    call emit(prefix || '_local:')
+    call argcopy(1,reg(_dynamicbundle),1); call argcopy(2,reg(_dynamicentry)); call invoke(reg(_dynamicreturned),'llf' || _fn,2)
+    call emit('br',shared || '_childdone')
     if _bound then do
       providers = dereference _providers
-      do index = 1 to providers.count()
-        if providers.kind(index) = 'typed' then iterate
-        call emit('seq',reg(_workbase + 7) || ',' || reg(_dynamictarget) || ',' || llrxastext..quote(providers.callable(index) as .binary))
-        call emit('brt',prefix || '_external' || index || ',' || reg(_workbase + 7))
-      end
-      call emit('br',prefix || '_local')
       do index = 1 to providers.count()
         route = providers.kind(index); if route = 'typed' then iterate
         call emit(prefix || '_external' || index || ':')
@@ -2868,7 +3049,106 @@ compilation: class
             call emit('move',reg(_dynamicreturned) || ',' || reg(_dynamicarguments))
           end
         end
-        call emit('br',prefix || '_childdone')
+        call emit('br',shared || '_childdone')
+      end
+    end
+    call emit(prefix || '_resume:')
+    symbol = imported('llcdynamic','llcdynamic.resume','.llcdynamic..boundary','reference@.llcdynamic..scope .rexxactivation..rexxactivationarguments .object','001')
+    call argcopy(1,reg(_dynamicscope),1); call argcopy(2,reg(_dynamicreturned)); call invoke(reg(_dynamicboundary),symbol,2)
+    call emit('br',shared || '_dispatch')
+    call emit(prefix || '_failure:')
+    call argcopy(1,reg(_dynamicscope),1); call argcopy(2,reg(_dynamicreturned)); call argcopy(3,reg(_dynamicevent)); call invoke(reg(_dynamicboundary),symbol,3)
+    call emit('null',reg(_dynamicevent)); call emit('br',shared || '_dispatch')
+    call emit(prefix || '_done:'); call emit('load',reg(_dynamiccontinuation) || ',0')
+    if destination <> '' then do
+      call emit('seq',reg(_workbase + 7) || ',' || reg(_dynamickind) || ',"normal"')
+      call emit('brf',prefix || '_ready,' || reg(_workbase + 7))
+      call emit('copy',destination || ',' || reg(_dynamicreturned)); call emit(prefix || '_ready:')
+    end
+    return
+  /** A checked finite branch map never treats source names or continuation
+   * IDs as VM addresses. Its default cannot fall into an unrelated stub. */
+  dynamicroute: method = .void
+    arg suffix = .string
+    prefix = 'llroute' || _fn || '_' || _cleanupnumber
+    _cleanupnumber = _cleanupnumber + 1
+    call emit(prefix || ':')
+    groups = (_dynamicsites[0] + 3) <idiv> 4
+    call dynamicroutepart(suffix,1,groups,prefix)
+    return
+  /** Integer splits select flat groups of at most four checked site IDs.
+   * Every leaf refuses a mismatch; no range proof silently selects a target. */
+  dynamicroutepart: method = .void
+    arg suffix = .string, first = .int, last = .int, prefix = .string
+    invalid = 'lldispatch' || _fn || '_invalid'
+    if first > last then do; call emit('br',invalid); return; end
+    if first = last then do
+      begin = (first - 1) * 4 + 1
+      finish = min(begin + 3,_dynamicsites[0])
+      do site = begin to finish
+        call emit('beq',_dynamicsites[site] || '_' || suffix || ',' || reg(_dynamiccontinuation) || ',' || site)
+      end
+      call emit('br',invalid); return
+    end
+    middle = first + ((last - first) <idiv> 2)
+    leftlabel = prefix || '_left_' || first || '_' || last
+    split = middle * 4 + 1
+    call emit('blt',leftlabel || ',' || reg(_dynamiccontinuation) || ',' || split)
+    call dynamicroutepart(suffix,middle + 1,last,prefix)
+    call emit(leftlabel || ':')
+    call dynamicroutepart(suffix,first,middle,prefix)
+    return
+  /** One loop stays in the owning compiled frame. Child routines use the
+   * original source-mapped call windows; native failures resume once. */
+  dynamicbody: method = .void
+    arg entry_ref = reference .llcprocedureprotocol..checked, signal_ref = reference .llcsignalprotocol..checked
+    prefix = 'lldispatch' || _fn
+    entries = dereference entry_ref; signals = dereference signal_ref
+    receiver = reg(_workbase + 1); kind = reg(_dynamickind); boundary = reg(_dynamicboundary)
+    index = .int; entry = .int; target = .int; symbol = .string
+    call emit(prefix || '_dispatch:')
+    call emit('igt',reg(_workbase + 7) || ',' || reg(_dynamiccontinuation) || ',0')
+    call emit('brf',prefix || '_invalid,' || reg(_workbase + 7))
+    call emit('igt',reg(_workbase + 7) || ',' || reg(_dynamiccontinuation) || ',' || _dynamicsites[0])
+    call emit('brt',prefix || '_invalid,' || reg(_workbase + 7))
+    call emit('link',receiver || ',' || boundary)
+    symbol = dynamicmember('boundary','kind','.string'); call invoke(kind,symbol,1,receiver)
+    symbol = dynamicmember('boundary','entry','.int'); call invoke(reg(_dynamicentry),symbol,1,receiver)
+    symbol = dynamicmember('boundary','result','.rexxactivation..rexxactivationarguments'); call invoke(reg(_dynamicreturned),symbol,1,receiver)
+    call emit('unlink',receiver)
+    do index = 1 to 6
+      state = word('normal invoke return exit signal failure',index)
+      call emit('seq',reg(_workbase + 7) || ',' || kind || ',' || llrxastext..quote(state as .binary))
+      call emit('brt',prefix || '_' || state || ',' || reg(_workbase + 7))
+    end
+    /* Static policies are still handled by their finite existing dispatcher. */
+    call emit('seq',reg(_workbase + 7) || ',' || kind || ',"static"')
+    call emit('brt',prefix || '_done,' || reg(_workbase + 7))
+    call emit('signal','"ERROR","Unknown Classic dynamic boundary kind"')
+    call emit(prefix || '_normal:')
+    call installnumeric('a1'); if _hastrace then call tracesync('a1')
+    call emit('br',prefix || '_done')
+    call emit(prefix || '_invoke:')
+    call emit('link',receiver || ',' || boundary)
+    symbol = dynamicmember('boundary','arguments','.rexxactivation..rexxactivationarguments'); call invoke(reg(_dynamicarguments),symbol,1,receiver)
+    symbol = dynamicmember('boundary','target','.string'); call invoke(reg(_dynamictarget),symbol,1,receiver)
+    call emit('unlink',receiver)
+    call dynamicroute('linkchild')
+    call emit(prefix || '_protected:')
+    do index = 1 to words(_signals); call emit('sigpush',llrxastext..quote(word(_signals,index) as .binary)); end
+    do index = 1 to words(_signals); call emit('sigbrv',prefix || '_childfailure,r0,' || llrxastext..quote(word(_signals,index) as .binary)); end
+    if _bound then do
+      providers = dereference _providers
+      do index = 1 to providers.count()
+        if providers.kind(index) = 'typed' then iterate
+        call emit('seq',reg(_workbase + 7) || ',' || reg(_dynamictarget) || ',' || llrxastext..quote(providers.callable(index) as .binary))
+        call emit('brt',prefix || '_external' || index || ',' || reg(_workbase + 7))
+      end
+      call emit('br',prefix || '_local')
+      do index = 1 to providers.count()
+        route = providers.kind(index); if route = 'typed' then iterate
+        call emit(prefix || '_external' || index || ':')
+        call dynamicroute('external' || index)
       end
       call emit(prefix || '_local:')
     end
@@ -2880,23 +3160,19 @@ compilation: class
     end
     call emit('signal','"INVALID_ARGUMENTS","Dynamic invocation selected a foreign lexical entry"')
     call emit(prefix || '_child:')
-    call argcopy(1,reg(_dynamicbundle),1); call argcopy(2,reg(_dynamicentry)); call invoke(reg(_dynamicreturned),'llf' || _fn,2)
+    call dynamicroute('local')
     call emit(prefix || '_childdone:')
     do index = words(_signals) to 1 by -1; call emit('sigpop',llrxastext..quote(word(_signals,index) as .binary)); end
     call dynamicunlink()
     if _hastrace then call emit('bpoff')
-    symbol = imported('llcdynamic','llcdynamic.resume','.llcdynamic..boundary','reference@.llcdynamic..scope .rexxactivation..rexxactivationarguments .object','001')
-    call argcopy(1,reg(_dynamicscope),1); call argcopy(2,reg(_dynamicreturned)); call invoke(boundary,symbol,2)
-    call emit('br',prefix || '_dispatch')
+    call dynamicroute('resume')
     call emit(prefix || '_childfailure:'); call emit('copy',reg(_dynamicevent) || ',r0')
     call emit('unlink',reg(_workbase)); call emit('unlink',reg(_workbase + 1))
     do index = words(_signals) to 1 by -1; call emit('sigpop',llrxastext..quote(word(_signals,index) as .binary)); end
     call dynamicunlink()
     symbol = imported('llctarget','llctarget.absent','.rexxactivation..rexxactivationarguments',''); call invoke(reg(_dynamicreturned),symbol,0)
     if _hastrace then call emit('bpoff')
-    symbol = imported('llcdynamic','llcdynamic.resume','.llcdynamic..boundary','reference@.llcdynamic..scope .rexxactivation..rexxactivationarguments .object','001')
-    call argcopy(1,reg(_dynamicscope),1); call argcopy(2,reg(_dynamicreturned)); call argcopy(3,reg(_dynamicevent)); call invoke(boundary,symbol,3)
-    call emit('null',reg(_dynamicevent)); call emit('br',prefix || '_dispatch')
+    call dynamicroute('failure')
     call emit(prefix || '_exit:')
     call binding('a1','activation',reg(_workbase + 4))
     call emit('link',receiver || ',' || reg(_dynamicreturned))
@@ -2905,7 +3181,7 @@ compilation: class
     call emit('linkref',receiver || ',' || reg(_workbase + 4))
     symbol = member('rexxactivation.rexxactivationarguments','requestprogramexit','.void','.rexxvalue..rexxvalue .boolean')
     call argcopy(2,reg(_workbase + 6)); call argcopy(3,reg(_workbase + 7)); call invoke('',symbol,3,receiver); call emit('unlink',receiver)
-    call emit(prefix || '_return:'); call exitcleanup(); call restorepolicies(); call emit('ret',reg(_dynamicreturned))
+    call emit(prefix || '_return:'); call normalterminal(reg(_dynamicreturned))
     call emit(prefix || '_signal:'); call transientcleanup(1)
     if _capturebusy >= 0 then do
       call emit('load',reg(_capturebusy) || ',0'); call emit('load',reg(_captureline) || ',0'); call emit('null',reg(_captureowner))
@@ -2932,6 +3208,9 @@ compilation: class
     call argcopy(1,reg(_dynamicevent)); call invoke('',symbol,1); call emit('ret')
     call emit(prefix || '_protocol:'); call emit('signal','"ERROR","Dynamic execution failed without an owned runtime event"')
     call emit(prefix || '_done:'); call emit('null',boundary)
+    call dynamicroute('done')
+    call emit(prefix || '_invalid:'); call emit('load',reg(_dynamiccontinuation) || ',0')
+    call emit('signal','"ERROR","Invalid Classic dynamic continuation"'); call emit('ret')
     return
   dynamicunlink: method = .void
     symbol = imported('llcdynamic','llcdynamic.unlinkchild','.void','.int')
@@ -3053,6 +3332,9 @@ compilation: class
     detail = reg(_workbase + 8); flag = reg(_workbase + 7); delivered = reg(_workbase + 10)
     prefix = 'llcomplete' || _fn || '_' || op.id()
     if _dynamicscope >= 0 then do
+      symbol = imported('llctarget','llctarget.clausepending','.boolean','reference@.rexxclassiccontext..rexxclassiccontext')
+      call argcopy(1,context); call invoke(flag,symbol,1)
+      call emit('brf',prefix || '_idle,' || flag)
       if _hastrace then call emit('bpoff')
       symbol = imported('llcdynamic','llcdynamic.checkpoint','.llcdynamic..boundary','reference@.llcdynamic..scope .int .int')
       call argcopy(1,reg(_dynamicscope),1); bits = op.attribute('id')
@@ -3061,8 +3343,7 @@ compilation: class
       call emit('link',receiver || ',' || reg(_dynamicboundary)); symbol = dynamicmember('boundary','kind','.string')
       call invoke(reg(_dynamickind),symbol,1,receiver); call emit('unlink',receiver)
       call emit('seq',flag || ',' || reg(_dynamickind) || ',"static"'); call emit('brt',prefix || '_static,' || flag)
-      entry_ref = programproof(); signal_ref = signalproof()
-      call dynamicdispatch('',prefix || '_dynamic',entry_ref,signal_ref)
+      call dynamicdispatch('',prefix || '_dynamic')
       call binding(context,'activation',activation); call emit('linkref',receiver || ',' || activation)
       symbol = member('rexxactivation.rexxactivationarguments','programexitrequested','.boolean'); call invoke(flag,symbol,1,receiver); call emit('unlink',receiver)
       call emit('brf',prefix || '_noexit,' || flag)
@@ -3074,7 +3355,11 @@ compilation: class
     if _fn <= _callspans[0] then hasstaticcalls = _callspans[_fn] > 0
     if hasstaticcalls = 0 then do
       call emit('null',result(op))
-      if _dynamicscope >= 0 then call emit(prefix || '_finished:')
+      if _dynamicscope >= 0 then do
+        call emit('br',prefix || '_finished')
+        call emit(prefix || '_idle:'); call emit('null',reg(_dynamicboundary))
+        call emit('null',result(op)); call emit(prefix || '_finished:')
+      end
       return
     end
     call emit('load',delivered || ',0')
@@ -3090,7 +3375,11 @@ compilation: class
     call emit('beq',prefix || '_ready,' || flag || ',0')
     call emit('signal','"CLASSIC_SYNTAX",' || detail); call emit('ret')
     call emit(prefix || '_ready:'); call emit('null',detail)
-    if _dynamicscope >= 0 then call emit(prefix || '_finished:')
+    if _dynamicscope >= 0 then do
+      call emit('br',prefix || '_finished')
+      call emit(prefix || '_idle:'); call emit('null',reg(_dynamicboundary))
+      call emit('null',result(op)); call emit(prefix || '_finished:')
+    end
     return
   /** Only declared internal-helper operations override handler SIGL. External
    * providers and child invocations preserve their original bound event source. */
@@ -3230,8 +3519,7 @@ compilation: class
         call argcopy(2,reg(_captureline)); call invoke('',symbol,2,receiver); call emit('unlink',receiver)
         symbol = imported('llcdynamic','llcdynamic.condition','.llcdynamic..boundary','reference@.llcdynamic..scope .rxfnsb..runtime_signal')
         call argcopy(1,reg(_dynamicscope),1); call argcopy(2,reg(_captureowner)); call invoke(reg(_dynamicboundary),symbol,2)
-        entry_ref = programproof()
-        call dynamicdispatch('',prefix || '_dynamic',entry_ref,signal_ref)
+        call dynamicdispatch('',prefix || '_dynamic')
       end
       call binding(input(op,2),'activation',activation); call emit('linkref',receiver || ',' || activation)
       symbol = member('rexxactivation.rexxactivationarguments','signalpolicy','.int','.int')

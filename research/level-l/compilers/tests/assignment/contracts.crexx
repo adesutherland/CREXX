@@ -7,13 +7,24 @@ import llcparse
 import llcfrontend
 import llcrxas
 
-main: procedure = .int expose checks failures artifacts
+main: procedure = .int expose checks failures artifacts inspection emission_requests emission_finished
   arg argv = .string[]
-  if argv[0] <> 2 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 4 then do
+    if argv[3] \== 'emit-only' | argv[4] == '' then return 2
+    inspection = argv[4]; argc = 2
+  end
+  if argc <> 2 then return 2
   artifacts = argv[1]; checks = 0; failures = 0
   call sourcecontracts()
   call provider(argv[2])
-  say 'ASSIGN_CONTRACTS|checks=' || checks || '|failures=' || failures
+  call noemission('assignment.ast-schema')
+  if inspection <> '' then do
+    expected = 1 + 2 + 1
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit ASSIGN emission inventory')
+    say 'ASSIGN_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'ASSIGN_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -39,6 +50,7 @@ sourcecontracts: procedure = .void expose artifacts
     rhs = rhs.child('operands',1)
   end
   call check(rhs.kind() = 'Name' & rhs.text('spelling') = 'old','RHS leaf keeps its authored name')
+  call emissionstart('assignment.frontend-empty')
   empty = .llcfrontend..request('empty =' as .binary,artifacts,'assignment-empty.crexx')
   call check(empty.status() = 0,'omitted RHS frontend: ' || empty.error())
   if empty.status() = 0 then do
@@ -51,7 +63,9 @@ sourcecontracts: procedure = .void expose artifacts
     end
     call check(stores = 1,'omitted RHS has one store')
   end
+  call frontendfinish('assignment.frontend-empty','empty =' as .binary,0,empty.status(),empty.error())
   text = "old = 'before'; µ.key = old || marker(); exit 0; marker: procedure; return 'after'"
+  call emissionstart('assignment.frontend-rhs-order')
   request = .llcfrontend..request(text as .binary,artifacts,'assignment-order.crexx')
   call check(request.status() = 0,'RHS-call frontend: ' || request.error())
   if request.status() <> 0 then return
@@ -76,6 +90,7 @@ sourcecontracts: procedure = .void expose artifacts
   call check(readid < callid & callid < storeid,'RHS read and call precede target store')
   call check(tailreads = 0,'compiler does not pre-read compound substitution')
   call check(emptydefaults = 0,'explicit RHS constructs no unused empty default')
+  call frontendfinish('assignment.frontend-rhs-order',text as .binary,0,request.status(),request.error())
   return
 
 /* This test-only export composes same-context effects with the source call
@@ -120,7 +135,9 @@ provider: procedure = .void expose artifacts
   operation = draft.finish(); call block.returnvalue(operation.result(),at)
   graph = builder.finish(); saved = graph.binary()
   call check(graph.error() = '', 'supplied-context graph: ' || graph.error())
+  call emissionstart('assignment.provider')
   backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish('assignment.provider',reference graph,reference output,1,backend.status(),backend.error())
   call check(backend.status() = 0 & output.bytes() > 0,'supplied-context selection: ' || backend.error())
   call check(bin2x(saved) = bin2x(graph.binary()),'selection preserves graph')
   if backend.status() = 0 then call check(writebinary(destination,output.text() as .binary) > 0,'provider RXAS written for B host')
@@ -144,3 +161,61 @@ entrybody: procedure = .llir..block
   draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
   call invalid.returnvalue(operation.result(),at)
   return body
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return
+
+/* Frontend-only cases retain exact loop/source bytes without inventing RXAS. */
+frontendfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, source = .binary, refused = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  accepted = (status <> 0) = refused
+  call check(accepted,caseid || ' frontend disposition matches its existing oracle: ' || diagnostic)
+  if accepted = 0 then return
+  written = writebinary(inspection || '/' || caseid || '.source',source) = <blen>(source)
+  call check(written,caseid || ' exact temporary frontend source export')
+  if written = 0 then return
+  if refused then say 'REFUSAL|' || caseid || '|' || diagnostic
+  else say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return

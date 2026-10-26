@@ -10,7 +10,7 @@ arg ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 say 'sparse [' || MANY || ']|' || arg()
 call WORDS '  a  b  '
 call PATTERNS 'abcDef'
-call PRESENCE ' first ',, '',
+call PRESENCE ' first ',, '',;
 call LIVE 'nleft:right', 'x:y', ':', 'left:right', 'mrest', 'x:y z'
 call POSITIONS 'one two three', 'aa:bb cc'
 call UNICODE 'aé🙂b', 'FF'x, 'B5'x, 'DF'x, 'a' || '00'x || 'b'

@@ -6,7 +6,7 @@ full reference conformance, delivery qualification and production replacement
 remain open.
 The [requirements ledger](levelc-requirements.md) owns detailed obligations,
 [PLAN](../PLAN.md) owns delivery status and acceptance, and
-[architecture](architecture.md) owns exact contracts. Existing native C is a
+[architecture](levelc-architecture.md) owns exact contracts. Existing native C is a
 comparison implementation; its defects are not acceptance targets.
 
 ## Current baseline
@@ -17,17 +17,17 @@ selected queues, explicit and implicit ADDRESS, NUMERIC and the static
 value/context/error integration of all 95 shared BIF names. Full BIF-CHECK,
 host, platform and complete-C acceptance remain separate obligations.
 
-The [whole SIGNAL contract](architecture.md#signal-complete-contract) combines
+The [whole SIGNAL contract](levelc-architecture.md#signal-complete-contract) combines
 retained direct/quoted/VALUE transfers, seven-condition ON/OFF, producers,
 cleanup and typed payload/origin transport as one complete instruction.
-The [whole practical TRACE contract](architecture.md#trace-complete-contract)
+The [whole practical TRACE contract](levelc-architecture.md#trace-complete-contract)
 adds source forms, shared activation options/query state, command inhibition
 and a private observer over existing B services. Group 3 extends the C23
 baseline to C24 with 97 operations, five C types and 38 target exports;
 its static profile is locally qualified. These instructions include
 their required helpers and dependencies; complete C remains open.
 
-The approved [semantic IR route](architecture.md#dynamic-execution-strategy) is
+The approved [semantic IR route](levelc-architecture.md#dynamic-execution-strategy) is
 implemented and locally qualified under STEP11. It adds same-frontend INTERPRET groups, a checked
 compiled-owner bridge, persistent conditions, invocation-owned PROCEDURE pools,
 ordinary checked bytecode/RXPA calls and deterministic Classic source lookup.
@@ -73,7 +73,7 @@ into separate prerequisite or partial-profile deliveries.
 - Modern SAY emits Unicode text through the output route, rather than promising
   historical raw-byte output. Wider host/callback/platform proof remains in
   the [SAY ledger row](levelc-requirements.md#whole-instruction-work-units).
-- [Static statement providers](architecture.md#call3-static-provider-contract)
+- [Static statement providers](levelc-architecture.md#call3-static-provider-contract)
   are explicit, signed and prepared by their owning B/G/C pipeline. External
   function expressions, ordinary scalar typed/native procedures and configured
   callbacks use the approved Group 2 extension below. Automatic late provider
@@ -85,15 +85,15 @@ into separate prerequisite or partial-profile deliveries.
   that resource spelling, such as `missing.0`; native C can print `MISSING.0`.
   The condition identity and causing clause are unchanged.
 - The approved SIGNAL profile canonicalizes direct, quoted and VALUE names
-  through shared simple Unicode uppercase, then compares exact canonical text.
+  through the shared Classic uppercase policy, then compares exact canonical text.
   This intentionally differs from reference literal/evaluated-name spelling;
   `1.20`, `1.2` and names with trailing blanks remain distinct. See the
   [language guide](../../../../docs/books/crexx_language_reference/statements.md#level-c-classic-signal)
-  and [whole SIGNAL contract](architecture.md#signal-complete-contract).
+  and [whole SIGNAL contract](levelc-architecture.md#signal-complete-contract).
 
 ## Calls and host integration
 
-[Group 2](architecture.md#group2-calls-host-proposal) is approved and implemented;
+[Group 2](levelc-architecture.md#group2-calls-host-proposal) is approved and implemented;
 focused component qualification is complete for the selected local Debug/rxbvm
 profile. It supplies metadata-guided ordinary scalar
 B/G/RXPA calls and external expressions, callee-owned defaults/ABI, runtime
@@ -118,7 +118,7 @@ open under [PLAN](../PLAN.md#group2-calls-host-plan).
 
 ## Static language functionality
 
-The [Group 3 contract](architecture.md#group3-static-language-contract) is
+The [Group 3 contract](levelc-architecture.md#group3-static-language-contract) is
 locally qualified for its complete admitted static profile. It adds left-associative
 power, integer division/remainder and the complete admitted strict/negated
 comparison family, preserving tighter prefix precedence and eager logical
@@ -202,7 +202,7 @@ Unicode/NUL values, command statuses/inhibition, source/errors and raw C23
 contracts. It does not establish full compiler, platform or delivery acceptance;
 formal QA follows feature completion.
 
-The [conditions and observations contract](architecture.md#conditions-observations-complete-contract)
+The [conditions and observations contract](levelc-architecture.md#conditions-observations-complete-contract)
 extends those foundations with CALL ON/OFF for ERROR, FAILURE, HALT and
 NOTREADY, policy replacement, delayed delivery/resumption, suppression and
 buffered HALT. The shared B activation remains the single policy/event owner.
@@ -263,7 +263,7 @@ Classic values, pools, conditions and BIF behavior remain in their adapters and
 shared B owners. STEP11 supplies the live compiled-caller and full source-program
 boundaries; standalone generic fixtures do not establish those language contracts.
 The C compiler continues to emit RXAS, while runtime Classic source executes IR
-through the [selected bridge](architecture.md#dynamic-execution-strategy).
+through the [selected bridge](levelc-architecture.md#dynamic-execution-strategy).
 Modern RexxScript retains its current executor pending its separate G-derived
 language and consumer migration; it does not define Classic semantics.
 
@@ -274,7 +274,7 @@ public clients select exact image roots; the RXAS guide's producer emits a
 checked four-cell program that runs with the VM alone. C integration retains
 the indexed graph/effects/target pipeline and stable C body ABI; no source-language
 feature or native frontend changes follow from package closure. The owning
-[contract](architecture.md#group4-package-closure-contract) distinguishes this
+[contract](levelc-architecture.md#group4-package-closure-contract) distinguishes this
 focused development closure from installed/platform and formal acceptance.
 
 ## Material work remaining

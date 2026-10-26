@@ -3,7 +3,7 @@
 The [requirements ledger](levelc-requirements.md#whole-instruction-work-units)
 owns all 25 instruction statuses, detailed native-criterion links, dependencies
 and closure checks. The [plan](../PLAN.md#remaining-actions) owns the approved
-sequence; [architecture](architecture.md) owns the design. This document retains
+sequence; [architecture](levelc-architecture.md) owns the design. This document retains
 review reasoning and findings, not a duplicate progress table.
 
 Review each instruction in LC-I order with independent values/errors, source
@@ -156,7 +156,7 @@ orchestrator, grammar, schema or runtime change was needed.
 
 ## OPTIONS: retained expressions and current empty processor
 
-The [approved OPTIONS contract](architecture.md#approved-options-contract)
+The [approved OPTIONS contract](levelc-architecture.md#approved-options-contract)
 defines the source and execution checks. Each clause is
 `COptions(value:expression?)`, including the first static header. Only a complete
 first nonempty bare-word clause selects approved C/Classic/comment settings;
@@ -214,7 +214,7 @@ The approved SELECT increment is reviewed separately below.
 
 ## SELECT: ordered WHEN checks and source-backed no-match delivery
 
-The [SELECT contract](architecture.md#approved-select-contract) owns the bounded
+The [SELECT contract](levelc-architecture.md#approved-select-contract) owns the bounded
 source and execution checks. CSelect retains ordered CWhen/COtherwise and original spans;
 OTHERWISE is one optional final instruction list and may be empty. Each reached
 WHEN evaluates once and performs contextual truth before its selected body.
@@ -243,7 +243,7 @@ recovery and condition/SIGL/clause/TRACE owners.
 
 ## DO: approved full headers and explicit loop-state ownership
 
-The [exact DO contract](architecture.md#approved-do-contract) covers
+The [exact DO contract](levelc-architecture.md#approved-do-contract) covers
 normalized headers/END names, counted/controlled/FOREVER and WHILE/UNTIL forms,
 shared-runtime order/errors and unnamed transfers. Its state uses static
 function-local text keys and hidden owned storage, not first-class borrowed
@@ -259,7 +259,7 @@ the admitted increment does not close whole-instruction or complete-C delivery.
 
 ## LEAVE: static raw targets and request-local errors
 
-The [approved transfer contract](architecture.md#approved-leave-iterate-contract)
+The [approved transfer contract](levelc-architecture.md#approved-leave-iterate-contract)
 owns the LEAVE-AC01–04 checks; the [plan](../PLAN.md#current-action-leave)
 tracks status and remaining work. Optional names compare authored symbols
 using shared Classic casing without tail substitution or runtime pool lookup;
@@ -269,9 +269,9 @@ then jump past its UNTIL/advance work. Ordinary C refuses provably invalid
 transfers everywhere; static first-clause STRICTC defers 28.1/28.3 to reached
 instructions and preserves the shared helper's raw event through the bridge.
 C v6/52 operations and 33 exports were this LEAVE slice's exact surface; the
-[C family contract](architecture.md#current-c-family-contract) retains PARSE and the
+[C family contract](levelc-architecture.md#current-c-family-contract) retains PARSE and the
 removal of the scalar ARG shortcut and PROCEDURE's shared entries. The
-[current C contract](architecture.md#current-c-family-contract) owns the complete
+[current C contract](levelc-architecture.md#current-c-family-contract) owns the complete
 family inventory and later CALL/EXIT integration.
 This LEAVE
 checkpoint initially retained named ITERATE's profile refusal, now removed by
@@ -284,7 +284,7 @@ and clause/TRACE remain open; bounded local qualification does not close them.
 
 ## ITERATE: preserve the selected loop and enter its end work
 
-The [approved transfer contract](architecture.md#approved-leave-iterate-contract)
+The [approved transfer contract](levelc-architecture.md#approved-leave-iterate-contract)
 owns the ITERATE-AC01–04 checks for the static nearest/named profile; the
 [plan](../PLAN.md#current-action-iterate) tracks status and remaining work. Resolve raw names within this routine using shared
 Classic casing; close only crossed inner states, retain the selected owner and
@@ -303,7 +303,7 @@ resumable conditions, exact recovery and clause/TRACE remain open.
 
 ## ARG: authored templates through the shared executor
 
-The [approved ARG contract](architecture.md#proposed-arg-contract) owns the
+The [approved ARG contract](levelc-architecture.md#proposed-arg-contract) owns the
 requirements for this bounded LC-I-11 increment.
 `CArg(templates:ParseTemplates)` retains the authored ARG instruction and exact
 template/item origins, reusing every PARSE item shape. Private lowering supplies
@@ -329,7 +329,7 @@ bounded qualification does not close the whole instruction or complete C.
 
 ## EXIT: owned completion at the program root
 
-The [EXIT contract](architecture.md#exit-contract) defines the local optional-result
+The [EXIT contract](levelc-architecture.md#exit-contract) defines the local optional-result
 and internal-call propagation profile. Visible query/branch/return paths carry
 the same packet before result observations or later operands. Proved unwind
 terminals release partially collected DO owners, PARSE/work windows and private

@@ -18,7 +18,7 @@ implementations supply reusable services and consumer/migration evidence; their
 organic dialect details are not the future language specification. The
 [owning roadmap](../../research/level-l/PLAN.md#accepted-first-product-direction--rexxscript-10-october)
 retains the selected scalar baseline and the open class/host/migration contracts.
-The [shared semantic-IR execution route](../../research/level-l/compilers/doc/architecture.md#dynamic-execution-strategy)
+The [shared semantic-IR execution route](../../research/level-l/compilers/doc/levelc-architecture.md#dynamic-execution-strategy)
 is approved as the direction; detailed integration contracts precede implementation
 and neither interpreter has been replaced. G operators,
 Classic-compatible BIF contracts, host capabilities and intentional Unicode

@@ -41,7 +41,7 @@ activation keep the injectable `RexxVariablePool` fallback, including
 offset_microseconds)` for deterministic tests.
 
 The research C compiler's
-[CLAUSE1 contract](../../research/level-l/compilers/doc/architecture.md#clause-clock-contract)
+[CLAUSE1 contract](../../research/level-l/compilers/doc/levelc-architecture.md#clause-clock-contract)
 owns clause-begin placement and bounded compiled progression qualification.
 Injected samples alone do not establish real clause progression or broader
 conditions/TRACE, host and platform clock behavior.

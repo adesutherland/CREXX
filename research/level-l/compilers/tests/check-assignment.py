@@ -145,14 +145,21 @@ def check_provider_shape(text):
     assert '.expose=assignfixture.run' in body
     assert 'context=reference .rexxclassiccontext..rexxclassiccontext,entry=.int' in body
     assert re.findall(r'^llf\d+\(\)', text, re.M) == ['llf1()'], 'one supplied-context unit'
-    assert len(re.findall(r'^call [^\n]*,llctarget.poolread\(\),', body, re.M)) == 3
+    read = 'rexxclassiccontext.rexxclassiccontext.readsymbol'
+    assert len(re.findall(r'^call [^\n]*,' + re.escape(read) + r'\(\),', body, re.M)) == 3
+    assert ',llctarget.poolread(),' not in body, 'final reads retain live NOVALUE policy'
     assert len(re.findall(r'^call [^\n]*,llctarget.poolwrite\(\),', body, re.M)) == 8
     assert not re.search(r'^deref |asstring|resolve|split', body, re.M | re.I)
     assert re.findall(r'^beq llprocedure1_\d+_match,[^,\n]+,(\d+)$', body, re.M) == ['0'], 'checked exported entry zero'
     blocks = re.findall(r'^llb\d+:\n([\s\S]*?)(?=^llb\d+:|\Z)', body, re.M)
-    semantic = [block for block in blocks if ',llctarget.poolread(),' in block]
+    semantic = [block for block in blocks if ',' + read + '(),' in block]
     assert len(semantic) == 1, 'one straight-line assignment semantic block'
-    assert not re.search(r'^br(?:t|f)? |^b(?:eq|ne|lt|le|gt|ge) ', semantic[0], re.M), 'assignment effects introduce no branch'
+    # Exclude only the terminal forward guard that restores condition policy;
+    # reads and writes themselves must still introduce no branch.
+    effects = re.sub(r'^brf (llpolicies\d+_\d+_done),(r\d+)\n'
+                     r'(?:sigpop "[A-Z_]+"\n)+load \2,0\n\1:\n(?=ret r\d+\n?$)',
+                     '', semantic[0], flags=re.M)
+    assert not re.search(r'^br(?:t|f)? |^b(?:eq|ne|lt|le|gt|ge) ', effects, re.M), 'assignment effects introduce no branch'
     assert ',llctarget.poolnew(),' not in body and '.bindpool(),' not in body, 'supplied shared entry adds no private pool'
     assert body.index('"key"') < body.index('"items.key"'), 'tail mutation precedes raw compound store'
 
@@ -170,7 +177,8 @@ def check_source_shape(text):
     following = body[calls[0].end():]
     first_write = re.search(r'^call [^\n]*,llctarget.poolwrite\(\),', following, re.M)
     assert first_write and '"items.key"' in following[:first_write.end()]
-    assert not re.search(r'^call [^\n]*,llctarget.poolread\(\),', following[:first_write.end()], re.M)
+    assert not re.search(r'^call [^\n]*,(?:llctarget\.poolread|rexxclassiccontext\.rexxclassiccontext\.readsymbol)\(\),',
+                         following[:first_write.end()], re.M)
 
 
 def check_fatal_shape(text):

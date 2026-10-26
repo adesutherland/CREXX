@@ -91,7 +91,8 @@ exact. IF's
 maps those children and creates separate IR blocks; they are not pre-existing
 flow nodes or reserved variable names.
 
-All compiler operation descriptors are registered by
+Classic operation descriptors are registered by
+[`llcir.crexx`](../levelc/llcir.crexx); typed G descriptors are registered by
 [`lltir.crexx`](../typed/lltir.crexx). The generic Level L schema,
 storage, verifier and codecs remain language-independent. The frontend adds a
 request-local `crexx.calls` family for resolved G signatures. Every operation
@@ -165,7 +166,7 @@ initially borrows its current pool; the root owns the UTF8 configuration.
 Arguments remain ordered presence packets. Internal calls evaluate actuals
 before constructing child owners and inherit the parent's numeric state.
 Only executed PROCEDURE replaces the live pool; see the
-[current entry/lifetime contract](architecture.md#proposed-procedure-contract). NUMERIC validates the live activation, then the executing C frame
+[current entry/lifetime contract](levelc-architecture.md#proposed-procedure-contract). NUMERIC validates the live activation, then the executing C frame
 installs its validated settings; child return restores the parent frame.
 
 | Operation | Contract |
@@ -182,21 +183,25 @@ installs its validated settings; child return restores the parent frame.
 | `call` | Resolved local entry, argument packet, borrowed context and function/subroutine attribute; fresh child activation/bundle initially share the current pool. |
 | `bif`, `call.missing` | Exact named shared BIF binding or reached missing43.1 after actual evaluation; preserve raw presence. |
 | `return.present/empty/absent`, `requirevalue`, `setresult` | Present value, authored bare RETURN45.1 in a function, or generated EOF absence; expression EOF fails44.1 with target identity, and CALL sets or drops RESULT/.RESULT. |
-| `length`, `say`, `exit` | Actual Classic BIF contract, observable output and process exit. |
+| `length`, `say` | Actual Classic BIF contract and observable output. |
+| `exit` | Record owned completion on the applicable program root and unwind through Classic cleanup. Only the root command adapter converts completion to process status. |
 
 These names carry the `crexx.c.` prefix in IR. No contextual Classic constant
 evaluator is registered. Empty `NUMERIC FORM` selects SCIENTIFIC. Classic
-labels and PROCEDURE remain separate AST nodes; semantic inventory pairs the
-admitted entry with its statement interval. Label-only shared-pool routines and
-fall-through into a procedure entry receive profile diagnostics.
+labels and PROCEDURE remain separate AST nodes. The shared source body has
+checked main/label entries; label-only routines share the current pool. A
+reached PROCEDURE creates a private pool only with valid invocation-entry
+eligibility; fall-through does not create that eligibility.
 
 Both languages lower IF, loops, LEAVE, ITERATE and RETURN to the common
-block/edge structure. Classic's [approved static DO forms](architecture.md#approved-do-contract)
+block/edge structure. Classic's [approved static DO forms](levelc-architecture.md#approved-do-contract)
 use ordered header captures and function-local state keys, checked by the
 compiler-owned `llcdoprotocol` before source-graph publication and again after
 transformation/loaded-graph admission. G retains its existing DO WHILE profile.
-EXIT has a diverging compiler operation; a structural
-return closes its block but is unreachable under that contract. General flow
+Both languages' EXIT operations declare divergence from ordinary continuation.
+G targets process exit; C records program-root completion and follows its
+cleanup/unwind path. A structural return closes the block but is unreachable
+under that contract. General flow
 services must refuse to claim complete coverage when their accepted termination
 profile excludes such a diverging extension. Neither graph shape nor an effect
 label alone proves arbitrary abnormal control flow.

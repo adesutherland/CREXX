@@ -1,0 +1,9 @@
+/* Missing source-call fallback is distinct from the static provider caller. */
+options levelc
+if 0 then call ABSENT
+call ABSENT FATALMARK()
+return 0
+
+FATALMARK:
+say 'actual before missing'
+return 'raw'

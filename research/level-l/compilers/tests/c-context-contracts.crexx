@@ -7,16 +7,25 @@ import llcrxas
 import llirservices
 import llcdoprotocol
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished inspection_profile inspection_prefix inspection_imports
   arg argv = .string[]
-  if argv[0] < 1 | argv[0] > 2 then return 2
-  selector = 'all'; if argv[0] = 2 then selector = argv[2]
-  if selector <> 'all' & selector <> 'do' & selector <> 'do-exact' & selector <> 'leave' & selector <> 'parse' then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc >= 3 then do
+    if argv[argc - 1] \== 'emit-only' | argv[argc] == '' then return 2
+    inspection = argv[argc]; argc = argc - 2
+  end
+  if argc < 1 | argc > 2 then return 2
+  selector = 'all'; if argc = 2 then selector = argv[2]
+  if selector <> 'all' & selector <> 'do' & selector <> 'do-exact' & selector <> 'leave' & selector <> 'parse' & selector <> 'target-limits' then return 2
+  inspection_profile = selector; inspection_prefix = 'context.' || selector || '.'; inspection_imports = argv[1]
   checks = 0; failures = 0; mode = .int
+  if selector = 'target-limits' then do
+    call targetlimits(argv[1])
+    return emissionreport()
+  end
   if selector = 'do-exact' then do
     call doexactparts(argv[1])
-    say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
-    return failures
+    return emissionreport()
   end
   call versionrefusal(argv[1],5)
   call versionrefusal(argv[1],6)
@@ -26,15 +35,15 @@ main: procedure = .int expose checks failures
   call versionrefusal(argv[1],19)
   if selector = 'parse' then do
     call selectschema(); call parseschema(); call forgedschema(argv[1],4)
-    say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
-    return failures
+    call noemission('schema-contracts')
+    return emissionreport()
   end
   if selector = 'all' | selector = 'leave' then call transfercontracts(argv[1])
   if selector = 'leave' then do
-    say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
-    return failures
+    return emissionreport()
   end
   if selector = 'all' then do
+    call targetlimits(argv[1])
     call selectschema()
     call parseschema()
     do mode = 1 to 6
@@ -50,8 +59,8 @@ main: procedure = .int expose checks failures
   call forgedschema(argv[1],7)
   call docontracts(argv[1])
   call doexactparts(argv[1])
-  say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
-  return failures
+  call noemission('schema-contracts')
+  return emissionreport()
 
 check: procedure = .void expose checks failures
   arg passed = .int, label = .string
@@ -59,6 +68,38 @@ check: procedure = .void expose checks failures
   if passed then return
   failures = failures + 1
   say 'FAIL|' || label
+  return
+
+/** An unsupported semantic version reaches budget admission without building
+ * a large target or consulting imported runtime metadata. */
+targetlimits: procedure = .void
+  arg artifacts = .string
+  registry = .llir..schema(); family = registry.family('crexx.c',5)
+  context = family.type('context',.llir..bytescodec() as .object)
+  result = family.type('result',.llir..bytescodec() as .object)
+  absent = family.operation('return.absent'); call absent.output('value',result)
+  call absent.state('none'); call absent.failure('none'); call absent.termination('returns')
+  contract = registry.finish(); builder = .llir..builder(contract)
+  at = builder.synthetic('C target work boundary')
+  fn = builder.function('$MAIN',result); ignored = fn.argument(context)
+  block = fn.block('entry'); draft = block.operation(contract.operation('crexx.c.return.absent'),at)
+  operation = draft.finish(); call block.returnvalue(operation.result(),at)
+  graph = builder.finish(); saved = graph.binary(); bytes = .int
+  call check(graph.error() = '','valid generic target-work boundary fixture')
+  call emissionstart('target-bytes-9223372036853775807')
+  backend = .llcrxas..compilation(graph,artifacts,9223372036853775807); output = backend.output()
+  call emissionfinish('target-bytes-9223372036853775807',reference graph,reference output,0,backend.status(),backend.error(),9223372036853775807)
+  call check(pos('unsupported family version crexx.c',backend.error()) > 0,'maximum safe target allowance reaches ordinary schema admission')
+  call check(output.bytes() = 0 & bin2x(saved) = bin2x(graph.binary()),'safe target allowance preserves refused graph and output')
+  do mode = 1 to 2
+    bytes = 9223372036853775808
+    if mode = 2 then bytes = 9223372036854775807
+    call emissionstart('target-bytes-' || bytes)
+    backend = .llcrxas..compilation(graph,artifacts,bytes); output = backend.output()
+    call emissionfinish('target-bytes-' || bytes,reference graph,reference output,0,backend.status(),backend.error(),bytes)
+    call check(backend.error() = 'LL_COMPILER_LIMIT: output budget exceeds target work range','checked target allowance refuses overflow ' || mode)
+    call check(output.bytes() = 0 & bin2x(saved) = bin2x(graph.binary()),'target allowance overflow is atomic ' || mode)
+  end
   return
 
 parseschema: procedure = .void
@@ -107,7 +148,9 @@ versionrefusal: procedure = .void
   operation = draft.finish(); call block.returnvalue(operation.result(),at)
   graph = builder.finish(); saved = graph.binary()
   call check(graph.error() = '', 'valid generic version fixture ' || version)
+  call emissionstart('version-' || version)
   backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish('version-' || version,reference graph,reference output,0,backend.status(),backend.error())
   call check(backend.status() <> 0 & pos('unsupported family version crexx.c',backend.error()) > 0, 'precise semantic version refusal ' || version)
   call check(output.bytes() = 0 & bin2x(saved) = bin2x(graph.binary()), 'version refusal publishes no output and preserves input ' || version)
   return
@@ -145,7 +188,9 @@ functioncontract: procedure = .void
   call block.returnvalue(returned,at)
   graph = builder.finish(); saved = graph.binary()
   call check(graph.error() = '', 'valid generic function fixture ' || mode)
+  call emissionstart('function-' || mode)
   backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish('function-' || mode,reference graph,reference output,mode = 1,backend.status(),backend.error())
   if mode = 1 then do
     call check(backend.status() = 0 & output.bytes() > 0, 'required context/entry ABI admitted: ' || backend.error())
     restored = llir..loadbinary(contract,graph.binary())
@@ -183,7 +228,7 @@ forgedschema: procedure = .void
     do kind = 1 to 3
       do field = 1 to source.arity(i,kind)
         spelling = source.fieldname(i,kind,field)
-        if mode = 2 & name = 'crexx.c.numeric.form' & kind = 1 then spelling = 'wrongcontext'
+        if mode = 2 & name = 'crexx.c.numeric.form' & kind = 1 & field = 2 then spelling = 'wrongcontext'
         if mode = 5 & name = 'crexx.c.when.truth' & kind = 1 & field = 2 then spelling = 'wrongcontext'
         type = .llir..typeid(data.identity(),source.fieldtype(i,kind,field))
         if kind = 1 then call declared.input(spelling,type)
@@ -232,7 +277,9 @@ forgedschema: procedure = .void
   operation = draft.finish(); call block.returnvalue(operation.result(),at)
   graph = builder.finish(); saved = graph.binary()
   call check(graph.error() = '', 'forged unused descriptor is a valid generic graph ' || mode)
+  call emissionstart('unused-schema-' || mode)
   backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish('unused-schema-' || mode,reference graph,reference output,0,backend.status(),backend.error())
   expected = word('effects field operation constant field effects constant constant',mode)
   diagnosed = pos(expected,backend.error()) > 0
   if mode = 7 then diagnosed = diagnosed | pos('key',backend.error()) > 0 | pos('UTF',backend.error()) > 0
@@ -291,7 +338,9 @@ contextslots: procedure = .void
   end
   graph = builder.finish(); saved = graph.binary()
   call check(graph.error() = '', 'generic context slot graph ' || mode)
+  call emissionstart('context-slots-' || mode)
   backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish('context-slots-' || mode,reference graph,reference output,mode = 4,backend.status(),backend.error())
   if mode = 4 then call check(backend.status() = 0 & output.bytes() > 0, 'entry-bound context aliases admitted: ' || backend.error())
   else call check(backend.status() <> 0 & pos('context',lower(backend.error())) > 0, 'unbound/nonentry context slot refused ' || mode || ': ' || backend.error())
   call check((mode = 4 | output.bytes() = 0) & bin2x(saved) = bin2x(graph.binary()), 'context alias admission is atomic ' || mode)
@@ -301,7 +350,9 @@ contextslots: procedure = .void
     changed = llirservices..optimise(reference graph)
     call check(changed.status() = 'keep' | changed.status() = 'changed','context alias generic optimisation succeeds: ' || changed.message())
     if changed.status() = 'keep' | changed.status() = 'changed' then do
-      selected = changed.result(); backend = .llcrxas..compilation(selected,artifacts); output = backend.output()
+      selected = changed.result(); call emissionstart('context-slots-transformed-4')
+      backend = .llcrxas..compilation(selected,artifacts); output = backend.output()
+      call emissionfinish('context-slots-transformed-4',reference selected,reference output,1,backend.status(),backend.error())
       call check(backend.status() = 0 & output.bytes() > 0,'forwarded entry-bound context aliases admitted: ' || backend.error())
     end
     call check(bin2x(saved) = bin2x(graph.binary()),'context alias optimisation preserves original graph')
@@ -352,7 +403,9 @@ selectorigin: procedure = .void
 selectadmission: procedure = .void
   arg artifacts = .string, graph = .llir..module, mode = .int, lane = .string
   saved = graph.binary(); label = lane || ' SELECT origin ' || mode
+  caseid = changestr(' ',label,'-'); call emissionstart(caseid)
   backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish(caseid,reference graph,reference output,mode = 1,backend.status(),backend.error())
   if mode = 1 then do
     call check(backend.status() = 0 & output.bytes() > 0, label || ' admits anonymous exact source: ' || backend.error())
     call check(pos('<source>',output.text()) > 0 & pos('llctarget.selectmissing',output.text()) > 0,label || ' retains logical source and missing helper')
@@ -462,21 +515,28 @@ transfercontracts: procedure = .void
     call check(bincompare(saved,graph.binary()) = 0,label || ' load/transform preserve original graph')
   end
   graph = transfergraph(1); saved = graph.binary()
+  call emissionstart('transfer-prior')
   backend = .llcrxas..compilation(graph,artifacts); prior = backend.output(); priorbytes = prior.text()
+  call emissionfinish('transfer-prior',reference graph,reference prior,1,backend.status(),backend.error())
   call check(backend.status() = 0 & prior.bytes() > 0,'transfer prior owned output succeeds')
   call check(pos('transfer.crexx',priorbytes) > 0 & pos('llctarget.invalidtransfer',priorbytes) > 0,'transfer keeps logical source and the existing helper route')
+  call emissionstart('transfer-bytes-128-registers-65536')
   backend = .llcrxas..compilation(graph,artifacts,128); output = backend.output()
+  call emissionfinish('transfer-bytes-128-registers-65536',reference graph,reference output,0,backend.status(),backend.error(),128)
   call check(backend.status() <> 0 & pos('LIMIT',backend.error()) > 0 & output.bytes() = 0,'transfer output limit refusal publishes nothing')
   call check(bincompare(saved,graph.binary()) = 0 & prior.text() == priorbytes,'transfer output refusal preserves graph and earlier output')
   graph = transfergraph(26); longsaved = graph.binary()
   proof = .llcdoprotocol..checked(reference graph,67108864,128)
   call check(graph.error() = '' & proof.status() <> 0 & pos('DO admission work budget',proof.error()) > 0,'transfer text work is bounded before enum decoding')
   call check(bincompare(longsaved,graph.binary()) = 0 & prior.text() == priorbytes,'transfer work refusal preserves input and earlier output')
+  call noemission('transfer-schema-and-protocol-work')
   return
 
 transferadmission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  caseid = changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,backend.status(),backend.error())
   if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ' admitted: ' || backend.error())
   else do
     diagnosed = pos('transfer',backend.error()) > 0 | pos('invalid variable symbol',backend.error()) > 0 | pos('DO state key',backend.error()) > 0
@@ -583,12 +643,16 @@ docontracts: procedure = .void
     call check(bincompare(saved,graph.binary()) = 0,label || ' load/transform preserve original graph')
   end
   graph = dograph(3); saved = graph.binary()
+  call emissionstart('DO-prior')
   backend = .llcrxas..compilation(graph,artifacts); prior = backend.output(); priorbytes = prior.text()
+  call emissionfinish('DO-prior',reference graph,reference prior,1,backend.status(),backend.error())
   call check(backend.status() = 0 & prior.bytes() > 0,'valid nested owner output retained as prior result')
   do mode = 1 to 2
     bytes = 128; registers = 65536
     if mode = 2 then do; bytes = 67108864; registers = 16; end
+    call emissionstart('DO-bytes-' || bytes || '-registers-' || registers)
     backend = .llcrxas..compilation(graph,artifacts,bytes,registers); output = backend.output()
+    call emissionfinish('DO-bytes-' || bytes || '-registers-' || registers,reference graph,reference output,0,backend.status(),backend.error(),bytes,registers)
     call check(backend.status() <> 0 & pos('LIMIT',backend.error()) > 0 & output.bytes() = 0,'DO-bearing request resource refusal is atomic ' || mode)
     call check(bincompare(saved,graph.binary()) = 0 & prior.text() == priorbytes,'resource refusal preserves graph and earlier owned output ' || mode)
   end
@@ -601,6 +665,7 @@ docontracts: procedure = .void
   proof = .llcdoprotocol..checked(reference graph,67108864,400)
   call check(proof.status() <> 0 & pos('DO admission work budget',proof.error()) > 0,'long repeated key consumes bounded admission work')
   call check(bincompare(saved,graph.binary()) = 0 & prior.text() == priorbytes,'key-work refusal preserves graph and earlier owned output')
+  call noemission('DO-key-protocol-work')
   return
 
 /* Enum attributes are exact byte strings, not WORDPOS phrases. Both fixtures
@@ -616,7 +681,9 @@ doexactparts: procedure = .void
 
 doadmission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  caseid = changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,backend.status(),backend.error())
   if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ' admitted: ' || backend.error())
   else do
     diagnosed = pos('DO',upper(backend.error())) > 0 | pos('invalid variable symbol',backend.error()) > 0
@@ -836,3 +903,68 @@ entrybody: procedure = .llir..block
   draft = invalid.operation(contract.operation('crexx.c.return.absent'),at); operation = draft.finish()
   call invalid.returnvalue(operation.result(),at)
   return body
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests inspection_prefix
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || inspection_prefix || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished inspection_imports inspection_prefix
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string, bytes = 67108864, registers = 65536
+  if inspection == '' then return
+  caseid = inspection_prefix || caseid
+  graph = dereference graph_ref; output = dereference output_ref
+  say 'REQUEST|' || caseid || '|imports=' || inspection_imports || '|output.bytes=' || (bytes as .string) || '|registers=' || (registers as .string)
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished inspection_prefix
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || inspection_prefix || caseid
+  emission_finished = emission_finished + 1
+  return
+
+
+/* Independent source-profile inventory, rather than captured-output discovery. */
+emissionreport: procedure = .int expose checks failures inspection emission_requests emission_finished inspection_profile
+  if inspection <> '' then do
+    expected = .int
+    select inspection_profile
+      when 'all' then expected = 159 + 3
+      when 'do' then expected = 84 + 2
+      when 'do-exact' then expected = 2
+      when 'leave' then expected = 49 + 1
+      when 'parse' then expected = 7 + 1
+      when 'target-limits' then expected = 3
+      otherwise return 2
+    end
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit context profile ' || inspection_profile)
+    say 'CONTEXT_EMISSION|profile=' || inspection_profile || '|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'C_CONTEXT_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures

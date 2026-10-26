@@ -277,7 +277,7 @@ def controlled_injection(text, stem, scenario):
         # Native inject_buffered_halt queues only after the guarded 'inside'
         # SAY, so the buffered handler invocation cannot enqueue itself again.
         sites = [(source_anchors(text, filename, 3)[0], 3, 'initial', 4),
-                 (call_at_line(text, filename, 8, 'llctarget.sayvalue').end() + 1, 8, 'buffered', 4)]
+                 (call_at_line(text, filename, 8, 'llctarget.sayconfigured').end() + 1, 8, 'buffered', 4)]
     elif scenario == 'lifecycle':
         header, end = function_extent(text)
         on = [match for match in called(text, 'rexxactivation.rexxactivationarguments.setcallpolicy')
@@ -287,7 +287,7 @@ def controlled_injection(text, stem, scenario):
         # through the native OFF owner or the additive CALL policy owner.
         off = call_at_line(text, filename, 6, 'rexxactivation.rexxactivationarguments.setsignalpolicy')
         sites = [(on[0].end() + 1, 3, 'first', 2),
-                 (call_at_line(text, filename, 4, 'llctarget.sayvalue').end() + 1, 4, 'again', 2),
+                 (call_at_line(text, filename, 4, 'llctarget.sayconfigured').end() + 1, 4, 'again', 2),
                  (off.end() + 1, 6, 'off', 2),
                  (complete_at_line(text, filename, 9), 9, 'parent', 2)]
     else:
@@ -361,7 +361,11 @@ class Batch:
         suffix = '.exe' if os.name == 'nt' else ''
         self.tools = {name: self.build / 'bin' / (name + suffix)
                       for name in ('rxc', 'rxas', 'rxlink', 'rxbvm')}
-        inputs = [*self.tools.values(), self.backend / 'conditions-fixtures-linked.rxbin']
+        contract_provider = self.build / 'bin/rxcontract.rxplugin'
+        if not contract_provider.exists():
+            contract_provider = self.build / 'bin/providers/rxcontract.rxplugin'
+        inputs = [*self.tools.values(), self.backend / 'conditions-fixtures-linked.rxbin',
+                  contract_provider]
         for name in LIBRARIES:
             root = self.backend if name == 'llctarget' else self.build / 'bin'
             inputs.append(root / (name + '.rxbin'))
@@ -386,6 +390,10 @@ class Batch:
             providers = destination / 'providers'; providers.mkdir(exist_ok=True)
             for name in ('rxfs', 'rxcstream'):
                 shutil.copy2(self.build / 'bin' / (name + '.rxplugin'), providers / (name + '.rxplugin'))
+        # Metadata decoding belongs to the warm compiler worker alone.
+        shutil.copy2(contract_provider, self.host / 'providers' / contract_provider.name)
+        assert not (self.application / 'providers/rxcontract.rxplugin').exists(), (
+            'static application excludes the compiler metadata provider')
         self.host_vm = self.host / ('rxbvm' + suffix)
         self.target_vm = self.application / ('rxbvm' + suffix)
         self.service = self.host / 'conditions-fixtures-linked.rxbin'

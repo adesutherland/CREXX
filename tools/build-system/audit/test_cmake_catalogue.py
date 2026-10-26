@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -121,6 +122,60 @@ class CatalogueUnitTests(unittest.TestCase):
                     (result["product_layer"], result["wave"]), classification
                 )
                 self.assertEqual(result["basis"], "stage-target")
+
+    @unittest.skipUnless(shutil.which("ninja"), "Private stage graph requires Ninja")
+    def test_research_stage_prepares_selected_install_payload(self) -> None:
+        root = Path(__file__).resolve().parents[3]
+        stages = (root / "cmake/CrexxBuildStages.cmake").read_text()
+        # Stub unrelated required leaves from the actual declarations. The
+        # independent payload oracle below names installed research producers.
+        required = set()
+        for block in re.findall(r"crexx_add_build_stage\((stage-[^)]*)\)", stages):
+            if "REQUIRED_TARGETS" in block:
+                leaves = block.split("REQUIRED_TARGETS", 1)[1].split("OPTIONAL_TARGETS", 1)[0]
+                required.update(name for name in leaves.split() if not name.startswith("stage-"))
+        self.assertTrue(required)
+        self.assertTrue(all(re.fullmatch(r"[A-Za-z0-9_-]+", name) for name in required))
+        c_payload = {"llccompiler", "llctarget", "llcdynamic", "llrxc-c"}
+        g_payload = {"llgcompiler", "llrxc-g"}
+        with tempfile.TemporaryDirectory(prefix="crexx-stage-") as temporary:
+            source = Path(temporary).resolve() / "source"
+            source.mkdir()
+            (source / "BuildStages.cmake").write_text(stages)
+            (source / "CMakeLists.txt").write_text('''cmake_minimum_required(VERSION 3.24)
+project(ResearchInstallStage NONE)
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/prepared")
+foreach(target IN LISTS STUB_TARGETS)
+  add_custom_target(${target} COMMAND "${CMAKE_COMMAND}" -E touch
+    "${CMAKE_BINARY_DIR}/prepared/${target}")
+endforeach()
+include("${CMAKE_SOURCE_DIR}/BuildStages.cmake")
+if(TARGET stage-research-compilers)
+  file(WRITE "${CMAKE_BINARY_DIR}/research-stage" "present")
+endif()
+''')
+            for profile in ("off", "c", "g", "cg"):
+                with self.subTest(profile=profile):
+                    selected = (c_payload if "c" in profile else set()) | (g_payload if "g" in profile else set())
+                    if profile != "off":
+                        selected = selected | {"llcontract_runtime_package"}
+                    build = source.parent / profile
+                    def run(*arguments: str) -> None:
+                        result = subprocess.run(["cmake", *map(str, arguments)], text=True,
+                                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                        self.assertEqual(result.returncode, 0, result.stdout[-8000:])
+                    run("-S", source, "-B", build, "-G", "Ninja",
+                        "-DCREXX_BUILD_RESEARCH_COMPILERS=" + ("OFF" if profile == "off" else "ON"),
+                        "-DSTUB_TARGETS=" + ";".join(sorted(required | selected)))
+                    run("--build", build, "--target", "stage-product")
+                    prepared = {path.name for path in (build / "prepared").iterdir()}
+                    self.assertTrue(prepared)
+                    self.assertFalse(prepared & (c_payload | g_payload | {"llcontract_runtime_package"}))
+                    self.assertEqual((build / "research-stage").exists(), profile != "off")
+                    if profile != "off":
+                        run("--build", build, "--target", "stage-research-compilers")
+                        prepared_after = {path.name for path in (build / "prepared").iterdir()}
+                        self.assertEqual(prepared_after - prepared, selected)
 
     def test_qa_classification_recognizes_explicit_qualification(self) -> None:
         self.assertEqual(catalogue.classify_test(["qualification", "performance"], "candidate"), "qualification")

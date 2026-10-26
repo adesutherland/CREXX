@@ -40,7 +40,7 @@ samples once. Nested calls use independent activation samples. Direct library
 contexts without an activation retain the injectable pool-clock fallback.
 `injectClauseTime(...)` supplies deterministic harness values and does not by
 itself establish compiled clause progression. The research C compiler's
-[CLAUSE1 contract](../../research/level-l/compilers/doc/architecture.md#clause-clock-contract)
+[CLAUSE1 contract](../../research/level-l/compilers/doc/levelc-architecture.md#clause-clock-contract)
 owns begin placement and its bounded qualification; complete conditions/TRACE
 and wider host/platform clock behavior remain separate.
 

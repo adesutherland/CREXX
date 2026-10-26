@@ -71,6 +71,51 @@ bad: procedure = .void expose artifacts
   graph = request.graph(); call check(graph.error() <> '', 'failure publishes no successful graph')
   return
 
+/** INTERPRET is admitted even in dead bodies; authored source stays intact. */
+interpretcase: procedure = .void expose artifacts
+  arg source = .string, first = .int, emitted = 0
+  request = .lltestfrontend..request('c',source as .binary,artifacts,'interpret.crexx')
+  call check(request.status() = 0,'Classic INTERPRET accepted: ' || request.error())
+  if request.status() <> 0 then return
+  graph = request.graph()
+  call check(graph.error() = '','INTERPRET publishes verified IR: ' || graph.error())
+  text = graph.dump()
+  if emitted then do
+    call check(pos('crexx.c.dynamic.expansion.begin',text) > 0,'INTERPRET begins source expansion')
+    call check(pos('crexx.c.dynamic.interpret',text) > 0,'INTERPRET uses dynamic source execution')
+    beginnings = 0; executions = 0; anchor = 0
+    do i = 1 to graph.operations()
+      op = graph.operation(i)
+      if wordpos(op.name(),'crexx.c.dynamic.expansion.begin crexx.c.dynamic.interpret') = 0 then iterate
+      origin = op.origin()
+      call check(origin.kind() = 'exact' & origin.first() = first & origin.last() = first + 17,'INTERPRET IR retains the exact authored clause span')
+      call check(bincompare(origin.sourcebytes(),source as .binary) = 0,'INTERPRET IR retains the complete authored source bytes')
+      if op.name() = 'crexx.c.dynamic.expansion.begin' then do
+        beginnings = beginnings + 1; anchor = origin.id()
+      end
+      else do
+        executions = executions + 1
+        call check(anchor > 0 & origin.id() = anchor,'INTERPRET execution retains its explicit expansion origin identity')
+      end
+    end
+    call check(beginnings = 1 & executions = 1,'one retained INTERPRET expansion and execution')
+  end
+  tree = request.ast(); walk = tree.walk('parents first'); count = 0
+  do while walk.next()
+    node = walk.node()
+    if node.kind() <> 'CInterpret' then iterate
+    count = count + 1
+    call check(node.start() = first & node.finish() = first + 17 & node.sourcetext() == 'interpret "say 1"','INTERPRET retains its authored clause extent')
+    value = node.child('value')
+    do while value.kind() = 'Chain'
+      if value.count('operators') <> 0 | value.count('operands') <> 1 then leave
+      value = value.child('operands',1)
+    end
+    call check(value.kind() = 'String' & value.text('spelling') == '"say 1"' & value.start() = first + 10 & value.finish() = first + 17,'INTERPRET retains its exact source expression')
+  end
+  call check(count = 1,'one authored INTERPRET node, including dead bodies')
+  return
+
 syntax: procedure = .void
   do langindex = 1 to 2
     language = word('c g',langindex)
@@ -97,7 +142,11 @@ syntax: procedure = .void
     else call bad(language,('say ''α''' || ('0D0A'x as .string) || 'say 1 +') as .binary,'LL_COMPILER_SYNTAX:','number',17,'line 2, column 8')
     if language = 'c' then call bad(language,"say 'α' +" as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-35.1',9,'line 1, column 9')
     else call bad(language,"say 'α' +" as .binary,'LL_COMPILER_SYNTAX:','number',10,'line 1, column 10')
-    call bad(language,'interpret "say 1"' as .binary,'LL_COMPILER_PROFILE:','INTERPRET',0)
+    if language = 'c' then do
+      call interpretcase('interpret "say 1"',0,1)
+      call interpretcase('p: interpret "say 1"',3,1)
+    end
+    else call bad(language,'interpret "say 1"' as .binary,'LL_COMPILER_PROFILE:','INTERPRET',0)
     if language = 'g' then call bad(language,'select' as .binary,'LL_COMPILER_PROFILE:','SELECT',0)
     else call bad(language,'select' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-14.2',0)
   end
@@ -181,7 +230,8 @@ literals: procedure = .void
   call bad('c',"if 0 then say 'GG'x" as .binary,'LL_COMPILER_SYNTAX:','invalid digit',14)
   text = good('c',"say '41' x",'crexx.c.blank')
   text = good('c',"say '41'xyz",'crexx.c.abut')
-  text = good('c',"say '41'/* gap */x",'crexx.c.blank')
+  text = good('c',"say '41'/* gap */x",'crexx.c.abut','crexx.c.blank')
+  text = good('c',"say '41' /* gap */x",'crexx.c.blank','crexx.c.abut')
   text = good('c',"x = 1; say x",'crexx.c.load')
   call bad('g',"say '41'x" as .binary,'LL_COMPILER_BIND:','unknown variable X')
   return
@@ -214,10 +264,14 @@ grammar: procedure = .void expose examples
     text = good(language,'if 1 then do; say 1; end' || ('0D0A'x as .string) || 'else say 2','if.no')
   end
   text = good('c','if = 2; then = 3; else = 4; say if then else','crexx.c.blank')
-  text = good('c','say ''a'' ''b''; say ''a''''b''; say ''a''(2)','crexx.c.abut')
+  text = good('c','say ''a'' ''b''; say ''a''''b''; say ''a''xname','crexx.c.abut')
+  text = good('c','say ''a''(2)','crexx.c.dynamic.call.resolve','crexx.c.abut')
+  call check(pos('quoted="true"',text) > 0 & pos('function="true"',text) > 0,'adjacent quoted literal retains function-call semantics')
   text = good('c','x =; say x; say unknown','crexx.c.load')
   call check(pos('name="unknown"',text) > 0,'Classic raw pool key visible in IR')
   text = good('c','interpret = 1; say interpret','crexx.c.store')
+  call bad('c','interpret' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-35.1: invalid INTERPRET expression',9,'line 1, column 10')
+  call bad('c','interpret 1 +' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-35.1: invalid INTERPRET expression',12,'line 1, column 13')
   return
 
 /** Source AST, single acquisition and immutable ordered PARSE packets. These
@@ -580,11 +634,17 @@ leavepolicytests: procedure = .void
 /* Static refusal controls are also selectable after header admission changes. */
 optionrefusals: procedure = .void
   do sample = 1 to 8
-    word = word('levelb levelg levell numeric_common comments_slash srcmap comments_nohash comments_nodash',sample)
+    word = word('levelb levelg levell numeric_common comments_slash leveld comments_nohash comments_nodash',sample)
     source = 'options levelc ' || word
     if sample = 7 then source = 'options comments_hash comments_nohash'
     if sample = 8 then source = 'options comments_dash comments_nodash'
     call bad('c',source as .binary,'LL_COMPILER_PROFILE:',word)
+  end
+  parsed = .llcparse..parsed('options levelc srcmap; nop' as .binary)
+  call check(parsed.status() = 0,'SRCMAP is an admitted source header option: ' || parsed.error())
+  if parsed.status() = 0 then do
+    prepared_map = parsed.mapping()
+    call check(prepared_map.active() = 1,'SRCMAP enables this request source map')
   end
   return
 
@@ -698,7 +758,10 @@ dotests: procedure = .void expose artifacts
   end
   call bad('c',"exit 0; do i='GG'x; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
   call doliteraltests()
-  call bad('c','do 0; interpret "x"; end' as .binary,'LL_COMPILER_PROFILE:','INTERPRET')
+  call interpretcase('do 1; interpret "say 1"; end',6,1)
+  call interpretcase('do 0; interpret "say 1"; end',6,1)
+  call interpretcase('fresh: interpret "say 1"',7,1)
+  call bad('c','do 0; interpret 1 +; end' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-35.1: invalid INTERPRET expression',18,'line 1, column 19')
   return
 
 /* A closed body still validates its discarded UNTIL operand. */
@@ -859,11 +922,15 @@ selecttests: procedure = .void expose artifacts
       when 13 then source = 'otherwise nop'
       otherwise source = 'exit 0; select; when 1 then nop; otherwise; otherwise; end'
     end
-    call bad('c',source as .binary,'LL_COMPILER_SYNTAX:','expected')
+    expected = 'expected'
+    if sample = 6 then expected = 'RXC-LC-10.5: END cannot immediately follow THEN or ELSE'
+    call bad('c',source as .binary,'LL_COMPILER_SYNTAX:',expected)
   end
   call classicconstant('select; when 1 then nop; when 1d then nop; end')
   call bad('c',"select; when 1 then nop; otherwise say 'GG'x; end" as .binary,'LL_COMPILER_SYNTAX:','invalid digit')
-  call bad('c','select; when 0 then interpret "x"; end' as .binary,'LL_COMPILER_PROFILE:','INTERPRET')
+  call interpretcase('select; when 1 then interpret "say 1"; end',20,1)
+  call interpretcase('select; when 0 then interpret "say 1"; end',20,1)
+  call bad('c','select; when 0 then interpret 1 +; end' as .binary,'LL_COMPILER_SYNTAX:','RXC-LC-35.1: invalid INTERPRET expression',32,'line 1, column 33')
   return
 
 /** IF owns only its nearest ELSE; arm instructions retain their own AST. */
@@ -1217,8 +1284,9 @@ calls: procedure = .void
   call check(pos('name="P"',text) > 0 & pos('function P',text) = 0,'shared label is a checked entry in one source body')
   text = good('c','say 1; p: procedure; return 2','crexx.c.procedure.enter')
   call check(pos('name="P"',text) > 0,'source-legal fall-through retains executed PROCEDURE guard')
-  text = good('c','say missing()','crexx.c.call.missing','crexx.c.call ')
-  call check(pos('crexx.c.requirevalue',text) > 0 & pos('name="MISSING"',text) > 0,'unresolved function retains reached failure and exact invocation identity')
+  text = good('c','say missing()','crexx.c.dynamic.call.resolve','crexx.c.call.missing')
+  call check(pos('crexx.c.requirevalue',text) > 0 & pos('name="MISSING"',text) > 0 & pos('sourceKey="MISSING"',text) > 0,'unresolved function retains value checking and canonical source identity')
+  call check(pos('quoted="false"',text) > 0 & pos('function="true"',text) > 0 & pos('crexx.c.call ',text) = 0,'unresolved function retains unquoted function-call semantics')
   call bad('g','say length(''a'')' as .binary,'LL_COMPILER_IMPORT:','requires import')
   call bad('g','import nonexistent; say 1' as .binary,'LL_COMPILER_IMPORT:','cannot read nonexistent.rxbin')
   return

@@ -1,6 +1,5 @@
 /* Independent stable invocation, policy and aggregate ledger contracts. */
 options levelb
-import rxfnsb
 import llcdynamicbudget
 import rexxclassicinvocation
 import rexxclassiccontext

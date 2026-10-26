@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Target adapters, never linked into the compiler host. */
 options levelb numeric_classic
-namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue sayconfigured setting digits arguments mainargs append countargs existsarg present absent emptyreturn bifarguments missing missingconfigured requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer parsesource
+namespace llctarget expose literal poolnew poolread poolwrite binaryop unaryop truth sayvalue sayconfigured clausepending setting digits arguments mainargs append countargs existsarg present absent emptyreturn bifarguments missing missingconfigured requirevalue setresult status lengthvalue failuremessage whentruth selectmissing donew docapture dostart doentry doadvance whiletruth untiltruth invalidtransfer parsesource
 import rxfnsb
 import rexxvalue
 import rexxpool
@@ -99,6 +99,19 @@ sayconfigured: procedure = .void
   call config.bindHostContext(bundle as .object)
   call config.sayText(value.asString(1))
   return
+/** Read clause work without consuming an event or constructing a boundary.
+ * The checked caller retains its authoritative context through completion.
+ * Existing target-helper TRACE filtering keeps this query unobserved.
+ * @param context Borrowed current Classic context.
+ * @return True for program EXIT/host failure or a queued CALL condition.
+ */
+clausepending: procedure = .boolean
+  arg context = reference .rexxclassiccontext..RexxClassicContext
+  bundle = dereference context
+  activation = dereference bundle.activation()
+  if activation.programExitRequested() then return 1
+  return activation.hasPendingCallCondition()
+
 arguments: procedure = .RexxActivationArguments
   return .RexxActivationArguments()
 mainargs: procedure = .RexxActivationArguments

@@ -5,10 +5,15 @@ import llir
 import llcir
 import llcrxas
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished inspection_instruction
   arg argv = .string[]
-  if argv[0] <> 2 then return 2
-  instruction = argv[2]
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 4 then do
+    if argv[3] \== 'emit-only' | argv[4] == '' then return 2
+    inspection = argv[4]; argc = 2
+  end
+  if argc <> 2 then return 2
+  instruction = argv[2]; inspection_instruction = instruction
   if instruction \== 'PUSH' & instruction \== 'QUEUE' then return 2
   checks = 0; failures = 0
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
@@ -37,7 +42,13 @@ main: procedure = .int expose checks failures
     call check(loaded.error() == '', 'loaded stale C13 graph: ' || loaded.error())
     if loaded.error() == '' then call admission(argv[1],loaded,0,'loaded C13',diagnostic)
   end
-  say instruction || '_CONTRACTS|checks=' || checks || '|failures=' || failures
+  call noemission('queue-insertion.' || instruction || '.schema')
+  if inspection <> '' then do
+    expected = 3 * 2 + 2 + 1 + 1
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit ' || instruction || ' emission inventory')
+    say instruction || '_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say instruction || '_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -107,16 +118,20 @@ loadgraph: procedure = .llir..module
   storage = dereference graph.storage(); contract = dereference storage.contract()
   return llir..loadbinary(contract,graph.binary())
 
-admission: procedure = .void
+admission: procedure = .void expose inspection_instruction
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, diagnostic = '', limitcontrol = 0
+  caseid = 'queue-insertion.' || inspection_instruction || '.' || changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,selected.status(),selected.error())
   if accepted then call check(selected.status() = 0 & output.bytes() > 0,label || ' admits canonical insertion: ' || selected.error())
   else call check(selected.status() <> 0 & output.bytes() = 0,label || ' refuses atomically: ' || selected.error())
   if diagnostic <> '' then call check(pos(diagnostic,selected.error()) > 0,label || ' retains its specific cause: ' || selected.error())
   call check(bincompare(saved,graph.binary()) = 0,label || ' preserves the input graph')
   if limitcontrol & accepted & selected.status() = 0 then do
     previous = output.text()
+    call emissionstart(caseid || '.limited')
     limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+    call emissionfinish(caseid || '.limited',reference graph,reference empty,0,limited.status(),limited.error())
     call check(limited.status() <> 0 & pos('LL_COMPILER_LIMIT:',limited.error()) > 0 & empty.bytes() = 0,'bounded refusal publishes no partial insertion output')
     call check(output.text() == previous & bincompare(saved,graph.binary()) = 0,'bounded refusal preserves prior owned output and graph')
   end
@@ -169,4 +184,47 @@ absent: procedure = .void
   arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
   draft = block.operation(contract.operation('crexx.c.return.absent'),origin)
   finished = draft.finish(); call block.returnvalue(finished.result(),origin)
+  return
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
   return

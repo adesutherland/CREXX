@@ -9,16 +9,25 @@ import llcrxas
 import llcbifs
 import llcompilercontracts
 import llbinmeta
+import llcprocedureprotocol
+import llirgraph
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished
   arg argv = .string[]
-  if argv[0] < 1 | argv[0] > 2 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc >= 3 then do
+    if argv[argc - 1] \== 'emit-only' | argv[argc] == '' then return 2
+    inspection = argv[argc]; argc = argc - 2
+  end
+  if argc < 1 | argc > 2 then return 2
   checks = 0; failures = 0
   mode = .int; graph = .llir..module
   call catalogue(argv[1])
   call signaturetypes()
   call sourcecontract()
   call schemacontract()
+  call noemission('call.catalogue-source-schema')
+  call packetproofs(argv[1])
   do mode = 1 to 5
     call forgedschema(argv[1],mode)
   end
@@ -38,13 +47,23 @@ main: procedure = .int expose checks failures
     end
   end
   graph = fixture(1); saved = graph.binary()
+  call emissionstart('call.prior-output')
   selected = .llcrxas..compilation(graph,argv[1]); previous = selected.output(); previous_text = previous.text()
+  call emissionfinish('call.prior-output',reference graph,reference previous,1,selected.status(),selected.error())
+  call emissionstart('call.limited-output')
   limited = .llcrxas..compilation(graph,argv[1],128); output = limited.output()
+  call emissionfinish('call.limited-output',reference graph,reference output,0,limited.status(),limited.error())
   call check(selected.status() = 0 & previous.bytes() > 0,'previous owned output')
   call check(limited.status() <> 0 & output.bytes() = 0 & pos('LIMIT',limited.error()) > 0,'bounded atomic refusal')
   call check(bincompare(saved,graph.binary()) = 0 & previous.text() == previous_text,'failure preserves input and previous output')
-  if argv[0] = 2 then call fieldindices(argv[1],argv[2],graph,previous)
-  say 'CALL_CONTRACTS|checks=' || checks || '|failures=' || failures
+  if argc = 2 then call fieldindices(argv[1],argv[2],graph,previous)
+  if inspection <> '' then do
+    expected = 6 + 5 + 15 * 2 + 1 + 2 + 2
+    if argc = 2 then expected = expected + 2
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit CALL emission inventory')
+    say 'CALL_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'CALL_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -52,6 +71,68 @@ check: procedure = .void expose checks failures
   checks = checks + 1
   if passed then return
   failures = failures + 1; say 'FAIL|' || label
+  return
+
+packetproofs: procedure = .void
+  arg artifacts = .string
+  mode = .int; opid = .int; root = .int; owner = .int; count = .int
+  do mode = 16 to 21
+    graph = fixture(mode)
+    call check(graph.error() = '', 'packet fixture is generically valid ' || mode || ': ' || graph.error())
+    if graph.error() <> '' then iterate
+    saved = graph.binary()
+    entries = .llcprocedureprotocol..checked(reference graph)
+    indexed_graph = graph; index = .llirgraph..index
+    if mode = 17 then do
+      index = .llirgraph..index(reference indexed_graph)
+      call check(index.valid() & index.matches(reference graph) = 0 & entries.belongs(reference indexed_graph),'same frozen graph revision has a distinct index owner')
+    end
+    else index = .llirgraph..index(reference graph)
+    ready = entries.preparepackets(reference index,1000000,67108864)
+    call check(entries.status() = 0 & ready, 'optional packet proof preserves required admission ' || mode)
+    root = 0; count = 0
+    do opid = 1 to graph.operations()
+      op = graph.operation(opid)
+      if op.name() <> 'crexx.c.arguments.append' then iterate
+      owner = entries.consumingappend(opid); count = count + 1
+      if mode <= 18 then do
+        call check(owner > 0, 'fresh SSA/slot/mixed chain is consuming ' || mode)
+        if root = 0 then root = owner
+        call check(owner = root & entries.packetroot(op.result().id()) = root, 'one owner per packet version ' || mode)
+      end
+      else call check(owner = 0, 'shared/dead-read/foreign-writer chain keeps value semantics ' || mode)
+    end
+    call check(count = 2, 'two independently constructed append operations')
+    call emissionstart('call.packet-' || mode)
+    selected = .llcrxas..compilation(graph,artifacts); output = selected.output(); text = output.text()
+    call emissionfinish('call.packet-' || mode,reference graph,reference output,1,selected.status(),selected.error())
+    call check(selected.status() = 0, 'packet candidate or fallback remains supported ' || mode || ': ' || selected.error())
+    if mode <= 18 then do
+      call check(pos(',llctarget.append(),',text) = 0 & pos(',rexxactivation.rexxactivationarguments.append(),',text) > 0,'fresh chain uses existing mutating append ' || mode)
+    end
+    else call check(pos(',llctarget.append(),',text) > 0,'shared chain retains persistent append ' || mode)
+    call check(bincompare(saved,graph.binary()) = 0,'packet proof and selection preserve the input graph ' || mode)
+  end
+  budget_graph = fixture(18); budget_entries = .llcprocedureprotocol..checked(reference budget_graph)
+  budget_index = .llirgraph..index(reference budget_graph)
+  budget_ready = budget_entries.preparepackets(reference budget_index,0,1)
+  call check(budget_ready = 0 & budget_entries.status() = 0,'optional budget decline is not a C admission error')
+  do opid = 1 to budget_graph.operations()
+    if budget_graph.operation(opid).name() = 'crexx.c.arguments.append' then call check(budget_entries.consumingappend(opid) = 0,'declined proof publishes no partial mutation facts')
+  end
+  foreign_storage = dereference budget_graph.storage()
+  foreign_contract = dereference foreign_storage.contract()
+  foreign_graph = llir..loadbinary(foreign_contract,budget_graph.binary())
+  foreign_index = .llirgraph..index(reference foreign_graph)
+  foreign_entries = .llcprocedureprotocol..checked(reference budget_graph)
+  foreign_ready = foreign_entries.preparepackets(reference foreign_index,1000000,67108864)
+  call check(foreign_graph.error() == '' & bincompare(foreign_graph.binary(),budget_graph.binary()) = 0 & foreign_graph.identity() <> budget_graph.identity(),'reloaded identical bytes are a distinct frozen revision')
+  call check(foreign_ready = 0 & foreign_entries.status() = 0,'foreign revision declines optional proof without a C admission error')
+  expired_index = expiredpacketindex(budget_graph)
+  expired_entries = .llcprocedureprotocol..checked(reference budget_graph)
+  expired_ready = expired_entries.preparepackets(reference expired_index,1000000,67108864)
+  call check(expired_index.valid() = 0 & expired_ready = 0 & expired_entries.status() = 0,'expired index declines before owner access')
+  call noemission('call.optional-proof-budget')
   return
 
 /* Independent inventory and namespace rules, checked against physical B metadata.
@@ -227,7 +308,9 @@ forgedschema: procedure = .void
   graph = builder.finish()
   call check(graph.error() = '', 'generic valid unused schema mutation ' || mode)
   if graph.error() = '' then do
+    call emissionstart('call.unused-schema-' || mode)
     saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+    call emissionfinish('call.unused-schema-' || mode,reference graph,reference output,0,backend.status(),backend.error())
     diagnostic = 'incompatible operation'
     if mode = 1 then diagnostic = 'unsupported family version crexx.c'
     call check(backend.status() <> 0 & output.bytes() = 0 & pos(diagnostic,backend.error()) > 0,'strict unused descriptor ' || mode || ': ' || backend.error())
@@ -245,14 +328,21 @@ contracttype: procedure = .int
 fixture: procedure = .llir..module
   arg mode = .int
   packet = .llir..opdraft; result = .llir..opview
+  packet_slot = .llir..slot; snapshot_slot = .llir..slot
+  current_args = .llir..valuehandle; prefix = .llir..valuehandle; payload = .llir..valuehandle; presence = .llir..valuehandle
+  observed = .llir..origin; nth = .int
   registry = .llir..schema(); call llcir..registerfamilies(reference registry)
   contract = registry.finish(); builder = .llir..builder(contract)
   source = 'call LENGTH' || '0A'x || 'return'
+  if mode >= 16 then source = 'call MAX 1,2' || '0A'x || 'call MAX 1' || '0A'x || 'return'
   file = builder.source('call-ir.crexx',source as .binary)
   authored = file.origin(0,11); returning = file.origin(12,18); generated = builder.synthetic('call dispatch')
+  if mode >= 16 then do; authored = file.origin(0,12); observed = file.origin(13,23); returning = file.origin(24,30); end
   fn = builder.function('$MAIN',contract.type('crexx.c.result'))
   ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
   context_slot = fn.slot('$context',contract.type('crexx.c.context')); entry_slot = fn.slot('$entry',contract.type('crexx.g.int64'))
+  if mode = 17 | mode = 18 | mode = 21 then packet_slot = fn.slot('$packet',contract.type('crexx.c.arguments'))
+  if mode = 20 then snapshot_slot = fn.slot('$snapshot',contract.type('crexx.c.arguments'))
   setup = fn.block('entry'); dispatch = fn.block('dispatch'); body = fn.block('body'); invalid = fn.block('invalid')
   call setup.store(context_slot,setup.readarg(1,generated),generated)
   call setup.store(entry_slot,setup.readarg(2,generated),generated); call setup.jump(dispatch,generated)
@@ -267,20 +357,50 @@ fixture: procedure = .llir..module
   draft = body.operation(contract.operation('crexx.c.procedure.consume'),authored)
   call draft.input('context',context); finished = draft.finish()
   draft = body.operation(contract.operation('crexx.c.arguments.empty'),authored); arguments = draft.finish()
+  current_args = arguments.result()
+  if mode >= 16 then do
+    if mode = 17 | mode = 18 | mode = 21 then do
+      call body.store(packet_slot,current_args,generated)
+      if mode <> 18 then current_args = body.load(packet_slot,generated)
+    end
+    do nth = 1 to 2
+      payload = body.constantbytes(contract.type('crexx.c.value'),(nth as .string) as .binary,authored)
+      presence = body.constant(contract.boolean(),'1',authored)
+      draft = body.operation(contract.operation('crexx.c.arguments.append'),authored)
+      call draft.input('arguments',current_args); call draft.input('value',payload); call draft.input('present',presence)
+      arguments = draft.finish()
+      if builder.error() <> '' then return builder.finish()
+      current_args = arguments.result()
+      if nth = 1 then do
+        prefix = current_args
+        if mode = 20 then call body.store(snapshot_slot,prefix,generated)
+      end
+      if mode = 17 | mode = 18 | mode = 21 then do
+        call body.store(packet_slot,current_args,generated)
+        if mode <> 18 then current_args = body.load(packet_slot,generated)
+      end
+    end
+  end
   context = body.load(context_slot,authored)
   if mode = 5 | mode = 7 then context = body.readarg(1,authored)
   origin = authored
   if mode = 8 | mode = 10 then origin = generated
   name = 'LENGTH'
+  if mode >= 16 then name = 'MAX'
   if mode = 2 then name = 'UNKNOWN'
   if mode = 3 then name = 'length'
   if mode = 4 then name = 'LENGTH' || '00'x
   operation = 'crexx.c.bif'
   if mode = 7 | mode = 10 then do; operation = 'crexx.c.call.missing'; name = 'ABSENT'; end
   draft = body.operation(contract.operation(operation),origin)
-  call draft.input('arguments',arguments.result()); call draft.input('context',context); call draft.attribute('name',name as .binary)
+  call draft.input('arguments',current_args); call draft.input('context',context); call draft.attribute('name',name as .binary)
   if operation = 'crexx.c.call.missing' then call draft.attribute('function','00'x)
   finished = draft.finish()
+  if mode = 19 then do
+    draft = body.operation(contract.operation('crexx.c.bif'),observed)
+    call draft.input('arguments',prefix); call draft.input('context',context); call draft.attribute('name','MAX' as .binary)
+    finished = draft.finish()
+  end
   if mode = 11 | mode = 12 | mode = 14 | mode = 15 then do
     packet = body.operation(contract.operation('crexx.c.return.absent'),generated); result = packet.finish()
     origin = generated
@@ -305,6 +425,20 @@ fixture: procedure = .llir..module
     call draft.input('arguments',result.result()); call draft.input('context',context); call draft.attribute('name','UNKNOWN' as .binary)
     finished = draft.finish(); call absent(dead,contract,generated)
   end
+  if mode = 20 | mode = 21 then do
+    packet_dead = fn.block('dead packet observation')
+    if mode = 20 then do
+      current_args = packet_dead.load(snapshot_slot,generated); context = packet_dead.load(context_slot,observed)
+      draft = packet_dead.operation(contract.operation('crexx.c.bif'),observed)
+      call draft.input('arguments',current_args); call draft.input('context',context); call draft.attribute('name','MAX' as .binary)
+      finished = draft.finish()
+    end
+    else do
+      draft = packet_dead.operation(contract.operation('crexx.c.arguments.empty'),generated); arguments = draft.finish()
+      call packet_dead.store(packet_slot,arguments.result(),generated)
+    end
+    call absent(packet_dead,contract,generated)
+  end
   return builder.finish()
 
 absent: procedure = .void
@@ -315,7 +449,9 @@ absent: procedure = .void
 
 admission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string
+  caseid = 'call.' || changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,backend.status(),backend.error())
   if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ': ' || backend.error())
   else call check(backend.status() <> 0 & output.bytes() = 0,label || ' refuses: ' || backend.error())
   call check(bincompare(saved,graph.binary()) = 0,label || ' preserves original graph')
@@ -323,7 +459,7 @@ admission: procedure = .void
 
 /* Forge only the two C-owned index restrictions. The generic reader admits
  * zero and duplicate scalar indices; no envelope or signature is corrupted. */
-fieldindices: procedure = .void
+fieldindices: procedure = .void expose inspection
   arg artifacts = .string, forged = .string, graph = .llir..module, previous = .llir..output
   image = uncompressed(readbinary(artifacts || '/rxfnsc.rxbin'))
   decoder = .llbinmeta..catalog(image,67108864)
@@ -353,7 +489,10 @@ fieldindices: procedure = .void
     decoder = .llbinmeta..catalog(broken,67108864)
     call check(decoder.field(12,'rexxactivation.rexxactivationarguments.values','',4) = index as .string & decoder.error() = '', 'generic-valid field index ' || mode)
     call check(writebinary(forged || '/rxfnsc.rxbin',broken) = <blen>(broken), 'write forged runtime ' || mode)
+    if inspection <> '' then call check(writebinary(inspection || '/call.field-index-' || mode || '.input-rxfnsc.rxbin',broken) = <blen>(broken),'retain exact overwritten metadata input ' || mode)
+    call emissionstart('call.field-index-' || mode)
     backend = .llcrxas..compilation(graph,forged); output = backend.output()
+    call emissionfinish('call.field-index-' || mode,reference graph,reference output,0,backend.status(),backend.error())
     call check(backend.status() <> 0 & output.bytes() = 0 & pos('IMPORT: incompatible Classic argument field indices',backend.error()) > 0, 'C refuses nonpositive or duplicate field index ' || mode || ': ' || backend.error())
     call check(bincompare(saved,graph.binary()) = 0 & previous.text() == previous_text, 'field refusal preserves graph and previous output ' || mode)
   end
@@ -380,3 +519,54 @@ uncompressed: procedure = .binary
   end
   <at..i64>(16) output = <blen>(output)
   return output
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return
+
+/* The returned index keeps only a weak reference to this local module value. */
+expiredpacketindex: procedure = .llirgraph..index
+  arg input = .llir..module
+  local_graph = input
+  local_index = .llirgraph..index(reference local_graph)
+  call check(local_index.valid(),'index is valid before its storage owner expires')
+  return local_index

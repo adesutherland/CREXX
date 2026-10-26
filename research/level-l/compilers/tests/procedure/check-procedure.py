@@ -47,7 +47,7 @@ def check_consume_origin(text, source):
 
 
 def check_fatal_cleanup(text):
-    """Cleanup may call methods, but cannot overwrite the saved event or tag."""
+    """Cleanup restores bindings and preserves the raw event, tag and payload."""
     receivers = set(re.findall(r'^\s*link(?:ref)?\s+([^,\n]+),', unit_body(text), re.M))
     start = text.index('llerror1:')
     suffix = text[start:]
@@ -56,8 +56,7 @@ def check_fatal_cleanup(text):
     detached = set(re.findall(r'^\s*unlink\s+([^\s]+)\s*$', suffix[:first_clear.start()], re.M))
     assert receivers <= detached, ('detach borrowed receivers before clearing fatal temporaries', receivers, detached)
     restored = calls(suffix, 'rexxclassiccontext.rexxclassiccontext.bindpool')
-    formatted = calls(suffix, 'llctarget.failuremessage')
-    assert restored and formatted and restored[0].start() < formatted[0].start(), 'restore binding before formatting fatal message'
+    assert not calls(suffix, 'llctarget.failuremessage'), 'relay the original payload without message formatting'
     relays = re.findall(r'^\s*signalorigin\s+"([A-Z_]+)",([^,\n]+),([^\n]+)', suffix, re.M)
     names = {'CLASSIC_SYNTAX', 'DIVISION_BY_ZERO', 'CONVERSION_ERROR', 'INVALID_ARGUMENTS',
              'OBJECT_NOT_INITIALIZED', 'REFERENCE_INVALID', 'UNICODE_ERROR', 'OUT_OF_RANGE', 'FAILURE'}
@@ -65,13 +64,31 @@ def check_fatal_cleanup(text):
     events = {event.strip() for _, _, event in relays}
     assert len(events) == 1, ('same original raw event for every relay', events)
     event = next(iter(events))
+    payloads = {payload.strip() for _, payload, _ in relays}
+    assert len(payloads) == 1, ('same original payload for every relay', payloads)
+    payload = next(iter(payloads))
     branch = re.search(r'^\s*beq\s+llraise1_1,([^,\n]+),1\s*$', suffix, re.M)
     assert branch, 'saved discriminator selects the original fatal name'
     tag = branch.group(1).strip()
-    before_format = suffix[:formatted[0].start()]
-    for match in re.finditer(r'^\s*call\s+([^,\n]+),', before_format, re.M):
-        assert match.group(1).strip() not in (event, tag), ('cleanup overwrites saved event/discriminator', match.group())
-    assert suffix.index('signalorigin') > formatted[0].start(), 'cleanup/format precedes relay'
+    capture = re.search(r'^\s*linkattr1\s+([^,\n]+),' + re.escape(event) + r',5\s*\n'
+                        r'\s*linkattr1\s+([^,\n]+),\1,5\s*\n'
+                        r'\s*copy\s+' + re.escape(payload) + r',\2\s*\n'
+                        r'\s*unlink\s+\2\s*\n\s*unlink\s+\1\s*\n'
+                        r'\s*null\s+\2\s*\n\s*null\s+\1\s*$', suffix, re.M)
+    assert restored and capture and restored[0].start() < capture.start(), 'restore binding before copying the original raw payload'
+    assert len({event, payload, tag, *capture.groups()}) == 5, 'raw payload transport uses separate borrowed and owned cells'
+    before_clear = suffix[:first_clear.start()]
+    saved_events = re.findall(r'^\s*copy\s+([^,\n]+),' + re.escape(event) + r'\s*$', before_clear, re.M)
+    saved_tags = re.findall(r'^\s*copy\s+([^,\n]+),' + re.escape(tag) + r'\s*$', before_clear, re.M)
+    assert len(saved_events) == len(saved_tags) == 1, 'save the original event and discriminator before cleanup'
+    saved_event = saved_events[0].strip(); saved_tag = saved_tags[0].strip()
+    after_restore = suffix[restored[0].end():capture.start()]
+    for destination, saved in ((event, saved_event), (tag, saved_tag)):
+        assert re.search(r'^\s*copy\s+' + re.escape(destination) + ',' + re.escape(saved) + r'\s*$', after_restore, re.M), ('restore the saved fatal value after binding cleanup', destination)
+    before_capture = suffix[:capture.start()]
+    for match in re.finditer(r'^\s*call\s+([^,\n]+),', before_capture, re.M):
+        assert match.group(1).strip() not in (event, tag, saved_event, saved_tag), ('cleanup overwrites saved event/discriminator', match.group())
+    assert suffix.index('signalorigin') > capture.end(), 'cleanup and raw payload copy precede relay'
 
 
 def main():
@@ -113,11 +130,15 @@ def main():
             provider_dir = directory / 'providers'
             provider_dir.mkdir()
             for provider in providers:
-                shutil.copy2(build / 'bin' / (provider + '.rxplugin'), provider_dir / (provider + '.rxplugin'))
+                name = provider + '.rxplugin'
+                source = build / 'bin' / name
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / name
+                shutil.copy2(source, provider_dir / name)
             return vm
 
         host = work / 'C compiler host'
-        host_vm = stage(host, ('rxfs',))
+        host_vm = stage(host, ('rxfs', 'rxcontract'))
         compiler = host / 'llrxc-c-linked.rxbin'
         shutil.copy2(backend / compiler.name, compiler)
         application = work / 'static application'
@@ -218,7 +239,7 @@ def main():
             cases = [('main', "say 'before'\np: procedure\nsay 'UNREACHED'\n", b'17.1', b'CLASSIC_SYNTAX', 3),
                      ('second', "call p\nexit 0\np: procedure\nsay 'before'\nq: procedure\nsay 'UNREACHED'\n", b'17.1', b'CLASSIC_SYNTAX', 6)]
             for name, instruction in (('nop', 'nop'), ('options', 'options'), ('literal-options', "options 'held'"),
-                                      ('empty-arg', 'arg'), ('comma-arg', 'arg ,,,'), ('group', 'do; end')):
+                                      ('empty-arg', 'arg'), ('comma-arg', 'arg ,,,;'), ('group', 'do; end')):
                 cases.append((name, "say 'before'\ncall p\nexit 0\np:\n" + instruction + "\nq: procedure\nsay 'UNREACHED'\n", b'17.1', b'CLASSIC_SYNTAX', 7))
             cases.append(('private-divide', "call p\nexit 0\np: procedure expose SHARED\nSHARED = 'written'\nsay 'before'\nBAD = 1 / 0\nsay 'UNREACHED'\n", b'42.3', b'CLASSIC_SYNTAX', 7))
             cases.append(('nested-group', "say 'before'\ncall p\nexit 0\np:\ndo\nINNER:\nprocedure\nsay 'UNREACHED'\nend\nreturn\n", b'17.1', b'CLASSIC_SYNTAX', 8))
@@ -322,16 +343,21 @@ def main():
             run('B caller link', [tool('rxlink'), '-c', control], silent=True)
             completed = run('direct B caller restoration', [target_vm, '--no-autoload', linked.with_suffix('.rxbin')], cwd=application)
             assert re.fullmatch(rb'PROCEDURE_HOST\|checks=\d+\|failures=0\r?\n', completed.stdout) and not completed.stderr, completed
-            generated_origin = b'context-c.crexx: generated code in $MAIN'
-            for name, signal, detail, location in (
-                    ('wrong-positive', b'INVALID_ARGUMENTS', b'activation does not match entry kind', generated_origin),
-                    ('wrong-zero', b'INVALID_ARGUMENTS', b'activation does not match entry kind', generated_origin),
-                    ('unknown-entry', b'INVALID_ARGUMENTS', b'invalid source-unit entry identity', generated_origin),
-                    ('expired-pool', b'REFERENCE_INVALID', b'Classic pool reference is not live', b'context-c.crexx: entering $MAIN'),
-                    ('expired-config', b'REFERENCE_INVALID', b'Classic configuration reference is not live', b'context-c.crexx:5:')):
+            # Raw faults retain their payload and report the authored B caller;
+            # generated dispatch/prologue locations are not authored C clauses.
+            for name, signal, detail, caller_line, location in (
+                    ('wrong-positive', b'INVALID_ARGUMENTS', b'activation does not match entry kind', 26, None),
+                    ('wrong-zero', b'INVALID_ARGUMENTS', b'activation does not match entry kind', 32, None),
+                    ('unknown-entry', b'INVALID_ARGUMENTS', b'invalid source-unit entry identity', 38, None),
+                    ('expired-pool', b'REFERENCE_INVALID', b'Classic pool reference is not live', 45, None),
+                    ('expired-config', b'REFERENCE_INVALID', b'Classic configuration reference is not live', 52, b'context-c.crexx:5:')):
                 completed = run(name, [target_vm, '--no-autoload', linked.with_suffix('.rxbin'), '-a', name], failure=True, cwd=application)
                 assert not completed.stdout and signal in completed.stderr and detail in completed.stderr, (name, completed.stdout, completed.stderr)
-                assert location in completed.stderr, (name, completed.stderr)
+                assert completed.stderr.count(b'PANIC:') == 1, (name, completed.stderr)
+                caller_location = f'source: host.crexx:{caller_line}:'.encode()
+                assert caller_location in completed.stderr, (name, caller_location, completed.stderr)
+                if location:
+                    assert location in completed.stderr, (name, completed.stderr)
                 assert b'UNREACHED' not in completed.stdout and b'Assertion' not in completed.stderr
 
         if args.phase in ('all', 'contracts'):

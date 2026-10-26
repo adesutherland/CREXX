@@ -5,6 +5,7 @@ the source, expected output, host and refusals belong to each instruction.
 Configured host failures, TRACE and platform delivery remain STEP07/08.
 """
 import argparse
+import hashlib
 from collections import Counter
 import json
 import os
@@ -124,9 +125,13 @@ def main(instruction, fixtures):
     parser.add_argument('--mode', choices=('opt', 'noopt'), default='opt')
     parser.add_argument('--vm', choices=('rxbvm', 'rxtvm'), default='rxbvm')
     parser.add_argument('--ir', choices=('on', 'off'), default='on')
-    parser.add_argument('--phase', choices=('all', 'source', 'host', 'fatal', 'refusals', 'shapes', 'contracts'), default='all')
+    parser.add_argument('--phase', choices=('all', 'emit', 'source', 'host', 'fatal', 'refusals', 'shapes', 'contracts'), default='all')
     parser.add_argument('--inspect', type=Path)
-    args = parser.parse_args(); build = args.build.resolve()
+    args = parser.parse_args()
+    emit = args.phase == 'emit'
+    if emit and args.inspect is None:
+        parser.error('--phase emit requires --inspect')
+    build = args.build.resolve()
     backend = build / 'research/level-l/compilers/backend' / args.mode
     suffix = '.exe' if os.name == 'nt' else ''
     libraries = ('llctarget', 'library', 'rxfnsc', 'classlib', 'rxunicode-core')
@@ -148,10 +153,14 @@ def main(instruction, fixtures):
                 shutil.copy2(dll, directory / dll.name)
             providers = directory / 'providers'; providers.mkdir()
             for plugin in plugins:
-                shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
+                name = plugin + '.rxplugin'
+                source = build / 'bin' / name
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / name
+                shutil.copy2(source, providers / name)
             return directory, vm
 
-        host, host_vm = stage('C compiler host', ('rxfs',))
+        host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
         application, target_vm = stage('static application', ('rxfs', 'rxcstream'))
         compiler = host / 'llrxc-c-linked.rxbin'; shutil.copy2(backend / compiler.name, compiler)
         empty_path = work / 'empty PATH'; empty_path.mkdir()
@@ -170,22 +179,85 @@ def main(instruction, fixtures):
             return result
 
         def compile_c(source, output, *, failure=False):
+            emission_start(source)
             return run('compile ' + source.name,
                        [host_vm, '--no-autoload', compiler, '-a', *(['-n'] if args.ir == 'off' else []),
                         '-i', runtime, '-o', output, source], failure=failure, silent=not failure, cwd=host)
 
         def inspect(path, label):
-            if args.inspect:
+            if args.inspect and not emit:
                 args.inspect.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(path, args.inspect / f'{name}-{label}-{args.mode}-{args.ir}-{args.vm}.rxas')
 
-        if args.phase in ('all', 'source', 'host', 'fatal', 'shapes'):
+        # Emit-only capture stays local to this recipe and never replaces a tool.
+        def emission_hash(path):
+            return hashlib.sha256(path.read_bytes()).hexdigest()
+
+        if emit:
+            emission_owner = instruction.lower()
+            emission_dir = args.inspect.resolve() / f'{emission_owner}-{args.mode}-{args.ir}-{args.vm}'
+            emission_dir.mkdir(parents=True)  # Refuse reuse of an earlier collection.
+            emission_records = []
+            emission_derived_records = []
+            emission_started = []
+
+        def emission_start(source):
+            if emit:
+                case = source.stem
+                assert case not in emission_started, ('duplicate request identity', case)
+                emission_started.append(case)
+                print(f'START|{emission_owner}.{case}')
+
+        def emission_finish(source, output, completed, *, refused=False):
+            case = source.stem
+            assert case in emission_started and not any(row['case'] == case for row in emission_records)
+            assert (completed.returncode != 0) == refused
+            data = source.read_bytes()
+            (emission_dir / (case + '.source')).write_bytes(data)
+            (emission_dir / (case + '.stdout')).write_bytes(completed.stdout)
+            (emission_dir / (case + '.stderr')).write_bytes(completed.stderr)
+            record = dict(case=case, logical=source.name, source_sha256=hashlib.sha256(data).hexdigest(),
+                          argv=completed.args, status=completed.returncode,
+                          stdout_sha256=hashlib.sha256(completed.stdout).hexdigest(),
+                          stderr_sha256=hashlib.sha256(completed.stderr).hexdigest(),
+                          disposition='REFUSAL' if refused else 'EMITTED')
+            if refused:
+                # The owner has already checked exact diagnostics and the prior-output sentinel.
+                (emission_dir / (case + '.previous')).write_bytes(output.read_bytes())
+                record['previous_sha256'] = emission_hash(output)
+            else:
+                assert output.stat().st_size > 0
+                shutil.copyfile(output, emission_dir / (case + '.rxas'))
+                record['rxas_sha256'] = emission_hash(output)
+            emission_records.append(record)
+            print(f"{record['disposition']}|{emission_owner}.{case}")
+
+        def emission_derived(base, exported):
+            assert len(emission_derived_records) == 0
+            assert emission_hash(base) == next(row['rxas_sha256'] for row in emission_records if row['disposition'] == 'EMITTED')
+            shutil.copyfile(exported, emission_dir / 'entry-export.rxas')
+            emission_derived_records.append(dict(case='entry-export', base_sha256=emission_hash(base),
+                                                 rxas_sha256=emission_hash(exported), transform='existing-entry-export'))
+            print(f'DERIVED|{emission_owner}.entry-export')
+
+        def export_entry(text):
+            exported = application / 'source-exported.rxas'
+            text, headers = re.subn(r'^(llf1\(\) \.locals=\d+)(\s*)$', rf'\1 .expose={name}fixture.run\2', text, count=1, flags=re.M)
+            text, metadata = re.subn(r'^(\s*\.meta )"llprogram\.\$MAIN"(?==)', rf'\1"{name}fixture.run"', text, count=1, flags=re.M)
+            assert headers == metadata == 1, 'one test-only exported entry0'
+            exported.write_text(text, encoding='utf-8'); inspect(exported, 'exported')
+            return exported
+
+        if args.phase in ('all', 'emit', 'source', 'host', 'fatal', 'shapes'):
             source = work / 'source-c.crexx'; data = (fixtures / source.name).read_bytes()
             source.write_bytes(data.replace(b'\n', b'\r\n') if args.mode == 'noopt' else data)
-            assembly = application / 'source.rxas'; compile_c(source, assembly)
+            assembly = application / 'source.rxas'; compiled = compile_c(source, assembly)
             inspect(assembly, 'source'); text = assembly.read_text()
             assert str(work) not in text and str(build) not in text, 'stable logical source identity'
             shapes(instruction, text, source)
+            if emit:
+                emission_finish(source, assembly, compiled)
+                emission_derived(assembly, export_entry(text))
             if args.phase in ('all', 'source'):
                 run('source assemble', [tool('rxas'), *(['-n'] if args.mode == 'noopt' else []), assembly], silent=True)
                 linked = application / 'source-linked'
@@ -195,11 +267,7 @@ def main(instruction, fixtures):
                 expected = (fixtures / 'source-c.expected').read_bytes().replace(b'\r\n', b'\n')
                 assert result.stdout.replace(b'\r\n', b'\n') == expected and not result.stderr, (result.stdout, result.stderr, expected)
             if args.phase in ('all', 'host', 'fatal'):
-                exported = application / 'source-exported.rxas'
-                text, headers = re.subn(r'^(llf1\(\) \.locals=\d+)(\s*)$', rf'\1 .expose={name}fixture.run\2', text, count=1, flags=re.M)
-                text, metadata = re.subn(r'^(\s*\.meta )"llprogram\.\$MAIN"(?==)', rf'\1"{name}fixture.run"', text, count=1, flags=re.M)
-                assert headers == metadata == 1, 'one test-only exported entry0'
-                exported.write_text(text, encoding='utf-8'); inspect(exported, 'exported')
+                exported = export_entry(text)
                 run('exported assemble', [tool('rxas'), '-n', exported], silent=True)
                 imports = work / 'B caller imports'; imports.mkdir()
                 for library in runtime.glob('*.rxbin'):
@@ -234,7 +302,7 @@ def main(instruction, fixtures):
             expected = instruction.encode() + rb'_CONTRACTS\|checks=\d+\|failures=0\r?\n'
             assert re.fullmatch(expected, result.stdout) and not result.stderr, (result.stdout, result.stderr)
 
-        if args.phase in ('all', 'refusals'):
+        if args.phase in ('all', 'emit', 'refusals'):
             output = application / 'prior.rxas'; prior = b'unchanged prior output\n'; output.write_bytes(prior)
             cases = json.loads((fixtures / 'refusals.json').read_text())
             for index, case in enumerate(cases, 1):
@@ -247,4 +315,24 @@ def main(instruction, fixtures):
                 line, column, offset = map(int, location.groups())
                 assert data.rfind(name.encode()) <= offset <= len(data) and position(data, offset) == (line, column), (case['purpose'], 'original byte/scalar position', line, column, offset, diagnostic)
                 assert output.read_bytes() == prior and not Path(str(output) + '.llrxc-stage').exists(), (case['purpose'], 'failed request is atomic')
+                if emit: emission_finish(source, output, result, refused=True)
+        if emit:
+            assert len(emission_records) == 3 + 1 and len(emission_started) == 3 + 1
+            assert sum(row['disposition'] == 'EMITTED' for row in emission_records) == 1
+            assert sum(row['disposition'] == 'REFUSAL' for row in emission_records) == 3
+            assert len(emission_derived_records) == 1
+            identity = dict(kind='EMISSION_ONLY', owner=emission_owner, mode=args.mode,
+                            producer_vm=args.vm, semantic_ir=args.ir, dialect='C',
+                            adapter_sha256=emission_hash(Path(__file__)),
+                            entry_sha256=emission_hash(fixtures / ('check-' + emission_owner + '.py')),
+                            compiler_sha256=emission_hash(compiler), vm_sha256=emission_hash(host_vm),
+                            imports={path.name: emission_hash(path) for path in sorted(runtime.glob('*.rxbin'))},
+                            providers={path.name: emission_hash(path) for path in sorted((host / 'providers').glob('*')) if path.is_file()},
+                            host_libraries={path.name: emission_hash(path) for path in sorted(host.glob('*.dll'))},
+                            bindings=[], routine_export='', host_export='',
+                            limits=dict(frontend_bytes='1000000', nesting='512', output_bytes='67108864', registers='65536'),
+                            requests=emission_records, derived=emission_derived_records)
+            (emission_dir / 'identity.json').write_text(json.dumps(identity, indent=2) + '\n', encoding='utf-8')
+            print(f'{emission_owner.upper()}_EMISSION|mode={args.mode}|vm={args.vm}|ir={args.ir}|requests={len(emission_records)}|derived=1|EMISSION')
+            return
     print(f'{instruction}_CHECK|mode={args.mode}|vm={args.vm}|ir={args.ir}|phase={args.phase}|commands={commands}|PASS')

@@ -20,7 +20,7 @@ backward ONE TWO THREE|ONE TWO THREE
 zero ONE|TWO THREE|ONE TWO THREE
 relative AA|BB CC
 empty-pattern ONE TWO THREE|
-unicode AÉ|🙂B|Ÿ|µ|ß
+unicode AÉ|🙂B|ÿ|µ|ß
 nul 1|3
 raw-unicode aé🙂b|ÿ|µ|ß
 raw-nul 1

@@ -69,16 +69,23 @@ def main():
             provider_dir = directory / 'providers'
             provider_dir.mkdir()
             for provider in providers:
-                shutil.copy2(build / 'bin' / (provider + '.rxplugin'),
-                             provider_dir / (provider + '.rxplugin'))
+                name = provider + '.rxplugin'
+                source = build / 'bin' / name
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / name
+                shutil.copy2(source, provider_dir / name)
+            assert {path.name for path in provider_dir.iterdir()} == {
+                provider + '.rxplugin' for provider in providers}
             return vm
 
         host = work / 'C compiler host'
-        host_vm = stage(host, ('rxfs',))
+        host_vm = stage(host, ('rxfs', 'rxcontract'))
         image = host / 'llrxc-c-linked.rxbin'
         shutil.copy2(backend / image.name, image)
         target = work / 'static application'
         target_vm = stage(target, ('rxfs', 'rxcstream'))
+        assert not (target / 'providers' / 'rxcontract.rxplugin').exists(), (
+            'static application excludes the compiler metadata provider')
         empty_path = work / 'empty PATH'
         empty_path.mkdir()
         env = dict(os.environ, PATH=str(empty_path))

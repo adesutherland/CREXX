@@ -8,8 +8,9 @@ freezing register allocation. Runtime tests own values, errors and lifetimes.
 
 The clean llctarget surface is checked here independently of generated C.
 Generated caller ownership and same-frame numeric installation are checked by
-the C-only end-to-end harness. Argument/result transport and BIF configuration
-getters retain their existing value-copy costs; this is not a zero-copy claim.
+the C-only end-to-end harness. Argument/result transport, BIF configuration
+getters and the checked host-context bundle snapshot retain their existing
+value-copy costs; activation, pool and configuration owners remain borrowed.
 """
 
 import argparse
@@ -136,19 +137,40 @@ def reference_flow(procedure, attributes):
     return validated, writes, returns
 
 
+def attribute_borrows(procedure, attributes):
+    slots = {slot: name for name, (_, slot) in attributes.items()}
+    links, borrowed = {}, {}
+    for op, operands in procedure.instructions:
+        parts = operands.split(',')
+        if op == 'linkattr1':
+            links[parts[0]] = slots.get(int(parts[2]))
+        elif op == 'linkref':
+            borrowed[parts[0]] = links.get(parts[1])
+        elif op == 'unlink':
+            links.pop(parts[0], None)
+    return borrowed
+
+
 def check_context(procedures, attributes):
     expected_attributes = {
         'activation_ref': 'reference .rexxactivation..rexxactivationarguments',
         'pool_ref': 'reference .rexxpool..rexxvariablepool',
         'config_ref': 'reference .rexxclassicconfig..rexxclassicconfig',
+        'zz_parse_observations': '.boolean',
     }
     require({name: kind for name, (kind, _) in attributes.items()} == expected_attributes,
-            'context: expected only the three approved reference fields')
-    expected = {'§factory', 'activation', 'pool', 'config', 'bindpool'}
+            'context: expected three borrowed references and the observation flag')
+    require({name: slot for name, (_, slot) in attributes.items()}
+            == {'activation_ref': 1, 'config_ref': 2, 'pool_ref': 3, 'zz_parse_observations': 4},
+            'context: observation flag must preserve existing reference-field ordinals')
+    primitives = {'§factory', 'activation', 'pool', 'config', 'bindpool'}
+    observers = {'enableparseobservations', 'parseobservations'}
+    expected = primitives | observers | {'readsymbol'}
     public = {p.export.removeprefix(CONTEXT + '.'): p for p in procedures.values() if p.export}
     require(set(public) == expected and len(procedures) == len(expected),
-            'context: expected exactly five approved callables and no extra implementation')
-    for p in procedures.values():
+            'context: expected exactly the eight approved callables and no extra implementation')
+    for name in primitives | observers:
+        p = public[name]
         require(not p.calls(), f'{p.name}: bundle must not call constructors or other services')
         require(not any(op in {'mkref', 'deref', 'setref'} for op, _ in p.instructions),
                 f'{p.name}: bundle must copy existing reference payloads, not create owners or snapshots')
@@ -166,6 +188,17 @@ def check_context(procedures, attributes):
             and len(writes) == 3, 'context: factory must store each supplied reference payload exactly once')
     require(max(index for index, _ in validated) < min(index for index, _, _ in writes),
             'context: factory publishes bindings before all references are validated')
+    flag_slot = attributes['zz_parse_observations'][1]
+    constants, defaults = {}, []
+    for index, (op, operands) in enumerate(factory.instructions):
+        parts = operands.split(',')
+        if op == 'load':
+            constants[parts[0]] = parts[1]
+        elif op == 'isetattr1' and int(parts[1]) == flag_slot:
+            defaults.append((index, constants.get(parts[2], parts[2])))
+    require(len(defaults) == 1 and defaults[0][1] == '0'
+            and max(index for index, _ in validated) < defaults[0][0],
+            'context: validated factory must initialize observations disabled')
     signal_returns(factory, 3)
     for name in ['activation', 'pool', 'config']:
         p = public[name]
@@ -189,6 +222,60 @@ def check_context(procedures, attributes):
     require(validated[0][0] < writes[0][0], 'context: bindPool changes binding before validation')
     signal_returns(p, 1)
 
+    for name, signature in {'enableparseobservations': ('.void', 'enabled=.boolean'),
+                            'parseobservations': ('.boolean', '')}.items():
+        p = public[name]
+        require((p.result, p.arguments) == signature, f'{p.name}: observation signature changed')
+        accesses = [(op, int(args.split(',')[2 if op == 'linkattr1' else 1]))
+                    for op, args in p.instructions if op in {'linkattr1', 'isetattr1'}]
+        expected_op = 'isetattr1' if name == 'enableparseobservations' else 'linkattr1'
+        require(accesses == [(expected_op, flag_slot)], f'{p.name}: access only the observation flag')
+        require(not any(op == 'linkref' for op, _ in p.instructions), f'{p.name}: must not borrow another owner')
+    setter = public['enableparseobservations']
+    receiver, enabled = (setter.variables[name][1] for name in ('§this', 'enabled'))
+    require(('isetattr1', f'{receiver},{flag_slot},{enabled}') in setter.instructions,
+            'context: observation setter stores the supplied Boolean')
+    require(reference_flow(public['parseobservations'], attributes) == ([], [], ['zz_parse_observations']),
+            'context: observation getter returns the stored flag without mutation')
+
+    p = public['readsymbol']
+    require((p.result, p.arguments) == ('.rexxvalue..rexxvalue', 'name=.string'),
+            'context: readSymbol signature changed')
+    borrowed = attribute_borrows(p, attributes)
+    owner_registers = {p.variables[name][1] for name in ('current_pool', 'current_activation')}
+    require(borrowed == {p.variables['current_pool'][1]: 'pool_ref',
+                         p.variables['current_activation'][1]: 'activation_ref'},
+            'readSymbol: borrow the live pool and activation bindings')
+    require(not any(op in {'mkref', 'deref', 'setref'} or
+                    (op == 'copy' and args.split(',')[0] in owner_registers)
+                    for op, args in p.instructions), 'readSymbol: no owner construction or snapshots')
+    targets = ['§rexxpool.rexxvariablepool.' + name
+               for name in ('resolvesymbolname', 'resolvedhasvalue')]
+    targets += ['§rexxclassicconditionevent.rexxclassicconditionevent.§factory',
+                '§rexxpool.rexxvariablepool.resolvedvalue']
+    policy_target = '§rexxactivation.rexxactivationarguments.signalpolicy'
+    require({target for _, target in p.calls()} <= set(targets) | {policy_target},
+            'readSymbol: delegate only to the shared pool, policy and condition event')
+    positions = [p.call_index(target) for target in targets]
+    require(positions == sorted(positions), 'readSymbol: resolve once before presence, event and value')
+    policy = [index for index, target in p.calls() if target == policy_target]
+    policy += [index for index, (op, args) in enumerate(p.instructions)
+               if op == 'minlinkattr1' and args.split(',')[-1] == '6'
+               and p.sources[index] is not None
+               and Path(p.sources[index][0]).name == 'RexxActivationArguments.crexx'
+               and 'signal_policy' in p.sources[index][2]]
+    require(len(policy) == 1 and positions[0] < policy[0] < positions[1],
+            'readSymbol: use the shared NOVALUE policy before testing presence')
+    require(sum(op in {'brf', 'brt'} for op, _ in p.instructions[policy[0]:positions[2]]) >= 2,
+            'readSymbol: condition event is gated by policy and absent final value')
+    resolved = p.variables['resolved'][1]
+    require(p.instructions[positions[0]][1].split(',')[0] == resolved
+            and all(resolved in p.instructions[index][1].split(',') for index in positions[1:]),
+            'readSymbol: presence, event and value share the once-resolved name')
+    event = p.instructions[positions[2]][1].split(',')[0]
+    require(('signal', f'"CLASSIC_CONDITION",{event}') in p.instructions,
+            'readSymbol: relay the owned shared condition event')
+
 
 def check_adapter(procedures):
     value, context = '.rexxvalue', 'reference ' + CONTEXT_TYPE
@@ -209,6 +296,7 @@ def check_adapter(procedures):
         'untiltruth': ('.int', f'value={value},context={context}'),
         'setting': ('.void', f'operation=.string,context={context},value={value}'),
         'digits': ('.rexxvalue..rexxvalue', f'context={context}'),
+        'clausepending': ('.boolean', f'context={context}'),
         'parsesource': ('.rexxvalue..rexxvalue',
                         f'context={context},kind=.string,ordinal=.int,caller_source=.string,'
                         'source_state=reference .rexxclassicbifs..rexxbifcallcontext'),
@@ -219,16 +307,20 @@ def check_adapter(procedures):
     require({p.export for p in procedures.values() if p.export}
             == {'llctarget.' + name for name in signatures} | {
                 'llctarget.' + name for name in ('literal', 'poolnew', 'poolread', 'poolwrite',
-                    'sayvalue', 'arguments', 'mainargs', 'append', 'present', 'absent', 'emptyreturn', 'bifarguments', 'missing',
+                    'sayvalue', 'sayconfigured', 'arguments', 'mainargs', 'append', 'present', 'absent', 'emptyreturn', 'bifarguments', 'missing', 'missingconfigured',
                     'requirevalue', 'setresult', 'status', 'failuremessage')},
             'adapter: expected exactly the clean context and packet/helper surface')
-    helpers = {'literal', 'poolnew', 'poolread', 'poolwrite', 'sayvalue',
-               'arguments', 'mainargs', 'append', 'present', 'absent', 'emptyreturn', 'bifarguments', 'missing',
+    helpers = {'literal', 'poolnew', 'poolread', 'poolwrite', 'sayvalue', 'sayconfigured',
+               'arguments', 'mainargs', 'append', 'present', 'absent', 'emptyreturn', 'bifarguments', 'missing', 'missingconfigured',
                'requirevalue', 'setresult', 'status', 'failuremessage'}
-    implementation = set(signatures) | helpers | {'bifcontext'}
+    implementation = set(signatures) | helpers | {'bifcontext', 'lostdigitscheck'}
     require(set(procedures) - implementation in (set(), {'bad'})
             and implementation <= set(procedures),
             'adapter: unexpected implementation or executable main')
+    lostdigits = procedures['lostdigitscheck']
+    require(lostdigits.export is None and lostdigits.result == '.void'
+            and lostdigits.arguments == f'value={value},context={context}',
+            'lostdigitscheck: expected the private value/context condition helper')
     # Native B opt inlines this unchanged helper; noopt retains its body.
     if 'bad' in procedures:
         p = procedures['bad']
@@ -256,24 +348,43 @@ def check_adapter(procedures):
     require(not set(all_calls) & forbidden, 'adapter: owner/default-context construction or legacy BIF dispatch')
     require(all_calls.count(BIF + '.§factory.expression') == 1,
             'adapter: expected one shared expression-context construction site')
+    helper = procedures['bifcontext']
+    host_binding = '§rexxclassicconfig.rexxclassicconfig.bindhostcontext'
+    binding = helper.call_index(host_binding)
+    binding_operands = helper.instructions[binding][1].split(',')
+    require(helper.instructions[binding][0] == 'settpcall' and len(binding_operands) == 5,
+            'bifcontext: host binding must receive one explicit context value')
+    bundle = helper.variables['bundle'][1]
+    incoming = helper.variables['context'][1]
+    borrows = [index for index, instruction in enumerate(helper.instructions)
+               if instruction == ('linkref', f'{bundle},{incoming}')]
+    actual = binding_operands[3]
+    require(actual not in {register for _, register in helper.variables.values()},
+            'bifcontext: host snapshot transport must not replace a named value or owner')
+    transports = [index for index, instruction in enumerate(helper.instructions)
+                  if instruction == ('copy', f'{actual},{bundle}')]
+    require(len(borrows) == len(transports) == 1 and borrows[0] < transports[0] < binding,
+            'bifcontext: copy only the incoming borrowed bundle into the host snapshot argument')
+    transport = transports[0]
+    require(not any(actual in operands.split(',')
+                    for _, operands in helper.instructions[transport + 1:binding]),
+            'bifcontext: host snapshot argument must reach its binding without other use or mutation')
     for p in borrowed.values():
         require(not any(op == 'deref' for op, _ in p.instructions), f'{p.name}: live-owner snapshot introduced')
         owner_registers = {register for kind, register in p.variables.values()
                            if kind in {CONTEXT_TYPE, '.rexxactivation..rexxactivationarguments',
                                        '.rexxpool..rexxvariablepool', '.rexxclassicconfig..rexxclassicconfig'}}
         require(not any(op == 'copy' and operands.split(',')[-1] in owner_registers
-                        for op, operands in p.instructions), f'{p.name}: copied live owner value')
+                        and not (p is helper and index == transport)
+                        for index, (op, operands) in enumerate(p.instructions)),
+                f'{p.name}: copied live owner value')
     for name in ['binaryop', 'unaryop', 'truth', 'whentruth', 'digits',
                  'donew', 'docapture', 'dostart', 'doentry', 'doadvance', 'whiletruth', 'untiltruth']:
         require(not any(op in {'numsci', 'numeng', 'setnumdgts', 'setnumfuz', 'setnumfrm'}
                         for op, _ in procedures[name].instructions), f'{name}: inherited numeric frame reset')
-    helper = procedures['bifcontext']
     require(helper.arguments == 'name=.string,context=' + context,
             'bifcontext: private helper must also borrow the authoritative bundle')
-    helper_context_register = helper.variables['context'][1]
-    require(any(op == 'linkref' and args.split(',')[1] == helper_context_register
-                for op, args in helper.instructions), 'bifcontext: authoritative bundle not borrowed')
-    ordered = [BIF + '.§factory.expression', '§' + CONTEXT + '.config', BIF + '.setconfig',
+    ordered = [BIF + '.§factory.expression', '§' + CONTEXT + '.config', host_binding, BIF + '.setconfig',
                '§' + CONTEXT + '.pool', BIF + '.setcallerpool',
                '§' + CONTEXT + '.activation', BIF + '.setcalleractivation']
     positions = [helper.call_index(target) for target in ordered]

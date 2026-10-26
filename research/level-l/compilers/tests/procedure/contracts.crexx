@@ -5,15 +5,22 @@ import llir
 import llirservices
 import llcir
 import llcparse
+import llcprocedureprotocol
 import llcrxas
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
   checks = 0; failures = 0
   mode = .int; graph = .llir..module
   call astcontract()
   call schemacontract()
+  call noemission('procedure.source-schema')
   do mode = 1 to 6
     call forgedschema(argv[1],mode)
   end
@@ -35,13 +42,23 @@ main: procedure = .int expose checks failures
       if changed.status() = 'keep' | changed.status() = 'changed' then call admission(argv[1],changed.result(),1,'transformed ' || mode)
     end
   end
+  call expansioncontracts()
   graph = fixture(1); saved = graph.binary()
+  call emissionstart('procedure.prior-output')
   selected = .llcrxas..compilation(graph,argv[1]); previous = selected.output(); previous_text = previous.text()
+  call emissionfinish('procedure.prior-output',reference graph,reference previous,1,selected.status(),selected.error())
   call check(selected.status() = 0 & previous.bytes() > 0,'owned output before limit control: ' || selected.error())
+  call emissionstart('procedure.limited-output')
   limited = .llcrxas..compilation(graph,argv[1],128); output = limited.output()
+  call emissionfinish('procedure.limited-output',reference graph,reference output,0,limited.status(),limited.error())
   call check(limited.status() <> 0 & pos('LIMIT',limited.error()) > 0 & output.bytes() = 0,'bounded output refusal is empty')
   call check(bincompare(saved,graph.binary()) = 0 & previous.text() == previous_text,'limit refusal preserves graph and previous owned output')
-  say 'PROCEDURE_CONTRACTS|checks=' || checks || '|failures=' || failures
+  if inspection <> '' then do
+    expected = 6 + 30 * 2 + 3 + 2 + 1 + 15 * 2 + 2
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit PROCEDURE emission inventory')
+    say 'PROCEDURE_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'PROCEDURE_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -156,7 +173,9 @@ forgedschema: procedure = .void
   block = fn.block('entry'); call absent(block,contract,at)
   graph = builder.finish(); saved = graph.binary()
   call check(graph.error() = '', 'generic forged schema ' || mode)
+  call emissionstart('procedure.unused-schema-' || mode)
   backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish('procedure.unused-schema-' || mode,reference graph,reference output,0,backend.status(),backend.error())
   diagnostic = 'incompatible operation'
   if mode = 1 then diagnostic = 'unsupported family version crexx.c'
   call check(backend.status() <> 0 & output.bytes() = 0 & pos(diagnostic,backend.error()) > 0,'changed unused descriptor/version refuses before body protocol ' || mode || ': ' || backend.error())
@@ -165,11 +184,169 @@ forgedschema: procedure = .void
 
 admission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, diagnostic = ''
+  caseid = 'procedure.' || changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); backend = .llcrxas..compilation(graph,artifacts); output = backend.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,backend.status(),backend.error())
   if accepted then call check(backend.status() = 0 & output.bytes() > 0,label || ' admitted: ' || backend.error())
   else call check(backend.status() <> 0 & output.bytes() = 0,label || ' refuses malformed protocol: ' || backend.error())
   if diagnostic <> '' then call check(pos(diagnostic,backend.error()) > 0,label || ' retains its specific refusal: ' || backend.error())
   call check(bincompare(saved,graph.binary()) = 0,label || ' preserves input')
+  return
+
+/** INTERPRET may retain Fresh but cannot recreate it after consume. The raw
+ * fixtures isolate that proof from selector, runtime and source validation. */
+expansioncontracts: procedure = .void
+  graph = .llir..module; mode = .int; diagnostic = .string
+  labels = .string[]
+  labels[1] = 'consumed INTERPRET permits subsequent write'
+  labels[2] = 'Fresh-capable INTERPRET requires consume before write'
+  labels[3] = 'Fresh-capable INTERPRET followed by consume permits write'
+  labels[4] = 'unrelated clause begin cannot prefix expansion'
+  labels[5] = 'same-origin semantic work cannot prefix expansion'
+  labels[6] = 'expansion requires its canonical bound context'
+  labels[7] = 'unrelated later clause administration gains no Fresh exemption'
+  labels[8] = 'unpaired clause begin gains no Fresh exemption'
+  labels[9] = 'same-origin semantic work is not a source expression'
+  labels[10] = 'same-origin canonical Fresh expansion remains admitted'
+  labels[11] = 'Private INTERPRET permits subsequent write'
+  labels[12] = 'Consumed and Private union permits subsequent write'
+  labels[13] = 'generated group retains its Fresh-capable expansion'
+  labels[14] = 'Fresh-capable generated group requires consume before write'
+  labels[15] = 'same-origin clause prefix cannot cross semantic work'
+  do mode = 1 to 15
+    graph = expansionfixture(mode)
+    call check(graph.error() = '',labels[mode] || ' is generic-valid: ' || graph.error())
+    if graph.error() <> '' then iterate
+    accepted = mode = 1 | mode = 3 | mode = 10 | mode = 11 | mode = 12 | mode = 13
+    diagnostic = 'fresh entry requires consume or PROCEDURE before semantic work'
+    if mode = 2 | mode = 14 then diagnostic = diagnostic || ' (crexx.c.store,'
+    if mode = 4 | mode = 7 | mode = 8 | mode = 15 then diagnostic = diagnostic || ' (crexx.c.clause.begin,'
+    if mode = 5 then diagnostic = diagnostic || ' (crexx.c.drop,'
+    if mode = 6 then diagnostic = 'entry dispatch requires bound slot loads'
+    if mode = 9 then diagnostic = 'expansion region contains non-expression semantic work'
+    if accepted then diagnostic = ''
+    call expansionadmission(graph,accepted,'fresh ' || labels[mode],diagnostic)
+    if mode <> 8 then do
+      beginnings = 0; executions = 0; anchor = 0
+      do i = 1 to graph.operations()
+        op = graph.operation(i)
+        if wordpos(op.name(),'crexx.c.dynamic.expansion.begin crexx.c.dynamic.interpret') = 0 then iterate
+        origin = op.origin()
+        call check(origin.kind() = 'exact' & origin.first() = 0 & origin.last() = 17,labels[mode] || ' retains exact INTERPRET extent')
+        call check(bincompare(origin.sourcebytes(),'interpret "say 1"; nop' as .binary) = 0,labels[mode] || ' retains complete source bytes')
+        if op.name() = 'crexx.c.dynamic.expansion.begin' then do
+          beginnings = beginnings + 1; anchor = origin.id()
+        end
+        else do
+          executions = executions + 1
+          call check(anchor > 0 & origin.id() = anchor,labels[mode] || ' retains one expansion origin identity')
+        end
+      end
+      call check(beginnings = 1 & executions = 1,labels[mode] || ' retains one explicit expansion pair')
+    end
+    store = dereference graph.storage(); contract = dereference store.contract()
+    restored = llir..loadbinary(contract,graph.binary())
+    call check(restored.error() = '' & bincompare(graph.binary(),restored.binary()) = 0,'loaded expansion ' || mode)
+    if restored.error() = '' then call expansionadmission(restored,accepted,'loaded ' || labels[mode],diagnostic)
+    if mode = 1 | mode = 3 then do
+      changed = llirservices..optimise(reference graph)
+      call check(changed.status() = 'keep' | changed.status() = 'changed','transformed expansion ' || mode)
+      if changed.status() = 'keep' | changed.status() = 'changed' then call expansionadmission(changed.result(),1,'transformed ' || labels[mode])
+    end
+  end
+  return
+
+expansionadmission: procedure = .void
+  arg graph = .llir..module, accepted = .int, label = .string, diagnostic = ''
+  saved = graph.binary(); proof = .llcprocedureprotocol..checked(reference graph)
+  call check((proof.status() = 0) = accepted,label || ': ' || proof.error())
+  if diagnostic <> '' then call check(pos(diagnostic,proof.error()) > 0,label || ' retains its specific refusal: ' || proof.error())
+  call check(bincompare(saved,graph.binary()) = 0,label || ' preserves input')
+  call noemission('procedure.expansion-' || changestr(' ',label,'-'))
+  return
+
+/** One named Fresh entry; mode 1 consumes, modes 11/12 commit Private and
+ * mode 12 also merges a consumed main path. Modes 13/14 seed a generated
+ * group's incoming union. Clause markers use real source extents. */
+expansionfixture: procedure = .llir..module
+  arg mode = .int
+  draft = .llir..opdraft; built = .llir..opview
+  registry = .llir..schema(); call llcir..registerfamilies(reference registry,1)
+  contract = registry.finish(); builder = .llir..builder(contract)
+  file = builder.source('interpret-entry.crexx','interpret "say 1"; nop' as .binary)
+  authored = file.origin(0,17); operand = file.origin(10,17); unrelated = file.origin(19,22)
+  generated = builder.synthetic('INTERPRET entry dispatch')
+  fn = builder.function('$MAIN',contract.type('crexx.c.result'))
+  ignored = fn.argument(contract.type('crexx.c.context')); ignored = fn.argument(contract.type('crexx.g.int64'))
+  context_slot = fn.slot('$context',contract.type('crexx.c.context')); entry_slot = fn.slot('$entry',contract.type('crexx.g.int64'))
+  setup = fn.block('entry'); dispatch = fn.block('dispatch0'); main = fn.block('main')
+  test = fn.block('dispatch1'); landing = fn.block('named entry'); body = fn.block('interpret body'); invalid = fn.block('invalid')
+  call setup.store(context_slot,setup.readarg(1,generated),generated)
+  call setup.store(entry_slot,setup.readarg(2,generated),generated)
+  if mode = 13 | mode = 14 then do
+    draft = setup.operation(contract.operation('crexx.c.dynamic.group.entry'),generated)
+    call draft.input('context',setup.load(context_slot,generated)); built = draft.finish()
+  end
+  call setup.jump(dispatch,generated)
+  integer = .llir..intcodec()
+  draft = dispatch.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',dispatch.load(context_slot,generated)); call draft.input('entry',dispatch.load(entry_slot,generated))
+  call draft.attribute('id',integer.parse('0')); call draft.attribute('name',''x as .binary)
+  checked = draft.finish(); call dispatch.branch(checked.result(),main,test,generated)
+  if mode = 12 | mode = 13 | mode = 14 then call main.jump(body,generated)
+  else call absent(main,contract,generated)
+  draft = test.operation(contract.operation('crexx.c.entry.test'),generated)
+  call draft.input('context',test.load(context_slot,generated)); call draft.input('entry',test.load(entry_slot,generated))
+  call draft.attribute('id',integer.parse('1')); call draft.attribute('name','PROBE' as .binary)
+  checked = draft.finish(); call test.branch(checked.result(),landing,invalid,generated)
+  if mode = 1 then do
+    draft = landing.operation(contract.operation('crexx.c.procedure.consume'),authored)
+    call draft.input('context',landing.load(context_slot,authored)); built = draft.finish()
+  end
+  if mode = 11 | mode = 12 then do
+    draft = landing.operation(contract.operation('crexx.c.procedure.enter'),authored)
+    call draft.input('context',landing.load(context_slot,authored)); built = draft.finish()
+  end
+  call landing.jump(body,generated)
+  if mode = 5 then call expansiondrop(body,contract,context_slot,authored)
+  beginorigin = authored; if mode = 4 then beginorigin = unrelated
+  draft = body.operation(contract.operation('crexx.c.clause.begin'),beginorigin)
+  call draft.input('context',body.load(context_slot,beginorigin))
+  call draft.attribute('id',integer.parse((beginorigin.first() + 1) as .string)); built = draft.finish()
+  if mode = 15 then call expansiondrop(body,contract,context_slot,authored)
+  if mode <> 8 then do
+    context = body.load(context_slot,authored)
+    if mode = 6 then context = body.readarg(1,authored)
+    draft = body.operation(contract.operation('crexx.c.dynamic.expansion.begin'),authored)
+    call draft.input('context',context); built = draft.finish()
+    if mode = 9 then call expansiondrop(body,contract,context_slot,authored)
+    source = body.constantbytes(contract.type('crexx.c.value'),'say 1' as .binary,operand)
+    draft = body.operation(contract.operation('crexx.c.dynamic.interpret'),authored)
+    call draft.input('source',source); call draft.input('context',body.load(context_slot,authored)); built = draft.finish()
+    if mode = 3 then do
+      draft = body.operation(contract.operation('crexx.c.procedure.consume'),unrelated)
+      call draft.input('context',body.load(context_slot,unrelated)); built = draft.finish()
+    end
+    if mode <= 3 | mode = 11 | mode = 12 | mode = 14 then do
+      draft = body.operation(contract.operation('crexx.c.store'),unrelated)
+      call draft.input('context',body.load(context_slot,unrelated)); call draft.input('value',source)
+      call draft.attribute('name','after' as .binary); built = draft.finish()
+    end
+    if mode = 7 then do
+      draft = body.operation(contract.operation('crexx.c.clause.begin'),unrelated)
+      call draft.input('context',body.load(context_slot,unrelated)); call draft.attribute('id',integer.parse('20')); built = draft.finish()
+    end
+  end
+  call absent(body,contract,generated)
+  draft = invalid.operation(contract.operation('crexx.c.entry.invalid'),generated)
+  built = draft.finish(); call absent(invalid,contract,generated)
+  return builder.finish()
+
+expansiondrop: procedure = .void
+  arg block = .llir..block, contract = .llir..contract, context_slot = .llir..slot, origin = .llir..origin
+  draft = block.operation(contract.operation('crexx.c.drop'),origin)
+  call draft.input('context',block.load(context_slot,origin)); call draft.attribute('name','early' as .binary)
+  boolean = .llir..boolcodec(); call draft.attribute('indirect',boolean.parse('false')); built = draft.finish()
   return
 
 /* Deliberately generic-valid variants cross C's exact entry/procedure boundary.
@@ -333,4 +510,47 @@ absent: procedure = .void
   arg block = .llir..block, contract = .llir..contract, at = .llir..origin
   draft = block.operation(contract.operation('crexx.c.return.absent'),at)
   returned = draft.finish(); call block.returnvalue(returned.result(),at)
+  return
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
   return

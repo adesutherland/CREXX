@@ -54,7 +54,10 @@ def stage_vm(directory, providers):
     provider_directory.mkdir()
     for provider in providers:
         name = provider + '.rxplugin'
-        shutil.copy2(build / 'bin' / name, provider_directory / name)
+        source = build / 'bin' / name
+        if not source.exists():
+            source = build / 'bin' / 'providers' / name
+        shutil.copy2(source, provider_directory / name)
     assert {entry.name for entry in provider_directory.iterdir()} == {
         provider + '.rxplugin' for provider in providers}
     return directory / (args.vm + ext)
@@ -67,7 +70,7 @@ if args.c_only:
     (work / 'no-native-compiler').mkdir()
     env.pop('CREXX_PROVIDER_PATH', None)
     compiler_directory = work / 'compiler host'
-    compiler_vm = stage_vm(compiler_directory, ['rxfs'])
+    compiler_vm = stage_vm(compiler_directory, ['rxfs', 'rxcontract'])
     compiler_image = compiler_directory / 'llrxc-c-linked.rxbin'
     shutil.copyfile(backend / compiler_image.name, compiler_image)
     assert {entry.name for entry in compiler_directory.iterdir()} == {
@@ -130,7 +133,7 @@ try:
             assert str(source.parent) not in text, (label, 'physical source path')
             assert 'generated Classic entry' not in text
             if name == 'literal':
-                assert len(re.findall(r'^call .*llctarget.sayvalue\(\)', text, re.M)) == 1
+                assert len(re.findall(r'^call .*llctarget.sayconfigured\(\)', text, re.M)) == 1
                 assert 'llctarget.poolread' not in text and 'llctarget.binaryop' not in text
                 assert 'x2c' not in text.lower() and 'b2x' not in text.lower()
                 assert r'\x00' in text and r'\xC2\x80\xC3\xBF' in text

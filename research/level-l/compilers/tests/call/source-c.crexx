@@ -80,10 +80,10 @@ call .
 say 'constant ' || RESULT
 say 'constant-concat ' || (7dogs 'x')
 say 'constant-group ' || (7dogs ('x'))
-say 'constant-dot-left ' || (.foo 'x')
-say 'constant-dot-right ' || ('x' .foo)
+say 'constant-dot-left ' || (.5 'x')
+say 'constant-dot-right ' || ('x' .5)
 say 'constant-function ' || 7dogs()
-say 'sigl-nested ' || SIGLNESTED(
+say 'sigl-nested ' || SIGLNESTED(,
   MARK('n'))
 parse var SHARED POOLCOPY
 say 'pool ' || POOLCOPY || '|' || SYMBOL('SHARED')

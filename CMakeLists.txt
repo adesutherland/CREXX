@@ -366,6 +366,18 @@ set(CREXX_CLASSLIB_NATIVE_MEMBER_ROOT
         "${CMAKE_BINARY_DIR}/lib/classlib/members/native")
 
 if(BUILD_TESTING)
+    # Subdirectory test registration consumes this same named-QA job budget.
+    if(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
+        set(_crexx_qa_default_jobs 30)
+    else()
+        set(_crexx_qa_default_jobs 5)
+    endif()
+    set(CREXX_QA_CTEST_JOBS "${_crexx_qa_default_jobs}" CACHE STRING
+            "Parallel CTest jobs used by the named correctness QA targets")
+    if(NOT CREXX_QA_CTEST_JOBS MATCHES "^[1-9][0-9]*$")
+        message(FATAL_ERROR "CREXX_QA_CTEST_JOBS must be a positive integer")
+    endif()
+
     # Tier preparation targets must exist before test directories are added so
     # their deferred tier finalizers can attach exact artifact prerequisites.
     add_custom_target(qa-prep)
@@ -768,17 +780,6 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_TESTING)
-    if(APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$")
-        set(_crexx_qa_default_jobs 30)
-    else()
-        set(_crexx_qa_default_jobs 5)
-    endif()
-    set(CREXX_QA_CTEST_JOBS "${_crexx_qa_default_jobs}" CACHE STRING
-            "Parallel CTest jobs used by the named correctness QA targets")
-    if(NOT CREXX_QA_CTEST_JOBS MATCHES "^[1-9][0-9]*$")
-        message(FATAL_ERROR "CREXX_QA_CTEST_JOBS must be a positive integer")
-    endif()
-
     set(_crexx_qa_ctest_configuration)
     if(CMAKE_CONFIGURATION_TYPES)
         set(_crexx_qa_ctest_configuration -C "$<CONFIG>")

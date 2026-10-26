@@ -3,6 +3,7 @@ options levelb
 namespace dynamiccoordinator expose typedprobe typedcalls
 import rxfnsb
 import llcdynamic
+import llctarget
 import llcdynamicbudget
 import llcompilercontracts
 import rxinvoke
@@ -12,6 +13,7 @@ import rexxpool
 import rexxclassiccontext
 import rexxclassicconfig
 import rexxvalue
+import rexxclassicstate
 
 boot: initialiser expose target_entries
   target_entries = 0
@@ -27,6 +29,7 @@ main: procedure = .int
   names = .string[]; entries = .int[]
   names[1] = 'COMPILED'; entries[1] = 1
   owner = .llcdynamic..scope(reference context,'coordinator-contract',names,entries,'coordinator-contract')
+  call check(llctarget..clausepending(reference context) = 0,'idle compiled clause has no dispatch work')
   answer = llcdynamic..interpret(.rexxvalue..RexxValue('x=40; x=x+2'),reference owner)
   call check(answer.kind() == 'normal','ordinary group completes')
   call check(pool.symbolValue('X').asString() == '42','IR uses live caller pool')
@@ -69,15 +72,18 @@ main: procedure = .int
   owner = .llcdynamic..scope(reference context,'halt-contract',names,entries,'halt-contract')
   call llcdynamic..policy(reference owner,'CALL',4,1,'COMPILED')
   queued = activation.queueCallCondition(4,'first',7)
+  call check(llctarget..clausepending(reference context) & activation.pendingConditionId() = 4,'pending predicate preserves queued HALT')
   answer = llcdynamic..checkpoint(reference owner,1,7)
   call check(queued & answer.kind() == 'invoke','compiled checkpoint delivers first HALT')
   handler = answer.arguments()
   queued = handler.queueCallCondition(4,'buffered',8)
+  call check(llctarget..clausepending(reference context) & activation.pendingConditionId() = 4,'pending predicate sees buffered parent HALT without consuming it')
   returned = .rexxactivation..RexxActivationArguments()
   answer = llcdynamic..resume(reference owner,returned)
   call check(queued & answer.kind() == 'invoke' & activation.hasPendingCallCondition() = 0 & pool.symbolValue('SIGL').asString() == '8','compiled checkpoint drains buffered HALT before resumption')
   answer = llcdynamic..resume(reference owner,returned)
   call check(answer.kind() == 'normal','compiled checkpoint resumes once after final handler')
+  call check(llctarget..clausepending(reference context) = 0,'drained compiled checkpoint returns to idle')
   queued = activation.queueCallCondition(4,'IR first',11)
   answer = llcdynamic..interpret(.rexxvalue..RexxValue("nop; marker='completed'"),reference owner)
   call check(queued & answer.kind() == 'invoke','IR checkpoint delivers first HALT')
@@ -175,8 +181,136 @@ main: procedure = .int
   answer = llcdynamic..interpret(.rexxvalue..RexxValue("x='before'; x=typedprobe('bad',temporary)"),reference owner)
   call check(answer.kind() == 'failure' & typedcalls() = baseline + 4 & budget.used() = prior_used,'cached conversion failure releases held invocation charge')
   call owner.close(original as .object)
+  call check(llctarget..clausepending(reference context) = 0,'closed dynamic scope leaves the current context idle')
+  call activation.requestProgramExit(.rexxvalue..RexxValue('9'),1)
+  call check(llctarget..clausepending(reference context) & activation.returnValue().asString() == '9','pending predicate preserves program EXIT result')
+  call cataloguecontracts()
   say 'PASS: Classic dynamic coordinator contracts'
   return 0
+
+/** Independent pure-definition identity, owned snapshots and partial bind
+ * cleanup. Local owners model the same stable-before-borrow rule as globals. */
+cataloguecontracts: procedure = .void
+  declarations = .llcdynamic..declaration[]
+  names = .string[]; entries = .int[]; names[1] = 'COMPILED'; entries[1] = 1
+  first = .llcdynamic..catalogue('1:00AB',names,entries,'catalogue-contract',reference declarations)
+  equal = .llcdynamic..catalogue('1:00AB',names,entries,'catalogue-contract',reference declarations)
+  other_function = .llcdynamic..catalogue('2:00AB',names,entries,'catalogue-contract',reference declarations)
+  other_bytes = .llcdynamic..catalogue('1:00AC',names,entries,'catalogue-contract',reference declarations)
+  call check(first.ready() & first.bytes() > 0 & first.matches(reference equal),'distinct catalogue owners retain exact definition equality')
+  call check(first.matches(reference other_function) = 0 & first.matches(reference other_bytes) = 0,'function identity and exact graph bytes independently reject foreign definitions')
+  copied_names = first.names(); copied_entries = first.entries()
+  copied_names[1] = 'CHANGED'; copied_entries[1] = 9
+  call check(first.entry('COMPILED') = 1 & first.entry('CHANGED') = -1,'owned vector getters cannot mutate immutable catalogue rows')
+  rejected = .int
+  do
+    mismatched_entries = .int[]
+    malformed = .llcdynamic..catalogue('1:00AB',names,mismatched_entries,'catalogue-contract',reference declarations)
+  on signal invalid_arguments
+    rejected = 1
+  end
+  call check(rejected,'invalid catalogue construction signals instead of publishing readiness')
+  activation_one = .rexxactivation..RexxActivationArguments(); call activation_one.beginInternalCall()
+  activation_two = .rexxactivation..RexxActivationArguments(); call activation_two.beginInternalCall()
+  pool = .rexxpool..RexxVariablePool(1); config = .rexxclassicconfig..RexxClassicConfig('UTF8')
+  context_one = .rexxclassiccontext..RexxClassicContext(reference activation_one,reference pool,reference config)
+  context_two = .rexxclassiccontext..RexxClassicContext(reference activation_two,reference pool,reference config)
+  parent = .llcdynamic..scope.prepared(reference context_one,reference first)
+  call parent.bindcatalogue()
+  ticket = llcdynamic..linkchild(reference activation_two,reference parent)
+  child = .llcdynamic..scope.prepared(reference context_two,reference equal)
+  call llcdynamic..unlinkchild(ticket)
+  parent_budget = parent.budget(); child_budget = child.budget()
+  call check(parent.matchesdefinition(reference first) & parent.matchesdefinition(reference equal) & parent.matchesdefinition(reference other_bytes) = 0,'prepared scopes preserve same-owner and exact distinct-owner comparison')
+  call check(parent.identity() <> child.identity() & parent.generation() = 1 & child.generation() = 1 & (parent_budget <refsame> child_budget),'recursive scopes share immutable data and the existing ledger, with independent invocation identity')
+  call child.close()
+  call check(child.generation() = 2 & parent.generation() = 1,'child close cannot revoke its parent generation')
+  call parent.check(1)
+  call parent.close()
+  call check(parent.fingerprint() == '1:00AB' & parent.entry('COMPILED') = 1,'closed scope retains compatible owned definition getters')
+  stale = .int
+  do
+    call parent.check(1)
+  on signal reference_invalid
+    stale = 1
+  end
+  call check(stale,'shared catalogue does not bypass closed invocation generation checks')
+  legacy = .llcdynamic..scope(reference context_one,'1:00AB',names,entries,'catalogue-contract')
+  call check(legacy.matchesdefinition(reference equal),'legacy value scopes compare exactly with prepared definitions')
+  call legacy.close()
+  expired = expiredcatalogue(reference context_one)
+  expired_rejected = .int
+  do
+    ignored = expired.fingerprint()
+  on signal reference_invalid
+    expired_rejected = 1
+  end
+  call check(expired_rejected,'expired local catalogue reports REFERENCE_INVALID without value fallback')
+  call expired.close()
+  policy_snapshot = ownedcataloguepolicy(reference context_one)
+  call check(policy_snapshot.fingerprint() == '1:00AB' & policy_snapshot.name() == 'COMPILED' & policy_snapshot.generation() = 1,'owned handler fingerprint survives scope and local catalogue expiry')
+  partial_rows = .llcdynamic..declaration[]; no_projection = .string[]
+  partial_rows[1] = .llcdynamic..declaration('FIRST','','process','','','',no_projection)
+  partial_rows[2] = .llcdynamic..declaration('SECOND','','process','','','',no_projection)
+  partial_catalogue = .llcdynamic..catalogue('1:00AB',names,entries,'partial-contract',reference partial_rows)
+  partial_owner = .llcdynamic..scope.prepared(reference context_one,reference partial_catalogue)
+  partial_budget = dereference partial_owner.budget()
+  /* Existing route definition accounting: 512 + 4*(5+5+7) = 580. */
+  held = partial_budget.reserve(partial_budget.available() - 580,'fixture.catalogue.headroom')
+  bind_failed = .int
+  do
+    call partial_owner.bindcatalogue()
+  on signal out_of_range as problem
+    bind_failed = problem.message() == 'Classic prepared route aggregate budget exhausted'
+  end
+  call check(held > 0 & bind_failed & partial_owner.findbinding('FIRST') > 0 & partial_owner.findbinding('SECOND') = 0,'published scope retains the first binding when the second reservation fails')
+  call partial_owner.close()
+  call check(partial_budget.used() = 67108864 - 580,'partial binding close releases its one ticket')
+  call partial_owner.close()
+  call check(partial_budget.used() = 67108864 - 580,'repeated partial close cannot release a ticket twice')
+  call partial_budget.release(held)
+  call check(partial_budget.used() = 0,'partial binding failure leaves no retained reservation')
+  call preparedtypedcontract(reference context_one)
+  return
+
+preparedtypedcontract: procedure = .void
+  arg context_ref = reference .rexxclassiccontext..RexxClassicContext
+  signature_text = 'value=.int,expose temporary=.int,?increment=.int'
+  fields = rxcontract..project('dynamiccoordinator.typedprobe','.int',signature_text,'b',0,0,65536,65536)
+  rows = .llcdynamic..declaration[]; names = .string[]; entries = .int[]
+  baseline = typedcalls()
+  rows[1] = .llcdynamic..declaration('dynamiccoordinator.typedprobe','typedprobe','typed','.int',signature_text,'',fields)
+  definition = .llcdynamic..catalogue('1:00AB',names,entries,'typed-catalogue-contract',reference rows)
+  call check(rows[1].ready() & rows[1].bytes() > 0 & definition.ready() & typedcalls() = baseline,'pure declaration preparation cannot invoke its target')
+  owner = .llcdynamic..scope.prepared(context_ref,reference definition)
+  call owner.bindcatalogue()
+  call check(owner.findbinding('dynamiccoordinator.typedprobe') > 0 & owner.findbinding('typedprobe') > 0 & typedcalls() = baseline,'published scope acquires canonical and alias capabilities without target entry')
+  actuals = .rexxactivation..RexxActivationArguments()
+  call actuals.append(.rexxvalue..RexxValue('2'),1)
+  call actuals.append(.rexxvalue..RexxValue('5'),1)
+  answer = llcdynamic..resolve(actuals,reference owner,'typedprobe','typedprobe',0,1)
+  returned = answer.result()
+  call check(answer.kind() == 'normal' & returned.hasReturnValue() & returned.returnValue().asString() == '114' & typedcalls() = baseline + 1,'prepared typed descriptor retains checked default/exposed invocation semantics')
+  budget = dereference owner.budget()
+  call owner.close()
+  call check(budget.used() = 0,'prepared native bindings release all invocation reservations')
+  return
+
+expiredcatalogue: procedure = .llcdynamic..scope
+  arg context_ref = reference .rexxclassiccontext..RexxClassicContext
+  rows = .llcdynamic..declaration[]; names = .string[]; entries = .int[]
+  definition = .llcdynamic..catalogue('1:00AB',names,entries,'expired-contract',reference rows)
+  return .llcdynamic..scope.prepared(context_ref,reference definition)
+
+ownedcataloguepolicy: procedure = .rexxclassicstate..RexxClassicHandlerDefinition
+  arg context_ref = reference .rexxclassiccontext..RexxClassicContext
+  rows = .llcdynamic..declaration[]; names = .string[]; entries = .int[]
+  names[1] = 'COMPILED'; entries[1] = 1
+  definition = .llcdynamic..catalogue('1:00AB',names,entries,'owned-contract',reference rows)
+  owner = .llcdynamic..scope.prepared(context_ref,reference definition)
+  result = .rexxclassicstate..RexxClassicHandlerDefinition('CALL','COMPILED',1,owner.fingerprint(),owner.generation(),'owned-contract',1)
+  call owner.close()
+  return result
 
 typedprobe: procedure = .int expose target_entries
   arg value = .int, expose temporary = .int, ?increment = 7

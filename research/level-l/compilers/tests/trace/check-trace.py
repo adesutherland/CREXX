@@ -130,7 +130,17 @@ def shapes(text, source, disabled, target, lean_query):
     assert not re.search(r'^\s*(?:bpon|bpoff|metalinkpreg|sigcall|sigsave|sigrestore)\b', quiet, re.M), 'plain constant source has no trace-only VM operations'
     assert not re.search(r'(?:_trace_|tracecontroller|tracecontext|settraceoption|tracesetting)', disabled, re.I), 'plain source has no trace-only imports/setup/value conversions'
     definitions = re.findall(r'^\S+\([^\n]*\s\.locals=\d+[^\n]*\.expose=(llctarget\.[^\s]+)\s*$', target, re.M)
-    assert len(definitions) == len(set(definitions)) == 36, 'unchanged target export surface'
+    assert len(definitions) == len(set(definitions)) == 39, 'target API including clausepending'
+    assert set(definitions) == {'llctarget.' + name for name in (
+        'literal', 'poolnew', 'poolread', 'poolwrite', 'binaryop', 'unaryop',
+        'truth', 'sayvalue', 'sayconfigured', 'setting', 'digits', 'arguments',
+        'mainargs', 'append', 'countargs', 'existsarg', 'present', 'absent',
+        'emptyreturn', 'bifarguments', 'missing', 'missingconfigured',
+        'requirevalue', 'setresult', 'status', 'lengthvalue', 'failuremessage',
+        'whentruth', 'selectmissing', 'donew', 'docapture', 'dostart', 'doentry',
+        'doadvance', 'whiletruth', 'untiltruth', 'invalidtransfer', 'parsesource',
+        'clausepending',
+    )}, ('exact target export inventory', definitions)
     if lean_query:
         query_line = source_line(source, "say 'STATE|bare='")
         current = None; rows = []
@@ -202,10 +212,14 @@ def main():
                 shutil.copy2(dll, directory / dll.name)
             providers = directory / 'providers'; providers.mkdir()
             for plugin in plugins:
-                shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
+                name = plugin + '.rxplugin'
+                source = build / 'bin' / name
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / name
+                shutil.copy2(source, providers / name)
             return directory, vm
 
-        host, host_vm = stage('C compiler host', ('rxfs',))
+        host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
         application, target_vm = stage('static application', ('rxfs', 'rxcstream'))
         compiler = host / 'llrxc-c-linked.rxbin'; shutil.copy2(backend / compiler.name, compiler)
         empty_path = work / 'empty PATH'; empty_path.mkdir()

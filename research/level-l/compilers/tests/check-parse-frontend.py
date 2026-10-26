@@ -59,11 +59,15 @@ with tempfile.TemporaryDirectory(prefix='parse-', dir=args.work) as temporary:
         target = directory / 'providers'
         target.mkdir()
         for provider in providers:
-            shutil.copy2(build / 'bin' / (provider + '.rxplugin'), target / (provider + '.rxplugin'))
+            name = provider + '.rxplugin'
+            source = build / 'bin' / name
+            if not source.exists():
+                source = build / 'bin' / 'providers' / name
+            shutil.copy2(source, target / name)
         return vm
 
     host = work / 'C compiler host'
-    host_vm = stage(host, ('rxfs',))
+    host_vm = stage(host, ('rxfs', 'rxcontract'))
     image = host / 'llrxc-c-linked.rxbin'
     shutil.copy2(backend / image.name, image)
     target = work / 'static application'

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Prepared static statement providers; no builds or source discovery.
+"""Prepared statement providers and a separate missing source-call control.
 
 Owning B/G preparation is explicit and outside the C request host. One C caller
-serves normal, direct-host and fatal checks. Scratch images/logs are disposable;
+serves normal, direct-host and provider-fatal checks. Source fallback uses its
+optional dynamic image only in the missing-source control. Scratch is disposable;
 --inspect retains only active readable RXAS for independent review.
 """
 import argparse
@@ -40,6 +41,7 @@ def executable(text):
 
 def caller_shape(text):
     body = unit(text)
+    assert 'llcdynamic' not in text.lower(), 'prepared provider caller stays static without source fallback'
     assert not re.search(r'^\s*exit\s', body, re.M), 'provider calls complete frames'
     targets = ('extfixture.length', 'eoffixture.run',
                'levelc_call_external_bg.typedentry', 'levelc_call_alias.typedentry')
@@ -62,14 +64,18 @@ def caller_shape(text):
         assert after and set(after.groups()) == pair, ('inverse SWAP immediately recovers completion before NULL/helper', row, rows[index + 1:index + 5])
     assert calls >= 4 and all(called(body, target) for target in targets), 'all selected provider families use direct exports'
     assert not called(body, 'llctarget.status'), 'no status conversion in provider call body'
-    assert len(re.findall(r'^\s*sigbrv\s+[^\n]*"FUNCTION_NOT_FOUND"', text, re.M)) == 1, 'external unit installs one core missing-function cleanup relay'
-    assert len(re.findall(r'^\s*sighalt\s+"FUNCTION_NOT_FOUND"', text, re.M)) == 1, 'fatal relay detaches core missing-function trap'
+    traps = re.findall(r'^\s*sigbrv\s+llerror1_(\d+),[^\n]*"FUNCTION_NOT_FOUND"', text, re.M)
+    assert len(traps) == 1, 'external unit installs one core missing-function cleanup relay'
     fatal = text[text.index('llerror1:'):]
+    cleanup = fatal[:re.search(r'^llraise1_\d+:', fatal, re.M).start()]
+    masks = list(re.finditer(r'^\s*sighalt\s+"FUNCTION_NOT_FOUND"\s*$', cleanup, re.M))
+    assert len(masks) == 1, 'fatal cleanup detaches the core missing-function trap once'
     restored = called(fatal, 'rexxclassiccontext.rexxclassiccontext.bindpool')
     owners = {match[1].strip() for match in called(body, 'llctarget.poolnew')}
     releases = [match for match in re.finditer(r'^\s*null\s+(\S+)\s*$', fatal, re.M) if match[1] in owners]
-    assert restored and releases and restored[0].end() < releases[0].start(), 'fatal external call restores original binding before private owner release'
-    assert 'signalorigin' in fatal, 'original fatal event/location is relayed'
+    assert restored and releases and masks[0].end() < restored[0].start() and restored[0].end() < releases[0].start(), 'fatal external call masks cleanup, restores original binding, then releases private owner'
+    relay = r'^llraise1_' + traps[0] + r':\s*sighalt\s+"FUNCTION_NOT_FOUND"\s+signalorigin\s+"FUNCTION_NOT_FOUND",[^\n]+\s+ret\s*$'
+    assert len(re.findall(relay, fatal, re.M)) == 1, 'matching fatal relay masks the tag before preserving its original event/location'
     assert not re.search(r'^\s*(?:settp)?(?:swap)?call[1-4]?\s+[^,]+,§?ll(?:binmeta|cbindings|ccompiler)\.', text, re.M), 'static runtime never reads compiler metadata/images'
 
 
@@ -156,7 +162,11 @@ def main():
                 shutil.copy2(dll, directory / dll.name)
             providers = directory / 'providers'; providers.mkdir()
             for plugin in plugins:
-                shutil.copy2(build / 'bin' / (plugin + '.rxplugin'), providers / (plugin + '.rxplugin'))
+                name = plugin + '.rxplugin'
+                source = build / 'bin' / name
+                if not source.exists():
+                    source = build / 'bin' / 'providers' / name
+                shutil.copy2(source, providers / name)
             return directory, vm
 
         host, host_vm = stage('C compiler host', ('rxfs', 'rxcontract'))
@@ -229,6 +239,13 @@ def main():
             run(name + ' link', [tool('rxlink'), '-c', control], silent=True)
             return output.with_suffix('.rxbin')
 
+        def expose_unit(text):
+            # Test-only externalfixture.run exposes the existing C unit entry0.
+            text, headers = re.subn(r'^(llf1\(\) \.locals=\d+)(\s*)$', r'\1 .expose=externalfixture.run\2', text, count=1, flags=re.M)
+            text, metadata = re.subn(r'^(\s*\.meta )"llprogram\.\$MAIN"(?==)', r'\1"externalfixture.run"', text, count=1, flags=re.M)
+            assert headers == metadata == 1, 'one test-only exported C unit, entry0 remains ineligible'
+            return text
+
         base = [runtime / (name + '.rxbin') for name in libraries]
         extra = [runtime / (name + '.rxbin') for name in ('c-provider', 'c-eof', 'alias')]
         if args.phase in ('all', 'source', 'host', 'fatal', 'shapes'):
@@ -245,10 +262,7 @@ def main():
                     assert result.stdout.replace(b'\r\n', b'\n') == expected and not result.stderr, (dialect, result.stdout, result.stderr, expected)
             if args.phase in ('all', 'host', 'fatal'):
                 exported = application / 'externalfixture.rxas'
-                exported_text, headers = re.subn(r'^(llf1\(\) \.locals=\d+)(\s*)$', r'\1 .expose=externalfixture.run\2', text, count=1, flags=re.M)
-                exported_text, metadata = re.subn(r'^(\s*\.meta )"llprogram\.\$MAIN"(?==)', r'\1"externalfixture.run"', exported_text, count=1, flags=re.M)
-                assert headers == metadata == 1, 'one test-only exported C unit, entry0 remains ineligible'
-                exported.write_text(exported_text, encoding='utf-8'); inspect(exported, 'external-exported')
+                exported.write_text(expose_unit(text), encoding='utf-8'); inspect(exported, 'external-exported')
                 exported_binary = assemble(exported)
                 imports = work / 'B caller imports'; imports.mkdir()
                 for library in runtime.glob('*.rxbin'):
@@ -261,16 +275,32 @@ def main():
                     result = run('owned completion, root/pool isolation and named B ABI', [target_vm, '--no-autoload', image], cwd=application)
                     assert re.fullmatch(rb'direct=COMMAND\r?\nEXTERNAL_HOST\|checks=\d+\|failures=0\r?\n', result.stdout) and not result.stderr, (result.stdout, result.stderr)
                 if args.phase in ('all', 'fatal'):
-                    full = linked('absent', caller.stem, [caller_binary, exported_binary, *extra, bg_b, *base])
+                    # An unresolved name now selects hook/source fallback. Keep
+                    # that optional runtime out of the static provider proof.
+                    dynamic = runtime / 'llcdynamic.rxbin'
+                    shutil.copy2(build / 'research/level-l/compilers/products/llcdynamic.rxbin', dynamic)
+                    absent_source = fixtures / 'source-absent-c.crexx'
+                    absent = application / 'absentfixture.rxas'
+                    compile_c(absent_source, absent)
+                    absent_text = absent.read_text()
+                    assert called(absent_text, 'llcdynamic.resolve'), 'missing routine uses hook/source fallback'
+                    assert called(absent_text, 'llcdynamic.scope.close'), 'missing source caller retains dynamic-scope cleanup'
+                    absent.write_text(expose_unit(absent_text), encoding='utf-8'); inspect(absent, 'external-absent')
+                    full = linked('absent', caller.stem, [caller_binary, assemble(absent), *extra, bg_b, *base, dynamic])
+                    # The optional frontend needs its metadata provider; keep
+                    # that native dependency outside the static application.
+                    source_application, source_vm = stage('source fallback application', ('rxfs', 'rxcstream', 'rxcontract'))
+                    source_image = source_application / full.name
+                    shutil.copy2(full, source_image)
                     missing = linked('unlinked', caller.stem, [caller_binary, exported_binary, runtime / 'c-eof.rxbin', runtime / 'alias.rxbin', bg_b, *base])
-                    source = (fixtures / 'source-c.crexx').read_text().splitlines()
-                    for mode, image, needle, signal in (
-                            ('absent', full, "if MODE = 'absent'", b'CLASSIC_SYNTAX'),
-                            ('private-missing', missing, '  call extfixture.LENGTH FATALMARK()', b'FUNCTION_NOT_FOUND')):
-                        line = next(i for i, row in enumerate(source, 1) if needle in row)
-                        result = run(mode, [target_vm, '--no-autoload', image, '-a', mode], failure=True, cwd=application)
-                        assert result.stdout.replace(b'\r\n', b'\n') == b'EXTERNAL_FATAL|before\nactual before missing\n', (mode, result.stdout)
-                        assert signal in result.stderr and f'source-c.crexx:{line}:'.encode() in result.stderr, (mode, line, result.stderr)
+                    for mode, image, source, needle, signal in (
+                            ('absent', source_image, absent_source, 'call ABSENT FATALMARK()', b'CLASSIC_SYNTAX'),
+                            ('private-missing', missing, fixtures / 'source-c.crexx', '  call extfixture.LENGTH FATALMARK()', b'FUNCTION_NOT_FOUND')):
+                        line = next(i for i, row in enumerate(source.read_text().splitlines(), 1) if needle in row)
+                        vm, cwd = (source_vm, source_application) if mode == 'absent' else (target_vm, application)
+                        result = run(mode, [vm, '--no-autoload', image, '-a', mode], failure=True, cwd=cwd)
+                        assert result.stdout.replace(b'\r\n', b'\n') == b'EXTERNAL_FATAL|before\nactual before missing\n', (mode, result.returncode, result.stdout, result.stderr)
+                        assert signal in result.stderr and f'{source.name}:{line}:'.encode() in result.stderr, (mode, line, result.stderr)
                         assert (b'43.1' in result.stderr) == (mode == 'absent'), (mode, result.stderr)
                         assert b'UNREACHED' not in result.stdout and b'Assertion' not in result.stderr
 

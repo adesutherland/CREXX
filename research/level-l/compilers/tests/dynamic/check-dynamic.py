@@ -12,6 +12,7 @@ registered separately, rather than duplicated in this language driver.
 import argparse
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import queue
@@ -95,6 +96,145 @@ def optional_windows(text):
         setup = '\n'.join(lines[max(0, index - physical - 3):index])
         assert f'load r{base},{physical}' in setup, ('complete optional window', row, setup)
         assert re.search(rf'\bsettp r{base + physical},(?:512|768)\b', setup), ('optional presence flag', row, setup)
+
+
+def catalogue_shape(text):
+    """Only pure module data is prepared once; invocation ownership stays local."""
+    globals_count = int(re.search(r'^\.globals=(\d+)$', text, re.M)[1])
+    boot = re.search(r'^llcatalogues\(\) \.locals=\d+\n([\s\S]*?)(?=^\S+\(\) \.expose=|\Z)', text, re.M)
+    if globals_count == 0:
+        assert boot is None and not re.search(r'^\.meta .*="\.initializer"', text, re.M), 'static output has no catalogue initializer'
+        assert not re.search(r'^llcdynamic\.|^call [^,]+,llcdynamic\.', text, re.M), 'static output imports no dynamic runtime or prepared scope'
+        return
+    assert globals_count >= 2 and boot, 'one declaration owner plus function catalogues'
+    assert len(re.findall(r'="\.initializer" "\.void" llcatalogues\(\) ""$', text, re.M)) == 1, 'one private declared module initializer'
+    assert re.search(r'^\.meta "([^"\n]+)"="b" "\.void" llcatalogues\(\) ""\n'
+                     r'\.meta "\1"="\.initializer" "\.void" llcatalogues\(\) ""$', boot[1], re.M), 'same-symbol local callable metadata accompanies initializer'
+    assert not re.search(r'^llcatalogues\(\).*\.expose=', text, re.M), 'initializer remains private'
+    before, after = text[:boot.start()], text[boot.end():]
+    assert not re.search(r'^\S+\(\) \.locals=', after, re.M), 'initializer follows application and private helper bodies'
+    assert not re.search(r'^\s*(?:load|copy|move|null|setattrs|call) g\d+(?:,|$)', before + after, re.M), 'globals are never rewritten after module publication'
+    body = boot[1]
+    assert not re.search(r'^\.traceevent\b|^call [^,]+,rxinvoke\.', body, re.M), 'pure initializer has no authored observations or live native bindings'
+    assert all(re.fullmatch(r'\.srcstep 0 0 6 "" 0 0 0 ""', row.strip())
+               for row in body.splitlines() if row.strip().startswith('.srcstep ')), 'initializer source is synthetic'
+    catalogues = re.findall(r'^call g(\d+),llcdynamic\.catalogue\.§factory\(\),r\d+$', body, re.M)
+    assert sorted(map(int, catalogues)) == list(range(1, globals_count)), 'every function catalogue is constructed exactly once'
+    ready = re.findall(r'^call (r\d+),llcdynamic\.(declaration|catalogue)\.ready\(\),r\d+$', body, re.M)
+    declarations = len(re.findall(r'^call r\d+,llcdynamic\.declaration\.§factory\(\),r\d+$', body, re.M))
+    assert len(ready) == declarations + len(catalogues), 'every immutable constructor has an explicit readiness check'
+    for flag, kind in ready:
+        assert re.search(r'^brf llcatalogues_invalid,' + flag + r'$', body, re.M), ('readiness failure refuses publication', kind)
+    uses = list(re.finditer(r'^call (r\d+),llcdynamic\.scope\.§factory\.prepared\(\),r(\d+)$', before, re.M))
+    assert len(uses) == len(catalogues), 'each dynamic function uses its prepared catalogue'
+    for use in uses:
+        scope, base = use.groups(); base = int(base)
+        setup = before[max(0, use.start() - 400):use.start()]
+        assert re.search(rf'^mkref r{base + 2},g[1-9]\d*$', setup, re.M), 'scope borrows a stable catalogue global'
+        assert f'load r{base},3' in setup and f'settp r{base + 3},512' in setup, 'resource-base optional argument remains absent'
+        tail = before[use.end():]
+        bound = re.search(r'^call r\d+,llcdynamic\.scope\.bindcatalogue\(\),r\d+$', tail, re.M)
+        if declarations:
+            assert bound and re.search(r'^link r\d+,' + scope + r'$', tail[:bound.start()], re.M), 'native binding starts only after scope publication'
+        else:
+            assert not bound, 'an empty declaration catalogue introduces no binding frame'
+    assert not re.search(r'^call [^,]+,llcdynamic\.scope\.§factory\(\)', before, re.M), 'compiled entry has no repeated legacy catalogue construction'
+
+
+def dynamic_shape(text):
+    """Check actual idle paths and finite routing, without executing applications."""
+    catalogue_shape(text)
+    rows = [row.strip() for row in text.splitlines()]
+    labels = {row[:-1]: index for index, row in enumerate(rows) if re.fullmatch(r'\w+:', row)}
+    sites = {}
+    for match in re.finditer(r'^load (r\d+),(\d+)\nbr lldispatch(\d+)_dispatch\n(\w+)_linkchild:$', text, re.M):
+        register, site, function, prefix = match.groups()
+        key = (function, int(site))
+        assert key not in sites, ('duplicate continuation', key)
+        sites[key] = (register, prefix)
+    predicates = [index for index, row in enumerate(rows) if re.fullmatch(r'call r\d+,llctarget\.clausepending\(\),r\d+', row)]
+    checkpoints = [index for index, row in enumerate(rows) if re.fullmatch(r'call r\d+,llcdynamic\.checkpoint\(\),r\d+', row)]
+    assert len(predicates) == len(checkpoints), 'every dynamic checkpoint has an idle predicate'
+    for index in predicates:
+        flag, base = re.fullmatch(r'call (r\d+),llctarget\.clausepending\(\),(r\d+)', rows[index]).groups()
+        argument = 'r' + str(int(base[1:]) + 1)
+        assert re.fullmatch(r'copy ' + argument + r',r\d+', rows[index - 3]), 'one existing context-reference copy'
+        assert rows[index - 2:index] == [f'load {base},1', f'settp {argument},768'], 'one required predicate argument'
+        assert rows[index + 1] == f'null {argument}', 'predicate argument cleanup'
+        idle = re.fullmatch(r'brf (llcomplete\d+_\d+_idle),' + flag, rows[index + 2])
+        assert idle and rows[index + 3] == 'bpoff', 'idle branches before TRACE suspension'
+        prefix = idle[1][:-5]
+        end = labels[prefix + '_finished']
+        point = labels[idle[1]]
+        assert end == point + 3, 'idle has only boundary and carrier clears'
+        assert all(re.fullmatch(r'null r\d+', row) for row in rows[point + 1:end]), 'idle constructs no packet or boundary'
+        checkpoint = next((rows[p] for p in checkpoints if index < p < point), '')
+        boundary = re.fullmatch(r'call (r\d+),llcdynamic\.checkpoint\(\),r\d+', checkpoint)
+        assert boundary and rows[point + 1] == f'null {boundary[1]}', 'idle releases a preceding static boundary'
+    families = {}
+    for start, row in enumerate(rows):
+        root = re.fullmatch(r'(llroute(\d+)_\d+):', row)
+        if not root:
+            continue
+        prefix, function = root.groups()
+        selected = {site: value for (fn, site), value in sites.items() if fn == function}
+        count = len(selected)
+        assert count and set(selected) == set(range(1, count + 1)), 'dense checked continuation IDs'
+        registers = {value[0] for value in selected.values()}
+        assert len(registers) == 1, 'one frame-local continuation register'
+        register = registers.pop()
+        invalid = f'lldispatch{function}_invalid'
+        code = {}
+        equalities = {}
+        suffixes = set()
+        point = start + 1
+        while point < len(rows):
+            current = rows[point]
+            if re.fullmatch(re.escape(prefix) + r'_left_\d+_\d+:', current):
+                point += 1
+                continue
+            branch = re.fullmatch(r'(beq|blt) (\w+),' + register + r',(-?\d+)', current)
+            if branch:
+                opcode, target, number = branch.groups(); number = int(number)
+                code[point] = (opcode, target, number)
+                if opcode == 'beq':
+                    assert number in selected and number not in equalities, 'one equality per admitted site'
+                    owner = selected[number][1] + '_'
+                    assert target.startswith(owner), 'route cannot select a foreign site'
+                    suffixes.add(target[len(owner):]); equalities[number] = target
+                else:
+                    assert target.startswith(prefix + '_left_') and target in labels, 'split remains within its route'
+            elif current == f'br {invalid}':
+                code[point] = ('br', invalid, 0)
+            else:
+                break
+            point += 1
+        assert set(equalities) == set(selected) and len(suffixes) == 1, 'complete single-suffix map'
+        suffix = suffixes.pop()
+        assert suffix not in families.setdefault(function, set()), 'one shared map per route family'
+        families[function].add(suffix)
+        groups = (count + 3) // 4
+        assert len(code) == count + 2 * groups - 1, 'bounded flat-leaf route size'
+        limit = math.ceil(math.log2(groups)) + 4
+        for value in [-1, 0, *range(1, count + 1), count + 1]:
+            pc = start + 1; seen = set(); comparisons = 0
+            while True:
+                while pc not in code and pc < point and rows[pc].endswith(':'):
+                    pc += 1
+                assert pc in code and pc not in seen, 'finite owned route'
+                seen.add(pc); opcode, target, number = code[pc]
+                if opcode == 'br':
+                    result = target; break
+                comparisons += 1
+                if opcode == 'beq' and value == number:
+                    result = target; break
+                pc = labels[target] if opcode == 'blt' and value < number else pc + 1
+            expected = equalities[value] if 1 <= value <= count else invalid
+            assert result == expected and comparisons <= limit, ('checked bounded route', function, suffix, value)
+    for function in {fn for fn, site in sites}:
+        assert {'linkchild', 'local', 'resume', 'failure', 'done'} <= families.get(function, set()), 'all cold route families checked'
+        assert rows.count(f'lldispatch{function}_dispatch:') == 1, 'one shared same-frame dispatcher'
+        assert rows.count(f'llterminal{function}:') == 1, 'one equivalent normal terminal'
 
 
 def inventory(root):
@@ -223,7 +363,7 @@ def inventory(root):
         caught:
           say condition('C')
           return
-    ''', 'SYNTAX\n')
+    ''', 'SYNTAX\n', status=99)
     add('generated-procedure-placement-error', '''
         signal on syntax name caught
         call child
@@ -235,7 +375,7 @@ def inventory(root):
         caught:
           say condition('C')
           return
-    ''', 'SYNTAX\n')
+    ''', 'SYNTAX\n', status=99)
     add('signal-policy-survives-group', '''
         interpret 'signal on novalue name caught'
         say missing
@@ -500,8 +640,9 @@ def main():
         assert compiled.returncode == 0 and b'|PASS\n' in diagnostic and not DIAGNOSTIC.search(diagnostic), ('warm dynamic compiler', diagnostic[-10000:])
         for case in cases:
             stem = case['stem']; assembly = app / (stem + '.rxas')
-            text = assembly.read_text()
+            text = assembly.read_text(encoding='utf-8')
             optional_windows(text)
+            dynamic_shape(text)
             if case['static']:
                 assert not re.search(r'llcdynamic|llirexecute|llcgraph|llcfrontend|llccompiler', text, re.I), 'trivial static application has no dynamic/compiler/executor dependency'
             if stem == 'live-once':

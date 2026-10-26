@@ -83,6 +83,8 @@ definition: class
 
 /** Immutable prepared selections. Images/readers exist only while their group
  * is selected; later queries own small checked records, never image snapshots.
+ * Acquisition/projection limits retain LL_RESOURCE_LIMIT after charging their
+ * returned counters; other metadata failures retain LL_COMPILER_IMPORT.
  * @param root explicit artifact directory
  * @param bindings ordered selections, not source files or a search path
  * @param bytes aggregate logical retained/acquired payload allowance
@@ -335,6 +337,7 @@ prepared: class
             if fields[0] <> 13 then do; call fail('incomplete native metadata acquisition'); return; end
             if fields[1] \== 'rxnative1' then do; call fail('unknown native metadata acquisition'); return; end
             if reserve(fields[4] as .int,fields[5] as .int) = 0 then return
+            if fields[2] == 'limit' then do; _error = 'LL_RESOURCE_LIMIT: native provider: ' || fields[3]; return; end
             if fields[2] \== 'ok' then do; call fail('native provider ' || fields[2] || ': ' || fields[3]); return; end
             if fields[6] = '' | fields[8] \== '0' | fields[9] <> '' then do; call fail('native binding requires an identified ordinary procedure'); return; end
             projection = rxcontract..project(fields[7],fields[10],fields[11],fields[12],fields[8] as .int,fields[13] as .int,_bytecap - _bytes,_workcap - _work)
@@ -416,6 +419,7 @@ prepared: class
     if fields[1] \== 'rxcontract1' then do; call fail('unknown metadata projection'); return .llcompilercontracts..signature.failed(_error); end
     usedbytes = fields[6] as .int; usedwork = fields[7] as .int
     if reserve(usedbytes,usedwork) = 0 then return .llcompilercontracts..signature.failed(_error)
+    if fields[2] == 'limit' then do; _error = 'LL_RESOURCE_LIMIT: provider signature ' || fields[3] || ': ' || fields[4]; return .llcompilercontracts..signature.failed(_error); end
     if fields[2] \== 'ok' then do; call fail('provider signature ' || fields[2] || ': ' || fields[3] || ': ' || fields[4]); return .llcompilercontracts..signature.failed(_error); end
     result = .llcompilercontracts..signature.projected(fields)
     if result.error() <> '' then call fail('provider signature: ' || result.error())

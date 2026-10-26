@@ -24,7 +24,7 @@ text I/O.
 During the 19 October C-only compiler design, Adrian suggested placing common
 Unicode capability in B for G and C. At the design baseline the executors
 were already B but packaged with the G facade; C still imports that facade. The
-[approved architecture](../../../research/level-l/compilers/doc/architecture.md#shared-unicode-foundation-in-level-b)
+[approved architecture](../../../research/level-l/compilers/doc/levelc-architecture.md#shared-unicode-foundation-in-level-b)
 extracts an independently selectable B runtime/API and one pinned-data owner,
 retains G's public functions/collections and C's Classic adapters, and keeps
 Level L bootstrap acyclic. Adrian approved extraction on 19 October 2026.

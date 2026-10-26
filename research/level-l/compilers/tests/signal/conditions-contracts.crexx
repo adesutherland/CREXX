@@ -8,9 +8,14 @@ import llcprocedureprotocol
 import llcsignalprotocol
 import llcrxas
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
   checks = 0; failures = 0
   registry = .llir..schema(); call llcir..registerfamilies(reference registry); contract = registry.finish()
   call checkSchema(contract)
@@ -38,7 +43,13 @@ main: procedure = .int expose checks failures
       end
     end
   end
-  say 'SIGNAL_CONDITIONS_CONTRACTS|checks=' || checks || '|failures=' || failures
+  call noemission('signal-conditions.schema-and-proof-budgets')
+  if inspection <> '' then do
+    expected = 6 * 2 + 2 + 3 + 1
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit SIGNAL_CONDITIONS emission inventory')
+    say 'SIGNAL_CONDITIONS_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'SIGNAL_CONDITIONS_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -76,7 +87,9 @@ admission: procedure = .void
   graph = dereference graph_ref; saved = graph.binary()
   entries = .llcprocedureprotocol..checked(graph_ref)
   signals = .llcsignalprotocol..checked(graph_ref,reference entries)
+  caseid = 'signal-conditions.' || changestr(' ',label,'-'); call emissionstart(caseid)
   selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,selected.status(),selected.error())
   if accepted then do
     call check(entries.status() = 0 & signals.status() = 0,label || ' owns complete protected proof: ' || entries.error() || signals.error())
     call check(selected.status() = 0 & output.bytes() > 0,label || ' selects: ' || selected.error())
@@ -96,18 +109,24 @@ limits: procedure = .void
   graph = dereference graph_ref; saved = graph.binary()
   entries = .llcprocedureprotocol..checked(graph_ref); signals = .llcsignalprotocol..checked(graph_ref,reference entries)
   if entries.status() <> 0 | signals.status() <> 0 then return
+  call emissionstart('signal-conditions.prechecked-valid')
   selected = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts)
   output = selected.output(); previous = output.text()
+  call emissionfinish('signal-conditions.prechecked-valid',reference graph,reference output,1,selected.status(),selected.error())
   call check(selected.status() = 0 & output.bytes() > 0,'adequate owned output before refusal: ' || selected.error())
   smaller = .llcsignalprotocol..checked(graph_ref,reference entries,signals.bytesused() - 1)
   call check(smaller.status() <> 0 & pos('LL_COMPILER_LIMIT:',smaller.error()) = 1,'one byte below actual whole proof refuses')
   lesswork = .llcsignalprotocol..checked(graph_ref,reference entries,67108864,signals.workused() - 1)
   call check(lesswork.status() <> 0 & pos('LL_COMPILER_LIMIT:',lesswork.error()) = 1,'one work unit below actual whole proof refuses')
+  call emissionstart('signal-conditions.prechecked-narrow')
   limited = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts,128)
   empty = limited.output()
+  call emissionfinish('signal-conditions.prechecked-narrow',reference graph,reference empty,0,limited.status(),limited.error())
   call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,'narrow selection fails without partial output')
+  call emissionstart('signal-conditions.prechecked-reused')
   again = .llcrxas..compilation.prechecked(graph,reference entries,reference signals,artifacts)
   repeated = again.output()
+  call emissionfinish('signal-conditions.prechecked-reused',reference graph,reference repeated,1,again.status(),again.error())
   call check(again.status() = 0 & repeated.text() == previous & signals.status() = 0 & signals.belongs(graph_ref),'refusal does not poison completed proof or later adequate reuse')
   call check(output.text() == previous & bincompare(saved,graph.binary()) = 0,'earlier output and original graph survive all refusals')
   return
@@ -205,4 +224,47 @@ absent: procedure = .void
   arg block = .llir..block, contract = .llir..contract, origin = .llir..origin
   draft = block.operation(contract.operation('crexx.c.return.absent'),origin); finished = draft.finish()
   call block.returnvalue(finished.result(),origin)
+  return
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
   return

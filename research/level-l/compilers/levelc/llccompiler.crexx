@@ -36,6 +36,9 @@ request: class
   _offset = .int
   *: factory
     arg source = .binary, artifacts = '', filename = '<source>', budget = 1000000, nesting = 512, bytes = 67108864, registers = 65536, optimise = 1, ?providers = .llcbindings..binding[], routine_export = '', host_export = ''
+    /* Early provider/export refusals leave a typed absent frontend. */
+    absent_frontend = .llcfrontend..request
+    _frontend = absent_frontend
     _source = source; _filename = llcompilercontracts..sourcename(filename); _path = artifacts
     _bytes = bytes; _registers = registers; _ready = 0; _error = ''; _offset = 0
     _budget = budget; _optimise = optimise; _nesting = nesting

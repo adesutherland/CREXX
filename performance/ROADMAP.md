@@ -84,7 +84,7 @@ imports must not substitute for these preparation dependencies.
    ordinary green, report its cost/limits and delete temporary output; serves AC03.
 
 **LEVELC-TARGET-01 — approved C-only infrastructure direction (19 October).** The
-[compiler architecture](../research/level-l/compilers/doc/architecture.md#optimisation-ownership)
+[compiler architecture](../research/level-l/compilers/doc/levelc-architecture.md#optimisation-ownership)
 and [delivery plan](../research/level-l/compilers/PLAN.md#c-first-delivery-milestone)
 own C-OPT-01–06: remove proven-unused activation setup, allocate by liveness,
 use direct context-aware library calls and improve pool/call selection before

@@ -10,12 +10,23 @@ import llirservices
 import llcrxas
 import llcompilercontracts
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
   checks = 0; failures = 0
   call signatures(); call sourcecontracts(argv[1]); call raw(argv[1])
-  say 'TRACE_CONTRACTS|checks=' || checks || '|failures=' || failures
+  call noemission('trace.ast-schema-signatures')
+  if inspection <> '' then do
+    expected = 7 * 2 + 1 + 2 + 5 + 5 + 1
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit TRACE emission inventory')
+    say 'TRACE_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'TRACE_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -83,11 +94,11 @@ sourcecontracts: procedure = .void
     end
     call check(names = 1,'unowned ELSE retained as one operand Name')
   end
-  call staticbad(artifacts,'trace scan','scan')
-  call staticbad(artifacts,'trace zebra','zebra')
-  call staticbad(artifacts,"trace 'scan'","'scan'")
-  call staticbad(artifacts,'if 0 then trace scan','scan')
-  call staticbad(artifacts,'if 0 then trace zebra','zebra')
+  call staticbad(artifacts,'trace scan','scan',1)
+  call staticbad(artifacts,'trace zebra','zebra',2)
+  call staticbad(artifacts,"trace 'scan'","'scan'",3)
+  call staticbad(artifacts,'if 0 then trace scan','scan',4)
+  call staticbad(artifacts,'if 0 then trace zebra','zebra',5)
   call bad('trace +','19.6','+')
   call bad('trace -R','19.6','-')
   call bad('trace R extra','19.6','extra')
@@ -102,10 +113,12 @@ sourcecontracts: procedure = .void
   return
 
 staticbad: procedure = .void
-  arg artifacts = .string, text = .string, token = .string
+  arg artifacts = .string, text = .string, token = .string, ordinal = .int
+  caseid = 'trace.frontend-refusal-' || ordinal; call emissionstart(caseid)
   source = text as .binary; request = .llcfrontend..request(source,artifacts,'trace-source.crexx')
   expected = binpos(token as .binary,source) - 1
   call check(request.status() <> 0 & pos('24.1',request.error()) > 0 & request.offset() = expected,'24.1 source meaning and original byte offset for ' || text || ': ' || request.error() || ' at ' || request.offset())
+  call frontendfinish(caseid,source,1,request.status(),request.error())
   return
 
 bad: procedure = .void
@@ -170,10 +183,14 @@ loadgraph: procedure = .llir..module
 
 admission: procedure = .void
   arg artifacts = .string, graph = .llir..module, accepted = .int, label = .string, reason = .string
+  caseid = 'trace.' || changestr(' ',label,'-'); call emissionstart(caseid)
   saved = graph.binary(); selected = .llcrxas..compilation(graph,artifacts); output = selected.output()
+  call emissionfinish(caseid,reference graph,reference output,accepted,selected.status(),selected.error())
   if accepted then do
     call check(selected.status() = 0 & output.bytes() > 0,label || ': ' || selected.error())
+    call emissionstart(caseid || '.limited')
     previous = output.text(); limited = .llcrxas..compilation(graph,artifacts,128); empty = limited.output()
+    call emissionfinish(caseid || '.limited',reference graph,reference empty,0,limited.status(),limited.error())
     call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LL_COMPILER_LIMIT:',limited.error()) = 1,label || ' bounded atomic output failure')
     call check(previous == output.text(),label || ' prior output remains owned')
   end
@@ -247,3 +264,61 @@ stalecontract: procedure = .llir..contract
     call declared.state(source.effectvalue(i,1)); call declared.failure(source.effectvalue(i,2)); call declared.termination(source.effectvalue(i,3))
   end
   ignored = data.freeze(); return .llir..contract(data)
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return
+
+/* Frontend-only cases retain exact loop/source bytes without inventing RXAS. */
+frontendfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, source = .binary, refused = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  accepted = (status <> 0) = refused
+  call check(accepted,caseid || ' frontend disposition matches its existing oracle: ' || diagnostic)
+  if accepted = 0 then return
+  written = writebinary(inspection || '/' || caseid || '.source',source) = <blen>(source)
+  call check(written,caseid || ' exact temporary frontend source export')
+  if written = 0 then return
+  if refused then say 'REFUSAL|' || caseid || '|' || diagnostic
+  else say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return

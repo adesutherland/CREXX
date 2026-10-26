@@ -1,7 +1,7 @@
 # STEP05: cleaned IR and RXAS before and after optimisation
 
 These retained walkthrough outputs illustrate the earlier STEP05 construction
-and transformation shapes. Their C schema predates the [current contract](../../doc/architecture.md#current-c-family-contract);
+and transformation shapes. Their C schema predates the [current contract](../../doc/levelc-architecture.md#current-c-family-contract);
 G views retain the STEP05 output. The before
 side disables shared passes and the after side enables them. The
 [current plan](../../PLAN.md) tracks remaining compiler work.

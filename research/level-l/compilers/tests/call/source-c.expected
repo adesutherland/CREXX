@@ -4,7 +4,7 @@ hex 4
 binary 3
 quoted-function 3
 quoted-gap LENGTH abc
-quoted-comment-gap LENGTH abc
+quoted-comment-gap LENGTHabc
 substr é🙂
 translate CAFÉ
 max 3
@@ -40,8 +40,8 @@ constant dot-digit-symbol
 constant dot
 constant-concat 7DOGS x
 constant-group 7DOGS x
-constant-dot-left .FOO x
-constant-dot-right x .FOO
+constant-dot-left .5 x
+constant-dot-right x .5
 constant-function digit-symbol
 sigl-nested 86
 pool after|VAR

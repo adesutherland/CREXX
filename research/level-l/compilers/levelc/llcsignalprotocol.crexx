@@ -4,6 +4,7 @@ namespace llcsignalprotocol expose checked
 import rxfnsb
 import llir
 import llscalar
+import llcir
 import llcsymbols
 import llcprocedureprotocol
 import rexxclassicunicodeproperties
@@ -21,6 +22,7 @@ checked: class
   _bytes = .int
   _work = .int
   _ready = .int
+  _dynamicprofile = .int
   _error = .string
   _offset = .int
   _symbols = .llcsymbols..checked
@@ -86,6 +88,7 @@ checked: class
     arg graph = reference .llir..module, program = reference .llcprocedureprotocol..checked, bytes = 67108864, work = 1000000
     _graph = graph; _program = program; _limit = bytes; _budget = work
     _ready = 0; _error = ''; _offset = 0; _bytes = 0; _work = 0; _identity = 0
+    _dynamicprofile = -1
     _rowkeys = .stem(); _sourcekeys = .stem()
     return
   fail: method = .void
@@ -719,13 +722,82 @@ checked: class
     end
     ignored = claim(opid,opid)
     return
+  /** Account for both manifest strings before serialization. Twelve bytes
+   * per character conservatively allows the character payload and concat
+   * scratch; descriptor cells are charged separately. This is logical proof
+   * workspace, not an aggregate VM/RSS bound. */
+  manifestspace: method = .int
+    arg contract_ref = reference .llir..contract
+    contract = dereference contract_ref; data = dereference contract.data()
+    i = .int; kind = .int; field = .int; effect = .int; size = .int
+    if reserve(14,12) = 0 | charge(14) = 0 then return 0
+    do i = 1 to data.familycount()
+      if reserve(1,64) = 0 | reserve(19,12) = 0 | charge(19) = 0 then return 0
+      size = length(data.familyname(i))
+      if reserve(size,12) = 0 | charge(size) = 0 then return 0
+    end
+    do i = 1 to data.types()
+      if reserve(1,64) = 0 | reserve(6,12) = 0 | charge(6) = 0 then return 0
+      size = length(data.typename(i))
+      if reserve(size,12) = 0 | charge(size) = 0 then return 0
+    end
+    do i = 1 to data.ops()
+      if reserve(1,64) = 0 | reserve(14,12) = 0 | charge(14) = 0 then return 0
+      size = length(data.opname(i))
+      if reserve(size,12) = 0 | charge(size) = 0 then return 0
+      do effect = 1 to 3
+        size = length(data.effectvalue(i,effect))
+        if reserve(size,12) = 0 | charge(size) = 0 then return 0
+      end
+      do kind = 1 to 3
+        if charge() = 0 then return 0
+        do field = 1 to data.arity(i,kind)
+          if reserve(1,64) = 0 | reserve(4,12) = 0 | charge(4) = 0 then return 0
+          size = length(data.fieldname(i,kind,field))
+          if reserve(size,12) = 0 | charge(size) = 0 then return 0
+          size = length(data.typename(data.fieldtype(i,kind,field)))
+          if reserve(size,12) = 0 | charge(size) = 0 then return 0
+        end
+      end
+    end
+    return 1
+  /** The graph's complete frozen profile survives optional block pruning.
+   * Query lazily only for a completion with no CALL or operation witness. */
+  dynamicprofile: method = .int
+    if _dynamicprofile >= 0 then return _dynamicprofile
+    _dynamicprofile = 0
+    if charge() = 0 then return 0
+    store = dereference _store; actual = dereference store.contract()
+    expected = llcir..dynamiccontract()
+    if actual.error() <> '' | expected.error() <> '' then return 0
+    source = dereference actual.data(); canonical = dereference expected.data()
+    if source.familycount() <> canonical.familycount() | source.types() <> canonical.types() | source.ops() <> canonical.ops() then return 0
+    /* Arity queries scan the generic field table. Bound every admitted field
+     * traversal to the canonical inventory before manifestspace indexes it. */
+    operation = .int; kind = .int
+    do operation = 1 to canonical.ops()
+      do kind = 1 to 3
+        if charge() = 0 then return 0
+        if source.arity(operation,kind) <> canonical.arity(operation,kind) then return 0
+      end
+    end
+    if manifestspace(reference actual) = 0 then return 0
+    if manifestspace(reference expected) = 0 then return 0
+    _dynamicprofile = actual.manifest() == expected.manifest()
+    return _dynamicprofile
   complete: method = .void
     arg opid = .int
     store = dereference _store; program = dereference _program; op = .llir..opview(_store,opid)
     fn = store.get(2,op.blockid(),1)
     if authored(opid) = 0 then return
-    if _tablevalues[store.operand(opid,1)] <> fn | (_callcount[fn] = 0 & program.dynamic(fn) = 0) then do
+    if _tablevalues[store.operand(opid,1)] <> fn then do
       call fail('LOWERING: clause completion lacks its source-owned CALL inventory',opid); return
+    end
+    if _callcount[fn] = 0 then if program.dynamic(fn) = 0 then do
+      if dynamicprofile() = 0 then do
+        if _error = '' then call fail('LOWERING: clause completion lacks its source-owned CALL inventory',opid)
+        return
+      end
     end
     identity = integer(op,'id'); at = store.get(3,opid,11)
     if identity <> store.get(9,at,2) + 1 then do; call fail('LOWERING: clause completion id differs from its authored head',opid); return; end

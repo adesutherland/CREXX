@@ -37,7 +37,7 @@ compiler invocation or library initialiser is implied.
 ## Emission review
 
 Inspect complete emitted modules, including wrappers/cold handlers, separately
-from linked helper bodies. C uses the [current context/entry contract](../../doc/architecture.md#current-c-family-contract) and one
+from linked helper bodies. C uses the [current context/entry contract](../../doc/levelc-architecture.md#current-c-family-contract) and one
 source-unit body; its fresh child activation initially borrows the caller pool,
 then PROCEDURE creates the private pool and binds it before ARG executes. The
 visible call guards propagate program-root EXIT before result observation. The

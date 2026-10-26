@@ -68,8 +68,8 @@ foreach(_mode opt noopt)
           llcompiler_backend-tests_${_mode} llcompiler_target_${_mode}
           library rxfnsc classlib rxunicode_core rxas rxlink ${_vm})
 
-      # Isolated 90-command provenance proof: 28s Debug, 90s Apple ASan.
-      # Keep nested tools serialized, with generous whole/inner hang guards.
+      # Provenance includes the shared backend graph/shape contract aggregate.
+      # Serialize nested tools; allow its 1800s inner guard plus toolchain work.
       set(_provenance "llcompiler_provenance_${_mode}_${_vm}")
       add_test(NAME ${_provenance}
         COMMAND ${Python3_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/tests/check-provenance.py"
@@ -77,7 +77,7 @@ foreach(_mode opt noopt)
           --mode ${_mode} --vm ${_vm})
       set_tests_properties(${_provenance} PROPERTIES
         PASS_REGULAR_EXPRESSION "PROVENANCE_E2E[|]failures=0"
-        TIMEOUT 900 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
+        TIMEOUT 3600 RUN_SERIAL TRUE RESOURCE_LOCK llcompiler_backend
         LABELS "library;level-l;compiler-backend;optimizer-parity")
       crexx_register_test_prep_targets(TESTS ${_provenance}
         TARGETS llcompiler_llrxc-c_${_mode} llcompiler_llrxc-g_${_mode}

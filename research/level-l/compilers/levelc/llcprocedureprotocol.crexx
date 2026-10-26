@@ -3,6 +3,7 @@ options levelb
 namespace llcprocedureprotocol expose checked
 import rxfnsb
 import llir
+import llirgraph
 import llscalar
 import llcsymbols
 import llcparseprogram
@@ -65,6 +66,12 @@ checked: class
   _dynamicfunctions = .int[]
   _expansions = .int[]
   _previous = .int[]
+  _packetready = .int
+  _packetremaining = .int
+  _packetroots = .int[]
+  _packetslots = .int[]
+  _packettransports = .int[]
+  _packetappends = .int[]
   *: factory
     arg graph = reference .llir..module, bytes = 67108864, work = 1000000
     _graph = graph; _limit = bytes; _budget = work
@@ -107,6 +114,193 @@ checked: class
     call run(); return _bytes
   workused: method = .int
     call run(); return _work
+  /** Optional facts never replace or weaken required entry admission. */
+  packetcharge: method = .int
+    arg count = 1
+    if count < 0 | count > _packetremaining then return 0
+    _packetremaining = _packetremaining - count
+    return 1
+  packetroot: method = .int
+    arg value = .int
+    if _packetready <> 1 then return 0
+    if value < 1 | value > _packetroots[0] then return 0
+    return _packetroots[value]
+  packetslot: method = .int
+    arg slotid = .int
+    if _packetready <> 1 then return 0
+    if slotid < 1 | slotid > _packetslots[0] then return 0
+    return _packetslots[slotid]
+  packettransport: method = .int
+    arg opid = .int
+    if _packetready <> 1 then return 0
+    if opid < 1 | opid > _packettransports[0] then return 0
+    return _packettransports[opid]
+  consumingappend: method = .int
+    arg opid = .int
+    if _packetready <> 1 then return 0
+    if opid < 1 | opid > _packetappends[0] then return 0
+    return _packetappends[opid]
+  /** One optional all-record proof. Private false continuations form linear
+   * regions; every slot read is resolved before any store is called dead.
+   * Exhaustion leaves all published facts unavailable, never an IR error. */
+  preparepackets: method = .int
+    arg index_ref = reference .llirgraph..index, work = .int, bytes = .int
+    call run()
+    if _error <> '' then return 0
+    if _packetready <> 0 then return _packetready = 1
+    _packetready = 2; _packetremaining = work
+    if work < 1 | bytes < 1 | <refvalid>(index_ref) = 0 then return 0
+    index = dereference index_ref
+    if index.valid() = 0 then return 0
+    if belongs(index.owner()) = 0 then return 0
+    graph = dereference _graph; store = dereference _store
+    contract = dereference store.contract(); argumenttype = contract.type('crexx.c.arguments').id()
+    operations = store.count(3); values = store.count(4); slots = store.count(5); blocks = store.count(2)
+    /* Logical retained workspace includes slot versions and DFS scratch. */
+    if operations > bytes <idiv> 384 then return 0
+    bytes = bytes - operations * 384
+    if values > bytes <idiv> 96 then return 0
+    bytes = bytes - values * 96
+    if slots > bytes <idiv> 48 then return 0
+    bytes = bytes - slots * 48
+    if blocks > bytes <idiv> 48 then return 0
+    parent = .int[]; child = .int[]; region = .int[]; rank = .int[]
+    writer = .int[]; readers = .int[]; badslot = .int[]; slotroot = .int[]
+    roots = .int[]; state = .int[]; stack = .int[]
+    semantic = .int[]; bad = .int[]; terminals = .int[]; dead = .int[]; appends = .int[]
+    lastwrite = .int[]; lastregion = .int[]
+    b = .int; p = .int; current = .int; depth = .int; opid = .int; slotid = .int
+    value = .int; nextvalue = .int; top = .int; root = .int; ordinal = .int; target = .int
+    producer = .int; before = .int; after = .int; function = .int; name = .string
+    op = .llir..opview
+    do b = 1 to blocks
+      if packetcharge() = 0 then return 0
+      if _falseblocks[b] > 0 & _predecessors[b] = 1 then do
+        p = store.get(3,_predops[b],2)
+        if child[p] <> 0 | store.get(2,p,1) <> store.get(2,b,1) then return 0
+        parent[b] = p; child[p] = b
+      end
+    end
+    do b = 1 to blocks
+      if packetcharge() = 0 then return 0
+      if parent[b] <> 0 then iterate
+      current = b; depth = 0
+      do while current > 0
+        if packetcharge() = 0 then return 0
+        if region[current] <> 0 then return 0
+        depth = depth + 1; region[current] = b; rank[current] = depth
+        opid = store.get(2,current,2)
+        do while opid > 0
+          if packetcharge() = 0 then return 0
+          op = graph.operation(opid); name = op.name()
+          if name = 'core.store' | name = 'core.load' then do
+            slotid = store.get(3,opid,12)
+            if store.get(5,slotid,2) = argumenttype then do
+              if name = 'core.store' then do; lastwrite[slotid] = opid; lastregion[slotid] = b; end
+              else if lastregion[slotid] <> b then badslot[slotid] = 1
+              else do; writer[opid] = lastwrite[slotid]; readers[lastwrite[slotid]] = readers[lastwrite[slotid]] + 1; end
+            end
+          end
+          opid = store.get(3,opid,3)
+        end
+        current = child[current]
+      end
+    end
+    do b = 1 to blocks
+      if packetcharge() = 0 then return 0
+      if region[b] = 0 then return 0
+    end
+    /* Each A value has at most one producer dependency. Memoize every visit. */
+    do value = 1 to values
+      if packetcharge() = 0 then return 0
+      if store.get(4,value,3) <> argumenttype | state[value] = 2 then iterate
+      current = value; top = 0; root = 0
+      do while current > 0
+        if packetcharge() = 0 then return 0
+        if state[current] = 2 then do; root = roots[current]; leave; end
+        if state[current] = 1 then leave
+        state[current] = 1; top = top + 1; stack[top] = current
+        producer = index.definition(current)
+        if producer < 1 | producer > operations then leave
+        op = graph.operation(producer); name = op.name()
+        nextvalue = 0
+        if name = 'crexx.c.arguments.empty' then do; root = current; leave; end
+        if name = 'crexx.c.arguments.append' then nextvalue = op.input(1).id()
+        else if name = 'core.load' then do
+          slotid = store.get(3,producer,12)
+          if badslot[slotid] = 0 & writer[producer] > 0 then nextvalue = store.operand(writer[producer],1)
+        end
+        if nextvalue > 0 then if store.get(4,nextvalue,3) <> argumenttype then nextvalue = 0
+        current = nextvalue
+      end
+      do while top > 0
+        current = stack[top]; top = top - 1
+        roots[current] = root; state[current] = 2
+      end
+    end
+    /* A coalesced slot has one root across every writer, even dead records. */
+    do slotid = 1 to slots
+      if packetcharge() = 0 then return 0
+      if store.get(5,slotid,2) <> argumenttype then iterate
+      do ordinal = 1 to index.slotwrites(slotid)
+        if packetcharge() = 0 then return 0
+        opid = index.slotwrite(slotid,ordinal); root = roots[store.operand(opid,1)]
+        if root = 0 then badslot[slotid] = 1
+        else if slotroot[slotid] = 0 then slotroot[slotid] = root
+        else if slotroot[slotid] <> root then badslot[slotid] = 1
+      end
+    end
+    do opid = 1 to operations
+      if packetcharge() = 0 then return 0
+      op = graph.operation(opid); name = op.name(); after = index.opblock(opid)
+      do ordinal = 1 to op.inputs()
+        if packetcharge() = 0 then return 0
+        value = op.input(ordinal).id(); root = roots[value]
+        if root = 0 then iterate
+        producer = index.definition(value); before = index.opblock(producer)
+        function = store.get(2,index.opblock(index.definition(root)),1)
+        if store.get(2,after,1) <> function then bad[root] = 1
+        if before = after then do
+          if index.opposition(producer) >= index.opposition(opid) then bad[root] = 1
+        end
+        else if region[before] <> region[after] | rank[before] >= rank[after] then bad[root] = 1
+        if name = 'core.store' & ordinal = 1 then do
+          slotid = store.get(3,opid,12)
+          if badslot[slotid] then bad[root] = 1
+          if badslot[slotid] = 0 & readers[opid] = 0 then do; dead[opid] = root; iterate; end
+          if readers[opid] <> 1 then bad[root] = 1
+        end
+        else if name = 'crexx.c.arguments.append' & ordinal = 1 then appends[opid] = root
+        else if ordinal = 1 & wordpos(name,'crexx.c.call crexx.c.call.external crexx.c.call.missing crexx.c.bif crexx.c.dynamic.call.owner crexx.c.dynamic.call.resolve') > 0 then terminals[root] = terminals[root] + 1
+        else bad[root] = 1
+        semantic[value] = semantic[value] + 1
+      end
+    end
+    do value = 1 to values
+      if packetcharge() = 0 then return 0
+      root = roots[value]
+      if root > 0 then if semantic[value] <> 1 | terminals[root] <> 1 then bad[root] = 1
+    end
+    /* Publish only complete candidates after every use and budget check. */
+    do value = 1 to values
+      if packetcharge() = 0 then return 0
+      root = roots[value]
+      if root > 0 then if bad[root] = 0 then _packetroots[value] = root
+    end
+    do slotid = 1 to slots
+      if packetcharge() = 0 then return 0
+      root = slotroot[slotid]
+      if root > 0 then if badslot[slotid] = 0 & bad[root] = 0 then _packetslots[slotid] = root
+    end
+    do opid = 1 to operations
+      if packetcharge() = 0 then return 0
+      root = dead[opid]
+      if root > 0 then if bad[root] = 0 then _packettransports[opid] = root
+      root = appends[opid]
+      if root > 0 then if bad[root] = 0 then _packetappends[opid] = root
+    end
+    _packetready = 1
+    return 1
   tableslot: method = .int
     arg fn = .int
     call run(); return _tableslots[fn]
@@ -985,7 +1179,11 @@ checked: class
         op = graph.operation(opid); name = op.name()
         select
           when name = 'crexx.c.dynamic.expansion.begin' then nop
-          when name = 'crexx.c.dynamic.interpret' then state = 7
+          /* INTERPRET may preserve Fresh, consume it or commit Private. It
+           * cannot reopen eligibility already consumed by an outer clause. */
+          when name = 'crexx.c.dynamic.interpret' then do
+            if state % 2 then state = 7
+          end
           when name = 'crexx.c.procedure.consume' then do
             nextstate = 0; if state % 4 > 0 then nextstate = 2
             if state >= 4 then nextstate = nextstate + 4

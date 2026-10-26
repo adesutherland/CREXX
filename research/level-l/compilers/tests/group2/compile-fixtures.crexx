@@ -1,6 +1,7 @@
 /* cREXX License (MIT). Ordered Group 2 requests in one warm compiler worker.
  * This maintained fixture transport uses the existing public compiler service.
- * Each successful request publishes then invokes the explicit owning assembler.
+ * Ordinary success publishes then invokes the explicit owning assembler;
+ * explicit emit-only requests stop after publication and retain refusal checks.
  */
 options levelb
 namespace g2compile
@@ -13,7 +14,9 @@ import llfileoutput
 
 main: procedure = .int
   arg argv = .string[]
-  if argv[0] <> 3 then return 2
+  if argv[0] < 3 | argv[0] > 4 then return 2
+  emit_only = .int; emit_only = argv[0] = 4
+  if emit_only then if argv[4] <> 'emit-only' then return 2
   artifacts = argv[1]; rows = readlines(argv[2]); assembler_path = argv[3]
   requests = 0; index = .int; binding_index = .int; status = .int
   do row_index = 1 to rows[0]
@@ -58,13 +61,15 @@ main: procedure = .int
       return 1
     end
     /* Keep child exit notifications outside the compiler's protected block. */
+    if emit_only then do; say 'EMITTED|' || logical; iterate; end
     arguments = .string[]
     arguments[1] = '-o'; arguments[2] = left(output,length(output) - 5) || '.rxbin'; arguments[3] = output
     status = processrun(assembler_path,arguments)
     if status <> 0 then do; say 'FAIL|assemble|' || logical || '|' || status; return 1; end
     say 'COMPILED|' || logical
   end
-  say 'GROUP2_FIXTURES|requests=' || requests || '|PASS'
+  if emit_only then say 'GROUP2_EMISSION|requests=' || requests || '|EMISSION'
+  else say 'GROUP2_FIXTURES|requests=' || requests || '|PASS'
   return 0
 
 splitrow: procedure = .string[]

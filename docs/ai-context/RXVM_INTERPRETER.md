@@ -2465,7 +2465,7 @@ an empty or missing pattern consumes the remaining section. Every control,
 including targetless controls, updates this state and requests its dynamic
 operand at the actual transition. Existing v1/v2/direct instruction behavior is
 unchanged. The exact versioned layout/transitions and independent controls are
-documented in the [section contract](../../research/level-l/compilers/doc/architecture.md#proposed-c-parse-integration).
+documented in the [section contract](../../research/level-l/compilers/doc/levelc-architecture.md#proposed-c-parse-integration).
 Word/blank policy and pool/TRACE/source policy remain outside the generic VM
 matcher; Classic consumers reuse their shared B character scanner.
 
@@ -2515,7 +2515,7 @@ allocation/OOM and interruption limits, with dispatch HALT checks between calls.
 Local constructorless static smoke and kernel-only NUTF8 tests do not establish
 real 31-bit/CMS/TSO/Windows runtime qualification. Apple LeakSanitizer is
 unsupported; Linux LeakSanitizer and hosted proof remain unverified. See the
-[owning contract](../../research/level-l/compilers/doc/architecture.md#proposed-parse-cursor-contract)
+[owning contract](../../research/level-l/compilers/doc/levelc-architecture.md#proposed-parse-cursor-contract)
 and [local qualification](../../research/level-l/compilers/PLAN.md#parse-cursor-local-qualification).
 
 ### Pooled float operands

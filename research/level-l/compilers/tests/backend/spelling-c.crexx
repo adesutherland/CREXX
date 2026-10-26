@@ -3,7 +3,7 @@ options levelc
 if = 2; then = 3; else = 4
 say if then else
 say 'α''β' || '\path'
-say 'a'(2)
+say ('a')(2)
 x =
 say '[' || x || ']'
 say 01

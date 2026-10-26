@@ -8,14 +8,25 @@ import llir
 import llirservices
 import llcrxas
 
-main: procedure = .int expose checks failures
+main: procedure = .int expose checks failures inspection emission_requests emission_finished
   arg argv = .string[]
-  if argv[0] <> 1 then return 2
+  argc = argv[0]; inspection = ''; emission_requests = 0; emission_finished = 0
+  if argc = 3 then do
+    if argv[2] \== 'emit-only' | argv[3] == '' then return 2
+    inspection = argv[3]; argc = 1
+  end
+  if argc <> 1 then return 2
   checks = 0; failures = 0
   call sourcecontracts()
   call inventory(argv[1])
   call graphcontracts(argv[1])
-  say 'LABEL_CONTRACTS|checks=' || checks || '|failures=' || failures
+  call noemission('labels.ast-source-contracts')
+  if inspection <> '' then do
+    expected = 4 + 7 + 1
+    call check(emission_requests = expected & emission_finished = expected,'complete explicit LABEL emission inventory')
+    say 'LABEL_EMISSION|requests=' || emission_requests || '|complete=' || emission_finished || '|failures=' || failures
+  end
+  else say 'LABEL_CONTRACTS|checks=' || checks || '|failures=' || failures
   return failures
 
 check: procedure = .void expose checks failures
@@ -99,7 +110,7 @@ sourcecontracts: procedure = .void
   call bad('if 1 then A: ; /* no payload */ B: ;','14.3','then')
   call bad('if 0 then nop else A:','14.4','else')
   call bad('if 1 then if 0 then nop else A: ;','14.4','else')
-  call bad('select; when 1 then A: ; end','14.3','then')
+  call bad('select; when 1 then A: ; end','10.5','end')
   call bad("if '雪' = '雪' then A:",'14.3','then')
   comment = .llcparse..parsed('if 1 then A: /* open' as .binary)
   call check(comment.status() <> 0 & pos('RXC-LC-6.1',comment.error()) > 0 & pos('14.3',comment.error()) = 0,'comment failure retains lexical priority: ' || comment.error())
@@ -128,6 +139,7 @@ inventory: procedure = .void
 inventory_case: procedure = .void
   arg runtime = .string, text = .string, accepted = .int, label = .string
   graph = .llir..module
+  caseid = 'labels.inventory-' || changestr(' ',label,'-'); call emissionstart(caseid)
   request = .llcfrontend..request(text as .binary,runtime,'inventory.crexx')
   if accepted then do
     call check(request.status() = 0,label || ': ' || request.error())
@@ -137,28 +149,37 @@ inventory_case: procedure = .void
     call check(request.status() <> 0 & pos('16.3',request.error()) > 0,label || ': ' || request.error())
     graph = request.graph(); call check(graph.error() <> '',label || ' publishes no graph')
   end
+  call frontendfinish(caseid,text as .binary,1 - accepted,request.status(),request.error())
   return
 
 graphcontracts: procedure = .void
   arg runtime = .string
   text = "call P 'x'; return RESULT; if 0 then P: return ARG(1)"
+  call emissionstart('labels.fresh')
   request = .llcfrontend..request(text as .binary,runtime,'roundtrip.crexx')
   call check(request.status() = 0,'labelled entry source lowers: ' || request.error())
   if request.status() then return
   graph = request.graph(); saved = graph.binary()
   original = .llcrxas..compilation(graph,runtime); previous = original.output(); previous_text = previous.text()
+  call emissionfinish('labels.fresh',reference graph,reference previous,1,original.status(),original.error())
   call check(original.status() = 0 & previous.bytes() > 0,'source graph selects under current C17 contract: ' || original.error())
   restored = loadgraph(reference graph)
   call check(restored.error() == '', 'current graph binary roundtrip')
-  loaded = .llcrxas..compilation(restored,runtime)
+  call emissionstart('labels.loaded')
+  loaded = .llcrxas..compilation(restored,runtime); loaded_output = loaded.output()
+  call emissionfinish('labels.loaded',reference restored,reference loaded_output,1,loaded.status(),loaded.error())
   call check(loaded.status() = 0,'loaded labelled-entry graph selects: ' || loaded.error())
   transformed = llirservices..optimise(reference graph)
   call check(transformed.status() == 'changed' & bin2x(transformed.result().binary()) \== bin2x(saved),'actual typed packet forwarding changes representative labelled-entry graph')
   if transformed.status() == 'changed' then do
-    changed = .llcrxas..compilation(transformed.result(),runtime)
+    rewritten = transformed.result(); call emissionstart('labels.transformed')
+    changed = .llcrxas..compilation(rewritten,runtime); changed_output = changed.output()
+    call emissionfinish('labels.transformed',reference rewritten,reference changed_output,1,changed.status(),changed.error())
     call check(changed.status() = 0,'transformed labelled-entry graph selects: ' || changed.error())
   end
+  call emissionstart('labels.limited')
   limited = .llcrxas..compilation(graph,runtime,128); empty = limited.output()
+  call emissionfinish('labels.limited',reference graph,reference empty,0,limited.status(),limited.error())
   call check(limited.status() <> 0 & empty.bytes() = 0 & pos('LIMIT',limited.error()) > 0,'bounded selector refuses atomically')
   call check(bin2x(graph.binary()) == bin2x(saved) & previous.text() == previous_text,'failure retains source graph and earlier owned output')
   return
@@ -169,3 +190,61 @@ loadgraph: procedure = .llir..module
   storage = dereference graph.storage()
   contract = dereference storage.contract()
   return llir..loadbinary(contract,graph.binary())
+
+/* Inspection is test-owned transport, never part of the compiler service. */
+emissionstart: procedure = .void expose inspection emission_requests
+  arg caseid = .string
+  if inspection == '' then return
+  emission_requests = emission_requests + 1
+  say 'START|' || caseid
+  return
+
+emissionfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, graph_ref = reference .llir..module, output_ref = reference .llir..output, expected = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  graph = dereference graph_ref; output = dereference output_ref
+  call check(graph.error() == '',caseid || ' inspection graph is frozen and valid')
+  if graph.error() <> '' then return
+  image = graph.binary()
+  written = writebinary(inspection || '/' || caseid || '.llir',image) = <blen>(image)
+  call check(written,caseid || ' exact temporary graph export')
+  if written = 0 then return
+  if expected then do
+    call check(status = 0 & output.bytes() > 0,caseid || ' inspection requires accepted output: ' || diagnostic)
+    if status <> 0 | output.bytes() = 0 then return
+    text = output.text() as .binary
+    written = writebinary(inspection || '/' || caseid || '.rxas',text) = output.bytes()
+    call check(written,caseid || ' exact temporary RXAS export')
+    if written = 0 then return
+    say 'EMITTED|' || caseid
+  end
+  else do
+    call check(status <> 0 & output.bytes() = 0,caseid || ' inspection refusal has no output')
+    if status = 0 | output.bytes() <> 0 then return
+    say 'REFUSAL|' || caseid || '|' || diagnostic
+  end
+  emission_finished = emission_finished + 1
+  return
+
+noemission: procedure = .void expose inspection emission_finished
+  arg caseid = .string
+  if inspection == '' then return
+  call emissionstart(caseid)
+  say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return
+
+/* Frontend-only cases retain exact loop/source bytes without inventing RXAS. */
+frontendfinish: procedure = .void expose inspection emission_finished
+  arg caseid = .string, source = .binary, refused = .int, status = .int, diagnostic = .string
+  if inspection == '' then return
+  accepted = (status <> 0) = refused
+  call check(accepted,caseid || ' frontend disposition matches its existing oracle: ' || diagnostic)
+  if accepted = 0 then return
+  written = writebinary(inspection || '/' || caseid || '.source',source) = <blen>(source)
+  call check(written,caseid || ' exact temporary frontend source export')
+  if written = 0 then return
+  if refused then say 'REFUSAL|' || caseid || '|' || diagnostic
+  else say 'NO_EMISSION|' || caseid
+  emission_finished = emission_finished + 1
+  return

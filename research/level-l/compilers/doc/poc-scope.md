@@ -34,7 +34,7 @@ that adding those constructs does not require changing the meaning of an
 existing operation. No debugger/TRACE parity claim is made from the first slice.
 
 This table records the original shared PoC. Later C instruction increments,
-including the [approved static DO forms](architecture.md#approved-do-contract),
+including the [approved static DO forms](levelc-architecture.md#approved-do-contract),
 are owned by the current C plan/ledger; G retains its existing bounded profile.
 
 Recognised unadmitted instructions and semantic forms report
@@ -93,8 +93,8 @@ whole fixture passes through the PoC.
 
 | Area | Existing contract owner | Later obligation |
 |---|---|---|
-| Proper B and self-hosting | [B implementation contract](../../../../docs/ai-context/CREXX_LEVELB_AUTHORING.md), [bootstrap architecture](architecture.md#bootstrap-native-seed-to-self-hosted-b-and-l) | STEP07B is deferred until after the C-first milestone, retaining full B language/ABI and compiler/library closure criteria. Native B seeds proper B through L; proper B rebuilds B libraries, L and itself with stage comparison and independent regressions. |
-| Complete Classic instructions/BIFs | [Classic worklist](../../../../docs/planning/release-1/levelc-compatibility-worklist.md), [working architecture](../../../../compiler/docs/levelc_working_architecture.md) | Active C-first priority: all agreed instructions and catalogued BIFs, stems/exposure, full ARG/PARSE, label dispatch, SIGNAL, conditions, TRACE, ADDRESS and streams. Review proceeds instruction by instruction. STEP08 INTERPRET and its mechanism review are deferred until later, retaining existing LC acceptance and eventual C-completion scope. |
+| Proper B and self-hosting | [B implementation contract](../../../../docs/ai-context/CREXX_LEVELB_AUTHORING.md), [build order and scope](levelc-architecture.md#products-and-build-order) | STEP07B is deferred until after the C-first milestone, retaining full B language/ABI and compiler/library closure criteria. Native B seeds proper B through L; proper B rebuilds B libraries, L and itself with stage comparison and independent regressions. |
+| Complete Classic instructions/BIFs | [Classic worklist](../../../../docs/planning/release-1/levelc-compatibility-worklist.md), [working architecture](../../../../compiler/docs/levelc_working_architecture.md) | Active C-first priority: all agreed instructions and catalogued BIFs, stems/exposure, full ARG/PARSE, label dispatch, SIGNAL, conditions, TRACE, ADDRESS and streams. STEP11 locally delivers same-frontend INTERPRET and Rexx source calls through semantic IR. Full LC-87, complete-C and delivery/platform acceptance remain open in PLAN. |
 | G language | [Language reference](../../../../docs/books/crexx_language_reference/statements.md), [types](../../../../docs/books/crexx_language_reference/data_types.md), [classes](../../../../docs/books/crexx_language_reference/classes_and_interfaces.md) | Classes/interfaces, references, arrays, complete numerics/options, initialisers, namespace exposure, all routine forms and extensions/tasks. |
 | Module ABI | [Metadata conformance](../../../../compiler/docs/metadata_conformance.md) | Full imports, exports, providers/autoload, layouts, optional defaults, source and supported inline templates. Phase A emits no optional inline body and refuses unsupported required contracts explicitly. |
 | Tools | [Compiler architecture](../../../../docs/ai-context/CREXX_ARCHITECTURE.md) | Wrappers, project builds, diagnostics/localisation, editors, source imports and host services. Existing commands keep their routing until replacement. |

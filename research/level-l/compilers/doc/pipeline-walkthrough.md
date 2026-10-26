@@ -136,7 +136,7 @@ spelling in their `name` attribute; the shared pool owns normalization. The
 required context argument is stored as a reference-valued local alias and read
 for each contextual operation. A second required integer argument selects the
 checked main/label entry in one source-unit body; the
-[current C ABI](architecture.md#proposed-procedure-contract) owns that protocol. The bundle borrows live
+[current C ABI](levelc-architecture.md#proposed-procedure-contract) owns that protocol. The bundle borrows live
 activation, pool and configuration owners; pool reads observe its current binding.
 The caller constructs stable child owners after completing the argument packet,
 inherits numeric state and passes its bundle reference plus the declared entry ID. Child updates leave the
@@ -159,7 +159,7 @@ function/subroutine attribute, and yields a result-presence packet. CALL updates
 RESULT/.RESULT; expression use requires a value. Static quoted targets bypass
 local labels, and direct BIF bindings preserve the original presence vectors.
 Authored bare RETURN and EOF absence have distinct callee/caller errors under
-the [current CALL contract](architecture.md#call-contract).
+the [current CALL contract](levelc-architecture.md#call-contract).
 The imports are checked against actual runtime metadata by the Level B reader,
 not guessed from source names or supplied by the native compiler.
 

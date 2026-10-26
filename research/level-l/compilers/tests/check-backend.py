@@ -147,7 +147,7 @@ try:
         for label, level, content, expected in [
             ('syntax','g','if 1 say 2','LL_COMPILER_SYNTAX'),
             ('type','g','x = .unknown','LL_COMPILER_TYPE'),
-            ('profile','c','interpret "say 1"','LL_COMPILER_PROFILE'),
+            ('profile','c','options levelc levelb','LL_COMPILER_PROFILE'),
             ('utf8','g',b'say \xff','LL_UTF8')]:
             source.write_bytes(content if isinstance(content,bytes) else content.encode())
             destination.write_bytes(b'previous output')
