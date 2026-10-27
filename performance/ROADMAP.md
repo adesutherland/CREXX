@@ -405,6 +405,25 @@ are recorded here or appeared in the completed programme ledger:
   decision selected. Memoization does not require adaptive opcode rewriting.
 - `PERF-LINK-01`: VM/link and dead-code hygiene. Keep artifact size, lifecycle,
   throughput, and late-loaded/plugin behaviour as separate verdicts.
+
+  **VM-STARTUP-02 — future candidate; unselected:** minimize VM startup by
+  investigating further static relationship/index preparation at the
+  `rxlink`/RXBIN stage, retaining only necessary process-local pointer binding
+  and execution preparation. Current dirty linking eagerly rebuilds compatibility
+  method/factory registries, independently constructs their temporary metadata
+  indexes, then rebuilds graph bindings; graph factory binding counts and fills
+  providers in separate passes, repeating signature work. Evaluate lazy
+  compatibility registries, a shared temporary index and narrower graph-binding
+  passes against the current design. Graph bindings currently consume
+  compatibility entries, and generic/native/cross-image paths retain those
+  registries: overlap does not establish safe removal. Preserve late loading,
+  native providers, cross-image resolution, factory selection, module
+  initializers, TRACE/debug observations, ownership, failure fallback and
+  teardown. Require independent correctness before matched ordinary
+  profiling-off Release load-to-first-result, peak RSS, image/package size and
+  steady-state cost comparisons under the existing first-verdict gate, covering
+  both concrete VMs and installed consumers. No gain is claimed; this entry
+  approves no implementation, format or architecture change.
 - `PERF-ISA-01`: file-I/O call migration and measured RXAS instruction-family
   review. These remain post-Release-1 design studies; no opcode or RXBIN change
   follows from the old ledger alone.
