@@ -84,7 +84,7 @@ if(CREXX_BUILD_RESEARCH_COMPILERS)
     crexx_add_build_stage(stage-research-compilers
         DESCRIPTION "Explicitly selected experimental compilers"
         OPTIONAL_TARGETS llccompiler llgcompiler llctarget llcdynamic llrxc-c llrexx llrxc-g
-            llcontract_runtime_package)
+            llcompiler_llcbrowser_opt llcontract_runtime_package)
 endif()
 
 crexx_add_build_stage(stage-product

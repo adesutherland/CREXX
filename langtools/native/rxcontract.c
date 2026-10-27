@@ -1,13 +1,19 @@
 /* cREXX License (MIT). Compiler-host-only projection of binutils contracts.
  * No signature grammar or source-language admission policy lives here. */
 #include "crexxpa.h"
+#if defined(CREXX_VM_SINGLE_THREADED)
+#undef INITIALIZER
+#define INITIALIZER(f) static void f(void) {
+#endif
 #include "rxcontract.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(_MSC_VER)
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define CONTRACT_LOCAL
+#elif defined(_MSC_VER)
 #define CONTRACT_LOCAL __declspec(thread)
 #else
 #define CONTRACT_LOCAL __thread
@@ -275,3 +281,13 @@ LOADFUNCS
     ADDPROC(acquire, "rxcontract.acquire", "b", ".string[]",
         "artifact=.string,callable=.string,bytes=.int,work=.int");
 ENDLOADFUNCS
+
+#if defined(CREXX_VM_SINGLE_THREADED)
+void crexx_contract_init(void) {
+    static int initialized;
+    if (initialized) return;
+    initialized = 1;
+    UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)();
+    UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID)();
+}
+#endif

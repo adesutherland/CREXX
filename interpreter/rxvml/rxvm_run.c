@@ -62,8 +62,10 @@ int rxvm_set_provider_path(struct rxvm_context* ctx, const char* path) {
     char *copy = 0;
     if (!ctx) return -1;
     if (path && *path) {
-        copy = strdup(path);
+        size_t copy_size = strlen(path) + 1u;
+        copy = malloc(copy_size);
         if (!copy) return -1;
+        memcpy(copy, path, copy_size);
     }
     free(ctx->provider_location);
     ctx->provider_location = copy;

@@ -35,6 +35,10 @@
 #endif
 
 #include "crexxpa.h"
+#if defined(CREXX_VM_SINGLE_THREADED)
+#undef INITIALIZER
+#define INITIALIZER(f) static void f(void) {
+#endif
 
 #include "rxfs_ops.h"
 #include "rxfs_source.h"
@@ -345,3 +349,13 @@ LOADFUNCS
     ADDPROC(list_directory, "rxfs.listdir", "b", ".int", "path = .string,expose entries = .string[]");
     ADDPROC(append_file, "rxfs.append", "b", ".int", "source = .string,target = .string");
 ENDLOADFUNCS
+
+#if defined(CREXX_VM_SINGLE_THREADED)
+void crexx_fs_init(void) {
+    static int initialized;
+    if (initialized) return;
+    initialized = 1;
+    UNIQUE_CAPABILITY_FUNCTION_NAME(PLUGIN_ID)();
+    UNIQUE_INIT_FUNCTION_NAME(PLUGIN_ID)();
+}
+#endif

@@ -1,0 +1,92 @@
+/* cREXX License (MIT). Bounded embedded Classic source entry. */
+options levelb
+namespace llcbrowser expose run
+import rxfnsb
+import llcdynamic
+import rexxclassichost
+
+/**
+ * Execute valid UTF-8 source as an ordinary Classic COMMAND program.
+ * No physical directory or external-source permission follows from filename.
+ * Program stdout/stderr stay on the host's configured streams; the detached
+ * completion and conditions return only through the bounded LLB1 record.
+ * @param source source text, at most 2 MiB of UTF-8 bytes
+ * @param filename nonempty NUL-free logical source name, at most 4096 bytes
+ * @param arguments at most 128 present positions, at most 1 MiB total bytes
+ * @return LLB1 ASCII completion record; see the C user guide for fixed fields
+ */
+run: procedure = .string
+  arg source = .string, filename = .string, arguments = .string[]
+  result = .rexxclassichost..RexxClassicHostResult
+  do
+    source_bytes = source as .binary
+    if binlength(source_bytes) > 2097152 then assembler signal 'OUT_OF_RANGE','Browser source exceeds 2 MiB'
+    /* An embedding can supply an uncertified string slot. Explicit byte-to-
+     * text conversion checks UTF-8 before frontend or resource effects. */
+    validated_source = source_bytes as .string
+    source_bytes = validated_source as .binary
+    name_bytes = filename as .binary
+    if binlength(name_bytes) = 0 | binlength(name_bytes) > 4096 then assembler signal 'INVALID_ARGUMENTS','Browser logical filename must contain 1..4096 UTF-8 bytes'
+    validated_name = name_bytes as .string
+    if binpos('00'x as .binary,name_bytes) > 0 then assembler signal 'INVALID_ARGUMENTS','Browser logical filename must not contain NUL'
+    if arguments[0] > 128 then assembler signal 'OUT_OF_RANGE','Browser arguments exceed 128 positions'
+    request = .rexxclassichost..RexxClassicHostRequest('COMMAND',validated_name)
+    call request.setLimits(1048576,128,64)
+    call request.setQueue(rxqueue('QUERY'))
+    total = 0
+    do index = 1 to arguments[0]
+      argument_bytes = arguments[index] as .binary
+      amount = binlength(argument_bytes)
+      if amount > 1048576 - total then assembler signal 'OUT_OF_RANGE','Browser arguments exceed 1 MiB'
+      argument_text = argument_bytes as .string
+      call request.appendText(argument_text)
+      total = total + amount
+    end
+    result = llcdynamic..runprogram(source_bytes,request,'',0)
+  on signal failure,error,overflow_underflow,division_by_zero,conversion_error,invalid_arguments,out_of_range,unicode_error,reference_invalid,object_not_initialized,rxbin_corruption,unknown_instruction,function_not_found,not_implemented,invalid_signal_code,notready,quit,term,posix_int,channel_error,task_failure,cancel,classic_syntax,classic_condition,other as problem
+    result = .rexxclassichost..RexxClassicHostResult.failed(problem as .runtime_signal,'')
+  end
+  return encode(result)
+
+/** Private bounded wire projection after all execution owners have closed. */
+encode: procedure = .string
+  arg result = .rexxclassichost..RexxClassicHostResult
+  lf = '0A'x as .string
+  truncated = 0; status = 0; has_status = 0; value = ''
+  if result.hasCondition() = 0 then do
+    has_status = 1; status = result.commandStatus()
+  end
+  if result.hasValue() then do
+    returned = result.value()
+    value = hexfield(returned.asString() as .binary,1048576,truncated)
+  end
+  primary_name = ''; primary_message = ''; primary_code = 0; primary_module = 0; primary_address = 0
+  if result.hasCondition() then do
+    primary = result.condition()
+    primary_name = hexfield(primary.name() as .binary,65536,truncated)
+    primary_message = hexfield(primary.message() as .binary,65536,truncated)
+    primary_code = primary.code(); primary_module = primary.module(); primary_address = primary.address()
+  end
+  cleanup_name = ''; cleanup_message = ''; cleanup_code = 0; cleanup_module = 0; cleanup_address = 0
+  if result.hasCleanupCondition() then do
+    cleanup = result.cleanupCondition()
+    cleanup_name = hexfield(cleanup.name() as .binary,65536,truncated)
+    cleanup_message = hexfield(cleanup.message() as .binary,65536,truncated)
+    cleanup_code = cleanup.code(); cleanup_module = cleanup.module(); cleanup_address = cleanup.address()
+  end
+  wire = 'LLB1' || lf || 'indicator=' || result.indicator() || lf || 'hasStatus=' || has_status || lf || 'status=' || status || lf
+  wire = wire || 'hasValue=' || (result.hasValue() as .int) || lf || 'valueHex=' || value || lf
+  wire = wire || 'hasPrimary=' || (result.hasCondition() as .int) || lf || 'primaryNameHex=' || primary_name || lf || 'primaryMessageHex=' || primary_message || lf
+  wire = wire || 'primaryCode=' || primary_code || lf || 'primaryModule=' || primary_module || lf || 'primaryAddress=' || primary_address || lf
+  wire = wire || 'hasCleanup=' || (result.hasCleanupCondition() as .int) || lf || 'cleanupNameHex=' || cleanup_name || lf || 'cleanupMessageHex=' || cleanup_message || lf
+  wire = wire || 'cleanupCode=' || cleanup_code || lf || 'cleanupModule=' || cleanup_module || lf || 'cleanupAddress=' || cleanup_address || lf || 'truncated=' || truncated || lf
+  return wire
+
+/** Hex transport preserves byte prefixes exactly; the caller owns the flag. */
+hexfield: procedure = .string
+  arg bytes = .binary, limit = .int, expose truncated = .int
+  if binlength(bytes) > limit then do
+    truncated = 1
+    return bin2x(binsubstr(bytes,1,limit))
+  end
+  return bin2x(bytes)

@@ -19,6 +19,7 @@ set(vm_sources
     interpreter/rxvmintp.c interpreter/rxvmparse.c interpreter/rxvmparse_cursor.c
     interpreter/rxvmlinkindex.c interpreter/rxvmworker.c interpreter/rxvmprogram.c
     interpreter/rxvmactive.c interpreter/rxvmload.c interpreter/interrupt_single.c
+    interpreter/rxvminvoke.c ports/single-threaded/resource_single.c
     interpreter/rxenv.c interpreter/exitfunc.c interpreter/rxpacallmethod.c interpreter/rxpafuncs.c
     interpreter/rxvml/rxvm_run.c
     interpreter/rxvmref.c interpreter/rxpacompat.c interpreter/rxvmmemory.c
@@ -46,17 +47,37 @@ target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_SINGLE_THREADED=1
     CREXX_VM_PORTABLE_ALLOC=1 CREXX_VM_COMPACT=1
     RXVM_MEMORY_SLAB_SIZE=${CREXX_VM_SLAB_SIZE}
     RXVM_MEMORY_MAX_STANDARD_SIZE=${CREXX_VM_MAX_POOLED_SIZE})
+if(EMSCRIPTEN)
+    # Strict C99 otherwise hides the POSIX stream declarations used by the core.
+    target_compile_definitions(rxvm_single_core PRIVATE _POSIX_C_SOURCE=200809L)
+endif()
 option(CREXX_MAINFRAME_ADDRESS "Link the selected CMS31/TSO31 native ADDRESS provider" OFF)
 option(CREXX_VM_CLASSIC_PROVIDERS "Link portable Classic stream and native logical-file bindings" OFF)
-if(CREXX_VM_CLASSIC_PROVIDERS)
+option(CREXX_VM_CLASSIC_FULL_PROVIDERS "Link full static Classic stream, filesystem and contract providers" OFF)
+if(CREXX_VM_CLASSIC_PROVIDERS AND CREXX_VM_CLASSIC_FULL_PROVIDERS)
+    message(FATAL_ERROR "Select either reduced native or full Classic providers")
+endif()
+if(CREXX_VM_CLASSIC_PROVIDERS OR CREXX_VM_CLASSIC_FULL_PROVIDERS)
     target_sources(rxvm_single_core PRIVATE
-        "${CREXX_SOURCE}/lib/plugins/cstream/rxcstream.c"
-        "${CMAKE_CURRENT_LIST_DIR}/mainframe_fs.c")
-    target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_CLASSIC_PROVIDERS=1)
+        "${CREXX_SOURCE}/lib/plugins/cstream/rxcstream.c")
     set_source_files_properties("${CREXX_SOURCE}/lib/plugins/cstream/rxcstream.c"
         PROPERTIES COMPILE_DEFINITIONS "PLUGIN_ID=rxcstream")
+endif()
+if(CREXX_VM_CLASSIC_PROVIDERS)
+    target_sources(rxvm_single_core PRIVATE "${CMAKE_CURRENT_LIST_DIR}/mainframe_fs.c")
+    target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_CLASSIC_PROVIDERS=1)
     set_source_files_properties("${CMAKE_CURRENT_LIST_DIR}/mainframe_fs.c"
         PROPERTIES COMPILE_DEFINITIONS "PLUGIN_ID=rxfs")
+endif()
+if(CREXX_VM_CLASSIC_FULL_PROVIDERS)
+    target_sources(rxvm_single_core PRIVATE
+        "${CREXX_SOURCE}/lib/plugins/fs/rxfs.c"
+        "${CREXX_SOURCE}/langtools/native/rxcontract.c")
+    target_compile_definitions(rxvm_single_core PUBLIC CREXX_VM_CLASSIC_FULL_PROVIDERS=1)
+    set_source_files_properties("${CREXX_SOURCE}/lib/plugins/fs/rxfs.c"
+        PROPERTIES COMPILE_DEFINITIONS "PLUGIN_ID=rxfs")
+    set_source_files_properties("${CREXX_SOURCE}/langtools/native/rxcontract.c"
+        PROPERTIES COMPILE_DEFINITIONS "PLUGIN_ID=rxcontract")
 endif()
 set(CREXX_COMMAND_INCLUDE "" CACHE PATH "Verified selected SDK include directory with command.h")
 set(CREXX_COMMAND_LIBRARIES "" CACHE STRING "Selected SDK command adapter libraries/objects")
@@ -82,6 +103,9 @@ endif()
 # RXC calls the public embedding API; this does not include a VM CLI main.
 add_library(rxvm_single_embed STATIC "${CREXX_SOURCE}/interpreter/rxvml.c")
 target_link_libraries(rxvm_single_embed PUBLIC rxvm_single_core)
+if(EMSCRIPTEN)
+    target_compile_definitions(rxvm_single_embed PRIVATE _POSIX_C_SOURCE=200809L)
+endif()
 if(CREXX_BUILD_COMPILER)
     include("${CMAKE_CURRENT_LIST_DIR}/compiler.cmake")
 endif()
@@ -101,6 +125,14 @@ if(BUILD_TESTING AND CREXX_VM_CLASSIC_PROVIDERS AND CREXX_CLASSIC_PROVIDER_FIXTU
     add_test(NAME single_vm_classic_providers COMMAND rxbvm_single ${CREXX_CLASSIC_PROVIDER_FIXTURE})
     set_tests_properties(single_vm_classic_providers PROPERTIES
         PASS_REGULAR_EXPRESSION "NATIVE CLASSIC PROVIDERS PASS")
+endif()
+set(CREXX_BROWSER_FIXTURE "" CACHE FILEPATH "Prepared standalone llcbrowser.rxbin image")
+if(BUILD_TESTING AND CREXX_VM_CLASSIC_FULL_PROVIDERS AND CREXX_BROWSER_FIXTURE)
+    add_executable(test_single_browser test_browser.c)
+    target_link_libraries(test_single_browser PRIVATE rxvm_single_embed ${CMAKE_DL_LIBS} m)
+    add_test(NAME single_vm_browser_entry COMMAND test_single_browser "${CREXX_BROWSER_FIXTURE}")
+    set_tests_properties(single_vm_browser_entry PROPERTIES
+        PASS_REGULAR_EXPRESSION "BROWSER EMBEDDING PASS" TIMEOUT 180)
 endif()
 if(BUILD_TESTING)
     add_executable(test_single_state test_state.c)

@@ -22,6 +22,10 @@ static FILE *rxvm_private_fopen(const char *path, const char *mode) {
     /* Native profiles have no child-process inheritance and libc may reject
      * Linux's e modifier. Use the logical-name/text boundary exactly once. */
     return platform_fopen(path, mode);
+#elif defined(__EMSCRIPTEN__)
+    /* Browser files have no child-process inheritance. Keep the virtual
+     * filesystem's ordinary C modes rather than adding a libc extension. */
+    return fopen(path, mode);
 #elif defined(__APPLE__)
     /* Darwin fopen does not implement the 'e' modifier. Preserve its C mode
      * parsing and initial append position, but open atomically close-on-exec. */

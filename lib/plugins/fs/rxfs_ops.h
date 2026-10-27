@@ -9,7 +9,9 @@ static wchar_t *rxfs_wide(const char *s) {
 }
 #else
 #include <fcntl.h>
+#ifndef __EMSCRIPTEN__
 #include <sys/file.h>
+#endif
 #ifdef __linux__
 #include <sys/syscall.h>
 #endif
@@ -147,7 +149,9 @@ typedef struct rxfs_guard {
     int handle;
 #endif
 } rxfs_guard;
-#ifdef _MSC_VER
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXFS_LOCAL
+#elif defined(_MSC_VER)
 #define RXFS_LOCAL __declspec(thread)
 #else
 #define RXFS_LOCAL __thread
@@ -254,6 +258,10 @@ PROCEDURE(make_guard) {
             free(path);
         }
     }
+#elif defined(__EMSCRIPTEN__)
+    /* Browser filesystems supply no interprocess flock contract. Publish an
+     * ordinary failed acquisition without opening or creating the lock file. */
+    guard->handle = -1;
 #else
     guard->handle = open(GETSTRING(ARG0), O_RDWR | O_NOFOLLOW | (lease ? 0 : O_CREAT), 0600);
     if (guard->handle >= 0) {

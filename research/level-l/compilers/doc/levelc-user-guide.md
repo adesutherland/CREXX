@@ -64,7 +64,8 @@ cmake --install cmake-build-debug --prefix '/tmp/crexx review' --component Resea
 Both installations copy prepared outputs; they do not build missing products.
 The base installation supplies commands, ordinary runtime and native providers;
 the opt-in ResearchCompilers component adds `llrxc-c`, `llccompiler.rxbin`,
-`llctarget.rxbin`, `llcdynamic.rxbin`, `llrexx` and `llrexx.rxbin`. Keep those files together with their
+`llctarget.rxbin`, `llcdynamic.rxbin`, `llrexx`, `llrexx.rxbin` and the embedded
+source entry `llcbrowser.rxbin`. Keep those files together with their
 base installation. A program using native services is not distributed simply
 by copying its one RXBIN file.
 
@@ -117,11 +118,64 @@ for a child failure.
 
 A B host can import `llcdynamic` and `rexxclassichost`, construct a public
 `RexxClassicHostRequest('COMMAND', logicalName)`, append values/presence and call
-`llcdynamic..runprogram(sourceBytes, request, resourceBase)`. It returns an owned
+`llcdynamic..runprogram(sourceBytes, request, resourceBase, sourceEnabled)`. The
+last two arguments default to `''` and `1`; an embedding passes `sourceEnabled=0`
+to explicitly disable external source lookup. It returns an owned
 `RexxClassicHostResult` after closing engine and host owners, retaining the primary
 condition and first cleanup condition separately. The trusted physical resource
 base is distinct from the logical source name. Non-COMMAND requests are refused;
 unsupported static/invoke boundaries are explicit failures, never empty success.
+
+### Embedded source entry
+
+`llcbrowser.rxbin` is a prepared entry for a browser embedding that already owns
+its VM, native providers and program streams. It reuses the same COMMAND
+frontend/IR execution as `llrexx`; it does not compile the submitted program to
+RXAS or bytecode. Its exact RXVML callable descriptor is:
+
+```text
+rxsig1|llcbrowser.run|.string|source=.string,filename=.string,arguments=.string[*]
+```
+
+Callable metadata uses `.string[*]` for the source declaration's `.string[]`.
+
+`source` is valid UTF-8 text with at most 2 MiB of bytes. `filename` is a logical
+source name: nonempty, NUL-free and at most 4096 UTF-8 bytes. It supplies SOURCE
+and diagnostics and grants no physical source directory. `arguments` contains
+at most 128 separate present ARG positions, totaling at most 1 MiB of UTF-8
+bytes. Empty, Unicode and embedded-NUL argument text remain exact. The entry
+explicitly disables external source search, including ambient cwd candidates;
+local routines, BIFs and INTERPRET retain their ordinary behavior. The embedding
+owns the available ADDRESS/stream/native services.
+
+The single-thread port's full static providers retain that port's service
+limits: clocks, sockets, process launch and dynamic provider loading remain
+unavailable. Automatic random seeding needs the unavailable clock; explicit
+seeding remains available. An execution-directory resource snapshot also fails
+until the embedding supplies its explicit command-resource owner. The browser
+entry does not need that snapshot because external source lookup is disabled.
+CREXX's native entry/embedding checks and Emscripten core/embed archive build
+are separate from THE's pending Wasm Worker host and browser integration.
+
+The return is ASCII text beginning `LLB1` and a newline, then these fixed
+`key=value` lines in this order, each ending in a newline:
+
+| Fields | Meaning |
+|---|---|
+| `indicator` | Existing `N` absent, `R` result, `E` condition, `X` resource or `S` unable completion view. |
+| `hasStatus`, `status` | Boolean 0/1 and signed decimal COMMAND status. A primary condition sets `hasStatus=0` and `status=0`; that zero does not describe successful execution. |
+| `hasValue`, `valueHex` | Boolean presence and uppercase hex of the returned value's UTF-8 bytes. An absent value has empty hex; a present empty value retains `hasValue=1`. |
+| `hasPrimary`, `primaryNameHex`, `primaryMessageHex`, `primaryCode`, `primaryModule`, `primaryAddress` | Primary-condition presence, name/message byte hex and decimal runtime code/module/address. Absent conditions have empty hex and zero numbers. |
+| `hasCleanup`, `cleanupNameHex`, `cleanupMessageHex`, `cleanupCode`, `cleanupModule`, `cleanupAddress` | Separate first cleanup-condition projection, using the same rules. |
+| `truncated` | Boolean 0/1. Value bytes are capped at 1 MiB and each condition name/message at 64 KiB before hex encoding; any capped projection sets 1. |
+
+Hex preserves exact byte prefixes, including NUL; a capped prefix may end within
+a multibyte UTF-8 sequence. The wire projects condition name, message and runtime
+identity rather than serializing arbitrary typed payload objects. Program
+stdout/stderr remain separate host streams. The facade writes no completion
+marker or diagnostic to them. Frontend errors retain their logical filename in
+the existing diagnostic; the interpreter's helper-PC traceback limitation still
+applies to unhandled runtime conditions.
 
 ## Compile, assemble, link and run
 

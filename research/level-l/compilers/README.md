@@ -56,6 +56,7 @@ selected C dynamic-runtime image and contract-provider package.
 |---|---|
 | `llrxc-c`, `llccompiler.rxbin` | Classic C command and reusable compile service; `llrxc-c --run` shares the interpreter. |
 | `llrexx`, `llrexx.rxbin` | File-only Classic COMMAND interpreter using the full-program C frontend/IR runtime. |
+| `llcbrowser.rxbin` | Bounded embedded source entry over the same COMMAND runtime, with external source lookup disabled and a separate structured result. |
 | `llctarget.rxbin` | Runtime adapter for generated C applications. |
 | `llcdynamic.rxbin` | Optional same-C-frontend preparation and semantic IR execution. |
 | `llrxc-g`, `llgcompiler.rxbin` | Separate G command and compile service over the typed core. |

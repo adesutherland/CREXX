@@ -17,6 +17,20 @@ asynchronous callbacks. Unavailable channel/socket/clock operations raise
 `NOT_IMPLEMENTED` (12); static-only loading and process-worker entry fail
 explicitly. The port guide owns its supported option bundle and tests.
 
+The separate opt-in `CREXX_VM_CLASSIC_FULL_PROVIDERS` profile statically binds
+the existing `rxcstream`, full `rxfs` and `rxcontract` providers into this same
+single-thread core. CLI and RXVML register their immutable catalogues explicitly
+and retain per-VM sessions. It leaves the reduced native Classic and parser-only
+profiles unchanged. The intended browser host supplies Worker-local MEMFS with
+no host mounts; ordinary stream/source/temporary-file operations use that
+filesystem, while fileguard acquisition fails explicitly. Dynamic providers,
+child processes, channels, sockets and clocks remain unavailable. The optional
+execution-directory snapshot also fails unless the embedding supplies an
+explicit command-resource owner; no ambient process cwd replaces it. See the
+port guide for the exact option, resource-view and fileguard failure contracts.
+The native browser-entry consumer and compiled Emscripten archives qualify the
+CREXX side; THE's actual Wasm Worker host and browser integration remain pending.
+
 On native CMS/TSO builds, UTF READLINE/FREADLINE/FREADCDPT decode IBM1047
 stdin through `platform_text_getc`. File text streams already retain their
 selected codec. SAY and UTF text stdout/stderr writes use

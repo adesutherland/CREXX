@@ -212,8 +212,11 @@ rxvm_parse_cursor *rxvm_parse_create(const char *source, size_t source_length,
     if (status) *status = RXVM_PARSE_INVALID;
     if ((!source && source_length) || !plan || !plan_length) return NULL;
     if (source_length >= (size_t)PTRDIFF_MAX || plan_length > (size_t)PTRDIFF_MAX ||
-        source_length == SIZE_MAX || source_length > (uint64_t)RXINTEGER_MAX ||
-        plan_length > (uint64_t)RXINTEGER_MAX) {
+        source_length == SIZE_MAX
+#if SIZE_MAX > RXINTEGER_MAX
+        || source_length > (size_t)RXINTEGER_MAX || plan_length > (size_t)RXINTEGER_MAX
+#endif
+        ) {
         if (status) *status = RXVM_PARSE_RANGE;
         return NULL;
     }
@@ -394,7 +397,11 @@ int rxvm_parse_supply(rxvm_parse_cursor *p, const char *text, size_t length) {
     int status;
     if (!p || p->phase != P_INPUT) return rxvm_parse_fail(p, RXVM_PARSE_INVALID);
     if ((!text && length) || length >= (size_t)PTRDIFF_MAX ||
-        length == SIZE_MAX || length > (uint64_t)RXINTEGER_MAX)
+        length == SIZE_MAX
+#if SIZE_MAX > RXINTEGER_MAX
+        || length > (size_t)RXINTEGER_MAX
+#endif
+        )
         return rxvm_parse_fail(p, !text && length ? RXVM_PARSE_INVALID : RXVM_PARSE_RANGE);
     if (!text) text = "";
     status = text_chars(text, length, &chars);

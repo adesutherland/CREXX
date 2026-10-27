@@ -956,6 +956,41 @@ involved. Frontend diagnostics delegate to the original mapped frontend owner;
 unhandled IR events retain their native helper-PC traceback as a documented
 presentation limit rather than fabricating a Rexx PC.
 
+### Prepared browser source entry
+
+`llcbrowser.run` is a small Level B facade over that same COMMAND coordinator.
+Its prepared RXBIN selects the existing frontend/IR/ordinary-runtime closure,
+without `llcruncli`, an RXAS selector, assembler, linker or native source
+compiler. The embedding's checked RXVML descriptor accepts three typed values:
+UTF-8 source text, logical filename text and an array of separate present
+argument strings. The [user guide](levelc-user-guide.md#embedded-source-entry)
+owns exact input bounds and the fixed `LLB1` return fields.
+`llctarget` remains in this closure as the existing runtime semantic-helper
+owner; its presence does not add a compiler backend or source compilation.
+
+The facade checks all input lengths and UTF-8 before execution, constructs the
+public COMMAND request, then calls `runprogram(sourceBytes,request,'',0)`.
+The last parameter defaults to enabled for existing callers and accepts only
+0 or 1. Disabled requests invoke the existing scope's `configureSource(0,[])`
+before setting IR or entering the host; nested INTERPRET scopes inherit the
+same source policy. A logical source name supplies no physical resource base.
+This is a source-resolution setting, not a new service capability framework.
+
+The detached result is projected only after engine/host cleanup. Its ASCII
+return separates status availability, optional value, primary condition and
+first cleanup condition, preserving the runtime's indicator and numeric origin.
+Uppercase hex carries exact text bytes, including NUL, with explicit bounded
+prefix truncation. Arbitrary typed event payload objects remain owned by the
+ordinary result during the call and are not serialized. The native browser host
+owns stream capture and provider preparation; the facade emits no protocol text
+on stdout/stderr and does not redefine ADDRESS or stream behavior.
+The selected single-thread port keeps clocks, sockets, process launch and
+dynamic provider loading unavailable. Full static provider registration does
+not restore those services. Its resource-snapshot fallback reports failure
+unless the embedding links an explicit command-resource owner; no process cwd
+is substituted. Native entry/embedding qualification and compiled Emscripten
+archives do not establish THE's pending Wasm Worker host or browser integration.
+
 ### The compiled and interpreted boundary
 
 [llcdynamic](../levelc/dynamic/llcdynamic.crexx) owns a stable invocation scope,

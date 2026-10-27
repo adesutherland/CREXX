@@ -312,6 +312,29 @@ foreach(_mode opt noopt)
       target_link_libraries(llrexx rxvml rxpashim)
       install(TARGETS llrexx RUNTIME DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
       install(FILES "${_products}/llrexx.rxbin" DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+      # Embedded browser hosts call this prepared source facade through RXVML.
+      # Its logical filename grants no filesystem source-search permission.
+      ll_compile(llcbrowser "${CMAKE_CURRENT_SOURCE_DIR}/levelc/llcbrowser.crexx"
+        "${_dynamic_dir}" ${_dynamic_inputs})
+      set(_browser_control "INPUT ${_dynamic_dir}/llcbrowser.rxbin\n")
+      foreach(_runtime_input IN LISTS _dynamic_runtime)
+        string(APPEND _browser_control "INPUT ${_runtime_input}\n")
+      endforeach()
+      string(APPEND _browser_control "ROOT llcbrowser\nOUTPUT ${_products}/llcbrowser\n")
+      file(GENERATE OUTPUT "${_dynamic_dir}/browser.ctl" CONTENT "${_browser_control}")
+      add_custom_command(OUTPUT "${_products}/llcbrowser.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -c "${_dynamic_dir}/browser.ctl"
+        DEPENDS rxlink classlib rxunicode_core "${_dynamic_dir}/llcbrowser.rxbin"
+          ${_dynamic_runtime} "${_dynamic_dir}/browser.ctl" VERBATIM)
+      add_custom_target(llcompiler_llcbrowser_opt DEPENDS "${_products}/llcbrowser.rxbin")
+      install(FILES "${_products}/llcbrowser.rxbin" DESTINATION bin COMPONENT ResearchCompilers EXCLUDE_FROM_ALL)
+      ll_compile(browser-contracts "${CMAKE_CURRENT_SOURCE_DIR}/tests/dynamic/browser-contracts.crexx"
+        "${_dynamic_dir}" "${_products}/llcbrowser.rxbin")
+      add_custom_command(OUTPUT "${_dynamic_dir}/browser-contracts-linked.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -o "${_dynamic_dir}/browser-contracts-linked"
+          "${_dynamic_dir}/browser-contracts.rxbin" "${_products}/llcbrowser.rxbin"
+        DEPENDS rxlink "${_dynamic_dir}/browser-contracts.rxbin" "${_products}/llcbrowser.rxbin" VERBATIM)
+      add_custom_target(llcompiler_browser_contracts_opt DEPENDS "${_dynamic_dir}/browser-contracts-linked.rxbin")
       set(_dynamic_control "")
       foreach(_file IN LISTS _dynamic_inputs)
         if(_file MATCHES "rxplugin$")
@@ -1494,6 +1517,14 @@ if("c" IN_LIST _languages AND "g" IN_LIST _languages)
 endif()
 
 if("c" IN_LIST _languages AND TARGET rxbvm)
+  add_test(NAME llcompiler_c_browser_contracts_opt_rxbvm COMMAND $<TARGET_FILE:rxbvm>
+    "${CMAKE_CURRENT_BINARY_DIR}/dynamic/opt/browser-contracts-linked.rxbin")
+  set_tests_properties(llcompiler_c_browser_contracts_opt_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "BROWSER_CONTRACTS[|]checks=[0-9]+[|]failures=0"
+    TIMEOUT 600 WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/tests/dynamic"
+    LABELS "level-l;levelc;compiler;component;levelc-interaction")
+  crexx_register_test_prep_targets(TESTS llcompiler_c_browser_contracts_opt_rxbvm TARGETS
+    llcompiler_browser_contracts_opt rxbvm fs cstream llcontract)
   # One warm compiler and one VM cover the wider registered dynamic inventory.
   # Focused Debug preparation is costly; allow a generous full-inventory guard
   # and serialize it. Registration does not commission this full run or matrices.
@@ -1646,7 +1677,7 @@ foreach(_language IN LISTS _languages)
   list(APPEND _selected ll${_language}compiler llrxc-${_language})
 endforeach()
 if("c" IN_LIST _languages)
-  list(APPEND _selected llctarget llrexx)
+  list(APPEND _selected llctarget llrexx llcompiler_llcbrowser_opt)
 endif()
 crexx_register_test_prep_targets(TESTS llcompiler_product_inventory TARGETS ${_selected}
   rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_execute rxlang rxlanglib

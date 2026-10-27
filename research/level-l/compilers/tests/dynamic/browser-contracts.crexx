@@ -1,0 +1,81 @@
+/* Independent bounded embedded-entry and wire controls. */
+options levelb
+import rxfnsb
+import llcbrowser
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  args = .string[]; lf = '0A'x as .string; nul = '00'x as .string
+  wire = llcbrowser..run('nop','empty.rexx',args)
+  call check(left(wire,5) == 'LLB1' || lf,'versioned ASCII result')
+  call check(field(wire,'indicator') == 'N' & field(wire,'hasStatus') == '1' & field(wire,'status') == '0','normal absent completion has status')
+  call check(field(wire,'hasValue') == '0' & field(wire,'valueHex') == '' & field(wire,'hasPrimary') == '0' & field(wire,'hasCleanup') == '0','normal completion carries no manufactured value or condition')
+  call check(field(wire,'truncated') == '0','normal result is projected completely')
+  args[1] = ''; args[2] = 'λ雪'; args[3] = 'A' || nul || 'B'
+  source = "parse source platform mode resource; return mode || '|' || arg() || '|' || arg(1,'E') || '|' || arg(1) || '|' || arg(2) || '|' || arg(3) || '|' || resource"
+  wire = llcbrowser..run(source,'browser λ.rexx',args)
+  expected = 'COMMAND|3|1||λ雪|A' || nul || 'B|browser λ.rexx'
+  call check(field(wire,'indicator') == 'R' & field(wire,'hasValue') == '1','RETURN is present')
+  call check(field(wire,'valueHex') == bin2x(expected as .binary),'logical SOURCE and separate empty Unicode NUL arguments remain exact')
+  call check(field(wire,'hasStatus') == '1' & field(wire,'status') == '0','nonnumeric result uses existing COMMAND status')
+  call arraydrop args
+  source = "x=1; interpret 'x=x+1'; return F(x)" || lf || 'F: procedure' || lf || 'arg n' || lf || 'if n=0 then return 1' || lf || 'return n*F(n-1)'
+  wire = llcbrowser..run(source,'ordinary.rexx',args)
+  call check(field(wire,'status') == '2' & field(wire,'valueHex') == '32','INTERPRET and recursive local calls use the ordinary executor')
+  wire = llcbrowser..run('exit -7','exit.rexx',args)
+  call check(field(wire,'status') == '-7' & field(wire,'hasStatus') == '1','EXIT preserves signed COMMAND status')
+  wire = llcbrowser..run('if then','syntax.rexx',args)
+  call check(field(wire,'hasPrimary') == '1' & field(wire,'hasStatus') == '0' & field(wire,'indicator') == 'E','syntax failure is separate from COMMAND status')
+  call check(field(wire,'primaryNameHex') == bin2x('CLASSIC_SYNTAX' as .binary),'typed frontend condition is projected')
+  message = x2bin(field(wire,'primaryMessageHex')) as .string
+  call check(pos('syntax.rexx:',message) > 0,'syntax diagnostic retains the logical filename')
+  wire = llcbrowser..run('return 1/0','runtime.rexx',args)
+  call check(field(wire,'hasPrimary') == '1' & field(wire,'hasStatus') == '0' & field(wire,'primaryCode') <> '0','runtime failure remains structured')
+  /* The maintained .rexx candidate exists in the CTest working directory.
+   * Enabling ambient source search would execute it and return its sentinel. */
+  wire = llcbrowser..run("return 'browser-source-probe'()",'source-policy.rexx',args)
+  call check(field(wire,'hasPrimary') == '1' & field(wire,'hasValue') == '0','external source lookup is explicitly disabled')
+  message = x2bin(field(wire,'primaryMessageHex')) as .string
+  call check(pos('43.1',message) > 0,'disabled source lookup reports missing routine')
+  wire = llcbrowser..run('return 0','recovery.rexx',args)
+  call check(field(wire,'hasPrimary') == '0' & field(wire,'status') == '0','failure-to-valid reuse releases execution owners')
+  do index = 1 to 128
+    args[index] = ''
+  end
+  wire = llcbrowser..run('return arg()','arguments.rexx',args)
+  call check(field(wire,'status') == '128','argument position bound is inclusive')
+  args[129] = ''
+  wire = llcbrowser..run('return 0','arguments.rexx',args)
+  call check(field(wire,'hasPrimary') == '1' & field(wire,'primaryNameHex') == bin2x('OUT_OF_RANGE' as .binary),'argument position overflow is refused')
+  call arraydrop args
+  args[1] = copies('x',1048577)
+  wire = llcbrowser..run('return 0','arguments.rexx',args)
+  call check(field(wire,'hasPrimary') == '1','aggregate argument bytes are bounded')
+  call arraydrop args
+  wire = llcbrowser..run(copies(' ',2097153),'source.rexx',args)
+  call check(field(wire,'hasPrimary') == '1','source bytes are bounded before execution')
+  wire = llcbrowser..run('return 0','',args)
+  call check(field(wire,'hasPrimary') == '1','empty logical filename is refused')
+  wire = llcbrowser..run('return 0','name' || nul || '.rexx',args)
+  call check(field(wire,'hasPrimary') == '1','NUL-bearing logical filename is refused')
+  wire = llcbrowser..run('return 0',copies('x',4097),args)
+  call check(field(wire,'hasPrimary') == '1','logical filename bytes are bounded')
+  say 'BROWSER_CONTRACTS|checks=' || checks || '|failures=' || failures
+  return failures
+
+field: procedure = .string
+  arg wire = .string, key = .string
+  lf = '0A'x as .string
+  needle = lf || key || '='
+  start = pos(needle,wire)
+  if start = 0 then return '#MISSING'
+  start = start + length(needle)
+  stop = pos(lf,wire,start)
+  if stop = 0 then return '#UNTERMINATED'
+  return substr(wire,start,stop-start)
+
+check: procedure = .void expose checks failures
+  arg condition = .int, message = .string
+  checks = checks + 1
+  if condition = 0 then do; failures = failures + 1; say 'FAIL: ' || message; end
+  return

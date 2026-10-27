@@ -395,9 +395,17 @@ static int rxinimod_common(rxvm_context *context,
     if (!context || !runtime) return 0;
     rxvm_parse_cursor_init();
     rxvm_invoke_init();
+#if (defined(CREXX_VM_CLASSIC_PROVIDERS) || defined(CREXX_VM_CLASSIC_FULL_PROVIDERS)) && defined(CREXX_VM_SINGLE_THREADED)
+    { extern void crexx_cstream_init(void); crexx_cstream_init(); }
+#endif
 #if defined(CREXX_VM_CLASSIC_PROVIDERS) && defined(CREXX_VM_SINGLE_THREADED)
-    { extern void crexx_cstream_init(void); extern void crexx_mainframe_fs_init(void);
-      crexx_cstream_init(); crexx_mainframe_fs_init(); }
+    { extern void crexx_mainframe_fs_init(void); crexx_mainframe_fs_init(); }
+#endif
+#if defined(CREXX_VM_CLASSIC_FULL_PROVIDERS) && defined(CREXX_VM_SINGLE_THREADED)
+    /* Both CLI and RXVML retain these providers from the static archive. The
+       catalogue is immutable process state; provider sessions remain per VM. */
+    { extern void crexx_fs_init(void); extern void crexx_contract_init(void);
+      crexx_fs_init(); crexx_contract_init(); }
 #endif
 #if defined(CREXX_MAINFRAME_ADDRESS) && defined(CREXX_VM_SINGLE_THREADED)
     /* Native startup lacks C constructors. Both CLI and RXVML use this entry;
@@ -1881,14 +1889,16 @@ static int load_declared_provider(rxvm_context *context,
     char *locations;
     char *cursor;
     char *directory;
+    size_t locations_size;
     int candidate_seen = 0;
 
     if (!context->provider_location || !*context->provider_location) return 0;
     if (!provider_id_valid(provider_id)) return 0;
-    locations = strdup(context->provider_location);
+    locations_size = strlen(context->provider_location) + 1u;
+    locations = malloc(locations_size);
     if (!locations) RX_PANIC_OOM("copy RXPA provider path",
-                                 strlen(context->provider_location) + 1u,
-                                 provider_id);
+                                 locations_size, provider_id);
+    memcpy(locations, context->provider_location, locations_size);
     cursor = locations;
     while (cursor) {
         char artifact_path[MAXFILEPATH * 2u];
@@ -2005,6 +2015,7 @@ static void remember_autoload_artifact(rxvm_context *context,
                                        const char *artifact) {
     char **items;
     size_t capacity;
+    size_t copy_size;
     char *copy;
 
     if (autoload_artifact_seen(context, artifact)) return;
@@ -2019,9 +2030,11 @@ static void remember_autoload_artifact(rxvm_context *context,
         context->autoloaded_artifacts = items;
         context->autoloaded_artifact_capacity = capacity;
     }
-    copy = strdup(artifact);
+    copy_size = strlen(artifact) + 1u;
+    copy = malloc(copy_size);
     if (!copy) RX_PANIC_OOM("copy RXBIN autoload stem",
-                            strlen(artifact) + 1u, artifact);
+                            copy_size, artifact);
+    memcpy(copy, artifact, copy_size);
     context->autoloaded_artifacts[context->autoloaded_artifact_count++] = copy;
 }
 

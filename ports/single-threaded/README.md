@@ -46,6 +46,12 @@ Static decimal support remains selected. This is not a reduction of serialized
 types or integer widths. Additional services can be restored explicitly after
 their host implementation is qualified. There is no fake pthread/atomic API.
 
+The shared checked-invocation owner is part of the core in every profile. The
+port has no native command-resource owner: its optional execution-directory
+snapshot returns failure without consulting the process directory or filesystem.
+That fallback occupies a separate static-archive member so an embedding's
+explicit resource-service definition can resolve the symbol instead.
+
 The private synchronization operations are empty only in this selected build;
 the desktop implementations are retained. Compatibility callbacks keep nesting
 and lifecycle bookkeeping without a transition that waits on another thread.
@@ -135,6 +141,41 @@ from the original compiler campaign.
 CLI entry point. The legacy native ADDRESS redirection endpoint returns an
 explicit error in this build; structured endpoints and ordinary console output
 retain their existing implementation. The one-thread contract still applies.
+
+`CREXX_VM_CLASSIC_FULL_PROVIDERS=ON` selects the full static provider closure
+for a standalone Classic research interpreter: `rxcstream`, the ordinary `rxfs`
+provider (including bounded source acquisition and the resource-view entrypoint),
+and `rxcontract`. The resource-view entrypoint still reports failure without
+an embedding-supplied command-resource owner; the fallback does not synthesize
+an execution directory. It is mutually exclusive with the reduced native
+`CREXX_VM_CLASSIC_PROVIDERS` profile. Both options default to OFF, so parser-only
+consumers retain their existing core. CLI and RXVML initialize the full profile
+explicitly; a linker constructor is not required, and each VM owns its provider
+sessions. This reuses the existing provider algorithms and adds no compiler,
+assembler, dynamic provider or child-process service.
+The single-thread clock/socket/process/dynamic-loading exclusions above remain
+in force, including unavailable automatic random seeding.
+
+The intended browser embedding runs this profile in one Emscripten Worker with
+Worker-local MEMFS and no host mounts. Ordinary reads, writes and temporary
+files use that virtual filesystem; the embedding owns its population and
+lifetime. The Emscripten core and RXVML embedding target privately select
+`_POSIX_C_SOURCE=200809L` so strict C99 exposes the existing POSIX stream and
+string declarations. Browser opens keep ordinary C file modes. Emscripten fileguard
+acquisition returns the existing initialized failure (`held()=0`, `busy()=0`,
+`status()=-8`) without opening or creating the lock file, because no interprocess
+lock is available. Desktop fileguard behavior is unchanged. The existing bounded
+source reader still accepts only regular files, checks its byte allowance and
+closes the descriptor before publishing owned bytes.
+
+With testing enabled, an explicit `CREXX_BROWSER_FIXTURE` path to the prepared
+`llcbrowser.rxbin` adds `test_single_browser` and `single_vm_browser_entry`.
+This small RXVML consumer checks static provider resolution, the exact entry
+descriptor, separate empty/Unicode/NUL arguments, logical SOURCE and the LLB1
+success/condition boundary. The default leaf adds no browser fixture or test.
+The prepared entry and native RXVML consumer have focused CREXX qualification;
+the Emscripten core/embed archives compile separately. THE's actual Wasm Worker
+host, stream integration and browser execution remain pending with THE.
 
 The optional `CREXX_BUILD_COMPILER=ON` builds `rxc_single` with this static
 embedding library. Build normal `rxc` and `compiler_exit_bin` first, then set

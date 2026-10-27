@@ -284,6 +284,52 @@ closure and its broader qualification claims do not change.
 | **CHL-STEP02** | Add the optional observation seam and focused parser checks; keep the default path unchanged; AC01–02. Done. |
 | **CHL-STEP03** | Qualify the small DSLSH consumer and link closure on one ordinary VM, then commit scoped changes locally; AC02–03. Done. |
 
+## Browser source interpreter entry
+
+This authorized development increment supplies a prepared `llcbrowser.rxbin`
+entry for an embedded browser host. It reuses the ordinary Classic frontend,
+full-program IR executor and COMMAND result/cleanup owners; it introduces no
+second interpreter, native source compilation, general capability framework,
+new language feature or publication. Native provider/port preparation and all
+build/test execution remain coordinator-owned.
+
+| Stable criterion | Observable condition |
+|---|---|
+| **RBROW-AC01** | Public `llcbrowser.run(source: .string, filename: .string, arguments: .string[]) -> .string` accepts valid UTF-8 source up to 2 MiB, a nonempty NUL-free logical filename up to 4096 UTF-8 bytes, and up to 128 separate present ARG positions totaling at most 1 MiB. Empty/Unicode/NUL-bearing argument values remain exact; no shell-tail reconstruction or physical source directory is inferred. |
+| **RBROW-AC02** | The entry explicitly disables external source search before execution, while retaining ordinary local calls, BIFs, INTERPRET, values, conditions and COMMAND completion through `llcdynamic.runprogram`. Existing CLI callers keep their source-search default. |
+| **RBROW-AC03** | The return is a versioned bounded ASCII record separate from host-captured stdout/stderr, distinguishing completion indicator, COMMAND status, value presence/value, primary condition and cleanup condition. Byte-bearing fields use uppercase hex and projection truncation is explicit. The entry emits no result markers or diagnostics on program streams. |
+| **RBROW-AC04** | A focused maintained consumer covers ordinary source, empty/Unicode/NUL ARG values, absent/RETURN/EXIT completion, syntax/runtime failure, INTERPRET/local calls, disabled source lookup and failure-to-valid reuse. The prepared image contains only this entry and its existing frontend/IR/runtime closure; no compiler backend/assembler/linker is embedded. |
+
+| Stable step | Status and dependency |
+|---|---|
+| **RBROW-STEP01 — done** | Record and coordinator-review exact entry, limits, wire projection and source policy before product edits; AC01–03. |
+| **RBROW-STEP02 — done** | Implement the small entry, backward-compatible source-policy parameter and prepared-image/consumer build hooks; AC01–04. |
+| **RBROW-STEP03 — CREXX done; THE pending** | Source and representative entry RXAS review, selected ordinary consumer, native RXVML single-thread integration and enduring CREXX docs are complete; AC01–04. Emscripten core/embed archives compile, but THE owns the pending actual Wasm Worker host, stream integration and browser execution. Wider platform/release/SAN gates remain outside this increment. |
+
+The exact descriptor is
+`rxsig1|llcbrowser.run|.string|source=.string,filename=.string,arguments=.string[*]`.
+The wire begins `LLB1\n`, followed by these fixed `key=value\n` fields, in order:
+`indicator`, `hasStatus`, `status`, `hasValue`, `valueHex`, `hasPrimary`,
+`primaryNameHex`, `primaryMessageHex`, `primaryCode`, `primaryModule`,
+`primaryAddress`, `hasCleanup`, `cleanupNameHex`, `cleanupMessageHex`,
+`cleanupCode`, `cleanupModule`, `cleanupAddress`, `truncated`.
+`indicator` is the existing N/R/E/X/S view. Boolean fields are 0/1; status and
+condition code/module/address are decimal integers. A primary condition makes
+`hasStatus=0`; status is then zero and is not an execution-success claim. An
+absent condition has empty name/message and zero numeric fields. Hex encodes
+the exact UTF-8 bytes, including NUL, of each text projection. `valueHex` is
+capped at 1 MiB of projected bytes and each condition name/message at 64 KiB;
+`truncated=1` explicitly marks any cap. Arbitrary typed payload objects are not
+serialized; condition name/code/module/address and message are the wire view.
+
+The single-thread port retains its unavailable clock/socket/process/dynamic-
+loading services; selecting full static Classic providers does not restore
+them. Its execution-directory snapshot fails until an embedding supplies the
+explicit command-resource owner. Browser entry source lookup remains disabled;
+the logical filename never grants a resource base. `llctarget` supplies existing
+runtime semantic helpers in the prepared image, without a compiler backend,
+assembler or linker.
+
 ## Outside current C closure
 
 **G21 unread scalar writes** remains a generic/G forwarding opportunity only:
