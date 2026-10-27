@@ -481,3 +481,30 @@ PUB-AC04 is fulfilled on successful publication and remote-ref verification of
 these commits, which is reported live in the conversation. No later CI-status-
 only commit is planned. Research adoption and qualification remain with the
 research agent after publication; wider research completion is not claimed.
+
+## Open numeric semantics follow-ups
+
+Source-reconfirmed findings below remain distinct from their historical runtime
+reproductions; source review is not fresh execution or qualification. Policy
+questions do not imply defects or authorize numeric redesign. Adrian owns those
+decisions; the named compiler, runtime/provider and reference owners own any
+separately scoped repair. The completed typed-constant, float transport and
+typed-NaN repairs above remain separate.
+
+| ID | Status and durable finding | Owner / next action |
+| --- | --- | --- |
+| REV-F01 | Open defect, source-reconfirmed: loose numeric-string comparison can treat `"nan" = "0"` as true because neither greater nor less is taken. | Runtime `rxvm_loose_compare_text` in [rxvmintp.c](../../interpreter/rxvmintp.c) and folded comparison in [rxcp_opt.c](../rxcp_opt.c): define accepted NaN-text semantics for all six operators, then align folding/runtime with focused regressions. |
+| REV-F02 | Open optimizer-equivalence defect, source-reconfirmed: `"Infinity" as .decimal` reaches a finite-only folded validator although the decimal provider accepts special values; historical execution succeeded without optimisation and failed during optimised compilation. | [rxcp_opt.c](../rxcp_opt.c), `stringtodecimal` in [rxvmvars.h](../../interpreter/rxvmvars.h) and [mc_decimal.c](../../interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c): align conversion admission and failure policy. |
+| REV-F03 | Policy decision: finite float-to-decimal conversion still uses `%.16g`, which can lose a binary64 value such as `1.0000000000000002`. Compiler/provider parity is a separate, repaired obligation. | [mc_decimal.c](../../interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c) and [db_decimal.c](../../interpreter/rxvmplugin/rxvmplugins/db_decimal/db_decimal.c): choose exact-value, round-trip or contextual-text conversion semantics before changing precision. |
+| REV-F04 | Policy/reference mismatch, source-reconfirmed: typed integer/integer `/` selects its result type from the file numeric standard, independently of procedure `NUMERIC STANDARD`. | `OP_DIV` in [rxcp_val_type.c](../rxcp_val_type.c) and [numeric reference](../../docs/books/crexx_language_reference/numeric.md): document the static rule or explicitly approve different type-selection/inheritance semantics. |
+| REV-F05 | Policy/reference decision, source-reconfirmed: explicit `floats_binary` rewrites decimal literals and `.decimal`; `floats_decimal` rewrites `.float`. Omission of a force option has different semantics. | Representation walkers in [rxcp_val_type.c](../rxcp_val_type.c), selected by [rxcp_val_orch.c](../rxcp_val_orch.c): document force-option precedence; decide separately whether explicit type intent should override it. |
+| REV-F06 | Open formatting/reference mismatch, source-reconfirmed: mcdecimal special values return lowercase `inf`/`nan` before `NUMERIC CASE` handling; finite exponent formatting follows a different path. | `decimalToString` in [mc_decimal.c](../../interpreter/rxvmplugin/rxvmplugins/mc_decimal/mc_decimal.c): decide whether CASE covers special values and align implementation/reference. |
+| REV-F07 | Reference defect, source-reconfirmed: the advertised combined `NUMERIC` settings syntax is absent from the grammar; separate clauses are supported. The older B/G expression `(.float(0.1) + .float(0.2) = .float(0.3))` reportedly raised `CLASS_NOT_FOUND` while separate assignment worked; that symptom is unverified against current code. | [rxcpbgmr.y](../rxcpbgmr.y) and [numeric reference](../../docs/books/crexx_language_reference/numeric.md): correct combined-syntax examples; obtain a minimal current reproducer before classifying or repairing the constructor report. |
+| REV-F08 | Comparison-model decision: typed numbers, loose numeric strings above binary64 integer precision, decimal/string conversion and `RexxValue.compareEqual` versus `equals` follow different value, precision and textual paths. | Loose comparison in [rxvmintp.c](../../interpreter/rxvmintp.c), [RexxValue.crexx](../../lib/rxfnsc/RexxValue.crexx) and numeric reference: specify type-specific equality/FUZZ contracts before proposing a common comparison algorithm. |
+| REV-F09 | Reference scope: distinguish type-specific DIGITS/FUZZ/FORM/CASE/STANDARD effects, default versus force options, and value conversion versus display versus exact transport. | [numeric reference](../../docs/books/crexx_language_reference/numeric.md) and [data types](../../docs/books/crexx_language_reference/data_types.md): reconcile specific claims with the owners above; do not describe all typed calculations/comparisons as decimal-context operations. |
+
+Strict `==` compares the resulting strings exactly, not numeric payloads. Typed
+B/G formatting can give distinct float payloads the same text; Classic C can
+retain literal spelling. Binary64 value equality, contextual display and exact
+transport are different contracts: decimal formatting cannot recover precision
+already lost at a binary conversion boundary.
