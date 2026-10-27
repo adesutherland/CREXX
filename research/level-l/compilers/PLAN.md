@@ -265,6 +265,25 @@ builders remain the construction path. Per-input AST result storage is unchanged
 The generic plan owns the selected focused checks and local delivery; this adds
 no G feature or wider qualification.
 
+## Classic parser observation for DSLSH
+
+This is a separate, bounded parser-consumer increment. A host-built DSLSH
+example may reuse the maintained Classic grammar and `llcparse` preparation to
+highlight source without compiling or executing it. The existing C research
+closure and its broader qualification claims do not change.
+
+| Stable criterion | Observable condition |
+|---|---|
+| **CHL-AC01** | An opt-in, bounded parse observation exposes owned Classic lexical/comment coverage and original located diagnostics, including failed/incomplete input, while ordinary compiler parsing and `sourcetokens()` keep their existing behavior. No second Classic lexer or grammar is introduced. |
+| **CHL-AC02** | Source offsets projected to an editor refer to its original bytes. Active SRCMAP is refused unless exact range mapping is implemented; failed/resource requests cannot publish a falsely successful parse. |
+| **CHL-AC03** | Focused normal checks cover contextual keywords, authored continuation punctuation, Unicode, comments/quotes, malformed source and failure-to-valid reuse. The parser-only image excludes C execution and native provider services. |
+
+| Stable step | Status and dependency |
+|---|---|
+| **CHL-STEP01** | Review the Classic preparation and DSLSH projection contract, including ownership, bounds, source mapping and the exact parser-only module closure; AC01–03. Done. |
+| **CHL-STEP02** | Add the optional observation seam and focused parser checks; keep the default path unchanged; AC01–02. Done. |
+| **CHL-STEP03** | Qualify the small DSLSH consumer and link closure on one ordinary VM, then commit scoped changes locally; AC02–03. Done. |
+
 ## Outside current C closure
 
 **G21 unread scalar writes** remains a generic/G forwarding opportunity only:

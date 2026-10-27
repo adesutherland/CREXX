@@ -14,7 +14,12 @@ import llcsrcmap
 
 /** One parse request owns source, diagnostics and projected AST. Token layout
  * filters continuations and inserts zero-width separators; original spans are
- * never rewritten. The generated LR grammar owns syntactic decisions. */
+ * never rewritten. The generated LR grammar owns syntactic decisions.
+ * Optional observations retain bounded lexical/comment display data, including
+ * failed source, without changing the compiler-private token borrow.
+ * @param observations zero disables capture; a positive count bounds retained
+ * tokens plus comment regions, subject to existing source/preparation limits
+ */
 parsed: class
   _tree = .llast..tree
   _error = .string
@@ -24,12 +29,24 @@ parsed: class
   _sourcetokens = .llcore..stream
   _source = .binary
   _mapping = .llcsrcmap..prepared
+  _mapped = .int
+  _observations = .int
+  _observedtokens = .llcore..stream
+  _observedtrivia = .llcomments..regions
   *: factory
-    arg source = .binary, limit = 1000000, filename = '<source>', mode = 'program'
+    arg source = .binary, limit = 1000000, filename = '<source>', mode = 'program', observations = 0
+    rawlayout = .llcore..stream
     _source = source; empty_mapping = .llcsrcmap..prepared; _mapping = empty_mapping
-    _error = ''; _offset = 0; _status = 0; _strictc = 0
+    _error = ''; _offset = 0; _status = 0; _strictc = 0; _mapped = 0
+    _observations = observations
     _tree = .llast..tree.failed('LL_COMPILER_PARSE: no accepted source tree')
-
+    if observations < 0 then do
+      _error = 'LL_COMPILER_CONTRACT: observation limit must be nonnegative'; _status = 3; return
+    end
+    if observations > 0 then do
+      _observedtokens = .llcore..stream.tokens(source)
+      _observedtrivia = .llcomments..regions(0)
+    end
     if limit < 1 | <blen>(source) > limit then do
       _error = 'LL_COMPILER_LIMIT: source byte budget exceeded'; _status = 2; return
     end
@@ -40,9 +57,11 @@ parsed: class
     language = dereference language_ref
     policy = .lllimits..policy()
     ok = policy.set('source.bytes',limit)
+    if observations > 0 then _observations = min(observations,policy.limit('tree.entries'))
     comments = .llcomments..rules
     mapped = 0
-    comments = headerpolicy(language_ref,source,policy,reference _status,reference _error,reference _offset,reference _strictc,reference mapped)
+    comments = headerpolicy(language_ref,source,policy,reference _status,reference _error,reference _offset,reference _strictc,reference mapped,_observations,reference _observedtrivia)
+    _mapped = mapped
     if _status <> 0 then do; _error = lexicalmessage(_error,source,_offset); return; end
     _mapping = .llcsrcmap..prepared(source,mapped,filename,limit)
     if _mapping.status() <> 0 then do
@@ -51,7 +70,15 @@ parsed: class
     source = _mapping.bytes(); _source = source
     if _status <> 0 then return
     request = .lllanguage..request.borrowed(language_ref,source,policy,comments)
+    if observations > 0 then ok = request.capturetrivia(_observations)
     _status = request.lex(0)
+    if observations > 0 then do
+      rawlayout = request.tokens(); _observedtrivia = request.trivia()
+      if rawlayout.size() > _observations - _observedtrivia.size() then do
+        _status = 2; _offset = 0; _error = 'LL_COMPILER_LIMIT: parse observation record budget exceeded'; return
+      end
+      _observedtokens = rawlayout
+    end
     if _status <> 0 then do
       _error = lexicalmessage(request.error(),source,request.offset()); _offset = request.offset()
       if left(_error,11) = 'LL_LEXICAL:' then do
@@ -62,7 +89,7 @@ parsed: class
       end
       return
     end
-    rawlayout = request.tokens()
+    if observations = 0 then rawlayout = request.tokens()
     /* Generic comment preparation preserves byte gaps by masking. A Classic
      * composite operator may span only authored space/HT, never a comment
      * that happens to mask to those bytes. Keep this raw-source boundary
@@ -492,6 +519,10 @@ parsed: class
       end
       after = word; previous = kind
     end
+    if observations > 0 then do
+      _observedtokens = displaytokens(reference rawlayout,reference classified,_observations - _observedtrivia.size(),reference _status,reference _error)
+      if _status <> 0 then return
+    end
     /* Normalize separators only after words have their contextual meanings.
      * A variable named THEN/ELSE must never consume the following clause. */
     normalized = .llcore..stream.tokens(source)
@@ -612,10 +643,68 @@ parsed: class
     return _source
   mapping: method = .llcsrcmap..prepared
     return _mapping
+  /** Header recognition may select SRCMAP before later admission fails. The
+   * editor must refuse this state unless it maps complete ranges to raw bytes. */
+  mapped: method = .int
+    return _mapped
+  /** Owned display tokens. Early failures retain the accepted raw lexer prefix;
+   * completed classification merges contextual roles with authored punctuation.
+   * No zero-width parser token is a display token. Extract once per request. */
+  observedtokens: method = .llcore..stream
+    if _observations <= 0 then return .llcore..stream.tokens(_source)
+    return _observedtokens
+  /** Outer regions come from existing preparation, including unfinished EOF
+   * comments. Resource/contract statuses still forbid publishing this snapshot. */
+  observedtrivia: method = .llcomments..regions
+    if _observations <= 0 then return .llcomments..regions(0)
+    return _observedtrivia
   /** C-private synchronous borrow. The caller anchors this completed parsed
    * owner and never retains the reference after collecting owned plans. */
   sourcetokens: method = reference .llcore..stream
     return reference _sourcetokens
+
+/** Merge existing token decisions, without rescanning source. Contextual spans
+ * replace their raw counterparts (including adjacent radix suffixes); raw
+ * punctuation omitted from parser layout survives between those spans. Both
+ * cursors advance once, and the output cannot exceed the admitted raw count. */
+displaytokens: procedure = .llcore..stream
+  arg raw_ref = reference .llcore..stream, classified_ref = reference .llcore..stream, limit = .int, status_ref = reference .int, error_ref = reference .string
+  raw = dereference raw_ref; classified = dereference classified_ref
+  status = dereference status_ref; error = dereference error_ref
+  result = .llcore..stream.tokens(raw.source())
+  original = 0; contextual = 0
+  kind = .int; first = .int; last = .int
+  do while original < raw.size() | contextual < classified.size()
+    do while contextual < classified.size()
+      if classified.start(contextual) <> classified.finish(contextual + 1) then leave
+      contextual = contextual + 1
+    end
+    if original >= raw.size() & contextual >= classified.size() then leave
+    use_raw = contextual >= classified.size()
+    if use_raw = 0 & original < raw.size() then use_raw = raw.finish(original + 1) <= classified.start(contextual)
+    if use_raw then do
+      kind = raw.symbol(original); first = raw.start(original); last = raw.finish(original + 1)
+      original = original + 1
+    end
+    else do
+      kind = classified.symbol(contextual); first = classified.start(contextual); last = classified.finish(contextual + 1)
+      contextual = contextual + 1
+      do while original < raw.size()
+        if raw.start(original) >= last then leave
+        if raw.start(original) < first | raw.finish(original + 1) > last then do
+          status = 3; error = 'LL_COMPILER_CONTRACT: contextual display token splits a raw token'; return result
+        end
+        original = original + 1
+      end
+    end
+    if result.size() >= limit then do
+      status = 2; error = 'LL_COMPILER_LIMIT: parse observation record budget exceeded'; return result
+    end
+    if result.append(kind,first,last) = 0 then do
+      status = 3; error = 'LL_COMPILER_CONTRACT: invalid display token: ' || result.error(); return result
+    end
+  end
+  return result
 
 /** Request-local fixed literal roles reuse the original token-name authority.
  * A zero slot is unknown; result+2 preserves token zero and not-found minus one.
@@ -660,14 +749,17 @@ armmessage: procedure = .string
  * quotes/comments; raw separators merely frame a candidate for exact lexing.
  * A failed candidate never contributes partial static settings. */
 headerpolicy: procedure = .llcomments..rules
-  arg language_ref = reference .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int, strictc_ref = reference .int, srcmap_ref = reference .int
+  arg language_ref = reference .lllanguage..definition, source = .binary, policy = .lllimits..policy, status_ref = reference .int, error_ref = reference .string, offset_ref = reference .int, strictc_ref = reference .int, srcmap_ref = reference .int, observations = .int, trivia_ref = reference .llcomments..regions
   language = dereference language_ref
   status = dereference status_ref; error = dereference error_ref; offset = dereference offset_ref; strictc = dereference strictc_ref
   srcmap = dereference srcmap_ref
   byte = .int; i = .int; setting = .int
   result = language.comments()
-  prepared = .llsource..prepared(source,language.encoding(),'','',policy.limit('source.bytes'),0,result,policy.limit('scan.work'))
+  prepared = .llsource..prepared(source,language.encoding(),'','',policy.limit('source.bytes'),0,result,policy.limit('scan.work'),observations)
   preparedstatus = prepared.status()
+  if observations > 0 then do
+    trivia = dereference trivia_ref; trivia = prepared.trivia()
+  end
   if preparedstatus <> 0 then do
     if preparedstatus <> 1 | left(prepared.error(),11) <> 'LL_COMMENT:' then do
       status = preparedstatus; error = prepared.error(); offset = prepared.offset(); return result

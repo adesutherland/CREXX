@@ -79,6 +79,51 @@ runtime package). These are resource limits, not performance promises. The
 [algorithm reference](algorithms.md) describes the costs of name lookup and type propagation
 and bounded failure paths.
 
+## Classic parser observations
+
+Editor consumers may call
+`llcparse..parsed(source, limit=1000000, filename='<source>', mode='program', observations=0)`
+without invoking C binding, lowering, compilation or execution. A positive
+`observations` selects owned `observedtokens()` and `observedtrivia()` values;
+zero leaves observation capture disabled and their getters return empty values.
+The existing compiler-private `sourcetokens()` borrow is unchanged. Extract each
+observation value once and retain it while traversing its entries.
+
+The retained tokens and outer-comment regions share the requested record bound,
+capped by Level L's `tree.entries` policy. Existing source, scanner, parser and
+layout work limits remain in force. Capture occurs within the existing source
+preparation passes, including the preliminary header pass. Exhaustion in any
+selected pass is a resource failure, never truncated success. Negative observation
+limits are contract failures. No extra lexer or comment scan is introduced.
+
+A completed contextual pass merges its positive-width tokens with the original
+lexer stream. Authored continuation commas and physical separators remain
+observable, adjacent radix string suffixes share their string token, and virtual
+parser tokens are omitted. Lexical or earlier contextual failures retain only
+the accepted raw lexical data available at that stage. Header/source preparation
+can fail before any token exists; observed unfinished outer comments still end
+at EOF with `complete=0`. A failed request never supplies a successful partial
+AST. Its unchanged `status()`, `error()` and `offset()` distinguish source
+rejection (1), resource failure (2) and contract/preparation failure (3).
+
+Token/comment spans and error offsets are exclusive-end UTF-8 byte positions in
+the parsed buffer. The separate `mapped()` query is initialized to zero and
+records header discovery of SRCMAP even if a later header or source-map check
+fails. Consumers projecting onto the supplied editor bytes must check statuses
+2/3 first, then refuse `mapped()=1`: exact range projection across removed map
+directives is not provided by this observation API. A status-1 unmapped snapshot
+can render observed tokens/comments, unknown remainder and its located error;
+it must not be presented as an accepted parse. DSLSH owns later byte-to-codepoint
+conversion, source coverage and atomic document publication.
+
+The parser-only consumer links matching `library.rxbin`, `rxfnsl.rxbin`,
+`llcgrammar`, `llclanguage`, `llcsrcmap`, `llcparse` and the dedicated
+`RexxClassicUnicodeProperties` member. The matching Level L SDK transitively
+includes generic `llir`/`llirservices` support through `rxfnsl`. The consumer
+excludes the C frontend, `llcir`, `llcdynamic`, the executor, RXAS selector and
+native providers. Native B remains the build seed; no edited source is executed
+for highlighting.
+
 ## Source meaning and IR contracts
 
 The [tree reference](trees-and-ir.md) defines the actual generated node fields.

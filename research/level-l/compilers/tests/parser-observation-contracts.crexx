@@ -1,0 +1,124 @@
+/* cREXX License (MIT). Independent Classic parser display/ownership contract. */
+options levelb
+import rxfnsb
+import llcore
+import llcomments
+import lllanguage
+import llclanguage
+import llcparse
+
+main: procedure = .int expose checks failures
+  checks = 0; failures = 0
+  owner = llclanguage..prepared(); language = dereference owner
+  identifier = language.tokenid('identifier'); string = language.tokenid('string')
+  separator = language.tokenid('separator'); comma = language.tokenid('comma')
+  sayword = language.tokenid('sayword'); thenword = language.tokenid('thenword')
+  source = 'then = 1; say then' as .binary
+  plain = .llcparse..parsed(source)
+  plain_tokens = plain.observedtokens(); plain_trivia = plain.observedtrivia()
+  call check(plain.status() = 0 & plain.mapped() = 0,'ordinary successful source')
+  call check(plain_tokens.size() = 0 & plain_trivia.size() = 0,'observations are disabled by default')
+  parsed = .llcparse..parsed(source,1000000,'observation.rexx','program',64)
+  tokens = parsed.observedtokens()
+  call check(parsed.status() = 0 & bincompare(tokens.source(),source) = 0,'display owns exact source')
+  call check(tokenat(reference tokens,0,4,identifier),'THEN assignment head stays a variable')
+  call check(tokenat(reference tokens,10,13,sayword),'SAY receives its contextual role')
+  call check(tokenat(reference tokens,14,18,identifier),'THEN expression stays a variable')
+  saved = tokens
+
+  continued = ('say 1,' || '0d0a'x || '2') as .binary
+  parsed = .llcparse..parsed(continued,1000000,'continued.rexx','program',64)
+  tokens = parsed.observedtokens()
+  call check(parsed.status() = 0,'physical continuation remains accepted: ' || parsed.error())
+  call check(tokenat(reference tokens,5,6,comma),'authored continuation comma survives layout filtering')
+  call check(tokenat(reference tokens,6,7,separator) & tokenat(reference tokens,7,8,separator),'both authored CRLF separator bytes survive')
+  call check(tokens.size() = 6,'continuation display has no synthetic concatenation token')
+  radix = "say '41'X" as .binary
+  parsed = .llcparse..parsed(radix,1000000,'radix.rexx','program',64)
+  tokens = parsed.observedtokens()
+  call check(parsed.status() = 0,'adjacent radix suffix remains accepted: ' || parsed.error())
+  call check(tokens.size() = 2 & tokenat(reference tokens,4,9,string),'merged string replaces its raw suffix without overlap')
+
+  parsed = .llcparse..parsed('if 1 then' as .binary,1000000,'arm.rexx','program',64)
+  tokens = parsed.observedtokens()
+  call check(parsed.status() = 1 & pos('RXC-LC-14.3:',parsed.error()) > 0 & parsed.offset() = 5,'missing THEN arm keeps the Classic error and anchor')
+  call check(tokenat(reference tokens,0,2,language.tokenid('ifword')) & tokenat(reference tokens,5,9,thenword),'LR refusal retains contextual display tokens')
+
+  unicode = ("say 'é'" || '0d0a'x || 'if 1 then') as .binary
+  parsed = .llcparse..parsed(unicode,1000000,'unicode.rexx','program',64)
+  tokens = parsed.observedtokens()
+  call check(parsed.status() = 1 & parsed.offset() = 15,'Unicode and CRLF retain original byte diagnostic offsets')
+  call check(tokenat(reference tokens,4,8,string) & tokenat(reference tokens,15,19,thenword),'Unicode byte spans remain exact')
+
+  quote = "say 'é" as .binary
+  plain = .llcparse..parsed(quote)
+  parsed = .llcparse..parsed(quote,1000000,'quote.rexx','program',64)
+  tokens = parsed.observedtokens()
+  call check(parsed.status() = 1 & parsed.error() == 'LL_COMPILER_SYNTAX: RXC-LC-6.2: unmatched single quote' & parsed.offset() = 4,'incomplete single quote retains its Classic diagnostic')
+  call check(parsed.status() = plain.status() & parsed.error() == plain.error() & parsed.offset() = plain.offset(),'observation preserves the ordinary failure')
+  call check(tokens.size() = 1 & tokenat(reference tokens,0,3,identifier),'failed lexing retains its accepted raw prefix')
+  parsed = .llcparse..parsed('say "x' as .binary,1000000,'double.rexx','program',64)
+  call check(parsed.status() = 1 & parsed.error() == 'LL_COMPILER_SYNTAX: RXC-LC-6.3: unmatched double quote' & parsed.offset() = 4,'incomplete double quote retains its Classic diagnostic')
+  parsed = .llcparse..parsed('say ~' as .binary,1000000,'invalid.rexx','program',64)
+  tokens = parsed.observedtokens()
+  call check(parsed.status() = 1 & pos('RXC-LC-13.1:',parsed.error()) > 0 & parsed.offset() = 4,'invalid input remains a lexical refusal')
+  call check(tokens.size() = 1,'invalid input retains only its accepted prefix')
+
+  unfinished = '/* outer /* inner */' as .binary
+  parsed = .llcparse..parsed(unfinished,1000000,'comment.rexx','program',64)
+  regions = parsed.observedtrivia(); tokens = parsed.observedtokens()
+  call check(parsed.status() = 1 & parsed.error() == 'LL_COMPILER_SYNTAX: RXC-LC-6.1: unmatched comment delimiter' & parsed.offset() = 0,'early header preparation keeps the unmatched-comment diagnostic')
+  call check(regions.size() = 1 & regions.start(1) = 0 & regions.finish(1) = <blen>(unfinished) & regions.complete(1) = 0,'early header trivia alias retains the unfinished outer region')
+  call check(tokens.size() = 0,'failed source preparation does not invent accepted tokens')
+  saved_regions = regions
+  hash = ('options comments_hash;' || '0a'x || '# tail' || '0a'x || 'nop') as .binary
+  parsed = .llcparse..parsed(hash,1000000,'hash.rexx','program',64)
+  regions = parsed.observedtrivia()
+  call check(parsed.status() = 0 & regions.size() = 1 & regions.complete(1) = 1,'selected hash policy supplies its own observed comment')
+  call check(regions.start(1) = binpos('#' as .binary,hash) - 1,'selected hash region uses the original source bytes')
+
+  parsed = .llcparse..parsed('say 1' as .binary,1000000,'tokens.rexx','program',1)
+  failed_tree = parsed.ast()
+  call check(parsed.status() = 2 & pos('observation record budget',parsed.error()) > 0 & failed_tree.status() <> 0,'token exhaustion cannot publish a successful parse')
+  parsed = .llcparse..parsed('say 1 /*a*/' as .binary,1000000,'combined.rexx','program',2)
+  call check(parsed.status() = 2 & pos('observation record budget',parsed.error()) > 0,'tokens and comments share the retained-record bound')
+  parsed = .llcparse..parsed('/*a*/ /*b*/' as .binary,1000000,'regions.rexx','program',1)
+  regions = parsed.observedtrivia()
+  call check(parsed.status() = 2 & regions.size() <= 1,'comment capture exhaustion is a bounded resource refusal')
+  parsed = .llcparse..parsed('nop' as .binary,1000000,'negative.rexx','program',-1)
+  call check(parsed.status() = 3,'negative observation limit is a contract refusal')
+  parsed = .llcparse..parsed('nop' as .binary,2,'source-limit.rexx','program',64)
+  tokens = parsed.observedtokens(); regions = parsed.observedtrivia()
+  call check(parsed.status() = 2 & tokens.size() = 0 & regions.size() = 0,'source-limit refusal exposes empty owned observations')
+
+  parsed = .llcparse..parsed('options srcmap; nop' as .binary,1000000,'mapped.rexx','program',64)
+  call check(parsed.status() = 0 & parsed.mapped() = 1,'active SRCMAP is exposed even without map directives')
+  parsed = .llcparse..parsed('options srcmap comments_slash' as .binary,1000000,'mapped-refused.rexx','program',64)
+  call check(parsed.status() = 1 & parsed.mapped() = 1,'SRCMAP discovery survives an early header refusal')
+  parsed = .llcparse..parsed('options srcmap; @q' as .binary,1000000,'mapped-invalid.rexx','program',64)
+  call check(parsed.status() = 1 & parsed.mapped() = 1,'source-map decoding failure retains the raw-offset refusal flag')
+  parsed = .llcparse..parsed('' as .binary,1000000,'empty.rexx','program',64)
+  tokens = parsed.observedtokens(); regions = parsed.observedtrivia()
+  call check(parsed.status() = 0 & parsed.mapped() = 0 & tokens.size() = 0 & regions.size() = 0,'empty request succeeds after independent failures')
+  parsed = .llcparse..parsed('say 2' as .binary,1000000,'reused.rexx','program',64)
+  tokens = parsed.observedtokens()
+  call check(parsed.status() = 0 & tokenat(reference tokens,0,3,sayword),'valid request recovers after syntax, limit and map refusals')
+  call check(bincompare(saved.source(),source) = 0 & tokenat(reference saved,10,13,sayword),'prior owned tokens survive later request replacement')
+  call check(saved_regions.size() = 1 & saved_regions.finish(1) = <blen>(unfinished) & saved_regions.complete(1) = 0,'prior owned comment regions survive later requests')
+  say 'C_OBSERVATIONS|checks=' || checks || '|failures=' || failures
+  return failures
+
+tokenat: procedure = .int
+  arg tokens_ref = reference .llcore..stream, first = .int, last = .int, kind = .int
+  tokens = dereference tokens_ref
+  do i = 0 to tokens.size() - 1
+    if tokens.start(i) = first & tokens.finish(i + 1) = last & tokens.symbol(i) = kind then return 1
+  end
+  return 0
+
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return

@@ -405,6 +405,35 @@ foreach(_mode opt noopt)
       endif()
     endforeach()
 
+    if(_mode STREQUAL "opt")
+      # Keep this consumer's parser-only link closure independent of C
+      # lowering, target execution and native provider metadata/services.
+      set(_observation_inputs ${_base} "${_front}/llcgrammar.rxbin"
+        "${CMAKE_CURRENT_BINARY_DIR}/levelc/opt/llclanguage.rxbin"
+        "${CMAKE_CURRENT_BINARY_DIR}/levelc/opt/llcsrcmap.rxbin"
+        "${CMAKE_CURRENT_BINARY_DIR}/levelc/opt/llcparse.rxbin" "${_classic_names}")
+      ll_compile(parser-observation-contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/tests/parser-observation-contracts.crexx"
+        "${_dir}" ${_observation_inputs})
+      add_custom_command(OUTPUT "${_dir}/parser-observation-contracts-linked.rxbin"
+        COMMAND $<TARGET_FILE:rxlink> -s -o "${_dir}/parser-observation-contracts-linked"
+          "${_dir}/parser-observation-contracts.rxbin" ${_observation_inputs}
+        DEPENDS rxlink "${_dir}/parser-observation-contracts.rxbin" ${_observation_inputs} VERBATIM)
+      add_custom_target(llcompiler_c_observations_opt
+        DEPENDS "${_dir}/parser-observation-contracts-linked.rxbin")
+      if(BUILD_TESTING)
+        add_test(NAME llcompiler_c_observations_rxbvm_opt
+          COMMAND $<TARGET_FILE:rxbvm> --no-autoload
+            "${_dir}/parser-observation-contracts-linked.rxbin" -a)
+        set_tests_properties(llcompiler_c_observations_rxbvm_opt PROPERTIES
+          PASS_REGULAR_EXPRESSION "C_OBSERVATIONS[|]checks=[0-9]+[|]failures=0"
+          FAIL_REGULAR_EXPRESSION "FAIL[|]|PANIC:" TIMEOUT 120
+          LABELS "level-l;levelc;compiler;component")
+        crexx_register_test_prep_targets(TESTS llcompiler_c_observations_rxbvm_opt
+          TARGETS llcompiler_c_observations_opt rxbvm)
+      endif()
+    endif()
+
     set(_c_contract_inputs ${_base} ${_infrastructure} ${_shared}
       "${_front}/llcgrammar.rxbin"
       "${CMAKE_CURRENT_BINARY_DIR}/levelc/${_mode}/llcir.rxbin"
