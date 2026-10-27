@@ -470,6 +470,7 @@ int write_modules(module_file *const *modules,
                   size_t module_count,
                   RxGraph *semantic_graph,
                   FILE *outFile);
+/* Borrowed calling-thread text, until the next RXBIN operation on that thread. */
 const char *rxbin_last_error(void);
 void rxbin_reader_init_file(rxbin_reader *reader, FILE *inFile);
 void rxbin_reader_init_mem(rxbin_reader *reader,
@@ -477,6 +478,7 @@ void rxbin_reader_init_mem(rxbin_reader *reader,
                            const char *end_of_buffer);
 void rxbin_reader_close(rxbin_reader *reader);
 int rxbin_reader_next_module(rxbin_reader *reader, module_file **module);
+/* Serial-only convenience cursors. Concurrent owners use explicit readers. */
 int read_module(module_file **module, FILE *inFile);
 int read_module_mem(module_file **module,
                     char **in_buffer,

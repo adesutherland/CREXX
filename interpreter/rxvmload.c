@@ -1142,6 +1142,7 @@ size_t rxvm_materialize_module_overlay(
 static int rxldmod_internal(rxvm_context *context, char *file_name,
                             const char *expected_provider_id) {
     FILE *fp;
+    rxbin_reader reader;
     module_file *file_module_section;
     size_t modules_processed = 0;
     int loaded_rc;
@@ -1212,11 +1213,12 @@ static int rxldmod_internal(rxvm_context *context, char *file_name,
         DEBUG("CREXX Module file\n");
         fp = openfile(file_name, (char*)type_bin, found_location[0] ? found_location : 0, "rb");
         if (!fp) return 0;
+        rxbin_reader_init_file(&reader, fp);
 
         loaded_rc = 0;
         while (loaded_rc == 0) {
             file_module_section = 0;
-            switch (loaded_rc = read_module(&file_module_section, fp)) {
+            switch (loaded_rc = rxbin_reader_next_module(&reader, &file_module_section)) {
                 case 0: /* Success */
                     DEBUG("Module Read\n");
                     n = rxvm_materialize_module_overlay(
@@ -1229,6 +1231,7 @@ static int rxldmod_internal(rxvm_context *context, char *file_name,
                     if (file_module_section) free_module(file_module_section);
                     if (!modules_processed) {
                         DEBUG("ERROR: empty file %s\n", file_name);
+                        rxbin_reader_close(&reader);
                         fclose(fp);
                         return 0;
                     }
@@ -1237,10 +1240,12 @@ static int rxldmod_internal(rxvm_context *context, char *file_name,
                 default: /* error */
                     if (file_module_section) free_module(file_module_section);
                     DEBUG("ERROR: reading file %s\n", file_name);
+                    rxbin_reader_close(&reader);
                     fclose(fp);
                     return(-1);
             }
         }
+        rxbin_reader_close(&reader);
         fclose(fp);
     }
 
@@ -2108,6 +2113,7 @@ int rxvm_resolve_autoload_dependencies(rxvm_context *context) {
  *         >0 - Last Module Number loaded (1 based) (more than one might have been loaded ...)  */
 int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
     module_file *file_module_section;
+    rxbin_reader reader;
     size_t modules_processed = 0;
     int loaded_rc;
     size_t n;
@@ -2115,10 +2121,11 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
 
     DEBUG("Loading Module(s) from memory\n");
 
+    rxbin_reader_init_mem(&reader, &buffer_start, buffer_end);
     loaded_rc = 0;
     while (loaded_rc == 0) {
         file_module_section = 0;
-        switch (loaded_rc = read_module_mem(&file_module_section, &buffer_start, buffer_end)) {
+        switch (loaded_rc = rxbin_reader_next_module(&reader, &file_module_section)) {
             case 0: /* Success */
                 n = rxvm_materialize_module_overlay(
                         context, file_module_section);
@@ -2129,6 +2136,7 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
                 if (file_module_section) free_module(file_module_section);
                 if (!modules_processed) {
                     DEBUG("ERROR: empty buffer\n");
+                    rxbin_reader_close(&reader);
                     return 0;
                 }
                 break;
@@ -2136,10 +2144,12 @@ int rxldmodm(rxvm_context *context, char *buffer_start, size_t buffer_length) {
             default: /* error */
                 if (file_module_section) free_module(file_module_section);
                 fprintf(stderr, "ERROR: reading buffer\n");
+                rxbin_reader_close(&reader);
                 exit(-1);
         }
     }
 
+    rxbin_reader_close(&reader);
     return (int)(n); /* Module Number */
 }
 
