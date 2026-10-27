@@ -29,6 +29,16 @@ add_test(NAME crexx_help_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_HELP_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+add_test(NAME crexx_build_dispatch
+    COMMAND ${CMAKE_COMMAND}
+        "-DCREXX=$<TARGET_FILE:crexx>"
+        "-DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/build_dispatch_ws"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/crexx_build_dispatch.cmake")
+set_tests_properties(crexx_build_dispatch PROPERTIES
+    PASS_REGULAR_EXPRESSION "CREXX_BUILD_DISPATCH[|]PASS"
+    LABELS "driver;rxbuild;regression" TIMEOUT 90
+    CREXX_PREP_TARGETS "crexx;rxbuild")
+
 set(CREXX_HEADERLESS_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_headerless_smoke.cmake")
 set(CREXX_HEADERLESS_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"${CMAKE_CURRENT_BINARY_DIR}/headerless_simple.crx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx headerless script failed: \\n\${out}\")\nendif()\n")

@@ -18,6 +18,36 @@ exercises the first built-in string-function compatibility slice.
 [`php-numeric-sample.php`](php-numeric-sample.php) exercises the first numeric
 function compatibility slice.
 
+## Build and run
+
+From the repository root, prepare the driver and build-plan runner in the same
+configured toolchain, then run the maintained plan:
+
+```sh
+cmake --build cmake-build-debug --target crexx rxbuild --parallel 4
+cmake-build-debug/bin/crexx examples/php/setup.build
+```
+
+Use the configured build directory and executable suffix appropriate to your
+platform. The equivalent direct invocation is
+`cmake-build-debug/bin/rxbuild examples/php/setup.build`. The `crexx` convenience
+form accepts the single `.build` filename without additional driver options.
+Plan-relative paths resolve from the repository root.
+
+The plan builds the grammar, array runtime and reader, translates the four
+scalar/function/string/numeric samples, then runs those four applications.
+Products stay under `.crexx-build/php`; translated cREXX sources stay under
+`.crexx-build/.rxbuild-generated`. The reader replaces its output on each
+conversion. Generated sources and binaries are build artifacts, not source
+assets. The array migration sample is separate from these four plan inputs.
+
+The sample lines show `expected=... result=...` for inspection. Those labels
+are not runtime assertions: successful execution alone does not check the
+values. The maintained grouping control separately checks parenthesized reader
+output against an independent tree.
+
+## Embedded source example
+
 [`php_embedded.rxpp`](php_embedded.rxpp) demonstrates keeping a PHP example
 visible inside an RXPP member. `##DALIAS PHP` collects the `PHP ... END PHP`
 block into an array and calls `exec_to_process`. The sample callback only
@@ -31,29 +61,18 @@ Run the RXPP sample normally; it only demonstrates collection and export:
 crexx.exe examples/php/php_embedded.rxpp
 ```
 
-The exported source can then be converted by the standalone cREXX driver:
+To convert that exported source, use it as a `COMPILE APPLICATION` input with
+the grammar/reader phases shown in `setup.build`. No `php_convert` executable
+is supplied by this example.
 
-```powershell
-php_convert.exe php_embedded_source.php php_embedded_converted --run
-```
+## Current limits
 
-The driver expects `php_reader-linked.rxbin` in the current directory. Set
-`CREXX_PHP_READER` when the reader is elsewhere. Without `--run`, it stops
-after generating `php_embedded_converted.crexx` and
-`php_embedded_converted.rxbin`.
-
-The reader expects the generated `phpgrammar` module beside it. Its conceptual
-invocation is:
-
-```powershell
-php_reader.exe migration.php migration.crexx
-```
-
-The output file is replaced on each conversion, so rerunning the reader does
-not append a second translation.
-
-Generated grammar and reader binaries belong in the build directory and are
-not source assets.
+This is a procedural subset translator, not a PHP implementation. `echo` uses
+line-oriented `say`; translated variable names follow cREXX case-insensitive
+binding. Runtime scalar values and function arguments use the documented
+typed/text conversion subset. PHP references, copy-on-write compatibility,
+complete key conversion, exact warnings and the full built-in library are not
+provided. The design documents distinguish these limits from later extensions.
 
 Phase 1 note: initialize a variable before an `if` or `while` block when the
 variable is assigned inside that block and used afterward. This keeps the

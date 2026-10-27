@@ -337,7 +337,28 @@ greater
   product-VM synthetic-tree check uses the existing generic tree runtime; no PHP
   grammar generation or language expansion is required.
 - **PHP-GROUP-STEP01 — done:** match the authored node name and compose the
-  unchanged reader expression procedures into the owned regression fixture.
+  reader expression procedures and their referenced `named_child` and
+  `expression_child` bodies directly from the reader into the regression fixture;
+  the fixture must not maintain another implementation of those helpers.
 - **PHP-GROUP-STEP02 — done:** qualify that focused control, including a private
   before-copy negative, then retain it in ordinary QA. This does not complete
   the broader Phase 1 acceptance criteria above.
+
+19. Basic build integration
+    This prototype uses the existing `setup.build` plan and sibling cREXX tools;
+    it does not introduce a standalone PHP conversion executable.
+    Qualification covers the local source-tree route and the example install
+    rule, not a complete installed toolchain or broader platform/PHP compatibility.
+
+- **PHP-BUILD-AC01 — done:** `crexx plan.build` accepts exactly one plan input,
+  delegates to `rxbuild` and preserves its status. Extra filenames or options
+  return usage status 2 before any plan action; they must not be silently ignored.
+- **PHP-BUILD-AC02 — done:** the example install rule includes the setup plan;
+  the source-tree plan builds/runs its scalar, function, string and numeric
+  samples. Their output values are checked independently of successful child
+  exit statuses.
+- **PHP-BUILD-STEP01 — done:** retain one cheap driver control: a malformed single
+  plan reaches `RXBUILD_PARSE`; extra option/file inputs fail at driver admission.
+- **PHP-BUILD-STEP02 — done:** document and qualify the existing setup route and
+  four samples, retaining the current PHP subset limits. This is basic prototype
+  integration, not complete PHP compatibility or platform qualification.

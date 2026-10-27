@@ -304,7 +304,7 @@ emit_expression: procedure = .string
     end
     return result || ')'
   end
-  if name = 'group' then return '(' || emit_expression(tree,tree.child(node,2)) || ')'
+  if name = 'group.value' then return '(' || emit_expression(tree,tree.child(node,2)) || ')'
   if name = 'unary' & tree.count(node) > 1 then return php_operator(tree.name(tree.child(node,1))) || emit_expression(tree,tree.child(node,2))
   if tree.count(node) = 1 then return emit_expression(tree,tree.child(node,1))
   result = emit_expression(tree,tree.child(node,1))

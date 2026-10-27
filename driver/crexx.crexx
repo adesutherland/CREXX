@@ -115,6 +115,10 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
   * dispatch deliberately small so the main driver does not duplicate the
   * plan language or its build orchestration. */
  if fn[0] >= 1 & lower(right(fn.1,6)) = '.build' then do
+   if fn[0] <> 1 then do
+     say 'usage: crexx build-plan.build (exactly one .build input; no additional options)'
+     return 2
+   end
    buildCommand = .string[]
    buildCommand[1] = rxpath || 'bin' || dirsep || 'rxbuild'
    if platformUpper = 'WINDOWS' then buildCommand[1] = buildCommand[1] || '.exe'

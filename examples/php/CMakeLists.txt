@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.24)
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
         DESTINATION examples/php
         FILES_MATCHING
+        PATTERN "*.build"
         PATTERN "*.php"
         PATTERN "*.rxpp"
         PATTERN "*.levell"
@@ -25,6 +26,22 @@ if(BUILD_TESTING AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
     math(EXPR _php_expression_length "${_php_expression_end} - ${_php_expression_start}")
     string(SUBSTRING "${_php_reader_source}" ${_php_expression_start} ${_php_expression_length}
         PHP_READER_EXPRESSION_PROCEDURES)
+    foreach(_php_helper IN ITEMS named_child expression_child)
+        if(_php_helper STREQUAL "named_child")
+            set(_php_helper_next first_child)
+        else()
+            set(_php_helper_next array_parent)
+        endif()
+        string(FIND "${_php_reader_source}" "\n${_php_helper}: procedure" _php_helper_start)
+        string(FIND "${_php_reader_source}" "\n${_php_helper_next}: procedure" _php_helper_end)
+        if(_php_helper_start LESS 0 OR _php_helper_end LESS_EQUAL _php_helper_start)
+            message(FATAL_ERROR "PHP reader ${_php_helper} procedure boundaries changed")
+        endif()
+        math(EXPR _php_helper_length "${_php_helper_end} - ${_php_helper_start}")
+        string(SUBSTRING "${_php_reader_source}" ${_php_helper_start} ${_php_helper_length}
+            _php_helper_source)
+        string(APPEND PHP_READER_EXPRESSION_PROCEDURES "${_php_helper_source}")
+    endforeach()
     set(_php_group_base "${CMAKE_CURRENT_BINARY_DIR}/php_reader_group_smoke")
     configure_file("${_php_group_template}" "${_php_group_base}.crexx" @ONLY)
     set(_php_group_modules "${CMAKE_BINARY_DIR}/bin/library.rxbin" "${CMAKE_BINARY_DIR}/bin/rxfnsl.rxbin")
