@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <stdatomic.h>
 #include <time.h>
+#include <limits.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -28,6 +29,7 @@ typedef struct state {
     rxvml_context *other;
     int releases, command_calls, function_calls, foreign_result;
     int identity, concurrent;
+    atomic_int *peer_abort;
     rxvml_address_binding_spans update;
 } state;
 static int bytes(rxvml_text_span span, const char *data, size_t length) {
@@ -68,7 +70,8 @@ static int command_callback(rxvml_context *ctx, const rxvml_address_request_span
     if (s->concurrent) {
         unsigned int waits = 0;
         atomic_fetch_add(&concurrent_callbacks, 1);
-        while (atomic_load(&concurrent_callbacks) < 2 && waits++ < 10000u) {
+        while (atomic_load(&concurrent_callbacks) < 2 &&
+               !atomic_load(s->peer_abort) && waits++ < 10000u) {
 #ifdef _WIN32
             Sleep(1);
 #else
@@ -239,7 +242,103 @@ static void check_context_initialization(void) {
             sizeof(empty_callback_capture)));
     rxfremod(&context);
 }
-typedef struct concurrent_case { const char *library, *fixture; int identity; } concurrent_case;
+typedef struct reader_image {
+    char *bytes;
+    size_t length;
+    int modules;
+} reader_image;
+
+/* The independent count oracle never uses the legacy convenience cursor. */
+static int read_counted_image(const char *path, reader_image *image) {
+    FILE *file = fopen(path, "rb");
+    rxbin_reader reader;
+    module_file *module = NULL;
+    char *cursor;
+    long length;
+    int rc;
+    memset(image, 0, sizeof(*image));
+    if (!file) return 0;
+    if (fseek(file, 0, SEEK_END) || (length = ftell(file)) <= 0 ||
+        fseek(file, 0, SEEK_SET)) { fclose(file); return 0; }
+    image->length = (size_t)length;
+    image->bytes = malloc(image->length);
+    if (!image->bytes || fread(image->bytes, 1, image->length, file) != image->length) {
+        free(image->bytes); image->bytes = NULL; fclose(file); return 0;
+    }
+    fclose(file);
+    cursor = image->bytes;
+    rxbin_reader_init_mem(&reader, &cursor, image->bytes + image->length);
+    while ((rc = rxbin_reader_next_module(&reader, &module)) == 0) {
+        free_module(module); module = NULL;
+        if (image->modules == INT_MAX) { rc = -1; break; }
+        ++image->modules;
+    }
+    free_module(module);
+    rxbin_reader_close(&reader);
+    if (rc != 1 || !image->modules) {
+        free(image->bytes); image->bytes = NULL; return 0;
+    }
+    return 1;
+}
+
+typedef struct concurrent_case {
+    const char *library, *fixture;
+    const reader_image *combined;
+    int identity, memory, native_modules, library_modules;
+    atomic_int *error_phase, *peer_abort;
+} concurrent_case;
+
+static int wait_reader_phase(concurrent_case *test, int phase) {
+    unsigned waits = 0;
+    while (atomic_load(test->error_phase) < phase &&
+           !atomic_load(test->peer_abort) && waits++ < 10000u) {
+#ifdef _WIN32
+        Sleep(1);
+#else
+        struct timespec pause = {0, 1000000};
+        (void)nanosleep(&pause, NULL);
+#endif
+    }
+    return atomic_load(test->error_phase) >= phase;
+}
+
+/* Phased operations make error clobbering deterministic, without racing reads. */
+static void check_reader_error_isolation(concurrent_case *test) {
+    rxbin_reader reader;
+    module_file *module = NULL;
+    char *cursor;
+    if (test->identity == 101) {
+        char truncated[] = "cReXx007";
+        const char *borrowed;
+        char saved[512];
+        cursor = truncated;
+        rxbin_reader_init_mem(&reader, &cursor, truncated + 8);
+        CHECK(rxbin_reader_next_module(&reader, &module) == -1 && !module);
+        free_module(module); module = NULL;
+        rxbin_reader_close(&reader);
+        borrowed = rxbin_last_error();
+        CHECK(borrowed && strstr(borrowed, "truncated header"));
+        (void)snprintf(saved, sizeof(saved), "%s", borrowed ? borrowed : "");
+        atomic_store(test->error_phase, 1);
+        CHECK(wait_reader_phase(test, 2));
+        CHECK(borrowed && strcmp(borrowed, saved) == 0 && rxbin_last_error() == borrowed);
+        atomic_store(test->error_phase, 3);
+    } else {
+        if (!wait_reader_phase(test, 1)) {
+            CHECK(0); atomic_store(test->peer_abort, 1); return;
+        }
+        cursor = test->combined->bytes;
+        rxbin_reader_init_mem(&reader, &cursor, cursor + test->combined->length);
+        CHECK(rxbin_reader_next_module(&reader, &module) == 0 && module);
+        free_module(module);
+        /* Early close must release the remaining, undelivered linked modules. */
+        rxbin_reader_close(&reader);
+        CHECK(rxbin_last_error() == NULL);
+        atomic_store(test->error_phase, 2);
+        CHECK(wait_reader_phase(test, 3));
+    }
+}
+
 #ifdef _WIN32
 static DWORD WINAPI independent_context(void *userdata) {
 #else
@@ -249,12 +348,25 @@ static void *independent_context(void *userdata) {
     state s;
     rxvml_context *ctx;
     rxvml_value *text, *name, *result, *args[2];
-    int registration_rc;
+    int registration_rc, total;
     memset(&s, 0, sizeof(s)); s.concurrent = 1; s.identity = test->identity;
+    s.peer_abort = test->peer_abort;
+    if (!test->memory) check_reader_error_isolation(test);
     ctx = rxvml_create(NULL, 0); CHECK(ctx != NULL);
+    if (!ctx) atomic_store(test->peer_abort, 1);
     if (ctx) {
-        CHECK(rxvml_load_module_file(ctx, test->library) > 0);
-        CHECK(rxvml_load_module_file(ctx, test->fixture) > 0);
+        if (test->memory) {
+            total = rxvml_load_module_buffer(ctx, test->combined->bytes, test->combined->length);
+        } else {
+            total = rxvml_load_module_file(ctx, test->library);
+            CHECK(total == test->native_modules + test->library_modules);
+            if (total != test->native_modules + test->library_modules)
+                atomic_store(test->peer_abort, 1);
+            total = rxvml_load_module_file(ctx, test->fixture);
+        }
+        CHECK(total == test->native_modules + test->combined->modules);
+        if (total != test->native_modules + test->combined->modules)
+            atomic_store(test->peer_abort, 1);
         registration_rc = rxvml_address_register_callback_environment_spans(
                 ctx, "SPANS", "independent", command_callback, function_callback, &s);
         if (registration_rc) {
@@ -264,6 +376,7 @@ static void *independent_context(void *userdata) {
                     test->identity, error ? error : "unknown");
         }
         CHECK(!registration_rc);
+        if (registration_rc) atomic_store(test->peer_abort, 1);
         text = rxvml_value_new(ctx); name = rxvml_value_new(ctx);
         CHECK(!rxvml_set_str(text, input, sizeof(input))); CHECK(!rxvml_set_str(name, "result", 6));
         args[0] = text; args[1] = text;
@@ -285,17 +398,71 @@ static void *independent_context(void *userdata) {
 #endif
 }
 static void check_independent_contexts(const char *library, const char *fixture) {
-    concurrent_case cases[2] = {{library, fixture, 101}, {library, fixture, 202}};
+    reader_image library_image = {0}, fixture_image = {0}, combined = {0};
+    concurrent_case cases[2];
+    rxvml_context *probe;
+    atomic_int error_phase, peer_abort;
+    int native_modules, loaded, mode;
     size_t index;
+    CHECK(read_counted_image(library, &library_image));
+    CHECK(read_counted_image(fixture, &fixture_image));
+    if (!library_image.bytes || !fixture_image.bytes) goto done;
+    CHECK(library_image.length <= SIZE_MAX - fixture_image.length &&
+          library_image.modules <= INT_MAX - fixture_image.modules);
+    if (library_image.length > SIZE_MAX - fixture_image.length ||
+        library_image.modules > INT_MAX - fixture_image.modules) goto done;
+    combined.length = library_image.length + fixture_image.length;
+    combined.modules = library_image.modules + fixture_image.modules;
+    combined.bytes = malloc(combined.length); CHECK(combined.bytes);
+    if (!combined.bytes) goto done;
+    memcpy(combined.bytes, library_image.bytes, library_image.length);
+    memcpy(combined.bytes + library_image.length, fixture_image.bytes, fixture_image.length);
+    /* Derive the native prefix without assuming a fixed bridge module count. */
+    probe = rxvml_create(NULL, 0); CHECK(probe);
+    if (!probe) goto done;
+    loaded = rxvml_load_module_buffer(probe, fixture_image.bytes, fixture_image.length);
+    native_modules = loaded - fixture_image.modules;
+    CHECK(loaded > 0 && native_modules >= 0);
+    rxvml_destroy(probe);
+    if (loaded <= 0 || native_modules < 0) goto done;
+    CHECK(combined.modules <= INT_MAX - native_modules);
+    if (combined.modules > INT_MAX - native_modules) goto done;
+    for (mode = 0; mode < 2; ++mode) {
+        atomic_init(&error_phase, 0); atomic_init(&peer_abort, 0);
+        atomic_store(&concurrent_callbacks, 0);
+        for (index = 0; index < 2; ++index) {
+            cases[index].library = library; cases[index].fixture = fixture;
+            cases[index].combined = &combined; cases[index].identity = index ? 202 : 101;
+            cases[index].memory = mode; cases[index].native_modules = native_modules;
+            cases[index].library_modules = library_image.modules;
+            cases[index].error_phase = &error_phase; cases[index].peer_abort = &peer_abort;
+        }
 #ifdef _WIN32
-    HANDLE threads[2];
-    for (index = 0; index < 2; ++index) { threads[index] = CreateThread(NULL, 0, independent_context, &cases[index], 0, NULL); CHECK(threads[index] != NULL); }
-    for (index = 0; index < 2; ++index) if (threads[index]) { CHECK(WaitForSingleObject(threads[index], 30000) == WAIT_OBJECT_0); CloseHandle(threads[index]); }
+        HANDLE threads[2];
+        for (index = 0; index < 2; ++index) { threads[index] = CreateThread(NULL, 0, independent_context, &cases[index], 0, NULL); CHECK(threads[index] != NULL); if (!threads[index]) atomic_store(&peer_abort, 1); }
+        for (index = 0; index < 2; ++index) if (threads[index]) {
+            DWORD waited = WaitForSingleObject(threads[index], 30000);
+            CHECK(waited == WAIT_OBJECT_0);
+            if (waited != WAIT_OBJECT_0) {
+                atomic_store(&peer_abort, 1);
+                /* Shared inputs cannot be freed while an owner still runs. */
+                waited = WaitForSingleObject(threads[index], INFINITE);
+                if (waited != WAIT_OBJECT_0) { CHECK(0); exit(1); }
+            }
+            CloseHandle(threads[index]);
+        }
 #else
-    pthread_t threads[2]; int started[2];
-    for (index = 0; index < 2; ++index) { started[index] = pthread_create(&threads[index], NULL, independent_context, &cases[index]); CHECK(!started[index]); }
-    for (index = 0; index < 2; ++index) if (!started[index]) CHECK(!pthread_join(threads[index], NULL));
+        pthread_t threads[2]; int started[2];
+        for (index = 0; index < 2; ++index) { started[index] = pthread_create(&threads[index], NULL, independent_context, &cases[index]); CHECK(!started[index]); if (started[index]) atomic_store(&peer_abort, 1); }
+        for (index = 0; index < 2; ++index) if (!started[index]) {
+            int joined = pthread_join(threads[index], NULL);
+            CHECK(!joined);
+            if (joined) exit(1);
+        }
 #endif
+    }
+done:
+    free(combined.bytes); free(fixture_image.bytes); free(library_image.bytes);
 }
 static int halt_command(rxvml_context *ctx, const rxvml_address_request_spans *request,
         rxvml_address_response_spans *response, void *userdata) {

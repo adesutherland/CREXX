@@ -46,7 +46,15 @@ typedef struct rxbin007_section {
 #define RXBIN007_LZSS_MAX_CHAIN 64u
 #define RXBIN007_LZSS_PREV_SIZE (RXBIN007_LZSS_WINDOW + 1u)
 
-static char rxbin007_error[512];
+#if defined(CREXX_VM_SINGLE_THREADED)
+#define RXBIN_ERROR_THREAD_LOCAL
+#elif defined(_MSC_VER)
+#define RXBIN_ERROR_THREAD_LOCAL __declspec(thread)
+#else
+#define RXBIN_ERROR_THREAD_LOCAL __thread
+#endif
+
+static RXBIN_ERROR_THREAD_LOCAL char rxbin007_error[512];
 
 static void rxbin007_set_error(const char *format, ...) {
     va_list args;

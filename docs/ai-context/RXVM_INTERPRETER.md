@@ -109,6 +109,12 @@ the correct execution host.
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `interpreter/rxvml/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
 2. **Loading**: `rxvm_load()` ingests one or more 007 containers, validates the fixed header and six sections, materializes portable constants/metadata and the semantic graph, expands variable-integer instructions into the normal runtime image, and loads each module directory entry into an internal `module` struct. A linked container shares one materialized pool and graph across its modules; concatenated archive containers remain independently owned.
+   File and buffer loads each keep one caller-owned `rxbin_reader` through the
+   complete operation, closing unread state on every exit. Delivered modules
+   transfer to the VM independently of that reader. Concurrent contexts do not
+   use the serial-only legacy convenience-reader lists. `rxbin_last_error()`
+   returns calling-thread borrowed text until that thread's next RXBIN operation;
+   this does not make the legacy cursor wrappers safe for concurrent callers.
 3. **Dependency resolution and linking**: `rxvm_link()` first resolves declared
    `META_PROVIDER` dependencies, then traverses newly loaded modules to resolve
    exports and external imports into a unified memory map. After that ordinary
