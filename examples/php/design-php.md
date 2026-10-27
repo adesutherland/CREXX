@@ -344,6 +344,11 @@ greater
   before-copy negative, then retain it in ordinary QA. This does not complete
   the broader Phase 1 acceptance criteria above.
 
+The normal smoke gate owns this composed fixture and its real reader helpers,
+so missing helper definitions or grouping regressions fail before overnight QA.
+Its compiler, assembler, linker, curated imports, base/SDK images and product VM
+remain explicit preparation dependencies; PHP grammar generation is unnecessary.
+
 19. Basic build integration
     This prototype uses the existing `setup.build` plan and sibling cREXX tools;
     it does not introduce a standalone PHP conversion executable.

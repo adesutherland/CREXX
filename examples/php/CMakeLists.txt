@@ -60,7 +60,7 @@ if(BUILD_TESTING AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
     add_custom_target(example_php_reader_group_artifact DEPENDS "${_php_group_base}-linked.rxbin")
     add_test(NAME example_php_reader_group
         COMMAND $<TARGET_FILE:${CREXX_DEFAULT_VM_TARGET}> "${_php_group_base}-linked.rxbin")
-    set_tests_properties(example_php_reader_group PROPERTIES LABELS "examples;php;comprehensive" TIMEOUT 60)
+    set_tests_properties(example_php_reader_group PROPERTIES LABELS "examples;php;smoke" TIMEOUT 60)
     crexx_register_test_prep_targets(TESTS example_php_reader_group
         TARGETS example_php_reader_group_artifact ${CREXX_DEFAULT_VM_TARGET})
     crexx_finalize_directory_qa_tiers()

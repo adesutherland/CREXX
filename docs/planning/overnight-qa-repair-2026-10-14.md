@@ -1,5 +1,35 @@
 # Overnight QA repair — 14 October 2026
 
+## 27 October continuation — PHP fixture helper closure and fast coverage
+
+Restore the composed PHP grouping control and catch its source/helper closure
+failures in the normal fast gate before overnight QA. All five affected
+comprehensive jobs stopped at the same missing `named_child`/`expression_child`
+fixture definitions; their composition from the real reader is already repaired.
+Keep the existing synthetic-tree oracle and avoid PHP grammar generation or a
+broader translator campaign. This is separate from the unresolved intermittent
+Intel ADDRESS registration cause.
+
+1. **O27-AC01 — done:** the fixture includes the real reader expression and
+   helper bodies, with checked extraction boundaries and source-change tracking.
+2. **O27-AC02 — done locally:** `example_php_reader_group`
+   belongs to smoke, retaining explicit compiler/assembler/linker, curated
+   imports, base/SDK image and product-VM preparation dependencies.
+3. **O27-AC03 — done locally:** the freshly composed fixture compiles, assembles
+   and links against the published SDK and passes on the product VM with exact
+   grouping assertions. Registered smoke-tier and preparation metadata are checked.
+4. **O27-AC04 — open:** verify the affected hosted comprehensive gate at the
+   repaired revision; focused proof alone does not close platform assurance.
+
+1. **O27-STEP01 — done (AC01):** review the common missing-helper cause and the
+   existing source-composition repair.
+2. **O27-STEP02 — done locally (AC02):** promote the existing control to smoke
+   and update its owning grouping contract without adding another oracle.
+3. **O27-STEP03 — focused proof done; publication and hosted proof pending
+   (AC03/04), depends on STEP02:** central consumer and metadata checks are
+   complete. Review/publish the scoped repair and inspect affected hosted
+   comprehensive proof. Keep pending gates open.
+
 ## 26 October continuation — independent ADDRESS contexts and log delivery
 
 ### Vision and intended outcomes
