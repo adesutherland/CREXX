@@ -565,6 +565,17 @@ typedef struct rxvm_diagnostic_callout_scope {
     unsigned char has_callsite;
 } rxvm_diagnostic_callout_scope;
 
+enum { RXVM_CAPTURE_MESSAGE_BYTES = 128 };
+
+/* Private synchronous output: owned bytes and canonical coordinates only. */
+typedef struct rxvm_captured_signal {
+    int code;
+    rxinteger module_number, address;
+    size_t message_length;
+    unsigned char has_location, message_truncated;
+    char message[RXVM_CAPTURE_MESSAGE_BYTES + 1];
+} rxvm_captured_signal;
+
 typedef struct rxvm_active_state {
     void *rxvml_context;
     void *rxpa_context;
@@ -583,6 +594,7 @@ typedef struct rxvm_active_state {
     sig_atomic_t (*external_mailbox_claim)(void *owner);
     /* Optional synchronous callback outcome, scoped by run_with_signal(). */
     int *callback_signal;
+    rxvm_captured_signal *callback_capture;
     rxvm_invocation_boundary *invocation_boundary; /* Stack-scoped native entry. */
     value *invocation_fault_sink; /* Scoped checked-entry initializer failure. */
     proc_runtime *invocation_fault_entry; /* Exact initializer run owner. */
@@ -664,7 +676,7 @@ int run(rxvm_context *context, int argc, char *argv[]);
 /* Preserve normal program status while reporting an unhandled VM signal
  * separately to an embedding host. */
 int rxvm_run_capturing_signal(rxvm_context *context, int argc, char *argv[],
-                              int *signal_out);
+                              int *signal_out, rxvm_captured_signal *capture_out);
 /* Existing canonical VM signal names; NULL for an unknown code. */
 const char *interrupt_to_string(unsigned char interrupt);
 /* Internal typed external-call boundary: zero means successful RETURN;

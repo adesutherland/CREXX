@@ -224,11 +224,16 @@ and the existing real signal/unwind and worker executor tests.
 RXVML descriptor entry keeps its existing failure return and NULL response for
 an unhandled captured signal. `rxvml_last_error()` then supplies a bounded
 context-owned summary containing that call's numeric signal code, canonical
-signal name and external procedure name. Long procedure names use a marked
-UTF-8 prefix. The returned text is borrowed until that context updates its error
+signal name and external procedure name, followed by a bounded signal-message
+prefix and the captured module number/canonical instruction PC. Long procedure
+names and messages use marked UTF-8 prefixes; unavailable coordinates are
+reported as unknown. These details are copied synchronously before frame/signal
+cleanup into a private caller-owned record, whose optional sink is restored on
+nested return. No VM payload object or source/frame/procedure pointer escapes.
+The returned text is borrowed until that context updates its error
 or is destroyed; another context cannot overwrite it. This is not a payload,
-origin or captured-stack API and does not infer an event from cached signal
-state. Capture, frame cleanup, nested entry and successful-call behavior are
+public origin or captured-stack API and does not infer an event from cached signal
+state. Signal routing, frame cleanup, nested entry and successful-call behavior are
 unchanged; recovered embedding calls remain silent.
 
 ## 2. Core Internal Structs

@@ -464,6 +464,7 @@ static int rxinimod_common(rxvm_context *context,
     context->active.external_mailbox_owner = 0;
     context->active.external_mailbox_claim = 0;
     context->active.callback_signal = 0;
+    context->active.callback_capture = 0;
     context->active.invocation_boundary = 0;
     context->active.invocation_fault_sink = 0;
     context->active.invocation_fault_entry = 0;

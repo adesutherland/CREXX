@@ -228,12 +228,15 @@ static void check_optional_resource_tail(void) {
 static void check_context_initialization(void) {
     rxvm_context context;
     int *empty_callback_signal = NULL;
+    rxvm_captured_signal *empty_callback_capture = NULL;
     /* RXVML uses caller-allocated storage; defaults cannot depend on calloc. */
     memset(&context, 0xa5, sizeof(context));
     rxinimod(&context);
     CHECK(context.prepare_only == 0);
     CHECK(!memcmp(&context.active.callback_signal, &empty_callback_signal,
             sizeof(empty_callback_signal)));
+    CHECK(!memcmp(&context.active.callback_capture, &empty_callback_capture,
+            sizeof(empty_callback_capture)));
     rxfremod(&context);
 }
 typedef struct concurrent_case { const char *library, *fixture; int identity; } concurrent_case;
@@ -331,7 +334,10 @@ static void check_captured_signal_diagnostics(const char *library, const char *f
     rxvml_context *second = rxvml_create(NULL, 0);
     rxvml_value *first_name, *second_name, *result = NULL, *args[1];
     const char *first_error = NULL, *second_error = NULL;
-    char saved[512];
+    const char *location;
+    char saved[512], saved_second[512];
+    int first_module, second_module;
+    long long module_number = -1, failure_pc = -1, missing_pc = -1;
     const char *descriptor = "rxsig1|rxvml_spans.forcedsignal|.int|name=.string";
 
     CHECK(first && second);
@@ -340,8 +346,10 @@ static void check_captured_signal_diagnostics(const char *library, const char *f
         if (second) rxvml_destroy(second);
         return;
     }
-    CHECK(rxvml_load_module_file(first, library) > 0 && rxvml_load_module_file(first, fixture) > 0);
-    CHECK(rxvml_load_module_file(second, library) > 0 && rxvml_load_module_file(second, fixture) > 0);
+    CHECK(rxvml_load_module_file(first, library) > 0);
+    first_module = rxvml_load_module_file(first, fixture); CHECK(first_module > 0);
+    CHECK(rxvml_load_module_file(second, library) > 0);
+    second_module = rxvml_load_module_file(second, fixture); CHECK(second_module > 0);
     first_name = rxvml_value_new(first); second_name = rxvml_value_new(second);
     CHECK(first_name && second_name);
     if (!first_name || !second_name) {
@@ -354,7 +362,11 @@ static void check_captured_signal_diagnostics(const char *library, const char *f
     CHECK(rxvml_call_procedure_descriptor(first, descriptor, 1, args, &result) == -1);
     CHECK(result == NULL && rxvml_last_error(first, &first_error) == -1);
     CHECK(first_error && strstr(first_error, "code=2 name=FAILURE") &&
-          strstr(first_error, "procedure=rxvml_spans.forcedsignal"));
+          strstr(first_error, "procedure=rxvml_spans.forcedsignal") &&
+          strstr(first_error, "message=forced RXVML diagnostic"));
+    location = first_error ? strstr(first_error, " module=") : NULL;
+    CHECK(location && sscanf(location, " module=%lld pc=%lld", &module_number, &failure_pc) == 2);
+    CHECK(module_number == first_module && failure_pc >= 0);
     (void)snprintf(saved, sizeof(saved), "%s", first_error ? first_error : "");
     if (result) { rxvml_value_free(result); result = NULL; }
 
@@ -362,15 +374,34 @@ static void check_captured_signal_diagnostics(const char *library, const char *f
     CHECK(rxvml_call_procedure_descriptor(second, descriptor, 1, args, &result) == -1);
     CHECK(result == NULL && rxvml_last_error(second, &second_error) == -1);
     CHECK(second_error && strstr(second_error, "code=8 name=OUT_OF_RANGE") &&
-          strstr(second_error, "procedure=rxvml_spans.forcedsignal"));
+          strstr(second_error, "procedure=rxvml_spans.forcedsignal") &&
+          strstr(second_error, "message=forced RXVML diagnostic"));
+    module_number = -1;
+    location = second_error ? strstr(second_error, " module=") : NULL;
+    CHECK(location && sscanf(location, " module=%lld pc=%lld", &module_number, &missing_pc) == 2);
+    CHECK(module_number == second_module && missing_pc >= 0);
+    (void)snprintf(saved_second, sizeof(saved_second), "%s", second_error ? second_error : "");
     if (result) { rxvml_value_free(result); result = NULL; }
     CHECK(first_error && strcmp(first_error, saved) == 0);
     CHECK(rxvml_last_error(first, &first_error) == -1 && first_error && strcmp(first_error, saved) == 0);
 
+    CHECK(!rxvml_set_str(first_name, "FUNCTION_NOT_FOUND", 18)); args[0] = first_name;
+    CHECK(rxvml_call_procedure_descriptor(first, descriptor, 1, args, &result) == -1);
+    CHECK(result == NULL && rxvml_last_error(first, &first_error) == -1);
+    CHECK(first_error && strstr(first_error, "code=11 name=FUNCTION_NOT_FOUND") &&
+          strstr(first_error, "procedure=rxvml_spans.forcedsignal") &&
+          strstr(first_error, "message=rxvml_spans.missing_inner_callee"));
+    module_number = -1; missing_pc = -1;
+    location = first_error ? strstr(first_error, " module=") : NULL;
+    CHECK(location && sscanf(location, " module=%lld pc=%lld", &module_number, &missing_pc) == 2);
+    CHECK(module_number == first_module && missing_pc >= 0 && missing_pc != failure_pc);
+    CHECK(second_error && strcmp(second_error, saved_second) == 0);
+    if (result) { rxvml_value_free(result); result = NULL; }
+
     args[0] = first_name;
     result = call(first, "rxsig1|rxvml_spans.identity|.string|text=.string", 1, args);
     if (result) {
-        check_text(first, result, "FAILURE", 7);
+        check_text(first, result, "FUNCTION_NOT_FOUND", 18);
         rxvml_value_free(result);
     }
     rxvml_value_free(first_name); rxvml_value_free(second_name);

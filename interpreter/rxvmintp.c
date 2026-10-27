@@ -2792,7 +2792,8 @@ static char *build_runtime_match_proc_name(const char *class_name,
  * policy, retaining session/legacy reentry and an independent signal cell.
  * These synchronous callbacks are already inside the owning worker's run(). */
 static int run_with_signal(rxvm_context *context, int argc, char *argv[],
-                           int *callback_signal, value *diagnostic_out);
+                           int *callback_signal, value *diagnostic_out,
+                           rxvm_captured_signal *capture_out);
 static int run_external_diagnostic_status(rxvm_context *, int, char **, value *);
 
 static int invoke_runtime_native_member(rxvm_context *context,
@@ -5362,9 +5363,37 @@ static void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RX
 /* A callback's outer caller still has the opportunity to handle this signal.
  * Record it separately from a numeric result and defer terminal diagnostics. */
 static int rxvm_capture_callback_signal(rxvm_context *context, int code,
-                                        const value *diagnostic) {
+                                        const value *diagnostic,
+                                        const value *payload,
+                                        rxinteger module_number, rxinteger address) {
+    rxvm_captured_signal *capture;
     if (!context->active.callback_signal) return 0;
     *context->active.callback_signal = code;
+    capture = context->active.callback_capture;
+    if (capture) {
+        size_t length = payload && payload->string_value
+                ? (size_t)payload->string_length : 0u;
+        memset(capture, 0, sizeof(*capture));
+        capture->code = code;
+        if (module_number > 0 && (size_t)module_number <= context->num_modules &&
+            address >= 0 && (size_t)address <
+                context->modules[module_number - 1]->segment.inst_size) {
+            capture->module_number = module_number;
+            capture->address = address;
+            capture->has_location = 1;
+        }
+        if (length > RXVM_CAPTURE_MESSAGE_BYTES) {
+            length = RXVM_CAPTURE_MESSAGE_BYTES;
+            capture->message_truncated = 1;
+            /* Do not cut a UTF-8 scalar in a bounded text prefix. */
+            while (length &&
+                   ((unsigned char)payload->string_value[length] & 0xc0u) == 0x80u)
+                --length;
+        }
+        if (length) memcpy(capture->message, payload->string_value, length);
+        capture->message[length] = '\0';
+        capture->message_length = length;
+    }
     rxvm_signal_diagnostic_copy(context->active.callback_diagnostic, diagnostic);
     return 1;
 }
@@ -5375,7 +5404,7 @@ if (is_interrupt && temp_frame->is_interrupt_action) { \
     if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
         value *payload__ = rxsignal_handler_payload(temp_frame); \
         diagnostic_capture(context, temp_frame, &diagnostic_owners[is_interrupt]); \
-        if (!rxvm_capture_callback_signal(context, (int)is_interrupt, &diagnostic_owners[is_interrupt]) && \
+        if (!rxvm_capture_callback_signal(context, (int)is_interrupt, &diagnostic_owners[is_interrupt], payload__, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt]) && \
             !rxvm_checked_initializer_fault(context, is_interrupt, last_interrupted_module[is_interrupt], last_interrupted_address[is_interrupt], payload__, &diagnostic_owners[is_interrupt])) { \
             if (payload__ && payload__->string_length) { \
                 fprintf(stderr, "PANIC: %.*s (SIGNAL %s)\n", (int)(payload__->string_length), payload__->string_value, interrupt_to_string(is_interrupt)); \
@@ -6699,7 +6728,10 @@ static RXVM_LABEL_OWNER RX_FLATTEN int rxvm_run_owned_core(
             DEBUG("TRACE - INTR HANDLER -> HALT %s\n", interrupt_to_string(last_interrupt));
             /* Print error message to stderr */
             if (!rxvm_capture_callback_signal(context, (int)last_interrupt,
-                                               &diagnostic_owners[last_interrupt]) &&
+                                               &diagnostic_owners[last_interrupt],
+                                               interrupt_object[last_interrupt],
+                                               last_interrupted_module[last_interrupt],
+                                               last_interrupted_address[last_interrupt]) &&
                 !rxvm_checked_initializer_fault(context, last_interrupt,
                     last_interrupted_module[last_interrupt],
                     last_interrupted_address[last_interrupt], interrupt_object[last_interrupt],
@@ -7431,15 +7463,18 @@ START_OF_INSTRUCTIONS
 #undef context
 
 static int run_with_signal(rxvm_context *context, int argc, char *argv[],
-                           int *callback_signal, value *diagnostic_out) {
+                           int *callback_signal, value *diagnostic_out,
+                           rxvm_captured_signal *capture_out) {
     rxvm_worker_transition_result transition;
     rxvm_context *previous_active_context;
     int *previous_callback_signal;
+    rxvm_captured_signal *previous_capture;
     value *previous_diagnostic;
     int rc;
 
     if (callback_signal) *callback_signal = SIGNAL_NONE;
     if (diagnostic_out) value_zero(diagnostic_out);
+    if (capture_out) memset(capture_out, 0, sizeof(*capture_out));
 
     transition = rxvm_worker_begin_execution(&context->worker);
 
@@ -7467,11 +7502,14 @@ static int run_with_signal(rxvm_context *context, int argc, char *argv[],
 
     previous_active_context = rxvm_active_context_enter(context);
     previous_callback_signal = context->active.callback_signal;
+    previous_capture = context->active.callback_capture;
     previous_diagnostic = context->active.callback_diagnostic;
     context->active.callback_signal = callback_signal;
+    context->active.callback_capture = capture_out;
     context->active.callback_diagnostic = diagnostic_out;
     rc = rxvm_run_owned_core(context, argc, argv);
     context->active.callback_signal = previous_callback_signal;
+    context->active.callback_capture = previous_capture;
     context->active.callback_diagnostic = previous_diagnostic;
     rxvm_active_context_leave(previous_active_context);
     rxpa_compatibility_execution_leave(&context->rxpa_compatibility);
@@ -7483,12 +7521,12 @@ static int run_with_signal(rxvm_context *context, int argc, char *argv[],
 }
 
 int run(rxvm_context *context, int argc, char *argv[]) {
-    return run_with_signal(context, argc, argv, NULL, NULL);
+    return run_with_signal(context, argc, argv, NULL, NULL, NULL);
 }
 
 int rxvm_run_capturing_signal(rxvm_context *context, int argc, char *argv[],
-                              int *signal_out) {
-    return run_with_signal(context, argc, argv, signal_out, NULL);
+                              int *signal_out, rxvm_captured_signal *capture_out) {
+    return run_with_signal(context, argc, argv, signal_out, NULL, capture_out);
 }
 
 int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]) {
@@ -7498,7 +7536,7 @@ int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]) {
 static int run_external_diagnostic_status(rxvm_context *context, int argc,
                                           char *argv[], value *diagnostic_out) {
     int signal = SIGNAL_NONE;
-    int status = run_with_signal(context, argc, argv, &signal, diagnostic_out);
+    int status = run_with_signal(context, argc, argv, &signal, diagnostic_out, NULL);
     if (signal != SIGNAL_NONE) return signal;
     /* RET historically publishes the physical integer field as process status,
      * even for a string/object return. Preserve run()'s process contract while
