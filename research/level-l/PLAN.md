@@ -21,10 +21,10 @@ never a truncated successful result. Capture cannot be selected after lexing.
 | --- | --- | --- |
 | **L-TRIVIA-AC01** | Existing comment/source owners capture complete, nested/line, shielded and unfinished-comment spans in their existing scan, with no delimiter rescan or duplicate source ownership. | done |
 | **L-TRIVIA-AC02** | Requests expose one owned region table; disabled capture, exact/exhausted limits, invalid ordering and failure paths retain explicit contracts. | done |
-| **L-TRIVIA-AC03** | Focused normal comment/request checks and SDK/API documentation are complete. One DSLSH grammar consumer must still prove the integration. Broader parser/platform/SAN qualification remains outside this increment. | in progress |
+| **L-TRIVIA-AC03** | Focused normal comment/request checks, SDK/API documentation and the optional DSLSH grammar consumer prove exact spans and lifetime. Broader parser/platform/SAN qualification remains outside this increment. | done; selected native profile |
 | **L-TRIVIA-STEP01** | Record and internally review the capture/read contract before source edits; AC01–03. | done |
 | **L-TRIVIA-STEP02** | Add capture to the existing owners and selected request surface; AC01–02. | done |
-| **L-TRIVIA-STEP03** | Focused SDK checks and local supporting delivery are complete; qualify the optional consumer before closing this step; AC01–03. | in progress |
+| **L-TRIVIA-STEP03** | Focused SDK and optional-consumer checks, owning documentation and local supporting delivery are complete; AC01–03. | done |
 
 ## Proposed target-toolchain research
 

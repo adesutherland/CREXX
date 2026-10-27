@@ -1590,6 +1590,27 @@ lexing/parsing or with a negative limit is invalid API use (status 3).
 Extract the value once per snapshot; it remains usable after the request/source
 ends. Captured comments do not make a failed parse or partial tree executable.
 
+### Grammar-driven DSLSH highlighting
+
+The optional B/L component in the
+[DSLSH project](https://github.com/adesutherland/DSL-Syntax-Highlighter/blob/develop/docs/CREXX_INTEGRATION.md)
+connects generated languages to DSLSH-compatible editors. DSLSH owns the parser
+protocol and document sessions; core Level L has no dependency on that component.
+
+Keep one generated definition anchored, bind declared token/rule names to
+highlight categories in a profile, and reuse that profile for fresh document
+requests. An optional trusted validator runs after a clean unique parse and
+returns owned diagnostics or exact-token classification refinements. Source is
+never executed to obtain highlighting. The initial adapter supports scanner-only
+and nonregional LR(1) definitions; it does not supply complete PHP or cREXX
+language semantics merely from a grammar.
+
+Highlight ranges cross from original UTF-8 byte spans to Unicode codepoints at
+the DSLSH boundary. Invalid source retains lexical/comment/unknown coverage and
+located diagnostics, without claiming a successful partial AST. Resource or
+contract failures remain refusals. The DSLSH guide owns build selection,
+callbacks, range policies, examples and the remaining full-library/browser work.
+
 ### Strict request statuses
 
 These codes apply to `.lllanguage..request`:
