@@ -1,5 +1,63 @@
 # Overnight QA repair — 14 October 2026
 
+## 26 October continuation — independent ADDRESS contexts and log delivery
+
+### Vision and intended outcomes
+
+Restore the failed ARM callback check from the existing hotfix checkout and
+distinguish log-delivery failures from product qualification. Preserve independent VM
+contexts, intentional callback overlap, byte-span and release-count assertions,
+and all platform correctness gates. Reuse passing qualification; this repair
+does not commission another functional or sanitizer matrix.
+
+### Acceptance criteria
+
+1. **O26-AC01 — diagnosed; cause investigation open:** distinguish the ARM
+   independent-context registration failure from its later callback/count
+   failures. Preserve the first registration diagnostic. Intel correctness and
+   installed qualification passed; DNS failure uploading their logs is a
+   delivery failure, not a product defect.
+2. **O26-AC02 — open; hosted registration cause unproven:** repair the cause without serializing the
+   independent contexts, hiding failed assertions or weakening callback ownership.
+   Reuse Intel's passing product qualification and keep its external DNS failure
+   distinct; do not repeat successful tests merely to retry an upload.
+3. **O26-AC03 — done for the initialization repair:** run bounded affected Debug checks and a current core
+   build. Keep the small span regression in normal smoke coverage. Check native
+   context initialization with focused maintained sanitizer proof; do not pull
+   unrelated compiler bootstrap or full functional panels into this repair.
+   Span and direct host-callback checks qualify this native boundary; the Level C
+   host check remains outside this increment because it requires a Level L bootstrap.
+4. **O26-AC04 — locally qualified; publication prepared:** review and publish only the repair to hotfix/develop,
+   verify exact-revision normal CI and snapshot publication, and remove task
+   diagnostics. Preserve unrelated local drafts and the release/schedule boundary.
+5. **O26-AC05 — done:** common VM initialization establishes a zero
+   `prepare_only` flag and NULL callback-signal destination even in poisoned
+   caller storage. Keep this independently reproduced initialization defect
+   distinct from the still-unidentified hosted registration failure.
+6. **O26-AC06 — locally qualified; native Windows CI pending:** the native RXAS catalogue generator uses binary scratch
+   streams beside its requested output instead of relying on Windows CRT
+   `tmpfile()` permissions. Preserve emitted catalogue bytes, metadata fingerprints
+   and atomic final replacement. Clean owned scratch files on success and failure;
+   an unsuccessful generation preserves any existing final output. Qualify the
+   small generator and its affected consumer without another VM or compiler matrix.
+
+### Implementation steps
+
+1. **O26-STEP01 — done; original cause remains open (AC01):** inspect the two failed job logs and
+   actual candidate checkout, reconcile hotfix and add a first-registration
+   diagnostic. Bounded unsynchronized and aligned cold-start replays have not
+   reproduced the hosted failure; remove the temporary alignment experiment.
+2. **O26-STEP02 — initialization repair done; callback cause open (AC02/05), depends on STEP01:** repair the identified
+   callback cause, preserving the separate log-delivery diagnosis.
+   Establish the missing common context defaults with a poisoned-storage
+   regression before changing the owning initializer (AC05).
+3. **O26-STEP03 — locally qualified; publication prepared (AC03/04), depends on STEP02:** freeze, review, run the
+   affected checks and current core build, then publish the bounded repair and
+   inspect normal CI without claiming full Deep or original-incident closure.
+4. **O26-STEP04 — locally qualified; publication prepared (AC06):** review Peter's Windows generator diagnosis,
+   repair only scratch-stream placement/cleanup, exercise denied-CRT-temp and
+   publication-failure controls, and publish as a separate compatible repair.
+
 ## 25 October continuation — core Deep QA contracts
 
 Restore the affected core Deep checks without publishing held research work,

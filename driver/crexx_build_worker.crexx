@@ -68,11 +68,21 @@ remove_tree: procedure = .int
 
 make_directory: procedure = .int
   arg path = .string
-  captured = .string[]
-  errors = .string[]
-  address crexx "mkdir -p :path" output captured error errors
-  command_rc = rc
-  if command_rc <> 0 then call show_failure("make directory " || path, command_rc, captured, errors)
+  command_rc = .int
+  if rxfs..isdir(path) <> 0 then return 0
+  slash = lastpos('\',path)
+  alt_slash = lastpos('/',path)
+  if alt_slash > slash then slash = alt_slash
+  if slash > 0 then do
+    parent = left(path,slash - 1)
+    if parent <> '' & parent <> path & right(parent,1) <> ':' then do
+      command_rc = make_directory(parent)
+      if command_rc <> 0 then return command_rc
+    end
+  end
+  command_rc = rxfs..mkdir(path)
+  if command_rc = 0 | rxfs..isdir(path) <> 0 then return 0
+  say 'FAILED: make directory ' || path || ' rc=' || command_rc
   return command_rc
 
 write_stamp: procedure = .int

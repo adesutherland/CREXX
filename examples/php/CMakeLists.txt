@@ -6,6 +6,7 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
         DESTINATION examples/php
         FILES_MATCHING
         PATTERN "*.php"
+        PATTERN "*.rxpp"
         PATTERN "*.levell"
         PATTERN "*.crexx"
         PATTERN "*.md")

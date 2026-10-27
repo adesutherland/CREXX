@@ -92,11 +92,19 @@ static int replace_output(const char *temporary, const char *output) {
 #endif
 }
 
+static int close_catalog_data(FILE *stream, const char *path) {
+    int failed;
+    if (!stream) return 0;
+    failed = fclose(stream) != 0;
+    if (remove(path)) { perror(path); failed = 1; }
+    return failed;
+}
+
 int main(int argc, char **argv) {
-    FILE *out, *rows, *keys;
-    char *temporary;
+    FILE *out = NULL, *rows = NULL, *keys = NULL;
+    char *temporary, *rows_path, *keys_path;
     size_t path_size;
-    int opcode, write_failed;
+    int opcode, write_failed, temporary_owned = 0, result = 1;
     Lookup lookup[OP_MAX_INSTRUCTIONS];
     uint32_t row_start[OP_MAX_INSTRUCTIONS], row_size[OP_MAX_INSTRUCTIONS];
     uint32_t key_start[OP_MAX_INSTRUCTIONS], key_size[OP_MAX_INSTRUCTIONS];
@@ -105,19 +113,26 @@ int main(int argc, char **argv) {
         fprintf(stderr, "usage: %s OUTPUT\n", argv[0]);
         return 2;
     }
-    path_size = strlen(argv[1]) + sizeof(".tmp");
+    path_size = strlen(argv[1]) + sizeof(".rows.tmp");
     temporary = malloc(path_size);
-    if (!temporary) { fputs("catalog output path allocation failed\n", stderr); return 1; }
-    snprintf(temporary, path_size, "%s.tmp", argv[1]);
-    out = fopen(temporary, "wb");
-    if (!out) { perror(temporary); free(temporary); return 1; }
-    rows = tmpfile(); keys = tmpfile();
-    if (!rows || !keys) {
-        perror("catalog temporary data");
-        if (rows) fclose(rows);
-        if (keys) fclose(keys);
-        fclose(out); remove(temporary); free(temporary); return 1;
+    rows_path = malloc(path_size);
+    keys_path = malloc(path_size);
+    if (!temporary || !rows_path || !keys_path) {
+        fputs("catalog output path allocation failed\n", stderr);
+        goto cleanup;
     }
+    snprintf(temporary, path_size, "%s.tmp", argv[1]);
+    snprintf(rows_path, path_size, "%s.rows.tmp", argv[1]);
+    snprintf(keys_path, path_size, "%s.keys.tmp", argv[1]);
+    out = fopen(temporary, "wb");
+    if (!out) { perror(temporary); goto cleanup; }
+    temporary_owned = 1;
+    /* Windows CRT tmpfile() can require root-directory write access. Keep
+     * binary update streams beside the output already owned by this build. */
+    rows = fopen(rows_path, "w+b");
+    if (!rows) { perror(rows_path); goto cleanup; }
+    keys = fopen(keys_path, "w+b");
+    if (!keys) { perror(keys_path); goto cleanup; }
     fputs("/* cREXX License (MIT). Generated; native rxop metadata is the owner. */\n"
           "options levelb\nnamespace llrxascatalog expose catalog\nimport rxfnsb\n\n"
           "catalog: class\n  _rows = .binary\n  _rowindex = .binary\n"
@@ -220,14 +235,28 @@ int main(int argc, char **argv) {
                           "    return value\n", query->field);
     }
     write_failed = write_failed || ferror(out) || ferror(rows) || ferror(keys);
-    if (fclose(rows)) write_failed = 1;
-    if (fclose(keys)) write_failed = 1;
-    if (fclose(out) || write_failed) {
-        perror(temporary); remove(temporary); free(temporary); return 1;
+    if (close_catalog_data(rows, rows_path)) write_failed = 1;
+    rows = NULL;
+    if (close_catalog_data(keys, keys_path)) write_failed = 1;
+    keys = NULL;
+    if (fclose(out)) write_failed = 1;
+    out = NULL;
+    if (write_failed) {
+        perror(temporary); goto cleanup;
     }
     if (replace_output(temporary, argv[1])) {
-        perror(argv[1]); remove(temporary); free(temporary); return 1;
+        perror(argv[1]); goto cleanup;
     }
+    temporary_owned = 0;
+    result = 0;
+
+cleanup:
+    if (close_catalog_data(rows, rows_path)) result = 1;
+    if (close_catalog_data(keys, keys_path)) result = 1;
+    if (out && fclose(out)) result = 1;
+    if (temporary_owned && remove(temporary)) perror(temporary);
     free(temporary);
-    return 0;
+    free(rows_path);
+    free(keys_path);
+    return result;
 }

@@ -2126,7 +2126,7 @@ add_dependencies(test_rxvml_spans test_rxvml_spans_bin)
 add_test(NAME rxvml_span_callbacks COMMAND test_rxvml_spans
         ${CMAKE_BINARY_DIR}/bin/library.rxbin ${CMAKE_CURRENT_BINARY_DIR}/test_rxvml_spans.rxbin)
 set_tests_properties(rxvml_span_callbacks PROPERTIES TIMEOUT 90
-        LABELS "interpreter;embedding;regression" CREXX_PREP_TARGETS test_rxvml_spans)
+        LABELS "interpreter;embedding;regression;smoke" CREXX_PREP_TARGETS test_rxvml_spans)
 
 add_executable(test_rxvmlinkindex tests/test_rxvmlinkindex.c)
 target_link_libraries(test_rxvmlinkindex PRIVATE rxvml rxpashim)

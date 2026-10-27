@@ -46,6 +46,7 @@ getArray(key)
 has(key)
 count()
 keys()
+keyAt(index)
 ```
 
 Scalar values are retained as text at the PHP boundary; cREXX numeric
@@ -86,26 +87,27 @@ calls. Generated cREXX must contain no PHP array syntax.
 - **AC-04**: [x] nested `php_array` values can be stored and retrieved.
 - **AC-05**: [x] `count()` and ordered `keys()` work.
 - **AC-06**: [x] focused runtime tests pass in the normal build.
-- **AC-07**: the Phase 2 reader lowers list, associative, lookup, append,
+- **AC-07**: [x] the Phase 2 reader lowers list, associative, lookup, append,
   nested, count, and foreach syntax.
-- **AC-08**: generated cREXX compiles and runs without PHP array syntax.
+- **AC-08**: [x] generated cREXX compiles and runs without PHP array syntax.
 - **AC-09**: unsupported features produce clear PHP diagnostics.
 
 ## 7. Implementation steps
 
 - **STEP-01**: [x] Add and test the ordered `.php_array` runtime object. Serves
   AC-01 through AC-06.
-- **STEP-02**: Extend the Level L grammar with array syntax and named nodes.
+- **STEP-02**: [x] Extend the Level L grammar with array syntax and named nodes.
   Serves AC-07 and AC-09.
-- **STEP-03**: Extend the Level B reader with array lowering and nested access.
+- **STEP-03**: [x] Extend the Level B reader with array lowering and nested access.
   Serves AC-07 and AC-08.
-- **STEP-04**: Add list, associative, nested, append, count, and foreach
+- **STEP-04**: [x] Add list, associative, nested, append, count, and foreach
   migration fixtures. Serves AC-06 through AC-09.
 
 ## 8. Initial implementation status
 
-Design preserved from the Phase 2 proposal on 24 October 2026. STEP-01 is
-complete. The runtime and smoke test were compiled, assembled, linked, and run
-in the normal Release build; output confirmed count, append order, replacement
-without reordering, and nested-array lookup. Grammar and reader work remain
-open.
+Design preserved from the Phase 2 proposal on 24 October 2026. The runtime,
+grammar, reader, and migration fixture are implemented. The Release pipeline
+was exercised by translating, compiling, assembling, linking, and running
+`php-array-sample.php`; output covered list access, count, nested associative
+lookup, scalar foreach, and key/value foreach. AC-09 remains open because
+unsupported-feature diagnostics have not yet been added.

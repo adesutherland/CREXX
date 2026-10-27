@@ -1,0 +1,35 @@
+options levelb
+##cflag nosrcmap
+
+/*
+ * The PHP remains visible as ordinary PHP source inside the RXPP member.
+ * RXPP collects the block into php_source and passes it to exec_to_process.
+ * This sample only exports the collected PHP text. A separate converter
+ * service will own PHP reader and runtime selection.
+ */
+##DALIAS PHP
+
+PHP php_source exec_to_process
+<?php
+$items = ["A", "B", "C"];
+$customer = ["name" => "Peter"];
+
+echo $customer["name"];
+echo count($items);
+
+foreach ($items as $item) {
+    echo $item;
+}
+?>
+END PHP
+
+exec_to_process: procedure = .int
+  arg source = .string[]
+  source_path = '{inpath}/php_embedded_source.php'
+  call erasefile source_path
+  do source_index = 1 to source[0]
+    call lineout source_path,source[source_index]
+  end
+  call lineout source_path
+  say 'PHP_EMBEDDED: exported ' || source[0] || ' lines to ' || source_path
+return 0

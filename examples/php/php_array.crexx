@@ -5,7 +5,7 @@
  */
 options levelb
 import rxfnsb
-namespace php_runtime expose php_array
+namespace php_runtime expose php_array php_strpos php_str_replace php_round php_ceil php_floor
 
 php_array: class
   keys_ = .string[]
@@ -99,3 +99,35 @@ php_array: class
       result[index] = keys_[index]
     end
     return result
+
+  keyAt: method = .string
+    arg index = .int
+    if index < 1 | index > count_ then return ''
+    return keys_[index]
+
+php_strpos: procedure = .int
+  arg haystack = .string, needle = .string
+  position = pos(needle,haystack)
+  if position = 0 then return -1
+  return position - 1
+
+php_str_replace: procedure = .string
+  arg search = .string, replacement = .string, subject = .string
+  return changestr(search,subject,replacement)
+
+php_round: procedure = .decimal
+  arg number = .decimal
+  if number >= 0 then return trunc(number + 0.5,0) as .decimal
+  return trunc(number - 0.5,0) as .decimal
+
+php_floor: procedure = .decimal
+  arg number = .decimal
+  truncated = trunc(number,0) as .decimal
+  if number < truncated then return truncated - 1
+  return truncated
+
+php_ceil: procedure = .decimal
+  arg number = .decimal
+  truncated = trunc(number,0) as .decimal
+  if number > truncated then return truncated + 1
+  return truncated

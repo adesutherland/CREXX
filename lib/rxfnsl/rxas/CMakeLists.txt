@@ -22,6 +22,27 @@ endforeach()
 string(SHA256 _fingerprint "${_fingerprints}")
 target_compile_definitions(llrxascataloggen PRIVATE LL_RXAS_CATALOG_FINGERPRINT="${_fingerprint}")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_catalog_inputs})
+if(BUILD_TESTING)
+  add_executable(test_llrxascataloggen_no_tmpfile EXCLUDE_FROM_ALL
+    "${CMAKE_SOURCE_DIR}/tools/tests/generate_rxas_catalog_no_tmpfile.c"
+    "${CMAKE_SOURCE_DIR}/binutils/include/opdata.c"
+    "${CMAKE_SOURCE_DIR}/binutils/rxopmeta.c")
+  target_include_directories(test_llrxascataloggen_no_tmpfile PRIVATE
+    "${CMAKE_SOURCE_DIR}/binutils/include")
+  target_compile_definitions(test_llrxascataloggen_no_tmpfile PRIVATE
+    LL_RXAS_CATALOG_FINGERPRINT="${_fingerprint}")
+  add_test(NAME llrxascataloggen_scratch
+    COMMAND ${CMAKE_COMMAND}
+      "-DGENERATOR=$<TARGET_FILE:llrxascataloggen>"
+      "-DDENIED_GENERATOR=$<TARGET_FILE:test_llrxascataloggen_no_tmpfile>"
+      "-DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/catalog scratch test"
+      -P "${CMAKE_SOURCE_DIR}/tools/tests/check_rxas_catalog_scratch.cmake")
+  set_tests_properties(llrxascataloggen_scratch PROPERTIES
+    LABELS "unit;build;rxas;smoke" TIMEOUT 30)
+  crexx_register_test_prep_targets(TESTS llrxascataloggen_scratch
+    TARGETS llrxascataloggen test_llrxascataloggen_no_tmpfile)
+  crexx_finalize_directory_qa_tiers()
+endif()
 set(_catalog "${CMAKE_CURRENT_BINARY_DIR}/llrxascatalog.crexx")
 add_custom_command(OUTPUT "${_catalog}"
   COMMAND $<TARGET_FILE:llrxascataloggen> "${_catalog}"

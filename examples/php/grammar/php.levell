@@ -10,7 +10,7 @@
  *   arithmetic and comparisons
  *
  * Deliberately excluded:
- *   arrays, functions, classes, namespaces, interpolation,
+ *   classes, namespaces, interpolation,
  *   exceptions, references, includes, and web-server variables.
  */
 
@@ -44,11 +44,19 @@ close: token
 lbrace: token
 rbrace: token
 comma: token
+lbracket: token
+rbracket: token
+arrow: token
 
 ifword: token
 elseword: token
 whileword: token
 echoword: token
+countword: token
+foreachword: token
+asword: token
+functionword: token
+returnword: token
 
 comment: comments nested "/*" "*/"
 
@@ -98,6 +106,15 @@ scan: lexer input utf8bytes
 
   separator.sign:
       rule = ";" then emit separator
+
+  open.bracket:
+      rule = "[" then emit lbracket
+
+  close.bracket:
+      rule = "]" then emit rbracket
+
+  key.value.arrow:
+      rule = "=>" then emit arrow
 
   open.parenthesis:
       rule = "(" then emit open
@@ -164,12 +181,42 @@ parse: parser semantics contextfree input tokens start program
             | echo.statement
             | if.statement
             | while.statement
+            | foreach.statement
+            | return.statement
+            | function.declaration
 
   assignment.statement:
-      rule = variable assign expression separator
+      rule = assignment.target assign expression separator
+
+  assignment.target:
+      rule = append.target
+            | array.access
+            | variable
+
+  append.target:
+      rule = variable lbracket rbracket
+
+  array.access:
+      rule = variable array.index+
+
+  array.index:
+      rule = lbracket expression rbracket
+
+  array.literal:
+      rule = lbracket array.items? rbracket
+
+  array.items:
+      rule = array.item (comma array.item)*
+
+  array.item:
+      rule = expression arrow expression
+            | expression
 
   echo.statement:
       rule = echoword expression echo.tail separator
+
+  count.call:
+      rule = countword open expression close
 
   echo.tail:
       rule = comma expression echo.tail
@@ -183,6 +230,28 @@ parse: parser semantics contextfree input tokens start program
 
   while.statement:
       rule = whileword open expression close block
+
+  foreach.statement:
+      rule = foreachword open variable asword foreach.target close block
+
+  function.declaration:
+      rule = functionword identifier open parameters? close block
+
+  parameters:
+      rule = variable (comma variable)*
+
+  return.statement:
+      rule = returnword expression separator
+
+  function.call:
+      rule = identifier open arguments? close
+
+  arguments:
+      rule = expression (comma expression)*
+
+  foreach.target:
+      rule = variable arrow variable
+            | variable
 
   block:
       rule = lbrace statement* rbrace
@@ -221,7 +290,11 @@ parse: parser semantics contextfree input tokens start program
   primary:
       rule = number.value
             | string.value
+            | array.literal
+            | array.access
             | variable.value
+            | count.call
+            | function.call
             | group.value
 
   number.value:
@@ -261,6 +334,36 @@ word.echo:
   transform stage classify state 1
   take identifier text "echo"
   emit echoword
+  next 1
+
+word.count:
+  transform stage classify state 1
+  take identifier text "count"
+  emit countword
+  next 1
+
+word.foreach:
+  transform stage classify state 1
+  take identifier text "foreach"
+  emit foreachword
+  next 1
+
+word.as:
+  transform stage classify state 1
+  take identifier text "as"
+  emit asword
+  next 1
+
+word.function:
+  transform stage classify state 1
+  take identifier text "function"
+  emit functionword
+  next 1
+
+word.return:
+  transform stage classify state 1
+  take identifier text "return"
+  emit returnword
   next 1
 
 word.other:

@@ -967,7 +967,7 @@ CMD_external: procedure
   if pos('|'module'|',external_modules'|')=0 then external_modules=external_modules'|'module
 return
 /* ------------------------------------------------------------------
- * CMD_link: Declare a linked RXBIN output member for crexx.exe.
+ * : Declare a linked RXBIN output member for crexx.exe.
  * The directive is metadata only; the driver invokes rxlink after RXPP.
  * ------------------------------------------------------------------
  */

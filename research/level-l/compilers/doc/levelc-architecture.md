@@ -762,6 +762,11 @@ A generated view of canonical native opcode/effect/signal metadata supplies
 legality and freshness; C does not maintain another opcode table. Metadata and
 final text still use their owning writer/quoting services.
 
+The build-time `generate-rxas-catalog.c` keeps its binary row/key scratch streams
+beside the requested output and removes them after use, including failed
+generation. It replaces the final catalogue only after all streams close
+successfully; an existing output survives a failed generation.
+
 Whole-cell allocation starts from distinct identities. It reuses proved plain
 scalar temporaries within a target block and coalesces proved aliases of the
 immutable context binding. Addressed/reference/owned cells, unknown effects,

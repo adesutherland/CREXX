@@ -111,6 +111,18 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
  
  rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
 
+ /* A .build file belongs to the Level L rxbuild plan runner. Keep this
+  * dispatch deliberately small so the main driver does not duplicate the
+  * plan language or its build orchestration. */
+ if fn[0] >= 1 & lower(right(fn.1,6)) = '.build' then do
+   buildCommand = .string[]
+   buildCommand[1] = rxpath || 'bin' || dirsep || 'rxbuild'
+   if platformUpper = 'WINDOWS' then buildCommand[1] = buildCommand[1] || '.exe'
+   buildCommand[2] = fn.1
+   address crexx 'run :buildCommand[]'
+   return rc
+ end
+
  libraries='bin'
 
  modulenumber=1
@@ -1456,16 +1468,22 @@ return normalized
 
 projectMakeDirectory: procedure = .int
 arg path = .string
+status = .int
 if rxfs..isdir(path) <> 0 then return 0
-captured = .string[]
-errors = .string[]
-address crexx "mkdir -p :path" output captured error errors
-if rc = 0 then return 0
-say 'FAILED: make project directory' path
-do i = 1 to errors[0]
-  say errors[i]
+slash = lastpos('\',path)
+alt_slash = lastpos('/',path)
+if alt_slash > slash then slash = alt_slash
+if slash > 0 then do
+  parent = left(path,slash - 1)
+  if parent <> '' & parent <> path & right(parent,1) <> ':' then do
+    status = projectMakeDirectory(parent)
+    if status <> 0 then return status
+  end
 end
-return rc
+status = rxfs..mkdir(path)
+if status = 0 | rxfs..isdir(path) <> 0 then return 0
+say 'FAILED: make project directory' path
+return status
 
 projectRunArgv: procedure = .int
 arg label = .string, argv = .string[]

@@ -731,6 +731,8 @@ The worker lifecycle is idle, running, draining and stopped. Only the owning
 thread may start/end execution or begin teardown. Nested RXVML calls on that
 same thread are depth-counted and retain the running state until the outermost
 call returns; a foreign thread is rejected without changing the lifecycle.
+Common context initialization clears preparation-only mode and the scoped
+callback-signal destination, including when the caller supplies nonzero storage.
 Teardown is permitted only from idle, moves through draining, destroys the
 worker arena, unregisters it from the runtime and then destroys the now-empty
 runtime domain. Debug teardown continues to abort on any live allocation.
