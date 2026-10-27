@@ -23,10 +23,12 @@ prepared: class
   _badfirst = .int[]
   _badlast = .int[]
   _badpoint = .int[]
+  _capture = .int
+  _regions = .llcomments..regions
   *: factory
-    arg source = .binary, encoding = 'utf8', opening = '', closing = '', limit = 1048576, recover = 0, ?policies = .llcomments..rules, work = 10000000
+    arg source = .binary, encoding = 'utf8', opening = '', closing = '', limit = 1048576, recover = 0, ?policies = .llcomments..rules, work = 10000000, capture = 0
     _source = source; _masked = source; _status = 0; _offset = 0; _error = ''
-    _encoding = encoding; _opening = opening; _closing = closing; _limit = limit; _ran = 0; _recover = recover; _work = work
+    _encoding = encoding; _opening = opening; _closing = closing; _limit = limit; _ran = 0; _recover = recover; _work = work; _capture = capture
     if ?policies then _comments = policies
     else do
       _comments = .llcomments..rules()
@@ -36,6 +38,9 @@ prepared: class
   run: method = .void
     if _ran then return
     _ran = 1; source = _source; encoding = _encoding; limit = _limit
+    if _capture < 0 then do
+      _status = 3; _error = 'LL_COMMENT_TRIVIA: region limit must be nonnegative'; return
+    end
     if _recover <> 0 & _recover <> 1 then do
       _status = 3; _error = 'LL_ENCODING: recovery flag must be 0 or 1'; return
     end
@@ -120,8 +125,9 @@ prepared: class
     return
   comments: method = .void
     before = _masked
-    coordinator = .llcomments..processor(_masked,_comments,_work)
+    coordinator = .llcomments..processor(_masked,_comments,_work,_capture)
     _status = coordinator.run(); _offset = coordinator.offset(); _error = coordinator.error()
+    if _capture > 0 then _regions = coordinator.trivia()
     _masked = coordinator.bytes()
     /* Only the proper specification reader requests this candidate-inspection
      * fallback. The original preparation remains failed, never publishable. */
@@ -131,6 +137,13 @@ prepared: class
     return
   bytes: method = .binary
     return _masked
+  /** Owned observations from the same preparation; no second comment scan. */
+  trivia: method = .llcomments..regions
+    call run()
+    if initialized(_regions) then do
+      if _regions is .llcomments..regions then return _regions
+    end
+    return .llcomments..regions(0)
   status: method = .int
     call run()
     return _status

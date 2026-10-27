@@ -861,9 +861,12 @@ request: class
   _forest = .llforest..arena
   _forestroot = .int
   _limits = .lllimits..policy
+  _trivialimit = .int
+  _triviasealed = .int
+  _trivia = .llcomments..regions
   *: factory
     arg language = .definition, source = .binary, ?limits = .lllimits..policy
-    _borrowed = 0; _admitted = 1
+    _borrowed = 0; _admitted = 1; _trivialimit = 0; _triviasealed = 0
     empty_owner = reference .definition; _owner = empty_owner
     _language = language; _source = source; _root = 0; _status = 0; _offset = 0; _error = ''; _lexed = 0
     _tokens = .llcore..stream.tokens(source); _tree = .llcore..tree.from_source(source)
@@ -880,7 +883,7 @@ request: class
    * Source, limits, comments and all results remain request-owned. */
   borrowed: factory
     arg language = reference .definition, source = .binary, ?limits = .lllimits..policy, ?comments = .llcomments..rules
-    _borrowed = 1; _admitted = 0; _owner = language
+    _borrowed = 1; _admitted = 0; _owner = language; _trivialimit = 0; _triviasealed = 0
     _source = source; _root = 0; _status = 0; _offset = 0; _error = ''; _lexed = 0
     _tokens = .llcore..stream.tokens(source); _tree = .llcore..tree.from_source(source)
     _forestroot = 0
@@ -904,6 +907,22 @@ request: class
     end
     _admitted = 1
     return
+  /** Select outer-comment observations before any lexing. Zero disables them. */
+  capturetrivia: method = .int
+    arg limit = .int
+    if _lexed | _triviasealed | limit < 0 then do
+      _status = 3; _error = 'LL_COMMENT_TRIVIA: select a nonnegative region limit before lexing or parsing'; _lexed = 1; return 0
+    end
+    _trivialimit = min(limit,_limits.limit('tree.entries'))
+    if limit > 0 & _trivialimit = 0 then do
+      _status = 2; _error = _limits.exhausted('tree.entries',1); _lexed = 1; return 0
+    end
+    return 1
+  trivia: method = .llcomments..regions
+    if initialized(_trivia) then do
+      if _trivia is .llcomments..regions then return _trivia
+    end
+    return .llcomments..regions(0)
   lex: method = .int
     arg classify = 1
     ownerref = reference _language
@@ -921,8 +940,9 @@ request: class
     comments = .llcomments..rules
     if _borrowed then comments = _comments
     else comments = language.comments()
-    prepared = .llsource..prepared(_source,language.encoding(),'','',_limits.limit('source.bytes'),0,comments,_limits.limit('scan.work'))
+    prepared = .llsource..prepared(_source,language.encoding(),'','',_limits.limit('source.bytes'),0,comments,_limits.limit('scan.work'),_trivialimit)
     _status = prepared.status()
+    if _trivialimit > 0 then _trivia = prepared.trivia()
     if _status <> 0 then do
       _error = prepared.error(); _offset = prepared.offset()
       if left(_error,8) = 'LL_UTF8:' & language.malformed() <> '' then _error = language.malformed()
@@ -977,6 +997,7 @@ request: class
     return parse_tokens(_tokens)
   parse_tokens: method = .int
     arg tokens = .llcore..stream
+    _triviasealed = 1
     at = .int; bytes = .binary; found = .string; fallback = .string
     ownerref = reference _language
     if _borrowed then do

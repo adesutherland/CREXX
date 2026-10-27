@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Checked source-preserving comment coordination. */
 options levelb
-namespace llcomments expose rules processor
+namespace llcomments expose rules processor regions
 import rxfnsb
 import llmunch
 import lllimits
@@ -393,6 +393,64 @@ rules: class
     _keep = keeps; _lines = lines; _bytes = bytes; _custom = customs; _shield = shields; _ready = ready
     return
 
+/** Owned outer-comment observations. No source or rule owner is retained. */
+regions: class
+  _rule = .int[]
+  _first = .int[]
+  _last = .int[]
+  _complete = .int[]
+  _count = .int
+  _limit = .int
+  _status = .int
+  _error = .string
+  *: factory
+    arg limit = 0
+    _limit = limit; _count = 0; _status = 0; _error = ''
+    if limit < 0 then do
+      _status = 3; _error = 'LL_COMMENT_TRIVIA: region limit must be nonnegative'
+    end
+    return
+  add: method = .int
+    arg rule = .int, first = .int, last = .int, complete = .int
+    if _status <> 0 then return 0
+    if rule < 1 | first < 0 | last <= first | (complete <> 0 & complete <> 1) then do
+      _status = 3; _error = 'LL_COMMENT_TRIVIA: invalid outer region'; return 0
+    end
+    if _count > 0 then do
+      if first < _last[_count] then do
+        _status = 3; _error = 'LL_COMMENT_TRIVIA: regions must be ordered and disjoint'; return 0
+      end
+    end
+    if _count >= _limit then do
+      _status = 2; _error = lllimits..describe('comment.regions',_limit,_count + 1); return 0
+    end
+    next = _count + 1
+    _rule[next] = rule; _first[next] = first; _last[next] = last; _complete[next] = complete
+    _count = next
+    return 1
+  size: method = .int
+    return _count
+  rule: method = .int
+    arg entry = .int
+    if entry < 1 | entry > _count then return 0
+    return _rule[entry]
+  start: method = .int
+    arg entry = .int
+    if entry < 1 | entry > _count then return 0
+    return _first[entry]
+  finish: method = .int
+    arg entry = .int
+    if entry < 1 | entry > _count then return 0
+    return _last[entry]
+  complete: method = .int
+    arg entry = .int
+    if entry < 1 | entry > _count then return 0
+    return _complete[entry]
+  status: method = .int
+    return _status
+  error: method = .string
+    return _error
+
 /** A request owns scanning bytes while original source remains elsewhere.
  * Work charges dispatch/byte comparisons, masking and shielding transitions;
  * finite work is a safeguard, not a grammar-specific successful-time proof.
@@ -408,10 +466,17 @@ processor: class
   _openingend = .int
   _error = .string
   _ran = .int
+  _capture = .int
+  _regions = .regions
   *: factory
-    arg input = .binary, policies = .rules, fuel = 10000000
+    arg input = .binary, policies = .rules, fuel = 10000000, capture = 0
     _input = input; _masked = input; _rules = policies; _fuel = fuel
     _work = 0; _status = 0; _offset = 0; _openingend = 0; _error = ''; _ran = 0
+    _capture = capture
+    if capture < 0 then do
+      _status = 3; _error = 'LL_COMMENT_TRIVIA: region limit must be nonnegative'
+    end
+    else if capture > 0 then _regions = .regions(capture)
     return
   tick: method = .int
     arg at = .int
@@ -475,6 +540,7 @@ processor: class
   run: method = .int
     if _ran then return _status
     _ran = 1
+    if _status <> 0 then return _status
     if _rules.validate() = 0 then do
       _status = 3; _error = _rules.error(); return _status
     end
@@ -509,6 +575,7 @@ processor: class
           if c = 10 | c = 13 then leave
           call mask(at,at + 1,0); at = at + 1
         end
+        if _capture > 0 & _status = 0 then call recordregion(selected,origin,at,1)
         iterate
       end
       do while at < extent & depth > 0 & _status = 0
@@ -527,8 +594,17 @@ processor: class
         _status = 1; _offset = origin; _openingend = origin + longest
         _error = 'LL_COMMENT: unclosed ' || form || ' comment ' || _rules.name(selected) || '; opening bytes [' || origin || ',' || _openingend || ')'
       end
+      if _capture > 0 & _status < 2 then call recordregion(selected,origin,at,depth = 0)
     end
     return _status
+  recordregion: method = .void
+    arg rule = .int, first = .int, last = .int, complete = .int
+    if _regions.add(rule,first,last,complete) then return
+    _status = _regions.status(); _error = _regions.error(); _offset = first
+    return
+  trivia: method = .regions
+    if _capture <= 0 then return .regions(0)
+    return _regions
   bytes: method = .binary
     return _masked
   offset: method = .int

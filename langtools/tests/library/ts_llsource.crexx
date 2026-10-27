@@ -2,6 +2,10 @@
 options levelb
 import rxfnsb
 import llsource
+import llcomments
+import lllanguage
+import llmunch
+import lllimits
 
 main: procedure = .int expose failures checks
   failures = 0; checks = 0
@@ -48,6 +52,7 @@ main: procedure = .int expose failures checks
   do i = 100 to 0 by -1
     call point(index,i * 2,i + 1,1,i * 2,min(200,i * 2 + 1))
   end
+  call triviachecks()
   say 'SOURCE_INDEX|checks=' || checks || '|failures=' || failures
   return failures
 
@@ -62,4 +67,80 @@ point: procedure = .void
   arg index = .llsource..index, offset = .int, line = .int, column = .int, first = .int, last = .int
   location = index.position(offset)
   call check(location.error() = '' & location.line() = line & location.column() = column & location.first() = first & location.last() = last, 'position at byte ' || offset)
+  return
+
+triviachecks: procedure = .void
+  policies = .llcomments..rules()
+  ok = policies.add('nested','nested','/*','*/')
+  ok = policies.add('line','line','//')
+  source = ('"/*x*/"a/*o/*i*/z*/b//t' || '0D0A'x || 'a') as .binary
+  observed = .llsource..prepared(source,'utf8','','',1024,0,policies,10000,2)
+  disabled = .llsource..prepared(source,'utf8','','',1024,0,policies,10000)
+  call check(observed.status() = 0 & disabled.status() = 0,'captured source status')
+  regions = observed.trivia(); none = disabled.trivia()
+  call check(regions.size() = 2 & none.size() = 0,'outer comments only; quoted marker opaque')
+  call region(regions,1,1,8,19,1)
+  call region(regions,2,2,20,23,1)
+  call check(bin2x(observed.bytes()) == bin2x(disabled.bytes()),'capture leaves masking unchanged')
+  saved = regions
+  observed = .llsource..prepared('a/*tail' as .binary,'utf8','','',1024,0,policies,10000,1)
+  call check(observed.status() = 1 & observed.offset() = 1,'unfinished comment retains syntax failure')
+  regions = observed.trivia()
+  call region(regions,1,1,1,7,0)
+  call region(saved,2,2,20,23,1)
+  broken = .llsource..prepared('FF'x as .binary,'utf8','','',1024,0,policies,10000,1)
+  call check(broken.status() = 1,'encoding failure remains separate')
+  none = broken.trivia()
+  call check(none.size() = 0,'encoding failure invents no comments')
+
+  built = .llmunch..automaton(4,3)
+  ok = built.mapping(97,0); ok = built.mapping(98,1); ok = built.mapping(32,2)
+  ok = built.transition(1,0,2); ok = built.transition(1,1,3)
+  ok = built.transition(1,2,4); ok = built.transition(4,2,4)
+  ok = built.accepting(2,1); ok = built.accepting(3,2); ok = built.accepting(4,-1)
+  dfa = .llmunch..automaton.loaded(built.image())
+  language = .lllanguage..definition.scanner(dfa,'utf8','/*','*/')
+  reader = .lllanguage..request.borrowed(reference language,'a/*x*/b' as .binary)
+  call check(reader.capturetrivia(1) = 1 & reader.lex(0) = 0,'borrowed exact capture limit')
+  tokens = reader.tokens(); regions = reader.trivia()
+  call check(tokens.size() = 2,'capture preserves lexer tokens')
+  call region(regions,1,1,1,6,1)
+  call check(reader.capturetrivia(2) = 0 & reader.lex() = 3,'late capture refused')
+  reader = .lllanguage..request.borrowed(reference language,'a/*x*/b/*y*/a' as .binary)
+  ok = reader.capturetrivia(1)
+  call check(reader.lex(0) = 2 & pos('comment.regions',reader.error()) > 0,'region capacity is resource failure')
+  regions = reader.trivia()
+  call check(regions.size() = 1,'capacity keeps observed prefix without success')
+  reader = .lllanguage..request.borrowed(reference language,'a/*tail' as .binary)
+  ok = reader.capturetrivia(1)
+  call check(reader.lex(0) = 1 & pos('LL_COMMENT:',reader.error()) = 1,'request retains unclosed-comment failure')
+  regions = reader.trivia()
+  call region(regions,1,1,1,7,0)
+  reader = .lllanguage..request.borrowed(reference language,'a/*x*/b!' as .binary)
+  ok = reader.capturetrivia(1)
+  call check(reader.lex(0) = 1,'lexical suffix failure remains invalid')
+  tokens = reader.tokens(); regions = reader.trivia()
+  call check(tokens.size() = 2 & regions.size() = 1,'failed lex retains tokens and observed comments')
+  reader = .lllanguage..request.borrowed(reference language,'a/*x*/b' as .binary)
+  call check(reader.capturetrivia(0) = 1 & reader.lex(0) = 0,'explicit disabled capture')
+  none = reader.trivia()
+  call check(none.size() = 0,'disabled request retains no region rows')
+  reader = .lllanguage..request.borrowed(reference language,'a' as .binary)
+  call check(reader.capturetrivia(-1) = 0 & reader.lex() = 3,'negative capture remains refused')
+  policy = .lllimits..policy()
+  ok = policy.set('tree.entries',1)
+  reader = .lllanguage..request.borrowed(reference language,'a/*x*/b/*y*/a' as .binary,policy)
+  ok = reader.capturetrivia(2)
+  call check(ok = 1 & reader.lex(0) = 2 & pos('comment.regions',reader.error()) > 0,'capture honors existing entry allowance')
+  regions = reader.trivia()
+  call check(regions.size() = 1,'policy-capped capture retains only observed prefix')
+  invalid = .llcomments..regions(2)
+  ok = invalid.add(1,1,3,1)
+  call check(invalid.add(1,2,4,1) = 0 & invalid.status() = 3 & invalid.size() = 1,'overlapping observation refused')
+  call region(saved,1,1,8,19,1)
+  return
+
+region: procedure = .void
+  arg values = .llcomments..regions, entry = .int, rule = .int, first = .int, last = .int, complete = .int
+  call check(values.rule(entry) = rule & values.start(entry) = first & values.finish(entry) = last & values.complete(entry) = complete,'comment region ' || entry)
   return

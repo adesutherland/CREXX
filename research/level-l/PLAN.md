@@ -1,5 +1,31 @@
 # Level L language tooling research — 10 October 2026
 
+## Supporting increment: optional captured comment regions
+
+The optional parser-side B/L integration is owned by DSLSH's
+[BL plan](https://github.com/adesutherland/DSL-Syntax-Highlighter/blob/develop/docs/FUTURE_WORK.md#optional-crexx-bl-library).
+Its generic SDK dependency is limited to observing outer comment regions from
+the existing comment/source preparation algorithm. No DSLSH protocol, colours,
+language policy, new lexer or partial-AST claim enters the SDK.
+
+Before lexing, `lllanguage.request.capturetrivia(limit)` selects bounded capture;
+the default remains disabled. One `trivia()` result owns rule IDs, original
+zero-based byte starts/ends and completeness flags, without owning another
+source copy. Existing scan/preparation records each outer region once, including
+the observed unclosed region ending at EOF while preserving its failure status.
+Existing parser request factory signatures and unselected recognition/error
+behavior remain unchanged. Capacity exhaustion is a named resource failure,
+never a truncated successful result. Capture cannot be selected after lexing.
+
+| ID | Selected acceptance and steps | Status |
+| --- | --- | --- |
+| **L-TRIVIA-AC01** | Existing comment/source owners capture complete, nested/line, shielded and unfinished-comment spans in their existing scan, with no delimiter rescan or duplicate source ownership. | done |
+| **L-TRIVIA-AC02** | Requests expose one owned region table; disabled capture, exact/exhausted limits, invalid ordering and failure paths retain explicit contracts. | done |
+| **L-TRIVIA-AC03** | Focused normal comment/request checks and SDK/API documentation are complete. One DSLSH grammar consumer must still prove the integration. Broader parser/platform/SAN qualification remains outside this increment. | in progress |
+| **L-TRIVIA-STEP01** | Record and internally review the capture/read contract before source edits; AC01–03. | done |
+| **L-TRIVIA-STEP02** | Add capture to the existing owners and selected request surface; AC01–02. | done |
+| **L-TRIVIA-STEP03** | Focused SDK checks and local supporting delivery are complete; qualify the optional consumer before closing this step; AC01–03. | in progress |
+
 ## Proposed target-toolchain research
 
 The [single target-toolchain plan](toolchain/PLAN.md) proposes a B/L RXAS

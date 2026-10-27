@@ -1561,6 +1561,8 @@ Capture-field lookup is case-insensitive.
 | `lex(0)` | Prepare and lex, leaving declared token stages unapplied. Returns a status. |
 | `classify_tokens(tokens)` | Apply the declared stages to a supplied token stream from the same source. Returns a status. |
 | `parse_tokens(tokens)` | Parse supplied tokens from the same source. The caller handles source validation, lexing and classification. Returns a status. |
+| `capturetrivia(limit)` | Before lexing or parsing, select a maximum number of outer comment observations; 0 disables capture. Returns 1 when selected, 0 on refusal. |
+| `trivia()` | Return an owned `.llcomments..regions` table from the same comment-preparation scan. It owns no additional source bytes. |
 | `tokens()` | Token stream held by the request. |
 | `tree()`, `root()` | Raw tree and root of a successful single-tree result. |
 | `forest()`, `forestroot()` | Earley forest and its root. |
@@ -1572,6 +1574,21 @@ Use a fresh request for each document. Lexing is cached: calling `lex()` after
 `lex(0)` does not classify the cached stream. To insert a custom token pass,
 call `lex(0)`, perform that pass, call `classify_tokens(...)` if needed, then
 call `parse_tokens(...)`. Check the status after every operation.
+
+Comment capture is optional and disabled by default. It records outer comments
+only, using the existing delimiter/shielding policy: nested comments form one
+region, line regions exclude the terminating newline, and complete block regions
+include both delimiters. `regions.size()` counts rows; `rule(i)`, `start(i)`,
+`finish(i)` and `complete(i)` read their rule ID, original byte range and completion
+flag. Rows are one-based and ordered; invalid row queries return 0. An unclosed
+comment can supply an incomplete region ending at EOF while the request remains
+failed. UTF-8 failure before comment scanning supplies no invented regions.
+The selected count is also bounded by `tree.entries`; exhaustion returns status 2,
+never a truncated success. Exhausting captured rows reports `comment.regions`.
+Selecting capture after
+lexing/parsing or with a negative limit is invalid API use (status 3).
+Extract the value once per snapshot; it remains usable after the request/source
+ends. Captured comments do not make a failed parse or partial tree executable.
 
 ### Strict request statuses
 
