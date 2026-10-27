@@ -71,6 +71,14 @@ _deps
 
 # cREXX
 *.rxbin
+*.crexx-driver.lock
+
+# Python tooling caches
+__pycache__/
+
+# Generated output from the maintained single-threaded build drivers
+/ports/single-threaded/mainframe-build.rxas
+/ports/single-threaded/mainframe-classic-pack.rxas
 
 # emacs backup files
 *~
