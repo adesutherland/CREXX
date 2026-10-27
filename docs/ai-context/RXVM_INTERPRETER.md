@@ -221,6 +221,16 @@ failures remain failures. The historical `run()` process-status contract is
 unchanged. Permanent controls include `tests/rxpa/rxpa_objects_text_worker.crexx`
 and the existing real signal/unwind and worker executor tests.
 
+RXVML descriptor entry keeps its existing failure return and NULL response for
+an unhandled captured signal. `rxvml_last_error()` then supplies a bounded
+context-owned summary containing that call's numeric signal code, canonical
+signal name and external procedure name. Long procedure names use a marked
+UTF-8 prefix. The returned text is borrowed until that context updates its error
+or is destroyed; another context cannot overwrite it. This is not a payload,
+origin or captured-stack API and does not infer an event from cached signal
+state. Capture, frame cleanup, nested entry and successful-call behavior are
+unchanged; recovered embedding calls remain silent.
+
 ## 2. Core Internal Structs
 
 ### `rxvm_context`

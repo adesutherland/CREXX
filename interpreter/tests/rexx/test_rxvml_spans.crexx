@@ -1,5 +1,5 @@
 options levelb
-namespace rxvml_spans expose command function identity interrupt clocks
+namespace rxvml_spans expose command function identity interrupt clocks forcedsignal
 
 command: procedure = ._rxsysb..addressresponse
   arg text = .string, binding = .string
@@ -19,6 +19,12 @@ function: procedure = ._rxsysb..addressfunctionresponse
 identity: procedure = .string
   arg text = .string
   return text
+
+forcedsignal: procedure = .int
+  arg name = .string
+  if name == 'FAILURE' then assembler signal "FAILURE", "forced RXVML diagnostic"
+  else assembler signal "OUT_OF_RANGE", "forced RXVML diagnostic"
+  return 0
 
 interrupt: procedure = .int
   arg name = .string

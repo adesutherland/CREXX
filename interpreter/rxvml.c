@@ -24,6 +24,7 @@
 
 #include <ctype.h>
 #include <limits.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "rxvml.h"
@@ -115,7 +116,37 @@ struct rxvml_context {
     size_t registry_size;
     rxvml_address_callback_entry* address_callbacks;
     size_t address_callback_size;
+    char last_error_text[512];
 };
+
+/* This is a context-owned summary of the code captured by this exact call.
+ * Do not consult a prior signal payload or retain a live procedure pointer. */
+static void rxvml_set_captured_signal_error(rxvml_context* ctx,
+                                            int signal_code,
+                                            const proc_runtime* proc,
+                                            const char* diagnostic_name) {
+    const char* signal_name = NULL;
+    const char* procedure = diagnostic_name && diagnostic_name[0]
+            ? diagnostic_name : proc && proc->name ? proc->name : "<unknown>";
+    size_t length = 0u;
+    int truncated;
+
+    if (signal_code > RXSIGNAL_NONE && signal_code < RXSIGNAL_MAX) {
+        signal_name = interrupt_to_string((unsigned char)signal_code);
+    }
+    while (length < 320u && procedure[length]) ++length;
+    truncated = procedure[length] != '\0';
+    if (truncated) {
+        /* Loaded names are UTF-8. Do not end the bounded prefix inside a scalar. */
+        while (length > 0u &&
+               ((unsigned char)procedure[length] & 0xc0u) == 0x80u) --length;
+    }
+    (void)snprintf(ctx->last_error_text, sizeof(ctx->last_error_text),
+                   "VM procedure raised an unhandled signal: code=%d name=%s procedure=%.*s%s",
+                   signal_code, signal_name ? signal_name : "UNKNOWN",
+                   (int)length, procedure, truncated ? "..." : "");
+    ctx->last_error = ctx->last_error_text;
+}
 
 static rxvml_context* rxvml_current_context(void) {
     rxvm_context* vm = rxvm_active_context_current();
@@ -529,9 +560,12 @@ static void rxvml_restore_external_call_state(
     vm->ext_ret = state->ext_ret;
 }
 
+/* A descriptor caller keeps diagnostic_name alive until this returns. Only the
+ * synchronous failure formatter copies it; the context retains no name pointer. */
 static int rxvml_invoke_external_proc(
     rxvml_context* ctx,
     proc_runtime* proc,
+    const char* diagnostic_name,
     size_t argc,
     rxvml_value** args,
     const char* dummy_argv0,
@@ -623,7 +657,7 @@ static int rxvml_invoke_external_proc(
     if (run_status_out) *run_status_out = run_status;
 
     if (caught_signal != SIGNAL_NONE) {
-        ctx->last_error = "VM procedure raised an unhandled signal";
+        rxvml_set_captured_signal_error(ctx, caught_signal, proc, diagnostic_name);
         if (response_out) *response_out = NULL;
         rxvml_value_free((rxvml_value*)call_ret);
     } else if (response_out) {
@@ -1927,6 +1961,7 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     }
     ctx->vm.debug_mode = flags;
     ctx->last_error = NULL;
+    ctx->last_error_text[0] = '\0';
     ctx->registry = NULL;
     ctx->registry_size = 0;
     ctx->address_callbacks = NULL;
@@ -2213,7 +2248,8 @@ int rxvml_call_procedure_descriptor(
         return -1;
     }
 
-    rc = rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out, NULL);
+    /* expected owns its external name until after the synchronous invocation. */
+    rc = rxvml_invoke_external_proc(ctx, p, expected.name, argc, args, "rxc_bridge_proc", response_out, NULL);
     rx_sig_free(&expected);
     return rc;
 }
@@ -2300,7 +2336,7 @@ static int rxvml_run_internal(
     }
 
     arg_values[0] = arg_array;
-    if (rxvml_invoke_external_proc(ctx, main_proc, 1, arg_values, "rxvml_run", &result, &run_status) != 0) {
+    if (rxvml_invoke_external_proc(ctx, main_proc, NULL, 1, arg_values, "rxvml_run", &result, &run_status) != 0) {
         goto cleanup;
     }
 
@@ -2397,6 +2433,7 @@ int rxvml_call_method_descriptor(
         rc = rxvml_invoke_external_proc(
             ctx,
             p,
+            expected.name,
             argc + 1,
             method_args,
             "rxc_plugin_method",
@@ -2447,7 +2484,7 @@ int rxvml_call_factory_descriptor(
         return -1;
     }
 
-    rc = rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_factory", response_out, NULL);
+    rc = rxvml_invoke_external_proc(ctx, p, expected.name, argc, args, "rxc_bridge_factory", response_out, NULL);
     rx_sig_free(&expected);
     return rc;
 }
