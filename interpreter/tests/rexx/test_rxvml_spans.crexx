@@ -23,6 +23,7 @@ identity: procedure = .string
 forcedsignal: procedure = .int
   arg name = .string
   if name == 'FAILURE' then assembler signal "FAILURE", "forced RXVML diagnostic"
+  else if name == 'FUNCTION_NOT_FOUND' then assembler signal "FUNCTION_NOT_FOUND", "rxvml_spans.missing_inner_callee"
   else assembler signal "OUT_OF_RANGE", "forced RXVML diagnostic"
   return 0
 

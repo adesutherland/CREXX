@@ -124,27 +124,46 @@ struct rxvml_context {
 static void rxvml_set_captured_signal_error(rxvml_context* ctx,
                                             int signal_code,
                                             const proc_runtime* proc,
-                                            const char* diagnostic_name) {
+                                            const char* diagnostic_name,
+                                            const rxvm_captured_signal* capture) {
     const char* signal_name = NULL;
     const char* procedure = diagnostic_name && diagnostic_name[0]
             ? diagnostic_name : proc && proc->name ? proc->name : "<unknown>";
     size_t length = 0u;
+    size_t limit = capture && capture->code == signal_code ? 128u : 320u;
     int truncated;
 
     if (signal_code > RXSIGNAL_NONE && signal_code < RXSIGNAL_MAX) {
         signal_name = interrupt_to_string((unsigned char)signal_code);
     }
-    while (length < 320u && procedure[length]) ++length;
+    while (length < limit && procedure[length]) ++length;
     truncated = procedure[length] != '\0';
     if (truncated) {
         /* Loaded names are UTF-8. Do not end the bounded prefix inside a scalar. */
         while (length > 0u &&
                ((unsigned char)procedure[length] & 0xc0u) == 0x80u) --length;
     }
-    (void)snprintf(ctx->last_error_text, sizeof(ctx->last_error_text),
-                   "VM procedure raised an unhandled signal: code=%d name=%s procedure=%.*s%s",
-                   signal_code, signal_name ? signal_name : "UNKNOWN",
-                   (int)length, procedure, truncated ? "..." : "");
+    if (capture && capture->code == signal_code && capture->has_location) {
+        (void)snprintf(ctx->last_error_text, sizeof(ctx->last_error_text),
+                "VM procedure raised an unhandled signal: code=%d name=%s procedure=%.*s%s message=%s%s module=%lld pc=%lld",
+                signal_code, signal_name ? signal_name : "UNKNOWN",
+                (int)length, procedure, truncated ? "..." : "",
+                capture->message_length ? capture->message : "<empty>",
+                capture->message_truncated ? "..." : "",
+                (long long)capture->module_number, (long long)capture->address);
+    } else if (capture && capture->code == signal_code) {
+        (void)snprintf(ctx->last_error_text, sizeof(ctx->last_error_text),
+                "VM procedure raised an unhandled signal: code=%d name=%s procedure=%.*s%s message=%s%s location=unknown",
+                signal_code, signal_name ? signal_name : "UNKNOWN",
+                (int)length, procedure, truncated ? "..." : "",
+                capture->message_length ? capture->message : "<empty>",
+                capture->message_truncated ? "..." : "");
+    } else {
+        (void)snprintf(ctx->last_error_text, sizeof(ctx->last_error_text),
+                "VM procedure raised an unhandled signal: code=%d name=%s procedure=%.*s%s location=unknown",
+                signal_code, signal_name ? signal_name : "UNKNOWN",
+                (int)length, procedure, truncated ? "..." : "");
+    }
     ctx->last_error = ctx->last_error_text;
 }
 
@@ -579,6 +598,7 @@ static int rxvml_invoke_external_proc(
     char* dummy_argv[1];
     int run_status;
     int caught_signal = SIGNAL_NONE;
+    rxvm_captured_signal captured = {0};
 
     if (run_status_out) *run_status_out = 0;
     if (!ctx || !proc) return -1;
@@ -652,12 +672,12 @@ static int rxvml_invoke_external_proc(
     }
     dummy_argv[0] = (char*)(dummy_argv0 ? dummy_argv0 : "rxvml_call");
     run_status = rxvm_run_capturing_signal(&ctx->vm, 0, dummy_argv,
-                                           &caught_signal);
+                                           &caught_signal, &captured);
     ctx->vm.active.rxvml_context = previous_active_context;
     if (run_status_out) *run_status_out = run_status;
 
     if (caught_signal != SIGNAL_NONE) {
-        rxvml_set_captured_signal_error(ctx, caught_signal, proc, diagnostic_name);
+        rxvml_set_captured_signal_error(ctx, caught_signal, proc, diagnostic_name, &captured);
         if (response_out) *response_out = NULL;
         rxvml_value_free((rxvml_value*)call_ret);
     } else if (response_out) {
