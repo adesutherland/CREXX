@@ -326,6 +326,57 @@ static void check_compiled_halt(const char *image) {
     CHECK(rxvml_request_interrupt(ctx) == -1);
     rxvml_destroy(ctx);
 }
+static void check_captured_signal_diagnostics(const char *library, const char *fixture) {
+    rxvml_context *first = rxvml_create(NULL, 0);
+    rxvml_context *second = rxvml_create(NULL, 0);
+    rxvml_value *first_name, *second_name, *result = NULL, *args[1];
+    const char *first_error = NULL, *second_error = NULL;
+    char saved[512];
+    const char *descriptor = "rxsig1|rxvml_spans.forcedsignal|.int|name=.string";
+
+    CHECK(first && second);
+    if (!first || !second) {
+        if (first) rxvml_destroy(first);
+        if (second) rxvml_destroy(second);
+        return;
+    }
+    CHECK(rxvml_load_module_file(first, library) > 0 && rxvml_load_module_file(first, fixture) > 0);
+    CHECK(rxvml_load_module_file(second, library) > 0 && rxvml_load_module_file(second, fixture) > 0);
+    first_name = rxvml_value_new(first); second_name = rxvml_value_new(second);
+    CHECK(first_name && second_name);
+    if (!first_name || !second_name) {
+        if (first_name) rxvml_value_free(first_name);
+        if (second_name) rxvml_value_free(second_name);
+        rxvml_destroy(first); rxvml_destroy(second);
+        return;
+    }
+    CHECK(!rxvml_set_str(first_name, "FAILURE", 7)); args[0] = first_name;
+    CHECK(rxvml_call_procedure_descriptor(first, descriptor, 1, args, &result) == -1);
+    CHECK(result == NULL && rxvml_last_error(first, &first_error) == -1);
+    CHECK(first_error && strstr(first_error, "code=2 name=FAILURE") &&
+          strstr(first_error, "procedure=rxvml_spans.forcedsignal"));
+    (void)snprintf(saved, sizeof(saved), "%s", first_error ? first_error : "");
+    if (result) { rxvml_value_free(result); result = NULL; }
+
+    CHECK(!rxvml_set_str(second_name, "OUT_OF_RANGE", 12)); args[0] = second_name;
+    CHECK(rxvml_call_procedure_descriptor(second, descriptor, 1, args, &result) == -1);
+    CHECK(result == NULL && rxvml_last_error(second, &second_error) == -1);
+    CHECK(second_error && strstr(second_error, "code=8 name=OUT_OF_RANGE") &&
+          strstr(second_error, "procedure=rxvml_spans.forcedsignal"));
+    if (result) { rxvml_value_free(result); result = NULL; }
+    CHECK(first_error && strcmp(first_error, saved) == 0);
+    CHECK(rxvml_last_error(first, &first_error) == -1 && first_error && strcmp(first_error, saved) == 0);
+
+    args[0] = first_name;
+    result = call(first, "rxsig1|rxvml_spans.identity|.string|text=.string", 1, args);
+    if (result) {
+        check_text(first, result, "FAILURE", 7);
+        rxvml_value_free(result);
+    }
+    rxvml_value_free(first_name); rxvml_value_free(second_name);
+    rxvml_destroy(first); rxvml_destroy(second);
+}
+
 int main(int argc, char **argv) {
     state s; rxvml_context *ctx;
     rxvml_value *text, *name, *result, *args[2], *list, *binding;
@@ -338,6 +389,7 @@ int main(int argc, char **argv) {
         return failures ? 1 : 0;
     }
     if (argc != 3) return 2;
+    check_captured_signal_diagnostics(argv[1], argv[2]);
     check_context_initialization();
     check_optional_native_tail();
     check_optional_resource_tail();

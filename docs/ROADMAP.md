@@ -19,6 +19,27 @@ Use this authority split:
 - [`../performance/ROADMAP.md`](../performance/ROADMAP.md) tracks only live
   performance closeout and evidence-gated performance candidates.
 
+## Bounded repair: captured RXVML signal diagnostics (RXS-DIAG)
+
+Expose the directly captured signal code/name and external procedure name in
+`rxvml_last_error()` when an embedding call fails with an unhandled VM signal.
+This diagnostic increment does not identify or repair the intermittent Intel
+Release ADDRESS-registration failure. It changes no VM execution, signal capture,
+cleanup, public API or ABI. A bounded context-owned summary retains no signal
+payload, frame, procedure or source pointer; distinct context owners remain
+independent. Existing literal errors and successful-call behavior are preserved.
+
+| ID | Observable contract or step | Status |
+| --- | --- | --- |
+| **RXS-DIAG-AC01** | Captured failures report the exact numeric code, existing canonical signal name and a bounded external-procedure name; formatting uses private per-context storage without a new allocation/failure path. | done |
+| **RXS-DIAG-AC02** | One permanent forced-signal regression verifies failure/NULL response, two-context diagnostic isolation and subsequent successful entry/cleanup. | done |
+| **RXS-DIAG-AC03** | Focused normal build/checks and the owning error-lifetime guide qualify the diagnostic increment; automatic publication CI remains distinct from local proof and the original intermittent failure remains undiagnosed. | done; local diagnostic profile |
+| **RXS-DIAG-AC04** | The coordinator owns Intel Release replay of concurrent ADDRESS registration with the captured signal/phase, diagnosis and any material repair, followed by the affected hosted check. Local ARM success does not close this platform investigation; retain concurrency and the existing oracle. | open |
+| **RXS-DIAG-STEP01** | Review the existing external-entry and diagnostic ownership contracts before implementation; AC01–03. | done |
+| **RXS-DIAG-STEP02** | Add the bounded summary and existing-fixture forced-signal controls without changing the capture/cleanup algorithm; AC01–02. | done |
+| **RXS-DIAG-STEP03** | Qualify selected normal checks and the guide; isolated publication uses normal automatic CI under the existing authority; AC03. | done; local diagnostic profile |
+| **RXS-DIAG-STEP04** | Read the affected Intel result and diagnose/repair any reproduced concurrent registration failure; AC04. | open |
+
 ## Current Baseline
 
 - RXVECTOR-02 is published through hotfix/develop as `5949ef27efd8` and installed

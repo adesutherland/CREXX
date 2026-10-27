@@ -665,6 +665,8 @@ int run(rxvm_context *context, int argc, char *argv[]);
  * separately to an embedding host. */
 int rxvm_run_capturing_signal(rxvm_context *context, int argc, char *argv[],
                               int *signal_out);
+/* Existing canonical VM signal names; NULL for an unknown code. */
+const char *interrupt_to_string(unsigned char interrupt);
 /* Internal typed external-call boundary: zero means successful RETURN;
  * genuine signals/startup/EXIT failures remain distinct from value fields. */
 int rxvm_run_external_status(rxvm_context *context, int argc, char *argv[]);
