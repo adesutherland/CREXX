@@ -64,9 +64,10 @@ def service_shape(path):
               headers[index + 1].start() if index + 1 < len(headers) else len(source)]
               for index, match in enumerate(headers)}
     exports = set(re.findall(r'^\S+\(\)[^\n]*\.expose=(llgenerate\.\S+)', source, re.M))
-    # Exposing request historically exposes its existing implementation methods.
-    # The new capsule machinery must stay private; only these two queries are new.
+    # Exposing request also exposes its implementation methods, including the
+    # prepared-definition emitters. Capsule helper classes must remain private.
     methods = '''§factory run status error output lexical reused fail line generate
+        definitionimage assemblyclasses compiledassembly
         quoted sourceoperators contextmask emitdata assembly asmoperators asmimport
         asmload asmcall asmquote servicesource serviceassembly asmclass asmheader
         asmwrap asmdefault'''.split()
@@ -101,7 +102,7 @@ def service_shape(path):
                line.split()[1].split(',')[0] + ':' in ensure[resize + 1:]
                for line in ensure[:resize])
     assert any(re.match(r'imult [^,]+,[^,]+,2$', line) for line in ensure[:resize])
-    print('LEXICAL_REUSE_SHAPE|exports=26|linked_integer=1|growth_resize=1|span_copy=1', flush=True)
+    print('LEXICAL_REUSE_SHAPE|exports=29|linked_integer=1|growth_resize=1|span_copy=1', flush=True)
 
 
 if args.service_rxas:
