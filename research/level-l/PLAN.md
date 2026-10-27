@@ -1,5 +1,13 @@
 # Level L language tooling research — 10 October 2026
 
+## Proposed target-toolchain research
+
+The [single target-toolchain plan](toolchain/PLAN.md) proposes a B/L RXAS
+assembler, RXBIN reassembler, module linker and shared naive instruction
+expander, with explicit final-stage L validation. It awaits detailed scope
+approval; all TGT criteria remain open. It neither closes this programme's
+criteria nor changes the separate C delivery or develop QA/publication scope.
+
 <a id="current-action-ir-schema-reads"></a>
 
 ## Completed increment: bounded source-interpreter startup repairs (LIR-SCHEMA-READ-01)

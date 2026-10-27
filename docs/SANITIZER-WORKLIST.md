@@ -178,6 +178,91 @@ unchanged native memory qualification instead of repeating the full panel.
    develop and the master workflow-only update. Report exact scope and limits;
    delete temporary diagnostics and retain no timing/run archive in Git.
 
+### Paused draft: replace the redesign's Python
+
+Adrian requires removal of Python introduced by this sanitizer redesign. The
+initial scope left existing Python elsewhere unchanged. His 21 October extension
+covers later replacement of all build-related Python after review of native C
+bootstrap and cREXX-built G/L tools; other areas, including performance, need
+separate options. The initial inventory names `tools/sanitizer-policy.py`,
+`tools/sanitizer-fixtures.py`, `tools/tests/test_sanitizer_strategy.py`,
+`compiler/tests/contract_fixture.py`, `compiler/tests/levelc_bif_reference_audit.py`
+and new inline workflow Python. Revalidate provenance and references before
+replacement; preserve pre-existing facilities outside the agreed scope.
+
+**This proposal is paused and unimplemented.** Preserving it and the inactive
+`tools/cmake/SanitizerCommon.cmake` prototype does not activate a replacement or
+remove Python. The helper has no build/runner/workflow/CTest callers. Its tab-
+separated source fingerprints are incompatible with the maintained NUL-separated
+seal; JSON array-type checks and complete control-character escaping are missing,
+and identity/configuration/CLI failure contracts remain unqualified. A syntax or
+basic-helper smoke check is not replacement qualification. All criteria below
+remain open, independently of completed component-memory publication and the
+open full-baseline/SAN findings above.
+
+Vision: restore Bash/CMake/CTest as the complete sanitizer coordination stack,
+preserving the current fixed component-memory panel, explicit owner/stage
+boundaries, selected ordinary/native preparation, checked fixture transfer,
+independent runtime oracles, strict completion and platform-qualified proof.
+The approved component policy above supersedes the historical VM-priority and
+2,010-name weekly selection. Unknown functional tests do not silently enlarge
+daily assurance; unknown owners and incomplete preparation still fail closed.
+Explicit full/weekly/native/affected, release and actual SAN-closure obligations
+remain intact. Preserve the repaired ELF harness link order, certified-exit
+prerequisites, Bash 3.2 argument handling and source locking. Schedule activation
+is already effective; this draft changes neither the schedule nor its scope.
+
+1. **PYN-AC01 — todo:** remove the redesign's five Python files, registrations,
+   imports and new inline workflow Python after migrating their owned services.
+   Inspect provenance and search new coordination sources for Python invocation;
+   keep existing facilities outside this replacement scope intact.
+2. **PYN-AC02 — todo:** CMake policy preserves the current explicit memory
+   membership/ownership map and setup/cleanup fixture closure. Unknown owners,
+   missing declarations and incomplete discovery fail closed; new functional
+   tests do not silently expand daily. Full/weekly/native/affected scope stays
+   complete. Verify positive/negative miniature inventories and actual cold/warm
+   discovery using platform-discovered names and counts.
+3. **PYN-AC03 — todo:** selected preparation retains explicit owner declarations
+   and rejects unknown owners/ALL fallback. CMake fixture services preserve
+   source/configuration/dependency/producer identities, complete-owner copying,
+   atomic failure cleanup, native-tree runtime routing and final drift rejection.
+   Verify independent missing/changed/partial-owner and drift controls; migrate
+   seal identities explicitly rather than accepting incompatible fingerprints.
+4. **PYN-AC04 — todo:** retain native own-source flag and product/provider/child
+   instrumentation audits, leak policy, late-diagnostic rejection, exact
+   completed selection, focused/daily/broad distinction and qualified reuse.
+   Failure/incomplete results cannot publish assurance. Verify negative controls.
+5. **PYN-AC05 — todo:** shared Classic two-mode preparation remains CTest-owned,
+   locked, invalidation-aware and atomic, with all original expression/BIF
+   expected values, errors and four runtime modes preserved. Existing Python
+   oracles gain no new Python coordination service; verify focused functional
+   scope and isolated preparation scheduling before registration changes.
+6. **PYN-AC06 — todo:** actual workflow/runner commands execute under Apple Bash
+   3.2 and available Linux-style Bash; manual daily platform retry cannot narrow
+   full/scheduled scope. New coordination has independent CMake/shell contracts,
+   measured in isolation, then matching Debug/Apple-ASan focused checks.
+7. **PYN-AC07 — todo:** publish the reviewed replacement from qualified develop
+   only under separate publication authority and complete approved clean Linux
+   ASan/LSan and Apple ASan daily proof without unnecessary full reruns. Report
+   exact qualified inputs, scope and limits in conversation; preserve schedule,
+   unrelated work and all open full/SAN obligations, and remove diagnostics.
+
+1. **PYN-STEP01 — todo (AC01–06):** complete the Python provenance/reference
+   inventory and map each accepted service to its owning CMake/Bash replacement
+   after the wider bootstrap/build review. Retain older facilities unchanged.
+2. **PYN-STEP02 — todo (AC02–04), depends on STEP01:** implement CMake policy,
+   fixture/identity/copy/routing/instrumentation and completion services with
+   independent miniature contracts; preserve explicit owner/stage boundaries.
+3. **PYN-STEP03 — todo (AC01/05), depends on STEP02:** replace shared Classic
+   preparation/adapter ownership without changing or dropping semantic oracles;
+   delete superseded Python implementations after references are migrated.
+4. **PYN-STEP04 — todo (AC01/06), depends on STEP02/03:** replace runner/workflow
+   Python calls with checked CMake/Bash commands; qualify actual shell blocks,
+   cold/warm selection/preparation and focused Debug then maintained ASan.
+5. **PYN-STEP05 — todo (AC07), depends on STEP04:** reconcile owning guides,
+   qualify both daily platforms and publish under the separate authority;
+   reuse valid unchanged proof and leave schedule/master activation untouched.
+
 **Current status: component memory assurance is qualified and published on
 both maintained platforms. The same fixed memory panel runs every scheduled
 day. Full functional QA and explicit full/release/SAN-closure assurance retain

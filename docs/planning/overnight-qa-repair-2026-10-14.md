@@ -160,36 +160,37 @@ Adrian. Preserve private research and Python-removal drafts.
 
 ### Acceptance criteria
 
-1. **B21-AC01 — local controls done; Windows execution todo:** normalize both fixture containment operands consistently;
+1. **B21-AC01 — done:** normalize both fixture containment operands consistently;
    forwarding, whole-owner failure and configuration registries pass on Windows
    and in focused ordinary Debug / maintained Apple ASan controls. Retain
    outside-tree rejection and original producer argument boundaries.
 2. **B21-AC02 — done:** the late-diagnostic fixture runs with an explicit Ninja
    generator even when the host defaults to a multiconfig generator. Its
    semantic-pass negative control still rejects late sanitizer diagnostics.
-3. **B21-AC03 — accepted; local controls done; hosted proof todo:** restrict the Apple transport workaround to disposable
+3. **B21-AC03 — done:** restrict the Apple transport workaround to disposable
    GitHub-hosted Intel Mac packaging jobs. A controlled shell fixture verifies
    the UDP/443 rule, enablement, platform restrictions and error propagation;
    notarization/stapling gates and bounded retries remain mandatory.
-4. **B21-AC04 — todo:** publish compatible repairs, inspect actual Windows and
+4. **B21-AC04 — done:** publish compatible repairs, inspect actual Windows and
    Intel Mac results and confirm dev-snapshot publication. Reuse unchanged
    sanitizer proof; do not dispatch a new full sanitizer or deep matrix. Adrian's
    subsequent schedule-activation request is owned by SCOPE-AC07 in the sanitizer
    worklist; preserve that explicit workflow-only scope and remove task diagnostics.
+   The Windows/Intel Mac jobs and dev-snapshot publication passed in
+   [Build CREXX](https://github.com/adesutherland/CREXX/actions/runs/39584411086).
 
 ### Implementation steps
 
 1. **B21-STEP01 — done (AC01/02/03):** inspect the failed jobs and retained Windows
    CTest diagnostics; compare fixture paths/generator handling and GitHub's
    confirmed Intel HTTP/3 failure in actions/runner-images#14924.
-2. **B21-STEP02 — done locally (AC01/02):** repair containment normalization and pin the
+2. **B21-STEP02 — done (AC01/02):** repair containment normalization and pin the
    miniature generator; run existing policy/ownership and late-failure controls
-   in ordinary Debug then maintained Apple ASan. Preserve native Windows proof
-   as a separate outstanding check.
-3. **B21-STEP03 — done locally; accepted by Adrian (AC03):** prepare a
+   in ordinary Debug then maintained Apple ASan, and verify native Windows proof.
+3. **B21-STEP03 — done; accepted by Adrian (AC03):** prepare a
    runner-restricted Bash helper and controlled shell test; include the approved
    network change at the Intel core/plugin packaging boundaries.
-4. **B21-STEP04 — todo (AC04), depends on STEP02 and the STEP03 decision:** push
+4. **B21-STEP04 — done (AC04), depends on STEP02 and the STEP03 decision:** push
    the compatible repair set to hotfix/develop, monitor the normal publication
    jobs lightly and reconcile occupied checkouts without publishing private work.
 
