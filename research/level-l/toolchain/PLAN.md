@@ -1,12 +1,12 @@
 # Level L target-toolchain research
 
-**Status: standalone inliner architecture under review; implementation pending.**
+**Status: standalone inliner architecture approved; implementation in progress.**
 Adrian has requested a standalone, effective RXAS inliner proof of concept and,
-first, an architecture and mapping proposal. The [inliner contract](doc/inlining.md)
+approved this plan for implementation. The [inliner contract](doc/inlining.md)
 and INL criteria/steps below own that selected outcome within this single plan.
 The wider assembler/reassembler/linker proposal remains proposed; all TGT
-acceptance criteria remain open. This design increment includes no product
-implementation, native replacement or publication.
+acceptance criteria remain open. Implementation and reviewed local commits for
+the INL outcome are authorized; native replacement and publication are not.
 
 ## Vision and boundaries
 
@@ -121,16 +121,37 @@ require separate decisions.
 
 | Stable step | Status, dependency and decision gate |
 |---|---|
-| **INL-STEP01 — architecture and contract** | Proposal under review; AC01–08. Freeze mapping, observation/coverage boundaries, service/CLI, default policy and bounded cleanup before product edits. This task prepares the concrete proposal; architecture approval remains the implementation gate. |
-| **INL-STEP02 — shared model and conservative expansion** | todo; after 01; AC01/02/04/06/07. Extend the optional target owner and canonical schema, then qualify constructed-model local calls with fresh identities and no copy elimination. Review first emitted RXAS early. |
+| **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
+| **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | todo; after 02; AC01/02/04/06/07. Add the L-owned RXAS reader/writer and thin CLI, preserving module artifacts, with a real generated caller and exact-bound imported global-free helper. This is an intermediate slice; full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP04 — complete representable expansion** | todo; after 03; AC02–04/06/07. Batch the reviewed alias/rebinding, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | todo; after each coherent conservative category, with final qualification after 04; AC02–07. Implement bounded machine proofs and minimum cleanup as a separate callable pass. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
-No build/test campaign is selected by this documentation increment. Per-feature
-checks and execution allocation follow the repository instructions;
+Per-feature checks and execution allocation follow the repository instructions;
 INL-STEP06 is the named standalone integration milestone.
+
+### Reviewed shared CFG prerequisite
+
+INL-STEP02/04 extend the existing generic L IR owner for real machine CFGs.
+`operation.control(flow,minimum=0,maximum=0)` declares structural `next` or
+`terminal` flow independently of semantic effects. Default `next/0/0` preserves
+existing manifests and behavior. Terminal extensions end a block and declare
+an inclusive bounded successor count, including zero and table fanout.
+`opdraft.successor(block)` appends an ordered edge only after exact live owner,
+same-function, arity and prospective budget checks; repeated targets are legal.
+Freeze and decoded-input validation reject missing/extra edges, cross-function
+targets, operations after terminators and unterminated blocks identically.
+Use existing owned edge rows and serialization envelopes, with nondefault
+control declarations participating in exact schema compatibility.
+
+The generic optimizer must preserve terminal extensions and control contracts;
+structural admission alone does not authorize generic execution. The existing
+L graph index consumes their declared edges. One independent non-RXAS graph
+fixture plus existing core IR controls qualifies this shared API. Its enduring
+account belongs in `langtools/doc/ir-design.md`. This shared API is implemented
+and qualified for the selected ordinary owner checks; inliner integration and
+broader INL acceptance remain open. There is no target-private graph framework.
 
 ## Complete initial target profile
 

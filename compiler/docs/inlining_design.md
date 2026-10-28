@@ -1437,8 +1437,9 @@ Those documents supersede this review's earlier recommendation to begin with a
 compiler-driven prototype. The alternatives and source-boundary discussion below
 remain background; the current native AST inliner is unchanged.
 
-**Separate architecture proposal; implementation and migration are not yet
-approved.** The current AST inliner and all its supported shapes retain their
+**Background architecture review.** The standalone B/L plan linked above is
+approved for implementation; migration/default replacement is not approved.
+The current AST inliner and all its supported shapes retain their
 contracts above. The [Level L compiler plan](../../research/level-l/compilers/PLAN.md#emission-simplifications-and-conformance-choices)
 retains future optimisation decisions outside the bounded C research closure. This review
 does not commission formal compiler QA or a production performance campaign.

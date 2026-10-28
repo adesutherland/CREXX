@@ -1,0 +1,109 @@
+/* cREXX License (MIT). Independent constructed target/expansion contract. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import llinline
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+
+main: procedure = .int
+  failures = 0
+  draft = .lltarget..draft('constructed','constructed.fixture',0)
+  at = draft.synthetic('constructed scalar call')
+  root = draft.procedure('main',6,at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(11),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(23),at)
+  ignored = two(root,'load',root.reg('r',3),.lltarget..operand.integer(2),at)
+  snapshot_record_id = two(root,'copy',root.reg('r',4),root.reg('r',2),at)
+  ignored = two(root,'settp',root.reg('r',4),.lltarget..operand.integer(768),at)
+  ignored = two(root,'copy',root.reg('r',5),root.reg('r',1),at)
+  ignored = two(root,'settp',root.reg('r',5),.lltarget..operand.integer(768),at)
+  fields = .object[]; fields[1] = root.reg('r',0) as .object
+  fields[2] = .lltarget..operand.procedure('pickfirst') as .object
+  fields[3] = root.reg('r',3) as .object
+  callid = root.emit('call',fields,at)
+  ignored = one(root,'itos',root.reg('r',0),at)
+  ignored = one(root,'say',root.reg('r',0),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('pickfirst',0,at)
+  ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'constructed module verifies')
+  if original.valid() = 0 then do; say original.error(); say 'CONSTRUCTED_INLINE|failures=' || failures; return failures; end
+  failures = failures + check(original.procedures() = 2,'catalogue is not a target procedure')
+  failures = failures + check(original.records() = 14,'headers and records preserve source order')
+  header = original.record(1); failures = failures + check(header.kind() = 'procedure','first source-order record is the procedure header')
+  lastbody = original.procedure(2)
+  failures = failures + check(lastbody.locals() = 0 & lastbody.name() = 'pickfirst','zero-local machine body is admitted')
+  graph = dereference original.ir(); before = graph.binary()
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('pickfirst'))
+  unknown = llinline..inspect(request)
+  failures = failures + check(unknown.status() = 'keep' & unknown.reason() = 'signal.policy.unproved','unknown inherited policy retains the call')
+  admitted = llinline..inspect(request,'closed-main-default-halt.v1')
+  failures = failures + check(admitted.status() = 'legal' & admitted.arguments() = 2,'checked root derives the counted argument window')
+  if admitted.status() <> 'legal' then say admitted.reason()
+  changed = llinline..expand(request,'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','direct scalar return expands')
+  if changed.status() <> 'changed' then say changed.reason()
+  if changed.status() = 'changed' then do
+    result = changed.result(); calls = 0; captures = 0; retainedsnapshot = 0
+    do i = 1 to result.records()
+      item = result.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'call' then calls = calls + 1
+      if item.mnemonic() = 'link' then captures = captures + 1
+      if item.id() = changed.operation(snapshot_record_id) then retainedsnapshot = item.mnemonic() = 'copy'
+    end
+    failures = failures + check(result.valid() & calls = 0 & captures = 3,'call removed with result and two borrowed-pointer anchors')
+    failures = failures + check(retainedsnapshot,'conservative expansion retains the original value snapshot')
+    failures = failures + check(changed.operation(callid) = 0,'removed call has no surviving instruction identity')
+    newmain = result.procedure(1)
+    failures = failures + check(newmain.locals() = 11,'fresh transport cells are explicit before cleanup')
+  end
+  graph = dereference original.ir()
+  failures = failures + check(bin2x(graph.binary()) = bin2x(before),'expansion preserves the exact frozen input')
+  limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,65536,1)
+  failures = failures + check(limited.status() = 'limit' & limited.reason() = 'inline.code.cells','encoded-cell cap refuses without partial publication')
+  kept = limited.result(); graph = dereference kept.ir()
+  failures = failures + check(bin2x(graph.binary()) = bin2x(before),'failed expansion returns unchanged content')
+
+  /* Independent negative builders exercise the target owner, not its reader. */
+  rejected = .lltarget..draft('bad','bad.fixture',0)
+  at = rejected.synthetic('foreign operands'); a = rejected.procedure('a',1,at); b = rejected.procedure('b',1,at)
+  ignored = one(a,'ret',b.reg('r',0),at)
+  failures = failures + check(pos('foreign register',rejected.error()) > 0,'foreign function operand is rejected before publication')
+
+  forged = .lltarget..draft('forged','forged.fixture',0)
+  at = forged.synthetic('forged register'); a = forged.procedure('main',1,at)
+  real = a.reg('r',0)
+  fake = .lltarget..operand.bound(real.owner(),real.procedureid(),real.slotid(),'r',1)
+  ignored = one(a,'ret',fake,at); invalid = forged.finish()
+  failures = failures + check(invalid.valid() = 0 & pos('descriptor mismatch',invalid.error()) > 0,'frozen target validation reconstructs bank/index/slot correspondence')
+
+  missing = .lltarget..draft('missing','missing.fixture',0)
+  at = missing.synthetic('missing branch'); a = missing.procedure('main',0,at)
+  ignored = one(a,'br',.lltarget..operand.symbol('absent'),at)
+  invalid = missing.finish()
+  failures = failures + check(invalid.valid() = 0 & pos('unresolved branch',invalid.error()) > 0,'forward branch binding rejects a missing target')
+
+  small = .lltarget..draft('small','small.fixture',0,1000000,4096,1000000)
+  at = small.synthetic('bounded payload'); a = small.procedure('main',1,at)
+  huge = copies('x',8192) as .binary
+  ignored = two(a,'load',a.reg('r',0),.lltarget..operand.string(huge),at)
+  failures = failures + check(pos('budget',small.error()) > 0,'payload preflight fails before vector allocation')
+  say 'CONSTRUCTED_INLINE|failures=' || failures
+  return failures

@@ -1,9 +1,10 @@
 # Standalone RXAS inlining architecture
 
-**Status: proposed design; implementation pending.** This document specifies
+**Status: approved architecture; implementation in progress.** This document specifies
 the target-level expansion service and its standalone proof of concept. It
-does not describe an existing inliner, approve a new ISA or VM contract, or
-replace the native AST inliner. The existing [toolchain plan](../PLAN.md) owns
+distinguishes the current tools from the approved design and the optional
+extensions requiring concrete owner contracts. It does not replace the native
+AST inliner. The existing [toolchain plan](../PLAN.md) owns
 acceptance criteria, numbered steps, decisions and approval, specifically
 INL-AC01–08 and INL-STEP01–06 for the standalone outcome. This is its enduring
 architecture account, not another plan. The complete outcome includes all
@@ -106,6 +107,33 @@ is proposed, not an installed command. The CLI and service share the same
 policy and diagnostics; clients do not scrape command output.
 
 ## Target identities and proof inputs
+
+### RXAS input/output profile
+
+The first adapter increment reads one UTF-8 module with an explicit logical
+module/artifact identity. Its generated L grammar owns tokenization and syntax;
+the target draft owns declaration, forward-reference and operand validation.
+It admits optional `.globals`, procedure definitions/imports/exports, global
+exposure, canonical source-visible instructions with ordered typed operands,
+labels, `.const`, callable/register/clear metadata, opaque known `META_INLINE`
+string transport, `.srcstep` and `.traceevent`. Literal operands retain their
+exact validated spelling/bytes; importing a float or decimal introduces no new
+host conversion or constant evaluator. Jump tables and class/interface/task/
+provider/initializer/autoload records remain explicit next-profile work until
+their typed model contracts are implemented; unsupported forms fail precisely,
+without dropping records or publishing a partial module.
+
+One CLI request selects one caller module and explicit immutable body inputs,
+then publishes only the caller's complete output through the existing atomic
+single-file writer. It does not concatenate modules or partially update a set
+of files. Current RXAS has no serialized module-name directive: the service
+retains its explicit logical identity, while native reassembly derives its
+module filename/description from the input filename. Controlled fixtures use
+stable logical filenames; this adapter makes no RXBIN module-name roundtrip
+claim. External `rxdas` preparation is distinct from the B/L request. A native
+compiler-generated no-optimization input and an independent handwritten client
+must both exercise the actual reader; a handwritten approximation cannot stand
+in for the generated input.
 
 The shared target model must represent these domains explicitly:
 
@@ -408,7 +436,7 @@ need a real virtual-frame contract or the call. Do not invent that capability
 or describe rejection of one observer as rejection of every method/reference/
 condition. Legality is transitive through observed callees and callbacks.
 
-### Observation policy requiring a decision
+### Approved observation policy
 
 Exact physical diagnostics and useful frame-eliminating inlining cannot be
 silently equated. The current diagnostic capture walks actual frames; an
@@ -418,7 +446,7 @@ any site where that difference can be observed; this can prevent nearly all
 useful expansion. The native AST inliner already removes physical frames, but
 that precedent does not approve a new target contract.
 
-**Recommended proof-of-concept policy, pending Adrian's approval:** preserve
+**Approved proof-of-concept policy:** preserve
 language-visible values/control/state/lifetime, authored source/TRACE mapping,
 signal tag/payload and logical fault source, while allowing an optimized inline
 call to be absent from the physical traceback. Explicit physical-frame,
@@ -426,8 +454,8 @@ raw-address/register-bank and raw physical-event observers still retain calls
 transitively unless specifically specialized. This is an explicit observable-
 behavior decision, not a proof that physical stacks remain equal. If strict
 logical call chains are required instead, the inline-origin extension below
-needs adoption before claiming that guarantee. Neither policy nor extension is
-approved by documenting it.
+needs implementation before claiming that guarantee. Approval of the ordinary
+inline policy does not establish virtual-frame support.
 
 ## Modules, globals and initialization
 
@@ -470,10 +498,11 @@ expansion does not grant a new source-language access path.
 
 ## Extensions considered to simplify correct inlining
 
-These are design options requested for review, not current VM capabilities or
-implementation authority. Prefer narrow extensions that preserve one existing
-runtime algorithm over frontend-specific workarounds. Each needs explicit
-compatibility, source/wire/schema and API/ISA decisions in INL-STEP01.
+These are approved design directions, not current VM capabilities. Prefer narrow
+extensions that preserve one existing runtime algorithm over frontend-specific
+workarounds. Record and internally review concrete compatibility, source/wire/
+schema and API/ISA contracts in INL-STEP01 before the corresponding edits;
+optional mechanisms must be justified by the selected coverage requirement.
 
 ### Recommended private global binding
 
@@ -767,6 +796,43 @@ explicit later plan gates; this design document runs or closes none of them.
 
 ## Owning source contracts
 
+### First constructed-model implementation contract
+
+The first INL-STEP02 slice uses the optional `rxfnsl-target` package, built
+explicitly, with `lltarget` and `llinline` namespaces. `lltarget.draft` owns an
+existing `llir.arena`; publication freezes/verifies that arena into one
+`llir.module` per target artifact. A versioned, nonexecuting catalogue function
+holds checked module/procedure/register descriptors. It is excluded from target
+procedure counts, rendering and machine CFG analysis and is never passed to a
+generic executable optimizer. Actual target bodies are separate L functions;
+their initial single-block structural `returnvoid` sentinel is distinct from
+the recorded RXAS `RET`. Arbitrary target successors are the next shared
+`llir` extension, not a private target graph.
+
+`draft(logicalModule,artifact,globals,entries,bytes,work)` supplies `source`,
+`synthetic`, `procedure(name,locals,origin,expose)`, module `record`, and atomic
+`finish`. A body draft supplies owner-checked `reg(bank,index)`, canonical
+`emit(mnemonic,operands,origin)` and typed `record`. Operands have register,
+integer, byte-string, procedure, symbol and checked exact-literal forms.
+Records persist canonical opcode identities and typed operand vectors as L
+extension attributes, never instruction source strings. `finish` owns forward
+local/label/import binding. Published module/body/record views borrow the exact
+L owner and expose source-order records and procedure identities; foreign or
+expired handles are rejected. Existing `llrxas` allocation APIs remain intact.
+
+`llinline.bind(caller,callId,provider,procedureId)` captures exact frozen owners
+and body binding; `inspect`/`expand` return specific keep/invalid/limit outcomes
+or a new frozen target with mappings. The initial admitted body is a direct
+straight-line scalar return, with no global, local-history, reference, context,
+handler or nested-call effects. Entry is an explicit closed-main, default-
+halting-signal integration profile with checked plain-integer actuals; unknown
+inherited policy retains the call. HALT/CANCEL has no resumable continuation in
+that profile. Relaxed physical traceback alone is insufficient. Conservative
+expansion uses fresh argument/result anchors and retains caller marshalling;
+outer setup/reverse-swap elimination remains required by INL-STEP05/AC05.
+Independent constructed-model fixtures exercise the service and its output;
+they do not complete the real RXAS adapter or the full approved POC profile.
+
 The following current sources constrain this proposal; changes require the
 corresponding catalog/proof/profile review:
 
@@ -780,7 +846,7 @@ corresponding catalog/proof/profile review:
   [frame activation/identity](../../../../interpreter/rxvmintp.c) and
   [VM guide](../../../../docs/ai-context/RXVM_INTERPRETER.md).
 - [Global binding/loading](../../../../interpreter/rxvmload.c) and
-  [module initialization](../../../../rxvml/rxvm_run.c).
+  [module initialization](../../../../interpreter/rxvml/rxvm_run.c).
 - [Assembler body lifetime and register encoding](../../../../assembler/rxasassm.c),
   [flush owner](../../../../assembler/rxas_opt.c),
   [machine pass contracts](../../../../assembler/rxas_flow_pass.c) and

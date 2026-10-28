@@ -1,0 +1,785 @@
+/* cREXX License (MIT). Optional checked machine-target records over Level L IR. */
+options levelb
+namespace lltarget expose draft bodydraft module body record operand operandcodec schema
+import rxfnsb
+import llir
+import llrxascatalog
+
+bad: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** Request work is shared by drafts through a reference, not copied per body. */
+fuel: class
+  _left = .int
+  *: factory
+    arg work = .int
+    _left = work
+    return
+  take: method = .int
+    arg owner = reference .llir..arena, count = .int
+    store = dereference owner
+    if store.error() <> '' then return 0
+    if count < 0 | count > _left then do
+      call store.fail('LL_RESOURCE_LIMIT: target.work budget'); return 0
+    end
+    _left = _left - count
+    return 1
+  remaining: method = .int
+    return _left
+
+/** Operands are typed values, never source instruction fragments. Register
+ * operands additionally carry the exact draft owner, function and L slot. */
+operand: class
+  _kind = .string
+  _bank = .string
+  _index = .int
+  _bytes = .binary
+  _owner = .int
+  _procedure = .int
+  _slot = .int
+  *: factory
+    return
+  integer: factory
+    arg number = .int
+    _kind = 'I'; _index = number
+    return
+  string: factory
+    arg bytes = .binary
+    _kind = 'S'; _bytes = bytes
+    return
+  symbol: factory
+    arg text = .string
+    _kind = 'L'; _bytes = text as .binary
+    return
+  procedure: factory
+    arg name = .string
+    _kind = 'P'; _bytes = name as .binary
+    return
+  literal: factory
+    arg kind = .string, spelling = .binary
+    _kind = kind; _bytes = spelling
+    if literalerror(kind,spelling) <> '' then _kind = ''
+    return
+  bound: factory
+    arg owner = .int, procedureid = .int, slotid = .int, bank = .string, index = .int
+    _kind = 'R'; _owner = owner; _procedure = procedureid; _slot = slotid
+    _bank = bank; _index = index
+    return
+  decoded: factory
+    arg kind = .string, bank = .string, index = .int, bytes = .binary, owner = .int, procedureid = .int, slotid = .int
+    _kind = kind; _bank = bank; _index = index; _bytes = bytes
+    _owner = owner; _procedure = procedureid; _slot = slotid
+    return
+  kind: method = .string
+    return _kind
+  bank: method = .string
+    return _bank
+  index: method = .int
+    return _index
+  bytes: method = .binary
+    return _bytes
+  length: method = .int
+    return <blen>(_bytes)
+  byte: method = .int
+    arg index = .int
+    return <at..u8>(index) _bytes
+  text: method = .string
+    return _bytes as .string
+  owner: method = .int
+    return _owner
+  procedureid: method = .int
+    return _procedure
+  slotid: method = .int
+    return _slot
+
+/** Version 1 vector: u32 count, then kind/bank u32, index i64,
+ * function/slot/byte-length u32 and exact payload bytes. This is an internal
+ * checked L attribute encoding, not an RXBIN format or packed host structure. */
+operandcodec: class implements .llir..typecodec
+  *: factory
+    return
+  parse: method = .binary
+    arg text = .string
+    codec = .llir..bytescodec()
+    return codec.parse(text)
+  check: method = .string
+    arg bits = .binary
+    size = <blen>(bits)
+    if size < 4 then return 'target operand vector header'
+    count = <at..u32>(0) bits; at = 4
+    if count > (size - 4) / 28 then return 'target operand vector count'
+    do i = 1 to count
+      if at > size - 28 then return 'target operand vector truncated'
+      kind = <at..u32>(at) bits; bank = <at..u32>(at + 4) bits
+      index = <at..i64>(at + 8) bits; fn = <at..u32>(at + 16) bits
+      slot = <at..u32>(at + 20) bits; length = <at..u32>(at + 24) bits
+      if kind < 1 | kind > 9 | bank > 3 then return 'target operand tag'
+      if kind = 1 then do
+        if bank = 0 | index < 0 | fn = 0 | slot = 0 | length <> 0 then return 'target register operand'
+      end
+      else if bank <> 0 | fn <> 0 | slot <> 0 then return 'target nonregister binding'
+      if kind = 2 & length <> 0 then return 'target integer operand'
+      if length > size - at - 28 then return 'target operand bytes truncated'
+      at = at + 28 + length
+    end
+    if at <> size then return 'target operand vector trailing bytes'
+    return ''
+  format: method = .string
+    arg bits = .binary
+    return bin2x(bits)
+
+literalerror: procedure = .string
+  arg kind = .string, spelling = .binary
+  i = .int
+  text = spelling as .string
+  if kind = 'B' then do
+    if left(lower(text),2) <> '0x' | (length(text) - 2) % 2 <> 0 then return 'binary spelling'
+    do i = 3 to length(text)
+      if pos(upper(substr(text,i,1)),'0123456789ABCDEF') = 0 then return 'binary digits'
+    end
+    return ''
+  end
+  if kind = 'C' then do
+    if left(text,1) <> "'" | right(text,1) <> "'" then return 'character quoting'
+    middle = substr(text,2,length(text) - 2)
+    if length(middle) = 1 & middle <> "'" & middle <> '\' then return ''
+    if length(middle) = 2 & left(middle,1) = '\' & right(middle,1) <> '0a'x & right(middle,1) <> '0d'x then return ''
+    return 'character spelling'
+  end
+  if kind = 'F' then do
+    special = lower(text)
+    if left(special,1) = '+' | left(special,1) = '-' then special = substr(special,2)
+    if special = 'inf' then return ''
+    if lower(text) = 'nan' then return ''
+    if left(lower(text),4) = 'nan(' & right(text,1) = ')' & length(text) = 21 then do
+      do i = 5 to 20
+        if pos(upper(substr(text,i,1)),'0123456789ABCDEF') = 0 then return 'NaN payload'
+      end
+      return ''
+    end
+    if pos('.',text) = 0 & pos('e',lower(text)) = 0 then return 'float requires float spelling'
+  end
+  else if kind = 'D' then do
+    if right(lower(text),1) <> 'd' then return 'decimal suffix'
+    text = left(text,length(text) - 1)
+  end
+  else return 'literal kind'
+  do i = 1 to length(text)
+    if pos(substr(text,i,1),'0123456789+-.eE') = 0 then return 'numeric spelling'
+  end
+  if datatype(text,'N') = 0 then return 'numeric literal'
+  return ''
+
+pack: procedure = .binary
+  arg fields = .object[], owner = reference .llir..arena, fuel_ref = reference .fuel
+  work = dereference fuel_ref; store = dereference owner
+  i = .int; j = .int
+  size = 4; item = .operand
+  do i = 1 to fields[0]
+    item = fields[i] as .operand
+    if item.length() > 2147483647 - size - 28 then do
+      call store.fail('LL_RESOURCE_LIMIT: target operand size'); return ''x as .binary
+    end
+    size = size + 28 + item.length()
+  end
+  if store.canreserve(0,size) = 0 then return ''x as .binary
+  if work.take(owner,size + fields[0]) = 0 then return ''x as .binary
+  result = .binary; call binresize result,size
+  <at..u32>(0) result = fields[0]; at = 4
+  do i = 1 to fields[0]
+    item = fields[i] as .operand
+    <at..u32>(at) result = wordpos(item.kind(),'R I S L P F D C B')
+    <at..u32>(at + 4) result = wordpos(item.bank(),'r g a')
+    <at..i64>(at + 8) result = item.index()
+    <at..u32>(at + 16) result = item.procedureid()
+    <at..u32>(at + 20) result = item.slotid()
+    <at..u32>(at + 24) result = item.length()
+    do j = 0 to item.length() - 1
+      <at..u8>(at + 28 + j) result = item.byte(j)
+    end
+    at = at + 28 + item.length()
+  end
+  return result
+
+unpack: procedure = .operand
+  arg bits = .binary, ordinal = .int, owner = .int
+  i = .int
+  if ordinal < 1 | ordinal > (<at..u32>(0) bits) then do
+    call bad('LL_TARGET_OPERAND: ordinal outside vector'); return .operand()
+  end
+  at = 4
+  do i = 1 to ordinal - 1
+    at = at + 28 + (<at..u32>(at + 24) bits)
+  end
+  length = <at..u32>(at + 24) bits; bytes = .binary
+  call binresize bytes,length
+  do i = 0 to length - 1
+    <at..u8>(i) bytes = <at..u8>(at + 28 + i) bits
+  end
+  kind = word('R I S L P F D C B',<at..u32>(at) bits)
+  bank = ''; bankid = <at..u32>(at + 4) bits
+  /* Zero is the declared nonregister bank sentinel, not a WORD ordinal. */
+  if bankid > 0 then bank = word('r g a',bankid)
+  return .operand.decoded(kind,bank,<at..i64>(at + 8) bits,bytes,owner,<at..u32>(at + 16) bits,<at..u32>(at + 20) bits)
+
+schema: procedure = .llir..contract
+  registry = .llir..schema(); family = registry.family('rxas.target',1)
+  integer = family.type('integer',.llir..intcodec() as .object)
+  bytes = family.type('bytes',.llir..bytescodec() as .object)
+  vector = family.type('operands',.operandcodec() as .object)
+  cell = family.type('cell',.llir..bytescodec() as .object)
+  descriptor = family.operation('module')
+  call descriptor.attribute('name',bytes); call descriptor.attribute('artifact',bytes)
+  call descriptor.attribute('globals',integer); call descriptor.attribute('catalog',bytes)
+  descriptor = family.operation('register')
+  call descriptor.attribute('body',integer); call descriptor.attribute('slot',integer)
+  call descriptor.attribute('bank',bytes); call descriptor.attribute('index',integer)
+  descriptor = family.operation('record')
+  call descriptor.attribute('kind',bytes); call descriptor.attribute('body',integer)
+  call descriptor.attribute('opcode',integer); call descriptor.attribute('operands',vector)
+  /* No generic executable optimization may consume this target profile. */
+  return registry.finish()
+
+integerbits: procedure = .binary
+  arg value = .int
+  result = .binary; call binresize result,8; <at..i64>(0) result = value
+  return result
+
+syntheticorigin: procedure = .llir..origin
+  arg owner = reference .llir..arena, description = .string
+  store = dereference owner
+  source = store.source(description,''x as .binary)
+  id = store.origin(source,0,0,4)
+  return .llir..origin(owner,id)
+
+findprocedure: procedure = .int
+  arg owner = reference .llir..module, headers_ref = reference .int[], name = .string
+  headers = dereference headers_ref
+  do i = 1 to headers[0]
+    header = .record(owner,headers[i]); item = header.operand(1)
+    if item.text() == name then return header.procedureid()
+  end
+  return 0
+
+namesafe: procedure = .int
+  arg text = .string, empty = 0
+  if text = '' then return empty
+  if pos(substr(text,1,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_§') = 0 then return 0
+  do i = 2 to length(text)
+    if pos(substr(text,i,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_§.-#') = 0 then return 0
+  end
+  return 1
+
+recordshape: procedure = .string
+  arg item = .lltarget..record
+  signature = ''; field = .operand
+  do i = 1 to item.operands()
+    field = item.operand(i); signature = signature || field.kind()
+  end
+  kind = item.kind(); body = item.procedureid()
+  select
+    when kind = 'instruction' then return ''
+    when kind = 'procedure' then do
+      if signature <> 'PIL' | body < 2 then return 'procedure shape'
+      name = item.operand(1); locals = item.operand(2); exposed = item.operand(3)
+      if namesafe(name.text()) = 0 | locals.index() < 0 | namesafe(exposed.text(),1) = 0 then return 'procedure fields'
+    end
+    when kind = 'label' then do
+      if signature <> 'L' | body < 2 then return 'label shape'
+    end
+    when kind = '.import' then do
+      if signature <> 'PL' | body <> 0 then return 'import shape'
+    end
+    when kind = '.globalexpose' then do
+      if signature <> 'IL' | body <> 0 then return 'global exposure shape'
+    end
+    when kind = '.const' then do
+      if (signature <> 'LLS' & signature <> 'LLB') | body <> 0 then return 'constant shape'
+      type = item.operand(2)
+      if (signature = 'LLS' & type.text() <> 'string') | (signature = 'LLB' & type.text() <> 'binary') then return 'constant type'
+    end
+    when kind = '.srcfile' then do
+      if signature <> 'S' | body < 2 then return 'source file shape'
+    end
+    when kind = '.srcline' then do
+      if signature <> 'I' | body < 2 then return 'source line shape'
+    end
+    when kind = '.srcstep' then do
+      if signature <> 'IIISIIIS' | body < 2 then return 'source step shape'
+    end
+    when kind = '.traceevent' then do
+      if signature <> 'SISSSIIIISS' | body < 2 then return 'TRACE event shape'
+    end
+    when kind = '.meta' then do
+      if signature = 'S' & body > 1 then return ''
+      if signature = 'SSS' then do
+        option = item.operand(2)
+        if option.text() = '.inline' then return ''
+      end
+      if (signature = 'SSSR' | signature = 'SSSS') & body > 1 then return ''
+      if signature = 'SSSPS' then return ''
+      return 'metadata shape/profile'
+    end
+    otherwise return 'record kind'
+  end
+  return ''
+
+appendrecord: procedure = .int
+  arg owner = reference .llir..arena, fuel_ref = reference .fuel, block = .llir..block, bodyid = .int, kind = .string, opcode = .int, fields = .object[], at = .llir..origin
+  store = dereference owner; work = dereference fuel_ref
+  if work.take(owner,fields[0] + 1) = 0 then return 0
+  if wordpos(kind,'procedure instruction label .meta .srcfile .srcline .srcstep .traceevent .const .import .globalexpose') = 0 then do
+    call store.fail('LL_TARGET_RECORD: unsupported record kind ' || kind); return 0
+  end
+  if at.belongs(owner) = 0 then do
+    call store.fail('LL_TARGET_OWNER: foreign record origin'); return 0
+  end
+  item = .operand
+  do i = 1 to fields[0]
+    if fields[i] is .operand then item = fields[i] as .operand
+    else do; call store.fail('LL_TARGET_OPERAND: expected typed operand'); return 0; end
+    if wordpos(item.kind(),'R I S L P F D C B') = 0 then do
+      call store.fail('LL_TARGET_OPERAND: invalid operand kind'); return 0
+    end
+    if item.kind() = 'R' then do
+      if item.owner() <> store.identity() | item.procedureid() <> bodyid then do
+        call store.fail('LL_TARGET_OWNER: foreign register operand'); return 0
+      end
+    end
+  end
+  contract = dereference store.contract(); operation = contract.operation('rxas.target.record')
+  draft = block.operation(operation,at)
+  call draft.attribute('kind',kind as .binary); call draft.attribute('body',integerbits(bodyid))
+  bits = pack(fields,owner,fuel_ref)
+  if store.error() <> '' then return 0
+  call draft.attribute('opcode',integerbits(opcode)); call draft.attribute('operands',bits)
+  result = draft.finish()
+  return result.id()
+
+/** All persistent records and IDs use the existing L arena and freeze. The
+ * private catalogue function is declarative and never emitted or executed. */
+draft: class
+  _store = .llir..arena
+  _fuel = .fuel
+  _catalogue = .llir..block
+  _functions = .int[]
+  _blocks = .object[]
+  _globals = .int
+  _sealed = .int
+  *: factory
+    arg logicalModule = .string, artifact = .string, globals = .int, entries = 1000000, bytes = 67108864, work = 1000000
+    contract = schema(); _store = .llir..arena(contract,entries,bytes); _fuel = .fuel(work)
+    _globals = globals
+    if logicalModule = '' | artifact = '' | globals < 0 | work < 1 then call _store.fail('LL_TARGET_MODULE: invalid identity, globals or work budget')
+    fn = .llir..function(reference _store,_store.function('$target.catalogue',contract.voidtype()))
+    _catalogue = fn.block('records'); origin = syntheticorigin(reference _store,'target module')
+    op = _catalogue.operation(contract.operation('rxas.target.module'),origin)
+    catalog = .llrxascatalog..catalog()
+    call op.attribute('name',logicalModule as .binary); call op.attribute('artifact',artifact as .binary)
+    call op.attribute('globals',integerbits(globals)); call op.attribute('catalog',catalog.fingerprint() as .binary)
+    result = op.finish()
+    return
+  error: method = .string
+    store_ref = reference _store; store = dereference store_ref
+    return store.error()
+  source: method = .llir..sourcefile
+    arg name = .string, bytes = .binary
+    id = _store.source(name,bytes)
+    return .llir..sourcefile(reference _store,id)
+  synthetic: method = .llir..origin
+    arg description = .string
+    return syntheticorigin(reference _store,description)
+  procedure: method = .lltarget..bodydraft
+    arg name = .string, locals = .int, at = .llir..origin, exposed = ''
+    contract = dereference _store.contract()
+    if name = '' | locals < 0 then call _store.fail('LL_TARGET_PROCEDURE: invalid name or local count')
+    fn = .llir..function(reference _store,_store.function(name,contract.voidtype()))
+    block = fn.block('body'); n = _functions[0] + 1
+    _functions[n] = fn.id(); _blocks[n] = block as .object
+    fields = .object[]; fields[1] = .operand.procedure(name) as .object
+    fields[2] = .operand.integer(locals) as .object; fields[3] = .operand.symbol(exposed) as .object
+    ignored = appendrecord(reference _store,reference _fuel,_catalogue,fn.id(),'procedure',-1,fields,at)
+    return .lltarget..bodydraft(reference _store,reference _fuel,block,_catalogue,fn.id(),locals,_globals)
+  record: method = .int
+    arg kind = .string, fields = .object[], at = .llir..origin
+    return appendrecord(reference _store,reference _fuel,_catalogue,0,kind,-1,fields,at)
+  finish: method = .lltarget..module
+    if _sealed then do
+      call bad('LL_TARGET_STATE: draft already finished'); return .lltarget..module(.llir..module(_store),0)
+    end
+    _sealed = 1; origin = syntheticorigin(reference _store,'target structural sentinel'); block = .llir..block
+    do i = 1 to _blocks[0]
+      block = _blocks[i] as .llir..block; call block.returnvoid(origin)
+    end
+    call _catalogue.returnvoid(origin)
+    ok = _store.freeze(); graph = .llir..module(_store)
+    return .lltarget..module(graph,_fuel.remaining())
+
+bodydraft: class
+  _owner = reference .llir..arena
+  _fuel = reference .fuel
+  _block = .llir..block
+  _catalogue = .llir..block
+  _function = .int
+  _locals = .int
+  _globals = .int
+  *: factory
+    arg owner = reference .llir..arena, work = reference .fuel, block = .llir..block, catalogue = .llir..block, functionid = .int, locals = .int, globals = .int
+    _owner = owner; _fuel = work; _block = block; _catalogue = catalogue
+    _function = functionid; _locals = locals; _globals = globals
+    return
+  reg: method = .lltarget..operand
+    arg bank = .string, index = .int
+    store = dereference _owner; work = dereference _fuel
+    if work.take(_owner,1) = 0 then return .operand()
+    if wordpos(bank,'r g a') = 0 | index < 0 | (bank = 'r' & index >= _locals) | (bank = 'g' & index >= _globals) then do
+      call store.fail('LL_TARGET_REGISTER: bank/index outside declaration'); return .operand()
+    end
+    contract = dereference store.contract(); name = bank || index
+    slotid = 0
+    do i = 1 to store.count(5)
+      if work.take(_owner,1) = 0 then return .operand()
+      if store.get(5,i,1) = _function & store.text(store.get(5,i,3)) == name then slotid = i
+    end
+    if slotid = 0 then do
+      slotid = store.slot(_function,name,contract.type('rxas.target.cell'))
+      origin = .llir..origin(_owner,1)
+      descriptor = _catalogue.operation(contract.operation('rxas.target.register'),origin)
+      call descriptor.attribute('body',integerbits(_function)); call descriptor.attribute('slot',integerbits(slotid))
+      call descriptor.attribute('bank',bank as .binary); call descriptor.attribute('index',integerbits(index))
+      result = descriptor.finish()
+    end
+    return .operand.bound(store.identity(),_function,slotid,bank,index)
+  emit: method = .int
+    arg mnemonic = .string, fields = .object[], at = .llir..origin
+    signature = ''; item = .operand; store = dereference _owner; work = dereference _fuel
+    do i = 1 to fields[0]
+      if fields[i] is .operand then item = fields[i] as .operand
+      else do; call store.fail('LL_TARGET_OPERAND: expected typed operand'); return 0; end
+      /* A .const declaration is bound by the target owner, never by a reader's
+       * second symbol framework. Keep its declaration; use its exact value. */
+      if item.kind() = 'L' then do
+        do j = 1 to store.count(3)
+          if work.take(_owner,1) = 0 then return 0
+          existing = .llir..opview(_owner,j)
+          if existing.name() <> 'rxas.target.record' then iterate
+          if existing.attribute('kind') as .string <> '.const' then iterate
+          vector = existing.attribute('operands')
+          if (<at..u32>(0) vector) <> 3 then iterate
+          alias = unpack(vector,1,store.identity())
+          if alias.text() == item.text() then do
+            item = unpack(vector,3,store.identity()); fields[i] = item as .object
+            leave
+          end
+        end
+      end
+      signature = signature || item.kind()
+    end
+    catalog = .llrxascatalog..catalog(); opcode = catalog.find(mnemonic,signature)
+    if opcode < 0 then do
+      call store.fail('LL_TARGET_OPCODE: unknown source-visible instruction/signature ' || mnemonic || '/' || signature); return 0
+    end
+    return appendrecord(_owner,_fuel,_block,_function,'instruction',opcode,fields,at)
+  record: method = .int
+    arg kind = .string, fields = .object[], at = .llir..origin
+    return appendrecord(_owner,_fuel,_block,_function,kind,-1,fields,at)
+
+/** Views borrow the exact published L owner. No arena copies on scalar queries. */
+record: class
+  _owner = reference .llir..module
+  _identity = .int
+  _id = .int
+  *: factory
+    arg owner = reference .llir..module, id = .int
+    _owner = owner; graph = dereference owner; _identity = graph.identity(); _id = id
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    graph = dereference _owner
+    if graph.identity() <> _identity | _id < 1 | _id > graph.operations() then return 0
+    op = graph.operation(_id)
+    return op.name() = 'rxas.target.record'
+  require: method = .void
+    if valid() = 0 then call bad('LL_TARGET_OWNER: stale or foreign record')
+    return
+  id: method = .int
+    call require(); return _id
+  kind: method = .string
+    call require(); graph = dereference _owner; op = graph.operation(_id)
+    return op.attribute('kind') as .string
+  procedureid: method = .int
+    call require(); graph = dereference _owner; op = graph.operation(_id)
+    bits = op.attribute('body'); return <at..i64>(0) bits
+  opcode: method = .int
+    call require(); graph = dereference _owner; op = graph.operation(_id)
+    bits = op.attribute('opcode'); return <at..i64>(0) bits
+  mnemonic: method = .string
+    if kind() <> 'instruction' then return ''
+    catalog = .llrxascatalog..catalog(); return catalog.field(opcode(),1)
+  operands: method = .int
+    call require(); graph = dereference _owner; op = graph.operation(_id)
+    bits = op.attribute('operands'); return <at..u32>(0) bits
+  operand: method = .lltarget..operand
+    arg ordinal = .int
+    call require(); graph = dereference _owner; op = graph.operation(_id)
+    return unpack(op.attribute('operands'),ordinal,_identity)
+  origin: method = .llir..origin
+    call require(); graph = dereference _owner; op = graph.operation(_id)
+    return op.origin()
+
+body: class
+  _owner = reference .llir..module
+  _identity = .int
+  _function = .int
+  _header = .int
+  *: factory
+    arg owner = reference .llir..module, functionid = .int, header = .int
+    _owner = owner; graph = dereference owner; _identity = graph.identity()
+    _function = functionid; _header = header
+    return
+  require: method = .void
+    if <refvalid>(_owner) = 0 then do; call bad('LL_TARGET_OWNER: body expired'); return; end
+    graph = dereference _owner
+    if graph.identity() <> _identity then call bad('LL_TARGET_OWNER: body replaced')
+    return
+  functionid: method = .int
+    call require(); return _function
+  name: method = .string
+    call require(); header = .record(_owner,_header); item = header.operand(1)
+    return item.text()
+  locals: method = .int
+    call require(); header = .record(_owner,_header); item = header.operand(2)
+    return item.index()
+  expose: method = .string
+    call require(); header = .record(_owner,_header); item = header.operand(3)
+    return item.text()
+  records: method = .int
+    call require(); graph = dereference _owner; count = 0
+    do i = 1 to graph.operations()
+      op = graph.operation(i)
+      if op.name() <> 'rxas.target.record' then iterate
+      item = .record(_owner,i)
+      if item.procedureid() = _function & item.kind() <> 'procedure' then count = count + 1
+    end
+    return count
+  record: method = .lltarget..record
+    arg ordinal = .int
+    call require(); graph = dereference _owner; count = 0
+    do i = 1 to graph.operations()
+      op = graph.operation(i)
+      if op.name() <> 'rxas.target.record' then iterate
+      item = .record(_owner,i)
+      if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      count = count + 1
+      if count = ordinal then return item
+    end
+    call bad('LL_TARGET_RECORD: body ordinal outside records')
+    return .record(_owner,0)
+
+module: class
+  _graph = .llir..module
+  _records = .int[]
+  _headers = .int[]
+  _error = .string
+  _name = .string
+  _artifact = .string
+  _globals = .int
+  *: factory
+    arg graph = .llir..module, work = 1000000
+    i = .int; j = .int; k = .int; fn = .int; slot = .int
+    found = .int; n = .int; size = .int; cost = .int; index = .int
+    bits = .binary; vector = .binary; bank = .string; signature = .string
+    item = .record; declaration = .record; op = .llir..opview
+    field = .operand; imported = .operand; label = .operand
+    do
+    _graph = graph; _error = graph.error(); catalog = .llrxascatalog..catalog()
+    if _error <> '' then return
+    store = dereference _graph.storage(); contract = dereference store.contract(); expected = schema()
+    if contract.manifest() <> expected.manifest() then do
+      _error = 'LL_TARGET_SCHEMA: incompatible target contract'; return
+    end
+    if _graph.functions() < 1 then do; _error = 'LL_TARGET_SCHEMA: missing catalogue'; return; end
+    catalogue = _graph.function(1)
+    if catalogue.name() <> '$target.catalogue' then do; _error = 'LL_TARGET_SCHEMA: catalogue identity'; return; end
+    descriptor = 0
+    slotfn = .int[]; slotbank = .string[]; slotindex = .int[]
+    headerfn = .int[]; localcount = .int[]; type = contract.type('rxas.target.cell')
+    do i = 1 to _graph.operations()
+      work = work - 1
+      if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.validation work'; return; end
+      op = _graph.operation(i)
+      if op.name() = 'rxas.target.module' then do
+        descriptor = descriptor + 1
+        _name = op.attribute('name') as .string; _artifact = op.attribute('artifact') as .string
+        bits = op.attribute('globals'); _globals = <at..i64>(0) bits
+        if op.attribute('catalog') as .string <> catalog.fingerprint() then _error = 'LL_TARGET_SCHEMA: stale opcode catalog'
+        else if _name = '' | _artifact = '' | _globals < 0 then _error = 'LL_TARGET_MODULE: invalid descriptor'
+        else if store.get(2,op.blockid(),1) <> 1 then _error = 'LL_TARGET_OWNER: module outside catalogue'
+        if _error <> '' then return
+      end
+      else if op.name() = 'rxas.target.register' then do
+        bits = op.attribute('body'); fn = <at..i64>(0) bits
+        bits = op.attribute('slot'); slot = <at..i64>(0) bits
+        bank = op.attribute('bank') as .string; bits = op.attribute('index'); index = <at..i64>(0) bits
+        if slot < 1 | slot > store.count(5) | fn < 2 | fn > _graph.functions() | wordpos(bank,'r g a') = 0 | index < 0 then do
+          _error = 'LL_TARGET_REGISTER: invalid descriptor'; return
+        end
+        if slotfn[slot] <> 0 | store.get(5,slot,1) <> fn | store.get(5,slot,2) <> type.id() | store.text(store.get(5,slot,3)) <> (bank || index) then do
+          _error = 'LL_TARGET_REGISTER: descriptor/slot mismatch'; return
+        end
+        if store.get(2,op.blockid(),1) <> 1 then do; _error = 'LL_TARGET_OWNER: register outside catalogue'; return; end
+        slotfn[slot] = fn; slotbank[slot] = bank; slotindex[slot] = index
+      end
+      else if op.name() <> 'rxas.target.record' & store.get(3,i,1) <> 7 then do
+        _error = 'LL_TARGET_SCHEMA: unexpected executable IR operation'; return
+      end
+      if op.name() <> 'rxas.target.record' then iterate
+      item = .record(reference _graph,i); _records[_records[0] + 1] = i
+      vector = op.attribute('operands'); codec = .operandcodec()
+      if codec.check(vector) <> '' then do; _error = 'LL_TARGET_OPERAND: invalid encoded vector'; return; end
+      n = item.operands(); size = <blen>(vector)
+      if n > work | size > work | n > work / max(1,n) then do; _error = 'LL_RESOURCE_LIMIT: target.validation work'; return; end
+      cost = n * n
+      if cost > work - size then do; _error = 'LL_RESOURCE_LIMIT: target.validation work'; return; end
+      work = work - cost - size
+      shape = recordshape(item)
+      if shape <> '' then do; _error = 'LL_TARGET_RECORD: ' || shape; return; end
+      fn = item.procedureid()
+      if item.kind() = 'procedure' then do
+        if fn > _graph.functions() | headerfn[fn] <> 0 then do; _error = 'LL_TARGET_OWNER: procedure/header mismatch'; return; end
+        name = item.operand(1); number = item.operand(2); function_view = _graph.function(fn)
+        if name.text() <> function_view.name() | store.get(2,op.blockid(),1) <> 1 then do; _error = 'LL_TARGET_OWNER: procedure identity'; return; end
+        _headers[_headers[0] + 1] = i; headerfn[fn] = i; localcount[fn] = number.index()
+      end
+      else if store.get(2,op.blockid(),1) <> max(1,fn) then do
+        _error = 'LL_TARGET_OWNER: record/function mismatch'; return
+      end
+    end
+    if descriptor <> 1 then _error = 'LL_TARGET_SCHEMA: expected one module descriptor'
+    if _error <> '' then return
+    if _headers[0] <> _graph.functions() - 1 | slotfn[0] <> store.count(5) then do
+      _error = 'LL_TARGET_OWNER: orphan procedure or register'; return
+    end
+    do i = 1 to store.count(5)
+      if slotfn[i] = 0 then do; _error = 'LL_TARGET_REGISTER: orphan slot'; return; end
+      if (slotbank[i] = 'r' & slotindex[i] >= localcount[slotfn[i]]) | (slotbank[i] = 'g' & slotindex[i] >= _globals) then do
+        _error = 'LL_TARGET_REGISTER: descriptor bank bounds'; return
+      end
+    end
+    do i = 1 to _records[0]
+      item = .record(reference _graph,_records[i])
+      signature = ''
+      if item.procedureid() > 1 & headerfn[item.procedureid()] = 0 then do; _error = 'LL_TARGET_OWNER: missing procedure'; return; end
+      if item.kind() = '.globalexpose' then do
+        global = item.operand(1)
+        if global.index() < 0 | global.index() >= _globals then do; _error = 'LL_TARGET_REGISTER: exposed global outside module'; return; end
+      end
+      do j = 1 to item.operands()
+        work = work - 1
+        if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.validation work'; return; end
+        field = item.operand(j)
+        signature = signature || field.kind()
+        if field.kind() = 'R' then do
+          slot = field.slotid(); fn = item.procedureid()
+          if slot < 1 | slot > store.count(5) then _error = 'LL_TARGET_REGISTER: invalid L slot'
+          else if slotfn[slot] <> fn | field.procedureid() <> fn | slotbank[slot] <> field.bank() | slotindex[slot] <> field.index() then _error = 'LL_TARGET_OWNER: register/descriptor mismatch'
+          else if (field.bank() = 'r' & field.index() >= localcount[fn]) | (field.bank() = 'g' & field.index() >= _globals) then _error = 'LL_TARGET_REGISTER: bank bounds'
+          if _error <> '' then return
+        end
+        if wordpos(field.kind(),'L P') > 0 then do
+          if namesafe(field.text(),item.kind() = 'procedure' & j = 3) = 0 then _error = 'LL_TARGET_NAME: unsupported identifier spelling'
+          if _error <> '' then return
+        end
+        if wordpos(field.kind(),'F D C B') > 0 then do
+          work = work - field.length()
+          if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.literal work'; return; end
+          if literalerror(field.kind(),field.bytes()) <> '' then _error = 'LL_TARGET_LITERAL: invalid spelling'
+          if _error <> '' then return
+        end
+        if item.kind() = 'instruction' & field.kind() = 'P' then do
+          work = work - _records[0]
+          if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.binding work'; return; end
+          found = findprocedure(reference _graph,reference _headers,field.text()) > 0
+          do k = 1 to _records[0] while found = 0
+            work = work - 1
+            if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.binding work'; return; end
+            declaration = .record(reference _graph,_records[k])
+            if declaration.kind() = '.import' & declaration.operands() > 0 then do
+              imported = declaration.operand(1); found = imported.text() == field.text()
+            end
+          end
+          if found = 0 then _error = 'LL_TARGET_BINDING: unresolved procedure ' || field.text()
+          if _error <> '' then return
+        end
+        if item.kind() = 'instruction' & catalog.branch(item.opcode(),j) then do
+          found = 0
+          do k = 1 to _records[0]
+            work = work - 1
+            if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.binding work'; return; end
+            declaration = .record(reference _graph,_records[k])
+            if declaration.kind() = 'label' & declaration.procedureid() = item.procedureid() then do
+              label = declaration.operand(1)
+              if label.text() == field.text() then found = 1
+            end
+          end
+          if found = 0 then _error = 'LL_TARGET_BINDING: unresolved branch label ' || field.text()
+          if _error <> '' then return
+        end
+      end
+      if item.kind() = 'instruction' then do
+        opcode = item.opcode()
+        if opcode < 0 | opcode >= catalog.count() then _error = 'LL_TARGET_OPCODE: outside canonical catalog'
+        else if catalog.find(catalog.field(opcode,1),signature) <> opcode then _error = 'LL_TARGET_OPCODE: canonical signature mismatch'
+      end
+      if _error <> '' then return
+    end
+    on signal as problem
+      if _error = '' then _error = 'LL_TARGET_INVALID: ' || problem.name() || ': ' || problem.message()
+    end
+    return
+  error: method = .string
+    return _error
+  valid: method = .int
+    return _error = ''
+  identity: method = .int
+    graph_ref = reference _graph; graph = dereference graph_ref
+    return graph.identity()
+  ir: method = reference .llir..module
+    return reference _graph
+  name: method = .string
+    return _name
+  artifact: method = .string
+    return _artifact
+  globals: method = .int
+    return _globals
+  records: method = .int
+    if _error <> '' then return 0
+    return _records[0]
+  record: method = .lltarget..record
+    arg ordinal = .int
+    if _error <> '' | ordinal < 1 | ordinal > _records[0] then call bad('LL_TARGET_RECORD: invalid module or ordinal')
+    return .record(reference _graph,_records[ordinal])
+  at: method = .lltarget..record
+    arg id = .int
+    return .record(reference _graph,id)
+  procedures: method = .int
+    if _error <> '' then return 0
+    return _headers[0]
+  procedure: method = .lltarget..body
+    arg ordinal = .int
+    if _error <> '' | ordinal < 1 | ordinal > _headers[0] then call bad('LL_TARGET_PROCEDURE: invalid module or ordinal')
+    header = .record(reference _graph,_headers[ordinal])
+    return .body(reference _graph,header.procedureid(),header.id())
+  procedureid: method = .int
+    arg name = .string
+    return findprocedure(reference _graph,reference _headers,name)
+  body: method = .lltarget..body
+    arg functionid = .int
+    do i = 1 to _headers[0]
+      header = .record(reference _graph,_headers[i])
+      if header.procedureid() = functionid then return .body(reference _graph,functionid,header.id())
+    end
+    call bad('LL_TARGET_PROCEDURE: unknown function identity')
+    return .body(reference _graph,0,0)
