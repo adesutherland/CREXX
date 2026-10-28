@@ -102,6 +102,7 @@ main: procedure = .int expose failures checks
   transparent = raw.add(2,'sequence',0,3000,root,0)
   through = .lltree..view(raw,transparent,6001)
   call check(through.error() = '' & through.root() = root,'transparent root selects named root')
+  call regularconstruction()
   say 'generated_checks=' || checks
   say 'generated_failures=' || failures
   return failures
@@ -111,4 +112,93 @@ check: procedure = .void expose failures checks
   if condition = 0 then do
     failures = failures + 1; say 'FAIL ' || label
   end
+  return
+
+/* A separate four-state oracle checks class numbering and first-discovery
+ * order, rather than comparing two products of the same DFA construction.
+ * Duplicate roots and an overlapping range leave many epsilon/accept rows
+ * beside the one consuming row after 'a'. A first accept of kind zero must
+ * still win over later nonzero accepts. */
+regularconstruction: procedure = .void
+  ok = .int; cls = .int; failed = .int; invalidkey = .binary
+  graph = .llcore..grammar('contextfree')
+  a = graph.add(1,97,0,'a',1)
+  b = graph.add(1,98,0,'b',1)
+  range = graph.add(11,97,99,'a to c',1)
+  pair = graph.add(2,a,b,'ab',1)
+  duplicate = graph.add(4,a,a,'duplicate a',1)
+  mask = graph.characters('a' as .binary,0,'a mask',1)
+  roots = .int[]; kinds = .int[]
+  roots[1] = a; kinds[1] = 0
+  roots[2] = range; kinds[2] = 2
+  roots[3] = pair; kinds[3] = 3
+  roots[4] = duplicate; kinds[4] = 7
+  roots[5] = mask; kinds[5] = 8
+  built = .llregular..builder(graph,roots,kinds)
+  call check(built.error() = '','indexed consuming-row grammar admission')
+  actual = built.automaton()
+  expected = .llmunch..automaton(4,4)
+  do byte = 0 to 255
+    cls = 0
+    if byte = 97 then cls = 1
+    if byte = 98 then cls = 2
+    if byte = 99 then cls = 3
+    ok = expected.mapping(byte,cls)
+  end
+  do state = 1 to 4
+    ok = expected.accepting(state,0)
+    do cls = 0 to 3
+      ok = expected.transition(state,cls,0)
+    end
+  end
+  ok = expected.transition(1,1,2)
+  ok = expected.transition(1,2,3)
+  ok = expected.transition(1,3,3)
+  ok = expected.transition(2,2,4)
+  ok = expected.accepting(3,2)
+  ok = expected.accepting(4,3)
+  call check(expected.verify() = 1,'independent four-state DFA oracle')
+  call check(actual.image() = expected.image(),'exact independent DFA image with duplicate and zero-kind accepts')
+
+  /* Exercise the public value wrapper with an epsilon cycle. Its queue and
+   * dense membership are caller-owned and must not be extended in place. */
+  empty = .int[]; raw = .llcore..grammar('contextfree')
+  helper = .llregular..builder(raw,empty,empty)
+  accepted = helper.node(2,0,0,5,'')
+  link = helper.node(0,accepted,0,0,'')
+  cycle = helper.node(0,link,accepted,0,'')
+  call helper.patch(link,cycle)
+  active = .binary; call binresize active,3
+  <at..u8>(cycle - 1) active = 1
+  saved = active; pending = .int[]; pending[1] = cycle
+  closed = helper.closure(active,pending)
+  call check(closed = '010000000200000003000000'x as .binary,'epsilon cycle canonical membership')
+  call check(active = saved & pending[0] = 1 & pending[1] = cycle,'public closure preserves both input values')
+  call check(helper.membershipkey('010101'x as .binary,3) = closed,'complete dense membership has the same canonical key')
+  failed = 0
+  do
+    invalidkey = helper.membershipkey('010101'x as .binary,0)
+  on signal as problem
+    failed = pos('LL_LEX_SUBSET',problem.message()) > 0
+  end
+  call check(failed,'dense membership rejects understated count before writing')
+  failed = 0
+  do
+    invalidkey = helper.membershipkey('010201'x as .binary,3)
+  on signal as problem
+    failed = pos('LL_LEX_SUBSET',problem.message()) > 0
+  end
+  call check(failed,'dense membership rejects invalid bit values')
+
+  keys = .int[]
+  keys[1] = 2147483647; keys[2] = -2147483648
+  keys[3] = 5; keys[4] = 5; keys[5] = -3; keys[6] = 0; keys[7] = 4
+  original = keys
+  ordered = helper.subsetkey(keys)
+  call check(ordered = '00000080FDFFFFFF00000000040000000500000005000000FFFFFF7F'x as .binary,'packed stable sort preserves signed order and duplicates')
+  call check(keys[0] = original[0],'public subset key preserves input length')
+  do i = 1 to original[0]
+    call check(keys[i] = original[i],'public subset key preserves input element')
+  end
+  call check(helper.subsetkey(empty) = ''x as .binary,'empty canonical subset')
   return

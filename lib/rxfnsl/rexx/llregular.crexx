@@ -120,9 +120,16 @@ builder: class
     _visiting[id] = 0; _depth = _depth - 1
     return result
   /** Each epsilon-reachable state enters the queue once. Membership is a
-   * binary vector, so setting a bit does not rebuild a Unicode string. */
+   * binary vector, so setting a bit does not rebuild a Unicode string.
+   * Public arguments retain their value semantics. */
   closure: method = .binary
     arg active = .binary, pending = .int[]
+    call closurewalk(active,pending)
+    return subsetkey(pending)
+  /** Construction-owned scratch is dead after each closure. Keep the edge
+   * walk here so its public value wrapper and determinization share it. */
+  closurewalk: method = .void
+    arg expose active = .binary, expose pending = .int[]
     at = 1; state = .int
     do while at <= pending[0]
       state = pending[at]; at = at + 1; base = (state - 1) * 272
@@ -137,38 +144,106 @@ builder: class
         end
       end
     end
-    return subsetkey(pending)
+    return
+  /** Internal construction queues contain exactly the complete membership,
+   * once per state. Encode that checked invariant in ascending ID order;
+   * public closure still sorts its potentially different caller queue. */
+  membershipkey: method = .binary
+    arg active = .binary, expected = .int
+    extent = <blen>(active)
+    if extent <> _count | expected < 0 | expected > _count | expected > 2305843009213693951 then do
+      assembler signal "ERROR","LL_LEX_SUBSET: invalid membership dimensions"
+      return ''x as .binary
+    end
+    result = .binary; call binresize result,expected * 4
+    at = 0; count = 0; bit = .int; chunk = .int
+    do while at < extent
+      width = extent - at
+      if width > 8 then width = 8
+      if width = 8 then do
+        chunk = <at..i64>(at) active
+        if chunk = 0 then do
+          at = at + 8; iterate
+        end
+      end
+      last = at + width
+      do while at < last
+        bit = <at..u8>(at) active
+        if bit <> 0 & bit <> 1 then do
+          assembler signal "ERROR","LL_LEX_SUBSET: invalid membership bit"
+          return ''x as .binary
+        end
+        if bit = 1 then do
+          if count >= expected then do
+            assembler signal "ERROR","LL_LEX_SUBSET: membership count exceeds queue"
+            return ''x as .binary
+          end
+          <at..i32>(count * 4) result = at + 1
+          count = count + 1
+        end
+        at = at + 1
+      end
+    end
+    if count <> expected then do
+      assembler signal "ERROR","LL_LEX_SUBSET: membership count differs from queue"
+      return ''x as .binary
+    end
+    return result
   /** Canonical sparse membership: byte equality iff the state sets agree. */
   subsetkey: method = .binary
     arg keys = .int[]
-    width = 1; size = keys[0]; scratch = .int[]
+    width = 1; size = keys[0]; current = .binary; scratch = .binary
     first = .int; middle = .int; last = .int; a = .int; b = .int; out = .int
+    leftkey = .int; rightkey = .int; value = .int
+    if size > 1152921504606846975 then do
+      assembler signal "ERROR","LL_REPRESENTATION_LIMIT: lexical subset byte extent"
+      return ''x as .binary
+    end
+    call binresize current,size * 8
+    call binresize scratch,size * 8
+    do out = 0 to size - 1
+      <at..i64>(out * 8) current = keys[out + 1]
+    end
+    /* Sort full integer values before the existing i32 key encoding. Packed
+     * work buffers avoid boxed-array copies after every merge pass; keys is
+     * read-only, preserving its ordinary public argument contract. */
     do while width < size
-      do first = 1 to size by width * 2
-        middle = min(first + width,size + 1); last = min(first + width * 2,size + 1)
+      first = 0
+      do while first < size
+        middle = first + min(width,size - first)
+        last = middle + min(width,size - middle)
         a = first; b = middle
         do out = first to last - 1
           if a < middle then do
             if b >= last then do
-              scratch[out] = keys[a]; a = a + 1
-            end
-            else if keys[a] <= keys[b] then do
-              scratch[out] = keys[a]; a = a + 1
+              value = <at..i64>(a * 8) current; a = a + 1
             end
             else do
-              scratch[out] = keys[b]; b = b + 1
+              leftkey = <at..i64>(a * 8) current
+              rightkey = <at..i64>(b * 8) current
+              if leftkey <= rightkey then do
+                value = leftkey; a = a + 1
+              end
+              else do
+                value = rightkey; b = b + 1
+              end
             end
           end
           else do
-            scratch[out] = keys[b]; b = b + 1
+            value = <at..i64>(b * 8) current; b = b + 1
           end
+          <at..i64>(out * 8) scratch = value
         end
+        first = last
       end
-      keys = scratch; width = width * 2
+      assembler swap current,scratch
+      if width >= size - width then width = size
+      else width = width * 2
     end
     result = .binary; call binresize result,size * 4
-    do out = 1 to size
-      <at..i32>((out - 1) * 4) result = keys[out]
+    do out = 0 to size - 1
+      value = <at..i64>(out * 8) current
+      <at..i32>(out * 4) result = value
     end
     return result
   determinize: method = .void
@@ -193,15 +268,24 @@ builder: class
     initial = .binary; call binresize initial,_count
     <at..u8>(_root - 1) initial = 1
     seeds[1] = _root
-    sets[1] = closure(initial,seeds); total = 1; next = 1
+    /* Both initial membership and its queue are construction-owned scratch;
+     * neither original value is read after this call. */
+    call closurewalk(initial,seeds)
+    sets[1] = membershipkey(initial,seeds[0]); total = 1; next = 1
     do while next <= total
-      active = sets[next]; kind = 0
+      active = sets[next]; kind = 0; accept_seen = 0; consumers = 0
+      consuming = .binary; call binresize consuming,<blen>(active)
       do member = 0 to <blen>(active) - 1 by 4
         state = <at..i32>(member) active; base = (state - 1) * 272
-        if <at..i32>(base) _nfa = 2 then do
-          kind = <at..i32>(base + 12) _nfa; owner = <at..i32>(base + 8) _nfa; leave
+        type = <at..i32>(base) _nfa
+        if type = 1 then do
+          <at..i32>(consumers * 4) consuming = state; consumers = consumers + 1
+        end
+        else if type = 2 & accept_seen = 0 then do
+          kind = <at..i32>(base + 12) _nfa; owner = <at..i32>(base + 8) _nfa; accept_seen = 1
         end
       end
+      call binresize consuming,consumers * 4
       kinds[next] = kind
       if next = 1 & kind <> 0 then do
         _error = 'LL_NULLABLE_TOKEN: ' || _graph.label(owner) || ' (line ' || _graph.line(owner) || ') accepts empty input. Every lexical rule must consume at least one byte; replace optional/repeated-only content with a consuming pattern.'; return
@@ -209,9 +293,9 @@ builder: class
       do cls = 1 to classes
         byte = representatives[cls]; following = .binary; call binresize following,_count; live = 0
         seeds = emptyseeds
-        do member = 0 to <blen>(active) - 1 by 4
-          state = <at..i32>(member) active; base = (state - 1) * 272
-          if <at..i32>(base) _nfa = 1 & <at..u8>(base + 16 + byte) _nfa = 1 then do
+        do member = 0 to <blen>(consuming) - 1 by 4
+          state = <at..i32>(member) consuming; base = (state - 1) * 272
+          if <at..u8>(base + 16 + byte) _nfa = 1 then do
             target = <at..i32>(base + 4) _nfa
             if <at..u8>(target - 1) following = 0 then do
               <at..u8>(target - 1) following = 1; live = 1
@@ -221,7 +305,9 @@ builder: class
         end
         target = 0
         if live then do
-          following = closure(following,seeds)
+          /* The seed membership and queue are replaced before the next class. */
+          call closurewalk(following,seeds)
+          following = membershipkey(following,seeds[0])
           do i = 1 to total
             if sets[i] = following then target = i
           end
