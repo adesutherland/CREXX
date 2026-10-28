@@ -70,3 +70,14 @@ if(BUILD_TESTING)
       TARGETS levell_constructed_inline rxbvm)
   endif()
 endif()
+
+option(CREXX_BUILD_TARGET_IO "Build the optional Level L target RXAS adapters" OFF)
+if(CREXX_BUILD_TARGET_IO)
+  add_subdirectory(io)
+  add_subdirectory("${CMAKE_SOURCE_DIR}/research/level-l/toolchain/cli"
+    "${CMAKE_BINARY_DIR}/research/level-l/toolchain/cli")
+  if(BUILD_TESTING)
+    add_subdirectory("${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests"
+      "${CMAKE_BINARY_DIR}/research/level-l/toolchain/tests")
+  endif()
+endif()

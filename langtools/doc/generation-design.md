@@ -281,10 +281,11 @@ direct CLI writes have no atomic publication guarantee; the wrapper owns publica
 ## CMake persistence and atomic publication
 
 Use boolean `REUSE_LEXER=ON` for `generate.cmake`. Derive one private cache
-location from `OUTPUT`; do not accept a freely shared cache path. Initially opt
-in only the research C grammar. Global, user and bootstrap caches stay disabled
-by default. The persistent ignored-build artifact is owned and cleaned by its
-generation target; it is not a log, receipt or retained diagnostic bundle.
+location from `OUTPUT`; do not accept a freely shared cache path. The research
+C grammar and optional target RXAS grammar opt in. Global, user and bootstrap
+caches stay disabled by default. The persistent ignored-build artifact is owned
+and cleaned by its generation target; it is not a log, receipt or retained
+diagnostic bundle.
 
 For `REUSE_LEXER=ON`, lock the canonical output producer and its derived cache before reading,
 generating or publishing. Use unique owned staging, never another invocation's

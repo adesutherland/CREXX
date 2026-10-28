@@ -4,6 +4,7 @@ namespace lltarget expose draft bodydraft module body record operand operandcode
 import rxfnsb
 import llir
 import llrxascatalog
+import llsource
 
 bad: procedure = .void
   arg message = .string
@@ -162,7 +163,7 @@ literalerror: procedure = .string
     if pos('.',text) = 0 & pos('e',lower(text)) = 0 then return 'float requires float spelling'
   end
   else if kind = 'D' then do
-    if right(lower(text),1) <> 'd' then return 'decimal suffix'
+    if right(text,1) <> 'd' then return 'decimal suffix'
     text = left(text,length(text) - 1)
   end
   else return 'literal kind'
@@ -384,6 +385,12 @@ draft: class
   error: method = .string
     store_ref = reference _store; store = dereference store_ref
     return store.error()
+  /** Charge adapter work before scanning/copying and check prospective bytes
+   * through the existing arena owner. No bytes are reserved by this check. */
+  preflight: method = .int
+    arg work = .int, bytes = .int
+    if _fuel.take(reference _store,work) = 0 then return 0
+    return _store.canreserve(0,bytes)
   source: method = .llir..sourcefile
     arg name = .string, bytes = .binary
     id = _store.source(name,bytes)
@@ -590,9 +597,11 @@ module: class
     arg graph = .llir..module, work = 1000000
     i = .int; j = .int; k = .int; fn = .int; slot = .int
     found = .int; n = .int; size = .int; cost = .int; index = .int
+    position = .int; payloadbytes = .int
     bits = .binary; vector = .binary; bank = .string; signature = .string
     item = .record; declaration = .record; op = .llir..opview
     field = .operand; imported = .operand; label = .operand
+    encoding = .llsource..prepared
     do
     _graph = graph; _error = graph.error(); catalog = .llrxascatalog..catalog()
     if _error <> '' then return
@@ -644,6 +653,24 @@ module: class
       cost = n * n
       if cost > work - size then do; _error = 'LL_RESOURCE_LIMIT: target.validation work'; return; end
       work = work - cost - size
+      /* Every S is an RXAS string, including metadata fields. Charge the
+       * encoded payload before unpacking or constructing the shared UTF-8
+       * validator; B remains arbitrary binary spelling. */
+      position = 4
+      do j = 1 to n
+        payloadbytes = <at..u32>(position + 24) vector
+        if (<at..u32>(position) vector) = 3 then do
+          if payloadbytes > work then do; _error = 'LL_RESOURCE_LIMIT: target.string work'; return; end
+          work = work - payloadbytes
+          field = unpack(vector,j,store.identity())
+          encoding = .llsource..prepared(field.bytes())
+          call encoding.utf8()
+          if encoding.error() <> '' then do
+            _error = 'LL_TARGET_STRING: ' || encoding.error() || ' at byte ' || encoding.offset(); return
+          end
+        end
+        position = position + 28 + payloadbytes
+      end
       shape = recordshape(item)
       if shape <> '' then do; _error = 'LL_TARGET_RECORD: ' || shape; return; end
       fn = item.procedureid()

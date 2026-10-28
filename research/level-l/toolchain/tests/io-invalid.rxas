@@ -1,0 +1,5 @@
+/* Invalid independent input must never replace an existing output. */
+.globals=0
+main() .locals=1
+  load r2,7
+  ret 0

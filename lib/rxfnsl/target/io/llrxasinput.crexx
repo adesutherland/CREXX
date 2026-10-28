@@ -1,0 +1,334 @@
+/* cREXX License (MIT). Ordinary RXAS admission through generated Level L. */
+options levelb
+namespace llrxasinput expose reader parsed
+import rxfnsb
+import llcore
+import llast
+import lllanguage
+import lllimits
+import llsource
+import llir
+import lltarget
+import llrxasgrammar
+
+/** An atomic parse/bind result. Failed requests expose no partial target. */
+parsed: class
+  _module = .lltarget..module
+  _source = .binary
+  _name = .string
+  _status = .int
+  _message = .string
+  _offset = .int
+  *: factory
+    arg source = .binary, name = .string, status = .int, message = .string, offset = .int, ?module = .lltarget..module
+    _source = source; _name = name; _status = status; _message = message; _offset = offset
+    if status = 0 & ?module then _module = module
+    return
+  status: method = .int
+    return _status
+  error: method = .string
+    return _message
+  offset: method = .int
+    return _offset
+  diagnostic: method = .string
+    if _status = 0 then return ''
+    return _name || ': ' || llsource..diagnostic(_source,_offset,'LL_RXAS_INPUT',_message)
+  result: method = .lltarget..module
+    if _status <> 0 then assembler signal "ERROR","LL_RXAS_RESULT: failed input has no target module"
+    return _module
+
+/** One immutable prepared grammar owner; every request has independent source,
+ * AST, target draft and allowances. Parsing borrows no other request's state. */
+reader: class
+  _language = .lllanguage..definition
+  *: factory
+    _language = llrxasgrammar..language()
+    return
+  parse: method = .llrxasinput..parsed
+    arg source = .binary, logicalModule = .string, artifact = .string, ?limits = .lllimits..policy, entries = 1000000, bytes = 67108864, work = 1000000
+    failureOffset = 0; j = .int
+    do
+    if ?limits = 0 then limits = .lllimits..policy()
+    if logicalModule = '' | artifact = '' then return .parsed(source,logicalModule,3,'LL_RXAS_IDENTITY: explicit module and artifact identities are required',0)
+    if limits.error() <> '' then return .parsed(source,logicalModule,3,limits.error(),0)
+    if entries < 1 | bytes < 1 | work < 1 then return .parsed(source,logicalModule,2,'LL_RESOURCE_LIMIT: positive target allowances required',0)
+    request = .lllanguage..request.borrowed(reference _language,source,limits)
+    status = request.lex(0)
+    if status <> 0 then return .parsed(source,logicalModule,status,request.error(),request.offset())
+    original = request.tokens(); tokens = .llcore..stream.tokens(source)
+    directive = _language.tokenid('directive'); terminator = _language.tokenid('newline')
+    do i = 0 to original.size() - 1
+      first = original.start(i); last = original.finish(i + 1)
+      if original.symbol(i) = directive then do
+        spelling = lower(binsubstr(source,first + 1,last - first) as .string)
+        if wordpos(spelling,'.globals .locals .expose .meta .const .srcstep .traceevent') = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: unsupported directive ' || spelling,first)
+      end
+      ok = tokens.append(original.symbol(i),first,last)
+    end
+    /* The owning native grammar also receives a final synthetic newline. */
+    ok = tokens.synthetic(terminator,<blen>(source))
+    status = request.parse_tokens(tokens)
+    if status <> 0 then return .parsed(source,logicalModule,status,request.error(),request.offset())
+    syntax = request.ast()
+    if syntax.status() <> 0 then return .parsed(source,logicalModule,1,syntax.error(),request.offset())
+    root = syntax.root(); globalcount = 0; seen = 0; inbody = 0; remaining = work
+    item = .llast..node
+    cursor = root.each('items')
+    do while cursor.next()
+      item = cursor.node(); failureOffset = item.start(); remaining = remaining - 1
+      if remaining < 0 then return .parsed(source,logicalModule,2,'LL_RESOURCE_LIMIT: RXAS binding work',item.start())
+      if item.kind() = 'Procedure' | item.kind() = 'ExposedProcedure' | item.kind() = 'Import' then inbody = 1
+      if item.kind() = 'Globals' then do
+        if lower(item.text('directive')) <> '.globals' then return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: expected .globals directive',item.start())
+        if seen | inbody then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: duplicate or misplaced .globals',item.start())
+        seen = 1
+        if natural(item.text('count')) = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: invalid global count',item.start())
+        globalcount = number(item.text('count'))
+      end
+    end
+    if remaining < 1 then return .parsed(source,logicalModule,2,'LL_RESOURCE_LIMIT: RXAS binding work',failureOffset)
+    draft = .lltarget..draft(logicalModule,artifact,globalcount,entries,bytes,remaining)
+    file = draft.source(logicalModule,source)
+    if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+    body = .lltarget..bodydraft; active = 0; functionsStarted = 0
+    cursor = root.each('items')
+    do while cursor.next()
+      item = cursor.node(); failureOffset = item.start(); at = file.origin(item.start(),item.finish())
+      if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+      fields = .object[]; kind = item.kind()
+      select
+        when kind = 'Blank' | kind = 'Globals' then nop
+        when kind = 'Procedure' | kind = 'ExposedProcedure' then do
+          if lower(item.text('locals')) <> '.locals' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: procedure requires .locals',item.start())
+          if natural(item.text('count')) = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: invalid local count',item.start())
+          exposed = ''
+          if kind = 'ExposedProcedure' then do
+            exposed = item.text('symbol')
+            if lower(item.text('expose')) <> '.expose' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: expected .expose',item.start())
+          end
+          body = draft.procedure(procname(item.text('name')),number(item.text('count')),at,fold(exposed)); active = 1; functionsStarted = 1
+        end
+        when kind = 'Import' then do
+          if lower(item.text('expose')) <> '.expose' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: import requires .expose',item.start())
+          fields[1] = .lltarget..operand.procedure(procname(item.text('name'))) as .object
+          fields[2] = .lltarget..operand.symbol(fold(item.text('symbol'))) as .object
+          ignored = draft.record('.import',fields,at); active = 0; functionsStarted = 1
+        end
+        when kind = 'GlobalExpose' then do
+          raw = item.text('slot')
+          if functionsStarted | lower(left(raw,1)) <> 'g' | lower(item.text('expose')) <> '.expose' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: only header global exposure is supported',item.start())
+          fields[1] = .lltarget..operand.integer(substr(raw,2) as .int) as .object
+          fields[2] = .lltarget..operand.symbol(fold(item.text('symbol'))) as .object
+          ignored = draft.record('.globalexpose',fields,at)
+        end
+        when kind = 'Instruction' then do
+          if active = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: instruction outside a procedure',item.start())
+          values = item.each('values'); j = 0
+          do while values.next()
+            field = values.node(); j = j + 1; fields[j] = operand(field,body,reference draft) as .object
+            if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+          end
+          ignored = body.emit(fold(item.text('mnemonic')),fields,at)
+        end
+        when kind = 'Label' then do
+          if active = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: label outside a procedure',item.start())
+          raw = item.text('name'); fields[1] = .lltarget..operand.symbol(fold(left(raw,length(raw) - 1))) as .object
+          ignored = body.record('label',fields,at)
+        end
+        when kind = 'Metadata' then do
+          if lower(item.text('directive')) <> '.meta' then return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: unsupported metadata directive',item.start())
+          fields[1] = .lltarget..operand.string(unquote(item.text('name'),reference draft,item.finish() - item.start())) as .object
+          if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+          values = item.each('values'); j = 0
+          do while values.next()
+            field = values.node(); j = j + 1
+            if field.kind() = 'Directive' then return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: class/interface metadata is not admitted yet',field.start())
+            if active = 0 & field.kind() = 'Register' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: register metadata requires a procedure',field.start())
+            fields[j + 1] = operand(field,body,reference draft) as .object
+            if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+          end
+          message = metaprofile(fields,active)
+          if message <> '' then return .parsed(source,logicalModule,1,message,item.start())
+          if active then ignored = body.record('.meta',fields,at)
+          else ignored = draft.record('.meta',fields,at)
+        end
+        when kind = 'Constant' then do
+          if lower(item.text('directive')) <> '.const' | functionsStarted then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: .const requires the module header',item.start())
+          fields[1] = .lltarget..operand.symbol(fold(item.text('name'))) as .object
+          fields[2] = .lltarget..operand.symbol(fold(item.text('type'))) as .object
+          field = item.child('value')
+          if (fold(item.text('type')) <> 'string' | field.kind() <> 'String') & (fold(item.text('type')) <> 'binary' | field.kind() <> 'Binary') then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: constant alias needs matching string/binary literal',item.start())
+          fields[3] = operand(field,body,reference draft) as .object
+          if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+          ignored = draft.record('.const',fields,at)
+        end
+        when kind = 'SourceStep' then do
+          if active = 0 | lower(item.text('directive')) <> '.srcstep' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: source step requires a procedure',item.start())
+          names = 'step clause flags file line first last source'
+          do j = 1 to 8
+            raw = item.text(word(names,j))
+            if j = 4 | j = 8 then fields[j] = .lltarget..operand.string(unquote(raw,reference draft,item.finish() - item.start())) as .object
+            else fields[j] = .lltarget..operand.integer(number(raw)) as .object
+            if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+          end
+          ignored = body.record('.srcstep',fields,at)
+        end
+        when kind = 'TraceEvent' then do
+          if active = 0 | lower(item.text('directive')) <> '.traceevent' then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: TRACE event requires a procedure',item.start())
+          names = 'kind modes source type bank value step clause flags symbol resolved'
+          do j = 1 to 11
+            raw = item.text(word(names,j))
+            if wordpos(j as .string,'1 3 4 5 10 11') > 0 then fields[j] = .lltarget..operand.string(unquote(raw,reference draft,item.finish() - item.start())) as .object
+            else fields[j] = .lltarget..operand.integer(number(raw)) as .object
+            if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+          end
+          ignored = body.record('.traceevent',fields,at)
+        end
+        otherwise return .parsed(source,logicalModule,1,'LL_RXAS_PROFILE: unsupported source record ' || kind,item.start())
+      end
+      if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
+    end
+    result = draft.finish()
+    if result.error() <> '' then do
+      status = 1
+      if pos('LL_RESOURCE_LIMIT',result.error()) > 0 then status = 2
+      return .parsed(source,logicalModule,status,result.error(),failureOffset)
+    end
+    return .parsed(source,logicalModule,0,'',0,result)
+    on signal as problem
+      status = 1
+      if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 2
+      return .parsed(source,logicalModule,status,'LL_RXAS_BINDING: ' || problem.name() || ': ' || problem.message(),failureOffset)
+    end
+    return .parsed(source,logicalModule,3,'LL_RXAS_BINDING: input did not return',failureOffset)
+
+bindingfailure: procedure = .llrxasinput..parsed
+  arg source = .binary, name = .string, message = .string, offset = .int
+  status = 1
+  if pos('LL_RESOURCE_LIMIT',message) > 0 then status = 2
+  return .parsed(source,name,status,message,offset)
+
+/** ASCII symbol folding matches native RXAS; Unicode name bytes stay exact. */
+fold: procedure = .string
+  arg text = .string
+  bytes = text as .binary
+  do i = 0 to <blen>(bytes) - 1
+    c = <at..u8>(i) bytes
+    if c >= 65 & c <= 90 then <at..u8>(i) bytes = c + 32
+  end
+  return bytes as .string
+procname: procedure = .string
+  arg text = .string
+  return fold(left(text,length(text) - 2))
+natural: procedure = .int
+  arg text = .string
+  value = number(text)
+  return value >= 0 & value <= 2147483647
+number: procedure = .int
+  arg text = .string
+  if left(text,1) = '+' then text = substr(text,2)
+  codec = .llir..intcodec(); bits = codec.parse(text)
+  return <at..i64>(0) bits
+operand: procedure = .lltarget..operand
+  arg node = .llast..node, body = .lltarget..bodydraft, owner = reference .lltarget..draft
+  raw = node.text('spelling'); kind = node.kind()
+  select
+    when kind = 'Register' then return body.reg(lower(left(raw,1)),number(substr(raw,2)))
+    when kind = 'Integer' then return .lltarget..operand.integer(number(raw))
+    when kind = 'String' then return .lltarget..operand.string(unquote(raw,owner,node.finish() - node.start()))
+    when kind = 'Function' then return .lltarget..operand.procedure(procname(raw))
+    when kind = 'Symbol' then return .lltarget..operand.symbol(fold(raw))
+    when kind = 'Float' then return .lltarget..operand.literal('F',raw as .binary)
+    when kind = 'Decimal' then return .lltarget..operand.literal('D',(left(raw,length(raw) - 1) || 'd') as .binary)
+    when kind = 'Character' then return .lltarget..operand.literal('C',raw as .binary)
+    when kind = 'Binary' then return .lltarget..operand.literal('B',raw as .binary)
+    otherwise assembler signal "ERROR","LL_RXAS_OPERAND: unclassified syntax operand"
+  end
+  return .lltarget..operand.symbol('')
+metaprofile: procedure = .string
+  arg fields = .object[], active = .int
+  value = .lltarget..operand
+  if fields[0] = 1 then do
+    if active then return ''
+    return 'LL_RXAS_BINDING: metadata clear requires a procedure'
+  end
+  if fields[0] < 3 then return 'LL_RXAS_BINDING: incomplete metadata record'
+  option = fields[2] as .lltarget..operand
+  if option.kind() <> 'S' then return 'LL_RXAS_BINDING: metadata option must be a string'
+  text = option.bytes() as .string
+  if left(text,1) = '.' & text <> '.inline' then return 'LL_RXAS_PROFILE: unsupported runtime metadata option ' || text
+  if text = '.inline' then do
+    value = fields[3] as .lltarget..operand
+    if fields[0] <> 3 | value.kind() <> 'S' then return 'LL_RXAS_BINDING: inline transport requires one opaque string'
+    return ''
+  end
+  if fields[0] = 4 then do
+    value = fields[4] as .lltarget..operand
+    if value.kind() = 'R' & active then return ''
+    if value.kind() = 'S' & active then return ''
+  end
+  if fields[0] = 5 then do
+    value = fields[4] as .lltarget..operand; signature = fields[5] as .lltarget..operand
+    if value.kind() = 'P' & signature.kind() = 'S' then return ''
+  end
+  return 'LL_RXAS_BINDING: unsupported metadata shape'
+
+/** Decode only one already parsed STRING token. Structural syntax is L-owned.
+ * Unknown escape pairs remain bytes, as in native RXAS; output uses exact quote. */
+unquote: procedure = .binary
+  arg token = .string, owner = reference .lltarget..draft, bound = .int
+  draft = dereference owner; result = .binary
+  if bound < 2 | bound > 3074457345618258602 then do
+    assembler signal "ERROR","LL_RESOURCE_LIMIT: RXAS literal decode work"
+    return result
+  end
+  /* AST byte spans bound the conversion and both decoder passes before any
+   * token-to-binary copy. Text captures conservatively use their record span. */
+  if draft.preflight(bound * 3,0) = 0 then return result
+  input = token as .binary; size = <blen>(input)
+  if size < 2 | size > bound then do
+    assembler signal "ERROR","LL_RXAS_LITERAL: spelling exceeds parsed byte span"
+    return result
+  end
+  /* Both passes use this one decoder. The first determines exact output size;
+   * the second emits only after shared work/arena preflight has succeeded. */
+  do pass = 0 to 1
+    at = 1; last = size - 1; count = 0
+    do while at < last
+      c = <at..u8>(at) input; at = at + 1; prefix = -1
+      if c = 92 & at < last then do
+        next = <at..u8>(at) input; at = at + 1
+        select
+          when next = 92 | next = 39 | next = 34 | next = 63 then c = next
+          when next = 110 then c = 10
+          when next = 116 then c = 9
+          when next = 97 then c = 7
+          when next = 98 then c = 8
+          when next = 102 then c = 12
+          when next = 114 then c = 13
+          when next = 118 then c = 11
+          when next = 48 then c = 0
+          when next = 120 then do
+            if at + 1 < last then do
+              pair = binsubstr(input,at + 1,2) as .string
+              if datatype(pair,'X') then do; c = x2d(pair); at = at + 2; end
+              else do; prefix = 92; c = 120; end
+            end
+            else do; prefix = 92; c = 120; end
+          end
+          otherwise do; prefix = 92; c = next; end
+        end
+      end
+      if prefix >= 0 then do
+        if pass = 1 then <at..u8>(count) result = prefix
+        count = count + 1
+      end
+      if pass = 1 then <at..u8>(count) result = c
+      count = count + 1
+    end
+    if pass = 0 then do
+      if draft.preflight(0,count) = 0 then return result
+      call binresize result,count
+    end
+  end
+  return result

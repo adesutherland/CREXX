@@ -1,0 +1,92 @@
+/* cREXX License (MIT). Independent RXAS service/ownership and admission controls. */
+options levelb
+import rxfnsb
+import lllimits
+import llir
+import lltarget
+import llrxasinput
+import llrxasoutput
+
+main: procedure = .int expose checks failures
+  i = .int; record = .lltarget..record; value = .lltarget..operand
+  emitted = .llrxasoutput..emission; refused = .llrxasoutput..emission; output = .llir..output
+  checks = 0; failures = 0; nl = '0a'x
+  frontend = .llrxasinput..reader()
+  source = '.globals=0' || nl || 'main() .locals=1' || nl || 'say "café\x00"' || nl || 'ret 0'
+  first = frontend.parse(source as .binary,'service-one.rxas','fixture:one')
+  call check(first.status() = 0,'ordinary source admitted without final newline')
+  if first.status() = 0 then do
+    firstmodule = first.result(); id = firstmodule.identity(); found = 0
+    do i = 1 to firstmodule.records()
+      record = firstmodule.record(i)
+      if record.kind() = 'instruction' & record.mnemonic() = 'say' then do
+        value = record.operand(1); found = upper(bin2x(value.bytes())) = '636166C3A900'
+      end
+    end
+    call check(found,'UTF-8 and escaped NUL preserve exact literal bytes')
+    emitted = llrxasoutput..render(reference firstmodule)
+    call check(emitted.error() = '','typed output rendered')
+    if emitted.error() = '' then do
+      output = emitted.output(); second = frontend.parse(output.text() as .binary,'service-two.rxas','fixture:two')
+      call check(second.status() = 0,'rendered current RXAS read through same public service')
+      call check(firstmodule.identity() = id & firstmodule.error() = '','interleaved result retains independent owner')
+    end
+    refused = llrxasoutput..render(reference firstmodule,8)
+    call check(refused.error() <> '' & refused.output().bytes() = 0,'output limit publishes no partial chunks')
+  end
+  literalSource = '.globals=+0' || nl || 'main() .locals=+3' || nl || 'load r0,+7' || nl || 'load r1,1D' || nl || 'load r2,0x00FF' || nl || 'ret +0' || nl
+  literals = frontend.parse(literalSource as .binary,'literals','fixture:literals')
+  call check(literals.status() = 0,'plus integers/counts and uppercase decimal syntax admitted')
+  if literals.status() = 0 then do
+    literalModule = literals.result(); foundInteger = 0; foundDecimal = 0; foundBinary = 0
+    do i = 1 to literalModule.records()
+      record = literalModule.record(i)
+      if record.kind() = 'instruction' & record.mnemonic() = 'load' then do
+        value = record.operand(2)
+        if value.kind() = 'I' then foundInteger = value.index() = 7
+        if value.kind() = 'D' then foundDecimal = value.text() = '1d'
+        if value.kind() = 'B' then foundBinary = value.text() = '0x00FF'
+      end
+    end
+    call check(foundInteger & foundDecimal,'adapter normalizes signed integer and native decimal spellings')
+    call check(foundBinary,'binary literal retains arbitrary FF and NUL byte spelling')
+    emitted = llrxasoutput..render(reference literalModule)
+    call check(emitted.error() = '','normalized literal module renders')
+    if emitted.error() = '' then do
+      output = emitted.output(); normalized = frontend.parse(output.text() as .binary,'normalized','fixture:normalized')
+      call check(normalized.status() = 0,'normalized literals read back through public service')
+    end
+  end
+  invalid = frontend.parse(('main() .locals=0' || nl || 'say "\xff"' || nl || 'ret 0' || nl) as .binary,'invalid-escaped-utf8','fixture:negative')
+  call check(invalid.status() <> 0,'escaped invalid UTF-8 string payload refused')
+  largeSource = 'main() .locals=0' || nl || 'say "' || copies('x',4096) || '"' || nl || 'ret 0' || nl
+  invalid = frontend.parse(largeSource as .binary,'decode-work','fixture:negative',.lllimits..policy(),1000000,67108864,64)
+  call check(invalid.status() = 2,'literal decoding shares the binding work allowance')
+  large = frontend.parse(largeSource as .binary,'render-work','fixture:large')
+  call check(large.status() = 0,'large literal control admitted under ordinary allowances')
+  if large.status() = 0 then do
+    largeModule = large.result(); refused = llrxasoutput..render(reference largeModule,67108864,10)
+    call check(refused.error() <> '' & refused.output().bytes() = 0,'render work limit rejects payload without partial output')
+  end
+  invalid = frontend.parse(('.globals=0' || nl || '.globals=1' || nl) as .binary,'duplicate','fixture:negative')
+  call check(invalid.status() <> 0 & pos('duplicate',invalid.error()) > 0,'duplicate global declaration refused')
+  invalid = frontend.parse(('main() .locals=1' || nl || 'load r2,1' || nl || 'ret 0' || nl) as .binary,'badreg','fixture:negative')
+  call check(invalid.status() <> 0,'register outside declared frame refused')
+  invalid = frontend.parse(('main() .locals=0' || nl || 'madeup' || nl) as .binary,'opcode','fixture:negative')
+  call check(invalid.status() <> 0,'unknown canonical instruction refused')
+  invalid = frontend.parse(('.jtable table' || nl) as .binary,'profile','fixture:negative')
+  call check(invalid.status() <> 0 & pos('PROFILE',invalid.error()) > 0,'unimplemented structural directive explicitly refused')
+  limits = .lllimits..policy(); ok = limits.set('source.bytes',4)
+  invalid = frontend.parse(source as .binary,'limited','fixture:negative',limits)
+  call check(invalid.status() = 2,'input allowance refuses before target publication')
+  last = frontend.parse(('main() .locals=0' || nl || 'ret 0' || nl) as .binary,'last','fixture:last')
+  call check(last.status() = 0,'small request succeeds after malformed and over-budget requests')
+  say 'RXAS_IO|checks=' || checks || '|failures=' || failures
+  if failures > 0 then return 1
+  return 0
+
+check: procedure = .void expose checks failures
+  arg condition = .int, name = .string
+  checks = checks + 1
+  if condition = 0 then do; failures = failures + 1; say 'FAIL|' || name; end
+  return

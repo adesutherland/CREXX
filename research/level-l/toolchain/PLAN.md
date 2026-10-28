@@ -123,7 +123,7 @@ require separate decisions.
 |---|---|
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
-| **INL-STEP03 — standalone RXAS client** | todo; after 02; AC01/02/04/06/07. Add the L-owned RXAS reader/writer and thin CLI, preserving module artifacts, with a real generated caller and exact-bound imported global-free helper. This is an intermediate slice; full assembler/codec/linker delivery is unnecessary. |
+| **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP04 — complete representable expansion** | todo; after 03; AC02–04/06/07. Batch the reviewed alias/rebinding, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | todo; after each coherent conservative category, with final qualification after 04; AC02–07. Implement bounded machine proofs and minimum cleanup as a separate callable pass. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
@@ -152,6 +152,84 @@ fixture plus existing core IR controls qualifies this shared API. Its enduring
 account belongs in `langtools/doc/ir-design.md`. This shared API is implemented
 and qualified for the selected ordinary owner checks; inliner integration and
 broader INL acceptance remain open. There is no target-private graph framework.
+
+### Reviewed lexer preparation repair
+
+INL-STEP03 exposed excessive shared `llregular` preparation cost for the
+unchanged RXAS Unicode lexer. The selected repair stays at that L owner and
+preserves exact byte classes, DFA images, rule priority, first-discovery order
+and existing NFA/DFA limits. Each DFA state derives its consuming-state list
+once from the canonical sparse set; byte-class transitions scan that list.
+Acceptance keeps the first/minimum-ID accept, with a separate seen flag rather
+than assuming an accepting kind is nonzero.
+
+The existing public value-argument `closure` contract remains; one internal
+borrowed scratch walk serves last-use determinization callers and the public
+compatibility adapter. Public subset sorting keeps the same stable merge
+algorithm using packed i64 work buffers and pointer swaps, then the existing
+i32 result encoding. Preserve integer ordering before final encoding and
+retain public input ownership. Internal determinization has a stronger proved
+invariant: its initially zeroed membership and unique seed queue correspond
+exactly, and each newly visited state updates both once. After the shared walk,
+emit canonical IDs by ascending membership scan, validating extent, 0/1 bits,
+expected count and result bounds. Public callers retain queue-sorting behavior;
+arbitrary membership/queue arguments do not acquire that stronger precondition.
+Add no persistent cache, patched-NFA sharing, new graph framework or reduced
+Unicode profile.
+
+The owning `testGenerated` fixture adds an independently constructed exact DFA
+image and ownership/duplicate-order controls. The repair and selected owner
+checks are complete; real RXAS adapter integration remains open. This is a
+bounded research preparation fix, not a production performance verdict or
+wider language/platform campaign.
+
+The initial adapter normalizes source-level leading plus signs and decimal
+suffix case at its own boundary; generic integer encodings remain canonical.
+Decoded string payloads, including constructed inputs, use the existing L
+UTF-8 validator at the checked target owner. Embedded NUL remains valid and
+binary literals retain arbitrary bytes. Preflight payload size and charge work
+before decoding, copying or quoting; stop binding promptly after draft failure.
+These checks belong to the adapter/target owners and do not change the grammar
+or shared L encoding contracts. `draft.preflight(work,bytes)` delegates to the
+existing shared target fuel and arena prospective-reservation checks without
+reserving bytes or duplicating accounting. String decoding uses one count/emit
+walk; it charges the source scans and checks decoded extent before allocation.
+Trusted AST byte spans bound token conversion before its first owned copy;
+private decoder inputs cannot bypass that prospective work check.
+Constructed decimal literals require canonical lowercase `d` as emitted RXAS.
+
+### Reviewed scalar and transport increment
+
+After the initial RXAS adapter is qualified, INL-STEP04/05 admit real compiler
+metadata and multiple direct scalar leaf calls under the existing checked
+closed-main/default-halt profile. Extend `llinline.expandmany(bindings,profile,
+budgets)` to analyze one exact frozen caller and clone selected sites atomically;
+the existing singleton entry delegates to it. Keep integer arithmetic as the
+original checked VM operations, preserve argument COPY versus local MOVE/reset,
+and admit numeric setup only when the complete context tuple matches the
+proved caller tuple. Unknown policies/contexts retain calls.
+
+Add independently callable `llcleanup.transport(module,procedure,profile,
+budgets)` using the existing change result. It reconstructs the whole caller's
+storage, active/base bindings, slot permutation, captured result, components,
+status and observations; it can remove binding-only LINK/UNLINK and redundant
+outer setup/reverse SWAPs only after remapping every intervening operand and
+metadata observation and proving continuation equivalence. It needs no private
+expansion tags. Keep required snapshots and machinery for retained nested calls.
+The reordered-actual argument-return leaf must use direct COPY and add zero
+frame cells. General allocation remains with the existing RXAS owner.
+
+Register-reference enumeration/remapping, source-step/clause identity freshening,
+scoped META_REG/clear names, TRACE reference domains and L contributing origins
+belong to `lltarget`; callable and opaque inline transport declarations remain
+with the original callable. Transient checked storage/context facts may live in
+`lltargetfacts`, with cleanup in `llcleanup`; there is no second graph/provenance
+framework. Independent checks cover reordered actuals plus metadata, retained
+snapshot with aliased mutation, two generated arithmetic calls including the
+documented overflow signal, and an intact retained counted-call window.
+Conservative and cleaned RXAS receive one coherent review before freeze.
+Implementation of this increment is in progress; broader CFG, nested/writable/
+optional/variadic, global and context coverage remains open.
 
 ## Complete initial target profile
 

@@ -100,6 +100,21 @@ main: procedure = .int
   invalid = missing.finish()
   failures = failures + check(invalid.valid() = 0 & pos('unresolved branch',invalid.error()) > 0,'forward branch binding rejects a missing target')
 
+  badstring = .lltarget..draft('badstring','badstring.fixture',0)
+  at = badstring.synthetic('malformed RXAS string'); a = badstring.procedure('main',0,at)
+  ignored = one(a,'say',.lltarget..operand.string('FF'x as .binary),at)
+  ignored = one(a,'ret',.lltarget..operand.integer(0),at)
+  invalid = badstring.finish()
+  failures = failures + check(invalid.valid() = 0 & pos('LL_TARGET_STRING: LL_UTF8',invalid.error()) > 0,'constructed RXAS string rejects malformed UTF-8 before publication')
+
+  baddecimal = .lltarget..draft('baddecimal','baddecimal.fixture',0)
+  at = baddecimal.synthetic('noncanonical RXAS decimal'); a = baddecimal.procedure('main',1,at)
+  rawdecimal = .lltarget..operand.decoded('D','',0,'1D' as .binary,0,0,0)
+  ignored = two(a,'load',a.reg('r',0),rawdecimal,at)
+  ignored = one(a,'ret',.lltarget..operand.integer(0),at)
+  invalid = baddecimal.finish()
+  failures = failures + check(invalid.valid() = 0 & pos('LL_TARGET_LITERAL',invalid.error()) > 0,'decoded decimal cannot bypass canonical lowercase suffix validation')
+
   small = .lltarget..draft('small','small.fixture',0,1000000,4096,1000000)
   at = small.synthetic('bounded payload'); a = small.procedure('main',1,at)
   huge = copies('x',8192) as .binary

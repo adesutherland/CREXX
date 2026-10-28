@@ -1,0 +1,12 @@
+/* Native -n compiler input: its real metadata/call emission exercises the reader. */
+options levelb
+namespace inliogenerated
+
+main: procedure = .int
+  result = identity(7)
+  say result
+  return 0
+
+identity: procedure = .int
+  arg value = .int
+  return value

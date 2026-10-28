@@ -1,0 +1,96 @@
+/* cREXX License (MIT). Shared ordinary RXAS syntax, not an assembler backend. */
+options levell
+namespace llrxasgrammar
+
+identifier: token
+function: token
+label: token
+register: token
+integer: token
+floating: token
+decimal: token
+string: token
+character: token
+binary: token
+directive: token
+equals: token
+comma: token
+newline: token
+
+block.notes: comments nested '/*' '*/' outside quoted
+line.notes: comments line '*' outside quoted
+scan: lexer input utf8
+  digit: charset = '0' to '9'
+  hex: charset = digit | 'a' to 'f' | 'A' to 'F'
+  letter: charset = unicode.gc.L | '_' | U+00A7
+  part: charset = letter | digit | '-' | '.' | '#'
+  hspace: charset = unicode.gc.Zs | U+0009 | U+000B | U+000C
+  text.body: charset = scalar except (U+0000 | U+000A | U+000D | '"')
+  char.body: charset = scalar except (U+0000 | U+000A | U+000D | "'")
+  nonnewline: charset = scalar except (U+0000 | U+000A | U+000D)
+  name: pattern = letter part*
+  signed: pattern = ('+' | '-')? digit+
+  exponent: pattern = ('e' | 'E') ('+' | '-')? digit+
+  finite: pattern = ('+' | '-')? ((digit* '.' digit+ | digit+ '.') exponent? | digit+ exponent)
+  nan.bits: pattern = hex hex hex hex hex hex hex hex hex hex hex hex hex hex hex hex
+  special: pattern = ('+' | '-')? ('i' | 'I') ('n' | 'N') ('f' | 'F') | ('n' | 'N') ('a' | 'A') ('n' | 'N') ('(' nan.bits ')')?
+  quoted.string: pattern = '"' (text.body | U+005C '"')* '"'
+  quoted.char: pattern = "'" (char.body | U+005C nonnewline) "'"
+  quoted: pattern = quoted.string | quoted.char
+  spaces: rule = hspace+ then skip
+  line.end: rule = U+000D U+000A | U+000D | U+000A then emit newline
+  binary.literal: rule = '0' ('x' | 'X') (hex hex)* then emit binary
+  decimal.literal: rule = (finite | signed) ('d' | 'D') then emit decimal
+  float.literal: rule = finite | special then emit floating
+  integer.literal: rule = signed then emit integer
+  string.literal: rule = quoted.string then emit string
+  char.literal: rule = quoted.char then emit character
+  register.literal: rule = ('r' | 'R' | 'g' | 'G' | 'a' | 'A') digit+ then emit register
+  function.literal: rule = name '()' then emit function
+  label.literal: rule = name ':' then emit label
+  directive.literal: rule = '.' name then emit directive
+  name.literal: rule = name then emit identifier
+  assignment: rule = '=' then emit equals
+  separator: rule = ',' then emit comma
+
+parse: parser semantics contextfree input tokens start module backend lr1
+module: rule = (record as item)* then tree Module(items = item*)
+record: rule = declaration | exposure | global.exposure | header | metadata | instruction | label.record | constant | source.step | trace.event | blank
+declaration: rule = plain.declaration | exposed.declaration
+/* Share the same capture reduction before '='; the following integer/name
+ * distinguishes .locals declarations from .expose imports. Directive spelling
+ * remains checked by the reader, and each mapped AST keeps its public fields. */
+plain.declaration: rule = function as name directive as option equals integer as count newline
+  then tree Procedure(name = text(name), locals = text(option), count = text(count))
+exposed.declaration: rule = function as name directive as option equals integer as count directive as expose equals identifier as symbol newline
+  then tree ExposedProcedure(name = text(name), locals = text(option), count = text(count), expose = text(expose), symbol = text(symbol))
+exposure: rule = function as name directive as option equals identifier as symbol newline
+  then tree Import(name = text(name), expose = text(option), symbol = text(symbol))
+header: rule = directive as directive equals integer as count newline
+  then tree Globals(directive = text(directive), count = text(count))
+global.exposure: rule = register as slot directive as expose equals identifier as symbol newline
+  then tree GlobalExpose(slot = text(slot), expose = text(expose), symbol = text(symbol))
+metadata: rule = directive as directive string as name (equals (meta.operand as value)+)? newline
+  then tree Metadata(directive = text(directive), name = text(name), values = value*)
+instruction: rule = identifier as mnemonic (operand as value (comma operand as value)*)? newline
+  then tree Instruction(mnemonic = text(mnemonic), values = value*)
+label.record: rule = label as name then tree Label(name = text(name))
+constant: rule = directive as directive identifier as name identifier as type operand as value newline
+  then tree Constant(directive = text(directive), name = text(name), type = text(type), value = value)
+source.step: rule = directive as directive integer as step integer as clause integer as flags string as file integer as line integer as first integer as last string as source newline
+  then tree SourceStep(directive = text(directive), step = text(step), clause = text(clause), flags = text(flags), file = text(file), line = text(line), first = text(first), last = text(last), source = text(source))
+trace.event: rule = directive as directive string as kind integer as modes string as source string as type string as bank integer as value integer as step integer as clause integer as flags string as symbol string as resolved newline
+  then tree TraceEvent(directive = text(directive), kind = text(kind), modes = text(modes), source = text(source), type = text(type), bank = text(bank), value = text(value), step = text(step), clause = text(clause), flags = text(flags), symbol = text(symbol), resolved = text(resolved))
+blank: rule = newline then tree Blank()
+operand: rule = register.operand | integer.operand | float.operand | decimal.operand | string.operand | char.operand | binary.operand | function.operand | symbol.operand
+meta.operand: rule = operand | directive.operand
+register.operand: rule = register as spelling then tree Register(spelling = text(spelling))
+integer.operand: rule = integer as spelling then tree Integer(spelling = text(spelling))
+float.operand: rule = floating as spelling then tree Float(spelling = text(spelling))
+decimal.operand: rule = decimal as spelling then tree Decimal(spelling = text(spelling))
+string.operand: rule = string as spelling then tree String(spelling = text(spelling))
+char.operand: rule = character as spelling then tree Character(spelling = text(spelling))
+binary.operand: rule = binary as spelling then tree Binary(spelling = text(spelling))
+function.operand: rule = function as spelling then tree Function(spelling = text(spelling))
+symbol.operand: rule = identifier as spelling then tree Symbol(spelling = text(spelling))
+directive.operand: rule = directive as spelling then tree Directive(spelling = text(spelling))

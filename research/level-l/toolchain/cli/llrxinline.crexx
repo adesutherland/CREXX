@@ -1,0 +1,192 @@
+/* cREXX License (MIT). Thin one-module client of the shared B/L services. */
+options levelb
+import rxfnsb
+import lllimits
+import llir
+import lltarget
+import llinline
+import llrxasinput
+import llrxasoutput
+import llfileoutput
+
+main: procedure = .int
+  arg argv = .string[]
+  limits = .lllimits..policy; frontend = .llrxasinput..reader; parsed = .llrxasinput..parsed
+  target = .lltarget..module; emitted = .llrxasoutput..emission; output = .llir..output
+  bodies = .object[]; calls = .int[]
+  sourcepath = ''; destination = ''; logical = ''; artifact = ''; profile = 'unknown'; policy = 'default'
+  bodypaths = .string[]; bodynames = .string[]; i = 1
+  do while i <= argv[0]
+    option = argv[i]
+    select
+      when option = '-o' | option = '--module' | option = '--artifact' | option = '--profile' | option = '--policy' then do
+        if i = argv[0] then return usage('missing operand for ' || option)
+        i = i + 1; value = argv[i]
+        select option
+          when '-o' then destination = value
+          when '--module' then logical = value
+          when '--artifact' then artifact = value
+          when '--profile' then profile = value
+          when '--policy' then policy = value
+        end
+      end
+      when option = '--body' then do
+        if i + 2 > argv[0] then return usage('--body requires logical-module and source-path')
+        bodynames[bodynames[0] + 1] = argv[i + 1]; bodypaths[bodypaths[0] + 1] = argv[i + 2]; i = i + 2
+      end
+      when option = '--no-inline' then policy = 'never'
+      when option = '--no-cleanup' then nop
+      when left(option,1) = '-' then return usage('unknown option ' || option)
+      when sourcepath <> '' then return usage('only one output module can be selected')
+      otherwise sourcepath = option
+    end
+    i = i + 1
+  end
+  if sourcepath = '' | destination = '' | logical = '' then return usage('source, --module and -o are required')
+  if wordpos(policy,'default all-legal never') = 0 then return usage('unknown selection policy ' || policy)
+  if profile <> 'unknown' & profile <> 'closed-main-default-halt.v1' then return usage('unknown preservation profile ' || profile)
+  if artifact = '' then artifact = sourcepath
+  do
+    limits = .lllimits..policy(); inputbytes = 67108864
+    frontend = .llrxasinput..reader()
+    source = readsource(sourcepath,min(inputbytes,limits.limit('source.bytes'))); inputbytes = inputbytes - <blen>(source)
+    parsed = frontend.parse(source,logical,artifact,limits)
+    if parsed.status() <> 0 then do; call lineout 'stderr',parsed.diagnostic(); return 1; end
+    target = parsed.result()
+    do i = 1 to bodypaths[0]
+      source = readsource(bodypaths[i],min(inputbytes,limits.limit('source.bytes'))); inputbytes = inputbytes - <blen>(source)
+      parsed = frontend.parse(source,bodynames[i],bodypaths[i],limits)
+      if parsed.status() <> 0 then do; call lineout 'stderr',parsed.diagnostic(); return 1; end
+      bodies[i] = parsed.result() as .object
+    end
+    calls = callsites(reference target)
+    if policy <> 'never' then do i = 1 to calls[0]
+      if applysite(target,calls,i,reference bodies,profile) <> 0 then return 1
+    end
+    emitted = llrxasoutput..render(reference target)
+    if emitted.error() <> '' then do; call lineout 'stderr',emitted.error(); return 1; end
+    output = emitted.output(); message = llfileoutput..publish(output,destination)
+    if message <> '' then do; call lineout 'stderr',message; return 1; end
+    return 0
+  on signal as problem
+    call lineout 'stderr','LL_INLINE_ERROR: ' || problem.name() || ': ' || problem.message(); return 1
+  end
+  return 1
+
+/** Capture only original IDs. Every later atomic change remaps the remaining
+ * IDs; generated calls never enter an unbounded restart loop. */
+callsites: procedure = .int[]
+  arg owner = reference .lltarget..module
+  target = .lltarget..module; item = .lltarget..record
+  target = dereference owner; calls = .int[]
+  do i = 1 to target.records()
+    item = target.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if wordpos(item.mnemonic(),'call call1 call2 call3 call4 swapcall settpswapcall settpcall') > 0 then calls[calls[0] + 1] = item.id()
+  end
+  return calls
+
+/** Return 2 for the exact caller owner, 1 for a supplied provider, 0 when no
+ * body is available, and -1 after reporting an ambiguous supplied binding.
+ * The supplied provider value stays owned by applysite during inspection and
+ * expansion. Local binding always uses the caller reference itself. */
+selectprovider: procedure = .int
+  arg owner = reference .lltarget..module, called = .string, supplied = reference .object[], expose provider = .lltarget..module, expose procedureid = .int
+  target = .lltarget..module; candidate = .lltarget..module
+  declaration = .lltarget..record; localname = .lltarget..operand; name = .lltarget..operand; body = .lltarget..body
+  target = dereference owner; bodies = dereference supplied; j = .int
+  procedureid = target.procedureid(called)
+  if procedureid > 0 then return 2
+  exported = ''; selected = 0
+  do j = 1 to target.records()
+    declaration = target.record(j)
+    if declaration.kind() <> '.import' then iterate
+    localname = declaration.operand(1)
+    if localname.text() == called then do
+      name = declaration.operand(2); exported = name.text()
+    end
+  end
+  do j = 1 to bodies[0]
+    candidate = bodies[j] as .lltarget..module
+    do k = 1 to candidate.procedures()
+      body = candidate.procedure(k)
+      if exported <> '' & body.expose() == exported then do
+        if selected then do
+          call lineout 'stderr','LL_INLINE_BINDING: ambiguous supplied provider ' || exported
+          return -1
+        end
+        provider = candidate; procedureid = body.functionid(); selected = 1
+      end
+    end
+  end
+  return selected
+
+/** Apply one selected site, retaining the original caller owner until its
+ * change map has remapped every pending original ID. */
+applysite: procedure = .int
+  arg expose target = .lltarget..module, expose calls = .int[], index = .int, supplied = reference .object[], profile = .string
+  j = .int; procedureid = .int; item = .lltarget..record; field = .lltarget..operand
+  provider = .lltarget..module; binding = .llinline..binding
+  decision = .llinline..decision; change = .llinline..change
+  if calls[index] = 0 then return 0
+  item = target.at(calls[index]); called = ''
+  do j = 1 to item.operands()
+    field = item.operand(j)
+    if field.kind() = 'P' then called = field.text()
+  end
+  selected = selectprovider(reference target,called,supplied,provider,procedureid)
+  if selected < 0 then return 1
+  if selected = 0 then do
+    call lineout 'stderr','LL_INLINE_KEEP: unavailable exact body ' || called
+    return 0
+  end
+  if selected = 2 then binding = llinline..bind(reference target,calls[index],reference target,procedureid)
+  else binding = llinline..bind(reference target,calls[index],reference provider,procedureid)
+  decision = llinline..inspect(binding,profile)
+  if decision.status() = 'keep' then do; call lineout 'stderr','LL_INLINE_KEEP: ' || decision.reason(); return 0; end
+  if decision.status() <> 'legal' then do; call lineout 'stderr','LL_INLINE_' || upper(decision.status()) || ': ' || decision.reason(); return 1; end
+  change = llinline..expand(binding,profile)
+  if change.status() = 'keep' then do; call lineout 'stderr','LL_INLINE_KEEP: ' || change.reason(); return 0; end
+  if change.status() <> 'changed' then do; call lineout 'stderr','LL_INLINE_' || upper(change.status()) || ': ' || change.reason(); return 1; end
+  do j = index + 1 to calls[0]
+    if calls[j] > 0 then calls[j] = change.operation(calls[j])
+  end
+  target = change.result()
+  return 0
+
+usage: procedure = .int
+  arg reason = ''
+  if reason <> '' then call lineout 'stderr','LL_INLINE_OPTIONS: ' || reason
+  call lineout 'stderr','Usage: llrxinline --module logical -o output.rxas [--artifact identity] [--body logical source.rxas] [--profile closed-main-default-halt.v1] [--policy default|all-legal|never] [--no-cleanup] source.rxas'
+  call lineout 'stderr','The closed-main profile requires a fresh standalone root with default HALT policy; unknown profile retains calls.'
+  return 2
+
+/** Read bytes under the source adapter's allowance before accumulating them.
+ * Ordinary VM file primitives are IO, never a compiler/assembler backend. */
+readsource: procedure = .binary
+  arg path = .string, limit = .int
+  file = 0; result = .binary; mode = 'rb'; remaining = .int; size = .int
+  do
+    if limit < 1 then assembler signal "ERROR","LL_RESOURCE_LIMIT: source input bytes"
+    assembler fopen file,path,mode
+    if file = 0 then assembler signal "ERROR","LL_INLINE_INPUT: cannot open source"
+    eof = 0
+    do while eof = 0
+      remaining = limit - <blen>(result); size = 32768
+      if remaining < size then size = remaining + 1
+      chunk = .binary; assembler freadb chunk,file,size
+      status = 0; assembler ferror status,file
+      if status <> 0 then assembler signal "ERROR","LL_INLINE_INPUT: source read failed"
+      if <blen>(chunk) > remaining then assembler signal "ERROR","LL_RESOURCE_LIMIT: source input bytes"
+      assembler bappend result,chunk
+      assembler feof eof,file
+      if <blen>(chunk) = 0 & eof = 0 then assembler signal "ERROR","LL_INLINE_INPUT: source read made no progress"
+    end
+    status = 0; assembler fclose status,file; file = 0
+    if status <> 0 then assembler signal "ERROR","LL_INLINE_INPUT: source close failed"
+    return result
+  on signal as problem
+    if file <> 0 then do; ignored = 0; assembler fclose ignored,file; end
+    message = problem.message(); assembler signal "ERROR",message
+  end
+  return result

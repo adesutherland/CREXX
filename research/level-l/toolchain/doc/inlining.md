@@ -102,8 +102,8 @@ request contains frozen caller and body owners/revisions, a call identity,
 exact target binding, admitted observation profile and explicit limits. It
 returns either a validated new owner with all reference maps, an unchanged
 owner plus a specific retained-call reason, or a diagnostic/limit/cancellation
-result. It never partially edits its input. CLI spelling such as `llrxinline`
-is proposed, not an installed command. The CLI and service share the same
+result. It never partially edits its input. The first `llrxinline` client is a
+build-tree bytecode CLI, not yet an installed command. The CLI and service share the same
 policy and diagnostics; clients do not scrape command output.
 
 ## Target identities and proof inputs
@@ -117,11 +117,21 @@ It admits optional `.globals`, procedure definitions/imports/exports, global
 exposure, canonical source-visible instructions with ordered typed operands,
 labels, `.const`, callable/register/clear metadata, opaque known `META_INLINE`
 string transport, `.srcstep` and `.traceevent`. Literal operands retain their
-exact validated spelling/bytes; importing a float or decimal introduces no new
-host conversion or constant evaluator. Jump tables and class/interface/task/
+validated value and exact payload bytes. The adapter normalizes integer leading
+plus signs and decimal suffix case to native RXAS spelling; importing a float
+or decimal introduces no new host conversion or constant evaluator. Decoded
+strings use the existing L UTF-8 validator, including embedded NUL; binary
+literals retain arbitrary bytes. Jump tables and class/interface/task/
 provider/initializer/autoload records remain explicit next-profile work until
 their typed model contracts are implemented; unsupported forms fail precisely,
 without dropping records or publishing a partial module.
+
+Build preparation gives this full Unicode grammar the maintained Classic
+grammar's finite `dfa.states=16384` allowance. Other construction budgets retain
+their existing defaults. The canonical generation service owns its output-local
+lexical cache, generator fingerprint, locking and cleanup entries. Exceeding the
+declared cap remains a resource refusal with no partial grammar publication;
+the adapter's runtime input policy remains separately bounded.
 
 One CLI request selects one caller module and explicit immutable body inputs,
 then publishes only the caller's complete output through the existing atomic
@@ -543,6 +553,43 @@ The private alias record is the recommended lower-cost option. Synthetic public
 `.expose` names are rejected because they alter naming, storage ownership and
 load-order semantics. A private alias is missing infrastructure, not a permanent
 inlining exclusion.
+
+The reviewed native increment uses the following opt-in 007 profile; these
+records are not implemented yet. Append `META_GLOBAL_BINDING=23` and
+`META_SOURCE_ARTIFACT=24`, guarded by feature bit `1 << 8`. After the existing
+16-byte metadata wire prefix, a binding stores u32 destination-global,
+provider-name StringRef, provider-global, provider-ModuleRef and flags, then
+32 SHA256 bytes (68-byte payload total). A source witness stores u32 schema 1
+and 32 SHA256 bytes (52-byte payload total). Both have address zero. Unresolved
+bindings have zero flags and ModuleRef `RXBIN007_NONE`; linked bindings have
+only `RESOLVED=1` and a checked same-image ModuleRef. Reject unknown flags,
+schema, conflicting exposures/destinations, invalid slots and ownerless cycles
+through one binutils-owned binding-plan helper.
+
+The source form is `g7 .bind = "exact.logical.provider.module" 3 "64hex-sha"`.
+RXLINK uniquely matches the full provider identity and derived source witness,
+retains that module through its existing selection queue, then publishes direct
+ModuleRefs. The loader uses same-image worker-overlay storage, never public
+name/callable substitution. Allocate owned/public cells first, skip alias
+destinations, then bind them with `globals_dont_free=1` before initialization.
+Resolved input images remap their existing ModuleRefs on relink.
+
+For this RXAS-first profile, the witness is SHA256 of the exact immutable UTF-8
+provider source acquired by B/L and actually assembled. An opt-in native
+assembler setting derives the witness from its input; supplied declarations
+are not proof. A matching explicit logical module-name option keeps serialized
+name/description stable across source/output directories. It does not grant a
+runtime search base. Use existing SHA256 primitives and input/relocation owners;
+there is no normalized-image hash subsystem or native encoding backend in a
+B/L request. The semantic-graph digest does not hash executable bodies.
+
+Providers must be finalized before dependent acquisition/assembly. Rewriting or
+re-rendering a provider invalidates dependent bindings until reacquisition/
+re-inlining or an explicitly proved driver rebinding. Cyclic source witnesses
+require such a driver proof, not a hash fixed point. Disassembly/reassembly
+creates new source identity; binary codec roundtrip preserves the actual fields.
+This is source provenance under the ordinary assembler/build contract, not
+proof that arbitrary existing RXBIN bytes came from supplied RXAS.
 
 ### Initialization ingress and active regions
 

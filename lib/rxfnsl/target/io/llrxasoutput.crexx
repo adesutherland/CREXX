@@ -1,0 +1,171 @@
+/* cREXX License (MIT). Final ordinary RXAS rendering from checked target records. */
+options levelb
+namespace llrxasoutput expose render emission
+import rxfnsb
+import llir
+import lltarget
+import llrxastext
+
+/** Retain the source owner alongside chunk origin IDs. Output is independently
+ * streamable through the existing L sink/publication service. */
+emission: class
+  _module = .lltarget..module
+  _output = .llir..output
+  *: factory
+    arg module = .lltarget..module, output = .llir..output
+    _module = module; _output = output
+    return
+  error: method = .string
+    return _output.error()
+  output: method = .llir..output
+    return _output
+  module: method = reference .lltarget..module
+    return reference _module
+
+/** Render one complete module. No source template or parsed-token replacement
+ * participates: every structural field comes from the checked target owner. */
+render: procedure = .llrxasoutput..emission
+  arg owner = reference .lltarget..module, bytes = 67108864, work = 1000000
+  j = .int
+  module = dereference owner; output = .llir..writer(bytes,'')
+  if module.error() <> '' then return failed(module,module.error())
+  if work < 1 then return failed(module,'LL_RESOURCE_LIMIT: positive RXAS rendering work required')
+  do
+    header = '.globals=' || module.globals(); used = <blen>(header as .binary) + 1
+    if used > bytes then return failed(module,'LL_RESOURCE_LIMIT: output.bytes')
+    call output.line(header)
+    do i = 1 to module.records()
+      item = module.record(i); kind = item.kind(); work = work - 1 - item.operands()
+      if work < 0 then return failed(module,'LL_RESOURCE_LIMIT: RXAS rendering work')
+      size = recordbytes(item,work,bytes - used)
+      if size < 0 then return failed(module,'LL_RESOURCE_LIMIT: output.bytes')
+      at = item.origin(); text = ''
+      select
+        when kind = 'procedure' then do
+          name = item.operand(1); locals = item.operand(2); exportname = item.operand(3)
+          text = name.text() || '() .locals=' || locals.index()
+          if exportname.text() <> '' then text = text || ' .expose=' || exportname.text()
+        end
+        when kind = '.import' then do
+          name = item.operand(1); exportname = item.operand(2)
+          text = name.text() || '() .expose=' || exportname.text()
+        end
+        when kind = '.globalexpose' then do
+          index = item.operand(1); exportname = item.operand(2)
+          text = 'g' || index.index() || ' .expose=' || exportname.text()
+        end
+        when kind = 'instruction' then do
+          text = item.mnemonic()
+          do j = 1 to item.operands()
+            if j = 1 then text = text || ' '
+            else text = text || ','
+            text = text || operandtext(item.operand(j))
+          end
+        end
+        when kind = 'label' then do
+          name = item.operand(1); text = name.text() || ':'
+        end
+        when kind = '.meta' then do
+          name = item.operand(1); text = '.meta ' || operandtext(name)
+          if item.operands() > 1 then text = text || '='
+          do j = 2 to item.operands()
+            if j > 2 then text = text || ' '
+            text = text || operandtext(item.operand(j))
+          end
+        end
+        when kind = '.const' then do
+          name = item.operand(1); type = item.operand(2)
+          text = '.const ' || name.text() || ' ' || type.text() || ' ' || operandtext(item.operand(3))
+        end
+        when kind = '.srcstep' | kind = '.traceevent' then do
+          text = kind
+          do j = 1 to item.operands()
+            text = text || ' ' || operandtext(item.operand(j))
+          end
+        end
+        otherwise return failed(module,'LL_RXAS_PROFILE: unsupported rendered record ' || kind)
+      end
+      call output.line(text,at.id())
+      if output.error() <> '' then return failed(module,output.error())
+      used = used + size
+    end
+    return .emission(module,output.finish())
+  on signal as problem
+    return failed(module,'LL_RXAS_OUTPUT: ' || problem.name() || ': ' || problem.message())
+  end
+  return failed(module,'LL_RXAS_OUTPUT: rendering did not return')
+
+operandtext: procedure = .string
+  arg value = .lltarget..operand
+  select value.kind()
+    when 'R' then return value.bank() || value.index()
+    when 'I' then return value.index() as .string
+    when 'S' then return llrxastext..quote(value.bytes())
+    when 'P' then return value.text() || '()'
+    when 'L' then return value.text()
+    when 'F' then return value.text()
+    when 'D' then return value.text()
+    when 'C' then return value.text()
+    when 'B' then return value.text()
+    otherwise assembler signal "ERROR","LL_RXAS_OPERAND: invalid rendered operand kind"
+  end
+  return ''
+
+failed: procedure = .llrxasoutput..emission
+  arg module = .lltarget..module, message = .string
+  chunks = .binary[]; origins = .int[]
+  return .emission(module,.llir..output(chunks,origins,0,message))
+
+/** Preflight exact byte size before constructing a line or quoting a payload.
+ * Subtraction checks avoid overflowing accumulated growth. Charge payload scans
+ * and final rendering before either pass can create an oversized temporary. */
+recordbytes: procedure = .int
+  arg item = .lltarget..record, expose work = .int, limit = .int
+  kind = item.kind(); count = item.operands()
+  select
+    when kind = 'procedure' then do
+      size = 10; exposed = item.operand(3)
+      if exposed.text() <> '' then size = size + 9
+    end
+    when kind = '.import' then size = 10
+    when kind = '.globalexpose' then size = 11
+    when kind = 'instruction' then size = 1 + <blen>(item.mnemonic() as .binary) + count
+    when kind = 'label' then size = 2
+    when kind = '.meta' then do
+      size = 7
+      if count > 1 then size = size + 1 + max(0,count - 2)
+    end
+    when kind = '.const' then size = 10
+    when kind = '.srcstep' | kind = '.traceevent' then size = 1 + <blen>(kind as .binary) + count
+    otherwise assembler signal "ERROR","LL_RXAS_PROFILE: unsupported rendered record"
+  end
+  if size > limit then return -1
+  do i = 1 to count
+    amount = fieldbytes(item.operand(i),work,limit - size)
+    if amount < 0 | amount > limit - size then return -1
+    size = size + amount
+  end
+  return size
+fieldbytes: procedure = .int
+  arg value = .lltarget..operand, expose work = .int, limit = .int
+  kind = value.kind()
+  if kind = 'R' then return 1 + length(value.index() as .string)
+  if kind = 'I' then return length(value.index() as .string)
+  size = value.length(); overhead = 0
+  if kind = 'S' | kind = 'P' then overhead = 2
+  if overhead > limit | size > limit - overhead then return -1
+  if size > (work / 2) then do
+    assembler signal "ERROR","LL_RESOURCE_LIMIT: RXAS payload rendering work"
+    return -1
+  end
+  work = work - size * 2
+  if kind <> 'S' then return size + overhead
+  payload = value.bytes(); result = 2
+  do i = 0 to size - 1
+    c = <at..u8>(i) payload
+    amount = 4
+    if c >= 32 & c < 127 & c <> 34 & c <> 92 then amount = 1
+    if amount > limit - result then return -1
+    result = result + amount
+  end
+  return result
