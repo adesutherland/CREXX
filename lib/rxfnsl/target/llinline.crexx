@@ -5,6 +5,7 @@ import rxfnsb
 import llir
 import lltarget
 import lltargetfacts
+import llrxascatalog
 
 binding: class
   _caller = reference .lltarget..module
@@ -84,10 +85,13 @@ inspect: procedure = .llinline..decision
   if facts.status() <> 'ok' then return .decision(facts.status(),facts.reason())
   if facts.bodyid(request.callid()) = 0 then return .decision('keep','call.form.pending')
   if facts.bodyid(request.callid()) <> request.bodyid() then return .decision('invalid','binding.target.mismatch')
-  returned = source.at(facts.returned(request.callid())); returnindex = -1
-  if returned.operands() = 1 then do
-    value = returned.operand(1)
-    if value.kind() = 'R' & value.bank() = 'a' then returnindex = value.index()
+  returnindex = -1
+  if facts.returns(request.callid()) = 1 then do
+    returned = source.at(facts.returnsite(request.callid(),1))
+    if returned.operands() = 1 then do
+      value = returned.operand(1)
+      if value.kind() = 'R' & value.bank() = 'a' then returnindex = value.index()
+    end
   end
   return .decision('legal','closed.root.scalar',facts.arguments(request.callid()),facts.first(request.callid()),returnindex,facts.remaining())
 
@@ -224,15 +228,24 @@ metascopes: class
   _sourcefn = .int[]
   _sourcerecord = .int[]
   _sourcearity = .int[]
+  _sourcekind = .int[]
   _sourcecount = .int
   _suffixes = .string[]
+  _branched = .int[]
+  _dag = .int[]
+  _continuations = .string[]
+  _labelsites = .int[]
+  _oldlabels = .binary[]
+  _newlabels = .string[]
+  _serial = .int
+  _catalog = .llrxascatalog..catalog
   _bindings = .binary[]
   _active = .int[]
   _start = .int
   _held = .int
   *: factory
     arg owner = reference .lltarget..draft
-    _owner = owner
+    _owner = owner; _catalog = .llrxascatalog..catalog()
     return
   claim: method = .int
     arg work = .int, bytes = 0
@@ -248,13 +261,28 @@ metascopes: class
     return
   seed: method = .void
     arg item = .lltarget..record
+    if item.kind() = 'instruction' then do
+      flow = _catalog.flow(item.opcode())
+      if flow = 1 | flow = 2 then call markbranch(item.procedureid())
+      return
+    end
+    if item.kind() = 'label' then call markbranch(item.procedureid())
+    if item.kind() <> '.meta' & item.kind() <> 'label' & item.kind() <> '.const' then return
     name = item.operand(1)
-    if claim(1,24) = 0 then return
+    if claim(1,32) = 0 then return
     call remember(name.bytes())
     _sourcecount = _names[0]
     _sourcefn[_sourcecount] = item.procedureid(); _sourcerecord[_sourcecount] = item.id()
     _sourcearity[_sourcecount] = 0
+    _sourcekind[_sourcecount] = item.kind() = 'label'
     if item.kind() = '.meta' then _sourcearity[_sourcecount] = item.operands()
+    return
+  markbranch: method = .void
+    arg functionid = .int
+    growth = max(0,functionid - _branched[0])
+    if growth > 2147483647 / 8 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline branch index"
+    if claim(1,growth * 8) = 0 then return
+    _branched[functionid] = 1
     return
   guard: method = .int
     arg work = .int, bytes = 0
@@ -271,10 +299,11 @@ metascopes: class
     end
     return 0
   prepare: method = .void
-    arg functionid = .int, retid = .int, site = .int, slot = .int
+    arg functionid = .int, site = .int, slot = .int, facts_ref = reference .lltargetfacts..analysis
     i = .int; attempt = .int; collision = .int; width = .int
     suffix = .string
-    draft = dereference _owner; attempt = 0
+    draft = dereference _owner; facts = dereference facts_ref; attempt = 0
+    _dag[slot] = (_branched[functionid] <> 0) | (facts.returns(site) > 1)
     do forever
       if claim(1,0) = 0 then return
       suffix = '.$inline.' || site
@@ -282,8 +311,9 @@ metascopes: class
       collision = 0
       do i = 1 to _sourcecount
         if claim(1,0) = 0 then return
-        if _sourcefn[i] <> functionid | _sourcerecord[i] >= retid then iterate
+        if _sourcefn[i] <> functionid then iterate
         if _sourcearity[i] <> 1 & _sourcearity[i] <> 4 then iterate
+        if facts.recordlive(site,_sourcerecord[i]) = 0 then iterate
         width = <blen>(_names[i]) + length(suffix)
         if guard(width + 1,width * 3) = 0 then return
         if contains(_names[i] || (suffix as .binary)) then collision = 1
@@ -296,13 +326,55 @@ metascopes: class
     _suffixes[slot] = suffix
     do i = 1 to _sourcecount
       if claim(1,0) = 0 then return
-      if _sourcefn[i] <> functionid | _sourcerecord[i] >= retid then iterate
+      if _sourcefn[i] <> functionid then iterate
       if _sourcearity[i] <> 1 & _sourcearity[i] <> 4 then iterate
+      if facts.recordlive(site,_sourcerecord[i]) = 0 then iterate
       width = <blen>(_names[i]) + length(suffix)
       if guard(width + 1,width * 3) = 0 then return
       call remember(_names[i] || (suffix as .binary))
     end
+    if _dag[slot] then do
+      _continuations[slot] = newlabel(site,''x as .binary)
+      do i = 1 to _sourcecount
+        if claim(1,0) = 0 then return
+        if _sourcefn[i] <> functionid | _sourcekind[i] = 0 then iterate
+        if facts.recordlive(site,_sourcerecord[i]) = 0 then iterate
+        ignored = newlabel(site,_names[i])
+      end
+    end
     return
+  newlabel: method = .string
+    arg site = .int, old = .binary
+    candidate = .string
+    do forever
+      if guard(1,192) = 0 then return ''
+      if _serial >= 2147483647 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline label identity extent"
+      _serial = _serial + 1; candidate = '_inline.' || site || '.' || _serial
+      if contains(candidate as .binary) = 0 then leave
+      draft = dereference _owner
+      if draft.error() <> '' then return ''
+    end
+    if claim(<blen>(old) + length(candidate) + 1,<blen>(old) + length(candidate) + 48) = 0 then return ''
+    at = _labelsites[0] + 1; _labelsites[at] = site; _oldlabels[at] = old; _newlabels[at] = candidate
+    call remember(candidate as .binary)
+    return candidate
+  label: method = .string
+    arg site = .int, old = .binary
+    width = <blen>(old) + 1
+    if _labelsites[0] > 2147483647 / width then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline label lookup"
+    if claim(_labelsites[0] * width,0) = 0 then return ''
+    do i = 1 to _labelsites[0]
+      if _labelsites[i] <> site then iterate
+      if bincompare(_oldlabels[i],old) = 0 then return _newlabels[i]
+    end
+    assembler signal "ERROR","LL_INLINE_LABEL: missing live label mapping"
+    return ''
+  dag: method = .int
+    arg slot = .int
+    return _dag[slot]
+  continuation: method = .string
+    arg slot = .int
+    return _continuations[slot]
   begin: method = .string
     arg site = .int
     _start = _bindings[0] + 1
@@ -366,7 +438,9 @@ expandmany: procedure = .llinline..change
   i = .int; j = .int; k = .int; a = .int; ignored = .int; count = .int; required = .int
   locals = .int; base = .int; higheststep = .int; highestclause = .int
   extent = .int; fileid = .int; hasresult = .int; ordered = .int; slots = .int; activebase = .int; position = .int
-  scope = .string; scopes = .metascopes
+  dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int
+  catalog = .llrxascatalog..catalog
+  scope = .string; status = .string; scopes = .metascopes
   request = .binding; selected = .lltarget..record; input = .lltarget..record; childrecord = .lltarget..record; swaprecord = .lltarget..record
   field = .lltarget..operand; oldresult = .lltarget..operand; value = .lltarget..operand
   resultcell = .lltarget..operand; countcell = .lltarget..operand; tempcell = .lltarget..operand
@@ -455,23 +529,27 @@ expandmany: procedure = .llinline..change
   end
   do
     result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
-    code = .emitter(cells); bodies = .object[]; sources = .object[]; origins = .object[]
+    if result.error() <> '' then do
+      status = 'invalid'
+      if pos('LL_RESOURCE_LIMIT',result.error()) > 0 then status = 'limit'
+      return .change(status,result.error(),source,empty)
+    end
+    code = .emitter(cells); catalog = .llrxascatalog..catalog()
+    bodies = .object[]; sources = .object[]; origins = .object[]
     graph_ref = source.ir(); generated = result.synthetic('inline scalar transport')
     scopes = .metascopes(reference result)
-    if sites[0] > 2147483647 / 8 then return .change('limit','inline.metadata.names',source,empty)
-    if scopes.claim(1,sites[0] * 8) = 0 then return .change('limit',result.error(),source,empty)
+    if sites[0] > 2147483647 / 32 then return .change('limit','inline.metadata.names',source,empty)
+    if scopes.claim(1,sites[0] * 32) = 0 then return .change('limit',result.error(),source,empty)
     /* Reserve every authored metadata name. The label/constant names remain
      * reserved too; no authored or generated name is mistaken for a clear. */
     do i = 1 to source.records()
       if scopes.claim(1,0) = 0 then return .change('limit',result.error(),source,empty)
       input = source.record(i)
-      if input.kind() = '.meta' | input.kind() = 'label' | input.kind() = '.const' then do
-        call scopes.seed(input)
-      end
+      call scopes.seed(input)
     end
     do i = 1 to sites[0]
       if accepted[sites[i]] = 0 then iterate
-      call scopes.prepare(facts.bodyid(sites[i]),facts.returned(sites[i]),sites[i],accepted[sites[i]])
+      call scopes.prepare(facts.bodyid(sites[i]),sites[i],accepted[sites[i]],reference facts)
       if result.error() <> '' then return .change('limit',result.error(),source,empty)
     end
     do i = 1 to source.records()
@@ -499,6 +577,7 @@ expandmany: procedure = .llinline..change
       end
       callee = source.body(facts.bodyid(input.id())); count = facts.arguments(input.id()); base = offsets[input.id()]
       scope = scopes.begin(accepted[input.id()])
+      dag = scopes.dag(accepted[input.id()])
       /* Retained counted children observe adjacency across r/a bank borders,
        * even when the outer body never explicitly rebinds a slot. */
       ordered = facts.rebinding(input.id()) | facts.orderedslots(input.id())
@@ -532,12 +611,11 @@ expandmany: procedure = .llinline..change
         ignored = code.two(targetbody,'link',anchor,actual,at)
       end
       steps = empty; clauses = empty
-      do j = 1 to callee.records()
+      do j = 1 to source.records()
         if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
-        childrecord = callee.record(j)
-        /* Facts verified one reachable RET and only detached zero-width tail
-         * records after it. Those retain their original body-end address. */
-        if childrecord.kind() = 'instruction' & childrecord.mnemonic() = 'ret' then leave
+        childrecord = source.record(j)
+        if childrecord.procedureid() <> callee.functionid() | childrecord.kind() = 'procedure' then iterate
+        if facts.recordlive(input.id(),childrecord.id()) = 0 then iterate
         if childrecord.kind() = '.srcstep' then do
           value = childrecord.operand(1); call freshidentity(steps,value.index(),higheststep)
           value = childrecord.operand(2); call freshidentity(clauses,value.index(),highestclause)
@@ -547,8 +625,11 @@ expandmany: procedure = .llinline..change
           value = childrecord.operand(8); call freshidentity(clauses,value.index(),highestclause)
         end
       end
-      do j = 1 to callee.records()
-        childrecord = callee.record(j)
+      do j = 1 to source.records()
+        if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
+        childrecord = source.record(j)
+        if childrecord.procedureid() <> callee.functionid() | childrecord.kind() = 'procedure' then iterate
+        if facts.recordlive(input.id(),childrecord.id()) = 0 then iterate
         if childrecord.kind() = '.meta' & (childrecord.operands() = 3 | childrecord.operands() = 5) then iterate
         if childrecord.kind() = 'instruction' & childrecord.mnemonic() = 'numsci' then iterate
         oldat = childrecord.origin()
@@ -566,9 +647,36 @@ expandmany: procedure = .llinline..change
         end
         fields = lltarget..remapregisters(childrecord,replacements)
         fields = lltarget..remapmetadata(childrecord,fields,scope,steps,clauses)
+        if childrecord.kind() = 'label' then do
+          value = childrecord.operand(1)
+          fields[1] = .lltarget..operand.symbol(scopes.label(input.id(),value.bytes())) as .object
+        end
         if childrecord.kind() <> 'instruction' then do
           ignored = targetbody.record(childrecord.kind(),fields,childat)
           if childrecord.kind() = '.meta' then call scopes.observe(fields)
+        end
+        else if catalog.flow(childrecord.opcode()) = 1 | catalog.flow(childrecord.opcode()) = 2 then do
+          flow = catalog.flow(childrecord.opcode()); choice = facts.branchchoice(input.id(),childrecord.id())
+          if flow = 2 & choice > 0 then do
+            if childrecord.mnemonic() = 'brtf' | choice = 1 then do
+              value = childrecord.operand(choice)
+              ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.label(input.id(),value.bytes())),childat)
+            end
+            else do
+              /* A selected fallthrough keeps an executable source address for
+               * attached source/TRACE records without retaining a dead edge. */
+              call objectarraydrop fields
+              ignored = code.emit(targetbody,'cnop',fields,childat)
+            end
+          end
+          else do
+            do k = 1 to childrecord.operands()
+              if catalog.branch(childrecord.opcode(),k) = 0 then iterate
+              value = childrecord.operand(k)
+              fields[k] = .lltarget..operand.symbol(scopes.label(input.id(),value.bytes())) as .object
+            end
+            ignored = code.emit(targetbody,childrecord.mnemonic(),fields,childat)
+          end
         end
         else if childrecord.mnemonic() = 'linkarg' then do
           /* The source slot is the current active argument, including prior
@@ -596,18 +704,27 @@ expandmany: procedure = .llinline..change
             end
             else do
               mapped = fields[1] as .lltarget..operand
-              if facts.returnaction(input.id()) = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
+              if facts.returnactionat(input.id(),childrecord.id()) = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
               else ignored = code.two(targetbody,'copy',resultcell,mapped,childat)
             end
           end
           if ordered then do
-            /* Reverse the complete admitted SWAP sequence to restore actual
-             * runtime slot identities, even when LINK duplicated pointers. */
-            do k = facts.swaps(input.id()) to 1 by -1
-              swaprecord = source.at(facts.swap(input.id(),k))
-              field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,1)
-              field = swaprecord.operand(2); mapped = mappedslot(targetbody,field,base,callee.locals(),count,1)
+            if dag then do k = 1 to facts.restores(input.id(),childrecord.id())
+              pairleft = facts.restoreleft(input.id(),childrecord.id(),k)
+              pairright = facts.restoreright(input.id(),childrecord.id(),k)
+              if pairleft < 0 | pairleft >= slots | pairright < 0 | pairright >= slots then assembler signal "ERROR","LL_INLINE: invalid per-RET slot restoration"
+              destination = targetbody.reg('r',activebase + pairleft); mapped = targetbody.reg('r',activebase + pairright)
               ignored = code.two(targetbody,'swap',destination,mapped,childat)
+            end
+            else do
+              /* Preserve the qualified linear reversal, including swaps
+               * around retained children that restore the same identity. */
+              do k = facts.swaps(input.id()) to 1 by -1
+                swaprecord = source.at(facts.swap(input.id(),k))
+                field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,1)
+                field = swaprecord.operand(2); mapped = mappedslot(targetbody,field,base,callee.locals(),count,1)
+                ignored = code.two(targetbody,'swap',destination,mapped,childat)
+              end
             end
             /* Restore every active binding before expiring owned bases.
              * Argument entry anchors never become owned argument storage. */
@@ -629,6 +746,10 @@ expandmany: procedure = .llinline..change
             else anchor = targetbody.reg('r',base + count + 3 + a)
             ignored = code.one(targetbody,'endlife',anchor,childat)
           end
+          if dag then do
+            ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.continuation(accepted[input.id()])),childat)
+            iterate
+          end
           if scopes.hasbindings() then do
             do k = 1 to scopes.closings()
               if scopes.active(k) = 0 then iterate
@@ -645,6 +766,21 @@ expandmany: procedure = .llinline..change
           /* Do not turn unreachable callee end metadata into observations
            * at the reachable caller continuation. The original body is kept. */
           leave
+        end
+      end
+      if dag then do
+        call objectarraydrop fields
+        fields[1] = .lltarget..operand.symbol(scopes.continuation(accepted[input.id()])) as .object
+        ignored = targetbody.record('label',fields,at)
+        if scopes.hasbindings() then do
+          do k = 1 to scopes.closings()
+            if scopes.active(k) = 0 then iterate
+            call objectarraydrop fields
+            fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
+            ignored = targetbody.record('.meta',fields,at)
+          end
+          call objectarraydrop fields
+          ignored = code.emit(targetbody,'cnop',fields,at)
         end
       end
       maps[input.id()] = 0

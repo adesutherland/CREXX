@@ -517,9 +517,19 @@ draft: class
     contract = schema(); _store = .llir..arena(contract,entries,bytes); _fuel = .fuel(work)
     _globals = globals
     if logicalModule = '' | artifact = '' | globals < 0 | work < 1 then call _store.fail('LL_TARGET_MODULE: invalid identity, globals or work budget')
-    fn = .llir..function(reference _store,_store.function('$target.catalogue',contract.voidtype()))
-    _catalogue = fn.block('records'); origin = syntheticorigin(reference _store,'target module')
+    if _store.error() <> '' then return
+    functionid = _store.function('$target.catalogue',contract.voidtype())
+    if _store.error() <> '' then return
+    fn = .llir..function(reference _store,functionid)
+    _catalogue = fn.block('records')
+    if _store.error() <> '' then return
+    sourceid = _store.source('target module',''x as .binary)
+    if _store.error() <> '' then return
+    originid = _store.origin(sourceid,0,0,4)
+    if _store.error() <> '' then return
+    origin = .llir..origin(reference _store,originid)
     op = _catalogue.operation(contract.operation('rxas.target.module'),origin)
+    if _store.error() <> '' then return
     catalog = .llrxascatalog..catalog()
     call op.attribute('name',logicalModule as .binary); call op.attribute('artifact',artifact as .binary)
     call op.attribute('globals',integerbits(globals)); call op.attribute('catalog',catalog.fingerprint() as .binary)

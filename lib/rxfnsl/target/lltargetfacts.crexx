@@ -18,6 +18,8 @@ numbers: class
     arg ordinal = .int
     if ordinal < 1 | ordinal > _values[0] then assembler signal "ERROR","LL_TARGET_FACTS_ID: numeric row ordinal"
     return _values[ordinal]
+  size: method = .int
+    return _values[0]
 
 /** This helper proves the checked write succeeds before evaluating it. The VM
  * default OVERFLOW_UNDERFLOW response ignores a failed, unwritten destination;
@@ -62,6 +64,7 @@ cells: class
   _values = .int[]
   _plain = .int[]
   _flags = .int[]
+  _flagsknown = .int[]
   _wholeknown = .int[]
   _zeroed = .int[]
   *: factory
@@ -70,7 +73,7 @@ cells: class
     arg defined = 0, known = 0, value = 0
     n = _defined[0] + 1
     _defined[n] = defined; _known[n] = known; _values[n] = value; _plain[n] = 1; _flags[n] = 0
-    _wholeknown[n] = 1; _zeroed[n] = 0
+    _wholeknown[n] = 1; _zeroed[n] = 0; _flagsknown[n] = 1
     return n
   defined: method = .int
     arg id = .int
@@ -87,6 +90,27 @@ cells: class
   flags: method = .int
     arg id = .int
     return _flags[id]
+  flagsknown: method = .int
+    arg id = .int
+    return _flagsknown[id]
+  size: method = .int
+    return _defined[0]
+  /* Whole-known means entry independence, not identical bits across paths.
+   * The status token tracks authored public flags, never protected VM bits. */
+  meet: method = .int
+    arg other = .cells
+    if size() <> other.size() then return 0
+    do i = 1 to size()
+      _defined[i] = _defined[i] & other.defined(i)
+      _known[i] = _defined[i] & _known[i] & other.known(i) & (_values[i] = other.value(i))
+      if _known[i] = 0 then _values[i] = 0
+      _plain[i] = _plain[i] & other.plain(i)
+      _wholeknown[i] = _wholeknown[i] & other.wholeknown(i)
+      _zeroed[i] = _zeroed[i] & other.zeroed(i)
+      _flagsknown[i] = _flagsknown[i] & other.flagsknown(i) & (_flags[i] = other.flags(i))
+      if _flagsknown[i] = 0 then _flags[i] = 0
+    end
+    return 1
   wholeknown: method = .int
     arg id = .int
     return _wholeknown[id]
@@ -97,7 +121,7 @@ cells: class
     arg id = .int
     /* The scalar profile proves no native/reference payload was created.
      * Recycled ordinary components/status still cannot be assumed fresh. */
-    _defined[id] = 0; _known[id] = 0; _wholeknown[id] = 0; _zeroed[id] = 0
+    _defined[id] = 0; _known[id] = 0; _wholeknown[id] = 0; _zeroed[id] = 0; _flagsknown[id] = 0
     return
   integer: method = .void
     arg id = .int, known = .int, value = 0
@@ -106,13 +130,14 @@ cells: class
   reset: method = .void
     arg id = .int
     _defined[id] = 1; _known[id] = 1; _values[id] = 0; _plain[id] = 1; _flags[id] = 0
-    _wholeknown[id] = 1; _zeroed[id] = 1
+    _wholeknown[id] = 1; _zeroed[id] = 1; _flagsknown[id] = 1
     return
   copy: method = .void
     arg destination = .int, source = .int, whole = 1
     _defined[destination] = _defined[source]; _known[destination] = _known[source]; _values[destination] = _values[source]
     if whole then do
       _plain[destination] = _plain[source]; _flags[destination] = _flags[source]
+      _flagsknown[destination] = _flagsknown[source]
       _wholeknown[destination] = _wholeknown[source]; _zeroed[destination] = _zeroed[source]
     end
     else _zeroed[destination] = 0
@@ -125,7 +150,7 @@ cells: class
     return
   status: method = .void
     arg id = .int, flags = .int
-    _flags[id] = flags; _zeroed[id] = 0
+    _flags[id] = flags; _zeroed[id] = 0; _flagsknown[id] = 1
     return
   string: method = .void
     arg id = .int
@@ -205,6 +230,22 @@ frame: class
     arg position = .int
     if position < 1 | position > _base[0] then assembler signal "ERROR","LL_TARGET_FACTS_ID: frame base ordinal"
     return _base[position]
+  identityat: method = .int
+    arg position = .int
+    return _identity[position]
+  compatible: method = .int
+    arg other = .frame
+    if slots() <> other.slots() | _arguments <> other.arguments() | _context <> other.context() then return 0
+    do i = 1 to slots()
+      if _base[i] <> other.baseat(i) | _identity[i] <> other.identityat(i) then return 0
+      if _map[i] <> other.storage(slot(i - 1)) then return 0
+    end
+    return 1
+  privateordinal: method = .int
+    arg physical = .int
+    if physical < _locals then return physical
+    if physical < _locals + _globals then return -1
+    return physical - _globals
   ownedbase: method = .int
     arg ordinal = .int
     if ordinal < 1 | ordinal > _locals + 1 then do
@@ -288,6 +329,67 @@ callshape: class
     arg ordinal = .int
     return _actuals[ordinal]
 
+/** Compact, internally authored per-call rows. Keys are callee source/RET
+ * ordinals; no mutable state or caller-authored proof escapes the analysis. */
+callproof: class
+  _live = .int[]
+  _choice = .int[]
+  _sites = .int[]
+  _action = .string[]
+  _left = .numbers[]
+  _right = .numbers[]
+  _written = .int
+  _killinteger = .int
+  _killwhole = .int
+  *: factory
+    arg records = .int, returns = .int
+    i = .int
+    do i = 1 to records; _live[i] = 0; _choice[i] = 0; end
+    do i = 1 to returns; _action[i] = ''; end
+    return
+  live: method = .int
+    arg ordinal = .int
+    return _live[ordinal]
+  visit: method = .void
+    arg ordinal = .int, choice = 0
+    _live[ordinal] = 1; _choice[ordinal] = choice
+    return
+  choice: method = .int
+    arg ordinal = .int
+    return _choice[ordinal]
+  addreturn: method = .void
+    arg ordinal = .int, site = .int, action = .string, left = .int[], right = .int[]
+    if _sites[0] = 0 then do; _killinteger = 1; _killwhole = 1; end
+    _sites[_sites[0] + 1] = site; _action[ordinal] = action
+    _left[ordinal] = .numbers(left); _right[ordinal] = .numbers(right)
+    _written = _written | (action <> 'none')
+    _killinteger = _killinteger & (action <> 'none')
+    _killwhole = _killwhole & (action = 'copy' | action = 'move')
+    return
+  returns: method = .int
+    return _sites[0]
+  site: method = .int
+    arg ordinal = .int
+    return _sites[ordinal]
+  action: method = .string
+    arg ordinal = .int
+    return _action[ordinal]
+  restores: method = .int
+    arg ordinal = .int
+    return _left[ordinal].size()
+  left: method = .int
+    arg ordinal = .int, pair = .int
+    return _left[ordinal].at(pair)
+  right: method = .int
+    arg ordinal = .int, pair = .int
+    return _right[ordinal].at(pair)
+  written: method = .int
+    return _written
+  killinteger: method = .int
+    return _killinteger
+  killwhole: method = .int
+    return _killwhole
+
 /** Facts are bound to one exact frozen target owner and shared graph/access
  * projection. The projection supplies accesses to the existing L liveness
  * solver; this target owner supplies VM-specific transfer and storage facts. */
@@ -339,6 +441,15 @@ analysis: class
   _linear = .object[]
   _linearcount = .int[]
   _runtime = .int[]
+  _recordordinal = .int[]
+  _recordcount = .int[]
+  _retordinal = .int[]
+  _retcount = .int[]
+  _dagbody = .int[]
+  _proofindex = .int[]
+  _proofs = .callproof[]
+  _cycles = .llirgraph..cycles
+  _cyclesready = .int
   _bytelimit = .int
   _retained = .int
   *: factory
@@ -360,6 +471,164 @@ analysis: class
     arg reason = .string
     _status = 'keep'; _reason = reason
     return 0
+  /* Include transient and retained deep copies, not an assumed VM COW path. */
+  pathallowance: method = .int
+    arg cells = .int, slots = .int
+    if reserve(cells,256) = 0 | reserve(slots,128) = 0 | reserve(1,256) = 0 then return 0
+    if cells > _work / 32 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(cells * 32) = 0 then return 0
+    if slots > _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    return spend(slots * 16)
+  joinpath: method = .int
+    arg cells_ref = reference .cells, frame_ref = reference .frame, incoming = .cells, incomingframe = .frame
+    state = dereference cells_ref; view = dereference frame_ref
+    if view.compatible(incomingframe) = 0 then return reject('join.binding.unproved')
+    if state.meet(incoming) = 0 then return reject('join.storage.unproved')
+    return 1
+  /* Transfer into the pointer captured at call entry before deriving the
+   * inverse reached permutation. A source r is owned only at its own base. */
+  finishreturn: method = .int
+    arg item = .lltarget..record, expose view = .frame, expose state = .cells, destination = .int, hasresult = .int, expose proof = .callproof
+    i = .int; j = .int; id = .int; displaced = .int; a = .int; b = .int
+    value = .lltarget..operand; action = .string; permutation = .int[]; positions = .int[]; left = .int[]; right = .int[]
+    if reserve(view.slots(),64) = 0 | reserve(1,128) = 0 then return 0
+    if view.slots() > _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(view.slots() * 16) = 0 then return 0
+    action = 'none'
+    if hasresult & item.operands() = 1 then do
+      value = item.operand(1)
+      if value.kind() = 'I' then do; action = 'integer'; call state.integer(destination,1,value.index()); end
+      else do
+        id = view.storage(value)
+        if value.bank() = 'r' & id = view.base(value) then do; action = 'move'; call state.move(destination,id); end
+        else do; action = 'copy'; call state.copy(destination,id); end
+      end
+    end
+    do i = 1 to view.slots()
+      id = view.identityat(i)
+      if id < 1 | id > view.slots() then return reject('return.permutation.unproved')
+      if positions[id] <> 0 then return reject('return.permutation.unproved')
+      permutation[i] = id; positions[id] = i
+    end
+    do i = 1 to view.slots()
+      if permutation[i] = i then iterate
+      j = positions[i]; a = view.privateordinal(i - 1); b = view.privateordinal(j - 1)
+      if a < 0 | b < 0 then return reject('global.callee.binding.pending')
+      left[left[0] + 1] = a; right[right[0] + 1] = b
+      displaced = permutation[i]; permutation[j] = displaced; positions[displaced] = j
+      permutation[i] = i; positions[i] = i
+    end
+    call proof.addreturn(_retordinal[item.id()],item.id(),action,left,right)
+    return 1
+  /* One finite forward pass over the shared graph's DAG order. These rows
+   * hold target transfer snapshots; edges and scheduling stay index-owned. */
+  dag: method = .int
+    arg bodyid = .int, expose entryframe = .frame, expose state = .cells, destination = .int, hasresult = .int, expose proof = .callproof, expose selectors = .int[], publish = 1, callid = 0
+    i = .int; b = .int; opid = .int; target = .int; edge = .int; choice = .int; returned = .int; exits = .int; id = .int; j = .int; retid = .int
+    incoming = .cells[]; frames = .frame[]; present = .int[]
+    path = .cells; merged = .cells; view = .frame; item = .lltarget..record; value = .lltarget..operand
+    source_ref = reference .cells; view_ref = reference .frame; path_ref = reference .cells; pathview_ref = reference .frame
+    name = .string; flow = .int
+    module = dereference _owner; catalog = .llrxascatalog..catalog()
+    if _cyclesready = 0 then do
+      _cycles = _index.loops(_work,_bytelimit)
+      if _cycles.status() <> 'ok' then do; _status = _cycles.status(); _reason = _cycles.message(); return 0; end
+      if spend(_cycles.usedwork()) = 0 | reserve(_cycles.usedbytes(),1) = 0 then return 0
+      _cyclesready = 1
+    end
+    do i = 1 to _index.functionblocks(bodyid)
+      if spend(1) = 0 then return 0
+      b = _index.functionblock(bodyid,i)
+      if _index.reachable(b) then do
+        if _cycles.cyclic(_cycles.component(b)) then return reject('callee.cfg.cycle.pending')
+      end
+    end
+    if reserve(_index.blocks(),32) = 0 | pathallowance(state.size(),entryframe.slots()) = 0 then return 0
+    b = _index.functionentry(bodyid); source_ref = reference state; view_ref = reference entryframe
+    incoming[b] = snapshot source_ref; frames[b] = snapshot view_ref; present[b] = 1; exits = 0
+    do i = 1 to _index.rposize()
+      if spend(1) = 0 then return 0
+      b = _index.rpo(i)
+      if _index.blockfunction(b) <> bodyid | present[b] = 0 then iterate
+      if pathallowance(state.size(),entryframe.slots()) = 0 then return 0
+      source_ref = reference incoming[b]; view_ref = reference frames[b]
+      path = snapshot source_ref; view = snapshot view_ref
+      choice = 0; returned = 0; opid = _index.firstop(b)
+      do while opid > 0
+        if spend(1) = 0 then return 0
+        if _index.opcode(opid) <= 16 then do; opid = _index.nextop(opid); iterate; end
+        item = module.at(opid); call proof.visit(_recordordinal[opid])
+        if item.kind() = 'instruction' then do
+          name = item.mnemonic(); flow = catalog.flow(item.opcode())
+          if wordpos(name,'call call1 call2 call3 call4') > 0 then return reject('call.branch.history.pending')
+          if flow = 1 | flow = 2 then do
+            if name = 'br' then choice = 1
+            else if wordpos(name,'brt brf brtf') > 0 then do
+              value = item.operand(item.operands()); id = view.storage(value)
+              if id = 0 | path.defined(id) = 0 then return reject('branch.condition.unproved')
+              if globalcell(id) & path.wholeknown(id) = 0 then return reject('global.definition.unproved')
+              if path.known(id) then do
+                choice = 2
+                if (name = 'brf' & path.value(id) = 0) | (name <> 'brf' & path.value(id) <> 0) then choice = 1
+              end
+            end
+            else return reject('profile.callee.cfg.pending')
+            call proof.visit(_recordordinal[opid],choice)
+          end
+          else do
+            if flow <> 0 & name <> 'ret' then return reject('profile.callee.exit.pending')
+            if step(item,view,reference path,1,0,hasresult,0) = 0 then return 0
+            if publish & name = 'linkarg' then selectors[_selectorordinal[opid]] = _lastselector
+            if publish & wordpos(name,'link unlink swap linkarg') > 0 then _rebinding[callid] = 1
+            if name = 'ret' then do
+              if finishreturn(item,view,path,destination,hasresult,proof) = 0 then return 0
+              if pathallowance(state.size(),entryframe.slots()) = 0 then return 0
+              if exits = 0 then do; path_ref = reference path; merged = snapshot path_ref; end
+              else if merged.meet(path) = 0 then return reject('join.storage.unproved')
+              exits = exits + 1; returned = 1
+            end
+          end
+        end
+        else if step(item,view,reference path,1,0,hasresult,0) = 0 then return 0
+        opid = _index.nextop(opid)
+      end
+      if returned then iterate
+      if _index.successors(b) = 0 then return reject('return.missing')
+      do edge = 1 to _index.successors(b)
+        if spend(1) = 0 then return 0
+        if choice > 0 & edge <> choice then iterate
+        target = _index.successor(b,edge)
+        if pathallowance(state.size(),entryframe.slots()) = 0 then return 0
+        if present[target] = 0 then do
+          path_ref = reference path; pathview_ref = reference view
+          incoming[target] = snapshot path_ref; frames[target] = snapshot pathview_ref; present[target] = 1
+        end
+        else if joinpath(reference incoming[target],reference frames[target],path,view) = 0 then return 0
+      end
+    end
+    if exits = 0 then return reject('return.missing')
+    /* Until the metadata owner proves path-local binding reconciliation,
+     * common post-arm closure requires every live open/clear to precede each
+     * feasible RET. Detached tails were never visited and cannot count. */
+    do i = 1 to _index.functionoperations(bodyid)
+      if spend(1) = 0 then return 0
+      opid = _index.functionoperation(bodyid,i)
+      if _index.opcode(opid) <= 16 then iterate
+      if proof.live(_recordordinal[opid]) = 0 then iterate
+      item = module.at(opid)
+      if item.kind() <> '.meta' then iterate
+      if item.operands() <> 1 & item.operands() <> 4 then iterate
+      do j = 1 to proof.returns()
+        if spend(1) = 0 then return 0
+        retid = proof.site(j)
+        if _index.dominates(_index.opblock(opid),_index.opblock(retid)) = 0 then return reject('metadata.scope.cfg.pending')
+        if _index.opblock(opid) = _index.opblock(retid) then do
+          if _index.opposition(opid) >= _index.opposition(retid) then return reject('metadata.scope.cfg.pending')
+        end
+      end
+    end
+    state = merged
+    return 1
   /* Cache only the operation order of an already indexed linear CFG. The
    * shared index owns edges/reachability; this is not a second graph. Core
    * entry thunks and detached metadata blocks need not make a scalar body
@@ -451,7 +720,7 @@ analysis: class
     values[values[0] + 1] = id
     return
   step: method = .int
-    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1, returnwhole = 1
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1, returnwhole = 1, history = 1
     i = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
     opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
     selected = .int; checked = .int[]; limits = .int[]
@@ -474,7 +743,7 @@ analysis: class
     end
     if record then do; _references[item.id()] = .numbers(references) as .object; _beforeplain[item.id()] = .numbers(plain) as .object; end
     if item.kind() <> 'instruction' then do
-      if wordpos(item.kind(),'.srcstep .srcfile .srcline') > 0 then nop
+      if wordpos(item.kind(),'.srcstep .srcfile .srcline') > 0 | (private & item.kind() = 'label') then nop
       else if item.kind() = '.meta' then do
         if item.operands() > 1 then do
           option = item.operand(2)
@@ -689,7 +958,7 @@ analysis: class
           call insert(reference kills,domain(destination)); call insert(reference kills,domain(destination,1))
         end
         else if wordpos(name,'load icopy getandtp iadd isub imult') > 0 then call insert(reference kills,domain(destination))
-        _plain[destination] = state.plain(destination)
+        if history then _plain[destination] = state.plain(destination)
       end
     end
     else return reject('profile.scalar.operation.pending')
@@ -745,7 +1014,7 @@ analysis: class
     id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
     callee = .lltarget..body; child = .frame; record = .lltarget..record; shape = .callshape
     value = .lltarget..operand; ownedrow = .numbers; resetrow = .numbers; action = .string; linearrow = .numbers
-    selectors = .int[]; banks = .string
+    selectors = .int[]; banks = .string; proof = .callproof; p = .int
     if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
     module = dereference _owner; state = dereference state_ref
     if _globals[0] > 0 then do
@@ -762,8 +1031,14 @@ analysis: class
     if publish then outerCallId = item.id()
     else if item.mnemonic() = 'call' & item.operands() = 3 then _ordered[outerCallId] = 1
     callee = module.body(bodyid)
-    if linear(bodyid,'profile.callee.cfg.pending') = 0 then return 0
-    linearrow = _linear[bodyid] as .numbers
+    if module.normalcfgcomplete(bodyid) = 0 then return reject('profile.callee.cfg.pending')
+    if _dagbody[bodyid] = 0 then do
+      if linear(bodyid,'profile.callee.cfg.pending') = 0 then return 0
+      linearrow = _linear[bodyid] as .numbers
+    end
+    if reserve(_recordcount[bodyid],32) = 0 | reserve(_retcount[bodyid],112) = 0 | reserve(1,256) = 0 then return 0
+    if spend(_recordcount[bodyid]) = 0 | spend(_retcount[bodyid]) = 0 then return 0
+    proof = .callproof(_recordcount[bodyid],_retcount[bodyid])
     actuals = .int[]; positions = .int[]; references = .int[]; owned = .int[]; reset = .int[]; swaps = .int[]
     reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]
     if spend(count) = 0 then return 0
@@ -820,7 +1095,7 @@ analysis: class
       else child = .frame(state_ref,callee.locals(),actuals,0,view.context(),owned)
     end
     else do
-      if reserve(callee.locals() + 1,80) = 0 then return 0
+      if reserve(callee.locals() + 1,88) = 0 then return 0
       if _globals[0] > 0 then do
         if spend(callee.locals() + 1) = 0 then return 0
         do i = 1 to callee.locals(); owned[i] = state.add(); end
@@ -832,10 +1107,17 @@ analysis: class
       _owned[bodyid] = .numbers(owned) as .object
     end
     _activations[bodyid] = _activations[bodyid] + 1; returned = 0
+    if _dagbody[bodyid] then do
+      if dag(bodyid,child,state,destination,hasresult,proof,selectors,publish,item.id()) = 0 then return 0
+      if spend(state.size()) = 0 then return 0
+      do i = 1 to state.size(); _plain[i] = state.plain(i); end
+    end
+    else do
     do i = 1 to _linearcount[bodyid]
       if spend(1) = 0 then return 0
       recordid = linearrow.at(i)
       record = module.at(recordid)
+      call proof.visit(_recordordinal[recordid])
       if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
       if record.kind() = 'instruction' & wordpos(record.mnemonic(),'call call1 call2 call3 call4') > 0 then do
         if invoke(record,child,state_ref,0,outerCallId,depth + 1) = 0 then return 0
@@ -855,28 +1137,14 @@ analysis: class
       if record.kind() = 'instruction' & record.mnemonic() = 'ret' then returned = record.id()
     end
     if returned = 0 then return reject('return.missing')
-    action = 'none'
-    if hasresult then do
       record = module.at(returned)
-      if record.operands() = 1 then do
-        value = record.operand(1)
-        if value.kind() = 'I' then do
-          action = 'integer'; call state.integer(destination,1,value.index())
-        end
-        else do
-          id = child.storage(value)
-          if value.bank() = 'r' & id = child.base(value) then do
-            action = 'move'; call state.move(destination,id)
-          end
-          else do; action = 'copy'; call state.copy(destination,id); end
-        end
-        if publish then do
-          call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
-          call insert(reference kills,domain(destination))
-          if value.kind() = 'R' then call insert(reference kills,domain(destination,1))
-        end
-      end
-      _plain[destination] = state.plain(destination)
+      if finishreturn(record,child,state,destination,hasresult,proof) = 0 then return 0
+    end
+    if hasresult then _plain[destination] = state.plain(destination)
+    if publish & proof.written() then do
+      call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
+      if proof.killinteger() then call insert(reference kills,domain(destination))
+      if proof.killwhole() then call insert(reference kills,domain(destination,1))
     end
     do i = 1 to callee.locals()
       reset[i] = state.zeroed(child.ownedbase(i))
@@ -885,6 +1153,10 @@ analysis: class
     _active[bodyid] = 0
     if publish = 0 then return 1
     if _selectorcount[bodyid] > 0 then _selectors[item.id()] = .numbers(selectors) as .object
+    returned = 0; action = ''
+    if proof.returns() = 1 then do
+      returned = proof.site(1); action = proof.action(_retordinal[returned])
+    end
     _returnaction[item.id()] = action
     _swaps[item.id()] = .numbers(swaps) as .object; _swapcount[item.id()] = swaps[0]
     do i = 1 to actuals[0]
@@ -898,6 +1170,7 @@ analysis: class
     _return[item.id()] = returned; _actuals[item.id()] = .numbers(positions) as .object; _argumentstorage[item.id()] = .numbers(actuals) as .object; _context[item.id()] = view.context()
     if _globals[0] > 0 then _argumentbanks[item.id()] = banks
     _calls[_calls[0] + 1] = item.id()
+    p = _proofs[0] + 1; _proofs[p] = proof; _proofindex[item.id()] = p
     call _access.put(item.id(),reads,observations,writes,kills)
     return 1
   run: method = .void
@@ -907,10 +1180,10 @@ analysis: class
     id = .int; slot = .int; integer = .int; whole = .int; barrier = .int; definition = .int
     references = .numbers; plain = .numbers; actuals = .numbers; destination = .lltarget..operand; linearrow = .numbers
     ownedroot = .int[]; view = .frame
-    item = .lltarget..record; value = .lltarget..operand; option = .lltarget..operand
+    item = .lltarget..record; value = .lltarget..operand; option = .lltarget..operand; catalog = .llrxascatalog..catalog
     do
     if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _reason = 'owner.expired'; return; end
-    module = dereference _owner
+    module = dereference _owner; catalog = .llrxascatalog..catalog()
     if module.valid() = 0 then do; _status = 'invalid'; _reason = module.error(); return; end
     if _profile <> 'closed-main-default-halt.v1' then do; ignored = reject('signal.policy.unproved'); return; end
     body = module.body(_function)
@@ -922,7 +1195,7 @@ analysis: class
     _index = .llirgraph..index(graph_ref,_work,_bytelimit)
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
-    if reserve(graph.operations(),176) = 0 | reserve(graph.functions(),56) = 0 then return
+    if reserve(graph.operations(),200) = 0 | reserve(graph.functions(),80) = 0 then return
     if module.globals() > 0 then do
       if reserve(graph.operations(),8) = 0 then return
     end
@@ -931,6 +1204,16 @@ analysis: class
     do i = 1 to module.records()
       if spend(1) = 0 then return
       item = module.record(i)
+      if item.procedureid() > 1 & item.kind() <> 'procedure' then do
+        j = item.procedureid(); _recordcount[j] = _recordcount[j] + 1; _recordordinal[item.id()] = _recordcount[j]
+        if item.kind() = 'instruction' then do
+          if item.mnemonic() = 'ret' then do
+            _retcount[j] = _retcount[j] + 1; _retordinal[item.id()] = _retcount[j]
+            if _retcount[j] > 1 then _dagbody[j] = 1
+          end
+          if catalog.flow(item.opcode()) = 1 | catalog.flow(item.opcode()) = 2 then _dagbody[j] = 1
+        end
+      end
       if module.globals() > 0 then do
         if item.kind() = '.globalexpose' then do; ignored = reject('global.exposure.pending'); return; end
         if item.kind() = '.meta' & item.operands() > 1 then do
@@ -957,11 +1240,11 @@ analysis: class
     if spend(body.locals() + 1) = 0 then return
     state = .cells(); empty = .int[]
     if module.globals() = 0 then do
-      if reserve(body.locals() + 1,104) = 0 then return
+      if reserve(body.locals() + 1,112) = 0 then return
       view = .frame(reference state,body.locals(),empty,1)
     end
     else do
-      if reserve(body.locals() + 1,128) = 0 | reserve(module.globals(),128) = 0 then return
+      if reserve(body.locals() + 1,136) = 0 | reserve(module.globals(),136) = 0 then return
       if spend(body.locals() + 1) = 0 | spend(module.globals()) = 0 | spend(module.globals()) = 0 then return
       /* Keep root r StorageIds 1..L. Module bases persist independently of
        * every procedure's physical r/g/a map and owned local/a0 cache. */
@@ -1158,9 +1441,110 @@ analysis: class
   argumentstorage: method = .int
     arg callid = .int, ordinal = .int
     call require(); actuals = _argumentstorage[callid] as .numbers; return actuals.at(ordinal)
+  proofid: method = .int
+    arg callid = .int
+    call require()
+    if valid() = 0 then return 0
+    if callid < 1 | callid > _body[0] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root call identity"; return 0
+    end
+    if _body[callid] = 0 | _proofindex[callid] = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root call identity"; return 0
+    end
+    return _proofindex[callid]
+  recordkey: method = .int
+    arg callid = .int, recordid = .int
+    if proofid(callid) = 0 then return 0
+    if recordid < 1 | recordid > _recordordinal[0] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original callee record identity"; return 0
+    end
+    if _recordordinal[recordid] = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original callee record identity"; return 0
+    end
+    if _index.blockfunction(_index.opblock(recordid)) <> _body[callid] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: foreign callee record"; return 0
+    end
+    return _recordordinal[recordid]
+  returnkey: method = .int
+    arg callid = .int, recordid = .int
+    p = .int
+    if recordkey(callid,recordid) = 0 then return 0
+    if recordid > _retordinal[0] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original callee RET identity"; return 0
+    end
+    if _retordinal[recordid] = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original callee RET identity"; return 0
+    end
+    p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
+    if row.action(_retordinal[recordid]) = '' then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: infeasible callee RET"; return 0
+    end
+    return _retordinal[recordid]
+  /** All exit queries use exact original root-call/callee-record identities.
+   * Queries borrow sealed rows and consume no handed-off construction work. */
+  returns: method = .int
+    arg callid = .int
+    p = proofid(callid)
+    if p = 0 then return 0
+    row_ref = reference _proofs[p]; row = dereference row_ref
+    return row.returns()
+  returnsite: method = .int
+    arg callid = .int, ordinal = .int
+    p = proofid(callid)
+    if p = 0 then return 0
+    row_ref = reference _proofs[p]; row = dereference row_ref
+    if ordinal < 1 | ordinal > row.returns() then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: return ordinal"; return 0
+    end
+    return row.site(ordinal)
+  returnactionat: method = .string
+    arg callid = .int, retid = .int
+    ordinal = returnkey(callid,retid)
+    if ordinal = 0 then return ''
+    p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
+    return row.action(ordinal)
+  restores: method = .int
+    arg callid = .int, retid = .int
+    ordinal = returnkey(callid,retid)
+    if ordinal = 0 then return 0
+    p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
+    return row.restores(ordinal)
+  restoreleft: method = .int
+    arg callid = .int, retid = .int, pair = .int
+    ordinal = returnkey(callid,retid)
+    if ordinal = 0 then return -1
+    p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
+    if pair < 1 | pair > row.restores(ordinal) then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: restore ordinal"; return -1
+    end
+    return row.left(ordinal,pair)
+  restoreright: method = .int
+    arg callid = .int, retid = .int, pair = .int
+    ordinal = returnkey(callid,retid)
+    if ordinal = 0 then return -1
+    p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
+    if pair < 1 | pair > row.restores(ordinal) then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: restore ordinal"; return -1
+    end
+    return row.right(ordinal,pair)
+  recordlive: method = .int
+    arg callid = .int, recordid = .int
+    ordinal = recordkey(callid,recordid)
+    if ordinal = 0 then return 0
+    p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
+    return row.live(ordinal)
+  branchchoice: method = .int
+    arg callid = .int, recordid = .int
+    ordinal = recordkey(callid,recordid)
+    if ordinal = 0 then return 0
+    p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
+    return row.choice(ordinal)
   returned: method = .int
     arg callid = .int
-    call require(); return _return[callid]
+    if returns(callid) <> 1 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_RETURN: use per-RET facts"; return 0
+    end
+    return _return[callid]
   /** The sealed call plan distinguishes active binding changes from values. */
   rebinding: method = .int
     arg callid = .int
@@ -1213,13 +1597,24 @@ analysis: class
     return row.at(ordinal)
   returnaction: method = .string
     arg callid = .int
-    call require(); return _returnaction[callid]
+    if returns(callid) <> 1 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_RETURN: use per-RET facts"; return ''
+    end
+    return _returnaction[callid]
   swaps: method = .int
     arg callid = .int
-    call require(); return _swapcount[callid]
+    if proofid(callid) = 0 then return 0
+    if _dagbody[_body[callid]] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_RETURN: use per-RET restoration"; return 0
+    end
+    return _swapcount[callid]
   swap: method = .int
     arg callid = .int, ordinal = .int
-    call require(); records = _swaps[callid] as .numbers; return records.at(ordinal)
+    if proofid(callid) = 0 then return 0
+    if _dagbody[_body[callid]] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_RETURN: use per-RET restoration"; return 0
+    end
+    records = _swaps[callid] as .numbers; return records.at(ordinal)
   context: method = .string
     arg callid = .int
     call require(); return _context[callid]

@@ -124,8 +124,8 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, and private same-module scalar global slices are implemented and focused-qualified. Direct target CFG transport/validation and sole-RET detached-scope closure are focused-qualified, with branch/multiple-return expansion still open. Complete broader aliasing, optional presence/defaults and dynamic varargs, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. The target CFG prerequisite keeps current linear cleanup conservative on branched callers and typed end-anchor observations; graph-aware placement, broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, and acyclic direct-branch scalar multiple returns are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, optional presence/defaults and dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage meets and the fresh-root private-scalar reuse slice are focused-qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Current linear cleanup keeps branched callers and typed end-anchor observations; graph-aware placement, broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -746,8 +746,14 @@ deterministic names safe for native RXAS. It rewrites only label declarations
 and catalogue-declared branch operands; unrelated `L` symbols retain their
 meaning. It preserves source/TRACE/provenance and omits only already proved
 detached callee end-anchor records. Each cloned RET emits its own transfer,
-restoration and owned cleanup, then branches to one continuation before the
-resumed caller. The current source-order transport/storage cleanup keeps the
+restoration and owned cleanup, then branches to one shared closure block after
+all cloned arms. That block closes fresh bindings still open at a normal exit,
+uses one executable address carrier, and resumes the caller. An earlier arm's
+generated clear must not lie lexically before a later arm: `rxdb` scans prior
+addresses statically and could hide a binding inside that arm. Initially admit
+only metadata scopes whose entry/exit state has a compatible proof across
+feasible arms; a branch-local scope without one keeps its call with a precise
+observation reason. The current source-order transport/storage cleanup keeps the
 newly branched caller until a separately reviewed graph-aware proof exists.
 
 Independent controls include both `0` and nonzero `2` arms of the same
@@ -761,6 +767,13 @@ and byte-identical retained owners for incompatible joins, cycles, undefined
 conditions and unsupported edges. Tight work/frame/entry/byte limits remain
 atomic. Qualify conservative expansion through native assembler `-n` and one
 VM; run the existing small target/inline/IO checks only where inputs changed.
+
+The entry-limit control also exercises construction of the target draft's
+catalogue, before any cloned body exists. The target draft owner must preserve
+the arena's `LL_RESOURCE_LIMIT` when its initial function/block/record cannot
+be allocated; no invalid handle may replace that diagnosis with an owner
+error. The inliner checks the draft error before provenance or emission and
+returns the exact frozen input with status `limit`.
 
 ### Required native bootstrap correctness repair
 

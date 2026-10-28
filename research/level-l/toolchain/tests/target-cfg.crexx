@@ -217,8 +217,8 @@ malformed: procedure = .int
   end
   return failures
 
-/** The CFG prerequisite preserves current proof refusals. These are pending
- * inliner/cleanup implementations, not permanent restrictions on valid RXAS. */
+/** Caller CFG and cleanup proofs remain pending; a callee's known branch
+ * now has a positive expansion control rather than the old blanket refusal. */
 keeps: procedure = .int
   failures = 0; variant = .int; ignored = .int; callid = .int; expected = .string
   original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
@@ -245,16 +245,25 @@ keeps: procedure = .int
     original = draft.finish(); graph = dereference original.ir(); image = graph.binary()
     failures = failures + check(original.valid(),'pending proof control is valid RXAS ' || variant)
     if original.valid() = 0 then do; say original.error(); iterate; end
-    if variant < 3 then do
+    if variant = 1 then do
       expected = 'profile.caller.cfg.pending'
-      if variant = 2 then expected = 'profile.callee.cfg.pending'
       request = llinline..bind(reference original,callid,reference original,original.procedureid('helper'))
       decision = llinline..inspect(request,'closed-main-default-halt.v1')
       failures = failures + check(decision.status() = 'keep' & decision.reason() = expected,'current branch inlining has a specific pending reason ' || variant)
       changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result(); proofgraph = dereference kept.ir()
       failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(proofgraph.binary()) = bin2x(image),'pending branch expansion preserves exact original ' || variant)
     end
-    if variant = 2 then iterate
+    if variant = 2 then do
+      request = llinline..bind(reference original,callid,reference original,original.procedureid('helper'))
+      decision = llinline..inspect(request,'closed-main-default-halt.v1')
+      failures = failures + check(decision.status() = 'legal','defined nonzero BRF input admits its one feasible callee exit')
+      changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result()
+      failures = failures + check(changed.status() = 'changed' & kept.valid() & changed.operation(callid) = 0,'known callee branch expands without an authored caller CFG')
+      if changed.status() <> 'changed' then say changed.reason()
+      originalgraph = dereference original.ir()
+      failures = failures + check(bin2x(originalgraph.binary()) = bin2x(image),'known branch expansion preserves the exact original owner')
+      iterate
+    end
     changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
     failures = failures + check(changed.status() = 'keep' & changed.reason() = 'transport.cfg.pending' & bin2x(graph.binary()) = bin2x(image),'linear transport keeps branches or typed end anchors ' || variant)
     changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()

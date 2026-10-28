@@ -1002,8 +1002,9 @@ than accepting a caller assertion. Straight-line scalar facts traverse a
 verified sole-return normal chain through structural thunks, ignoring detached
 end-address metadata tails for runtime transfer. A selected callee's tail
 remains in its original declaration and is not cloned into the caller's
-continuation. These facts still retain source branches, cycles and multiple
-returns until the corresponding proof exists. The current linear cleanup keeps
+continuation. The original straight-line fact path retains source branches,
+cycles and multiple returns; the acyclic proof below admits a selected subset.
+The current linear cleanup keeps
 changed callers with branches or typed end-anchor observations before making
 source-order storage assignments.
 
@@ -1017,6 +1018,39 @@ specific pending reason and unchanged original owner; malformed labels or
 edges are invalid-input tests. Neither kind proves a shape inherently
 impossible. When a proof is implemented, replace its pending regression with
 a positive expansion and execution check.
+
+### Acyclic scalar callee expansion
+
+The current B/L proof admits a direct-branch callee with a finite acyclic
+normal CFG and multiple RETs while its root caller remains on the qualified
+linear profile. The shared `llirgraph` RPO/SCC index supplies reachability and
+cycle checks. Each feasible path snapshots the complete scalar component and
+status state and the active/base/identity/context frame bindings. A join keeps
+an integer constant only when every incoming path proves the same value;
+`wholeknown` remains entry-independence and status has a separate known bit.
+An unknown but defined integer branch condition takes both zero and nonzero
+arms, including values other than one. Incompatible bindings, undefined
+conditions, cycles, abrupt exits and nested calls in branch bodies retain the
+ordinary call with a specific pending reason.
+
+Each reached RET has its own typed copy/move/integer/bare action and inverse
+permutation. The result transfers before inverse swaps, active/base restoration
+and owned-local expiry. The proof meets caller-visible and recycled-local state
+after every feasible normal exit; a bare RET does not invent a result write or
+definite kill. The emitter clones only feasible records, freshens labels
+against all module label and constant names, and rewrites only declared branch
+operands. Each return branches to one post-arm closure. A common-entry scoped
+binding whose original clear is detached at the callee end closes there, then
+one `CNOP` carries the clear before caller continuation. A branch-local scope
+requires further observation proof and stays a call in this slice.
+
+The current transport and storage cleanup keeps a newly branched caller, so
+register frames can remain sparse after a correct DAG expansion. Graph-aware
+placement and branch cleanup are the next code-quality work; the existing
+straight-line cleanup still compacts callers with a single-return `CNOP`
+carrier. The target draft also checks initial catalogue allocations before
+using their handles, preserving a resource-limit diagnosis for very small
+entry budgets and allowing the inliner to return the unchanged original.
 
 ### Straight-line callee rebinding contract
 

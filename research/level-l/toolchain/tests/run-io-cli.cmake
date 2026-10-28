@@ -61,8 +61,8 @@ if(NOT _result STREQUAL "16")
 endif()
 
 # The independently authored helper has two returns. A nonzero condition
-# selects its reference-mutating arm; policy-never exercises target CFG
-# transport without claiming that the current inliner expands the call.
+# selects its reference-mutating arm; policy-never independently exercises
+# target CFG transport before the expansion controls below.
 run_checked("read two-arm RXAS" "${VM}" "${CLI}" ${RUNTIME} -a
   --module io-branch.rxas --policy never
   -o "${WORK}/io-branch.rxas" "${FIXTURES}/io-branch.rxas")
@@ -74,6 +74,58 @@ string(STRIP "${_normalized}" _result)
 if(NOT _result STREQUAL "9\n11\n99")
   message(FATAL_ERROR "two-arm roundtrip expected '9, 11, 99', got '${_result}'")
 endif()
+
+# Expand known0/2 arms and runtime0/256 arms. The latter also tests unequal
+# joined constants, MOVE into an aliased result/actual and bare RET preserving55.
+foreach(_case branch dag-values)
+  set(_expected "9\n11\n99")
+  if(_case STREQUAL "dag-values")
+    set(_expected "9\n11\n99\n55\n7\n4\n8")
+  endif()
+  foreach(_mode conservative cleaned)
+    set(_cleanup_option)
+    if(_mode STREQUAL "conservative")
+      set(_cleanup_option --no-cleanup)
+    endif()
+    set(_product "${WORK}/${_case}-${_mode}")
+    run_checked("inline ${_case} DAG (${_mode})" "${VM}" "${CLI}" ${RUNTIME} -a
+      --module "io-${_case}.rxas" --profile closed-main-default-halt.v1 ${_cleanup_option}
+      -o "${_product}.rxas" "${FIXTURES}/io-${_case}.rxas")
+    caller_instructions("${_product}.rxas" main _caller)
+    set(_returns 0)
+    set(_moves 0)
+    set(_copies 0)
+    set(_swaps 0)
+    foreach(_instruction IN LISTS _caller)
+      if(_instruction MATCHES "^[ \t]*(call[0-9]*|swapcall|settpswapcall|settpcall)[ \t]")
+        message(FATAL_ERROR "${_case} ${_mode} retained a selected DAG call")
+      endif()
+      if(_instruction MATCHES "^[ \t]*ret([ \t]|$)")
+        math(EXPR _returns "${_returns} + 1")
+      elseif(_instruction MATCHES "^[ \t]*move[ \t]")
+        math(EXPR _moves "${_moves} + 1")
+      elseif(_instruction MATCHES "^[ \t]*copy[ \t]")
+        math(EXPR _copies "${_copies} + 1")
+      elseif(_instruction MATCHES "^[ \t]*swap[ \t]")
+        math(EXPR _swaps "${_swaps} + 1")
+      endif()
+    endforeach()
+    if(NOT _returns EQUAL 1)
+      message(FATAL_ERROR "${_case} ${_mode} cloned RET escaped into the caller")
+    endif()
+    if(_case STREQUAL "dag-values" AND (NOT _moves EQUAL 4 OR NOT _copies EQUAL 2 OR NOT _swaps EQUAL 4))
+      message(FATAL_ERROR "${_mode} dynamic DAG lost per-exit MOVE/COPY or source/inverse swaps")
+    endif()
+    run_checked("assemble ${_case} DAG (${_mode})" "${ASSEMBLER}" -n
+      -o "${_product}" "${_product}.rxas")
+    run_checked("execute ${_case} DAG (${_mode})" "${VM}" "${_product}.rxbin")
+    string(REPLACE "\r\n" "\n" _normalized "${_last_stdout}")
+    string(STRIP "${_normalized}" _result)
+    if(NOT _result STREQUAL _expected)
+      message(FATAL_ERROR "${_case} ${_mode} expected '${_expected}', got '${_result}'")
+    endif()
+  endforeach()
+endforeach()
 
 # Expand both original arithmetic calls atomically. Execution is independent
 # of cleanup and native assembler optimization in both products.
