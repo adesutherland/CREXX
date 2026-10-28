@@ -2147,6 +2147,11 @@ add_test(NAME rxvml_context_output COMMAND ${CMAKE_COMMAND}
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_context_output.cmake)
 set_tests_properties(rxvml_context_output PROPERTIES TIMEOUT 90
         LABELS "interpreter;embedding;regression;smoke" CREXX_PREP_TARGETS test_context_output)
+if(WIN32)
+    # The host is in interpreter/, while its crexxsaa DLL is in the product bin/.
+    set_tests_properties(rxvml_context_output PROPERTIES
+            ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:$<TARGET_FILE_DIR:crexxsaa>")
+endif()
 
 add_executable(test_rxvmlinkindex tests/test_rxvmlinkindex.c)
 target_link_libraries(test_rxvmlinkindex PRIVATE rxvml rxpashim)
