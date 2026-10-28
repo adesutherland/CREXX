@@ -334,6 +334,23 @@ void rxvml_set_say_exit_bytes(rxvml_say_exit_bytes_func say_exit);
 void rxvml_set_context_say_exit_bytes(rxvml_context* ctx,
                                       rxvml_say_exit_bytes_func say_exit);
 
+/* Optional context-local console output. The writer consumes the entire exact
+ * byte span synchronously and returns zero, or returns nonzero for NOTREADY.
+ * Spans may contain NUL and remain borrowed for this callback only. The host
+ * owns userdata until the writer is reset or the context is destroyed. Writers
+ * must not re-enter/destroy this context or change its output registration.
+ * Existing SAY exits and explicit ADDRESS redirects take precedence. This
+ * covers SAY and VM text stdout/stderr writes, not native panic diagnostics,
+ * raw binary writes, child-process descriptors or stdin. NULL restores the
+ * existing output routes. Call on the context's owning thread. */
+#define RXVML_OUTPUT_STDOUT 1
+#define RXVML_OUTPUT_STDERR 2
+typedef int (*rxvml_output_writer)(int stream, const char* bytes,
+                                  size_t length, void* userdata);
+int rxvml_set_context_output_writer(rxvml_context* ctx,
+                                    rxvml_output_writer writer,
+                                    void* userdata);
+
 /* Error reporting */
 int  rxvml_last_error(rxvml_context* ctx, const char** out_msg);
 

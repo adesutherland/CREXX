@@ -3042,7 +3042,7 @@ RXVM_HANDLER(FCLOSE_REG_REG, VM_ADVANCE(2);
 
 RXVM_HANDLER(FFLUSH_REG_REG, VM_ADVANCE(2);
         DEBUG("TRACE - FFLUSH R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = fflush((FILE*)(uintptr_t)op2R->int_value);
+        op1R->int_value = rxvm_console_flush(context, (FILE*)(uintptr_t)op2R->int_value);
         DISPATCH;
 
     /* freadb - op1(binary) = fread op2 file*(int) op3 bytes(int) */

@@ -1269,6 +1269,14 @@ void crexxsaa_destroy(crexxsaa_context* ctx) {
     free(ctx);
 }
 
+int crexxsaa_set_output_writer(
+    crexxsaa_context* ctx,
+    crexxsaa_output_writer writer,
+    void* userdata) {
+    if (!ctx || !ctx->rxvml) return -1;
+    return rxvml_set_context_output_writer(ctx->rxvml, writer, userdata);
+}
+
 int crexxsaa_register_address_environment(
     crexxsaa_context* ctx,
     const char* env_name,

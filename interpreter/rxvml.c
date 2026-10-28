@@ -1093,11 +1093,17 @@ static int rxvml_address_emit_to_endpoint(
     }
 
     {
-        if (is_error) {
-            (void)platform_console_text_write(stderr, text, strlen(text));
-            fflush(stderr);
-        } else {
-            rxvm_mprintf("%s", text);
+        if (!is_error) {
+            if (rxvm_say_write_checked(ctx ? &ctx->vm : rxvm_active_context_current(),
+                                       text, strlen(text), 0)) {
+                if (ctx) ctx->last_error = "Failed to emit native ADDRESS output text";
+                return -1;
+            }
+        } else if (rxvm_console_text_write(ctx ? &ctx->vm : NULL, stderr,
+                                            text, strlen(text)) ||
+                   rxvm_console_flush(ctx ? &ctx->vm : NULL, stderr)) {
+            if (ctx) ctx->last_error = "Failed to emit native ADDRESS error text";
+            return -1;
         }
         return 0;
     }
@@ -2792,4 +2798,13 @@ void rxvml_set_context_say_exit_bytes(rxvml_context* ctx,
     if (ctx) {
         ctx->vm.active.say_exit_bytes = say_exit;
     }
+}
+
+int rxvml_set_context_output_writer(rxvml_context* ctx,
+                                    rxvml_output_writer writer,
+                                    void* userdata) {
+    if (!ctx) return -1;
+    ctx->vm.active.output_writer = writer;
+    ctx->vm.active.output_userdata = writer ? userdata : NULL;
+    return 0;
 }

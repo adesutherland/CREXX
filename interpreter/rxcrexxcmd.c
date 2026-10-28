@@ -334,8 +334,9 @@ static int ctx_write(rxcrexxcmd_context *ctx, int is_error, const char *text, si
     if (writer) return writer(ctx->io->userdata, text, length);
 
     fallback = is_error ? stderr : stdout;
-    if (platform_console_text_write(fallback, text, length)) return -1;
-    return fflush(fallback) == 0 ? 0 : -1;
+    if (rxvm_console_text_write(rxvm_active_context_current(),
+                                fallback, text, length)) return -1;
+    return rxvm_console_flush(rxvm_active_context_current(), fallback) == 0 ? 0 : -1;
 }
 
 static int ctx_write_process_text(rxcrexxcmd_context *ctx, int is_error, const char *text, size_t length) {

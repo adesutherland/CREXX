@@ -75,6 +75,21 @@ CREXXSAA_API int crexxsaa_create(
 
 CREXXSAA_API void crexxsaa_destroy(crexxsaa_context* ctx);
 
+/* Same synchronous exact-byte console contract as RXVML. Existing SAY exits
+ * and explicit ADDRESS redirects take precedence. Callback spans are borrowed;
+ * userdata remains host-owned. The callback must not re-enter/destroy its
+ * context or change the registration. NULL restores native output. This does
+ * not replace stdin, ADDRESS command handling, raw binary output or native
+ * panic diagnostics. Call on the context's owning thread. */
+#define CREXXSAA_OUTPUT_STDOUT 1
+#define CREXXSAA_OUTPUT_STDERR 2
+typedef int (*crexxsaa_output_writer)(int stream, const char* bytes,
+                                     size_t length, void* userdata);
+CREXXSAA_API int crexxsaa_set_output_writer(
+    crexxsaa_context* ctx,
+    crexxsaa_output_writer writer,
+    void* userdata);
+
 CREXXSAA_API int crexxsaa_register_address_environment(
     crexxsaa_context* ctx,
     const char* env_name,

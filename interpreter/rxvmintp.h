@@ -45,6 +45,7 @@
 #include <stdatomic.h>
 #endif
 #include <stdint.h>
+#include <stdio.h>
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
 typedef enum {
@@ -600,6 +601,10 @@ typedef struct rxvm_active_state {
     proc_runtime *invocation_fault_entry; /* Exact initializer run owner. */
     value *callback_diagnostic; /* This synchronous callback's private owner. */
     rxvm_diagnostic_callout_scope *diagnostic_callout;
+    /* Host-owned leaf callback; see rxvml_set_context_output_writer(). */
+    int (*output_writer)(int stream, const char *bytes, size_t length,
+                         void *userdata);
+    void *output_userdata;
 } rxvm_active_state;
 
 /* Runtime context */
@@ -921,6 +926,11 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes);
 void rxvm_setsayexit_bytes(say_exit_bytes_func sayExitFunc);
 void rxvm_resetsayexit();
 void rxvm_say_write(const char *message, size_t length, int newline);
+int rxvm_say_write_checked(rxvm_context *context, const char *message,
+                           size_t length, int newline);
+int rxvm_console_text_write(rxvm_context *context, FILE *stream,
+                            const char *bytes, size_t length);
+int rxvm_console_flush(rxvm_context *context, FILE *stream);
 void rxvm_mprintf(const char* format, ...); /* printf replacement - prints to the say exit function (or stdout) */
 
 /**

@@ -49,6 +49,31 @@ against the current headers. Custom callbacks own their output policy. See
 [the mainframe text guide](../../ports/single-threaded/CMS-TEXT.md) for
 sequential stream and SDK limits.
 
+Embedded hosts may instead install
+`rxvml_set_context_output_writer(ctx, writer, userdata)`. The writer receives
+`RXVML_OUTPUT_STDOUT` (1) or `RXVML_OUTPUT_STDERR` (2), a pointer and an exact
+byte length, then consumes or copies the whole span synchronously. NUL is
+content; the pointer is borrowed only during the callback. The host retains
+ownership of userdata until reset or context destruction. Registration and
+callbacks belong to the context's owning thread; the writer must not re-enter
+or destroy that context or change its output registration. Zero means complete
+success. Any nonzero return means failure, with no retry or native fallback:
+SAY and console text instructions raise `NOTREADY`, while native ADDRESS emit
+helpers return -1. `NULL` restores the existing routes for that context alone.
+
+The context writer handles SAY/SAYX, console FWRITE/FWRITECDPT (including TRACE
+to stdout/stderr), native ADDRESS emit fallback and synchronous built-in CREXX
+command fallback. SAY includes its LF in one callback span; TRACE may write the
+record and LF separately. An existing SAY exit takes precedence on the SAY
+route, and explicit ADDRESS redirects keep their normal owner. FFLUSH of a
+callback-owned console succeeds immediately because writes are synchronous.
+Without a writer, native console conversion, flushing and BYTE-mode behavior
+remain unchanged. File TRACE targets, raw binary writes, native panic/debug
+diagnostics, child-process descriptors and stdin retain their existing owners.
+This API neither suspends PULL/LINEIN nor changes synchronous ADDRESS commands
+such as THE READ. `crexxsaa_set_output_writer` exposes the same contract through
+the facade; see [the host guide](../books/crexx_programming_guide/crexxsaa.md).
+
 The VM reserves signal code 28 as `CLASSIC_SYNTAX` for compiled Level C syntax
 conditions and code 29 as `CLASSIC_CONDITION` for the other six Classic
 condition names. Both are distinct from VM `ERROR` (code 3); existing Level B

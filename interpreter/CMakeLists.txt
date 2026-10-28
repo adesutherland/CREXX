@@ -2128,6 +2128,26 @@ add_test(NAME rxvml_span_callbacks COMMAND test_rxvml_spans
 set_tests_properties(rxvml_span_callbacks PROPERTIES TIMEOUT 90
         LABELS "interpreter;embedding;regression;smoke" CREXX_PREP_TARGETS test_rxvml_spans)
 
+add_custom_command(
+        OUTPUT test_context_output.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin
+                -o test_context_output ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_context_output.crexx
+        COMMAND $<TARGET_FILE:rxas> test_context_output
+        DEPENDS tests/rexx/test_context_output.crexx rxc rxas library compiler_exit_bin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling context console output contract ...")
+add_custom_target(test_context_output_bin DEPENDS test_context_output.rxbin)
+add_executable(test_context_output tests/test_context_output.c)
+target_link_libraries(test_context_output PRIVATE crexxsaa rxpashim)
+add_dependencies(test_context_output test_context_output_bin)
+add_test(NAME rxvml_context_output COMMAND ${CMAKE_COMMAND}
+        -DHOST=$<TARGET_FILE:test_context_output>
+        -DLIBRARY=${CMAKE_BINARY_DIR}/bin/library.rxbin
+        -DFIXTURE=${CMAKE_CURRENT_BINARY_DIR}/test_context_output.rxbin
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_context_output.cmake)
+set_tests_properties(rxvml_context_output PROPERTIES TIMEOUT 90
+        LABELS "interpreter;embedding;regression;smoke" CREXX_PREP_TARGETS test_context_output)
+
 add_executable(test_rxvmlinkindex tests/test_rxvmlinkindex.c)
 target_link_libraries(test_rxvmlinkindex PRIVATE rxvml rxpashim)
 target_include_directories(test_rxvmlinkindex PRIVATE

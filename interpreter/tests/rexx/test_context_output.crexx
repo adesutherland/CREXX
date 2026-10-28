@@ -1,0 +1,62 @@
+/* Context-local console output contract. */
+options levelb
+namespace context_output expose saytext textwrite codepoint tracewrite failure capture crexxwrite
+import rxfnsb
+
+main: procedure = .int
+  arg arguments = .string[]
+  say "SAA_PRIVATE"
+  return textwrite("stderr", "SAA_ERROR_PRIVATE")
+
+saytext: procedure = .int
+  arg text = .string
+  say text
+  return 0
+
+textwrite: procedure = .int
+  arg target = .string, text = .string
+  fileid = 0
+  mode = "w"
+  assembler fopen fileid,target,mode
+  assembler fwrite fileid,text
+  status = 0
+  assembler fflush status,fileid
+  return status
+
+codepoint: procedure = .int
+  fileid = 0
+  target = "stderr"
+  mode = "w"
+  number = 90
+  assembler fopen fileid,target,mode
+  assembler fwritecdpt fileid,number
+  return 0
+
+tracewrite: procedure = .int
+  call _trace_set_output("stderr")
+  call _trace_write_line("TRACE_PRIVATE")
+  return 0
+
+failure: procedure = .int
+  arg kind = .int
+  do
+    if kind = 0 then say "FAILED_PRIVATE"
+    else if kind = 1 then call textwrite("stderr", "FAILED_PRIVATE")
+    else call codepoint()
+    return 0
+  on signal notready
+    return 71
+  end
+  return 0
+
+capture: procedure = .int
+  output_text = ""
+  error_text = ""
+  address CONSOLE "emit" output output_text error error_text
+  if output_text <> "ADDRESS_PRIVATE" then return 1
+  if error_text <> "ADDRESS_ERROR_PRIVATE" then return 2
+  return 0
+
+crexxwrite: procedure = .int
+  address crexx "echo CREXX_PRIVATE"
+  return rc

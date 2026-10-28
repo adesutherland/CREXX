@@ -116,7 +116,7 @@ RXVM_HANDLER(FWRITE_REG_REG, VM_ADVANCE(2);
             RXVM_UTF8_ONLY(
             if (stream == stdout || stream == stderr) {
                 errno = 0;
-                if (platform_console_text_write(stream, op2R->string_value, op2R->string_length)) {
+                if (rxvm_console_text_write(context, stream, op2R->string_value, op2R->string_length)) {
                     unsigned char output_signal = errno == EILSEQ ? RXSIGNAL_UNICODE_ERROR : RXSIGNAL_NOTREADY;
                     SET_SIGNAL_MSG(output_signal,
                                    "Unable to write console text");
@@ -126,7 +126,10 @@ RXVM_HANDLER(FWRITE_REG_REG, VM_ADVANCE(2);
                 fwrite(op2R->string_value, op2R->string_length, 1, stream);
             )
             RXVM_BYTE_ONLY(
-            fwrite(op2R->string_value, op2R->string_length, 1, stream);
+            if (context->active.output_writer && (stream == stdout || stream == stderr)) {
+                if (rxvm_console_text_write(context, stream, op2R->string_value, op2R->string_length))
+                    SET_SIGNAL_MSG(RXSIGNAL_NOTREADY, "Unable to write console text");
+            } else fwrite(op2R->string_value, op2R->string_length, 1, stream);
             )
         }
         DISPATCH;
@@ -173,7 +176,7 @@ RXVM_HANDLER(FWRITECDPT_REG_REG, VM_ADVANCE(2);
                 RXVM_UTF8_ONLY(
                 if (stream == stdout || stream == stderr) {
                     errno = 0;
-                    if (platform_console_text_write(stream, codepoint, length_of_codepoint)) {
+                    if (rxvm_console_text_write(context, stream, codepoint, length_of_codepoint)) {
                         unsigned char output_signal = errno == EILSEQ ? RXSIGNAL_UNICODE_ERROR : RXSIGNAL_NOTREADY;
                         SET_SIGNAL_MSG(output_signal,
                                        "Unable to write console codepoint");
@@ -183,7 +186,10 @@ RXVM_HANDLER(FWRITECDPT_REG_REG, VM_ADVANCE(2);
                     fwrite(codepoint, length_of_codepoint, 1, stream);
                 )
                 RXVM_BYTE_ONLY(
-                fwrite(codepoint, length_of_codepoint, 1, stream);
+                if (context->active.output_writer && (stream == stdout || stream == stderr)) {
+                    if (rxvm_console_text_write(context, stream, codepoint, length_of_codepoint))
+                        SET_SIGNAL_MSG(RXSIGNAL_NOTREADY, "Unable to write console codepoint");
+                } else fwrite(codepoint, length_of_codepoint, 1, stream);
                 )
             }
         }

@@ -467,6 +467,8 @@ static int rxinimod_common(rxvm_context *context,
     context->active.rxpa_pool_head = 0;
     context->active.crexx_command_state = 0;
     context->active.say_exit_bytes = 0;
+    context->active.output_writer = 0;
+    context->active.output_userdata = 0;
     context->active.pending_interrupts = 0;
     context->active.compatibility_interrupts = 0;
     context->active.external_mailbox_owner = 0;
@@ -562,6 +564,8 @@ void rxfremod(rxvm_context *context) {
     rxcrexxcmd_context_state_free(context);
 #endif
     context->active.say_exit_bytes = 0;
+    context->active.output_writer = 0;
+    context->active.output_userdata = 0;
 
     /* Free Symbol Search Trees */
     DEBUG("Free Symbol Search Trees\n");

@@ -73,6 +73,42 @@ The cache namespace argument, `"THE"` in this example, is part of the cache
 identity. Different hosts can compile the same source path without sharing a
 cache bucket accidentally.
 
+## Context console output
+
+`crexxsaa_set_output_writer(ctx, writer, userdata)` installs an optional output
+writer for one context. The callback has this signature:
+
+```c
+int writer(int stream, const char *bytes, size_t length, void *userdata);
+```
+
+`stream` is `CREXXSAA_OUTPUT_STDOUT` (1) or `CREXXSAA_OUTPUT_STDERR` (2).
+Consume or copy the exact span synchronously: it may contain NUL, and the
+pointer is valid only during the callback. Return zero after consuming the
+whole span, or nonzero for failure. Failure raises `NOTREADY` for SAY and VM
+console text writes; the runtime does not retry or fall back to native output.
+Native ADDRESS emit helpers report failure through their return value.
+
+The writer covers SAY/SAYX, VM text writes to stdout/stderr, TRACE using those
+targets, native ADDRESS output/error fallback and synchronous built-in CREXX
+command fallback. SAY supplies its trailing LF in the same span; other writes
+may arrive in separate pieces. Existing SAY exits and explicit ADDRESS
+redirects take precedence. Console flush succeeds immediately while the
+synchronous writer owns the stream. Pass NULL as the writer to restore the
+context's existing output routes. The setter returns -1 for an invalid context
+and zero on success.
+
+Keep userdata alive until reset or context destruction, and use the context's
+owning thread. The callback must not re-enter or destroy its context or change
+the output registration. The host owns presentation and buffering; registering
+the writer does not redirect process stdout/stderr or change another context.
+File targets, raw binary output, native panic/debug diagnostics and child
+process descriptors retain their existing owners.
+
+Input remains separate: PULL/LINEIN keep their current stdin behavior, and
+`ADDRESS THE "READ ..."` remains a synchronous host command. Installing an
+output writer does not add input suspension or editor interaction.
+
 ## Low-level rxvml calls
 
 Hosts that bypass the `crexxsaa` facade and call `rxvml` directly must use the

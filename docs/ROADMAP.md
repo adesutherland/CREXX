@@ -19,6 +19,27 @@ Use this authority split:
 - [`../performance/ROADMAP.md`](../performance/ROADMAP.md) tracks only live
   performance closeout and evidence-gated performance candidates.
 
+## Context-owned host console output (RXCONSOLE)
+
+Give desktop and browser embeddings one optional, synchronous RXVML output
+writer for a VM context, with a CREXXSAA facade. The host chooses how complete
+stdout/stderr byte spans reach its console. Existing SAY exits and explicit
+ADDRESS redirects keep precedence; no writer retains the normal native output
+path. This increment covers SAY, text console writes used by TRACE, and native
+ADDRESS emit fallbacks. It does not redirect process-global streams, raw panic
+diagnostics, child file descriptors or stdin. THE owns its editor, Worker and
+terminal adapters; browser end-to-end acceptance remains there.
+
+| ID | Observable contract or step | Status |
+| --- | --- | --- |
+| **RXCONSOLE-AC01** | A context-local writer receives the exact stdout/stderr span and host userdata synchronously. Zero reports full consumption; failure follows the existing NOTREADY path without a native retry. Unregistering restores native behavior on that context only. | done; focused local profile |
+| **RXCONSOLE-AC02** | SAY/SAYX, TRACE's console text writes and native ADDRESS output/error fallbacks use the writer. Legacy SAY exits and explicit ADDRESS redirects retain precedence; file and binary writes stay unchanged. | done; focused local profile |
+| **RXCONSOLE-AC03** | A small native host regression checks independent contexts, normal/default and failure/reset behavior, output lengths and callback precedence; a source-profile consumer proves the intended SDK boundary. | done; focused local profile |
+| **RXCONSOLE-AC04** | Desktop and browser hosts integrate the same console contract, with their own thread, input and UI ownership; the browser uses a matching compiled toolchain and runtime cohort. | THE integration open |
+| **RXCONSOLE-STEP01** | Review existing RXVML/SAA and TRACE/ADDRESS output paths; fix the output-only contract before implementation. | done |
+| **RXCONSOLE-STEP02** | Add the private VM route, public optional setters, focused regression and owning VM/SAA documentation; AC01–03. | done |
+| **RXCONSOLE-STEP03** | Run focused native and source-profile checks, then hand exact entrypoints and artifacts to THE; AC03–04. | done for CREXX; THE browser acceptance open |
+
 ## Bounded repair: captured RXVML signal diagnostics (RXS-DIAG)
 
 Expose the directly captured signal code/name and external procedure name in

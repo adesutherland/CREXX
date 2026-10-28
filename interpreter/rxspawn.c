@@ -1654,8 +1654,9 @@ static int join_redirect_thread(REDIRECT *redirect) {
 static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length) {
     if (!text) length = 0;
     if (!redirect) {
-        if (platform_console_text_write(fallback, text ? text : "", length) != 0) return -1;
-        return fflush(fallback) == 0 ? 0 : -1;
+        if (rxvm_console_text_write(rxvm_active_context_current(), fallback,
+                                    text ? text : "", length) != 0) return -1;
+        return rxvm_console_flush(rxvm_active_context_current(), fallback) == 0 ? 0 : -1;
     }
 
 #ifdef _WIN32
@@ -1663,7 +1664,8 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
         DWORD written;
         DWORD total = 0;
         if (redirect->hWrite == INVALID_HANDLE_VALUE) {
-            return platform_console_text_write(fallback, text ? text : "", length);
+            return rxvm_console_text_write(rxvm_active_context_current(), fallback,
+                                            text ? text : "", length);
         }
         while (total < length) {
             if (!WriteFile(redirect->hWrite, text + total, (DWORD)(length - total), &written, NULL)) {
@@ -1681,7 +1683,8 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
         size_t total = 0;
         ssize_t written;
         if (redirect->hWrite == -1) {
-            return platform_console_text_write(fallback, text ? text : "", length);
+            return rxvm_console_text_write(rxvm_active_context_current(), fallback,
+                                            text ? text : "", length);
         }
         while (total < length) {
             written = write(redirect->hWrite, text + total, length - total);
