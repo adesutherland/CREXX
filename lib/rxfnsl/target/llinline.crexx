@@ -1,11 +1,10 @@
-/* cREXX License (MIT). Conservative target expansion; constructed scalar slice. */
+/* cREXX License (MIT). Atomic checked RXAS expansion; cleanup is independent. */
 options levelb
-namespace llinline expose binding bind decision inspect change expand
+namespace llinline expose binding bind decision inspect change expand expandmany copyorigin clonefields
 import rxfnsb
 import llir
-import llirgraph
 import lltarget
-import llrxascatalog
+import lltargetfacts
 
 binding: class
   _caller = reference .lltarget..module
@@ -18,8 +17,10 @@ binding: class
   _body = .int
   *: factory
     arg caller = reference .lltarget..module, callId = .int, provider = reference .lltarget..module, procedureId = .int
-    _caller = caller; _provider = provider; source = dereference caller; target = dereference provider
-    _callerid = source.identity(); _providerid = target.identity(); _call = callId; _body = procedureId
+    _caller = caller; _provider = provider; _call = callId; _body = procedureId
+    if <refvalid>(caller) = 0 | <refvalid>(provider) = 0 then return
+    source = dereference caller; target = dereference provider
+    _callerid = source.identity(); _providerid = target.identity()
     graph = dereference source.ir(); _callerstore = graph.storage()
     graph = dereference target.ir(); _providerstore = graph.storage()
     return
@@ -67,153 +68,48 @@ decision: class
   remaining: method = .int
     return _remaining
 
-/** This first policy is a checked fresh standalone-root contract, not an
- * arbitrary safe=true hint. The driver additionally guarantees default VM
- * root entry, no embedding/reentry and no externally installed handlers.
- * Within it, asynchronous HALT/CANCEL terminates rather than resuming through
- * a missing frame. Unknown inherited signal policy always retains the call. */
+/** The profile requires fresh standalone main entry without embedding/reentry
+ * or externally installed handlers. Static target facts check the complete
+ * root and callees; the profile does not pretend all signals halt. */
 inspect: procedure = .llinline..decision
   arg request = .llinline..binding, profile = 'unknown', work = 1000000
-  i = .int; a = .int; argslot = .int
-  slot = .int; d = .int; s = .int
-  value = .lltarget..operand; target = .lltarget..operand
-  actual = .lltarget..operand; dest = .lltarget..operand
   if request.valid() = 0 then return .decision('invalid','binding.expired')
-  if work < 1 then return .decision('limit','inline.work')
-  if profile <> 'closed-main-default-halt.v1' then return .decision('keep','signal.policy.unproved')
-  source = dereference request.caller(); provider = dereference request.provider()
-  caller_ref = request.caller(); provider_ref = request.provider()
+  source = dereference request.caller(); caller_ref = request.caller(); provider_ref = request.provider()
   if (caller_ref <refsame> provider_ref) = 0 then return .decision('keep','profile.imported.body.pending')
-  if source.globals() <> 0 then return .decision('keep','profile.module.globals.pending')
   selected = source.at(request.callid())
   if selected.valid() = 0 then return .decision('invalid','call.identity')
   if selected.kind() <> 'instruction' then return .decision('invalid','call.not.instruction')
-  caller = source.body(selected.procedureid())
-  if caller.name() <> 'main' then return .decision('keep','signal.root.context.unproved')
-  graph_ref = source.ir(); graph = dereference graph_ref
-  index = .llirgraph..index(graph_ref,work)
-  if index.status() <> 'ok' then return .decision(index.status(),'inline.graph.' || index.message())
-  work = work - index.usedwork()
-  if graph.operations() > work / 3 then return .decision('limit','inline.work')
-  work = work - graph.operations() * 3
-  if index.functionblocks(caller.functionid()) <> 1 then return .decision('keep','profile.caller.cfg.pending')
-  found = 0
-  do i = 1 to provider.procedures()
-    checked = provider.procedure(i)
-    if checked.functionid() = request.bodyid() then found = 1
-  end
-  if found = 0 then return .decision('invalid','binding.body')
-  callee = provider.body(request.bodyid())
-  if callee.records() <> 1 then return .decision('keep','profile.scalar.return.body.pending')
-  returned = callee.record(1)
-  if returned.kind() <> 'instruction' | returned.mnemonic() <> 'ret' then return .decision('keep','profile.scalar.return.body.pending')
-  if returned.operands() > 1 then return .decision('invalid','return.arity')
-  returnindex = -1
+  if wordpos(selected.mnemonic(),'call call1 call2 call3 call4') = 0 then return .decision('keep','call.form.pending')
+  facts = lltargetfacts..analyse(caller_ref,selected.procedureid(),profile,work)
+  if facts.status() <> 'ok' then return .decision(facts.status(),facts.reason())
+  if facts.bodyid(request.callid()) = 0 then return .decision('keep','call.form.pending')
+  if facts.bodyid(request.callid()) <> request.bodyid() then return .decision('invalid','binding.target.mismatch')
+  returned = source.at(facts.returned(request.callid())); returnindex = -1
   if returned.operands() = 1 then do
     value = returned.operand(1)
-    if value.kind() = 'R' then do
-      if value.bank() <> 'a' then return .decision('keep','local.recycler.history.unproved')
-      returnindex = value.index()
-    end
-    else if value.kind() <> 'I' then return .decision('keep','profile.return.component.pending')
+    if value.kind() = 'R' & value.bank() = 'a' then returnindex = value.index()
   end
-  mnemonic = selected.mnemonic(); count = 0; first = 0
-  if mnemonic = 'call' then do
-    if selected.operands() = 1 then target = selected.operand(1)
-    else target = selected.operand(2)
-  end
-  else if wordpos(mnemonic,'call1 call2 call3 call4') > 0 then do
-    target = selected.operand(2); count = wordpos(mnemonic,'call1 call2 call3 call4'); first = 3
-  end
-  else return .decision('keep','call.form.pending')
-  if target.kind() <> 'P' | target.text() <> callee.name() then return .decision('invalid','binding.target.mismatch')
-  /* A closed root can contain no other callable/opaque/policy entry. Definite
-   * integer values and active slot permutation are derived from instructions. */
-  pointers = .int[]; known = .int[]; values = .int[]; seen = 0
-  do i = 0 to caller.locals() - 1
-    pointers[i + 1] = i + 1; known[i + 1] = 1; values[i + 1] = 0
-  end
-  catalog = .llrxascatalog..catalog()
-  do i = 1 to source.records()
-    work = work - 1
-    if work < 0 then return .decision('limit','inline.work')
-    item = source.record(i)
-    at = item.origin()
-    if at.parents() <> 0 | wordpos(at.kind(),'exact synthetic') = 0 then return .decision('keep','profile.provenance.pending')
-    if item.kind() = 'procedure' then iterate
-    if item.procedureid() <> caller.functionid() then do
-      if item.procedureid() = callee.functionid() then iterate
-      return .decision('keep','signal.closed.root.unproved')
-    end
-    if item.kind() <> 'instruction' then return .decision('keep','profile.observation.mapping.pending')
-    opcode = item.opcode(); op = item.mnemonic()
-    if catalog.field(opcode,26) <> '0' then return .decision('keep','signal.policy.unproved')
-    if item.id() = selected.id() then do
-      seen = 1
-      if mnemonic = 'call' & selected.operands() = 3 then do
-        counter = selected.operand(3)
-        if counter.kind() <> 'R' | counter.bank() <> 'r' then return .decision('keep','argument.count.unproved')
-        location = pointers[counter.index() + 1]
-        if known[location] = 0 then return .decision('keep','argument.count.unproved')
-        count = values[location]
-        if count < 0 | count > caller.locals() - counter.index() - 1 then return .decision('keep','argument.window.unproved')
-        first = counter.index() + 1
-      end
-      if returnindex > count then return .decision('keep','argument.access.domain.unproved')
-      do a = 1 to count
-        if mnemonic = 'call' then argslot = first + a - 1
-        else do
-          actual = selected.operand(a + 2)
-          if actual.bank() <> 'r' then return .decision('keep','argument.storage.unproved')
-          argslot = actual.index()
-        end
-        if argslot < 0 | argslot >= caller.locals() | known[pointers[argslot + 1]] = 0 then return .decision('keep','argument.scalar.state.unproved')
-      end
-      iterate
-    end
-    if left(op,4) = 'call' | op = 'dcall' | op = 'srcfprocsel' then return .decision('keep','signal.other.call.unproved')
-    if wordpos(op,'null load icopy copy settp swap ret say itos') = 0 then return .decision('keep','signal.closed.root.unproved')
-    if op = 'ret' then iterate
-    do a = 1 to item.operands()
-      field = item.operand(a)
-      if field.kind() = 'R' & field.bank() <> 'r' then return .decision('keep','root.external.storage.unproved')
-    end
-    if seen then iterate
-    if op = 'itos' then return .decision('keep','root.scalar.state.unproved')
-    if op = 'swap' then do
-      leftreg = item.operand(1); rightreg = item.operand(2)
-      leftslot = leftreg.index() + 1; rightslot = rightreg.index() + 1
-      temp = pointers[leftslot]; pointers[leftslot] = pointers[rightslot]; pointers[rightslot] = temp
-    end
-    else if op = 'null' | op = 'load' then do
-      dest = item.operand(1); slot = pointers[dest.index() + 1]
-      known[slot] = 1; values[slot] = 0
-      if op = 'load' then do
-        literal = item.operand(2)
-        if literal.kind() <> 'I' then return .decision('keep','root.scalar.state.unproved')
-        values[slot] = literal.index()
-      end
-    end
-    else if op = 'icopy' | op = 'copy' then do
-      dest = item.operand(1); value = item.operand(2)
-      d = pointers[dest.index() + 1]; s = pointers[value.index() + 1]
-      known[d] = known[s]; values[d] = values[s]
-    end
-  end
-  if seen = 0 then return .decision('invalid','call.not.in.caller')
-  return .decision('legal','closed.root.scalar.return',count,first,returnindex,work)
+  return .decision('legal','closed.root.scalar',facts.arguments(request.callid()),facts.first(request.callid()),returnindex,facts.remaining())
 
+/** One owned publication plus complete original-record and site decisions.
+ * A failed batch publishes the unchanged caller; expired input has no result. */
 change: class
   _status = .string
   _reason = .string
   _result = .lltarget..module
   _mapping = .int[]
+  _callers = .int[]
+  _sites = .int[]
+  _decisions = .object[]
   _hasresult = .int
   *: factory
-    arg status = .string, reason = .string, ?result = .lltarget..module, ?mapping = .int[]
+    arg status = .string, reason = .string, ?result = .lltarget..module, ?mapping = .int[], ?callers = .int[], ?sites = .int[], ?decisions = .object[]
     _status = status; _reason = reason; _hasresult = ?result
     if ?result then _result = result
     if ?mapping then _mapping = mapping
+    if ?callers then _callers = callers
+    if ?sites then _sites = sites
+    if ?decisions then _decisions = decisions
     return
   status: method = .string
     return _status
@@ -226,146 +122,299 @@ change: class
     arg oldId = .int
     if _status <> 'changed' then return oldId
     return _mapping[oldId]
+  callers: method = .int
+    return _callers[0]
+  caller: method = .int
+    arg ordinal = .int
+    return _callers[ordinal]
+  sites: method = .int
+    return _sites[0]
+  site: method = .int
+    arg ordinal = .int
+    return _sites[ordinal]
+  statusat: method = .string
+    arg callid = .int
+    do i = 1 to _sites[0]
+      if _sites[i] = callid then do; checked = _decisions[i] as .decision; return checked.status(); end
+    end
+    return 'invalid'
+  reasonat: method = .string
+    arg callid = .int
+    do i = 1 to _sites[0]
+      if _sites[i] = callid then do; checked = _decisions[i] as .decision; return checked.reason(); end
+    end
+    return 'binding.site.unavailable'
 
-/** Clone source ownership through an existing L source map, not temporary
- * filenames. The initial profile has exact/synthetic origins only. */
+/** Copy all L contributors in topological order. Sources/origins are
+ * cached by their existing owner IDs; no returned handle borrows a local arena. */
 copyorigin: procedure = .llir..origin
-  arg owner = reference .llir..module, old = .llir..origin, target = reference .lltarget..draft, source_ref = reference .object[]
-  source = .llir..sourcefile
-  sources = dereference source_ref
-  graph = dereference owner; store = dereference graph.storage()
-  fileid = store.get(9,old.id(),1); draft = dereference target
-  if fileid > sources[0] then do
-    source = draft.source(old.filename(),old.sourcebytes()); sources[fileid] = source as .object
+  arg owner = reference .llir..module, old = .llir..origin, target = reference .lltarget..draft, source_ref = reference .object[], origin_ref = reference .object[]
+  i = .int; j = .int; fileid = .int; parentid = .int
+  file = .llir..sourcefile; at = .llir..origin; parent = .llir..origin; copied = .llir..origin
+  parents = .object[]
+  sources = dereference source_ref; origins = dereference origin_ref; draft = dereference target
+  graph = dereference owner; store_ref = graph.storage(); store = dereference store_ref
+  do i = origins[0] + 1 to old.id()
+    if draft.preflight(1,0) = 0 then return draft.synthetic('failed provenance')
+    at = .llir..origin(store_ref,i); fileid = store.get(9,i,1)
+    if fileid > sources[0] then do; file = draft.source(at.filename(),at.sourcebytes()); sources[fileid] = file as .object; end
+    else if sources[fileid] is .llir..sourcefile then file = sources[fileid] as .llir..sourcefile
+    else do; file = draft.source(at.filename(),at.sourcebytes()); sources[fileid] = file as .object; end
+    if draft.preflight(at.parents(),0) = 0 then return draft.synthetic('failed provenance')
+    call objectarraydrop parents
+    do j = 1 to at.parents()
+      parent = at.parent(j); parentid = parent.id(); parents[j] = origins[parentid]
+    end
+    copied = draft.contributingorigin(file,at.first(),at.last(),at.kind(),parents)
+    origins[i] = copied as .object
   end
-  else if sources[fileid] is .llir..sourcefile then source = sources[fileid] as .llir..sourcefile
-  else do
-    source = draft.source(old.filename(),old.sourcebytes()); sources[fileid] = source as .object
-  end
-  return source.origin(old.first(),old.last(),old.kind())
+  return origins[old.id()] as .llir..origin
 
-copyfields: procedure = .object[]
+clonefields: procedure = .object[]
   arg input = .lltarget..record, target = .lltarget..bodydraft
-  fields = .object[]; value = .lltarget..operand
-  do i = 1 to input.operands()
-    value = input.operand(i)
-    if value.kind() = 'R' then value = target.reg(value.bank(),value.index())
-    fields[i] = value as .object
+  replacements = .object[]; value = .lltarget..operand
+  do i = 1 to input.registerrefs()
+    value = input.registerref(i); replacements[i] = target.reg(value.bank(),value.index()) as .object
   end
-  return fields
+  return lltarget..remapregisters(input,replacements)
 
-emit1: procedure = .int
-  arg target = .lltarget..bodydraft, mnemonic = .string, first = .lltarget..operand, at = .llir..origin
-  fields = .object[]; fields[1] = first as .object
-  return target.emit(mnemonic,fields,at)
-emit2: procedure = .int
-  arg target = .lltarget..bodydraft, mnemonic = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
-  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
-  return target.emit(mnemonic,fields,at)
+/** Exact encoded instruction cells are counted while constructing the private
+ * draft; exceeding the cap discards that draft before any result publication. */
+emitter: class
+  _limit = .int
+  _used = .int
+  _error = .string
+  *: factory
+    arg limit = .int
+    _limit = limit
+    return
+  emit: method = .int
+    arg target = .lltarget..bodydraft, mnemonic = .string, fields = .object[], at = .llir..origin
+    cost = 1 + fields[0]
+    if _error <> '' then return 0
+    if cost > _limit - _used then do; _error = 'inline.code.cells'; return 0; end
+    _used = _used + cost
+    return target.emit(mnemonic,fields,at)
+  one: method = .int
+    arg target = .lltarget..bodydraft, mnemonic = .string, first = .lltarget..operand, at = .llir..origin
+    fields = .object[]; fields[1] = first as .object
+    return emit(target,mnemonic,fields,at)
+  two: method = .int
+    arg target = .lltarget..bodydraft, mnemonic = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+    fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+    return emit(target,mnemonic,fields,at)
+  error: method = .string
+    return _error
+
+freshidentity: procedure = .void
+  arg expose pairs = .int[], old = .int, expose highest = .int
+  if old <= 0 then return
+  do i = 1 to pairs[0] by 2
+    if pairs[i] = old then return
+  end
+  if highest >= 4294967295 then assembler signal "ERROR","LL_RESOURCE_LIMIT: source/clause identity extent"
+  highest = highest + 1; n = pairs[0]; pairs[n + 1] = old; pairs[n + 2] = highest
+  return
 
 expand: procedure = .llinline..change
   arg request = .llinline..binding, profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
-  i = .int; j = .int; a = .int; ignored = .int
-  fields = .object[]
-  value = .lltarget..operand; anchor = .lltarget..operand
-  actual = .lltarget..operand; oldactual = .lltarget..operand
+  bindings = .object[]; bindings[1] = request as .object
+  return expandmany(bindings,profile,work,entries,bytes,frame,cells)
+
+expandmany: procedure = .llinline..change
+  arg bindings = .object[], profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
+  i = .int; j = .int; k = .int; a = .int; ignored = .int; count = .int; required = .int
+  locals = .int; base = .int; higheststep = .int; highestclause = .int
+  extent = .int; fileid = .int; hasresult = .int
+  request = .binding; selected = .lltarget..record; input = .lltarget..record; childrecord = .lltarget..record
+  field = .lltarget..operand; oldresult = .lltarget..operand; value = .lltarget..operand
+  resultcell = .lltarget..operand; countcell = .lltarget..operand; tempcell = .lltarget..operand
+  destination = .lltarget..operand; anchor = .lltarget..operand; actual = .lltarget..operand; mapped = .lltarget..operand
+  callee = .lltarget..body; oldbody = .lltarget..body; caller = .lltarget..body
+  at = .llir..origin; childat = .llir..origin; file = .llir..sourcefile
+  ignoredorigin = .llir..origin
+  targetbody = .lltarget..bodydraft; fields = .object[]; replacements = .object[]
+  empty = .int[]; callers = .int[]; sites = .int[]; decisions = .object[]; maps = .int[]
+  steps = .int[]; clauses = .int[]
+  contributors = .object[]
+  if bindings[0] = 0 then return .change('keep','binding.empty')
+  if bindings[1] is .binding then request = bindings[1] as .binding
+  else return .change('invalid','binding.type')
   if request.valid() = 0 then return .change('invalid','binding.expired')
-  source = dereference request.caller(); empty = .int[]
-  allowed = inspect(request,profile,work)
-  if allowed.status() <> 'legal' then return .change(allowed.status(),allowed.reason(),source,empty)
-  work = allowed.remaining()
-  callsite = source.at(request.callid()); caller = source.body(callsite.procedureid())
-  provider = dereference request.provider(); callee = provider.body(request.bodyid()); returned = callee.record(1)
-  count = allowed.arguments(); base = caller.locals(); required = count + 3
-  if frame < required | base > frame - required then return .change('limit','inline.frame',source,empty)
-  hasresult = callsite.operands() > 1; inserted = 9
-  if count > cells / 5 then return .change('limit','inline.code.cells',source,empty)
-  inserted = inserted + count * 5
-  if hasresult then inserted = inserted + 5
-  if callsite.mnemonic() = 'call' & callsite.operands() = 2 then inserted = inserted + 2
-  if hasresult & returned.operands() = 1 then do
-    value = returned.operand(1)
-    if value.kind() = 'I' then inserted = inserted + 6
-    else inserted = inserted + 3
+  owner = request.caller(); source = dereference owner; selected = source.at(request.callid())
+  if selected.valid() = 0 then return .change('invalid','call.identity',source,empty)
+  functionid = source.procedureid('main')
+  if functionid > 0 then caller = source.body(functionid)
+  if work < 1 | entries < 1 | bytes < 1 | frame < 0 | cells < 1 then return .change('limit','inline.allowances',source,empty)
+  accepted = .int[]; offsets = .int[]; selectedcount = 0
+  do i = 1 to bindings[0]
+    if bindings[i] is .binding then request = bindings[i] as .binding
+    else return .change('invalid','binding.type',source,empty)
+    if request.valid() = 0 then return .change('invalid','binding.expired',source,empty)
+    caller_ref = request.caller(); provider_ref = request.provider()
+    if (caller_ref <refsame> owner) = 0 then return .change('invalid','binding.foreign.caller',source,empty)
+    do j = 1 to sites[0]
+      if sites[j] = request.callid() then return .change('invalid','binding.duplicate.site',source,empty)
+    end
+    sites[i] = request.callid()
+    selected = source.at(request.callid())
+    if selected.valid() = 0 then return .change('invalid','call.identity',source,empty)
+    if selected.kind() <> 'instruction' then return .change('invalid','call.not.instruction',source,empty)
+    if functionid = 0 | selected.procedureid() <> functionid then decisions[i] = .decision('keep','signal.root.context.unproved') as .object
+    else if wordpos(selected.mnemonic(),'call call1 call2 call3 call4') = 0 then decisions[i] = .decision('keep','call.form.pending') as .object
+    else if (provider_ref <refsame> owner) = 0 then decisions[i] = .decision('keep','profile.imported.body.pending') as .object
+    else do; accepted[request.callid()] = i; selectedcount = selectedcount + 1; end
   end
-  total = 0
+  if selectedcount = 0 then do
+    checked = decisions[1] as .decision
+    return .change('keep',checked.reason(),source,empty,callers,sites,decisions)
+  end
+  facts = lltargetfacts..analyse(owner,functionid,profile,work,bytes)
+  if facts.status() <> 'ok' then do
+    do i = 1 to sites[0]
+      if accepted[sites[i]] > 0 then decisions[i] = .decision(facts.status(),facts.reason()) as .object
+    end
+    return .change(facts.status(),facts.reason(),source,empty,callers,sites,decisions)
+  end
+  work = facts.remaining(); locals = caller.locals()
+  do i = 1 to bindings[0]
+    request = bindings[i] as .binding
+    if accepted[request.callid()] = 0 then iterate
+    selected = source.at(request.callid())
+    if selected.procedureid() <> functionid then return .change('invalid','binding.foreign.procedure',source,empty)
+    if facts.bodyid(request.callid()) <> request.bodyid() then return .change('invalid','binding.target.mismatch',source,empty)
+    callee = source.body(request.bodyid()); count = facts.arguments(request.callid())
+    required = count + 3
+    if required > frame then return .change('limit','inline.frame',source,empty)
+    if callee.locals() > frame - required then return .change('limit','inline.frame',source,empty)
+    required = required + callee.locals()
+    if required > frame - locals then return .change('limit','inline.frame',source,empty)
+    offsets[request.callid()] = locals; locals = locals + required
+    decisions[i] = .decision('changed','closed.root.scalar',count,facts.first(request.callid())) as .object
+  end
   do i = 1 to source.records()
-    item = source.record(i); work = work - 1 - item.operands()
-    if work < 0 then return .change('limit','inline.work',source,empty)
-    if item.kind() <> 'instruction' | item.id() = callsite.id() then iterate
-    cost = 1 + item.operands()
-    if cost > cells - total then return .change('limit','inline.code.cells',source,empty)
-    total = total + cost
+    input = source.record(i)
+    if input.kind() = '.srcstep' then do
+      value = input.operand(1); higheststep = max(higheststep,value.index())
+      value = input.operand(2); highestclause = max(highestclause,value.index())
+    end
+    else if input.kind() = '.traceevent' then do
+      value = input.operand(7); higheststep = max(higheststep,value.index())
+      value = input.operand(8); highestclause = max(highestclause,value.index())
+    end
   end
-  if inserted > cells - total then return .change('limit','inline.code.cells',source,empty)
-  result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
-  bodies = .object[]; origins = .object[]; maps = .int[]; targetbody = .lltarget..bodydraft
-  graph_ref = source.ir(); generated = result.synthetic('inline scalar transport')
-  do i = 1 to source.records()
-    input = source.record(i); at = copyorigin(graph_ref,input.origin(),reference result,reference origins)
-    if input.kind() = 'procedure' then do
-      oldbody = source.body(input.procedureid()); locals = oldbody.locals()
-      if input.procedureid() = caller.functionid() then locals = locals + required
-      targetbody = result.procedure(oldbody.name(),locals,at,oldbody.expose())
-      bodies[input.procedureid()] = targetbody as .object
-      /* The new header is discoverable by its exact procedure name. */
-      iterate
-    end
-    if input.procedureid() = 0 then do
-      call objectarraydrop fields
-      do j = 1 to input.operands()
-        fields[j] = input.operand(j) as .object
+  do
+    result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
+    code = .emitter(cells); bodies = .object[]; sources = .object[]; origins = .object[]
+    graph_ref = source.ir(); generated = result.synthetic('inline scalar transport')
+    do i = 1 to source.records()
+      input = source.record(i); at = copyorigin(graph_ref,input.origin(),reference result,reference sources,reference origins)
+      if input.kind() = 'procedure' then do
+        oldbody = source.body(input.procedureid()); extent = oldbody.locals()
+        if input.procedureid() = functionid then extent = locals
+        targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose())
+        bodies[input.procedureid()] = targetbody as .object; maps[input.id()] = targetbody.headerid()
+        if input.procedureid() = functionid then callers[1] = targetbody.functionid()
+        iterate
       end
-      maps[input.id()] = result.record(input.kind(),fields,at)
-      iterate
-    end
-    targetbody = bodies[input.procedureid()] as .lltarget..bodydraft
-    if input.id() <> callsite.id() then do
-      fields = copyfields(input,targetbody)
-      if input.kind() = 'instruction' then maps[input.id()] = targetbody.emit(input.mnemonic(),fields,at)
-      else maps[input.id()] = targetbody.record(input.kind(),fields,at)
-      iterate
-    end
-    /* Capture result and actual pointers before the cloned return. No value
-     * snapshots or outer setup/reverse swaps are elided in this first slice. */
-    resultcell = targetbody.reg('r',base); countcell = targetbody.reg('r',base + count + 1)
-    tempcell = targetbody.reg('r',base + count + 2)
-    hasresult = callsite.operands() > 1
-    if hasresult then do
-      oldresult = callsite.operand(1); destination = targetbody.reg(oldresult.bank(),oldresult.index())
-      if callsite.mnemonic() = 'call' & callsite.operands() = 2 then ignored = emit1(targetbody,'null',destination,at)
-      ignored = emit2(targetbody,'link',resultcell,destination,at)
-    end
-    do a = 1 to count
-      if callsite.mnemonic() = 'call' then actual = targetbody.reg('r',allowed.first() + a - 1)
-      else do
-        oldactual = callsite.operand(a + 2); actual = targetbody.reg(oldactual.bank(),oldactual.index())
+      if input.procedureid() = 0 then do
+        call objectarraydrop fields
+        do j = 1 to input.operands(); fields[j] = input.operand(j) as .object; end
+        maps[input.id()] = result.record(input.kind(),fields,at); iterate
       end
-      anchor = targetbody.reg('r',base + a)
-      ignored = emit2(targetbody,'link',anchor,actual,at)
-    end
-    ignored = emit1(targetbody,'null',countcell,at)
-    ignored = emit2(targetbody,'load',countcell,.lltarget..operand.integer(count),at)
-    if hasresult & returned.operands() = 1 then do
-      value = returned.operand(1)
-      if value.kind() = 'I' then do
-        ignored = emit2(targetbody,'load',tempcell,value,at)
-        ignored = emit2(targetbody,'icopy',resultcell,tempcell,at)
+      targetbody = bodies[input.procedureid()] as .lltarget..bodydraft
+      if accepted[input.id()] = 0 then do
+        fields = clonefields(input,targetbody)
+        if input.kind() = 'instruction' then maps[input.id()] = code.emit(targetbody,input.mnemonic(),fields,at)
+        else maps[input.id()] = targetbody.record(input.kind(),fields,at)
+        iterate
       end
-      else do
-        if value.index() = 0 then anchor = countcell
-        else anchor = targetbody.reg('r',base + value.index())
-        ignored = emit2(targetbody,'copy',resultcell,anchor,at)
+      callee = source.body(facts.bodyid(input.id())); count = facts.arguments(input.id()); base = offsets[input.id()]
+      resultcell = targetbody.reg('r',base); countcell = targetbody.reg('r',base + count + 1)
+      tempcell = targetbody.reg('r',base + count + 2); hasresult = input.operands() > 1
+      if hasresult then do
+        oldresult = input.operand(1); destination = targetbody.reg(oldresult.bank(),oldresult.index())
+        if input.mnemonic() = 'call' & input.operands() = 2 then ignored = code.one(targetbody,'null',destination,at)
+        ignored = code.two(targetbody,'link',resultcell,destination,at)
       end
+      do a = 1 to count
+        anchor = targetbody.reg('r',base + a); actual = targetbody.reg('r',facts.argument(input.id(),a))
+        ignored = code.two(targetbody,'link',anchor,actual,at)
+      end
+      ignored = code.one(targetbody,'null',countcell,at)
+      ignored = code.two(targetbody,'load',countcell,.lltarget..operand.integer(count),at)
+      steps = empty; clauses = empty
+      do j = 1 to callee.records()
+        childrecord = callee.record(j)
+        if childrecord.kind() = '.srcstep' then do
+          value = childrecord.operand(1); call freshidentity(steps,value.index(),higheststep)
+          value = childrecord.operand(2); call freshidentity(clauses,value.index(),highestclause)
+        end
+        else if childrecord.kind() = '.traceevent' then do
+          value = childrecord.operand(7); call freshidentity(steps,value.index(),higheststep)
+          value = childrecord.operand(8); call freshidentity(clauses,value.index(),highestclause)
+        end
+      end
+      do j = 1 to callee.records()
+        childrecord = callee.record(j)
+        if childrecord.kind() = '.meta' & (childrecord.operands() = 3 | childrecord.operands() = 5) then iterate
+        if childrecord.kind() = 'instruction' & childrecord.mnemonic() = 'numsci' then iterate
+        oldat = childrecord.origin()
+        ignoredorigin = copyorigin(graph_ref,oldat,reference result,reference sources,reference origins)
+        graph = dereference graph_ref; store = dereference graph.storage(); fileid = store.get(9,oldat.id(),1)
+        file = sources[fileid] as .llir..sourcefile
+        call objectarraydrop contributors
+        contributors[1] = ignoredorigin as .object; contributors[2] = at as .object
+        childat = result.contributingorigin(file,oldat.first(),oldat.last(),'composite',contributors)
+        call objectarraydrop replacements
+        do k = 1 to childrecord.registerrefs()
+          field = childrecord.registerref(k)
+          if field.bank() = 'r' then value = targetbody.reg('r',base + count + 3 + field.index())
+          else if field.index() = 0 then value = countcell
+          else value = targetbody.reg('r',base + field.index())
+          replacements[k] = value as .object
+        end
+        fields = lltarget..remapregisters(childrecord,replacements)
+        fields = lltarget..remapmetadata(childrecord,fields,'.$inline.' || input.id(),steps,clauses)
+        if childrecord.kind() <> 'instruction' then ignored = targetbody.record(childrecord.kind(),fields,childat)
+        else if childrecord.mnemonic() <> 'ret' then ignored = code.emit(targetbody,childrecord.mnemonic(),fields,childat)
+        else do
+          if hasresult & childrecord.operands() = 1 then do
+            value = childrecord.operand(1)
+            if value.kind() = 'I' then do
+              ignored = code.two(targetbody,'load',tempcell,value,childat)
+              ignored = code.two(targetbody,'icopy',resultcell,tempcell,childat)
+            end
+            else do
+              mapped = fields[1] as .lltarget..operand
+              if value.bank() = 'r' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
+              else ignored = code.two(targetbody,'copy',resultcell,mapped,childat)
+            end
+          end
+          do a = 1 to count
+            anchor = targetbody.reg('r',base + a); ignored = code.one(targetbody,'unlink',anchor,childat)
+          end
+          if hasresult then ignored = code.one(targetbody,'unlink',resultcell,childat)
+          ignored = code.one(targetbody,'endlife',countcell,childat)
+          ignored = code.one(targetbody,'endlife',tempcell,childat)
+          do a = 0 to callee.locals() - 1
+            anchor = targetbody.reg('r',base + count + 3 + a); ignored = code.one(targetbody,'endlife',anchor,childat)
+          end
+        end
+      end
+      maps[input.id()] = 0
     end
-    do a = 1 to count
-      anchor = targetbody.reg('r',base + a); ignored = emit1(targetbody,'unlink',anchor,at)
+    if code.error() <> '' then return .change('limit',code.error(),source,empty)
+    target = result.finish()
+    if target.valid() = 0 then do
+      status = 'invalid'
+      if pos('LL_RESOURCE_LIMIT',target.error()) > 0 then status = 'limit'
+      return .change(status,target.error(),source,empty)
     end
-    if hasresult then ignored = emit1(targetbody,'unlink',resultcell,at)
-    ignored = emit1(targetbody,'endlife',countcell,at)
-    ignored = emit1(targetbody,'endlife',tempcell,at)
-    maps[input.id()] = 0
+    return .change('changed','closed.root.scalar',target,maps,callers,sites,decisions)
+  on signal as problem
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
+    return .change(status,'LL_INLINE: ' || problem.name() || ': ' || problem.message(),source,empty)
   end
-  target = result.finish()
-  if target.valid() = 0 then return .change('invalid',target.error(),source,empty)
-  return .change('changed','closed.root.scalar.return',target,maps)
+  return .change('invalid','inline.no.result',source,empty)

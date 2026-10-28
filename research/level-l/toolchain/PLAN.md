@@ -124,8 +124,8 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. The scalar/metadata/batch category is under implementation. Complete the reviewed alias/rebinding, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness and canonical fact extraction are qualified; the separate transport proof/cleanup consumer is under implementation. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. The scalar/metadata/batch slice is implemented and focused-qualified. Complete the reviewed alias/rebinding, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction and the separate scalar transport consumer are focused-qualified. Typed allocation/reuse and broader control/component cleanup remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -205,6 +205,15 @@ intended to inform and merge with later RXAS optimization. The existing C
 optimizer remains in place. Its pass demand/capability, immutable analysis
 epoch, storage/component/use facts, proof-plan and atomic-mutation structure
 informs this boundary; its conservative coverage is not the new pass's ceiling.
+
+Existing optimizer code, metadata and tests are evidence, not correctness
+oracles. Reuse maintained behavioral cases, check their expectations against
+the intended semantics, and classify disagreements in the fixture, VM, current
+optimizer or L consumer. The existing `storage_identity_runtime`,
+`entry_alias_runtime` and `copied_xtoy_component_placement_runtime` fixtures
+provide relevant alias/permutation, failure-mapping and independent-component
+cases. Keep independent L expectations; do not copy an old defect or treat a
+conservative refusal as a language restriction.
 
 Register numbers are names, not storage or value identities. Track physical
 slots/permutations, active and entry/base storage bindings, and independent
@@ -296,6 +305,12 @@ metadata observation and proving continuation equivalence. It needs no private
 expansion tags. Keep required snapshots and machinery for retained nested calls.
 The reordered-actual argument-return leaf must use direct COPY and add zero
 frame cells. General allocation remains with the existing RXAS owner.
+INL-STEP05 still includes factoring that owner's assignment/checking interface
+for typed target records, then qualified reuse of proved private scalar storage.
+Removing dead anchors while leaving sparse fresh register numbers is not full
+storage-reuse closure. Its controls must cover nonoverlapping inline temporaries,
+required snapshots, retained contiguous call windows and hidden cleanup; stronger
+target facts may improve admission without duplicating the allocator algorithm.
 
 Register-reference enumeration/remapping, source-step/clause identity freshening,
 scoped META_REG/clear names, TRACE reference domains and L contributing origins
@@ -306,8 +321,53 @@ framework. Independent checks cover reordered actuals plus metadata, retained
 snapshot with aliased mutation, two generated arithmetic calls including the
 documented overflow signal, and an intact retained counted-call window.
 Conservative and cleaned RXAS receive one coherent review before freeze.
-Implementation of this increment is in progress; broader CFG, nested/writable/
+This scalar/transport slice is implemented and focused-qualified; broader CFG, nested/writable/
 optional/variadic, global and context coverage remains open.
+
+Metadata identities use their actual unsigned 32-bit domains, including fresh
+source-step/clause exhaustion. Normalize native source spellings at the text
+boundary before constructing canonical records. TRACE code bytes are data, not
+an invented enum. The typed raw-code reader/writer supports literal control and
+DEL bytes. Backslash token-boundary handling remains a named adapter gap;
+nonnegative `K` raw constant-pool offsets require logical constant binding.
+These representable cases remain open; preserving an unrelocated number would
+not establish preservation, even with expansion disabled.
+
+The adapter treats TRACE fields 1/3/4/5 as raw quoted code bytes,
+not ordinary escaped strings. Strip only their surrounding quotes, preflight
+conversion from the trusted AST span, and render admitted bytes literally with
+exact `2+length` output accounting. Preserve empty/default roles and unknown
+codes without an enum whitelist. Raw control/DEL byte controls are qualified;
+backslash token boundaries still need an L-side proof. Native source restrictions and a missing writer
+proof are distinct. No grammar change is assumed. A stable `K` reference needs
+typed logical constant binding plus native alias syntax for that field;
+FLOAT/DECIMAL constants also need representation. Existing 007 relocation can
+remain the wire owner. That syntax adoption retains its explicit decision gate.
+
+### Reviewed straight-line rebinding increment
+
+After the scalar/transport batch is qualified, extend the same target owners
+for callee LINK/UNLINK and ordered SWAP. Active storage, immutable entry/base
+bindings and slot permutation identity remain separate. Native SWAP changes
+active pointers and slot identities; UNLINK restores the base of its original
+encoded slot. A preceding swap does not change that base. Extend the immutable
+per-call binding plan rather than introducing another mapping framework.
+
+Give the expander untouched argument entry and local base anchors, retain the
+entry-captured result pointer, and lower each UNLINK through its original base.
+At each return, choose MOVE only when the original encoded slot is local and
+its active pointer equals that slot's own base; an owned value in a different
+swapped slot still copies. Transfer the result, restore permutation and active
+bindings, then end only inline-owned lifetimes. Reverse admitted swaps as
+needed to restore actual VM slot identities; relinking alone cannot do that.
+The later cleanup may remove this transport only with its whole-region proof.
+
+Independent controls cover swapped arguments followed by UNLINK, local link/
+mutation/unlink with both owned and still-linked returns, a result aliasing an
+actual while that formal is rebound, and repeated calls. Reuse relevant
+maintained alias/permutation fixtures after checking their intended behavior.
+Inspect COPY/MOVE and restoration-before-cleanup structurally. Broader CFG,
+nested calls, optional/variadic and aggregate/context cases remain open.
 
 ## Complete initial target profile
 

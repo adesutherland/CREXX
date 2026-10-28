@@ -1,0 +1,10 @@
+/* Arithmetic failure/write-history proof boundary. The root overflow policy
+ * ignores the signal, so this fixture asserts retention rather than a value. */
+.globals=0
+main() .locals=2
+  load r0,9223372036854775807
+  call1 r1,increment(),r0
+  ret 0
+increment() .locals=1
+  iadd r0,a1,1
+  ret r0

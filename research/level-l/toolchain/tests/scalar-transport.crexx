@@ -1,0 +1,400 @@
+/* cREXX License (MIT). Independent scalar/storage/permutation expectations. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargetfacts
+import llinline
+import llcleanup
+
+check: procedure = .int
+  arg value = .int, message = .string
+  if value then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+three: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, third = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object; fields[3] = third as .object
+  return body.emit(name,fields,at)
+sayint: procedure = .void
+  arg body = .lltarget..bodydraft, regindex = .int, at = .llir..origin
+  ignored = one(body,'itos',body.reg('r',regindex),at)
+  ignored = one(body,'say',body.reg('r',regindex),at)
+  return
+
+reordered: procedure = .int
+  failures = 0; item = .lltarget..record; value = .lltarget..operand; i = .int
+  draft = .lltarget..draft('reordered','scalar.reordered',0)
+  at = draft.synthetic('reordered actual storage')
+  root = draft.procedure('main',6,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(11),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(23),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(2),at)
+  ignored = two(root,'swap',root.reg('r',3),root.reg('r',1),at)
+  ignored = two(root,'swap',root.reg('r',4),root.reg('r',0),at)
+  fields = .object[]
+  fields[1] = .lltarget..operand.string('V' as .binary) as .object
+  fields[2] = .lltarget..operand.integer(4) as .object
+  fields[3] = .lltarget..operand.string('R' as .binary) as .object
+  fields[4] = .lltarget..operand.string('I' as .binary) as .object
+  fields[5] = .lltarget..operand.string('r' as .binary) as .object
+  fields[6] = .lltarget..operand.integer(3) as .object
+  do i = 7 to 9; fields[i] = .lltarget..operand.integer(0) as .object; end
+  fields[10] = .lltarget..operand.string('y' as .binary) as .object
+  fields[11] = .lltarget..operand.string(''x as .binary) as .object
+  traceid = root.record('.traceevent',fields,at)
+  callid = three(root,'call',root.reg('r',5),.lltarget..operand.procedure('first'),root.reg('r',2),at)
+  ignored = two(root,'swap',root.reg('r',0),root.reg('r',4),at)
+  ignored = two(root,'swap',root.reg('r',1),root.reg('r',3),at)
+  call sayint(root,5,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('first',0,at)
+  ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'reordered source model')
+  binding = llinline..bind(reference original,callid,reference original,original.procedureid('first'))
+  expanded = llinline..expand(binding,'closed-main-default-halt.v1')
+  failures = failures + check(expanded.status() = 'changed','reordered counted call expands')
+  if expanded.status() <> 'changed' then do; say expanded.reason(); return failures; end
+  conservative = expanded.result()
+  cleaned = llcleanup..transport(reference conservative,conservative.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(cleaned.status() = 'changed','whole-region transport proof changes caller')
+  if cleaned.status() <> 'changed' then do; say cleaned.reason(); return failures; end
+  result = cleaned.result(); body = result.body(result.procedureid('main')); swaps = 0; links = 0; calls = 0; copied = 0; remapped = 0
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = '.traceevent' then do
+      value = item.operand(6); remapped = remapped | (value.index() = 1)
+    end
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'swap' then swaps = swaps + 1
+    if wordpos(item.mnemonic(),'link unlink') > 0 then links = links + 1
+    if left(item.mnemonic(),4) = 'call' then calls = calls + 1
+    if item.mnemonic() = 'copy' then do
+      value = item.operand(2); copied = copied | (value.bank() = 'r' & value.index() = 1)
+    end
+  end
+  failures = failures + check(swaps = 0 & links = 0 & calls = 0 & copied,'direct actual mapping removes complete outer setup/restoration')
+  failures = failures + check(body.locals() <= 6,'reordered leaf adds zero caller frame cells')
+  failures = failures + check(remapped,'TRACE bank/index follows exact actual storage')
+  return failures
+
+snapshotcase: procedure = .int
+  failures = 0; i = .int
+  draft = .lltarget..draft('snapshotcase','scalar.snapshot',0)
+  at = draft.synthetic('snapshot before aliased mutation'); root = draft.procedure('main',3,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  fields = .object[]; fields[1] = root.reg('r',1) as .object
+  fields[2] = .lltarget..operand.procedure('snapshotfirst') as .object
+  fields[3] = root.reg('r',0) as .object; fields[4] = root.reg('r',0) as .object
+  callid = root.emit('call2',fields,at)
+  call sayint(root,1,at); call sayint(root,0,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('snapshotfirst',1,at)
+  ignored = two(leaf,'icopy',leaf.reg('r',0),leaf.reg('a',1),at)
+  ignored = three(leaf,'iadd',leaf.reg('a',2),leaf.reg('a',2),.lltarget..operand.integer(1),at)
+  ignored = one(leaf,'ret',leaf.reg('r',0),at)
+  original = draft.finish()
+  binding = llinline..bind(reference original,callid,reference original,original.procedureid('snapshotfirst'))
+  expanded = llinline..expand(binding,'closed-main-default-halt.v1')
+  failures = failures + check(expanded.status() = 'changed','snapshot and writable alias expand')
+  if expanded.status() <> 'changed' then do; say expanded.reason(); return failures; end
+  conservative = expanded.result()
+  cleaned = llcleanup..transport(reference conservative,conservative.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(cleaned.status() = 'changed','snapshot transport cleanup')
+  if cleaned.status() <> 'changed' then do; say cleaned.reason(); return failures; end
+  result = cleaned.result(); body = result.body(result.procedureid('main')); snapshots = 0; moves = 0
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'icopy' then snapshots = snapshots + 1
+    if item.mnemonic() = 'move' then moves = moves + 1
+  end
+  failures = failures + check(snapshots = 1 & moves = 1,'required scalar snapshot and owned return MOVE/reset survive')
+  return failures
+
+identities: procedure = .int
+  failures = 0
+  draft = .lltarget..draft('identities','scalar.identities',0); at = draft.synthetic('storage versus equal component')
+  root = draft.procedure('main',3,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(7),at)
+  ignored = two(root,'settp',root.reg('r',0),.lltarget..operand.integer(256),at)
+  ignored = two(root,'settp',root.reg('r',1),.lltarget..operand.integer(768),at)
+  distinctcopy = two(root,'copy',root.reg('r',1),root.reg('r',0),at)
+  fields = .object[]; fields[1] = .lltarget..operand.string('observed' as .binary) as .object
+  fields[2] = .lltarget..operand.string('b' as .binary) as .object
+  fields[3] = .lltarget..operand.string('.int' as .binary) as .object; fields[4] = root.reg('r',1) as .object
+  ignored = root.record('.meta',fields,at)
+  ignored = two(root,'link',root.reg('r',2),root.reg('r',0),at)
+  samecopy = two(root,'copy',root.reg('r',2),root.reg('r',0),at)
+  ignored = one(root,'unlink',root.reg('r',2),at)
+  call sayint(root,1,at); ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(facts.status() = 'ok','identity fact admission')
+  if facts.status() <> 'ok' then do; say facts.reason(); return failures; end
+  failures = failures + check(facts.storage(distinctcopy,1) <> facts.storage(distinctcopy,2),'equal integer components retain distinct storage identities')
+  failures = failures + check(facts.storage(samecopy,1) = facts.storage(samecopy,2),'LINK establishes actual same storage')
+  cleaned = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(cleaned.status() = 'changed','identity cleanup changes mapped copy')
+  if cleaned.status() = 'changed' then do
+    failures = failures + check(cleaned.operation(distinctcopy) > 0,'different status/ownership copy is retained despite equal integers')
+    failures = failures + check(cleaned.operation(samecopy) = 0,'canonical exact-storage self-copy is removed')
+  end
+  return failures
+
+retainedwindow: procedure = .int
+  failures = 0; i = .int
+  draft = .lltarget..draft('retainedwindow','scalar.retained',0); at = draft.synthetic('retained implicit call window')
+  root = draft.procedure('main',6,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(3),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(1),at)
+  ignored = two(root,'swap',root.reg('r',3),root.reg('r',0),at)
+  keptcall = three(root,'call',root.reg('r',1),.lltarget..operand.procedure('kept'),root.reg('r',2),at)
+  ignored = two(root,'swap',root.reg('r',0),root.reg('r',3),at)
+  selected = three(root,'call1',root.reg('r',5),.lltarget..operand.procedure('selected'),root.reg('r',0),at)
+  call sayint(root,5,at); ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('kept',0,at); ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  leaf = draft.procedure('selected',0,at); ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  original = draft.finish()
+  binding = llinline..bind(reference original,selected,reference original,original.procedureid('selected'))
+  expanded = llinline..expand(binding,'closed-main-default-halt.v1')
+  failures = failures + check(expanded.status() = 'changed','selected call expands beside retained scalar call')
+  if expanded.status() <> 'changed' then do; say expanded.reason(); return failures; end
+  conservative = expanded.result()
+  cleaned = llcleanup..transport(reference conservative,conservative.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(cleaned.status() = 'changed','retained-window caller has other removable transport')
+  if cleaned.status() <> 'changed' then do; say cleaned.reason(); return failures; end
+  result = cleaned.result(); body = result.body(result.procedureid('main')); calls = 0; swaps = 0; validwindow = 0
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'swap' then swaps = swaps + 1
+    if item.mnemonic() = 'call' then do
+      calls = calls + 1; counter = item.operand(3); validwindow = counter.index() = 2
+    end
+  end
+  failures = failures + check(calls = 1 & swaps = 2 & validwindow,'retained count/window and reverse permutation remain valid')
+  return failures
+
+batchhistory: procedure = .int
+  failures = 0; i = .int
+  draft = .lltarget..draft('batchhistory','scalar.batch',0); at = draft.synthetic('repeated owned RET reset')
+  root = draft.procedure('main',3,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  firstcall = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('bump'),root.reg('r',0),at)
+  secondcall = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('bump'),root.reg('r',1),at)
+  call sayint(root,2,at); ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('bump',1,at)
+  ignored = three(leaf,'iadd',leaf.reg('r',0),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  ignored = one(leaf,'ret',leaf.reg('r',0),at)
+  other = draft.procedure('other',1,at)
+  othercall = three(other,'call1',other.reg('r',0),.lltarget..operand.procedure('bump'),other.reg('r',0),at)
+  ignored = one(other,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish(); bindings = .object[]
+  bindings[1] = llinline..bind(reference original,firstcall,reference original,original.procedureid('bump')) as .object
+  bindings[2] = llinline..bind(reference original,secondcall,reference original,original.procedureid('bump')) as .object
+  changed = llinline..expandmany(bindings,'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed' & changed.sites() = 2 & changed.callers() = 1,'multiple calls share one atomic expansion')
+  if changed.status() <> 'changed' then say changed.reason()
+  if changed.status() = 'changed' then do
+    failures = failures + check(changed.operation(firstcall) = 0 & changed.operation(secondcall) = 0,'both original call identities map to removal')
+    failures = failures + check(changed.statusat(firstcall) = 'changed' & changed.statusat(secondcall) = 'changed','each admitted site exposes its decision')
+  end
+  bindings[3] = llinline..bind(reference original,othercall,reference original,original.procedureid('bump')) as .object
+  mixed = llinline..expandmany(bindings,'closed-main-default-halt.v1')
+  failures = failures + check(mixed.status() = 'changed' & mixed.statusat(othercall) = 'keep' & mixed.reasonat(othercall) = 'signal.root.context.unproved','valid non-root call gets a specific ordinary-call decision')
+  bindings[2] = bindings[1]
+  refused = llinline..expandmany(bindings,'closed-main-default-halt.v1')
+  failures = failures + check(refused.status() = 'invalid' & refused.reason() = 'binding.duplicate.site','duplicate site refuses the complete batch')
+
+  history = .lltarget..draft('history','scalar.history',0); at = history.synthetic('unproved non-returned recycled local')
+  root = history.procedure('main',3,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  firstcall = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('bump'),root.reg('r',0),at)
+  secondcall = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('bump'),root.reg('r',1),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = history.procedure('bump',2,at)
+  ignored = three(leaf,'iadd',leaf.reg('r',0),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  ignored = two(leaf,'icopy',leaf.reg('r',1),leaf.reg('r',0),at)
+  ignored = one(leaf,'ret',leaf.reg('r',1),at)
+  uncertain = history.finish()
+  call objectarraydrop bindings
+  bindings[1] = llinline..bind(reference uncertain,firstcall,reference uncertain,uncertain.procedureid('bump')) as .object
+  bindings[2] = llinline..bind(reference uncertain,secondcall,reference uncertain,uncertain.procedureid('bump')) as .object
+  refused = llinline..expandmany(bindings,'closed-main-default-halt.v1')
+  failures = failures + check(refused.status() = 'keep' & refused.reason() = 'local.recycler.history.unproved','unproved recycler side components retain the call')
+  return failures
+
+provenance: procedure = .int
+  failures = 0; i = .int; found = .int
+  draft = .lltarget..draft('provenance','scalar.provenance',0)
+  file = draft.source('provenance.rxas','ab' as .binary)
+  first = file.origin(0,1); second = file.origin(1,2)
+  parents = .object[]; parents[1] = first as .object; parents[2] = second as .object; parents[3] = first as .object
+  at = draft.contributingorigin(file,0,2,'composite',parents)
+  root = draft.procedure('main',2,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('identity'),root.reg('r',0),at)
+  call sayint(root,1,at); ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('identity',0,at); ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  original = draft.finish()
+  binding = llinline..bind(reference original,callid,reference original,original.procedureid('identity'))
+  expanded = llinline..expand(binding,'closed-main-default-halt.v1')
+  failures = failures + check(expanded.status() = 'changed','existing multi-contributor provenance expands')
+  if expanded.status() <> 'changed' then do; say expanded.reason(); return failures; end
+  conservative = expanded.result()
+  cleaned = llcleanup..transport(reference conservative,conservative.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(cleaned.status() = 'changed','multi-contributor cleanup preserves owned graph')
+  if cleaned.status() <> 'changed' then do; say cleaned.reason(); return failures; end
+  result = cleaned.result(); body = result.body(result.procedureid('main')); found = 0
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() <> 'instruction' | item.mnemonic() <> 'copy' then iterate
+    origin = item.origin()
+    if origin.parents() <> 2 then iterate
+    old = origin.parent(1); site = origin.parent(2)
+    if old.parents() <> 3 | site.parents() <> 3 then iterate
+    left = old.parent(1); right = old.parent(2); repeated = old.parent(3)
+    found = left.first() = 0 & left.last() = 1 & right.first() = 1 & right.last() = 2 & repeated.id() = left.id()
+  end
+  failures = failures + check(found,'all original and call-site contributors retain order, multiplicity and spans')
+  return failures
+
+resources: procedure = .int
+  draft = .lltarget..draft('unusedlocals','scalar.resource',0)
+  at = draft.synthetic('unused locals still have a resource cost')
+  root = draft.procedure('main',100000,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,4096)
+  return check(facts.status() = 'limit','facts byte allowance covers unused frame state before allocation')
+
+metadatamodel: procedure = .lltarget..module
+  arg kind = .string, fields = .object[]
+  draft = .lltarget..draft('metadata','scalar.metadata',0)
+  at = draft.synthetic('independent metadata wire domains')
+  root = draft.procedure('main',1,at)
+  ignored = root.record(kind,fields,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  return draft.finish()
+
+metadata: procedure = .int
+  failures = 0; i = .int
+  fields = .object[]
+  do i = 1 to 8; fields[i] = .lltarget..operand.integer(0) as .object; end
+  fields[4] = .lltarget..operand.string('metadata.rxas' as .binary) as .object
+  fields[8] = .lltarget..operand.string(''x as .binary) as .object
+  fields[1] = .lltarget..operand.integer(4294967295) as .object
+  original = metadatamodel('.srcstep',fields)
+  failures = failures + check(original.valid(),'maximum u32 source identity is representable')
+  fields[1] = .lltarget..operand.integer(4294967296) as .object
+  original = metadatamodel('.srcstep',fields)
+  failures = failures + check(original.valid() = 0 & pos('canonical u32',original.error()) > 0,'constructed source identity cannot bypass wire bounds')
+  fields[1] = .lltarget..operand.integer(-1) as .object
+  original = metadatamodel('.srcstep',fields)
+  failures = failures + check(original.valid() = 0,'constructed source metadata must already be canonical')
+
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.string('V' as .binary) as .object
+  fields[2] = .lltarget..operand.integer(0) as .object
+  fields[3] = .lltarget..operand.string('K' as .binary) as .object
+  fields[4] = .lltarget..operand.string('I' as .binary) as .object
+  fields[5] = .lltarget..operand.string(''x as .binary) as .object
+  fields[6] = .lltarget..operand.integer(-1) as .object
+  do i = 7 to 9; fields[i] = .lltarget..operand.integer(0) as .object; end
+  fields[10] = .lltarget..operand.string(''x as .binary) as .object
+  fields[11] = .lltarget..operand.string(''x as .binary) as .object
+  original = metadatamodel('.traceevent',fields)
+  failures = failures + check(original.valid(),'TRACE absent constant reference and empty code remain valid')
+  fields[6] = .lltarget..operand.integer(0) as .object
+  original = metadatamodel('.traceevent',fields)
+  failures = failures + check(original.valid() = 0 & pos('constant-pool offset',original.error()) > 0,'raw TRACE pool offsets require relocatable constant binding')
+  fields[6] = .lltarget..operand.integer(-2) as .object
+  original = metadatamodel('.traceevent',fields)
+  failures = failures + check(original.valid() = 0 & pos('absent reference',original.error()) > 0,'TRACE absent reference has one canonical sentinel')
+  fields[6] = .lltarget..operand.integer(-1) as .object
+  fields[7] = .lltarget..operand.integer(4294967296) as .object
+  original = metadatamodel('.traceevent',fields)
+  failures = failures + check(original.valid() = 0 & pos('canonical u32',original.error()) > 0,'TRACE source identity cannot exceed wire bounds')
+  fields[7] = .lltarget..operand.integer(0) as .object
+  fields[1] = .lltarget..operand.string('VV' as .binary) as .object
+  original = metadatamodel('.traceevent',fields)
+  failures = failures + check(original.valid() = 0 & pos('one byte',original.error()) > 0,'TRACE code is a byte rather than a free string')
+  fields[1] = .lltarget..operand.string('22'x as .binary) as .object
+  original = metadatamodel('.traceevent',fields)
+  failures = failures + check(original.valid() = 0 & pos('not representable',original.error()) > 0,'quote TRACE byte refuses native RXAS text boundary')
+  fields[1] = .lltarget..operand.string('V' as .binary) as .object
+  fields[3] = .lltarget..operand.string('R' as .binary) as .object
+  fields[5] = .lltarget..operand.string('z' as .binary) as .object
+  fields[6] = .lltarget..operand.integer(0) as .object
+  original = metadatamodel('.traceevent',fields)
+  failures = failures + check(original.valid() = 0 & pos('register bank',original.error()) > 0,'TRACE logical register cannot silently escape reference remapping')
+
+  call objectarraydrop fields
+  do i = 1 to 8; fields[i] = .lltarget..operand.integer(0) as .object; end
+  fields[1] = .lltarget..operand.integer(4294967295) as .object
+  fields[4] = .lltarget..operand.string('metadata.rxas' as .binary) as .object
+  fields[8] = .lltarget..operand.string(''x as .binary) as .object
+  draft = .lltarget..draft('metadataextent','scalar.metadata.extent',0)
+  at = draft.synthetic('source identity freshening is bounded')
+  root = draft.procedure('main',2,at)
+  ignored = root.record('.srcstep',fields,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('identity'),root.reg('r',0),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('identity',0,at)
+  fields[1] = .lltarget..operand.integer(1) as .object
+  ignored = leaf.record('.srcstep',fields,at)
+  ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  original = draft.finish()
+  binding = llinline..bind(reference original,callid,reference original,original.procedureid('identity'))
+  refused = llinline..expand(binding,'closed-main-default-halt.v1')
+  failures = failures + check(refused.status() = 'limit' & pos('source/clause identity extent',refused.reason()) > 0,'fresh identity exhaustion refuses atomically')
+  return failures
+
+arithmeticbounds: procedure = .int
+  constant HIGHEST = 9223372036854775807
+  constant LOWEST = -9223372036854775807 - 1
+  failures = 0
+  result = lltargetfacts..arithmetic('iadd',HIGHEST,1)
+  failures = failures + check(result[1] = 0,'MAX plus one has no checked write')
+  result = lltargetfacts..arithmetic('iadd',LOWEST,-1)
+  failures = failures + check(result[1] = 0,'MIN plus negative one has no checked write')
+  result = lltargetfacts..arithmetic('isub',LOWEST,1)
+  failures = failures + check(result[1] = 0,'MIN minus one has no checked write')
+  result = lltargetfacts..arithmetic('isub',HIGHEST,-1)
+  failures = failures + check(result[1] = 0,'MAX minus negative one has no checked write')
+  result = lltargetfacts..arithmetic('imult',LOWEST,1)
+  failures = failures + check(result[1] = 1 & result[2] = LOWEST,'MIN times one is exact')
+  result = lltargetfacts..arithmetic('imult',LOWEST,-1)
+  failures = failures + check(result[1] = 0,'MIN times negative one is refused')
+  result = lltargetfacts..arithmetic('imult',0,LOWEST)
+  failures = failures + check(result[1] = 1 & result[2] = 0,'zero times MIN is exact')
+  result = lltargetfacts..arithmetic('imult',7,2)
+  failures = failures + check(result[1] = 1 & result[2] = 14,'positive multiplication')
+  result = lltargetfacts..arithmetic('imult',7,-2)
+  failures = failures + check(result[1] = 1 & result[2] = -14,'positive negative multiplication')
+  result = lltargetfacts..arithmetic('imult',-7,2)
+  failures = failures + check(result[1] = 1 & result[2] = -14,'negative positive multiplication')
+  result = lltargetfacts..arithmetic('imult',-7,-2)
+  failures = failures + check(result[1] = 1 & result[2] = 14,'negative multiplication')
+  result = lltargetfacts..arithmetic('iadd',LOWEST,HIGHEST)
+  failures = failures + check(result[1] = 1 & result[2] = -1,'opposite extreme addition')
+  result = lltargetfacts..arithmetic('isub',LOWEST,LOWEST)
+  failures = failures + check(result[1] = 1 & result[2] = 0,'equal extreme subtraction')
+  return failures
+
+main: procedure = .int
+  failures = reordered() + snapshotcase() + identities() + retainedwindow() + batchhistory() + arithmeticbounds() + provenance() + resources() + metadata()
+  say 'SCALAR_TRANSPORT|failures=' || failures
+  return failures

@@ -46,7 +46,7 @@ reader: class
     return
   parse: method = .llrxasinput..parsed
     arg source = .binary, logicalModule = .string, artifact = .string, ?limits = .lllimits..policy, entries = 1000000, bytes = 67108864, work = 1000000
-    failureOffset = 0; j = .int
+    failureOffset = 0; j = .int; codevalue = .int
     do
     if ?limits = 0 then limits = .lllimits..policy()
     if logicalModule = '' | artifact = '' then return .parsed(source,logicalModule,3,'LL_RXAS_IDENTITY: explicit module and artifact identities are required',0)
@@ -168,7 +168,7 @@ reader: class
           do j = 1 to 8
             raw = item.text(word(names,j))
             if j = 4 | j = 8 then fields[j] = .lltarget..operand.string(unquote(raw,reference draft,item.finish() - item.start())) as .object
-            else fields[j] = .lltarget..operand.integer(number(raw)) as .object
+            else fields[j] = .lltarget..operand.integer(metadatauint(raw)) as .object
             if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
           end
           ignored = body.record('.srcstep',fields,at)
@@ -178,8 +178,14 @@ reader: class
           names = 'kind modes source type bank value step clause flags symbol resolved'
           do j = 1 to 11
             raw = item.text(word(names,j))
-            if wordpos(j as .string,'1 3 4 5 10 11') > 0 then fields[j] = .lltarget..operand.string(unquote(raw,reference draft,item.finish() - item.start())) as .object
-            else fields[j] = .lltarget..operand.integer(number(raw)) as .object
+            if wordpos(j as .string,'1 3 4 5') > 0 then fields[j] = .lltarget..operand.string(rawcode(raw,reference draft,item.finish() - item.start())) as .object
+            else if j = 10 | j = 11 then fields[j] = .lltarget..operand.string(unquote(raw,reference draft,item.finish() - item.start())) as .object
+            else if j = 6 then do
+              codevalue = number(raw)
+              if codevalue < 0 then codevalue = -1
+              fields[j] = .lltarget..operand.integer(codevalue) as .object
+            end
+            else fields[j] = .lltarget..operand.integer(metadatauint(raw,1)) as .object
             if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
           end
           ignored = body.record('.traceevent',fields,at)
@@ -229,6 +235,15 @@ number: procedure = .int
   if left(text,1) = '+' then text = substr(text,2)
   codec = .llir..intcodec(); bits = codec.parse(text)
   return <at..i64>(0) bits
+/** SRCSTEP stores a signed integer cast to u32. TRACE first clamps negatives
+ * to zero; both then retain only the low 32 bits in the checked target model. */
+metadatauint: procedure = .int
+  arg text = .string, clamp = 0
+  value = number(text)
+  if clamp & value < 0 then return 0
+  value = value % 4294967296
+  if value < 0 then value = value + 4294967296
+  return value
 operand: procedure = .lltarget..operand
   arg node = .llast..node, body = .lltarget..bodydraft, owner = reference .lltarget..draft
   raw = node.text('spelling'); kind = node.kind()
@@ -272,6 +287,29 @@ metaprofile: procedure = .string
     if value.kind() = 'P' & signature.kind() = 'S' then return ''
   end
   return 'LL_RXAS_BINDING: unsupported metadata shape'
+
+/** Native TRACE code tokens retain their raw interior, without string escape
+ * decoding. Conversion and the at-most-one-byte copy share draft allowances. */
+rawcode: procedure = .binary
+  arg token = .string, owner = reference .lltarget..draft, bound = .int
+  draft = dereference owner; result = .binary
+  if bound < 2 | bound > 4611686018427387903 then do
+    assembler signal "ERROR","LL_RESOURCE_LIMIT: RXAS raw TRACE code work"
+    return result
+  end
+  if draft.preflight(bound * 2,0) = 0 then return result
+  input = token as .binary; size = <blen>(input)
+  if size < 2 | size > bound then do
+    assembler signal "ERROR","LL_RXAS_LITERAL: spelling exceeds parsed byte span"
+    return result
+  end
+  if size > 3 then do
+    assembler signal "ERROR","LL_RXAS_BINDING: TRACE code must be empty or one raw byte"
+    return result
+  end
+  if draft.preflight(0,size - 2) = 0 then return result
+  if size = 3 then result = binsubstr(input,2,1)
+  return result
 
 /** Decode only one already parsed STRING token. Structural syntax is L-owned.
  * Unknown escape pairs remain bytes, as in native RXAS; output uses exact quote. */

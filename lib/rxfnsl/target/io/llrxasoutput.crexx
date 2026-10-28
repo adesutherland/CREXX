@@ -80,7 +80,8 @@ render: procedure = .llrxasoutput..emission
         when kind = '.srcstep' | kind = '.traceevent' then do
           text = kind
           do j = 1 to item.operands()
-            text = text || ' ' || operandtext(item.operand(j))
+            if kind = '.traceevent' & wordpos(j as .string,'1 3 4 5') > 0 then text = text || ' ' || codetext(item.operand(j))
+            else text = text || ' ' || operandtext(item.operand(j))
           end
         end
         otherwise return failed(module,'LL_RXAS_PROFILE: unsupported rendered record ' || kind)
@@ -110,6 +111,12 @@ operandtext: procedure = .string
     otherwise assembler signal "ERROR","LL_RXAS_OPERAND: invalid rendered operand kind"
   end
   return ''
+
+/** Checked TRACE byte roles use literal interiors, unlike ordinary strings.
+ * recordbytes has charged exact output and work before this payload copy. */
+codetext: procedure = .string
+  arg value = .lltarget..operand
+  return '"' || (value.bytes() as .string) || '"'
 
 failed: procedure = .llrxasoutput..emission
   arg module = .lltarget..module, message = .string
@@ -141,11 +148,22 @@ recordbytes: procedure = .int
   end
   if size > limit then return -1
   do i = 1 to count
-    amount = fieldbytes(item.operand(i),work,limit - size)
+    if kind = '.traceevent' & wordpos(i as .string,'1 3 4 5') > 0 then amount = codebytes(item.operand(i),work,limit - size)
+    else amount = fieldbytes(item.operand(i),work,limit - size)
     if amount < 0 | amount > limit - size then return -1
     size = size + amount
   end
   return size
+codebytes: procedure = .int
+  arg value = .lltarget..operand, expose work = .int, limit = .int
+  size = value.length()
+  if limit < 2 | size > limit - 2 then return -1
+  if size + 2 > work then do
+    assembler signal "ERROR","LL_RESOURCE_LIMIT: RXAS raw TRACE code rendering work"
+    return -1
+  end
+  work = work - size - 2
+  return size + 2
 fieldbytes: procedure = .int
   arg value = .lltarget..operand, expose work = .int, limit = .int
   kind = value.kind()

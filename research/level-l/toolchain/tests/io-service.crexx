@@ -9,6 +9,7 @@ import llrxasoutput
 
 main: procedure = .int expose checks failures
   i = .int; record = .lltarget..record; value = .lltarget..operand
+  normalized = .llrxasinput..parsed
   emitted = .llrxasoutput..emission; refused = .llrxasoutput..emission; output = .llir..output
   checks = 0; failures = 0; nl = '0a'x
   frontend = .llrxasinput..reader()
@@ -57,6 +58,63 @@ main: procedure = .int expose checks failures
       call check(normalized.status() = 0,'normalized literals read back through public service')
     end
   end
+  metadataSource = 'main() .locals=0' || nl || '.srcstep -1 4294967296 4294967297 "meta.crexx" -4294967297 4294967295 -9223372036854775808 "source"' || nl || '.traceevent "V" -1 "N" "I" "" -9 4294967296 -4294967297 4294967297 "symbol" ""' || nl || 'ret 0' || nl
+  metadata = frontend.parse(metadataSource as .binary,'metadata','fixture:metadata')
+  call check(metadata.status() = 0,'signed source/TRACE metadata integer spellings admitted')
+  if metadata.status() = 0 then do
+    metadataModule = metadata.result(); foundStep = 0; foundTrace = 0
+    do i = 1 to metadataModule.records()
+      record = metadataModule.record(i)
+      if record.kind() = '.srcstep' then do
+        value = record.operand(1); foundStep = value.index() = 4294967295
+        value = record.operand(2); foundStep = foundStep & value.index() = 0
+        value = record.operand(3); foundStep = foundStep & value.index() = 1
+        value = record.operand(5); foundStep = foundStep & value.index() = 4294967295
+        value = record.operand(6); foundStep = foundStep & value.index() = 4294967295
+        value = record.operand(7); foundStep = foundStep & value.index() = 0
+      end
+      if record.kind() = '.traceevent' then do
+        value = record.operand(2); foundTrace = value.index() = 0
+        value = record.operand(6); foundTrace = foundTrace & value.index() = -1
+        value = record.operand(7); foundTrace = foundTrace & value.index() = 0
+        value = record.operand(8); foundTrace = foundTrace & value.index() = 0
+        value = record.operand(9); foundTrace = foundTrace & value.index() = 1
+      end
+    end
+    call check(foundStep,'source metadata uses signed modulo-u32 canonical fields')
+    call check(foundTrace,'TRACE negatives clamp or become NONE before modulo-u32 storage')
+    emitted = llrxasoutput..render(reference metadataModule)
+    call check(emitted.error() = '','canonical metadata renders through the ordinary writer')
+    if emitted.error() = '' then do
+      output = emitted.output(); normalized = frontend.parse(output.text() as .binary,'metadata-normalized','fixture:metadata-normalized')
+      call check(normalized.status() = 0,'canonical metadata reads back through the public service')
+    end
+  end
+  rawCodes = '01090B1B1F7F3F'x as .binary
+  do i = 0 to <blen>(rawCodes)
+    code = .binary
+    if i > 0 then code = binsubstr(rawCodes,i,1)
+    spelling = code as .string
+    codeLine = '.traceevent "' || spelling || '" 0 "' || spelling || '" "' || spelling || '" "' || spelling || '" -1 0 0 0 "symbol" ""'
+    rawSource = 'main() .locals=0' || nl || codeLine || nl || 'ret 0' || nl
+    rawParsed = frontend.parse(rawSource as .binary,'raw-trace-' || i,'fixture:raw-trace')
+    call check(rawParsed.status() = 0,'literal TRACE byte admitted: ' || i)
+    if rawParsed.status() = 0 then do
+      rawModule = rawParsed.result()
+      call check(tracecodes(rawModule,code),'raw TRACE model fields retain exact byte: ' || i)
+      emitted = llrxasoutput..render(reference rawModule)
+      call check(emitted.error() = '','raw TRACE byte renders: ' || i)
+      if emitted.error() = '' then do
+        output = emitted.output()
+        call check(pos(codeLine,output.text()) > 0,'writer emits literal TRACE byte without ordinary escaping: ' || i)
+        normalized = frontend.parse(output.text() as .binary,'raw-trace-roundtrip-' || i,'fixture:raw-trace-roundtrip')
+        call check(normalized.status() = 0,'raw TRACE output reads back: ' || i)
+        if normalized.status() = 0 then call check(tracecodes(normalized.result(),code),'raw TRACE roundtrip fields retain exact byte: ' || i)
+      end
+    end
+  end
+  invalid = frontend.parse(('main() .locals=0' || nl || '.traceevent "\x01" 0 "N" "" "" -1 0 0 0 "" ""' || nl || 'ret 0' || nl) as .binary,'escaped-trace-code','fixture:negative')
+  call check(invalid.status() <> 0 & pos('one raw byte',invalid.error()) > 0,'TRACE code escape spelling is not decoded into a byte')
   invalid = frontend.parse(('main() .locals=0' || nl || 'say "\xff"' || nl || 'ret 0' || nl) as .binary,'invalid-escaped-utf8','fixture:negative')
   call check(invalid.status() <> 0,'escaped invalid UTF-8 string payload refused')
   largeSource = 'main() .locals=0' || nl || 'say "' || copies('x',4096) || '"' || nl || 'ret 0' || nl
@@ -84,6 +142,21 @@ main: procedure = .int expose checks failures
   say 'RXAS_IO|checks=' || checks || '|failures=' || failures
   if failures > 0 then return 1
   return 0
+
+tracecodes: procedure = .int
+  arg module = .lltarget..module, expected = .binary
+  item = .lltarget..record; value = .lltarget..operand; count = 0
+  do i = 1 to module.records()
+    item = module.record(i)
+    if item.kind() <> '.traceevent' then iterate
+    count = count + 1
+    do j = 1 to 5
+      if j = 2 then iterate
+      value = item.operand(j)
+      if bin2x(value.bytes()) <> bin2x(expected) then return 0
+    end
+  end
+  return count = 1
 
 check: procedure = .void expose checks failures
   arg condition = .int, name = .string

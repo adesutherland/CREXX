@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Optional checked machine-target records over Level L IR. */
 options levelb
-namespace lltarget expose draft bodydraft module body record operand operandcodec schema
+namespace lltarget expose draft bodydraft module body record operand operandcodec schema remapregisters remapmetadata
 import rxfnsb
 import llir
 import llrxascatalog
@@ -275,7 +275,7 @@ namesafe: procedure = .int
 
 recordshape: procedure = .string
   arg item = .lltarget..record
-  signature = ''; field = .operand
+  signature = ''; field = .operand; i = .int
   do i = 1 to item.operands()
     field = item.operand(i); signature = signature || field.kind()
   end
@@ -309,9 +309,21 @@ recordshape: procedure = .string
     end
     when kind = '.srcstep' then do
       if signature <> 'IIISIIIS' | body < 2 then return 'source step shape'
+      do i = 1 to 7
+        if i = 4 then iterate
+        field = item.operand(i)
+        if field.index() < 0 | field.index() > 4294967295 then return 'source step requires canonical u32 fields'
+      end
     end
     when kind = '.traceevent' then do
       if signature <> 'SISSSIIIISS' | body < 2 then return 'TRACE event shape'
+      do i = 2 to 9
+        if wordpos(i as .string,'2 7 8 9') = 0 then iterate
+        field = item.operand(i)
+        if field.index() < 0 | field.index() > 4294967295 then return 'TRACE requires canonical u32 fields'
+      end
+      field = item.operand(6)
+      if field.index() < -1 then return 'TRACE requires canonical absent reference'
     end
     when kind = '.meta' then do
       if signature = 'S' & body > 1 then return ''
@@ -398,6 +410,25 @@ draft: class
   synthetic: method = .llir..origin
     arg description = .string
     return syntheticorigin(reference _store,description)
+  /** Create provenance through the L origin owner. A parent is an owned
+   * contributor, not an executable/virtual runtime frame. */
+  origin: method = .llir..origin
+    arg file = .llir..sourcefile, first = .int, last = .int, kind = 'exact', ?parent = .llir..origin
+    parentid = 0
+    if file.belongs(reference _store) = 0 then call _store.fail('LL_TARGET_OWNER: foreign source file')
+    if ?parent then do
+      if parent.belongs(reference _store) = 0 then call _store.fail('LL_TARGET_OWNER: foreign origin parent')
+      else parentid = parent.id()
+    end
+    id = _store.origin(file.id(),first,last,wordpos(kind,'exact composite derived synthetic recovered'),parentid)
+    return .llir..origin(reference _store,id)
+  contributingorigin: method = .llir..origin
+    arg file = .llir..sourcefile, first = .int, last = .int, kind = .string, parents = .object[]
+    if file.belongs(reference _store) = 0 then do
+      call _store.fail('LL_TARGET_OWNER: foreign source file'); return .llir..origin(reference _store,0)
+    end
+    if preflight(parents[0] + 1,0) = 0 then return .llir..origin(reference _store,0)
+    return file.contributingorigin(first,last,kind,parents)
   procedure: method = .lltarget..bodydraft
     arg name = .string, locals = .int, at = .llir..origin, exposed = ''
     contract = dereference _store.contract()
@@ -407,8 +438,8 @@ draft: class
     _functions[n] = fn.id(); _blocks[n] = block as .object
     fields = .object[]; fields[1] = .operand.procedure(name) as .object
     fields[2] = .operand.integer(locals) as .object; fields[3] = .operand.symbol(exposed) as .object
-    ignored = appendrecord(reference _store,reference _fuel,_catalogue,fn.id(),'procedure',-1,fields,at)
-    return .lltarget..bodydraft(reference _store,reference _fuel,block,_catalogue,fn.id(),locals,_globals)
+    headerid = appendrecord(reference _store,reference _fuel,_catalogue,fn.id(),'procedure',-1,fields,at)
+    return .lltarget..bodydraft(reference _store,reference _fuel,block,_catalogue,fn.id(),locals,_globals,headerid)
   record: method = .int
     arg kind = .string, fields = .object[], at = .llir..origin
     return appendrecord(reference _store,reference _fuel,_catalogue,0,kind,-1,fields,at)
@@ -432,11 +463,16 @@ bodydraft: class
   _function = .int
   _locals = .int
   _globals = .int
+  _header = .int
   *: factory
-    arg owner = reference .llir..arena, work = reference .fuel, block = .llir..block, catalogue = .llir..block, functionid = .int, locals = .int, globals = .int
+    arg owner = reference .llir..arena, work = reference .fuel, block = .llir..block, catalogue = .llir..block, functionid = .int, locals = .int, globals = .int, headerid = 0
     _owner = owner; _fuel = work; _block = block; _catalogue = catalogue
-    _function = functionid; _locals = locals; _globals = globals
+    _function = functionid; _locals = locals; _globals = globals; _header = headerid
     return
+  functionid: method = .int
+    return _function
+  headerid: method = .int
+    return _header
   reg: method = .lltarget..operand
     arg bank = .string, index = .int
     store = dereference _owner; work = dereference _fuel
@@ -491,6 +527,15 @@ bodydraft: class
     return appendrecord(_owner,_fuel,_block,_function,'instruction',opcode,fields,at)
   record: method = .int
     arg kind = .string, fields = .object[], at = .llir..origin
+    source = .operand; bank = .operand; number = .operand; registered = .operand
+    /* TRACE encodes a register as a typed bank/index pair. Register it with
+     * the same target storage owner as an explicitly spelled R operand. */
+    if kind = '.traceevent' & fields[0] = 11 & fields[3] is .operand & fields[5] is .operand & fields[6] is .operand then do
+      source = fields[3] as .operand; bank = fields[5] as .operand; number = fields[6] as .operand
+      if source.kind() = 'S' & bank.kind() = 'S' & number.kind() = 'I' then do
+        if source.text() = 'R' & number.index() >= 0 & wordpos(lower(bank.text()),'r g a') > 0 then registered = reg(lower(bank.text()),number.index())
+      end
+    end
     return appendrecord(_owner,_fuel,_block,_function,kind,-1,fields,at)
 
 /** Views borrow the exact published L owner. No arena copies on scalar queries. */
@@ -532,9 +577,107 @@ record: class
     arg ordinal = .int
     call require(); graph = dereference _owner; op = graph.operation(_id)
     return unpack(op.attribute('operands'),ordinal,_identity)
+  /** Enumerate spelled register operands and typed TRACE bank/index pairs.
+   * Implicit call windows/addressed registers still require the canonical
+   * operation contract plus call-site facts; this is not a completeness proof. */
+  registerrefs: method = .int
+    total = 0; field = .operand; i = .int
+    do i = 1 to operands()
+      field = operand(i)
+      if field.kind() = 'R' then total = total + 1
+    end
+    if kind() = '.traceevent' then do
+      source = operand(3); bank = operand(5); number = operand(6)
+      if source.text() = 'R' & number.index() >= 0 & wordpos(lower(bank.text()),'r g a') > 0 then total = total + 1
+    end
+    return total
+  registerref: method = .lltarget..operand
+    arg ordinal = .int
+    total = 0; field = .operand; slotid = .int; i = .int
+    do i = 1 to operands()
+      field = operand(i)
+      if field.kind() <> 'R' then iterate
+      total = total + 1
+      if total = ordinal then return field
+    end
+    if kind() = '.traceevent' then do
+      source = operand(3); bank = operand(5); number = operand(6)
+      if source.text() = 'R' & number.index() >= 0 & wordpos(lower(bank.text()),'r g a') > 0 & ordinal = total + 1 then do
+        graph = dereference _owner; store = dereference graph.storage(); slotid = 0
+        do i = 1 to store.count(5)
+          if store.get(5,i,1) = procedureid() & store.text(store.get(5,i,3)) = (lower(bank.text()) || number.index()) then slotid = i
+        end
+        if slotid = 0 then call bad('LL_TARGET_METADATA: TRACE register has no storage descriptor')
+        return .operand.bound(_identity,procedureid(),slotid,lower(bank.text()),number.index())
+      end
+    end
+    call bad('LL_TARGET_METADATA: register reference ordinal outside record')
+    return .operand()
   origin: method = .llir..origin
     call require(); graph = dereference _owner; op = graph.operation(_id)
     return op.origin()
+
+/** Rebind typed references into another body. The receiving builder checks
+ * exact storage ownership; no source text or physical-number substitution is
+ * involved. Register order agrees with record.registerref(). */
+remapregisters: procedure = .object[]
+  arg item = .lltarget..record, replacements = .object[]
+  fields = .object[]; value = .operand; replacement = .operand; i = .int
+  if replacements[0] <> item.registerrefs() then call bad('LL_TARGET_METADATA: register remap arity')
+  next = 0
+  do i = 1 to item.operands()
+    value = item.operand(i)
+    if value.kind() = 'R' then do
+      next = next + 1
+      if replacements[next] is .operand then replacement = replacements[next] as .operand
+      else call bad('LL_TARGET_METADATA: untyped replacement register')
+      if replacement.kind() <> 'R' then call bad('LL_TARGET_METADATA: replacement is not a register')
+      value = replacement
+    end
+    fields[i] = value as .object
+  end
+  if item.kind() = '.traceevent' & next < replacements[0] then do
+    next = next + 1; replacement = replacements[next] as .operand
+    if replacement.kind() <> 'R' then call bad('LL_TARGET_METADATA: replacement is not a register')
+    fields[5] = .operand.string(replacement.bank() as .binary) as .object
+    fields[6] = .operand.integer(replacement.index()) as .object
+  end
+  return fields
+
+mappedidentity: procedure = .int
+  arg identities = .int[], old = .int
+  i = .int
+  if old <= 0 | identities[0] = 0 then return old
+  if identities[0] % 2 <> 0 then call bad('LL_TARGET_METADATA: identity map shape')
+  do i = 1 to identities[0] by 2
+    if identities[i] = old then return identities[i + 1]
+  end
+  call bad('LL_TARGET_METADATA: missing source/clause identity')
+  return 0
+
+/** Relocate source identities and paired local-symbol scope records after
+ * remapping their registers. Maps contain ordered old/new integer pairs;
+ * zero/negative native sentinels are preserved. Callable and opaque compiler
+ * transport declarations are retained with their original procedure. */
+remapmetadata: procedure = .object[]
+  arg item = .lltarget..record, fields = .object[], scope = '', ?steps = .int[], ?clauses = .int[]
+  value = .operand; old = .operand
+  if fields[0] <> item.operands() then call bad('LL_TARGET_METADATA: field remap arity')
+  if item.kind() = '.srcstep' then do
+    if ?steps then do; old = fields[1] as .operand; fields[1] = .operand.integer(mappedidentity(steps,old.index())) as .object; end
+    if ?clauses then do; old = fields[2] as .operand; fields[2] = .operand.integer(mappedidentity(clauses,old.index())) as .object; end
+  end
+  else if item.kind() = '.traceevent' then do
+    if ?steps then do; old = fields[7] as .operand; fields[7] = .operand.integer(mappedidentity(steps,old.index())) as .object; end
+    if ?clauses then do; old = fields[8] as .operand; fields[8] = .operand.integer(mappedidentity(clauses,old.index())) as .object; end
+  end
+  else if item.kind() = '.meta' & scope <> '' then do
+    if fields[0] = 1 | fields[0] = 4 then do
+      value = fields[1] as .operand
+      fields[1] = .operand.string(value.bytes() || (scope as .binary)) as .object
+    end
+  end
+  return fields
 
 body: class
   _owner = reference .llir..module
@@ -601,6 +744,7 @@ module: class
     bits = .binary; vector = .binary; bank = .string; signature = .string
     item = .record; declaration = .record; op = .llir..opview
     field = .operand; imported = .operand; label = .operand
+    trace_source = .operand; trace_bank = .operand; trace_value = .operand
     encoding = .llsource..prepared
     do
     _graph = graph; _error = graph.error(); catalog = .llrxascatalog..catalog()
@@ -702,6 +846,44 @@ module: class
       if item.kind() = '.globalexpose' then do
         global = item.operand(1)
         if global.index() < 0 | global.index() >= _globals then do; _error = 'LL_TARGET_REGISTER: exposed global outside module'; return; end
+      end
+      if item.kind() = '.traceevent' then do
+        do k = 1 to 5
+          if k = 2 then iterate
+          field = item.operand(k)
+          if field.length() > 1 then do; _error = 'LL_TARGET_METADATA: TRACE code must be empty or one byte'; return; end
+          /* TRACE codes use raw quoted bytes. Admit literal ASCII controls
+           * and DEL, while naming the remaining native text boundaries. */
+          if field.length() = 1 then do
+            bits = field.bytes(); index = <at..u8>(0) bits
+            if index = 0 | index = 10 | index = 13 | index = 34 then do
+              _error = 'LL_TARGET_PROFILE: TRACE code byte is not representable in native RXAS text: ' || index; return
+            end
+            if index = 92 then do
+              _error = 'LL_TARGET_PROFILE: TRACE backslash token boundary needs lexical proof'; return
+            end
+            if index > 127 then do
+              _error = 'LL_TARGET_PROFILE: TRACE code byte is outside UTF-8 RXAS text'; return
+            end
+          end
+        end
+        trace_source = item.operand(3); trace_bank = item.operand(5); trace_value = item.operand(6)
+        if trace_source.text() = 'K' & trace_value.index() >= 0 then do
+          _error = 'LL_TARGET_PROFILE: TRACE constant-pool offset needs relocatable binding'; return
+        end
+        if trace_source.text() = 'R' & trace_value.index() >= 0 then do
+          if wordpos(lower(trace_bank.text()),'r g a') = 0 then do
+            _error = 'LL_TARGET_PROFILE: unsupported logical TRACE register bank'; return
+          end
+          bank = lower(trace_bank.text()); index = trace_value.index(); fn = item.procedureid(); found = 0
+          if (bank = 'r' & index >= localcount[fn]) | (bank = 'g' & index >= _globals) then do; _error = 'LL_TARGET_METADATA: TRACE register bank bounds'; return; end
+          do k = 1 to store.count(5)
+            work = work - 1
+            if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.metadata work'; return; end
+            if slotfn[k] = fn & slotbank[k] = bank & slotindex[k] = index then found = 1
+          end
+          if found = 0 then do; _error = 'LL_TARGET_METADATA: TRACE register has no storage descriptor'; return; end
+        end
       end
       do j = 1 to item.operands()
         work = work - 1

@@ -5,6 +5,7 @@ import lllimits
 import llir
 import lltarget
 import llinline
+import llcleanup
 import llrxasinput
 import llrxasoutput
 import llfileoutput
@@ -13,7 +14,7 @@ main: procedure = .int
   arg argv = .string[]
   limits = .lllimits..policy; frontend = .llrxasinput..reader; parsed = .llrxasinput..parsed
   target = .lltarget..module; emitted = .llrxasoutput..emission; output = .llir..output
-  bodies = .object[]; calls = .int[]
+  bodies = .lltarget..module[]; cleanup = 1
   sourcepath = ''; destination = ''; logical = ''; artifact = ''; profile = 'unknown'; policy = 'default'
   bodypaths = .string[]; bodynames = .string[]; i = 1
   do while i <= argv[0]
@@ -35,7 +36,7 @@ main: procedure = .int
         bodynames[bodynames[0] + 1] = argv[i + 1]; bodypaths[bodypaths[0] + 1] = argv[i + 2]; i = i + 2
       end
       when option = '--no-inline' then policy = 'never'
-      when option = '--no-cleanup' then nop
+      when option = '--no-cleanup' then cleanup = 0
       when left(option,1) = '-' then return usage('unknown option ' || option)
       when sourcepath <> '' then return usage('only one output module can be selected')
       otherwise sourcepath = option
@@ -57,12 +58,9 @@ main: procedure = .int
       source = readsource(bodypaths[i],min(inputbytes,limits.limit('source.bytes'))); inputbytes = inputbytes - <blen>(source)
       parsed = frontend.parse(source,bodynames[i],bodypaths[i],limits)
       if parsed.status() <> 0 then do; call lineout 'stderr',parsed.diagnostic(); return 1; end
-      bodies[i] = parsed.result() as .object
+      bodies[i] = parsed.result()
     end
-    calls = callsites(reference target)
-    if policy <> 'never' then do i = 1 to calls[0]
-      if applysite(target,calls,i,reference bodies,profile) <> 0 then return 1
-    end
+    if policy <> 'never' then if applybatch(target,reference bodies,profile,cleanup) <> 0 then return 1
     emitted = llrxasoutput..render(reference target)
     if emitted.error() <> '' then do; call lineout 'stderr',emitted.error(); return 1; end
     output = emitted.output(); message = llfileoutput..publish(output,destination)
@@ -73,8 +71,8 @@ main: procedure = .int
   end
   return 1
 
-/** Capture only original IDs. Every later atomic change remaps the remaining
- * IDs; generated calls never enter an unbounded restart loop. */
+/** Capture only original IDs in source order. Generated calls never enter an
+ * unbounded restart loop. */
 callsites: procedure = .int[]
   arg owner = reference .lltarget..module
   target = .lltarget..module; item = .lltarget..record
@@ -88,14 +86,14 @@ callsites: procedure = .int[]
 
 /** Return 2 for the exact caller owner, 1 for a supplied provider, 0 when no
  * body is available, and -1 after reporting an ambiguous supplied binding.
- * The supplied provider value stays owned by applysite during inspection and
- * expansion. Local binding always uses the caller reference itself. */
+ * Supplied providers remain anchored in main's immutable typed array. Return
+ * its index rather than a reference to a helper-local copied module. */
 selectprovider: procedure = .int
-  arg owner = reference .lltarget..module, called = .string, supplied = reference .object[], expose provider = .lltarget..module, expose procedureid = .int
+  arg owner = reference .lltarget..module, called = .string, supplied = reference .lltarget..module[], expose providerindex = .int, expose procedureid = .int
   target = .lltarget..module; candidate = .lltarget..module
   declaration = .lltarget..record; localname = .lltarget..operand; name = .lltarget..operand; body = .lltarget..body
   target = dereference owner; bodies = dereference supplied; j = .int
-  procedureid = target.procedureid(called)
+  providerindex = 0; procedureid = target.procedureid(called)
   if procedureid > 0 then return 2
   exported = ''; selected = 0
   do j = 1 to target.records()
@@ -107,7 +105,7 @@ selectprovider: procedure = .int
     end
   end
   do j = 1 to bodies[0]
-    candidate = bodies[j] as .lltarget..module
+    candidate = bodies[j]
     do k = 1 to candidate.procedures()
       body = candidate.procedure(k)
       if exported <> '' & body.expose() == exported then do
@@ -115,43 +113,68 @@ selectprovider: procedure = .int
           call lineout 'stderr','LL_INLINE_BINDING: ambiguous supplied provider ' || exported
           return -1
         end
-        provider = candidate; procedureid = body.functionid(); selected = 1
+        providerindex = j; procedureid = body.functionid(); selected = 1
       end
     end
   end
   return selected
 
-/** Apply one selected site, retaining the original caller owner until its
- * change map has remapped every pending original ID. */
-applysite: procedure = .int
-  arg expose target = .lltarget..module, expose calls = .int[], index = .int, supplied = reference .object[], profile = .string
-  j = .int; procedureid = .int; item = .lltarget..record; field = .lltarget..operand
-  provider = .lltarget..module; binding = .llinline..binding
-  decision = .llinline..decision; change = .llinline..change
-  if calls[index] = 0 then return 0
-  item = target.at(calls[index]); called = ''
-  do j = 1 to item.operands()
-    field = item.operand(j)
-    if field.kind() = 'P' then called = field.text()
+/** Bind once against the frozen caller and fully populated provider array.
+ * Neither owner is replaced until the atomic expansion has finished. */
+collectbindings: procedure = .object[]
+  arg owner = reference .lltarget..module, supplied = reference .lltarget..module[], expose failed = .int
+  target = .lltarget..module; item = .lltarget..record; field = .lltarget..operand
+  binding = .llinline..binding; procedureid = .int; providerindex = .int
+  target = dereference owner; bodies = dereference supplied; calls = callsites(owner); bindings = .object[]; failed = 0
+  do i = 1 to calls[0]
+    item = target.at(calls[i]); called = ''
+    do j = 1 to item.operands()
+      field = item.operand(j)
+      if field.kind() = 'P' then called = field.text()
+    end
+    selected = selectprovider(owner,called,supplied,providerindex,procedureid)
+    if selected < 0 then do; failed = 1; return bindings; end
+    if selected = 0 then do
+      call lineout 'stderr','LL_INLINE_KEEP: unavailable exact body ' || called
+      iterate
+    end
+    if selected = 2 then binding = llinline..bind(owner,calls[i],owner,procedureid)
+    else binding = llinline..bind(owner,calls[i],reference bodies[providerindex],procedureid)
+    bindings[bindings[0] + 1] = binding as .object
   end
-  selected = selectprovider(reference target,called,supplied,provider,procedureid)
-  if selected < 0 then return 1
-  if selected = 0 then do
-    call lineout 'stderr','LL_INLINE_KEEP: unavailable exact body ' || called
-    return 0
+  return bindings
+
+/** Expand original bindings atomically, then run the separately callable
+ * cleanup once per changed caller, resolving stable names after each change. */
+applybatch: procedure = .int
+  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, cleanup = .int
+  change = .llinline..change; cleaned = .llinline..change; body = .lltarget..body
+  bindings = .object[]; names = .string[]; failed = 0; procedureid = .int; i = .int
+  bindings = collectbindings(reference target,supplied,failed)
+  if failed then return 1
+  if bindings[0] = 0 then return 0
+  change = llinline..expandmany(bindings,profile)
+  do i = 1 to change.sites()
+    site = change.site(i)
+    if change.statusat(site) = 'keep' then call lineout 'stderr','LL_INLINE_KEEP: ' || change.reasonat(site)
   end
-  if selected = 2 then binding = llinline..bind(reference target,calls[index],reference target,procedureid)
-  else binding = llinline..bind(reference target,calls[index],reference provider,procedureid)
-  decision = llinline..inspect(binding,profile)
-  if decision.status() = 'keep' then do; call lineout 'stderr','LL_INLINE_KEEP: ' || decision.reason(); return 0; end
-  if decision.status() <> 'legal' then do; call lineout 'stderr','LL_INLINE_' || upper(decision.status()) || ': ' || decision.reason(); return 1; end
-  change = llinline..expand(binding,profile)
-  if change.status() = 'keep' then do; call lineout 'stderr','LL_INLINE_KEEP: ' || change.reason(); return 0; end
+  if change.status() = 'keep' then return 0
   if change.status() <> 'changed' then do; call lineout 'stderr','LL_INLINE_' || upper(change.status()) || ': ' || change.reason(); return 1; end
-  do j = index + 1 to calls[0]
-    if calls[j] > 0 then calls[j] = change.operation(calls[j])
-  end
   target = change.result()
+  if cleanup = 0 then return 0
+  do i = 1 to change.callers()
+    body = target.body(change.caller(i)); names[i] = body.name()
+  end
+  do i = 1 to names[0]
+    procedureid = target.procedureid(names[i])
+    cleaned = llcleanup..transport(reference target,procedureid,profile)
+    if cleaned.status() = 'keep' then do
+      call lineout 'stderr','LL_CLEANUP_KEEP: ' || cleaned.reason()
+      iterate
+    end
+    if cleaned.status() <> 'changed' then do; call lineout 'stderr','LL_CLEANUP_' || upper(cleaned.status()) || ': ' || cleaned.reason(); return 1; end
+    target = cleaned.result()
+  end
   return 0
 
 usage: procedure = .int

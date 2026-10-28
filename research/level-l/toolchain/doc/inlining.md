@@ -584,6 +584,15 @@ name/callable substitution. Allocate owned/public cells first, skip alias
 destinations, then bind them with `globals_dont_free=1` before initialization.
 Resolved input images remap their existing ModuleRefs on relink.
 
+Qualification reuses the maintained exposed-global bounds, program-generation
+control and module-initializer fixtures. Their observations must be checked
+against the intended contracts. Existing worker-isolation checks do not prove
+cross-module public-global sharing: add a focused shared-cell/mutation/worker-
+isolation/one-owner-teardown control before reusing `globals_dont_free` for
+private aliases. Current `rxvm_call` initializes all loaded modules before
+dispatch; retaining a provider alone does not establish exact-site initializer
+ingress for other entry paths.
+
 For this RXAS-first profile, the witness is SHA256 of the exact immutable UTF-8
 provider source acquired by B/L and actually assembled. An opt-in native
 assembler setting derives the witness from its input; supplied declarations
@@ -724,7 +733,16 @@ physical register numbers, TRACE's separate register-type/value-reference
 domains, source-step/clause IDs and all address-bound records need typed maps.
 When removing unreachable instructions, remove or deliberately reattach their
 bound source/TRACE records with a proven meaning; do not leave them to drift
-onto the next surviving instruction. Fresh IDs must not collide with the caller.
+onto the next surviving instruction. Fresh IDs must not collide with the caller
+or exceed the unsigned 32-bit metadata domain. The text reader normalizes the
+native signed numeric spellings before constructing canonical checked records.
+TRACE code fields are raw byte codes, separate from ordinary escaped strings.
+The adapter reads raw quoted interiors and renders admitted control/DEL bytes
+literally, preserving unknown codes without an enum whitelist. Backslash token
+boundaries remain a specific adapter gap. Nonnegative `K` constant-pool offsets
+need a logical relocatable constant binding. These are unfinished representable
+cases; a retained call or disabled expansion alone cannot make an unrelocated
+offset safe.
 
 Do not delete a procedure, global, callable contract, provider/autoload record
 or initializer merely because its last direct call disappeared. Exports,
@@ -907,6 +925,36 @@ expansion uses fresh argument/result anchors and retains caller marshalling;
 outer setup/reverse-swap elimination remains required by INL-STEP05/AC05.
 Independent constructed-model fixtures exercise the service and its output;
 they do not complete the real RXAS adapter or the full approved POC profile.
+
+### Scalar expansion and transport development contract
+
+The next slice adds `llinline.expandmany` over exact bindings to one original
+frozen module and separately callable `llcleanup.transport`. The batch exposes
+each site's decision and one atomic result. Valid non-root sites retain their
+calls under `closed-main-default-halt.v1`; malformed or duplicate bindings fail
+the batch. Source-step/clause identities and scoped register metadata are
+freshened, and copied origins retain every contributor plus the call site.
+The original callable declarations and inline payload stay with their body.
+
+`lltargetfacts` projects checked RXAS accesses into the existing `llirgraph`
+liveness service. Its current transfer profile covers straight-line integer
+storage, aliases/permutations, status, selected numeric setup and observations.
+Checked integer arithmetic requires a range proof before its destination is
+treated as available: overflow may be ignored without writing a value. A local
+return uses MOVE/reset only after proving original owned storage. Repeated
+activation must account for recycled local contents; the current proof admits
+the private return cell reset by the preceding successful MOVE and retains
+unproved history cases. Fresh nulls must not manufacture original freshness.
+
+Transport cleanup remaps the whole caller's executable and metadata references
+using storage identity. It can remove redundant LINK/UNLINK, outer ordering and
+restoration swaps, exact-storage self-copies and unobserved plain glue. Equal
+integer values alone do not justify removing a copy. Required snapshots and
+retained counted-call windows remain intact. Frame trimming is implemented
+separately from the still-open typed allocator/storage-reuse work; sparse fresh
+registers do not satisfy that remaining requirement. General CFG, nested,
+optional/variadic, reference/aggregate, imported/global and wider context
+coverage remains open in INL-STEP04/05.
 
 The following current sources constrain this proposal; changes require the
 corresponding catalog/proof/profile review:

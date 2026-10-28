@@ -1,0 +1,706 @@
+/* cREXX License (MIT). RXAS scalar/storage transfers over shared L analyses. */
+options levelb
+namespace lltargetfacts expose analysis analyse arithmetic
+import rxfnsb
+import llir
+import llirgraph
+import lltarget
+import llrxascatalog
+
+/** Typed numeric row retained as an object; primitive arrays are not boxed. */
+numbers: class
+  _values = .int[]
+  *: factory
+    arg values = .int[]
+    _values = values
+    return
+  at: method = .int
+    arg ordinal = .int
+    if ordinal < 1 | ordinal > _values[0] then assembler signal "ERROR","LL_TARGET_FACTS_ID: numeric row ordinal"
+    return _values[ordinal]
+
+/** This helper proves the checked write succeeds before evaluating it. The VM
+ * default OVERFLOW_UNDERFLOW response ignores a failed, unwritten destination;
+ * integer equality alone cannot establish return availability or history. */
+arithmetic: procedure = .int[]
+  arg name = .string, left = .int, right = .int
+  constant HIGHEST = 9223372036854775807
+  constant LOWEST = -9223372036854775807 - 1
+  result = .int[]; result[1] = 0; result[2] = 0
+  select name
+    when 'iadd' then do
+      if right > 0 then do; if left > HIGHEST - right then return result; end
+      else if right < 0 then do; if left < LOWEST - right then return result; end
+      result[2] = left + right
+    end
+    when 'isub' then do
+      if right < 0 then do; if left > HIGHEST + right then return result; end
+      else if right > 0 then do; if left < LOWEST + right then return result; end
+      result[2] = left - right
+    end
+    when 'imult' then do
+      if left = 0 | right = 0 then result[2] = 0
+      else do
+        if left > 0 & right > 0 then do; if left > HIGHEST / right then return result; end
+        else if left > 0 & right < 0 then do; if right < LOWEST / left then return result; end
+        else if left < 0 & right > 0 then do; if left < LOWEST / right then return result; end
+        else do; if left < HIGHEST / right then return result; end
+        result[2] = left * right
+      end
+    end
+    otherwise return result
+  end
+  result[1] = 1
+  return result
+
+/** Target transfer state, not a CFG/worklist or allocator. Distinct storage
+ * identities never merge merely because their current integer values agree.
+ * Only the closed scalar profile below establishes absence of hidden payloads. */
+cells: class
+  _defined = .int[]
+  _known = .int[]
+  _values = .int[]
+  _plain = .int[]
+  _flags = .int[]
+  *: factory
+    return
+  add: method = .int
+    arg defined = 0, known = 0, value = 0
+    n = _defined[0] + 1
+    _defined[n] = defined; _known[n] = known; _values[n] = value; _plain[n] = 1; _flags[n] = 0
+    return n
+  defined: method = .int
+    arg id = .int
+    return _defined[id]
+  known: method = .int
+    arg id = .int
+    return _known[id]
+  value: method = .int
+    arg id = .int
+    return _values[id]
+  plain: method = .int
+    arg id = .int
+    return _plain[id]
+  flags: method = .int
+    arg id = .int
+    return _flags[id]
+  integer: method = .void
+    arg id = .int, known = .int, value = 0
+    _defined[id] = 1; _known[id] = known; _values[id] = value
+    return
+  reset: method = .void
+    arg id = .int
+    _defined[id] = 1; _known[id] = 1; _values[id] = 0; _plain[id] = 1; _flags[id] = 0
+    return
+  copy: method = .void
+    arg destination = .int, source = .int, whole = 1
+    _defined[destination] = _defined[source]; _known[destination] = _known[source]; _values[destination] = _values[source]
+    if whole then do; _plain[destination] = _plain[source]; _flags[destination] = _flags[source]; end
+    return
+  move: method = .void
+    arg destination = .int, source = .int
+    if destination = source then return
+    call copy(destination,source)
+    call reset(source)
+    return
+  status: method = .void
+    arg id = .int, flags = .int
+    _flags[id] = flags
+    return
+  string: method = .void
+    arg id = .int
+    _plain[id] = 0
+    return
+
+frame: class
+  _map = .int[]
+  _base = .int[]
+  _identity = .int[]
+  _locals = .int
+  _arguments = .int
+  _context = .string
+  *: factory
+    arg owner = reference .cells, locals = .int, actuals = .int[], fresh = 0, context = ''
+    i = .int; id = .int; at = .int
+    state = dereference owner; _locals = locals; _arguments = actuals[0]; _context = context
+    do i = 1 to locals
+      id = state.add(fresh,fresh,0); _map[i] = id; _base[i] = id; _identity[i] = i
+    end
+    id = state.add(1,1,actuals[0]); _map[locals + 1] = id; _base[locals + 1] = id; _identity[locals + 1] = locals + 1
+    do i = 1 to actuals[0]
+      at = locals + 1 + i; _map[at] = actuals[i]; _base[at] = actuals[i]; _identity[at] = at
+    end
+    return
+  position: method = .int
+    arg value = .lltarget..operand
+    if value.kind() <> 'R' then return 0
+    if value.bank() = 'r' & value.index() < _locals then return value.index() + 1
+    if value.bank() = 'a' & value.index() <= _arguments then return _locals + value.index() + 1
+    return 0
+  storage: method = .int
+    arg value = .lltarget..operand
+    at = position(value)
+    if at = 0 then return 0
+    return _map[at]
+  base: method = .int
+    arg value = .lltarget..operand
+    at = position(value)
+    if at = 0 then return 0
+    return _base[at]
+  link: method = .void
+    arg destination = .lltarget..operand, source = .lltarget..operand
+    _map[position(destination)] = storage(source)
+    return
+  unlink: method = .void
+    arg destination = .lltarget..operand
+    at = position(destination); _map[at] = _base[at]
+    return
+  swap: method = .void
+    arg left = .lltarget..operand, right = .lltarget..operand
+    a = position(left); b = position(right)
+    id = _map[a]; _map[a] = _map[b]; _map[b] = id
+    id = _identity[a]; _identity[a] = _identity[b]; _identity[b] = id
+    return
+  canonical: method = .int
+    do i = 1 to _identity[0]
+      if _identity[i] <> i then return 0
+    end
+    return 1
+  context: method = .string
+    return _context
+  numeric: method = .void
+    arg value = .string
+    _context = value
+    return
+
+/** Facts are bound to one exact frozen target owner and shared graph/access
+ * projection. The projection supplies accesses to the existing L liveness
+ * solver; this target owner supplies VM-specific transfer and storage facts. */
+analysis: class
+  _owner = reference .lltarget..module
+  _store = reference .llir..arena
+  _revision = .int
+  _function = .int
+  _index = .llirgraph..index
+  _access = .llirgraph..access
+  _status = .string
+  _reason = .string
+  _work = .int
+  _references = .object[]
+  _beforeplain = .object[]
+  _domains = .int[]
+  _whole = .int[]
+  _plain = .int[]
+  _counts = .int[]
+  _first = .int[]
+  _body = .int[]
+  _return = .int[]
+  _actuals = .object[]
+  _argumentstorage = .object[]
+  _context = .string[]
+  _calls = .int[]
+  _regions = .int[]
+  _blocked = .int[]
+  _mapping = .int[]
+  _windowblocked = .int[]
+  _profile = .string
+  _activations = .int[]
+  _reset = .int[]
+  _bytelimit = .int
+  _retained = .int
+  *: factory
+    arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864
+    _owner = owner; _function = functionId; _profile = profile; _work = work; _status = 'building'; _reason = ''; _bytelimit = bytes
+    return
+  spend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _work then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    _work = _work - amount
+    return 1
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then do; _status = 'invalid'; _reason = 'target.facts.dimensions'; return 0; end
+    if count > (_bytelimit - _retained) / width then do; _status = 'limit'; _reason = 'target.facts.bytes'; return 0; end
+    _retained = _retained + count * width
+    return 1
+  reject: method = .int
+    arg reason = .string
+    _status = 'keep'; _reason = reason
+    return 0
+  domain: method = .int
+    arg id = .int, whole = 0
+    if id = 0 then return 0
+    if whole then do
+      if _whole[id] = 0 then _whole[id] = _access.domain(_function,'rxas.storage.' || id || '.whole')
+      return _whole[id]
+    end
+    if _domains[id] = 0 then _domains[id] = _access.domain(_function,'rxas.storage.' || id || '.integer')
+    return _domains[id]
+  bindingdomain: method = .int
+    arg value = .lltarget..operand, kind = .string
+    return _access.domain(_function,'rxas.slot.' || value.bank() || value.index() || '.' || kind)
+  /* A set vector uses the existing ordered numeric array representation.
+   * Projection.put rejects duplicates, so domain adapters deduplicate here. */
+  insert: method = .void
+    arg values_ref = reference .int[], id = .int
+    values = dereference values_ref
+    if id = 0 then return
+    do i = 1 to values[0]
+      if values[i] = id then return
+    end
+    values[values[0] + 1] = id
+    return
+  step: method = .int
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1
+    i = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
+    opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
+    source = .lltarget..operand; bank = .lltarget..operand; reference_value = .lltarget..operand; option = .lltarget..operand
+    digits = .lltarget..operand; casetype = .lltarget..operand; standard = .lltarget..operand
+    if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: transfer state is sealed"
+    left = .lltarget..operand; right = .lltarget..operand; value = .lltarget..operand
+    state = dereference state_ref; reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]; references = .int[]; plain = .int[]
+    if spend(1 + item.operands() + item.registerrefs()) = 0 then return 0
+    if record then do
+      if reserve(item.registerrefs(),16) = 0 | reserve(2,32) = 0 then return 0
+    end
+    at = item.origin()
+    if at.kind() = 'recovered' then return reject('profile.provenance.recovered')
+    do i = 1 to item.registerrefs()
+      value = item.registerref(i); id = view.storage(value)
+      if id = 0 then return reject('profile.external.storage.pending')
+      if private = 0 & value.bank() <> 'r' then return reject('root.external.storage.unproved')
+      references[i] = id; plain[i] = state.plain(id)
+    end
+    if record then do; _references[item.id()] = .numbers(references) as .object; _beforeplain[item.id()] = .numbers(plain) as .object; end
+    if item.kind() <> 'instruction' then do
+      if wordpos(item.kind(),'.srcstep .srcfile .srcline') > 0 then nop
+      else if item.kind() = '.meta' then do
+        if item.operands() > 1 then do
+          option = item.operand(2)
+          if left(option.text(),1) = '.' & option.text() <> '.inline' then return reject('metadata.runtime.observer.unproved')
+        end
+        do i = 1 to references[0]
+          call insert(reference observations,domain(references[i],1))
+        end
+      end
+      else if item.kind() = '.traceevent' then do
+        source = item.operand(3); bank = item.operand(5); reference_value = item.operand(6)
+        if source.text() = 'K' & reference_value.index() >= 0 then return reject('metadata.constant.reference.pending')
+        if source.text() = 'R' & reference_value.index() >= 0 & references[0] <> 1 then return reject('metadata.register.reference.unproved')
+        do i = 1 to references[0]
+          if state.defined(references[i]) = 0 then return reject('local.recycler.observation.unproved')
+          call insert(reference observations,domain(references[i],1))
+        end
+      end
+      else return reject('profile.scalar.control.pending')
+      if record then call _access.put(item.id(),reads,observations,writes,kills)
+      return 1
+    end
+    catalog = .llrxascatalog..catalog(); opcode = item.opcode(); name = item.mnemonic()
+    if catalog.policyeffect(opcode) <> 0 then return reject('signal.policy.unproved')
+    /* Native canonical component/cleanup metadata supplies the use adapter;
+     * transfer code below still proves write availability and plain ownership. */
+    if wordpos(name,'link unlink swap endlife') = 0 then do i = 1 to item.operands()
+        value = item.operand(i)
+        if value.kind() <> 'R' then iterate
+        id = view.storage(value)
+        if catalog.reads(opcode,i) then call insert(reference reads,domain(id,catalog.readcomponents(opcode,i) <> 1))
+        if catalog.writes(opcode,i) then do
+          component = catalog.writecomponents(opcode,i); cleared = catalog.clearcomponents(opcode,i)
+          if component % 2 = 1 | component = 0 then call insert(reference writes,domain(id))
+          call insert(reference writes,domain(id,1))
+          if cleared <> 0 then call insert(reference writes,domain(id,1))
+        end
+      end
+    if name = 'numsci' then do
+      digits = item.operand(1); casetype = item.operand(2); standard = item.operand(3)
+      if digits.index() < 5 | casetype.index() < 1 | casetype.index() > 2 | standard.index() < 1 | standard.index() > 2 then return reject('context.numeric.arguments.unproved')
+      setting = digits.index() || ',' || casetype.index() || ',' || standard.index()
+      if private & setting <> view.context() then return reject('context.numeric.restore.unproved')
+      call view.numeric(setting)
+    end
+    else if name = 'ret' then do
+      if item.operands() = 1 then do
+        value = item.operand(1)
+        if value.kind() = 'R' then do
+          id = view.storage(value)
+          if id = 0 | state.defined(id) = 0 then return reject('local.recycler.history.unproved')
+          call insert(reference reads,domain(id,1))
+        end
+        else if value.kind() <> 'I' then return reject('profile.return.component.pending')
+      end
+    end
+    else if name = 'cnop' then nop
+    else if wordpos(name,'link unlink swap') > 0 then do
+      if private then return reject('profile.callee.rebinding.pending')
+      left = item.operand(1)
+      call insert(reference writes,bindingdomain(left,'active')); call insert(reference kills,bindingdomain(left,'active'))
+      if name = 'unlink' then do
+        call insert(reference reads,bindingdomain(left,'base')); call view.unlink(left)
+      end
+      else do
+        right = item.operand(2)
+        call insert(reference reads,bindingdomain(right,'active'))
+        if name = 'link' then call view.link(left,right)
+        else do
+          call insert(reference reads,bindingdomain(left,'active'))
+          call insert(reference writes,bindingdomain(right,'active')); call insert(reference kills,bindingdomain(right,'active'))
+          call insert(reference reads,bindingdomain(left,'identity')); call insert(reference reads,bindingdomain(right,'identity'))
+          call insert(reference writes,bindingdomain(left,'identity')); call insert(reference kills,bindingdomain(left,'identity'))
+          call insert(reference writes,bindingdomain(right,'identity')); call insert(reference kills,bindingdomain(right,'identity'))
+          call view.swap(left,right)
+        end
+      end
+      if record then _mapping[item.id()] = 1
+    end
+    else if wordpos(name,'null load copy icopy move settp endlife iadd isub imult itos say') > 0 then do
+      if name = 'say' then do
+        if private then return reject('profile.callee.external.effect.pending')
+        value = item.operand(1)
+        if value.kind() = 'R' then call insert(reference reads,domain(view.storage(value),1))
+      end
+      else do
+        left = item.operand(1); destination = view.storage(left)
+        if destination = 0 then return reject('profile.external.storage.pending')
+        if name = 'null' then call state.reset(destination)
+        else if name = 'endlife' then do
+          if state.plain(destination) = 0 then return reject('lifetime.hidden.payload.unproved')
+        end
+        else if name = 'settp' then do
+          value = item.operand(2); call state.status(destination,value.index())
+        end
+        else if name = 'load' then do
+          value = item.operand(2)
+          if value.kind() <> 'I' then return reject('profile.scalar.literal.pending')
+          call state.integer(destination,1,value.index())
+        end
+        else if name = 'itos' then do
+          if private then return reject('profile.callee.component.pending')
+          if state.defined(destination) = 0 then return reject('local.recycler.history.unproved')
+          call insert(reference reads,domain(destination))
+          call state.string(destination)
+        end
+        else if wordpos(name,'copy icopy move') > 0 then do
+          right = item.operand(2); sourceid = view.storage(right)
+          if sourceid = 0 | state.defined(sourceid) = 0 then return reject('local.recycler.history.unproved')
+          if state.plain(sourceid) = 0 & private then return reject('argument.scalar.state.unproved')
+          call insert(reference reads,domain(sourceid,name <> 'icopy'))
+          if name = 'move' then call state.move(destination,sourceid)
+          else call state.copy(destination,sourceid,name <> 'icopy')
+        end
+        else do
+          left = item.operand(2); right = item.operand(3)
+          if left.kind() = 'R' then do
+            sourceid = view.storage(left)
+            if sourceid = 0 | state.known(sourceid) = 0 then return reject('arithmetic.write.availability.unproved')
+            lhs = state.value(sourceid); call insert(reference reads,domain(sourceid))
+          end
+          else lhs = left.index()
+          if right.kind() = 'R' then do
+            rightid = view.storage(right)
+            if rightid = 0 | state.known(rightid) = 0 then return reject('arithmetic.write.availability.unproved')
+            rhs = state.value(rightid); call insert(reference reads,domain(rightid))
+          end
+          else rhs = right.index()
+          checked = arithmetic(name,lhs,rhs)
+          if checked[1] = 0 then return reject('arithmetic.write.availability.unproved')
+          call state.integer(destination,1,checked[2])
+        end
+        /* A whole-cell domain observes every numeric/status side component.
+         * Definite scalar kills are narrower; whole copy/move/null kill both. */
+        if name <> 'endlife' then do
+          call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
+        end
+        if wordpos(name,'null copy move') > 0 then do
+          call insert(reference kills,domain(destination)); call insert(reference kills,domain(destination,1))
+        end
+        else if wordpos(name,'load icopy iadd isub imult') > 0 then call insert(reference kills,domain(destination))
+        _plain[destination] = state.plain(destination)
+      end
+    end
+    else return reject('profile.scalar.operation.pending')
+    if record then call _access.put(item.id(),reads,observations,writes,kills)
+    return 1
+  invoke: method = .int
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells
+    i = .int; j = .int; ignored = .int; privatecell = .int; repeated = .int
+    id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
+    callee = .lltarget..body; child = .frame; record = .lltarget..record
+    value = .lltarget..operand; target = .lltarget..operand
+    if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
+    module = dereference _owner; state = dereference state_ref; name = item.mnemonic(); count = 0; first = 0
+    actuals = .int[]; positions = .int[]; references = .int[]
+    reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]
+    if name = 'call' then do
+      if item.operands() = 1 then target = item.operand(1)
+      else target = item.operand(2)
+      if item.operands() = 3 then do
+        value = item.operand(3); id = view.storage(value)
+        if value.bank() <> 'r' | id = 0 | state.known(id) = 0 then return reject('argument.count.unproved')
+        count = state.value(id); first = value.index() + 1
+        if count < 0 | count > module.body(_function).locals() - first then return reject('argument.window.unproved')
+        call insert(reference reads,domain(id))
+      end
+    end
+    else if wordpos(name,'call1 call2 call3 call4') > 0 then do
+      count = wordpos(name,'call1 call2 call3 call4'); target = item.operand(2)
+    end
+    else return reject('call.form.pending')
+    if target.kind() <> 'P' then return reject('call.target.unproved')
+    bodyid = module.procedureid(target.text())
+    if bodyid = 0 then return reject('body.unavailable')
+    if reserve(count,64) = 0 then return 0
+    do i = 1 to count
+      if name = 'call' then do
+        id = first + i - 1; value = .lltarget..operand.bound(0,0,0,'r',id)
+      end
+      else value = item.operand(i + 2)
+      if value.bank() <> 'r' then return reject('argument.storage.unproved')
+      id = view.storage(value)
+      if id = 0 | state.defined(id) = 0 | state.plain(id) = 0 then return reject('argument.scalar.state.unproved')
+      actuals[i] = id; positions[i] = value.index(); call insert(reference reads,domain(id,1))
+    end
+    callee = module.body(bodyid)
+    if _index.functionblocks(bodyid) <> 1 then return reject('profile.callee.cfg.pending')
+    /* A fresh standalone image proves first activation. For another use of
+     * this procedure, the currently supported history proof requires every
+     * observed private cell to be the owned RET cell reset by the prior MOVE.
+     * Integer success alone does not clear its other components/status. */
+    privatecell = -1; repeated = _activations[bodyid] > 0
+    do i = 1 to _index.functionoperations(bodyid)
+      recordid = _index.functionoperation(bodyid,i)
+      if _index.opcode(recordid) <= 16 then iterate
+      record = module.at(recordid)
+      if record.kind() = 'instruction' & record.mnemonic() = 'ret' & record.operands() = 1 then do
+        value = record.operand(1)
+        if value.kind() = 'R' & value.bank() = 'r' then privatecell = value.index()
+      end
+    end
+    if repeated then do i = 1 to _index.functionoperations(bodyid)
+      recordid = _index.functionoperation(bodyid,i)
+      if _index.opcode(recordid) <= 16 then iterate
+      record = module.at(recordid)
+      do j = 1 to record.registerrefs()
+        value = record.registerref(j)
+        if value.bank() = 'r' & value.index() <> privatecell then return reject('local.recycler.history.unproved')
+      end
+    end
+    if repeated & privatecell >= 0 & _reset[bodyid] <> privatecell + 1 then return reject('local.recycler.history.unproved')
+    _activations[bodyid] = _activations[bodyid] + 1
+    if count >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if callee.locals() > _work - count - 1 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(callee.locals() + count + 1) = 0 then return 0
+    if reserve(callee.locals() + 1,64) = 0 | reserve(callee.locals() + count + 1,24) = 0 then return 0
+    child = .frame(state_ref,callee.locals(),actuals,0,view.context()); returned = 0
+    do i = 1 to _index.functionoperations(bodyid)
+      recordid = _index.functionoperation(bodyid,i)
+      if _index.opcode(recordid) <= 16 then iterate
+      record = module.at(recordid)
+      if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
+      if step(record,child,state_ref,1,0) = 0 then return 0
+      if record.kind() = 'instruction' & record.mnemonic() = 'ret' then returned = record.id()
+    end
+    if returned = 0 then return reject('return.missing')
+    hasresult = item.operands() > 1
+    _reset[bodyid] = 0
+    if hasresult then do
+      value = item.operand(1); destination = view.storage(value)
+      if destination = 0 then return reject('result.storage.unproved')
+      if name = 'call' & item.operands() = 2 then call state.reset(destination)
+      record = module.at(returned)
+      if record.operands() = 1 then do
+        value = record.operand(1)
+        if value.kind() = 'I' then call state.integer(destination,1,value.index())
+        else do
+          id = child.storage(value)
+          if value.bank() = 'r' & id = child.base(value) then do
+            call state.move(destination,id); _reset[bodyid] = value.index() + 1
+          end
+          else call state.copy(destination,id)
+        end
+        call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
+        call insert(reference kills,domain(destination))
+        if value.kind() = 'R' then call insert(reference kills,domain(destination,1))
+      end
+      _plain[destination] = state.plain(destination)
+    end
+    do i = 1 to actuals[0]
+      call insert(reference writes,domain(actuals[i])); call insert(reference writes,domain(actuals[i],1))
+    end
+    do i = 1 to item.registerrefs()
+      value = item.registerref(i); references[i] = view.storage(value)
+    end
+    _references[item.id()] = .numbers(references) as .object
+    _counts[item.id()] = count; _first[item.id()] = first; _body[item.id()] = bodyid
+    _return[item.id()] = returned; _actuals[item.id()] = .numbers(positions) as .object; _argumentstorage[item.id()] = .numbers(actuals) as .object; _context[item.id()] = view.context()
+    _calls[_calls[0] + 1] = item.id()
+    call _access.put(item.id(),reads,observations,writes,kills)
+    return 1
+  run: method = .void
+    if _status <> 'building' then return
+    i = .int; j = .int; region = .int; nextregion = .int
+    ignored = .int; returned = .int; previous = .int
+    item = .lltarget..record; value = .lltarget..operand; option = .lltarget..operand
+    do
+    if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _reason = 'owner.expired'; return; end
+    module = dereference _owner
+    if module.valid() = 0 then do; _status = 'invalid'; _reason = module.error(); return; end
+    if _profile <> 'closed-main-default-halt.v1' then do; ignored = reject('signal.policy.unproved'); return; end
+    if module.globals() <> 0 then do; ignored = reject('profile.module.globals.pending'); return; end
+    body = module.body(_function)
+    if body.name() <> 'main' then do; ignored = reject('signal.root.context.unproved'); return; end
+    graph_ref = module.ir(); graph = dereference graph_ref; _store = graph.storage(); _revision = module.identity()
+    store = dereference _store
+    if store.bytes() > _bytelimit then do; _status = 'limit'; _reason = 'target.facts.bytes'; return; end
+    if spend(store.bytes()) = 0 then return
+    _index = .llirgraph..index(graph_ref,_work,_bytelimit)
+    if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
+    if spend(_index.usedwork()) = 0 then return
+    if reserve(graph.operations(),112) = 0 | reserve(graph.functions(),24) = 0 then return
+    if _index.functionblocks(_function) <> 1 then do; ignored = reject('profile.caller.cfg.pending'); return; end
+    _access = .llirgraph..access(reference _index,'rxas.scalar.storage.v1',1000000,_bytelimit,_work)
+    if body.locals() >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return; end
+    if spend(body.locals() + 1) = 0 then return
+    if reserve(body.locals() + 1,88) = 0 then return
+    state = .cells(); empty = .int[]; view = .frame(reference state,body.locals(),empty,1)
+    do i = 1 to body.locals(); _plain[i] = 1; end
+    region = 0; nextregion = 0; returned = 0
+    do i = 1 to module.records()
+      item = module.record(i)
+      if item.kind() = '.meta' & item.operands() > 1 then do
+        option = item.operand(2)
+        if left(option.text(),1) = '.' & option.text() <> '.inline' then do; ignored = reject('metadata.runtime.observer.unproved'); return; end
+      end
+      if item.kind() = 'procedure' | item.procedureid() <> _function then iterate
+      if item.kind() = 'instruction' & returned then do; ignored = reject('profile.caller.control.pending'); return; end
+      previous = view.canonical()
+      if item.kind() = 'instruction' & wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+        if invoke(item,view,reference state) = 0 then return
+        if region > 0 & item.mnemonic() = 'call' & _counts[item.id()] > 0 then _blocked[region] = 1
+      end
+      else if step(item,view,reference state) = 0 then return
+      if previous & view.canonical() = 0 then do; nextregion = nextregion + 1; region = nextregion; end
+      _regions[item.id()] = region
+      if view.canonical() then region = 0
+      if item.kind() = 'instruction' & item.mnemonic() = 'ret' then returned = 1
+    end
+    if returned = 0 then do; ignored = reject('return.missing'); return; end
+    if region <> 0 then _blocked[region] = 1
+    windows = .int[]
+    do i = 1 to _calls[0]
+      item = module.at(_calls[i])
+      if item.mnemonic() <> 'call' | item.operands() <> 3 then iterate
+      do j = _first[item.id()] to _first[item.id()] + _counts[item.id()]
+        if spend(1) = 0 then return
+        windows[j] = 1
+      end
+    end
+    do i = 1 to module.records()
+      item = module.record(i)
+      if _mapping[item.id()] = 0 then iterate
+      do j = 1 to item.registerrefs()
+        value = item.registerref(j)
+        if j > 1 & item.mnemonic() <> 'swap' then iterate
+        if windows[value.index() + 1] then do
+          _windowblocked[item.id()] = 1
+          if _regions[item.id()] > 0 then _blocked[_regions[item.id()]] = 1
+        end
+      end
+    end
+    /* Declarative catalogue rows have no runtime access. Other executable
+     * bodies remain undescribed and therefore pinned by the shared owner;
+     * this caller projection must not claim empty effects for those bodies. */
+    do i = 1 to graph.operations()
+      if spend(1) = 0 then return
+      operation = graph.operation(i)
+      if operation.name() = 'core.return' then iterate
+      if _index.opcode(i) <= 16 then iterate
+      if operation.name() = 'rxas.target.record' then do
+        item = module.at(i)
+        if item.procedureid() = _function & item.kind() <> 'procedure' then iterate
+        if item.procedureid() > 1 & item.kind() <> 'procedure' then iterate
+      end
+      call _access.put(i,empty,empty,empty,empty)
+    end
+    if _access.seal() = 0 then do; _status = _access.status(); _reason = _access.message(); return; end
+    if spend(_access.usedwork()) = 0 then return
+    _status = 'ok'
+    return
+    on signal as problem
+      if _status = 'building' then do; _status = 'invalid'; _reason = 'target.facts.' || problem.name() || ': ' || problem.message(); end
+    end
+    return
+  status: method = .string
+    call run()
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  valid: method = .int
+    if _status <> 'ok' | <refvalid>(_owner) = 0 | <refvalid>(_store) = 0 then return 0
+    module = dereference _owner; graph = dereference module.ir(); store_ref = graph.storage()
+    return module.identity() = _revision & (store_ref <refsame> _store) & _index.valid() & _access.valid()
+  require: method = .void
+    call run()
+    if valid() = 0 then assembler signal "ERROR","LL_TARGET_FACTS_OWNER: facts unavailable, expired or replaced"
+    return
+  reason: method = .string
+    call run()
+    if _status = 'ok' & valid() = 0 then return 'owner.expired.or.replaced'
+    return _reason
+  remaining: method = .int
+    call run(); return _work
+  index: method = reference .llirgraph..index
+    call require(); return reference _index
+  access: method = reference .llirgraph..access
+    call require(); return reference _access
+  calls: method = .int
+    call require(); return _calls[0]
+  callid: method = .int
+    arg ordinal = .int
+    call require(); return _calls[ordinal]
+  bodyid: method = .int
+    arg callid = .int
+    call require(); return _body[callid]
+  arguments: method = .int
+    arg callid = .int
+    call require(); return _counts[callid]
+  first: method = .int
+    arg callid = .int
+    call require(); return _first[callid]
+  argument: method = .int
+    arg callid = .int, ordinal = .int
+    call require(); actuals = _actuals[callid] as .numbers; return actuals.at(ordinal)
+  argumentstorage: method = .int
+    arg callid = .int, ordinal = .int
+    call require(); actuals = _argumentstorage[callid] as .numbers; return actuals.at(ordinal)
+  returned: method = .int
+    arg callid = .int
+    call require(); return _return[callid]
+  context: method = .string
+    arg callid = .int
+    call require(); return _context[callid]
+  storage: method = .int
+    arg recordid = .int, ordinal = .int
+    call require(); refs = _references[recordid] as .numbers; return refs.at(ordinal)
+  integerdomain: method = .int
+    arg storageid = .int
+    call require(); return _domains[storageid]
+  wholedomain: method = .int
+    arg storageid = .int
+    call require(); return _whole[storageid]
+  plain: method = .int
+    arg storageid = .int
+    call require(); return _plain[storageid]
+  plainbefore: method = .int
+    arg recordid = .int, ordinal = .int
+    call require(); plain = _beforeplain[recordid] as .numbers; return plain.at(ordinal)
+  mapping: method = .int
+    arg recordid = .int
+    call require(); return _mapping[recordid]
+  blocked: method = .int
+    arg recordid = .int
+    call require(); region = _regions[recordid]
+    return _windowblocked[recordid] | (region > 0 & _blocked[region])
+
+analyse: procedure = .lltargetfacts..analysis
+  arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864
+  return .analysis(owner,functionId,profile,work,bytes)

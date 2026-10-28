@@ -3,10 +3,15 @@ options levelb
 namespace inliogenerated
 
 main: procedure = .int
-  result = identity(7)
+  result = increment(7)
+  result = twice(result)
   say result
   return 0
 
-identity: procedure = .int
+increment: procedure = .int
   arg value = .int
-  return value
+  return value + 1
+
+twice: procedure = .int
+  arg value = .int
+  return value * 2

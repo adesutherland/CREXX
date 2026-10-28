@@ -1,0 +1,202 @@
+/* cREXX License (MIT). Checked target transport cleanup; independent of expansion. */
+options levelb
+namespace llcleanup expose transport
+import rxfnsb
+import llir
+import llirgraph
+import lltarget
+import lltargetfacts
+import llinline
+import llrxascatalog
+
+/** A typed immutable rewrite row; arrays themselves are never boxed. */
+plan: class
+  _fields = .object[]
+  *: factory
+    arg fields = .object[]
+    _fields = fields
+    return
+  operand: method = .lltarget..operand
+    arg ordinal = .int
+    return _fields[ordinal] as .lltarget..operand
+
+/** Locate the actual storage in the mapping being emitted. Equal values are
+ * insufficient; prefer the original spelling when it still denotes it. */
+location: procedure = .int
+  arg mapping_ref = reference .int[], storage = .int, preferred = -1
+  mapping = dereference mapping_ref
+  if preferred >= 0 & preferred < mapping[0] then do
+    if mapping[preferred + 1] = storage then return preferred
+  end
+  do i = 1 to mapping[0]
+    if mapping[i] = storage then return i - 1
+  end
+  assembler signal "ERROR","LL_TARGET_TRANSPORT: required owned storage is unavailable"
+  return -1
+
+transport: procedure = .llinline..change
+  arg owner = reference .lltarget..module, procedureId = .int, profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
+  i = .int; j = .int; id = .int; ignored = .int; highest = .int; usedcells = .int
+  k = .int; a = .int; b = .int; physical = .int; temporary = .int; locals = .int; cost = .int; extent = .int
+  integer = .int; whole = .int; observed = .int; discard = .int; keptmapping = .int; ordinal = .int
+  plannedbytes = .int; querybound = .int
+  fields = .object[]; replacements = .object[]
+  value = .lltarget..operand; left = .lltarget..operand; right = .lltarget..operand
+  field = .lltarget..operand; replacement = .lltarget..operand; number = .lltarget..operand
+  planned = .plan
+  input = .lltarget..record; targetbody = .lltarget..bodydraft
+  sources = .object[]; origins = .object[]; maps = .int[]; callers = .int[]; empty = .int[]
+  if <refvalid>(owner) = 0 then return .llinline..change('invalid','owner.expired')
+  source = dereference owner
+  if source.valid() = 0 then return .llinline..change('invalid',source.error(),source,empty)
+  do
+    facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
+    if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
+    graph_ref = facts.index(); index = dereference graph_ref; access_ref = facts.access()
+    live = index.accessliveness(access_ref,facts.remaining(),bytes)
+    if live.status() <> 'ok' then return .llinline..change(live.status(),live.message(),source,empty)
+    if live.complete(procedureId) = 0 then return .llinline..change('keep','transport.observation.unproved',source,empty)
+    work = facts.remaining() - live.usedwork()
+    source_graph = source.ir(); source_ir = dereference source_graph; source_store = dereference source_ir.storage()
+    plannedbytes = source_store.bytes(); querybound = index.functionoperations(procedureId); access = dereference access_ref
+    do i = 1 to index.functionoperations(procedureId)
+      opid = index.functionoperation(procedureId,i)
+      if access.accesses(opid) > work - querybound then return .llinline..change('limit','transport.work',source,empty)
+      querybound = querybound + access.accesses(opid)
+    end
+    caller = source.body(procedureId); mapping = .int[]
+    if caller.locals() > work then return .llinline..change('limit','transport.work',source,empty)
+    work = work - caller.locals()
+    do i = 1 to caller.locals(); mapping[i] = i; end
+    plans = .object[]; removed = .int[]; changed = 0; highest = -1
+    catalog = .llrxascatalog..catalog()
+    do i = 1 to source.records()
+      input = source.record(i)
+      if input.procedureid() <> procedureId | input.kind() = 'procedure' then iterate
+      work = work - 1 - input.registerrefs()
+      if work < 0 then return .llinline..change('limit','transport.work',source,empty)
+      discard = 0; keptmapping = 0
+      if facts.mapping(input.id()) then do
+        if facts.blocked(input.id()) = 0 then discard = 1
+        else keptmapping = 1
+      end
+      if input.kind() = 'instruction' & discard = 0 then do
+        name = input.mnemonic()
+        if name = 'endlife' then do
+          id = facts.storage(input.id(),1)
+          if facts.plainbefore(input.id(),1) then discard = 1
+        end
+        else if wordpos(name,'null load') > 0 then do
+          id = facts.storage(input.id(),1); integer = facts.integerdomain(id); whole = facts.wholedomain(id)
+          observed = 0
+          if integer > 0 then do
+            if querybound > work then return .llinline..change('limit','transport.work',source,empty)
+            work = work - querybound; observed = live.domainafter(input.id(),integer)
+          end
+          if whole > 0 then do
+            if querybound > work then return .llinline..change('limit','transport.work',source,empty)
+            work = work - querybound; observed = observed | live.domainafter(input.id(),whole)
+          end
+          if observed = 0 & facts.plainbefore(input.id(),1) then discard = 1
+        end
+        else if input.operands() = 2 & catalog.samecopyisnoop(input.opcode()) then do
+          if facts.storage(input.id(),1) = facts.storage(input.id(),2) then discard = 1
+        end
+      end
+      if discard then do; removed[input.id()] = 1; changed = 1; iterate; end
+      call objectarraydrop replacements
+      do j = 1 to input.registerrefs()
+        value = input.registerref(j)
+        if value.bank() <> 'r' then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
+        if keptmapping then physical = value.index()
+        else if input.kind() = 'instruction' & input.mnemonic() = 'call' & input.operands() = 3 then physical = value.index()
+        else physical = location(reference mapping,facts.storage(input.id(),j),value.index())
+        replacements[j] = .lltarget..operand.bound(0,0,0,'r',physical) as .object
+        highest = max(highest,physical)
+        if physical <> value.index() then changed = 1
+      end
+      if input.operands() > (bytes - plannedbytes) / 64 then return .llinline..change('limit','transport.plan.bytes',source,empty)
+      plannedbytes = plannedbytes + input.operands() * 64
+      fields = lltarget..remapregisters(input,replacements); plans[input.id()] = .plan(fields) as .object
+      if keptmapping then do
+        left = input.operand(1); a = left.index() + 1
+        if input.mnemonic() = 'unlink' then mapping[a] = a
+        else do
+          right = input.operand(2); b = right.index() + 1
+          if input.mnemonic() = 'link' then mapping[a] = mapping[b]
+          else do; temporary = mapping[a]; mapping[a] = mapping[b]; mapping[b] = temporary; end
+        end
+      end
+      /* A retained counted call observes every physical slot of its implicit
+       * window, not only the counter/result operands. The adapter pins the
+       * surrounding permutation and we verify that exact storage projection. */
+      if input.kind() = 'instruction' & input.mnemonic() = 'call' & input.operands() = 3 then do
+        do j = 1 to facts.arguments(input.id())
+          physical = facts.argument(input.id(),j)
+          if mapping[physical + 1] <> facts.argumentstorage(input.id(),j) then return .llinline..change('keep','transport.retained.window.binding.unproved',source,empty)
+          highest = max(highest,physical)
+        end
+      end
+    end
+    locals = highest + 1
+    if locals <> caller.locals() then changed = 1
+    if changed = 0 then return .llinline..change('keep','transport.no.change',source,empty)
+    if locals > frame then return .llinline..change('limit','transport.frame',source,empty)
+    result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
+    bodies = .object[]; source_graph = source.ir()
+    do i = 1 to source.records()
+      input = source.record(i)
+      at = llinline..copyorigin(source_graph,input.origin(),reference result,reference sources,reference origins)
+      if input.kind() = 'procedure' then do
+        oldbody = source.body(input.procedureid()); extent = oldbody.locals()
+        if input.procedureid() = procedureId then extent = locals
+        targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose())
+        bodies[input.procedureid()] = targetbody as .object; maps[input.id()] = targetbody.headerid()
+        if input.procedureid() = procedureId then callers[1] = targetbody.functionid()
+        iterate
+      end
+      if removed[input.id()] then do; maps[input.id()] = 0; iterate; end
+      if input.procedureid() = 0 then do
+        call objectarraydrop fields
+        do j = 1 to input.operands(); fields[j] = input.operand(j) as .object; end
+        maps[input.id()] = result.record(input.kind(),fields,at); iterate
+      end
+      targetbody = bodies[input.procedureid()] as .lltarget..bodydraft
+      if input.procedureid() = procedureId then do
+        planned = plans[input.id()] as .plan; call objectarraydrop replacements
+        do j = 1 to input.registerrefs()
+          value = input.registerref(j)
+          /* The plan's typed fields include TRACE pairs. Re-enumerate their
+           * selected indices without inventing a raw metadata text parser. */
+          replacement = input.registerref(j)
+          if input.kind() = '.traceevent' then do; number = planned.operand(6); physical = number.index(); end
+          else do
+            ordinal = 0
+            do k = 1 to input.operands()
+              field = input.operand(k)
+              if field.kind() <> 'R' then iterate
+              ordinal = ordinal + 1
+              if ordinal = j then do; field = planned.operand(k); physical = field.index(); end
+            end
+          end
+          replacements[j] = targetbody.reg('r',physical) as .object
+        end
+        fields = lltarget..remapregisters(input,replacements)
+      end
+      else fields = llinline..clonefields(input,targetbody)
+      if input.kind() = 'instruction' then do
+        cost = 1 + fields[0]
+        if cost > cells - usedcells then return .llinline..change('limit','transport.code.cells',source,empty)
+        usedcells = usedcells + cost; maps[input.id()] = targetbody.emit(input.mnemonic(),fields,at)
+      end
+      else maps[input.id()] = targetbody.record(input.kind(),fields,at)
+    end
+    target = result.finish()
+    if target.valid() = 0 then return .llinline..change('invalid',target.error(),source,empty)
+    return .llinline..change('changed','transport.storage.permutation',target,maps,callers)
+  on signal as problem
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
+    return .llinline..change(status,'LL_TARGET_TRANSPORT: ' || problem.name() || ': ' || problem.message(),source,empty)
+  end
+  return .llinline..change('invalid','transport.no.result',source,empty)

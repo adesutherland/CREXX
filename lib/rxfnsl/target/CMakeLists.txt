@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 # Explicit optional target tools; core/bootstrap packages have no reverse edge.
-set(_modules lltarget llinline)
+set(_modules lltarget lltargetfacts llinline llcleanup)
 set_property(GLOBAL PROPERTY RXFNSL_TARGET_SELECTORS "${_modules}")
 set(_imports "${CMAKE_CURRENT_BINARY_DIR}/imports")
 crexx_add_import_root(rxfnsl_target_imports DIRECTORY "${_imports}"
@@ -18,8 +18,14 @@ endif()
 set(_bins)
 foreach(_module IN LISTS _modules)
   set(_deps)
-  if(_module STREQUAL "llinline")
+  if(NOT _module STREQUAL "lltarget")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltarget.rxbin")
+  endif()
+  if(_module STREQUAL "llinline" OR _module STREQUAL "llcleanup")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetfacts.rxbin")
+  endif()
+  if(_module STREQUAL "llcleanup")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/llinline.rxbin")
   endif()
   crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin"
     BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxas"
@@ -33,8 +39,15 @@ foreach(_module IN LISTS _modules)
   list(APPEND _bins "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
 endforeach()
 set(_control "${CMAKE_CURRENT_BINARY_DIR}/target.ctl")
-file(GENERATE OUTPUT "${_control}" CONTENT
-  "INPUT ${CMAKE_CURRENT_BINARY_DIR}/lltarget.rxbin\nINPUT ${CMAKE_CURRENT_BINARY_DIR}/llinline.rxbin\nINCLUDE lltarget\nINCLUDE llinline\nPRESERVE INLINE\nOUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsl-target\n")
+set(_target_control "")
+foreach(_module IN LISTS _modules)
+  string(APPEND _target_control "INPUT ${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin\n")
+endforeach()
+foreach(_module IN LISTS _modules)
+  string(APPEND _target_control "INCLUDE ${_module}\n")
+endforeach()
+string(APPEND _target_control "PRESERVE INLINE\nOUTPUT ${CMAKE_BINARY_DIR}/bin/rxfnsl-target\n")
+file(GENERATE OUTPUT "${_control}" CONTENT "${_target_control}")
 crexx_add_fixture_command(OUTPUT "${CMAKE_BINARY_DIR}/bin/rxfnsl-target.rxbin"
   COMMAND $<TARGET_FILE:rxlink> -c "${_control}"
   DEPENDS rxlink ${_bins} "${_control}" VERBATIM)
@@ -68,6 +81,27 @@ if(BUILD_TESTING)
       TIMEOUT 120 LABELS "level-l;research;inlining")
     crexx_register_test_prep_targets(TESTS levell_constructed_inline_rxbvm
       TARGETS levell_constructed_inline rxbvm)
+  endif()
+
+  set(_scalar_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/scalar-transport.crexx")
+  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/scalar-transport-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
+      -o scalar-transport "${_scalar_fixture}"
+    COMMAND $<TARGET_FILE:rxas> scalar-transport
+    COMMAND $<TARGET_FILE:rxlink> -s -o scalar-transport-linked scalar-transport ${_images}
+    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_scalar_fixture}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+  add_custom_target(levell_scalar_transport
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/scalar-transport-linked.rxbin")
+  if(TARGET rxbvm)
+    add_test(NAME levell_scalar_transport_rxbvm
+      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/scalar-transport-linked.rxbin")
+    set_tests_properties(levell_scalar_transport_rxbvm PROPERTIES
+      PASS_REGULAR_EXPRESSION "SCALAR_TRANSPORT[|]failures=0"
+      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+      TIMEOUT 120 LABELS "level-l;research;inlining")
+    crexx_register_test_prep_targets(TESTS levell_scalar_transport_rxbvm
+      TARGETS levell_scalar_transport rxbvm)
   endif()
 endif()
 

@@ -54,6 +54,7 @@ if(TARGET rxbvm)
       "-DRUNTIME=${_runtime}"
       "-DGENERATED=${CMAKE_CURRENT_BINARY_DIR}/io-generated.rxas"
       "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DOPTIMIZER_FIXTURES=${CMAKE_SOURCE_DIR}/tests/rxas_optimizer"
       "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/io-cli-work"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/run-io-cli.cmake")
   set_tests_properties(levell_rxas_io_cli PROPERTIES
