@@ -124,7 +124,7 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch and straight-line callee LINK/UNLINK/SWAP slices are implemented and focused-qualified. Complete broader aliasing, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP and one retained same-module scalar nested leaf slices are implemented and focused-qualified. Complete broader aliasing, optional/variadic, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -455,6 +455,51 @@ interval ends, with the usual reset before a different fresh cell arrives.
 Mapping aliases, calls, imported/recycled cells and hidden or unproved lifetime
 state still need their separate ownership proof. Add a positive plain-root
 `ENDLIFE` control; a blanket refusal is not a semantic rule.
+
+### Reviewed retained nested-call increment
+
+The next INL-STEP04/05 slice expands a straight-line outer body while retaining
+an exact same-module scalar bytecode leaf call inside it. Admit fixed `CALL1`–
+`CALL4` and counted `CALL` nested forms through the same checked closed-root
+profile, including windows based in the outer callee's local or argument bank.
+Keep the nested call opcode and its normal setup/reverse swaps. The first slice
+does not infer argument presence from count, expand the nested call recursively,
+admit an imported/native body or add a control-flow or exception mechanism.
+
+`lltargetfacts` owns a transient checked call-shape normalization in the
+**current frame**: form, entry-captured result pointer and zero-argument result
+clear, count, ordered actual slot/storage pairs, and exact counted-window
+bounds. Add frame slot-ordinal helpers rather than assuming the root's `r`
+bank. A private nested invocation simulates the exact selected leaf and its
+ordinary return/side effects, with a bounded active-procedure/depth check
+before consulting per-procedure recycled owned bases. It must not publish a
+second root access row or overwrite root-call facts using a nested record ID.
+The existing root-indexed getters continue to describe only original root
+sites. A readonly `orderedslots(rootCallId)` result requires the existing
+contiguous local/`a0`/argument active-slot and untouched-anchor layout even
+when no explicit callee LINK/SWAP was seen. The expander remaps the retained
+nested opcode's typed registers; the outer return action still uses its
+original encoded slot, current active storage and exact own base. Reanalysis
+after expansion observes the retained nested window for placement.
+
+Independent executable controls include a fixed nested call that mutates an
+aliased actual after an outer integer snapshot (starting 5, child adds 7,
+outer result 17 and caller actual 12), and an argument-bank counted window
+whose outer swaps are restored (starting 10/20, child mutates the second actual
+to 21 and returns 10; repeat reaches 22). Check conservative and cleaned RXAS
+through native `rxas -n` and one VM, plus typed window/return/snapshot structure.
+Unknown count, unresolved/nonbytecode body, active recursion and unproved
+signal continuation retain the original outer call with specific reasons and
+last-good atomic output. Current refusals are missing implementation/proof,
+not infeasible language forms. Use maintained optional/vararg and signal-unwind
+fixtures as behavioral evidence, checking their expectations independently.
+
+Typed B may pad omitted fixed optional formals with real ABI slots whose
+`REGTP_VAL` presence bit is clear; `REGTP_NOTSYM` is separate. Count is not
+presence, and raw RXAS calls synthesize neither placeholders nor defaults.
+Optional prologues and finite dynamic `LINKARG` remain subsequent representable
+categories requiring status/control and selector/range proofs. Preserve the
+producer's existing range check; raw `LINKARG` does not add one.
 
 ### Required native bootstrap correctness repair
 

@@ -964,9 +964,9 @@ integer values alone do not justify removing a copy. Required snapshots and
 retained counted-call windows remain intact. The typed assignment owner now
 compacts complete live cells and reuses disjoint fresh-root plain scalar cells
 only with checked entry, component/status and whole-reset premises. Sparse
-registers alone do not meet the wider reuse requirement. General CFG, nested,
-optional/variadic, reference/aggregate, imported/global and wider context
-coverage remains open in INL-STEP04/05.
+registers alone do not meet the wider reuse requirement. General CFG, deeper
+nesting, optional/variadic, reference/aggregate, imported/global and wider
+context coverage remains open in INL-STEP04/05.
 
 ### Straight-line callee rebinding contract
 
@@ -1000,8 +1000,25 @@ for the next call to observe before that SETTP executes again. Tracking an
 original recycled cell does not itself prove equality with a fresh inline cell.
 Use actual reset/overwrite proofs; do not emit zero initialization to conceal
 the difference. The current nonrecursive same-module profile owns one original
-cache identity per procedure. Imported aliases and nested/recursive activation
+cache identity per procedure. Imported aliases and deeper/recursive activation
 require their own cache/binding proofs in the later categories.
+
+One retained same-module scalar leaf may execute inside an expanded outer
+body. Its fixed or counted current-frame window is normalized privately,
+including physical r/a0/aN adjacency, without publishing a second root call
+fact. A counted child forces the complete ordered active-slot and entry-anchor
+layout even if the outer body has no LINK/SWAP. The child opcode and required
+source/inverse swaps remain; the outer return still uses its original result
+and base ownership. An active-procedure and depth check precede recycled-base
+reuse. Count is not an argument-presence proof.
+
+Current negative controls distinguish proof limits from inherent language
+limits. Missing exact body, status-derived unknown count and active recursion
+retain the original frozen module with precise reasons. The unknown-count
+control also executes the retained call through the ordinary assembler/VM;
+its zero-actual result is independently expected. A later supported proof
+should turn the relevant negative regression into a positive one rather than
+preserve an obsolete refusal.
 
 The following current sources constrain this proposal; changes require the
 corresponding catalog/proof/profile review:

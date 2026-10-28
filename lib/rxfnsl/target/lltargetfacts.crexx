@@ -163,6 +163,16 @@ frame: class
     if value.bank() = 'r' & value.index() < _locals then return value.index() + 1
     if value.bank() = 'a' & value.index() <= _arguments then return _locals + value.index() + 1
     return 0
+  slots: method = .int
+    return _locals + _arguments + 1
+  slot: method = .lltarget..operand
+    arg ordinal = .int
+    if ordinal < 0 | ordinal >= slots() then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: physical frame slot ordinal"
+      return .lltarget..operand.integer(0)
+    end
+    if ordinal < _locals then return .lltarget..operand.bound(0,0,0,'r',ordinal)
+    return .lltarget..operand.bound(0,0,0,'a',ordinal - _locals)
   storage: method = .int
     arg value = .lltarget..operand
     at = position(value)
@@ -203,6 +213,48 @@ frame: class
     _context = value
     return
 
+/** Transient owned normalization, never an authored proof or a graph owner.
+ * Slots are zero-based physical ordinals in the current globals-free frame;
+ * storage IDs capture its active pointers before the selected call enters. */
+callshape: class
+  _body = .int
+  _form = .string
+  _count = .int
+  _first = .int
+  _result = .int
+  _clear = .int
+  _countstorage = .int
+  _slots = .int[]
+  _actuals = .int[]
+  *: factory
+    arg body = 0, form = '', count = 0, first = 0, result = 0, clear = 0, countstorage = 0, ?slots = .int[], ?actuals = .int[]
+    _body = body; _form = form; _count = count; _first = first; _result = result; _clear = clear; _countstorage = countstorage
+    if ?slots then _slots = slots
+    if ?actuals then _actuals = actuals
+    return
+  valid: method = .int
+    return _body > 0
+  body: method = .int
+    return _body
+  form: method = .string
+    return _form
+  count: method = .int
+    return _count
+  first: method = .int
+    return _first
+  result: method = .int
+    return _result
+  clear: method = .int
+    return _clear
+  countstorage: method = .int
+    return _countstorage
+  slot: method = .int
+    arg ordinal = .int
+    return _slots[ordinal]
+  storage: method = .int
+    arg ordinal = .int
+    return _actuals[ordinal]
+
 /** Facts are bound to one exact frozen target owner and shared graph/access
  * projection. The projection supplies accesses to the existing L liveness
  * solver; this target owner supplies VM-specific transfer and storage facts. */
@@ -236,9 +288,11 @@ analysis: class
   _windowblocked = .int[]
   _profile = .string
   _activations = .int[]
+  _active = .int[]
   _owned = .object[]
   _reset = .object[]
   _rebinding = .int[]
+  _ordered = .int[]
   _returnaction = .string[]
   _swaps = .object[]
   _swapcount = .int[]
@@ -473,58 +527,80 @@ analysis: class
     else return reject('profile.scalar.operation.pending')
     if record then call _access.put(item.id(),reads,observations,writes,kills)
     return 1
-  invoke: method = .int
-    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells
-    i = .int; j = .int; ignored = .int; repeated = .int
-    id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
-    callee = .lltarget..body; child = .frame; record = .lltarget..record
+  normalize: method = .callshape
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0
+    i = .int; id = .int; bodyid = .int; count = .int; first = .int; destination = .int; countstorage = .int; ignored = .int
     value = .lltarget..operand; target = .lltarget..operand
-    ownedrow = .numbers; resetrow = .numbers
-    if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
-    module = dereference _owner; state = dereference state_ref; name = item.mnemonic(); count = 0; first = 0
-    actuals = .int[]; positions = .int[]; references = .int[]; owned = .int[]; reset = .int[]; swaps = .int[]
-    reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]
+    if _status <> 'building' then do
+      assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
+      return .callshape()
+    end
+    module = dereference _owner; state = dereference state_ref; name = item.mnemonic()
+    count = 0; first = 0; destination = 0; countstorage = 0; positions = .int[]; actuals = .int[]
+    if spend(1 + item.operands() + item.registerrefs()) = 0 then return .callshape()
     if name = 'call' then do
       if item.operands() = 1 then target = item.operand(1)
       else target = item.operand(2)
       if item.operands() = 3 then do
-        value = item.operand(3); id = view.storage(value)
-        if value.bank() <> 'r' | id = 0 | state.known(id) = 0 then return reject('argument.count.unproved')
-        count = state.value(id); first = value.index() + 1
-        if count < 0 | count > module.body(_function).locals() - first then return reject('argument.window.unproved')
-        call insert(reference reads,domain(id))
+        value = item.operand(3); countstorage = view.storage(value)
+        if private = 0 & value.bank() <> 'r' then do; ignored = reject('argument.count.unproved'); return .callshape(); end
+        if countstorage = 0 | state.known(countstorage) = 0 then do; ignored = reject('argument.count.unproved'); return .callshape(); end
+        count = state.value(countstorage); first = view.position(value)
+        if count < 0 | count > view.slots() - first then do; ignored = reject('argument.window.unproved'); return .callshape(); end
       end
     end
     else if wordpos(name,'call1 call2 call3 call4') > 0 then do
       count = wordpos(name,'call1 call2 call3 call4'); target = item.operand(2)
     end
-    else return reject('call.form.pending')
-    if target.kind() <> 'P' then return reject('call.target.unproved')
+    else do; ignored = reject('call.form.pending'); return .callshape(); end
+    if target.kind() <> 'P' then do; ignored = reject('call.target.unproved'); return .callshape(); end
     bodyid = module.procedureid(target.text())
-    if bodyid = 0 then return reject('body.unavailable')
-    if reserve(count,64) = 0 then return 0
-    do i = 1 to count
-      if name = 'call' then do
-        id = first + i - 1; value = .lltarget..operand.bound(0,0,0,'r',id)
-      end
-      else value = item.operand(i + 2)
-      if value.bank() <> 'r' then return reject('argument.storage.unproved')
-      id = view.storage(value)
-      if id = 0 | state.defined(id) = 0 | state.plain(id) = 0 | state.wholeknown(id) = 0 then return reject('argument.scalar.state.unproved')
-      actuals[i] = id; positions[i] = value.index(); call insert(reference reads,domain(id,1))
+    if bodyid = 0 then do; ignored = reject('body.unavailable'); return .callshape(); end
+    if item.operands() > 1 then do
+      value = item.operand(1); destination = view.storage(value)
+      if destination = 0 then do; ignored = reject('result.storage.unproved'); return .callshape(); end
     end
+    if spend(count) = 0 | reserve(count,64) = 0 | reserve(1,128) = 0 then return .callshape()
+    do i = 1 to count
+      if name = 'call' then value = view.slot(first + i - 1)
+      else value = item.operand(i + 2)
+      if private = 0 & value.bank() <> 'r' then do; ignored = reject('argument.storage.unproved'); return .callshape(); end
+      id = view.storage(value)
+      if id = 0 | state.defined(id) = 0 | state.plain(id) = 0 | state.wholeknown(id) = 0 then do; ignored = reject('argument.scalar.state.unproved'); return .callshape(); end
+      actuals[i] = id; positions[i] = view.position(value) - 1
+    end
+    return .callshape(bodyid,name,count,first,destination,name = 'call' & item.operands() = 2,countstorage,positions,actuals)
+  invoke: method = .int
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, publish = 1, outerCallId = 0, depth = 0
+    i = .int; j = .int; ignored = .int; repeated = .int
+    id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
+    callee = .lltarget..body; child = .frame; record = .lltarget..record; shape = .callshape
+    value = .lltarget..operand; ownedrow = .numbers; resetrow = .numbers; action = .string
+    if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
+    module = dereference _owner; state = dereference state_ref
+    shape = normalize(item,view,state_ref,publish = 0)
+    if shape.valid() = 0 then return 0
+    bodyid = shape.body(); count = shape.count(); first = shape.first(); destination = shape.result(); hasresult = destination <> 0
+    if _active[bodyid] then return reject('call.recursion.active')
+    if depth > 1 then return reject('nested.call.depth.pending')
+    if publish then outerCallId = item.id()
+    else if item.mnemonic() = 'call' & item.operands() = 3 then _ordered[outerCallId] = 1
     callee = module.body(bodyid)
     if _index.functionblocks(bodyid) <> 1 then return reject('profile.callee.cfg.pending')
+    actuals = .int[]; positions = .int[]; references = .int[]; owned = .int[]; reset = .int[]; swaps = .int[]
+    reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]
+    if spend(count) = 0 then return 0
+    do i = 1 to count
+      actuals[i] = shape.storage(i); positions[i] = shape.slot(i)
+      if publish then call insert(reference reads,domain(actuals[i],1))
+    end
+    if publish & shape.countstorage() > 0 then call insert(reference reads,domain(shape.countstorage()))
+    if shape.clear() then call state.reset(destination)
     /* Native recycling reuses each procedure's owned bases, but relinks its
      * active map and resets slot identities. Keep those StorageIds stable.
      * Only a proved whole reset lets a later inline site assume fresh state;
      * mapping-only operands neither read nor overwrite the owned value. */
-    repeated = _activations[bodyid] > 0; hasresult = item.operands() > 1; destination = 0
-    if hasresult then do
-      value = item.operand(1); destination = view.storage(value)
-      if destination = 0 then return reject('result.storage.unproved')
-      if name = 'call' & item.operands() = 2 then call state.reset(destination)
-    end
+    repeated = _activations[bodyid] > 0; _active[bodyid] = 1
     if count >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     if callee.locals() > _work - count - 1 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     if spend(callee.locals() + count + 1) = 0 then return 0
@@ -552,8 +628,11 @@ analysis: class
       if _index.opcode(recordid) <= 16 then iterate
       record = module.at(recordid)
       if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
-      if step(record,child,state_ref,1,0,hasresult) = 0 then return 0
-      if record.kind() = 'instruction' & wordpos(record.mnemonic(),'link unlink swap') > 0 then do
+      if record.kind() = 'instruction' & wordpos(record.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+        if invoke(record,child,state_ref,0,outerCallId,depth + 1) = 0 then return 0
+      end
+      else if step(record,child,state_ref,1,0,hasresult) = 0 then return 0
+      if publish & record.kind() = 'instruction' & wordpos(record.mnemonic(),'link unlink swap') > 0 then do
         _rebinding[item.id()] = 1
         if record.mnemonic() = 'swap' then do
           if reserve(1,8) = 0 then return 0
@@ -563,24 +642,26 @@ analysis: class
       if record.kind() = 'instruction' & record.mnemonic() = 'ret' then returned = record.id()
     end
     if returned = 0 then return reject('return.missing')
-    _returnaction[item.id()] = 'none'
+    action = 'none'
     if hasresult then do
       record = module.at(returned)
       if record.operands() = 1 then do
         value = record.operand(1)
         if value.kind() = 'I' then do
-          _returnaction[item.id()] = 'integer'; call state.integer(destination,1,value.index())
+          action = 'integer'; call state.integer(destination,1,value.index())
         end
         else do
           id = child.storage(value)
           if value.bank() = 'r' & id = child.base(value) then do
-            _returnaction[item.id()] = 'move'; call state.move(destination,id)
+            action = 'move'; call state.move(destination,id)
           end
-          else do; _returnaction[item.id()] = 'copy'; call state.copy(destination,id); end
+          else do; action = 'copy'; call state.copy(destination,id); end
         end
-        call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
-        call insert(reference kills,domain(destination))
-        if value.kind() = 'R' then call insert(reference kills,domain(destination,1))
+        if publish then do
+          call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
+          call insert(reference kills,domain(destination))
+          if value.kind() = 'R' then call insert(reference kills,domain(destination,1))
+        end
       end
       _plain[destination] = state.plain(destination)
     end
@@ -588,6 +669,9 @@ analysis: class
       reset[i] = state.zeroed(child.baseat(i))
     end
     _reset[bodyid] = .numbers(reset) as .object
+    _active[bodyid] = 0
+    if publish = 0 then return 1
+    _returnaction[item.id()] = action
     _swaps[item.id()] = .numbers(swaps) as .object; _swapcount[item.id()] = swaps[0]
     do i = 1 to actuals[0]
       call insert(reference writes,domain(actuals[i])); call insert(reference writes,domain(actuals[i],1))
@@ -623,7 +707,7 @@ analysis: class
     _index = .llirgraph..index(graph_ref,_work,_bytelimit)
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
-    if reserve(graph.operations(),144) = 0 | reserve(graph.functions(),24) = 0 then return
+    if reserve(graph.operations(),152) = 0 | reserve(graph.functions(),32) = 0 then return
     if _index.functionblocks(_function) <> 1 then do; ignored = reject('profile.caller.cfg.pending'); return; end
     _access = .llirgraph..access(reference _index,'rxas.scalar.storage.v1',1000000,_bytelimit,_work)
     if body.locals() >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return; end
@@ -631,7 +715,7 @@ analysis: class
     if reserve(body.locals() + 1,104) = 0 then return
     state = .cells(); empty = .int[]; view = .frame(reference state,body.locals(),empty,1)
     do i = 1 to body.locals(); _plain[i] = 1; end
-    region = 0; nextregion = 0; returned = 0
+    region = 0; nextregion = 0; returned = 0; _active[_function] = 1
     do i = 1 to module.records()
       item = module.record(i)
       if item.kind() = '.meta' & item.operands() > 1 then do
@@ -652,6 +736,7 @@ analysis: class
       if item.kind() = 'instruction' & item.mnemonic() = 'ret' then returned = 1
     end
     if returned = 0 then do; ignored = reject('return.missing'); return; end
+    _active[_function] = 0
     if region <> 0 then _blocked[region] = 1
     windows = .int[]
     do i = 1 to _calls[0]
@@ -803,6 +888,22 @@ analysis: class
   rebinding: method = .int
     arg callid = .int
     call require(); return _rebinding[callid]
+  /** A retained nested counted window requires the original complete slot
+   * order even when the outer frame contains no explicit binding change.
+   * The root ledger and inverse SWAP list remain distinct from child frames. */
+  orderedslots: method = .int
+    arg callid = .int
+    call require()
+    if valid() = 0 then return 0
+    if callid < 1 | callid > _body[0] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root call identity"
+      return 0
+    end
+    if _body[callid] = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root call identity"
+      return 0
+    end
+    return _ordered[callid] <> 0
   returnaction: method = .string
     arg callid = .int
     call require(); return _returnaction[callid]

@@ -1,0 +1,67 @@
+/* Independent nested-call values. Raw count describes slots, not presence. */
+.globals=0
+main() .locals=10
+  load r0,5
+  call2 r1,outerfixed(),r0,r0
+  load r2,10
+  load r3,20
+  call2 r4,outercounted(),r2,r3
+  icopy r6,r3
+  call2 r5,outercounted(),r2,r3
+  load r7,30
+  load r8,40
+  call2 r9,outerordered(),r7,r8
+  say "fixed-snapshot"
+  itos r1
+  say r1
+  itos r0
+  say r0
+  say "counted-first"
+  itos r4
+  say r4
+  itos r2
+  say r2
+  itos r6
+  say r6
+  say "counted-repeat"
+  itos r5
+  say r5
+  say r2
+  itos r3
+  say r3
+  say "ordered-without-swap"
+  itos r9
+  say r9
+  itos r7
+  say r7
+  itos r8
+  say r8
+  ret 0
+
+outerfixed() .locals=2
+  icopy r0,a1
+  call1 r1,bump7(),a2
+  iadd r0,r0,r1
+  ret r0
+bump7() .locals=0
+  iadd a1,a1,7
+  ret a1
+
+outercounted() .locals=1
+  load a0,2
+  swap a1,a2
+  call r0,bumpfirst(),a0
+  swap a1,a2
+  ret r0
+bumpfirst() .locals=0
+  iadd a1,a1,1
+  ret a2
+
+/* No LINK/SWAP: only the nested counted window requires ordered active slots. */
+outerordered() .locals=1
+  load a0,2
+  call r0,bumpsecond(),a0
+  ret r0
+bumpsecond() .locals=0
+  iadd a2,a2,1
+  ret a1

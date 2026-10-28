@@ -3,6 +3,7 @@ options levelb
 import rxfnsb
 import llir
 import lltarget
+import lltargetfacts
 import llinline
 
 check: procedure = .int
@@ -19,6 +20,62 @@ two: procedure = .int
   arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
   fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
   return body.emit(name,fields,at)
+three: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, third = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object; fields[3] = third as .object
+  return body.emit(name,fields,at)
+
+/** A counted child can cross locals/a0/arguments without any source SWAP.
+ * Its original counter r0 is followed by a0 and a1, not by unrelated glue. */
+nestedordered: procedure = .int
+  failures = 0; i = .int; calls = .int; fixedcalls = .int; countcell = .int; countload = .int
+  item = .lltarget..record; left = .lltarget..operand; right = .lltarget..operand
+  draft = .lltarget..draft('nestedordered','constructed.nestedordered',0)
+  at = draft.synthetic('retained counted window crosses original r/a boundary')
+  root = draft.procedure('main',2,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('outer'),root.reg('r',0),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  outer = draft.procedure('outer',1,at)
+  ignored = two(outer,'load',outer.reg('r',0),.lltarget..operand.integer(2),at)
+  nestedid = three(outer,'call',outer.reg('a',1),.lltarget..operand.procedure('second'),outer.reg('r',0),at)
+  ignored = one(outer,'ret',outer.reg('a',1),at)
+  leaf = draft.procedure('second',0,at)
+  ignored = one(leaf,'ret',leaf.reg('a',2),at)
+  original = draft.finish(); graph = dereference original.ir(); before = graph.binary()
+  facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(facts.status() = 'ok','counted child window is checked in its current outer frame')
+  if facts.status() <> 'ok' then do; say facts.reason(); return failures; end
+  failures = failures + check(facts.orderedslots(callid) & facts.rebinding(callid) = 0 & facts.swaps(callid) = 0,'window ordering is independent of explicit rebinding')
+  failures = failures + check(facts.calls() = 1 & facts.callid(1) = callid & facts.bodyid(callid) = original.procedureid('outer'),'nested simulation does not publish or replace root-indexed call facts')
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('outer'))
+  changed = llinline..expand(request,'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','outer expands while retaining exact counted child')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main')); originalcall = original.at(nestedid)
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'call1' then fixedcalls = fixedcalls + 1
+    if item.mnemonic() = 'call' then do
+      calls = calls + 1
+      failures = failures + check(item.opcode() = originalcall.opcode(),'retained nested call uses the original opcode')
+      left = item.operand(1); right = item.operand(3); countcell = right.index()
+      failures = failures + check(left.index() = countcell + 2,'a1 result stays the second member of the counted window')
+    end
+    if item.mnemonic() = 'load' then do
+      left = item.operand(1); right = item.operand(2)
+      if right.kind() = 'I' & right.index() = 1 then countload = left.index()
+    end
+  end
+  failures = failures + check(calls = 1 & fixedcalls = 0 & countload = countcell + 1,'owned outer a0 remains adjacent between local counter and borrowed a1')
+  failures = failures + check(body.locals() = 10,'ordered no-rebinding layout reserves exactly two complete slot regions plus result/scratch')
+  failures = failures + check(changed.operation(callid) = 0,'only the original outer call identity is removed')
+  limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,9)
+  failures = failures + check(limited.status() = 'limit' & limited.reason() = 'inline.frame','ordered nested window demand is preflighted per site')
+  kept = limited.result(); graph = dereference kept.ir()
+  failures = failures + check(bin2x(graph.binary()) = bin2x(before),'ordered-window limit returns the exact original module')
+  return failures
 
 main: procedure = .int
   failures = 0
@@ -120,5 +177,6 @@ main: procedure = .int
   huge = copies('x',8192) as .binary
   ignored = two(a,'load',a.reg('r',0),.lltarget..operand.string(huge),at)
   failures = failures + check(pos('budget',small.error()) > 0,'payload preflight fails before vector allocation')
+  failures = failures + nestedordered()
   say 'CONSTRUCTED_INLINE|failures=' || failures
   return failures

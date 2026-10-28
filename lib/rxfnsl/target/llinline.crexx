@@ -225,8 +225,8 @@ slotordinal: procedure = .int
   return -1
 
 mappedslot: procedure = .lltarget..operand
-  arg body = .lltarget..bodydraft, value = .lltarget..operand, base = .int, locals = .int, arguments = .int, rebinding = .int
-  if rebinding then return body.reg('r',base + locals + arguments + 3 + slotordinal(value,locals,arguments))
+  arg body = .lltarget..bodydraft, value = .lltarget..operand, base = .int, locals = .int, arguments = .int, ordered = .int
+  if ordered then return body.reg('r',base + locals + arguments + 3 + slotordinal(value,locals,arguments))
   if value.bank() = 'r' then return body.reg('r',base + arguments + 3 + value.index())
   if value.index() = 0 then return body.reg('r',base + arguments + 1)
   return body.reg('r',base + value.index())
@@ -240,7 +240,7 @@ expandmany: procedure = .llinline..change
   arg bindings = .object[], profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
   i = .int; j = .int; k = .int; a = .int; ignored = .int; count = .int; required = .int
   locals = .int; base = .int; higheststep = .int; highestclause = .int
-  extent = .int; fileid = .int; hasresult = .int; rebinding = .int; slots = .int; activebase = .int; position = .int
+  extent = .int; fileid = .int; hasresult = .int; ordered = .int; slots = .int; activebase = .int; position = .int
   request = .binding; selected = .lltarget..record; input = .lltarget..record; childrecord = .lltarget..record; swaprecord = .lltarget..record
   field = .lltarget..operand; oldresult = .lltarget..operand; value = .lltarget..operand
   resultcell = .lltarget..operand; countcell = .lltarget..operand; tempcell = .lltarget..operand
@@ -299,7 +299,7 @@ expandmany: procedure = .llinline..change
     if selected.procedureid() <> functionid then return .change('invalid','binding.foreign.procedure',source,empty)
     if facts.bodyid(request.callid()) <> request.bodyid() then return .change('invalid','binding.target.mismatch',source,empty)
     callee = source.body(request.bodyid()); count = facts.arguments(request.callid())
-    if facts.rebinding(request.callid()) then do
+    if facts.rebinding(request.callid()) | facts.orderedslots(request.callid()) then do
       if frame < 2 | count >= frame then return .change('limit','inline.frame',source,empty)
       if callee.locals() > frame - count - 1 then return .change('limit','inline.frame',source,empty)
       slots = callee.locals() + count + 1
@@ -354,9 +354,12 @@ expandmany: procedure = .llinline..change
         iterate
       end
       callee = source.body(facts.bodyid(input.id())); count = facts.arguments(input.id()); base = offsets[input.id()]
-      rebinding = facts.rebinding(input.id()); resultcell = targetbody.reg('r',base); hasresult = input.operands() > 1
+      /* Retained counted children observe adjacency across r/a bank borders,
+       * even when the outer body never explicitly rebinds a slot. */
+      ordered = facts.rebinding(input.id()) | facts.orderedslots(input.id())
+      resultcell = targetbody.reg('r',base); hasresult = input.operands() > 1
       slots = callee.locals() + count + 1; activebase = base + slots + 2
-      if rebinding then do
+      if ordered then do
         countcell = targetbody.reg('r',activebase + callee.locals()); tempcell = targetbody.reg('r',base + 1)
       end
       else do
@@ -369,7 +372,7 @@ expandmany: procedure = .llinline..change
       end
       ignored = code.one(targetbody,'null',countcell,at)
       ignored = code.two(targetbody,'load',countcell,.lltarget..operand.integer(count),at)
-      if rebinding then do a = 0 to slots - 1
+      if ordered then do a = 0 to slots - 1
         anchor = targetbody.reg('r',base + 2 + a); mapped = targetbody.reg('r',activebase + a)
         if a <= callee.locals() then ignored = code.two(targetbody,'link',anchor,mapped,at)
         else do
@@ -408,13 +411,13 @@ expandmany: procedure = .llinline..change
         call objectarraydrop replacements
         do k = 1 to childrecord.registerrefs()
           field = childrecord.registerref(k)
-          value = mappedslot(targetbody,field,base,callee.locals(),count,rebinding)
+          value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
           replacements[k] = value as .object
         end
         fields = lltarget..remapregisters(childrecord,replacements)
         fields = lltarget..remapmetadata(childrecord,fields,'.$inline.' || input.id(),steps,clauses)
         if childrecord.kind() <> 'instruction' then ignored = targetbody.record(childrecord.kind(),fields,childat)
-        else if rebinding & childrecord.mnemonic() = 'unlink' then do
+        else if ordered & childrecord.mnemonic() = 'unlink' then do
           field = childrecord.operand(1); position = slotordinal(field,callee.locals(),count)
           mapped = fields[1] as .lltarget..operand; anchor = targetbody.reg('r',base + 2 + position)
           ignored = code.two(targetbody,'link',mapped,anchor,childat)
@@ -433,7 +436,7 @@ expandmany: procedure = .llinline..change
               else ignored = code.two(targetbody,'copy',resultcell,mapped,childat)
             end
           end
-          if rebinding then do
+          if ordered then do
             /* Reverse the complete admitted SWAP sequence to restore actual
              * runtime slot identities, even when LINK duplicated pointers. */
             do k = facts.swaps(input.id()) to 1 by -1
@@ -458,7 +461,7 @@ expandmany: procedure = .llinline..change
           ignored = code.one(targetbody,'endlife',countcell,childat)
           ignored = code.one(targetbody,'endlife',tempcell,childat)
           do a = 0 to callee.locals() - 1
-            if rebinding then anchor = targetbody.reg('r',activebase + a)
+            if ordered then anchor = targetbody.reg('r',activebase + a)
             else anchor = targetbody.reg('r',base + count + 3 + a)
             ignored = code.one(targetbody,'endlife',anchor,childat)
           end
