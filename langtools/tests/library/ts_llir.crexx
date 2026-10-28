@@ -47,7 +47,7 @@ main: procedure = .int
   if restored.error() <> '' then say restored.error()
   failures = failures + check(restored.error() = '' & restored.text() = saved,'text round trip')
   failures = failures + check(pos('demo.add',graph.dump()) > 0,'named dump')
-  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments() + protection(c) + schemareads() + schemabuckets()
+  failures = failures + refusals(c,graph) + emission() + origins(c) + registration() + signatures() + optionalarguments() + protection(c) + schemareads() + schemabuckets() + controlschemas()
   say 'failures=' || failures
   return failures
 
@@ -115,6 +115,36 @@ protection: procedure = .int
   call entry.protect(body,foreign,at); call body.returnvoid(at); restored = draft.finish()
   failures = failures + check(pos('protect successors or origin belong to another module',restored.error()) > 0,'builder refuses foreign protect owner')
   failures = failures + check(graph.text() = text & bin2x(graph.binary()) = bin2x(image),'protect refusals preserve original graph')
+  return failures
+
+/** Adding no structural control, or explicitly spelling its default, keeps
+ * the existing exact schema bytes. Invalid/frozen changes cannot broaden it. */
+controlschemas: procedure = .int
+  data = .llir..schema_data(); call data.bootstrap()
+  call data.addfamily('compat',1); op = data.addop('compat.step')
+  expected = 'LLIR-SCHEMA-1' || '0a'x || 'family core 1' || '0a'x || 'family compat 1' || '0a'x || 'type core.void' || '0a'x || 'type core.boolean' || '0a'x || 'operation compat.step unknown unknown unknown' || '0a'x
+  failures = check(data.manifest() == expected,'absent control preserves exact legacy manifest')
+  call data.control(op,'next'); ok = data.freeze(); contract = .llir..contract(data)
+  descriptor = contract.operation('compat.step')
+  failures = failures + check(ok & contract.manifest() == expected & descriptor.flow() = 'next' & descriptor.minsuccessors() = 0 & descriptor.maxsuccessors() = 0,'explicit default control preserves manifest and frozen reads')
+  caught = 0
+  do
+    call descriptor.control('terminal',1,1)
+  on signal error as problem
+    caught = pos('LL_IR_SCHEMA: contract is frozen',problem.message()) = 1
+  end
+  failures = failures + check(caught & contract.error() = '' & contract.manifest() == expected & descriptor.flow() = 'next','frozen control mutation preserves usable contract')
+  do mode = 1 to 6
+    data = .llir..schema_data(); call data.bootstrap(); op = data.addop('bad.control')
+    if mode = 1 then call data.control(op,'other')
+    if mode = 2 then call data.control(op,'next',0,1)
+    if mode = 3 then call data.control(op,'terminal',-1,0)
+    if mode = 4 then call data.control(op,'terminal',2,1)
+    if mode = 5 then call data.control(op,'terminal',0,4294967296)
+    if mode = 6 then call data.control(op,'next terminal')
+    ok = data.freeze()
+    failures = failures + check(ok = 0 & pos('LL_IR_SCHEMA',data.error()) > 0 & data.flow(op) = 'next','invalid structural control declaration ' || mode)
+  end
   return failures
 
 check: procedure = .int

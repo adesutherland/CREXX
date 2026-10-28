@@ -739,6 +739,9 @@ plan: class
           _constants[op] = item as .object; _bytes = _bytes + constantsize
         end
         if _opcode[op] <= 16 then iterate
+        if schema.flow(_opcode[op] - 16) <> 'next' then do
+          _message = 'LL_IR_EXEC_CONTROL: declared extension successors have no runtime dispatch contract'; return
+        end
         binding = _registry.opindex(operation.name())
         if binding = 0 then do; _message = 'LL_IR_EXEC_CAPABILITY: no runtime binding for ' || operation.name(); return; end
         summary = _registry.effect(binding)

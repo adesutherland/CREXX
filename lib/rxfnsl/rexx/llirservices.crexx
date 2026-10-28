@@ -331,6 +331,7 @@ evaluate: procedure = .llir..evaluation
   opcode = store.get(3,opid,1)
   if opcode <= 16 then return .llir..evaluation('keep','core operation has no extension evaluator')
   descriptor = opcode - 16
+  if schema.flow(descriptor) <> 'next' then return .llir..evaluation('keep','structural control does not permit constant replacement')
   if schema.effectvalue(descriptor,1) <> 'none' | schema.effectvalue(descriptor,2) = 'unknown' | schema.effectvalue(descriptor,3) <> 'returns' then return .llir..evaluation('keep','operation effects do not permit constant replacement')
   service = schema.callback(descriptor,1)
   if (service is .llir..evaluator) = 0 then return .llir..evaluation('keep','no constant evaluator registered')
@@ -357,6 +358,7 @@ dispatch: procedure = .llir..evaluation
   store = dereference graph.storage(); contract = dereference store.contract(); schema = dereference contract.data()
   i = .int
   operation = graph.operation(opid); descriptor = store.get(3,opid,1) - 16
+  if schema.flow(descriptor) <> 'next' then return .llir..evaluation('keep','structural control does not permit constant replacement')
   if schema.effectvalue(descriptor,1) <> 'none' | schema.effectvalue(descriptor,2) = 'unknown' | schema.effectvalue(descriptor,3) <> 'returns' then return .llir..evaluation('keep','operation effects do not permit constant replacement')
   service = schema.callback(descriptor,1)
   if (service is .llir..evaluator) = 0 then return .llir..evaluation('keep','no constant evaluator registered')
@@ -823,10 +825,11 @@ transform: procedure = .llirservices..change
 
 pure: procedure = .int
   arg schema = .llir..schema_data, op = .int
-  return schema.effectvalue(op,1) = 'none' & schema.effectvalue(op,2) = 'none' & schema.effectvalue(op,3) = 'returns'
+  return schema.flow(op) = 'next' & schema.effectvalue(op,1) = 'none' & schema.effectvalue(op,2) = 'none' & schema.effectvalue(op,3) = 'returns'
 
 signature: procedure = .int
   arg source = .llir..schema_data, from = .int, target = .llir..schema_data, dest = .int
+  if source.flow(from) <> target.flow(dest) | source.minsuccessors(from) <> target.minsuccessors(dest) | source.maxsuccessors(from) <> target.maxsuccessors(dest) then return 0
   do mode = 1 to 3
     if source.effectvalue(from,mode) <> target.effectvalue(dest,mode) then return 0
     if source.arity(from,mode) <> target.arity(dest,mode) then return 0

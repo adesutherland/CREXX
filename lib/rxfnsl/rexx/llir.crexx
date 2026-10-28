@@ -258,6 +258,9 @@ schema_data: class
   _states = .string[]
   _failures = .string[]
   _termination = .string[]
+  _flow = .string[]
+  _minsuccessors = .int[]
+  _maxsuccessors = .int[]
   _evaluators = .object[]
   _verifiers = .object[]
   _lowerers = .object[]
@@ -349,6 +352,7 @@ schema_data: class
     end
     i = _ops[0] + 1; _ops[i] = name
     _states[i] = 'unknown'; _failures[i] = 'unknown'; _termination[i] = 'unknown'
+    _flow[i] = 'next'; _minsuccessors[i] = 0; _maxsuccessors[i] = 0
     /* Mutable rows hold per-mode heads; freeze replaces them with ranges. */
     extent = i * 24
     call binresize _fieldindex,extent
@@ -445,6 +449,27 @@ schema_data: class
     if which = 1 then return _states[op]
     if which = 2 then return _failures[op]
     return _termination[op]
+  control: method = .void
+    arg op = .int, flow = .string, minimum = 0, maximum = 0
+    owner_ref = reference self; owner = dereference owner_ref
+    if owner.mutable() = 0 then return
+    if op < 1 | op > _ops[0] | (flow <> 'next' & flow <> 'terminal') | minimum < 0 | maximum < minimum | maximum > 4294967295 then do
+      call fail('LL_IR_SCHEMA: invalid structural control declaration'); return
+    end
+    if flow = 'next' & (minimum <> 0 | maximum <> 0) then do
+      call fail('LL_IR_SCHEMA: next control cannot declare successors'); return
+    end
+    _flow[op] = flow; _minsuccessors[op] = minimum; _maxsuccessors[op] = maximum
+    return
+  flow: method = .string
+    arg op = .int
+    return _flow[op]
+  minsuccessors: method = .int
+    arg op = .int
+    return _minsuccessors[op]
+  maxsuccessors: method = .int
+    arg op = .int
+    return _maxsuccessors[op]
   service: method = .void
     arg op = .int, which = .int, service = .object
     owner_ref = reference self; owner = dereference owner_ref
@@ -511,6 +536,7 @@ schema_data: class
     end
     do i = 1 to _ops[0]
       text = text || 'operation ' || _ops[i] || ' ' || _states[i] || ' ' || _failures[i] || ' ' || _termination[i] || '0a'x
+      if _flow[i] <> 'next' then text = text || 'control ' || _flow[i] || ' ' || _minsuccessors[i] || ' ' || _maxsuccessors[i] || '0a'x
       do mode = 1 to 3
         if _indexready then do
           at = ((i - 1) * 3 + mode - 1) * 8
@@ -650,6 +676,25 @@ operation: class
     if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
     store = dereference _data; call store.effect(_id,3,text)
     return
+  /** Declare structural block flow independently of semantic termination.
+   * @param flow next (no successors) or terminal (ends the block).
+   * @param minimum Minimum ordered successor count.
+   * @param maximum Maximum ordered successor count; request budgets still apply.
+   * Omitted/default control preserves the existing next/0/0 contract. */
+  control: method = .void
+    arg flow = .string, minimum = 0, maximum = 0
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; call store.control(_id,flow,minimum,maximum)
+    return
+  flow: method = .string
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; return store.flow(_id)
+  minsuccessors: method = .int
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; return store.minsuccessors(_id)
+  maxsuccessors: method = .int
+    if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
+    store = dereference _data; return store.maxsuccessors(_id)
   evaluator: method = .void
     arg service = .object
     if valid() = 0 then call bad('LL_IR_OWNER: operation descriptor expired')
@@ -760,7 +805,8 @@ arena: class
       end
     end
     return
-  reserve: method = .int
+  /** Check a prospective reservation without charging or allocating rows. */
+  canreserve: method = .int
     arg entries = .int, bytes = .int
     if _sealed then do
       call bad('LL_IR_LIFECYCLE: module is frozen'); return 0
@@ -775,6 +821,10 @@ arena: class
     if bytes > _bytelimit - _bytes then do
       call fail('LL_RESOURCE_LIMIT: ir.bytes budget ' || _bytelimit || '; increase the host budget'); return 0
     end
+    return 1
+  reserve: method = .int
+    arg entries = .int, bytes = .int
+    if canreserve(entries,bytes) = 0 then return 0
     _entries = _entries + entries; _bytes = _bytes + bytes
     return 1
   entries: method = .int
@@ -1015,7 +1065,7 @@ arena: class
     last = get(2,blockid,3)
     if last > 0 then do
       previous = get(3,last,1)
-      if (previous >= 5 & previous <= 7) | previous = 10 then do
+      if terminal(previous) then do
         call fail('LL_IR_TERMINATOR: operation follows a terminator',last); return 0
       end
     end
@@ -1045,6 +1095,13 @@ arena: class
       call put(7,item,1,edges[i])
     end
     return id
+  /** Structural termination is shared by construction and decoded verification. */
+  terminal: method = .int
+    arg opcode = .int
+    if (opcode >= 5 & opcode <= 7) | opcode = 10 then return 1
+    schema = dereference _contract.data()
+    if opcode > 16 & opcode <= schema.ops() + 16 then return schema.flow(opcode - 16) = 'terminal'
+    return 0
   operand: method = .int
     arg op = .int, index = .int
     if index < 1 | index > get(3,op,5) then call bad('LL_IR_OPERAND: ordinal is outside operation')
@@ -1264,7 +1321,8 @@ arena: class
           end
           otherwise do
             descriptor = opcode - 16
-            if nin <> schema.arity(descriptor,1) | nout <> schema.arity(descriptor,2) | nedge <> 0 then call fail('LL_IR_ARITY: extension signature mismatch',op)
+            if nin <> schema.arity(descriptor,1) | nout <> schema.arity(descriptor,2) | (schema.flow(descriptor) = 'next' & nedge <> 0) then call fail('LL_IR_ARITY: extension signature mismatch',op)
+            if nedge < schema.minsuccessors(descriptor) | nedge > schema.maxsuccessors(descriptor) then call fail('LL_IR_EDGE: extension successor count outside declared range',op)
             do i = 1 to nin while _error = ''
               if get(4,operand(op,i),3) <> schema.fieldtype(descriptor,1,i) then call fail('LL_IR_TYPE: extension input ' || schema.fieldname(descriptor,1,i) || ' has the wrong type',op)
             end
@@ -1284,7 +1342,7 @@ arena: class
             attributes = attributes + nattr
           end
         end
-        if (opcode >= 5 & opcode <= 7) | opcode = 10 then do
+        if terminal(opcode) then do
           if get(3,op,3) <> 0 | op <> last then call fail('LL_IR_TERMINATOR: terminator must end its block',op)
         end
         else if op = last | get(3,op,3) = 0 then call fail('LL_IR_TERMINATOR: block requires a terminator',op)
@@ -1441,6 +1499,7 @@ block: class
     if left.belongs(_owner) = 0 | right.belongs(_owner) = 0 | at.belongs(_owner) = 0 then call store.fail('LL_IR_OWNER: binary input or origin belongs to another module')
     if store.error() = '' then do
       if schema.arity(opcode.id(),1) <> 2 | schema.arity(opcode.id(),2) <> 1 | schema.arity(opcode.id(),3) <> 0 then call store.fail('LL_IR_ARITY: binary shorthand requires two inputs, one result and no attributes')
+      else if schema.flow(opcode.id()) <> 'next' then call store.fail('LL_IR_CONTROL: binary shorthand requires next control')
       else do
         inputs = .int[]; types = .int[]; edges = .int[]
         inputs[1] = left.id(); inputs[2] = right.id(); types[1] = schema.fieldtype(opcode.id(),2,1)
@@ -1779,6 +1838,7 @@ opdraft: class
   _op = .int
   _origin = .int
   _inputs = .int[]
+  _edges = .int[]
   _attributes = .binary[]
   _present = .int[]
   _done = .int
@@ -1819,6 +1879,26 @@ opdraft: class
     end
     call store.fail('LL_IR_ATTRIBUTE: unknown attribute ' || name)
     return
+  /** Append one actual ordered successor; duplicate target blocks are legal.
+   * @param target Live block in the draft operation's own function.
+   * No graph rows or reservation counters change before finish. */
+  successor: method = .void
+    arg target = .llir..block
+    call require(); store = dereference _owner; contract = dereference store.contract(); schema = dereference contract.data()
+    if target.belongs(_owner) = 0 then do
+      call store.fail('LL_IR_OWNER: extension successor belongs to another module'); return
+    end
+    if store.get(2,target.id(),1) <> store.get(2,_block,1) then do
+      call store.fail('LL_IR_OWNER: successor crosses a function boundary'); return
+    end
+    count = _edges[0] + 1
+    if count > schema.maxsuccessors(_op) then do
+      call store.fail('LL_IR_EDGE: extension successor count outside declared range'); return
+    end
+    inputs = schema.arity(_op,1); results = schema.arity(_op,2)
+    if store.canreserve(1 + inputs + results + count,48 + inputs * 4 + results * 16 + count * 4) = 0 then return
+    _edges[count] = target.id()
+    return
   finish: method = .llir..opview
     call require(); _done = 1; store = dereference _owner; contract = dereference store.contract(); schema = dereference contract.data()
     id = 0; i = .int
@@ -1828,12 +1908,13 @@ opdraft: class
     do i = 1 to schema.arity(_op,3)
       if _present[i] = 0 then call store.fail('LL_IR_ATTRIBUTE: missing attribute ' || schema.fieldname(_op,3,i))
     end
+    if _edges[0] < schema.minsuccessors(_op) | _edges[0] > schema.maxsuccessors(_op) then call store.fail('LL_IR_EDGE: extension successor count outside declared range')
     if store.error() = '' then do
-      types = .int[]; edges = .int[]
+      types = .int[]
       do i = 1 to schema.arity(_op,2)
         types[i] = schema.fieldtype(_op,2,i)
       end
-      id = store.append(_block,16 + _op,_inputs,types,edges,_origin)
+      id = store.append(_block,16 + _op,_inputs,types,_edges,_origin)
       if id > 0 & schema.arity(_op,3) > 0 then do
         call store.put(3,id,10,store.count(11) + 1)
         do i = 1 to schema.arity(_op,3)

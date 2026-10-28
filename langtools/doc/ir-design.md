@@ -64,6 +64,9 @@ roles in `llflow` remain a separate service.
 Liveness is a storage fact for declared control, not a result-availability or
 alias proof. Consumers must also honor structured effect/ownership premises;
 an effect model does not add missing continuation edges to the graph.
+Extension terminators contribute their actual ordered successor rows, including
+repeated destinations, to the same index. Structural admission does not change
+the existing opaque-effect/lifetime pinning rules or authorize execution.
 
 `llireffects.summary(inputs,results,version=1)` separates domain reads, writes,
 observations, allocation/release, operand value/borrow/escape modes, result
@@ -186,6 +189,63 @@ trusted consumer's explicit operation IDs after it has checked their terminal
 control contract. The executor derives this list from checked graph-bound ports
 and structured summaries. This reuses the existing definite-assignment lattice;
 it neither changes graph edges nor authorizes execution or optimiser rewrites.
+
+### Declared extension control
+
+An extension may declare structural block control independently of its semantic
+termination summary:
+
+```rexx
+route = family.operation('route')
+call route.control('terminal',2,8)
+stop = family.operation('stop')
+call stop.control('terminal')
+```
+
+`control(flow,minimum=0,maximum=0)` admits `next` or `terminal`. The default
+`next/0/0` has no successors and continues to the next operation in the block.
+`terminal` ends the block and requires an inclusive successor-count range;
+`terminal/0/0` has no declared successor. Bounds are unsigned 32-bit counts,
+with `minimum <= maximum`; actual graph and draft growth still obey request
+budgets. A table-like operation can therefore declare bounded fanout without
+pretending to be a sequence of Boolean core branches. Edge meanings, including
+case order, normal/exceptional roles and dispatch behavior, belong to the
+registering family. This API does not redefine `core.protect`.
+
+Append actual targets in their declared order:
+
+```rexx
+statement = entry.operation(contract.operation('demo.route'),at)
+call statement.successor(first)
+call statement.successor(second)
+call statement.successor(first)
+operation = statement.finish()
+```
+
+`opdraft.successor(block)` requires a live block in the exact same module owner
+and function. Duplicate destinations remain distinct ordered edges. The method
+checks arity and prospective numeric-row budget before growing its private
+draft array; it neither allocates graph rows nor charges reservation counters.
+`finish()` checks the full count and writes the existing owned edge rows. A
+terminal extension must be last in its block, and no operation may follow it.
+Freeze and text/binary decoding apply the same arity, target ownership and
+terminator checks, including unreachable blocks.
+
+`operation.flow()`, `.minsuccessors()` and `.maxsuccessors()` expose the frozen
+descriptor's structural contract. Default controls emit no additional manifest
+line, preserving existing exact schema bytes. Nondefault controls add the
+canonical `control terminal MIN MAX` line after the operation declaration.
+The existing saved-form tables and envelopes carry the actual successor rows;
+exact manifest compatibility also checks the structural contract. Schema copies
+own these declarations, and frozen mutation remains forbidden.
+
+`llirservices` reconstruction preserves ordered edges and refuses a target
+schema with changed control bounds or flow. Constant evaluation, pure-operation
+deletion and pure lowering cannot remove a structural terminator, even if its
+state/failure/termination summaries otherwise look pure. Generic execution
+currently refuses extension structural control explicitly: declaring edges is
+not a runtime dispatch capability. The ordinary graph index can still analyze
+the declared CFG without a private graph or fabricated branch cascade.
 
 State and failure names are compiler-owned contract identifiers. Level L does
 not infer aliasing, effects or mathematical properties from a name. Complete

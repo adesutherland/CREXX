@@ -4,9 +4,10 @@ import rxfnsb
 import llir
 import llirgraph
 import llireffects
+import llirservices
 
 main: procedure = .int
-  failures = diamond() + cycles() + protection() + effects()
+  failures = diamond() + cycles() + protection() + effects() + declaredcontrol()
   say 'failures=' || failures
   return failures
 
@@ -171,6 +172,216 @@ effects: procedure = .int
   call forged.put(candidate,record)
   failures = failures + check(forged.seal() = 0 & pos('core',forged.error()) > 0,'trusted extension premises cannot suppress a core store')
   return failures
+
+/** An independent routing family declares real ordered control, not a Boolean
+ * cascade. Two routes deliberately share one destination. Structural control
+ * grants neither constant evaluation nor a runtime handler capability. */
+declaredcontrol: procedure = .int
+  contract = .llir..contract; graph = .llir..module
+  savedtext = .string; savedimage = .binary; failures = .int
+  contract = controlcontract()
+  routeop = contract.operation('routing.dispatch')
+  failures = check(contract.error() = '' & routeop.flow() = 'terminal' & routeop.minsuccessors() = 2 & routeop.maxsuccessors() = 4,'declared control schema')
+  graph = controlgraph(contract)
+  failures = failures + check(graph.error() = '' & graph.operations() = 5,'fanout and zero-successor terminal freeze')
+  if graph.error() <> '' then do; say graph.error(); return failures; end
+  savedtext = graph.text(); savedimage = graph.binary()
+  failures = failures + controlstructure(graph) + controltransforms(contract,graph) + controlreaders(contract,graph) + controlbuilders(contract)
+  failures = failures + controlbudget(contract,20,4096) + controlbudget(contract,1000000,180)
+  failures = failures + check(graph.text() == savedtext & bin2x(graph.binary()) == bin2x(savedimage),'refusals preserve the original owner')
+  return failures
+
+controlgraph: procedure = .llir..module
+  arg contract = .llir..contract
+  statement = .llir..opdraft; observed = .llir..opview
+  routeop = contract.operation('routing.dispatch'); haltop = contract.operation('routing.stop')
+  draft = .llir..builder(contract); at = draft.synthetic('ordered routing')
+  fn = draft.function('routes',contract.voidtype())
+  entry = fn.block('entry'); firstarm = fn.block('left'); secondarm = fn.block('right'); dead = fn.block('dead')
+  statement = entry.operation(routeop,at)
+  call statement.successor(firstarm); call statement.successor(secondarm); call statement.successor(firstarm)
+  observed = statement.finish(); statement = firstarm.operation(haltop,at); observed = statement.finish()
+  call secondarm.returnvoid(at); statement = dead.operation(haltop,at); observed = statement.finish()
+  otherfn = draft.function('other',contract.voidtype()); otherentry = otherfn.block('entry'); call otherentry.returnvoid(at)
+  return draft.finish()
+
+controlstructure: procedure = .int
+  arg graph = .llir..module
+  routed = graph.operation(1); stopped = graph.operation(2)
+  failures = check(routed.successors() = 3 & routed.successor(1) = 2 & routed.successor(2) = 3 & routed.successor(3) = 2 & stopped.successors() = 0,'ordered duplicate targets remain distinct edges')
+  index = .llirgraph..index(reference graph)
+  failures = failures + check(index.status() = 'ok','declared control index')
+  if index.status() = 'ok' then do
+    failures = failures + check(index.successors(1) = 3 & index.predecessors(2) = 2 & index.predecessors(3) = 1,'fanout/predecessor multiplicity')
+    failures = failures + check(index.reachable(2) & index.reachable(3) & index.reachable(4) = 0 & index.idom(2) = 1,'declared reachability and dominance')
+    live = index.liveness()
+    failures = failures + check(live.status() = 'ok' & live.complete(1),'declared terminal edges need no opaque lifetime inference')
+  end
+  return failures
+
+controltransforms: procedure = .int
+  arg contract = .llir..contract, graph = .llir..module
+  restored = .llir..module; kept = .llir..opview; terminal = .llir..opview
+  text = graph.text(); image = graph.binary()
+  rebuilt = llirservices..lower(reference graph,contract); restored = rebuilt.result()
+  failures = check(rebuilt.status() = 'changed' & restored.text() == text,'reconstruction retains all terminal edges')
+  facts = .llirservices..facts(reference graph); answer = llirservices..evaluate(reference graph,1,facts)
+  failures = failures + check(answer.status() = 'keep' & pos('structural control',answer.message()) > 0,'declared control does not authorize constant execution')
+  cleaned = llirservices..optimise(reference graph); restored = cleaned.result()
+  failures = failures + check(cleaned.status() = 'changed' & restored.error() = '' & restored.blocks() = 4,'ordinary cleanup removes only unreachable route block')
+  if cleaned.status() = 'changed' & restored.error() = '' then do
+    kept = restored.operation(cleaned.operation(1)); terminal = restored.operation(cleaned.operation(2))
+    failures = failures + check(kept.name() = 'routing.dispatch' & kept.successors() = 3 & kept.successor(1) = kept.successor(3) & terminal.name() = 'routing.stop' & terminal.successors() = 0,'pure-looking structural control is never discarded')
+  end
+  changedcontract = controlcontract(3)
+  refused = llirservices..lower(reference graph,changedcontract); restored = refused.result()
+  failures = failures + check(refused.status() = 'invalid' & pos('changed operation contract',refused.message()) > 0 & restored.text() == text,'reconstruction refuses changed control range even when current arity fits')
+  restored = llir..loadbinary(changedcontract,image)
+  failures = failures + check(pos('LL_IR_SCHEMA',restored.error()) > 0 & restored.operations() = 0,'saved control schema requires exact manifest')
+  failures = failures + check(graph.text() == text & bin2x(graph.binary()) == bin2x(image),'transforms preserve the original owner')
+  return failures
+
+controlreaders: procedure = .int
+  arg contract = .llir..contract, graph = .llir..module
+  restored = .llir..module; tableid = .int; i = .int
+  text = graph.text(); image = graph.binary()
+  restored = llir..loadtext(contract,text)
+  failures = check(restored.error() = '' & restored.text() == text,'declared control text round trip')
+  restored = llir..loadbinary(contract,image)
+  failures = failures + check(restored.error() = '' & bin2x(restored.binary()) == bin2x(image),'declared control binary round trip')
+  cases = .string[]
+  cases[1] = 'operations 1 9 1 LL_IR_EDGE'
+  cases[2] = 'operations 1 1 18 LL_IR_EDGE'
+  cases[3] = 'edges 1 1 0 LL_IR_EDGE'
+  cases[4] = 'edges 1 1 5 LL_IR_OWNER'
+  cases[5] = 'operations 2 1 20 LL_IR_TERMINATOR'
+  cases[6] = 'operations 1 3 2 LL_IR_TERMINATOR'
+  cases[7] = 'operations 1 1 20 LL_IR_ARITY'
+  do i = 1 to cases[0]
+    item = cases[i]
+    restored = llir..loadtext(contract,controltext(text,word(item,1),word(item,2) as .int,word(item,3) as .int,word(item,4)))
+    failures = failures + check(pos(word(item,5),restored.error()) > 0 & restored.operations() = 0,'decoded text control refusal ' || item)
+    tableid = 3
+    if word(item,1) = 'edges' then tableid = 7
+    restored = llir..loadbinary(contract,controlbinary(image,tableid,word(item,2) as .int,word(item,3) as .int,word(item,4) as .int))
+    failures = failures + check(pos(word(item,5),restored.error()) > 0 & restored.operations() = 0,'decoded binary control refusal ' || item)
+  end
+  failures = failures + check(graph.text() == text & bin2x(graph.binary()) == bin2x(image),'reader refusals preserve the original owner')
+  return failures
+
+controlbuilders: procedure = .int
+  arg contract = .llir..contract
+  draft = .llir..builder; otherdraft = .llir..builder; at = .llir..origin
+  fn = .llir..function; otherfn = .llir..function
+  entry = .llir..block; target = .llir..block; otherentry = .llir..block
+  statement = .llir..opdraft; observed = .llir..opview; restored = .llir..module
+  mode = .int; count = .int; i = .int; expected = .string; failures = 0
+  routeop = contract.operation('routing.dispatch'); stepop = contract.operation('routing.step')
+  do mode = 1 to 6
+    draft = .llir..builder(contract); at = draft.synthetic('control refusal'); fn = draft.function('f',contract.voidtype())
+    entry = fn.block('entry'); target = fn.block('target'); call target.returnvoid(at)
+    statement = entry.operation(routeop,at)
+    if mode = 1 then call statement.successor(target)
+    if mode = 2 | mode = 3 then do
+      call statement.successor(target); call statement.successor(target)
+      if mode = 2 then do
+        call statement.successor(target); call statement.successor(target); call statement.successor(target)
+      end
+    end
+    if mode = 4 then do
+      otherfn = draft.function('g',contract.voidtype()); otherentry = otherfn.block('entry'); call otherentry.returnvoid(at)
+      call statement.successor(otherentry)
+    end
+    if mode = 5 then do
+      otherdraft = .llir..builder(contract); otherfn = otherdraft.function('g',contract.voidtype()); otherentry = otherfn.block('entry')
+      call statement.successor(otherentry)
+    end
+    if mode = 6 then statement = entry.operation(stepop,at)
+    observed = statement.finish()
+    if mode = 3 then call entry.returnvoid(at)
+    restored = draft.finish()
+    expected = 'LL_IR_EDGE'
+    if mode = 3 | mode = 6 then expected = 'LL_IR_TERMINATOR'
+    if mode = 4 | mode = 5 then expected = 'LL_IR_OWNER'
+    failures = failures + check(pos(expected,restored.error()) > 0 & restored.operations() = 0,'builder control refusal ' || mode)
+  end
+  do count = 2 to 4 by 2
+    draft = .llir..builder(contract); at = draft.synthetic('range endpoint'); fn = draft.function('f',contract.voidtype())
+    entry = fn.block('entry'); target = fn.block('target'); call target.returnvoid(at)
+    statement = entry.operation(routeop,at)
+    do i = 1 to count; call statement.successor(target); end
+    observed = statement.finish(); restored = draft.finish()
+    failures = failures + check(restored.error() = '' & observed.successors() = count,'inclusive declared range endpoint ' || count)
+  end
+  return failures
+
+controlcontract: procedure = .llir..contract
+  arg maximum = 4
+  routeop = .llir..operation; haltop = .llir..operation; openop = .llir..operation; stepop = .llir..operation
+  schema = .llir..schema(); family = schema.family('routing',1)
+  routeop = family.operation('dispatch'); call routeop.control('terminal',2,maximum)
+  haltop = family.operation('stop'); call haltop.control('terminal')
+  openop = family.operation('open'); call openop.control('terminal',0,4294967295)
+  stepop = family.operation('step')
+  call routeop.state('none'); call routeop.failure('none'); call routeop.termination('returns')
+  call haltop.state('none'); call haltop.failure('none'); call haltop.termination('returns')
+  call openop.state('none'); call openop.failure('none'); call openop.termination('returns')
+  call stepop.state('none'); call stepop.failure('none'); call stepop.termination('returns')
+  return schema.finish()
+
+/** Draft edge growth is checked before allocating/charging any graph row. */
+controlbudget: procedure = .int
+  arg contract = .llir..contract, entries = .int, bytes = .int
+  sourceid = .int; originid = .int; fnid = .int; firstid = .int; secondid = .int
+  beforeentries = .int; beforebytes = .int; i = .int
+  store = .llir..arena(contract,entries,bytes)
+  sourceid = store.source('budget',''x as .binary); originid = store.origin(sourceid,0,0,4)
+  fnid = store.function('f',contract.voidtype()); firstid = store.block(fnid,'e'); secondid = store.block(fnid,'t')
+  entry = .llir..block(reference store,firstid); target = .llir..block(reference store,secondid); at = .llir..origin(reference store,originid)
+  statement = entry.operation(contract.operation('routing.open'),at)
+  beforeentries = store.entries(); beforebytes = store.bytes()
+  failures = check(store.error() = '','control budget setup')
+  do i = 1 to 32 while store.error() = ''
+    call statement.successor(target)
+  end
+  failures = failures + check(pos('LL_RESOURCE_LIMIT',store.error()) > 0 & store.count(3) = 0 & store.count(7) = 0 & store.entries() = beforeentries & store.bytes() = beforebytes,'draft successor growth refuses before graph allocation')
+  return failures
+
+controltext: procedure = .string
+  arg text = .string, table = .string, row = .int, col = .int, replacement = .string
+  reader = .llir..textreader(text); out = .llir..writer(); countdown = 0
+  do while reader.left() > 0
+    line = reader.line()
+    if countdown > 0 then do
+      countdown = countdown - 1
+      if countdown = 0 then do
+        fixed = ''
+        do i = 1 to words(line)
+          if i > 1 then fixed = fixed || ' '
+          if i = col then fixed = fixed || replacement
+          else fixed = fixed || word(line,i)
+        end
+        line = fixed
+      end
+    end
+    else if word(line,1) = table then countdown = row
+    call out.line(line)
+  end
+  result = out.finish()
+  return result.text()
+
+controlbinary: procedure = .binary
+  arg image = .binary, table = .int, row = .int, col = .int, replacement = .int
+  at = 12 + <at..u32>(8) image
+  do t = 1 to table
+    count = <at..u32>(at) image; width = <at..u32>(at + 4) image; at = at + 8
+    if t = table then do
+      <at..u32>(at + ((row - 1) * width + col - 1) * 4) image = replacement
+      return image
+    end
+    at = at + count * width * 4
+  end
+  return image
 
 check: procedure = .int
   arg condition = .int, message = .string

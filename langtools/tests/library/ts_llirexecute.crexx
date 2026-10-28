@@ -15,7 +15,7 @@ main: procedure = .int
   if plan.valid() = 0 then return failures
   say 'execute_plan_logical_bytes=' || plan.usedbytes()
   failures = failures + ordinary(plan) + continuations(plan) + failuresandlimits(plan)
-  failures = failures + preflight(contract,graph) + snapshots(contract,reference graph,plan)
+  failures = failures + preflight(contract,graph) + snapshots(contract,reference graph,plan) + declaredcontrol()
   say 'failures=' || failures
   return failures
 
@@ -173,6 +173,28 @@ preflight: procedure = .int
   run = .llirexecute..session(zeroplan); ignored = run.start(1,args,present); answer = run.run()
   first = run.service('demo') as .neutralhandler
   failures = failures + check(answer.status() = 'failure' & answer.size() = 0 & first.events() = 'absent|cleanup.failure', 'zero-byte output reservation rejects a positive handler result')
+  return failures
+
+/** A matching ordinary handler does not authorize successor dispatch. The
+ * structurally valid edge must be refused before the handler's visible effect. */
+declaredcontrol: procedure = .int
+  schema = .llir..schema(); family = schema.family('independent',1)
+  before = family.operation('before'); call before.control('terminal',1,1)
+  call before.state('test.state'); call before.failure('none'); call before.termination('returns')
+  contract = schema.finish(); draft = .llir..builder(contract); at = draft.synthetic('unadmitted extension control')
+  fn = draft.function('f',contract.voidtype()); entry = fn.block('entry'); target = fn.block('target')
+  statement = entry.operation(before,at); call statement.successor(target); observed = statement.finish()
+  call target.returnvoid(at); graph = draft.finish()
+  registry = .llirexecute..registry(contract); call registry.handler('demo',.neutralhandler() as .object)
+  summary = .llireffects..summary(0,0); call summary.control('none','none','none'); call summary.write('test.state'); sealed = summary.seal()
+  call registry.operation('independent.before','demo',summary,0); sealed = registry.seal()
+  failures = check(graph.error() = '' & sealed & observed.successors() = 1,'structural control and matching handler are separately valid')
+  if graph.error() <> '' | sealed = 0 then return failures
+  plan = .llirexecute..plan(reference graph,registry)
+  failures = failures + check(plan.valid() = 0 & pos('LL_IR_EXEC_CONTROL: declared extension successors',plan.message()) = 1,'declared extension control has no implicit runtime dispatch authority')
+  run = .llirexecute..session(plan); args = .object[]; present = .int[]
+  ignored = run.start(1,args,present); answer = run.run(); service = run.service('demo') as .neutralhandler
+  failures = failures + check(answer.status() <> 'done' & pos('before',service.events()) = 0,'refused control plan cannot execute its matching handler')
   return failures
 
 snapshots: procedure = .int
