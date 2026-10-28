@@ -1,0 +1,103 @@
+/* Independent finite argument selection. All printing follows the calls. */
+.globals=0
+main() .locals=21
+  load r0,10
+  load r1,20
+  load r2,30
+  call3 r3,activepick(),r0,r1,r2
+  load r4,40
+  load r5,50
+  load r6,60
+  call3 r7,activepick(),r4,r5,r6
+  load r8,10
+  load r9,20
+  load r10,30
+  call3 r11,capturedbank(),r8,r9,r10
+  load r12,5
+  load r13,77
+  call2 r14,selectoralias(),r12,r13
+  load r15,1
+  load r16,100
+  load r17,200
+  call3 r18,persite(),r15,r16,r17
+  load r19,2
+  call3 r20,persite(),r19,r16,r17
+
+  say "active-first"
+  itos r3
+  say r3
+  itos r0
+  say r0
+  itos r1
+  say r1
+  itos r2
+  say r2
+  say "active-repeat"
+  itos r7
+  say r7
+  itos r4
+  say r4
+  itos r5
+  say r5
+  itos r6
+  say r6
+  say "captured-bank"
+  itos r11
+  say r11
+  itos r8
+  say r8
+  itos r9
+  say r9
+  itos r10
+  say r10
+  say "selector-alias"
+  itos r14
+  say r14
+  itos r12
+  say r12
+  itos r13
+  say r13
+  say "per-site-selector"
+  itos r18
+  say r18
+  itos r20
+  say r20
+  itos r16
+  say r16
+  itos r17
+  say r17
+  ret 0
+
+/* a1 currently points at the original second actual, not its entry anchor. */
+activepick() .locals=1
+  swap a1,a2
+  linkarg r0,1
+  load r0,99
+  unlink r0
+  ret a2
+
+/* Captured N is3 even after a0 becomes0. Index0 follows active a0 after LINK. */
+capturedbank() .locals=2
+  load a0,0
+  linkarg r0,3
+  iadd r0,r0,1
+  link a0,a1
+  linkarg r1,0
+  load r1,7
+  iadd r0,r0,a0
+  ret r0
+
+/* The selector register is also the destination: read1 before linking to77. */
+selectoralias() .locals=1
+  load r0,1
+  ichkrng r0,0,2
+  linkarg r0,r0,1
+  iadd r0,r0,1
+  ret r0
+
+/* The same source instruction selects different slots at the two root sites. */
+persite() .locals=1
+  ichkrng a1,1,2
+  linkarg r0,a1,1
+  iadd r0,r0,1
+  ret r0

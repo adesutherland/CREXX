@@ -965,8 +965,8 @@ retained counted-call windows remain intact. The typed assignment owner now
 compacts complete live cells and reuses disjoint fresh-root plain scalar cells
 only with checked entry, component/status and whole-reset premises. Sparse
 registers alone do not meet the wider reuse requirement. General CFG, deeper
-nesting, optional/variadic, reference/aggregate, imported/global and wider
-context coverage remains open in INL-STEP04/05.
+nesting, optional presence/defaults, dynamic varargs, reference/aggregate,
+imported/global and wider context coverage remains open in INL-STEP04/05.
 
 ### Straight-line callee rebinding contract
 
@@ -1011,6 +1011,17 @@ layout even if the outer body has no LINK/SWAP. The child opcode and required
 source/inverse swaps remain; the outer return still uses its original result
 and base ownership. An active-procedure and depth check precede recycled-base
 reuse. Count is not an argument-presence proof.
+
+Finite straight-line `LINKARG` selection uses a per-root-site checked selector
+row. It reads a register selector and adds its immediate offset before changing
+the destination binding. Index `0` selects the current active `a0`; `0..N`
+is bounded by captured entry arity, even if the body changes the integer in
+`a0`. Lowering uses ordinary LINK to the selected **active** argument slot,
+so preceding SWAP/LINK effects remain visible. A known-passing `ICHKRNG`
+keeps its exact instruction; unproved or failing guards retain the call under
+the current signal profile. Raw LINKARG gains no invented range signal.
+Status presence, conditional guards and optional defaults still need their
+separate component/control proof.
 
 Current negative controls distinguish proof limits from inherent language
 limits. Missing exact body, status-derived unknown count and active recursion

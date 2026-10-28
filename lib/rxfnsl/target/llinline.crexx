@@ -417,6 +417,17 @@ expandmany: procedure = .llinline..change
         fields = lltarget..remapregisters(childrecord,replacements)
         fields = lltarget..remapmetadata(childrecord,fields,'.$inline.' || input.id(),steps,clauses)
         if childrecord.kind() <> 'instruction' then ignored = targetbody.record(childrecord.kind(),fields,childat)
+        else if childrecord.mnemonic() = 'linkarg' then do
+          /* The source slot is the current active argument, including prior
+           * LINK/SWAP effects. Its immutable entry anchor has other semantics.
+           * The site-specific proof captured the index before rebinding the
+           * destination, including when that slot held the selector itself. */
+          position = facts.argumentselector(input.id(),childrecord.id())
+          field = .lltarget..operand.bound(0,0,0,'a',position)
+          value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
+          destination = fields[1] as .lltarget..operand
+          ignored = code.two(targetbody,'link',destination,value,childat)
+        end
         else if ordered & childrecord.mnemonic() = 'unlink' then do
           field = childrecord.operand(1); position = slotordinal(field,callee.locals(),count)
           mapped = fields[1] as .lltarget..operand; anchor = targetbody.reg('r',base + 2 + position)

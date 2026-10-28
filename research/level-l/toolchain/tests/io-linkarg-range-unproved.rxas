@@ -1,0 +1,12 @@
+/* The status-derived value is unknown to facts but runtime0 passes0..0. */
+.globals=0
+main() .locals=3
+  load r0,5
+  getandtp r2,r0,768
+  call1 r1,guardunknown(),r2
+  itos r1
+  say r1
+  ret 0
+guardunknown() .locals=0
+  ichkrng a1,0,0
+  ret a1

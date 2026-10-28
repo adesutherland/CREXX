@@ -124,7 +124,7 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP and one retained same-module scalar nested leaf slices are implemented and focused-qualified. Complete broader aliasing, optional/variadic, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf and finite LINKARG/known-passing ICHKRNG slices are implemented and focused-qualified. Complete broader aliasing, optional presence/defaults and dynamic varargs, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -500,6 +500,43 @@ presence, and raw RXAS calls synthesize neither placeholders nor defaults.
 Optional prologues and finite dynamic `LINKARG` remain subsequent representable
 categories requiring status/control and selector/range proofs. Preserve the
 producer's existing range check; raw `LINKARG` does not add one.
+
+### Reviewed finite argument-selection increment
+
+The next INL-STEP04/05 slice proves straight-line `LINKARG` selection in the
+existing same-module, globals-free, closed-root scalar profile. It changes no
+ISA, linker or source-language contract. Admit immediate selectors and
+register-plus-immediate selectors only when the selector and checked sum are
+known before destination rebinding, and the resulting index is within the
+captured entry argument-bank extent `0..N`. `N` is the actual call arity, not the
+mutable integer currently held by `a0`; index zero selects the current active
+`a0`. A raw `LINKARG` has no implicit bounds signal. The selected source is the
+current active `a[index]` pointer, including prior LINK/SWAP effects, never its
+entry/base anchor.
+
+`lltargetfacts` records a per-root-call, per-callee-record checked selector;
+repeated activations of the same body cannot overwrite another site's proof.
+It snapshots selector inputs before changing the destination binding, models
+the active link and marks outer rebinding. Existing per-slot base and return
+ownership facts still determine UNLINK and COPY/MOVE. A retained private leaf
+may simulate a finite selector in its own frame but does not publish a second
+root rewrite row. The expander lowers only the selected outer body's LINKARG
+to ordinary LINK between its mapped destination and active argument slot.
+Unknown, overflowed or out-of-bank selection keeps the original call with a
+specific proof reason and exact original result. A proven-passing scalar
+`ICHKRNG` may remain in the cloned body; an unknown/failing guard retains the
+call under the current signal profile. This slice does not infer presence from
+count, add optional defaults, or admit branch/handler paths.
+
+Independent conservative and cleaned RXAS controls assemble with optimizer
+disabled and execute on one VM. They cover active-versus-entry selection after
+SWAP (starting `10/20/30`, mutate selected original second actual to `99`,
+return `10`), mutable `a0` versus captured three-slot bank, selector/destination
+aliasing with pre-link snapshot, original return ownership, repeated selected
+sites, and exact retained-call reasons/atomicity. Inspect source and rewritten
+LINK/UNLINK/window structure as well as values. Existing compiler vararg tests
+are behavioral evidence, not a correctness oracle for L legality. Producer
+branches/status presence and signal paths remain for the later CFG slice.
 
 ### Required native bootstrap correctness repair
 

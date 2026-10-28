@@ -165,6 +165,15 @@ frame: class
     return 0
   slots: method = .int
     return _locals + _arguments + 1
+  arguments: method = .int
+    return _arguments
+  argument: method = .lltarget..operand
+    arg index = .int
+    if index < 0 | index > _arguments then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: captured argument-bank index"
+      return .lltarget..operand.integer(0)
+    end
+    return .lltarget..operand.bound(0,0,0,'a',index)
   slot: method = .lltarget..operand
     arg ordinal = .int
     if ordinal < 0 | ordinal >= slots() then do
@@ -293,6 +302,10 @@ analysis: class
   _reset = .object[]
   _rebinding = .int[]
   _ordered = .int[]
+  _selectorordinal = .int[]
+  _selectorcount = .int[]
+  _selectors = .object[]
+  _lastselector = .int
   _returnaction = .string[]
   _swaps = .object[]
   _swapcount = .int[]
@@ -344,11 +357,12 @@ analysis: class
     arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1, returnwhole = 1
     i = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
     opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
+    selected = .int; checked = .int[]; limits = .int[]
     source = .lltarget..operand; bank = .lltarget..operand; reference_value = .lltarget..operand; option = .lltarget..operand
     digits = .lltarget..operand; casetype = .lltarget..operand; standard = .lltarget..operand
     if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: transfer state is sealed"
     left = .lltarget..operand; right = .lltarget..operand; value = .lltarget..operand
-    state = dereference state_ref; reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]; references = .int[]; plain = .int[]
+    state = dereference state_ref; reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]; references = .int[]; plain = .int[]; _lastselector = -1
     if spend(1 + item.operands() + item.registerrefs()) = 0 then return 0
     if record then do
       if reserve(item.registerrefs(),16) = 0 | reserve(2,32) = 0 then return 0
@@ -388,10 +402,10 @@ analysis: class
       return 1
     end
     catalog = .llrxascatalog..catalog(); opcode = item.opcode(); name = item.mnemonic()
-    if catalog.policyeffect(opcode) <> 0 then return reject('signal.policy.unproved')
+    if catalog.policyeffect(opcode) <> 0 & (name <> 'ichkrng' | item.operands() <> 3) then return reject('signal.policy.unproved')
     /* Native canonical component/cleanup metadata supplies the use adapter;
      * transfer code below still proves write availability and plain ownership. */
-    if wordpos(name,'link unlink swap endlife') = 0 then do i = 1 to item.operands()
+    if wordpos(name,'link unlink swap linkarg endlife') = 0 then do i = 1 to item.operands()
         value = item.operand(i)
         if value.kind() <> 'R' then iterate
         id = view.storage(value)
@@ -423,6 +437,47 @@ analysis: class
       end
     end
     else if name = 'cnop' then nop
+    else if name = 'ichkrng' then do
+      if spend(3) = 0 | reserve(3,8) = 0 then return 0
+      do i = 1 to 3
+        value = item.operand(i)
+        if value.kind() = 'R' then do
+          id = view.storage(value)
+          if id = 0 | state.known(id) = 0 then return reject('argument.range.unproved')
+          limits[i] = state.value(id); call insert(reference reads,domain(id))
+        end
+        else if value.kind() = 'I' then limits[i] = value.index()
+        else return reject('argument.range.unproved')
+      end
+      if limits[1] < limits[2] | limits[1] > limits[3] then return reject('argument.range.failure.unproved')
+    end
+    else if name = 'linkarg' then do
+      if private = 0 then return reject('argument.bank.root.unproved')
+      left = item.operand(1); value = item.operand(2)
+      if item.operands() = 2 then selected = value.index()
+      else do
+        id = view.storage(value)
+        if id = 0 | state.known(id) = 0 then return reject('argument.selector.unproved')
+        lhs = state.value(id); right = item.operand(3); rhs = right.index()
+        call insert(reference reads,domain(id))
+        if spend(1) = 0 | reserve(2,8) = 0 then return 0
+        checked = arithmetic('iadd',lhs,rhs)
+        if checked[1] = 0 then return reject('argument.selector.overflow.unproved')
+        selected = checked[2]
+      end
+      if selected < 0 | selected > view.arguments() then return reject('argument.selector.bank.unproved')
+      right = view.argument(selected)
+      if record then do
+        call insert(reference reads,bindingdomain(right,'active'))
+        call insert(reference writes,bindingdomain(left,'active')); call insert(reference kills,bindingdomain(left,'active'))
+        _mapping[item.id()] = 1
+      end
+      /* Resolve selector inputs before LINK can replace the same destination.
+       * The selected active a0/aN is independent of its immutable entry anchor
+       * and of any integer currently stored in the mutable owned a0 cell. */
+      call view.link(left,right)
+      _lastselector = selected
+    end
     else if wordpos(name,'link unlink swap') > 0 then do
       left = item.operand(1)
       if record then do
@@ -576,6 +631,7 @@ analysis: class
     id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
     callee = .lltarget..body; child = .frame; record = .lltarget..record; shape = .callshape
     value = .lltarget..operand; ownedrow = .numbers; resetrow = .numbers; action = .string
+    selectors = .int[]
     if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
     module = dereference _owner; state = dereference state_ref
     shape = normalize(item,view,state_ref,publish = 0)
@@ -605,6 +661,12 @@ analysis: class
     if callee.locals() > _work - count - 1 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     if spend(callee.locals() + count + 1) = 0 then return 0
     if reserve(callee.locals() + count + 1,24) = 0 | reserve(callee.locals() + 1,16) = 0 | reserve(4,32) = 0 then return 0
+    if publish & _selectorcount[bodyid] > 0 then do
+      /* Reserve both the transient vector and the retained numbers copy;
+       * reserve checks the quotient before multiplying, without assuming COW. */
+      if spend(_selectorcount[bodyid]) = 0 | reserve(_selectorcount[bodyid],16) = 0 | reserve(1,32) = 0 then return 0
+      do i = 1 to _selectorcount[bodyid]; selectors[i] = -1; end
+    end
     if repeated then do
       ownedrow = _owned[bodyid] as .numbers; resetrow = _reset[bodyid] as .numbers
       do i = 1 to callee.locals() + 1
@@ -632,7 +694,11 @@ analysis: class
         if invoke(record,child,state_ref,0,outerCallId,depth + 1) = 0 then return 0
       end
       else if step(record,child,state_ref,1,0,hasresult) = 0 then return 0
-      if publish & record.kind() = 'instruction' & wordpos(record.mnemonic(),'link unlink swap') > 0 then do
+      if publish & record.kind() = 'instruction' & record.mnemonic() = 'linkarg' then do
+        if _lastselector < 0 then return reject('argument.selector.unproved')
+        selectors[_selectorordinal[record.id()]] = _lastselector
+      end
+      if publish & record.kind() = 'instruction' & wordpos(record.mnemonic(),'link unlink swap linkarg') > 0 then do
         _rebinding[item.id()] = 1
         if record.mnemonic() = 'swap' then do
           if reserve(1,8) = 0 then return 0
@@ -671,6 +737,7 @@ analysis: class
     _reset[bodyid] = .numbers(reset) as .object
     _active[bodyid] = 0
     if publish = 0 then return 1
+    if _selectorcount[bodyid] > 0 then _selectors[item.id()] = .numbers(selectors) as .object
     _returnaction[item.id()] = action
     _swaps[item.id()] = .numbers(swaps) as .object; _swapcount[item.id()] = swaps[0]
     do i = 1 to actuals[0]
@@ -707,7 +774,17 @@ analysis: class
     _index = .llirgraph..index(graph_ref,_work,_bytelimit)
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
-    if reserve(graph.operations(),152) = 0 | reserve(graph.functions(),32) = 0 then return
+    if reserve(graph.operations(),168) = 0 | reserve(graph.functions(),40) = 0 then return
+    /* Index only LINKARG records once. Each root site then owns a compact row
+     * for its callee, rather than a root-sites by whole-module matrix. */
+    do i = 1 to module.records()
+      if spend(1) = 0 then return
+      item = module.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() <> 'linkarg' then iterate
+      j = item.procedureid(); _selectorcount[j] = _selectorcount[j] + 1
+      _selectorordinal[item.id()] = _selectorcount[j]
+    end
     if _index.functionblocks(_function) <> 1 then do; ignored = reject('profile.caller.cfg.pending'); return; end
     _access = .llirgraph..access(reference _index,'rxas.scalar.storage.v1',1000000,_bytelimit,_work)
     if body.locals() >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return; end
@@ -904,6 +981,36 @@ analysis: class
       return 0
     end
     return _ordered[callid] <> 0
+  /** Exact active argument selected by one original outer-body LINKARG.
+   * Zero denotes a0; -1 denotes a valid callee record without a rewrite.
+   * Each root activation owns its row, so repeated bodies cannot overwrite
+   * another site's selector. No lookup consumes handed-off work. */
+  argumentselector: method = .int
+    arg callid = .int, recordid = .int
+    ordinal = .int; row = .numbers
+    call require()
+    if valid() = 0 then return -1
+    if callid < 1 | callid > _body[0] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root call identity"
+      return -1
+    end
+    if _body[callid] = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root call identity"
+      return -1
+    end
+    if recordid < 1 | recordid > _index.operations() then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: callee record identity"
+      return -1
+    end
+    if _index.blockfunction(_index.opblock(recordid)) <> _body[callid] | _index.opcode(recordid) <= 16 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: foreign callee record"
+      return -1
+    end
+    if recordid > _selectorordinal[0] then return -1
+    ordinal = _selectorordinal[recordid]
+    if ordinal = 0 then return -1
+    row = _selectors[callid] as .numbers
+    return row.at(ordinal)
   returnaction: method = .string
     arg callid = .int
     call require(); return _returnaction[callid]

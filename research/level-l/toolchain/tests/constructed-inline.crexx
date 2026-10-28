@@ -77,6 +77,163 @@ nestedordered: procedure = .int
   failures = failures + check(bin2x(graph.binary()) = bin2x(before),'ordered-window limit returns the exact original module')
   return failures
 
+/** A selected argument means its active slot at that instruction. The same
+ * source record can select different slots at two separately proved sites. */
+argumentselection: procedure = .int
+  failures = 0; variant = .int; i = .int; swaps = .int; links = .int; guards = .int; calls = .int; selected = .int
+  firstcall = .int; secondcall = .int; selectid = .int; guardid = .int; expected = .int; remaining = .int; localcount = .int
+  draft = .lltarget..draft; root = .lltarget..bodydraft; leaf = .lltarget..bodydraft
+  at = .llir..origin; original = .lltarget..module; result = .lltarget..module
+  item = .lltarget..record; next = .lltarget..record; originalselect = .lltarget..record; originalguard = .lltarget..record
+  left = .lltarget..operand; right = .lltarget..operand; selectedslot = .lltarget..operand
+  fields = .object[]; bindings = .object[]
+  do variant = 1 to 3
+    draft = .lltarget..draft('argumentselection.' || variant,'constructed.argumentselection',0)
+    at = draft.synthetic('finite current-active argument selection')
+    root = draft.procedure('main',4,at)
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(10),at)
+    ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(20),at)
+    ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(30),at)
+    call objectarraydrop fields
+    fields[1] = root.reg('r',3) as .object; fields[2] = .lltarget..operand.procedure('choose') as .object
+    fields[3] = root.reg('r',0) as .object; fields[4] = root.reg('r',1) as .object; fields[5] = root.reg('r',2) as .object
+    firstcall = root.emit('call3',fields,at); secondcall = 0
+    if variant = 1 then do
+      ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(31),at)
+      secondcall = root.emit('call3',fields,at)
+    end
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    localcount = 1
+    if variant = 2 then localcount = 0
+    leaf = draft.procedure('choose',localcount,at); guardid = 0
+    if variant = 1 then do
+      ignored = two(leaf,'swap',leaf.reg('a',1),leaf.reg('a',2),at)
+      guardid = three(leaf,'ichkrng',leaf.reg('a',3),.lltarget..operand.integer(30),.lltarget..operand.integer(31),at)
+      selectid = three(leaf,'linkarg',leaf.reg('r',0),leaf.reg('a',3),.lltarget..operand.integer(-29),at)
+      ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(99),at)
+      ignored = one(leaf,'unlink',leaf.reg('r',0),at)
+      ignored = one(leaf,'ret',leaf.reg('a',2),at)
+    end
+    else if variant = 2 then do
+      ignored = two(leaf,'load',leaf.reg('a',0),.lltarget..operand.integer(77),at)
+      selectid = two(leaf,'linkarg',leaf.reg('a',1),.lltarget..operand.integer(0),at)
+      ignored = one(leaf,'ret',leaf.reg('a',1),at)
+    end
+    else do
+      ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(1),at)
+      guardid = three(leaf,'ichkrng',leaf.reg('r',0),.lltarget..operand.integer(0),.lltarget..operand.integer(3),at)
+      selectid = three(leaf,'linkarg',leaf.reg('r',0),leaf.reg('r',0),.lltarget..operand.integer(1),at)
+      ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    end
+    original = draft.finish()
+    failures = failures + check(original.valid(),'finite selector target verifies ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(facts.status() = 'ok','finite selector has checked current-frame facts ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    expected = 2
+    if variant = 1 then expected = 1
+    if variant = 2 then expected = 0
+    remaining = facts.remaining()
+    failures = failures + check(facts.argumentselector(firstcall,selectid) = expected & facts.rebinding(firstcall),'checked selector preserves zero and forces immutable base anchors ' || variant)
+    failures = failures + check(facts.returnaction(firstcall) = 'copy','linked original local or argument returns remain whole COPY ' || variant)
+    if secondcall > 0 then failures = failures + check(facts.argumentselector(secondcall,selectid) = 2 & facts.argumentselector(firstcall,selectid) = 1,'second activation does not overwrite the first call-site selector')
+    failures = failures + check(facts.remaining() = remaining,'sealed selector queries do not consume handed-off work ' || variant)
+    call objectarraydrop bindings
+    bindings[1] = llinline..bind(reference original,firstcall,reference original,original.procedureid('choose')) as .object
+    if secondcall > 0 then bindings[2] = llinline..bind(reference original,secondcall,reference original,original.procedureid('choose')) as .object
+    changed = llinline..expandmany(bindings,'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'changed','finite LINKARG lowers with ordinary LINK ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    result = changed.result(); body = result.body(result.procedureid('main'))
+    if guardid > 0 then originalguard = original.at(guardid)
+    swaps = 0; links = 0; guards = 0; calls = 0; selected = 0
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if wordpos(item.mnemonic(),'call call1 call2 call3 call4 linkarg') > 0 then calls = calls + 1
+      if item.mnemonic() = 'ichkrng' then do
+        guards = guards + 1
+        failures = failures + check(item.opcode() = originalguard.opcode(),'passing range check retains its exact original opcode ' || variant)
+      end
+      if item.mnemonic() = 'copy' then links = links + 1
+      if variant = 1 & item.mnemonic() = 'swap' then do
+        swaps = swaps + 1
+        if swaps % 2 = 1 then do
+          /* The passing guard is retained between the source SWAP and LINK. */
+          next = body.record(i + 2); expected = 1
+          if swaps = 3 then expected = 2
+          selectedslot = item.operand(expected); left = next.operand(1); right = next.operand(2)
+          failures = failures + check(next.mnemonic() = 'link' & right.index() = selectedslot.index(),'each site links to its proved active argument after SWAP')
+          next = body.record(i + 4); right = next.operand(1); selectedslot = next.operand(2)
+          failures = failures + check(next.mnemonic() = 'link' & right.index() = left.index() & selectedslot.index() <> left.index(),'original UNLINK restores the encoded local through a distinct anchor')
+          selected = selected + 1
+        end
+      end
+      else if variant > 1 & item.mnemonic() = 'load' then do
+        left = item.operand(1); right = item.operand(2)
+        if (variant = 2 & right.index() = 77) | (variant = 3 & right.index() = 1) then do
+          next = body.record(i + variant - 1); selectedslot = next.operand(1); right = next.operand(2)
+          failures = failures + check(next.mnemonic() = 'link','immediate or destination-aliased selector becomes ordinary LINK ' || variant)
+          if variant = 2 then failures = failures + check(right.index() = left.index(),'index zero selects the current mutable a0, not captured arity')
+          else failures = failures + check(selectedslot.index() = left.index() & right.index() <> left.index(),'selector is evaluated before its destination is rebound')
+          selected = selected + 1
+        end
+      end
+    end
+    expected = 1
+    if variant = 1 then expected = 2
+    failures = failures + check(calls = 0 & selected = expected & links = expected,'selected calls and LINKARG are removed with exact COPY returns ' || variant)
+    failures = failures + check(swaps = 4 * (variant = 1) & guards = expected * (variant <> 2),'only authored and inverse swaps remain; passing guards retain their opcode ' || variant)
+    originalselect = original.at(selectid); item = result.at(changed.operation(selectid))
+    failures = failures + check(item.opcode() = originalselect.opcode(),'unexpanded source helper retains its original LINKARG opcode ' || variant)
+  end
+  return failures
+
+argumentkeeps: procedure = .int
+  failures = 0; variant = .int; initial = .int
+  reasons = .string[]
+  reasons[1] = 'argument.selector.unproved'; reasons[2] = 'argument.selector.overflow.unproved'
+  reasons[3] = 'argument.selector.bank.unproved'; reasons[4] = 'argument.range.unproved'; reasons[5] = 'argument.range.failure.unproved'
+  draft = .lltarget..draft; root = .lltarget..bodydraft; leaf = .lltarget..bodydraft
+  at = .llir..origin; original = .lltarget..module; kept = .lltarget..module
+  fields = .object[]
+  do variant = 1 to 5
+    draft = .lltarget..draft('argumentkeep.' || variant,'constructed.argumentkeep',0)
+    at = draft.synthetic('unproved selection retains the exact original call')
+    root = draft.procedure('main',3,at); initial = 3
+    if variant = 2 then initial = 9223372036854775807
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(initial),at)
+    ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(1),at)
+    if variant = 1 | variant = 4 then ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',1),.lltarget..operand.integer(768),at)
+    call objectarraydrop fields
+    fields[1] = root.reg('r',2) as .object; fields[2] = .lltarget..operand.procedure('choose') as .object
+    fields[3] = root.reg('r',0) as .object; fields[4] = root.reg('r',1) as .object
+    callid = root.emit('call2',fields,at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    leaf = draft.procedure('choose',1,at)
+    if variant > 3 then do
+      ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(0),.lltarget..operand.integer(2),at)
+      ignored = two(leaf,'linkarg',leaf.reg('r',0),.lltarget..operand.integer(1),at)
+    end
+    else do
+      initial = 0
+      if variant = 2 then initial = 1
+      ignored = three(leaf,'linkarg',leaf.reg('r',0),leaf.reg('a',1),.lltarget..operand.integer(initial),at)
+    end
+    ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    original = draft.finish()
+    failures = failures + check(original.valid(),'unproved selector/range still has a valid original target ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    graph = dereference original.ir(); before = graph.binary()
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('choose'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = reasons[variant],'specific selector/range proof refusal ' || variant)
+    kept = changed.result(); graph = dereference kept.ir()
+    failures = failures + check(bin2x(graph.binary()) = bin2x(before),'unproved selector/range publishes unchanged original IR ' || variant)
+  end
+  return failures
+
 main: procedure = .int
   failures = 0
   draft = .lltarget..draft('constructed','constructed.fixture',0)
@@ -178,5 +335,6 @@ main: procedure = .int
   ignored = two(a,'load',a.reg('r',0),.lltarget..operand.string(huge),at)
   failures = failures + check(pos('budget',small.error()) > 0,'payload preflight fails before vector allocation')
   failures = failures + nestedordered()
+  failures = failures + argumentselection() + argumentkeeps()
   say 'CONSTRUCTED_INLINE|failures=' || failures
   return failures
