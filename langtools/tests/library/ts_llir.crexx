@@ -414,6 +414,86 @@ origins: procedure = .int
   failures = failures + check(bin2x(at.sourcebytes()) = 'CEB10D0A00FF','exact source bytes including CRLF, NUL and opaque byte')
   parent = at.parent(1)
   failures = failures + check(at.kind() = 'derived' & parent.kind() = 'exact','derived provenance survives image')
+  return failures + contributingorigins(contract) + originrefusals(contract)
+
+/** A contributor DAG retains source order and repeated contributors through
+ * the existing text/binary wire. Legacy zero/one-parent rows have fixed fields. */
+contributingorigins: procedure = .int
+  arg contract = .llir..contract
+  draft = .llir..builder(contract); source = draft.source('contributors','abcdef' as .binary)
+  first = source.origin(0,2); second = source.origin(4,6)
+  parents = .object[]; parents[1] = second as .object; parents[2] = first as .object; parents[3] = second as .object
+  combined = source.contributingorigin(0,6,'composite',parents)
+  outer = .object[]; outer[1] = combined as .object; outer[2] = first as .object
+  derived = source.contributingorigin(0,6,'derived',outer)
+  fn = draft.function('contributors',contract.voidtype()); entry = fn.block('entry'); call entry.returnvoid(derived)
+  graph = draft.finish(); failures = check(graph.error() = '','ordered contributor DAG verifies')
+  if graph.error() <> '' then return failures
+  restored = llir..loadbinary(contract,graph.binary()); op = restored.operation(1); at = op.origin()
+  child = at.parent(1); left = child.parent(1); middle = child.parent(2); right = child.parent(3); root = at.parent(2)
+  failures = failures + check(restored.error() = '' & at.kind() = 'derived' & at.parents() = 2 & child.kind() = 'composite' & child.parents() = 3,'multi-parent DAG survives without flattening')
+  failures = failures + check(left.first() = 4 & left.last() = 6 & middle.first() = 0 & middle.last() = 2 & left.id() = right.id() & root.id() = middle.id(),'contributor order, multiplicity and shared ancestry survive')
+  failures = failures + check(bin2x(restored.binary()) = bin2x(graph.binary()),'multi-parent origin image round trip is exact')
+  legacy = origincompat(contract,0); extended = origincompat(contract,1)
+  expected = 'origins 2 6' || '0a'x || '1 0 2 1 0 0' || '0a'x || '1 0 2 3 1 1' || '0a'x
+  expectedparents = 'contributors 1 1' || '0a'x || '1' || '0a'x
+  failures = failures + check(legacy.error() = '' & extended.error() = '' & pos(expected,legacy.text()) > 0 & pos(expectedparents,legacy.text()) > 0,'zero/one-parent records retain the legacy wire fields')
+  failures = failures + check(bin2x(legacy.binary()) = bin2x(extended.binary()),'zero/one-parent entry points retain complete byte compatibility')
+  return failures
+
+origincompat: procedure = .llir..module
+  arg contract = .llir..contract, mode = .int
+  first = .llir..origin; child = .llir..origin; parents = .object[]
+  draft = .llir..builder(contract); source = draft.source('compat','ab' as .binary)
+  if mode = 0 then do
+    first = source.origin(0,2); child = first.derive()
+  end
+  else do
+    first = source.contributingorigin(0,2,'exact',parents); parents[1] = first as .object
+    child = source.contributingorigin(0,2,'derived',parents)
+  end
+  fn = draft.function('origin.compat',contract.voidtype()); entry = fn.block('entry'); call entry.returnvoid(child)
+  return draft.finish()
+
+originrefusals: procedure = .int
+  arg contract = .llir..contract
+  store = .llir..arena; parents = .int[]; failures = 0
+  mode = .int; sourceid = .int; rootid = .int; sourcearg = .int; first = .int; last = .int; kind = .int; result = .int
+  beforeentries = .int; beforebytes = .int; budget = .int; entries = .int
+  do mode = 1 to 8
+    store = .llir..arena(contract); sourceid = store.source('s','abc' as .binary); rootid = store.origin(sourceid,0,3)
+    parents[1] = rootid; sourcearg = sourceid; first = 0; last = 3; kind = 2
+    select
+      when mode = 1 then parents[1] = 0
+      when mode = 2 then parents[1] = -1
+      when mode = 3 then parents[1] = rootid + 1
+      when mode = 4 then parents[1] = 999
+      when mode = 5 then sourcearg = 0
+      when mode = 6 then first = -1
+      when mode = 7 then last = 4
+      otherwise kind = 6
+    end
+    beforeentries = store.entries(); beforebytes = store.bytes()
+    result = store.contributingorigin(sourcearg,first,last,kind,parents)
+    failures = failures + check(result = 0 & pos('LL_IR_ORIGIN',store.error()) > 0 & store.count(9) = 1 & store.count(13) = 0 & store.entries() = beforeentries & store.bytes() = beforebytes,'invalid contributor input refuses before row mutation case ' || mode)
+  end
+  store = .llir..arena(contract); sourceid = store.source('s','abc' as .binary); rootid = store.origin(sourceid,0,3)
+  foreign = .llir..arena(contract); foreignsource = foreign.source('s','abc' as .binary); foreignroot = foreign.origin(foreignsource,0,3)
+  source = .llir..sourcefile(reference store,sourceid); handle = .llir..origin(reference foreign,foreignroot)
+  handles = .object[]; handles[1] = handle as .object; beforeentries = store.entries(); beforebytes = store.bytes()
+  rejected = source.contributingorigin(0,3,'composite',handles)
+  failures = failures + check(rejected.valid() = 0 & pos('LL_IR_OWNER',store.error()) > 0 & store.count(9) = 1 & store.count(13) = 0 & store.entries() = beforeentries & store.bytes() = beforebytes,'foreign contributor with a matching numeric ID is refused before mutation')
+  do mode = 1 to 3
+    entries = 1000; budget = 1000
+    if mode = 1 then entries = 6
+    if mode = 2 then budget = 67
+    if mode = 3 then entries = 5
+    store = .llir..arena(contract,entries,budget); sourceid = store.source('s','abc' as .binary); rootid = store.origin(sourceid,0,3)
+    parents[1] = rootid; parents[2] = rootid; beforeentries = store.entries(); beforebytes = store.bytes()
+    if mode = 3 then result = store.origin(sourceid,0,3,3,rootid)
+    else result = store.contributingorigin(sourceid,0,3,2,parents)
+    failures = failures + check(result = 0 & pos('LL_RESOURCE_LIMIT',store.error()) > 0 & store.count(9) = 1 & store.count(13) = 0 & store.entries() = beforeentries & store.bytes() = beforebytes,'origin and contributors are prospectively reserved together case ' || mode)
+  end
   return failures
 
 registration: procedure = .int

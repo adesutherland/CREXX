@@ -401,6 +401,21 @@ include `first`, `last`, `filename`, `sourcebytes`, `kind`, `parents` and `paren
 Kinds are `exact`, `composite`, `derived`, `synthetic` and `recovered`. Any
 recovered origin prevents successful executable-module publication.
 
+`source.contributingorigin(first,last,kind,parents)` accepts an ordered
+`.object[]` of `llir.origin` handles belonging to that exact arena. It retains
+every contributor, including repeated handles and shared DAG ancestors.
+Foreign, expired, future or invalid handles fail before adding origin rows.
+The low-level `arena.contributingorigin(source_id,first,last,kind,parents)`
+accepts the existing numeric kind and a `.int[]` of positive prior-origin IDs.
+Both APIs preserve input order and multiplicity. Construction validates the
+complete source/range/kind/parent set and prospectively checks the existing
+entry/byte limits for one six-column origin row and all contributor rows.
+Invalid input or insufficient budget adds neither origin nor contributor rows.
+`arena.origin(...,parent=0)` delegates through the same algorithm with zero or
+one contributor. The existing origin/contributor tables, successful legacy
+bytes and wire version are unchanged; no alternate provenance structure or
+parent-count restriction is introduced.
+
 `finish()` freezes and verifies the complete draft, including unreachable
 blocks. On failure the result reports an error and exposes no successful graph
 or encoded output. Existing published modules remain usable. A published module

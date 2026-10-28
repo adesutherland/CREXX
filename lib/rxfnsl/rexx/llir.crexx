@@ -1026,20 +1026,51 @@ arena: class
     return id
   origin: method = .int
     arg source = .int, first = .int, last = .int, kind = 1, parent = 0
+    parents = .int[]
+    if parent <> 0 then parents[1] = parent
+    return contributingorigin(source,first,last,kind,parents)
+  /** Construct one origin with ordered prior contributors. Validate and reserve
+   * the complete existing wire shape before adding any origin or parent row.
+   * @param source Existing source ID.
+   * @param first First byte, inclusive.
+   * @param last Last byte, exclusive.
+   * @param kind Existing numeric provenance kind (1..5).
+   * @param parents Ordered positive prior-origin IDs; repeats remain repeats.
+   * @return New origin ID, or zero with the owning arena diagnostic.
+   */
+  contributingorigin: method = .int
+    arg source = .int, first = .int, last = .int, kind = .int, parents = .int[]
+    sourcebytes = .binary; extent = .int; prior = .int; total = .int; i = .int; id = .int; link = .int; start = .int
+    if canreserve(0,0) = 0 then return 0
     if source < 1 | source > count(10) | first < 0 | last < first | kind < 1 | kind > 5 then do
       call fail('LL_IR_ORIGIN: invalid source range or provenance'); return 0
     end
     sourcebytes = bits(get(10,source,2)); extent = <blen>(sourcebytes)
-    if last > extent | parent < 0 | parent > count(9) then do
+    if last > extent | last > 4294967295 then do
       call fail('LL_IR_ORIGIN: range or parent is outside its source'); return 0
     end
+    prior = count(9); total = parents[0]
+    do i = 1 to total
+      if parents[i] < 1 | parents[i] > prior then do
+        call fail('LL_IR_ORIGIN: range or parent is outside its source'); return 0
+      end
+    end
+    if prior = 4294967295 | total > 4294967295 - count(13) then do
+      call fail('LL_RESOURCE_LIMIT: ir.origin table or contributors exhausted'); return 0
+    end
+    /* The u32 row bound above also makes both prospective sums safe in .int. */
+    if canreserve(1 + total,24 + total * 4) = 0 then return 0
     id = add(9)
     if id = 0 then return 0
     call put(9,id,1,source); call put(9,id,2,first); call put(9,id,3,last); call put(9,id,4,kind)
-    if parent > 0 then do
+    start = count(13) + 1
+    do i = 1 to total
       link = add(13)
       if link = 0 then return 0
-      call put(13,link,1,parent); call put(9,id,5,link); call put(9,id,6,1)
+      call put(13,link,1,parents[i])
+    end
+    if total > 0 then do
+      call put(9,id,5,start); call put(9,id,6,total)
     end
     return id
   constant: method = .int
@@ -1746,6 +1777,29 @@ sourcefile: class
     call require(); store = dereference _owner
     id = store.origin(_id,first,last,wordpos(kind,'exact composite derived synthetic recovered'))
     return .llir..origin(_owner,id)
+  /** Construct provenance with every contributor owned by this exact arena.
+   * @param first First byte, inclusive.
+   * @param last Last byte, exclusive.
+   * @param kind exact, composite, derived, synthetic or recovered.
+   * @param parents Ordered origin handles; order and multiplicity survive.
+   * @return New origin handle, or an invalid handle with the arena diagnostic.
+   */
+  contributingorigin: method = .llir..origin
+    arg first = .int, last = .int, kind = .string, parents = .object[]
+    store = .llir..arena; parent = .llir..origin; ids = .int[]; i = .int; id = .int
+    call require(); owner = _owner; store = dereference owner
+    do i = 1 to parents[0]
+      if parents[i] is .llir..origin then parent = parents[i] as .llir..origin
+      else do
+        call store.fail('LL_IR_OWNER: contributing parent must be an origin handle'); return .llir..origin(owner,0)
+      end
+      if parent.belongs(owner) = 0 then do
+        call store.fail('LL_IR_OWNER: contributing origin belongs to another or expired arena'); return .llir..origin(owner,0)
+      end
+      ids[i] = parent.id()
+    end
+    id = store.contributingorigin(_id,first,last,wordpos(kind,'exact composite derived synthetic recovered'),ids)
+    return .llir..origin(owner,id)
 
 /** Borrowed opview handle. A reference plus owner serial prevents stale reuse. */
 opview: class

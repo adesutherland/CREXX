@@ -124,8 +124,8 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | todo; after 03; AC02–04/06/07. Batch the reviewed alias/rebinding, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | todo; after each coherent conservative category, with final qualification after 04; AC02–07. Implement bounded machine proofs and minimum cleanup as a separate callable pass. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. The scalar/metadata/batch category is under implementation. Complete the reviewed alias/rebinding, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness and canonical fact extraction are qualified; the separate transport proof/cleanup consumer is under implementation. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -260,6 +260,21 @@ the complete optimizer; those remain open work through these same seams.
 The generic access/liveness extension and compatible catalogue extraction are
 implemented and qualified by their selected independent owner checks. Target
 adapter and cleanup integration remains in progress.
+
+Contributor preservation uses one additive L construction API:
+`arena.contributingorigin(sourceId,first,last,kind,parents)` accepts ordered
+prior-origin IDs, and `sourcefile.contributingorigin(first,last,kind,parents)`
+accepts exact-owned origin handles. Validate all inputs and prospectively
+reserve the existing origin/contributor rows before mutation; preserve order
+and multiplicity. Existing single-parent `arena.origin` delegates to the same
+algorithm with zero/one parent, keeping its bytes and wire contract unchanged.
+The target facade delegates; copying retains all parents, and inline provenance
+contributes both the complete copied body origin and call-site origin. No
+private provenance structure, flattening or parent-count admission guard is
+needed. Qualify this shared API independently before the target consumer;
+batch the resulting generator refresh after target source/owner checks.
+The shared contributor API and its independent compatibility/failure controls
+are implemented and qualified; target consumer integration remains open.
 
 ### Reviewed scalar and transport increment
 
