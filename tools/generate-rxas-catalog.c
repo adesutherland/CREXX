@@ -37,13 +37,14 @@ static void signature(FILE *out, const RxOpEffects *effect, size_t count,
     }
 }
 
-static void components(FILE *out, int opcode, size_t count, int writes) {
+static void components(FILE *out, int opcode, size_t count, int which) {
     size_t i;
     if (!count) { fputc('-', out); return; }
     for (i = 0; i < count; ++i) {
         if (i) fputc(',', out);
-        fprintf(out, "%u", writes ? rxop_component_writes(opcode, i) :
-                                   rxop_component_reads(opcode, i));
+        fprintf(out, "%u", which == 0 ? rxop_component_reads(opcode, i) :
+                           which == 1 ? rxop_component_writes(opcode, i) :
+                                        rxop_component_clears(opcode, i));
     }
 }
 
@@ -64,7 +65,10 @@ static const Query queries[] = {
     {"failurecontext", 22, 1}, {"signaldependencies", 23, 1},
     {"continuations", 24, 1}, {"signalproperties", 25, 1},
     {"policyeffect", 26, 1}, {"policysource", 27, 1},
-    {"policysourceoperand", 28, 1}, {"policyname", 29, 0}
+    {"policysourceoperand", 28, 1}, {"policyname", 29, 0},
+    {"samecopyisnoop", 32, 1}, {"derivation", 33, 1},
+    {"derivationsource", 34, 1}, {"derivationcomponent", 35, 1},
+    {"contextreads", 36, 1}, {"contextwrites", 37, 1}
 };
 
 static int compare_lookup(const void *a, const void *b) {
@@ -141,6 +145,7 @@ int main(int argc, char **argv) {
         const OpInfo *op = &op_table[opcode];
         RxOpEffects effect = rxop_effects(opcode);
         RxOpSignalContract signal = rxop_signal_contract(opcode);
+        size_t derivation_source = rxop_derivation_source_operand(opcode);
         size_t count = rxop_format_operand_count(op->format), i;
         char name[128];
         for (i = 0; op->mnemonic[i] && op->mnemonic[i] != '_' &&
@@ -167,7 +172,7 @@ int main(int argc, char **argv) {
         if (!count) fputc('-', rows);
         for (i = 0; i < count; ++i)
             fputc(rxop_signal_failure_writes_operand(&signal, i) ? '1' : '0', rows);
-        fprintf(rows, " %u %u %u %u %u %d %d %lld %s %d\n",
+        fprintf(rows, " %u %u %u %u %u %d %d %lld %s %d ",
                 signal.failure_component_writes, signal.failure_context_writes,
                 signal.dependencies, signal.continuations, signal.properties,
                 (int)signal.policy_effect, (int)signal.policy_source,
@@ -175,6 +180,13 @@ int main(int argc, char **argv) {
                 nonempty(signal.policy_static_name),
                 (effect.semantics & (RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_INDIRECT_BRANCH)) != 0 ||
                 (signal.properties & RXOP_SIGNAL_PROP_ASYNC_ENTRY) != 0);
+        components(rows, opcode, count, 2);
+        fprintf(rows, " %d %d %lld %u %u %u\n",
+                rxop_same_storage_copy_is_noop(opcode),
+                (int)rxop_value_derivation(opcode),
+                derivation_source == SIZE_MAX ? -1LL : (long long)derivation_source,
+                rxop_derivation_source_component(opcode),
+                rxop_derivation_context_reads(opcode), rxop_context_writes(opcode));
         row_size[opcode] = (uint32_t)ftell(rows) - row_start[opcode];
     }
     qsort(lookup, lookup_count, sizeof(*lookup), compare_lookup);
@@ -225,7 +237,11 @@ int main(int argc, char **argv) {
           "  readcomponents: method = .int\n    arg opcode = .int, operand = .int\n"
           "    return word(translate(field(opcode,13),' ',','),operand) as .int\n"
           "  writecomponents: method = .int\n    arg opcode = .int, operand = .int\n"
-          "    return word(translate(field(opcode,14),' ',','),operand) as .int\n", out);
+          "    return word(translate(field(opcode,14),' ',','),operand) as .int\n"
+          "  /* Operand queries are one-based; derivationsource retains the native\n"
+          "   * zero-based operand index, with -1 for no derivation source. */\n"
+          "  clearcomponents: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,31),' ',','),operand) as .int\n", out);
     for (entry = 0; entry < sizeof(queries) / sizeof(*queries); ++entry) {
         const Query *query = &queries[entry];
         fprintf(out, "  %s: method = .%s\n    arg opcode = .int\n", query->name,
