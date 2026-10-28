@@ -62,12 +62,15 @@ cells: class
   _values = .int[]
   _plain = .int[]
   _flags = .int[]
+  _wholeknown = .int[]
+  _zeroed = .int[]
   *: factory
     return
   add: method = .int
     arg defined = 0, known = 0, value = 0
     n = _defined[0] + 1
     _defined[n] = defined; _known[n] = known; _values[n] = value; _plain[n] = 1; _flags[n] = 0
+    _wholeknown[n] = 1; _zeroed[n] = 0
     return n
   defined: method = .int
     arg id = .int
@@ -84,18 +87,35 @@ cells: class
   flags: method = .int
     arg id = .int
     return _flags[id]
+  wholeknown: method = .int
+    arg id = .int
+    return _wholeknown[id]
+  zeroed: method = .int
+    arg id = .int
+    return _zeroed[id]
+  uncertain: method = .void
+    arg id = .int
+    /* The scalar profile proves no native/reference payload was created.
+     * Recycled ordinary components/status still cannot be assumed fresh. */
+    _defined[id] = 0; _known[id] = 0; _wholeknown[id] = 0; _zeroed[id] = 0
+    return
   integer: method = .void
     arg id = .int, known = .int, value = 0
-    _defined[id] = 1; _known[id] = known; _values[id] = value
+    _defined[id] = 1; _known[id] = known; _values[id] = value; _zeroed[id] = 0
     return
   reset: method = .void
     arg id = .int
     _defined[id] = 1; _known[id] = 1; _values[id] = 0; _plain[id] = 1; _flags[id] = 0
+    _wholeknown[id] = 1; _zeroed[id] = 1
     return
   copy: method = .void
     arg destination = .int, source = .int, whole = 1
     _defined[destination] = _defined[source]; _known[destination] = _known[source]; _values[destination] = _values[source]
-    if whole then do; _plain[destination] = _plain[source]; _flags[destination] = _flags[source]; end
+    if whole then do
+      _plain[destination] = _plain[source]; _flags[destination] = _flags[source]
+      _wholeknown[destination] = _wholeknown[source]; _zeroed[destination] = _zeroed[source]
+    end
+    else _zeroed[destination] = 0
     return
   move: method = .void
     arg destination = .int, source = .int
@@ -105,11 +125,11 @@ cells: class
     return
   status: method = .void
     arg id = .int, flags = .int
-    _flags[id] = flags
+    _flags[id] = flags; _zeroed[id] = 0
     return
   string: method = .void
     arg id = .int
-    _plain[id] = 0
+    _plain[id] = 0; _zeroed[id] = 0
     return
 
 frame: class
@@ -120,13 +140,19 @@ frame: class
   _arguments = .int
   _context = .string
   *: factory
-    arg owner = reference .cells, locals = .int, actuals = .int[], fresh = 0, context = ''
+    arg owner = reference .cells, locals = .int, actuals = .int[], fresh = 0, context = '', ?owned = .int[]
     i = .int; id = .int; at = .int
     state = dereference owner; _locals = locals; _arguments = actuals[0]; _context = context
     do i = 1 to locals
-      id = state.add(fresh,fresh,0); _map[i] = id; _base[i] = id; _identity[i] = i
+      if ?owned then id = owned[i]
+      else id = state.add(fresh,fresh,0)
+      _map[i] = id; _base[i] = id; _identity[i] = i
     end
-    id = state.add(1,1,actuals[0]); _map[locals + 1] = id; _base[locals + 1] = id; _identity[locals + 1] = locals + 1
+    if ?owned then do
+      id = owned[locals + 1]; call state.reset(id); call state.integer(id,1,actuals[0])
+    end
+    else id = state.add(1,1,actuals[0])
+    _map[locals + 1] = id; _base[locals + 1] = id; _identity[locals + 1] = locals + 1
     do i = 1 to actuals[0]
       at = locals + 1 + i; _map[at] = actuals[i]; _base[at] = actuals[i]; _identity[at] = at
     end
@@ -147,6 +173,10 @@ frame: class
     at = position(value)
     if at = 0 then return 0
     return _base[at]
+  baseat: method = .int
+    arg position = .int
+    if position < 1 | position > _base[0] then assembler signal "ERROR","LL_TARGET_FACTS_ID: frame base ordinal"
+    return _base[position]
   link: method = .void
     arg destination = .lltarget..operand, source = .lltarget..operand
     _map[position(destination)] = storage(source)
@@ -205,7 +235,12 @@ analysis: class
   _windowblocked = .int[]
   _profile = .string
   _activations = .int[]
-  _reset = .int[]
+  _owned = .object[]
+  _reset = .object[]
+  _rebinding = .int[]
+  _returnaction = .string[]
+  _swaps = .object[]
+  _swapcount = .int[]
   _bytelimit = .int
   _retained = .int
   *: factory
@@ -251,7 +286,7 @@ analysis: class
     values[values[0] + 1] = id
     return
   step: method = .int
-    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1, returnwhole = 1
     i = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
     opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
     source = .lltarget..operand; bank = .lltarget..operand; reference_value = .lltarget..operand; option = .lltarget..operand
@@ -280,6 +315,7 @@ analysis: class
           if left(option.text(),1) = '.' & option.text() <> '.inline' then return reject('metadata.runtime.observer.unproved')
         end
         do i = 1 to references[0]
+          if state.wholeknown(references[i]) = 0 then return reject('local.recycler.observation.unproved')
           call insert(reference observations,domain(references[i],1))
         end
       end
@@ -288,7 +324,7 @@ analysis: class
         if source.text() = 'K' & reference_value.index() >= 0 then return reject('metadata.constant.reference.pending')
         if source.text() = 'R' & reference_value.index() >= 0 & references[0] <> 1 then return reject('metadata.register.reference.unproved')
         do i = 1 to references[0]
-          if state.defined(references[i]) = 0 then return reject('local.recycler.observation.unproved')
+          if state.defined(references[i]) = 0 | state.wholeknown(references[i]) = 0 then return reject('local.recycler.observation.unproved')
           call insert(reference observations,domain(references[i],1))
         end
       end
@@ -325,6 +361,7 @@ analysis: class
         if value.kind() = 'R' then do
           id = view.storage(value)
           if id = 0 | state.defined(id) = 0 then return reject('local.recycler.history.unproved')
+          if returnwhole & state.wholeknown(id) = 0 then return reject('local.recycler.history.unproved')
           call insert(reference reads,domain(id,1))
         end
         else if value.kind() <> 'I' then return reject('profile.return.component.pending')
@@ -332,22 +369,26 @@ analysis: class
     end
     else if name = 'cnop' then nop
     else if wordpos(name,'link unlink swap') > 0 then do
-      if private then return reject('profile.callee.rebinding.pending')
       left = item.operand(1)
-      call insert(reference writes,bindingdomain(left,'active')); call insert(reference kills,bindingdomain(left,'active'))
+      if record then do
+        call insert(reference writes,bindingdomain(left,'active')); call insert(reference kills,bindingdomain(left,'active'))
+      end
       if name = 'unlink' then do
-        call insert(reference reads,bindingdomain(left,'base')); call view.unlink(left)
+        if record then call insert(reference reads,bindingdomain(left,'base'))
+        call view.unlink(left)
       end
       else do
         right = item.operand(2)
-        call insert(reference reads,bindingdomain(right,'active'))
+        if record then call insert(reference reads,bindingdomain(right,'active'))
         if name = 'link' then call view.link(left,right)
         else do
-          call insert(reference reads,bindingdomain(left,'active'))
-          call insert(reference writes,bindingdomain(right,'active')); call insert(reference kills,bindingdomain(right,'active'))
-          call insert(reference reads,bindingdomain(left,'identity')); call insert(reference reads,bindingdomain(right,'identity'))
-          call insert(reference writes,bindingdomain(left,'identity')); call insert(reference kills,bindingdomain(left,'identity'))
-          call insert(reference writes,bindingdomain(right,'identity')); call insert(reference kills,bindingdomain(right,'identity'))
+          if record then do
+            call insert(reference reads,bindingdomain(left,'active'))
+            call insert(reference writes,bindingdomain(right,'active')); call insert(reference kills,bindingdomain(right,'active'))
+            call insert(reference reads,bindingdomain(left,'identity')); call insert(reference reads,bindingdomain(right,'identity'))
+            call insert(reference writes,bindingdomain(left,'identity')); call insert(reference kills,bindingdomain(left,'identity'))
+            call insert(reference writes,bindingdomain(right,'identity')); call insert(reference kills,bindingdomain(right,'identity'))
+          end
           call view.swap(left,right)
         end
       end
@@ -383,6 +424,7 @@ analysis: class
         else if wordpos(name,'copy icopy move') > 0 then do
           right = item.operand(2); sourceid = view.storage(right)
           if sourceid = 0 | state.defined(sourceid) = 0 then return reject('local.recycler.history.unproved')
+          if name <> 'icopy' & state.wholeknown(sourceid) = 0 then return reject('local.recycler.history.unproved')
           if state.plain(sourceid) = 0 & private then return reject('argument.scalar.state.unproved')
           call insert(reference reads,domain(sourceid,name <> 'icopy'))
           if name = 'move' then call state.move(destination,sourceid)
@@ -423,13 +465,14 @@ analysis: class
     return 1
   invoke: method = .int
     arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells
-    i = .int; j = .int; ignored = .int; privatecell = .int; repeated = .int
+    i = .int; j = .int; ignored = .int; repeated = .int
     id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
     callee = .lltarget..body; child = .frame; record = .lltarget..record
     value = .lltarget..operand; target = .lltarget..operand
+    ownedrow = .numbers; resetrow = .numbers
     if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
     module = dereference _owner; state = dereference state_ref; name = item.mnemonic(); count = 0; first = 0
-    actuals = .int[]; positions = .int[]; references = .int[]
+    actuals = .int[]; positions = .int[]; references = .int[]; owned = .int[]; reset = .int[]; swaps = .int[]
     reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]
     if name = 'call' then do
       if item.operands() = 1 then target = item.operand(1)
@@ -457,66 +500,73 @@ analysis: class
       else value = item.operand(i + 2)
       if value.bank() <> 'r' then return reject('argument.storage.unproved')
       id = view.storage(value)
-      if id = 0 | state.defined(id) = 0 | state.plain(id) = 0 then return reject('argument.scalar.state.unproved')
+      if id = 0 | state.defined(id) = 0 | state.plain(id) = 0 | state.wholeknown(id) = 0 then return reject('argument.scalar.state.unproved')
       actuals[i] = id; positions[i] = value.index(); call insert(reference reads,domain(id,1))
     end
     callee = module.body(bodyid)
     if _index.functionblocks(bodyid) <> 1 then return reject('profile.callee.cfg.pending')
-    /* A fresh standalone image proves first activation. For another use of
-     * this procedure, the currently supported history proof requires every
-     * observed private cell to be the owned RET cell reset by the prior MOVE.
-     * Integer success alone does not clear its other components/status. */
-    privatecell = -1; repeated = _activations[bodyid] > 0
-    do i = 1 to _index.functionoperations(bodyid)
-      recordid = _index.functionoperation(bodyid,i)
-      if _index.opcode(recordid) <= 16 then iterate
-      record = module.at(recordid)
-      if record.kind() = 'instruction' & record.mnemonic() = 'ret' & record.operands() = 1 then do
-        value = record.operand(1)
-        if value.kind() = 'R' & value.bank() = 'r' then privatecell = value.index()
-      end
-    end
-    if repeated then do i = 1 to _index.functionoperations(bodyid)
-      recordid = _index.functionoperation(bodyid,i)
-      if _index.opcode(recordid) <= 16 then iterate
-      record = module.at(recordid)
-      do j = 1 to record.registerrefs()
-        value = record.registerref(j)
-        if value.bank() = 'r' & value.index() <> privatecell then return reject('local.recycler.history.unproved')
-      end
-    end
-    if repeated & privatecell >= 0 & _reset[bodyid] <> privatecell + 1 then return reject('local.recycler.history.unproved')
-    _activations[bodyid] = _activations[bodyid] + 1
-    if count >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-    if callee.locals() > _work - count - 1 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-    if spend(callee.locals() + count + 1) = 0 then return 0
-    if reserve(callee.locals() + 1,64) = 0 | reserve(callee.locals() + count + 1,24) = 0 then return 0
-    child = .frame(state_ref,callee.locals(),actuals,0,view.context()); returned = 0
-    do i = 1 to _index.functionoperations(bodyid)
-      recordid = _index.functionoperation(bodyid,i)
-      if _index.opcode(recordid) <= 16 then iterate
-      record = module.at(recordid)
-      if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
-      if step(record,child,state_ref,1,0) = 0 then return 0
-      if record.kind() = 'instruction' & record.mnemonic() = 'ret' then returned = record.id()
-    end
-    if returned = 0 then return reject('return.missing')
-    hasresult = item.operands() > 1
-    _reset[bodyid] = 0
+    /* Native recycling reuses each procedure's owned bases, but relinks its
+     * active map and resets slot identities. Keep those StorageIds stable.
+     * Only a proved whole reset lets a later inline site assume fresh state;
+     * mapping-only operands neither read nor overwrite the owned value. */
+    repeated = _activations[bodyid] > 0; hasresult = item.operands() > 1; destination = 0
     if hasresult then do
       value = item.operand(1); destination = view.storage(value)
       if destination = 0 then return reject('result.storage.unproved')
       if name = 'call' & item.operands() = 2 then call state.reset(destination)
+    end
+    if count >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if callee.locals() > _work - count - 1 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(callee.locals() + count + 1) = 0 then return 0
+    if reserve(callee.locals() + count + 1,24) = 0 | reserve(callee.locals() + 1,16) = 0 | reserve(4,32) = 0 then return 0
+    if repeated then do
+      ownedrow = _owned[bodyid] as .numbers; resetrow = _reset[bodyid] as .numbers
+      do i = 1 to callee.locals() + 1
+        owned[i] = ownedrow.at(i)
+        if i <= callee.locals() then do
+          if resetrow.at(i) = 0 then call state.uncertain(owned[i])
+        end
+      end
+      child = .frame(state_ref,callee.locals(),actuals,0,view.context(),owned)
+    end
+    else do
+      if reserve(callee.locals() + 1,80) = 0 then return 0
+      child = .frame(state_ref,callee.locals(),actuals,0,view.context())
+      do i = 1 to callee.locals() + 1; owned[i] = child.baseat(i); end
+      _owned[bodyid] = .numbers(owned) as .object
+    end
+    _activations[bodyid] = _activations[bodyid] + 1; returned = 0
+    do i = 1 to _index.functionoperations(bodyid)
+      if spend(1) = 0 then return 0
+      recordid = _index.functionoperation(bodyid,i)
+      if _index.opcode(recordid) <= 16 then iterate
+      record = module.at(recordid)
+      if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
+      if step(record,child,state_ref,1,0,hasresult) = 0 then return 0
+      if record.kind() = 'instruction' & wordpos(record.mnemonic(),'link unlink swap') > 0 then do
+        _rebinding[item.id()] = 1
+        if record.mnemonic() = 'swap' then do
+          if reserve(1,8) = 0 then return 0
+          swaps[swaps[0] + 1] = record.id()
+        end
+      end
+      if record.kind() = 'instruction' & record.mnemonic() = 'ret' then returned = record.id()
+    end
+    if returned = 0 then return reject('return.missing')
+    _returnaction[item.id()] = 'none'
+    if hasresult then do
       record = module.at(returned)
       if record.operands() = 1 then do
         value = record.operand(1)
-        if value.kind() = 'I' then call state.integer(destination,1,value.index())
+        if value.kind() = 'I' then do
+          _returnaction[item.id()] = 'integer'; call state.integer(destination,1,value.index())
+        end
         else do
           id = child.storage(value)
           if value.bank() = 'r' & id = child.base(value) then do
-            call state.move(destination,id); _reset[bodyid] = value.index() + 1
+            _returnaction[item.id()] = 'move'; call state.move(destination,id)
           end
-          else call state.copy(destination,id)
+          else do; _returnaction[item.id()] = 'copy'; call state.copy(destination,id); end
         end
         call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
         call insert(reference kills,domain(destination))
@@ -524,6 +574,11 @@ analysis: class
       end
       _plain[destination] = state.plain(destination)
     end
+    do i = 1 to callee.locals()
+      reset[i] = state.zeroed(child.baseat(i))
+    end
+    _reset[bodyid] = .numbers(reset) as .object
+    _swaps[item.id()] = .numbers(swaps) as .object; _swapcount[item.id()] = swaps[0]
     do i = 1 to actuals[0]
       call insert(reference writes,domain(actuals[i])); call insert(reference writes,domain(actuals[i],1))
     end
@@ -556,12 +611,12 @@ analysis: class
     _index = .llirgraph..index(graph_ref,_work,_bytelimit)
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
-    if reserve(graph.operations(),112) = 0 | reserve(graph.functions(),24) = 0 then return
+    if reserve(graph.operations(),144) = 0 | reserve(graph.functions(),24) = 0 then return
     if _index.functionblocks(_function) <> 1 then do; ignored = reject('profile.caller.cfg.pending'); return; end
     _access = .llirgraph..access(reference _index,'rxas.scalar.storage.v1',1000000,_bytelimit,_work)
     if body.locals() >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return; end
     if spend(body.locals() + 1) = 0 then return
-    if reserve(body.locals() + 1,88) = 0 then return
+    if reserve(body.locals() + 1,104) = 0 then return
     state = .cells(); empty = .int[]; view = .frame(reference state,body.locals(),empty,1)
     do i = 1 to body.locals(); _plain[i] = 1; end
     region = 0; nextregion = 0; returned = 0
@@ -675,6 +730,19 @@ analysis: class
   returned: method = .int
     arg callid = .int
     call require(); return _return[callid]
+  /** The sealed call plan distinguishes active binding changes from values. */
+  rebinding: method = .int
+    arg callid = .int
+    call require(); return _rebinding[callid]
+  returnaction: method = .string
+    arg callid = .int
+    call require(); return _returnaction[callid]
+  swaps: method = .int
+    arg callid = .int
+    call require(); return _swapcount[callid]
+  swap: method = .int
+    arg callid = .int, ordinal = .int
+    call require(); records = _swaps[callid] as .numbers; return records.at(ordinal)
   context: method = .string
     arg callid = .int
     call require(); return _context[callid]

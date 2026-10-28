@@ -124,7 +124,7 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. The scalar/metadata/batch slice is implemented and focused-qualified. Complete the reviewed alias/rebinding, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch and straight-line callee LINK/UNLINK/SWAP slices are implemented and focused-qualified. Complete broader aliasing, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction and the separate scalar transport consumer are focused-qualified. Typed allocation/reuse and broader control/component cleanup remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -366,8 +366,58 @@ Independent controls cover swapped arguments followed by UNLINK, local link/
 mutation/unlink with both owned and still-linked returns, a result aliasing an
 actual while that formal is rebound, and repeated calls. Reuse relevant
 maintained alias/permutation fixtures after checking their intended behavior.
-Inspect COPY/MOVE and restoration-before-cleanup structurally. Broader CFG,
-nested calls, optional/variadic and aggregate/context cases remain open.
+Inspect COPY/MOVE and restoration-before-cleanup structurally. This straight-line
+rebinding category is implemented and focused-qualified with conservative and
+cleaned executable controls. Broader CFG, nested calls, optional/variadic and
+aggregate/context cases remain open.
+
+### Reviewed typed assignment and reuse seam
+
+Factor the existing `llrxas.program` first-fit assignment and independent
+checker once into a typed `llrxas` kernel. Keep text parsing/rendering and
+target record remapping in their respective adapters; the RXAS owner gains no
+target dependency. Rows carry stable record IDs and complete reference,
+read/write/definite-kill/observation sets. Preserve fixed cells, retained
+lifetimes and contiguous call windows, with current conservative control
+boundaries and protected intervals. Missing uses cannot authorize reuse.
+
+Separate identity preservation, dense unique placement and private scalar
+reuse. A cell may disappear only when complete rows and all retained/fixed/
+window/lifetime requirements prove its absence; validate absent mappings
+independently. Preserve the existing text API's required-cell contract.
+Target facts must prove candidate entry state, successful initialization,
+absent hidden payloads and dead status/base/identity/lifetime obligations.
+Return ordered typed NULL-reset requests with the mapping, preserving origins;
+the independent checker must verify interference, constraints and required
+resets without trusting allocator order. A live snapshot or release obligation
+prevents reuse. Qualify sparse metadata remapping, disjoint versus overlapping
+temporaries, retained windows and corrupted-map/missing-reset/resource failures.
+Existing text META/TRACE adapters must either enumerate their supported uses
+correctly or retain identity for unproved rows; their current conservative view
+does not limit the complete target projection. No second allocator or generic
+L solver is needed for this straight-line seam.
+
+### Required native bootstrap correctness repair
+
+The rebinding consumer exposed unsound implicit constant promotion in native
+B's shared optimizer: a conditional first write after a declaration was treated
+as unconditional initialization. It could substitute the wrong false-path
+value and delete the mandatory THEN child before emission. Repair the promotion
+legality at `compiler/rxcp_opt.c`, not the downstream emitter or the consumer
+assertion. Both implicit promotion arms must require a literal initializer in
+the owning callable's unconditional entry sequence, before every substituted
+use, with no bypass/alternate entry. Conditional, loop, protected, early-read
+and ambiguous cases retain the variable when that proof is absent. Existing
+alias/write/assembler-form checks and explicit language constants remain intact.
+
+Qualify a compact maintained native B regression with independent false/true
+values, branch/ELSE side effects, early reads, zero/one-iteration control and
+an unconditional-fold positive, then the unchanged rebinding consumer. This
+necessary producer repair is implemented and focused-qualified within the
+standalone increment; it does not
+commission native C frontend changes or a native optimizer replacement. Refresh
+the changed producer and affected L preparation once after this repair freezes;
+keep wider INL acceptance and normal milestone QA open.
 
 ## Complete initial target profile
 

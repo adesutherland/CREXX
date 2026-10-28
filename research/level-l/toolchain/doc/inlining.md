@@ -956,6 +956,41 @@ registers do not satisfy that remaining requirement. General CFG, nested,
 optional/variadic, reference/aggregate, imported/global and wider context
 coverage remains open in INL-STEP04/05.
 
+### Straight-line callee rebinding contract
+
+For admitted callee LINK/UNLINK/SWAP, `lltargetfacts.analysis` supplies exact
+`rebinding(callId)`, `returnaction(callId)`, `swaps(callId)` and
+`swap(callId,ordinal)` facts. The action is `none`, `integer`, `copy` or `move`,
+computed at the original return. Originally encoded local storage moves only
+when its active pointer equals that same slot's immutable base. An owned value
+returned through an argument or a different swapped local slot still copies.
+An ignored result performs no transfer and establishes no MOVE reset.
+
+A rebinding expansion reserves `S=locals+arguments+1` contiguous active slots
+in original local/a0/argument order, `S` untouched entry/base anchors, and
+captured-result/scratch cells: `2*S+2` cells. Entry anchors borrow actual
+pointers without copying argument values. The result pointer is captured
+before body mutation. Lower an original UNLINK to LINK from that original
+slot's fixed anchor; a previous swap never changes its base. Bodies without
+rebinding retain the smaller scalar layout.
+
+Transfer the return value before exit restoration. Replay body swaps in
+reverse to restore actual VM slot identities, then unlink active slots,
+anchors and the captured result. Only then end private local/a0/scratch
+lifetimes. Relinking a pointer alone cannot restore permutation identity.
+Cleanup may eliminate this machinery through its complete caller proof.
+
+Repeated-call history follows reached storage and observed components. Pure
+binding changes do not observe private contents. Integer-only ICOPY can remain
+independent of unobserved side-component history; whole COPY requires the
+corresponding entry-state proof. For example, SETTP after a copy can leave flags
+for the next call to observe before that SETTP executes again. Tracking an
+original recycled cell does not itself prove equality with a fresh inline cell.
+Use actual reset/overwrite proofs; do not emit zero initialization to conceal
+the difference. The current nonrecursive same-module profile owns one original
+cache identity per procedure. Imported aliases and nested/recursive activation
+require their own cache/binding proofs in the later categories.
+
 The following current sources constrain this proposal; changes require the
 corresponding catalog/proof/profile review:
 

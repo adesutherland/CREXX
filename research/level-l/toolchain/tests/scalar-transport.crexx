@@ -187,7 +187,8 @@ retainedwindow: procedure = .int
   return failures
 
 batchhistory: procedure = .int
-  failures = 0; i = .int
+  failures = 0; i = .int; variant = .int
+  whole = .lltarget..draft; unknownwhole = .lltarget..module; copyname = .string
   draft = .lltarget..draft('batchhistory','scalar.batch',0); at = draft.synthetic('repeated owned RET reset')
   root = draft.procedure('main',3,at)
   ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
@@ -232,7 +233,30 @@ batchhistory: procedure = .int
   bindings[1] = llinline..bind(reference uncertain,firstcall,reference uncertain,uncertain.procedureid('bump')) as .object
   bindings[2] = llinline..bind(reference uncertain,secondcall,reference uncertain,uncertain.procedureid('bump')) as .object
   refused = llinline..expandmany(bindings,'closed-main-default-halt.v1')
-  failures = failures + check(refused.status() = 'keep' & refused.reason() = 'local.recycler.history.unproved','unproved recycler side components retain the call')
+  failures = failures + check(refused.status() = 'changed','integer-only copy needs no recycled source side-component proof')
+
+  do variant = 1 to 2
+    whole = .lltarget..draft('statushistory' || variant,'scalar.statushistory.' || variant,0)
+    at = whole.synthetic('recycled source status differs from fresh inline storage')
+    root = whole.procedure('main',3,at)
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+    firstcall = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('bump'),root.reg('r',0),at)
+    secondcall = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('bump'),root.reg('r',1),at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    leaf = whole.procedure('bump',2,at)
+    ignored = three(leaf,'iadd',leaf.reg('r',0),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+    copyname = 'copy'
+    if variant = 2 then copyname = 'icopy'
+    ignored = two(leaf,copyname,leaf.reg('r',1),leaf.reg('r',0),at)
+    ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(256),at)
+    ignored = one(leaf,'ret',leaf.reg('r',1),at)
+    unknownwhole = whole.finish()
+    bindings[1] = llinline..bind(reference unknownwhole,firstcall,reference unknownwhole,unknownwhole.procedureid('bump')) as .object
+    bindings[2] = llinline..bind(reference unknownwhole,secondcall,reference unknownwhole,unknownwhole.procedureid('bump')) as .object
+    refused = llinline..expandmany(bindings,'closed-main-default-halt.v1')
+    if variant = 1 then failures = failures + check(refused.status() = 'keep' & refused.reason() = 'local.recycler.history.unproved','whole copy retains real recycled-status history difference')
+    else failures = failures + check(refused.status() = 'changed','integer-only copy ignores source status carried from the prior activation')
+  end
   return failures
 
 provenance: procedure = .int

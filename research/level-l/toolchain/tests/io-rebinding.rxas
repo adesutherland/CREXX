@@ -1,0 +1,94 @@
+/* Independent active/base/slot-identity and return-ownership expectations.
+ * All calls precede ITOS so every actual remains in the plain scalar profile. */
+.globals=0
+main() .locals=16
+  load r0,11
+  load r1,22
+  call2 r2,entryswap(),r0,r1
+  load r3,31
+  load r4,42
+  call2 r5,entryswap(),r3,r4
+  load r6,40
+  call1 r7,localrestore(),r6
+  load r8,50
+  call1 r9,linkedreturn(),r8
+  load r10,60
+  call1 r11,linkedreturn(),r10
+  load r12,70
+  call1 r13,crossswap(),r12
+  load r14,80
+  load r15,90
+  call2 r14,capturedresult(),r14,r15
+
+  say "entryswap-first"
+  itos r2
+  say r2
+  itos r0
+  say r0
+  itos r1
+  say r1
+  say "entryswap-repeat"
+  itos r5
+  say r5
+  itos r3
+  say r3
+  itos r4
+  say r4
+  say "localrestore"
+  itos r7
+  say r7
+  itos r6
+  say r6
+  say "linkedreturn-first"
+  itos r9
+  say r9
+  itos r8
+  say r8
+  say "linkedreturn-repeat"
+  itos r11
+  say r11
+  itos r10
+  say r10
+  say "crossswap"
+  itos r13
+  say r13
+  itos r12
+  say r12
+  say "capturedresult"
+  itos r14
+  say r14
+  itos r15
+  say r15
+  ret 0
+
+/* UNLINK uses the encoded a1 entry base, even after its active slot swaps. */
+entryswap() .locals=0
+  swap a1,a2
+  unlink a1
+  load a1,7
+  ret a2
+
+/* Restoring the local's own base makes its return an owned MOVE. */
+localrestore() .locals=1
+  load r0,9
+  link r0,a1
+  iadd r0,r0,1
+  unlink r0
+  ret r0
+
+/* The unused private base has no value obligation, including on repeat entry.
+ * The still-linked local returns borrowed actual storage with COPY. */
+linkedreturn() .locals=1
+  link r0,a1
+  ret r0
+
+/* The encoded argument return must COPY even while it holds an owned value. */
+crossswap() .locals=1
+  load r0,9
+  swap r0,a1
+  ret a1
+
+/* The result points at the original first actual, not the rebound a1 slot. */
+capturedresult() .locals=0
+  link a1,a2
+  ret a1
