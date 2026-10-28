@@ -125,7 +125,7 @@ require separate decisions.
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch and straight-line callee LINK/UNLINK/SWAP slices are implemented and focused-qualified. Complete broader aliasing, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction and the separate scalar transport consumer are focused-qualified. Typed allocation/reuse and broader control/component cleanup remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -396,6 +396,65 @@ Existing text META/TRACE adapters must either enumerate their supported uses
 correctly or retain identity for unproved rows; their current conservative view
 does not limit the complete target projection. No second allocator or generic
 L solver is needed for this straight-line seam.
+
+The additive kernel is `llrxas.assignment(virtualLocals,recordIds,
+registerBudget,work,bytes)`. Stable positive record IDs are declared in source
+order; rows and vectors are one-based, while virtual/physical cells are
+zero-based. `row(ordinal,refs,reads,writes,kills,observations,origin)` is assigned
+exactly once per record; validate unique in-range vector members, access sets
+within refs and kills within writes. Borrow inputs through preflight and retain
+owned copies, without borrowing target/module handles. Typed zero-cell input is
+valid; the text adapter keeps its existing positive-budget contract.
+`candidate`, `pin`, `fixed`, `window`, `retain`, `boundary` and `protect` carry
+the checked constraints. Retain defaults true for legacy compatibility; pin
+preserves distinct storage while fixed also preserves its index.
+
+`finish(identity|dense|reuse)` returns an owned `assignmentresult` with
+valid/error, frame size, virtual-to-physical mapping and ordered typed reset
+requests (virtual/physical cell, arrival record ID, origin). Failure exposes no
+partial mapping/reset list. `validate(mapping,locals,resets)` independently
+reconstructs required cells, inclusive interference, fixed/window/identity
+constraints and reset order. Rendering remains outside the kernel. Scoped
+META_REG bindings protect storage through matching clear, while point TRACE
+observations extend the relevant interval. Unknown frame observations retain
+identity; a raw integer write is not itself a whole-value kill or entry proof.
+
+The target adapter is separately callable `llcleanup.storage`, with the same
+module/procedure/profile and work/entry/byte/frame/cell limits as transport,
+returning the existing atomic change result. Reanalyze the frozen caller after
+transport; derive complete typed executable, metadata and implicit-window uses,
+checked candidate/entry/lifetime constraints, then validate and emit the mapping
+and reset requests through existing target builders. Preserve complete origins
+and source/TRACE references. The CLI invokes it after transport for each changed
+caller; disabled cleanup and disabled expansion keep their existing controls.
+Pin preserves storage distinctness; only actual fixed/window/frame-observer
+obligations constrain physical numbering. Keep scoped metadata live through its
+clear, and reject or retain identity when observation completeness is unproved.
+
+For the focused executable reset control, admit the existing non-signalling
+`GETANDTP_REG_REG_INT` in the closed-root scalar facts profile. It reads the
+source status component and successfully writes only the destination integer
+component; it neither releases a payload nor kills the destination's whole
+cell. The transfer may mark the result integer defined but unknown, so no
+constant-status assumption is needed. Preserve source/destination alias reads
+and the existing component access projection. A constructed disjoint-lifetime
+case must first copy a cell whose compiler flag band is 256, then reuse its
+physical cell for a fresh second cell with a checked `NULL` before its first
+partial write. Use `GETANDTP` with mask 768 on both copied outputs and execute
+the transformed RXAS through the ordinary unoptimized assembler and one VM;
+expect 256 and 0 independently of unrelated protected/VM-private flag bits.
+The existing register-flags VM fixture and handlers are evidence for these
+expectations, not an oracle for the L transformation or a blanket admission of
+other status operations.
+
+The same scalar storage proof may cross `ENDLIFE` on a proved fresh root cell
+whose admitted history contains no reference identity, reference/native payload
+or attribute tree: the VM lifetime handler has nothing to release there. Keep
+the instruction and its reference interval; allow reuse only after that
+interval ends, with the usual reset before a different fresh cell arrives.
+Mapping aliases, calls, imported/recycled cells and hidden or unproved lifetime
+state still need their separate ownership proof. Add a positive plain-root
+`ENDLIFE` control; a blanket refusal is not a semantic rule.
 
 ### Required native bootstrap correctness repair
 

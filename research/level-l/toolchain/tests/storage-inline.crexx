@@ -1,0 +1,205 @@
+/* cREXX License (MIT). Independent typed placement/reuse and metadata controls. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import llcleanup
+import llinline
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+three: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, third = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object; fields[3] = third as .object
+  return body.emit(name,fields,at)
+tracepoint: procedure = .int
+  arg body = .lltarget..bodydraft, index = .int, at = .llir..origin
+  fields = .object[]
+  fields[1] = .lltarget..operand.string('V' as .binary) as .object
+  fields[2] = .lltarget..operand.integer(4) as .object
+  fields[3] = .lltarget..operand.string('R' as .binary) as .object
+  fields[4] = .lltarget..operand.string('I' as .binary) as .object
+  fields[5] = .lltarget..operand.string('r' as .binary) as .object
+  fields[6] = .lltarget..operand.integer(index) as .object
+  do i = 7 to 9; fields[i] = .lltarget..operand.integer(0) as .object; end
+  fields[10] = .lltarget..operand.string('r14,quoted' as .binary) as .object
+  fields[11] = .lltarget..operand.string(''x as .binary) as .object
+  return body.record('.traceevent',fields,at)
+binding: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, index = .int, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.string(name as .binary) as .object
+  if index >= 0 then do
+    fields[2] = .lltarget..operand.string('b' as .binary) as .object
+    fields[3] = .lltarget..operand.string('.int' as .binary) as .object
+    fields[4] = body.reg('r',index) as .object
+  end
+  return body.record('.meta',fields,at)
+
+sparse: procedure = .int
+  failures = 0; item = .lltarget..record; left = .lltarget..operand; right = .lltarget..operand
+  changed = .llinline..change; limited = .llinline..change
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module; body = .lltarget..body
+  draft = .lltarget..draft('storage.sparse','fixture:storage.sparse',0)
+  at = draft.synthetic('sparse complete typed references'); root = draft.procedure('main',15,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  named = two(root,'load',root.reg('r',8),.lltarget..operand.integer(11),at)
+  observed = two(root,'load',root.reg('r',14),.lltarget..operand.integer(13),at)
+  metaid = binding(root,'visible',8,at); traceid = tracepoint(root,14,at)
+  ignored = two(root,'copy',root.reg('r',0),root.reg('r',8),at)
+  clearid = binding(root,'visible',-1,at)
+  ignored = three(root,'iadd',root.reg('r',14),root.reg('r',14),root.reg('r',0),at)
+  ignored = one(root,'itos',root.reg('r',14),at); ignored = one(root,'say',root.reg('r',14),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish(); changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','sparse complete body receives checked placement')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  failures = failures + check(body.locals() = 3,'three overlapping required cells use a dense three-cell frame')
+  item = result.at(changed.operation(named)); left = item.operand(1)
+  item = result.at(changed.operation(metaid)); right = item.operand(4)
+  failures = failures + check(left.index() = right.index(),'scoped META_REG follows its logical cell')
+  item = result.at(changed.operation(observed)); left = item.operand(1)
+  item = result.at(changed.operation(traceid)); right = item.operand(6)
+  failures = failures + check(left.index() = right.index(),'point TRACE follows its logical cell')
+  right = item.operand(10)
+  failures = failures + check(right.text() = 'r14,quoted','quoted metadata text is not a register template')
+  item = result.at(changed.operation(clearid)); right = item.operand(1)
+  failures = failures + check(item.operands() = 1 & right.text() = 'visible','matching metadata clear retains its name')
+  graph = dereference original.ir(); before = graph.binary()
+  limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,2)
+  kept = limited.result(); graph = dereference kept.ir()
+  failures = failures + check(limited.status() = 'limit' & bin2x(graph.binary()) = bin2x(before),'insufficient simultaneous-cell budget preserves exact original')
+  limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1)
+  kept = limited.result(); graph = dereference kept.ir()
+  failures = failures + check(limited.status() = 'limit' & bin2x(graph.binary()) = bin2x(before),'work refusal publishes no partial storage rewrite')
+  limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,1)
+  kept = limited.result(); graph = dereference kept.ir()
+  failures = failures + check(limited.status() = 'limit' & bin2x(graph.binary()) = bin2x(before),'byte refusal publishes no partial storage rewrite')
+  limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,65536,1)
+  kept = limited.result(); graph = dereference kept.ir()
+  failures = failures + check(limited.status() = 'limit' & bin2x(graph.binary()) = bin2x(before),'output cell refusal publishes the complete original')
+  changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','ordinary storage request succeeds after bounded failures')
+  return failures
+
+scoped: procedure = .int
+  failures = 0; item = .lltarget..record; left = .lltarget..operand; right = .lltarget..operand
+  changed = .llinline..change; original = .lltarget..module; result = .lltarget..module; body = .lltarget..body
+  draft = .lltarget..draft('storage.scope','fixture:storage.scope',0)
+  at = draft.synthetic('metadata remains live until clear'); root = draft.procedure('main',11,at)
+  firstid = two(root,'load',root.reg('r',2),.lltarget..operand.integer(11),at)
+  ignored = binding(root,'scoped',2,at)
+  secondid = two(root,'load',root.reg('r',10),.lltarget..operand.integer(22),at)
+  ignored = tracepoint(root,10,at); ignored = binding(root,'scoped',-1,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish(); changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','metadata-only retention permits unique dense placement')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  item = result.at(changed.operation(firstid)); left = item.operand(1)
+  item = result.at(changed.operation(secondid)); right = item.operand(1)
+  failures = failures + check(body.locals() = 2 & left.index() <> right.index(),'scoped metadata prevents reuse before its clear')
+  return failures
+
+reuse: procedure = .int
+  arg ended = 0
+  failures = 0; item = .lltarget..record; left = .lltarget..operand; right = .lltarget..operand
+  changed = .llinline..change; original = .lltarget..module; result = .lltarget..module; body = .lltarget..body
+  previous = .lltarget..record; value = .lltarget..operand; secondat = .llir..origin
+  draft = .lltarget..draft('storage.reuse','fixture:storage.reuse',0)
+  at = draft.synthetic('two disjoint private scalar lifetimes'); root = draft.procedure('main',6,at)
+  firstid = two(root,'load',root.reg('r',3),.lltarget..operand.integer(11),at)
+  ignored = two(root,'settp',root.reg('r',3),.lltarget..operand.integer(256),at)
+  ignored = two(root,'copy',root.reg('r',0),root.reg('r',3),at)
+  lifeid = 0
+  if ended then lifeid = one(root,'endlife',root.reg('r',3),at)
+  secondat = draft.synthetic('second scalar entry requires fresh whole state')
+  secondid = two(root,'load',root.reg('r',5),.lltarget..operand.integer(22),secondat)
+  ignored = two(root,'copy',root.reg('r',1),root.reg('r',5),at)
+  ignored = tracepoint(root,0,at); ignored = tracepoint(root,1,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish(); changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','disjoint checked scalar cells receive storage reuse')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  item = result.at(changed.operation(firstid)); left = item.operand(1)
+  item = result.at(changed.operation(secondid)); right = item.operand(1)
+  failures = failures + check(body.locals() = 3 & left.index() = right.index(),'one private peak and two retained outputs need three cells')
+  reset = 0
+  do i = 2 to body.records()
+    item = body.record(i)
+    if item.id() <> changed.operation(secondid) then iterate
+    previous = body.record(i - 1)
+    if previous.kind() = 'instruction' & previous.mnemonic() = 'null' then do
+      value = previous.operand(1)
+      reset = value.index() = right.index() & previous.origin().id() = item.origin().id()
+    end
+  end
+  failures = failures + check(reset,'reused scalar has an ordered fresh-entry NULL with semantic origin')
+  if ended then do
+    item = result.at(changed.operation(lifeid))
+    failures = failures + check(item.kind() = 'instruction' & item.mnemonic() = 'endlife','proved plain-root lifetime ending remains before later reuse')
+  end
+  return failures
+
+retainedwindow: procedure = .int
+  failures = 0; item = .lltarget..record; counter = .lltarget..operand; left = .lltarget..operand; right = .lltarget..operand
+  changed = .llinline..change; original = .lltarget..module; result = .lltarget..module; body = .lltarget..body
+  draft = .lltarget..draft('storage.window','fixture:storage.window',0)
+  at = draft.synthetic('retained counted window and its slot permutation'); root = draft.procedure('main',12,at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(11),at)
+  ignored = two(root,'load',root.reg('r',3),.lltarget..operand.integer(22),at)
+  ignored = two(root,'load',root.reg('r',7),.lltarget..operand.integer(2),at)
+  firstswap = two(root,'swap',root.reg('r',8),root.reg('r',3),at)
+  secondswap = two(root,'swap',root.reg('r',9),root.reg('r',2),at)
+  callid = three(root,'call',root.reg('r',11),.lltarget..operand.procedure('first'),root.reg('r',7),at)
+  ignored = two(root,'swap',root.reg('r',2),root.reg('r',9),at)
+  ignored = two(root,'swap',root.reg('r',3),root.reg('r',8),at)
+  ignored = tracepoint(root,11,at); ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('first',0,at); ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  original = draft.finish(); changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','retained counted-call caller receives unique dense placement')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  item = result.at(changed.operation(callid)); counter = item.operand(3)
+  item = result.at(changed.operation(firstswap)); left = item.operand(1)
+  item = result.at(changed.operation(secondswap)); right = item.operand(1)
+  failures = failures + check(left.index() = counter.index() + 1 & right.index() = counter.index() + 2,'every implicit actual remains contiguous after its mapped counter')
+  swaps = 0
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = 'instruction' & item.mnemonic() = 'swap' then swaps = swaps + 1
+  end
+  failures = failures + check(body.locals() = 6 & swaps = 4,'window plus outside storage needs six cells and keeps its reverse permutation')
+  return failures
+
+hidden: procedure = .int
+  /* This is a pending noninteger analysis category, not a VM prohibition on
+   * placement. Its current specific keep must preserve the owned input. */
+  failures = 0; original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
+  draft = .lltarget..draft('storage.hidden','fixture:storage.hidden',0)
+  at = draft.synthetic('unproved hidden lifetime cannot be made fresh by allocation'); root = draft.procedure('main',8,at)
+  ignored = two(root,'load',root.reg('r',7),.lltarget..operand.string('payload' as .binary),at)
+  ignored = one(root,'endlife',root.reg('r',7),at); ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish(); graph = dereference original.ir(); before = graph.binary()
+  changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  kept = changed.result(); graph = dereference kept.ir()
+  failures = failures + check(changed.status() = 'keep' & changed.reason() = 'profile.scalar.literal.pending','broader noninteger analysis remains explicitly pending')
+  failures = failures + check(bin2x(graph.binary()) = bin2x(before),'hidden release state is preserved rather than reset to admit reuse')
+  return failures
+
+main: procedure = .int
+  failures = sparse() + scoped() + reuse() + reuse(1) + retainedwindow() + hidden()
+  say 'STORAGE_INLINE|failures=' || failures
+  return failures

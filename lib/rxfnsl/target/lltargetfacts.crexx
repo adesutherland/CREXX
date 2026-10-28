@@ -221,6 +221,7 @@ analysis: class
   _domains = .int[]
   _whole = .int[]
   _plain = .int[]
+  _reuse = .int[]
   _counts = .int[]
   _first = .int[]
   _body = .int[]
@@ -394,7 +395,7 @@ analysis: class
       end
       if record then _mapping[item.id()] = 1
     end
-    else if wordpos(name,'null load copy icopy move settp endlife iadd isub imult itos say') > 0 then do
+    else if wordpos(name,'null load copy icopy move settp getandtp endlife iadd isub imult itos say') > 0 then do
       if name = 'say' then do
         if private then return reject('profile.callee.external.effect.pending')
         value = item.operand(1)
@@ -409,6 +410,15 @@ analysis: class
         end
         else if name = 'settp' then do
           value = item.operand(2); call state.status(destination,value.index())
+        end
+        else if name = 'getandtp' then do
+          if private then return reject('profile.callee.status.observer.pending')
+          right = item.operand(2); sourceid = view.storage(right)
+          if sourceid = 0 | state.wholeknown(sourceid) = 0 then return reject('local.recycler.observation.unproved')
+          call insert(reference reads,domain(sourceid,1))
+          /* This non-signalling status observation always defines its integer
+           * result. It does not reset destination status or other components. */
+          call state.integer(destination,0)
         end
         else if name = 'load' then do
           value = item.operand(2)
@@ -456,7 +466,7 @@ analysis: class
         if wordpos(name,'null copy move') > 0 then do
           call insert(reference kills,domain(destination)); call insert(reference kills,domain(destination,1))
         end
-        else if wordpos(name,'load icopy iadd isub imult') > 0 then call insert(reference kills,domain(destination))
+        else if wordpos(name,'load icopy getandtp iadd isub imult') > 0 then call insert(reference kills,domain(destination))
         _plain[destination] = state.plain(destination)
       end
     end
@@ -595,6 +605,8 @@ analysis: class
     if _status <> 'building' then return
     i = .int; j = .int; region = .int; nextregion = .int
     ignored = .int; returned = .int; previous = .int
+    id = .int; slot = .int; integer = .int; whole = .int; barrier = .int; definition = .int
+    references = .numbers; plain = .numbers; actuals = .numbers; destination = .lltarget..operand
     item = .lltarget..record; value = .lltarget..operand; option = .lltarget..operand
     do
     if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _reason = 'owner.expired'; return; end
@@ -679,6 +691,63 @@ analysis: class
     end
     if _access.seal() = 0 then do; _status = _access.status(); _reason = _access.message(); return; end
     if spend(_access.usedwork()) = 0 then return
+    /* Only this closed root's original cells have proved fresh entry state.
+     * Recycled callee bases do not inherit it. Seal the reuse premises before
+     * handing the remaining work allowance to a placement consumer. */
+    if spend(body.locals()) = 0 | reserve(body.locals(),8) = 0 then return
+    do i = 1 to body.locals(); _reuse[i] = 0; end
+    if _access.complete(_function) then do i = 1 to module.records()
+      if spend(1) = 0 then return
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      references = _references[item.id()] as .numbers
+      barrier = 0; definition = 0
+      if item.kind() = 'instruction' then do
+        barrier = wordpos(item.mnemonic(),'link unlink swap call call1 call2 call3 call4 itos') > 0
+        definition = wordpos(item.mnemonic(),'null load copy icopy move getandtp iadd isub imult') > 0
+        if definition then destination = item.operand(1)
+      end
+      if barrier = 0 then plain = _beforeplain[item.id()] as .numbers
+      if spend(item.registerrefs()) = 0 then return
+      do j = 1 to item.registerrefs()
+        value = item.registerref(j); slot = value.index() + 1; id = references.at(j)
+        /* The current placement adapter addresses original slot domains. A
+         * binding/permutation participant, alias target or reached mismatch
+         * cannot use that projection to justify scalar sharing. */
+        if barrier | slot <> id then do
+          if slot >= 1 & slot <= body.locals() then _reuse[slot] = -1
+          if id >= 1 & id <= body.locals() then _reuse[id] = -1
+          iterate
+        end
+        if id < 1 | id > body.locals() then iterate
+        /* Fresh scalar-only storage never acquired a reference identity,
+         * payload or attribute tree. ENDLIFE therefore has nothing to release;
+         * its ordinary reference still extends the required interval. */
+        if plain.at(j) = 0 | _plain[id] = 0 then _reuse[id] = -1
+        if _reuse[id] <> 0 then iterate
+        _reuse[id] = -1
+        if definition = 0 then iterate
+        if destination.index() + 1 <> id then iterate
+        integer = _domains[id]; whole = _whole[id]
+        if integer = 0 | whole = 0 then iterate
+        if spend(5 * (_access.accesses(item.id()) + 1)) = 0 then return
+        if _access.kills(item.id(),integer) & _access.reads(item.id(),integer) = 0 & _access.reads(item.id(),whole) = 0 & _access.observes(item.id(),integer) = 0 & _access.observes(item.id(),whole) = 0 then _reuse[id] = 1
+      end
+      if item.kind() = 'instruction' & wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+        actuals = _argumentstorage[item.id()] as .numbers
+        if spend(_counts[item.id()]) = 0 then return
+        do j = 1 to _counts[item.id()]
+          id = actuals.at(j)
+          if id >= 1 & id <= body.locals() then _reuse[id] = -1
+        end
+        if item.mnemonic() = 'call' & item.operands() = 3 then do
+          if spend(_counts[item.id()] + 1) = 0 then return
+          do j = _first[item.id()] to _first[item.id()] + _counts[item.id()]
+            _reuse[j] = -1
+          end
+        end
+      end
+    end
     _status = 'ok'
     return
     on signal as problem
@@ -758,6 +827,20 @@ analysis: class
   plain: method = .int
     arg storageid = .int
     call require(); return _plain[storageid]
+  /** Whether an original zero-based root cell can share plain scalar storage.
+   * This sealed premise proves fresh entry and a successful first definition,
+   * complete component/status accesses and no alias/base/lifetime obligation.
+   * Integer kills remain component kills; a reused arrival still requires the
+   * assignment owner's typed whole-entry NULL. Queries consume no work. */
+  reusecandidate: method = .int
+    arg virtual = .int
+    call require()
+    if valid() = 0 then return 0
+    if virtual < 0 | virtual >= _reuse[0] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root cell outside frame"
+      return 0
+    end
+    return _reuse[virtual + 1] = 1
   plainbefore: method = .int
     arg recordid = .int, ordinal = .int
     call require(); plain = _beforeplain[recordid] as .numbers; return plain.at(ordinal)

@@ -124,6 +124,27 @@ if(BUILD_TESTING)
     crexx_register_test_prep_targets(TESTS levell_rebinding_inline_rxbvm
       TARGETS levell_rebinding_inline rxbvm)
   endif()
+
+  set(_storage_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/storage-inline.crexx")
+  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/storage-inline-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
+      -o storage-inline "${_storage_fixture}"
+    COMMAND $<TARGET_FILE:rxas> storage-inline
+    COMMAND $<TARGET_FILE:rxlink> -s -o storage-inline-linked storage-inline ${_images}
+    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_storage_fixture}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+  add_custom_target(levell_storage_inline
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/storage-inline-linked.rxbin")
+  if(TARGET rxbvm)
+    add_test(NAME levell_storage_inline_rxbvm
+      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/storage-inline-linked.rxbin")
+    set_tests_properties(levell_storage_inline_rxbvm PROPERTIES
+      PASS_REGULAR_EXPRESSION "STORAGE_INLINE[|]failures=0"
+      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+      TIMEOUT 120 LABELS "level-l;research;inlining")
+    crexx_register_test_prep_targets(TESTS levell_storage_inline_rxbvm
+      TARGETS levell_storage_inline rxbvm)
+  endif()
 endif()
 
 option(CREXX_BUILD_TARGET_IO "Build the optional Level L target RXAS adapters" OFF)

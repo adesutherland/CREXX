@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Checked target transport cleanup; independent of expansion. */
 options levelb
-namespace llcleanup expose transport
+namespace llcleanup expose transport storage
 import rxfnsb
 import llir
 import llirgraph
@@ -8,6 +8,7 @@ import lltarget
 import lltargetfacts
 import llinline
 import llrxascatalog
+import llrxas
 
 /** A typed immutable rewrite row; arrays themselves are never boxed. */
 plan: class
@@ -200,3 +201,278 @@ transport: procedure = .llinline..change
     return .llinline..change(status,'LL_TARGET_TRANSPORT: ' || problem.name() || ': ' || problem.message(),source,empty)
   end
   return .llinline..change('invalid','transport.no.result',source,empty)
+
+/** Add one virtual cell to an ordered row set. The assignment owner accounts
+ * the projection scan; the adapter reserves its five scratch vectors once. */
+storageput: procedure = .void
+  arg values_ref = reference .int[], virtual = .int, owner = .llrxas..assignment
+  values = dereference values_ref
+  do i = 1 to values[0]
+    if owner.charge(1) = 0 then return
+    if values[i] = virtual then return
+  end
+  if owner.charge(1) = 0 then return
+  values[values[0] + 1] = virtual
+  return
+
+/** Project complete typed references to the shared assignment owner. Facts
+ * prove machine state; this adapter supplies scope and physical-window uses. */
+storage: procedure = .llinline..change
+  arg owner = reference .lltarget..module, procedureId = .int, profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
+  source = .lltarget..module; body = .lltarget..body; item = .lltarget..record
+  value = .lltarget..operand; name = .lltarget..operand; reference_value = .lltarget..operand
+  facts = .lltargetfacts..analysis
+  assignment = .llrxas..assignment; allocated = .llrxas..assignmentresult
+  ids = .int[]; empty = .int[]; refs = .int[]; reads = .int[]; writes = .int[]; kills = .int[]; observations = .int[]
+  mapping = .int[]; active = .int[]; aliases = .int[]; names = .string[]; namesizes = .int[]; resets = .object[]
+  i = .int; j = .int; v = .int; id = .int; integer = .int; whole = .int
+  read = .int; write = .int; kill = .int; observed = .int; implicit = .int; identity = .int; changed = .int
+  scoped = .int; boundcall = .int; plainend = .int; idbytes = .int; querycost = .int
+  if <refvalid>(owner) = 0 then return .llinline..change('invalid','owner.expired')
+  source = dereference owner
+  if source.valid() = 0 then return .llinline..change('invalid',source.error(),source,empty)
+  if entries < 1 | bytes < 1 | work < 1 | frame < 0 | cells < 0 then return .llinline..change('limit','storage.allowances',source,empty)
+  do
+    facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
+    if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
+    access = .llirgraph..access
+    access_ref = facts.access()
+    access = dereference access_ref
+    body = source.body(procedureId)
+    if access.complete(procedureId) = 0 then return .llinline..change('keep','storage.observation.unproved',source,empty)
+    work = facts.remaining()
+    if source.records() > work then return .llinline..change('limit','storage.projection',source,empty)
+    work = work - source.records()
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.procedureid() = procedureId & item.kind() <> 'procedure' then do
+        if ids[0] >= bytes / 8 then return .llinline..change('limit','storage.projection.bytes',source,empty)
+        ids[ids[0] + 1] = item.id()
+      end
+    end
+    /* IDs are already owned adapter scratch. Their exact checked extent is
+     * removed before the kernel can copy IDs or allocate its own cell rows. */
+    idbytes = ids[0] * 8
+    if idbytes >= bytes then return .llinline..change('limit','storage.projection.bytes',source,empty)
+    assignment = .llrxas..assignment(body.locals(),reference ids,frame,work,bytes - idbytes)
+    if assignment.reserve(body.locals(),48) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+    do v = 0 to body.locals() - 1
+      if assignment.charge(1) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+      call assignment.retain(v,0)
+      if facts.reusecandidate(v) then call assignment.candidate(v)
+    end
+    catalog = .llrxascatalog..catalog(); identity = 0
+    do i = 1 to ids[0]
+      item = source.at(ids[i]); refs = empty; reads = empty; writes = empty; kills = empty; observations = empty; scoped = 0
+      if assignment.charge(1 + item.operands() + item.registerrefs()) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+      /* A META_REG remains observable through its matching clear, rather
+       * than becoming a single point use at its declaration address. */
+      do j = 1 to active[0]
+        if assignment.charge(1) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+        if active[j] = 0 then iterate
+        scoped = 1
+        call storageput(reference refs,active[j] - 1,assignment)
+        call storageput(reference observations,active[j] - 1,assignment)
+      end
+      /* Metadata names a live slot. With rebinding, conservatively observe
+       * all reached alias bases as well; these are never scalar candidates. */
+      if scoped then do j = 1 to aliases[0]
+        call storageput(reference refs,aliases[j],assignment)
+        call storageput(reference observations,aliases[j],assignment)
+      end
+      do j = 1 to item.registerrefs()
+        value = item.registerref(j)
+        if value.bank() <> 'r' then return .llinline..change('keep','storage.external.reference.unproved',source,empty)
+        call storageput(reference refs,value.index(),assignment)
+        id = facts.storage(item.id(),j)
+        if id > 0 & id <= body.locals() then call storageput(reference refs,id - 1,assignment)
+        if facts.mapping(item.id()) then do
+          call storageput(reference aliases,value.index(),assignment)
+          if id > 0 & id <= body.locals() then call storageput(reference aliases,id - 1,assignment)
+          if scoped then do
+            call storageput(reference observations,value.index(),assignment)
+            if id > 0 & id <= body.locals() then call storageput(reference observations,id - 1,assignment)
+          end
+        end
+      end
+      if item.kind() = 'instruction' then do
+        implicit = catalog.field(item.opcode(),5) as .int
+        boundcall = 0
+        if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then boundcall = facts.bodyid(item.id()) > 0
+        if implicit = 1 | implicit = 2 | implicit = 6 then identity = 1
+        if catalog.unbounded(item.opcode()) & boundcall = 0 then identity = 1
+        if implicit >= 3 & implicit <= 5 then do
+          v = implicit - 3; call assignment.fixed(v); call storageput(reference refs,v,assignment)
+        end
+        if item.mnemonic() = 'call' & item.operands() = 3 then do
+          value = item.operand(3); call assignment.window(value.index(),facts.arguments(item.id()) + 1)
+          do j = 0 to facts.arguments(item.id())
+            call storageput(reference refs,value.index() + j,assignment)
+            if j > 0 then do
+              id = facts.argumentstorage(item.id(),j)
+              if id > 0 & id <= body.locals() then call storageput(reference refs,id - 1,assignment)
+            end
+          end
+        end
+        if facts.mapping(item.id()) | wordpos(item.mnemonic(),'call call1 call2 call3 call4 endlife') > 0 then do j = 1 to item.registerrefs()
+          if assignment.charge(1) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+          value = item.registerref(j); id = facts.storage(item.id(),j); plainend = 0
+          if item.mnemonic() = 'endlife' & id > 0 & id <= body.locals() then do
+            plainend = facts.reusecandidate(value.index()) & facts.reusecandidate(id - 1)
+          end
+          if plainend = 0 then do
+            call assignment.pin(value.index())
+            if id > 0 & id <= body.locals() then call assignment.pin(id - 1)
+          end
+        end
+      end
+      do j = 1 to refs[0]
+        /* Each predicate scans the access row. Check before adding or
+         * multiplying so a large implicit window cannot evade the budget. */
+        querycost = access.accesses(item.id())
+        if querycost >= assignment.remaining() / 7 then return .llinline..change('limit','storage.access.work',source,empty)
+        if assignment.charge((querycost + 1) * 7) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+        v = refs[j]; id = v + 1; integer = facts.integerdomain(id); whole = facts.wholedomain(id)
+        read = 0; write = 0; kill = 0; observed = 0
+        if integer > 0 then do
+          read = access.reads(item.id(),integer); write = access.writes(item.id(),integer)
+          /* This is a successful scalar definition, not a whole-cell kill.
+           * Only reusecandidate plus a checked reset proves fresh entry. */
+          kill = access.kills(item.id(),integer); observed = access.observes(item.id(),integer)
+        end
+        if whole > 0 then do
+          read = read | access.reads(item.id(),whole); write = write | access.writes(item.id(),whole)
+          observed = observed | access.observes(item.id(),whole)
+        end
+        if read then call storageput(reference reads,v,assignment)
+        if write then call storageput(reference writes,v,assignment)
+        if kill then call storageput(reference kills,v,assignment)
+        if observed then call storageput(reference observations,v,assignment)
+      end
+      if item.kind() = '.meta' then do
+        name = item.operand(1)
+        if assignment.charge(name.length()) = 0 | assignment.reserve(name.length(),1) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+        spelling = name.text()
+        if item.operands() = 1 then do j = 1 to names[0]
+          if assignment.charge(1 + name.length() + namesizes[j]) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+          if names[j] == spelling then active[j] = 0
+        end
+        else if item.operands() = 4 then do
+          reference_value = item.operand(4)
+          if reference_value.kind() = 'R' then do
+            if assignment.reserve(1,32) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+            j = names[0] + 1; names[j] = spelling; namesizes[j] = name.length(); active[j] = reference_value.index() + 1
+          end
+        end
+      end
+      call assignment.row(i,reference refs,reference reads,reference writes,reference kills,reference observations,item.origin().id())
+      if assignment.error() <> '' then do
+        status = 'invalid'
+        if pos('LL_RXAS_LIMIT',assignment.error()) > 0 then status = 'limit'
+        return .llinline..change(status,assignment.error(),source,empty)
+      end
+    end
+    mode = 'reuse'
+    if identity then mode = 'identity'
+    allocated = assignment.finish(mode)
+    if allocated.valid() = 0 then do
+      status = 'invalid'
+      if pos('LL_RXAS_LIMIT',allocated.error()) > 0 then status = 'limit'
+      return .llinline..change(status,allocated.error(),source,empty)
+    end
+    if assignment.charge(body.locals()) = 0 | assignment.reserve(body.locals(),8) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+    if assignment.charge(allocated.resets()) = 0 | assignment.reserve(allocated.resets(),8) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+    do v = 0 to body.locals() - 1; mapping[v + 1] = allocated.assigned(v); end
+    do i = 1 to allocated.resets(); resets[i] = allocated.reset(i) as .object; end
+    message = assignment.validate(reference mapping,allocated.locals(),reference resets)
+    if message <> '' then do
+      status = 'invalid'
+      if pos('LL_RXAS_LIMIT',message) > 0 then status = 'limit'
+      return .llinline..change(status,message,source,empty)
+    end
+    changed = allocated.locals() <> body.locals() | resets[0] > 0
+    if assignment.charge(body.locals()) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+    do v = 0 to body.locals() - 1
+      if mapping[v + 1] <> v then changed = 1
+    end
+    if changed = 0 then return .llinline..change('keep','storage.no.change',source,empty)
+    if assignment.remaining() < 1 then return .llinline..change('limit','storage.output.work',source,empty)
+    return storageemit(source,procedureId,reference mapping,allocated.locals(),reference resets,assignment.remaining(),entries,bytes,cells)
+  on signal as problem
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 | pos('LL_RXAS_LIMIT',problem.message()) > 0 then status = 'limit'
+    return .llinline..change(status,'LL_TARGET_STORAGE: ' || problem.name() || ': ' || problem.message(),source,empty)
+  end
+  return .llinline..change('invalid','storage.no.result',source,empty)
+
+/** Emit only a checked physical assignment. Original records and inserted
+ * resets use the existing target/provenance owners; a failure returns source. */
+storageemit: procedure = .llinline..change
+  arg source = .lltarget..module, procedureId = .int, mapping_ref = reference .int[], locals = .int, resets_ref = reference .object[], work = .int, entries = .int, bytes = .int, cells = .int
+  input = .lltarget..record; oldbody = .lltarget..body; targetbody = .lltarget..bodydraft
+  value = .lltarget..operand; request = .llrxas..typedreset
+  result = .lltarget..draft; target = .lltarget..module; at = .llir..origin; status = .string
+  fields = .object[]; replacements = .object[]; bodies = .object[]
+  sources = .object[]; origins = .object[]; maps = .int[]; callers = .int[]; empty = .int[]
+  i = .int; j = .int; extent = .int; cost = .int; usedcells = .int; nextreset = .int; ignored = .int
+  mapping = dereference mapping_ref; resets = dereference resets_ref
+  result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
+  source_graph = source.ir(); nextreset = 1
+  do i = 1 to source.records()
+    input = source.record(i)
+    if result.preflight(1 + input.operands() + input.registerrefs(),0) = 0 then return .llinline..change('limit',result.error(),source,empty)
+    at = llinline..copyorigin(source_graph,input.origin(),reference result,reference sources,reference origins)
+    if input.kind() = 'procedure' then do
+      oldbody = source.body(input.procedureid()); extent = oldbody.locals()
+      if input.procedureid() = procedureId then extent = locals
+      targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose())
+      bodies[input.procedureid()] = targetbody as .object; maps[input.id()] = targetbody.headerid()
+      if input.procedureid() = procedureId then callers[1] = targetbody.functionid()
+      iterate
+    end
+    if input.procedureid() = 0 then do
+      call objectarraydrop fields
+      do j = 1 to input.operands(); fields[j] = input.operand(j) as .object; end
+      maps[input.id()] = result.record(input.kind(),fields,at); iterate
+    end
+    targetbody = bodies[input.procedureid()] as .lltarget..bodydraft
+    if input.procedureid() = procedureId then do
+      do while nextreset <= resets[0]
+        request = resets[nextreset] as .llrxas..typedreset
+        if request.recordid() <> input.id() then leave
+        if request.origin() <> input.origin().id() then return .llinline..change('invalid','storage.reset.origin',source,empty)
+        if usedcells > cells - 2 then return .llinline..change('limit','storage.code.cells',source,empty)
+        call objectarraydrop fields; fields[1] = targetbody.reg('r',request.physical()) as .object
+        ignored = targetbody.emit('null',fields,at); usedcells = usedcells + 2; nextreset = nextreset + 1
+      end
+      call objectarraydrop replacements
+      do j = 1 to input.registerrefs()
+        value = input.registerref(j)
+        if value.bank() <> 'r' then return .llinline..change('invalid','storage.reference.bank',source,empty)
+        extent = mapping[value.index() + 1]
+        if extent < 0 then return .llinline..change('invalid','storage.required.cell.absent',source,empty)
+        replacements[j] = targetbody.reg('r',extent) as .object
+      end
+      fields = lltarget..remapregisters(input,replacements)
+    end
+    else fields = llinline..clonefields(input,targetbody)
+    if input.kind() = 'instruction' then do
+      cost = 1 + fields[0]
+      if cost > cells - usedcells then return .llinline..change('limit','storage.code.cells',source,empty)
+      usedcells = usedcells + cost; maps[input.id()] = targetbody.emit(input.mnemonic(),fields,at)
+    end
+    else maps[input.id()] = targetbody.record(input.kind(),fields,at)
+    if result.error() <> '' then do
+      status = 'invalid'
+      if pos('LL_RESOURCE_LIMIT',result.error()) > 0 then status = 'limit'
+      return .llinline..change(status,result.error(),source,empty)
+    end
+  end
+  if nextreset <= resets[0] then return .llinline..change('invalid','storage.reset.record',source,empty)
+  target = result.finish()
+  if target.valid() = 0 then do
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',target.error()) > 0 then status = 'limit'
+    return .llinline..change(status,target.error(),source,empty)
+  end
+  return .llinline..change('changed','storage.checked.assignment',target,maps,callers)

@@ -200,8 +200,159 @@ main: procedure = .int
   target = .llrxas..program(3,3)
   call target.fixed(-1); result = target.finish()
   failures = failures + check(result.valid() = 0 & result.records() = 0,'invalid fixed identity is refused before array mutation')
+  failures = failures + typedchecks()
+  target = .llrxas..program(3,3)
+  call target.candidate(1); call target.candidate(2)
+  call target.recordline('metadata_test() .locals=3')
+  call target.recordline('.meta "x"="b" ".int" r2')
+  call target.recordline('load r1,1'); call target.recordline('load r2,2'); call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'unproved text META keeps executable identity')
+  if result.valid() then failures = failures + check(result.locals() = 3 & result.assigned(2) = 2,'unparsed META binding cannot authorize reuse or relocation')
+  target = .llrxas..program(3,3)
+  call target.recordline('native_trace() .locals=3')
+  call target.recordline('load r2,1')
+  call target.record('.traceevent','"V" 1 "R" "I" "r" 2 1 1 0 "x" ""')
+  call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'native r-bank TRACE is a supported text reference')
+  if result.valid() then failures = failures + check(pos('"r" ' || result.assigned(2) || ' 1 1',result.text(3)) > 0,'native TRACE local index follows placement')
+  target = .llrxas..program(3,3)
+  call target.candidate(1); call target.candidate(2)
+  call target.recordline('opaque_trace() .locals=3')
+  call target.recordline('load r1,1'); call target.recordline('say r1'); call target.recordline('load r2,2')
+  call target.record('.traceevent','"V" 1 "?" "I" "r" 2 1 1 0 "x" ""')
+  call target.recordline('ret')
+  result = target.finish()
+  failures = failures + check(result.valid(),'unknown text TRACE role retains executable identity')
+  if result.valid() then failures = failures + check(result.locals() = 3 & result.assigned(2) = 2,'unproved TRACE role cannot authorize remapping')
   if failures = 0 then say 'RXAS target checks passed'
   say 'failures=' || failures
+  return failures
+
+/** Fixture notation becomes typed vectors before entering the shared owner. */
+ids: procedure = .int[]
+  arg text = .string
+  values = .int[]
+  do i = 1 to words(text); values[i] = word(text,i) as .int; end
+  return values
+putrow: procedure = .void
+  arg target = .llrxas..assignment, ordinal = .int, refsText = '', readsText = '', writesText = '', killsText = '', observationsText = '', origin = 0
+  refs = ids(refsText); reads = ids(readsText); writes = ids(writesText); kills = ids(killsText); observations = ids(observationsText)
+  call target.row(ordinal,reference refs,reference reads,reference writes,reference kills,reference observations,origin)
+  return
+disjoint: procedure = .llrxas..assignment
+  records = ids('10 20 30 40 50')
+  target = .llrxas..assignment(4,reference records,4)
+  call target.candidate(0); call target.candidate(1)
+  call putrow(target,1,'0','','0','0','',101)
+  call putrow(target,2,'0 2','0','2','2')
+  call putrow(target,3,'1','','1','1','',303)
+  call putrow(target,4,'1 3','1','3','3')
+  call putrow(target,5,'2 3','2 3','','','2 3')
+  return target
+typedchecks: procedure = .int
+  failures = 0; i = .int
+  mapping = .int[]; shortmap = .int[]; resets = .object[]; reset = .llrxas..typedreset
+  records = ids('11 12'); target = .llrxas..assignment(15,reference records,15)
+  do i = 0 to 14; call target.retain(i,0); end
+  call putrow(target,1,'0 8','','0 8','0 8')
+  call putrow(target,2,'8 14','8','14','14','8')
+  dense = target.finish('dense')
+  failures = failures + check(dense.valid(),'typed sparse unique placement')
+  if dense.valid() then do
+    failures = failures + check(dense.locals() = 3 & dense.assigned(0) <> dense.assigned(8) & dense.assigned(8) <> dense.assigned(14),'complete sparse refs compact to three distinct cells')
+    failures = failures + check(dense.assigned(1) = -1 & dense.resets() = 0,'proven absent declarations disappear without resets')
+    do i = 0 to 14; mapping[i + 1] = dense.assigned(i); end
+    mapping[9] = -1
+    failures = failures + check(pos('physical cell',target.validate(reference mapping,3,reference resets)) > 0,'independent checker rejects absence of a referenced cell')
+  end
+
+  target = disjoint(); reused = target.finish()
+  failures = failures + check(reused.valid(),'typed disjoint scalar reuse')
+  if reused.valid() then do
+    failures = failures + check(reused.locals() = 3 & reused.assigned(0) = reused.assigned(1),'private peak one plus two retained outputs needs three cells')
+    failures = failures + check(reused.assigned(2) <> reused.assigned(3) & reused.assigned(2) <> reused.assigned(0),'retained outputs preserve distinct storage')
+    failures = failures + check(reused.resets() = 1,'one new whole-cell lifetime needs one reset')
+    if reused.resets() = 1 then do
+      reset = reused.reset(1)
+      failures = failures + check(reset.virtual() = 1 & reset.physical() = reused.assigned(1) & reset.recordid() = 30 & reset.origin() = 303,'reset is ordered before the second arrival with its own origin')
+      /* A new map preserves the exact cardinality independently of dense15. */
+      shortmap = ids('0 0 0 0')
+      do i = 0 to 3; shortmap[i + 1] = reused.assigned(i); end
+      call objectarraydrop resets
+      failures = failures + check(pos('missing reset',target.validate(reference shortmap,3,reference resets)) > 0,'sharing without reset is rejected independently')
+      resets[1] = .llrxas..typedreset(1,reused.assigned(1),40,303) as .object
+      failures = failures + check(pos('reset order',target.validate(reference shortmap,3,reference resets)) > 0,'late reset is rejected independently')
+      resets[1] = .llrxas..typedreset(1,reused.assigned(1),30,999) as .object
+      failures = failures + check(pos('reset order',target.validate(reference shortmap,3,reference resets)) > 0,'wrong reset provenance is rejected independently')
+      resets[1] = reset as .object
+      failures = failures + check(target.validate(reference shortmap,3,reference resets) = '','independent reconstruction accepts the complete reset plan')
+    end
+  end
+  target = disjoint(); call target.pin(1); pinned = target.finish()
+  failures = failures + check(pinned.valid(),'live identity/status/release premise may pin a candidate')
+  if pinned.valid() then failures = failures + check(pinned.assigned(0) <> pinned.assigned(1),'pin prevents sharing without preserving authored indices')
+
+  records = ids('1 2 3'); target = .llrxas..assignment(2,reference records,2)
+  call target.candidate(0); call target.candidate(1)
+  call putrow(target,1,'0','','0','0')
+  call putrow(target,2,'1','','1','1')
+  call putrow(target,3,'0 1','0 1','','','0 1')
+  overlap = target.finish()
+  failures = failures + check(overlap.valid(),'overlapping typed snapshot remains assignable')
+  if overlap.valid() then do
+    failures = failures + check(overlap.assigned(0) <> overlap.assigned(1),'simultaneous snapshot observations interfere')
+    shortmap = ids('0 0'); call objectarraydrop resets
+    failures = failures + check(pos('interfering scalar',target.validate(reference shortmap,1,reference resets)) > 0,'forced overlap is rejected by source reconstruction')
+  end
+
+  records = ids('4'); target = .llrxas..assignment(8,reference records,8)
+  do i = 0 to 7; call target.retain(i,0); end
+  call target.window(5,3)
+  call putrow(target,1,'5 6 7','5 6 7')
+  windowed = target.finish('dense')
+  failures = failures + check(windowed.valid(),'typed exact window placement')
+  if windowed.valid() then failures = failures + check(windowed.locals() = 3 & windowed.assigned(6) = windowed.assigned(5) + 1 & windowed.assigned(7) = windowed.assigned(5) + 2,'window moves as a complete contiguous group without fixing original indices')
+  records = ids('1'); target = .llrxas..assignment(6,reference records,6)
+  call target.fixed(1); call target.fixed(4); call target.window(2,2)
+  call putrow(target,1,'0 1 2 3 4 5','','0 1 2 3 4 5','0 1 2 3 4 5')
+  grouped = target.finish('dense')
+  failures = failures + check(grouped.valid(),'window placement is not fragmented by earlier scalar placement')
+  if grouped.valid() then failures = failures + check(grouped.locals() = 6 & grouped.assigned(1) = 1 & grouped.assigned(4) = 4 & grouped.assigned(3) = grouped.assigned(2) + 1,'fixed holes and a contiguous group fit the original six-cell budget')
+
+  target = disjoint(); call target.boundary(4); bounded = target.finish()
+  failures = failures + check(bounded.valid(),'declared boundary is retained')
+  if bounded.valid() then failures = failures + check(bounded.assigned(0) <> bounded.assigned(1),'cross-boundary lifetime cannot acquire scalar sharing')
+  target = disjoint(); call target.protect(3,3); protected = target.finish()
+  failures = failures + check(protected.valid(),'protected interval is retained')
+  if protected.valid() then failures = failures + check(protected.assigned(0) <> protected.assigned(1),'protected lifetime cannot acquire scalar sharing')
+  records = ids('1'); empty = .int[]
+  target = .llrxas..assignment(0,reference records,0)
+  call putrow(target,1)
+  zero = target.finish('dense')
+  failures = failures + check(zero.valid() & zero.locals() = 0 & zero.resets() = 0,'typed zero-local module is valid')
+  target = .llrxas..assignment(1,reference records,1)
+  missing = target.finish()
+  failures = failures + check(missing.valid() = 0 & missing.resets() = 0 & pos('missing declared row',missing.error()) > 0,'missing row publishes no allocation')
+  target = .llrxas..assignment(1,reference records,1)
+  call putrow(target,1,'0 0')
+  duplicate = target.finish()
+  failures = failures + check(duplicate.valid() = 0 & pos('duplicate vector',duplicate.error()) > 0,'duplicate typed refs are not silently discarded')
+  target = .llrxas..assignment(1,reference records,1,1000,1)
+  limited = target.finish()
+  failures = failures + check(limited.valid() = 0 & limited.resets() = 0 & pos('LIMIT',limited.error()) > 0,'constructor byte preflight is atomic')
+  target = .llrxas..assignment(1,reference records,1,1)
+  limited = target.finish()
+  failures = failures + check(limited.valid() = 0 & limited.resets() = 0,'constructor work preflight is atomic')
+  records = ids('20 10'); target = .llrxas..assignment(0,reference records,0)
+  call putrow(target,1); call putrow(target,2)
+  unordered = target.finish('dense')
+  failures = failures + check(unordered.valid(),'stable record IDs need not be numerically ordered')
+  records = ids('20 20'); target = .llrxas..assignment(0,reference records,0)
+  duplicate = target.finish('dense')
+  failures = failures + check(duplicate.valid() = 0 & pos('duplicate record ID',duplicate.error()) > 0,'record ID uniqueness is checked before owned publication')
+  failures = failures + check(dense.valid() & dense.locals() = 3,'later failed requests preserve an earlier owned allocation')
   return failures
 
 check: procedure = .int

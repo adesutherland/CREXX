@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Optional typed RXAS records and whole-cell assignment. */
 options levelb
-namespace llrxas expose program allocation
+namespace llrxas expose program allocation assignment assignmentresult typedreset
 import rxfnsb
 import llrxascatalog
 
@@ -61,7 +61,7 @@ instruction: class
     if quoted <> '' then _error = 'LL_RXAS_RECORD: unterminated quoted operand'
     if _kind = 'trace' then do
       if _parts[0] <> 11 then do; _error = 'LL_RXAS_RECORD: TRACE record arity'; return; end
-      if _parts[3] = '"R"' & _parts[5] = '"o"' then do
+      if _parts[3] = '"R"' & (_parts[5] = '"o"' | _parts[5] = '"r"' | _parts[5] = '"R"') then do
         raw = _parts[6]
         if datatype(raw,'W') = 0 then do; _error = 'LL_RXAS_RECORD: TRACE local location'; return; end
         _kinds[6] = 'local'; _locals[6] = raw as .int
@@ -186,6 +186,504 @@ allocation: class
     if _error <> '' then do; call fail(_error); return -1; end
     return _mapping[virtual + 1]
 
+/** A whole-cell reset immediately before the named source record. The origin
+ * is opaque to this owner and is preserved for the consuming emitter. */
+typedreset: class
+  _virtual = .int
+  _physical = .int
+  _record = .int
+  _origin = .int
+  *: factory
+    arg virtual = .int, physical = .int, recordId = .int, origin = 0
+    _virtual = virtual; _physical = physical; _record = recordId; _origin = origin
+    return
+  virtual: method = .int
+    return _virtual
+  physical: method = .int
+    return _physical
+  recordid: method = .int
+    return _record
+  origin: method = .int
+    return _origin
+
+/** Owned publication; invalid results expose neither assignments nor resets. */
+assignmentresult: class
+  _mapping = .int[]
+  _resets = .object[]
+  _locals = .int
+  _error = .string
+  *: factory
+    arg mapping = .int[], locals = .int, resets = .object[], error = ''
+    _error = error
+    if error = '' then do; _mapping = mapping; _locals = locals; _resets = resets; end
+    return
+  valid: method = .int
+    return _error = ''
+  error: method = .string
+    return _error
+  locals: method = .int
+    return _locals
+  assigned: method = .int
+    arg virtual = .int
+    if _error <> '' then do; call fail(_error); return -1; end
+    if virtual < 0 | virtual >= _mapping[0] then do; call fail('LL_RXAS_ASSIGNMENT: virtual cell outside map'); return -1; end
+    return _mapping[virtual + 1]
+  resets: method = .int
+    return _resets[0]
+  reset: method = .llrxas..typedreset
+    arg ordinal = .int
+    if _error <> '' then call fail(_error)
+    if ordinal < 1 | ordinal > _resets[0] then call fail('LL_RXAS_ASSIGNMENT: reset ordinal outside result')
+    return _resets[ordinal] as .typedreset
+
+/** Typed rows own numeric vectors after the assignment owner preflights them.
+ * Kills describe definite definitions in the adapter's checked allocation
+ * domain; they do not assert that a VM scalar opcode clears an entire value. */
+assignmentrow: class
+  _refs = .int[]
+  _reads = .int[]
+  _writes = .int[]
+  _kills = .int[]
+  _observations = .int[]
+  _origin = .int
+  *: factory
+    arg refs = reference .int[], reads = reference .int[], writes = reference .int[], kills = reference .int[], observations = reference .int[], origin = .int
+    references = dereference refs; readings = dereference reads; writings = dereference writes
+    killings = dereference kills; observing = dereference observations
+    _refs = references; _reads = readings; _writes = writings
+    _kills = killings; _observations = observing; _origin = origin
+    return
+  refs: method = .int
+    return _refs[0]
+  ref: method = .int
+    arg ordinal = .int
+    return _refs[ordinal]
+  cost: method = .int
+    return _refs[0] + _reads[0] + _writes[0] + _kills[0] + _observations[0]
+  kind: method = .int
+    arg virtual = .int
+    result = 0; i = .int
+    do i = 1 to _reads[0]; if _reads[i] = virtual then result = result + 1; end
+    do i = 1 to _writes[0]; if _writes[i] = virtual then result = result + 2; end
+    do i = 1 to _kills[0]; if _kills[i] = virtual then result = result + 4; end
+    do i = 1 to _observations[0]; if _observations[i] = virtual then result = result + 8; end
+    return result
+  origin: method = .int
+    return _origin
+
+/** Reconstructed intervals. Allocator and checker each build their own view. */
+assignmentlife: class
+  _first = .int[]
+  _last = .int[]
+  _initial = .int[]
+  _order = .int[]
+  *: factory
+    return
+  touch: method = .void
+    arg virtual = .int, ordinal = .int, initial = .int
+    v = virtual + 1
+    if _first[v] = 0 then do
+      _first[v] = ordinal; _initial[v] = initial; _order[_order[0] + 1] = virtual
+    end
+    _last[v] = ordinal
+    return
+  first: method = .int
+    arg virtual = .int
+    return _first[virtual + 1]
+  last: method = .int
+    arg virtual = .int
+    return _last[virtual + 1]
+  initial: method = .int
+    arg virtual = .int
+    return _initial[virtual + 1]
+  size: method = .int
+    return _order[0]
+  at: method = .int
+    arg ordinal = .int
+    return _order[ordinal]
+
+/** One bounded whole-cell assignment kernel. Inputs contain checked access
+ * premises, not target/module handles. Candidate admission additionally proves
+ * successful scalar initialization, equivalent zero entry and absence of
+ * hidden status/lifetime/release observations. Pin preserves distinct storage;
+ * fixed also preserves the authored physical index. Retain defaults true. */
+assignment: class
+  _virtual = .int
+  _budget = .int
+  _work = .int
+  _bytes = .int
+  _usedbytes = .int
+  _physicalcapacity = .int
+  _ids = .int[]
+  _rows = .object[]
+  _candidates = .int[]
+  _pinned = .int[]
+  _fixed = .int[]
+  _required = .int[]
+  _window = .int[]
+  _edge = .int[]
+  _boundaries = .int[]
+  _protectfirst = .int[]
+  _protectlast = .int[]
+  _sealed = .int
+  _mode = .string
+  _error = .string
+  *: factory
+    arg virtualLocals = .int, recordIds = reference .int[], registerBudget = .int, work = 1000000, bytes = 67108864
+    i = .int; increasing = .int
+    if <refvalid>(recordIds) = 0 then do; _error = 'LL_RXAS_ASSIGNMENT: expired record IDs'; return; end
+    ids = dereference recordIds
+    _virtual = virtualLocals; _budget = registerBudget; _work = work; _bytes = bytes; _mode = 'reuse'
+    if virtualLocals < 0 | registerBudget < 0 | work < 1 | bytes < 1 then do; _error = 'LL_RXAS_LIMIT: invalid assignment budgets'; return; end
+    if virtualLocals > work | ids[0] > (work - virtualLocals) / 2 then do; _error = 'LL_RXAS_LIMIT: target.work budget'; return; end
+    if virtualLocals > bytes / 64 then do; _error = 'LL_RXAS_LIMIT: assignment.bytes'; return; end
+    _usedbytes = virtualLocals * 64
+    if ids[0] > (bytes - _usedbytes) / 24 then do; _error = 'LL_RXAS_LIMIT: assignment.bytes'; return; end
+    _usedbytes = _usedbytes + ids[0] * 24; _work = work - virtualLocals - ids[0] * 2
+    increasing = 1
+    do i = 1 to ids[0]
+      if ids[i] < 1 then do; _error = 'LL_RXAS_ASSIGNMENT: positive record IDs required'; return; end
+      if i > 1 then do; if ids[i] <= ids[i - 1] then increasing = 0; end
+    end
+    if increasing = 0 then do
+      if ids[0] > _work / 20 then do; _error = 'LL_RXAS_LIMIT: target.work budget'; return; end
+      if ids[0] > (_bytes - _usedbytes) / 32 then do; _error = 'LL_RXAS_LIMIT: assignment.bytes'; return; end
+      _work = _work - ids[0] * 20; _usedbytes = _usedbytes + ids[0] * 32
+      seen = .stem()
+      do i = 1 to ids[0]
+        key = ids[i] as .string
+        if seen.get(key) <> '' then do; _error = 'LL_RXAS_ASSIGNMENT: duplicate record ID'; return; end
+        call seen.set(key,'1')
+      end
+    end
+    _ids = ids
+    do i = 1 to virtualLocals; _required[i] = 1; end
+    return
+  charge: method = .int
+    arg cost = .int
+    if _error <> '' then return 0
+    if cost < 0 | cost > _work then do; _error = 'LL_RXAS_LIMIT: target.work budget'; return 0; end
+    _work = _work - cost; return 1
+  reserve: method = .int
+    arg count = .int, width = .int
+    if _error <> '' then return 0
+    if count < 0 | width < 1 | count > (_bytes - _usedbytes) / width then do; _error = 'LL_RXAS_LIMIT: assignment.bytes'; return 0; end
+    _usedbytes = _usedbytes + count * width; return 1
+  error: method = .string
+    return _error
+  remaining: method = .int
+    return _work
+  room: method = .int
+    arg index = .int
+    if _error <> '' then return 0
+    if index < 0 | index >= _budget then do; _error = 'LL_RXAS_LIMIT: register budget'; return 0; end
+    if index >= _physicalcapacity then do
+      if charge(index + 1 - _physicalcapacity) = 0 then return 0
+      if reserve(index + 1 - _physicalcapacity,24) = 0 then return 0
+      _physicalcapacity = index + 1
+    end
+    return 1
+  cell: method = .int
+    arg virtual = .int
+    if _error <> '' then return 0
+    if _sealed then do; _error = 'LL_RXAS_STATE: assignment already sealed'; return 0; end
+    if virtual < 0 | virtual >= _virtual then do; _error = 'LL_RXAS_ASSIGNMENT: cell outside virtual frame'; return 0; end
+    return charge(1)
+  candidate: method = .void
+    arg virtual = .int, kind = 'integer'
+    if cell(virtual) = 0 then return
+    if kind <> 'integer' & kind <> 'boolean' then do; _error = 'LL_RXAS_ASSIGNMENT: plain scalar candidate required'; return; end
+    _candidates[virtual + 1] = 1
+    return
+  pin: method = .void
+    arg virtual = .int
+    if cell(virtual) then _pinned[virtual + 1] = 1
+    return
+  fixed: method = .void
+    arg virtual = .int
+    if cell(virtual) then do; _fixed[virtual + 1] = 1; _pinned[virtual + 1] = 1; end
+    return
+  retain: method = .void
+    arg virtual = .int, required = 1
+    if cell(virtual) = 0 then return
+    if required <> 0 & required <> 1 then do; _error = 'LL_RXAS_ASSIGNMENT: retain flag'; return; end
+    _required[virtual + 1] = required
+    return
+  window: method = .void
+    arg base = .int, count = .int
+    if _error <> '' then return
+    if _sealed then do; _error = 'LL_RXAS_STATE: assignment already sealed'; return; end
+    if base < 0 | count < 1 | base > _virtual - count then do; _error = 'LL_RXAS_ASSIGNMENT: call window outside frame'; return; end
+    if charge(count) = 0 then return
+    do i = base + 1 to base + count
+      _window[i] = 1
+      if i < base + count then _edge[i] = 1
+    end
+    return
+  boundary: method = .void
+    arg ordinal = .int
+    if _error <> '' then return
+    if _sealed then do; _error = 'LL_RXAS_STATE: assignment already sealed'; return; end
+    if ordinal < 1 | ordinal > _ids[0] then do; _error = 'LL_RXAS_ASSIGNMENT: boundary outside records'; return; end
+    if charge(1) = 0 | reserve(1,8) = 0 then return
+    _boundaries[_boundaries[0] + 1] = ordinal
+    return
+  protect: method = .void
+    arg first = .int, last = .int
+    if _error <> '' then return
+    if _sealed then do; _error = 'LL_RXAS_STATE: assignment already sealed'; return; end
+    if first < 1 | first > last | last > _ids[0] then do; _error = 'LL_RXAS_ASSIGNMENT: protected interval outside records'; return; end
+    if charge(1) = 0 | reserve(1,16) = 0 then return
+    n = _protectfirst[0] + 1; _protectfirst[n] = first; _protectlast[n] = last
+    return
+  checkvector: method = .int
+    arg vector = reference .int[], allowed = reference .int[]
+    values = dereference vector; within = dereference allowed; i = .int; j = .int; found = .int
+    do i = 1 to values[0]
+      if charge(1) = 0 then return 0
+      if values[i] < 0 | values[i] >= _virtual then do; _error = 'LL_RXAS_ASSIGNMENT: vector cell outside frame'; return 0; end
+      do j = 1 to i - 1
+        if charge(1) = 0 then return 0
+        if values[i] = values[j] then do; _error = 'LL_RXAS_ASSIGNMENT: duplicate vector member'; return 0; end
+      end
+      found = 0
+      do j = 1 to within[0]
+        if charge(1) = 0 then return 0
+        if values[i] = within[j] then found = 1
+      end
+      if found = 0 then do; _error = 'LL_RXAS_ASSIGNMENT: access outside reference set'; return 0; end
+    end
+    return 1
+  row: method = .void
+    arg ordinal = .int, refs = reference .int[], reads = reference .int[], writes = reference .int[], kills = reference .int[], observations = reference .int[], origin = 0
+    if _error <> '' then return
+    if _sealed then do; _error = 'LL_RXAS_STATE: assignment already sealed'; return; end
+    if ordinal < 1 | ordinal > _ids[0] then do; _error = 'LL_RXAS_ASSIGNMENT: row outside declared records'; return; end
+    if _rows[ordinal] is .assignmentrow then do; _error = 'LL_RXAS_ASSIGNMENT: row already supplied'; return; end
+    if <refvalid>(refs) = 0 | <refvalid>(reads) = 0 | <refvalid>(writes) = 0 | <refvalid>(kills) = 0 | <refvalid>(observations) = 0 then do
+      _error = 'LL_RXAS_ASSIGNMENT: expired row vector'; return
+    end
+    rr = dereference refs; rd = dereference reads; wr = dereference writes; kl = dereference kills; ob = dereference observations
+    if charge(1) = 0 | reserve(1,64) = 0 then return
+    if reserve(rr[0],8) = 0 | reserve(rd[0],8) = 0 | reserve(wr[0],8) = 0 | reserve(kl[0],8) = 0 | reserve(ob[0],8) = 0 then return
+    if checkvector(refs,refs) = 0 | checkvector(reads,refs) = 0 | checkvector(writes,refs) = 0 | checkvector(kills,writes) = 0 | checkvector(observations,refs) = 0 then return
+    _rows[ordinal] = .assignmentrow(refs,reads,writes,kills,observations,origin) as .object
+    return
+  scan: method = .assignmentlife
+    life = .assignmentlife(); item = .assignmentrow; i = .int; j = .int; v = .int; kind = .int
+    if reserve(_virtual,32) = 0 then return life
+    do i = 1 to _ids[0]
+      if charge(1) = 0 then return life
+      if (_rows[i] is .assignmentrow) = 0 then do; _error = 'LL_RXAS_ASSIGNMENT: missing declared row'; return life; end
+      item = _rows[i] as .assignmentrow
+      do j = 1 to item.refs()
+        if charge(item.cost() + 1) = 0 then return life
+        v = item.ref(j); kind = item.kind(v)
+        call life.touch(v,i,kind % 2 = 0 & kind % 8 >= 4 & kind < 8)
+      end
+    end
+    return life
+  eligible: method = .int
+    arg virtual = .int, life = .assignmentlife
+    v = virtual + 1; i = .int
+    if _mode <> 'reuse' | _candidates[v] = 0 | _pinned[v] | _fixed[v] | _window[v] | life.initial(virtual) = 0 then return 0
+    do i = 1 to _boundaries[0]
+      if charge(1) = 0 then return 0
+      if life.first(virtual) < _boundaries[i] & _boundaries[i] <= life.last(virtual) then return 0
+    end
+    do i = 1 to _protectfirst[0]
+      if charge(1) = 0 then return 0
+      if life.first(virtual) <= _protectlast[i] & life.last(virtual) >= _protectfirst[i] then return 0
+    end
+    return 1
+  validate: method = .string
+    arg mapping_ref = reference .int[], locals = .int, resets_ref = reference .object[]
+    if <refvalid>(mapping_ref) = 0 | <refvalid>(resets_ref) = 0 then return 'LL_RXAS_ASSIGNMENT: expired validation input'
+    mapping = dereference mapping_ref; resets = dereference resets_ref
+    i = .int; k = .int; v = .int; w = .int; assigned = .int; highest = .int; expected = .int; leftok = .int; rightok = .int
+    item = .assignmentrow; request = .typedreset
+    if _error <> '' then return _error
+    if locals < 0 | locals > _budget then return 'LL_RXAS_LIMIT: register budget'
+    if mapping[0] <> _virtual then return 'LL_RXAS_ASSIGNMENT: frame or map bound'
+    life = scan()
+    if _error <> '' then return _error
+    if reserve(locals,16) = 0 | reserve(_virtual,8) = 0 then return _error
+    if charge(locals) = 0 | charge(locals) = 0 then return _error
+    members = .int[]; chain = .int[]; occupied = .int[]; highest = -1
+    do v = 0 to _virtual - 1
+      if charge(1) = 0 then return _error
+      assigned = mapping[v + 1]
+      required = life.first(v) > 0 | _required[v + 1] | _pinned[v + 1] | _fixed[v + 1] | _window[v + 1] | _mode = 'identity'
+      if assigned = -1 & required = 0 then iterate
+      if assigned < 0 | assigned >= locals then return 'LL_RXAS_ASSIGNMENT: physical cell outside frame'
+      highest = max(highest,assigned)
+      if (_fixed[v + 1] | _mode = 'identity') & assigned <> v then return 'LL_RXAS_ASSIGNMENT: fixed physical cell moved'
+      if _edge[v + 1] then do
+        if mapping[v + 2] <> assigned + 1 then return 'LL_RXAS_ASSIGNMENT: call window is not contiguous'
+      end
+      w = members[assigned + 1]
+      do while w > 0
+        if charge(1) = 0 then return _error
+        leftok = eligible(v,life); rightok = eligible(w - 1,life)
+        if _error <> '' then return _error
+        if leftok = 0 | rightok = 0 then return 'LL_RXAS_ASSIGNMENT: distinct storage cells aliased'
+        if life.first(v) <= life.last(w - 1) & life.first(w - 1) <= life.last(v) then return 'LL_RXAS_ASSIGNMENT: interfering scalar cells aliased'
+        w = chain[w]
+      end
+      chain[v + 1] = members[assigned + 1]; members[assigned + 1] = v + 1
+    end
+    if highest + 1 <> locals then return 'LL_RXAS_ASSIGNMENT: frame or map bound'
+    expected = 0
+    do k = 1 to life.size()
+      if charge(1) = 0 then return _error
+      v = life.at(k); assigned = mapping[v + 1]
+      leftok = eligible(v,life)
+      if _error <> '' then return _error
+      if leftok = 0 then iterate
+      if occupied[assigned + 1] > 0 then do
+        expected = expected + 1
+        if expected > resets[0] then return 'LL_RXAS_ASSIGNMENT: missing reset before scalar arrival'
+        if (resets[expected] is .typedreset) = 0 then return 'LL_RXAS_ASSIGNMENT: untyped reset'
+        request = resets[expected] as .typedreset; i = life.first(v); item = _rows[i] as .assignmentrow
+        if request.virtual() <> v | request.physical() <> assigned | request.recordid() <> _ids[i] | request.origin() <> item.origin() then return 'LL_RXAS_ASSIGNMENT: reset order, location or origin'
+      end
+      occupied[assigned + 1] = v + 1
+    end
+    if expected <> resets[0] then return 'LL_RXAS_ASSIGNMENT: unexpected reset'
+    return _error
+  finish: method = .llrxas..assignmentresult
+    arg mode = 'reuse'
+    mapping = .int[]; resets = .object[]; i = .int; k = .int; v = .int; w = .int
+    physical = .int; found = .int; highest = .int; start = .int; last = .int; exact = .int; locals = .int; allowed = .int
+    item = .assignmentrow
+    if _sealed then return .assignmentresult(mapping,0,resets,'LL_RXAS_STATE: assignment already sealed')
+    _sealed = 1; _mode = mode
+    if _error = '' & wordpos(mode,'identity dense reuse') = 0 then _error = 'LL_RXAS_ASSIGNMENT: invalid assignment mode'
+    if _error <> '' then return .assignmentresult(mapping,0,resets,_error)
+    life = scan()
+    if _error <> '' then return .assignmentresult(mapping,0,resets,_error)
+    if reserve(_virtual,48) = 0 then return .assignmentresult(mapping,0,resets,_error)
+    if charge(_virtual) = 0 then return .assignmentresult(mapping,0,resets,_error)
+    members = .int[]; chain = .int[]; fixedat = .int[]; occupied = .int[]
+    do v = 0 to _virtual - 1; mapping[v + 1] = -1; end
+    if mode = 'identity' then do
+      if _virtual > _budget then return .assignmentresult(mapping,0,resets,'LL_RXAS_LIMIT: register budget')
+      if charge(_virtual) = 0 then return .assignmentresult(mapping,0,resets,_error)
+      do v = 0 to _virtual - 1; mapping[v + 1] = v; end
+    end
+    else do
+      /* Fixed members fix their entire overlapping contiguous window group. */
+      v = 0
+      do while v < _virtual
+        if charge(1) = 0 then leave
+        if _window[v + 1] then do
+          start = v; last = v; exact = _fixed[v + 1]
+          do while _edge[last + 1]
+            if charge(1) = 0 then leave
+            last = last + 1; exact = exact | _fixed[last + 1]
+          end
+          if exact then do i = start to last
+            if room(i) = 0 then leave
+            mapping[i + 1] = i; fixedat[i + 1] = 1
+          end
+          v = last + 1
+        end
+        else do
+          if _fixed[v + 1] then do
+            if room(v) = 0 then leave
+            mapping[v + 1] = v; fixedat[v + 1] = 1
+          end
+          v = v + 1
+        end
+      end
+      /* Place complete nonfixed groups before scalar placement can fragment them. */
+      v = 0
+      do while v < _virtual
+        if charge(1) = 0 then leave
+        if _window[v + 1] = 0 | mapping[v + 1] >= 0 then do; v = v + 1; iterate; end
+        start = v; last = v
+        do while _edge[last + 1]
+          if charge(1) = 0 then leave
+          last = last + 1
+        end
+        physical = 0; found = 0
+        do until found
+          found = 1
+          do i = 0 to last - start
+            if charge(1) = 0 then leave
+            if physical + i >= _budget then do; _error = 'LL_RXAS_LIMIT: register budget'; leave; end
+            if room(physical + i) = 0 then leave
+            if fixedat[physical + i + 1] | members[physical + i + 1] > 0 then found = 0
+          end
+          if _error <> '' then leave
+          if found = 0 then physical = physical + 1
+        end
+        if _error <> '' then leave
+        do i = start to last; mapping[i + 1] = physical + i - start; fixedat[physical + i - start + 1] = 1; end
+        v = last + 1
+      end
+      /* The existing deterministic first-fit over inclusive intervals. */
+      do k = 1 to life.size()
+        if charge(1) = 0 then leave
+        v = life.at(k)
+        allowed = eligible(v,life)
+        if _error <> '' then leave
+        if allowed = 0 then iterate
+        physical = 0; found = 0
+        do until found
+          if charge(1) = 0 then leave
+          if room(physical) = 0 then leave
+          found = fixedat[physical + 1] = 0; w = members[physical + 1]
+          do while w > 0 & found
+            if charge(1) = 0 then leave
+            if life.first(w - 1) <= life.last(v) & life.first(v) <= life.last(w - 1) then found = 0
+            w = chain[w]
+          end
+          if _error <> '' then leave
+          if found = 0 then physical = physical + 1
+        end
+        if _error <> '' then leave
+        mapping[v + 1] = physical; chain[v + 1] = members[physical + 1]; members[physical + 1] = v + 1
+      end
+      /* All remaining required cells are distinct, with no authored-index pin. */
+      do v = 0 to _virtual - 1
+        if charge(1) = 0 then leave
+        if mapping[v + 1] >= 0 | _window[v + 1] then iterate
+        if life.first(v) = 0 & _required[v + 1] = 0 & _pinned[v + 1] = 0 then iterate
+        physical = 0
+        if room(physical) = 0 then leave
+        do while fixedat[physical + 1] | members[physical + 1] > 0
+          if charge(1) = 0 then leave
+          physical = physical + 1
+          if room(physical) = 0 then leave
+        end
+        if _error <> '' then leave
+        mapping[v + 1] = physical; fixedat[physical + 1] = 1
+      end
+    end
+    if _error <> '' then return .assignmentresult(mapping,0,resets,_error)
+    if charge(_virtual) = 0 then return .assignmentresult(mapping,0,resets,_error)
+    highest = -1
+    do v = 0 to _virtual - 1; highest = max(highest,mapping[v + 1]); end
+    locals = highest + 1
+    do k = 1 to life.size()
+      if charge(1) = 0 then return .assignmentresult(mapping,0,resets,_error)
+      v = life.at(k)
+      allowed = eligible(v,life)
+      if _error <> '' then return .assignmentresult(mapping,0,resets,_error)
+      if allowed = 0 then iterate
+      physical = mapping[v + 1]
+      if occupied[physical + 1] > 0 then do
+        if reserve(1,96) = 0 then return .assignmentresult(mapping,0,resets,_error)
+        i = life.first(v); item = _rows[i] as .assignmentrow
+        resets[resets[0] + 1] = .typedreset(v,physical,_ids[i],item.origin()) as .object
+      end
+      occupied[physical + 1] = v + 1
+    end
+    message = validate(reference mapping,locals,reference resets)
+    if message <> '' then return .assignmentresult(mapping,0,resets,message)
+    return .assignmentresult(mapping,locals,resets,'')
+
 /** Per-function bounded target. Pinned cells preserve unique storage identity;
  * fixed cells additionally preserve their authored physical index. Calls use a
  * contiguous pinned suffix. Unknown indirect/exceptional control uses the
@@ -203,6 +701,9 @@ program: class
   _suffix = .int
   _identity = .int
   _sealed = .int
+  _prepared = .int
+  _kernel = .assignment
+  _resets = .object[]
   *: factory
     arg virtualLocals = .int, registerBudget = .int, workBudget = 1000000
     _virtual = virtualLocals; _budget = registerBudget; _work = workBudget
@@ -224,13 +725,13 @@ program: class
     if virtual < 0 | virtual >= _virtual | (kind <> 'integer' & kind <> 'boolean') then do
       _error = 'LL_RXAS_RECORD: candidate requires a plain integer/boolean local'; return
     end
-    _candidates[virtual + 1] = 1
+    _candidates[virtual + 1] = 1; _prepared = 0
     return
   pin: method = .void
     arg virtual = .int
     if _sealed then do; _error = 'LL_RXAS_STATE: target already sealed'; return; end
     if virtual < 0 | virtual >= _virtual then do; _error = 'LL_RXAS_RECORD: pin outside frame'; return; end
-    _pinned[virtual + 1] = 1
+    _pinned[virtual + 1] = 1; _prepared = 0
     return
   fixed: method = .void
     arg virtual = .int
@@ -245,7 +746,7 @@ program: class
       _error = 'LL_RXAS_RECORD: call window outside frame'; return
     end
     /* Reserve the suffix, including intervening work cells, as one group. */
-    _suffix = min(_suffix,base)
+    _suffix = min(_suffix,base); _prepared = 0
     return
   recordline: method = .void
     arg text = .string, origin = 0
@@ -261,8 +762,13 @@ program: class
     item = .instruction(mnemonic,operands,origin)
     call item.parse(reference _catalog)
     if item.error() <> '' then do; _error = item.error(); return; end
-    n = _records[0] + 1; _records[n] = item as .object
-    if item.kind() = 'opaque' then _identity = 1
+    n = _records[0] + 1; _records[n] = item as .object; _prepared = 0
+    /* This legacy text view does not decode scoped .meta register bindings.
+     * Retain identity rather than claiming their uses are absent. */
+    if item.kind() = 'opaque' | mnemonic = '.meta' then _identity = 1
+    if item.kind() = 'trace' then do
+      if item.local(6) < 0 then _identity = 1
+    end
     opcode = item.opcode()
     if opcode >= 0 then do
       implicit = _catalog.field(opcode,5) as .int
@@ -296,180 +802,125 @@ program: class
       end
     end
     return
-  /** Independent assignment checker: reconstruct intervals from source records,
-   * then check pairwise overlap, stable identities and window/fixed constraints.
-   * It does not trust the allocator's colour order or cached endpoints. */
-  validate: method = .string
-    arg mapping_ref = reference .int[], locals = .int
-    mapping = dereference mapping_ref
-    if locals > _budget then return 'LL_RXAS_LIMIT: register budget'
-    if locals < 1 | mapping[0] <> _virtual then return 'LL_RXAS_ASSIGNMENT: frame or map bound'
-    first = .int[]; last = .int[]; members = .int[]; chain = .int[]
-    i = .int; j = .int; v = .int; w = .int
-    item = .instruction
+  /** Prepare the typed view once. Parsing, label lookup and conservative text
+   * policy stay here; assignment and its checker live only in the kernel. */
+  prepare: method = .void
+    i = .int; j = .int; k = .int; v = .int; found = .int; bytebudget = .int
+    label = .string; opcode = .int
+    item = .instruction; other = .instruction
+    if _prepared | _error <> '' then return
+    ids = .int[]; labeltargets = .stem(); locations = .int[]
+    loopstarts = .int[]; loopends = .int[]
     do i = 1 to _records[0]
-      item = _records[i] as .instruction
-      do j = 1 to item.operands()
-        v = item.local(j) + 1
-        if v < 1 then iterate
-        if charge(1) = 0 then return _error
-        if first[v] = 0 then first[v] = i
-        last[v] = i
-      end
-    end
-    do v = 1 to _virtual
-      if charge(1) = 0 then return _error
-      assigned = mapping[v]
-      if assigned < 0 | assigned >= locals then return 'LL_RXAS_ASSIGNMENT: physical cell outside frame'
-      if _fixed[v] | _identity then do
-        if assigned <> v - 1 then return 'LL_RXAS_ASSIGNMENT: fixed physical cell moved'
-      end
-      if v - 1 >= _suffix then do
-        if assigned <> mapping[_suffix + 1] + v - _suffix - 1 then return 'LL_RXAS_ASSIGNMENT: call window is not contiguous'
-      end
-      w = members[assigned + 1]
-      do while w > 0
-        if charge(1) = 0 then return _error
-        if _candidates[v] = 0 | _candidates[w] = 0 | _pinned[v] | _pinned[w] | _fixed[v] | _fixed[w] | v - 1 >= _suffix | w - 1 >= _suffix then return 'LL_RXAS_ASSIGNMENT: distinct storage cells aliased'
-        if first[v] > 0 & first[w] > 0 then do
-          if first[v] <= last[w] & first[w] <= last[v] then return 'LL_RXAS_ASSIGNMENT: interfering scalar cells aliased'
-        end
-        w = chain[w]
-      end
-      chain[v] = members[assigned + 1]; members[assigned + 1] = v
-    end
-    return ''
-  finish: method = .llrxas..allocation
-    arg reuse = 1
-    texts = .string[]; origins = .int[]; mapping = .int[]
-    if _sealed then return .llrxas..allocation(texts,origins,mapping,0,'LL_RXAS_STATE: target already sealed')
-    _sealed = 1
-    if _error <> '' then return .llrxas..allocation(texts,origins,mapping,0,_error)
-    first = .int[]; last = .int[]; initial = .int[]; order = .int[]
-    arrivals = .int[]; following = .int[]; labeltargets = .stem(); locations = .int[]
-    loopstarts = .int[]; loopends = .int[]; members = .int[]; chain = .int[]; fixedat = .int[]
-    item = .instruction; other = .instruction; i = .int; j = .int; k = .int; v = .int; w = .int
-    n = .int; physical = .int; locals = .int; label = .string
-    do i = 1 to _records[0]
-      item = _records[i] as .instruction
+      ids[i] = i; item = _records[i] as .instruction
       if item.kind() <> 'label' then iterate
       label = item.mnemonic()
-      if charge(length(label) + 1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
-      /* Preserve the first target while retaining every storage boundary. */
+      if charge(length(label) + 1) = 0 then return
       if labeltargets.get(label) = '' then do
-        if charge(length(label) + 1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
+        if charge(length(label) + 1) = 0 then return
         call labeltargets.set(label,i as .string)
       end
-      n = locations[0] + 1; locations[n] = i
+      locations[locations[0] + 1] = i
     end
     do i = 1 to _records[0]
-      item = _records[i] as .instruction
-      opcode = item.opcode()
-      do j = 1 to item.operands()
-        v = item.local(j) + 1
-        if v < 1 then iterate
-        if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
-        if first[v] = 0 then do
-          first[v] = i
-          n = order[0] + 1; order[n] = v
-          following[v] = arrivals[i]; arrivals[i] = v
-          if opcode >= 0 then initial[v] = _catalog.kills(opcode,j) & (_catalog.reads(opcode,j) = 0)
-        end
-        last[v] = i
-      end
-      /* Any backward target closes a conservative protected interval. */
+      item = _records[i] as .instruction; opcode = item.opcode()
       if opcode < 0 then iterate
       do j = 1 to item.operands()
         if _catalog.branch(opcode,j) = 0 then iterate
         label = item.operand(j) || ':'
-        if charge(length(label) + 1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
+        if charge(length(label) + 1) = 0 then return
         targettext = labeltargets.get(label)
-        if targettext = '' then do
-          _error = 'LL_RXAS_RECORD: unresolved branch target'
-          return .llrxas..allocation(texts,origins,mapping,0,_error)
-        end
+        if targettext = '' then do; _error = 'LL_RXAS_RECORD: unresolved branch target'; return; end
         target = targettext as .int
-        if target <= i & _identity = 0 & reuse then do
+        if target <= i then do
           n = loopstarts[0] + 1; loopstarts[n] = target; loopends[n] = i
         end
       end
     end
-    do v = 1 to _virtual
-      mapping[v] = v - 1
-      if initial[v] = 0 then _pinned[v] = 1
-      if _fixed[v] & v - 1 >= _suffix then _identity = 1
-      if _candidates[v] & _pinned[v] = 0 then do
-        /* A first textual definition need not dominate an entry after it.
-         * Keep cross-block cells unique until a checked CFG proof is supplied. */
-        do k = 1 to locations[0]
-          if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
-          if first[v] < locations[k] & locations[k] <= last[v] then _pinned[v] = 1
-        end
-        do k = 1 to loopstarts[0]
-          if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
-          if first[v] <= loopends[k] & last[v] >= loopstarts[k] then _pinned[v] = 1
-        end
+    /* The text API predates a byte allowance: derive a conservative bound
+     * from its existing work allowance rather than impose a new hidden cap. */
+    if _work > 9007199254740991 then bytebudget = 9223372036854775807
+    else bytebudget = max(67108864,_work * 1024)
+    _kernel = .assignment(_virtual,reference ids,_budget,_work,bytebudget)
+    do v = 0 to _virtual - 1
+      if _candidates[v + 1] then call _kernel.candidate(v)
+      if _pinned[v + 1] then call _kernel.pin(v)
+      if _fixed[v + 1] then do
+        call _kernel.fixed(v)
+        if v >= _suffix then _identity = 1
       end
     end
-    if reuse = 0 | _identity then do
-      _identity = 1; locals = _virtual
-    end
-    else do
-      /* Greedy deterministic first-fit over inclusive intervals. Reserving r0
-       * and all exact fixed cells also preserves implicit short-form registers. */
-      do v = 1 to _virtual
-        mapping[v] = -1
-        if _fixed[v] then do; mapping[v] = v - 1; fixedat[v] = 1; end
-      end
-      do k = 1 to order[0]
-        if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
-        v = order[k]
-        if v > _suffix | _candidates[v] = 0 | _pinned[v] | _fixed[v] then iterate
-        physical = 0; found = 0
-        do until found
-          found = fixedat[physical + 1] = 0
-          w = members[physical + 1]
-          do while w > 0 & found
-            if charge(1) = 0 then return .llrxas..allocation(texts,origins,mapping,0,_error)
-            if first[w] <= last[v] & first[v] <= last[w] then found = 0
-            w = chain[w]
-          end
-          if found = 0 then physical = physical + 1
-          if _error <> '' then leave
+    if _suffix < _virtual then call _kernel.window(_suffix,_virtual - _suffix)
+    do i = 1 to locations[0]; call _kernel.boundary(locations[i]); end
+    do i = 1 to loopstarts[0]; call _kernel.protect(loopstarts[i],loopends[i]); end
+    empty = .int[]; refs = .int[]; reads = .int[]; writes = .int[]; kills = .int[]; observations = .int[]
+    do i = 1 to _records[0]
+      item = _records[i] as .instruction; opcode = item.opcode()
+      refs = empty; reads = empty; writes = empty; kills = empty; observations = empty
+      do j = 1 to item.operands()
+        if _kernel.charge(1) = 0 then leave
+        v = item.local(j)
+        if v < 0 then iterate
+        found = 0
+        do k = 1 to refs[0]
+          if _kernel.charge(1) = 0 then leave
+          if refs[k] = v then found = 1
         end
-        mapping[v] = physical
-        chain[v] = members[physical + 1]; members[physical + 1] = v
+        if _kernel.error() <> '' then leave
+        if found then iterate
+        if _kernel.reserve(1,40) = 0 then leave
+        refs[refs[0] + 1] = v
+        if item.kind() = 'trace' then observations[observations[0] + 1] = v
+        /* Aggregate all appearances of one local, including source=target. */
+        read = 0; write = 0; kill = 0
+        do k = 1 to item.operands()
+          if _kernel.charge(1) = 0 then leave
+          if item.local(k) <> v | opcode < 0 then iterate
+          read = read | _catalog.reads(opcode,k); write = write | _catalog.writes(opcode,k)
+          kill = kill | _catalog.kills(opcode,k)
+        end
+        if _kernel.error() <> '' then leave
+        if read then reads[reads[0] + 1] = v
+        if write then writes[writes[0] + 1] = v
+        if kill then kills[kills[0] + 1] = v
       end
-      highest = 0
-      do v = 1 to _virtual
-        highest = max(highest,mapping[v])
-      end
-      do v = 1 to _suffix
-        if mapping[v] >= 0 then iterate
-        highest = highest + 1; mapping[v] = highest
-      end
-      do v = _suffix + 1 to _virtual
-        highest = highest + 1; mapping[v] = highest
-      end
-      locals = highest + 1
+      call _kernel.row(i,reference refs,reference reads,reference writes,reference kills,reference observations,item.origin())
+      if _kernel.error() <> '' then leave
     end
-    if _error = '' then _error = validate(reference mapping,locals)
-    if _error <> '' then return .llrxas..allocation(texts,origins,mapping,0,_error)
-    occupied = .int[]
+    _work = _kernel.remaining(); _error = _kernel.error(); _prepared = 1
+    return
+  /** Independent checking delegates to the same typed source-row owner. It
+   * reconstructs intervals and reset requirements, not allocator endpoints. */
+  validate: method = .string
+    arg mapping_ref = reference .int[], locals = .int
+    call prepare()
+    if _error <> '' then return _error
+    message = _kernel.validate(mapping_ref,locals,reference _resets)
+    _work = _kernel.remaining()
+    return message
+  finish: method = .llrxas..allocation
+    arg reuse = 1
+    texts = .string[]; origins = .int[]; mapping = .int[]
+    i = .int; v = .int; n = .int; nextreset = .int
+    item = .instruction; reset = .typedreset
+    if _sealed then return .allocation(texts,origins,mapping,0,'LL_RXAS_STATE: target already sealed')
+    _sealed = 1; call prepare()
+    if _error <> '' then return .allocation(texts,origins,mapping,0,_error)
+    mode = 'reuse'
+    if reuse = 0 | _identity then mode = 'identity'
+    assigned = _kernel.finish(mode); _work = _kernel.remaining()
+    if assigned.valid() = 0 then return .allocation(texts,origins,mapping,0,assigned.error())
+    do v = 0 to _virtual - 1; mapping[v + 1] = assigned.assigned(v); end
+    do i = 1 to assigned.resets(); _resets[i] = assigned.reset(i) as .object; end
+    nextreset = 1
     do i = 1 to _records[0]
       item = _records[i] as .instruction
-      v = arrivals[i]
-      do while v > 0
-        physical = mapping[v] + 1
-        if _candidates[v] & _pinned[v] = 0 & _fixed[v] = 0 & v - 1 < _suffix then do
-          if occupied[physical] > 0 then do
-            n = texts[0] + 1; texts[n] = 'null r' || (physical - 1); origins[n] = item.origin()
-          end
-          occupied[physical] = v
-        end
-        v = following[v]
+      do while nextreset <= assigned.resets()
+        reset = assigned.reset(nextreset)
+        if reset.recordid() <> i then leave
+        n = texts[0] + 1; texts[n] = 'null r' || reset.physical(); origins[n] = reset.origin()
+        nextreset = nextreset + 1
       end
-      n = texts[0] + 1
-      texts[n] = item.render(reference mapping,locals); origins[n] = item.origin()
+      n = texts[0] + 1; texts[n] = item.render(reference mapping,assigned.locals()); origins[n] = item.origin()
     end
-    return .llrxas..allocation(texts,origins,mapping,locals,'')
+    return .allocation(texts,origins,mapping,assigned.locals(),'')

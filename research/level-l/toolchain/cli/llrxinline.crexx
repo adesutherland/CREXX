@@ -170,10 +170,14 @@ applybatch: procedure = .int
     cleaned = llcleanup..transport(reference target,procedureid,profile)
     if cleaned.status() = 'keep' then do
       call lineout 'stderr','LL_CLEANUP_KEEP: ' || cleaned.reason()
-      iterate
     end
-    if cleaned.status() <> 'changed' then do; call lineout 'stderr','LL_CLEANUP_' || upper(cleaned.status()) || ': ' || cleaned.reason(); return 1; end
-    target = cleaned.result()
+    else if cleaned.status() <> 'changed' then do; call lineout 'stderr','LL_CLEANUP_' || upper(cleaned.status()) || ': ' || cleaned.reason(); return 1; end
+    else target = cleaned.result()
+    procedureid = target.procedureid(names[i])
+    cleaned = llcleanup..storage(reference target,procedureid,profile)
+    if cleaned.status() = 'keep' then call lineout 'stderr','LL_STORAGE_KEEP: ' || cleaned.reason()
+    else if cleaned.status() <> 'changed' then do; call lineout 'stderr','LL_STORAGE_' || upper(cleaned.status()) || ': ' || cleaned.reason(); return 1; end
+    else target = cleaned.result()
   end
   return 0
 

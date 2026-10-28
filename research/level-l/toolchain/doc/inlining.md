@@ -878,6 +878,17 @@ multiple returns/control; numeric and handler restoration on admitted exits;
 module/global/initialization behavior; source/TRACE and transitive observations.
 Negative controls must assert both retained calls and specific reasons for real
 unsupported cases, and reject stale bodies/references and malformed schemas.
+Classify every refusal as malformed input, unavailable body, policy limit,
+missing proof/implementation or a current semantic boundary. A negative
+regression fixes the observed reason and atomic retained behavior; it does not
+prove the shape is inherently infeasible. Where practical, pair it with an
+independent executable counterexample for the unsafe rewrite and a positive
+case once a valid proof admits the shape. For example, reusing a plain scalar
+cell after `SETTP` requires a whole-cell `NULL` before the next cell's partial
+integer `LOAD`: without it, `GETANDTP` can observe stale compiler flags even
+though the integer output is correct. Keep representable missing-proof cases
+open for a later positive regression rather than treating old optimizer refusals
+or test expectations as language rules.
 
 Run an expansion with native RXAS optimization disabled to prove its own
 semantics, then separately check the selected cleanup profile and generated-code
@@ -950,9 +961,10 @@ Transport cleanup remaps the whole caller's executable and metadata references
 using storage identity. It can remove redundant LINK/UNLINK, outer ordering and
 restoration swaps, exact-storage self-copies and unobserved plain glue. Equal
 integer values alone do not justify removing a copy. Required snapshots and
-retained counted-call windows remain intact. Frame trimming is implemented
-separately from the still-open typed allocator/storage-reuse work; sparse fresh
-registers do not satisfy that remaining requirement. General CFG, nested,
+retained counted-call windows remain intact. The typed assignment owner now
+compacts complete live cells and reuses disjoint fresh-root plain scalar cells
+only with checked entry, component/status and whole-reset premises. Sparse
+registers alone do not meet the wider reuse requirement. General CFG, nested,
 optional/variadic, reference/aggregate, imported/global and wider context
 coverage remains open in INL-STEP04/05.
 
