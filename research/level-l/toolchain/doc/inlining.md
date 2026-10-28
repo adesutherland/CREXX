@@ -161,6 +161,16 @@ register. `g3` is `(module, global slot 3)`; an argument has a borrowed entry
 pointer; a local has owned base storage. Fresh integer register numbers do not
 prove equivalent base storage or reference lifetime.
 
+Track register-to-`StorageId` mappings separately from per-storage,
+per-component `ValueId` and presence facts. A swap renames the storage reached
+through a slot; a link aliases storage; a typed copy can preserve one component's
+value identity between distinct storage cells. None of those facts alone proves
+whole-value or lifetime equivalence. Integer, float, string, decimal, binary,
+reference and native-payload components remain independent. Canonical
+`ATTRIBUTES` denotes the status/type flags copied by `ACOPY`; attribute count
+and addressed child storage have separate identities. Known absence is distinct
+from unknown state or an unavailable proof.
+
 Reused VM frames relink local pointers but ordinarily retain their previous
 value contents; only the optional `SAFE_RECYCLED_STACKFRAMES` guard zeros them.
 Fresh frames initialize values and `a0` is reset on every activation. Inline
@@ -728,6 +738,24 @@ Rebuild affected graph/procedure/source indexes and task binding digests/seals
 after code changes, preserving stable logical sources instead of temporary paths.
 
 ### Selected bounded simplification
+
+These passes are consumers of reusable machine analysis, intended to merge
+with later L RXAS optimization. Generic CFG/traversal/dominance and bounded
+liveness stay with `llirgraph`; its checked access projection supplies explicit
+reads/observations, possible writes and definite kills for target attributes.
+`lltargetfacts` supplies RXAS storage/component/context transfer semantics and
+complete implicit/metadata/TRACE/window observations. Canonical facts are
+extracted from the existing opcode/effect/signal owner rather than duplicated
+in cleanup. Facts bind to the exact frozen owner, revision, schema, catalogue
+and preservation profile. Checked immutable rewrite plans precede atomic
+publication; structural changes invalidate affected analyses.
+
+A possible component write is not a definite kill. Checked arithmetic can
+signal before writing its destination, and a default policy may ignore that
+signal. Establish success/range or exact history/restoration before relying on
+a new value. The current C optimizer's capability-demand, storage/component/use
+and proof-plan structure informs this boundary; its conservative limits are
+not language restrictions or the ceiling for later L reasoning.
 
 The selected standalone deliverable includes this bounded cleanup profile;
 execution can be disabled independently for correctness comparison:

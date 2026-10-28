@@ -68,6 +68,64 @@ Extension terminators contribute their actual ordered successor rows, including
 repeated destinations, to the same index. Structural admission does not change
 the existing opaque-effect/lifetime pinning rules or authorize execution.
 
+`llirgraph.access(reference index,profile,entries=1000000,bytes=67108864,
+work=1000000)` supplies checked finite-domain access premises for semantic
+adapters. It borrows the exact index variable and binds its identity, frozen
+module revision, schema and nonempty profile. Keep the index, module and
+projection variables alive. Replacing an owner invalidates dependent results;
+a copied index cannot consume a projection belonging to the original variable.
+
+`domain(function_id,key)` declares or retrieves an opaque, function-scoped
+domain ID. Separate component, status, lifetime or binding domains belong to
+their semantic adapter; equal domain names in different functions remain
+distinct. IDs `1..index.slots()` are reserved canonical `core.slot.ID` domains.
+Authored `core.slot.*` keys and replacement core-operation descriptions are
+rejected. Core loads read their slot, core stores may write and definitely kill
+its incoming value, and core `protect` retains invocation-wide pinning.
+
+`put(operation_id,reads,observations,writes,kills)` accepts four integer domain
+vectors for one complete extension-operation description. Every domain must
+belong to that operation's function. Duplicate members, repeated descriptions,
+invalid IDs and kills absent from the possible-write vector invalidate the
+projection. Empty vectors explicitly describe no domain access; omitting an
+extension description remains unknown. Reads and observations demand incoming
+state. A possible write alone does not kill that state. A definite kill must
+overwrite it on **every declared continuation**; success-only or resumable-failure
+writes need additional semantic proof before an adapter can declare a kill.
+These are trusted access premises, never caller-supplied optimization results.
+
+Call `seal()` before analysis. `valid()`, `matches(reference index)`, `identity()`,
+`revision()`, `schemaid()`, `profile()`, `status()` and `message()` identify the
+sealed result. `domains()`, `domainfunction(id)`, `domainname(id)`,
+`known(operation_id)` and `reads`/`observes`/`writes`/`kills(operation_id,domain_id)`
+provide checked read-only queries. Missing descriptions report possible reads,
+observations and writes, with no definite kills. They conservatively pin every
+domain in the containing function; completeness is false there.
+
+`index.accessliveness(reference projection,work=1000000,bytes=67108864)` reuses
+the same bounded backward solver and predecessor worklist as `liveness()`.
+`domainin(block,domain)`, `domainout(block,domain)`, `domainbefore(op,domain)` and
+`domainafter(op,domain)` expose its result. Slot queries address the reserved
+canonical domains. `complete(function)` describes domain-access completeness
+over declared control; it does not prove result availability, alias safety,
+hidden cleanup or instruction equivalence. Existing value queries retain the
+index's conservative lifetime rules. Default `liveness()` behavior is unchanged.
+The projection cannot add control edges or supply path-specific kills.
+
+Construction checks entries, logical bytes and work before retaining rows.
+Entry accounting includes one row per operation, function, domain and access
+membership. Logical byte charges are 24 per operation/function, 32 per domain,
+16 per access membership, plus profile/key bytes; VM object overhead is excluded.
+Work counts initialization, domain lookup, vector validation/insertion and
+sealing traversals. `usedwork()` and `usedbytes()` report consumption. Failed
+construction publishes no queryable premises. Demands have independent retry
+budgets and cannot poison an earlier result. Projected point queries have the
+demand's work bound per query and signal on exhaustion without changing the
+published result. If that error is ignored, the query stops and conservatively
+returns live. Invalid/expired result queries signal rather than returning a
+false fact. The independent generic graph fixture checks component separation,
+conditional writes, definite kills, joins, a loop and lifecycle refusal.
+
 `llireffects.summary(inputs,results,version=1)` separates domain reads, writes,
 observations, allocation/release, operand value/borrow/escape modes, result
 normal/conditional/unknown availability, and failure/transfer/resume. Set the

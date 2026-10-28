@@ -7,7 +7,7 @@ import llireffects
 import llirservices
 
 main: procedure = .int
-  failures = diamond() + cycles() + protection() + effects() + declaredcontrol()
+  failures = diamond() + cycles() + protection() + effects() + accessdomains() + declaredcontrol()
   say 'failures=' || failures
   return failures
 
@@ -118,6 +118,9 @@ protection: procedure = .int
   failures = failures + check(index.pinnedfunction(fn.id()) & live.complete(fn.id()) = 0 & live.pinnedslot(slot.id()) & live.pinnedvalue(value.id()),'protected storage is explicitly pinned/incomplete')
   failures = failures + check(live.slotin(normal.id(),slot.id()) & live.slotout(normal.id(),slot.id()) & live.valuebefore(index.firstop(normal.id()),value.id()),'all protected function storage remains live beyond setup edge')
   failures = failures + check(index.pinnedfunction(other.id()) & live.complete(other.id()) = 0 & live.slotout(otherentry.id(),otherslot.id()),'nonreturns extensions retain structural indexing and conservative lifetime')
+  projection = .llirgraph..access(reference index,'protected.access'); sealed = projection.seal()
+  projected = index.accessliveness(reference projection)
+  failures = failures + check(sealed & projected.status() = 'ok' & projected.complete(fn.id()) = 0 & projected.slotout(normal.id(),slot.id()),'access premises cannot suppress canonical protect pinning')
   return failures
 
 /** Two state domains distinguish a real invalidator from an unrelated write.
@@ -171,6 +174,121 @@ effects: procedure = .int
   record = .llireffects..summary(1,0); call record.operand(1,'value'); call record.control('none','none','none'); sealed = record.seal()
   call forged.put(candidate,record)
   failures = failures + check(forged.seal() = 0 & pos('core',forged.error()) > 0,'trusted extension premises cannot suppress a core store')
+  return failures
+
+/** Independent cell components: only one diamond arm definitely overwrites the
+ * integer, while the loop body overwrites status before the next iteration.
+ * An observation demands a value; an unrelated binary component never does.
+ * These access premises describe no RXAS instruction or native optimizer. */
+accessdomains: procedure = .int
+  observed = .llir..opview; projection = .llirgraph..access; partial = .llirgraph..access
+  schema = .llir..schema(); family = schema.family('component.access',1)
+  integer = family.type('integer',.llir..intcodec() as .object)
+  action = family.operation('cell.access'); call action.state('cell'); call action.failure('none'); call action.termination('returns')
+  contract = schema.finish(); draft = .llir..builder(contract); at = draft.synthetic('component domains')
+  fn = draft.function('components',contract.voidtype())
+  entry = fn.block('entry'); left = fn.block('left'); right = fn.block('right'); join = fn.block('join')
+  head = fn.block('head'); body = fn.block('body'); done = fn.block('done'); slot = fn.slot('ordinary',integer)
+  one = entry.constant(integer,'1',at); call entry.store(slot,one,at)
+  cond = entry.constant(contract.boolean(),'true',at); call entry.branch(cond,left,right,at)
+  statement = left.operation(action,at); observed = statement.finish(); strong = observed.id(); call left.jump(join,at)
+  statement = right.operation(action,at); observed = statement.finish(); conditional = observed.id(); call right.jump(join,at)
+  statement = join.operation(action,at); observed = statement.finish(); watched = observed.id()
+  read = join.load(slot,at); call join.jump(head,at)
+  statement = head.operation(action,at); observed = statement.finish(); loopread = observed.id()
+  again = head.constant(contract.boolean(),'false',at); call head.branch(again,body,done,at)
+  statement = body.operation(action,at); observed = statement.finish(); loopwrite = observed.id(); call body.jump(head,at)
+  call done.returnvoid(at)
+  other = draft.function('separate',contract.voidtype()); otherentry = other.block('entry'); call otherentry.returnvoid(at)
+  graph = draft.finish(); failures = check(graph.error() = '','component access graph verifies')
+  if graph.error() <> '' then return failures
+  saved = graph.binary(); index = .llirgraph..index(reference graph)
+  failures = failures + check(index.status() = 'ok','component access graph indexes')
+  if index.status() <> 'ok' then return failures
+  ordinary = index.liveness()
+  failures = failures + check(ordinary.status() = 'ok' & ordinary.complete(fn.id()) = 0 & ordinary.pinnedslot(slot.id()),'default core-slot demand keeps opaque extension pinning')
+  projection = .llirgraph..access(reference index,'components.v1')
+  intdomain = projection.domain(fn.id(),'cell.integer'); statusdomain = projection.domain(fn.id(),'cell.status')
+  binarydomain = projection.domain(fn.id(),'cell.binary'); foreign = projection.domain(other.id(),'cell.integer')
+  failures = failures + check(intdomain > index.slots() & foreign <> intdomain & projection.domain(fn.id(),'cell.integer') = intdomain,'component domains are stable and function scoped')
+  empty = .int[]; integers = .int[]; statuses = .int[]; integers[1] = intdomain; statuses[1] = statusdomain
+  call projection.put(strong,empty,empty,integers,integers)
+  call projection.put(conditional,empty,empty,integers,empty)
+  call projection.put(watched,empty,integers,empty,empty)
+  call projection.put(loopread,statuses,empty,empty,empty)
+  call projection.put(loopwrite,empty,empty,statuses,statuses)
+  failures = failures + check(projection.seal() & projection.profile() = 'components.v1' & projection.revision() = index.revision() & projection.schemaid() = index.schemaid(),'access projection seals against exact revision schema and profile')
+  if projection.valid() = 0 then do; say projection.message(); return failures; end
+  live = index.accessliveness(reference projection)
+  failures = failures + check(live.status() = 'ok' & live.complete(fn.id()) & live.complete(other.id()),'complete access premises refine extension storage pinning')
+  if live.status() <> 'ok' then do; say live.message(); return failures; end
+  failures = failures + check(live.domainin(entry.id(),intdomain) & live.domainout(left.id(),intdomain) & live.domainin(left.id(),intdomain) = 0 & live.domainin(right.id(),intdomain),'join preserves incoming integer along the conditional-write arm')
+  failures = failures + check(live.domainbefore(conditional,intdomain) & live.domainafter(conditional,intdomain) & live.domainbefore(strong,intdomain) = 0 & live.domainafter(strong,intdomain),'possible write does not kill an incoming value')
+  failures = failures + check(live.domainbefore(watched,intdomain) & live.domainafter(watched,intdomain) = 0,'observation is a use with an exact death point')
+  failures = failures + check(live.domainin(head.id(),statusdomain) & live.domainout(body.id(),statusdomain) & live.domainbefore(loopwrite,statusdomain) = 0 & live.domainafter(loopwrite,statusdomain),'loop backedge demands the new status while its overwrite kills the old status')
+  failures = failures + check(live.domainin(entry.id(),binarydomain) = 0 & live.domainout(body.id(),binarydomain) = 0 & live.domainbefore(watched,statusdomain),'independent components do not inherit integer demand')
+  failures = failures + check(live.domainin(entry.id(),foreign) = 0 & live.domainin(otherentry.id(),intdomain) = 0,'domain queries remain within one function')
+  storeop = index.nextop(index.firstop(entry.id())); readop = index.definition(read.id())
+  failures = failures + check(projection.domainname(slot.id()) = 'core.slot.' || slot.id(),'core slot domain identity remains canonical')
+  failures = failures + check(live.slotbefore(storeop,slot.id()) = 0 & live.slotafter(storeop,slot.id()) & live.slotbefore(readop,slot.id()) & live.slotafter(readop,slot.id()) = 0,'core load and store retain canonical access semantics in a projection')
+  failures = failures + check(projection.writes(conditional,intdomain) & projection.kills(conditional,intdomain) = 0 & projection.observes(watched,intdomain) & projection.reads(watched,intdomain) = 0,'observation and possible-write premises stay distinct')
+  partial = .llirgraph..access(reference index,'incomplete.v1'); unknown = partial.domain(fn.id(),'cell.unknown'); sealed = partial.seal()
+  pinned = index.accessliveness(reference partial)
+  failures = failures + check(sealed & pinned.status() = 'ok' & pinned.complete(fn.id()) = 0 & pinned.domainin(entry.id(),unknown) & pinned.domainout(done.id(),unknown),'missing access descriptions pin all function domains')
+  failures = failures + check(partial.known(strong) = 0 & partial.reads(strong,unknown) & partial.observes(strong,unknown) & partial.writes(strong,unknown) & partial.kills(strong,unknown) = 0,'unknown access never supplies a definite kill')
+  limited = index.accessliveness(reference projection,1)
+  limitedbytes = index.accessliveness(reference projection,1000000,1)
+  failures = failures + check(limited.status() = 'limit' & limitedbytes.status() = 'limit' & live.valid(),'failed access demands preserve prior result and premises')
+  retry = index.accessliveness(reference projection)
+  failures = failures + check(retry.status() = 'ok' & retry.domainbefore(conditional,intdomain),'access demand retries independently')
+  copied = index; rejected = copied.accessliveness(reference projection)
+  failures = failures + check(projection.matches(reference copied) = 0 & rejected.status() = 'invalid' & live.valid(),'byte-identical foreign index is rejected')
+  failures = failures + accessrefusals(reference index,fn.id(),other.id(),strong,storeop)
+  caught = 0
+  do; call projection.put(watched,empty,empty,empty,empty); on signal; caught = 1; end
+  failures = failures + check(caught & live.valid(),'sealed projection cannot be changed')
+  failures = failures + check(bin2x(saved) = bin2x(graph.binary()),'access analysis leaves the frozen IR unchanged')
+  projection = .llirgraph..access(reference index,'replacement.v2'); sealed = projection.seal()
+  failures = failures + check(live.valid() = 0 & retry.valid() = 0 & ordinary.valid(),'replacing the projection invalidates its demands only')
+  index = .llirgraph..index(reference graph)
+  failures = failures + check(projection.valid() = 0 & pinned.valid() = 0,'replacing the exact index expires access premises and demands')
+  fresh = .llirgraph..access(reference index,'module.owner'); sealed = fresh.seal()
+  graph = llir..loadbinary(contract,saved)
+  failures = failures + check(fresh.valid() = 0 & index.valid() = 0,'replacing the frozen module expires the complete chain')
+  return failures
+
+accessrefusals: procedure = .int
+  arg index_ref = reference .llirgraph..index, fn = .int, other = .int, extension = .int, core = .int
+  invalid = .llirgraph..access; empty = .int[]; values = .int[]; duplicates = .int[]; wrong = .int[]
+  failures = 0; ignored = .int; mode = .int; domain = .int; foreign = .int
+  do mode = 1 to 9
+    invalid = .llirgraph..access(index_ref,'invalid.access')
+    domain = invalid.domain(fn,'cell'); values[1] = domain; duplicates[1] = domain; duplicates[2] = domain
+    select
+      when mode = 1 then ignored = invalid.domain(fn,'core.slot.forged')
+      when mode = 2 then ignored = invalid.domain(0,'outside')
+      when mode = 3 then call invalid.put(0,empty,empty,empty,empty)
+      when mode = 4 then do
+        foreign = invalid.domain(other,'elsewhere'); wrong[1] = foreign
+        call invalid.put(extension,wrong,empty,empty,empty)
+      end
+      when mode = 5 then call invalid.put(extension,duplicates,empty,empty,empty)
+      when mode = 6 then call invalid.put(extension,empty,empty,empty,values)
+      when mode = 7 then do
+        call invalid.put(extension,empty,empty,empty,empty); call invalid.put(extension,empty,empty,empty,empty)
+      end
+      when mode = 8 then call invalid.put(core,empty,empty,empty,empty)
+      otherwise do; wrong[1] = domain + 1; call invalid.put(extension,wrong,empty,empty,empty); end
+    end
+    failures = failures + check(invalid.seal() = 0 & invalid.status() = 'invalid' & invalid.valid() = 0,'invalid access contract refuses atomically case ' || mode)
+  end
+  tinyentries = .llirgraph..access(index_ref,'small.entries',1)
+  tinybytes = .llirgraph..access(index_ref,'small.bytes',1000000,1)
+  tinywork = .llirgraph..access(index_ref,'small.work',1000000,67108864,1)
+  failures = failures + check(tinyentries.seal() = 0 & tinyentries.status() = 'limit' & tinybytes.seal() = 0 & tinybytes.status() = 'limit' & tinywork.seal() = 0 & tinywork.status() = 'limit','projection budgets refuse before publishing usable premises')
+  caught = 0
+  do; ignored = tinywork.domains(); on signal; caught = 1; end
+  failures = failures + check(caught,'failed projection exposes no access facts')
   return failures
 
 /** An independent routing family declares real ordered control, not a Boolean

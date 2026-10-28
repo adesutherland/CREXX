@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Indexed, bounded analysis of frozen executable IR. */
 options levelb
-namespace llirgraph expose index cycles live
+namespace llirgraph expose index cycles access live
 import rxfnsb
 import llir
 
@@ -500,6 +500,9 @@ index: class
   liveness: method = .llirgraph..live
     arg work = 1000000, bytes = 67108864
     call require(); return .llirgraph..live(reference self,work,bytes)
+  accessliveness: method = .llirgraph..live
+    arg projection = reference .llirgraph..access, work = 1000000, bytes = 67108864
+    call require(); return .llirgraph..live.projected(reference self,projection,work,bytes)
 
 /** Demanded SCCs and natural-loop memberships. Irreducibility counts distinct
  * entry blocks (including a function root), not parallel incoming edges.
@@ -681,14 +684,314 @@ cycles: class
     end
     return 0
 
+/** Checked access premises over a finite function-scoped domain set. Core slot
+ * domains and operations are canonical. Extension descriptions are semantic
+ * premises, not optimization proofs; missing descriptions pin the function.
+ * A kill overwrites the incoming domain on every declared continuation.
+ * @param owner Exact live graph index owner.
+ * @param profile Nonempty semantic-adapter profile identity.
+ * @param entries Maximum retained index, domain and access rows.
+ * @param bytes Maximum logical retained bytes, excluding VM object overhead.
+ * @param work Maximum construction, validation and sealing traversals.
+ */
+access: class
+  _owner = reference .llirgraph..index
+  _indexid = .int
+  _revision = .int
+  _schema = .int
+  _identity = .int
+  _profile = .string
+  _status = .string
+  _message = .string
+  _sealed = .int
+  _prepared = .int
+  _entries = .int
+  _bytes = .int
+  _work = .int
+  _entrylimit = .int
+  _bytelimit = .int
+  _worklimit = .int
+  _operations = .int
+  _functions = .int
+  _core = .int
+  _domains = .int
+  _domainfn = .int[]
+  _keys = .string[]
+  _known = .int[]
+  _start = .int[]
+  _count = .int[]
+  _accessdomain = .int[]
+  _accesskind = .int[]
+  _pinned = .int[]
+  _fnstart = .int[]
+  _fncount = .int[]
+  _members = .int[]
+  *: factory
+    arg owner = reference .llirgraph..index, profile = .string, entries = 1000000, bytes = 67108864, work = 1000000
+    graph = .llirgraph..index
+    _owner = owner; _profile = profile; _identity = nextidentity(); _status = 'building'; _message = ''
+    _entrylimit = entries; _bytelimit = bytes; _worklimit = work
+    _entries = 0; _bytes = 0; _work = 0; _sealed = 0; _prepared = 0
+    if entries < 1 | bytes < 1 | work < 1 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: ir.access budgets must be positive'; return; end
+    if profile = '' then do; _status = 'invalid'; _message = 'LL_IR_ACCESS: profile is empty'; return; end
+    if <refvalid>(owner) = 0 then do; _status = 'invalid'; _message = 'LL_IR_GRAPH_OWNER: access index expired'; return; end
+    graph = dereference owner
+    if graph.valid() = 0 then do; _status = 'invalid'; _message = 'LL_IR_GRAPH_OWNER: access index unavailable'; return; end
+    _indexid = graph.identity(); _revision = graph.revision(); _schema = graph.schemaid()
+    _operations = graph.operations(); _functions = graph.functions(); _core = graph.slots(); _domains = _core
+    return
+  prepare: method = .void
+    graph = .llirgraph..index; profilebits = .binary
+    f = .int; d = .int; op = .int; slot = .int; i = .int
+    if _prepared then return
+    _prepared = 1
+    if _status <> 'building' then return
+    if ownerlive() = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: access index expired or replaced'); return; end
+    owner = _owner; graph = dereference owner; profilebits = _profile as .binary
+    if reserve(0,<blen>(profilebits),1) = 0 then return
+    if reserve(_operations,_operations,24) = 0 then return
+    if reserve(_functions,_functions,24) = 0 then return
+    if reserve(_core,_core,32) = 0 then return
+    if spend(_operations + _functions + _core) = 0 then return
+    do f = 1 to _functions; _pinned[f] = 0; _fncount[f] = 0; _fnstart[f] = 0; end
+    do d = 1 to _core; _domainfn[d] = graph.slotfunction(d); _keys[d] = ''; end
+    do op = 1 to _operations
+      _known[op] = graph.opcode(op) <= 16; _start[op] = _accessdomain[0] + 1; _count[op] = 0
+      if graph.opcode(op) = 10 then _pinned[graph.blockfunction(graph.opblock(op))] = 1
+      slot = graph.opslot(op)
+      if slot = 0 then iterate
+      if graph.opcode(op) = 3 then do
+        if reserve(1,1,16) = 0 then return
+        i = _accessdomain[0] + 1; _accessdomain[i] = slot; _accesskind[i] = 1; _count[op] = 1
+      end
+      else do
+        if reserve(2,2,16) = 0 then return
+        i = _accessdomain[0] + 1; _accessdomain[i] = slot; _accesskind[i] = 4
+        _accessdomain[i + 1] = slot; _accesskind[i + 1] = 8; _count[op] = 2
+      end
+    end
+    return
+  reject: method = .void
+    arg status = .string, message = .string
+    if _status = 'building' then do; _status = status; _message = message; end
+    return
+  spend: method = .int
+    arg amount = .int
+    if _status <> 'building' then return 0
+    if amount < 0 | amount > _worklimit - _work then do; call reject('limit','LL_RESOURCE_LIMIT: ir.access.work exhausted'); return 0; end
+    _work = _work + amount; return 1
+  reserve: method = .int
+    arg entries = .int, count = .int, width = .int
+    if _status <> 'building' then return 0
+    if entries < 0 | count < 0 | width < 1 | entries > _entrylimit - _entries then do; call reject('limit','LL_RESOURCE_LIMIT: ir.access.entries exhausted'); return 0; end
+    if count > (_bytelimit - _bytes) <idiv> width then do; call reject('limit','LL_RESOURCE_LIMIT: ir.access.bytes exhausted'); return 0; end
+    _entries = _entries + entries; _bytes = _bytes + count * width; return 1
+  ownerlive: method = .int
+    graph = .llirgraph..index
+    if <refvalid>(_owner) = 0 then return 0
+    graph = dereference _owner
+    if graph.valid() = 0 then return 0
+    return graph.identity() = _indexid & graph.revision() = _revision & graph.schemaid() = _schema
+  mutable: method = .int
+    if _sealed then call bad('LL_IR_ACCESS_FROZEN: projection is sealed')
+    call prepare()
+    if _status <> 'building' then return 0
+    if ownerlive() = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: access index expired or replaced'); return 0; end
+    return 1
+  domain: method = .int
+    arg f = .int, key = .string
+    d = .int; bits = .binary
+    if mutable() = 0 then return 0
+    if f < 1 | f > _functions | key = '' | left(lower(key),10) = 'core.slot.' then do; call reject('invalid','LL_IR_ACCESS_DOMAIN: invalid function, empty or reserved key'); return 0; end
+    do d = _core + 1 to _domains
+      if spend(1) = 0 then return 0
+      if _domainfn[d] = f & _keys[d] = key then return d
+    end
+    bits = key as .binary
+    if reserve(1,1,32) = 0 then return 0
+    if reserve(0,<blen>(bits),1) = 0 then return 0
+    if spend(1) = 0 then return 0
+    _domains = _domains + 1; _domainfn[_domains] = f; _keys[_domains] = key
+    return _domains
+  put: method = .void
+    arg op = .int, reads = .int[], observations = .int[], writes = .int[], kills = .int[]
+    graph = .llirgraph..index; list = .int[]
+    f = .int; amount = .int; kind = .int; i = .int; d = .int; j = .int
+    found = .int; mask = .int; next = .int
+    if mutable() = 0 then return
+    graph = dereference _owner
+    if op < 1 | op > _operations then do; call reject('invalid','LL_IR_ACCESS_ID: operation outside index'); return; end
+    if graph.opcode(op) <= 16 then do; call reject('invalid','LL_IR_ACCESS: core operations are canonical'); return; end
+    if _known[op] then do; call reject('invalid','LL_IR_ACCESS: duplicate operation description'); return; end
+    f = graph.blockfunction(graph.opblock(op))
+    amount = 0
+    do kind = 1 to 4
+      select
+        when kind = 1 then list = reads
+        when kind = 2 then list = observations
+        when kind = 3 then list = writes
+        otherwise list = kills
+      end
+      if list[0] > _entrylimit - amount then do; call reject('limit','LL_RESOURCE_LIMIT: ir.access.entries exhausted'); return; end
+      amount = amount + list[0]
+      do i = 1 to list[0]
+        if spend(1) = 0 then return
+        d = list[i]
+        if d < 1 | d > _domains then do; call reject('invalid','LL_IR_ACCESS_ID: domain outside projection'); return; end
+        if _domainfn[d] <> f then do; call reject('invalid','LL_IR_ACCESS_DOMAIN: foreign function domain'); return; end
+        do j = 1 to i - 1
+          if spend(1) = 0 then return
+          if list[j] = d then do; call reject('invalid','LL_IR_ACCESS: duplicate domain in access vector'); return; end
+        end
+        if kind <> 4 then iterate
+        found = 0
+        do j = 1 to writes[0]
+          if spend(1) = 0 then return
+          if writes[j] = d then do; found = 1; leave; end
+        end
+        if found = 0 then do; call reject('invalid','LL_IR_ACCESS: kill is not a possible write'); return; end
+      end
+    end
+    if reserve(amount,amount,16) = 0 then return
+    if spend(amount) = 0 then return
+    _start[op] = _accessdomain[0] + 1
+    do kind = 1 to 4
+      select
+        when kind = 1 then list = reads
+        when kind = 2 then list = observations
+        when kind = 3 then list = writes
+        otherwise list = kills
+      end
+      mask = 1
+      if kind = 2 then mask = 2
+      if kind = 3 then mask = 4
+      if kind = 4 then mask = 8
+      do i = 1 to list[0]
+        next = _accessdomain[0] + 1; _accessdomain[next] = list[i]; _accesskind[next] = mask; _count[op] = _count[op] + 1
+      end
+    end
+    _known[op] = 1
+    return
+  seal: method = .int
+    graph = .llirgraph..index; op = .int; d = .int; f = .int; next = .int
+    if _sealed then return valid()
+    if mutable() = 0 then do; _sealed = 1; return 0; end
+    graph = dereference _owner
+    if spend(_operations + _functions + _domains * 3) = 0 then do; _sealed = 1; return 0; end
+    do op = 1 to _operations
+      if _known[op] = 0 then _pinned[graph.blockfunction(graph.opblock(op))] = 1
+    end
+    do d = 1 to _domains; f = _domainfn[d]; _fncount[f] = _fncount[f] + 1; end
+    next = 1
+    do f = 1 to _functions; _fnstart[f] = next; next = next + _fncount[f]; _fncount[f] = 0; end
+    do d = 1 to _domains
+      f = _domainfn[d]; _members[_fnstart[f] + _fncount[f]] = d; _fncount[f] = _fncount[f] + 1
+    end
+    _sealed = 1; _status = 'ok'
+    return valid()
+  valid: method = .int
+    return _sealed & _status = 'ok' & ownerlive()
+  matches: method = .int
+    arg owner = reference .llirgraph..index
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_GRAPH_OWNER: access projection unavailable or expired: ' || message())
+    return
+  status: method = .string
+    call prepare()
+    if _status = 'ok' & ownerlive() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    call prepare()
+    if _status = 'ok' & ownerlive() = 0 then return 'LL_IR_GRAPH_OWNER: access index expired or replaced'
+    return _message
+  identity: method = .int
+    return _identity
+  revision: method = .int
+    call require(); return _revision
+  schemaid: method = .int
+    call require(); return _schema
+  profile: method = .string
+    call require(); return _profile
+  usedwork: method = .int
+    call prepare()
+    return _work
+  usedbytes: method = .int
+    call prepare()
+    return _bytes
+  checkid: method = .void
+    arg id = .int, count = .int
+    call require()
+    if id < 1 | id > count then call bad('LL_IR_ACCESS_ID: entity outside projection')
+    return
+  domains: method = .int
+    call require(); return _domains
+  domainfunction: method = .int
+    arg d = .int
+    call checkid(d,_domains); return _domainfn[d]
+  domainname: method = .string
+    arg d = .int
+    call checkid(d,_domains)
+    if d <= _core then return 'core.slot.' || d
+    return _keys[d]
+  functiondomains: method = .int
+    arg f = .int
+    call checkid(f,_functions); return _fncount[f]
+  functiondomain: method = .int
+    arg f = .int, i = .int
+    call checkid(f,_functions); call checkid(i,_fncount[f]); return _members[_fnstart[f] + i - 1]
+  complete: method = .int
+    arg f = .int
+    call checkid(f,_functions); return _pinned[f] = 0
+  known: method = .int
+    arg op = .int
+    call checkid(op,_operations); return _known[op]
+  accesses: method = .int
+    arg op = .int
+    call checkid(op,_operations); return _count[op]
+  accessdomain: method = .int
+    arg op = .int, i = .int
+    call checkid(op,_operations); call checkid(i,_count[op]); return _accessdomain[_start[op] + i - 1]
+  accesskind: method = .int
+    arg op = .int, i = .int
+    call checkid(op,_operations); call checkid(i,_count[op]); return _accesskind[_start[op] + i - 1]
+  has: method = .int
+    arg op = .int, d = .int, kind = .int
+    graph = .llirgraph..index; i = .int
+    call checkid(op,_operations); call checkid(d,_domains)
+    graph = dereference _owner
+    if _domainfn[d] <> graph.blockfunction(graph.opblock(op)) then return 0
+    if _known[op] = 0 then return kind <> 8
+    do i = _start[op] to _start[op] + _count[op] - 1
+      if _accessdomain[i] = d & _accesskind[i] = kind then return 1
+    end
+    return 0
+  reads: method = .int
+    arg op = .int, d = .int
+    return has(op,d,1)
+  observes: method = .int
+    arg op = .int, d = .int
+    return has(op,d,2)
+  writes: method = .int
+    arg op = .int, d = .int
+    return has(op,d,4)
+  kills: method = .int
+    arg op = .int, d = .int
+    return has(op,d,8)
+
 /** Backwards finite slot liveness, plus block-local value use intervals.
  * Every slot/value storage in protected or opaque functions is conservatively
  * live and pinned. complete(function) is false there. This is deliberately an
  * overapproximation until extent/escape/control contracts can refine it.
  * Values' storage liveness is distinct from conditional result availability.
+ * Projected demands share the core-slot solver and its bounded worklist.
  */
 live: class
   _owner = reference .llirgraph..index
+  _projection = reference .llirgraph..access
+  _projected = .int
+  _accessid = .int
+  _profile = .string
   _identity = .int
   _status = .string
   _message = .string
@@ -703,17 +1006,32 @@ live: class
   *: factory
     arg owner = reference .llirgraph..index, work = 1000000, bytes = 67108864
     _owner = owner; _status = 'building'; _message = ''; _work = 0; _bytes = 0; _worklimit = work
-    _bytelimit = bytes
+    _bytelimit = bytes; _projected = 0
+    return
+  projected: factory
+    arg owner = reference .llirgraph..index, projection = reference .llirgraph..access, work = 1000000, bytes = 67108864
+    _owner = owner; _status = 'building'; _message = ''; _work = 0; _bytes = 0; _worklimit = work
+    _bytelimit = bytes; _projected = 1; _projection = projection
     return
   run: method = .void
     if _status <> 'building' then return
     work = _worklimit; bytes = _bytelimit; owner = _owner
     b = .int; f = .int; offset = .int; i = .int; s = .int; at = .int; op = .int; p = .int; source = .int
+    projection = .llirgraph..access; kind = .int
+    projection_ref = _projection
     if work < 1 | bytes < 1 then do; call reject('limit','LL_RESOURCE_LIMIT: ir.live budgets must be positive'); return; end
     if <refvalid>(owner) = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: index expired'); return; end
     graph = dereference owner
     if graph.valid() = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: index unavailable'); return; end
     _identity = graph.identity(); _blocks = graph.blocks(); _slots = graph.slots()
+    if _projected then do
+      if <refvalid>(projection_ref) = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: access projection expired'); return; end
+    end
+    if _projected then projection = dereference projection_ref
+    if _projected then do
+      if projection.matches(owner) = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: access projection unavailable or foreign'); return; end
+      _accessid = projection.identity(); _profile = projection.profile(); _slots = projection.domains()
+    end
     if _blocks > bytes <idiv> 24 then do; call reject('limit','LL_RESOURCE_LIMIT: ir.live.bytes exhausted'); return; end
     _bytes = _blocks * 24
     if _slots > 0 then do
@@ -728,10 +1046,10 @@ live: class
       queued[b] = 0
       if graph.reachable(b) = 0 then iterate
       f = graph.blockfunction(b); offset = (b - 1) * _slots
-      if graph.pinnedfunction(f) then do
-        do i = 1 to graph.functionslots(f)
+      if pinnedfunction(f) then do
+        do i = 1 to functiondomains(f)
           if spend(1) = 0 then return
-          s = graph.functionslot(f,i); at = offset + s - 1
+          s = functiondomain(f,i); at = offset + s - 1
           <at..u8>(at) _in = 1; <at..u8>(at) _out = 1; <at..u8>(at) use = 1
         end
       end
@@ -739,13 +1057,25 @@ live: class
         op = graph.firstop(b)
         do while op > 0
           if spend(1) = 0 then return
-          s = graph.opslot(op)
-          if s > 0 then do
-            at = offset + s - 1
-            if graph.opcode(op) = 3 then do
-              if <at..u8>(at) kill = 0 then <at..u8>(at) use = 1
+          if _projected then do
+            do i = 1 to projection.accesses(op)
+              if spend(1) = 0 then return
+              s = projection.accessdomain(op,i); kind = projection.accesskind(op,i); at = offset + s - 1
+              if kind = 1 | kind = 2 then do
+                if <at..u8>(at) kill = 0 then <at..u8>(at) use = 1
+              end
+              else if kind = 8 then <at..u8>(at) kill = 1
             end
-            else <at..u8>(at) kill = 1
+          end
+          else do
+            s = graph.opslot(op)
+            if s > 0 then do
+              at = offset + s - 1
+              if graph.opcode(op) = 3 then do
+                if <at..u8>(at) kill = 0 then <at..u8>(at) use = 1
+              end
+              else <at..u8>(at) kill = 1
+            end
           end
           op = graph.nextop(op)
         end
@@ -759,10 +1089,10 @@ live: class
       if head > _blocks then head = 1
       waiting = waiting - 1; queued[b] = 0; changed = 0
       f = graph.blockfunction(b); offset = (b - 1) * _slots
-      do i = 1 to graph.functionslots(f)
+      do i = 1 to functiondomains(f)
         if spend(1) = 0 then return
-        s = graph.functionslot(f,i); at = offset + s - 1; after = 0
-        if graph.pinnedfunction(f) then after = 1
+        s = functiondomain(f,i); at = offset + s - 1; after = 0
+        if pinnedfunction(f) then after = 1
         else do j = 1 to graph.successors(b)
           if spend(1) = 0 then return
           target = graph.successor(b,j); after = after | <at..u8>((target - 1) * _slots + s - 1) _in
@@ -805,31 +1135,67 @@ live: class
     if _status <> 'ok' then return 0
     if <refvalid>(_owner) = 0 then return 0
     graph = dereference _owner
-    return graph.valid() & graph.identity() = _identity
+    if graph.valid() = 0 | graph.identity() <> _identity then return 0
+    projection_ref = _projection
+    if _projected then do
+      if <refvalid>(projection_ref) = 0 then return 0
+      projection = dereference projection_ref
+      if projection.matches(_owner) = 0 then return 0
+      return projection.identity() = _accessid & projection.profile() = _profile
+    end
+    return 1
   require: method = .void
     if valid() = 0 then call bad('LL_IR_GRAPH_OWNER: liveness unavailable or expired')
     return
   complete: method = .int
     arg f = .int
-    call require(); graph = dereference _owner; return graph.pinnedfunction(f) = 0
+    call require(); return pinnedfunction(f) = 0
+  pinnedfunction: method = .int
+    arg f = .int
+    graph = dereference _owner; projection_ref = _projection
+    if _projected then do; projection = dereference projection_ref; return projection.complete(f) = 0; end
+    return graph.pinnedfunction(f)
+  functiondomains: method = .int
+    arg f = .int
+    graph = dereference _owner; projection_ref = _projection
+    if _projected then do; projection = dereference projection_ref; return projection.functiondomains(f); end
+    return graph.functionslots(f)
+  functiondomain: method = .int
+    arg f = .int, i = .int
+    graph = dereference _owner; projection_ref = _projection
+    if _projected then do; projection = dereference projection_ref; return projection.functiondomain(f,i); end
+    return graph.functionslot(f,i)
+  domainfunction: method = .int
+    arg d = .int
+    graph = dereference _owner; projection_ref = _projection
+    if _projected then do; projection = dereference projection_ref; return projection.domainfunction(d); end
+    return graph.slotfunction(d)
   pinnedslot: method = .int
     arg s = .int
-    call require(); graph = dereference _owner; return graph.pinnedslot(s)
+    call require(); graph = dereference _owner; return pinnedfunction(graph.slotfunction(s))
   pinnedvalue: method = .int
     arg v = .int
     call require(); graph = dereference _owner; return graph.pinnedvalue(v)
   slotin: method = .int
     arg b = .int, s = .int
-    call require(); graph = dereference _owner; call graph.checkid(b,_blocks); call graph.checkid(s,_slots)
-    if graph.blockfunction(b) <> graph.slotfunction(s) then return 0
-    if graph.pinnedslot(s) then return 1
-    return <at..u8>((b - 1) * _slots + s - 1) _in
+    call require(); graph = dereference _owner; call graph.checkid(s,graph.slots())
+    return domainin(b,s)
   slotout: method = .int
     arg b = .int, s = .int
-    call require(); graph = dereference _owner; call graph.checkid(b,_blocks); call graph.checkid(s,_slots)
-    if graph.blockfunction(b) <> graph.slotfunction(s) then return 0
-    if graph.pinnedslot(s) then return 1
-    return <at..u8>((b - 1) * _slots + s - 1) _out
+    call require(); graph = dereference _owner; call graph.checkid(s,graph.slots())
+    return domainout(b,s)
+  domainin: method = .int
+    arg b = .int, d = .int
+    call require(); graph = dereference _owner; call graph.checkid(b,_blocks); call graph.checkid(d,_slots)
+    if graph.blockfunction(b) <> domainfunction(d) then return 0
+    if pinnedfunction(domainfunction(d)) then return 1
+    return <at..u8>((b - 1) * _slots + d - 1) _in
+  domainout: method = .int
+    arg b = .int, d = .int
+    call require(); graph = dereference _owner; call graph.checkid(b,_blocks); call graph.checkid(d,_slots)
+    if graph.blockfunction(b) <> domainfunction(d) then return 0
+    if pinnedfunction(domainfunction(d)) then return 1
+    return <at..u8>((b - 1) * _slots + d - 1) _out
   slotbefore: method = .int
     arg op = .int, s = .int
     return slotpoint(op,s,0)
@@ -838,19 +1204,48 @@ live: class
     return slotpoint(op,s,1)
   slotpoint: method = .int
     arg op = .int, s = .int, after = .int
-    call require(); graph = dereference _owner; b = graph.opblock(op); call graph.checkid(s,_slots)
-    if graph.blockfunction(b) <> graph.slotfunction(s) then return 0
-    if graph.pinnedslot(s) then return 1
+    call require(); graph = dereference _owner; call graph.checkid(s,graph.slots())
+    return domainpoint(op,s,after)
+  domainbefore: method = .int
+    arg op = .int, d = .int
+    return domainpoint(op,d,0)
+  domainafter: method = .int
+    arg op = .int, d = .int
+    return domainpoint(op,d,1)
+  domainpoint: method = .int
+    arg op = .int, d = .int, after = .int
+    graph = .llirgraph..index; projection = .llirgraph..access
+    b = .int; current = .int; querywork = .int; amount = .int; killed = .int; i = .int; kind = .int
+    projection_ref = _projection
+    call require(); graph = dereference _owner; b = graph.opblock(op); call graph.checkid(d,_slots)
+    if graph.blockfunction(b) <> domainfunction(d) then return 0
+    if pinnedfunction(domainfunction(d)) then return 1
     if graph.reachable(b) = 0 then return 0
     /* The first subsequent access decides, otherwise the block's live-out.
      * This bounded scan avoids retaining an operations-by-slots lattice. */
     current = op
     if after then current = graph.nextop(current)
+    querywork = 0
+    if _projected then projection = dereference projection_ref
     do while current > 0
-      if graph.opslot(current) = s then return graph.opcode(current) = 3
+      if _projected then do
+        amount = projection.accesses(current) + 1
+        if amount > _worklimit - querywork then do
+          call bad('LL_RESOURCE_LIMIT: ir.live.query work exhausted'); return 1
+        end
+        querywork = querywork + amount; killed = 0
+        do i = 1 to projection.accesses(current)
+          if projection.accessdomain(current,i) <> d then iterate
+          kind = projection.accesskind(current,i)
+          if kind = 1 | kind = 2 then return 1
+          if kind = 8 then killed = 1
+        end
+        if killed then return 0
+      end
+      else if graph.opslot(current) = d then return graph.opcode(current) = 3
       current = graph.nextop(current)
     end
-    return slotout(b,s)
+    return domainout(b,d)
   valuebefore: method = .int
     arg op = .int, v = .int
     return valuepoint(op,v,0)

@@ -198,6 +198,69 @@ Trusted AST byte spans bound token conversion before its first owned copy;
 private decoder inputs cannot bypass that prospective work check.
 Constructed decimal literals require canonical lowercase `d` as emitted RXAS.
 
+### Reviewed reusable machine-proof boundary
+
+The inliner and cleanup are first consumers of reusable L machine analysis
+intended to inform and merge with later RXAS optimization. The existing C
+optimizer remains in place. Its pass demand/capability, immutable analysis
+epoch, storage/component/use facts, proof-plan and atomic-mutation structure
+informs this boundary; its conservative coverage is not the new pass's ceiling.
+
+Register numbers are names, not storage or value identities. Track physical
+slots/permutations, active and entry/base storage bindings, and independent
+component ValueIds/presence/status. Swaps and links move or alias storage;
+copies may preserve a component's value identity while creating distinct
+storage and ownership obligations. Equal integer components do not establish
+whole-cell equality, reference validity, attribute equality or release safety.
+Keep absent, unknown and unavailable facts distinct.
+
+Reuse `llirgraph` for declared CFG, traversal, dominance and loops. Add the
+smallest checked finite-domain access projection to its existing bounded
+liveness solver, bound to exact analysis/module owner, revision/schema, profile
+and operation IDs. Separate reads/observations, possible writes and definite
+kills; incomplete descriptions conservatively retain storage. Preserve the
+existing core-slot adapter and qualify the generic extension independently.
+Target attributes do not become implicit machine reads merely by indexing IR.
+
+The generic API is `llirgraph.access(reference index,profile,entries,bytes,work)`
+with `domain(functionId,key)`, single-assignment extension
+`put(operationId,reads,observations,writes,kills)` and `seal()`. Existing slot
+IDs remain reserved canonical `core.slot.ID` domains; callers cannot replace
+core semantics. Validate owner/function/ranges, vector uniqueness and kills
+as a subset of writes. Missing extension descriptions pin all domains in the
+function. `index.accessliveness(reference access,work,bytes)` reuses the same
+`live` solver and adds domain before/after/in/out queries. Existing default
+liveness remains unchanged. Completeness describes access premises over
+declared control, not executable lifetime or result availability; kills must
+hold across every continuation. No edge-specific override is implied.
+
+`lltarget` owns typed executable/metadata/TRACE reference enumeration and
+remapping. `lltargetfacts` owns RXAS storage, component, presence, status,
+context and observation transfers over those generic algorithms. Canonical
+opcode/effect/signal data remains with its current generated owner; extend
+extraction for needed clear/copy/derivation/context facts rather than creating
+private mnemonic tables. Append compatible generated catalogue queries
+`clearcomponents(opcode,operand)`, `samecopyisnoop`, `derivation`,
+`derivationsource`, `derivationcomponent`, `contextreads` and `contextwrites`.
+Keep existing columns and operand conventions; absent derivation source is
+`-1`, and derivation-source indexes remain zero-based.
+`llcleanup` selects rewrites using immutable checked
+plans, validates expected records and publishes atomically. Structural changes
+invalidate affected facts; rebuilding the changed caller is acceptable.
+
+Checked arithmetic may leave a destination unwritten on a signal continuation.
+For example, default-root overflow can be ignored. A possible write is not a
+definite kill or a new available component: require success/range evidence or
+an exact history/restoration proof before expansion or elimination relies on
+it. Retain specific missing-proof outcomes while extending representable
+coverage. Independent controls cover renamed/aliased storage, equal integer
+but different other components, partial writes and required release effects.
+The current scalar slice need not implement general SSA, wider machine CFG or
+the complete optimizer; those remain open work through these same seams.
+The generic access/liveness extension and compatible catalogue extraction are
+implemented and qualified by their selected independent owner checks. Target
+adapter and cleanup integration remains in progress.
+
 ### Reviewed scalar and transport increment
 
 After the initial RXAS adapter is qualified, INL-STEP04/05 admit real compiler
