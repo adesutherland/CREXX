@@ -736,6 +736,16 @@ bound source/TRACE records with a proven meaning; do not leave them to drift
 onto the next surviving instruction. Fresh IDs must not collide with the caller
 or exceed the unsigned 32-bit metadata domain. The text reader normalizes the
 native signed numeric spellings before constructing canonical checked records.
+In the current sole-return inline profile, a binding opened before RET but
+cleared only at the callee's detached end anchor receives a fresh matching
+clear in the cloned caller. The original detached clear stays in the retained
+callee. One executable `CNOP` follows any generated clears: they attach to its
+address, so the debugger's backward lookup from the next instruction's
+`addr-1` sees the closure. This straight-line carrier lets the current
+transport and storage cleanup compact the caller; it is omitted when the
+cloned bindings have already closed. The ordinary `rxas -n` path retains the
+carrier. Native assembler optimization can fold adjacent CNOP forms, so an
+optimized-assembly observation guarantee needs its own relocation proof.
 TRACE code fields are raw byte codes, separate from ordinary escaped strings.
 The adapter reads raw quoted interiors and renders admitted control/DEL bytes
 literally, preserving unknown codes without an enum whitelist. Backslash token

@@ -336,24 +336,85 @@ globalscalar: procedure = .int
   end
   return failures
 
+/** A debugger lookup at continuation addr-1 must already see the fresh clear. */
+closedcallerscope: procedure = .int
+  arg owner = reference .lltarget..module, callername = .string, continuationid = .int
+  failures = 0; i = .int; metadata = .int; observations = .int; authored = .int
+  opened = .int; cleared = .int; lastglue = .int; continued = .int; openordinal = .int; clearordinal = .int
+  freshname = ''; clearname = ''; clearaddress = .int
+  constantname = ''; metaname = ''; constantopened = .int; constantcleared = .int
+  constantordinal = .int; constantclearordinal = .int; constantaddress = .int
+  item = .lltarget..record; value = .lltarget..operand; body = .lltarget..body
+  source = dereference owner; body = source.body(source.procedureid('main'))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = 'instruction' then do
+      if item.id() = continuationid then continued = 1
+      else if continued = 0 then lastglue = item.id()
+    end
+    if item.kind() = '.meta' then do
+      metadata = metadata + 1; value = item.operand(1); metaname = value.text()
+      if metaname == callername then authored = authored + 1
+      else if item.operands() = 4 then do
+        value = item.operand(4)
+        if value.kind() = 'R' then do
+          opened = opened + 1; freshname = metaname; openordinal = i
+        end
+        else if value.kind() = 'S' then do
+          constantopened = constantopened + 1; constantname = metaname; constantordinal = i
+          failures = failures + check(value.text() = 'constant','cloned META_CONST retains its exact literal')
+        end
+      end
+      else if item.operands() = 1 then do
+        if metaname == freshname then do
+          cleared = cleared + 1; clearname = metaname; clearordinal = i; clearaddress = item.addressid()
+        end
+        else if metaname == constantname then do
+          constantcleared = constantcleared + 1; constantclearordinal = i; constantaddress = item.addressid()
+        end
+        else failures = failures + check(0,'generated clear must match one open fresh binding')
+      end
+    end
+    if item.kind() = '.traceevent' | item.kind() = '.srcstep' then observations = observations + 1
+  end
+  failures = failures + check(metadata = 6 & authored = 2 & opened = 1 & cleared = 1 & constantopened = 1 & constantcleared = 1 & observations = 0,'caller keeps authored scope and fresh REG/CONST declaration/clear pairs; no detached observations')
+  failures = failures + check(freshname <> '' & freshname <> 'live' & freshname <> callername & clearname == freshname & clearordinal > openordinal,'fresh scope avoids authored suffix collision and receives its matching clear')
+  failures = failures + check(constantname <> '' & constantname <> 'fixed' & constantname <> callername & constantname <> freshname & constantclearordinal > constantordinal,'fresh constant binding receives its own matching clear')
+  failures = failures + check(continued & clearaddress = lastglue & constantaddress = lastglue & clearaddress <> continuationid,'both fresh clears anchor to final surviving glue before continuation for addr-1 lookup')
+  if lastglue > 0 then do
+    item = source.at(lastglue)
+    failures = failures + check(item.mnemonic() = 'cnop','scope clears use a surviving CNOP carrier before continuation')
+  end
+  return failures
+
 /** Detached callee metadata is retained, never relocated onto continuation. */
 calleetail: procedure = .int
-  failures = 0; i = .int; metadata = .int; observations = .int; ignored = .int
+  failures = 0; ignored = .int; continuationid = .int; mappedcontinuation = .int
   original = .lltarget..module; result = .lltarget..module; item = .lltarget..record; value = .lltarget..operand
-  body = .lltarget..body; request = .llinline..binding; changed = .llinline..change
+  request = .llinline..binding; changed = .llinline..change; cleaned = .llinline..change
   fields = .object[]
   draft = .lltarget..draft('calleetail','constructed.calleetail',0); at = draft.synthetic('live and detached callee metadata')
   root = draft.procedure('main',2,at)
   ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
   callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('identity'),root.reg('r',0),at)
-  ignored = one(root,'itos',root.reg('r',1),at); ignored = one(root,'say',root.reg('r',1),at)
+  callername = 'live.$inline.' || callid
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string(callername as .binary) as .object
+  fields[2] = .lltarget..operand.string('b' as .binary) as .object
+  fields[3] = .lltarget..operand.string('.int' as .binary) as .object; fields[4] = root.reg('r',0) as .object
+  ignored = root.record('.meta',fields,at)
+  continuationid = one(root,'itos',root.reg('r',1),at); ignored = one(root,'say',root.reg('r',1),at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string(callername as .binary) as .object
+  ignored = root.record('.meta',fields,at)
   ignored = one(root,'ret',.lltarget..operand.integer(0),at)
   leaf = draft.procedure('identity',0,at)
   call objectarraydrop fields; fields[1] = .lltarget..operand.string('live' as .binary) as .object
   fields[2] = .lltarget..operand.string('b' as .binary) as .object
   fields[3] = .lltarget..operand.string('.int' as .binary) as .object; fields[4] = leaf.reg('a',1) as .object
   ignored = leaf.record('.meta',fields,at)
-  call objectarraydrop fields; fields[1] = .lltarget..operand.string('live' as .binary) as .object
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('fixed' as .binary) as .object
+  fields[2] = .lltarget..operand.string('b' as .binary) as .object
+  fields[3] = .lltarget..operand.string('.string' as .binary) as .object
+  fields[4] = .lltarget..operand.string('constant' as .binary) as .object
   ignored = leaf.record('.meta',fields,at)
   ignored = one(leaf,'ret',leaf.reg('a',1),at)
   call objectarraydrop fields
@@ -370,6 +431,10 @@ calleetail: procedure = .int
   fields[9] = .lltarget..operand.integer(0) as .object
   fields[10] = .lltarget..operand.string('tail' as .binary) as .object; fields[11] = .lltarget..operand.string(''x as .binary) as .object
   traceid = leaf.record('.traceevent',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('live' as .binary) as .object
+  liveclearid = leaf.record('.meta',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('fixed' as .binary) as .object
+  constantclearid = leaf.record('.meta',fields,at)
   call objectarraydrop fields; fields[1] = .lltarget..operand.string('tail' as .binary) as .object
   fields[2] = .lltarget..operand.string('b' as .binary) as .object
   fields[3] = .lltarget..operand.string('.int' as .binary) as .object; fields[4] = leaf.reg('a',1) as .object
@@ -384,22 +449,28 @@ calleetail: procedure = .int
   changed = llinline..expand(request,'closed-main-default-halt.v1')
   failures = failures + check(changed.status() = 'changed','detached source-ID maxima and typed observations do not block expansion')
   if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
-  result = changed.result(); body = result.body(result.procedureid('main'))
-  do i = 1 to body.records()
-    item = body.record(i)
-    if item.kind() = '.meta' then do
-      metadata = metadata + 1; value = item.operand(1)
-      failures = failures + check(pos('live',value.text()) > 0,'only reachable callee binding metadata reaches caller')
-    end
-    if item.kind() = '.traceevent' | item.kind() = '.srcstep' then observations = observations + 1
-  end
-  failures = failures + check(metadata = 2 & observations = 0 & changed.operation(callid) = 0,'live binding clones; detached TRACE/source observations do not enter caller continuation')
+  result = changed.result(); mappedcontinuation = changed.operation(continuationid)
+  failures = failures + closedcallerscope(reference result,callername,mappedcontinuation)
+  failures = failures + check(changed.operation(callid) = 0,'selected call expands despite detached observations')
   item = result.at(changed.operation(stepid)); value = item.operand(1)
   failures = failures + check(item.addressid() = 0 & value.index() = 4294967295,'original declaration retains detached source identity')
   item = result.at(changed.operation(traceid)); value = item.operand(7)
   failures = failures + check(item.addressid() = 0 & value.index() = 4294967295,'original declaration retains detached TRACE identity')
   item = result.at(changed.operation(metaid)); value = item.operand(4)
   failures = failures + check(item.addressid() = 0 & value.bank() = 'a' & value.index() = 1,'original declaration retains its own tail binding')
+  item = result.at(changed.operation(liveclearid)); value = item.operand(1)
+  failures = failures + check(item.addressid() = 0 & value.text() = 'live','original detached clear remains with its original callee')
+  item = result.at(changed.operation(constantclearid)); value = item.operand(1)
+  failures = failures + check(item.addressid() = 0 & value.text() = 'fixed','original detached constant clear remains with its original callee')
+  cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(cleaned.status() = 'changed' | cleaned.status() = 'keep','default transport preserves generated scope closure')
+  if cleaned.status() <> 'changed' & cleaned.status() <> 'keep' then do; say cleaned.reason(); return failures; end
+  mappedcontinuation = cleaned.operation(mappedcontinuation); result = cleaned.result()
+  cleaned = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(cleaned.status() = 'changed' | cleaned.status() = 'keep','default placement preserves generated scope closure')
+  if cleaned.status() <> 'changed' & cleaned.status() <> 'keep' then do; say cleaned.reason(); return failures; end
+  mappedcontinuation = cleaned.operation(mappedcontinuation); result = cleaned.result()
+  failures = failures + closedcallerscope(reference result,callername,mappedcontinuation)
   failures = failures + check(bin2x(graph.binary()) = bin2x(before),'tail exclusion preserves the original frozen input')
   return failures
 

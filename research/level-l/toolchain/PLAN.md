@@ -124,7 +124,7 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, and private same-module scalar global slices are implemented and focused-qualified. Direct target CFG transport and validation are focused-qualified, with branch/multiple-return expansion still open. Complete broader aliasing, optional presence/defaults and dynamic varargs, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, and private same-module scalar global slices are implemented and focused-qualified. Direct target CFG transport/validation and sole-RET detached-scope closure are focused-qualified, with branch/multiple-return expansion still open. Complete broader aliasing, optional presence/defaults and dynamic varargs, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. The target CFG prerequisite keeps current linear cleanup conservative on branched callers and typed end-anchor observations; graph-aware placement, broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -652,6 +652,26 @@ wrong-but-well-formed edges, decoded interior record reordering and atomic
 limits. An ordinary RXAS both-arm
 control checks writer/native assembler/one VM without claiming inliner support.
 
+The selected-callee tail exclusion must also close cloned scoped metadata.
+`META_REG` bindings may be opened before a RET and closed by a detached
+`META_CLEAR` at the original callee end address. The original clear stays with
+the retained callee, while the expansion emits a clear for every still-open
+freshened binding on each logical exit before caller continuation. Check
+same-name clear/declaration order, no extra detached TRACE or source event,
+native debugger metadata lookup and atomic resource behavior. Fresh scope
+names must avoid collisions with caller declarations, rather than clearing a
+different caller binding. This is executable metadata correctness, not an
+exception to the detached-tail rule.
+The current sole-RET straight-line expansion uses one executable `CNOP` after
+the generated clear as its address carrier; the caller's source-order cleanup
+can then still prove transport and storage compaction. A future multi-return
+branching expansion uses a per-exit branch to its common continuation. The
+carrier survives ordinary assembly with optimization disabled, and source
+metadata is attached to its instruction address so debugger lookup from the
+following instruction's `addr-1` sees the clear. A previously closed cloned
+binding needs no new carrier. The independent generated caller must retain its
+existing compact frame and transport cleanup after this correctness repair.
+
 After target CFG qualification, a separate reviewed inliner slice will use
 one acyclic RPO pass with RXAS-specific finite-state meets. Conditional RXAS
 branches test integer zero/nonzero, not a Boolean-only 0/1 domain; an unknown
@@ -668,6 +688,79 @@ and placement proofs are reviewed. Meet caller-visible and recycled owned-base
 state after each feasible return transfer; a recycled cell is known reset only
 when every normal exit proves it. Full
 optional/default/presence, loops and exceptional unwinding are later categories.
+
+### Reviewed acyclic multi-return increment
+
+INL-STEP04 next admits a direct scalar callee DAG while the authored `main`
+caller remains on its already qualified linear profile. The shared target CFG
+and `llirgraph` index/RPO/SCC own block identity, edges, reachability and cycle
+refusal. RXAS-specific transfer state owns storage IDs, each component/status,
+active/base bindings, slot permutation, context and recycled owned-base
+history. Preflight path snapshots before copying; a single forward RPO pass
+propagates both feasible successors of an unknown defined integer condition.
+Allocate stable owned StorageIds once before path forking. Snapshot the cell
+component arrays and frame map/base/identity/context directly; dereferencing
+an existing state aliases it, while rebuilding a frame through its entry
+factory resets `a0`, active bindings and slot identities.
+`BR`, `BRT`, `BRF` and `BRTF` use their native zero/nonzero polarity and
+ordered target edges. An undefined condition, cycle, unsupported normal or
+exceptional edge, or incompatible join keeps the exact original with its own
+reason. Do not assume 0/1 Boolean contents. No general solver or SSA owner is
+introduced. A branch body containing a retained nested call stays pending
+until path-local activation/cache history can also be forked and met; the
+existing straight-line nested-call acceptance remains intact.
+
+At a join, intersect availability, plain/whole/status/zeroed guarantees and
+retain an integer constant only if every feasible predecessor proves the same
+value. `wholeknown` means independent of recycled entry, not identical whole
+bits on every path; preserve that property by conjunction, while tracking
+exact status separately as known or unknown instead of inventing zero. Keep
+storage identities distinct even when values coincide. Initially
+require equal active/base bindings, slot identity permutation and context at a
+join; precise differing-state reconciliation is later proof work. Every
+feasible RET has a separate typed return action, captured-result transfer,
+inverse of its reached slot permutation, base restoration and owned lifetime
+end. Transfer each return first, then meet caller-visible state and recycled
+owned-base reset/history over all normal exits. A base is reset only if every
+feasible exit proves it. An ignored result performs no MOVE/reset. `EXIT` and
+raising paths are not silently treated as normal returns.
+Call reads and possible writes are unioned over feasible paths; definite kills
+are intersected over normal exits, so an arm with bare `RET` cannot kill an
+unchanged result. Private scalar transfer currently writes analysis-level
+plain and selector rows: derive plain state from the merged poststate, seal
+each LINKARG selector from that record's incoming path state, and let shared
+per-call layout flags grow only monotonically. No last-visited-arm state may
+leak into published facts.
+
+Sealed per-site facts add `returns(callId)`, `returnsite(callId,ordinal)`,
+`returnactionat(callId,retId)`, `restores(callId,retId)` and
+`restoreleft/right(callId,retId,ordinal)` using zero-based private slot
+ordinals. The old single-return getters remain valid only when there is one
+proved return; they never silently select a first arm. If analysis prunes a
+known branch, it also publishes `recordlive(callId,recordId)` and
+`branchchoice(callId,branchId)` so emission follows exactly those feasible
+paths. Otherwise every emitted arm receives a legality proof. The emitter
+freshens each cloned label and one continuation against **all** destination
+labels and `.const` aliases, including allocated clone names, with bounded
+deterministic names safe for native RXAS. It rewrites only label declarations
+and catalogue-declared branch operands; unrelated `L` symbols retain their
+meaning. It preserves source/TRACE/provenance and omits only already proved
+detached callee end-anchor records. Each cloned RET emits its own transfer,
+restoration and owned cleanup, then branches to one continuation before the
+resumed caller. The current source-order transport/storage cleanup keeps the
+newly branched caller until a separately reviewed graph-aware proof exists.
+
+Independent controls include both `0` and nonzero `2` arms of the same
+reference-mutating helper (results `9`, `11`, final caller `y=99`), an unknown
+condition (for example a defined `GETANDTP` result of runtime `0`/`256`) with
+unequal branch values that loses its constant at join, mixed
+MOVE/COPY return ownership, absent-result RET preserving a prior destination,
+different exit permutations and aliased result targets, and recycled-local
+history across repeated calls. Negative regressions assert precise reasons
+and byte-identical retained owners for incompatible joins, cycles, undefined
+conditions and unsupported edges. Tight work/frame/entry/byte limits remain
+atomic. Qualify conservative expansion through native assembler `-n` and one
+VM; run the existing small target/inline/IO checks only where inputs changed.
 
 ### Required native bootstrap correctness repair
 

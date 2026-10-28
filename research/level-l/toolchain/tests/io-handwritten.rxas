@@ -7,7 +7,9 @@ main() .locals=2
   say r1
   ret 0
 identity() .locals=0
+  .meta "live"="b" ".int" a1
   ret a1
+  .meta "live"
   .meta "detached"="b" ".int" a1
   .traceevent "V" 4 "R" "I" "a" 1 0 0 0 "detached" ""
   .meta "detached"
