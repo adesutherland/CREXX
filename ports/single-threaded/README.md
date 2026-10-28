@@ -186,6 +186,48 @@ The source closure in `compiler.cmake` mirrors the normal compiler, retaining
 Level B/C and compiler-exit behavior. It is an experimental leaf, not the normal
 desktop build or a completed CMS port.
 
+For Emscripten, the bounded port builds `rxc_single`, `rxas_single_lib` and
+`rxas_single`. The assembler library is compiled for the target from the normal
+build's `mainframe/assembler_sources.txt`; the native host archive is not linked
+into Wasm. Both source manifests, all generated compiler/assembler C and headers,
+the generated version header, `library.rxbin` and `rxcexits.rxbin` must come from
+one matching source cohort. Prepare those inputs with the normal host build
+before configuring the port. The cross build consumes them without invoking
+Lemon, re2c, the host compiler or target tools. This adds build hooks only;
+browser packaging, limits and end-to-end execution remain the embedding's
+qualification work.
+
+The Emscripten compiler alone selects `CREXX_COMPILER_EMBEDDED_VM`: its RXPA
+metadata callbacks and loader callback table use `rxcp_metadata_*` symbols,
+leaving global `rxpa_*` bindings with the embedded VM's runtime shim. Static
+providers used by compiler exits therefore retain their ordinary runtime
+bindings. The normal/native compiler callback ABI is unchanged.
+
+The targets emit ES module `.mjs` files for Worker/Node environments, with
+`callMain` and `FS` exported, automatic main invocation disabled, runtime exit
+enabled and memory growth allowed. The browser contract is one fresh modular
+Emscripten instance for each compiler or assembler invocation, on its owning
+Worker thread. These are the existing process-style CLIs: they retain `exit()`
+paths and process-global state, and repeated `callMain` or concurrent calls in
+one instance are not supported.
+The embedding supplies isolated MEMFS files, exact argument-vector entries,
+stdout/stderr capture and an `onExit` status recorder. Success requires recorded
+status zero and readable, nonempty bytes at the expected output path; copy those
+bytes before disposing the instance. A returned `callMain` invocation alone is
+not success: failure can return without throwing. Treat aborts, missing/nonzero
+exit status and missing output as failures. It supplies explicit import roots with
+`--no-exe-import`, retains certified compiler exits, and stages matching
+`library.rxbin` and `rxcexits.rxbin` in those roots. No host filesystem mounts or
+ambient executable directory are implied. The hooks do not add a source-to-RXBIN
+embedding API, a linker or browser provider discovery.
+
+Select `CREXX_VM_CLASSIC_FULL_PROVIDERS=ON` when the browser application also
+hosts the prepared Classic interpreter through `rxvm_single_embed`. This keeps
+the existing explicit static provider registrations and the single-thread
+clock/socket/process/dynamic-loading exclusions. A successful compiler/assembler
+build alone does not qualify the source profile, its linked runtime closure or
+THE's browser integration.
+
 For embedding tests, compile `embedding.crexx` with the normal compiler's
 `-x --no-exe-import` options and assemble it with normal RXAS. Set
 `CREXX_EMBEDDING_FIXTURE` to the resulting RXBIN and run `single_vm_embedding`.

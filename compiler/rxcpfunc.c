@@ -26,6 +26,36 @@
  * Built-in and External Function Management
  */
 
+#ifdef CREXX_COMPILER_EMBEDDED_VM
+/* The embedded VM owns global RXPA runtime bindings. Keep the compiler's
+ * metadata-only callbacks distinct, including their header declarations and
+ * loader table entries. Apply aliases before any header can declare them. */
+#define rxpa_addfunc rxcp_metadata_addfunc
+#define rxpa_addfunc_for_plugin rxcp_metadata_addfunc_for_plugin
+#define rxpa_addclass rxcp_metadata_addclass
+#define rxpa_addinterface rxcp_metadata_addinterface
+#define rxpa_addimplements rxcp_metadata_addimplements
+#define rxpa_addmember rxcp_metadata_addmember
+#define rxpa_getstring rxcp_metadata_getstring
+#define rxpa_setstring rxcp_metadata_setstring
+#define rxpa_setint rxcp_metadata_setint
+#define rxpa_getint rxcp_metadata_getint
+#define rxpa_setfloat rxcp_metadata_setfloat
+#define rxpa_getfloat rxcp_metadata_getfloat
+#define rxpa_setnativepayload rxcp_metadata_setnativepayload
+#define rxpa_getnativepayload rxcp_metadata_getnativepayload
+#define rxpa_isinitialized rxcp_metadata_isinitialized
+#define rxpa_callmethod rxcp_metadata_callmethod
+#define rxpa_getnumattrs rxcp_metadata_getnumattrs
+#define rxpa_setnumattrs rxcp_metadata_setnumattrs
+#define rxpa_getattr rxcp_metadata_getattr
+#define rxpa_insertattr rxcp_metadata_insertattr
+#define rxpa_removeattr rxcp_metadata_removeattr
+#define rxpa_swapattrs rxcp_metadata_swapattrs
+#define rxpa_setsayexit_bytes rxcp_metadata_setsayexit_bytes
+#define rxpa_resetsayexit rxcp_metadata_resetsayexit
+#endif
+
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>

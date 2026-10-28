@@ -360,6 +360,10 @@ static FILE *platform_open_stream(const char *path, const char *mode) {
 #include <unistd.h>
 #endif
 
+#if defined(__EMSCRIPTEN__) && !defined(CREXX_MAINFRAME_ELF)
+#include <dirent.h>
+#endif
+
 #if defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT)
 /* Supplied by the CMS host runtime, never inherited Linux directory services. */
 #include <dirent.h>
@@ -683,7 +687,7 @@ int fileexists(char *name, char *type, char *dir) {
         else snprintf(file_name, len, "%s.%s", name, type);
 #if (defined(__linux__) || defined(__APPLE__)) && !defined(CREXX_MAINFRAME_ELF)
         result = access(file_name, F_OK) != -1;
-#elif defined(CREXX_CMS_ELF)
+#elif defined(CREXX_CMS_ELF) || defined(__EMSCRIPTEN__)
         FILE *probe = platform_open_stream(file_name, "rb");
         if (probe) { result = 1; fclose(probe); }
 #elif defined(_WIN32)
@@ -710,7 +714,7 @@ int fileexists(char *name, char *type, char *dir) {
             else snprintf(file_name, len, "%s/%s.%s", token, name, type);
 #if (defined(__linux__) || defined(__APPLE__)) && !defined(CREXX_MAINFRAME_ELF)
             result = access(file_name, F_OK) != -1;
-#elif defined(CREXX_CMS_ELF)
+#elif defined(CREXX_CMS_ELF) || defined(__EMSCRIPTEN__)
             FILE *probe = platform_open_stream(file_name, "rb");
             if (probe) { result = 1; fclose(probe); }
 #elif defined(_WIN32)
@@ -812,7 +816,8 @@ FILE *platform_fopen(const char *path, const char *mode) {
     return platform_fopen_storage(path, mode, CREXX_TEXT_STORAGE_DEFAULT);
 }
 
-#if ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_MAINFRAME_ELF)) || \
+#if ((defined(__APPLE__) || defined(__linux__) || defined(__EMSCRIPTEN__)) && \
+     !defined(CREXX_MAINFRAME_ELF)) || \
     (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 struct fl_dir {
     DIR *d;
@@ -841,7 +846,8 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
     return crexx_cms_dirfirst(dir, prefix, type, dir_ptr);
 #elif defined(CREXX_PLATFORM_TSO)
     return crexx_tso_dirfirst(dir, prefix, type, dir_ptr);
-#elif ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_MAINFRAME_ELF)) || \
+#elif ((defined(__APPLE__) || defined(__linux__) || defined(__EMSCRIPTEN__)) && \
+       !defined(CREXX_MAINFRAME_ELF)) || \
     (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
     struct fl_dir *ptr = malloc(sizeof(struct fl_dir));
@@ -916,7 +922,8 @@ char *dirnxtfl(void **dir_ptr) {
     return crexx_cms_dirnext(dir_ptr);
 #elif defined(CREXX_PLATFORM_TSO)
     return crexx_tso_dirnext(dir_ptr);
-#elif ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_MAINFRAME_ELF)) || \
+#elif ((defined(__APPLE__) || defined(__linux__) || defined(__EMSCRIPTEN__)) && \
+       !defined(CREXX_MAINFRAME_ELF)) || \
     (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
     struct dirent *dirent;
@@ -970,7 +977,8 @@ void dirclose(void **dir_ptr) {
     crexx_cms_dirclose(dir_ptr);
 #elif defined(CREXX_PLATFORM_TSO)
     crexx_tso_dirclose(dir_ptr);
-#elif ((defined(__APPLE__) || defined(__linux__)) && !defined(CREXX_MAINFRAME_ELF)) || \
+#elif ((defined(__APPLE__) || defined(__linux__) || defined(__EMSCRIPTEN__)) && \
+       !defined(CREXX_MAINFRAME_ELF)) || \
     (defined(CREXX_CMS_ELF) && defined(CREXX_CMS_DIRENT))
 
     struct fl_dir *ptr = dir_ptr ? *dir_ptr : NULL;
