@@ -500,6 +500,18 @@ set_tests_properties(rxas_exposed_global_bounds PROPERTIES
         LABELS "rxas;assembler;negative;regression"
         CREXX_PREP_TARGETS "rxas")
 
+add_test(NAME implicit_constant_entry_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc> -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/implicit_constant_entry_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/implicit_constant_entry_contract.cmake)
+set_tests_properties(implicit_constant_entry_contract PROPERTIES
+        LABELS "compiler;optimizer;correctness;regression"
+        TIMEOUT 180
+        CREXX_PREP_TARGETS "rxc;rxas;rxbvm;compiler_exit_bin")
+
 set(RXAS_INVALID_UTF8_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxas_invalid_utf8_string.cmake")
 set(RXAS_INVALID_UTF8_CONTENT "")
 string(APPEND RXAS_INVALID_UTF8_CONTENT

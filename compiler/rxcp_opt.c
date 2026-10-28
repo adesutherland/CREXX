@@ -2309,6 +2309,86 @@ static void explicit_constant_in_scope(Symbol *symbol, Payload *payload) {
     ast_prun(target_node->parent);
 }
 
+/* These entries can bypass an otherwise source-linear initializer. The native
+ * flow overlay is built after this pass, so implicit promotion must withhold
+ * the proof here rather than infer dominance from symbol-use order. */
+static int implicit_constant_has_alternate_entry(ASTNode *node,
+                                                  ASTNode *callable) {
+    ASTNode *child;
+    if (!node) return 0;
+    if (node != callable &&
+        (node->node_type == PROCEDURE || node->node_type == METHOD ||
+         node->node_type == FACTORY || node->node_type == MATCH)) return 0;
+    switch (node->node_type) {
+        case LABEL: case FRAME_LABEL: case FRAME_BRANCH:
+        case SIGNAL_BLOCK: case SIGNAL_HANDLER:
+        case FRAME_HANDLER_ON: case FRAME_HANDLER_OFF:
+        case LEVELC_SIGNAL: case ASSEMBLER:
+            return 1;
+        default:
+            break;
+    }
+    for (child = node->child; child; child = child->sibling) {
+        if (implicit_constant_has_alternate_entry(child, callable)) return 1;
+    }
+    return 0;
+}
+
+/* A bounded structural proof for implicit constants only. The initialization
+ * must be a direct statement in the callable's entry sequence, after only
+ * declarations or literal stores, and before every substituted value use.
+ * A conditional first write is not the declaration's default value. */
+static int implicit_constant_entry_initializer(Symbol *symbol,
+                                                ASTNode *initializer) {
+    ASTNode *callable, *body, *statement, *use, *top;
+    size_t i;
+    int found;
+
+    if (!symbol || !initializer) return 0;
+    callable = ast_proc(initializer);
+    if (!callable) return 0;
+    body = ast_chld(callable, INSTRUCTIONS, 0);
+    if (!body || initializer->parent != body ||
+        implicit_constant_has_alternate_entry(body, callable)) return 0;
+    for (statement = body->child; statement && statement != initializer;
+         statement = statement->sibling) {
+        switch (statement->node_type) {
+            case DEFINE: case CONSTANT_DEF: case ARGS: case NOP:
+                break;
+            case ASSIGN:
+                if (!statement->child ||
+                    statement->child->node_type != VAR_TARGET ||
+                    !statement->child->sibling ||
+                    statement->child->sibling->node_type != CONSTANT ||
+                    statement->child->sibling->sibling) return 0;
+                break;
+            default:
+                return 0;
+        }
+    }
+    if (!statement) return 0;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        use = sym_trnd(symbol, i)->node;
+        if (!use || !use->parent || ast_proc(use) != callable) return 0;
+        if (use->parent == initializer && use->node_type == VAR_TARGET) continue;
+        if (use->parent->node_type == DEFINE) {
+            if (use->parent->parent != body) return 0;
+            continue;
+        }
+        if (constant_symbol_use_keeps_identifier(use)) continue;
+        top = use;
+        while (top->parent && top->parent != body) top = top->parent;
+        if (top->parent != body) return 0;
+        found = 0;
+        for (statement = initializer->sibling; statement;
+             statement = statement->sibling) {
+            if (statement == top) { found = 1; break; }
+        }
+        if (!found) return 0;
+    }
+    return 1;
+}
+
 /* Propagate constant symbols handler */
 static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     /* TODO the logic here must be revisited once we have control flow analysis */
@@ -2348,6 +2428,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
 
     n = sym_trnd(symbol, 0)->node;
     if (n->parent->node_type == ASSIGN  && n->node_type == VAR_TARGET && n->sibling->node_type == CONSTANT) {
+        if (!implicit_constant_entry_initializer(symbol, n->parent)) return;
         /* OK this could be a constant symbol */
         value_node = n->sibling;
         /* Check to see if it is updated */
@@ -2370,6 +2451,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
 
     else if (n->parent->node_type == DEFINE) {
         /* OK - an explicit declaration, this could be a constant symbol */
+        if (!implicit_constant_entry_initializer(symbol, n->parent)) return;
 
         /* After the "define" usage could be an "assign" - this is the value of the constant */
         if (sym_nond(symbol) < 2) m = 0;
@@ -2383,6 +2465,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
             }
 
             if (m->node_type == VAR_TARGET && m->sibling->node_type == CONSTANT) {
+                if (!implicit_constant_entry_initializer(symbol, m->parent)) return;
                 value_node = m->sibling;
                 value_type = value_node->value_type;
                 int_value = value_node->int_value;

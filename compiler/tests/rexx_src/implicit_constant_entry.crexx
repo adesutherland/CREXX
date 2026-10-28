@@ -1,0 +1,77 @@
+/* Implicit promotion must preserve conditional defaults and observable paths. */
+options levelb
+namespace implicit_constant_entry expose entryliteral
+
+controls: procedure expose NO_INLINE
+  constant NO_INLINE = 0
+  return
+
+main: procedure = .int
+  say declared(0)
+  say declared(1)
+  say inferred(0)
+  say inferred(1)
+  say observable(0)
+  say observable(1)
+  say earlyread()
+  say zeroloop(0)
+  say zeroloop(1)
+  say emptythen(1)
+  say emptythen(0)
+  say entryliteral()
+  return 0
+
+declared: procedure = .int expose NO_INLINE
+  arg x = .int
+  flag = .int
+  if x = 1 then flag = 1
+  return flag
+
+inferred: procedure = .int expose NO_INLINE
+  arg x = .int
+  if x = 1 then flag = 1
+  return flag
+
+observable: procedure = .int expose NO_INLINE
+  arg x = .int
+  flag = .int
+  if x = 1 then do
+    say 'branch'
+    flag = 1
+  end
+  else say 'else'
+  return flag
+
+earlyread: procedure = .int expose NO_INLINE
+  flag = .int
+  say flag
+  flag = 1
+  return flag
+
+zeroloop: procedure = .int expose NO_INLINE
+  arg count = .int
+  flag = .int; i = .int
+  do i = 1 to count
+    flag = 1
+  end
+  return flag
+
+condition: procedure = .boolean expose NO_INLINE
+  arg x = .int
+  say 'condition'
+  return x = 1
+
+emptythen: procedure = .int expose NO_INLINE
+  arg x = .int
+  marker = 0
+  if condition(x) then unused = .int
+  else do
+    say 'else-body'
+    marker = 2
+  end
+  return marker
+
+entryliteral: procedure = .int expose NO_INLINE
+  flag = .int
+  flag = 37
+  return flag
