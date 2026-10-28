@@ -392,6 +392,9 @@ expandmany: procedure = .llinline..change
       steps = empty; clauses = empty
       do j = 1 to callee.records()
         childrecord = callee.record(j)
+        /* Facts verified one reachable RET and only detached zero-width tail
+         * records after it. Those retain their original body-end address. */
+        if childrecord.kind() = 'instruction' & childrecord.mnemonic() = 'ret' then leave
         if childrecord.kind() = '.srcstep' then do
           value = childrecord.operand(1); call freshidentity(steps,value.index(),higheststep)
           value = childrecord.operand(2); call freshidentity(clauses,value.index(),highestclause)
@@ -480,6 +483,9 @@ expandmany: procedure = .llinline..change
             else anchor = targetbody.reg('r',base + count + 3 + a)
             ignored = code.one(targetbody,'endlife',anchor,childat)
           end
+          /* Do not turn unreachable callee end metadata into observations
+           * at the reachable caller continuation. The original body is kept. */
+          leave
         end
       end
       maps[input.id()] = 0

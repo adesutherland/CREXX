@@ -336,6 +336,9 @@ analysis: class
   _returnaction = .string[]
   _swaps = .object[]
   _swapcount = .int[]
+  _linear = .object[]
+  _linearcount = .int[]
+  _runtime = .int[]
   _bytelimit = .int
   _retained = .int
   *: factory
@@ -357,6 +360,69 @@ analysis: class
     arg reason = .string
     _status = 'keep'; _reason = reason
     return 0
+  /* Cache only the operation order of an already indexed linear CFG. The
+   * shared index owns edges/reachability; this is not a second graph. Core
+   * entry thunks and detached metadata blocks need not make a scalar body
+   * fail its old straight-line proof. */
+  linear: method = .int
+    arg functionId = .int, reason = .string
+    block = .int; visited = .int; recordid = .int; returned = .int; i = .int
+    records = .int[]; item = .lltarget..record; operation = .llir..opview
+    if _linearcount[functionId] > 0 then return 1
+    module = dereference _owner; graph = dereference module.ir(); catalog = .llrxascatalog..catalog()
+    if module.normalcfgcomplete(functionId) = 0 then return reject(reason)
+    /* Account for transient and retained row storage before materializing it. */
+    if reserve(_index.functionoperations(functionId),16) = 0 | reserve(1,32) = 0 then return 0
+    block = _index.functionentry(functionId); visited = 0; returned = 0
+    do while block > 0
+      if spend(1) = 0 then return 0
+      if visited >= _index.functionblocks(functionId) then return reject(reason)
+      visited = visited + 1; recordid = _index.firstop(block)
+      do while recordid > 0
+        if spend(1) = 0 then return 0
+        operation = graph.operation(recordid)
+        if lltarget..isrecord(operation.name()) then do
+          item = module.at(recordid)
+          if returned then return reject(reason)
+          if item.kind() = 'instruction' then do
+            if item.mnemonic() = 'ret' then returned = recordid
+            else if catalog.flow(item.opcode()) <> 0 then return reject(reason)
+          end
+          records[records[0] + 1] = recordid
+        end
+        else if _index.opcode(recordid) > 16 then return reject(reason)
+        recordid = _index.nextop(recordid)
+      end
+      if returned then do
+        if _index.successors(block) <> 0 then return reject(reason)
+        block = 0
+      end
+      else do
+        if _index.successors(block) <> 1 then return reject(reason)
+        block = _index.successor(block,1)
+      end
+    end
+    if returned = 0 then return reject('return.missing')
+    /* Ignore only detached zero-width tails. Unreachable instructions or a
+     * reachable end anchor still need a later control-flow proof. */
+    do i = 1 to _index.functionoperations(functionId)
+      if spend(1) = 0 then return 0
+      recordid = _index.functionoperation(functionId,i)
+      if _index.reachable(_index.opblock(recordid)) then iterate
+      operation = graph.operation(recordid)
+      if lltarget..isrecord(operation.name()) then do
+        item = module.at(recordid)
+        /* addressid() searches the remaining source-operation table. Charge
+         * its full suffix before asking whether this is an end anchor. */
+        if spend(graph.operations() - recordid) = 0 then return 0
+        if wordpos(item.kind(),'.srcstep .srcfile .srcline .meta .traceevent') = 0 | item.addressid() <> 0 then return reject(reason)
+      end
+      else if _index.opcode(recordid) > 16 then return reject(reason)
+    end
+    if spend(records[0]) = 0 then return 0
+    do i = 1 to records[0]; _runtime[records[i]] = 1; end
+    _linear[functionId] = .numbers(records) as .object; _linearcount[functionId] = records[0]
+    return 1
   globalcell: method = .int
     arg id = .int
     if _globals[0] = 0 then return 0
@@ -678,7 +744,7 @@ analysis: class
     i = .int; j = .int; ignored = .int; repeated = .int
     id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
     callee = .lltarget..body; child = .frame; record = .lltarget..record; shape = .callshape
-    value = .lltarget..operand; ownedrow = .numbers; resetrow = .numbers; action = .string
+    value = .lltarget..operand; ownedrow = .numbers; resetrow = .numbers; action = .string; linearrow = .numbers
     selectors = .int[]; banks = .string
     if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
     module = dereference _owner; state = dereference state_ref
@@ -696,7 +762,8 @@ analysis: class
     if publish then outerCallId = item.id()
     else if item.mnemonic() = 'call' & item.operands() = 3 then _ordered[outerCallId] = 1
     callee = module.body(bodyid)
-    if _index.functionblocks(bodyid) <> 1 then return reject('profile.callee.cfg.pending')
+    if linear(bodyid,'profile.callee.cfg.pending') = 0 then return 0
+    linearrow = _linear[bodyid] as .numbers
     actuals = .int[]; positions = .int[]; references = .int[]; owned = .int[]; reset = .int[]; swaps = .int[]
     reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]
     if spend(count) = 0 then return 0
@@ -765,10 +832,9 @@ analysis: class
       _owned[bodyid] = .numbers(owned) as .object
     end
     _activations[bodyid] = _activations[bodyid] + 1; returned = 0
-    do i = 1 to _index.functionoperations(bodyid)
+    do i = 1 to _linearcount[bodyid]
       if spend(1) = 0 then return 0
-      recordid = _index.functionoperation(bodyid,i)
-      if _index.opcode(recordid) <= 16 then iterate
+      recordid = linearrow.at(i)
       record = module.at(recordid)
       if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
       if record.kind() = 'instruction' & wordpos(record.mnemonic(),'call call1 call2 call3 call4') > 0 then do
@@ -839,7 +905,7 @@ analysis: class
     i = .int; j = .int; region = .int; nextregion = .int
     ignored = .int; returned = .int; previous = .int
     id = .int; slot = .int; integer = .int; whole = .int; barrier = .int; definition = .int
-    references = .numbers; plain = .numbers; actuals = .numbers; destination = .lltarget..operand
+    references = .numbers; plain = .numbers; actuals = .numbers; destination = .lltarget..operand; linearrow = .numbers
     ownedroot = .int[]; view = .frame
     item = .lltarget..record; value = .lltarget..operand; option = .lltarget..operand
     do
@@ -856,7 +922,7 @@ analysis: class
     _index = .llirgraph..index(graph_ref,_work,_bytelimit)
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
-    if reserve(graph.operations(),168) = 0 | reserve(graph.functions(),40) = 0 then return
+    if reserve(graph.operations(),176) = 0 | reserve(graph.functions(),56) = 0 then return
     if module.globals() > 0 then do
       if reserve(graph.operations(),8) = 0 then return
     end
@@ -872,12 +938,20 @@ analysis: class
           if option.text() = '.initializer' then do; ignored = reject('global.initializer.pending'); return; end
         end
       end
+      if item.kind() = '.meta' & item.operands() > 1 then do
+        option = item.operand(2)
+        if left(option.text(),1) = '.' & option.text() <> '.inline' then do
+          if spend(graph.operations() - item.id()) = 0 then return
+          if item.addressid() <> 0 | _index.reachable(item.blockid()) then do; ignored = reject('metadata.runtime.observer.unproved'); return; end
+        end
+      end
       if item.kind() <> 'instruction' then iterate
       if item.mnemonic() <> 'linkarg' then iterate
       j = item.procedureid(); _selectorcount[j] = _selectorcount[j] + 1
       _selectorordinal[item.id()] = _selectorcount[j]
     end
-    if _index.functionblocks(_function) <> 1 then do; ignored = reject('profile.caller.cfg.pending'); return; end
+    if linear(_function,'profile.caller.cfg.pending') = 0 then return
+    linearrow = _linear[_function] as .numbers
     _access = .llirgraph..access(reference _index,'rxas.scalar.storage.v1',1000000,_bytelimit,_work)
     if body.locals() >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return; end
     if spend(body.locals() + 1) = 0 then return
@@ -901,13 +975,8 @@ analysis: class
     end
     do i = 1 to body.locals(); _plain[i] = 1; end
     region = 0; nextregion = 0; returned = 0; _active[_function] = 1
-    do i = 1 to module.records()
-      item = module.record(i)
-      if item.kind() = '.meta' & item.operands() > 1 then do
-        option = item.operand(2)
-        if left(option.text(),1) = '.' & option.text() <> '.inline' then do; ignored = reject('metadata.runtime.observer.unproved'); return; end
-      end
-      if item.kind() = 'procedure' | item.procedureid() <> _function then iterate
+    do i = 1 to _linearcount[_function]
+      item = module.at(linearrow.at(i))
       if item.kind() = 'instruction' & returned then do; ignored = reject('profile.caller.control.pending'); return; end
       previous = view.canonical()
       if item.kind() = 'instruction' & wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
@@ -952,10 +1021,16 @@ analysis: class
       operation = graph.operation(i)
       if operation.name() = 'core.return' then iterate
       if _index.opcode(i) <= 16 then iterate
-      if operation.name() = 'rxas.target.record' then do
+      if lltarget..isrecord(operation.name()) then do
         item = module.at(i)
-        if item.procedureid() = _function & item.kind() <> 'procedure' then iterate
-        if item.procedureid() > 1 & item.kind() <> 'procedure' then iterate
+        if item.procedureid() = _function & item.kind() <> 'procedure' then do
+          if _runtime[i] then iterate
+          /* linear() proved this detached metadata has no runtime storage
+           * observation. Consumers still receive explicit empty row objects. */
+          if reserve(2,32) = 0 then return
+          _references[i] = .numbers(empty) as .object; _beforeplain[i] = .numbers(empty) as .object
+        end
+        else if item.procedureid() > 1 & item.kind() <> 'procedure' then iterate
       end
       call _access.put(i,empty,empty,empty,empty)
     end
@@ -970,6 +1045,7 @@ analysis: class
       if spend(1) = 0 then return
       item = module.record(i)
       if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      if _runtime[item.id()] = 0 then iterate
       references = _references[item.id()] as .numbers
       barrier = 0; definition = 0
       if item.kind() = 'instruction' then do

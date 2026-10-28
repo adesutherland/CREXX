@@ -8,3 +8,6 @@ main() .locals=2
   ret 0
 identity() .locals=0
   ret a1
+  .meta "detached"="b" ".int" a1
+  .traceevent "V" 4 "R" "I" "a" 1 0 0 0 "detached" ""
+  .meta "detached"

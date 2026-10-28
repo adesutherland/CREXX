@@ -336,6 +336,73 @@ globalscalar: procedure = .int
   end
   return failures
 
+/** Detached callee metadata is retained, never relocated onto continuation. */
+calleetail: procedure = .int
+  failures = 0; i = .int; metadata = .int; observations = .int; ignored = .int
+  original = .lltarget..module; result = .lltarget..module; item = .lltarget..record; value = .lltarget..operand
+  body = .lltarget..body; request = .llinline..binding; changed = .llinline..change
+  fields = .object[]
+  draft = .lltarget..draft('calleetail','constructed.calleetail',0); at = draft.synthetic('live and detached callee metadata')
+  root = draft.procedure('main',2,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('identity'),root.reg('r',0),at)
+  ignored = one(root,'itos',root.reg('r',1),at); ignored = one(root,'say',root.reg('r',1),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('identity',0,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('live' as .binary) as .object
+  fields[2] = .lltarget..operand.string('b' as .binary) as .object
+  fields[3] = .lltarget..operand.string('.int' as .binary) as .object; fields[4] = leaf.reg('a',1) as .object
+  ignored = leaf.record('.meta',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('live' as .binary) as .object
+  ignored = leaf.record('.meta',fields,at)
+  ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.integer(4294967295) as .object; fields[2] = fields[1]
+  fields[3] = .lltarget..operand.integer(0) as .object; fields[4] = .lltarget..operand.string('tail.fixture' as .binary) as .object
+  fields[5] = .lltarget..operand.integer(1) as .object; fields[6] = .lltarget..operand.integer(0) as .object
+  fields[7] = .lltarget..operand.integer(4) as .object; fields[8] = .lltarget..operand.string('tail' as .binary) as .object
+  stepid = leaf.record('.srcstep',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('V' as .binary) as .object
+  fields[2] = .lltarget..operand.integer(4) as .object; fields[3] = .lltarget..operand.string('R' as .binary) as .object
+  fields[4] = .lltarget..operand.string('I' as .binary) as .object; fields[5] = .lltarget..operand.string('a' as .binary) as .object
+  fields[6] = .lltarget..operand.integer(1) as .object
+  fields[7] = .lltarget..operand.integer(4294967295) as .object; fields[8] = fields[7]
+  fields[9] = .lltarget..operand.integer(0) as .object
+  fields[10] = .lltarget..operand.string('tail' as .binary) as .object; fields[11] = .lltarget..operand.string(''x as .binary) as .object
+  traceid = leaf.record('.traceevent',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('tail' as .binary) as .object
+  fields[2] = .lltarget..operand.string('b' as .binary) as .object
+  fields[3] = .lltarget..operand.string('.int' as .binary) as .object; fields[4] = leaf.reg('a',1) as .object
+  metaid = leaf.record('.meta',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('tail' as .binary) as .object
+  ignored = leaf.record('.meta',fields,at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'callee tail fixture has a valid checked target')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  graph = dereference original.ir(); before = graph.binary()
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('identity'))
+  changed = llinline..expand(request,'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','detached source-ID maxima and typed observations do not block expansion')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = '.meta' then do
+      metadata = metadata + 1; value = item.operand(1)
+      failures = failures + check(pos('live',value.text()) > 0,'only reachable callee binding metadata reaches caller')
+    end
+    if item.kind() = '.traceevent' | item.kind() = '.srcstep' then observations = observations + 1
+  end
+  failures = failures + check(metadata = 2 & observations = 0 & changed.operation(callid) = 0,'live binding clones; detached TRACE/source observations do not enter caller continuation')
+  item = result.at(changed.operation(stepid)); value = item.operand(1)
+  failures = failures + check(item.addressid() = 0 & value.index() = 4294967295,'original declaration retains detached source identity')
+  item = result.at(changed.operation(traceid)); value = item.operand(7)
+  failures = failures + check(item.addressid() = 0 & value.index() = 4294967295,'original declaration retains detached TRACE identity')
+  item = result.at(changed.operation(metaid)); value = item.operand(4)
+  failures = failures + check(item.addressid() = 0 & value.bank() = 'a' & value.index() = 1,'original declaration retains its own tail binding')
+  failures = failures + check(bin2x(graph.binary()) = bin2x(before),'tail exclusion preserves the original frozen input')
+  return failures
+
 main: procedure = .int
   failures = 0
   draft = .lltarget..draft('constructed','constructed.fixture',0)
@@ -439,5 +506,6 @@ main: procedure = .int
   failures = failures + nestedordered()
   failures = failures + argumentselection() + argumentkeeps()
   failures = failures + globalscalar()
+  failures = failures + calleetail()
   say 'CONSTRUCTED_INLINE|failures=' || failures
   return failures

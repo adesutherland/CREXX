@@ -35,12 +35,34 @@ location: procedure = .int
   assembler signal "ERROR","LL_TARGET_TRANSPORT: required owned storage is unavailable"
   return -1
 
+/** The current cleanup plans walk source order, not mutually exclusive paths.
+ * Return -1 for work exhaustion, 1 for a pending control proof, 0 for linear.
+ * The target owner derives completeness; the catalogue owns flow classes. */
+cfgpending: procedure = .int
+  arg owner = reference .lltarget..module, procedureId = .int, expose work = .int
+  item = .lltarget..record; i = .int; flow = .int
+  source = dereference owner
+  if work < 2 then return -1
+  work = work - 2
+  if source.normalcfgcomplete(procedureId) = 0 then return 1
+  if source.endobservations(procedureId) then return 1
+  catalog = .llrxascatalog..catalog()
+  do i = 1 to source.records()
+    if work < 4 then return -1
+    work = work - 4
+    item = source.record(i)
+    if item.procedureid() <> procedureId | item.kind() <> 'instruction' then iterate
+    flow = catalog.flow(item.opcode())
+    if flow = 1 | flow = 2 then return 1
+  end
+  return 0
+
 transport: procedure = .llinline..change
   arg owner = reference .lltarget..module, procedureId = .int, profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
   i = .int; j = .int; id = .int; ignored = .int; highest = .int; usedcells = .int
   k = .int; a = .int; b = .int; physical = .int; temporary = .int; locals = .int; cost = .int; extent = .int
   integer = .int; whole = .int; observed = .int; discard = .int; keptmapping = .int; ordinal = .int
-  plannedbytes = .int; querybound = .int
+  plannedbytes = .int; querybound = .int; pending = .int
   fields = .object[]; replacements = .object[]
   value = .lltarget..operand; left = .lltarget..operand; right = .lltarget..operand
   field = .lltarget..operand; replacement = .lltarget..operand; number = .lltarget..operand
@@ -52,6 +74,9 @@ transport: procedure = .llinline..change
   if source.valid() = 0 then return .llinline..change('invalid',source.error(),source,empty)
   if source.globals() > 0 then return .llinline..change('keep','transport.global.storage.pending',source,empty)
   do
+    pending = cfgpending(owner,procedureId,work)
+    if pending < 0 then return .llinline..change('limit','transport.cfg.work',source,empty)
+    if pending then return .llinline..change('keep','transport.cfg.pending',source,empty)
     facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
     graph_ref = facts.index(); index = dereference graph_ref; access_ref = facts.access()
@@ -228,13 +253,16 @@ storage: procedure = .llinline..change
   mapping = .int[]; active = .int[]; aliases = .int[]; names = .string[]; namesizes = .int[]; resets = .object[]
   i = .int; j = .int; v = .int; id = .int; integer = .int; whole = .int
   read = .int; write = .int; kill = .int; observed = .int; implicit = .int; identity = .int; changed = .int
-  scoped = .int; boundcall = .int; plainend = .int; idbytes = .int; querycost = .int
+  scoped = .int; boundcall = .int; plainend = .int; idbytes = .int; querycost = .int; pending = .int
   if <refvalid>(owner) = 0 then return .llinline..change('invalid','owner.expired')
   source = dereference owner
   if source.valid() = 0 then return .llinline..change('invalid',source.error(),source,empty)
   if entries < 1 | bytes < 1 | work < 1 | frame < 0 | cells < 0 then return .llinline..change('limit','storage.allowances',source,empty)
   if source.globals() > 0 then return .llinline..change('keep','storage.global.storage.pending',source,empty)
   do
+    pending = cfgpending(owner,procedureId,work)
+    if pending < 0 then return .llinline..change('limit','storage.cfg.work',source,empty)
+    if pending then return .llinline..change('keep','storage.cfg.pending',source,empty)
     facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
     access = .llirgraph..access

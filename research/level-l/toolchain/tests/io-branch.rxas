@@ -1,0 +1,24 @@
+/* Independent two-arm RXAS input for the target CFG reader/writer boundary. */
+.globals=0
+main() .locals=5
+  load r0,0
+  load r1,11
+  load r2,22
+  call3 r3,choose(),r0,r1,r2
+  load r0,2
+  call3 r4,choose(),r0,r1,r2
+  itos r3
+  say r3
+  itos r4
+  say r4
+  itos r2
+  say r2
+  ret 0
+choose() .locals=1
+  brt positive,a1
+  load r0,9
+  ret r0
+positive:
+  swap a2,a3
+  load a2,99
+  ret a3

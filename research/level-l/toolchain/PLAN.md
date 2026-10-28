@@ -124,8 +124,8 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, and private same-module scalar global slices are implemented and focused-qualified. Complete broader aliasing, optional presence/defaults and dynamic varargs, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards; global-aware placement, broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, and private same-module scalar global slices are implemented and focused-qualified. Direct target CFG transport and validation are focused-qualified, with branch/multiple-return expansion still open. Complete broader aliasing, optional presence/defaults and dynamic varargs, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. The target CFG prerequisite keeps current linear cleanup conservative on branched callers and typed end-anchor observations; graph-aware placement, broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -597,6 +597,77 @@ foreign binding and counted-cross-global cases retain precise reasons and
 atomic output. Initializer input currently stops at the adapter's explicit
 unsupported-metadata diagnostic, not a facts keep; do not add initializer
 support merely for this fixture slice.
+
+### Reviewed target CFG and multiple-return prerequisite
+
+The focused-qualified INL-STEP04/05 target prerequisite makes the model's
+direct branch graph truthful. Acyclic multiple-return facts and expansion are
+the next separate increment. The existing generic `llir`
+terminal/successor contract and `llirgraph` RPO/SCC/liveness owners suffice;
+there is no target-private graph framework or new generic solver. Keep the
+RXAS reader/body-draft source API and source-order writer. Version the target
+schema for a typed control-record operation with the existing record fields
+and declared terminal successor bounds. Structural jumps/thunks are L graph
+operations, never emitted RXAS instructions.
+
+For direct `BR`, the ordered successor is its label target; `BRT` and `BRF`
+have target then lexical fallthrough; `BRTF` has its two operand targets;
+`RET` has none. Preserve opcode polarity and exact source operands rather than
+inferring it from generic edge order. `EXIT` is terminal, never a normal RET.
+Unsupported indirect/table control and unrepresented exceptional continuations
+stay transportable but mark normal CFG proof incomplete; a normal-flow opcode
+with a signal contract does not by itself make its represented normal graph
+incomplete. Signal success/continuation remains a separate facts proof. A
+target-owned body cursor creates real blocks,
+bounded forward-label entry thunks, alias-label address groups and fallthrough
+edges. Zero-width source/TRACE records preceding a label stay on that label's
+entry address. Finish closes only open blocks; it cannot append a sentinel
+after terminal RXAS code. Validate opcode/edge/label agreement independently
+of the builder, including decoded/mutated graph input and resource failure.
+
+Native RXAS labels use one module-wide namespace. Reject duplicate label
+definitions across all procedures and freshen cloned declarations against
+every label in the destination module. Rewrite only declared labels and
+catalogue-declared branch operands; a generic symbol/pool reference with the
+same spelling is not a branch target. Retain source order, logical record IDs,
+provenance and metadata addresses. Add readonly record block/address and body
+label-block/derived CFG-completeness views; never accept a caller assertion of
+completeness. Recognize both ordinary and control-record descriptors centrally
+through module/body views, validation and facts; structural thunks are never
+misclassified as empty catalogue records. Trailing zero-width metadata after
+a RET has a separate body-end address group (`addressid=0`), not an operation
+after the terminal RET. It stays in source order; an unreachable metadata-only
+block may close structurally but must not render another RXAS RET. Existing
+scalar proofs use a verified sole reachable normal RET and ignore such tail
+records as execution, while publishing explicit empty access/reference rows
+needed by consumers. A selected callee's detached end-anchor records stay in
+its retained original declaration and are not cloned into the reachable caller
+continuation; preflight/source identity work likewise skips them. Typed caller
+end-anchor observations that cannot be relocated precisely keep cleanup
+conservative. A branch that reaches the tail is not an
+unreachable exception. A small independent constructed model checks forward/alias and
+backward-lexical DAG labels, direct branch forms, multiple RET zero edges,
+unreachable blocks, source/TRACE entry address, duplicate/missing labels,
+wrong-but-well-formed edges, decoded interior record reordering and atomic
+limits. An ordinary RXAS both-arm
+control checks writer/native assembler/one VM without claiming inliner support.
+
+After target CFG qualification, a separate reviewed inliner slice will use
+one acyclic RPO pass with RXAS-specific finite-state meets. Conditional RXAS
+branches test integer zero/nonzero, not a Boolean-only 0/1 domain; an unknown
+defined condition propagates both feasible edges. At a join, known
+integer values survive only when equal and component/availability facts meet
+conservatively; active/base pointers, slot permutation and context must match
+or the call stays with a precise pending reason. Per-RET facts own COPY/MOVE,
+a canonical inverse of the reached slot permutation (not a union of SWAP
+histories), base restoration and owned cleanup; each expanded return reaches
+one continuation after its own transfer/restoration. No branch arm is simulated
+serially as if both executed, and EXIT/raising paths remain distinct. Existing
+linear cleanup keeps a changed branched caller until its graph-aware mapping
+and placement proofs are reviewed. Meet caller-visible and recycled owned-base
+state after each feasible return transfer; a recycled cell is known reset only
+when every normal exit proves it. Full
+optional/default/presence, loops and exceptional unwinding are later categories.
 
 ### Required native bootstrap correctness repair
 

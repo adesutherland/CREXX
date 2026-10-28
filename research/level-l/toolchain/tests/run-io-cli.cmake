@@ -60,6 +60,21 @@ if(NOT _result STREQUAL "16")
   message(FATAL_ERROR "compiler roundtrip expected 16, got '${_result}'")
 endif()
 
+# The independently authored helper has two returns. A nonzero condition
+# selects its reference-mutating arm; policy-never exercises target CFG
+# transport without claiming that the current inliner expands the call.
+run_checked("read two-arm RXAS" "${VM}" "${CLI}" ${RUNTIME} -a
+  --module io-branch.rxas --policy never
+  -o "${WORK}/io-branch.rxas" "${FIXTURES}/io-branch.rxas")
+run_checked("assemble two-arm roundtrip" "${ASSEMBLER}" -n
+  -o "${WORK}/io-branch" "${WORK}/io-branch.rxas")
+run_checked("execute two-arm roundtrip" "${VM}" "${WORK}/io-branch.rxbin")
+string(REPLACE "\r\n" "\n" _normalized "${_last_stdout}")
+string(STRIP "${_normalized}" _result)
+if(NOT _result STREQUAL "9\n11\n99")
+  message(FATAL_ERROR "two-arm roundtrip expected '9, 11, 99', got '${_result}'")
+endif()
+
 # Expand both original arithmetic calls atomically. Execution is independent
 # of cleanup and native assembler optimization in both products.
 foreach(_mode conservative cleaned)
@@ -713,6 +728,25 @@ run_checked("inline handwritten input" "${VM}" "${CLI}" ${RUNTIME} -a
 file(READ "${WORK}/io-handwritten.rxas" _expanded)
 if(_expanded MATCHES "(^|\n)[ \t]*call1[ \t]")
   message(FATAL_ERROR "selected handwritten call was retained")
+endif()
+file(STRINGS "${WORK}/io-handwritten.rxas" _tail_lines ENCODING UTF-8)
+set(_inside_caller OFF)
+set(_retained_tail OFF)
+foreach(_line IN LISTS _tail_lines)
+  if(_line MATCHES "^[^ \t]+\\(\\)[ \t]+\\.locals=")
+    set(_inside_caller OFF)
+    if(_line MATCHES "^main\\(\\)[ \t]")
+      set(_inside_caller ON)
+    endif()
+  elseif(_line MATCHES "^[ \t]*\\.(meta|traceevent)[ \t]")
+    if(_inside_caller)
+      message(FATAL_ERROR "detached callee observation became reachable at caller continuation")
+    endif()
+    set(_retained_tail ON)
+  endif()
+endforeach()
+if(NOT _retained_tail)
+  message(FATAL_ERROR "original helper declaration lost its detached metadata")
 endif()
 run_checked("assemble expansion without cleanup" "${ASSEMBLER}" -n
   -o "${WORK}/io-handwritten" "${WORK}/io-handwritten.rxas")

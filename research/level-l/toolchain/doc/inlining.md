@@ -909,9 +909,10 @@ existing `llir.arena`; publication freezes/verifies that arena into one
 holds checked module/procedure/register descriptors. It is excluded from target
 procedure counts, rendering and machine CFG analysis and is never passed to a
 generic executable optimizer. Actual target bodies are separate L functions;
-their initial single-block structural `returnvoid` sentinel is distinct from
-the recorded RXAS `RET`. Arbitrary target successors are the next shared
-`llir` extension, not a private target graph.
+their structural L terminators are distinct from recorded RXAS `RET`. The
+target-owned cursor now publishes direct normal successors through the shared
+`llir` control contract; wider exceptional and indirect control remains a
+separate proof boundary.
 
 `draft(logicalModule,artifact,globals,entries,bytes,work)` supplies `source`,
 `synthetic`, `procedure(name,locals,origin,expose)`, module `record`, and atomic
@@ -968,6 +969,44 @@ registers alone do not meet the wider reuse requirement. General CFG, deeper
 nesting, optional presence/defaults, dynamic varargs, reference/aggregate,
 imported/foreign-global and wider context coverage remains open in
 INL-STEP04/05.
+
+### Direct target CFG prerequisite
+
+Target schema version 2 separates source-visible control records from ordinary
+records. The draft cursor creates real L blocks for RXAS address groups, and
+structural label-entry jumps resolve forward and alias declarations without
+appearing in rendered RXAS. `BR`, `BRT`, `BRF` and `BRTF` have checked ordered
+normal edges; `RET` and `EXIT` have none. Other flow forms remain transportable
+with an incomplete normal CFG proof. A signal-capable normal instruction does
+not by itself make its represented normal edges incomplete. The target
+validator checks source opcode/edge/label agreement independently of the
+builder, including decoded graphs, and enforces native RXAS's module-wide
+label-definition namespace.
+
+Source-order record views include both descriptor kinds. A record's `blockid`
+names its L address group and `addressid` names the next RXAS instruction,
+with zero for a body-end anchor; neither is a byte offset. Zero-width metadata
+after a terminal RXAS instruction remains at that end anchor, outside normal
+execution. The owner derives `normalcfgcomplete` and `endobservations` rather
+than accepting a caller assertion. Straight-line scalar facts traverse a
+verified sole-return normal chain through structural thunks, ignoring detached
+end-address metadata tails for runtime transfer. A selected callee's tail
+remains in its original declaration and is not cloned into the caller's
+continuation. These facts still retain source branches, cycles and multiple
+returns until the corresponding proof exists. The current linear cleanup keeps
+changed callers with branches or typed end-anchor observations before making
+source-order storage assignments.
+
+The constructed CFG regression checks ordered branches, forward/alias labels,
+backward lexical acyclic flow, multiple RET, end-address metadata and
+wrong-but-well-formed decoded edges. An independent two-arm RXAS input also
+round-trips through the reader, writer, assembler and VM with both integer
+zero and nonzero conditions. This proves target representation and transport,
+not branch inlining. For current refusals, negative regressions assert the
+specific pending reason and unchanged original owner; malformed labels or
+edges are invalid-input tests. Neither kind proves a shape inherently
+impossible. When a proof is implemented, replace its pending regression with
+a positive expansion and execution check.
 
 ### Straight-line callee rebinding contract
 

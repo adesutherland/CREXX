@@ -1,0 +1,288 @@
+/* cREXX License (MIT). Independent target CFG representation, not inlining. */
+options levelb
+import rxfnsb
+import llir
+import llirgraph
+import lltarget
+import llinline
+import llcleanup
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+three: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, third = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object; fields[3] = third as .object
+  return body.emit(name,fields,at)
+namedlabel: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+sourcepoint: procedure = .int
+  arg body = .lltarget..bodydraft, at = .llir..origin
+  fields = .object[]
+  fields[1] = .lltarget..operand.integer(1) as .object; fields[2] = .lltarget..operand.integer(1) as .object
+  fields[3] = .lltarget..operand.integer(0) as .object
+  fields[4] = .lltarget..operand.string('cfg.fixture' as .binary) as .object
+  fields[5] = .lltarget..operand.integer(1) as .object; fields[6] = .lltarget..operand.integer(0) as .object
+  fields[7] = .lltarget..operand.integer(1) as .object; fields[8] = .lltarget..operand.string('x' as .binary) as .object
+  return body.record('.srcstep',fields,at)
+tracepoint: procedure = .int
+  arg body = .lltarget..bodydraft, at = .llir..origin
+  fields = .object[]
+  fields[1] = .lltarget..operand.string('V' as .binary) as .object
+  fields[2] = .lltarget..operand.integer(4) as .object
+  fields[3] = .lltarget..operand.string('R' as .binary) as .object
+  fields[4] = .lltarget..operand.string('I' as .binary) as .object
+  fields[5] = .lltarget..operand.string('r' as .binary) as .object
+  do i = 6 to 9; fields[i] = .lltarget..operand.integer(0) as .object; end
+  fields[10] = .lltarget..operand.string('flag' as .binary) as .object
+  fields[11] = .lltarget..operand.string(''x as .binary) as .object
+  return body.record('.traceevent',fields,at)
+tailbinding: procedure = .int
+  arg body = .lltarget..bodydraft, at = .llir..origin, clear = 0
+  fields = .object[]; fields[1] = .lltarget..operand.string('tail' as .binary) as .object
+  if clear = 0 then do
+    fields[2] = .lltarget..operand.string('b' as .binary) as .object
+    fields[3] = .lltarget..operand.string('.int' as .binary) as .object
+    fields[4] = body.reg('r',0) as .object
+  end
+  return body.record('.meta',fields,at)
+
+/** Mutate exactly one numeric table field in the maintained LLIR v2 envelope.
+ * This is negative fixture input, not a target parser or graph implementation. */
+tablefield: procedure = .binary
+  arg image = .binary, wanted = .int, row = .int, column = .int, target = .int
+  cursor = 12 + (<at..u32>(8) image)
+  do table = 1 to wanted
+    count = <at..u32>(cursor) image; width = <at..u32>(cursor + 4) image
+    cursor = cursor + 8
+    if table = wanted then do
+      <at..u32>(cursor + ((row - 1) * width + column - 1) * 4) image = target
+      return image
+    end
+    cursor = cursor + count * width * 4
+  end
+  return image
+
+shapes: procedure = .int
+  failures = 0; i = .int; direct = .int; falseexit = .int; trueexit = .int; sourceid = .int; traceid = .int
+  aliasid = .int; labelid = .int; tailid = .int; clearid = .int; backward = .int; backexit = .int
+  falsebranch = .int; dualbranch = .int; samebranch = .int; exitid = .int; cleartail = .int; edge = .int
+  headid = .int; loadid = .int; addid = .int; endret = .int
+  original = .lltarget..module; restored = .lltarget..module; rejected = .lltarget..module
+  draft = .lltarget..draft; root = .lltarget..bodydraft; leaf = .lltarget..bodydraft
+  file = .llir..sourcefile; at = .llir..origin
+  body = .lltarget..body; item = .lltarget..record; other = .lltarget..record
+  graph = .llir..module; decoded = .llir..module; contract = .llir..contract; op = .llir..opview
+  index = .llirgraph..index; cycles = .llirgraph..cycles; order = .int[]
+  draft = .lltarget..draft('target.cfg','fixture:target.cfg',0)
+  file = draft.source('cfg.fixture','x' as .binary); at = file.origin(0,1)
+  root = draft.procedure('main',1,at)
+  order[1] = two(root,'load',root.reg('r',0),.lltarget..operand.integer(2),at)
+  direct = two(root,'brt',.lltarget..operand.symbol('taken_alias'),root.reg('r',0),at); order[2] = direct
+  falseexit = one(root,'ret',.lltarget..operand.integer(0),at); order[3] = falseexit
+  sourceid = sourcepoint(root,at); order[4] = sourceid
+  traceid = tracepoint(root,at); order[5] = traceid
+  aliasid = namedlabel(root,'taken_alias',at); order[6] = aliasid
+  labelid = namedlabel(root,'taken',at); order[7] = labelid
+  trueexit = one(root,'ret',.lltarget..operand.integer(1),at); order[8] = trueexit
+  tailid = tailbinding(root,at); order[9] = tailid
+  clearid = tailbinding(root,at,1); order[10] = clearid
+  leaf = draft.procedure('backward',0,at)
+  ignored = one(leaf,'br',.lltarget..operand.symbol('back_later'),at)
+  ignored = namedlabel(leaf,'back_earlier',at)
+  backexit = one(leaf,'ret',.lltarget..operand.integer(11),at)
+  ignored = namedlabel(leaf,'back_later',at)
+  backward = one(leaf,'br',.lltarget..operand.symbol('back_earlier'),at)
+  leaf = draft.procedure('falsebranch',1,at)
+  ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(0),at)
+  falsebranch = two(leaf,'brf',.lltarget..operand.symbol('false_target'),leaf.reg('r',0),at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(1),at)
+  ignored = namedlabel(leaf,'false_target',at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('dual',1,at)
+  ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(2),at)
+  dualbranch = three(leaf,'brtf',.lltarget..operand.symbol('dual_yes'),.lltarget..operand.symbol('dual_no'),leaf.reg('r',0),at)
+  ignored = namedlabel(leaf,'dual_no',at); ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  ignored = namedlabel(leaf,'dual_yes',at); ignored = one(leaf,'ret',.lltarget..operand.integer(1),at)
+  leaf = draft.procedure('sameedge',1,at)
+  samebranch = three(leaf,'brtf',.lltarget..operand.symbol('same_target'),.lltarget..operand.symbol('same_target'),leaf.reg('r',0),at)
+  ignored = namedlabel(leaf,'same_target',at); ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('exitonly',0,at)
+  exitid = one(leaf,'exit',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('cleartail',0,at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  cleartail = tailbinding(leaf,at,1)
+  leaf = draft.procedure('ordered',1,at)
+  headid = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(1),at)
+  loadid = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(2),at)
+  addid = three(leaf,'iadd',leaf.reg('r',0),leaf.reg('r',0),.lltarget..operand.integer(3),at)
+  endret = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'direct CFG source verifies')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  graph_ref = original.ir(); graph = dereference graph_ref; image = graph.binary()
+  store_ref = graph.storage(); store = dereference store_ref; contract_ref = store.contract(); contract = dereference contract_ref
+  index = .llirgraph..index(graph_ref); failures = failures + check(index.status() = 'ok','shared graph index accepts target edges')
+  if index.status() <> 'ok' then do; say index.message(); return failures; end
+  body = original.body(original.procedureid('main'))
+  failures = failures + check(body.normalcfgcomplete() & original.normalcfgcomplete(body.functionid()),'normal CFG completeness is owner-derived')
+  failures = failures + check(body.records() = order[0],'all ordinary/control/metadata records stay visible')
+  do i = 1 to order[0]
+    item = body.record(i)
+    failures = failures + check(item.id() = order[i],'record enumeration preserves source order ' || i)
+  end
+  op = graph.operation(direct); item = original.at(falseexit)
+  failures = failures + check(op.successors() = 2 & op.successor(1) = body.labelblock('taken_alias') & op.successor(2) = item.blockid(),'BRT target then lexical fallthrough')
+  failures = failures + check(index.successors(body.labelblock('taken_alias')) = 1 & index.successor(body.labelblock('taken_alias'),1) = index.successor(body.labelblock('taken'),1),'alias names have one shared machine address group')
+  item = original.at(sourceid); other = original.at(traceid)
+  failures = failures + check(item.addressid() = trueexit & other.addressid() = trueexit,'source and TRACE preceding label belong to its next instruction')
+  item = original.at(aliasid); other = original.at(labelid)
+  failures = failures + check(item.addressid() = trueexit & other.addressid() = trueexit,'consecutive labels preserve their shared address')
+  op = graph.operation(falseexit); failures = failures + check(op.successors() = 0,'first RET has no CFG successor')
+  op = graph.operation(trueexit); failures = failures + check(op.successors() = 0,'second RET has no CFG successor')
+  item = original.at(tailid); other = original.at(clearid)
+  failures = failures + check(item.addressid() = 0 & other.addressid() = 0 & index.reachable(item.blockid()) = 0,'trailing META has an unreachable body-end address, not post-RET execution')
+  failures = failures + check(body.endobservations() & original.endobservations(body.functionid()),'typed tail observations are derived once by validation')
+  body = original.body(original.procedureid('backward')); op = graph.operation(backward)
+  failures = failures + check(op.successors() = 1 & op.successor(1) = body.labelblock('back_earlier'),'backward lexical BR retains its exact label edge')
+  item = original.at(backexit); failures = failures + check(index.reachable(item.blockid()),'backward lexical DAG return is reachable')
+  cycles = .llirgraph..cycles(reference index)
+  failures = failures + check(cycles.status() = 'ok','shared SCC analysis accepts target CFG')
+  if cycles.status() = 'ok' then do i = 1 to cycles.components()
+    failures = failures + check(cycles.cyclic(i) = 0,'backward lexical edges are not necessarily loops ' || i)
+  end
+  body = original.body(original.procedureid('falsebranch')); op = graph.operation(falsebranch)
+  failures = failures + check(op.successors() = 2 & op.successor(1) = body.labelblock('false_target'),'BRF retains target-first polarity contract')
+  body = original.body(original.procedureid('dual')); op = graph.operation(dualbranch)
+  failures = failures + check(op.successors() = 2 & op.successor(1) = body.labelblock('dual_yes') & op.successor(2) = body.labelblock('dual_no'),'BRTF edges follow its target operand order')
+  body = original.body(original.procedureid('sameedge')); op = graph.operation(samebranch)
+  failures = failures + check(op.successors() = 2 & op.successor(1) = op.successor(2),'same-name BRTF retains both ordered edges')
+  op = graph.operation(exitid); item = original.at(exitid)
+  failures = failures + check(op.successors() = 0 & item.mnemonic() = 'exit','EXIT is terminal without becoming a normal RET')
+  body = original.body(original.procedureid('cleartail')); item = original.at(cleartail)
+  failures = failures + check(body.endobservations() = 0 & item.addressid() = 0,'a harmless trailing metadata clear is not a register observation')
+  decoded = llir..loadbinary(contract,image); restored = .lltarget..module(decoded)
+  failures = failures + check(restored.valid(),'decoded direct CFG verifies independently')
+  op = graph.operation(direct); edge = store.get(3,direct,8)
+  damaged = tablefield(image,7,edge,1,op.successor(2)); decoded = llir..loadbinary(contract,damaged)
+  failures = failures + check(decoded.error() = '','wrong same-function edge remains structurally well-formed generic IR')
+  rejected = .lltarget..module(decoded)
+  failures = failures + check(rejected.valid() = 0,'target validation rejects well-formed edge that disagrees with branch label')
+  /* Keep the block's first/last rows and all ownership intact. Only its two
+   * interior source instructions exchange execution order: facts would see
+   * LOAD1,IADD3,LOAD2 while source-order rendering still emits LOAD1,LOAD2,IADD3. */
+  damaged = tablefield(image,3,headid,3,addid)
+  damaged = tablefield(damaged,3,addid,3,loadid)
+  damaged = tablefield(damaged,3,loadid,3,endret)
+  decoded = llir..loadbinary(contract,damaged)
+  failures = failures + check(decoded.error() = '','interior reorder remains structurally well-formed generic IR')
+  rejected = .lltarget..module(decoded)
+  failures = failures + check(rejected.valid() = 0 & pos('LL_TARGET_CFG',rejected.error()) > 0,'target rejects interior instruction order that disagrees with source records')
+  failures = failures + check(bin2x(graph.binary()) = bin2x(image),'interior-order rejection preserves the original owner')
+  rejected = .lltarget..module(graph,1)
+  failures = failures + check(rejected.valid() = 0 & rejected.records() = 0 & pos('LL_RESOURCE_LIMIT',rejected.error()) > 0,'validation fuel refusal publishes no partial target')
+  decoded = llir..loadbinary(contract,image,1000000,1)
+  failures = failures + check(decoded.error() <> '' & decoded.operations() = 0,'image byte refusal publishes no partial graph')
+  failures = failures + check(bin2x(graph.binary()) = bin2x(image),'decoded mutations and limits preserve the original owner')
+  return failures
+
+malformed: procedure = .int
+  failures = 0; variant = .int; ignored = .int; result = .lltarget..module
+  do variant = 1 to 2
+    draft = .lltarget..draft('cfg.invalid.' || variant,'fixture:cfg.invalid',0)
+    at = draft.synthetic('malformed label is validation failure, not policy keep')
+    root = draft.procedure('main',0,at)
+    if variant = 1 then ignored = namedlabel(root,'duplicate',at)
+    else ignored = one(root,'br',.lltarget..operand.symbol('missing'),at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    if variant = 1 then do
+      leaf = draft.procedure('other',0,at)
+      ignored = namedlabel(leaf,'duplicate',at)
+      ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+    end
+    result = draft.finish()
+    failures = failures + check(result.valid() = 0 & result.records() = 0 & pos('label',lower(result.error())) > 0,'duplicate/module-wide or missing label is invalid ' || variant)
+  end
+  return failures
+
+/** The CFG prerequisite preserves current proof refusals. These are pending
+ * inliner/cleanup implementations, not permanent restrictions on valid RXAS. */
+keeps: procedure = .int
+  failures = 0; variant = .int; ignored = .int; callid = .int; expected = .string
+  original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
+  request = .llinline..binding; decision = .llinline..decision
+  do variant = 1 to 3
+    draft = .lltarget..draft('cfg.keep.' || variant,'fixture:cfg.keep',0); at = draft.synthetic('pending control proof')
+    root = draft.procedure('main',2,at)
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(2),at)
+    if variant = 1 then ignored = two(root,'brt',.lltarget..operand.symbol('root_call'),root.reg('r',0),at)
+    if variant = 1 then do
+      ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+      ignored = namedlabel(root,'root_call',at)
+    end
+    callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('helper'),root.reg('r',0),at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    if variant = 3 then ignored = tailbinding(root,at)
+    leaf = draft.procedure('helper',0,at)
+    if variant = 2 then do
+      ignored = two(leaf,'brf',.lltarget..operand.symbol('helper_false'),leaf.reg('a',1),at)
+      ignored = one(leaf,'ret',leaf.reg('a',1),at)
+      ignored = namedlabel(leaf,'helper_false',at)
+    end
+    ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+    original = draft.finish(); graph = dereference original.ir(); image = graph.binary()
+    failures = failures + check(original.valid(),'pending proof control is valid RXAS ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    if variant < 3 then do
+      expected = 'profile.caller.cfg.pending'
+      if variant = 2 then expected = 'profile.callee.cfg.pending'
+      request = llinline..bind(reference original,callid,reference original,original.procedureid('helper'))
+      decision = llinline..inspect(request,'closed-main-default-halt.v1')
+      failures = failures + check(decision.status() = 'keep' & decision.reason() = expected,'current branch inlining has a specific pending reason ' || variant)
+      changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result(); proofgraph = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(proofgraph.binary()) = bin2x(image),'pending branch expansion preserves exact original ' || variant)
+    end
+    if variant = 2 then iterate
+    changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = 'transport.cfg.pending' & bin2x(graph.binary()) = bin2x(image),'linear transport keeps branches or typed end anchors ' || variant)
+    changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = 'storage.cfg.pending' & bin2x(graph.binary()) = bin2x(image),'linear placement keeps branches or typed end anchors ' || variant)
+    changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1); kept = changed.result(); graph = dereference kept.ir()
+    failures = failures + check(changed.status() = 'limit' & changed.reason() = 'transport.cfg.work' & bin2x(graph.binary()) = bin2x(image),'control scan fuel refusal is atomic ' || variant)
+  end
+  return failures
+
+incomplete: procedure = .int
+  failures = 0; original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
+  draft = .lltarget..draft('cfg.indirect','fixture:cfg.indirect',0); at = draft.synthetic('unrepresented indirect control is transportable')
+  root = draft.procedure('main',1,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(0),at)
+  ignored = two(root,'jumps',root.reg('r',0),.lltarget..operand.literal('B','0x' as .binary),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'indirect control remains transportable without invented successors')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  failures = failures + check(original.normalcfgcomplete(original.procedureid('main')) = 0,'unknown indirect successors make normal proof incomplete')
+  graph = dereference original.ir(); image = graph.binary()
+  changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
+  failures = failures + check(changed.status() = 'keep' & changed.reason() = 'transport.cfg.pending' & bin2x(graph.binary()) = bin2x(image),'transport keeps incomplete control atomically')
+  changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
+  failures = failures + check(changed.status() = 'keep' & changed.reason() = 'storage.cfg.pending' & bin2x(graph.binary()) = bin2x(image),'placement keeps incomplete control atomically')
+  return failures
+
+main: procedure = .int
+  failures = shapes() + malformed() + keeps() + incomplete()
+  say 'TARGET_CFG|failures=' || failures
+  return failures

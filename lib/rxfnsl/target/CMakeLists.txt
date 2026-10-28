@@ -166,6 +166,27 @@ if(BUILD_TESTING)
     crexx_register_test_prep_targets(TESTS levell_nested_inline_rxbvm
       TARGETS levell_nested_inline rxbvm)
   endif()
+
+  set(_cfg_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/target-cfg.crexx")
+  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/target-cfg-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
+      -o target-cfg "${_cfg_fixture}"
+    COMMAND $<TARGET_FILE:rxas> target-cfg
+    COMMAND $<TARGET_FILE:rxlink> -s -o target-cfg-linked target-cfg ${_images}
+    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_cfg_fixture}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+  add_custom_target(levell_target_cfg
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/target-cfg-linked.rxbin")
+  if(TARGET rxbvm)
+    add_test(NAME levell_target_cfg_rxbvm
+      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/target-cfg-linked.rxbin")
+    set_tests_properties(levell_target_cfg_rxbvm PROPERTIES
+      PASS_REGULAR_EXPRESSION "TARGET_CFG[|]failures=0"
+      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+      TIMEOUT 120 LABELS "level-l;research;inlining")
+    crexx_register_test_prep_targets(TESTS levell_target_cfg_rxbvm
+      TARGETS levell_target_cfg rxbvm)
+  endif()
 endif()
 
 option(CREXX_BUILD_TARGET_IO "Build the optional Level L target RXAS adapters" OFF)

@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Optional checked machine-target records over Level L IR. */
 options levelb
-namespace lltarget expose draft bodydraft module body record operand operandcodec schema remapregisters remapmetadata
+namespace lltarget expose draft bodydraft module body record operand operandcodec schema isrecord remapregisters remapmetadata
 import rxfnsb
 import llir
 import llrxascatalog
@@ -226,7 +226,7 @@ unpack: procedure = .operand
   return .operand.decoded(kind,bank,<at..i64>(at + 8) bits,bytes,owner,<at..u32>(at + 16) bits,<at..u32>(at + 20) bits)
 
 schema: procedure = .llir..contract
-  registry = .llir..schema(); family = registry.family('rxas.target',1)
+  registry = .llir..schema(); family = registry.family('rxas.target',2)
   integer = family.type('integer',.llir..intcodec() as .object)
   bytes = family.type('bytes',.llir..bytescodec() as .object)
   vector = family.type('operands',.operandcodec() as .object)
@@ -240,8 +240,31 @@ schema: procedure = .llir..contract
   descriptor = family.operation('record')
   call descriptor.attribute('kind',bytes); call descriptor.attribute('body',integer)
   call descriptor.attribute('opcode',integer); call descriptor.attribute('operands',vector)
+  descriptor = family.operation('control')
+  call descriptor.attribute('kind',bytes); call descriptor.attribute('body',integer)
+  call descriptor.attribute('opcode',integer); call descriptor.attribute('operands',vector)
+  call descriptor.control('terminal',0,2)
   /* No generic executable optimization may consume this target profile. */
   return registry.finish()
+
+/** Source records share one checked field contract; structural L jumps do not
+ * belong to source enumeration or rendering. */
+isrecord: procedure = .int
+  arg name = .string
+  return name = 'rxas.target.record' | name = 'rxas.target.control'
+
+/** -1 is ordinary fallthrough, -2 is an unrepresented normal transfer. The
+ * finite profile preserves encoded target order, not Boolean edge polarity. */
+controlarity: procedure = .int
+  arg opcode = .int
+  catalog = .llrxascatalog..catalog(); flow = catalog.flow(opcode)
+  if flow = 0 then return -1
+  if flow = 3 then return 0
+  name = catalog.mnemonic(opcode); signature = catalog.signature(opcode)
+  if flow = 1 & name = 'br' & signature = 'L' then return 1
+  if flow = 2 & wordpos(name,'brt brf') > 0 & signature = 'LR' then return 2
+  if flow = 2 & name = 'brtf' & signature = 'LLR' then return 2
+  return -2
 
 integerbits: procedure = .binary
   arg value = .int
@@ -281,7 +304,10 @@ recordshape: procedure = .string
   end
   kind = item.kind(); body = item.procedureid()
   select
-    when kind = 'instruction' then return ''
+    when kind = 'instruction' then do
+      if body < 2 then return 'instruction outside procedure'
+      return ''
+    end
     when kind = 'procedure' then do
       if signature <> 'PIL' | body < 2 then return 'procedure shape'
       name = item.operand(1); locals = item.operand(2); exposed = item.operand(3)
@@ -340,7 +366,7 @@ recordshape: procedure = .string
   return ''
 
 appendrecord: procedure = .int
-  arg owner = reference .llir..arena, fuel_ref = reference .fuel, block = .llir..block, bodyid = .int, kind = .string, opcode = .int, fields = .object[], at = .llir..origin
+  arg owner = reference .llir..arena, fuel_ref = reference .fuel, block = .llir..block, bodyid = .int, kind = .string, opcode = .int, fields = .object[], at = .llir..origin, ?edges = .object[]
   store = dereference owner; work = dereference fuel_ref
   if work.take(owner,fields[0] + 1) = 0 then return 0
   if wordpos(kind,'procedure instruction label .meta .srcfile .srcline .srcstep .traceevent .const .import .globalexpose') = 0 then do
@@ -349,7 +375,7 @@ appendrecord: procedure = .int
   if at.belongs(owner) = 0 then do
     call store.fail('LL_TARGET_OWNER: foreign record origin'); return 0
   end
-  item = .operand
+  item = .operand; target = .llir..block; i = .int
   do i = 1 to fields[0]
     if fields[i] is .operand then item = fields[i] as .operand
     else do; call store.fail('LL_TARGET_OPERAND: expected typed operand'); return 0; end
@@ -362,14 +388,119 @@ appendrecord: procedure = .int
       end
     end
   end
-  contract = dereference store.contract(); operation = contract.operation('rxas.target.record')
+  contract = dereference store.contract(); opname = 'rxas.target.record'
+  if kind = 'instruction' then do
+    catalog = .llrxascatalog..catalog()
+    if catalog.flow(opcode) <> 0 then opname = 'rxas.target.control'
+  end
+  operation = contract.operation(opname)
   draft = block.operation(operation,at)
   call draft.attribute('kind',kind as .binary); call draft.attribute('body',integerbits(bodyid))
   bits = pack(fields,owner,fuel_ref)
   if store.error() <> '' then return 0
   call draft.attribute('opcode',integerbits(opcode)); call draft.attribute('operands',bits)
+  if ?edges then do i = 1 to edges[0]
+    if edges[i] is .llir..block then target = edges[i] as .llir..block
+    else do; call store.fail('LL_TARGET_CFG: successor is not a block'); return 0; end
+    call draft.successor(target)
+  end
   result = draft.finish()
   return result.id()
+
+/** A draft-owned cursor retains only construction handles and label bindings.
+ * All executable blocks and edges belong to the shared L arena. Copies of a
+ * bodydraft borrow this same cursor rather than copying its current position. */
+bodycursor: class
+  _owner = reference .llir..arena
+  _fuel = reference .fuel
+  _function = .llir..function
+  _current = .llir..block
+  _fallthrough = .llir..block
+  _names = .string[]
+  _thunks = .object[]
+  _defined = .int[]
+  _lastlabel = .int
+  _sequence = .int
+  _after = .int
+  _ended = .int
+  *: factory
+    arg owner = reference .llir..arena, work = reference .fuel, functionview = .llir..function, entry = .llir..block
+    _owner = owner; _fuel = work; _function = functionview; _current = entry; _sequence = 1
+    return
+  newgroup: method = .llir..block
+    work = dereference _fuel
+    if work.take(_owner,1) = 0 then return _current
+    _sequence = _sequence + 1
+    return _function.block('$target.addr.' || _sequence)
+  before: method = .llir..block
+    arg at = .llir..origin, zero = 0
+    store = dereference _owner
+    if _ended | (zero & _after) then do
+      target = newgroup()
+      if store.error() <> '' then return _current
+      if _ended = 0 then call _current.jump(target,at)
+      _current = target; _after = 0; _ended = 0
+    end
+    return _current
+  labelentry: method = .llir..block
+    arg name = .string
+    i = .int; size = .int; comparisons = .int
+    store = dereference _owner; work = dereference _fuel
+    size = length(name) + 1
+    if _names[0] > 2147483647 / size then do; call store.fail('LL_RESOURCE_LIMIT: target label work'); return _current; end
+    comparisons = _names[0] * size
+    if work.take(_owner,comparisons + size) = 0 then return _current
+    if namesafe(name) = 0 then do; call store.fail('LL_TARGET_NAME: invalid label'); return _current; end
+    do i = 1 to _names[0]
+      if _names[i] == name then do; _lastlabel = i; return _thunks[i] as .llir..block; end
+    end
+    size = length(name)
+    if size > (2147483647 - 96) / 2 then do; call store.fail('LL_RESOURCE_LIMIT: target label bytes'); return _current; end
+    if store.reserve(0,96 + size * 2) = 0 then return _current
+    thunk = _function.block('$target.label.' || name)
+    _lastlabel = _names[0] + 1
+    _names[_lastlabel] = name; _thunks[_lastlabel] = thunk as .object; _defined[_lastlabel] = 0
+    return thunk
+  define: method = .void
+    arg name = .string, at = .llir..origin
+    store = dereference _owner
+    thunk = labelentry(name)
+    if store.error() <> '' then return
+    if _defined[_lastlabel] then do; call store.fail('LL_TARGET_BINDING: duplicate label definition ' || name); return; end
+    call thunk.jump(_current,at); _defined[_lastlabel] = 1
+    return
+  targets: method = .object[]
+    arg opcode = .int, fields = .object[]
+    edges = .object[]; field = .operand
+    arity = controlarity(opcode); catalog = .llrxascatalog..catalog()
+    if arity > 0 then do
+      field = fields[1] as .operand; edges[1] = labelentry(field.text()) as .object
+      if arity = 2 then do
+        if catalog.mnemonic(opcode) = 'brtf' then do
+          field = fields[2] as .operand; edges[2] = labelentry(field.text()) as .object
+        end
+        else do; _fallthrough = newgroup(); edges[2] = _fallthrough as .object; end
+      end
+    end
+    return edges
+  after: method = .void
+    arg opcode = .int
+    catalog = .llrxascatalog..catalog()
+    if catalog.flow(opcode) = 0 then do; _after = 1; return; end
+    if wordpos(catalog.mnemonic(opcode),'brt brf') > 0 & controlarity(opcode) = 2 then do
+      _current = _fallthrough; _after = 0; _ended = 0
+    end
+    else do; _ended = 1; _after = 0; end
+    return
+  finish: method = .void
+    arg at = .llir..origin
+    store = dereference _owner; work = dereference _fuel
+    if work.take(_owner,_names[0] + 1) = 0 then return
+    do i = 1 to _names[0]
+      if _defined[i] = 0 then do; call store.fail('LL_TARGET_BINDING: unresolved branch label ' || _names[i]); return; end
+    end
+    if _ended = 0 then call _current.returnvoid(at)
+    return
 
 /** All persistent records and IDs use the existing L arena and freeze. The
  * private catalogue function is declarative and never emitted or executed. */
@@ -378,7 +509,7 @@ draft: class
   _fuel = .fuel
   _catalogue = .llir..block
   _functions = .int[]
-  _blocks = .object[]
+  _cursors = .bodycursor[]
   _globals = .int
   _sealed = .int
   *: factory
@@ -434,12 +565,13 @@ draft: class
     contract = dereference _store.contract()
     if name = '' | locals < 0 then call _store.fail('LL_TARGET_PROCEDURE: invalid name or local count')
     fn = .llir..function(reference _store,_store.function(name,contract.voidtype()))
-    block = fn.block('body'); n = _functions[0] + 1
-    _functions[n] = fn.id(); _blocks[n] = block as .object
+    block = fn.block('$target.addr.1'); n = _functions[0] + 1
+    if _store.reserve(0,160) = 0 then return .lltarget..bodydraft()
+    _functions[n] = fn.id(); _cursors[n] = .bodycursor(reference _store,reference _fuel,fn,block)
     fields = .object[]; fields[1] = .operand.procedure(name) as .object
     fields[2] = .operand.integer(locals) as .object; fields[3] = .operand.symbol(exposed) as .object
     headerid = appendrecord(reference _store,reference _fuel,_catalogue,fn.id(),'procedure',-1,fields,at)
-    return .lltarget..bodydraft(reference _store,reference _fuel,block,_catalogue,fn.id(),locals,_globals,headerid)
+    return .lltarget..bodydraft(reference _store,reference _fuel,reference _cursors[n],_catalogue,fn.id(),locals,_globals,headerid)
   record: method = .int
     arg kind = .string, fields = .object[], at = .llir..origin
     return appendrecord(reference _store,reference _fuel,_catalogue,0,kind,-1,fields,at)
@@ -447,9 +579,10 @@ draft: class
     if _sealed then do
       call bad('LL_TARGET_STATE: draft already finished'); return .lltarget..module(.llir..module(_store),0)
     end
-    _sealed = 1; origin = syntheticorigin(reference _store,'target structural sentinel'); block = .llir..block
-    do i = 1 to _blocks[0]
-      block = _blocks[i] as .llir..block; call block.returnvoid(origin)
+    _sealed = 1; origin = syntheticorigin(reference _store,'target structural sentinel')
+    do i = 1 to _cursors[0]
+      cursor_ref = reference _cursors[i]; cursor = dereference cursor_ref
+      call cursor.finish(origin)
     end
     call _catalogue.returnvoid(origin)
     ok = _store.freeze(); graph = .llir..module(_store)
@@ -458,15 +591,18 @@ draft: class
 bodydraft: class
   _owner = reference .llir..arena
   _fuel = reference .fuel
-  _block = .llir..block
+  _cursor = reference .bodycursor
   _catalogue = .llir..block
   _function = .int
   _locals = .int
   _globals = .int
   _header = .int
   *: factory
-    arg owner = reference .llir..arena, work = reference .fuel, block = .llir..block, catalogue = .llir..block, functionid = .int, locals = .int, globals = .int, headerid = 0
-    _owner = owner; _fuel = work; _block = block; _catalogue = catalogue
+    arg ?owner = reference .llir..arena, ?work = reference .fuel, ?cursor = reference .bodycursor, ?catalogue = .llir..block, functionid = 0, locals = 0, globals = 0, headerid = 0
+    if ?owner then _owner = owner
+    if ?work then _fuel = work
+    if ?cursor then _cursor = cursor
+    if ?catalogue then _catalogue = catalogue
     _function = functionid; _locals = locals; _globals = globals; _header = headerid
     return
   functionid: method = .int
@@ -507,7 +643,7 @@ bodydraft: class
         do j = 1 to store.count(3)
           if work.take(_owner,1) = 0 then return 0
           existing = .llir..opview(_owner,j)
-          if existing.name() <> 'rxas.target.record' then iterate
+          if isrecord(existing.name()) = 0 then iterate
           if existing.attribute('kind') as .string <> '.const' then iterate
           vector = existing.attribute('operands')
           if (<at..u32>(0) vector) <> 3 then iterate
@@ -524,7 +660,11 @@ bodydraft: class
     if opcode < 0 then do
       call store.fail('LL_TARGET_OPCODE: unknown source-visible instruction/signature ' || mnemonic || '/' || signature); return 0
     end
-    return appendrecord(_owner,_fuel,_block,_function,'instruction',opcode,fields,at)
+    cursor = dereference _cursor; block = cursor.before(at)
+    edges = cursor.targets(opcode,fields)
+    id = appendrecord(_owner,_fuel,block,_function,'instruction',opcode,fields,at,edges)
+    call cursor.after(opcode)
+    return id
   record: method = .int
     arg kind = .string, fields = .object[], at = .llir..origin
     source = .operand; bank = .operand; number = .operand; registered = .operand
@@ -536,7 +676,11 @@ bodydraft: class
         if source.text() = 'R' & number.index() >= 0 & wordpos(lower(bank.text()),'r g a') > 0 then registered = reg(lower(bank.text()),number.index())
       end
     end
-    return appendrecord(_owner,_fuel,_block,_function,kind,-1,fields,at)
+    cursor = dereference _cursor; block = cursor.before(at,1)
+    if kind = 'label' & fields[0] = 1 & fields[1] is .operand then do
+      source = fields[1] as .operand; call cursor.define(source.text(),at)
+    end
+    return appendrecord(_owner,_fuel,block,_function,kind,-1,fields,at)
 
 /** Views borrow the exact published L owner. No arena copies on scalar queries. */
 record: class
@@ -552,12 +696,31 @@ record: class
     graph = dereference _owner
     if graph.identity() <> _identity | _id < 1 | _id > graph.operations() then return 0
     op = graph.operation(_id)
-    return op.name() = 'rxas.target.record'
+    return isrecord(op.name())
   require: method = .void
     if valid() = 0 then call bad('LL_TARGET_OWNER: stale or foreign record')
     return
   id: method = .int
     call require(); return _id
+  blockid: method = .int
+    call require(); graph = dereference _owner; op = graph.operation(_id)
+    return op.blockid()
+  /** A logical instruction anchor, not an encoded address. Zero denotes the
+   * body's end address, including preserved trailing metadata. */
+  addressid: method = .int
+    i = .int; candidate = .lltarget..record
+    call require()
+    if kind() = 'instruction' then return _id
+    fn = procedureid()
+    if fn < 2 then return 0
+    graph = dereference _owner
+    do i = _id + 1 to graph.operations()
+      op = graph.operation(i)
+      if isrecord(op.name()) = 0 then iterate
+      candidate = .record(_owner,i)
+      if candidate.procedureid() = fn & candidate.kind() = 'instruction' then return i
+    end
+    return 0
   kind: method = .string
     call require(); graph = dereference _owner; op = graph.operation(_id)
     return op.attribute('kind') as .string
@@ -679,15 +842,237 @@ remapmetadata: procedure = .object[]
   end
   return fields
 
+/** Checked target binding evidence over the existing graph. The small label
+ * index and completeness flags are derived once; they are not a second CFG. */
+cfgcheck: class
+  _identity = .int
+  _error = .string
+  _complete = .int[]
+  _endobservations = .int[]
+  _names = .string[]
+  _bodies = .int[]
+  _entries = .int[]
+  _groups = .int[]
+  *: factory
+    arg owner = reference .llir..module, records_ref = reference .int[], work = .int
+    i = .int; j = .int; b = .int; f = .int; id = .int; at = .int; prior = .int
+    arity = .int; found = .int; labelcount = .int; code = .int; first = .int; last = .int; ordinal = .int; activefn = .int
+    name = .string; expectedname = .string; bits = .binary
+    item = .record; field = .operand; op = .llir..opview
+    blockkind = .int[]; nextgroup = .int[]; lastgroup = .int[]; sequence = .int[]
+    firstrecord = .int[]; lastrecord = .int[]; firstmachine = .int[]; machines = .int[]; priorrecord = .int[]
+    do
+      if <refvalid>(owner) = 0 then do; _error = 'LL_TARGET_OWNER: expired CFG module'; return; end
+      graph = dereference owner; records = dereference records_ref
+      _identity = graph.identity(); store = dereference graph.storage(); catalog = .llrxascatalog..catalog()
+      /* Charge all retained flags/index rows and traversal scratch before any
+       * sparse vector can grow to a block/function/operation identifier. */
+      if work < 1 | graph.blocks() > work / 16 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
+      work = work - graph.blocks() * 16
+      if graph.functions() > work / 8 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
+      work = work - graph.functions() * 8
+      if graph.operations() > work / 8 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
+      work = work - graph.operations() * 8
+      do f = 1 to graph.functions()
+        _complete[f] = f > 1; _endobservations[f] = 0; machines[f] = 0; sequence[f] = 0; lastgroup[f] = 0; priorrecord[f] = 0
+      end
+      do b = 1 to graph.blocks()
+        f = store.get(2,b,1); name = store.text(store.get(2,b,4))
+        firstrecord[b] = 0; lastrecord[b] = 0; firstmachine[b] = 0; nextgroup[b] = 0
+        if f = 1 then do
+          if b <> store.get(1,1,3) then do; _error = 'LL_TARGET_CFG: extra catalogue block'; return; end
+          blockkind[b] = 0; iterate
+        end
+        if left(name,13) = '$target.addr.' then do
+          sequence[f] = sequence[f] + 1
+          if name <> ('$target.addr.' || sequence[f]) then do; _error = 'LL_TARGET_CFG: address group sequence'; return; end
+          blockkind[b] = 1
+          if lastgroup[f] = 0 then do
+            if b <> store.get(1,f,3) then do; _error = 'LL_TARGET_CFG: entry address group'; return; end
+          end
+          else nextgroup[lastgroup[f]] = b
+          lastgroup[f] = b
+        end
+        else if left(name,14) = '$target.label.' then blockkind[b] = 2
+        else do; _error = 'LL_TARGET_CFG: unknown target block'; return; end
+      end
+      activefn = 0
+      do i = 1 to records[0]
+        if work < 1 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
+        work = work - 1; id = records[i]; item = .record(owner,id); f = item.procedureid()
+        if item.kind() = 'procedure' then do; activefn = f; iterate; end
+        if item.kind() = '.import' then activefn = 0
+        if f < 2 then iterate
+        if f <> activefn then do; _error = 'LL_TARGET_CFG: source record outside its procedure stream'; return; end
+        b = item.blockid()
+        if blockkind[b] <> 1 then do; _error = 'LL_TARGET_CFG: source record outside address group'; return; end
+        if priorrecord[f] <> b then do
+          prior = priorrecord[f]
+          if lastrecord[b] <> 0 | (prior = 0 & b <> store.get(1,f,3)) then do; _error = 'LL_TARGET_CFG: source group order'; return; end
+          if prior > 0 then do
+            if nextgroup[prior] <> b then do; _error = 'LL_TARGET_CFG: source group skips an address'; return; end
+          end
+          priorrecord[f] = b
+        end
+        if firstrecord[b] = 0 then firstrecord[b] = id
+        if lastrecord[b] > 0 then do
+          if store.get(3,lastrecord[b],3) <> id then do
+            _error = 'LL_TARGET_CFG: linked source order disagrees with record order'; return
+          end
+        end
+        lastrecord[b] = id
+        if item.kind() = 'instruction' then do
+          machines[f] = machines[f] + 1
+          if firstmachine[b] = 0 then firstmachine[b] = id
+        end
+        else if firstmachine[b] > 0 then do
+          _error = 'LL_TARGET_CFG: zero-width record follows code in its address group'; return
+        end
+        if item.kind() <> 'label' then iterate
+        field = item.operand(1); name = field.text()
+        if _names[0] + 1 > work / (length(name) + 1) then do; _error = 'LL_RESOURCE_LIMIT: target.cfg labels'; return; end
+        work = work - (_names[0] + 1) * (length(name) + 1)
+        do j = 1 to _names[0]
+          if _names[j] == name then do; _error = 'LL_TARGET_BINDING: duplicate label definition ' || name; return; end
+        end
+        expectedname = '$target.label.' || name
+        if graph.blocks() > work / (length(expectedname) + 1) then do; _error = 'LL_RESOURCE_LIMIT: target.cfg labels'; return; end
+        work = work - graph.blocks() * (length(expectedname) + 1); found = 0
+        do j = 1 to graph.blocks()
+          if store.get(2,j,1) <> f then iterate
+          if store.text(store.get(2,j,4)) == expectedname then found = j
+        end
+        if found = 0 then do; _error = 'LL_TARGET_CFG: label has no entry block'; return; end
+        at = _names[0] + 1; _names[at] = name; _bodies[at] = f; _entries[at] = found; _groups[at] = b
+      end
+      do i = 1 to records[0]
+        if work < 1 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
+        work = work - 1; id = records[i]; item = .record(owner,id); f = item.procedureid()
+        if f < 2 | item.kind() = 'procedure' then iterate
+        b = item.blockid(); op = graph.operation(id)
+        if item.kind() <> 'instruction' then do
+          if op.name() <> 'rxas.target.record' | op.successors() <> 0 then do; _error = 'LL_TARGET_CFG: metadata control edges'; return; end
+          if firstmachine[b] = 0 & nextgroup[b] = 0 then do
+            bits = op.attribute('operands')
+            if <blen>(bits) > work then do; _error = 'LL_RESOURCE_LIMIT: target.cfg metadata'; return; end
+            work = work - <blen>(bits)
+            if item.registerrefs() > 0 then _endobservations[f] = 1
+          end
+          iterate
+        end
+        arity = controlarity(item.opcode())
+        if arity = -1 then do
+          if op.name() <> 'rxas.target.record' | op.successors() <> 0 then do; _error = 'LL_TARGET_CFG: fallthrough instruction edges'; return; end
+          do j = 1 to item.operands()
+            if work < 1 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
+            work = work - 1
+            if catalog.branch(item.opcode(),j) then _complete[f] = 0
+          end
+          iterate
+        end
+        if op.name() <> 'rxas.target.control' | op.successors() <> max(0,arity) then do; _error = 'LL_TARGET_CFG: canonical control arity'; return; end
+        if store.get(2,b,3) <> id then do; _error = 'LL_TARGET_CFG: control instruction is not last in its block'; return; end
+        if arity = -2 then do; _complete[f] = 0; iterate; end
+        labelcount = arity
+        if wordpos(item.mnemonic(),'brt brf') > 0 then labelcount = 1
+        do ordinal = 1 to labelcount
+          field = item.operand(ordinal); found = 0
+          name = field.text()
+          if _names[0] > work / (length(name) + 1) then do; _error = 'LL_RESOURCE_LIMIT: target.cfg labels'; return; end
+          work = work - _names[0] * (length(name) + 1)
+          do j = 1 to _names[0]
+            if _names[j] == name & _bodies[j] = f then found = j
+          end
+          if found = 0 then do; _error = 'LL_TARGET_BINDING: unresolved branch label ' || field.text(); return; end
+          if op.successor(ordinal) <> _entries[found] then do; _error = 'LL_TARGET_CFG: branch edge disagrees with label'; return; end
+        end
+        if arity = 2 & labelcount = 1 then do
+          if nextgroup[b] = 0 | op.successor(2) <> nextgroup[b] then do; _error = 'LL_TARGET_CFG: conditional fallthrough edge'; return; end
+          if firstmachine[nextgroup[b]] = 0 then _complete[f] = 0
+        end
+      end
+      do b = 1 to graph.blocks()
+        f = store.get(2,b,1)
+        if f = 1 then do
+          last = store.get(2,b,3)
+          if store.get(3,last,1) <> 7 then do; _error = 'LL_TARGET_CFG: catalogue terminator'; return; end
+          iterate
+        end
+        if work < 1 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
+        work = work - 1; first = store.get(2,b,2); last = store.get(2,b,3); op = graph.operation(last); code = store.get(3,last,1)
+        if blockkind[b] = 2 then do
+          found = 0
+          if _entries[0] > work then do; _error = 'LL_RESOURCE_LIMIT: target.cfg labels'; return; end
+          work = work - _entries[0]
+          do j = 1 to _entries[0]; if _entries[j] = b then found = j; end
+          if found = 0 | first <> last | code <> 5 then do; _error = 'LL_TARGET_CFG: malformed label entry'; return; end
+          if op.successors() <> 1 | op.successor(1) <> _groups[found] then do; _error = 'LL_TARGET_CFG: label entry address mismatch'; return; end
+          if firstmachine[_groups[found]] = 0 then _complete[f] = 0
+          iterate
+        end
+        if firstrecord[b] = 0 then do
+          if nextgroup[b] <> 0 | first <> last | code <> 7 then do; _error = 'LL_TARGET_CFG: empty nonterminal address group'; return; end
+        end
+        else if first <> firstrecord[b] then do; _error = 'LL_TARGET_CFG: hidden operation at address entry'; return; end
+        if lastrecord[b] > 0 & (code = 5 | code = 7) then do
+          if store.get(3,lastrecord[b],3) <> last then do
+            _error = 'LL_TARGET_CFG: structural terminator does not follow the last source record'; return
+          end
+        end
+        if code = 5 then do
+          if nextgroup[b] = 0 | op.successors() <> 1 then do; _error = 'LL_TARGET_CFG: structural fallthrough'; return; end
+          if op.successor(1) <> nextgroup[b] then do; _error = 'LL_TARGET_CFG: structural fallthrough address mismatch'; return; end
+          if firstmachine[nextgroup[b]] = 0 then _complete[f] = 0
+        end
+        else if code = 7 then do
+          if nextgroup[b] <> 0 then do; _error = 'LL_TARGET_CFG: premature structural return'; return; end
+          if firstmachine[b] > 0 then _complete[f] = 0
+        end
+        else if op.name() <> 'rxas.target.control' | last <> lastrecord[b] then do
+          _error = 'LL_TARGET_CFG: invalid address-group terminator'; return
+        end
+      end
+      do f = 2 to graph.functions(); if machines[f] = 0 then _complete[f] = 0; end
+    on signal as problem
+      if _error = '' then _error = 'LL_TARGET_CFG: ' || problem.name() || ': ' || problem.message()
+    end
+    return
+  valid: method = .int
+    return _error = '' & _identity > 0
+  identity: method = .int
+    return _identity
+  error: method = .string
+    return _error
+  complete: method = .int
+    arg functionid = .int
+    if valid() = 0 then return 0
+    if functionid < 2 | functionid > _complete[0] then do; call bad('LL_TARGET_CFG: function identity'); return 0; end
+    return _complete[functionid]
+  endobservations: method = .int
+    arg functionid = .int
+    if valid() = 0 then return 1
+    if functionid < 2 | functionid > _complete[0] then do; call bad('LL_TARGET_CFG: function identity'); return 1; end
+    return _endobservations[functionid]
+  labelblock: method = .int
+    arg functionid = .int, name = .string
+    if valid() = 0 then do; call bad('LL_TARGET_OWNER: invalid CFG evidence'); return 0; end
+    do i = 1 to _names[0]
+      if _bodies[i] = functionid & _names[i] == name then return _entries[i]
+    end
+    call bad('LL_TARGET_BINDING: unknown body label ' || name)
+    return 0
+
 body: class
   _owner = reference .llir..module
+  _target = reference .lltarget..module
   _identity = .int
   _function = .int
   _header = .int
   *: factory
-    arg owner = reference .llir..module, functionid = .int, header = .int
+    arg owner = reference .llir..module, functionid = .int, header = .int, ?target = reference .lltarget..module
     _owner = owner; graph = dereference owner; _identity = graph.identity()
     _function = functionid; _header = header
+    if ?target then _target = target
     return
   require: method = .void
     if <refvalid>(_owner) = 0 then do; call bad('LL_TARGET_OWNER: body expired'); return; end
@@ -705,11 +1090,30 @@ body: class
   expose: method = .string
     call require(); header = .record(_owner,_header); item = header.operand(3)
     return item.text()
+  normalcfgcomplete: method = .int
+    call require()
+    if <refvalid>(_target) = 0 then return 0
+    checked = dereference _target; graph_ref = checked.ir()
+    if (_owner <refsame> graph_ref) = 0 then return 0
+    return checked.normalcfgcomplete(_function)
+  endobservations: method = .int
+    call require()
+    if <refvalid>(_target) = 0 then return 1
+    checked = dereference _target; graph_ref = checked.ir()
+    if (_owner <refsame> graph_ref) = 0 then return 1
+    return checked.endobservations(_function)
+  labelblock: method = .int
+    arg name = .string
+    call require()
+    if <refvalid>(_target) = 0 then do; call bad('LL_TARGET_CFG: body has no checked target owner'); return 0; end
+    checked = dereference _target; graph_ref = checked.ir()
+    if (_owner <refsame> graph_ref) = 0 then do; call bad('LL_TARGET_OWNER: replaced target body'); return 0; end
+    return checked.labelblock(_function,name)
   records: method = .int
     call require(); graph = dereference _owner; count = 0
     do i = 1 to graph.operations()
       op = graph.operation(i)
-      if op.name() <> 'rxas.target.record' then iterate
+      if isrecord(op.name()) = 0 then iterate
       item = .record(_owner,i)
       if item.procedureid() = _function & item.kind() <> 'procedure' then count = count + 1
     end
@@ -719,7 +1123,7 @@ body: class
     call require(); graph = dereference _owner; count = 0
     do i = 1 to graph.operations()
       op = graph.operation(i)
-      if op.name() <> 'rxas.target.record' then iterate
+      if isrecord(op.name()) = 0 then iterate
       item = .record(_owner,i)
       if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
       count = count + 1
@@ -730,6 +1134,7 @@ body: class
 
 module: class
   _graph = .llir..module
+  _cfg = .cfgcheck
   _records = .int[]
   _headers = .int[]
   _error = .string
@@ -785,10 +1190,10 @@ module: class
         if store.get(2,op.blockid(),1) <> 1 then do; _error = 'LL_TARGET_OWNER: register outside catalogue'; return; end
         slotfn[slot] = fn; slotbank[slot] = bank; slotindex[slot] = index
       end
-      else if op.name() <> 'rxas.target.record' & store.get(3,i,1) <> 7 then do
+      else if isrecord(op.name()) = 0 & store.get(3,i,1) <> 7 & store.get(3,i,1) <> 5 then do
         _error = 'LL_TARGET_SCHEMA: unexpected executable IR operation'; return
       end
-      if op.name() <> 'rxas.target.record' then iterate
+      if isrecord(op.name()) = 0 then iterate
       item = .record(reference _graph,i); _records[_records[0] + 1] = i
       vector = op.attribute('operands'); codec = .operandcodec()
       if codec.check(vector) <> '' then do; _error = 'LL_TARGET_OPERAND: invalid encoded vector'; return; end
@@ -944,6 +1349,8 @@ module: class
       end
       if _error <> '' then return
     end
+    _cfg = .cfgcheck(reference _graph,reference _records,work)
+    if _cfg.error() <> '' then _error = _cfg.error()
     on signal as problem
       if _error = '' then _error = 'LL_TARGET_INVALID: ' || problem.name() || ': ' || problem.message()
     end
@@ -963,6 +1370,24 @@ module: class
     return _artifact
   globals: method = .int
     return _globals
+  normalcfgcomplete: method = .int
+    arg functionid = .int
+    if _error <> '' then return 0
+    graph_ref = reference _graph; graph = dereference graph_ref
+    if _cfg.identity() <> graph.identity() then return 0
+    return _cfg.complete(functionid)
+  endobservations: method = .int
+    arg functionid = .int
+    if _error <> '' then return 1
+    graph_ref = reference _graph; graph = dereference graph_ref
+    if _cfg.identity() <> graph.identity() then return 1
+    return _cfg.endobservations(functionid)
+  labelblock: method = .int
+    arg functionid = .int, name = .string
+    if _error <> '' then do; call bad('LL_TARGET_CFG: invalid target module'); return 0; end
+    graph_ref = reference _graph; graph = dereference graph_ref
+    if _cfg.identity() <> graph.identity() then do; call bad('LL_TARGET_OWNER: replaced CFG evidence'); return 0; end
+    return _cfg.labelblock(functionid,name)
   records: method = .int
     if _error <> '' then return 0
     return _records[0]
@@ -980,7 +1405,7 @@ module: class
     arg ordinal = .int
     if _error <> '' | ordinal < 1 | ordinal > _headers[0] then call bad('LL_TARGET_PROCEDURE: invalid module or ordinal')
     header = .record(reference _graph,_headers[ordinal])
-    return .body(reference _graph,header.procedureid(),header.id())
+    return .body(reference _graph,header.procedureid(),header.id(),reference self)
   procedureid: method = .int
     arg name = .string
     return findprocedure(reference _graph,reference _headers,name)
@@ -988,7 +1413,7 @@ module: class
     arg functionid = .int
     do i = 1 to _headers[0]
       header = .record(reference _graph,_headers[i])
-      if header.procedureid() = functionid then return .body(reference _graph,functionid,header.id())
+      if header.procedureid() = functionid then return .body(reference _graph,functionid,header.id(),reference self)
     end
     call bad('LL_TARGET_PROCEDURE: unknown function identity')
     return .body(reference _graph,0,0)
