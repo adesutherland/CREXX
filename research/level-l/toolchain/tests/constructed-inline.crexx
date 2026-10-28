@@ -5,6 +5,7 @@ import llir
 import lltarget
 import lltargetfacts
 import llinline
+import llcleanup
 
 check: procedure = .int
   arg condition = .int, message = .string
@@ -234,6 +235,107 @@ argumentkeeps: procedure = .int
   end
   return failures
 
+/** Module storage is shared across activations, while a fixed actual keeps its
+ * authored bank. Exercise both private layouts without allocating global bases. */
+globalscalar: procedure = .int
+  failures = 0; variant = .int; i = .int; locals = .int
+  calls = .int; additions = .int; copies_found = .int; borrowed = .int; metadata_found = .int; traces = .int; globalends = .int
+  draft = .lltarget..draft; root = .lltarget..bodydraft; leaf = .lltarget..bodydraft
+  at = .llir..origin; original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module
+  item = .lltarget..record; left = .lltarget..operand; right = .lltarget..operand; number = .lltarget..operand
+  fields = .object[]; bindings = .object[]
+  do variant = 1 to 2
+    draft = .lltarget..draft('globalscalar.' || variant,'constructed.globalscalar',2)
+    at = draft.synthetic('private same-module scalar global and actual storage')
+    root = draft.procedure('main',2,at)
+    ignored = one(root,'null',root.reg('g',0),at)
+    ignored = two(root,'load',root.reg('g',0),.lltarget..operand.integer(10),at)
+    ignored = one(root,'null',root.reg('g',1),at)
+    ignored = two(root,'load',root.reg('g',1),.lltarget..operand.integer(2),at)
+    firstcall = three(root,'call1',root.reg('r',0),.lltarget..operand.procedure('addglobal'),root.reg('g',1),at)
+    secondcall = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('addglobal'),root.reg('g',1),at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    locals = variant - 1; leaf = draft.procedure('addglobal',locals,at)
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.string('shared' as .binary) as .object
+    fields[2] = .lltarget..operand.string('b' as .binary) as .object
+    fields[3] = .lltarget..operand.string('.int' as .binary) as .object; fields[4] = leaf.reg('g',0) as .object
+    ignored = leaf.record('.meta',fields,at)
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.string('V' as .binary) as .object; fields[2] = .lltarget..operand.integer(4) as .object
+    fields[3] = .lltarget..operand.string('R' as .binary) as .object; fields[4] = .lltarget..operand.string('I' as .binary) as .object
+    fields[5] = .lltarget..operand.string('g' as .binary) as .object; fields[6] = .lltarget..operand.integer(1) as .object
+    do i = 7 to 9; fields[i] = .lltarget..operand.integer(0) as .object; end
+    fields[10] = .lltarget..operand.string('increment' as .binary) as .object; fields[11] = .lltarget..operand.string(''x as .binary) as .object
+    ignored = leaf.record('.traceevent',fields,at)
+    if variant = 1 then ignored = three(leaf,'iadd',leaf.reg('g',0),leaf.reg('g',0),leaf.reg('a',1),at)
+    else do
+      ignored = two(leaf,'link',leaf.reg('r',0),leaf.reg('a',1),at)
+      ignored = three(leaf,'iadd',leaf.reg('g',0),leaf.reg('g',0),leaf.reg('r',0),at)
+      ignored = one(leaf,'unlink',leaf.reg('r',0),at)
+    end
+    ignored = one(leaf,'ret',leaf.reg('g',0),at)
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.string('shared' as .binary) as .object
+    ignored = leaf.record('.meta',fields,at)
+    original = draft.finish()
+    failures = failures + check(original.valid(),'same-module global constructed target verifies ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(facts.status() = 'ok','repeated global effects retain one module storage state ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    failures = failures + check(facts.argumentbank(firstcall,1) = 'g' & facts.argument(firstcall,1) = 1 & facts.argumentbank(secondcall,1) = 'g' & facts.argument(secondcall,1) = 1,'fixed actual exposes logical global bank/index ' || variant)
+    failures = failures + check(facts.argumentstorage(firstcall,1) = facts.argumentstorage(secondcall,1),'repeated global actuals retain exact module storage identity ' || variant)
+    failures = failures + check(facts.rebinding(firstcall) = (variant = 2) & facts.returnaction(firstcall) = 'copy' & facts.returnaction(secondcall) = 'copy','global returns copy independently of private layout and local history ' || variant)
+    call objectarraydrop bindings
+    bindings[1] = llinline..bind(reference original,firstcall,reference original,original.procedureid('addglobal')) as .object
+    bindings[2] = llinline..bind(reference original,secondcall,reference original,original.procedureid('addglobal')) as .object
+    changed = llinline..expandmany(bindings,'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'changed','same-module global calls expand atomically ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    result = changed.result(); body = result.body(result.procedureid('main'))
+    calls = 0; additions = 0; copies_found = 0; borrowed = 0; metadata_found = 0; traces = 0; globalends = 0
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = '.meta' & item.operands() = 4 then do
+        left = item.operand(4)
+        if left.bank() = 'g' & left.index() = 0 then metadata_found = metadata_found + 1
+      end
+      if item.kind() = '.traceevent' then do
+        left = item.operand(5); number = item.operand(6)
+        if left.text() = 'g' & number.index() = 1 then traces = traces + 1
+      end
+      if item.kind() <> 'instruction' then iterate
+      if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then calls = calls + 1
+      if item.mnemonic() = 'endlife' then do
+        left = item.operand(1)
+        if left.bank() = 'g' then globalends = globalends + 1
+      end
+      if item.mnemonic() = 'iadd' then do
+        left = item.operand(1); right = item.operand(2)
+        if left.bank() = 'g' & left.index() = 0 & right.bank() = 'g' & right.index() = 0 then additions = additions + 1
+      end
+      if wordpos(item.mnemonic(),'copy link') > 0 then do
+        right = item.operand(2)
+        if item.mnemonic() = 'copy' & right.bank() = 'g' & right.index() = 0 then copies_found = copies_found + 1
+        if item.mnemonic() = 'link' & right.bank() = 'g' & right.index() = 1 then borrowed = borrowed + 1
+      end
+    end
+    failures = failures + check(result.globals() = 2 & calls = 0 & additions = 2 & copies_found = 2,'cloned arithmetic and COPY returns preserve module global count/index ' || variant)
+    failures = failures + check(borrowed = 2 & globalends = 0,'fixed global actuals borrow original cells without global lifetime cleanup ' || variant)
+    failures = failures + check(metadata_found = 2 & traces = 2,'cloned scoped metadata and TRACE preserve their original global bank/index ' || variant)
+    graph = dereference result.ir(); before = graph.binary()
+    cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'transport.global.storage.pending','r-only transport keeps a conservative global caller ' || variant)
+    kept = cleaned.result(); graph = dereference kept.ir()
+    failures = failures + check(bin2x(graph.binary()) = bin2x(before),'transport global guard preserves exact expanded IR ' || variant)
+    cleaned = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'storage.global.storage.pending','r-only placement keeps a conservative global caller ' || variant)
+    kept = cleaned.result(); graph = dereference kept.ir()
+    failures = failures + check(bin2x(graph.binary()) = bin2x(before),'placement global guard preserves exact expanded IR ' || variant)
+  end
+  return failures
+
 main: procedure = .int
   failures = 0
   draft = .lltarget..draft('constructed','constructed.fixture',0)
@@ -336,5 +438,6 @@ main: procedure = .int
   failures = failures + check(pos('budget',small.error()) > 0,'payload preflight fails before vector allocation')
   failures = failures + nestedordered()
   failures = failures + argumentselection() + argumentkeeps()
+  failures = failures + globalscalar()
   say 'CONSTRUCTED_INLINE|failures=' || failures
   return failures

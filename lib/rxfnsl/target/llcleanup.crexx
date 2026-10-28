@@ -50,6 +50,7 @@ transport: procedure = .llinline..change
   if <refvalid>(owner) = 0 then return .llinline..change('invalid','owner.expired')
   source = dereference owner
   if source.valid() = 0 then return .llinline..change('invalid',source.error(),source,empty)
+  if source.globals() > 0 then return .llinline..change('keep','transport.global.storage.pending',source,empty)
   do
     facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
@@ -232,6 +233,7 @@ storage: procedure = .llinline..change
   source = dereference owner
   if source.valid() = 0 then return .llinline..change('invalid',source.error(),source,empty)
   if entries < 1 | bytes < 1 | work < 1 | frame < 0 | cells < 0 then return .llinline..change('limit','storage.allowances',source,empty)
+  if source.globals() > 0 then return .llinline..change('keep','storage.global.storage.pending',source,empty)
   do
     facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)

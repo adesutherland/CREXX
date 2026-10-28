@@ -295,6 +295,89 @@ provenance: procedure = .int
   failures = failures + check(found,'all original and call-site contributors retain order, multiplicity and spans')
   return failures
 
+globalfacts: procedure = .int
+  failures = 0; i = .int; variant = .int; fields = .object[]; reasons = .string[]
+  draft = .lltarget..draft('globalfacts','scalar.global.facts',2)
+  at = draft.synthetic('persistent module bases differ from per-frame owned caches')
+  root = draft.procedure('main',2,at)
+  ignored = one(root,'null',root.reg('g',0),at)
+  globalzero = two(root,'load',root.reg('g',0),.lltarget..operand.integer(10),at)
+  ignored = one(root,'null',root.reg('g',1),at)
+  globalone = two(root,'load',root.reg('g',1),.lltarget..operand.integer(3),at)
+  localid = two(root,'load',root.reg('r',0),.lltarget..operand.integer(2),at)
+  firstcall = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('add'),root.reg('r',0),at)
+  secondcall = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('add'),root.reg('r',0),at)
+  ignored = three(root,'ichkrng',root.reg('g',0),.lltarget..operand.integer(14),.lltarget..operand.integer(14),at)
+  aliascall = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('alias'),root.reg('g',1),at)
+  ignored = three(root,'ichkrng',root.reg('g',1),.lltarget..operand.integer(8),.lltarget..operand.integer(8),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  add = draft.procedure('add',1,at)
+  ignored = two(add,'icopy',add.reg('r',0),add.reg('a',0),at)
+  ignored = three(add,'ichkrng',add.reg('r',0),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
+  ignored = three(add,'iadd',add.reg('g',0),add.reg('g',0),add.reg('a',1),at)
+  ignored = one(add,'ret',add.reg('g',0),at)
+  alias = draft.procedure('alias',0,at)
+  ignored = three(alias,'iadd',alias.reg('a',1),alias.reg('a',1),.lltarget..operand.integer(1),at)
+  ignored = three(alias,'iadd',alias.reg('g',1),alias.reg('g',1),alias.reg('a',1),at)
+  ignored = one(alias,'ret',alias.reg('g',1),at)
+  original = draft.finish()
+  facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(facts.status() = 'ok','global values survive repeated procedure local/a0 cache activation and aliased writes')
+  if facts.status() <> 'ok' then do; say facts.reason(); return failures; end
+  remaining = facts.remaining()
+  failures = failures + check(facts.argumentbank(firstcall,1) = 'r' & facts.argument(firstcall,1) = 0 & facts.storage(localid,1) = 1,'global frame construction preserves original root local StorageIds')
+  failures = failures + check(facts.argumentbank(aliascall,1) = 'g' & facts.argument(aliascall,1) = 1 & facts.argumentstorage(aliascall,1) = facts.storage(globalone,1),'fixed actuals preserve logical global bank/index and shared module storage')
+  failures = failures + check(facts.returnaction(firstcall) = 'copy' & facts.returnaction(secondcall) = 'copy' & facts.returnaction(aliascall) = 'copy','global returns never move or reset module storage')
+  failures = failures + check(facts.remaining() = remaining,'typed actual queries consume no handed-off work')
+  access = dereference facts.access(); domain = facts.wholedomain(facts.storage(globalzero,1))
+  failures = failures + check(access.reads(firstcall,domain) & access.writes(firstcall,domain) & access.kills(firstcall,domain) = 0,'call projection retains shared global access without a whole-cell kill claim')
+  reasons[1] = 'global.definition.unproved'; reasons[2] = 'global.binding.unproved'
+  reasons[3] = 'global.exposure.pending'; reasons[4] = 'global.counted.call.pending'
+  reasons[5] = 'global.callee.binding.pending'; reasons[6] = 'global.lifetime.pending'; reasons[7] = 'global.initializer.pending'
+  do variant = 1 to 7
+    draft = .lltarget..draft('globalkeep.' || variant,'scalar.global.keep',1)
+    at = draft.synthetic('distinct missing global premises retain the original call')
+    root = draft.procedure('main',2,at)
+    if variant <> 1 then ignored = one(root,'null',root.reg('g',0),at)
+    ignored = two(root,'load',root.reg('g',0),.lltarget..operand.integer(10),at)
+    if variant = 2 then do
+      ignored = two(root,'link',root.reg('r',0),root.reg('g',0),at)
+      ignored = two(root,'swap',root.reg('r',0),root.reg('g',0),at)
+    end
+    if variant = 4 then do
+      ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(1),at)
+      ignored = three(root,'call',root.reg('r',0),.lltarget..operand.procedure('read'),root.reg('r',1),at)
+    end
+    else if variant = 6 then ignored = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('read'),root.reg('g',0),at)
+    else ignored = two(root,'call',root.reg('r',1),.lltarget..operand.procedure('read'),at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    read = draft.procedure('read',1,at)
+    if variant = 5 then ignored = two(read,'link',read.reg('g',0),read.reg('r',0),at)
+    if variant = 6 then ignored = one(read,'endlife',read.reg('a',1),at)
+    ignored = one(read,'ret',read.reg('g',0),at)
+    if variant = 3 then do
+      call objectarraydrop fields
+      fields[1] = .lltarget..operand.integer(0) as .object; fields[2] = .lltarget..operand.symbol('shared') as .object
+      ignored = draft.record('.globalexpose',fields,at)
+    end
+    if variant = 7 then do
+      boot = draft.procedure('boot',0,at)
+      call objectarraydrop fields
+      ignored = boot.emit('ret',fields,at)
+      fields[1] = .lltarget..operand.string('globalkeep.boot' as .binary) as .object
+      fields[2] = .lltarget..operand.string('b' as .binary) as .object
+      fields[3] = .lltarget..operand.string('.void' as .binary) as .object
+      fields[4] = .lltarget..operand.procedure('boot') as .object; fields[5] = .lltarget..operand.string(''x as .binary) as .object
+      ignored = draft.record('.meta',fields,at)
+      fields[2] = .lltarget..operand.string('.initializer' as .binary) as .object
+      ignored = draft.record('.meta',fields,at)
+    end
+    original = draft.finish()
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(original.valid() & facts.status() = 'keep' & facts.reason() = reasons[variant],'global admission retains its precise missing premise ' || variant)
+  end
+  return failures
+
 selectorfacts: procedure = .int
   failures = 0; i = .int
   draft = .lltarget..draft('selectorfacts','scalar.selector.facts',0)
@@ -636,6 +719,6 @@ arithmeticbounds: procedure = .int
   return failures
 
 main: procedure = .int
-  failures = reordered() + snapshotcase() + identities() + retainedwindow() + batchhistory() + arithmeticbounds() + provenance() + selectorfacts() + nestedfacts() + resources() + reusepremises() + metadata()
+  failures = reordered() + snapshotcase() + identities() + retainedwindow() + batchhistory() + arithmeticbounds() + provenance() + globalfacts() + selectorfacts() + nestedfacts() + resources() + reusepremises() + metadata()
   say 'SCALAR_TRANSPORT|failures=' || failures
   return failures

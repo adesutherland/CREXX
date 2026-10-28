@@ -226,6 +226,9 @@ slotordinal: procedure = .int
 
 mappedslot: procedure = .lltarget..operand
   arg body = .lltarget..bodydraft, value = .lltarget..operand, base = .int, locals = .int, arguments = .int, ordered = .int
+  /* The admitted same-module profile proves canonical global bindings. These
+   * cells retain their module owner; they are outside both private r regions. */
+  if value.bank() = 'g' then return body.reg('g',value.index())
   if ordered then return body.reg('r',base + locals + arguments + 3 + slotordinal(value,locals,arguments))
   if value.bank() = 'r' then return body.reg('r',base + arguments + 3 + value.index())
   if value.index() = 0 then return body.reg('r',base + arguments + 1)
@@ -376,13 +379,14 @@ expandmany: procedure = .llinline..change
         anchor = targetbody.reg('r',base + 2 + a); mapped = targetbody.reg('r',activebase + a)
         if a <= callee.locals() then ignored = code.two(targetbody,'link',anchor,mapped,at)
         else do
-          actual = targetbody.reg('r',facts.argument(input.id(),a - callee.locals()))
+          actual = targetbody.reg(facts.argumentbank(input.id(),a - callee.locals()),facts.argument(input.id(),a - callee.locals()))
           ignored = code.two(targetbody,'link',anchor,actual,at)
           ignored = code.two(targetbody,'link',mapped,anchor,at)
         end
       end
       else do a = 1 to count
-        anchor = targetbody.reg('r',base + a); actual = targetbody.reg('r',facts.argument(input.id(),a))
+        anchor = targetbody.reg('r',base + a)
+        actual = targetbody.reg(facts.argumentbank(input.id(),a),facts.argument(input.id(),a))
         ignored = code.two(targetbody,'link',anchor,actual,at)
       end
       steps = empty; clauses = empty

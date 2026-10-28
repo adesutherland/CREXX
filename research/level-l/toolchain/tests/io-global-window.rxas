@@ -1,0 +1,12 @@
+/* Counter r2 is the last local. Its next physical slot is g0, not a0. */
+.globals=1
+main() .locals=3
+  null g0
+  load g0,7
+  load r2,1
+  call r0,first(),r2
+  itos r0
+  say r0
+  ret 0
+first() .locals=0
+  ret a1

@@ -124,8 +124,8 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf and finite LINKARG/known-passing ICHKRNG slices are implemented and focused-qualified. Complete broader aliasing, optional presence/defaults and dynamic varargs, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, and private same-module scalar global slices are implemented and focused-qualified. Complete broader aliasing, optional presence/defaults and dynamic varargs, recursive nesting/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking and the fresh-root private-scalar reuse slice are focused-qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards; global-aware placement, broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -537,6 +537,66 @@ sites, and exact retained-call reasons/atomicity. Inspect source and rewritten
 LINK/UNLINK/window structure as well as values. Existing compiler vararg tests
 are behavioral evidence, not a correctness oracle for L legality. Producer
 branches/status presence and signal paths remain for the later CFG slice.
+
+### Reviewed same-module global scalar increment
+
+The next INL-STEP04/05 slice admits private, unexposed globals in the same
+frozen module as the closed main caller. It changes no ISA or linker contract.
+No initializer, exposure, imported body, foreign global alias, global active
+rebinding inside the selected callee (LINK/UNLINK/LINKARG with a `gN`
+destination or SWAP involving `gN`), authored global ENDLIFE, or nested/
+count-window call is admitted in this
+first slice; each has a specific pending-proof reason rather than an inherent
+infeasibility label. Start global integer and whole/status contents unknown;
+the existing `cells.add()` freshness defaults do not establish them. Require a
+checked full NULL or whole overwrite before reading a global; LOAD and
+integer arithmetic are partial writes. Ordinary entry to `main` is after module
+preparation; this slice does not rewrite initializer ingress.
+
+The VM's physical frame order is locals, module globals, `a0`, arguments.
+`lltargetfacts.frame` must model that order even when the selected fixed call
+does not use an implicit counted window. One persistent StorageId per module
+`gN` is shared across procedure frames, while each frame has its own active and
+base bindings for that slot. Recycled frames relink their globals to those
+module-owned bases. Original caller global active pointers must equal their
+module/base StorageIds at each selected call, with canonical slot identities;
+a caller LINK/SWAP that redirects `gN` keeps that call until a
+base-binding rewrite is proved. Fixed-call actuals may borrow a canonical
+global cell. The selected callee may read/write it through its original `gN`.
+`RET gN` copies, never moves or ends the module cell. Per-procedure owned-base
+history remains only locals and `a0`, excluding the intervening global slots.
+
+The facts owner exposes each fixed actual's typed bank/index as well as its
+storage identity; the current integer-only argument getter must not turn a
+borrowed `gN` into `rN`. The expander maps selected callee `gN` operands and
+metadata references to the same caller-module `gN`, before its r/a layout
+logic, with no fresh local surrogate or global-count change. Per-procedure
+owned-base access skips intervening globals. Preserve root local StorageIds or
+guard their old ordinal assumptions explicitly. It emits no generated ENDLIFE for
+a module global; authored global ENDLIFE retains the call in this slice.
+Both cleanup services must check `source.globals()>0` before constructing
+r-only mappings and keep the conservative expanded module until global-aware
+placement proof exists;
+it must not claim an invalid compaction. Extend cleanup only with a reviewed
+shared storage proof later. Exact module/provider binding and private foreign
+global aliases remain separate later steps.
+
+Independent controls start with full `NULL`/integer definition of `g0=10`,
+call a helper with actual `2` twice, and require returned `12`, then `14`,
+and final `g0=14` through native `rxas -n`/one VM. A second global directly
+borrowed as an actual checks shared storage rather than duplicated callee
+state; scoped metadata/TRACE still name its original `gN`. Check global
+count/index, same-module storage and COPY return structure,
+conservative/default CLI output, and absence of global lifetime end.
+A negative witness relinks caller `g0` to
+a local `99` while its module base is `10`; an ordinary callee reading `g0`
+returns `10`. Refuse this call with a specific binding reason and preserve the
+original module and executable result. A counted call whose implicit window
+crosses a global is a separate executable pending-proof witness. Exposure,
+foreign binding and counted-cross-global cases retain precise reasons and
+atomic output. Initializer input currently stops at the adapter's explicit
+unsupported-metadata diagnostic, not a facts keep; do not add initializer
+support merely for this fixture slice.
 
 ### Required native bootstrap correctness repair
 

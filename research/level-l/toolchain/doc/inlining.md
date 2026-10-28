@@ -966,7 +966,8 @@ compacts complete live cells and reuses disjoint fresh-root plain scalar cells
 only with checked entry, component/status and whole-reset premises. Sparse
 registers alone do not meet the wider reuse requirement. General CFG, deeper
 nesting, optional presence/defaults, dynamic varargs, reference/aggregate,
-imported/global and wider context coverage remains open in INL-STEP04/05.
+imported/foreign-global and wider context coverage remains open in
+INL-STEP04/05.
 
 ### Straight-line callee rebinding contract
 
@@ -1022,6 +1023,19 @@ keeps its exact instruction; unproved or failing guards retain the call under
 the current signal profile. Raw LINKARG gains no invented range signal.
 Status presence, conditional guards and optional defaults still need their
 separate component/control proof.
+
+Private same-module scalar globals now use one persistent module StorageId per
+`gN`, shared through fresh and recycled callee frames. The physical frame order
+is locals, globals, `a0`, arguments; owned recycler history excludes globals.
+Initial global contents are unknown until a full NULL/whole definition.
+Selected calls require the caller's global active pointers and slot identities
+to match their module bases, while the callee must not rebind a global slot.
+Fixed actuals retain their typed bank/index, including a borrowed `gN`.
+Cloned g operands, scoped metadata and TRACE keep the original module bank and
+index; `RET gN` copies rather than moving or ending module storage. Both
+cleanup services keep the conservative expanded caller before their r-only
+mapping when globals are present. Imported/private foreign aliases, global
+rebinding, counted windows across globals and initializer ingress remain open.
 
 Current negative controls distinguish proof limits from inherent language
 limits. Missing exact body, status-derived unknown count and active recursion

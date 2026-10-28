@@ -1,0 +1,18 @@
+/* A callee starts with module globals, even when its caller redirected g0. */
+.globals=1
+main() .locals=2
+  null g0
+  load g0,10
+  load r0,99
+  link g0,r0
+  call r1,readglobal()
+  unlink g0
+  itos r1
+  say r1
+  itos r0
+  say r0
+  itos g0
+  say g0
+  ret 0
+readglobal() .locals=0
+  ret g0
