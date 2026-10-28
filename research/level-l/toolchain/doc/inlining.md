@@ -249,9 +249,19 @@ and reference lifetime liveness. Whole-register value liveness alone is not
 enough. Capture required by-value snapshots at the original marshalling point,
 including repeated occurrences that already occupy a primary call slot.
 
-Preserve complete contiguous regions used by counted calls, not just operands
-spelled explicitly. The count cell and argument cells must remain ordered and
-disjoint from result/selector scratch when the original ABI requires it.
+After mapping the expanded body directly to actual registers or required
+snapshots, eliminate the original caller's call-window setup swaps **and their
+reverse restoration swaps** when that outer window is no longer needed. This
+is storage/permutation proof across the entire preparation/body/continuation
+region, not cancellation of adjacent `SWAP` pairs. Preserve once-only actual
+evaluation/order, required snapshots, captured result and entry/base/slot
+identities, status observations and restoration on every admitted abrupt exit.
+Swaps needed by the actual body or retained nested calls remain; expansion does
+not require a swap-free body or removal of every argument snapshot.
+
+Preserve complete contiguous regions still needed by counted calls, not just
+operands spelled explicitly. The count cell and argument cells must remain
+ordered and disjoint from result/selector scratch when the original ABI requires it.
 Argument slots can themselves be nested-call windows. Their entry/base bindings
 must survive the canonical setup swaps, nested calls and normal reverse swaps.
 `SWAP` permutes both active pointers and runtime slot identities; `LINK` and
@@ -648,14 +658,26 @@ execution can be disabled independently for correctness comparison:
 
 1. Propagate bound constants/presence and exact copy/alias facts through the
    changed caller; simplify newly decided branches and unreachable blocks.
-2. Remove proven redundant preparation/result copies, self-copies, unchanged
-   context setup/restoration and certified effect-free private computations.
+2. Remove proven redundant preparation/result copies, self-copies and outer
+   call-window setup/reverse swaps exposed by direct actual-register mapping,
+   together with unchanged context setup/restoration and certified effect-free
+   private computations. Prove permutation/storage equivalence across the whole
+   call region, including abrupt exits; adjacent-swap cancellation alone is
+   insufficient.
    Preserve failing checks, flag/component observations, reference expiry,
    cleanup and native payload effects. A dead scalar result alone is insufficient:
    its write can release hidden reference/native payload state in the destination.
 3. Thread trivial joins/branches and remove now-unused private glue/anchors only
    when their entry/base/slot-identity obligations are dead. Recalculate storage
    demand and apply the selected private-scalar reuse proof independently.
+
+Structural acceptance includes a simple reordered-actual leaf such as `f(y,x)`
+whose cleaned expansion contains neither the original call nor its outer
+setup/restoration swaps; an alias case that retains its required value snapshot;
+and a body with a retained nested call whose contiguous window and restoration
+remain valid. Scope assertions to the removed outer call machinery: required
+body/nested-call swaps and snapshots are not failures. These are proposed
+acceptance checks, not claims of implemented cleanup.
 
 Start with one bounded pass/worklist over the changed caller. Include consumers
 outside the cloned region: an inlined constant return may simplify a following
