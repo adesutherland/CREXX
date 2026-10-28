@@ -1,17 +1,22 @@
 # Level L target-toolchain research
 
-**Status: proposed; awaiting Adrian's detailed scope approval.** All acceptance
-criteria and implementation steps below are open. Preserving this proposal in
-develop and committing that documentation are authorized; this approves no
-product implementation, native replacement or publication. No assembler,
-reassembler, linker or expander implementation accompanies this plan.
+**Status: standalone inliner architecture under review; implementation pending.**
+Adrian has requested a standalone, effective RXAS inliner proof of concept and,
+first, an architecture and mapping proposal. The [inliner contract](doc/inlining.md)
+and INL criteria/steps below own that selected outcome within this single plan.
+The wider assembler/reassembler/linker proposal remains proposed; all TGT
+acceptance criteria remain open. This design increment includes no product
+implementation, native replacement or publication.
 
 ## Vision and boundaries
 
-Implement four cooperating tools in Level B with Level L infrastructure:
+The wider proposal is four cooperating tools in Level B with Level L
+infrastructure:
 a nonoptimizing RXAS assembler, an RXBIN reader/writer (reassembler) ready for
-future middle passes, a module linker, and a common naive RXAS inliner
-(instruction expander).
+future middle passes, a module linker, and a common RXAS inliner. A naive,
+semantics-preserving instruction expander is its correctness baseline; the
+selected standalone outcome also includes proved transport simplification and
+bounded post-expansion cleanup.
 One owned target-module/image model carries instructions, records, references,
 module boundaries and provenance through every service. Expose callable services
 and thin CLI adapters; clients never capture another command's stdout.
@@ -29,6 +34,10 @@ bridges to those algorithms. Native B bootstrap, prepared canonical-schema
 extraction, native VM execution and independent native test oracles are allowed.
 Retain current product tools and defaults. No new ISA, runtime, source-language
 semantics, platform, search/autoload policy or production replacement is implied.
+The requested design also considers small linking, metadata, ABI/ISA or
+language-contract additions where they materially simplify correct inlining;
+the architecture compares them with the current-contract baseline. Their design
+is in scope; adopting/implementing an extension requires its explicit decision.
 Research has no formal performance-completion gate; correctness, bounded work,
 code quality and actual sanitizer obligations retain their existing owners.
 
@@ -58,11 +67,70 @@ optional L target owner. Research `common/` holds adapters/profile/orchestration
 research tooling/integration. Factor binary primitives with their current owners.
 Proposed services: `llbinformat`, `llassembler`, `lllinker`, `llinline`; commands:
 `llrxbin`, `llrxas`, `llrxlink`. STEP01 decides exact migration/package/API layout.
-Visible delivery follows assembler, reassembler, linker, inliner; internal codec
-construction precedes the first assembler output and is not a second framework.
+The wider toolchain delivery follows assembler, reassembler, linker, integrated
+inliner; internal codec construction precedes the first assembler output and is
+not a second framework. The standalone INL increment does not wait for complete
+assembler, codec or linker delivery: its RXAS reader/model/writer are shared
+target facilities, with existing native tools used only as independent checks.
 The broader [inlining design](../../../compiler/docs/inlining_design.md#future-inlining-boundary-review)
-of two reusable services, expansion and a separate optimizer, is unresolved.
-This proposal implements no new optimizer or optimizer framework.
+provides background. The selected proposal separates expansion from a bounded
+machine-cleanup service; it does not commission a general optimizer framework.
+The nonoptimizing assembler and linker retain their contracts. A later driver
+may explicitly invoke the same inliner/cleanup services around them.
+
+## Selected standalone inliner outcome
+
+The proposed [architecture and mapping rules](doc/inlining.md) implement one
+producer-independent B/L target pass, callable separately from compiler,
+assembler and linker orchestration. The first standalone adapter reads ordinary
+UTF-8 RXAS and writes current RXAS for the unchanged-contract profile, preserving
+separate module artifacts. An extension-enabled profile requires matching
+approved directives/records and assembler/linker/VM support; it cannot claim
+compatibility with unchanged consumers. Already optimized bodies are valid
+inputs. A checked constructed-model client is the first development slice, not
+the finished standalone proof of concept.
+RXBIN input/output reuses the future complete codec and is not a prerequisite.
+No runtime request shells out to native tools to parse, expand or optimize.
+
+The complete selected outcome covers every case representable under the approved
+ABI and preservation contract, including any selected extensions, rather than
+stopping at scalar leaf calls. Stage growth through aliases/rebinding,
+omissions/varargs, nested calls, multiple returns, objects/binaries/references,
+state and imported helpers.
+Specific unproved cases remain calls while implementation is incomplete;
+they are not automatically reclassified as inherently infeasible or accepted
+exclusions. Native/dynamic targets without one bound bytecode body, foreign private
+globals without a binding mechanism, and physical-frame observations without an
+equivalent are explicit current-boundary cases, not permanent impossibility
+claims. In particular, review linker-private global aliases and exact-site
+initialization ingress alongside virtual inline provenance and useful language
+effect/ownership facts. Recursion/growth policy is distinct from semantic
+feasibility. API/ISA, language/platform changes and production default replacement
+require separate decisions.
+
+| Stable criterion | Observable completion and verification |
+|---|---|
+| **INL-AC01 — shared service and real adapter** | One B/L checked target-model inliner serves an ordinary RXAS CLI, a callable B client and an independent handwritten/DSL-style producer. No AST inline payload, copied parser/framework or native backend is required. Input/output, unknown/unsupported forms and atomic publication have explicit contracts. |
+| **INL-AC02 — exact call/storage mapping** | All admitted direct, counted, fixed and fused forms preserve actual evaluation, counts/presence/defaults, active and entry argument bindings, slot identity/permutations, status components, explicit reference/value behavior, nested calls and return copy/move ownership. Independent executable and structural controls include repeated actuals, mutable aliases and abrupt exits. |
+| **INL-AC03 — full representable profile** | The architecture's coverage catalogue is implemented and checked, including rebinding, varargs, multiple returns, aggregate/reference lifetimes, context/cleanup and exact-bound imported helpers. Every retained case has a specific semantic, missing-proof, body-availability or policy reason. Unimplemented representable categories keep this criterion open. |
+| **INL-AC04 — module and observation integrity** | Globals keep their module/storage owner; initialization, poison/cycle ingress, dependencies, numeric/signal state, reference expiry, source/TRACE/diagnostic and declared physical-frame observations remain equivalent. Evaluate linked private aliases and narrowly scoped runtime/metadata or language additions; record the selected compatibility/observation contract before implementation. Cases lacking an approved equivalent stay calls. |
+| **INL-AC05 — effective bounded cleanup** | Expansion is correct with cleanup and assembler optimization disabled. Separately prove status/transport/copy elision, constants/presence, branch/reachability cleanup and alias-aware storage reuse on changed callers. A trivial leaf loses call machinery; an alias/snapshot case retains required copies. Previously optimized modules are covered without assuming their old analysis facts remain valid. |
+| **INL-AC06 — deterministic policy and resources** | Separate legality, availability and profitability decisions. Explicit recursion, depth, code/register/metadata growth and work limits terminate predictably, support diagnostics and forced-legal/disabled controls, and preserve ordinary calls on policy refusal. Malformed input or failed transformation publishes no partial output. |
+| **INL-AC07 — metadata and lifecycle** | Relocate executable and observation references together; keep runtime graph/provider/task/source contracts, source/module identity and initializer dependencies. Prune only under explicit reachability/consumer rules. Invalid/repeated/interleaved/resource/cancellation/I/O cases retain owned results and last-good publication. |
+| **INL-AC08 — reviewed research delivery** | Early coherent implementation and representative RXAS review, focused development checks and a final compact integration panel qualify both expanded and retained cases against independent expectations. Guides, coverage/limits and this plan are current. No production-speed, full toolchain, wider platform, SAN-clean or publication claim follows automatically. |
+
+| Stable step | Status, dependency and decision gate |
+|---|---|
+| **INL-STEP01 — architecture and contract** | Proposal under review; AC01–08. Freeze mapping, observation/coverage boundaries, service/CLI, default policy and bounded cleanup before product edits. This task prepares the concrete proposal; architecture approval remains the implementation gate. |
+| **INL-STEP02 — shared model and conservative expansion** | todo; after 01; AC01/02/04/06/07. Extend the optional target owner and canonical schema, then qualify constructed-model local calls with fresh identities and no copy elimination. Review first emitted RXAS early. |
+| **INL-STEP03 — standalone RXAS client** | todo; after 02; AC01/02/04/06/07. Add the L-owned RXAS reader/writer and thin CLI, preserving module artifacts, with a real generated caller and exact-bound imported global-free helper. This is an intermediate slice; full assembler/codec/linker delivery is unnecessary. |
+| **INL-STEP04 — complete representable expansion** | todo; after 03; AC02–04/06/07. Batch the reviewed alias/rebinding, optional/variadic, nested/multi-return, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | todo; after each coherent conservative category, with final qualification after 04; AC02–07. Implement bounded machine proofs and minimum cleanup as a separate callable pass. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
+
+No build/test campaign is selected by this documentation increment. Per-feature
+checks and execution allocation follow the repository instructions;
+INL-STEP06 is the named standalone integration milestone.
 
 ## Complete initial target profile
 
@@ -218,9 +286,11 @@ authorize implementation; detailed profile and contract approval remain open.
 5. **TGT-STEP05 — module linker (AC01/03/05/07–12; after 04).** Implement
    selection, shared pools and relocation/graph/task closure without instruction
    optimization. Qualify independent linked-module lifecycle and failure cases.
-6. **TGT-STEP06 — direct scalar expansion (AC01/06–09/11/12; after 05).**
-   Review the exact ABI proof and call-retention contract, then implement one
-   reusable expander. Prove local direct scalar cases and unchanged unsafe calls.
+6. **TGT-STEP06 — integrated scalar expansion (AC01/06–09/11/12; after 05).**
+   Integrate the one shared expander developed through INL-STEP01–05; do not
+   implement another algorithm. Prove local direct scalar cases and unchanged
+   unsafe calls through the wider toolchain. Standalone development need not
+   wait for TGT-STEP05.
 7. **TGT-STEP07 — reviewed expansion growth (AC06–12; after 06).** Add defaults/
    presence, nested/multiple-return and imported-helper cases plus the handwritten
    DSL only with each ownership/frame/context obligation proved. Preserve open

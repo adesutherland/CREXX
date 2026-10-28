@@ -29,9 +29,12 @@ never a truncated successful result. Capture cannot be selected after lexing.
 ## Proposed target-toolchain research
 
 The [single target-toolchain plan](toolchain/PLAN.md) proposes a B/L RXAS
-assembler, RXBIN reassembler, module linker and shared naive instruction
-expander, with explicit final-stage L validation. It awaits detailed scope
-approval; all TGT criteria remain open. It neither closes this programme's
+assembler, RXBIN reassembler, module linker and shared instruction inliner,
+with explicit final-stage L validation. The selected
+[standalone inliner](toolchain/PLAN.md#selected-standalone-inliner-outcome)
+now has an architecture/mapping proposal under review, independently of complete
+assembler/codec/linker delivery. Product implementation awaits that contract
+decision; all TGT criteria remain open. This neither closes this programme's
 criteria nor changes the separate C delivery or develop QA/publication scope.
 
 <a id="current-action-ir-schema-reads"></a>
