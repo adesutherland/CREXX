@@ -555,8 +555,48 @@ copies, MOVE, payload transport/relay and opaque event escape remain outside
 this increment. Exceptional cleanup still cannot delete copies or resets or
 reuse opaque storage.
 
+One additional source shape carries the saved owner across the normal/handler
+join. A distinct canonical flag has explicit pre-scope `NULL; LOAD 0`; the
+normal path keeps the saved owner empty. After all handler pops, the authored
+`COPY rSaved,rEvent; NULL rEvent; LOAD rHave,1` commits the captured owner before
+the join. Its first executable row is `BRF owner_closed,rHave`. The fallthrough
+contains exactly one existing checked code/name/message projection group; the
+false edge skips it. Both paths reach `owner_closed` and execute `NULL rSaved;
+NULL rEvent` before ordinary scalar observations and return.
+
+The shared target CFG validates the same-procedure guard, consumer and common
+closure with no alternate entry or backedge. A source metadata row may split
+the consumer into several address groups: each group must have exactly one
+predecessor from the previous group and one successor, remain in the same
+procedure, and reach closure without a thunk or repeated group. The common
+closure has exactly the checked false-edge label thunk and final consumer
+group as predecessors. Before the ordinary meet can erase
+path information, private facts prove flag0/empty storage on the normal
+predecessor and flag1/completed owned event on every feasible handler
+predecessor. Those exact predecessor snapshots survive to their matching BRF
+edges. The proof never reconstructs runtime-event shape from a scalar flag or
+an ordinary merged value. Scalar/component/status, binding and recycler facts
+meet only at common closure; both executable resets remain in place.
+
+Flag/owner aliases, extra writes, unknown or mismatched guards, early reads or
+resets, unsupported consumers, alternate entry and missing closure retain calls
+with `signal.owner.guard.pending`, `.mapping.pending`, `.state.unproved`,
+`.cleanup.pending` or `.consumer.pending`. Existing scope and snapshot refusals
+keep their more specific reasons. Normal empty storage is never projected;
+name uses whole COPY and message SCOPY keeps its existing integer/public status
+components. Ownership, diagnostic/native hooks and reference lifetimes retain
+the preceding opaque COPY contract. No frame cells, capture guard, synthesized
+cleanup, ISA, target record or public API is added. The separate serial
+`levell_rxas_guarded_owner` panel shares the existing signal preparation and
+checks constructed and handwritten producers. This admits the bounded
+capture/join/guard/use lifecycle; G method selection and whole-event relay, C
+capture before restoration/field5 transport/activation, and general nested
+signal scopes remain separate proof categories.
+
 The smaller named-list profile still retains `FAILURE` with
-`signal.activation.failure.pending`. Adrian accepted that reasonable inlining
+`signal.activation.failure.pending` because its proof has not yet covered
+other retained-instruction delivery points and inherited handler state.
+Adrian accepted that reasonable inlining
 may change infrastructure-pressure error paths as its resource use changes,
 including the `FAILURE` opportunity caused by an eliminated call-frame
 allocation. Deterministic failures from retained operations and call-entry
@@ -740,8 +780,11 @@ The model may retain `GlobalRef(callee-module,N)`, but rendering it as caller
 not a faithful lowering. Already exposed name-sharing storage can be reused
 only after proving the exact existing alias/owner/load-order relationship.
 Private foreign-global access is a representation limit under unchanged
-RXAS/ABI and retains the call until a binding mechanism is approved/implemented.
-It is not permanently infeasible: the narrow extension below addresses it.
+RXAS/ABI and retains the call in this POC. Adrian accepts that boundary because
+globals are expected to be relatively uncommon and unlikely to be hot; this is
+a prioritization judgment, not measured workload frequency. It is not a claim
+that cross-module private-global inlining is inherently impossible: a future
+binding mechanism could address it.
 Global-free imported bodies remain useful and feasible under the other proofs.
 
 Ordinary bytecode call ingress can initialize an unready callee module, detect
@@ -767,15 +810,15 @@ expansion does not grant a new source-language access path.
 
 ## Extensions considered to simplify correct inlining
 
-These are approved design directions, not current VM capabilities. Prefer narrow
+These are considered design directions, not current VM capabilities. Prefer narrow
 extensions that preserve one existing runtime algorithm over frontend-specific
 workarounds. Record and internally review concrete compatibility, source/wire/
 schema and API/ISA contracts in INL-STEP01 before the corresponding edits;
 optional mechanisms must be justified by the selected coverage requirement.
 
-### Recommended private global binding
+### Considered private global binding; not selected for this POC
 
-Add a typed, feature-gated **linker-private global binding**, separate from
+One future option is a typed, feature-gated **linker-private global binding**, separate from
 `EXPOSE_REG`: an importing module's appended hidden global slot aliases an
 exact selected provider module/global slot. Relocation maps both module identity
 and slot; the binding retains the selected provider artifact and ultimate
@@ -808,23 +851,23 @@ features. No new hot-path register access opcode is needed.
 
 A module-qualified global operand is an alternative, but it changes instruction
 encoding, operand/effect catalogs, decoding and VM access paths across all users.
-The private alias record is the recommended lower-cost option. Synthetic public
-`.expose` names are rejected because they alter naming, storage ownership and
-load-order semantics. A private alias is missing infrastructure, not a permanent
-inlining exclusion.
+The private alias record is one possible lower-cost option. Synthetic public
+`.expose` names cannot silently substitute: the existing compiler imports
+matching exposed `META_REG` names as source-visible globals, changing source
+privacy. Existing `META_REG` already carries complete types; more type metadata
+does not bind a foreign private storage cell. A private alias is missing
+infrastructure, not a permanent inlining impossibility.
 
 Adrian accepts essential typed metadata for compiler call signatures,
 startup, VM and linker contracts. An ordinary handwritten RXAS producer must
 also be able to express what those consumers require. The earlier paired
 `META_GLOBAL_BINDING`/`META_SOURCE_ARTIFACT` proposal, especially its
 source-hash witness and long binary payload, is withdrawn. If private aliases
-are selected later, the candidate handwritten spelling gives the provider a
-stable module-local symbol (`g7 .symbol="count"`) and the importer an exact
-module/name alias (`g2 .alias="counter.rxas","count"`). The consumer never
-names the provider's allocated `gN` slot. A typed symbol declaration and a
-typed symbolic-then-resolved alias record would serve linker/loader semantics,
-not certify the inliner. Their encoding and feature gate remain an explicit
-compatibility decision. The linker would resolve against its exact selected
+are selected later, a handwritten provider needs a stable symbol and the
+consumer must not name the provider's allocated `gN` slot. No directive spelling
+or typed record is selected now. Such records would serve linker/loader
+semantics, not certify the inliner. Their encoding and feature gate remain an
+explicit compatibility decision. The linker would resolve against its exact selected
 module set and publish checked image-local module/slot references; the loader
 would bind same-image
 worker-overlay storage before initialization. Owned/public cells are allocated
@@ -926,7 +969,7 @@ mapping/proof engine. Complexity alone is not an infeasibility reason.
 | Imported/global-free body or proved existing exposed storage | Exact selected body/dependencies and admitted context; module boundaries remain intact. |
 | Numeric/context changes, known signal scopes and cleanup | Feasible only with a complete lowering proof for all observable normal/abrupt exits; explicit glue may remain. |
 | Unknown dynamic/native body | No executable body to clone; retain. A proved dynamic target can become an ordinary candidate. |
-| Foreign private global; required initialization ingress without an expressible equivalent | Current representation cannot name/preserve the necessary behavior; retain pending a separately approved contract. |
+| Foreign private global; required initialization ingress without an expressible equivalent | Current representation cannot name/preserve the necessary behavior; retain under the approved POC boundary. A later extension needs a separate contract. |
 | Arbitrary physical-frame/parent/address observation; unrepresented unwind/exception behavior | Removed frame remains observable; retain without virtual-frame support or a specific specialization proof. |
 | Unbounded implicit register access or unknown relocation layout | No checked finite map/relocation proof; retain the call or reject malformed/unsupported input. |
 
@@ -1231,7 +1274,8 @@ unproved global contents/components, nested global calls and unsupported control
 retain their existing precise proof reasons. Whole global returns copy their
 value/status and do not acquire frame cleanup. Both cleanup services keep their
 conservative global guards. Private foreign globals and missing/mismatched
-caller aliases retain calls with separate reasons. Initializers, autoload and
+caller aliases retain calls with separate reasons. The former is an approved
+current-format POC boundary, not an unfinished alias implementation. Initializers, autoload and
 dynamic ingress retain their existing startup boundary; no `.meta` attestation,
 private alias directive, RXBIN feature or VM operation is introduced.
 

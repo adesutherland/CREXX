@@ -726,6 +726,16 @@ analysis: class
   _snapshotcount = .int
   _snapshotmove = .int
   _snapshotlifetimes = .int[]
+  /* Private correlation, validated against one frozen join/guard/closure.
+   * It preserves predecessor snapshots, never recreates an event from a flag. */
+  _ownerlane = .int
+  _ownerguard = .int
+  _ownerflag = .int
+  _ownerflagreset = .int
+  _ownerflaginit = .int
+  _ownercommit = .int
+  _ownerclose = .int
+  _ownerfinalevent = .int
   *: factory
     arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864, graphmode = 0
     _owner = owner; _function = functionId; _profile = profile; _work = work; _status = 'building'; _reason = ''; _bytelimit = bytes
@@ -855,11 +865,15 @@ analysis: class
           else if branches = 2 & field.text() = joined then _namedhandlerbr = item.id()
           else return reject('signal.named.join.pending')
         end
+        when 'brf' then do
+          if _ownerlane = 0 | item.id() <> _ownerguard then return reject('signal.owner.guard.pending')
+        end
         when 'call1' then do; calls = calls + 1; _namedcall = item.id(); end
         when 'ret' then returns = returns + 1
         otherwise do
           if _namedbound & wordpos(name,'linkattr1 unlink scopy') > 0 then iterate
           if _snapshotcopy > 0 & (name = 'endlife' | item.id() = _snapshotcopy) then iterate
+          if _ownerlane & catalog.flow(item.opcode()) = 2 then return reject('signal.owner.guard.pending')
           if left(name,3) = 'sig' then return reject('signal.caller.policy.pending')
           if wordpos(name,'call call2 call3 call4 swapcall settpcall settpswapcall dcall') > 0 then return reject('signal.call.window.pending')
           if _namedbound & wordpos(name,'link swap swapn linkarg') > 0 then return boundreject('mapping')
@@ -883,7 +897,10 @@ analysis: class
     end
     _namednormalpop = popids[1]; _namedhandlerpop = popids[tags[0] + 1]
     _boundlastpop = popids[pops]
-    if labels <> 2 then return reject('signal.named.entry.pending')
+    if _ownerlane then do
+      if labels <> 3 then return reject('signal.owner.guard.pending')
+    end
+    else if labels <> 2 then return reject('signal.named.entry.pending')
     if calls <> 1 | branches <> 2 | returns <> 1 then return reject('signal.named.shape.pending')
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
@@ -895,6 +912,10 @@ analysis: class
         _namedhandler = item.id()
       end
       if field.text() = joined & item.procedureid() = _function then _namedjoin = item.id()
+      if _ownerlane then do
+        target = module.at(_ownerguard).operand(1)
+        if field.text() = target.text() & item.procedureid() = _function then _ownerclose = item.id()
+      end
     end
     if _namedhandler = 0 then return reject('signal.handler.target.unproved')
     if _namedjoin = 0 then return reject('signal.named.join.pending')
@@ -916,12 +937,16 @@ analysis: class
       if item.id() > _namedhandlerpop & item.id() < popids[pops] & name <> 'sigpop' then return reject('signal.named.handler.pop.interleaved.pending')
       if item.id() > _namedhandlerbr & item.id() < _namedjoin then return reject('signal.named.departure.pending')
     end
+    if _ownerlane then do
+      if ownerlayout() = 0 then return 0
+    end
     if _namedbound then return boundshape()
     return 1
   /** Discover an authored event transfer without granting it legality. Scope,
    * placement, reset, alias and closure checks still precede admission. */
   findsnapshot: method = .int
     module = dereference _owner; item = .lltarget..record; source = .lltarget..operand; target = .lltarget..operand
+    i = .int; labels = .int; catalog = .llrxascatalog..catalog()
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
@@ -936,13 +961,128 @@ analysis: class
       end
       if item.mnemonic() = 'move' then _snapshotmove = 1
     end
+    if _snapshotcopy > 0 then do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> _function then iterate
+      if item.kind() = 'label' then labels = labels + 1
+      if item.kind() <> 'instruction' then iterate
+      if catalog.flow(item.opcode()) <> 2 then iterate
+      if _ownerguard > 0 then return reject('signal.owner.guard.pending')
+      _ownerlane = 1; _ownerguard = item.id()
+      if item.mnemonic() <> 'brf' | item.operands() <> 2 then return reject('signal.owner.guard.pending')
+      target = item.operand(2)
+      if target.kind() <> 'R' | target.bank() <> 'r' then return reject('signal.owner.mapping.pending')
+      _ownerflag = target.index() + 1
+    end
+    if _snapshotcopy > 0 & labels > 2 & _ownerguard = 0 then return reject('signal.owner.guard.pending')
     return 1
   boundreject: method = .int
     arg kind = .string
     stem = 'signal.bound.'
     if _snapshotcopy > 0 then stem = 'signal.snapshot.'
+    if _ownerlane then stem = 'signal.owner.'
     tail = '.pending'; if kind = 'state' then tail = '.unproved'
     return reject(stem || kind || tail)
+  /** One explicit false edge skips one projection block. The shared graph
+   * supplies same-procedure edges; the source shape excludes alternate ingress
+   * and backedges without a separate exceptional scheduler. */
+  ownerlayout: method = .int
+    module = dereference _owner; item = .lltarget..record; value = .lltarget..operand
+    next = .int; stage = .int; i = .int; j = .int; slot = .int
+    if _ownerclose <= _ownerguard | _ownerguard <= _namedjoin then return reject('signal.owner.guard.pending')
+    selected = module.at(_namedcall); value = selected.operand(1)
+    if _ownerflag = value.index() + 1 | _ownerflag = _boundevent | _ownerflag = _snapshotowner then return reject('signal.owner.mapping.pending')
+    value = selected.operand(3)
+    if _ownerflag = value.index() + 1 then return reject('signal.owner.mapping.pending')
+    if reserve(8,16) = 0 then return 0
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> _function then iterate
+      if item.kind() <> 'instruction' then do
+        do j = 1 to item.registerrefs()
+          if spend(1) = 0 then return 0
+          value = item.registerref(j)
+          if value.bank() = 'r' & value.index() + 1 = _ownerflag then do
+            if _ownerfinalevent = 0 | item.id() < _ownerfinalevent then return reject('signal.owner.guard.pending')
+          end
+        end
+        iterate
+      end
+      if item.id() > _namedjoin & item.id() < _ownerguard then return reject('signal.owner.guard.pending')
+      if item.id() > _snapshotcopy & item.id() < _namedhandlerbr then do
+        stage = stage + 1
+        if stage = 1 then do
+          value = item.operand(1)
+          if item.mnemonic() <> 'null' | value.bank() <> 'r' | value.index() + 1 <> _boundevent then return reject('signal.owner.cleanup.pending')
+        end
+        else if stage = 2 then do
+          value = item.operand(1)
+          if item.mnemonic() <> 'load' | value.bank() <> 'r' | value.index() + 1 <> _ownerflag then return reject('signal.owner.guard.pending')
+          value = item.operand(2)
+          if value.kind() <> 'I' | value.index() <> 1 then return reject('signal.owner.state.unproved')
+          _ownercommit = item.id()
+        end
+        else return reject('signal.owner.guard.pending')
+      end
+      if item.id() > _ownerclose & next < 2 then do
+        next = next + 1; value = item.operand(1); slot = _snapshotowner
+        if next = 2 then slot = _boundevent
+        if item.mnemonic() <> 'null' | value.bank() <> 'r' | value.index() + 1 <> slot then return reject('signal.owner.cleanup.pending')
+        if next = 2 then _ownerfinalevent = item.id()
+      end
+      do j = 1 to item.registerrefs()
+        if spend(1) = 0 then return 0
+        value = item.registerref(j)
+        if value.bank() <> 'r' | value.index() + 1 <> _ownerflag then iterate
+        if item.id() = _ownerguard | item.id() = _ownercommit then iterate
+        if _ownerfinalevent > 0 & item.id() > _ownerfinalevent then iterate
+        if item.id() < _namedpush & j = 1 then do
+          if item.mnemonic() = 'null' & _ownerflagreset = 0 & _ownerflaginit = 0 then do; _ownerflagreset = item.id(); iterate; end
+          if item.mnemonic() = 'load' & _ownerflagreset > 0 & _ownerflaginit = 0 then do
+            value = item.operand(2)
+            if value.kind() <> 'I' | value.index() <> 0 then return reject('signal.owner.state.unproved')
+            _ownerflaginit = item.id(); iterate
+          end
+          if item.mnemonic() = 'load' & _ownerflagreset = 0 then return reject('signal.owner.state.unproved')
+        end
+        return reject('signal.owner.guard.pending')
+      end
+    end
+    if stage <> 2 | _ownerfinalevent = 0 then return reject('signal.owner.cleanup.pending')
+    if _ownerflagreset = 0 | _ownerflaginit = 0 then return reject('signal.owner.state.unproved')
+    block = _index.opblock(_ownerguard); closed = _index.opblock(_ownerclose)
+    item = module.at(_ownerguard); value = item.operand(1)
+    if spend(value.length() + 24) = 0 then return 0
+    entry = module.labelblock(_function,value.text())
+    /* Target branches enter the checked label thunk, whose structural jump
+     * reaches the source label's address group. Metadata can split the source
+     * consumer into several address groups; traverse that exact linear chain. */
+    if block <> _index.opblock(_namedjoin) | _index.successors(block) <> 2 then return reject('signal.owner.guard.pending')
+    if _index.successor(block,1) <> entry | _index.blockfunction(entry) <> _function then return reject('signal.owner.guard.pending')
+    if _index.predecessors(entry) <> 1 | _index.successors(entry) <> 1 then return reject('signal.owner.guard.pending')
+    if _index.predecessor(entry,1) <> block | _index.successor(entry,1) <> closed then return reject('signal.owner.guard.pending')
+    consumer = _index.successor(block,2)
+    if consumer = closed | _index.blockfunction(consumer) <> _function | _index.blockfunction(closed) <> _function then return reject('signal.owner.guard.pending')
+    if reserve(_index.blocks(),8) = 0 then return 0
+    seen = .int[]; previous = block; count = 0
+    do while consumer <> closed
+      if spend(10) = 0 then return 0
+      if count >= _index.functionblocks(_function) then return reject('signal.owner.guard.pending')
+      if seen[consumer] | _index.blockfunction(consumer) <> _function then return reject('signal.owner.guard.pending')
+      /* Checked target address groups start with a source record. Label
+       * thunks start with the structural jump opcode; none may be bypassed. */
+      if _index.opcode(_index.firstop(consumer)) <= 16 then return reject('signal.owner.guard.pending')
+      if _index.predecessors(consumer) <> 1 | _index.successors(consumer) <> 1 then return reject('signal.owner.guard.pending')
+      if _index.predecessor(consumer,1) <> previous then return reject('signal.owner.guard.pending')
+      seen[consumer] = 1; count = count + 1
+      previous = consumer; consumer = _index.successor(consumer,1)
+    end
+    if _index.predecessors(closed) <> 2 then return reject('signal.owner.guard.pending')
+    first = _index.predecessor(closed,1); second = _index.predecessor(closed,2)
+    if (first = entry & second = previous) | (first = previous & second = entry) then return 1
+    return reject('signal.owner.guard.pending')
   /** Exact post-restoration consumer groups. These rows stay executable and
    * opaque to normal-only cleanup. No transient attribute storage can escape. */
   boundshape: method = .int
@@ -964,7 +1104,11 @@ analysis: class
       if spend(1) = 0 then return 0
       item = module.record(i)
       if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
-      if item.id() <= _boundlastpop | item.id() >= _namedhandlerbr then iterate
+      if item.id() <= _boundlastpop then iterate
+      if _ownerlane then do
+        if item.id() >= _ownerfinalevent + 1 then iterate
+      end
+      else if item.id() >= _namedhandlerbr then iterate
       if phase = 0 then do
         if item.mnemonic() = 'linkattr1' then do
           if item.operands() <> 3 then return boundreject('consumer')
@@ -987,8 +1131,10 @@ analysis: class
           value = item.operand(1)
           if value.bank() = 'r' & value.index() + 1 = _boundevent then do
             if _snapshotcopy > 0 & item.id() < _snapshotcopy then return reject('signal.snapshot.cleanup.pending')
-            if _boundclear > 0 then return boundreject('consumer')
-            _boundclear = item.id()
+            if _boundclear > 0 then do
+              if _ownerlane = 0 | item.id() <> _ownerfinalevent then return boundreject('consumer')
+            end
+            else _boundclear = item.id()
           end
           if _snapshotcopy > 0 & value.bank() = 'r' & value.index() + 1 = _snapshotowner then do
             if item.id() < _snapshotcopy | _snapshotclear > 0 then return reject('signal.snapshot.cleanup.pending')
@@ -1034,14 +1180,27 @@ analysis: class
         phase = phase + 1
       end
       if phase > 0 then _boundphases[item.id()] = phase
+      if phase > 0 & _ownerlane & (item.id() <= _ownerguard | item.id() >= _ownerclose) then return reject('signal.owner.guard.pending')
       if phase = 7 then phase = 0
     end
     if phase <> 0 then return boundreject('consumer')
+    if _ownerlane then do
+      groups = 0
+      do i = 1 to module.records()
+        if spend(1) = 0 then return 0
+        item = module.record(i)
+        if _boundphases[item.id()] = 3 then groups = groups + 1
+        if item.procedureid() <> _function | item.kind() <> 'instruction' | item.id() <= _ownerguard | item.id() >= _ownerclose then iterate
+        if _boundphases[item.id()] = 0 then return reject('signal.owner.guard.pending')
+      end
+      if groups <> 1 then return reject('signal.owner.guard.pending')
+    end
     if _snapshotcopy > 0 & (_boundclear = 0 | _snapshotclear = 0) then return reject('signal.snapshot.cleanup.pending')
     if _snapshotcopy = 0 & _boundclear = 0 then return boundreject('consumer')
     slots = .int[]; slots[1] = _boundevent; slots[2] = _boundraw; slots[3] = _boundfield
     slots[4] = _boundoutputs[1]; slots[5] = _boundoutputs[4]; slots[6] = _boundoutputs[5]
     if _snapshotcopy > 0 then slots[7] = _snapshotowner
+    if _ownerlane then slots[8] = _ownerflag
     do i = 1 to slots[0]
       if slots[i] = 0 then iterate
       if slots[i] = actual.index() + 1 | slots[i] = result.index() + 1 then return boundreject('mapping')
@@ -1066,6 +1225,7 @@ analysis: class
         if item.kind() = 'instruction' then do
           if item.mnemonic() = 'sigbrv' & slot = _boundevent then iterate
           if item.id() = _boundclear & slot = _boundevent then iterate
+          if _ownerlane & item.id() = _ownerfinalevent & slot = _boundevent then iterate
           if _snapshotcopy > 0 then do
             if item.id() = _snapshotcopy | item.id() = _snapshotclear | _snapshotlifetimes[item.id()] = slot then iterate
             if wordpos(item.mnemonic(),'linkattr1 unlink') > 0 then return reject('signal.snapshot.mapping.pending')
@@ -1086,10 +1246,11 @@ analysis: class
     return 1
   boundentry: method = .int
     arg view = .frame, state = .cells
-    if reserve(7,8) = 0 | spend(7) = 0 then return 0
+    if reserve(8,8) = 0 | spend(8) = 0 then return 0
     slots = .int[]; slots[1] = _boundevent; slots[2] = _boundraw; slots[3] = _boundfield
     slots[4] = _boundoutputs[1]; slots[5] = _boundoutputs[4]; slots[6] = _boundoutputs[5]
     if _snapshotcopy > 0 then slots[7] = _snapshotowner
+    if _ownerlane then slots[8] = _ownerflag
     value = .lltarget..operand; id = .int; i = .int
     do i = 1 to slots[0]
       if slots[i] = 0 then iterate
@@ -1099,7 +1260,23 @@ analysis: class
       if i <= 3 & _boundreset[slots[i]] = 0 then return boundreject('state')
       if (i = 2 | i = 3) & state.zeroed(id) = 0 then return boundreject('state')
       if i = 7 & (_boundreset[slots[i]] = 0 | state.zeroed(id) = 0) then return reject('signal.snapshot.state.unproved')
+      if i = 8 & (state.known(id) = 0 | state.value(id) <> 0) then return reject('signal.owner.state.unproved')
     end
+    return 1
+  ownerrelation: method = .int
+    arg state = .cells, view = .frame, captured = .int
+    flag = .lltarget..operand.bound(0,0,0,'r',_ownerflag - 1)
+    saved = .lltarget..operand.bound(0,0,0,'r',_snapshotowner - 1)
+    event = .lltarget..operand.bound(0,0,0,'r',_boundevent - 1)
+    if spend(12) = 0 then return 0
+    flagid = view.storage(flag); savedid = view.storage(saved); eventid = view.storage(event)
+    if flagid = 0 | flagid <> view.base(flag) | savedid = 0 | savedid <> view.base(saved) | eventid = 0 | eventid <> view.base(event) then return reject('signal.owner.mapping.pending')
+    if state.ordinary(flagid) = 0 | state.wholeknown(flagid) = 0 | state.known(flagid) = 0 then return reject('signal.owner.state.unproved')
+    if state.value(flagid) <> captured then return reject('signal.owner.state.unproved')
+    if captured then do
+      if state.runtimeevent(savedid) = 0 | state.zeroed(eventid) = 0 then return reject('signal.owner.state.unproved')
+    end
+    else if state.zeroed(savedid) = 0 then return reject('signal.owner.state.unproved')
     return 1
   boundevent: method = .int
     arg expose state = .cells, view = .frame
@@ -1249,21 +1426,43 @@ analysis: class
         state = handlerstate; view = beforeview; previous = handlerhistory
       end
       else if item.id() = _namedjoin then do
-        if normalpossible & handlerpossible then do
+        if _ownerlane then do
+          /* Validate the relation while each predecessor is still intact.
+           * Keep the event successor, and the saved empty normal alternative,
+           * through the authored guard; never tag an ordinary merged value. */
+          if handlerpossible then do
+            if ownerrelation(state,view,1) = 0 then return 0
+          end
+          if normalpossible then do
+            if ownerrelation(normal,normalview,0) = 0 then return 0
+          end
+        end
+        else if normalpossible & handlerpossible then do
           if spend(state.size() * 22 + view.slots() * 3) = 0 then return 0
           if joinpath(reference state,reference view,reference previous,normal,normalview,normalhistory) = 0 then return 0
+        end
+        else if normalpossible then do; state = normal; view = normalview; previous = normalhistory; end
+      end
+      else if _ownerlane & item.id() = _ownerclose then do
+        if normalpossible & handlerpossible then do
+          if spend(state.size() * 22 + view.slots() * 3) = 0 then return 0
+          if joinpath(reference state,reference view,reference previous,normal,normalview,normalhistory) = 0 then do
+            if _status = 'keep' then return reject('signal.owner.state.unproved')
+            return 0
+          end
         end
         else if normalpossible then do; state = normal; view = normalview; previous = normalhistory; end
       end
       /* Leave these opaque policy/control rows undescribed in the normal-only
        * access projection. It must remain incomplete, even when queried by a
        * consumer which bypasses the explicit cleanup guard. */
-      else if item.kind() = 'instruction' & (wordpos(item.mnemonic(),'sigpush sigbr sigbrv sigpop') > 0 | item.id() = _namednormalbr | item.id() = _namedhandlerbr) then nop
+      else if item.kind() = 'instruction' & (wordpos(item.mnemonic(),'sigpush sigbr sigbrv sigpop') > 0 | item.id() = _namednormalbr | item.id() = _namedhandlerbr | item.id() = _ownerguard) then nop
       else do
         /* Infeasible normal/handler observations do not execute. Their rows
          * remain opaque in this deliberately incomplete access projection. */
         if item.id() > _namedcall & item.id() < _namedhandler & normalpossible = 0 then iterate
         if item.id() > _namedhandler & item.id() < _namedjoin & handlerpossible = 0 then iterate
+        if _ownerlane & item.id() > _ownerguard & item.id() < _ownerclose & handlerpossible = 0 then iterate
         if _snapshotcopy > 0 & item.id() = _snapshotcopy then do
           field = item.operand(1); id = view.storage(field)
           source = item.operand(2); sourceid = view.storage(source)

@@ -102,11 +102,17 @@ they are not automatically reclassified as inherently infeasible or accepted
 exclusions. Native/dynamic targets without one bound bytecode body, foreign private
 globals without a binding mechanism, and physical-frame observations without an
 equivalent are explicit current-boundary cases, not permanent impossibility
-claims. In particular, review linker-private global aliases and exact-site
+claims. The linker-private global alias option has been reviewed and is not
+selected for this POC; review exact-site
 initialization ingress alongside virtual inline provenance and useful language
 effect/ownership facts. Recursion/growth policy is distinct from semantic
 feasibility. API/ISA, language/platform changes and production default replacement
 require separate decisions.
+Inlining preserves deterministic language values, control, ownership, delivered
+signals, logical source and cancellation/unwind. It need not reproduce slight
+differences in resource-pressure failure paths caused solely by removed or
+rearranged infrastructure, such as allocation of a call frame that no longer
+exists; such hypothetical opportunities alone do not retain a call.
 
 | Stable criterion | Observable completion and verification |
 |---|---|
@@ -121,10 +127,10 @@ require separate decisions.
 
 | Stable step | Status, dependency and decision gate |
 |---|---|
-| **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
+| **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -374,8 +380,9 @@ caller exposure, duplicate/out-of-bounds or cross-kind external declarations,
 an original-provider nested counted window, changed global binding,
 initializer ingress, unresolved callable provider and tight resource
 limits retain the exact inputs with specific reasons and CLI last-good output.
-Foreign private globals remain behind the separate stable-symbol compatibility
-decision. This focused slice does not complete INL-AC03/04/07 or INL-STEP06.
+Foreign private globals retain calls with `import.global.private.pending` under
+the selected current-format profile. A private linker binding is not selected
+for this POC. This focused slice does not complete INL-AC03/04/07 or INL-STEP06.
 
 ### Reviewed generated inverse-swap normalization
 
@@ -923,6 +930,146 @@ before restoration, Classic activation/relay and atomic restoration remain open.
 This contract does not commission broader functional, sanitizer, platform or
 performance qualification.
 
+### Guarded owned event across the handler join
+
+**Status: implemented and focused-qualified.** This
+INL-STEP04/05 increment serves AC02/03/04/06/07 by carrying one opaque owned
+event across the existing normal/handler join to one proved flag-guarded later
+consumer. Keep the full 29-name, fresh zero-global `main`, exact read-only
+range leaf and post-restoration authored event COPY of the preceding contract.
+No field-5 whole payload COPY, G method selection, Classic activation/relay,
+new ISA/public API/target wire schema or inliner `.meta` proof is selected.
+INL-AC03/04/05 and INL-STEP06 remain open.
+
+Add one canonical caller `rHave`, distinct from event/saved/scratch/output,
+actual and result. Before the first save, require explicit `NULL rHave; LOAD
+rHave,0` and `NULL rSaved`, with no later write to either before handler
+capture. The normal departure reaches the original join with `rHave=0` and
+empty saved storage. After its complete reverse-pop list, the handler keeps
+the authored `COPY rSaved,rEvent; NULL rEvent; LOAD rHave,1` and branches to
+that same join. COPY still requires the exact whole-NULL disjoint destination
+tree without nested aliases. Both paths retain canonical active/base/identity
+bindings. The flag commits only after the completed copy and event reset; it
+does not assert atomic first-event capture or alter any restoration failure.
+
+The join's first executable instruction is `BRF owner_closed,rHave`. Its
+fallthrough contains exactly one current checked code/name/message projection
+group from `rSaved`, with the established immediate fields, COPY versus SCOPY
+component rules and complete scratch UNLINK/NULL closure. There is no other
+branch, entry or owner/flag write between join and `owner_closed`. The false
+edge skips the consumer and reaches that same closure label. Both paths then
+execute authored `NULL rSaved; NULL rEvent` before the ordinary scalar tail
+and sole RET. The source flag and scalar output may be observed after owner
+closure. No opaque value escapes into that tail; ENDLIFE cannot replace NULL.
+All COPY, flag, branch, projection and reset rows remain executable in their
+original order. Add no storage, capture guard or synthesized cleanup.
+
+The smallest maintained handwritten producer-shaped fixture is
+`tests/io-signal-guarded-owner.rxas`, with this existing-ISA suffix (the save,
+install, call and normal restoration retain the preceding exact 29-tag rows):
+
+```rxas
+  /* pre-scope: null rSaved; null rHave; load rHave,0 */
+  /* normal reverse pops */
+  br joined
+caught:
+  /* complete handler reverse pops */
+  copy rSaved,rEvent
+  null rEvent
+  load rHave,1
+  br joined
+joined:
+  brf owner_closed,rHave
+  linkattr1 rRaw,rSaved,5
+  linkattr1 rField,rRaw,4
+  copy rName,rField
+  unlink rField
+  unlink rRaw
+  null rField
+  null rRaw
+owner_closed:
+  null rSaved
+  null rEvent
+  /* observe scalar name/flag/result and return */
+```
+
+This fixture must actually retain `rSaved` over `joined`, clear delivery
+storage before the join, consume the saved name later only on the handler
+path, and retain a preloaded name on the empty normal path. It represents the
+capture/join/guard/use/cleanup lifecycle in G HTTP `first_problem` and C
+capture, without claiming admission of their other calls, globals or relay.
+
+`lltargetfacts.namedshape`/`boundshape` recognize only this additional suffix.
+Use the existing `llirgraph` index and canonical branch catalogue to validate
+same-procedure labels/edges, the guarded block, common closure and absence of
+alternate ingress/backedges. Source metadata may split the consumer's address
+groups: follow only a bounded same-function chain with one exact predecessor
+and successor per group, no label thunk or repeated group, and exactly the
+false-edge label thunk plus final consumer group entering common closure.
+`namedrun` retains its existing normal and handler
+`.cells`/`.frame`/`.history` snapshots. Before `joinpath` erases path detail,
+establish the exact-owner relation: the normal predecessor has flag 0 and
+zeroed saved storage; every feasible handler predecessor has flag 1 and a
+completed owned runtime event. The relation belongs to this frozen module,
+call/join/guard and the exact flag/saved StorageIds and bindings. Equal values,
+a producer declaration or a merely nonzero unknown flag cannot establish it.
+
+Preserve both alternatives through the join. On the proved BRF successors,
+reuse the matching snapshots for the empty and event paths, applying the
+existing checked projection transfer only on the event path. Do not restore
+runtime-event shape from a scalar flag after an ordinary boolean meet has
+lost the relation. Meet changed scalar/component/status, binding and recycler
+facts with `joinpath` at `owner_closed`, then perform both common resets.
+Incompatible history or storage bindings retain the call. This is a bounded
+extension of `namedrun`, not another CFG/worklist framework or general predicate
+solver. The target's exceptional normal-only access projection stays incomplete;
+transport/storage retain their exceptional-CFG pending guards. No normal-only
+liveness may delete the flag, skipped consumer, owned copy or cleanup.
+
+Keep payload/native/reference ownership opaque under the preceding reviewed
+COPY contract: hooks and descriptor identities are preserved, referenced
+targets gain no language lifetime, and diagnostics retain their existing owner.
+Native-hook purity, bitcopy safety, allocation success or resumed partial-copy
+state must not be inferred from the catalogue's scalar COPY row. The user
+accepts slight infrastructure-pressure failure differences generally, including
+elimination of call-frame allocation FAILURE; such an opportunity alone is not
+an admission blocker or a new failure-injection campaign. Deterministic language
+state, delivered signal tag/payload/logical source and CANCEL/unwind remain exact.
+
+Retain all existing delivery-phase and restoration proofs: handler feasibility
+does not disappear for a known-passing check, and a delivered event reflects
+the actual caller writes before/after the result commit. After restored policy,
+an interrupt between capture and flag commit must keep its existing default
+response; no path may reach guarded use with an invented event or stale flag.
+Source/TRACE follows original call/check/join/guard/consumer/closure boundaries;
+normal result TRACE stays conditional on normal completion, and no physical
+traceback/raw-address observation or new semantic result event is introduced.
+
+Independent constructed records in `signal-inline.crexx` and the handwritten
+fixture cover known/unknown normal and fault actuals, result/actual alias,
+normal empty owner/flag 0 with unchanged output, handler owner/flag 1 with the
+expected later code/name/message, and both common cleanup paths. Keep a normal
+execution whose skipped LINKATTR1 would fail if wrongly reached. Check whole
+name COPY and message SCOPY's preserved integer/public status separately.
+Reuse paired original/expanded `rxas -n`/one-VM execution, pending CANCEL before
+and after result commit and after a normal observation, restoration/priority,
+logical source and native/reference ownership probes from the current runners.
+
+Negatives cover missing/wrong initial flag, wrong committed value, extra flag
+or saved writes, unknown/mismatched guard, reads before the guard or on its false
+edge, alternate entry/backedge, owner/flag aliases or rebound storage, early
+owner reset, missing common cleanup and opaque escape/unsupported consumers.
+Use specific `signal.owner.guard.pending`, `.mapping.pending`, `.state.unproved`
+or `.cleanup.pending` reasons; retained scope/snapshot shapes keep their current
+precise reasons. Execute one retained negative with independent expectations.
+Inspect the first conservative output for unchanged authored guarded ownership
+and observations, no original selected call, no fresh cells and no elision.
+Charge correlation/snapshot/graph work and bytes before growth; tight limits,
+replay and output failure retain exact input identity and CLI last-good output.
+The coordinator owns the affected build and bounded development panel, reusing
+prepared producers; broader functional/platform/sanitizer/performance QA is not
+commissioned by this increment.
+
 ### Pending atomic signal-scope decision
 
 The current G emitter's duplicate normal/handler reverse-pop lists cannot
@@ -949,25 +1096,28 @@ effect, RXBIN feature and G lowering contracts require review before any
 API/ISA/runtime adoption. This would solve policy restoration, not inherited
 physical `SIGRET`, arbitrary callee cleanup or Classic activation relay.
 
-### Pending private-global symbol and logical-activation decisions
+### Reviewed private-global boundary and pending logical-activation decision
 
-The earlier numeric-provider alias spelling is withdrawn: a handwritten
-consumer cannot rely on a compiled provider keeping a value in `g0`. The
-candidate source contract instead declares a stable provider-local linker
-symbol (`g7 .symbol="count"`) and lets a consumer write
-`g2 .alias="counter.rxas","count"`. The provider's own allocation can later
-move `count` to `g0` without changing consumer source. `.symbol` is module-
-qualified link visibility, not public `.expose` or a compiler proof fact.
-Two typed RXBIN007 records would persist the symbol declaration and a symbolic
-alias in relocatable input; the linker checks the exact selected module/name,
-then lowers the alias to its image-local module/slot. Loader binding remains
-worker-local, before initialization, with one owning cell. Disassembly/relink
-must recover the stable name, not print a provider register number. No source
-hash, attestation or inliner-side META payload is selected. Binding itself
-proves no initializer ingress, so the exact all-ready imported profile remains.
-The source spellings, typed feature extension, stable module-name round trip
-and strict symbol/alias validation are a pending compatibility decision before
-product implementation.
+Same-module private globals are representable and already have a bounded
+inlining path. Foreign private globals retain calls with
+`import.global.private.pending`: current `gN` operands address the executing
+module's bank and private type metadata does not bind foreign storage. Public
+`gN .expose=qualified.name` on both modules already maps different physical
+indices to one worker-local value. Merely adding that declaration to a
+compiler-private global changes source import visibility because the compiler
+imports matching exposed `META_REG` names. Complete typed-global metadata
+already exists; adding more type data does not solve this storage/privacy
+boundary. Adrian accepts this retained-call case for the POC, noting that
+globals are expected to be relatively uncommon and unlikely to be hot; this
+is a prioritization judgment, not measured workload frequency.
+
+A reserved private link key with compiler filtering or a separate typed
+linker-private alias record remains a possible later compatibility design,
+not a selected POC feature. If adopted later, a handwritten producer must be
+able to express a stable symbol without naming the provider's allocated `gN`;
+the linker/loader must preserve exact provider identity, worker-local ownership
+and initialization ingress. No source hash, attestation or inliner-side META
+payload is selected.
 
 The approved resource rule permits modest variation in infrastructure-pressure
 error paths, including elimination of `FAILURE` from removed call-frame

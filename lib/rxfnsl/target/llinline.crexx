@@ -515,6 +515,9 @@ expandlocalmany: procedure = .llinline..change
     if selected.procedureid() <> functionid then return .change('invalid','binding.foreign.procedure',source,empty)
     if facts.bodyid(request.callid()) <> request.bodyid() then return .change('invalid','binding.target.mismatch',source,empty)
     callee = source.body(request.bodyid()); count = facts.arguments(request.callid())
+    /* The checked caller-owned event/guarded-owner lanes also use this exact
+     * read-only mapping. Their authored COPY/guard/NULL rows stay in place;
+     * no fresh lifetime or handler machinery is introduced here. */
     if facts.handlerdirect(request.callid()) then required = 0
     else if facts.rebinding(request.callid()) | facts.orderedslots(request.callid()) then do
       if frame < 2 | count >= frame then return .change('limit','inline.frame',source,empty)

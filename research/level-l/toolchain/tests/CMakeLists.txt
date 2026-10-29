@@ -64,6 +64,21 @@ if(TARGET rxbvm)
     TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_named_signal
     TARGETS levell_rxas_signal_test_prep rxbvm rxas _testfuncs_dynamic)
+  add_test(NAME levell_rxas_guarded_owner
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DCONSTRUCTED=${CMAKE_CURRENT_BINARY_DIR}/signal-inline.rxbin"
+      "-DNATIVE_PAYLOAD_PLUGIN=$<TARGET_FILE:_testfuncs_dynamic>"
+      "-DRUNTIME=${_runtime}" "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/guarded-owner-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-guarded-owner.cmake")
+  set_tests_properties(levell_rxas_guarded_owner PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_GUARDED_OWNER[|]failures=0"
+    # Keep this expanded ownership lane out of the existing nested aggregate;
+    # producers are shared, and costly nested groups run serially.
+    RUN_SERIAL TRUE TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_guarded_owner
+    TARGETS levell_rxas_signal_test_prep rxbvm rxas _testfuncs_dynamic)
   add_test(NAME levell_rxas_io_service
     COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/io-service.rxbin" ${_runtime})
   set_tests_properties(levell_rxas_io_service PROPERTIES
