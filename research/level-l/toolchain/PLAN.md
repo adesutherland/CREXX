@@ -124,7 +124,7 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, and one exact global-free zero-private-local straight-line imported scalar leaf profile are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, one exact global-free zero-private-local straight-line imported scalar leaf profile, and a single named caller-owned unbound G-style signal scope around a proved CALL1 are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -220,6 +220,31 @@ callers are assembled with `rxas -n`, linked with those exact supplied
 providers and run on one VM. This slice does not close broader imported
 body/global/initialization coverage or INL-AC03/04/07.
 
+### Reviewed imported private-local follow-on
+
+After the exact global-free leaf slice, admit a straight-line imported scalar
+leaf with a finite private local count under the same static-exact profile,
+without changing metadata, ISA or public service signatures. The checked
+projection must preserve the provider's declared local count on its one
+interned surrogate per exact provider arena/procedure, and the shared facts
+owner must prove initial component state, repeated activation/recycler history,
+whole-value ownership and every normal return before expansion. Do not split
+aliases into fresh surrogate owners: two imported names for one provider body
+share one recycled local history. Default-HALT abrupt exits do not continue
+into another activation; caller-owned resumable handlers remain a separate
+signal proof. The existing expander closes fresh locals on each normal exit.
+
+Independent controls cover an owned private snapshot returned after mutating
+the actual (MOVE and reset), a borrowed local link returned by COPY (actual
+still live), and two aliases of one provider with a private register whose
+integer is overwritten but flags survive across activations. The latter must
+retain the whole batch with a precise recycler-history reason, not silently
+inline either alias. Check conservative and cleaned exact linked RXAS on one
+VM, unchanged caller/provider on negative and tight-limit cases, and source/
+TRACE identities. Imported direct DAGs need owner-qualified label relocation
+and remain a separate increment; globals, initialization and dynamic binding
+remain open.
+
 ### Signal coverage and practical-demand decision
 
 Adrian confirmed on 29 October 2026 that signal design should be tuned to real
@@ -291,6 +316,50 @@ explicit ISA/runtime/assembler/linker decision gate, not an approved opcode.
 Specific raw `SIGRET`, action-handler or physical-observer sites may
 provisionally remain calls under a selected profile while G blocks and
 C-generated protection are developed.
+
+### Reviewed caller-owned named-signal increment
+
+This focused-qualified INL-STEP04 slice uses the existing ISA and frozen target schema for
+one Level G shaped, caller-owned named handler around a same-module direct
+`CALL1`. The fresh standalone `main` saves one literal `OUT_OF_RANGE` policy
+with `SIGPUSH`, installs an unbound `SIGBR` to a same-procedure label, executes
+the call, then follows distinct normal and handler `SIGPOP` paths to one join.
+The selected leaf has zero private locals, no policy/context mutation, and
+exactly a before-write `ICHKRNG a1,0,10` followed by `RET a1`. Prove the one
+actual/result are plain scalar storage; reject alternate entries, nested
+scopes, backedges, other raising instructions and physical observers. The
+ordinary caller and callee instructions, including policy save/install/pop
+ordering, remain the source of truth; no assertion or inliner `.meta` record is
+accepted. Preserve `SIGPUSH`'s possible failed-save behavior by retaining its
+original instruction, not by assuming successful lexical restoration.
+
+Derive a bounded exact-owner exceptional overlay in the facts owner: checked
+push/install/handler/normal-pop/handler-pop/join IDs, literal tag, canonical
+failure phase, and normal versus handler entry state. Do not treat the handler
+as normally unreachable or feed its reads into a normal-only liveness result.
+At abrupt entry, the expander closes only its fresh, disjoint argument/result
+anchors and cloned metadata before the original handler body; it must not
+copy a return, expire borrowed actual/result storage or change the original
+policy instructions. Structural proof must cover partial setup, normal return
+and handler entry. Source/TRACE and skipped-result observations remain truthful.
+The current cleanup graph has no exceptional edges, so this slice retains
+conservative expanded RXAS and returns a precise cleanup-pending reason.
+General exceptional cleanup needs a reviewed derived graph/owner extension;
+this increment does not change public target or generic IR APIs, wire/schema,
+VM or language syntax. `INLINE_ENTER` remains a separate gate for inherited
+`SIGRET` and physical logical-call unwinding.
+
+Independent focused controls use input 7 (normal result 7, one normal
+observation), input 12 with preloaded result 99 (one handler observation,
+unchanged result 99 and actual 12), both policy pops, the same join, absent
+selected call, abrupt closure before handler work and a truthful fault source.
+Inherited `SIGRET`, callee policy mutation, unresolved/cross-procedure handler,
+reference/native payload and crossed counted windows retain specific reasons.
+Tight resource failure must preserve the original module and CLI last-good
+output. The first representative emitted G RXAS is inspected before edits;
+constructed and CLI outputs then assemble with `rxas -n` and execute on one VM.
+This does not close bound, catch-all or nested G handlers, general signal
+cleanup, Level C capture/relay, or INL-AC03/04/05.
 
 ### Reviewed shared CFG prerequisite
 

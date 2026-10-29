@@ -446,7 +446,7 @@ expandlocalmany: procedure = .llinline..change
   i = .int; j = .int; k = .int; a = .int; ignored = .int; count = .int; required = .int
   locals = .int; base = .int; higheststep = .int; highestclause = .int
   extent = .int; fileid = .int; hasresult = .int; ordered = .int; slots = .int; activebase = .int; position = .int
-  dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int
+  dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int; abrupt = .int
   catalog = .llrxascatalog..catalog
   scope = .string; status = .string; scopes = .metascopes
   request = .binding; selected = .lltarget..record; input = .lltarget..record; childrecord = .lltarget..record; swaprecord = .lltarget..record
@@ -581,6 +581,27 @@ expandlocalmany: procedure = .llinline..change
         fields = clonefields(input,targetbody)
         if input.kind() = 'instruction' then maps[input.id()] = code.emit(targetbody,input.mnemonic(),fields,at)
         else maps[input.id()] = targetbody.record(input.kind(),fields,at)
+        if input.kind() = 'label' then do
+          abrupt = facts.handlercall(input.id())
+          if abrupt > 0 then do
+            if accepted[abrupt] = 0 then return .change('invalid','inline.signal.site.unselected',source,empty)
+            /* This sole zero-local CALL1 owns four disjoint fresh cells.
+             * UNLINK is safe before, during and after its setup; it never
+             * clears or expires the borrowed result/actual. The caller's
+             * original SIGPOP remains the next original instruction. */
+            base = offsets[abrupt]
+            anchor = targetbody.reg('r',base + 1); ignored = code.one(targetbody,'unlink',anchor,at)
+            anchor = targetbody.reg('r',base); ignored = code.one(targetbody,'unlink',anchor,at)
+            anchor = targetbody.reg('r',base + 2); ignored = code.one(targetbody,'endlife',anchor,at)
+            anchor = targetbody.reg('r',base + 3); ignored = code.one(targetbody,'endlife',anchor,at)
+            if scopes.hasbindings() then do k = 1 to scopes.closings()
+              if scopes.active(k) = 0 then iterate
+              call objectarraydrop fields
+              fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
+              ignored = targetbody.record('.meta',fields,at)
+            end
+          end
+        end
         iterate
       end
       callee = source.body(facts.bodyid(input.id())); count = facts.arguments(input.id()); base = offsets[input.id()]

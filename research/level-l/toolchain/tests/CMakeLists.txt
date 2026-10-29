@@ -36,8 +36,31 @@ add_custom_target(levell_rxas_io_test_prep DEPENDS
   "${CMAKE_CURRENT_BINARY_DIR}/io-service.rxbin"
   "${CMAKE_CURRENT_BINARY_DIR}/io-generated.rxas")
 add_dependencies(levell_rxas_io_test_prep llrxinline)
+crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/signal-inline.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+    -i "${CMAKE_CURRENT_BINARY_DIR}/imports"
+    -o "${CMAKE_CURRENT_BINARY_DIR}/signal-inline"
+    "${CMAKE_CURRENT_SOURCE_DIR}/signal-inline.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${CMAKE_CURRENT_BINARY_DIR}/signal-inline"
+  DEPENDS rxc rxas levell_rxas_io_test_imports ${_imports}
+    "${CMAKE_CURRENT_SOURCE_DIR}/signal-inline.crexx" VERBATIM)
+add_custom_target(levell_rxas_signal_test_prep DEPENDS
+  "${CMAKE_CURRENT_BINARY_DIR}/signal-inline.rxbin")
+add_dependencies(levell_rxas_signal_test_prep llrxinline)
 if(TARGET rxbvm)
   get_target_property(_cli llrxinline LLRXINLINE_BYTECODE)
+  add_test(NAME levell_rxas_named_signal
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DCONSTRUCTED=${CMAKE_CURRENT_BINARY_DIR}/signal-inline.rxbin"
+      "-DRUNTIME=${_runtime}" "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/named-signal-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-named-signal.cmake")
+  set_tests_properties(levell_rxas_named_signal PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_NAMED_SIGNAL[|]failures=0"
+    TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_named_signal
+    TARGETS levell_rxas_signal_test_prep rxbvm rxas)
   add_test(NAME levell_rxas_io_service
     COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/io-service.rxbin" ${_runtime})
   set_tests_properties(levell_rxas_io_service PROPERTIES

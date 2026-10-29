@@ -102,7 +102,7 @@ querycosts: procedure = .int
 
 /** The current cleanup plans walk source order, not mutually exclusive paths.
  * Return -1 for exhaustion, 2 for incomplete/observed tails, 1 for branches,
- * or 0 for linear. The graph path establishes its own semantic proof.
+ * 3 for an exceptional policy graph, or 0 for linear. The graph path establishes its own semantic proof.
  * The target owner derives completeness; the catalogue owns flow classes. */
 cfgpending: procedure = .int
   arg owner = reference .lltarget..module, procedureId = .int, expose work = .int
@@ -110,9 +110,21 @@ cfgpending: procedure = .int
   source = dereference owner
   if work < 2 then return -1
   work = work - 2
-  if source.normalcfgcomplete(procedureId) = 0 then return 2
-  if source.endobservations(procedureId) then return 2
   catalog = .llrxascatalog..catalog()
+  /* The named-scope expander owns a private exact two-path proof. Its extra
+   * edge is absent from this normal index; neither cleanup nor assignment may
+   * consume normal-only liveness as though it included handler observations. */
+  if source.normalcfgcomplete(procedureId) = 0 then do
+    do i = 1 to source.records()
+      if work < 1 then return -1
+      work = work - 1; item = source.record(i)
+      if item.procedureid() = procedureId & item.kind() = 'instruction' then do
+        if wordpos(item.mnemonic(),'sigbr sigbrv') > 0 then return 3
+      end
+    end
+    return 2
+  end
+  if source.endobservations(procedureId) then return 2
   do i = 1 to source.records()
     if work < 4 then return -1
     work = work - 4
@@ -143,6 +155,7 @@ transport: procedure = .llinline..change
   do
     pending = cfgpending(owner,procedureId,work)
     if pending < 0 then return .llinline..change('limit','transport.cfg.work',source,empty)
+    if pending = 3 then return .llinline..change('keep','transport.exceptional.cfg.pending',source,empty)
     if pending = 2 then return .llinline..change('keep','transport.cfg.pending',source,empty)
     if pending = 1 then return graphtransport(owner,procedureId,profile,work,entries,bytes,frame,cells)
     facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
@@ -737,6 +750,7 @@ storage: procedure = .llinline..change
   do
     pending = cfgpending(owner,procedureId,work)
     if pending < 0 then return .llinline..change('limit','storage.cfg.work',source,empty)
+    if pending = 3 then return .llinline..change('keep','storage.exceptional.cfg.pending',source,empty)
     if pending = 2 then return .llinline..change('keep','storage.cfg.pending',source,empty)
     graphmode = pending = 1
     if graphmode then facts = lltargetfacts..analysegraph(owner,procedureId,profile,work,bytes)

@@ -471,6 +471,46 @@ Classic activation, one-shot and delayed delivery, original event payload and
 origin, and clause/SIGL/RC state; VM policy alone is not the Classic policy.
 The current root/default-HALT profile does not qualify these producer paths.
 
+### Caller-owned named range-handler slice
+
+The existing `closed-main-default-halt.v1` profile recognizes one source-authored,
+unbound G-shaped `OUT_OF_RANGE` scope in fresh standalone `main`: `SIGPUSH`,
+`SIGBR`, one same-module `CALL1`, separate normal/handler `SIGPOP` paths and one
+join. Its selected zero-local leaf has exactly `ICHKRNG a1,0,10` and `RET a1`;
+source/TRACE and ordinary scalar metadata are retained. Actual and result must
+be proved plain ordinary scalar storage, and the actual integer must determine
+the check outcome. Unknown values, additional control entries, nested scopes,
+counted windows, callee policy/context changes and physical observers retain
+specific pending/unproved reasons. This is an initial representable category,
+not complete G or Classic C signal coverage.
+
+`lltargetfacts` derives a request-local exact-owner structured overlay from the
+original record identities and canonical signal phase. The existing call
+normalization, scalar transfers and borrowed-result COPY rule produce the
+conditional normal path. Its before-write failure path starts from the captured
+caller state, so it cannot inherit a hypothetical result write or normal-only
+TRACE/value observations. The two bounded paths reuse existing state snapshots;
+they add no target schema, public service signature, wire record, instruction or
+general graph scheduler. The frozen target's normal graph stays incomplete.
+
+Conservative expansion retains the check and syntactic normal-return transport.
+The original handler label first unlinks the fresh argument/result anchors,
+expires only the fresh ordinary count/return temporary, and closes renamed
+callee metadata. Those disjoint anchors can be unlinked before, during or after
+setup without touching borrowed caller values. The original policy save,
+installation and both pops remain executable and ordered. In particular, no
+successful-save premise is inferred from `SIGPUSH`/`SIGPOP`; failed-save and
+installation/pop errors retain their original runtime behavior.
+
+The analysis intentionally leaves policy/control operations unknown in its
+normal-only access projection. Transport and assignment return
+`transport.exceptional.cfg.pending` and `storage.exceptional.cfg.pending` for
+branch-policy callers; conservative expanded output remains usable. Handler
+reads cannot justify any deletion or storage reuse through that normal-only
+index. General exceptional cleanup and bound/catch-all/nested handlers remain
+open in INL-STEP04/05. Inherited `SIGRET`, callee-owned policy and Classic
+capture/relay retain their separate contracts and gates.
+
 Assess practical demand using named independent B/G programs and static/dynamic
 C consumers separately from conformance fixtures. Inventory source constructs,
 then inspect emitted RXAS at *reachable candidate calls* for inherited and

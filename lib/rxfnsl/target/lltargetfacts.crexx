@@ -661,6 +661,20 @@ analysis: class
   _scopestorage = .int[]
   _bytelimit = .int
   _retained = .int
+  /* Analysis-private two-path overlay. Original source identities remain the
+   * only target model; these rows never make its normal CFG complete. */
+  _namedpush = .int
+  _namedinstall = .int
+  _namedcall = .int
+  _namednormalpop = .int
+  _namednormalbr = .int
+  _namedhandler = .int
+  _namedhandlerpop = .int
+  _namedhandlerbr = .int
+  _namedjoin = .int
+  _namedcheck = .int
+  _namedoutcome = .int
+  _namedactive = .int
   *: factory
     arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864, graphmode = 0
     _owner = owner; _function = functionId; _profile = profile; _work = work; _status = 'building'; _reason = ''; _bytelimit = bytes
@@ -681,6 +695,189 @@ analysis: class
     arg reason = .string
     _status = 'keep'; _reason = reason
     return 0
+  /** Recognize one complete source-authored G-shaped scope. No user proof,
+   * target-schema mutation or exceptional edge is added to the normal index. */
+  namedshape: method = .int
+    i = .int; policies = .int; labels = .int; calls = .int; pops = .int; branches = .int; returns = .int
+    handler = .string; joined = .string; name = .string
+    item = .lltarget..record; field = .lltarget..operand; target = .lltarget..operand
+    module = dereference _owner; catalog = .llrxascatalog..catalog()
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
+      if left(item.mnemonic(),3) = 'sig' then policies = policies + 1
+    end
+    if policies = 0 then return 1
+    if _graphmode then return reject('signal.exceptional.cfg.pending')
+    if _profile <> 'closed-main-default-halt.v1' then return reject('signal.named.profile.pending')
+    if module.globals() <> 0 then return reject('signal.global.storage.pending')
+    if reserve(12,16) = 0 then return 0
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.kind() = '.meta' & item.operands() > 1 then do
+        field = item.operand(2)
+        if left(field.text(),1) = '.' & field.text() <> '.inline' then return reject('signal.startup.observer.pending')
+      end
+      if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      if item.kind() = 'label' then do; labels = labels + 1; iterate; end
+      if item.kind() <> 'instruction' then iterate
+      name = item.mnemonic()
+      select name
+        when 'sigpush' then do
+          if _namedpush <> 0 then return reject('signal.nested.scope.pending')
+          field = item.operand(1)
+          if field.text() <> 'OUT_OF_RANGE' then return reject('signal.named.tag.pending')
+          _namedpush = item.id()
+        end
+        when 'sigbr' then do
+          if _namedinstall <> 0 then return reject('signal.nested.scope.pending')
+          field = item.operand(2); target = item.operand(1)
+          if field.text() <> 'OUT_OF_RANGE' then return reject('signal.named.tag.pending')
+          handler = target.text(); _namedinstall = item.id()
+        end
+        when 'sigpop' then do
+          field = item.operand(1)
+          if field.text() <> 'OUT_OF_RANGE' then return reject('signal.named.tag.pending')
+          pops = pops + 1
+          if pops = 1 then _namednormalpop = item.id()
+          else if pops = 2 then _namedhandlerpop = item.id()
+          else return reject('signal.named.pop.pending')
+        end
+        when 'sigret' then return reject('signal.inherited.return.pending')
+        when 'sigbrv' then return reject('signal.bound.handler.pending')
+        when 'br' then do
+          field = item.operand(1); branches = branches + 1
+          if branches = 1 then do; _namednormalbr = item.id(); joined = field.text(); end
+          else if branches = 2 & field.text() = joined then _namedhandlerbr = item.id()
+          else return reject('signal.named.join.pending')
+        end
+        when 'call1' then do; calls = calls + 1; _namedcall = item.id(); end
+        when 'ret' then returns = returns + 1
+        otherwise do
+          if left(name,3) = 'sig' then return reject('signal.caller.policy.pending')
+          if wordpos(name,'call call2 call3 call4 swapcall settpcall settpswapcall dcall') > 0 then return reject('signal.call.window.pending')
+          if wordpos(name,'link unlink swap swapn linkarg') > 0 then return reject('signal.caller.binding.pending')
+          if wordpos(name,'mkref deref linkref setref setobjtype setobjuninit setattrs linkattr1') > 0 then return reject('signal.storage.plain.unproved')
+          if catalog.signalstate(item.opcode()) <> 0 then return reject('signal.caller.failure.pending')
+          if wordpos(name,'null load copy icopy settp itos say numsci') = 0 then return reject('signal.caller.operation.pending')
+        end
+      end
+    end
+    if calls <> 1 | pops <> 2 | branches <> 2 | labels <> 2 | returns <> 1 then return reject('signal.named.shape.pending')
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.kind() <> 'label' then iterate
+      field = item.operand(1)
+      if field.text() = handler then do
+        if item.procedureid() <> _function then return reject('signal.handler.owner.unproved')
+        _namedhandler = item.id()
+      end
+      if field.text() = joined & item.procedureid() = _function then _namedjoin = item.id()
+    end
+    if _namedhandler = 0 then return reject('signal.handler.target.unproved')
+    if _namedjoin = 0 then return reject('signal.named.join.pending')
+    if _namedpush = 0 | _namedinstall <= _namedpush | _namedcall <= _namedinstall | _namednormalpop <= _namedcall | _namednormalbr <= _namednormalpop | _namedhandler <= _namednormalbr | _namedhandlerpop <= _namedhandler | _namedhandlerbr <= _namedhandlerpop | _namedjoin <= _namedhandlerbr then return reject('signal.named.order.pending')
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'ret' & item.id() < _namedjoin then return reject('signal.named.departure.pending')
+      if item.id() > _namedpush & item.id() < _namedcall & item.id() <> _namedinstall then return reject('signal.named.setup.pending')
+      if item.id() > _namednormalpop & item.id() < _namedhandler & item.id() <> _namednormalbr then return reject('signal.named.departure.pending')
+      if item.id() > _namedhandler & item.id() < _namedhandlerpop then return reject('signal.named.departure.pending')
+      if item.id() > _namedhandlerbr & item.id() < _namedjoin then return reject('signal.named.departure.pending')
+    end
+    return 1
+  namedleaf: method = .int
+    i = .int; instructions = .int; bodyid = .int
+    item = .lltarget..record; selected = .lltarget..record; field = .lltarget..operand
+    module = dereference _owner; catalog = .llrxascatalog..catalog(); selected = module.at(_namedcall)
+    field = selected.operand(2); bodyid = module.procedureid(field.text())
+    if bodyid = 0 then return reject('body.unavailable')
+    if bodyid = _function then return reject('call.recursion.active')
+    body = module.body(bodyid)
+    if body.locals() <> 0 then return reject('signal.callee.locals.pending')
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> bodyid | item.kind() = 'procedure' then iterate
+      if item.kind() = 'label' then return reject('signal.callee.control.pending')
+      if item.kind() <> 'instruction' then iterate
+      instructions = instructions + 1
+      if left(item.mnemonic(),3) = 'sig' then return reject('signal.callee.policy.pending')
+      if instructions = 1 & item.mnemonic() = 'ichkrng' & catalog.signature(item.opcode()) = 'RII' then do
+        field = item.operand(1)
+        if field.bank() <> 'a' | field.index() <> 1 then return reject('signal.callee.check.pending')
+        field = item.operand(2)
+        if field.index() <> 0 then return reject('signal.callee.check.pending')
+        field = item.operand(3)
+        if field.index() <> 10 then return reject('signal.callee.check.pending')
+        /* These are canonical signal enum fields, not copied opcode numbers.
+         * BEFORE_WRITES=1, KNOWN=1; no partial value/context write is allowed. */
+        if catalog.signalstate(item.opcode()) <> 1 | catalog.signalphase(item.opcode()) <> 1 | catalog.signalnames(item.opcode()) <> 'OUT_OF_RANGE' | catalog.failurecomponents(item.opcode()) <> 0 | catalog.failurecontext(item.opcode()) <> 0 then return reject('signal.callee.phase.unproved')
+        _namedcheck = item.id()
+      end
+      else if instructions = 2 & item.mnemonic() = 'ret' & item.operands() = 1 then do
+        field = item.operand(1)
+        if field.kind() <> 'R' | field.bank() <> 'a' | field.index() <> 1 then return reject('signal.callee.return.pending')
+      end
+      else return reject('signal.callee.operation.pending')
+    end
+    if instructions <> 2 | _namedcheck = 0 then return reject('signal.callee.check.pending')
+    return 1
+  /** Two explicitly bounded paths, not a second general graph scheduler.
+   * The ordinary invoke/return transfer supplies the conditional normal path;
+   * before-write failure restores its captured caller state before the handler. */
+  namedrun: method = .int
+    arg expose view = .frame, expose state = .cells, expose previous = .history
+    i = .int; id = .int; returned = .int; branch = .int
+    item = .lltarget..record; field = .lltarget..operand; before = .cells
+    normal = .cells; handlerstate = .cells; state_ref = reference .cells
+    module = dereference _owner
+    if namedleaf() = 0 then return 0
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      _runtime[item.id()] = 1
+      if returned & item.kind() = 'instruction' then return reject('signal.named.departure.pending')
+      if item.id() = _namedcall then do
+        field = item.operand(1); id = view.storage(field)
+        if id = 0 | state.plain(id) = 0 | state.ordinary(id) = 0 | state.wholeknown(id) = 0 then return reject('signal.storage.plain.unproved')
+        field = item.operand(3); id = view.storage(field)
+        if id = 0 | state.plain(id) = 0 | state.wholeknown(id) = 0 | state.known(id) = 0 then return reject('signal.argument.value.unproved')
+        branch = state.value(id) < 0 | state.value(id) > 10
+        if pathallowance(state.size(),view.slots()) = 0 then return 0
+        state_ref = reference state; before = snapshot state_ref
+        _namedactive = 1
+        if invoke(item,view,reference state,previous) = 0 then return 0
+        _namedactive = 0; _namedoutcome = 1 + branch
+        /* Retain the syntactic normal-return transport even for a proved
+         * failure; it stays unreachable at runtime. Do not transfer that
+         * hypothetical result into the handler's incoming caller state. */
+        if pathallowance(state.size(),view.slots()) = 0 then return 0
+        handlerstate = before
+      end
+      else if item.id() = _namedhandler then do
+        state_ref = reference state; normal = snapshot state_ref; state = handlerstate
+      end
+      else if item.id() = _namedjoin then do
+        if branch = 0 then state = normal
+      end
+      /* Leave these opaque policy/control rows undescribed in the normal-only
+       * access projection. It must remain incomplete, even when queried by a
+       * consumer which bypasses the explicit cleanup guard. */
+      else if item.id() = _namedpush | item.id() = _namedinstall | item.id() = _namednormalpop | item.id() = _namednormalbr | item.id() = _namedhandlerpop | item.id() = _namedhandlerbr then nop
+      else do
+        if step(item,view,reference state) = 0 then return 0
+        if item.kind() = 'instruction' & item.mnemonic() = 'ret' then returned = 1
+      end
+    end
+    if returned = 0 then return reject('return.missing')
+    return 1
   /* META scope is lexical address state, independent of whether the
    * declaration's own machine group executes. Resolve its storage later at
    * every feasible point in the scope, including its matching clear. */
@@ -1240,7 +1437,9 @@ analysis: class
         else if value.kind() = 'I' then limits[i] = value.index()
         else return reject('argument.range.unproved')
       end
-      if limits[1] < limits[2] | limits[1] > limits[3] then return reject('argument.range.failure.unproved')
+      if limits[1] < limits[2] | limits[1] > limits[3] then do
+        if _namedactive = 0 | item.id() <> _namedcheck then return reject('argument.range.failure.unproved')
+      end
     end
     else if name = 'linkarg' then do
       if private = 0 then return reject('argument.bank.root.unproved')
@@ -1757,11 +1956,12 @@ analysis: class
       j = item.procedureid(); _selectorcount[j] = _selectorcount[j] + 1
       _selectorordinal[item.id()] = _selectorcount[j]
     end
+    if namedshape() = 0 then return
     if _graphmode then do
       if module.normalcfgcomplete(_function) = 0 then do; ignored = reject('graph.cfg.pending'); return; end
       if preparescopes() = 0 then return
     end
-    else do
+    else if _namedhandler = 0 then do
       if linear(_function,'profile.caller.cfg.pending') = 0 then return
       linearrow = _linear[_function] as .numbers
     end
@@ -1790,7 +1990,11 @@ analysis: class
     callhistory = .history(); call callhistory.extend(state.size())
     do i = 1 to body.locals(); _plain[i] = 1; end
     region = 0; nextregion = 0; returned = 0; _active[_function] = 1
-    if _graphmode then do
+    if _namedhandler > 0 then do
+      if namedrun(view,state,callhistory) = 0 then return
+      returned = 1
+    end
+    else if _graphmode then do
       if reserve(_recordcount[_function],32) = 0 | reserve(_retcount[_function],112) = 0 | reserve(1,256) = 0 then return
       if spend(_recordcount[_function]) = 0 | spend(_retcount[_function]) = 0 then return
       rootproof = .callproof(_recordcount[_function],_retcount[_function])
@@ -1945,6 +2149,18 @@ analysis: class
     return _reason
   remaining: method = .int
     call run(); return _work
+  /** Internal expander query over this exact source owner. The source model's
+   * normal graph and public service signatures are unchanged. */
+  handlercall: method = .int
+    arg labelid = .int
+    call require()
+    if labelid = _namedhandler then return _namedcall
+    return 0
+  handleroutcome: method = .int
+    arg callid = .int
+    call require()
+    if callid = _namedcall then return _namedoutcome
+    return 0
   index: method = reference .llirgraph..index
     call require(); return reference _index
   access: method = reference .llirgraph..access
