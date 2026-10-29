@@ -267,7 +267,7 @@ main: procedure = .int
       when 2 then expected = 'branch.condition.unproved'
       when 3 then expected = 'join.binding.unproved'
       when 4 then expected = 'metadata.scope.cfg.pending'
-      when 5 then expected = 'import.leaf.nested.pending'
+      when 5 then expected = 'import.child.private.pending'
       when 8 then expected = 'import.work'
       otherwise expected = 'local.recycler.history.unproved'
     end

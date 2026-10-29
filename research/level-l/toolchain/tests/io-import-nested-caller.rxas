@@ -1,0 +1,57 @@
+/* Independent values, in order:
+ * fixed: snapshot5 + mutated12 =17, actual12; repeated result/actual =31.
+ * counted: swapped actual20 ->27, result10; repeated ->34, result10.
+ * branch: false snapshot5; true snapshot5 + mutated12 =17, actual12. */
+.globals=0
+outer_fixed() .expose=fixture.import.nested.fixed
+outer_counted() .expose=fixture.import.nested.counted
+outer_branch() .expose=fixture.import.nested.branched
+child_left() .expose=fixture.import.nested.child
+main() .locals=8
+  load r0,5
+  .srcstep 1 1 0 "io-import-nested-caller.rxas" 14 3 30 "  call2 r2,outer_fixed(),r0,r0"
+  .traceevent "V" 4 "R" "I" "r" 0 1 1 0 "caller-actual" ""
+  call2 r2,outer_fixed(),r0,r0
+  icopy r7,r2
+  itos r7
+  say r7
+  icopy r7,r0
+  itos r7
+  say r7
+  call2 r0,outer_fixed(),r0,r0
+  icopy r7,r0
+  itos r7
+  say r7
+  load r0,10
+  load r1,20
+  call2 r4,outer_counted(),r0,r1
+  icopy r7,r4
+  itos r7
+  say r7
+  icopy r7,r1
+  itos r7
+  say r7
+  call2 r0,outer_counted(),r0,r1
+  icopy r7,r0
+  itos r7
+  say r7
+  icopy r7,r1
+  itos r7
+  say r7
+  load r0,0
+  getandtp r6,r0,768
+  load r1,5
+  call2 r4,outer_branch(),r6,r1
+  icopy r7,r4
+  itos r7
+  say r7
+  settp r0,256
+  getandtp r6,r0,768
+  call2 r4,outer_branch(),r6,r1
+  icopy r7,r4
+  itos r7
+  say r7
+  icopy r7,r1
+  itos r7
+  say r7
+  ret 0

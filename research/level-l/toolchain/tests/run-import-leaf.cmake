@@ -188,7 +188,7 @@ expect_keep(old-profile closed-main-default-halt.v1 "profile.imported.body.pendi
 expect_keep(missing-body "${_profile}" "unavailable exact body foreign")
 expect_keep(global-provider "${_profile}" "import.global.storage.pending"
   --body io-import-provider-global.rxas "${FIXTURES}/io-import-provider-global.rxas")
-expect_keep(nested-provider "${_profile}" "import.leaf.nested.pending"
+expect_keep(nested-provider "${_profile}" "import.child.private.pending"
   --body io-import-provider-nested.rxas "${FIXTURES}/io-import-provider-nested.rxas")
 expect_failure(duplicate-provider "LL_INLINE_BINDING: ambiguous supplied provider fixture.import.bump"
   --body first-provider "${_provider}" --body second-provider "${_provider}")

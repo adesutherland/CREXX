@@ -1062,8 +1062,9 @@ they do not complete the real RXAS adapter or the full approved POC profile.
 ### Exact imported scalar-body development contract
 
 The opt-in `closed-main-static-exact-default-halt.v1` profile admits an exact
-imported scalar body with a finite declared private local count and no nested
-executable procedure references. Straight-line bodies and finite direct acyclic
+imported scalar body with a finite declared private local count. A retained
+direct child may be a same-provider exported bytecode leaf when the caller
+already imports that exact child, as specified below. Straight-line bodies and finite direct acyclic
 branch bodies use the existing same-owner scalar proof. The caller has
 the only `main`; caller and providers have no globals, providers have no
 imports, and the complete caller import set resolves uniquely over the
@@ -1085,8 +1086,9 @@ ownership, signal policy and normal-return legality.
 interning one surrogate per exact frozen provider arena/procedure pair. Separate
 source/origin caches and fresh observation IDs prevent numeric IDs from two
 modules colliding. The existing same-owner proof and expander run once; a final
-checked rebuild removes surrogate definitions and refuses any surviving
-surrogate reference. Only the original caller module, with all original
+checked rebuild removes surrogate definitions and refuses every surrogate
+reference except a validated retained child CALL target, which regains its
+existing caller import alias. Only the original caller module, with all original
 imports, can be published. Record and changed-caller mappings compose through
 both private owners, while cloned source bytes, spans and contributor chains
 remain attached to the provider's logical source.
@@ -1109,7 +1111,7 @@ Undefined conditions, reachable cycles, incompatible joins and branch-local
 metadata retain their existing specific missing-proof reasons. Source/TRACE
 at label entry remains in source order with its provider origin; detached
 end-anchor observations remain with the unchanged provider. The imported
-admission does not widen signal, nested-call, startup or global coverage.
+admission does not widen signal, startup or global coverage.
 
 The surrogate preserves the provider's declared local count, so the shared
 facts owner follows one private-base history across all aliases and selected
@@ -1125,6 +1127,38 @@ The handwritten RXAS control uses repeated calls through one import because
 the native assembler rejects duplicate import entries for one exposed index;
 the constructed service control additionally checks multiple bindings.
 
+The bounded nested closure contains selected outer bodies and their direct
+same-provider children. A child must have an existing real export and a caller
+import uniquely resolved to that exact provider/body under the complete import
+catalogue. If several existing aliases name the same uniquely resolved export,
+the first alias in caller record order is selected; the executable binding is
+identical, and authored source/TRACE records retain their original spelling and
+provider call-site provenance. No child definition, import or export is added
+to published RXAS. Private or unavailable children, absent exact imports,
+dynamic/fused calls, deeper calls and recursion retain specific reasons.
+
+One interned provider/procedure pair owns every selected or nested activation
+of a body. Preparation records each exact outer-pair/call-record/child-pair
+edge, checks the child is a leaf, and reserves all pair label and observation
+maps before replay. Only that checked direct call target becomes a child
+surrogate. The existing same-owner facts normalize fixed/count windows and
+prove component/status values, active versus entry storage, aliases, recycler
+history, return ownership and feasible branch paths; bank/register spellings
+do not establish storage identity. The ordinary expander keeps the child CALL
+and required setup/restoration. Final publication rewrites only canonical
+CALL/CALL1–CALL4 target operands naming an admitted child pair to its existing
+alias. Any other surviving surrogate reference refuses the whole publication.
+
+Published retained child calls are imported again. Current caller-only
+transport/storage cleanup has no child body and returns `keep: body.unavailable`,
+preserving conservative expanded RXAS. Provider-aware cleanup and removal of
+outer counted-window machinery need a separately reviewed lifecycle; this
+slice makes neither claim. A counted child can retain the authored swap/inverse
+pair plus a redundant linear reverse replay at outer RET; the provider-aware
+INL-STEP05 cleanup must prove and remove that extra pair without disturbing
+the child's required window. Provider images and their source/TRACE records stay
+unchanged, while copied observations retain their logical provider origins.
+
 The single request work allowance is partitioned into preparation/projection,
 existing proof/expansion, and deprojection quotas. The first two receive one
 third each; final publication receives the remainder. Unused quota is not
@@ -1134,7 +1168,7 @@ three new owned models coexist. Private map, name and provenance tables are
 preflighted alongside their stage's model allowance. Every refusal, exhausted
 allowance or invalid rebuild returns the exact original caller. Label-map/name
 storage, collision scans and lookups share those prospective checks. Unproved
-recycler histories, broader imported calls and initializer ingress remain open
+recycler histories, private/deeper imported calls and initializer ingress remain open
 in INL-STEP04. Independent constructed and handwritten controls cover colliding
 provider/caller labels and constants, two-target backward-lexical DAGs, both
 normal outcomes and return ownership, source/TRACE, repeated private history,

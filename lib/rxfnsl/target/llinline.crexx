@@ -439,7 +439,7 @@ expandmany: procedure = .llinline..change
   if profile = 'closed-main-static-exact-default-halt.v1' then return expandimports(bindings,work,entries,bytes,frame,cells)
   return expandlocalmany(bindings,profile,work,entries,bytes,frame,cells)
 
-/** The sole expansion algorithm. Imported leaves enter it only after checked
+/** The sole expansion algorithm. Imported bodies enter it only after checked
  * private projection; no projected definition can reach public output. */
 expandlocalmany: procedure = .llinline..change
   arg bindings = .object[], profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
@@ -876,6 +876,10 @@ importprojection: class
   _pairheader = .int[]
   _pairname = .string[]
   _pairfunction = .int[]
+  _pairalias = .string[]
+  _nestedparent = .int[]
+  _nestedoperation = .int[]
+  _nestedpair = .int[]
   _labelpair = .int[]
   _labelold = .binary[]
   _labelnew = .string[]
@@ -895,7 +899,6 @@ importprojection: class
   _entries = .int
   _held = .int
   _serial = .int
-  _lastheader = .int
   _namebytes = .int
   *: factory
     arg bindings = .object[], work = .int, entries = .int, bytes = .int
@@ -911,7 +914,7 @@ importprojection: class
     draft = .lltarget..draft; message = .string; status = .string
     fields = .object[]; sourcecache = .importorigins()
     providerindex = .int; pair = .int; found = .int; called = .string
-    i = .int; j = .int; k = .int; higheststep = .int; highestclause = .int; ignored = .int
+    i = .int; j = .int; k = .int; roots = .int; higheststep = .int; highestclause = .int; ignored = .int
     renamed = .string; catalog = .llrxascatalog..catalog()
     do
     if bindings[0] = 0 then do; ignored = fail('keep','binding.empty'); return; end
@@ -972,20 +975,8 @@ importprojection: class
       if pair = 0 then do; ignored = fail('invalid','binding.body.identity'); return; end
       body = provider.procedure(pair)
       if body.expose() = '' | body.expose() <> _importexports[found] then do; ignored = fail('invalid','binding.target.mismatch'); return; end
-      if leaf(provider_ref,body) = 0 then return
-      pair = 0
-      do j = 1 to _pairbody[0]
-        if spend(1) = 0 then return
-        if _pairprovider[j] = providerindex & _pairbody[j] = request.bodyid() then pair = j
-      end
-      if pair = 0 then do
-        if reserve(1,96) = 0 then return
-        pair = _pairbody[0] + 1; _pairprovider[pair] = providerindex; _pairbody[pair] = request.bodyid()
-        _pairheader[pair] = _lastheader
-        _pairname[pair] = newname()
-        if _status <> 'building' then return
-        _namebytes = _namebytes + length(_pairname[pair])
-      end
+      pair = intern(providerindex,body)
+      if pair = 0 then return
       _callpair[request.callid()] = pair
     end
     /* Imports remain dependencies even when all their executable uses vanish. */
@@ -996,6 +987,13 @@ importprojection: class
         if _exportproviders[j] > 0 & _exportnames[j] == _importexports[i] then found = found + 1
       end
       if found <> 1 then do; ignored = fail('keep','binding.import.unresolved'); return; end
+    end
+    /* Selected roots are interned before this bounded closure. A child uses
+     * the same pair if also selected directly; it never gains a fresh frame
+     * history merely because it is reached through a different outer site. */
+    roots = _pairbody[0]
+    do i = 1 to roots
+      if checkedbody(i,1) = 0 then return
     end
     do i = 1 to _providers[0]
       request = _providers[i] as .binding
@@ -1093,12 +1091,22 @@ importprojection: class
           if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
           fields[1] = .lltarget..operand.symbol(renamed) as .object
         end
-        else if item.kind() = 'instruction' then do k = 1 to item.operands()
-          if catalog.branch(item.opcode(),k) = 0 then iterate
-          value = item.operand(k); renamed = projectlabel(i,value.bytes(),reference draft)
-          if _status <> 'building' then return
-          if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-          fields[k] = .lltarget..operand.symbol(renamed) as .object
+        else if item.kind() = 'instruction' then do
+          do k = 1 to item.operands()
+            if catalog.branch(item.opcode(),k) = 0 then iterate
+            value = item.operand(k); renamed = projectlabel(i,value.bytes(),reference draft)
+            if _status <> 'building' then return
+            if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
+            fields[k] = .lltarget..operand.symbol(renamed) as .object
+          end
+          if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+            pair = projectedchild(i,item.id(),reference draft)
+            if _status <> 'building' then return
+            if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
+            if pair = 0 then do; ignored = fail('invalid','import.child.mapping'); return; end
+            k = 2; if item.operands() = 1 then k = 1
+            fields[k] = .lltarget..operand.procedure(_pairname[pair]) as .object
+          end
         end
         if item.kind() = 'instruction' then ignored = targetbody.emit(item.mnemonic(),fields,at)
         else ignored = targetbody.record(item.kind(),fields,at)
@@ -1234,23 +1242,106 @@ importprojection: class
       end
     end
     return 1
-  leaf: method = .int
-    arg owner = reference .lltarget..module, body = .lltarget..body
-    source = dereference owner; item = .lltarget..record; value = .lltarget..operand
-    i = .int; j = .int; returns = .int
-    _lastheader = 0
+  intern: method = .int
+    arg providerindex = .int, body = .lltarget..body
+    i = .int; pair = .int; header = .int
+    request = _providers[providerindex] as .binding
+    source = dereference request.provider(); item = .lltarget..record
+    do i = 1 to _pairbody[0]
+      if spend(1) = 0 then return 0
+      if _pairprovider[i] = providerindex & _pairbody[i] = body.functionid() then return i
+    end
+    do i = 1 to source.records()
+      if spend(1) = 0 then return 0
+      item = source.record(i)
+      if item.kind() = 'procedure' & item.procedureid() = body.functionid() then header = item.id()
+    end
+    if header = 0 then return fail('invalid','binding.body.identity')
+    if reserve(1,128) = 0 then return 0
+    pair = _pairbody[0] + 1; _pairprovider[pair] = providerindex; _pairbody[pair] = body.functionid()
+    _pairheader[pair] = header; _pairname[pair] = newname()
+    if _status <> 'building' then return 0
+    _namebytes = _namebytes + length(_pairname[pair])
+    return pair
+  childalias: method = .string
+    arg providerindex = .int, body = .lltarget..body
+    i = .int; found = .int; alias = .string; ignored = .int
+    if body.expose() = '' then do; ignored = fail('keep','import.child.private.pending'); return ''; end
+    do i = 1 to _exportnames[0]
+      if spend(length(body.expose()) + 1) = 0 then return ''
+      if _exportnames[i] == body.expose() & _exportproviders[i] = providerindex then found = found + 1
+    end
+    if found <> 1 then do; ignored = fail('keep','import.child.import.unresolved'); return ''; end
+    /* scanmodule has rejected duplicate aliases/exports, and prepare checked
+     * every import's unique provider resolution. Multiple existing aliases
+     * for this one export therefore name the exact same immutable child. */
+    do i = 1 to _importexports[0]
+      if spend(length(body.expose()) + 1) = 0 then return ''
+      if _importexports[i] == body.expose() & alias = '' then alias = _importnames[i]
+    end
+    if alias = '' then ignored = fail('keep','import.child.import.missing')
+    return alias
+  rememberchild: method = .int
+    arg parent = .int, operation = .int, child = .int
+    i = .int
+    do i = 1 to _nestedparent[0]
+      if spend(1) = 0 then return 0
+      if _nestedparent[i] = parent & _nestedoperation[i] = operation then do
+        if _nestedpair[i] <> child then return fail('invalid','import.child.mapping')
+        return 1
+      end
+    end
+    if reserve(1,64) = 0 then return 0
+    i = _nestedparent[0] + 1; _nestedparent[i] = parent; _nestedoperation[i] = operation; _nestedpair[i] = child
+    return 1
+  projectedchild: method = .int
+    arg parent = .int, operation = .int, target = reference .lltarget..draft
+    draft = dereference target; i = .int
+    do i = 1 to _nestedparent[0]
+      if draft.preflight(1,0) = 0 then return 0
+      if _nestedparent[i] = parent & _nestedoperation[i] = operation then return _nestedpair[i]
+    end
+    return 0
+  checkedbody: method = .int
+    arg pair = .int, children = .int, parent = 0
+    request = _providers[_pairprovider[pair]] as .binding
+    source = dereference request.provider(); body = source.body(_pairbody[pair])
+    item = .lltarget..record; value = .lltarget..operand; child = .lltarget..body
+    i = .int; j = .int; returns = .int; field = .int; bodyid = .int; childpair = .int; alias = .string
     do i = 1 to source.records()
       if spend(1) = 0 then return 0
       item = source.record(i)
       if item.procedureid() <> body.functionid() then iterate
-      if item.kind() = 'procedure' then do; _lastheader = item.id(); iterate; end
+      if item.kind() = 'procedure' then iterate
       if item.kind() = 'instruction' then do
         /* The checked target CFG and shared scalar facts own control
          * admission, feasible paths, return actions and cycle refusal. */
+        field = 0
+        if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+          field = 2; if item.operands() = 1 then field = 1
+        end
+        if wordpos(item.mnemonic(),'dcall swapcall settpcall settpswapcall') > 0 then return fail('keep','import.child.call.form.pending')
         do j = 1 to item.operands()
           if spend(1) = 0 then return 0
           value = item.operand(j)
-          if value.kind() = 'P' then return fail('keep','import.leaf.nested.pending')
+          if value.kind() <> 'P' then iterate
+          if j <> field then return fail('keep','import.child.reference.pending')
+          if spend(source.procedures()) = 0 then return 0
+          bodyid = source.procedureid(value.text())
+          if bodyid = 0 then return fail('keep','import.child.body.pending')
+          if bodyid = body.functionid() then return fail('keep','call.recursion.active')
+          if parent > 0 then do
+            if bodyid = _pairbody[parent] then return fail('keep','call.recursion.active')
+          end
+          if children = 0 then return fail('keep','nested.call.depth.pending')
+          child = source.body(bodyid); alias = childalias(_pairprovider[pair],child)
+          if _status <> 'building' then return 0
+          childpair = intern(_pairprovider[pair],child)
+          if childpair = 0 then return 0
+          if reserve(length(alias),1) = 0 then return 0
+          _pairalias[childpair] = alias
+          if checkedbody(childpair,0,pair) = 0 then return 0
+          if rememberchild(pair,item.id(),childpair) = 0 then return 0
         end
         if item.mnemonic() = 'ret' then returns = returns + 1
       end
@@ -1289,6 +1380,31 @@ importprojection: class
       if _pairname[i] == name then return 1
     end
     return 0
+  publicfields: method = .object[]
+    arg item = .lltarget..record, fields = .object[], target = reference .lltarget..draft
+    draft = dereference target; value = .lltarget..operand
+    i = .int; j = .int; field = .int; ignored = .int
+    if item.kind() = 'instruction' then do
+      if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+        field = 2; if item.operands() = 1 then field = 1
+      end
+    end
+    do i = 1 to item.operands()
+      value = item.operand(i)
+      if value.kind() <> 'P' then iterate
+      if draft.preflight(_namebytes + _pairname[0] * (value.length() + 1),0) = 0 then return fields
+      do j = 1 to _pairname[0]
+        if _pairname[j] <> value.text() then iterate
+        /* Collision-free private names can originate only in selected root
+         * targets or the checked nested-call rows. Roots were expanded; only
+         * a validated child in a canonical retained CALL target can escape. */
+        if i <> field | _pairalias[j] = '' then do
+          ignored = fail('keep','import.surrogate.reference.pending'); return fields
+        end
+        fields[i] = .lltarget..operand.procedure(_pairalias[j]) as .object
+      end
+    end
+    return fields
 
 /** Work is one request allowance, explicitly partitioned between preparation,
  * the existing proof/expander, and final publication. Unused stage quota is
@@ -1342,12 +1458,6 @@ expandimports: procedure = .llinline..change
         if skip then iterate
       end
       else if input.procedureid() > 0 & skip then iterate
-      do j = 1 to input.operands()
-        value = input.operand(j)
-        if value.kind() = 'P' then do
-          if prepared.surrogate(value.text(),reference draft) then return .change('keep','import.surrogate.reference.pending',source,empty)
-        end
-      end
       at = cache.copy(graph_ref,input.origin(),reference draft)
       if draft.error() <> '' then return importfailure(draft.error(),source)
       if input.kind() = 'procedure' then do
@@ -1359,9 +1469,13 @@ expandimports: procedure = .llinline..change
       if input.procedureid() = 0 then do
         call objectarraydrop fields
         do j = 1 to input.operands(); fields[j] = input.operand(j) as .object; end
+        fields = prepared.publicfields(input,fields,reference draft)
+        if prepared.status() <> 'ok' then return .change(prepared.status(),prepared.reason(),source,empty)
         published[input.id()] = draft.record(input.kind(),fields,at); iterate
       end
       targetbody = bodies[input.procedureid()] as .lltarget..bodydraft; fields = clonefields(input,targetbody)
+      fields = prepared.publicfields(input,fields,reference draft)
+      if prepared.status() <> 'ok' then return .change(prepared.status(),prepared.reason(),source,empty)
       if input.kind() = 'instruction' then published[input.id()] = code.emit(targetbody,input.mnemonic(),fields,at)
       else published[input.id()] = targetbody.record(input.kind(),fields,at)
     end

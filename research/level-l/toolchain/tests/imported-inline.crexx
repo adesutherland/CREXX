@@ -4,6 +4,7 @@ import rxfnsb
 import llir
 import lltarget
 import llinline
+import llcleanup
 
 check: procedure = .int
   arg condition = .int, message = .string
@@ -238,6 +239,223 @@ privatecontrols: procedure = .int
   end
   return failures
 
+/** The only retained child is a real same-provider export. Its existing
+ * caller alias is deliberately different from its provider procedure name. */
+nestedprovider: procedure = .lltarget..module
+  arg shape = .int, variant = 0
+  draft = .lltarget..draft('nested.provider','fixture:nested.provider',0)
+  file = draft.source('nested-provider.rxas','nested provider' as .binary); at = file.origin(0,15)
+  locals = 2; if shape = 2 then locals = 1
+  outer = draft.procedure('outer',locals,at,'fixture.nested.outer')
+  ignored = .int; fields = .object[]
+  childname = 'child'; if variant = 1 then childname = 'hidden'
+  if shape = 2 then do
+    ignored = two(outer,'load',outer.reg('a',0),.lltarget..operand.integer(2),at)
+    ignored = two(outer,'swap',outer.reg('a',1),outer.reg('a',2),at)
+    ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure(childname),outer.reg('a',0),at)
+    ignored = two(outer,'swap',outer.reg('a',1),outer.reg('a',2),at)
+  end
+  else do
+    ignored = one(outer,'null',outer.reg('r',0),at)
+    ignored = one(outer,'null',outer.reg('r',1),at)
+    actual = outer.reg('a',1); if shape = 3 then actual = outer.reg('a',2)
+    ignored = two(outer,'icopy',outer.reg('r',0),actual,at)
+    if shape = 3 then do
+      fields[1] = .lltarget..operand.symbol('mutate') as .object
+      fields[2] = .lltarget..operand.symbol('done') as .object; fields[3] = outer.reg('a',1) as .object
+      ignored = outer.emit('brtf',fields,at)
+      call objectarraydrop fields
+      fields[1] = .lltarget..operand.symbol('mutate') as .object
+      ignored = outer.record('label',fields,at)
+    end
+    call objectarraydrop fields
+    fields[1] = outer.reg('r',1) as .object
+    fields[2] = .lltarget..operand.procedure(childname) as .object
+    fields[3] = outer.reg('a',2) as .object; fields[4] = fields[3]
+    ignored = outer.emit('call2',fields,at)
+    ignored = three(outer,'iadd',outer.reg('r',0),outer.reg('r',0),outer.reg('r',1),at)
+    if shape = 3 then do
+      call objectarraydrop fields
+      fields[1] = .lltarget..operand.symbol('done') as .object
+      ignored = outer.record('label',fields,at)
+    end
+  end
+  ignored = one(outer,'ret',outer.reg('r',0),at)
+  exposed = 'fixture.nested.child'; if variant = 1 then exposed = ''
+  locals = 0; if variant = 4 then locals = 1
+  child = draft.procedure(childname,locals,at,exposed)
+  select variant
+    when 2 then ignored = three(child,'call1',child.reg('a',1),.lltarget..operand.procedure('deeper'),child.reg('a',1),at)
+    when 3 then ignored = three(child,'call1',child.reg('a',1),.lltarget..operand.procedure('outer'),child.reg('a',1),at)
+    when 4 then do
+      /* Both outer aliases must share this child's cached flag history. */
+      ignored = two(child,'load',child.reg('r',0),.lltarget..operand.integer(5),at)
+      ignored = two(child,'copy',child.reg('a',1),child.reg('r',0),at)
+      ignored = two(child,'settp',child.reg('r',0),.lltarget..operand.integer(256),at)
+    end
+    otherwise ignored = three(child,'iadd',child.reg('a',1),child.reg('a',1),.lltarget..operand.integer(7),at)
+  end
+  ignored = one(child,'ret',child.reg('a',2),at)
+  if variant = 1 then do
+    /* Keep the caller's real child import resolved while the outer instead
+     * invokes a distinct private body. Only the target's visibility changes. */
+    exported = draft.procedure('child',0,at,'fixture.nested.child')
+    ignored = one(exported,'ret',exported.reg('a',1),at)
+  end
+  if variant = 2 then do
+    deeper = draft.procedure('deeper',0,at,'fixture.nested.deeper')
+    ignored = one(deeper,'ret',deeper.reg('a',1),at)
+  end
+  decoy = draft.procedure('decoy',0,at,'fixture.nested.other')
+  ignored = one(decoy,'ret',decoy.reg('a',1),at)
+  return draft.finish()
+
+nestedcaller: procedure = .lltarget..module
+  arg shape = .int, variant = 0
+  draft = .lltarget..draft('nested.caller','fixture:nested.caller',0)
+  at = draft.synthetic('two outer aliases share one exported-child identity')
+  fields = .object[]; ignored = .int
+  fields[1] = .lltarget..operand.procedure('left') as .object
+  fields[2] = .lltarget..operand.symbol('fixture.nested.outer') as .object
+  ignored = draft.record('.import',fields,at)
+  fields[1] = .lltarget..operand.procedure('right') as .object
+  ignored = draft.record('.import',fields,at)
+  if variant <> 1 then do
+    fields[1] = .lltarget..operand.procedure('child_left') as .object
+    exposed = 'fixture.nested.child'; if variant = 2 then exposed = 'fixture.nested.other'
+    fields[2] = .lltarget..operand.symbol(exposed) as .object
+    ignored = draft.record('.import',fields,at)
+    if variant = 3 then do
+      fields[1] = .lltarget..operand.procedure('child_right') as .object
+      ignored = draft.record('.import',fields,at)
+    end
+  end
+  root = draft.procedure('main',4,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(5),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(20),at)
+  do i = 1 to 2
+    name = 'left'; if i = 2 then name = 'right'
+    first = root.reg('r',0); second = first
+    if shape = 2 then second = root.reg('r',1)
+    if shape = 3 then do
+      if i = 2 then ignored = two(root,'settp',root.reg('r',0),.lltarget..operand.integer(256),at)
+      ignored = three(root,'getandtp',root.reg('r',3),root.reg('r',0),.lltarget..operand.integer(768),at)
+      first = root.reg('r',3); second = root.reg('r',1)
+    end
+    call objectarraydrop fields
+    fields[1] = root.reg('r',0) as .object
+    fields[2] = .lltarget..operand.procedure(name) as .object
+    fields[3] = first as .object; fields[4] = second as .object
+    ignored = root.emit('call2',fields,at)
+  end
+  if variant = 3 then do
+    /* A separately selected direct child shares the pair and history used
+     * to prove both retained child calls inside the imported outer body. */
+    call objectarraydrop fields
+    fields[1] = root.reg('r',2) as .object
+    fields[2] = .lltarget..operand.procedure('child_right') as .object
+    fields[3] = root.reg('r',0) as .object; fields[4] = fields[3]
+    ignored = root.emit('call2',fields,at)
+  end
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  return draft.finish()
+
+nestedrequests: procedure = .object[]
+  arg source = reference .lltarget..module, target = reference .lltarget..module
+  result = .object[]; owner = dereference target
+  result[1] = llinline..bind(source,site(source,'left'),target,owner.procedureid('outer')) as .object
+  result[2] = llinline..bind(source,site(source,'right'),target,owner.procedureid('outer')) as .object
+  childsite = site(source,'child_right')
+  if childsite > 0 then result[3] = llinline..bind(source,childsite,target,owner.procedureid('child')) as .object
+  return result
+
+nestedcontrols: procedure = .int
+  arg profile = .string
+  failures = 0; source = .lltarget..module; target = .lltarget..module; result = .lltarget..module
+  bindings = .object[]; changed = .llinline..change; refused = .llinline..change; cleaned = .llinline..change
+  item = .lltarget..record; value = .lltarget..operand; imports = .int; calls = .int; swaps = .int
+  shape = .int; variant = .int; i = .int; j = .int; mode = .int; expected = .string
+  sourceid = .int; providerid = .int; request = .llinline..binding
+  do shape = 1 to 4
+    mode = shape; if shape = 4 then mode = 1
+    if shape = 4 then source = nestedcaller(mode,3)
+    else source = nestedcaller(mode)
+    target = nestedprovider(mode)
+    sourceid = source.identity(); providerid = target.identity()
+    failures = failures + check(source.valid() & target.valid(),'exported-child models are valid ' || shape)
+    bindings = nestedrequests(reference source,reference target)
+    changed = llinline..expandmany(bindings,profile,12000000)
+    failures = failures + check(changed.status() = 'changed','exact imported outer expands with retained exported child ' || shape)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    result = changed.result(); imports = 0; calls = 0; swaps = 0
+    do i = 1 to result.records()
+      item = result.record(i)
+      if item.kind() = '.import' then do
+        imports = imports + 1; value = item.operand(1); name = value.text()
+        expected = 'fixture.nested.outer'; if wordpos(name,'child_left child_right') > 0 then expected = 'fixture.nested.child'
+        value = item.operand(2)
+        failures = failures + check(wordpos(name,'left right child_left child_right') > 0 & value.text() = expected,'each original import keeps its exact export binding ' || shape)
+      end
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'swap' then swaps = swaps + 1
+      do j = 1 to item.operands()
+        value = item.operand(j)
+        if value.kind() <> 'P' then iterate
+        calls = calls + 1
+        failures = failures + check(value.text() = 'child_left','only caller original exact child import survives ' || shape)
+        if shape = 2 then failures = failures + check(item.mnemonic() = 'call','retained counted child keeps its original opcode')
+        else failures = failures + check(item.mnemonic() = 'call2','retained fixed child keeps its original opcode')
+      end
+    end
+    expectedimports = 3; if shape = 4 then expectedimports = 4
+    failures = failures + check(result.valid() & result.procedures() = 1 & imports = expectedimports & calls = 2,'no surrogate definition, new import or original selected call reaches publication ' || shape)
+    if shape = 4 then failures = failures + check(bindings[0] = 3,'two child import aliases select one deterministic retained alias beside a directly expanded child')
+    if shape = 2 then failures = failures + check(swaps >= 4,'both counted child activations retain authored swaps; conservative outer restoration may add more; swaps=' || swaps)
+    do i = 1 to bindings[0]
+      request = bindings[i] as .llinline..binding
+      failures = failures + check(changed.operation(request.callid()) = 0,'removed outer call mapping composes through exported-child deprojection')
+    end
+    cleaned = llcleanup..transport(reference result,result.procedureid('main'),profile,12000000)
+    failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'body.unavailable' & cleaned.result().identity() = result.identity(),'caller-only cleanup precisely retains published imported-child body ' || shape)
+    failures = failures + check(source.identity() = sourceid & target.identity() = providerid,'nested success preserves both original owners ' || shape)
+  end
+  do variant = 1 to 4
+    if variant = 4 then source = nestedcaller(1,3)
+    else source = nestedcaller(1)
+    target = nestedprovider(1,variant); providerid = target.identity()
+    bindings = nestedrequests(reference source,reference target)
+    select variant
+      when 1 then expected = 'import.child.private.pending'
+      when 2 then expected = 'nested.call.depth.pending'
+      when 3 then expected = 'call.recursion.active'
+      otherwise expected = 'local.recycler.history.unproved'
+    end
+    refused = llinline..expandmany(bindings,profile,12000000)
+    failures = failures + unchanged(refused,source,'keep',expected)
+    failures = failures + check(target.identity() = providerid,'child refusal preserves exact provider owner ' || variant)
+    do i = 1 to refused.sites()
+      failures = failures + check(refused.statusat(refused.site(i)) = 'keep','exported-child proof refusal applies to the complete alias batch')
+    end
+  end
+  target = nestedprovider(1)
+  do variant = 1 to 2
+    source = nestedcaller(1,variant); bindings = nestedrequests(reference source,reference target)
+    refused = llinline..expandmany(bindings,profile,12000000)
+    failures = failures + unchanged(refused,source,'keep','import.child.import.missing')
+  end
+  source = nestedcaller(1); sourceid = source.identity(); bindings = nestedrequests(reference source,reference target)
+  do mode = 1 to 5
+    select mode
+      when 1 then refused = llinline..expandmany(bindings,profile,2)
+      when 2 then refused = llinline..expandmany(bindings,profile,12000000,8)
+      when 3 then refused = llinline..expandmany(bindings,profile,12000000,1000000,64)
+      when 4 then refused = llinline..expandmany(bindings,profile,12000000,1000000,67108864,0)
+      otherwise refused = llinline..expandmany(bindings,profile,12000000,1000000,67108864,65536,1)
+    end
+    failures = failures + check(refused.status() = 'limit' & refused.result().identity() = sourceid,'child closure work/entry/byte/frame/cell limits are atomic ' || mode)
+  end
+  return failures
+
 main: procedure = .int
   alternate = .lltarget..module; alternatebindings = .object[]; status = .string; reason = .string
   refused = .llinline..change; variant = .int; i = .int
@@ -299,7 +517,7 @@ main: procedure = .int
       when 4 then reason = 'import.provider.main.pending'
       when 5 then reason = 'import.startup.metadata.pending'
       when 6 then reason = 'import.startup.metadata.pending'
-      when 7 then reason = 'import.leaf.nested.pending'
+      when 7 then reason = 'import.child.private.pending'
       when 8 then reason = 'import.leaf.inline.transport.pending'
     end
     failures = failures + check(alternate.valid(),'negative provider model is valid: ' || variant)
@@ -337,5 +555,6 @@ main: procedure = .int
   replayed = llinline..expandmany(bindings,profile,6000000)
   failures = failures + check(replayed.status() = 'changed' & source.identity() = original & target.identity() = providerid,'small replay after refusals retains both valid owners')
   failures = failures + privatecontrols(profile)
+  failures = failures + nestedcontrols(profile)
   say 'IMPORTED_INLINE|failures=' || failures
   return failures
