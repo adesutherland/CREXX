@@ -679,7 +679,7 @@ compile_application: procedure = .int
   generated_source = generated_root || '/' || source_stem(source) || '_generated.crexx'
 
   argv = .string[]
-  argv[1] = tool('rxtvm')
+  argv[1] = tool('rxvm')
   argv[2] = project_path(dir) || '/' || compiler || '.rxbin'
   argv[3] = '-a'
   argv[4] = project_path(source)
@@ -765,7 +765,7 @@ copy_binary: procedure = .int
 execute_program: procedure = .int
   arg dir = .string, program = .string, argument = .string, value = .string, input = .string
   argv = .string[]
-  argv[1] = tool('rxtvm')
+  argv[1] = tool('rxvm')
   argv[2] = '-l'
   argv[3] = project_path(dir)
   argv[4] = project_path(dir) || '/' || program || '.rxbin'
