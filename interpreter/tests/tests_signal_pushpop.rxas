@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=0
+main() .locals=1
     sigignore "OTHER"
     sigpush "OTHER"
     sigbr block_handler,"OTHER"
@@ -22,4 +22,143 @@ block_handler:
     say "pushpop-branch-hit"
     signal "OTHER"
     say "pushpop-after-restored-ignore"
+    call r0,top_marker_pop()
+    brf marker_failed,r0
+    call r0,non_top_marker_pop()
+    brf marker_failed,r0
+    call r0,saved_marker_restore()
+    brf marker_failed,r0
+    call r0,unwind_marker_restore()
+    brf marker_failed,r0
+    call r0,inherited_marker_restore()
+    brf marker_failed,r0
+    say "pushpop-marker-lifetime-ok"
     ret 0
+
+marker_failed:
+    signal "FAILURE","signal stack marker lifetime regression"
+    ret 1
+
+/* G-style protected scopes push every tag before installing handlers. Popping
+ * the shared top marker must leave the other handler's boundary live. */
+top_marker_pop() .locals=1
+    sigignore "OUT_OF_RANGE"
+    sigignore "INVALID_ARGUMENTS"
+    load r0,0
+    sigpush "OUT_OF_RANGE"
+    sigpush "INVALID_ARGUMENTS"
+    sigbr top_marker_caught,"OUT_OF_RANGE"
+    sigbr top_marker_caught,"INVALID_ARGUMENTS"
+    sigpop "INVALID_ARGUMENTS"
+    signal "OUT_OF_RANGE"
+    ret 0
+top_marker_caught:
+    inc r0
+    sigpop "OUT_OF_RANGE"
+    signal "OUT_OF_RANGE"
+    signal "INVALID_ARGUMENTS"
+    ieq r0,r0,1
+    ret r0
+
+/* Named removal can leave younger nodes above the deleted boundary. BRV must
+ * unwind those nodes, rather than rebasing its marker to the current head. */
+non_top_marker_pop() .locals=4
+    sigignore "OUT_OF_RANGE"
+    sigignore "INVALID_ARGUMENTS"
+    sigignore "OTHER"
+    sigpush "OUT_OF_RANGE"
+    sigpush "INVALID_ARGUMENTS"
+    sigbrv non_top_marker_caught,r1,"OUT_OF_RANGE"
+    sigpush "OTHER"
+    sighalt "OTHER"
+    sigpop "INVALID_ARGUMENTS"
+    signal "OUT_OF_RANGE","non-top marker payload"
+    ret 0
+non_top_marker_caught:
+    sigpop "OUT_OF_RANGE"
+    signal "OTHER"
+    signal "OUT_OF_RANGE"
+    signal "INVALID_ARGUMENTS"
+    linkattr1 r2,r1,5
+    linkattr1 r3,r2,5
+    seq r0,r3,"non-top marker payload"
+    unlink r3
+    unlink r2
+    ret r0
+
+/* The only reference to the removed boundary is inside a younger saved
+ * snapshot. A later pop must restore its rebased handler, not a freed node. */
+saved_marker_restore() .locals=0
+    sigignore "OUT_OF_RANGE"
+    sigignore "INVALID_ARGUMENTS"
+    sigignore "OTHER"
+    sigpush "OTHER"
+    sigpush "INVALID_ARGUMENTS"
+    sigbr saved_marker_caught,"OUT_OF_RANGE"
+    sigpush "OUT_OF_RANGE"
+    sigignore "OUT_OF_RANGE"
+    sigpop "INVALID_ARGUMENTS"
+    sigpop "OUT_OF_RANGE"
+    signal "OUT_OF_RANGE"
+    ret 0
+saved_marker_caught:
+    sigpop "OTHER"
+    sigignore "OUT_OF_RANGE"
+    signal "INVALID_ARGUMENTS"
+    signal "OTHER"
+    ret 1
+
+/* Unwind first restores OTHER from a younger snapshot, then removes the node
+ * that restored handler names. Its next delivery must use the older boundary. */
+unwind_marker_restore() .locals=0
+    sigignore "OUT_OF_RANGE"
+    sigignore "INVALID_ARGUMENTS"
+    sigignore "OTHER"
+    sigpush "OUT_OF_RANGE"
+    sigbr unwind_marker_outer,"OUT_OF_RANGE"
+    sigpush "INVALID_ARGUMENTS"
+    sigbr unwind_marker_inner,"OTHER"
+    sigpush "OTHER"
+    sigignore "OTHER"
+    signal "OUT_OF_RANGE"
+    ret 0
+unwind_marker_outer:
+    signal "OTHER"
+    ret 0
+unwind_marker_inner:
+    sigpop "OUT_OF_RANGE"
+    sigignore "OTHER"
+    signal "OUT_OF_RANGE"
+    signal "INVALID_ARGUMENTS"
+    ret 1
+
+/* A child mutates a private table and removes its own marker before delivering
+ * an inherited parent handler. Child teardown must preserve the parent marker. */
+inherited_marker_restore() .locals=0
+    sigignore "OUT_OF_RANGE"
+    sigignore "INVALID_ARGUMENTS"
+    sigignore "OTHER"
+    sigpush "OUT_OF_RANGE"
+    sigpush "INVALID_ARGUMENTS"
+    sigbr inherited_marker_caught,"OUT_OF_RANGE"
+    sigpop "INVALID_ARGUMENTS"
+    call inherited_marker_child()
+    ret 0
+inherited_marker_caught:
+    sigpop "OUT_OF_RANGE"
+    signal "OUT_OF_RANGE"
+    signal "INVALID_ARGUMENTS"
+    signal "OTHER"
+    ret 1
+
+inherited_marker_child() .locals=0
+    sigpush "OTHER"
+    sigignore "OTHER"
+    sigpush "INVALID_ARGUMENTS"
+    sigbr inherited_marker_child_bad,"OTHER"
+    sigpop "INVALID_ARGUMENTS"
+    signal "OUT_OF_RANGE"
+    ret
+inherited_marker_child_bad:
+    signal "FAILURE","child signal policy escaped its frame"
+    ret

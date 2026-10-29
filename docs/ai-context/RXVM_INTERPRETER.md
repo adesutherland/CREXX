@@ -496,6 +496,14 @@ all `sigpush` instructions before installing any `sigbr`/`sigbrv` handlers;
 each handler then retains the same complete saved stack. Pair normal exits
 with reverse-order `sigpop` instructions. Interleaving push and installation
 can restore later tags prematurely when an earlier handler is delivered.
+When a named `sigpop` removes a saved entry, or branch delivery unwinds one,
+the VM moves same-frame active and saved handler markers that named that entry
+to its next older boundary before releasing it. This also covers repeated
+delivery during a multi-tag pop sequence and removal below the stack head.
+Inherited parent-frame markers remain owned by the parent. Whole-frame teardown
+discards the stack without allocating or rebasing the table that dies with it.
+Rebasing does not make `sigpop` idempotent: popping a name without a remaining
+save still raises `INVALID_SIGNAL_CODE`.
 
 Signal codes are defined in `interpreter/rxsignal.h`. The handler responses are
 `IGNORE`, `HALT`, `SILENT_HALT`, `RETURN`, `BRANCH`, `BRANCH_VALUE`, `CALL`,

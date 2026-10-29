@@ -1463,6 +1463,7 @@ crexx_add_rxas_vm_binary(tests_signal_pushpop "signal handler push/pop scope")
 crexx_add_vm_test(NAME rxassignalpushpoprestoretests PREP_TARGETS run_tests_signal_pushpop RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-restored-ignore.*pushpop-after-restored-ignore")
 crexx_add_vm_test(NAME rxassignalpushpopbranchtests PREP_TARGETS run_tests_signal_pushpop RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-branch-hit.*pushpop-after-restored-ignore")
 crexx_add_vm_test(NAME rxassignalpushpophandlerrestoretests PREP_TARGETS run_tests_signal_pushpop RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-after-restored-ignore")
+crexx_add_vm_test(NAME rxassignalpushpopmarkertests PREP_TARGETS run_tests_signal_pushpop RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-marker-lifetime-ok")
 
 crexx_add_rxas_vm_binary(tests_signal_branch_value "signal branch with bound value")
 crexx_add_vm_test(NAME rxassignalbrvrawtests PREP_TARGETS run_tests_signal_branch_value RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-has-raw: 1.*brv-payload: value payload")

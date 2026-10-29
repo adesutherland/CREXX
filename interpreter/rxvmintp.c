@@ -4376,6 +4376,31 @@ typedef enum rxsignal_pop_result {
     RXSIGNAL_POP_NO_MEMORY = -1
 } rxsignal_pop_result;
 
+/* A removed saved entry no longer names a live stack boundary. Move all
+ * same-frame references to the next older boundary before releasing it.
+ * Only younger snapshots can refer to the removed entry: each snapshot was
+ * captured before its own node was linked, and rebasing only moves older.
+ * The node is already unlinked, so its successor ends that younger prefix.
+ * Head removal therefore scans no snapshots and keeps branch unwind linear. */
+static void rxsignal_rebase_handler_stack_markers(
+        stack_frame *frame, interrupt_saved_entry *removed) {
+    interrupt_saved_entry *replacement = removed->next;
+    interrupt_saved_entry *saved;
+    size_t i;
+
+    assert(frame->interrupt_table_owned);
+    for (i = 0; i < RXSIGNAL_MAX; i++) {
+        interrupt_entry *entry = &frame->interrupt_table[i];
+        if (entry->frame == frame && entry->stack_marker == removed)
+            entry->stack_marker = replacement;
+    }
+    for (saved = frame->interrupt_stack;
+         saved && saved != replacement; saved = saved->next) {
+        if (saved->entry.frame == frame && saved->entry.stack_marker == removed)
+            saved->entry.stack_marker = replacement;
+    }
+}
+
 static rxsignal_pop_result rxsignal_pop_handler(stack_frame *frame, unsigned char sig) {
     interrupt_saved_entry *saved;
     interrupt_saved_entry *previous;
@@ -4391,6 +4416,7 @@ static rxsignal_pop_result rxsignal_pop_handler(stack_frame *frame, unsigned cha
             rxsignal_apply_native_interrupt_mode(sig, &frame->interrupt_table[sig - 1]);
             if (previous) previous->next = saved->next;
             else frame->interrupt_stack = saved->next;
+            rxsignal_rebase_handler_stack_markers(frame, saved);
             (void)rxvm_memory_release(saved);
             return RXSIGNAL_POP_RESTORED;
         }
@@ -4417,6 +4443,7 @@ static int rxsignal_unwind_handler_stack_to(
         frame->interrupt_table[saved->signal - 1] = saved->entry;
         rxsignal_apply_native_interrupt_mode(
                 saved->signal, &frame->interrupt_table[saved->signal - 1]);
+        rxsignal_rebase_handler_stack_markers(frame, saved);
         (void)rxvm_memory_release(saved);
     }
     return 1;

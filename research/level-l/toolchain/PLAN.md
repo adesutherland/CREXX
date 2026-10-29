@@ -355,6 +355,29 @@ overlap retain their values. Structural assertions inspect child-window order
 and source/TRACE. Caller-only cleanup still returns `body.unavailable`; the
 broader provider-aware cleanup and INL-AC05 remain open.
 
+### Reviewed VM signal-marker prerequisite repair
+
+A minimal handwritten two-tag RXAS control on current `hotfix2` aborts at the
+VM's branch-unwind marker assertion after `SIGPOP` removes the top saved tag
+while another installed branch still holds that node as its stack marker.
+This is a VM signal-stack defect, not an inliner proof rejection. Named saved
+entries can also be removed below the head; branch unwind can free younger
+nodes while another handler remains active. The VM owner must maintain the
+invariant that every same-frame active or saved handler marker is null or a
+node still in that frame's saved-handler list. Before freeing any node during
+named pop or branch unwind, rebase exact marker references to that node's
+successor in the private active table and all remaining saved-entry snapshots.
+Do not allocate during unwind or change whole-frame stack teardown. No new
+ISA, metadata or signal response is selected.
+
+A permanent handwritten RXAS regression must prove top and non-top removal,
+active and saved handler references, branch and branch-value delivery, nested
+restoration and G-style shared-marker ordering. The former assertion reproducer must
+reach the expected handler exactly once, restore policy and exit normally.
+Run the affected ordinary VM signal checks, then a focused maintained-sanitizer
+check for the pointer-lifetime path. This prerequisite does not itself admit
+G catch-all inlining; asynchronous state and return/cleanup proof remain open.
+
 ### Signal coverage and practical-demand decision
 
 Adrian confirmed on 29 October 2026 that signal design should be tuned to real
@@ -551,6 +574,54 @@ handlers/entries retain exact input with specific reasons. Resource refusal
 preserves the caller and CLI last-good output; the cleanup guard stays active.
 The full catch-all, bound `SIGBRV`, nested scope and Level C protection layers
 remain open under INL-AC03/04/05.
+
+### Reviewed bounded G catch-all follow-on
+
+The next INL-STEP04 signal slice admits the G emitter's complete, explicit
+29-name catch-all around one same-module `CALL1` in fresh standalone `main`.
+The selected callee is exactly zero-local `ICHKRNG a1,lo,hi; RET a1`, with
+literal bounds, a proved defined plain scalar actual and result, and no
+callee policy, context, nested call or physical-frame observation. The ordinary
+RXAS rows are authoritative: every distinct name is pushed before any install,
+all unbound branches target the same local handler, and normal and handler
+departures pop the exact reverse list. Preserve every policy instruction and
+its ordering. No synthetic `ANY`, `.meta` proof, new API, ISA or VM change is
+selected for this inliner slice.
+
+The inliner may map the read-only `a1` directly to its caller actual storage:
+the leaf does not rebind, overwrite or expire it. `a0` is unused, the callee
+has no locals, and the normal `RET` needs only the proved borrowed-result COPY
+to the caller result. This avoids fresh call-window anchors and their cleanup,
+including an unnecessary handler prologue. Result/actual overlap remains
+valid under the same return-action proof. Retain the call if any status,
+ownership, entry-binding or alternate-control fact needed for this mapping is
+unproved. Keep the existing exceptional-CFG cleanup guard; no normal-only
+liveness fact may delete or reuse a handler-visible write.
+
+Prove the interrupted state at every original policy row and every generated
+instruction boundary, not only at the old call. Before the result COPY, a
+handler sees the pre-result caller value; afterward it sees the committed
+result. A synchronous failed `ICHKRNG` reaches the handler without the COPY.
+Earlier writes and observations remain visible. A second event during reverse
+pops must match the original policy and VM response, including a repeated-pop
+failure in the current G emitter pattern; this increment does not assert
+successful recovery from that existing failure. The eliminated call-frame
+allocation may no longer raise `FAILURE`;
+other retained deterministic failures and language control stay exact.
+Relocate call-site, callee and caller-continuation source/TRACE records at
+their actual phase boundaries, with the normal result event only after normal
+completion. A separate VM signal-marker repair is prerequisite to testing
+delivery through pop prefixes; it does not establish this state proof.
+
+Constructed and handwritten controls must cover normal, range-fault and
+analysis-unknown values, preloaded result, result/actual alias, asynchronous
+delivery before and after the result commit, another event during restoration,
+policy priority, source/TRACE, cleanup refusal and atomic resource refusal.
+Missing/duplicate/interleaved policies, alternate handlers or entries, bound
+branch, nested scope, nonplain actual, callee mutation, and physical observers
+retain precise reasons. The focused slice does not close general G blocks,
+Classic C protection, inherited `SIGRET`, general exceptional cleanup or
+INL-AC03/04/05. It is not a production performance claim.
 
 ### Pending private-global symbol and logical-activation decisions
 
