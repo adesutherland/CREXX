@@ -424,7 +424,7 @@ compile_reader: procedure = .int
   argv[5] = '-i'
   argv[6] = project_path(dir)
   argv[7] = '-l'
-  argv[8] = project_path(grammar)
+  argv[8] = project_path(dir) || '/' || grammar || '.rxbin'
   input_lines = .string[]
   say 'BUILD READER:' project_path(source)
   return run_command('reader',argv,input_lines)
