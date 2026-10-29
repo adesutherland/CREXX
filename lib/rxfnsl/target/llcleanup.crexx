@@ -59,6 +59,36 @@ deaddefinitioncandidate: procedure = .int
   value = item.operand(2)
   return value.kind() <> 'B'
 
+/** Inclusive local scan costs for domainafter's remaining block suffix.
+ * Return -2 for scratch bytes, -1 for work, or 1 after a complete setup.
+ * Operation IDs are module-wide, so preflight their full array extent. */
+querycosts: procedure = .int
+  arg index_ref = reference .llirgraph..index, access_ref = reference .llirgraph..access, functionId = .int, expose work = .int, expose plannedbytes = .int, bytes = .int, expose prefixes = .int[], expose blocktotals = .int[]
+  i = .int; op = .int; b = .int; amount = .int; operations = .int; blocks = .int
+  graph = dereference index_ref; access = dereference access_ref
+  operations = graph.operations(); blocks = graph.blocks()
+  if plannedbytes > bytes | bytes - plannedbytes < 64 then return -2
+  plannedbytes = plannedbytes + 64
+  if operations > (bytes - plannedbytes) / 8 then return -2
+  plannedbytes = plannedbytes + operations * 8
+  if blocks > (bytes - plannedbytes) / 8 then return -2
+  plannedbytes = plannedbytes + blocks * 8
+  if operations > work then return -1
+  work = work - operations
+  if blocks > work then return -1
+  work = work - blocks
+  assembler setattrs prefixes,0
+  assembler setattrs blocktotals,0
+  if operations > 0 then prefixes[operations] = 0
+  if blocks > 0 then blocktotals[blocks] = 0
+  do i = 1 to graph.functionoperations(functionId)
+    op = graph.functionoperation(functionId,i); amount = access.accesses(op)
+    if amount >= work then return -1
+    amount = amount + 1; work = work - amount; b = graph.opblock(op)
+    blocktotals[b] = blocktotals[b] + amount; prefixes[op] = blocktotals[b]
+  end
+  return 1
+
 /** The current cleanup plans walk source order, not mutually exclusive paths.
  * Return -1 for exhaustion, 2 for incomplete/observed tails, 1 for branches,
  * or 0 for linear. The graph path establishes its own semantic proof.
@@ -88,6 +118,7 @@ transport: procedure = .llinline..change
   k = .int; a = .int; b = .int; physical = .int; temporary = .int; locals = .int; cost = .int; extent = .int
   integer = .int; whole = .int; observed = .int; discard = .int; keptmapping = .int; ordinal = .int
   plannedbytes = .int; querybound = .int; pending = .int
+  prefixes = .int[]; blocktotals = .int[]
   fields = .object[]; replacements = .object[]
   value = .lltarget..operand; left = .lltarget..operand; right = .lltarget..operand
   field = .lltarget..operand; replacement = .lltarget..operand; number = .lltarget..operand
@@ -111,12 +142,10 @@ transport: procedure = .llinline..change
     if live.complete(procedureId) = 0 then return .llinline..change('keep','transport.observation.unproved',source,empty)
     work = facts.remaining() - live.usedwork()
     source_graph = source.ir(); source_ir = dereference source_graph; source_store = dereference source_ir.storage()
-    plannedbytes = source_store.bytes(); querybound = index.functionoperations(procedureId); access = dereference access_ref
-    do i = 1 to index.functionoperations(procedureId)
-      opid = index.functionoperation(procedureId,i)
-      if access.accesses(opid) > work - querybound then return .llinline..change('limit','transport.work',source,empty)
-      querybound = querybound + access.accesses(opid)
-    end
+    plannedbytes = source_store.bytes()
+    pending = querycosts(graph_ref,access_ref,procedureId,work,plannedbytes,bytes,prefixes,blocktotals)
+    if pending = -2 then return .llinline..change('limit','transport.plan.bytes',source,empty)
+    if pending < 0 then return .llinline..change('limit','transport.work',source,empty)
     caller = source.body(procedureId); mapping = .int[]
     if caller.locals() > work then return .llinline..change('limit','transport.work',source,empty)
     work = work - caller.locals()
@@ -141,7 +170,7 @@ transport: procedure = .llinline..change
         end
         else if deaddefinitioncandidate(input) then do
           id = facts.storage(input.id(),1); integer = facts.integerdomain(id); whole = facts.wholedomain(id)
-          observed = 0
+          observed = 0; querybound = blocktotals[index.opblock(input.id())] - prefixes[input.id()]
           if integer > 0 then do
             if querybound > work then return .llinline..change('limit','transport.work',source,empty)
             work = work - querybound; observed = live.domainafter(input.id(),integer)
@@ -261,6 +290,8 @@ graphtransport: procedure = .llinline..change
   i = .int; j = .int; id = .int; group = .int; nextmachine = .int; nextkept = .int
   highest = .int; physical = .int; integer = .int; whole = .int; observed = .int; discard = .int
   querybound = .int; plannedbytes = .int; width = .int; targetgroup = .int; choice = .int; changed = .int; oldlocals = .int
+  fixedcount = .int; resultstorage = .int; actuals = .int[]
+  pending = .int; prefixes = .int[]; blocktotals = .int[]
   input = .lltarget..record; value = .lltarget..operand; field = .lltarget..operand
   row = .plan; fields = .object[]; replacements = .object[]; plans = .object[]
   groups = .int[]; protected = .int[]; removed = .int[]; arrivals = .int[]
@@ -272,7 +303,7 @@ graphtransport: procedure = .llinline..change
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
     if facts.rootrestored() = 0 then return .llinline..change('keep','transport.cfg.restoration.unproved',source,empty)
     caller = source.body(procedureId); oldlocals = caller.locals(); catalog = .llrxascatalog..catalog()
-    index_ref = facts.index(); index = dereference index_ref; access_ref = facts.access(); access = dereference access_ref
+    index_ref = facts.index(); index = dereference index_ref; access_ref = facts.access()
     live = index.accessliveness(access_ref,facts.remaining(),bytes)
     if live.status() <> 'ok' then return .llinline..change(live.status(),live.message(),source,empty)
     if live.complete(procedureId) = 0 then return .llinline..change('keep','transport.observation.unproved',source,empty)
@@ -281,14 +312,9 @@ graphtransport: procedure = .llinline..change
     plannedbytes = store.bytes()
     if index.operations() > (bytes - plannedbytes) / 64 then return .llinline..change('limit','transport.plan.bytes',source,empty)
     plannedbytes = plannedbytes + index.operations() * 64
-    querybound = index.functionoperations(procedureId)
-    if querybound > work then return .llinline..change('limit','transport.work',source,empty)
-    work = work - querybound
-    do i = 1 to index.functionoperations(procedureId)
-      id = index.functionoperation(procedureId,i)
-      if access.accesses(id) > work - querybound then return .llinline..change('limit','transport.work',source,empty)
-      querybound = querybound + access.accesses(id)
-    end
+    pending = querycosts(index_ref,access_ref,procedureId,work,plannedbytes,bytes,prefixes,blocktotals)
+    if pending = -2 then return .llinline..change('limit','transport.plan.bytes',source,empty)
+    if pending < 0 then return .llinline..change('limit','transport.work',source,empty)
     /* One reverse indexed pass binds zero-width point records and labels to
      * their source machine group. No repeated addressid() suffix scans. */
     nextmachine = 0
@@ -319,16 +345,41 @@ graphtransport: procedure = .llinline..change
       else if wordpos(input.kind(),'.srcstep .traceevent') > 0 & group > 0 then do
         if facts.rootlive(group) = 0 then do; removed[input.id()] = 1; changed = 1; iterate; end
       end
-      discard = 0; name = ''
+      discard = 0; name = ''; fixedcount = 0
+      assembler setattrs actuals,0
       if input.kind() = 'instruction' then do
         name = input.mnemonic()
+        /* The exact root facts captured the count, result pointer and ordered
+         * actual pointers before the call. Explicit fixed operands preserve
+         * aliases without needing an adjacent physical argument window. */
+        if name = 'call' & input.operands() = 3 then do
+          if facts.bodyid(input.id()) > 0 then do
+            fixedcount = facts.arguments(input.id())
+            if fixedcount < 1 | fixedcount > 4 then fixedcount = 0
+            if fixedcount > 0 then do
+              value = input.operand(2)
+              if value.kind() <> 'P' then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
+              resultstorage = facts.storage(input.id(),1)
+              if resultstorage < 1 | resultstorage > oldlocals then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
+              if fixedcount > work then return .llinline..change('limit','transport.work',source,empty)
+              if fixedcount > (bytes - plannedbytes) / 8 then return .llinline..change('limit','transport.plan.bytes',source,empty)
+              work = work - fixedcount; plannedbytes = plannedbytes + fixedcount * 8
+              do j = 1 to fixedcount
+                id = facts.argumentstorage(input.id(),j)
+                if id < 1 | id > oldlocals then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
+                actuals[j] = id
+              end
+            end
+          end
+        end
         /* Implicit encoded/indexed locations need their own remapping proof;
-         * explicit StorageIds alone cannot establish a smaller frame. */
-        if (catalog.field(input.opcode(),5) as .int) <> 0 then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
+         * only this checked finite CALL becomes explicit in this slice. */
+        if (catalog.field(input.opcode(),5) as .int) <> 0 & fixedcount = 0 then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
         if facts.mapping(input.id()) then discard = 1
         else if name = 'endlife' then discard = facts.plainbefore(input.id(),1)
         else if deaddefinitioncandidate(input) then do
           id = facts.storage(input.id(),1); integer = facts.integerdomain(id); whole = facts.wholedomain(id); observed = 0
+          querybound = blocktotals[index.opblock(input.id())] - prefixes[input.id()]
           if integer > 0 then do
             if querybound > work then return .llinline..change('limit','transport.work',source,empty)
             work = work - querybound; observed = live.domainafter(input.id(),integer)
@@ -365,6 +416,7 @@ graphtransport: procedure = .llinline..change
         if physical <> value.index() then changed = 1
       end
       width = input.operands()
+      if fixedcount > 0 then width = fixedcount + 2
       if width > (bytes - plannedbytes) / 64 then return .llinline..change('limit','transport.plan.bytes',source,empty)
       plannedbytes = plannedbytes + width * 64
       if width > work then return .llinline..change('limit','transport.work',source,empty)
@@ -377,7 +429,16 @@ graphtransport: procedure = .llinline..change
         if field.length() > (bytes - plannedbytes) / 3 then return .llinline..change('limit','transport.plan.bytes',source,empty)
         work = work - field.length() * 3; plannedbytes = plannedbytes + field.length() * 3
       end
-      fields = lltarget..remapregisters(input,replacements)
+      if fixedcount > 0 then do
+        call objectarraydrop fields
+        fields[1] = .lltarget..operand.bound(0,0,0,'r',resultstorage - 1) as .object
+        fields[2] = input.operand(2) as .object
+        do j = 1 to fixedcount
+          fields[j + 2] = .lltarget..operand.bound(0,0,0,'r',actuals[j] - 1) as .object
+        end
+        name = 'call' || fixedcount; changed = 1
+      end
+      else fields = lltarget..remapregisters(input,replacements)
       if input.kind() = 'instruction' then do
         if catalog.flow(input.opcode()) = 2 then do
           choice = facts.rootbranchchoice(input.id())
@@ -464,7 +525,7 @@ graphemit: procedure = .llinline..change
   sources = .object[]; origins = .object[]; bodies = .object[]; fields = .object[]
   maps = .int[]; callers = .int[]; empty = .int[]; row = .plan
   input = .lltarget..record; targetbody = .lltarget..bodydraft
-  i = .int; j = .int; extent = .int; usedcells = .int; cost = .int; status = .string
+  i = .int; j = .int; extent = .int; usedcells = .int; cost = .int; width = .int; refs = .int; status = .string
   message = .string
   result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
   if result.error() <> '' then do
@@ -475,7 +536,16 @@ graphemit: procedure = .llinline..change
   source_graph = source.ir()
   do i = 1 to source.records()
     input = source.record(i)
-    if result.preflight(1 + input.operands() + input.registerrefs(),0) = 0 then return .llinline..change('limit',result.error(),source,empty)
+    width = input.operands(); refs = input.registerrefs()
+    if removed[input.id()] = 0 & input.procedureid() = procedureId & input.kind() <> 'procedure' then do
+      row = plans[input.id()] as .plan
+      /* Only the finite CALL specialization grows a graph row. Its added
+       * fields are explicit registers, so each adds an operand and a ref. */
+      if row.operands() > width then do
+        refs = refs + row.operands() - width; width = row.operands()
+      end
+    end
+    if result.preflight(1 + width + refs,0) = 0 then return .llinline..change('limit',result.error(),source,empty)
     if removed[input.id()] then do; maps[input.id()] = 0; iterate; end
     at = llinline..copyorigin(source_graph,input.origin(),reference result,reference sources,reference origins)
     if result.error() <> '' then do

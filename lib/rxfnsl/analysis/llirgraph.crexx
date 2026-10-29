@@ -1080,6 +1080,13 @@ live: class
           op = graph.nextop(op)
         end
       end
+    end
+    /* The index RPO contains every reachable block once. Reverse it for
+     * successor-first backward transfer on a DAG; cycles still use the same
+     * predecessor wakeups and one-entry-per-block bounded ring below. */
+    do p = graph.rposize() to 1 by -1
+      if spend(1) = 0 then return
+      b = graph.rpo(p)
       tail = tail + 1; pending[tail] = b; queued[b] = 1; waiting = waiting + 1
     end
     /* Union/kill on a finite Boolean lattice only adds bits. Wake predecessors

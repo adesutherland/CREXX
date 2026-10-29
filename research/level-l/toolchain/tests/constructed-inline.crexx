@@ -500,15 +500,16 @@ nestedDAGmodel: procedure = .lltarget..module
   outer = draft.procedure('outer',locals,at)
   ignored = one(outer,'null',outer.reg('r',0),at)
   if variant = 2 then do
+    file = draft.source('nested-dag.rxas','call r0,child(),r0' as .binary); callat = file.origin(0,18)
     ignored = two(outer,'link',outer.reg('a',0),outer.reg('a',2),at)
     ignored = two(outer,'load',outer.reg('r',0),.lltarget..operand.integer(2),at)
     ignored = two(outer,'brt',.lltarget..operand.symbol('cross_swapped'),outer.reg('a',3),at)
-    ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure('child'),outer.reg('r',0),at)
+    ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure('child'),outer.reg('r',0),callat)
     ignored = one(outer,'unlink',outer.reg('a',0),at)
     ignored = one(outer,'ret',outer.reg('r',0),at)
     ignored = namedlabel(outer,'cross_swapped',at)
     ignored = two(outer,'swap',outer.reg('a',0),outer.reg('a',1),at)
-    ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure('child'),outer.reg('r',0),at)
+    ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure('child'),outer.reg('r',0),callat)
     ignored = two(outer,'swap',outer.reg('a',0),outer.reg('a',1),at)
     ignored = one(outer,'unlink',outer.reg('a',0),at)
     ignored = one(outer,'ret',outer.reg('r',0),at)
@@ -556,15 +557,16 @@ nestedDAGmodel: procedure = .lltarget..module
   return draft.finish()
 
 nestedDAGstructure: procedure = .int
-  arg owner = reference .lltarget..module, variant = .int
+  arg owner = reference .lltarget..module, variant = .int, specialized = 0
   failures = 0; i = .int; calls = .int; snapshots = .int; sums = .int; paired = .int; counter = .int
-  snapshotcell = -1
+  snapshotcell = -1; firstleft = .int; firstright = .int
   body = .lltarget..body; item = .lltarget..record; neighbor = .lltarget..record
   value = .lltarget..operand; left = .lltarget..operand; right = .lltarget..operand
   source = dereference owner; body = source.body(source.procedureid('main'))
   do i = 1 to body.records()
     item = body.record(i)
     if item.kind() <> 'instruction' then iterate
+    if specialized & variant = 2 then failures = failures + check(wordpos(item.mnemonic(),'link unlink swap endlife') = 0,'explicit child actuals discharge the proved outer mapping/lifetime glue')
     if variant = 1 & item.mnemonic() = 'icopy' then do
       value = item.operand(1); snapshotcell = value.index(); snapshots = snapshots + 1
     end
@@ -577,6 +579,17 @@ nestedDAGstructure: procedure = .int
     failures = failures + check(value.text() = 'child','only retained child calls survive DAG expansion')
     if variant = 1 then do
       failures = failures + check(item.mnemonic() = 'call1' & snapshotcell >= 0,'conditional/common fixed child retains the prior integer snapshot')
+      iterate
+    end
+    if specialized then do
+      failures = failures + check(item.mnemonic() = 'call2' & item.operands() = 4,'known count2 becomes an explicit retained child call')
+      if item.mnemonic() <> 'call2' | item.operands() <> 4 then iterate
+      value = item.operand(1); left = item.operand(3); right = item.operand(4)
+      failures = failures + check(item.origin().filename() = 'nested-dag.rxas' & item.origin().first() = 0 & item.origin().last() = 18,'each specialized child retains its original logical call source')
+      failures = failures + check(left.bank() = 'r' & right.bank() = 'r' & left.index() <> right.index() & value.index() <> left.index() & value.index() <> right.index(),'count/result storage stays separate from both ordered actuals')
+      if calls = 1 then do; firstleft = left.index(); firstright = right.index(); end
+      if calls = 1 | calls = 3 then failures = failures + check(left.index() = firstleft & right.index() = firstright,'both cloned unswapped arms use the same caller storage order')
+      else failures = failures + check(left.index() = firstright & right.index() = firstleft,'swapped arms encode the reversed active pointers without source/inverse SWAPs')
       iterate
     end
     failures = failures + check(item.mnemonic() = 'call' & item.operands() = 3,'branch retains its counted r/a-crossing child call')
@@ -595,7 +608,7 @@ nestedDAGstructure: procedure = .int
   end
   failures = failures + check(calls = 4,'two repeated outer sites retain both branch/common child instructions')
   if variant = 1 then failures = failures + check(snapshots = 2 & sums = 2,'both pre-child snapshots remain inputs to their post-child sums')
-  else failures = failures + check(paired = 2,'each swapped arm restores its counted window immediately after the retained child')
+  else if specialized = 0 then failures = failures + check(paired = 2,'each swapped arm restores its counted window immediately after the retained child')
   return failures
 
 nestedDAG: procedure = .int
@@ -649,14 +662,32 @@ nestedDAG: procedure = .int
     if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
     do i = 1 to ids[0]; failures = failures + check(changed.operation(ids[i]) = 0,'selected outer identity is removed'); end
     result = changed.result(); failures = failures + nestedDAGstructure(reference result,variant)
+    if variant = 2 then do
+      cleanupgraph = .llir..module
+      cleanupgraph = dereference result.ir(); beforecleanup = cleanupgraph.binary()
+      do mode = 1 to 3
+        budgetgraph = .llir..module
+        select mode
+          when 1 then limited = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1',1)
+          when 2 then limited = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,1)
+          otherwise limited = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,0)
+        end
+        kept = limited.result(); budgetgraph = dereference kept.ir()
+        failures = failures + check(limited.status() = 'limit' & bin2x(budgetgraph.binary()) = bin2x(beforecleanup),'finite child specialization work/byte/frame refusal is atomic ' || mode)
+      end
+    end
     cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
     failures = failures + check(cleaned.status() = 'changed' | cleaned.status() = 'keep','DAG transport preserves admitted retained children')
     if cleaned.status() <> 'changed' & cleaned.status() <> 'keep' then do; say cleaned.reason(); iterate; end
     nextowner = cleaned.result()
+    if variant = 2 then do
+      failures = failures + check(cleaned.status() = 'changed','finite retained child specialization enables graph transport')
+      failures = failures + nestedDAGstructure(reference nextowner,variant,1)
+    end
     cleaned = llcleanup..storage(reference nextowner,nextowner.procedureid('main'),'closed-main-default-halt.v1')
     failures = failures + check(cleaned.status() = 'changed' | cleaned.status() = 'keep','DAG assignment preserves retained child windows')
     if cleaned.status() <> 'changed' & cleaned.status() <> 'keep' then do; say cleaned.reason(); iterate; end
-    result = cleaned.result(); failures = failures + nestedDAGstructure(reference result,variant)
+    result = cleaned.result(); failures = failures + nestedDAGstructure(reference result,variant,variant = 2)
     do mode = 1 to 3
       select mode
         when 1 then limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1)
@@ -666,6 +697,41 @@ nestedDAG: procedure = .int
       kept = limited.result(); limitedgraph = dereference kept.ir()
       failures = failures + check(limited.status() = 'limit' & bin2x(limitedgraph.binary()) = bin2x(before),'retained-child DAG work/byte/frame refusal is atomic ' || mode)
     end
+  end
+  return failures
+
+/** Specialization cannot change zero-count result clearing, invent an
+ * unknown count, or encode more actuals than the existing fixed-call ISA. */
+nestedcountkeeps: procedure = .int
+  failures = 0; variant = .int; i = .int; count = .int; ignored = .int
+  expected = .string; before = .binary
+  original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
+  do variant = 1 to 3
+    graph = .llir..module; keptgraph = .llir..module
+    draft = .lltarget..draft('nested.count.keep.' || variant,'constructed.nested.count',0)
+    at = draft.synthetic('finite counted specialization boundaries'); root = draft.procedure('main',8,at)
+    count = 0
+    if variant = 2 then count = 5
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(count),at)
+    ignored = three(root,'getandtp',root.reg('r',7),root.reg('r',0),.lltarget..operand.integer(768),at)
+    if variant = 3 then ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',0),.lltarget..operand.integer(768),at)
+    do i = 1 to 5; ignored = two(root,'load',root.reg('r',i),.lltarget..operand.integer(i * 11),at); end
+    ignored = two(root,'load',root.reg('r',6),.lltarget..operand.integer(73),at)
+    ignored = two(root,'brt',.lltarget..operand.symbol('invoke'),root.reg('r',7),at)
+    ignored = zero(root,'cnop',at); ignored = namedlabel(root,'invoke',at)
+    ignored = three(root,'call',root.reg('r',6),.lltarget..operand.procedure('bare'),root.reg('r',0),at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    leaf = draft.procedure('bare',0,at); ignored = zero(leaf,'ret',at)
+    original = draft.finish(); failures = failures + check(original.valid(),'count specialization boundary is valid input ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    graph = dereference original.ir(); before = graph.binary()
+    changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    expected = 'transport.implicit.storage.pending'
+    if variant = 3 then expected = 'argument.count.unproved'
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = expected,'count0/>4/unknown has its exact pending specialization reason ' || variant)
+    if changed.reason() <> expected then say changed.reason()
+    kept = changed.result(); keptgraph = dereference kept.ir()
+    failures = failures + check(bin2x(keptgraph.binary()) = bin2x(before),'count specialization refusal retains the exact preloaded-result source ' || variant)
   end
   return failures
 
@@ -1800,5 +1866,6 @@ main: procedure = .int
   failures = failures + optionalarguments() + optionalkeeps() + optionalhistory() + abiedges() + nestedDAG()
   failures = failures + stringarguments() + stringhistory(1) + stringhistory()
   failures = failures + binaryarguments() + binaryhistory(1) + binaryhistory()
+  failures = failures + nestedcountkeeps()
   say 'CONSTRUCTED_INLINE|failures=' || failures
   return failures

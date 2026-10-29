@@ -136,7 +136,10 @@ the adapter's runtime input policy remains separately bounded.
 One CLI request selects one caller module and explicit immutable body inputs,
 then publishes only the caller's complete output through the existing atomic
 single-file writer. It does not concatenate modules or partially update a set
-of files. Current RXAS has no serialized module-name directive: the service
+of files. `--work` accepts a positive decimal allowance up to 99999999 for
+each expansion and cleanup stage; its default is one million. A stage that
+exceeds its allowance returns a limit without publishing a partial result.
+Current RXAS has no serialized module-name directive: the service
 retains its explicit logical identity, while native reassembly derives its
 module filename/description from the input filename. Controlled fixtures use
 stable logical filenames; this adapter makes no RXBIN module-name roundtrip
@@ -1093,18 +1096,27 @@ meet independently. Reached child calls use the existing normalization and
 scalar transfer; their return and selector rows do not enter the outer
 expansion plan.
 
-A counted child still observes a contiguous implicit window, including slots
-crossing the outer `r`/`a` boundary. The expanded caller keeps the source
-setup and inverse swaps and preserves the exact window. Root graph analysis
-now summarizes retained child accesses, so cleanup can reason about reached
-fixed-argument calls. Graph transport continues to keep counted calls under
-its implicit-storage guard: remapping the visible count register alone could
-change the unspelled actual pointers. Dense placement may preserve a window
-with fixed contiguous slots; removing its setup requires a separate adjacency
-or constructed alias-window proof. The repeated counted example currently
-keeps a wide frame and binding glue under this guard, so alias-aware reuse
-remains INL-STEP05 work. Imported bodies, deeper recursion, aggregates and
-abrupt exits remain separate categories.
+A counted child observes a contiguous implicit window, including slots
+crossing the outer `r`/`a` boundary. Conservative expansion retains the source
+setup and inverse swaps. The reached root graph facts record the pre-call
+result StorageId, singleton count and ordered actual StorageIds. When an exact
+same-module bytecode target has one to four actuals, graph transport replaces
+the retained counted child with the existing explicit `CALL1`–`CALL4` form.
+The fixed VM handler captures those exact pointers before frame entry; equal
+StorageIds remain aliases rather than value copies. The normal mapping proof
+then removes outer setup, inverse swaps and plain lifetime glue even when the
+old implicit window crossed the bank boundary or branch arms reordered it.
+The call's executable address group and logical source/TRACE attachment survive
+the rewrite.
+
+Zero, unknown and over-four counts, imported or opaque targets, and unproved
+bindings retain the original counted call and window. A zero-count call with
+bare `RET` cannot become the two-operand `CALL`: that form clears the result.
+The first cleanup pass may keep a now-unused count LOAD because its frozen
+input still reads the count. Removing that LOAD needs bounded reanalysis of
+the new owner. General counted windows still need a proved adjacent placement
+or an equivalent linked pointer window, including abrupt restoration; deeper
+recursion, aggregates and imported bodies remain separate categories.
 
 ### Ordinary string components
 
@@ -1167,7 +1179,7 @@ storage identities and independent value, component and status facts; joins
 require compatible active/base/identity/context bindings. Root restoration
 requires both canonical identity and active pointer equality to its base at
 every normal RET. Reached admitted scalar child calls have effect summaries;
-counted implicit windows still keep transport under the guard above. Module
+eligible finite counted children use the explicit-pointer conversion above. Module
 globals, exceptional exits, opaque physical-frame observers, changing scoped
 metadata bindings and unsupported operations keep the unmodified owner with
 a specific reason.
@@ -1182,6 +1194,13 @@ clear; matching names compare as exact binary values. Point source/TRACE
 records follow their executable address group, and a closure `CNOP` retains
 the clear's address before caller continuation. All changes publish through a
 checked new target or return the exact frozen input.
+
+Projected liveness seeds its backward worklist in reverse RPO, then retains
+the same monotone predecessor wakeups for cycles. Transport charges each
+`domainafter` query for a safe bound on its containing block suffix, with
+prefix/scratch preparation charged once. Both paths preserve limit and atomic
+publication behavior; an explicit larger work allowance can admit a larger
+caller without weakening its storage proof.
 
 After transport, `llcleanup.storage` reanalyzes that new owner and uses the
 existing assignment service in injective dense mode. Distinct reached cells

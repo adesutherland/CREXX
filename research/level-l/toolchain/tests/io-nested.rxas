@@ -1,6 +1,6 @@
 /* Independent nested-call values. Raw count describes slots, not presence. */
 .globals=0
-main() .locals=24
+main() .locals=28
   load r0,5
   call2 r1,outerfixed(),r0,r0
   load r2,10
@@ -29,6 +29,10 @@ main() .locals=24
   settp r15,256
   getandtp r18,r15,768
   call3 r23,dagcounted(),r16,r17,r18
+  load r24,5
+  call2 r25,countedsnapshot(),r24,r24
+  icopy r26,r24
+  call2 r27,countedsnapshot(),r24,r24
   say "fixed-snapshot"
   itos r1
   say r1
@@ -78,6 +82,16 @@ main() .locals=24
   say r16
   itos r17
   say r17
+  say "counted-alias-first"
+  itos r25
+  say r25
+  itos r26
+  say r26
+  say "counted-alias-repeat"
+  itos r27
+  say r27
+  itos r24
+  say r24
   ret 0
 
 outerfixed() .locals=2
@@ -147,4 +161,19 @@ dag_cross_swapped:
   ret r0
 dagcrossleaf() .locals=0
   iadd a1,a1,1
+  ret a2
+
+/* r1's following a0/a1 slots both point to the same caller value.
+ * The owned ICOPY snapshot must survive the child's mutation and COPY return.
+ * Input5 gives 5+12=17/actual12; repeat gives 12+19=31/actual19. */
+countedsnapshot() .locals=2
+  icopy r0,a1
+  link a0,a2
+  load r1,2
+  call r1,aliasedstep(),r1
+  unlink a0
+  iadd r0,r0,r1
+  ret r0
+aliasedstep() .locals=0
+  iadd a1,a1,7
   ret a2

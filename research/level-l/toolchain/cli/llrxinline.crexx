@@ -14,7 +14,7 @@ main: procedure = .int
   arg argv = .string[]
   limits = .lllimits..policy; frontend = .llrxasinput..reader; parsed = .llrxasinput..parsed
   target = .lltarget..module; emitted = .llrxasoutput..emission; output = .llir..output
-  bodies = .lltarget..module[]; cleanup = 1
+  bodies = .lltarget..module[]; cleanup = 1; workbudget = 1000000
   sourcepath = ''; destination = ''; logical = ''; artifact = ''; profile = 'unknown'; policy = 'default'
   bodypaths = .string[]; bodynames = .string[]; i = 1
   do while i <= argv[0]
@@ -34,6 +34,14 @@ main: procedure = .int
       when option = '--body' then do
         if i + 2 > argv[0] then return usage('--body requires logical-module and source-path')
         bodynames[bodynames[0] + 1] = argv[i + 1]; bodypaths[bodypaths[0] + 1] = argv[i + 2]; i = i + 2
+      end
+      when option = '--work' then do
+        if i = argv[0] then return usage('missing operand for --work')
+        i = i + 1; value = argv[i]
+        if value = '' | length(value) > 8 then return usage('--work requires a positive decimal allowance up to 99999999')
+        if verify(value,'0123456789') <> 0 then return usage('--work requires a positive decimal allowance up to 99999999')
+        workbudget = value as .int
+        if workbudget < 1 then return usage('--work requires a positive decimal allowance up to 99999999')
       end
       when option = '--no-inline' then policy = 'never'
       when option = '--no-cleanup' then cleanup = 0
@@ -60,7 +68,7 @@ main: procedure = .int
       if parsed.status() <> 0 then do; call lineout 'stderr',parsed.diagnostic(); return 1; end
       bodies[i] = parsed.result()
     end
-    if policy <> 'never' then if applybatch(target,reference bodies,profile,cleanup) <> 0 then return 1
+    if policy <> 'never' then if applybatch(target,reference bodies,profile,cleanup,workbudget) <> 0 then return 1
     emitted = llrxasoutput..render(reference target)
     if emitted.error() <> '' then do; call lineout 'stderr',emitted.error(); return 1; end
     output = emitted.output(); message = llfileoutput..publish(output,destination)
@@ -147,13 +155,13 @@ collectbindings: procedure = .object[]
 /** Expand original bindings atomically, then run the separately callable
  * cleanup once per changed caller, resolving stable names after each change. */
 applybatch: procedure = .int
-  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, cleanup = .int
+  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, cleanup = .int, workbudget = .int
   change = .llinline..change; cleaned = .llinline..change; body = .lltarget..body
   bindings = .object[]; names = .string[]; failed = 0; procedureid = .int; i = .int
   bindings = collectbindings(reference target,supplied,failed)
   if failed then return 1
   if bindings[0] = 0 then return 0
-  change = llinline..expandmany(bindings,profile)
+  change = llinline..expandmany(bindings,profile,workbudget)
   do i = 1 to change.sites()
     site = change.site(i)
     if change.statusat(site) = 'keep' then call lineout 'stderr','LL_INLINE_KEEP: ' || change.reasonat(site)
@@ -167,14 +175,14 @@ applybatch: procedure = .int
   end
   do i = 1 to names[0]
     procedureid = target.procedureid(names[i])
-    cleaned = llcleanup..transport(reference target,procedureid,profile)
+    cleaned = llcleanup..transport(reference target,procedureid,profile,workbudget)
     if cleaned.status() = 'keep' then do
       call lineout 'stderr','LL_CLEANUP_KEEP: ' || cleaned.reason()
     end
     else if cleaned.status() <> 'changed' then do; call lineout 'stderr','LL_CLEANUP_' || upper(cleaned.status()) || ': ' || cleaned.reason(); return 1; end
     else target = cleaned.result()
     procedureid = target.procedureid(names[i])
-    cleaned = llcleanup..storage(reference target,procedureid,profile)
+    cleaned = llcleanup..storage(reference target,procedureid,profile,workbudget)
     if cleaned.status() = 'keep' then call lineout 'stderr','LL_STORAGE_KEEP: ' || cleaned.reason()
     else if cleaned.status() <> 'changed' then do; call lineout 'stderr','LL_STORAGE_' || upper(cleaned.status()) || ': ' || cleaned.reason(); return 1; end
     else target = cleaned.result()
@@ -184,7 +192,7 @@ applybatch: procedure = .int
 usage: procedure = .int
   arg reason = ''
   if reason <> '' then call lineout 'stderr','LL_INLINE_OPTIONS: ' || reason
-  call lineout 'stderr','Usage: llrxinline --module logical -o output.rxas [--artifact identity] [--body logical source.rxas] [--profile closed-main-default-halt.v1] [--policy default|all-legal|never] [--no-cleanup] source.rxas'
+  call lineout 'stderr','Usage: llrxinline --module logical -o output.rxas [--artifact identity] [--body logical source.rxas] [--profile closed-main-default-halt.v1] [--policy default|all-legal|never] [--work positive-decimal] [--no-cleanup] source.rxas'
   call lineout 'stderr','The closed-main profile requires a fresh standalone root with default HALT policy; unknown profile retains calls.'
   return 2
 
