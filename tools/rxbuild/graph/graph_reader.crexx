@@ -350,7 +350,7 @@ create_exe: procedure = .int
 run_program: procedure = .int
   arg program = .string, workdir = .string, argument = .string, argument_value = .string, stdin = .string
   argv = .string[]
-  argv[1] = tool('rxtvm')
+  argv[1] = tool('rxvm')
   argv[2] = '-l'
   if workdir = '' then argv[3] = project_path(dirname(program))
   else argv[3] = project_path(workdir)
@@ -424,7 +424,7 @@ compile_reader: procedure = .int
   argv[5] = '-i'
   argv[6] = project_path(dir)
   argv[7] = '-l'
-  argv[8] = project_path(grammar)
+  argv[8] = project_path(dir) || '/' || grammar || '.rxbin'
   input_lines = .string[]
   say 'BUILD READER:' project_path(source)
   return run_command('reader',argv,input_lines)
@@ -439,7 +439,7 @@ compile_application: procedure = .int
   if rc <> 0 then return rc
   generated_source = generated_root || '/' || source_stem(source) || '_generated.crexx'
   argv = .string[]
-  argv[1] = tool('rxtvm')
+  argv[1] = tool('rxvm')
   argv[2] = project_path(dir) || '/' || compiler || '.rxbin'
   argv[3] = '-a'
   argv[4] = project_path(source)
@@ -638,9 +638,12 @@ ensure_project_directories: procedure = .int
 
 dirname: procedure = .string
   arg path = .string
-  slash = lastpos('/',path)
+  slash = lastpos('\\',path)
+  alt_slash = lastpos('/',path)
+  if alt_slash > slash then slash = alt_slash
   if slash = 0 then return '.'
   if slash = 1 then return left(path,1)
+  if slash = 3 & substr(path,2,1) = ':' then return left(path,3)
   return left(path,slash-1)
 
 basename_no_suffix: procedure = .string
@@ -688,9 +691,12 @@ ensure_directory_tree: procedure = .int
   arg path = .string
   if path = '' then path = '.'
   if .rxfs..isdir(path) <> 0 then return 0
-  slash = lastpos('/',path)
+  slash = lastpos('\\',path)
+  alt_slash = lastpos('/',path)
+  if alt_slash > slash then slash = alt_slash
   if slash = 0 then parent = '.'
   else if slash = 1 then parent = left(path,1)
+  else if slash = 3 & substr(path,2,1) = ':' then parent = left(path,3)
   else parent = left(path,slash-1)
   if parent <> path & parent <> '' then do
     if ensure_directory_tree(parent) <> 0 then return 1
