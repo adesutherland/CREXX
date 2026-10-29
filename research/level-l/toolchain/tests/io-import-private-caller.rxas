@@ -1,0 +1,36 @@
+/* Owned results: snapshot5/actual12, overlapping result12, snapshot12/actual19.
+ * Borrowed local returns COPY19 twice; the separate results leave actual19. */
+.globals=0
+owned_left() .expose=fixture.import.private.owned
+borrowed_left() .expose=fixture.import.private.borrowed
+main() .locals=8
+  load r0,5
+  .srcstep 1 1 0 "io-import-private-caller.rxas" 10 3 26 "  call1 r1,owned_left(),r0"
+  .traceevent "V" 4 "R" "I" "r" 0 1 1 0 "caller-owned" ""
+  call1 r1,owned_left(),r0
+  icopy r2,r0
+  call1 r0,owned_left(),r0
+  icopy r3,r0
+  call1 r4,owned_left(),r0
+  icopy r5,r0
+  .srcstep 2 2 0 "io-import-private-caller.rxas" 18 3 29 "  call1 r6,borrowed_left(),r0"
+  .traceevent "V" 4 "R" "I" "r" 0 2 2 0 "caller-borrowed" ""
+  call1 r6,borrowed_left(),r0
+  call1 r7,borrowed_left(),r0
+  itos r1
+  say r1
+  itos r2
+  say r2
+  itos r3
+  say r3
+  itos r4
+  say r4
+  itos r5
+  say r5
+  itos r6
+  say r6
+  itos r7
+  say r7
+  itos r0
+  say r0
+  ret 0

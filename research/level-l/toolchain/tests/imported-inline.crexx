@@ -39,7 +39,7 @@ provider: procedure = .lltarget..module
   ignored = .int
   globals = 0; locals = 0; exposed = 'fixture.bump'; name = 'leaf'
   if variant = 1 then globals = 1
-  if variant = 2 then locals = 1
+  if variant = 2 | variant = 10 | variant = 11 | variant = 12 then locals = 1
   if variant = 3 then exposed = 'fixture.other'
   if variant = 4 then name = 'main'
   draft = .lltarget..draft('provider','fixture:provider',globals)
@@ -81,8 +81,31 @@ provider: procedure = .lltarget..module
     fields[3] = .lltarget..operand.string('opaque source transport' as .binary) as .object
     ignored = leaf.record('.meta',fields,at)
   end
-  ignored = three(leaf,'iadd',leaf.reg('a',1),leaf.reg('a',1),.lltarget..operand.integer(7),at)
-  ignored = one(leaf,'ret',leaf.reg('a',2),at)
+  select variant
+    when 10 then do
+      /* Original owned RET moves and resets this snapshot before reuse. */
+      ignored = two(leaf,'icopy',leaf.reg('r',0),leaf.reg('a',1),at)
+      ignored = three(leaf,'iadd',leaf.reg('a',1),leaf.reg('a',1),.lltarget..operand.integer(7),at)
+      ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    end
+    when 11 then do
+      /* Encoded local, active borrowed pointer: RET must COPY the actual. */
+      ignored = two(leaf,'link',leaf.reg('r',0),leaf.reg('a',1),at)
+      ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    end
+    when 12 then do
+      /* The second LOAD preserves flags256 left by the first activation.
+       * Whole COPY observes them before SETTP executes again. */
+      ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(5),at)
+      ignored = two(leaf,'copy',leaf.reg('a',1),leaf.reg('r',0),at)
+      ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(256),at)
+      ignored = one(leaf,'ret',leaf.reg('a',1),at)
+    end
+    otherwise do
+      ignored = three(leaf,'iadd',leaf.reg('a',1),leaf.reg('a',1),.lltarget..operand.integer(7),at)
+      ignored = one(leaf,'ret',leaf.reg('a',2),at)
+    end
+  end
   if variant = 7 then do
     child = draft.procedure('child',0,at)
     ignored = one(child,'ret',.lltarget..operand.integer(0),at)
@@ -168,6 +191,53 @@ unchanged: procedure = .int
   result = change.result()
   return failures + check(result.identity() = source.identity(),'refusal returns the exact original caller')
 
+instructions: procedure = .int
+  arg source = .lltarget..module, mnemonic = .string
+  count = 0; item = .lltarget..record
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'instruction' & item.mnemonic() = mnemonic then count = count + 1
+  end
+  return count
+
+/** Use the same two import aliases and overlapping result/actual cell for
+ * all models. The external RXAS panel independently executes their values. */
+privatecontrols: procedure = .int
+  arg profile = .string
+  failures = 0; source = caller(); sourceid = source.identity()
+  target = .lltarget..module; bindings = .object[]; changed = .llinline..change; refused = .llinline..change
+  mode = .int; providerid = .int; result = .lltarget..module
+  do variant = 1 to 3
+    mode = 2
+    if variant = 2 then mode = 10
+    if variant = 3 then mode = 11
+    target = provider(mode); providerid = target.identity(); bindings = requests(reference source,reference target)
+    failures = failures + check(target.valid(),'private-local provider model is valid: ' || mode)
+    changed = llinline..expandmany(bindings,profile,6000000)
+    failures = failures + check(changed.status() = 'changed','finite imported private locals expand: ' || mode)
+    if changed.status() = 'changed' then do
+      result = changed.result()
+      if mode = 10 then do
+        failures = failures + check(instructions(result,'move') = 2,'owned private returns MOVE at both aliases')
+        refused = llinline..expandmany(bindings,profile,6000000,1000000,67108864,14)
+        failures = failures + unchanged(refused,source,'limit','inline.frame')
+      end
+      else failures = failures + check(instructions(result,'move') = 0 & instructions(result,'copy') = 2,'borrowed return never moves or resets an actual')
+      failures = failures + check(result.procedures() = 1 & instructions(result,'call2') = 0,'private surrogate never reaches caller output')
+    end
+    failures = failures + check(source.identity() = sourceid & target.identity() = providerid,'private-local request preserves both frozen inputs')
+  end
+  target = provider(12); providerid = target.identity(); bindings = requests(reference source,reference target)
+  failures = failures + check(target.valid(),'recycled-flags provider model is valid')
+  refused = llinline..expandmany(bindings,profile,6000000)
+  failures = failures + unchanged(refused,source,'keep','local.recycler.history.unproved')
+  failures = failures + check(target.identity() = providerid & source.identity() = sourceid,'recycler refusal preserves both original owners')
+  do i = 1 to bindings[0]
+    request = bindings[i] as .llinline..binding
+    failures = failures + check(refused.statusat(request.callid()) = 'keep','recycled state retains every alias in the atomic batch')
+  end
+  return failures
+
 main: procedure = .int
   alternate = .lltarget..module; alternatebindings = .object[]; status = .string; reason = .string
   refused = .llinline..change; variant = .int; i = .int
@@ -220,11 +290,11 @@ main: procedure = .int
   inspected = llinline..inspect(singlefirst,profile,6000000)
   failures = failures + check(inspected.status() = 'legal' & inspected.arguments() = 2 & inspected.returned() = 2,'single-site inspect uses exact imported body proof')
   do variant = 1 to 8
+    if variant = 2 then iterate /* Former locals-only refusal is positive below. */
     alternate = provider(variant); alternatebindings = requests(reference source,reference alternate)
     status = 'keep'; reason = ''
     select variant
       when 1 then reason = 'import.global.storage.pending'
-      when 2 then reason = 'import.leaf.locals.pending'
       when 3 then do; status = 'invalid'; reason = 'binding.target.mismatch'; end
       when 4 then reason = 'import.provider.main.pending'
       when 5 then reason = 'import.startup.metadata.pending'
@@ -266,5 +336,6 @@ main: procedure = .int
   failures = failures + check(refused.status() = 'limit' & refused.result().identity() = original,'instruction cell cap is atomic')
   replayed = llinline..expandmany(bindings,profile,6000000)
   failures = failures + check(replayed.status() = 'changed' & source.identity() = original & target.identity() = providerid,'small replay after refusals retains both valid owners')
+  failures = failures + privatecontrols(profile)
   say 'IMPORTED_INLINE|failures=' || failures
   return failures

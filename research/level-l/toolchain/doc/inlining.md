@@ -1032,10 +1032,11 @@ they do not complete the real RXAS adapter or the full approved POC profile.
 ### Exact imported-leaf development contract
 
 The opt-in `closed-main-static-exact-default-halt.v1` profile admits an exact
-imported scalar leaf with zero private locals, no labels/branches and no nested
-executable procedure references. The caller has the only `main`; caller and
-providers have no globals, providers have no imports, and the complete caller
-import set resolves uniquely over the distinct bound providers. The CLI also
+imported scalar leaf with a finite declared private local count, no
+labels/branches and no nested executable procedure references. The caller has
+the only `main`; caller and providers have no globals, providers have no
+imports, and the complete caller import set resolves uniquely over the
+distinct bound providers. The CLI also
 rejects unused `--body` inputs. Existing profiles retain foreign calls.
 
 This profile requires subsequent assembly, linking and loading of the exact
@@ -1059,6 +1060,20 @@ imports, can be published. Record and changed-caller mappings compose through
 both private owners, while cloned source bytes, spans and contributor chains
 remain attached to the provider's logical source.
 
+The surrogate preserves the provider's declared local count, so the shared
+facts owner follows one private-base history across all aliases and selected
+sites. Original owned-local returns MOVE only when the active pointer equals
+that encoded local's immutable base; a local linked to a borrowed actual
+returns by COPY. An ignored result supplies no MOVE/reset. Repeated activation
+retains unreset component/status uncertainty, and a later whole-value read
+without an independence proof keeps the entire caller unchanged. Fresh inline
+cells do not justify inserting resets to hide that history. The existing
+expander performs proved return transfers and closes its private cells on
+every admitted normal exit.
+The handwritten RXAS control uses repeated calls through one import because
+the native assembler rejects duplicate import entries for one exposed index;
+the constructed service control additionally checks multiple bindings.
+
 The single request work allowance is partitioned into preparation/projection,
 existing proof/expansion, and deprojection quotas. The first two receive one
 third each; final publication receives the remainder. Unused quota is not
@@ -1066,7 +1081,7 @@ borrowed, so an uneven request may need an explicitly larger allowance. Entry,
 byte and instruction-cell limits apply to each checked owned stage; at most
 three new owned models coexist. Private map, name and provenance tables are
 preflighted alongside their stage's model allowance. Every refusal, exhausted
-allowance or invalid rebuild returns the exact original caller. Private-local
+allowance or invalid rebuild returns the exact original caller. Unproved
 recycler histories, DAG labels, nested imports and initializer ingress remain
 open in INL-STEP04.
 

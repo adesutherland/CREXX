@@ -1063,7 +1063,9 @@ importprojection: class
       cache = _caches[_pairprovider[i]] as .importorigins; body = provider.body(_pairbody[i]); graph_ref = provider.ir()
       item = provider.at(_pairheader[i]); at = cache.copy(graph_ref,item.origin(),reference draft)
       if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-      targetbody = draft.procedure(_pairname[i],0,at)
+      /* Every alias/site of this exact body keeps one original private-frame
+       * width and recycler identity for the existing scalar facts owner. */
+      targetbody = draft.procedure(_pairname[i],body.locals(),at)
       if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
       _pairfunction[i] = targetbody.functionid()
       do j = 1 to provider.records()
@@ -1191,7 +1193,6 @@ importprojection: class
     arg owner = reference .lltarget..module, body = .lltarget..body
     source = dereference owner; item = .lltarget..record; value = .lltarget..operand; catalog = .llrxascatalog..catalog()
     i = .int; j = .int; returns = .int
-    if body.locals() <> 0 then return fail('keep','import.leaf.locals.pending')
     _lastheader = 0
     do i = 1 to source.records()
       if spend(1) = 0 then return 0
