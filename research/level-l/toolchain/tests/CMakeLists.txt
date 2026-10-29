@@ -79,6 +79,19 @@ if(TARGET rxbvm)
     RUN_SERIAL TRUE TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_guarded_owner
     TARGETS levell_rxas_signal_test_prep rxbvm rxas _testfuncs_dynamic)
+  add_test(NAME levell_rxas_runtime_selector
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}"
+      "-DCONSTRUCTED=${CMAKE_BINARY_DIR}/lib/rxfnsl/target/constructed-inline-linked.rxbin"
+      "-DRUNTIME=${_runtime}" "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/runtime-selector-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-runtime-selector.cmake")
+  set_tests_properties(levell_rxas_runtime_selector PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_RUNTIME_SELECTOR[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_runtime_selector
+    TARGETS levell_constructed_inline llrxinline rxbvm rxas)
   add_test(NAME levell_rxas_io_service
     COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/io-service.rxbin" ${_runtime})
   set_tests_properties(levell_rxas_io_service PROPERTIES

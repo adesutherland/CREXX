@@ -1874,7 +1874,127 @@ calleetail: procedure = .int
   failures = failures + check(bin2x(graph.binary()) = bin2x(before),'tail exclusion preserves the original frozen input')
   return failures
 
+/** Current binary comparisons deliberately produce bounded unknown integers;
+ * their sum covers1..3 without requiring a branched caller analysis. */
+runtimemodel: procedure = .lltarget..module
+  arg variant = .int, expose callid = .int
+  ignored = .int; i = .int; fields = .object[]
+  draft = .lltarget..draft('runtime.selector.' || variant,'constructed.runtime.selector',0)
+  at = draft.synthetic('checked runtime selector normal edge')
+  root = draft.procedure('main',8,at)
+  ignored = two(root,'load',root.reg('r',6),.lltarget..operand.literal('B','0x01' as .binary),at)
+  ignored = three(root,'bineq',root.reg('r',0),root.reg('r',6),.lltarget..operand.literal('B','0x01' as .binary),at)
+  ignored = three(root,'bineq',root.reg('r',5),root.reg('r',6),.lltarget..operand.literal('B','0x02' as .binary),at)
+  ignored = three(root,'iadd',root.reg('r',0),root.reg('r',0),root.reg('r',5),at)
+  ignored = three(root,'iadd',root.reg('r',0),root.reg('r',0),.lltarget..operand.integer(1),at)
+  if variant = 6 | variant = 7 | variant = 9 | variant = 10 then ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',5),.lltarget..operand.integer(768),at)
+  do i = 1 to 3
+    ignored = two(root,'load',root.reg('r',i),.lltarget..operand.integer(i * 10),at)
+  end
+  if variant = 11 then ignored = three(root,'getandtp',root.reg('r',1),root.reg('r',5),.lltarget..operand.integer(768),at)
+  if variant = 2 then ignored = two(root,'link',root.reg('r',2),root.reg('r',1),at)
+  fields[1] = root.reg('r',4) as .object
+  if variant = 3 then fields[1] = root.reg('r',2) as .object
+  fields[2] = .lltarget..operand.procedure('pick') as .object
+  do i = 0 to 3; fields[i + 3] = root.reg('r',i) as .object; end
+  callid = root.emit('call4',fields,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('pick',2,at)
+  if variant = 1 then ignored = two(leaf,'swap',leaf.reg('a',2),leaf.reg('a',3),at)
+  selector = leaf.reg('a',1); destination = leaf.reg('r',0)
+  if variant = 4 then do
+    ignored = two(leaf,'icopy',leaf.reg('r',0),selector,at); selector = leaf.reg('r',0)
+  end
+  ignored = two(leaf,'icopy',leaf.reg('r',1),leaf.reg('a',0),at)
+  ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('r',1),.lltarget..operand.integer(1),at)
+  low = 1; high = 3; offset = 1
+  if variant = 5 then do
+    ignored = two(leaf,'load',leaf.reg('a',0),.lltarget..operand.integer(77),at)
+    low = 1; high = 3; offset = -1
+  end
+  if variant = 7 then high = 4
+  if variant = 8 then offset = 3
+  if variant = 9 then do; low = 9223372036854775807; high = low; offset = 1; end
+  if variant = 10 then do; low = 9223372036854775805; high = 9223372036854775807; offset = -9223372036854775805; end
+  bound = .lltarget..operand.integer(high)
+  if variant <= 4 then bound = leaf.reg('r',1)
+  if variant = 11 then bound = leaf.reg('a',2)
+  if variant = 14 | variant = 16 then do
+    ignored = one(leaf,'null',leaf.reg('r',0),at)
+    ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(44),at)
+    ignored = two(leaf,'link',leaf.reg('a',2),leaf.reg('r',0),at)
+    if variant = 16 then do
+      ignored = two(leaf,'link',leaf.reg('a',3),leaf.reg('r',0),at)
+      ignored = two(leaf,'link',leaf.reg('a',4),leaf.reg('r',0),at)
+    end
+  end
+  if variant <> 12 then ignored = three(leaf,'ichkrng',selector,.lltarget..operand.integer(low),bound,at)
+  source = selector; if variant = 13 then source = leaf.reg('a',2)
+  ignored = three(leaf,'linkarg',destination,source,.lltarget..operand.integer(offset),at)
+  if variant = 15 then ignored = two(leaf,'load',destination,.lltarget..operand.integer(99),at)
+  ignored = one(leaf,'ret',destination,at)
+  return draft.finish()
+
+runtimecontrols: procedure = .int
+  failures = 0; variant = .int; callid = .int; i = .int; id = .int
+  original = .lltarget..module; result = .lltarget..module; facts = .lltargetfacts..analysis; changed = .llinline..change; request = .llinline..binding
+  reasons = .string[]
+  reasons[7] = 'argument.selector.width.policy'; reasons[8] = 'argument.selector.bank.unproved'
+  reasons[9] = 'argument.selector.overflow.unproved'; reasons[11] = 'argument.range.unproved'
+  reasons[12] = 'argument.selector.unproved'; reasons[13] = 'argument.selector.guard.unproved'
+  reasons[14] = 'argument.selector.ownership.pending'; reasons[15] = 'argument.selector.suffix.pending'
+  do variant = 0 to 16
+    original = runtimemodel(variant,callid)
+    failures = failures + check(original.valid(),'runtime selector model verifies ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    id = original.identity()
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
+    if variant <= 6 | variant = 10 | variant = 16 then do
+      failures = failures + check(changed.status() = 'changed','checked runtime selector expands ' || variant)
+      if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+      facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
+      failures = failures + check(facts.status() = 'ok','runtime alternatives have checked facts ' || variant)
+      if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+      failures = failures + check(facts.argumentcases(callid) = 3,'three sealed normal alternatives ' || variant)
+      expectedaction = 'copy'; if variant = 16 then expectedaction = 'move'
+      do i = 1 to facts.argumentcases(callid)
+        failures = failures + check(facts.argumentcaseaction(callid,i) = expectedaction & facts.argumentcasestorage(callid,i) > 0,'case keeps its own whole return and binding ' || i)
+      end
+      result = changed.result(); calls = 0; guards = 0; branches = 0; moves = 0; copies = 0
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.procedureid() <> result.procedureid('main') | item.kind() <> 'instruction' then iterate
+        if item.mnemonic() = 'call4' | item.mnemonic() = 'linkarg' then calls = calls + 1
+        if item.mnemonic() = 'ichkrng' then guards = guards + 1
+        if item.mnemonic() = 'brf' then branches = branches + 1
+        if item.mnemonic() = 'move' then moves = moves + 1
+        if item.mnemonic() = 'copy' then copies = copies + 1
+      end
+      expectedmoves = 0; expectedcopies = 3
+      if variant = 16 then do; expectedmoves = 3; expectedcopies = 0; end
+      failures = failures + check(calls = 0 & guards = 1 & branches = 2 & moves = expectedmoves & copies = expectedcopies,'single check and three independently closed returns ' || variant)
+    end
+    else do
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = reasons[variant] & changed.result().identity() = id,'precise runtime selector refusal ' || variant)
+      if changed.reason() <> reasons[variant] then say variant || ':' || changed.reason()
+    end
+  end
+  original = runtimemodel(0,callid); id = original.identity()
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
+  changed = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,67108864,65536,1)
+  failures = failures + check(changed.status() = 'limit' & changed.result().identity() = id,'runtime dispatch growth refusal preserves original owner')
+  return failures
+
 main: procedure = .int
+  arg argv = .string[]
+  lane = ''
+  if argv[0] = 1 then lane = argv[1]
+  if lane = 'runtime' then do
+    runtimefailures = runtimecontrols()
+    say 'RUNTIME_SELECTOR|failures=' || runtimefailures
+    return runtimefailures
+  end
   failures = 0
   draft = .lltarget..draft('constructed','constructed.fixture',0)
   at = draft.synthetic('constructed scalar call')

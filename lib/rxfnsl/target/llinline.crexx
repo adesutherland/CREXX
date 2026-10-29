@@ -310,7 +310,7 @@ metascopes: class
     i = .int; attempt = .int; collision = .int; width = .int
     suffix = .string
     draft = dereference _owner; facts = dereference facts_ref; attempt = 0
-    _dag[slot] = (_branched[functionid] <> 0) | (facts.returns(site) > 1)
+    _dag[slot] = (_branched[functionid] <> 0) | (facts.returns(site) > 1) | (facts.argumentcases(site) > 0)
     do forever
       if claim(1,0) = 0 then return
       suffix = '.$inline.' || site
@@ -454,19 +454,22 @@ expandlocalmany: procedure = .llinline..change
   extent = .int; fileid = .int; hasresult = .int; ordered = .int; slots = .int; activebase = .int; position = .int
   dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int; abrupt = .int; samepair = .int
   direct = .int; callerstep = .int
+  runtime = .int; runtimearm = .int; runtimestart = .int; runtimeextent = .int; restores = .int
+  caseLabels = .string[]; compare = .lltarget..operand; selectorcopy = .lltarget..operand
   catalog = .llrxascatalog..catalog
-  scope = .string; status = .string; scopes = .metascopes
+  scope = .string; status = .string; action = .string; scopes = .metascopes
   request = .binding; selected = .lltarget..record; input = .lltarget..record; childrecord = .lltarget..record; swaprecord = .lltarget..record
   field = .lltarget..operand; oldresult = .lltarget..operand; value = .lltarget..operand
   resultcell = .lltarget..operand; countcell = .lltarget..operand; tempcell = .lltarget..operand
   destination = .lltarget..operand; anchor = .lltarget..operand; actual = .lltarget..operand; mapped = .lltarget..operand
   nextleft = .lltarget..operand; nextright = .lltarget..operand
   callee = .lltarget..body; oldbody = .lltarget..body; caller = .lltarget..body
-  at = .llir..origin; childat = .llir..origin; file = .llir..sourcefile
+  at = .llir..origin; childat = .llir..origin; runtimeorigin = .llir..origin; file = .llir..sourcefile
   ignoredorigin = .llir..origin
   targetbody = .lltarget..bodydraft; fields = .object[]; replacements = .object[]
   empty = .int[]; callers = .int[]; sites = .int[]; decisions = .object[]; maps = .int[]
   steps = .int[]; clauses = .int[]
+  lastchildstep = .object[]; runtimestep = .object[]
   contributors = .object[]
   if bindings[0] = 0 then return .change('keep','binding.empty')
   if bindings[1] is .binding then request = bindings[1] as .binding
@@ -477,7 +480,7 @@ expandlocalmany: procedure = .llinline..change
   functionid = source.procedureid('main')
   if functionid > 0 then caller = source.body(functionid)
   if work < 1 | entries < 1 | bytes < 1 | frame < 0 | cells < 1 then return .change('limit','inline.allowances',source,empty)
-  accepted = .int[]; offsets = .int[]; selectedcount = 0
+  accepted = .int[]; offsets = .int[]; compares = .int[]; selectedcount = 0
   do i = 1 to bindings[0]
     if bindings[i] is .binding then request = bindings[i] as .binding
     else return .change('invalid','binding.type',source,empty)
@@ -531,6 +534,10 @@ expandlocalmany: procedure = .llinline..change
       if required > frame then return .change('limit','inline.frame',source,empty)
       if callee.locals() > frame - required then return .change('limit','inline.frame',source,empty)
       required = required + callee.locals()
+    end
+    if facts.argumentcases(request.callid()) > 0 then do
+      if required >= frame - locals then return .change('limit','inline.frame',source,empty)
+      compares[request.callid()] = locals + required; required = required + 1
     end
     if required > frame - locals then return .change('limit','inline.frame',source,empty)
     offsets[request.callid()] = locals; locals = locals + required
@@ -620,6 +627,7 @@ expandlocalmany: procedure = .llinline..change
       end
       callee = source.body(facts.bodyid(input.id())); count = facts.arguments(input.id()); base = offsets[input.id()]
       direct = facts.handlerdirect(input.id())
+      runtime = facts.argumentcases(input.id()); runtimearm = 0
       scope = scopes.begin(accepted[input.id()])
       dag = scopes.dag(accepted[input.id()])
       /* Retained counted children observe adjacency across r/a bank borders,
@@ -670,6 +678,7 @@ expandlocalmany: procedure = .llinline..change
       end
       end
       steps = empty; clauses = empty
+      call objectarraydrop lastchildstep
       do j = 1 to source.records()
         if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
         childrecord = source.record(j)
@@ -713,6 +722,7 @@ expandlocalmany: procedure = .llinline..change
         end
         if childrecord.kind() <> 'instruction' then do
           ignored = targetbody.record(childrecord.kind(),fields,childat)
+          if childrecord.kind() = '.srcstep' then lastchildstep = fields
           if childrecord.kind() = '.meta' then call scopes.observe(fields)
         end
         else if catalog.flow(childrecord.opcode()) = 1 | catalog.flow(childrecord.opcode()) = 2 then do
@@ -743,7 +753,41 @@ expandlocalmany: procedure = .llinline..change
            * LINK/SWAP effects. Its immutable entry anchor has other semantics.
            * The site-specific proof captured the index before rebinding the
            * destination, including when that slot held the selector itself. */
-          position = facts.argumentselector(input.id(),childrecord.id())
+          if runtime > 0 & childrecord.id() = facts.argumentruntime(input.id()) then do
+            runtimestart = j; runtimearm = 1; runtimeextent = runtime
+            runtimeorigin = childat; runtimestep = lastchildstep
+            if runtimestep[0] = 0 then do
+              if callerstep > 0 then runtimestep = clonefields(source.at(callerstep),targetbody)
+              else do
+                runtimestep[1] = .lltarget..operand.integer(0) as .object; runtimestep[2] = runtimestep[1]
+                runtimestep[3] = .lltarget..operand.integer(6) as .object
+                runtimestep[4] = .lltarget..operand.string('') as .object
+                do k = 5 to 7; runtimestep[k] = .lltarget..operand.integer(0) as .object; end
+                runtimestep[8] = .lltarget..operand.string('') as .object
+              end
+            end
+            selectorcopy = fields[2] as .lltarget..operand
+            ignored = code.one(targetbody,'null',tempcell,childat)
+            ignored = code.two(targetbody,'icopy',tempcell,selectorcopy,childat)
+            compare = targetbody.reg('r',compares[input.id()])
+            ignored = code.one(targetbody,'null',compare,childat)
+            do a = 1 to runtimeextent
+              caseLabels[a] = scopes.newlabel(input.id(),('runtime.' || a) as .binary)
+            end
+            do a = 1 to runtimeextent - 1
+              call objectarraydrop replacements
+              replacements[1] = compare as .object; replacements[2] = tempcell as .object
+              replacements[3] = .lltarget..operand.integer(facts.argumentraw(input.id(),a)) as .object
+              ignored = code.emit(targetbody,'isub',replacements,childat)
+              ignored = code.two(targetbody,'brf',.lltarget..operand.symbol(caseLabels[a]),compare,childat)
+            end
+            ignored = code.one(targetbody,'br',.lltarget..operand.symbol(caseLabels[runtimeextent]),childat)
+            call objectarraydrop replacements
+            replacements[1] = .lltarget..operand.symbol(caseLabels[1]) as .object
+            ignored = targetbody.record('label',replacements,childat)
+            position = facts.argumentcase(input.id(),runtimearm)
+          end
+          else position = facts.argumentselector(input.id(),childrecord.id())
           field = .lltarget..operand.bound(0,0,0,'a',position)
           value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
           destination = fields[1] as .lltarget..operand
@@ -765,7 +809,9 @@ expandlocalmany: procedure = .llinline..change
             else if value.kind() = 'S' then ignored = code.two(targetbody,'load',resultcell,value,childat)
             else do
               mapped = fields[1] as .lltarget..operand
-              if facts.returnactionat(input.id(),childrecord.id()) = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
+              action = facts.returnactionat(input.id(),childrecord.id())
+              if runtimearm > 0 then action = facts.argumentcaseaction(input.id(),runtimearm)
+              if action = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
               else ignored = code.two(targetbody,'copy',resultcell,mapped,childat)
             end
           end
@@ -796,12 +842,22 @@ expandlocalmany: procedure = .llinline..change
             leave
           end
           if ordered then do
-            if dag then do k = 1 to facts.restores(input.id(),childrecord.id())
-              pairleft = facts.restoreleft(input.id(),childrecord.id(),k)
-              pairright = facts.restoreright(input.id(),childrecord.id(),k)
+            if dag then do
+              restores = facts.restores(input.id(),childrecord.id())
+              if runtimearm > 0 then restores = facts.argumentcaserestores(input.id(),runtimearm)
+              do k = 1 to restores
+              if runtimearm > 0 then do
+                pairleft = facts.argumentcaseleft(input.id(),runtimearm,k)
+                pairright = facts.argumentcaseright(input.id(),runtimearm,k)
+              end
+              else do
+                pairleft = facts.restoreleft(input.id(),childrecord.id(),k)
+                pairright = facts.restoreright(input.id(),childrecord.id(),k)
+              end
               if pairleft < 0 | pairleft >= slots | pairright < 0 | pairright >= slots then assembler signal "ERROR","LL_INLINE: invalid per-RET slot restoration"
               destination = targetbody.reg('r',activebase + pairleft); mapped = targetbody.reg('r',activebase + pairright)
               ignored = code.two(targetbody,'swap',destination,mapped,childat)
+              end
             end
             else do
               /* Only this contiguous generated replay may cancel pairs.
@@ -840,6 +896,7 @@ expandlocalmany: procedure = .llinline..change
           if hasresult then ignored = code.one(targetbody,'unlink',resultcell,childat)
           ignored = code.one(targetbody,'endlife',countcell,childat)
           ignored = code.one(targetbody,'endlife',tempcell,childat)
+          if runtimearm > 0 then ignored = code.one(targetbody,'endlife',compare,childat)
           do a = 0 to callee.locals() - 1
             if ordered then anchor = targetbody.reg('r',activebase + a)
             else anchor = targetbody.reg('r',base + count + 3 + a)
@@ -847,6 +904,19 @@ expandlocalmany: procedure = .llinline..change
           end
           if dag then do
             ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.continuation(accepted[input.id()])),childat)
+            if runtimearm > 0 & runtimearm < runtimeextent then do
+              runtimearm = runtimearm + 1
+              call objectarraydrop fields
+              fields[1] = .lltarget..operand.symbol(caseLabels[runtimearm]) as .object
+              ignored = targetbody.record('label',fields,runtimeorigin)
+              if runtimestep[0] > 0 then ignored = targetbody.record('.srcstep',runtimestep,runtimeorigin)
+              swaprecord = source.record(runtimestart)
+              field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
+              field = .lltarget..operand.bound(0,0,0,'a',facts.argumentcase(input.id(),runtimearm))
+              value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
+              ignored = code.two(targetbody,'link',destination,value,runtimeorigin)
+              j = runtimestart
+            end
             iterate
           end
           if scopes.hasbindings() then do
@@ -871,6 +941,18 @@ expandlocalmany: procedure = .llinline..change
         call objectarraydrop fields
         fields[1] = .lltarget..operand.symbol(scopes.continuation(accepted[input.id()])) as .object
         ignored = targetbody.record('label',fields,at)
+        if runtime > 0 then do
+          if callerstep > 0 then fields = clonefields(source.at(callerstep),targetbody)
+          else do
+            call objectarraydrop fields
+            fields[1] = .lltarget..operand.integer(0) as .object; fields[2] = fields[1]
+            fields[3] = .lltarget..operand.integer(6) as .object
+            fields[4] = .lltarget..operand.string('') as .object
+            do k = 5 to 7; fields[k] = .lltarget..operand.integer(0) as .object; end
+            fields[8] = .lltarget..operand.string('') as .object
+          end
+          ignored = targetbody.record('.srcstep',fields,at)
+        end
         if scopes.hasbindings() then do
           do k = 1 to scopes.closings()
             if scopes.active(k) = 0 then iterate

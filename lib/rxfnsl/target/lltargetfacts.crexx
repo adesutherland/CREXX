@@ -584,6 +584,54 @@ callproof: class
   killwhole: method = .int
     return _killwhole
 
+/** One activation's finite checked selector alternatives. Each arm owns its
+ * original RET proof; no divergent active map is collapsed into a frame. */
+selection: class
+  _guard = .int
+  _operation = .int
+  _return = .int
+  _low = .int
+  _offset = .int
+  _bindings = .int[]
+  _proofs = .callproof[]
+  *: factory
+    arg guard = .int, operation = .int, returned = .int, low = .int, offset = .int, bindings = .int[], proofs = .callproof[]
+    _guard = guard; _operation = operation; _return = returned; _low = low; _offset = offset; _bindings = bindings; _proofs = proofs
+    return
+  guard: method = .int
+    return _guard
+  operation: method = .int
+    return _operation
+  returned: method = .int
+    return _return
+  count: method = .int
+    return _bindings[0]
+  raw: method = .int
+    arg ordinal = .int
+    return _low + (ordinal - 1)
+  selected: method = .int
+    arg ordinal = .int
+    return raw(ordinal) + _offset
+  storage: method = .int
+    arg ordinal = .int
+    return _bindings[ordinal]
+  action: method = .string
+    arg ordinal = .int, returned = .int
+    proof_ref = reference _proofs[ordinal]; proof = dereference proof_ref
+    return proof.action(returned)
+  restores: method = .int
+    arg ordinal = .int, returned = .int
+    proof_ref = reference _proofs[ordinal]; proof = dereference proof_ref
+    return proof.restores(returned)
+  left: method = .int
+    arg ordinal = .int, returned = .int, pair = .int
+    proof_ref = reference _proofs[ordinal]; proof = dereference proof_ref
+    return proof.left(returned,pair)
+  right: method = .int
+    arg ordinal = .int, returned = .int, pair = .int
+    proof_ref = reference _proofs[ordinal]; proof = dereference proof_ref
+    return proof.right(returned,pair)
+
 /** Conditional last-exit guarantees for procedure-owned bases. All bases of
  * an activation, including a0, are marked together. A never-activated path is
  * neutral at a meet: its first entry is fresh, not a recycled unreset value.
@@ -669,6 +717,8 @@ analysis: class
   _selectorcount = .int[]
   _selectors = .object[]
   _lastselector = .int
+  _selectioncount = .int[]
+  _selections = .selection[]
   _returnaction = .string[]
   _swaps = .object[]
   _swapcount = .int[]
@@ -1669,6 +1719,137 @@ analysis: class
     end
     call proof.addreturn(_retordinal[item.id()],item.id(),action,left,right)
     return 1
+  /** A checked normal successor of ICHKRNG, immediately followed by one
+   * register LINKARG and direct RET. Return2 leaves the existing exact path
+   * responsible; return1 has separately proved every finite normal arm. */
+  runtimeselection: method = .int
+    arg guard = .lltarget..record, ordinal = .int, bodyid = .int, expose view = .frame, state_ref = reference .cells, expose previous = .history, destination = .int, hasresult = .int, expose proof = .callproof, publish = .int, callid = .int
+    i = .int; j = .int; next = .int; returned = .int; id = .int; selectorid = .int; raw = .int; selected = .int; low = .int; high = .int; offset = .int
+    arm = .int; width = .int; bound = .int
+    state_copy = reference .cells; view_copy = reference .frame; history_copy = reference .history; proof_copy = reference .callproof
+    action = .string; firstaction = .string
+    field = .lltarget..operand; selector = .lltarget..operand; target = .lltarget..operand; source = .lltarget..operand
+    item = .lltarget..record; operation = .lltarget..record; terminal = .lltarget..record
+    branchstate = .cells; merged = .cells; branchview = .frame; branchhistory = .history; mergedhistory = .history
+    branchproof = .callproof; cases = .callproof[]; bindings = .int[]; limits = .int[]; checked = .int[]
+    state = dereference state_ref; module = dereference _owner; row = _linear[bodyid] as .numbers
+    selector = guard.operand(1)
+    if selector.kind() <> 'R' then return 2
+    selectorid = view.storage(selector)
+    if selectorid = 0 then return 2
+    if state.known(selectorid) then return 2
+    do i = ordinal + 1 to row.size()
+      if spend(1) = 0 then return 0
+      item = module.at(row.at(i))
+      if item.kind() <> 'instruction' then iterate
+      next = i; leave
+    end
+    if next = 0 then return 2
+    operation = module.at(row.at(next))
+    if operation.mnemonic() <> 'linkarg' | operation.operands() <> 3 then return 2
+    if _profile <> 'closed-main-default-halt.v1' & _profile <> 'closed-main-static-exact-default-halt.v1' then return reject('argument.selector.policy.unproved')
+    if _namedhandler > 0 | _namedactive then return reject('argument.selector.policy.unproved')
+    if publish = 0 then return reject('argument.selector.nested.pending')
+    do i = 1 to ordinal - 1
+      if spend(1) = 0 then return 0
+      item = module.at(row.at(i))
+      if item.kind() = 'instruction' & wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then return reject('argument.selector.nested.pending')
+    end
+    field = operation.operand(2)
+    if view.storage(field) <> selectorid then return reject('argument.selector.guard.unproved')
+    if state.defined(selectorid) = 0 then return reject('argument.selector.unproved')
+    if _globals[0] > 0 then return reject('argument.selector.global.pending')
+    do i = 2 to 3
+      field = guard.operand(i)
+      if field.kind() = 'I' then limits[i] = field.index()
+      else do
+        id = view.storage(field)
+        if id = 0 then return reject('argument.range.unproved')
+        if state.defined(id) = 0 | state.known(id) = 0 then return reject('argument.range.unproved')
+        limits[i] = state.value(id)
+      end
+    end
+    low = limits[2]; high = limits[3]
+    if state.bounded(selectorid) then do
+      /* Generic MIN/MAX use decimal BIFs, whose current precision can round
+       * an int64 boundary. Keep this integer intersection exact. */
+      bound = state.low(selectorid); if bound > low then low = bound
+      bound = state.high(selectorid); if bound < high then high = bound
+    end
+    if low > high then return reject('argument.range.failure.unproved')
+    if spend(4) = 0 | reserve(4,8) = 0 then return 0
+    checked = arithmetic('isub',high,low)
+    if checked[1] = 0 then return reject('argument.selector.width.policy')
+    if checked[2] > 2 then return reject('argument.selector.width.policy')
+    width = checked[2] + 1; field = operation.operand(3); offset = field.index()
+    checked = arithmetic('iadd',low,offset)
+    if checked[1] = 0 then return reject('argument.selector.overflow.unproved')
+    selected = checked[2]
+    checked = arithmetic('iadd',high,offset)
+    if checked[1] = 0 then return reject('argument.selector.overflow.unproved')
+    if selected < 0 | checked[2] > view.arguments() then return reject('argument.selector.bank.unproved')
+    target = operation.operand(1)
+    do i = next + 1 to row.size()
+      if spend(1) = 0 then return 0
+      item = module.at(row.at(i))
+      if item.kind() <> 'instruction' then iterate
+      if returned > 0 | item.mnemonic() <> 'ret' | item.operands() <> 1 then return reject('argument.selector.suffix.pending')
+      field = item.operand(1)
+      if field.kind() <> 'R' | field.bank() <> target.bank() | field.index() <> target.index() then return reject('argument.selector.suffix.pending')
+      returned = i; terminal = item
+    end
+    if returned = 0 then return reject('argument.selector.suffix.pending')
+    if reserve(width,256) = 0 then return 0
+    do arm = 1 to width
+      raw = low + (arm - 1)
+      if spend(2) = 0 then return 0
+      checked = arithmetic('isub',low,raw)
+      if checked[1] = 0 then return reject('argument.selector.dispatch.unproved')
+      checked = arithmetic('isub',high,raw)
+      if checked[1] = 0 then return reject('argument.selector.dispatch.unproved')
+      if pathallowance(state.size(),view.slots()) = 0 then return 0
+      /* Include snapshots, case insertion, constructor arguments/storage and
+       * ordinary published summaries without assuming compiler copy elision. */
+      if reserve(_recordcount[bodyid],128) = 0 | reserve(_retcount[bodyid],1024) = 0 then return 0
+      if _recordcount[bodyid] > _work / 8 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+      if spend(_recordcount[bodyid] * 8) = 0 | spend(_retcount[bodyid] * 8) = 0 then return 0
+      state_copy = reference state; view_copy = reference view; history_copy = reference previous; proof_copy = reference proof
+      branchstate = snapshot state_copy; branchview = snapshot view_copy; branchhistory = snapshot history_copy; branchproof = snapshot proof_copy
+      call branchstate.integer(selectorid,1,raw)
+      do i = ordinal to returned
+        if spend(1) = 0 then return 0
+        item = module.at(row.at(i)); call branchproof.visit(_recordordinal[item.id()])
+        if step(item,branchview,reference branchstate,1,0,hasresult,0) = 0 then return 0
+        if i = next then do
+          source = branchview.argument(_lastselector); bindings[raw - low + 1] = branchview.storage(source)
+        end
+      end
+      if finishreturn(terminal,branchview,branchstate,destination,hasresult,branchproof) = 0 then return 0
+      action = branchproof.action(_retordinal[terminal.id()])
+      if raw = low then firstaction = action
+      else if action <> firstaction then return reject('argument.selector.ownership.pending')
+      do j = 1 to module.body(bodyid).locals()
+        call branchhistory.exited(branchview.ownedbase(j),branchstate.zeroed(branchview.ownedbase(j)))
+      end
+      call branchhistory.exited(branchview.ownedbase(module.body(bodyid).locals() + 1),0)
+      cases[raw - low + 1] = branchproof
+      if raw = low then do
+        state_copy = reference branchstate; history_copy = reference branchhistory
+        merged = snapshot state_copy; mergedhistory = snapshot history_copy
+      end
+      else do
+        if spend(state.size() * 22 + branchhistory.size() * 3) = 0 then return 0
+        if merged.meet(branchstate) = 0 then return reject('join.storage.unproved')
+        if mergedhistory.meet(branchhistory) = 0 then return reject('join.history.unproved')
+      end
+    end
+    state = merged; previous = mergedhistory; proof = cases[1]
+    if publish then do
+      _selectioncount[callid] = width
+      _selections[callid] = .selection(guard.id(),operation.id(),terminal.id(),low,offset,bindings,cases)
+      _rebinding[callid] = 1
+    end
+    return 1
   /* One finite forward pass over the shared graph's DAG order. These rows
    * hold target transfer snapshots; edges and scheduling stay index-owned. */
   dag: method = .int
@@ -2356,7 +2537,7 @@ analysis: class
     return .callshape(bodyid,name,count,first,destination,name = 'call' & item.operands() = 2,countstorage,positions,actuals)
   invoke: method = .int
     arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, expose callhistory = .history, publish = 1, outerCallId = 0, depth = 0, tracking = 1
-    i = .int; j = .int; ignored = .int; repeated = .int
+    i = .int; j = .int; ignored = .int; repeated = .int; runtime = .int
     id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
     callee = .lltarget..body; child = .frame; record = .lltarget..record; shape = .callshape
     value = .lltarget..operand; ownedrow = .numbers; action = .string; linearrow = .numbers
@@ -2480,11 +2661,17 @@ analysis: class
       end
     end
     else do
+    runtime = 0
     do i = 1 to _linearcount[bodyid]
       if spend(1) = 0 then return 0
       recordid = linearrow.at(i)
       record = module.at(recordid)
       call proof.visit(_recordordinal[recordid])
+      if record.kind() = 'instruction' & record.mnemonic() = 'ichkrng' then do
+        runtime = runtimeselection(record,i,bodyid,child,state_ref,callhistory,destination,hasresult,proof,publish,item.id())
+        if runtime = 0 then return 0
+        if runtime = 1 then do; returned = proof.site(1); leave; end
+      end
       if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
       if record.kind() = 'instruction' & wordpos(record.mnemonic(),'call call1 call2 call3 call4') > 0 then do
         if invoke(record,child,state_ref,callhistory,0,outerCallId,depth + 1,tracking) = 0 then return 0
@@ -2504,8 +2691,10 @@ analysis: class
       if record.kind() = 'instruction' & record.mnemonic() = 'ret' then returned = record.id()
     end
     if returned = 0 then return reject('return.missing')
-      record = module.at(returned)
-      if finishreturn(record,child,state,destination,hasresult,proof) = 0 then return 0
+      if runtime <> 1 then do
+        record = module.at(returned)
+        if finishreturn(record,child,state,destination,hasresult,proof) = 0 then return 0
+      end
     end
     if tracking & hasresult then _plain[destination] = state.plain(destination)
     if publish & (proof.written() | shape.clear()) then do
@@ -2567,7 +2756,7 @@ analysis: class
     _index = .llirgraph..index(graph_ref,_work,_bytelimit)
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
-    if reserve(graph.operations(),200) = 0 | reserve(graph.functions(),80) = 0 then return
+    if reserve(graph.operations(),216) = 0 | reserve(graph.functions(),80) = 0 then return
     if _graphmode then do
       if reserve(graph.operations(),32) = 0 then return
     end
@@ -3048,6 +3237,67 @@ analysis: class
    * Zero denotes a0; -1 denotes a valid callee record without a rewrite.
    * Each root activation owns its row, so repeated bodies cannot overwrite
    * another site's selector. No lookup consumes handed-off work. */
+  argumentcases: method = .int
+    arg callid = .int
+    if proofid(callid) = 0 then return 0
+    if callid > _selectioncount[0] then return 0
+    return _selectioncount[callid]
+  casekey: method = .int
+    arg callid = .int, ordinal = .int
+    count = argumentcases(callid)
+    if ordinal < 1 | ordinal > count then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: runtime selector case"; return 0
+    end
+    return 1
+  argumentruntime: method = .int
+    arg callid = .int
+    if argumentcases(callid) = 0 then return 0
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.operation()
+  argumentguard: method = .int
+    arg callid = .int
+    if argumentcases(callid) = 0 then return 0
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.guard()
+  argumentraw: method = .int
+    arg callid = .int, ordinal = .int
+    if casekey(callid,ordinal) = 0 then return 0
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.raw(ordinal)
+  argumentcase: method = .int
+    arg callid = .int, ordinal = .int
+    if casekey(callid,ordinal) = 0 then return 0
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.selected(ordinal)
+  argumentcasestorage: method = .int
+    arg callid = .int, ordinal = .int
+    if casekey(callid,ordinal) = 0 then return 0
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.storage(ordinal)
+  argumentcaseaction: method = .string
+    arg callid = .int, ordinal = .int
+    if casekey(callid,ordinal) = 0 then return ''
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.action(ordinal,_retordinal[row.returned()])
+  argumentcaserestores: method = .int
+    arg callid = .int, ordinal = .int
+    if casekey(callid,ordinal) = 0 then return 0
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.restores(ordinal,_retordinal[row.returned()])
+  argumentcaseleft: method = .int
+    arg callid = .int, ordinal = .int, pair = .int
+    if pair < 1 | pair > argumentcaserestores(callid,ordinal) then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: runtime selector restoration"; return -1
+    end
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.left(ordinal,_retordinal[row.returned()],pair)
+  argumentcaseright: method = .int
+    arg callid = .int, ordinal = .int, pair = .int
+    if pair < 1 | pair > argumentcaserestores(callid,ordinal) then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: runtime selector restoration"; return -1
+    end
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.right(ordinal,_retordinal[row.returned()],pair)
   argumentselector: method = .int
     arg callid = .int, recordid = .int
     ordinal = .int; row = .numbers

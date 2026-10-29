@@ -1735,6 +1735,41 @@ Finite padded optional presence and defaults use the separate ABI-bit and
 control proof above. Dynamic-count access and other component/status bands
 remain open.
 
+One additional straight-line scalar shape admits a runtime-unknown selector:
+an authored ICHKRNG immediately precedes one register-plus-immediate LINKARG,
+and the only executable suffix is RET of its destination. The checked selector
+and both bounds resolve through the current bindings. Bounds must be known;
+their nonempty normal interval, optionally intersected with existing integer
+bounds, contains at most three values. Checked offset addition must put every
+selected index inside the captured entry bank0..N. A mutated active a0 affects
+authored upper-bound arithmetic, while captured arity still bounds the bank.
+
+The exact range instruction stays once in the emitted prefix. Its failing path
+retains OUT_OF_RANGE/HALT before dispatch or return commit. The closed-root
+policy and absence of a resumable handler are checked independently of normal
+arm refinement. Each case uses its own existing cells/frame/history and RET
+proof, so differing active argument pointers are never met as one frame.
+Only returned caller states meet; per-case actions and inverse permutations
+remain sealed under their original call/selector identities. Mixed owned and
+borrowed return actions retain `argument.selector.ownership.pending` in this
+first slice; dependent alias mutation/use suffixes remain named follow-on work.
+
+Expansion captures the selector into an initialized owned scratch before any
+LINK. A separate initialized compare cell reads that stable snapshot for each
+small, independently checked ISUB/BRF test. Each direct-LINK arm retains its
+own original return action, inverse swaps, complete UNLINK and owned ENDLIFE
+closure before the common continuation. Borrowed selected cells are copied,
+never moved or ended. Original LINKARG and RET source states remain distinct
+in every arm, and the common continuation restores the caller source before
+its TRACE or next instruction. No ISA, type proof annotation or call frame is
+added. Width limits use `argument.selector.width.policy`; guard, bank,
+overflow, suffix and ownership gaps retain specific reasons and exact input
+identity. The separate serial `levell_rxas_runtime_selector` panel extends the
+maintained constructed argument-selection owner and handwritten RXAS controls.
+Current cleanup retains the conservative runtime dispatch when its independent
+range/access proof returns `argument.range.unproved`; branch-aware reduction of
+its generated register and closure work remains a separate cleanup increment.
+
 Private same-module scalar globals now use one persistent module StorageId per
 `gN`, shared through fresh and recycled callee frames. The physical frame order
 is locals, globals, `a0`, arguments; owned recycler history excludes globals.

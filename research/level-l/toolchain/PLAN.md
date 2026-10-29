@@ -130,7 +130,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a direct selected RET, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -1533,6 +1533,140 @@ sites, and exact retained-call reasons/atomicity. Inspect source and rewritten
 LINK/UNLINK/window structure as well as values. Existing compiler vararg tests
 are behavioral evidence, not a correctness oracle for L legality. Producer
 branches/status presence and signal paths remain for the later CFG slice.
+
+### Reviewed finite runtime argument-selection follow-on
+
+**Status: implemented and focused-qualified; broader varargs and milestone QA
+remain open.** This is a bounded INL-STEP04/05 vararg increment,
+serving INL-AC02/03/04/05/06 without completing them or creating a milestone.
+It changes no ISA, RXBIN schema, linker or source-language contract. Start with
+one runtime register-plus-immediate `LINKARG` in an otherwise admitted
+same-module, globals-free, straight-line scalar callee, with a read-only suffix
+whose sole executable instruction is `RET` of that LINKARG destination. Keep
+the existing exact entry arity and closed-main/default-OUT_OF_RANGE-HALT proof;
+unknown call counts, inherited/resumable policy, loops, nested calls and a
+second runtime selector retain their existing or specific pending-proof reason.
+The first dispatch has at most three possible selected indices. A wider finite
+domain is a growth-policy limit, not an ABI impossibility. The existing exact
+selector path continues to handle its currently admitted broader suffixes.
+
+The maintained native producer is `pick` in
+`compiler/tests/rexx_src/inline_test_vararg_dynamic.crexx`: `arg ix=.int,
+...=.int; return arg[ix]`. Its current `OP_ARG_VALUE` emitter in
+`compiler/rxcpemit.c` emits `ICOPY rD,a0; ISUB rD,rD,F;
+ICHKRNG aIx,1,rD; LINKARG rD,aIx,F`, where `F` is the visible fixed-argument
+count. For `pick`, `F=1`; captured arities two through four give one through
+three possible tail slots. This producer evidence does not imply that the
+fixture's currently constant caller indices exercise a runtime-unknown fact.
+The maintained handwritten `tests/io-linkarg-unproved.rxas` does: its defined
+GETANDTP result is deliberately unknown to facts and its unguarded selection
+must remain `argument.selector.unproved`. `tests/io-linkarg.rxas` separately
+owns current-active selection, selector/destination overlap and repeated-site
+controls. Extend these maintained owners rather than inventing another
+producer or treating the float-loop/ref-mutating vararg fixtures as covered.
+
+The new proof is a checked normal-successor refinement, not an assumption that
+a runtime integer has a finite domain. Require the authored `ICHKRNG` immediately
+before LINKARG apart from inert, already admitted metadata. Resolve its checked
+operand and bounds through current StorageIds before changing any binding;
+the checked operand must be the LINKARG selector and both bounds must have
+independent known integer values at this activation. In particular, the native
+upper-bound computation must prove its actual successful integer write from
+the current active `a0`, rather than substitute captured arity for a mutated
+`a0`. Prove a nonempty inclusive normal interval, checked selector-plus-offset
+addition at both ends, width at most three, and every selected index in the
+captured bank `0..N`. The bank extent remains entry arity `N`; index zero still
+selects current active `a0`. Intersect existing integer bounds where useful,
+but do not infer status, whole-cell equality, presence or ownership from an
+integer interval. A completely failing guard is not needed for this first
+admission and may retain its precise existing failure-proof reason.
+
+Retain the exact authored range-check opcode, operands, order and logical
+source. A runtime value outside its bounds delivers the same OUT_OF_RANGE and
+halts before dispatch or result commit under the checked policy. Values on
+that failing path need not have a safe raw LINKARG index, because that path
+cannot execute LINKARG. Refinement applies only to the normal continuation;
+an IGNORE/branch/call response or an alternate entry bypassing the check cannot
+use it. Raw LINKARG itself neither checks bounds nor signals; never add an
+invented range error to justify an unguarded, overflowed or out-of-bank access.
+Unproved bound values, selector definition, guard provenance or signal policy
+retain the call with distinct proof reasons and atomic original output.
+
+This needs new bounded target control facts in `lltargetfacts`: the existing
+exact-value ICHKRNG proof and one selector integer per original record are not
+enough. The shared `llirgraph` remains the sole CFG/index owner. Record the
+guard's normal-successor certificate and a per-root-call, per-selector-case
+proof row containing its exact selected index, active binding and return
+action/restoration. Each arm starts from the same immutable pre-LINKARG state,
+refined to that selector value, and uses the existing storage/component,
+history and return owners. Repeated activations cannot overwrite another
+site's cases; neither can several cases overwrite the single original RET's
+proof row. Never weaken `frame.compatible` or meet divergent active pointers
+into an integer-value union. Return all arm results to the caller through the
+existing whole COPY semantics for borrowed selected storage, then meet only
+the restored caller states. Each case retains its true COPY, MOVE or ignored
+return action; mixed owned/borrowed actions may retain the precise
+`argument.selector.ownership.pending` proof gap in this first slice.
+The selected actual and result may alias, actuals
+may repeat, and prior admitted LINK/SWAP effects still select the active slot,
+not its immutable entry anchor.
+
+Emit the body prefix and range check once. After the check, capture the selector
+integer in a fresh owned scratch before any destination LINK, including when
+the destination holds the selector or a bound. Keep that snapshot stable and
+use a separate initialized owned compare cell for every test. Use ordinary nonfaulting scalar
+dispatch, for example checked-small-difference ISUB/BRF tests against each raw
+selector candidate, followed by the proved final arm. Each arm emits ordinary
+LINK to its exact current active argument slot and its own cloned return
+commit/restoration/lifetime closure before the common caller continuation.
+All generated arithmetic must independently prove success; a three-value
+interval makes candidate differences small without changing caller state.
+Scratch initialization/status and cleanup follow the existing owned-cell
+contract. No selected borrowed cell is moved or ended. Preserve source/TRACE
+events and scoped metadata through the existing fresh-identity owner, and
+restore caller observation state before the continuation. Charge cases,
+scratch, cloned return rows, labels, records, bytes and analysis work against
+the existing request limits before publication. A representative emitted
+dispatch and its proof/metadata rows require coordinator review before product
+implementation is frozen.
+
+The focused development panel extends constructed argument selection/keeps and
+one maintained handwritten RXAS fixture. Produce runtime-unknown selectors with
+two existing root BINEQ interval0..1 observations followed by checked IADD,
+giving a straight-line unknown interval1..3, and execute every normal choice
+with independent expected values. Cover the native `N-F` range shape, nonzero
+offset, index zero with mutable active `a0`, prior argument SWAP, repeated
+actuals, result/actual overlap, selector/destination overlap, two selected call
+sites and repeat activation. Observe whole returned components and public
+status as well as integers; the dispatch must leave unselected actuals intact.
+A paired out-of-range witness requires original and expanded OUT_OF_RANGE,
+the same logical check source/TRACE, and no continuation/result commit.
+Negatives retain unguarded unknown selection, overflow, partly out-of-bank or
+too-wide normal domains, unknown/changed bounds, a changed checked selector,
+policy allowing range-check resumption, bypass entry and mutable/use suffixes.
+Keep valid original modules exactly on refusal and exercise one bounded
+work/growth rejection. Structural checks require no selected CALL/LINKARG,
+one authored prefix/check, finite direct-LINK arms, pre-link selector capture,
+COPY rather than borrowed MOVE, exact arm closure and truthful fresh metadata.
+Run conservative and cleaned artifacts through native `rxas -n` and one normal
+VM, reusing prepared producers; inspect the generated shape before expanding
+the small panel. Cleanup may simplify dispatch only with its existing complete
+access/storage proof; failure to prove cleanup keeps the conservative expansion.
+The current runtime-selector fixture takes that keep path with
+`argument.range.unproved` in cleanup, while the conservative expansion runs
+correctly with and without the cleanup request. Its branch-aware range proof
+and storage reduction remain separate INL-STEP05 work.
+No broad compiler, sanitizer or performance campaign is commissioned here.
+
+The named next representable step is a dependent scalar suffix that reads or
+mutates the selected alias before UNLINK/RET, including the maintained
+`inline_test_ref_vararg_runtime.crexx` use shape. It needs path-specific tail
+cloning or an equally exact reviewed alternative through binding restoration
+and every return, with status/alias/ownership effects proved for every case.
+General loops, additional selectors, dynamic arity and deeper retained calls
+remain separate open work. The first read-only return slice must not be
+reported as general dynamic vararg acceptance; none of these current proof
+gaps requires a new ISA merely because the present frame meet is exact.
 
 ### Reviewed same-module global scalar increment
 
