@@ -1157,14 +1157,36 @@ old implicit window crossed the bank boundary or branch arms reordered it.
 The call's executable address group and logical source/TRACE attachment survive
 the rewrite.
 
-Zero, unknown and over-four counts, imported or opaque targets, and unproved
-bindings retain the original counted call and window. A zero-count call with
-bare `RET` cannot become the two-operand `CALL`: that form clears the result.
+For a proved finite count above four, graph transport keeps counted `CALL`
+and constructs a fresh contiguous pointer window outside all original root
+cells. A straight-line caller reaches the same owner only after its linear
+facts identify an exact reached three-operand CALL with count above four;
+the charged lookup and graph reanalysis use the remaining work allowance.
+Other linear call forms retain their existing dispatch. The window's first
+slot links to the pre-call count storage; the following slots
+link to the ordered actual StorageIds. The call retains its captured result
+storage and target. Result/count/actual overlap and repeated actuals preserve
+the same value pointers, without copying values or changing status. Every
+normal continuation unlinks the complete scratch window back to its untouched
+bases. No scratch value or borrowed-value lifetime operation is introduced.
+The same fresh window can serve successive reached calls; assignment preserves
+its count/argument adjacency and keeps distinct cells distinct. Labels enter
+before setup, while point source/TRACE records remain attached to the retained
+call after setup. Original call IDs map to that call, and every added record,
+work/byte/frame demand and encoded cell is checked before atomic publication.
+LINK does not permute slot identities, so the fresh window has no displaced
+permutation for cold unwind to restore. Ignored signals resume the same path
+through normal closure; terminal departure uses the existing frame teardown.
+Nonlocal resumable handler departures need a separate closure proof.
+
+Zero and unknown counts, imported or opaque targets, and unproved bindings
+retain the original counted call and window. A zero-count call with bare
+`RET` cannot become the two-operand `CALL`: that form clears the result.
 The first cleanup pass may keep a now-unused count LOAD because its frozen
 input still reads the count. Removing that LOAD needs bounded reanalysis of
-the new owner. General counted windows still need a proved adjacent placement
-or an equivalent linked pointer window, including abrupt restoration; deeper
-recursion, aggregates and imported bodies remain separate categories.
+the new owner. Dynamic counts still need a proved extent and callee-effect
+summary; deeper recursion, aggregates and imported bodies remain separate
+categories.
 
 ### Ordinary string components
 
@@ -1227,7 +1249,8 @@ storage identities and independent value, component and status facts; joins
 require compatible active/base/identity/context bindings. Root restoration
 requires both canonical identity and active pointer equality to its base at
 every normal RET. Reached admitted scalar child calls have effect summaries;
-eligible finite counted children use the explicit-pointer conversion above. Module
+eligible finite counted children use the explicit-pointer conversion or fresh
+linked window above. Module
 globals, exceptional exits, opaque physical-frame observers, changing scoped
 metadata bindings and unsupported operations keep the unmodified owner with
 a specific reason.

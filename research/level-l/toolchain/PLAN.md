@@ -125,11 +125,46 @@ require separate decisions.
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, and ordinary binary LOAD/BCOPY/whole register return are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Other counted implicit windows still need adjacency or equivalent alias-window mapping. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
 INL-STEP06 is the named standalone integration milestone.
+
+### Reviewed finite counted-window increment
+
+The next INL-STEP05 slice covers a retained, exact same-module counted child
+with a proved finite count greater than four under the existing restored-root,
+closed-main-default-HALT profile. The proof captures the pre-call result and
+count StorageIds and every ordered actual StorageId. All must belong to the
+original caller frame. The one-to-four explicit-call rewrite stays in place;
+unknown counts retain their distinct `argument.count.unproved` reason.
+
+For a straight-line caller, the existing linear facts first identify a reached
+exact same-module three-operand `CALL` with count greater than four. A charged
+per-call lookup then dispatches that caller to the same graph transport, using
+only the remaining work allowance; one-to-four, zero and unknown-count paths
+retain their existing dispatch. Graph transport reserves a fresh, physically
+disjoint contiguous window
+`W0..WN`. It links `W0` to the proved count storage and `Wi` to actual `i`,
+calls the same target with the original result storage and `W0`, then unlinks
+every window cell on the normal continuation. Original count, result and
+actual storage may alias; repeated actuals remain repeated pointers. No value
+copy, status write or borrowed-value lifetime operation is introduced. The
+original call address, source and TRACE attachment stay on the call; labels
+enter before window setup. Added frame, records, bytes, work and code cells
+are checked before atomic publication. Assignment must preserve the new
+implicit window's adjacency. Ignored signals may resume within the same call
+region and reach normal closure. The existing admitted policy must exclude any
+nonlocal resumable handler departure that bypasses the UNLINKs; such handlers
+require a separate window-closure proof.
+
+Independent constructed and RXAS controls cover five reordered actuals,
+repeated mutable aliases and snapshots, result/count and result/actual overlap,
+multiple outer activations, source/TRACE, full normal UNLINK closure, and
+work/byte/frame/cell refusal. Inspect removal of proved outer setup and
+inverse swaps, then execute unchanged and cleaned artifacts through `rxas -n`
+and one VM. This increment does not complete INL-STEP05 or INL-AC02/03/05.
 
 ### Signal coverage and practical-demand decision
 

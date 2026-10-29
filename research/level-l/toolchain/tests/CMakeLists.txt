@@ -62,4 +62,16 @@ if(TARGET rxbvm)
     TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_io_cli
     TARGETS levell_rxas_io_test_prep rxbvm rxas rxdas)
+  add_test(NAME levell_rxas_linked_window
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURE=${CMAKE_CURRENT_SOURCE_DIR}/io-linked-window.rxas"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/linked-window-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-linked-window.cmake")
+  set_tests_properties(levell_rxas_linked_window PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_LINKED_WINDOW[|]failures=0"
+    TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_linked_window
+    TARGETS llrxinline rxbvm rxas)
 endif()

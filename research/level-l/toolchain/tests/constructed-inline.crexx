@@ -700,32 +700,148 @@ nestedDAG: procedure = .int
   end
   return failures
 
-/** Specialization cannot change zero-count result clearing, invent an
- * unknown count, or encode more actuals than the existing fixed-call ISA. */
+/** A fresh linked window keeps aliases, count/result overlap and each normal
+ * closure while eliminating the original pointer permutation. */
+countedwindowstructure: procedure = .int
+  arg source = .lltarget..module, entryrequired = 1
+  failures = 0; i = .int; j = .int; calls = .int; counter = .int; found = .int; expected = .int
+  firstsetup = .int; entry = .int; observations = .int; sources = .int[]
+  body = source.body(source.procedureid('main')); item = .lltarget..record; neighbor = .lltarget..record
+  value = .lltarget..operand; left = .lltarget..operand; right = .lltarget..operand
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = 'label' then do
+      value = item.operand(1)
+      if value.text() = 'invoke' then entry = item.addressid()
+    end
+    if wordpos(item.kind(),'.srcstep .traceevent') > 0 then do
+      neighbor = source.at(item.addressid())
+      failures = failures + check(neighbor.kind() = 'instruction' & neighbor.mnemonic() = 'call','point source/TRACE stays on the retained CALL after window setup')
+      observations = observations + 1
+    end
+    if item.kind() <> 'instruction' then iterate
+    failures = failures + check(item.mnemonic() <> 'swap','original setup and inverse swaps are removed')
+    if item.mnemonic() <> 'call' then iterate
+    calls = calls + 1; value = item.operand(3); counter = value.index(); found = 0
+    assembler setattrs sources,0
+    failures = failures + check(counter >= 0 & counter + 5 < body.locals(),'six-cell count/actual window is physically within the frame')
+    do j = i - 1 to 1 by -1
+      neighbor = body.record(j)
+      if neighbor.kind() <> 'instruction' then iterate
+      found = found + 1; expected = counter + 6 - found
+      failures = failures + check(neighbor.mnemonic() = 'link','each retained count5 call has six preceding pointer links')
+      if neighbor.mnemonic() <> 'link' then leave
+      left = neighbor.operand(1); right = neighbor.operand(2); sources[7 - found] = right.index()
+      failures = failures + check(left.index() = expected & (right.index() < counter | right.index() > counter + 5),'setup is ordered and physically disjoint from all sources')
+      if found = 6 then do
+        if calls = 1 then firstsetup = neighbor.id()
+        leave
+      end
+    end
+    failures = failures + check(found = 6,'complete count/actual setup is present')
+    if found <> 6 then iterate
+    value = item.operand(1)
+    if calls = 1 then do
+      failures = failures + check(value.index() = sources[1] & sources[3] = sources[4] & sources[2] <> sources[3],'result/count aliases and reordered repeated actuals survive')
+      failures = failures + check(item.origin().filename() = 'counted-window.rxas','retained counted CALL keeps its logical source')
+    end
+    else failures = failures + check(value.index() = sources[2] & sources[2] = sources[4] & sources[2] <> sources[3],'result/actual overlap and the second ordered pointer row survive')
+    found = 0
+    do j = i + 1 to body.records()
+      neighbor = body.record(j)
+      if neighbor.kind() <> 'instruction' then iterate
+      found = found + 1; expected = counter + 6 - found
+      failures = failures + check(neighbor.mnemonic() = 'unlink','normal continuation closes every borrowed window binding')
+      if neighbor.mnemonic() <> 'unlink' then leave
+      value = neighbor.operand(1)
+      failures = failures + check(value.index() = expected,'window closure restores scratch bases in reverse order')
+      if found = 6 then leave
+    end
+    failures = failures + check(found = 6,'normal window closure is complete')
+  end
+  failures = failures + check(calls = 2 & observations = 2,'both count5 calls and their point observations survive')
+  if entryrequired then failures = failures + check(entry = firstsetup,'the original label enters before fresh window setup')
+  return failures
+
+/** Zero-count clearing and unknown-count proof remain distinct refusals.
+ * Known counts above the fixed ISA arities use a checked linked window. */
 nestedcountkeeps: procedure = .int
-  failures = 0; variant = .int; i = .int; count = .int; ignored = .int
+  failures = 0; variant = .int; i = .int; count = .int; ignored = .int; callid = .int; mode = .int
   expected = .string; before = .binary
-  original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
-  do variant = 1 to 3
+  original = .lltarget..module; kept = .lltarget..module; nextowner = .lltarget..module
+  changed = .llinline..change; limited = .llinline..change; fields = .object[]
+  item = .lltarget..record; file = .llir..sourcefile; callat = .llir..origin
+  next_ref = reference .llir..module
+  do variant = 1 to 4
     graph = .llir..module; keptgraph = .llir..module
     draft = .lltarget..draft('nested.count.keep.' || variant,'constructed.nested.count',0)
     at = draft.synthetic('finite counted specialization boundaries'); root = draft.procedure('main',8,at)
     count = 0
-    if variant = 2 then count = 5
+    if variant = 2 | variant = 4 then count = 5
     ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(count),at)
     ignored = three(root,'getandtp',root.reg('r',7),root.reg('r',0),.lltarget..operand.integer(768),at)
     if variant = 3 then ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',0),.lltarget..operand.integer(768),at)
     do i = 1 to 5; ignored = two(root,'load',root.reg('r',i),.lltarget..operand.integer(i * 11),at); end
     ignored = two(root,'load',root.reg('r',6),.lltarget..operand.integer(73),at)
-    ignored = two(root,'brt',.lltarget..operand.symbol('invoke'),root.reg('r',7),at)
-    ignored = zero(root,'cnop',at); ignored = namedlabel(root,'invoke',at)
-    ignored = three(root,'call',root.reg('r',6),.lltarget..operand.procedure('bare'),root.reg('r',0),at)
+    if variant <> 4 then do
+      ignored = two(root,'brt',.lltarget..operand.symbol('invoke'),root.reg('r',7),at)
+      ignored = zero(root,'cnop',at)
+    end
+    if variant <> 4 then ignored = namedlabel(root,'invoke',at)
+    if variant = 2 | variant = 4 then do
+      ignored = two(root,'link',root.reg('r',3),root.reg('r',1),at)
+      ignored = two(root,'swap',root.reg('r',1),root.reg('r',2),at)
+      file = draft.source('counted-window.rxas','call r0,bare(),r0' as .binary); callat = file.origin(0,17)
+      call objectarraydrop fields
+      fields[1] = .lltarget..operand.integer(4294967295) as .object; fields[2] = fields[1]
+      fields[3] = .lltarget..operand.integer(0) as .object; fields[4] = .lltarget..operand.string('counted-window.rxas' as .binary) as .object
+      fields[5] = .lltarget..operand.integer(1) as .object; fields[6] = .lltarget..operand.integer(0) as .object
+      fields[7] = .lltarget..operand.integer(17) as .object; fields[8] = .lltarget..operand.string('call r0,bare(),r0' as .binary) as .object
+      ignored = root.record('.srcstep',fields,callat)
+      call objectarraydrop fields; fields[1] = .lltarget..operand.string('V' as .binary) as .object
+      fields[2] = .lltarget..operand.integer(17) as .object; fields[3] = .lltarget..operand.string('R' as .binary) as .object
+      fields[4] = .lltarget..operand.string('I' as .binary) as .object; fields[5] = .lltarget..operand.string('r' as .binary) as .object
+      fields[6] = .lltarget..operand.integer(0) as .object
+      fields[7] = .lltarget..operand.integer(4294967295) as .object; fields[8] = fields[7]
+      fields[9] = .lltarget..operand.integer(0) as .object
+      fields[10] = .lltarget..operand.string('call' as .binary) as .object; fields[11] = .lltarget..operand.string(''x as .binary) as .object
+      ignored = root.record('.traceevent',fields,callat)
+      callid = three(root,'call',root.reg('r',0),.lltarget..operand.procedure('bare'),root.reg('r',0),callat)
+      ignored = two(root,'swap',root.reg('r',1),root.reg('r',2),at)
+      ignored = three(root,'call',root.reg('r',1),.lltarget..operand.procedure('bare'),root.reg('r',0),at)
+      ignored = one(root,'unlink',root.reg('r',3),at)
+    end
+    else ignored = three(root,'call',root.reg('r',6),.lltarget..operand.procedure('bare'),root.reg('r',0),at)
     ignored = one(root,'ret',.lltarget..operand.integer(0),at)
     leaf = draft.procedure('bare',0,at); ignored = zero(leaf,'ret',at)
     original = draft.finish(); failures = failures + check(original.valid(),'count specialization boundary is valid input ' || variant)
     if original.valid() = 0 then do; say original.error(); iterate; end
     graph = dereference original.ir(); before = graph.binary()
     changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    if variant = 2 | variant = 4 then do
+      failures = failures + check(changed.status() = 'changed','count5 uses a fresh linked pointer window')
+      if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+      kept = changed.result(); failures = failures + countedwindowstructure(kept,variant <> 4)
+      item = kept.at(changed.operation(callid))
+      failures = failures + check(item.mnemonic() = 'call','original call identity maps to CALL rather than setup')
+      do mode = 1 to 4
+        limitgraph = .llir..module
+        select mode
+          when 1 then limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1)
+          when 2 then limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,1)
+          when 3 then limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,13)
+          otherwise limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,65536,1)
+        end
+        nextowner = limited.result(); next_ref = nextowner.ir(); limitgraph = dereference next_ref
+        failures = failures + check(limited.status() = 'limit' & bin2x(limitgraph.binary()) = bin2x(before),'counted-window work/byte/frame/cell refusal preserves the exact owner ' || mode)
+      end
+      changed = llcleanup..storage(reference kept,kept.procedureid('main'),'closed-main-default-halt.v1')
+      failures = failures + check(changed.status() = 'changed' | changed.status() = 'keep','assignment preserves the fresh implicit window')
+      if changed.status() = 'changed' | changed.status() = 'keep' then do
+        nextowner = changed.result(); failures = failures + countedwindowstructure(nextowner,variant <> 4)
+      end
+      iterate
+    end
     expected = 'transport.implicit.storage.pending'
     if variant = 3 then expected = 'argument.count.unproved'
     failures = failures + check(changed.status() = 'keep' & changed.reason() = expected,'count0/>4/unknown has its exact pending specialization reason ' || variant)

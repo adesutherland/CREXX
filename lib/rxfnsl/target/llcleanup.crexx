@@ -14,9 +14,13 @@ import llrxas
 plan: class
   _fields = .object[]
   _mnemonic = .string
+  _window = .int[]
+  _windowbase = .int
   *: factory
-    arg fields = .object[], mnemonic = ''
+    arg fields = .object[], mnemonic = '', ?window = .int[], windowbase = -1
     _fields = fields; _mnemonic = mnemonic
+    if ?window then _window = window
+    _windowbase = windowbase
     return
   operand: method = .lltarget..operand
     arg ordinal = .int
@@ -25,6 +29,13 @@ plan: class
     return _fields[0]
   mnemonic: method = .string
     return _mnemonic
+  windowcells: method = .int
+    return _window[0]
+  windowbase: method = .int
+    return _windowbase
+  windowstorage: method = .int
+    arg ordinal = .int
+    return _window[ordinal]
   fields: method = .object[]
     arg body = .lltarget..bodydraft
     values = .object[]; value = .lltarget..operand
@@ -136,11 +147,20 @@ transport: procedure = .llinline..change
     if pending = 1 then return graphtransport(owner,procedureId,profile,work,entries,bytes,frame,cells)
     facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
+    work = facts.remaining()
+    /* A linear caller can also need the graph owner's fresh counted window.
+     * Dispatch only a reached exact >4 ordinary CALL, charging this scan and
+     * both analyses; the graph path establishes its own restoration proof. */
+    do i = 1 to facts.calls()
+      if work < 8 then return .llinline..change('limit','transport.work',source,empty)
+      work = work - 8; id = facts.callid(i); input = source.at(id)
+      if facts.bodyid(id) > 0 & input.mnemonic() = 'call' & input.operands() = 3 & facts.arguments(id) > 4 then return graphtransport(owner,procedureId,profile,work,entries,bytes,frame,cells)
+    end
     graph_ref = facts.index(); index = dereference graph_ref; access_ref = facts.access()
-    live = index.accessliveness(access_ref,facts.remaining(),bytes)
+    live = index.accessliveness(access_ref,work,bytes)
     if live.status() <> 'ok' then return .llinline..change(live.status(),live.message(),source,empty)
     if live.complete(procedureId) = 0 then return .llinline..change('keep','transport.observation.unproved',source,empty)
-    work = facts.remaining() - live.usedwork()
+    work = work - live.usedwork()
     source_graph = source.ir(); source_ir = dereference source_graph; source_store = dereference source_ir.storage()
     plannedbytes = source_store.bytes()
     pending = querycosts(graph_ref,access_ref,procedureId,work,plannedbytes,bytes,prefixes,blocktotals)
@@ -290,7 +310,7 @@ graphtransport: procedure = .llinline..change
   i = .int; j = .int; id = .int; group = .int; nextmachine = .int; nextkept = .int
   highest = .int; physical = .int; integer = .int; whole = .int; observed = .int; discard = .int
   querybound = .int; plannedbytes = .int; width = .int; targetgroup = .int; choice = .int; changed = .int; oldlocals = .int
-  fixedcount = .int; resultstorage = .int; actuals = .int[]
+  fixedcount = .int; windowcount = .int; resultstorage = .int; actuals = .int[]; window = .int[]
   pending = .int; prefixes = .int[]; blocktotals = .int[]
   input = .lltarget..record; value = .lltarget..operand; field = .lltarget..operand
   row = .plan; fields = .object[]; replacements = .object[]; plans = .object[]
@@ -345,8 +365,9 @@ graphtransport: procedure = .llinline..change
       else if wordpos(input.kind(),'.srcstep .traceevent') > 0 & group > 0 then do
         if facts.rootlive(group) = 0 then do; removed[input.id()] = 1; changed = 1; iterate; end
       end
-      discard = 0; name = ''; fixedcount = 0
+      discard = 0; name = ''; fixedcount = 0; windowcount = 0
       assembler setattrs actuals,0
+      assembler setattrs window,0
       if input.kind() = 'instruction' then do
         name = input.mnemonic()
         /* The exact root facts captured the count, result pointer and ordered
@@ -355,7 +376,7 @@ graphtransport: procedure = .llinline..change
         if name = 'call' & input.operands() = 3 then do
           if facts.bodyid(input.id()) > 0 then do
             fixedcount = facts.arguments(input.id())
-            if fixedcount < 1 | fixedcount > 4 then fixedcount = 0
+            if fixedcount < 1 then fixedcount = 0
             if fixedcount > 0 then do
               value = input.operand(2)
               if value.kind() <> 'P' then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
@@ -369,12 +390,25 @@ graphtransport: procedure = .llinline..change
                 if id < 1 | id > oldlocals then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
                 actuals[j] = id
               end
+              if fixedcount > 4 then do
+                windowcount = fixedcount; fixedcount = 0
+                /* The fresh physical window cannot overwrite a source of a
+                 * later LINK, even when result/count/actual storage aliases. */
+                if oldlocals > frame | windowcount >= frame - oldlocals then return .llinline..change('limit','transport.frame',source,empty)
+                if windowcount + 1 > work then return .llinline..change('limit','transport.work',source,empty)
+                if windowcount + 1 > (bytes - plannedbytes) / 16 then return .llinline..change('limit','transport.plan.bytes',source,empty)
+                work = work - windowcount - 1; plannedbytes = plannedbytes + (windowcount + 1) * 16
+                id = facts.storage(input.id(),2)
+                if id < 1 | id > oldlocals then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
+                window[1] = id
+                do j = 1 to windowcount; window[j + 1] = actuals[j]; end
+              end
             end
           end
         end
         /* Implicit encoded/indexed locations need their own remapping proof;
-         * only this checked finite CALL becomes explicit in this slice. */
-        if (catalog.field(input.opcode(),5) as .int) <> 0 & fixedcount = 0 then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
+         * checked finite CALLs become explicit or get a fresh linked window. */
+        if (catalog.field(input.opcode(),5) as .int) <> 0 & fixedcount = 0 & windowcount = 0 then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
         if facts.mapping(input.id()) then discard = 1
         else if name = 'endlife' then discard = facts.plainbefore(input.id(),1)
         else if deaddefinitioncandidate(input) then do
@@ -438,6 +472,12 @@ graphtransport: procedure = .llinline..change
         end
         name = 'call' || fixedcount; changed = 1
       end
+      else if windowcount > 0 then do
+        fields[1] = .lltarget..operand.bound(0,0,0,'r',resultstorage - 1) as .object
+        fields[2] = input.operand(2) as .object
+        fields[3] = .lltarget..operand.bound(0,0,0,'r',oldlocals) as .object
+        changed = 1
+      end
       else fields = lltarget..remapregisters(input,replacements)
       if input.kind() = 'instruction' then do
         if catalog.flow(input.opcode()) = 2 then do
@@ -455,7 +495,7 @@ graphtransport: procedure = .llinline..change
           end
         end
       end
-      plans[input.id()] = .plan(fields,name) as .object
+      plans[input.id()] = .plan(fields,name,window,oldlocals) as .object
     end
     /* Thread only a branch to the immediately following effective address.
      * Earlier-arm exits remain branches over the other lexical arms. */
@@ -469,6 +509,7 @@ graphtransport: procedure = .llinline..change
         iterate
       end
       row = plans[input.id()] as .plan
+      if row.windowcells() > 0 then highest = max(highest,row.windowbase() + row.windowcells() - 1)
       if row.mnemonic() = 'br' & protected[input.id()] = 0 then do
         value = row.operand(1); targetname = value.text(); targetgroup = 0
         do j = 1 to labelnames[0]
@@ -497,7 +538,7 @@ graphtransport: procedure = .llinline..change
     if highest + 1 <> oldlocals then changed = 1
     if changed = 0 then return .llinline..change('keep','transport.no.change',source,empty)
     if highest + 1 > frame then return .llinline..change('limit','transport.frame',source,empty)
-    return graphemit(source,procedureId,reference plans,reference removed,highest + 1,work,entries,bytes,cells)
+    return graphemit(source,procedureId,reference plans,reference removed,reference groups,highest + 1,work,entries,bytes,cells)
   on signal as problem
     status = 'invalid'
     if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
@@ -520,12 +561,13 @@ graphstorage: procedure = .int
 
 /** Publish a complete graph plan through the same checked target builders. */
 graphemit: procedure = .llinline..change
-  arg source = .lltarget..module, procedureId = .int, plans_ref = reference .object[], removed_ref = reference .int[], locals = .int, work = .int, entries = .int, bytes = .int, cells = .int
-  plans = dereference plans_ref; removed = dereference removed_ref
-  sources = .object[]; origins = .object[]; bodies = .object[]; fields = .object[]
-  maps = .int[]; callers = .int[]; empty = .int[]; row = .plan
-  input = .lltarget..record; targetbody = .lltarget..bodydraft
-  i = .int; j = .int; extent = .int; usedcells = .int; cost = .int; width = .int; refs = .int; status = .string
+  arg source = .lltarget..module, procedureId = .int, plans_ref = reference .object[], removed_ref = reference .int[], groups_ref = reference .int[], locals = .int, work = .int, entries = .int, bytes = .int, cells = .int
+  plans = dereference plans_ref; removed = dereference removed_ref; groups = dereference groups_ref
+  sources = .object[]; origins = .object[]; bodies = .object[]; fields = .object[]; windowfields = .object[]
+  maps = .int[]; callers = .int[]; empty = .int[]; pending = .int[]; row = .plan; pointrow = .plan
+  input = .lltarget..record; point = .lltarget..record; targetbody = .lltarget..bodydraft
+  i = .int; j = .int; extent = .int; usedcells = .int; cost = .int; width = .int; refs = .int; windowcells = .int; status = .string
+  ignored = .int; pointat = .llir..origin
   message = .string
   result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
   if result.error() <> '' then do
@@ -536,6 +578,18 @@ graphemit: procedure = .llinline..change
   source_graph = source.ir()
   do i = 1 to source.records()
     input = source.record(i)
+    if removed[input.id()] = 0 & input.procedureid() = procedureId & wordpos(input.kind(),'.srcstep .traceevent') > 0 then do
+      if groups[input.id()] > 0 then do
+        row = plans[groups[input.id()]] as .plan
+        if row.windowcells() > 0 then do
+          /* Labels retain entry before setup; point observations are emitted
+           * after the non-signalling LINKs, immediately before their CALL. */
+          if work < 1 then return .llinline..change('limit','transport.address.work',source,empty)
+          work = work - 1; pending[pending[0] + 1] = input.id()
+          iterate
+        end
+      end
+    end
     width = input.operands(); refs = input.registerrefs()
     if removed[input.id()] = 0 & input.procedureid() = procedureId & input.kind() <> 'procedure' then do
       row = plans[input.id()] as .plan
@@ -582,11 +636,43 @@ graphemit: procedure = .llinline..change
       return .llinline..change(status,result.error(),source,empty)
     end
     if input.kind() = 'instruction' then do
+      windowcells = 0
+      if input.procedureid() = procedureId then windowcells = row.windowcells()
+      do j = 1 to windowcells
+        if result.preflight(5,0) = 0 then return .llinline..change('limit',result.error(),source,empty)
+        if 3 > cells - usedcells then return .llinline..change('limit','transport.code.cells',source,empty)
+        usedcells = usedcells + 3
+        windowfields[1] = targetbody.reg('r',row.windowbase() + j - 1) as .object
+        windowfields[2] = targetbody.reg('r',row.windowstorage(j) - 1) as .object
+        ignored = targetbody.emit('link',windowfields,at)
+        if result.error() <> '' then return graphfailure(result.error(),source)
+      end
+      do j = 1 to pending[0]
+        point = source.at(pending[j]); pointrow = plans[point.id()] as .plan
+        if result.preflight(1 + point.operands() + point.registerrefs(),0) = 0 then return .llinline..change('limit',result.error(),source,empty)
+        pointat = llinline..copyorigin(source_graph,point.origin(),reference result,reference sources,reference origins)
+        if result.error() <> '' then return graphfailure(result.error(),source)
+        maps[point.id()] = targetbody.record(point.kind(),pointrow.fields(targetbody),pointat)
+        if result.error() <> '' then return graphfailure(result.error(),source)
+      end
+      assembler setattrs pending,0
       cost = 1 + fields[0]
       if cost > cells - usedcells then return .llinline..change('limit','transport.code.cells',source,empty)
       usedcells = usedcells + cost
       if input.procedureid() = procedureId then maps[input.id()] = targetbody.emit(row.mnemonic(),fields,at)
       else maps[input.id()] = targetbody.emit(input.mnemonic(),fields,at)
+      if result.error() <> '' then return graphfailure(result.error(),source)
+      /* Borrowed values and untouched scratch bases have no lifetime writes.
+       * Restore every fresh binding before the original normal successor. */
+      do j = windowcells to 1 by -1
+        if result.preflight(3,0) = 0 then return .llinline..change('limit',result.error(),source,empty)
+        if 2 > cells - usedcells then return .llinline..change('limit','transport.code.cells',source,empty)
+        usedcells = usedcells + 2
+        call objectarraydrop windowfields
+        windowfields[1] = targetbody.reg('r',row.windowbase() + j - 1) as .object
+        ignored = targetbody.emit('unlink',windowfields,at)
+        if result.error() <> '' then return graphfailure(result.error(),source)
+      end
     end
     else maps[input.id()] = targetbody.record(input.kind(),fields,at)
     if result.error() <> '' then do
@@ -609,6 +695,13 @@ graphemit: procedure = .llinline..change
     return .llinline..change(status,'LL_TARGET_TRANSPORT: ' || message,source,empty)
   end
   return .llinline..change('invalid','transport.no.result',source,empty)
+
+/** Preserve the original owner for every failed added builder operation. */
+graphfailure: procedure = .llinline..change
+  arg message = .string, source = .lltarget..module
+  empty = .int[]; status = 'invalid'
+  if pos('LL_RESOURCE_LIMIT',message) > 0 then status = 'limit'
+  return .llinline..change(status,message,source,empty)
 
 /** Add one virtual cell to an ordered row set. The assignment owner accounts
  * the projection scan; the adapter reserves its five scratch vectors once. */
