@@ -130,7 +130,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, transactional private normalization of selected root same-module scalar counted SWAPCALL/SETTPSWAPCALL/SETTPCALL under the default-HALT profile, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure, stable-register scoped META re-entry on direct acyclic calls and checked runtime-selector suffixes, and stable nonempty REG rN/aN/CONST runtime prefix scopes and selected LINKARG-group META/source/TRACE staging are focused-qualified. Complete broader imported, aliasing, dynamic varargs, group-local aN/gN re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, transactional private normalization of selected root same-module scalar counted SWAPCALL/SETTPSWAPCALL/SETTPCALL under the default-HALT profile, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, six signed integer predicates in the exact-bound scalar profile, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure, stable-register scoped META re-entry on direct acyclic calls and checked runtime-selector suffixes, and stable nonempty REG rN/aN/CONST runtime prefix scopes and selected LINKARG-group META/source/TRACE staging are focused-qualified. Complete broader imported, aliasing, dynamic varargs, group-local aN/gN re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Runtime prefix metadata uses original typed operands, one stable StorageId ledger per root site and original incoming checkpoints through the shared bounded reconciler; argument-bank root reuse remains outside this proof. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Selected fused-root preparation is preserved conservatively and its proved outer setup/restoration is removed through the existing cleanup service; mixed fused batches retain exact original owners and site decisions on refusal. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -3409,6 +3409,119 @@ bounds. Subtraction/multiplication boundaries, aliased destination, status
 preservation and tight resource limits have focused controls in the existing
 storage/CLI development lane with native assembler optimization disabled and
 one VM. Broader acceptance stays INL-STEP06.
+
+### Integer predicate transfer increment
+
+**Status: implemented and focused-qualified; broader initiative acceptance
+open.** This INL-STEP04/05 development slice serves
+INL-AC02/03/05/06/07 by admitting the six ordinary signed-integer predicates
+`IEQ`, `INE`, `IGT`, `ILT`, `IGTE` and `ILTE` in the existing exact-bound scalar
+direct-call profile, including explicit fixed-argument CALL1--CALL4 sites and
+straight-line or acyclic bodies through their proved RETs. Their transfer
+belongs to the existing `lltargetfacts` owner and is shared with the changed
+caller's existing cleanup analysis. Preserve all enclosing call/body/module,
+arity, frame/history, child/depth, signal and observation gates. This is an
+operation-profile extension, not a new caller CFG, call form, selector proof,
+import/global capability, retained-child whitelist, reference/aggregate category,
+ISA, metadata annotation or solver. INL-STEP06 and the wider representable-profile
+acceptance remain open. In particular, the runtime-selector CALL1 child whitelist
+is a separate gate and is unchanged by the shared predicate transfer.
+
+Use the canonical extracted opcode/effect/component/signal catalogue and the
+owning VM handlers. IEQ/INE have register/register and register/immediate input
+forms; the four ordered predicates additionally have immediate/register input
+forms. Destination is a checked register. Do not invent immediate/immediate or
+immediate-left IEQ/INE forms, infer identities from numeric opcode ranges, or
+treat fused IGTBR/ILTBR as these ordinary result-producing instructions.
+Keep each original predicate instruction and source/TRACE address in conservative
+expansion; no compare helper, subtraction, conversion or runtime guard is added.
+
+Resolve both input operands through the current active frame before changing
+the destination, and capture all facts needed for their comparison first.
+Every register input requires an independently defined integer component;
+known whole-null state alone is insufficient. An input need not be an exact
+constant or have finite arithmetic bounds: signed int64 comparison itself has
+no overflow path. Immediate operands retain their exact signed int64 values.
+Unresolved storage keeps its existing external-storage reason; an undefined or
+unproved recycled integer input retains `predicate.operand.unproved`. These two
+fixtures deliberately share that reason: the missing premise is the same
+integer definition, with distinct fresh/recycled histories retained in their
+oracles. The new predicate transfer must explicitly require
+`state.ordinary(destination) = 1`, otherwise retaining
+`argument.scalar.state.unproved`. REG_RETURN_INT invokes `set_int`, which can
+release a reference payload or native payload before writing the integer.
+Do not use `state.plain` for this gate: an ordinary string/binary side component
+is permitted and must survive. This is a predicate-specific gate; it does not
+change unrelated existing arithmetic transfers. A source that is the destination, a
+repeated actual, or two distinct encoded slots resolving to one StorageId still
+reads the complete incoming operands before the one write.
+
+Compare signed integer values directly with the selected relation. In particular,
+do not compute `left-right`, negate MIN, use absolute values or route through
+decimal/string comparison. If both incoming integers are exact, publish the
+independently computed exact 0 or 1. Otherwise publish a defined integer with
+the existing interval `[0,1]`, including defined unbounded inputs. This slice
+adds no operand-range, same-storage correlation or branch-edge refinement;
+existing branch analysis may fold an exact result or carry both feasible
+edges for an unknown boolean. At joins, use the existing component/interval
+meet. No new value domain or per-cell state row is required.
+
+Canonical signal classification is NONE for these forms. Under the existing
+ordinary-storage proof the predicate therefore always commits its integer
+result; no arithmetic-success endpoint test or terminal-signal assumption is
+needed. Publish both integer reads before the write, a possible integer and
+whole-observation-domain write, and a definite kill of only the destination's
+old integer component. Preserve destination status, string/binary and other
+components, whole-knownness, owned/base/active/slot identity and required lifetime
+facts. Clear no whole-cell domain and assert no reset/freshness or known status.
+Refresh the current plain/lifetime summary through its existing owner. The
+remaining return-action, alias/copyback, META/TRACE and recycler proofs still
+decide whether later whole observations and transfers are legal.
+
+The smallest focused panel extends the maintained constructed scalar/storage
+owner and one paired handwritten or maintained-golden-derived native RXAS
+consumer. Cover all six relations, all canonical operand arrangements, equal
+and unequal values, negative/zero/positive inputs and signed MIN/MAX without
+overflowing oracle intermediates. Include a genuinely defined unknown/unbounded
+integer producing `[0,1]`, an exact comparison that selects a DAG edge, and an
+unknown comparison whose two edges reach different RETs. Cover destination equal
+to either register input, repeated actuals, and a seeded string/public-status
+side component which survives the integer write and result transfer. Assert
+independent values and mutations, exact integer read/write/kill summaries, no
+whole kill, no selected CALL, and retained original predicate instructions in
+cleanup-disabled output. The cleaned result must preserve the same observations;
+branch simplification may use only existing exact-result proof. A simple fixed
+leaf must add no compare calls, guards, copies or frames beyond the already
+required inline mapping and return ownership.
+
+Use the maintained `classify` callee in
+`compiler/tests/golden/noopt/inline_test_multi_return_assign.rxas` as the native
+source pattern, retaining its branch/RET/source shape in a small fixed-call
+harness. Inputs -1, 0 and 1 independently return -1, 0 and 1; the original
+golden's main loop is outside this caller profile and is not selected. The
+alias control starts an actual at integer -7, string `keep`, public status 512;
+an aliased greater-than-zero predicate changes its integer to 0 while the
+string and public status remain `keep` and 512. The original, conservatively
+expanded and cleaned native artifacts must agree with these independent values.
+
+Negative controls distinguish a fresh whole-null but integer-undefined input
+and a recycled local integer without an independent definition; both retain
+`predicate.operand.unproved` and the exact frozen input. Reuse existing
+nonordinary/call-profile refusals for unsupported payloads; do not introduce a
+new event/native-payload producer solely to exercise this predicate gate.
+Earlier enclosing-profile refusals retain their existing reasons. Reuse
+existing call/profile, whole-return and observation regressions;
+do not widen this slice to their full matrices. Charge operand lookups/captures,
+the constant-sized comparison and state/access updates through the existing
+work owner before growth. Snapshot and liveness use the existing cell and graph
+allowances; cloned instructions use the shared `inline.code.cells` ledger.
+The new fixed work charge has a CLI limit and last-good publication control;
+existing entry, byte, frame and code limit owners retain their controls and
+unchanged obligations.
+Review coherent source and one simple emitted predicate/branch region early,
+then freeze for the coordinator's small serial constructed/paired panel with
+prepared producers, native assembler optimization disabled and one normal VM.
+No broad compiler, sanitizer, platform or performance campaign is selected.
 
 ### Reviewed finite optional scalar prologue increment
 

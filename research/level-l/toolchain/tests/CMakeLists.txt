@@ -68,6 +68,18 @@ add_custom_target(levell_rxas_fused_test_prep DEPENDS
 add_dependencies(levell_rxas_fused_test_prep llrxinline)
 if(TARGET rxbvm)
   get_target_property(_cli llrxinline LLRXINLINE_BYTECODE)
+  add_test(NAME levell_rxas_integer_predicates
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/integer-predicates-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-integer-predicates.cmake")
+  set_tests_properties(levell_rxas_integer_predicates PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_INTEGER_PREDICATES[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_integer_predicates
+    TARGETS llrxinline rxbvm rxas)
   add_test(NAME levell_rxas_fused
     COMMAND ${CMAKE_COMMAND}
       "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"

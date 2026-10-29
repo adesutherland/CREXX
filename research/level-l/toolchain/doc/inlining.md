@@ -1773,6 +1773,48 @@ operation succeeds. Unbounded operands, failing endpoints and value
 correlations such as `x-x` retain their specific proof gap. Typed end-anchor
 observers and more general CFG/alias cleanup remain open under INL-STEP05.
 
+### Integer predicate transfer follow-on
+
+The authoritative plan records the coordinator-reviewed bounded six-predicate
+slice: IEQ/INE/IGT/ILT/IGTE/ILTE in the existing scalar
+direct/fixed-call profile and its shared cleanup analysis. Canonical opcode,
+effect/component and signal owners determine the admitted register/immediate
+forms. Fused compare-and-branch opcodes, new call/selector/global/import/child
+profiles and broader integer operations remain outside this slice. The
+runtime-selector retained-CALL1 child whitelist is a separate unchanged gate.
+
+Both input StorageIds and integer facts are captured before an aliased output
+write. Register inputs require independently defined integers; comparison may
+consume a defined unknown/unbounded integer without arithmetic endpoint proof.
+The new predicate branch explicitly requires `state.ordinary(destination) = 1`
+or retains `argument.scalar.state.unproved`: REG_RETURN_INT's `set_int` can
+release a reference/native payload. `state.plain` is too strong because ordinary
+string/binary side components are allowed. Existing arithmetic gates are
+unchanged. Signed comparisons use the relation directly, without subtracting,
+negating MIN or using decimal conversion. Exact inputs produce exact 0/1;
+otherwise the existing integer interval becomes `[0,1]`. No new input correlation
+or edge refinement is introduced. The canonical non-signalling operation commits
+one integer write and integer-only kill, preserving other components/status,
+whole-state and binding/lifetime obligations. Source/TRACE remains attached to
+the original predicate in conservative expansion; no runtime helper is added.
+
+Focused acceptance uses the maintained constructed owner plus one paired native
+handwritten/golden-derived consumer with cleanup disabled and enabled. It checks
+the six relations and canonical forms, signed endpoints, exact and genuinely
+unknown branches, alias-before-write, surviving side components, access/kill
+summaries and atomic limits. The maintained golden `classify` body supplies a
+small fixed-call native pattern for -1/0/1 inputs and matching -1/0/1 results;
+its original main loop is excluded. A greater-than-zero result written through
+an actual seeded with integer -7, string `keep` and public status 512 must become
+integer 0 while retaining `keep` and 512. Fresh undefined and recycled undefined
+integer inputs intentionally share `predicate.operand.unproved`, with distinct
+history fixtures; whole-null knowledge is not an integer definition. Earlier
+unsupported-payload/profile refusals retain their existing reasons.
+
+The constructed and paired native panels passed on one normal VM, with
+cleanup-disabled and cleaned output and exact negative/last-good controls.
+Full standalone acceptance remains open.
+
 ### Straight-line callee rebinding contract
 
 For admitted callee LINK/UNLINK/SWAP, `lltargetfacts.analysis` supplies exact

@@ -2557,6 +2557,7 @@ analysis: class
     i = .int; j = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
     opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
     integerwrite = .int; binaryload = .int; binaryequal = .int
+    leftknown = .int; rightknown = .int
     selected = .int; checked = .int[]; limits = .int[]
     leftlow = .int; lefthigh = .int; rightlow = .int; righthigh = .int; resultlow = .int; resulthigh = .int
     source = .lltarget..operand; bank = .lltarget..operand; reference_value = .lltarget..operand; option = .lltarget..operand
@@ -2742,7 +2743,7 @@ analysis: class
       end
       if record then _mapping[item.id()] = 1
     end
-    else if wordpos(name,'null load copy icopy scopy bcopy move acopy settp getandtp bineq endlife iadd isub imult itos say') > 0 then do
+    else if wordpos(name,'null load copy icopy scopy bcopy move acopy settp getandtp bineq endlife iadd isub imult ieq ine igt ilt igte ilte itos say') > 0 then do
       if name = 'say' then do
         if private then return reject('profile.callee.external.effect.pending')
         value = item.operand(1)
@@ -2852,6 +2853,49 @@ analysis: class
           if name = 'move' then call state.move(destination,sourceid)
           else call state.copy(destination,sourceid,name <> 'icopy')
         end
+        else if wordpos(name,'ieq ine igt ilt igte ilte') > 0 then do
+          /* Canonical forms have R/R, R/I or (ordered predicates only) I/R
+           * inputs. Direct signed comparison has no overflow path, including
+           * MIN/MAX. set_int may release opaque payloads, so ordinary storage
+           * is required even though ordinary string/binary fields may remain. */
+          if spend(8) = 0 then return 0
+          if state.ordinary(destination) = 0 then return reject('argument.scalar.state.unproved')
+          left = item.operand(2); right = item.operand(3)
+          leftknown = 1; rightknown = 1; lhs = 0; rhs = 0
+          if left.kind() = 'R' then do
+            sourceid = view.storage(left)
+            if sourceid = 0 then return reject('profile.external.storage.pending')
+            if state.defined(sourceid) = 0 then return reject('predicate.operand.unproved')
+            leftknown = state.known(sourceid)
+            if leftknown then lhs = state.value(sourceid)
+            call insert(reference reads,domain(sourceid))
+          end
+          else lhs = left.index()
+          if right.kind() = 'R' then do
+            rightid = view.storage(right)
+            if rightid = 0 then return reject('profile.external.storage.pending')
+            if state.defined(rightid) = 0 then return reject('predicate.operand.unproved')
+            rightknown = state.known(rightid)
+            if rightknown then rhs = state.value(rightid)
+            call insert(reference reads,domain(rightid))
+          end
+          else rhs = right.index()
+          /* All incoming operands are captured before a possibly aliased
+           * destination write. Unknown integers still define a boolean. */
+          if leftknown & rightknown then do
+            select name
+              when 'ieq' then selected = lhs = rhs
+              when 'ine' then selected = lhs <> rhs
+              when 'igt' then selected = lhs > rhs
+              when 'ilt' then selected = lhs < rhs
+              when 'igte' then selected = lhs >= rhs
+              when 'ilte' then selected = lhs <= rhs
+              otherwise return reject('profile.scalar.operation.pending')
+            end
+            call state.integer(destination,1,selected)
+          end
+          else call state.interval(destination,0,1)
+        end
         else do
           left = item.operand(2); right = item.operand(3)
           /* Capture both incoming intervals before a possibly aliased
@@ -2907,7 +2951,7 @@ analysis: class
         if wordpos(name,'null copy move') > 0 then do
           call insert(reference kills,domain(destination)); call insert(reference kills,domain(destination,1))
         end
-        else if integerwrite & wordpos(name,'load icopy getandtp bineq iadd isub imult') > 0 then call insert(reference kills,domain(destination))
+        else if integerwrite & wordpos(name,'load icopy getandtp bineq iadd isub imult ieq ine igt ilt igte ilte') > 0 then call insert(reference kills,domain(destination))
         if history then _plain[destination] = state.plain(destination)
       end
     end
