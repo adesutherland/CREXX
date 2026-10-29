@@ -1029,11 +1029,12 @@ outer setup/reverse-swap elimination remains required by INL-STEP05/AC05.
 Independent constructed-model fixtures exercise the service and its output;
 they do not complete the real RXAS adapter or the full approved POC profile.
 
-### Exact imported-leaf development contract
+### Exact imported scalar-body development contract
 
 The opt-in `closed-main-static-exact-default-halt.v1` profile admits an exact
-imported scalar leaf with a finite declared private local count, no
-labels/branches and no nested executable procedure references. The caller has
+imported scalar body with a finite declared private local count and no nested
+executable procedure references. Straight-line bodies and finite direct acyclic
+branch bodies use the existing same-owner scalar proof. The caller has
 the only `main`; caller and providers have no globals, providers have no
 imports, and the complete caller import set resolves uniquely over the
 distinct bound providers. The CLI also
@@ -1045,7 +1046,7 @@ invocation. It is a declared static delivery contract, not an RXBIN witness or
 a general proof of loader selection. Initializer/autoload and unknown startup
 metadata retain calls. The metadata gate positively admits the existing `b`
 compiler signature/register/constant record shapes and opaque three-field
-`.inline` transport elsewhere; a selected leaf containing that transport is
+`.inline` transport elsewhere; a selected body containing that transport is
 retained explicitly. No new inliner metadata is created or consumed as proof.
 The existing scalar facts owner still decides operations, argument status,
 ownership, signal policy and normal-return legality.
@@ -1059,6 +1060,26 @@ surrogate reference. Only the original caller module, with all original
 imports, can be published. Record and changed-caller mappings compose through
 both private owners, while cloned source bytes, spans and contributor chains
 remain attached to the provider's logical source.
+
+Before any provider body is replayed, the projection reserves one checked label
+map for each interned exact provider/procedure pair and original label bytes.
+It covers forward, alias and unreachable declarations, and fresh names avoid
+all caller/provider labels, constant aliases, procedure names and already
+allocated names. This matters because the target emitter resolves `L` operands
+against `.const` aliases. Only declarations and canonical catalogue branch
+operands are rewritten; unrelated symbols, metadata names and literal bytes
+retain their meaning. The same-owner expander then owns independent per-site
+label/continuation relocation. The shared target validator checks the rebuilt
+module-wide namespace and branch edges; no private CFG or metadata proof is
+introduced.
+
+Direct `BR`, `BRT`, `BRF`, `BRTF` and `BRTPANDT` use the existing acyclic proof,
+per-return transfers/restoration, component/status meets and shared closure.
+Undefined conditions, reachable cycles, incompatible joins and branch-local
+metadata retain their existing specific missing-proof reasons. Source/TRACE
+at label entry remains in source order with its provider origin; detached
+end-anchor observations remain with the unchanged provider. The imported
+admission does not widen signal, nested-call, startup or global coverage.
 
 The surrogate preserves the provider's declared local count, so the shared
 facts owner follows one private-base history across all aliases and selected
@@ -1081,9 +1102,13 @@ borrowed, so an uneven request may need an explicitly larger allowance. Entry,
 byte and instruction-cell limits apply to each checked owned stage; at most
 three new owned models coexist. Private map, name and provenance tables are
 preflighted alongside their stage's model allowance. Every refusal, exhausted
-allowance or invalid rebuild returns the exact original caller. Unproved
-recycler histories, DAG labels, nested imports and initializer ingress remain
-open in INL-STEP04.
+allowance or invalid rebuild returns the exact original caller. Label-map/name
+storage, collision scans and lookups share those prospective checks. Unproved
+recycler histories, broader imported calls and initializer ingress remain open
+in INL-STEP04. Independent constructed and handwritten controls cover colliding
+provider/caller labels and constants, two-target backward-lexical DAGs, both
+normal outcomes and return ownership, source/TRACE, repeated private history,
+invalid labels and atomic limits. Final qualification remains INL-STEP06.
 
 ### Scalar expansion and transport development contract
 

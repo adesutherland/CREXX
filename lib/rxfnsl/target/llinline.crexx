@@ -876,6 +876,9 @@ importprojection: class
   _pairheader = .int[]
   _pairname = .string[]
   _pairfunction = .int[]
+  _labelpair = .int[]
+  _labelold = .binary[]
+  _labelnew = .string[]
   _callpair = .int[]
   _operations = .int[]
   _functions = .int[]
@@ -908,7 +911,8 @@ importprojection: class
     draft = .lltarget..draft; message = .string; status = .string
     fields = .object[]; sourcecache = .importorigins()
     providerindex = .int; pair = .int; found = .int; called = .string
-    i = .int; j = .int; higheststep = .int; highestclause = .int; ignored = .int
+    i = .int; j = .int; k = .int; higheststep = .int; highestclause = .int; ignored = .int
+    renamed = .string; catalog = .llrxascatalog..catalog()
     do
     if bindings[0] = 0 then do; ignored = fail('keep','binding.empty'); return; end
     if bindings[1] is .binding then request = bindings[1] as .binding
@@ -1017,6 +1021,13 @@ importprojection: class
         if spend(1) = 0 then return
         item = provider.record(j)
         if item.procedureid() <> body.functionid() | item.kind() = 'procedure' then iterate
+        /* The private projection shares one module-wide label/constant
+         * namespace. Reserve every declaration before replay, including
+         * forward, alias and unreachable labels, for this exact body pair. */
+        if item.kind() = 'label' then do
+          value = item.operand(1)
+          if preparelabel(i,value.bytes()) = 0 then return
+        end
         if item.kind() = '.srcstep' | item.kind() = '.traceevent' then do
           /* freshidentity scans each existing pair before insertion. Charge
            * both lookup lengths before either request-local map can grow. */
@@ -1076,6 +1087,19 @@ importprojection: class
         at = cache.copy(graph_ref,item.origin(),reference draft)
         fields = clonefields(item,targetbody); fields = cache.metadata(item,fields)
         if item.kind() = '.meta' & item.operands() = 5 then fields[4] = .lltarget..operand.procedure(_pairname[i]) as .object
+        if item.kind() = 'label' then do
+          value = item.operand(1); renamed = projectlabel(i,value.bytes(),reference draft)
+          if _status <> 'building' then return
+          if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
+          fields[1] = .lltarget..operand.symbol(renamed) as .object
+        end
+        else if item.kind() = 'instruction' then do k = 1 to item.operands()
+          if catalog.branch(item.opcode(),k) = 0 then iterate
+          value = item.operand(k); renamed = projectlabel(i,value.bytes(),reference draft)
+          if _status <> 'building' then return
+          if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
+          fields[k] = .lltarget..operand.symbol(renamed) as .object
+        end
         if item.kind() = 'instruction' then ignored = targetbody.emit(item.mnemonic(),fields,at)
         else ignored = targetbody.record(item.kind(),fields,at)
       end
@@ -1124,10 +1148,11 @@ importprojection: class
     _reserved[_reserved[0] + 1] = name
     return 1
   newname: method = .string
+    arg prefix = '_import.body.'
     i = .int; collision = .int; ignored = .int; name = .string
     do forever
       if _serial >= 2147483647 then do; ignored = fail('limit','import.names'); return ''; end
-      _serial = _serial + 1; name = '_import.body.' || _serial; collision = 0
+      _serial = _serial + 1; name = prefix || _serial; collision = 0
       do i = 1 to _reserved[0]
         if spend(length(name) + length(_reserved[i]) + 1) = 0 then return ''
         if _reserved[i] == name then collision = 1
@@ -1136,6 +1161,26 @@ importprojection: class
     end
     if remember(name) = 0 then return ''
     return name
+  preparelabel: method = .int
+    arg pair = .int, old = .binary
+    name = .string; at = .int
+    if reserve(1,96) = 0 | reserve(<blen>(old),1) = 0 then return 0
+    name = newname('_import.label.')
+    if _status <> 'building' then return 0
+    if reserve(length(name),1) = 0 then return 0
+    at = _labelpair[0] + 1; _labelpair[at] = pair; _labelold[at] = old; _labelnew[at] = name
+    return 1
+  projectlabel: method = .string
+    arg pair = .int, old = .binary, target = reference .lltarget..draft
+    draft = dereference target; i = .int; ignored = .int
+    do i = 1 to _labelpair[0]
+      if draft.preflight(1,0) = 0 then return ''
+      if _labelpair[i] <> pair then iterate
+      if draft.preflight(<blen>(old) + <blen>(_labelold[i]) + 1,0) = 0 then return ''
+      if bincompare(_labelold[i],old) = 0 then return _labelnew[i]
+    end
+    ignored = fail('invalid','import.label.mapping')
+    return ''
   scanmodule: method = .int
     arg owner = reference .lltarget..module, provider = .int
     source = dereference owner; item = .lltarget..record; name = .lltarget..operand; option = .lltarget..operand
@@ -1191,7 +1236,7 @@ importprojection: class
     return 1
   leaf: method = .int
     arg owner = reference .lltarget..module, body = .lltarget..body
-    source = dereference owner; item = .lltarget..record; value = .lltarget..operand; catalog = .llrxascatalog..catalog()
+    source = dereference owner; item = .lltarget..record; value = .lltarget..operand
     i = .int; j = .int; returns = .int
     _lastheader = 0
     do i = 1 to source.records()
@@ -1199,10 +1244,9 @@ importprojection: class
       item = source.record(i)
       if item.procedureid() <> body.functionid() then iterate
       if item.kind() = 'procedure' then do; _lastheader = item.id(); iterate; end
-      if item.kind() = 'label' then return fail('keep','import.leaf.control.pending')
       if item.kind() = 'instruction' then do
-        if returns > 0 then return fail('keep','import.leaf.control.pending')
-        if catalog.flow(item.opcode()) = 1 | catalog.flow(item.opcode()) = 2 then return fail('keep','import.leaf.control.pending')
+        /* The checked target CFG and shared scalar facts own control
+         * admission, feasible paths, return actions and cycle refusal. */
         do j = 1 to item.operands()
           if spend(1) = 0 then return 0
           value = item.operand(j)
@@ -1219,7 +1263,7 @@ importprojection: class
         if value.text() = '.inline' then return fail('keep','import.leaf.inline.transport.pending')
       end
     end
-    if returns <> 1 then return fail('keep','import.leaf.control.pending')
+    if returns = 0 then return fail('keep','import.leaf.control.pending')
     return 1
   status: method = .string
     return _status

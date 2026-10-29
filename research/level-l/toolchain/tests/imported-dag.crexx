@@ -1,0 +1,298 @@
+/* cREXX License (MIT). Independent exact imported-DAG contract. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import llinline
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+three: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, third = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object; fields[3] = third as .object
+  return body.emit(name,fields,at)
+
+namedlabel: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+
+point: procedure = .int
+  arg body = .lltarget..bodydraft, id = .int, observed = .lltarget..operand, role = .string, at = .llir..origin
+  fields = .object[]
+  fields[1] = .lltarget..operand.integer(id) as .object; fields[2] = fields[1]
+  fields[3] = .lltarget..operand.integer(0) as .object
+  fields[4] = .lltarget..operand.string(at.filename() as .binary) as .object
+  fields[5] = .lltarget..operand.integer(id) as .object; fields[6] = .lltarget..operand.integer(1) as .object
+  fields[7] = .lltarget..operand.integer(8) as .object
+  fields[8] = .lltarget..operand.string(role as .binary) as .object
+  ignored = body.record('.srcstep',fields,at)
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.string('V' as .binary) as .object
+  fields[2] = .lltarget..operand.integer(4) as .object
+  fields[3] = .lltarget..operand.string('R' as .binary) as .object
+  fields[4] = .lltarget..operand.string('I' as .binary) as .object
+  fields[5] = .lltarget..operand.string(observed.bank() as .binary) as .object
+  fields[6] = .lltarget..operand.integer(observed.index()) as .object
+  fields[7] = .lltarget..operand.integer(id) as .object; fields[8] = fields[7]
+  fields[9] = .lltarget..operand.integer(0) as .object
+  fields[10] = .lltarget..operand.string(role as .binary) as .object
+  fields[11] = .lltarget..operand.string(''x as .binary) as .object
+  return body.record('.traceevent',fields,at)
+
+/** Distinct owners reuse every label and numeric observation ID. The normal
+ * body executes dispatch before its lexically earlier arms. */
+provider: procedure = .lltarget..module
+  arg exposed = .string, filename = .string, variant = 0
+  draft = .lltarget..draft('dag.provider','fixture:' || filename,0)
+  file = draft.source(filename,filename as .binary); at = file.origin(0,length(filename))
+  leaf = draft.procedure('leaf',1,at,exposed)
+  fields = .object[]; ignored = .int; i = .int
+  if variant = 1 then do
+    ignored = namedlabel(leaf,'again',at)
+    ignored = one(leaf,'br',.lltarget..operand.symbol('again'),at)
+    ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+    return draft.finish()
+  end
+  if variant = 6 then do
+    ignored = namedlabel(leaf,'duplicate',at)
+    ignored = namedlabel(leaf,'duplicate',at)
+    ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+    return draft.finish()
+  end
+  if variant = 7 then do
+    ignored = one(leaf,'br',.lltarget..operand.symbol('missing'),at)
+    ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+    return draft.finish()
+  end
+  if variant = 8 then do
+    do i = 1 to 96; ignored = namedlabel(leaf,'reserved.' || i,at); end
+    ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+    return draft.finish()
+  end
+  if variant = 2 then ignored = two(leaf,'brt',.lltarget..operand.symbol('positive'),leaf.reg('r',0),at)
+  else if variant = 3 | variant = 4 | variant = 5 then ignored = two(leaf,'brt',.lltarget..operand.symbol('positive'),leaf.reg('a',1),at)
+  if variant = 2 | variant = 3 | variant = 4 | variant = 5 then do
+    if variant = 3 then ignored = one(leaf,'br',.lltarget..operand.symbol('done'),at)
+    else ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+    ignored = namedlabel(leaf,'positive',at)
+    if variant = 3 then ignored = two(leaf,'link',leaf.reg('a',2),leaf.reg('a',1),at)
+    if variant = 4 then do
+      ignored = one(leaf,'null',leaf.reg('r',0),at)
+      fields[1] = .lltarget..operand.string('branch-local' as .binary) as .object
+      fields[2] = .lltarget..operand.string('b' as .binary) as .object
+      fields[3] = .lltarget..operand.string('.int' as .binary) as .object
+      fields[4] = leaf.reg('r',0) as .object
+      ignored = leaf.record('.meta',fields,at)
+    end
+    if variant = 5 then ignored = one(leaf,'call',.lltarget..operand.procedure('nested'),at)
+    ignored = namedlabel(leaf,'done',at)
+    ignored = one(leaf,'ret',leaf.reg('a',2),at)
+    if variant = 5 then do
+      nested = draft.procedure('nested',0,at)
+      ignored = one(nested,'ret',.lltarget..operand.integer(0),at)
+    end
+    return draft.finish()
+  end
+  if variant = 9 then ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(5),at)
+  else ignored = one(leaf,'null',leaf.reg('r',0),at)
+  ignored = one(leaf,'br',.lltarget..operand.symbol('dispatch'),at)
+  ignored = namedlabel(leaf,'negative',at)
+  ignored = namedlabel(leaf,'negative_alias',at)
+  if variant = 9 then do
+    ignored = two(leaf,'copy',leaf.reg('a',2),leaf.reg('r',0),at)
+    ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(256),at)
+    ignored = one(leaf,'ret',leaf.reg('a',2),at)
+  end
+  else do
+    ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(9),at)
+    ignored = point(leaf,1,leaf.reg('r',0),'owned',at)
+    ignored = one(leaf,'ret',leaf.reg('r',0),at)
+  end
+  ignored = namedlabel(leaf,'positive',at)
+  if variant = 9 then do
+    ignored = two(leaf,'copy',leaf.reg('a',2),leaf.reg('r',0),at)
+    ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(256),at)
+    ignored = one(leaf,'ret',leaf.reg('a',2),at)
+  end
+  else do
+    ignored = two(leaf,'swap',leaf.reg('a',2),leaf.reg('a',3),at)
+    ignored = two(leaf,'load',leaf.reg('a',2),.lltarget..operand.integer(99),at)
+    ignored = one(leaf,'br',.lltarget..operand.symbol('done'),at)
+  end
+  ignored = namedlabel(leaf,'dispatch',at)
+  ignored = point(leaf,3,leaf.reg('a',1),'condition',at)
+  ignored = three(leaf,'brtf',.lltarget..operand.symbol('positive'),.lltarget..operand.symbol('negative_alias'),leaf.reg('a',1),at)
+  ignored = namedlabel(leaf,'done',at)
+  ignored = point(leaf,2,leaf.reg('a',3),'borrowed',at)
+  ignored = one(leaf,'ret',leaf.reg('a',3),at)
+  return draft.finish()
+
+caller: procedure = .lltarget..module
+  draft = .lltarget..draft('dag.caller','fixture:dag.caller',0)
+  file = draft.source('dag-caller.rxas','dag caller' as .binary); at = file.origin(0,10)
+  fields = .object[]; ignored = .int; i = .int; name = .string; exposed = .string; destination = .int
+  do i = 1 to 3
+    name = 'left'; exposed = 'fixture.dag.first'
+    if i = 2 then name = 'right'
+    if i = 3 then do; name = 'other'; exposed = 'fixture.dag.second'; end
+    fields[1] = .lltarget..operand.procedure(name) as .object
+    fields[2] = .lltarget..operand.symbol(exposed) as .object
+    ignored = draft.record('.import',fields,at)
+  end
+  fields[1] = .lltarget..operand.symbol('positive') as .object
+  fields[2] = .lltarget..operand.symbol('string') as .object
+  fields[3] = .lltarget..operand.string('unchanged constant' as .binary) as .object
+  ignored = draft.record('.const',fields,at)
+  fields[1] = .lltarget..operand.symbol('_import.label.3') as .object
+  ignored = draft.record('.const',fields,at)
+  root = draft.procedure('main',7,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(0),at)
+  ignored = three(root,'getandtp',root.reg('r',1),root.reg('r',0),.lltarget..operand.integer(768),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(11),at)
+  ignored = two(root,'load',root.reg('r',3),.lltarget..operand.integer(22),at)
+  ignored = point(root,1,root.reg('r',1),'caller-condition',at)
+  do i = 1 to 3
+    name = 'left'; destination = 4
+    if i = 2 then do
+      name = 'right'; destination = 2
+      ignored = two(root,'settp',root.reg('r',0),.lltarget..operand.integer(256),at)
+      ignored = three(root,'getandtp',root.reg('r',1),root.reg('r',0),.lltarget..operand.integer(768),at)
+    end
+    if i = 3 then do; name = 'other'; destination = 6; end
+    call objectarraydrop fields
+    fields[1] = root.reg('r',destination) as .object; fields[2] = .lltarget..operand.procedure(name) as .object
+    fields[3] = root.reg('r',1) as .object; fields[4] = root.reg('r',2) as .object; fields[5] = root.reg('r',3) as .object
+    ignored = root.emit('call3',fields,at)
+  end
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  anchor = draft.procedure('anchor',0,at)
+  ignored = namedlabel(anchor,'done',at)
+  ignored = one(anchor,'ret',.lltarget..operand.integer(0),at)
+  return draft.finish()
+
+site: procedure = .int
+  arg owner = reference .lltarget..module, name = .string
+  source = dereference owner; item = .lltarget..record; value = .lltarget..operand
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() <> 'instruction' | item.mnemonic() <> 'call3' then iterate
+    value = item.operand(2)
+    if value.text() == name then return item.id()
+  end
+  return 0
+
+main: procedure = .int
+  failures = 0; profile = 'closed-main-static-exact-default-halt.v1'; source = caller(); original = source.identity()
+  first = provider('fixture.dag.first','dag-provider-a.rxas')
+  second = provider('fixture.dag.second','dag-provider-b.rxas')
+  firstid = first.identity(); secondid = second.identity()
+  bindings = .object[]; changed = .llinline..change; refused = .llinline..change
+  alternate = .lltarget..module; result = .lltarget..module; item = .lltarget..record; value = .lltarget..operand
+  i = .int; j = .int; variant = .int; mode = .int; expected = .string; status = .string; at = .llir..origin
+  left = site(reference source,'left'); right = site(reference source,'right'); other = site(reference source,'other')
+  bindings[1] = llinline..bind(reference source,left,reference first,first.procedureid('leaf')) as .object
+  bindings[2] = llinline..bind(reference source,right,reference first,first.procedureid('leaf')) as .object
+  bindings[3] = llinline..bind(reference source,other,reference second,second.procedureid('leaf')) as .object
+  failures = failures + check(source.valid() & first.valid() & second.valid(),'DAG caller and distinct colliding providers are valid')
+  changed = llinline..expandmany(bindings,profile,12000000)
+  failures = failures + check(changed.status() = 'changed','imported direct DAGs expand across exact owners and aliases')
+  if changed.status() = 'changed' then do
+    result = changed.result(); steps = .int[]; points = 0; traces = 0; branches = 0; constants = 0
+    do i = 1 to result.records()
+      item = result.record(i)
+      if item.kind() = '.const' then do
+        value = item.operand(3)
+        failures = failures + check(value.text() = 'unchanged constant','label relocation leaves unrelated constant bytes unchanged')
+        constants = constants + 1
+      end
+      if item.kind() = '.srcstep' then do
+        value = item.operand(4)
+        if value.text() = 'dag-provider-a.rxas' | value.text() = 'dag-provider-b.rxas' then do
+          value = item.operand(1); points = points + 1
+          failures = failures + check(value.index() > 1 & steps[value.index()] = 0,'DAG provider source identities are fresh per clone and exact owner')
+          steps[value.index()] = 1
+        end
+      end
+      if item.kind() = '.traceevent' then do
+        value = item.operand(10)
+        if value.text() <> 'caller-condition' then do
+          traces = traces + 1; value = item.operand(5)
+          failures = failures + check(value.text() = 'r','DAG provider TRACE uses mapped caller storage')
+        end
+      end
+      if item.kind() = 'instruction' & item.mnemonic() = 'brtf' then do
+        branches = branches + 1; at = item.origin()
+        failures = failures + check(at.sourcebytes() = (at.filename() as .binary) & at.parents() = 2,'DAG branch retains provider bytes and call/body contributors')
+      end
+    end
+    failures = failures + check(result.valid() & result.procedures() = 2 & constants = 2 & branches = 3,'DAG output retains only original procedures and valid two-target branches')
+    failures = failures + check(points = 9 & traces = 9,'both arms and branch-entry observations survive at every site')
+    moves = 0; copies = 0; calls = 0
+    do i = 1 to result.records()
+      item = result.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'move' then moves = moves + 1
+      if item.mnemonic() = 'copy' then copies = copies + 1
+      if item.mnemonic() = 'call3' then calls = calls + 1
+    end
+    failures = failures + check(calls = 0 & moves = 3 & copies = 3,'DAG returns preserve owned MOVE versus borrowed COPY')
+    failures = failures + check(changed.operation(left) = 0 & changed.operation(right) = 0 & changed.operation(other) = 0,'DAG record mappings compose through both private stages')
+  end
+  else say changed.reason()
+  failures = failures + check(source.identity() = original & first.identity() = firstid & second.identity() = secondid,'DAG expansion preserves all exact frozen inputs')
+  do variant = 1 to 9
+    alternate = provider('fixture.dag.first','negative-dag.rxas',variant)
+    if variant = 6 | variant = 7 then do
+      failures = failures + check(alternate.valid() = 0 & pos('LL_TARGET_BINDING:',alternate.error()) > 0,'duplicate or missing label is invalid input ' || variant)
+      iterate
+    end
+    failures = failures + check(alternate.valid(),'DAG proof-negative is structurally valid ' || variant)
+    bindings[1] = llinline..bind(reference source,left,reference alternate,alternate.procedureid('leaf')) as .object
+    bindings[2] = llinline..bind(reference source,right,reference alternate,alternate.procedureid('leaf')) as .object
+    select variant
+      when 1 then expected = 'callee.cfg.cycle.pending'
+      when 2 then expected = 'branch.condition.unproved'
+      when 3 then expected = 'join.binding.unproved'
+      when 4 then expected = 'metadata.scope.cfg.pending'
+      when 5 then expected = 'import.leaf.nested.pending'
+      when 8 then expected = 'import.work'
+      otherwise expected = 'local.recycler.history.unproved'
+    end
+    if variant = 8 then refused = llinline..expandmany(bindings,profile,12000)
+    else refused = llinline..expandmany(bindings,profile,12000000)
+    status = 'keep'; if variant = 8 then status = 'limit'
+    failures = failures + check(refused.status() = status & refused.reason() = expected & refused.result().identity() = original,'DAG refusal preserves exact original with reason ' || expected)
+    do j = 1 to refused.sites()
+      failures = failures + check(refused.statusat(refused.site(j)) = status,'DAG refusal applies to the entire selected batch ' || variant)
+    end
+    if refused.reason() <> expected then say refused.reason()
+  end
+  bindings[1] = llinline..bind(reference source,left,reference first,first.procedureid('leaf')) as .object
+  bindings[2] = llinline..bind(reference source,right,reference first,first.procedureid('leaf')) as .object
+  do mode = 1 to 5
+    select mode
+      when 1 then refused = llinline..expandmany(bindings,profile,2)
+      when 2 then refused = llinline..expandmany(bindings,profile,12000000,8)
+      when 3 then refused = llinline..expandmany(bindings,profile,12000000,1000000,64)
+      when 4 then refused = llinline..expandmany(bindings,profile,12000000,1000000,67108864,0)
+      otherwise refused = llinline..expandmany(bindings,profile,12000000,1000000,67108864,65536,1)
+    end
+    failures = failures + check(refused.status() = 'limit' & refused.result().identity() = original,'DAG work/entry/byte/frame/cell refusal is atomic ' || mode)
+  end
+  changed = llinline..expandmany(bindings,profile,12000000)
+  failures = failures + check(changed.status() = 'changed' & source.identity() = original,'DAG replay after refusals preserves the original owner')
+  say 'IMPORTED_DAG|failures=' || failures
+  return failures

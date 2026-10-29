@@ -104,6 +104,27 @@ if(BUILD_TESTING)
       TARGETS levell_imported_inline rxbvm)
   endif()
 
+  set(_import_dag_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/imported-dag.crexx")
+  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/imported-dag-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"
+      -o imported-dag "${_import_dag_fixture}"
+    COMMAND $<TARGET_FILE:rxas> imported-dag
+    COMMAND $<TARGET_FILE:rxlink> -s -o imported-dag-linked imported-dag ${_images}
+    DEPENDS rxc rxas rxlink levell_target_test_imports ${_test_files} "${_import_dag_fixture}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+  add_custom_target(levell_imported_dag
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/imported-dag-linked.rxbin")
+  if(TARGET rxbvm)
+    add_test(NAME levell_imported_dag_rxbvm
+      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/imported-dag-linked.rxbin")
+    set_tests_properties(levell_imported_dag_rxbvm PROPERTIES
+      PASS_REGULAR_EXPRESSION "IMPORTED_DAG[|]failures=0"
+      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+      TIMEOUT 120 LABELS "level-l;research;inlining")
+    crexx_register_test_prep_targets(TESTS levell_imported_dag_rxbvm
+      TARGETS levell_imported_dag rxbvm)
+  endif()
+
   set(_scalar_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/scalar-transport.crexx")
   crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/scalar-transport-linked.rxbin"
     COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_test_imports}"

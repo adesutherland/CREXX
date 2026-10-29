@@ -124,7 +124,7 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line imported scalar leaves with proved private locals, and a single named caller-owned unbound G-style signal scope around a proved CALL1 are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals, and a single named caller-owned unbound G-style signal scope around a proved CALL1 are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -247,9 +247,48 @@ inline either call. The constructed model also checks multiple bindings to
 one body; native RXAS permits one import per exposed index, so the handwritten
 case calls that import twice. Conservative and cleaned exact linked RXAS run on
 one VM, with unchanged caller/provider on negative and tight-limit cases and
-source/TRACE identities. Imported direct DAGs need owner-qualified label relocation
-and remain a separate increment; globals, initialization and dynamic binding
-remain open.
+source/TRACE identities. Direct DAG labels are covered by the following
+increment; globals, initialization and dynamic binding remain open.
+
+### Reviewed imported direct-DAG increment
+
+This focused-qualified INL-STEP04 slice admits a finite direct acyclic scalar branch body
+from an exact static imported provider under the existing profile and delivery
+contract. The selected body's normal CFG and per-return storage/status history
+must pass the existing same-module DAG proof; this is no new graph solver.
+Imports, provider readiness, globals, startup, nested executable references,
+physical observers and dynamic binding retain their existing limits. One
+surrogate per exact provider arena/procedure still carries its private locals
+and recycled state across every selected site.
+
+Before replaying each provider body into the private projection, allocate a
+bounded label map keyed by that interned provider/procedure pair and original
+label bytes. Cover every declared label, including forward, alias and detached
+labels, before any branch is emitted. Fresh names must avoid all caller and
+provider labels, `.const` aliases, procedure names and previously generated
+names; `bodydraft.emit` resolves `L` operands against constants. Rewrite only
+label declarations and canonical `catalog.branch(opcode,k)` operands. Other
+symbols, metadata names, literal bytes and source/TRACE records are unchanged.
+A missing map or malformed input refuses atomically. Charge map/name storage,
+collision scans and lookups before growth within the existing preparation
+work, entry and byte allowances. The existing cloned-site label relocation
+then owns the second stage; final deprojection removes every surrogate and
+retains the original import/module identity and exact provider selection.
+
+Independent controls include two feasible branch outcomes with actual native
+values and result/actual overlap; owned private MOVE versus borrowed COPY
+across returns; two distinct providers with identical label spellings and
+numeric source IDs; collision with caller labels and `.const` aliases; a
+forward/alias label and a two-target branch. Source/TRACE must stay at their
+original logical points. A later activation observing unreset private status,
+cycle, undefined condition, incompatible join, branch-local metadata and
+nested body remain precise whole-batch refusals; duplicate/missing labels
+inside one source are invalid input. Tight work/name, byte, entry, frame and
+cell limits preserve the exact caller and CLI last-good output. Compare
+original, conservative and cleaned handwritten RXAS through `rxas -n`, the
+same linked provider images and one VM. No public API, ISA, metadata or wire
+change is selected. Broader imported and exceptional cases keep INL-AC03/04/07
+and the final INL-STEP06 milestone open.
 
 ### Signal coverage and practical-demand decision
 
@@ -308,6 +347,13 @@ the L C emitter normally adds protection; confirm its emitted sites rather
 than inferring a signal-free body. These source candidates are not workload
 frequency evidence. Maintained signal/dynamic fixtures supplement, but do
 not substitute for, the nonfixture set.
+The bounded prepared G sample contains real unbound, bound, nested and
+catch-all scopes around both direct and dynamic calls. It also shows source
+TASK lowering can create many helper calls; source-call counts alone are
+insufficient. Raw `SIGRET` and action handlers were not observed in that
+sample, which supports a provisional specific retention policy, not a claim
+of rarity or absence. B Lotto and C CSV have source-only evidence here; the
+C emitter's generated protection still needs emitted-site inspection.
 
 Try the existing ISA first for proved unchanged context and bounded structured
 policy scopes. An isolated signal save/restore pair cannot generally reproduce

@@ -1,0 +1,16 @@
+/* Different reached returns share unreset private status across activations. */
+.globals=0
+foreign() .expose=fixture.import.dag.state
+main() .locals=4
+  load r0,0
+  load r1,0
+  call2 r1,foreign(),r0,r1
+  getandtp r2,r1,768
+  load r0,2
+  call2 r1,foreign(),r0,r1
+  getandtp r3,r1,768
+  itos r2
+  say r2
+  itos r3
+  say r3
+  ret 0
