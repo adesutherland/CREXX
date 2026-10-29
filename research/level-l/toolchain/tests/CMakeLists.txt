@@ -92,6 +92,18 @@ if(TARGET rxbvm)
     RUN_SERIAL TRUE TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_loose_predicates
     TARGETS llrxinline rxbvm rxas)
+  add_test(NAME levell_rxas_concat_trace
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/concat-trace-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-concat-trace.cmake")
+  set_tests_properties(levell_rxas_concat_trace PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_CONCAT_TRACE[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_concat_trace
+    TARGETS llrxinline rxbvm rxas)
   add_test(NAME levell_rxas_fused
     COMMAND ${CMAKE_COMMAND}
       "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"

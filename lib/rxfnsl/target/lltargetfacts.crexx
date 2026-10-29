@@ -2558,6 +2558,7 @@ analysis: class
     opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
     integerwrite = .int; binaryload = .int; binaryequal = .int
     leftknown = .int; rightknown = .int
+    stringtrace = .int
     selected = .int; checked = .int[]; limits = .int[]
     leftlow = .int; lefthigh = .int; rightlow = .int; righthigh = .int; resultlow = .int; resulthigh = .int
     source = .lltarget..operand; bank = .lltarget..operand; reference_value = .lltarget..operand; option = .lltarget..operand
@@ -2598,9 +2599,19 @@ analysis: class
         source = item.operand(3); bank = item.operand(5); reference_value = item.operand(6)
         if source.text() = 'K' & reference_value.index() >= 0 then return reject('metadata.constant.reference.pending')
         if source.text() = 'R' & reference_value.index() >= 0 & references[0] <> 1 then return reject('metadata.register.reference.unproved')
+        if spend(4) = 0 then return 0
+        value = item.operand(4); option = item.operand(9); stringtrace = 0
+        if source.text() = 'R' & reference_value.index() >= 0 then do
+          /* flags bit 0 selects the RexxValue view before the type code.
+           * Other event types retain their existing whole-state gate. */
+          if value.text() = 'S' & wordpos(lower(bank.text()),'r a g') > 0 & option.index() % 2 = 0 then stringtrace = 1
+        end
         do i = 1 to references[0]
           if globalcell(references[i]) & state.wholeknown(references[i]) = 0 then return reject('global.definition.unproved')
-          if state.defined(references[i]) = 0 | state.wholeknown(references[i]) = 0 then return reject('local.recycler.observation.unproved')
+          if stringtrace then do
+            if state.ordinary(references[i]) = 0 | state.stringdefined(references[i]) = 0 | state.stringindependent(references[i]) = 0 then return reject('local.recycler.observation.unproved')
+          end
+          else if state.defined(references[i]) = 0 | state.wholeknown(references[i]) = 0 then return reject('local.recycler.observation.unproved')
           call insert(reference observations,domain(references[i],1))
         end
       end
@@ -2743,7 +2754,7 @@ analysis: class
       end
       if record then _mapping[item.id()] = 1
     end
-    else if wordpos(name,'null load copy icopy scopy bcopy move acopy settp getandtp bineq endlife iadd isub imult ieq ine igt ilt igte ilte req rne itos say') > 0 then do
+    else if wordpos(name,'null load copy icopy scopy bcopy move acopy settp getandtp bineq endlife iadd isub imult ieq ine igt ilt igte ilte req rne concat sconcat itos say') > 0 then do
       if name = 'say' then do
         if private then return reject('profile.callee.external.effect.pending')
         value = item.operand(1)
@@ -2912,6 +2923,25 @@ analysis: class
             call insert(reference reads,domain(id,1))
           end
           call state.interval(destination,0,1)
+        end
+        else if wordpos(name,'concat sconcat') > 0 then do
+          if spend(8) = 0 then return 0
+          if state.ordinary(destination) = 0 then return reject('argument.scalar.state.unproved')
+          /* Non-ASCII VM paths can retain incoming destination normalization
+           * bits. Source independence alone cannot prove that metadata. */
+          if state.stringindependent(destination) = 0 then return reject('string.component.unproved')
+          do i = 2 to 3
+            value = item.operand(i)
+            if value.kind() <> 'R' then iterate
+            id = view.storage(value)
+            if id = 0 then return reject('profile.external.storage.pending')
+            if state.ordinary(id) = 0 then return reject('argument.scalar.state.unproved')
+            if state.stringdefined(id) = 0 | state.stringindependent(id) = 0 then return reject('string.component.unproved')
+            call insert(reference reads,domain(id,1))
+          end
+          /* Preserve both alias inputs and every non-string component. The
+           * retained VM instruction owns length, buffers and Unicode flags. */
+          integerwrite = 0; call state.string(destination)
         end
         else do
           left = item.operand(2); right = item.operand(3)

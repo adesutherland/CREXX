@@ -1848,6 +1848,36 @@ whitelist growth and full standalone acceptance remain later work. The
 constructed component panel and paired native RXAS/VM panel passed with an exact
 recycled-string refusal and CLI last-good control.
 
+### Concatenation and typed string TRACE
+
+The exact-bound scalar profile admits all six canonical CONCAT/SCONCAT
+register/string forms. Each register source needs ordinary storage and
+independently available string bytes/metadata. The destination needs ordinary
+storage and an independent incoming string certificate because the VM may
+retain destination normalization bits on a non-ASCII path. The original VM
+instruction still owns alias temporary buffers, allocation, explicit byte
+lengths, SCONCAT's one space, Unicode flags and failure behavior. The proof
+performs no string construction or folding.
+
+The normal successor updates only the destination string component and its
+nonplain state. Integer, binary, public status, whole-state and binding facts
+survive. Register inputs have whole-observation reads; the destination has a
+whole-observation write without integer or whole-cell kill. The existing
+owned MOVE, borrowed COPY, copyback and ENDLIFE gates remain in force. A
+recycled destination with unproved normalization metadata keeps
+`string.component.unproved`.
+
+A register-backed `.traceevent` with value type S and no RexxValue override
+can observe an ordinary independent string without requiring its unrelated
+integer component. Other TRACE forms and META observers keep their previous
+premises. The compiler-emitted readText()/combine_text() helpers now expand
+with their original source and typed TRACE records. Constructed and paired
+native tests on one normal VM cover all six forms, both alias directions,
+Unicode/NUL and exact spacing, surviving integer/binary/status values,
+component/TRACE refusals and atomic work-limit output. Full standalone
+acceptance, broader destination-certificate reasoning and milestone QA remain
+open.
+
 ### Straight-line callee rebinding contract
 
 For admitted callee LINK/UNLINK/SWAP, `lltargetfacts.analysis` supplies exact

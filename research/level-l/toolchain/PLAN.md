@@ -130,7 +130,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, transactional private normalization of selected root same-module scalar counted SWAPCALL/SETTPSWAPCALL/SETTPCALL under the default-HALT profile, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, six signed integer predicates and REQ/RNE loose equality in the exact-bound scalar profile, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure, stable-register scoped META re-entry on direct acyclic calls and checked runtime-selector suffixes, and stable nonempty REG rN/aN/CONST runtime prefix scopes and selected LINKARG-group META/source/TRACE staging are focused-qualified. Complete broader imported, aliasing, dynamic varargs, group-local aN/gN re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, transactional private normalization of selected root same-module scalar counted SWAPCALL/SETTPSWAPCALL/SETTPCALL under the default-HALT profile, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, six signed integer predicates, REQ/RNE loose equality, CONCAT/SCONCAT and register-backed typed string TRACE in the exact-bound scalar profile, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure, stable-register scoped META re-entry on direct acyclic calls and checked runtime-selector suffixes, and stable nonempty REG rN/aN/CONST runtime prefix scopes and selected LINKARG-group META/source/TRACE staging are focused-qualified. Complete broader imported, aliasing, dynamic varargs, group-local aN/gN re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Runtime prefix metadata uses original typed operands, one stable StorageId ledger per root site and original incoming checkpoints through the shared bounded reconciler; argument-bank root reuse remains outside this proof. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Selected fused-root preparation is preserved conservatively and its proved outer setup/restoration is removed through the existing cleanup service; mixed fused batches retain exact original owners and site decisions on refusal. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -3588,6 +3588,75 @@ valid entry/byte/frame/code controls. Review coherent source and one simple
 emitted equality/branch region early, then freeze for a small serial
 constructed/native panel using prepared producers. Broader component coverage,
 binding splitting, strict comparisons and initiative/milestone QA remain open.
+
+### Concatenation and typed string TRACE transfer increment
+
+**Status: implemented and focused-qualified; broader initiative acceptance
+open.** This INL-STEP04/05 slice serves INL-AC02/03/05/06/07 within the
+existing exact-bound scalar direct/fixed-call and cleanup profile. Admit the
+six canonical CONCAT/SCONCAT R,R,R / R,R,S / R,S,R forms with the existing
+opcode/effect/component/signal catalogue. Keep every enclosing call, arity,
+CFG, frame/history, child/depth, signal, metadata-scope and observation gate;
+the runtime-selector child whitelist is unchanged. Static prepared L-library
+occurrences make this worth addressing, but do not establish hotness or helper
+eligibility. Strict/ordered string comparisons, ITOS, aggregate/reference
+values, broader destination certificate reconstruction and full standalone
+acceptance remain separate work.
+
+Before a write, capture both typed operands, their StorageIds, source premises
+and destination state. Require ordinary storage and independent defined string
+bytes/metadata for each register input; require ordinary destination and its
+incoming string metadata certificate to be independent. A fresh/reset or
+previously proved destination qualifies, including either input alias; an
+unproved recycled destination retains `string.component.unproved`. Preserve
+existing external-storage and `argument.scalar.state.unproved` refusals for
+unresolved/nonordinary cells. The destination premise is necessary because
+CONCAT may retain incoming language-normalization status bits on a non-ASCII
+path even though it clears or reconstructs VM-private Unicode flags. A later
+proof may track dependent certificates; this bounded slice asserts none.
+
+Keep the exact original CONCAT/SCONCAT instruction and VM value owners. The VM
+selects an alias temporary buffer or direct destination buffer, checks byte
+length, allocates/reuses owned storage, copies explicit-length bytes, inserts
+SCONCAT's one ASCII space, and updates its caches and Unicode certificates.
+The proof never concatenates, copies, counts or normalizes runtime strings.
+On the normal successor, use the existing string-component transfer only:
+defined independent string, nonplain/nonzeroed destination; preserve integer
+value/bounds, binary, public status, whole-state/recycler and active/base/slot
+facts. Read both register sources in the whole-observation domain and write
+the destination in that domain only; there is no integer or whole kill. The
+canonical signal class is NONE, while VM allocation/length-overflow behavior
+stays at its retained instruction; do not infer success before execution.
+Retain existing owned-local MOVE, borrowed/aliased COPY, copyback, ENDLIFE
+and snapshot obligations.
+
+The existing generic TRACE gate requires an integer definition even for a
+compiler-emitted string result event. Admit only ordinary register-backed
+`.traceevent` with source R, supported r/a/g reference, value type S, and
+flags bit 0 clear (no RexxValue override). Require independent defined string
+component, not integer definition or wholeknown, because this event reads the
+typed string. Keep its whole-observation access, global-definition gate and
+original source/TRACE address. Leave constant, object, untyped/unknown and
+other TRACE events, META scopes and integer TRACE on their existing paths.
+An unproved string event retains `local.recycler.observation.unproved`.
+Charge the typed decision and fixed component/access work before growth.
+
+Extend maintained constructed proofs for all six forms, source/destination
+aliases and repeated actuals, Unicode, embedded NUL, empty operands,
+SCONCAT's unconditional space, and surviving integer/binary/public status.
+Show a fresh string-only output whose integer remains undefined yet whose
+typed S TRACE is accepted. Keep negative controls for missing source string,
+recycled destination certificate, unproved typed TRACE and existing
+nonordinary/profile cases with exact reasons. Pair one compiler-emitted
+single-activation string helper with source/TRACE and one handwritten alias/
+copyback consumer; compare original, conservative and cleaned RXAS under
+native assembler optimization disabled and one normal VM. Assert selected
+calls disappear, emitted CONCAT/SCONCAT and observations survive, exact text
+and side fields match independent expectations, and a bounded work-limit
+failure preserves last-good CLI output. Reuse unchanged resource owners and
+prepared producers; no broad compiler, mode, platform, sanitizer or performance
+campaign is selected for this development increment. Full initiative and
+milestone QA remain open.
 
 ### Reviewed finite optional scalar prologue increment
 

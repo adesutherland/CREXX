@@ -725,7 +725,103 @@ loosepredicates: procedure = .int
   end
   return failures
 
+stringtrace: procedure = .int
+  arg body = .lltarget..bodydraft, index = .int, at = .llir..origin, kind = 'S', flags = 0
+  fields = .object[]; i = .int
+  fields[1] = .lltarget..operand.string('O') as .object; fields[2] = .lltarget..operand.integer(4) as .object
+  fields[3] = .lltarget..operand.string('R') as .object; fields[4] = .lltarget..operand.string(kind) as .object
+  fields[5] = .lltarget..operand.string('r') as .object; fields[6] = .lltarget..operand.integer(index) as .object
+  fields[7] = .lltarget..operand.integer(0) as .object; fields[8] = fields[7]
+  fields[9] = .lltarget..operand.integer(flags) as .object
+  fields[10] = .lltarget..operand.string('string-result') as .object; fields[11] = .lltarget..operand.string('') as .object
+  return body.record('.traceevent',fields,at)
+
+concatenations: procedure = .int
+  failures = 0; relation = .int; form = .int; sample = .int; destination = .int; i = .int; ordinal = .int
+  opid = .int; storageid = .int; integer = .int; whole = .int; lhs = .binary; rhs = .binary; concatcase = .string
+  original = .lltarget..module; facts = .lltargetfacts..analysis; item = .lltarget..record
+  left = .lltarget..operand; right = .lltarget..operand
+  do relation = 1 to 2
+    do form = 1 to 3
+      do sample = 1 to 4
+        lhs = 'λ' as .binary; rhs = '61007a'x as .binary
+        if sample = 2 then do; lhs = ''x as .binary; rhs = lhs; end
+        if sample = 3 then do; lhs = 'left' as .binary; rhs = 'right' as .binary; end
+        if sample = 4 then do
+          if form <> 1 then iterate
+          lhs = 'same' as .binary; rhs = lhs
+        end
+        destination = sample % 3
+        concatcase = relation || '/' || form || '/' || sample
+        draft = .lltarget..draft('concat.' || relation || '.' || form || '.' || sample,'fixture:concat',0)
+        at = draft.synthetic('independent string certificates and surviving components'); root = draft.procedure('main',5,at)
+        do i = 0 to 4; ignored = one(root,'null',root.reg('r',i),at); end
+        ignored = two(root,'load',root.reg('r',0),.lltarget..operand.string(lhs),at)
+        ignored = two(root,'load',root.reg('r',1),.lltarget..operand.string(rhs),at)
+        if sample = 4 then ignored = two(root,'link',root.reg('r',1),root.reg('r',0),at)
+        ignored = two(root,'load',root.reg('r',destination),.lltarget..operand.integer(42),at)
+        ignored = two(root,'load',root.reg('r',destination),.lltarget..operand.literal('B','0xDEAD' as .binary),at)
+        ignored = two(root,'settp',root.reg('r',destination),.lltarget..operand.integer(512),at)
+        left = root.reg('r',0); right = root.reg('r',1)
+        if form = 2 then right = .lltarget..operand.string(rhs)
+        if form = 3 then left = .lltarget..operand.string(lhs)
+        opid = three(root,word('concat sconcat',relation),root.reg('r',destination),left,right,at)
+        ignored = stringtrace(root,destination,at)
+        ignored = three(root,'ichkrng',root.reg('r',destination),.lltarget..operand.integer(42),.lltarget..operand.integer(42),at)
+        ignored = two(root,'copy',root.reg('r',3),root.reg('r',destination),at)
+        ignored = three(root,'bineq',root.reg('r',4),root.reg('r',3),.lltarget..operand.literal('B','0xDEAD' as .binary),at)
+        ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+        original = draft.finish()
+        failures = failures + check(original.valid(),'canonical concatenation form is valid ' || relation || '/' || form || '/' || sample)
+        if original.valid() = 0 then do; say original.error(); iterate; end
+        facts = lltargetfacts..analysegraph(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+        failures = failures + check(facts.status() = 'ok','concatenation preserves integer/binary/status and defined string ' || relation || '/' || form || '/' || sample)
+        if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+        concataccess = .llirgraph..access
+        concataccess = dereference facts.access()
+        storageid = facts.storage(opid,1); integer = facts.integerdomain(storageid); whole = facts.wholedomain(storageid)
+        failures = failures + check(concataccess.writes(opid,whole) & concataccess.writes(opid,integer) = 0 & concataccess.kills(opid,whole) = 0 & concataccess.kills(opid,integer) = 0,'concatenation writes whole-observation domain without integer or whole kill ' || concatcase)
+        item = original.at(opid)
+        do ordinal = 2 to item.registerrefs()
+          storageid = facts.storage(opid,ordinal)
+          failures = failures + check(concataccess.reads(opid,facts.wholedomain(storageid)) & concataccess.reads(opid,facts.integerdomain(storageid)) = 0,'concatenation captures both string sources before alias write ' || concatcase || '/' || ordinal)
+        end
+        if sample = 4 then failures = failures + check(facts.storage(opid,2) = facts.storage(opid,3),'two encoded concatenation inputs retain shared storage')
+      end
+    end
+  end
+  return failures
+
+stringtraceproof: procedure = .int
+  failures = 0; variant = .int; kind = .string; flags = .int
+  original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
+  do variant = 0 to 2
+    draft = .lltarget..draft('concat.trace.' || variant,'fixture:concat.trace',0)
+    at = draft.synthetic('string-only owned result does not invent an integer'); root = draft.procedure('main',2,at)
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.string('λ'),at)
+    callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('text'),root.reg('r',0),at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    leaf = draft.procedure('text',1,at)
+    ignored = three(leaf,'concat',leaf.reg('r',0),leaf.reg('a',1),.lltarget..operand.string(':x'),at)
+    kind = 'S'; flags = 0
+    if variant = 1 then kind = 'I'
+    if variant = 2 then flags = 1
+    ignored = stringtrace(leaf,0,at,kind,flags)
+    ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    original = draft.finish(); tracegraph = dereference original.ir(); before = tracegraph.binary()
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('text'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1')
+    if variant = 0 then failures = failures + check(original.valid() & changed.status() = 'changed','typed S TRACE accepts fresh string-only CONCAT result')
+    else do
+      refusedgraph = .llir..module
+      kept = changed.result(); refusedgraph = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = 'local.recycler.observation.unproved' & bin2x(refusedgraph.binary()) = bin2x(before),'integer/override TRACE keeps its old observation premise ' || variant)
+    end
+    if variant = 0 & changed.status() <> 'changed' then say changed.reason()
+  end
+  return failures
+
 main: procedure = .int
-  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1) + predicates() + predicateunknown() + predicateundefined() + loosepredicates()
+  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1) + predicates() + predicateunknown() + predicateundefined() + loosepredicates() + concatenations() + stringtraceproof()
   say 'STORAGE_INLINE|failures=' || failures
   return failures
