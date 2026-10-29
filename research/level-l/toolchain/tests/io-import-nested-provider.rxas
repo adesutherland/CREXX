@@ -1,6 +1,6 @@
 /* One exact exported child is shared by every outer activation.
  * Fixed calls preserve a private snapshot; counted calls preserve a swap
- * and its inverse; the branch calls the child only on its true arm. */
+ * and its operand-reversed inverse; the branch calls the child on its true arm. */
 .globals=0
 fixed() .locals=2 .expose=fixture.import.nested.fixed
   icopy r0,a1
@@ -15,7 +15,7 @@ counted() .locals=1 .expose=fixture.import.nested.counted
   .srcstep 2 2 0 "io-import-nested-provider.rxas" 17 3 20 "  call r0,child(),a0"
   .traceevent "V" 4 "R" "I" "a" 1 2 2 0 "counted-child" ""
   call r0,child(),a0
-  swap a1,a2
+  swap a2,a1
   ret r0
 branched() .locals=2 .expose=fixture.import.nested.branched
   null r0

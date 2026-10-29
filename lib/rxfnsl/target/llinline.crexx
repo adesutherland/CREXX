@@ -446,13 +446,14 @@ expandlocalmany: procedure = .llinline..change
   i = .int; j = .int; k = .int; a = .int; ignored = .int; count = .int; required = .int
   locals = .int; base = .int; higheststep = .int; highestclause = .int
   extent = .int; fileid = .int; hasresult = .int; ordered = .int; slots = .int; activebase = .int; position = .int
-  dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int; abrupt = .int
+  dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int; abrupt = .int; samepair = .int
   catalog = .llrxascatalog..catalog
   scope = .string; status = .string; scopes = .metascopes
   request = .binding; selected = .lltarget..record; input = .lltarget..record; childrecord = .lltarget..record; swaprecord = .lltarget..record
   field = .lltarget..operand; oldresult = .lltarget..operand; value = .lltarget..operand
   resultcell = .lltarget..operand; countcell = .lltarget..operand; tempcell = .lltarget..operand
   destination = .lltarget..operand; anchor = .lltarget..operand; actual = .lltarget..operand; mapped = .lltarget..operand
+  nextleft = .lltarget..operand; nextright = .lltarget..operand
   callee = .lltarget..body; oldbody = .lltarget..body; caller = .lltarget..body
   at = .llir..origin; childat = .llir..origin; file = .llir..sourcefile
   ignoredorigin = .llir..origin
@@ -747,13 +748,25 @@ expandlocalmany: procedure = .llinline..change
               ignored = code.two(targetbody,'swap',destination,mapped,childat)
             end
             else do
-              /* Preserve the qualified linear reversal, including swaps
-               * around retained children that restore the same identity. */
-              do k = facts.swaps(input.id()) to 1 by -1
+              /* Only this contiguous generated replay may cancel pairs.
+               * Authored swaps and observations were already replayed above. */
+              k = facts.swaps(input.id())
+              do while k > 0
+                if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
                 swaprecord = source.at(facts.swap(input.id(),k))
                 field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,1)
                 field = swaprecord.operand(2); mapped = mappedslot(targetbody,field,base,callee.locals(),count,1)
+                if k > 1 then do
+                  if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
+                  swaprecord = source.at(facts.swap(input.id(),k - 1))
+                  field = swaprecord.operand(1); nextleft = mappedslot(targetbody,field,base,callee.locals(),count,1)
+                  field = swaprecord.operand(2); nextright = mappedslot(targetbody,field,base,callee.locals(),count,1)
+                  samepair = destination.bank() = nextleft.bank() & destination.index() = nextleft.index() & mapped.bank() = nextright.bank() & mapped.index() = nextright.index()
+                  if destination.bank() = nextright.bank() & destination.index() = nextright.index() & mapped.bank() = nextleft.bank() & mapped.index() = nextleft.index() then samepair = 1
+                  if samepair then do; k = k - 2; iterate; end
+                end
                 ignored = code.two(targetbody,'swap',destination,mapped,childat)
+                k = k - 1
               end
             end
             /* Restore every active binding before expiring owned bases.

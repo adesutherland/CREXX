@@ -334,7 +334,7 @@ and the final INL-STEP06 panel remain open.
 
 ### Reviewed generated inverse-swap normalization
 
-The next INL-STEP05 slice simplifies only the linear inverse SWAP replay
+This focused-qualified INL-STEP05 slice simplifies only the linear inverse SWAP replay
 generated at an expanded outer `RET`. After mapping each recorded pair to its
 actual output register identities, cancel adjacent equal unordered pairs in
 that contiguous generated replay. This bounded lookahead does not claim a

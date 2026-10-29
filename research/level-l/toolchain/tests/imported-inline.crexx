@@ -240,7 +240,8 @@ privatecontrols: procedure = .int
   return failures
 
 /** The only retained child is a real same-provider export. Its existing
- * caller alias is deliberately different from its provider procedure name. */
+ * caller alias is deliberately different from its provider procedure name.
+ * Counted variants 5/6/7 reverse, omit or overlap the post-child swap. */
 nestedprovider: procedure = .lltarget..module
   arg shape = .int, variant = 0
   draft = .lltarget..draft('nested.provider','fixture:nested.provider',0)
@@ -253,7 +254,12 @@ nestedprovider: procedure = .lltarget..module
     ignored = two(outer,'load',outer.reg('a',0),.lltarget..operand.integer(2),at)
     ignored = two(outer,'swap',outer.reg('a',1),outer.reg('a',2),at)
     ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure(childname),outer.reg('a',0),at)
-    ignored = two(outer,'swap',outer.reg('a',1),outer.reg('a',2),at)
+    select variant
+      when 5 then ignored = two(outer,'swap',outer.reg('a',2),outer.reg('a',1),at)
+      when 6 then nop
+      when 7 then ignored = two(outer,'swap',outer.reg('a',0),outer.reg('a',1),at)
+      otherwise ignored = two(outer,'swap',outer.reg('a',1),outer.reg('a',2),at)
+    end
   end
   else do
     ignored = one(outer,'null',outer.reg('r',0),at)
@@ -375,19 +381,22 @@ nestedcontrols: procedure = .int
   bindings = .object[]; changed = .llinline..change; refused = .llinline..change; cleaned = .llinline..change
   item = .lltarget..record; value = .lltarget..operand; imports = .int; calls = .int; swaps = .int
   shape = .int; variant = .int; i = .int; j = .int; mode = .int; expected = .string
+  returning = .int; inverses = .int; expectedinverses = .int; expectedswaps = .int
   sourceid = .int; providerid = .int; request = .llinline..binding
-  do shape = 1 to 4
+  do shape = 1 to 7
     mode = shape; if shape = 4 then mode = 1
+    if shape > 4 then mode = 2
     if shape = 4 then source = nestedcaller(mode,3)
     else source = nestedcaller(mode)
-    target = nestedprovider(mode)
+    if shape > 4 then target = nestedprovider(mode,shape)
+    else target = nestedprovider(mode)
     sourceid = source.identity(); providerid = target.identity()
     failures = failures + check(source.valid() & target.valid(),'exported-child models are valid ' || shape)
     bindings = nestedrequests(reference source,reference target)
     changed = llinline..expandmany(bindings,profile,12000000)
     failures = failures + check(changed.status() = 'changed','exact imported outer expands with retained exported child ' || shape)
     if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
-    result = changed.result(); imports = 0; calls = 0; swaps = 0
+    result = changed.result(); imports = 0; calls = 0; swaps = 0; returning = 0; inverses = 0
     do i = 1 to result.records()
       item = result.record(i)
       if item.kind() = '.import' then do
@@ -398,19 +407,31 @@ nestedcontrols: procedure = .int
       end
       if item.kind() <> 'instruction' then iterate
       if item.mnemonic() = 'swap' then swaps = swaps + 1
+      if mode = 2 then do
+        /* The counted model has no authored COPY/MOVE. Its outer return
+         * transfer precedes exactly the generated inverse replay. */
+        if wordpos(item.mnemonic(),'copy move') > 0 then returning = 1
+        else if item.mnemonic() = 'swap' & returning then inverses = inverses + 1
+        else returning = 0
+      end
       do j = 1 to item.operands()
         value = item.operand(j)
         if value.kind() <> 'P' then iterate
         calls = calls + 1
         failures = failures + check(value.text() = 'child_left','only caller original exact child import survives ' || shape)
-        if shape = 2 then failures = failures + check(item.mnemonic() = 'call','retained counted child keeps its original opcode')
+        if mode = 2 then failures = failures + check(item.mnemonic() = 'call','retained counted child keeps its original opcode')
         else failures = failures + check(item.mnemonic() = 'call2','retained fixed child keeps its original opcode')
       end
     end
     expectedimports = 3; if shape = 4 then expectedimports = 4
     failures = failures + check(result.valid() & result.procedures() = 1 & imports = expectedimports & calls = 2,'no surrogate definition, new import or original selected call reaches publication ' || shape)
     if shape = 4 then failures = failures + check(bindings[0] = 3,'two child import aliases select one deterministic retained alias beside a directly expanded child')
-    if shape = 2 then failures = failures + check(swaps >= 4,'both counted child activations retain authored swaps; conservative outer restoration may add more; swaps=' || swaps)
+    if mode = 2 then do
+      expectedswaps = 4; expectedinverses = 0
+      if shape = 6 then expectedinverses = 2
+      if shape = 7 then do; expectedswaps = 8; expectedinverses = 4; end
+      failures = failures + check(swaps = expectedswaps & inverses = expectedinverses,'counted child preserves authored swaps and only necessary generated inverses ' || shape || ': swaps=' || swaps || ', inverses=' || inverses)
+    end
     do i = 1 to bindings[0]
       request = bindings[i] as .llinline..binding
       failures = failures + check(changed.operation(request.callid()) = 0,'removed outer call mapping composes through exported-child deprojection')
