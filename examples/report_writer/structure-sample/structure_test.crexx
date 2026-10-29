@@ -1,0 +1,21 @@
+options levelg comments_dash
+import data
+import employee
+
+left = .Employee("001", "Alice", "Sales", "Munich")
+same = .Employee("001", "Alice", "Sales", "Munich")
+different = .Employee("001", "Alice", "Sales", "Hamburg")
+expected = "Employee { employeeId=001, name=Alice, department=Sales, city=Munich }"
+failures = 0
+
+if (left <eq> same) = 0 then failures = failures + 1
+if left <eq> different then failures = failures + 1
+if left.toString() <> expected then failures = failures + 1
+
+if failures <> 0 then do
+  say "STRUCTURE TEST FAILURES:" failures
+  exit 1
+end
+
+say "STRUCTURE TEST PASS:" left.toString()
+exit 0

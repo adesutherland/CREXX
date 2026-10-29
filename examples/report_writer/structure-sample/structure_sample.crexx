@@ -1,0 +1,51 @@
+options levelg comments_dash
+
+import data
+import employee
+
+say "=== DATA-CLASS demonstration ==="
+say
+
+say "The DATA-CLASS definition describes an Employee:"
+say "  employeeId  string[6]"
+say "  name        string[32]"
+say "  department  string[24]"
+say "  city        string[24]"
+say
+
+say "1. Create an Employee object"
+employee1 = .Employee("001", "Alice", "Sales", "Munich")
+say "   " employee1.toString()
+say
+
+say "2. Create another Employee with the same values"
+employee2 = .Employee("001", "Alice", "Sales", "Munich")
+say "   " employee2.toString()
+say
+
+say "3. Compare the two objects by their field values"
+
+if employee1 <eq> employee2 then
+  say "   The objects are equal."
+else
+  say "   The objects are different."
+
+say
+
+say "4. Create an Employee with a different city"
+employee3 = .Employee("001", "Alice", "Sales", "Hamburg")
+say "   " employee3.toString()
+say
+
+say "5. Compare the changed object"
+
+if employee1 <eq> employee3 then
+  say "   The objects are equal."
+else
+  say "   The objects are different because the city differs."
+
+say
+say "The generated toString() method provides a readable representation:"
+say "  " employee1.toString()
+
+exit 0

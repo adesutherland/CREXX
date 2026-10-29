@@ -1,0 +1,48 @@
+/* Scalar data-class definition grammar for the report-writer extension. */
+
+options levell
+namespace structuregrammar
+
+dataclassword: token
+fieldword: token
+endword: token
+identifier: token
+typeword: token
+number: token
+separator: token
+
+scan: lexer input utf8bytes
+  digit: charset = U+0030 to U+0039
+  letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
+  hspace: charset = U+0009 | U+0020
+  newline: charset = U+000A | U+000D
+  line.character: charset = U+0000 to U+0009 | U+000B to U+000C | U+000E to U+00FF
+  name.pattern: pattern = letter (letter | digit | "-")*
+  sized.string: pattern = "string" "[" digit+ "]"
+  whitespace: rule = hspace+ then skip
+  hash.comment: rule = '#' line.character* then skip
+  sized.string.literal: rule = sized.string then emit typeword
+  type.literal: rule = ("string" | "int" | "boolean") then emit typeword
+  number.literal: rule = digit+ then emit number
+  name.literal: rule = name.pattern then emit identifier
+  terminator: rule = newline then emit separator
+
+parse: parser semantics contextfree input tokens start document
+  document: rule = separator* data.class separator*
+  data.class: rule = dataclassword identifier separator field.list endword dataclassword
+  field.list: rule = separator* field.statement*
+  field.statement: rule = fieldword identifier typeword separator
+
+classify: tokenstage start 1
+  word.data.class:
+    transform stage classify state 1
+      take identifier text "DATA-CLASS" emit dataclassword next 1
+  word.field:
+    transform stage classify state 1
+      take identifier text "FIELD" emit fieldword next 1
+  word.end:
+    transform stage classify state 1
+      take identifier text "END" emit endword next 1
+  word.other:
+    transform stage classify state 1
+      take any emit copy next 1

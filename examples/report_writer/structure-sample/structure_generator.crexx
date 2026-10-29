@@ -1,0 +1,153 @@
+/* Generate a scalar data class with value equality and deterministic output. */
+options levelb
+namespace structuregenerator expose main
+import rxfnsb
+import lllanguage
+import llsource
+import lltree
+import rxfs
+import structuregrammar
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 1 then do
+    say 'usage: structure_generator definition.structure|output.crexx'
+    return 2
+  end
+
+  separator = pos('|',argv[1])
+  if separator = 0 then do
+    say 'STRUCTURE: input and output must be separated by |'
+    return 2
+  end
+  input_path = left(argv[1],separator - 1)
+  output = substr(argv[1],separator + 1)
+
+  source = .binary
+  do
+    source = readbinary(input_path)
+  on signal
+    say 'STRUCTURE_IO: cannot read ' || input_path
+    return 2
+  end
+
+  request = .lllanguage..request(structuregrammar..language(),source)
+  status = request.parse()
+  if status <> 0 then do
+    say input_path || ': ' || llsource..diagnostic(source,request.offset(),'STRUCTURE_PARSE',request.error())
+    return status
+  end
+
+  tree = .lltree..view(request.tree(),request.root())
+  if tree.error() <> '' then do
+    say 'STRUCTURE_TREE: ' || tree.error()
+    return 3
+  end
+
+  class_name = ''
+  fields = .string[]
+  types = .string[]
+  class_node = tree.root()
+  do i = 1 to tree.count(class_node)
+    node = tree.child(class_node,i)
+    if tree.name(node) = 'data.class' then do
+      class_node = node
+      leave
+    end
+  end
+  if tree.name(class_node) <> 'data.class' then do
+    say 'STRUCTURE: data class not found'
+    return 4
+  end
+
+  class_name = tree.text(tree.child(class_node,2))
+  field_list = 0
+  do i = 1 to tree.count(class_node)
+    node = tree.child(class_node,i)
+    if tree.name(node) = 'field.list' then field_list = node
+  end
+  if field_list = 0 then do
+    say 'STRUCTURE: field list not found'
+    return 4
+  end
+  do i = 1 to tree.count(field_list)
+    node = tree.child(field_list,i)
+    if tree.name(node) <> 'field.statement' then iterate
+    fields[fields[0] + 1] = tree.text(tree.child(node,2))
+    types[types[0] + 1] = tree.text(tree.child(node,3))
+  end
+  if fields[0] = 0 then do
+    say 'STRUCTURE: no fields declared'
+    return 4
+  end
+
+  generated = generate_class(class_name,fields,types)
+  if writebinary(output,generated as .binary) <> length(generated) then do
+    say 'STRUCTURE_IO: cannot write ' || output
+    return 5
+  end
+  say 'STRUCTURE GENERATED: ' || output
+  return 0
+
+generate_class: procedure = .string
+  arg class_name = .string, fields = .string[], types = .string[]
+  nl = '0a'x
+  text = 'options levelb comments_dash' || nl || 'namespace ' || lower(class_name) || ' expose ' || class_name || nl || 'import data' || nl || nl
+  text = text || class_name || ': class implements .ObjectEquatable .ObjectPrintable' || nl
+  do i = 1 to fields[0]
+    text = text || '  ' || fields[i] || '_ = ' || generated_type(types[i]) || nl
+  end
+  text = text || nl || '  *: factory' || nl
+  do i = 1 to fields[0]
+    if i = 1 then text = text || '    arg '
+    else text = text || ', '
+    text = text || fields[i] || ' = ' || generated_type(types[i])
+  end
+  text = text || nl
+  do i = 1 to fields[0]
+    text = text || '    ' || fields[i] || '_ = ' || fields[i] || nl
+  end
+  text = text || '    return' || nl || nl
+  text = text || '  equivalent: method = .boolean' || nl
+  text = text || '    arg other = .object' || nl
+  text = text || '    if other is .' || class_name || ' then do' || nl
+  text = text || '      right = other as .' || class_name || nl
+  text = text || '      return '
+  do i = 1 to fields[0]
+    if i > 1 then text = text || ' & '
+    text = text || fields[i] || '_ == right.' || fields[i] || '()'
+  end
+  text = text || nl || '    end' || nl || '    return 0' || nl || nl
+  text = text || '  toString: method = .string' || nl
+  text = text || '    result = "' || class_name || ' { "' || nl
+  do i = 1 to fields[0]
+    if i > 1 then text = text || '    result = result || ", "' || nl
+    text = text || '    result = result || "' || fields[i] || '=" || ' || fields[i] || '_' || nl
+  end
+  text = text || '    result = result || " }"' || nl || '    return result' || nl || nl
+  do i = 1 to fields[0]
+    text = text || '  ' || fields[i] || ': method = ' || generated_type(types[i]) || nl
+    text = text || '    return ' || fields[i] || '_' || nl || nl
+  end
+  return text
+
+generated_type: procedure = .string
+  arg declared = .string
+  base = declared
+  bracket = pos('[',base)
+  if bracket > 0 then base = left(base,bracket - 1)
+  if base = 'string' then return '.string'
+  if base = 'int' then return '.int'
+  if base = 'boolean' then return '.boolean'
+  return '.string'
+
+source_stem: procedure = .string
+  arg path = .string
+  slash = lastpos('/',path)
+  backslash = lastpos('\\',path)
+  if backslash > slash then slash = backslash
+  name = path
+  if slash > 0 then name = substr(name,slash + 1)
+  dot = lastpos('.',name)
+  if dot > 0 then name = left(name,dot - 1)
+  return name

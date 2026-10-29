@@ -1,0 +1,74 @@
+/* Graph build for the scalar structure generator example. */
+
+BUILD_DIR = ".crexx-build/report_writer/structure-sample";
+GRAMMAR_SOURCE = "examples/report_writer/structure-sample/grammar/structure.levell";
+GENERATOR_SOURCE = "examples/report_writer/structure-sample/structure_generator.crexx";
+TEST_SOURCE = "examples/report_writer/structure-sample/structure_sample.crexx";
+STRUCTURE_SOURCE = "examples/report_writer/structure-sample/employee.structure";
+GENERATED_SOURCE = "${BUILD_DIR}/employee.crexx";
+
+RULE compile_grammar
+  ACTION = "COMPILE GRAMMAR"
+END RULE;
+
+RULE compile_reader
+  ACTION = "COMPILE READER"
+END RULE;
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+END RULE;
+
+RULE run_program
+  ACTION = "RUN"
+END RULE;
+
+BUILD "${BUILD_DIR}/structuregrammar.rxbin"
+  BUILD_NAME = structure_grammar
+  RULE = compile_grammar
+  INPUT = "${GRAMMAR_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/structure_generator.rxbin"
+  BUILD_NAME = structure_generator
+  RULE = compile_reader
+  INPUT = "${GENERATOR_SOURCE}"
+  DEPENDS_ON_BUILD = structure_grammar
+END BUILD;
+
+/* RUN is a graph node with no durable output. It generates the source that
+ * the next compile node consumes. */
+BUILD "run-generate-employee"
+  BUILD_NAME = generate_employee
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/structure_generator.rxbin"
+  DEPENDS_ON_BUILD = structure_generator
+  WORK_DIR = "${BUILD_DIR}"
+  ARGUMENT = "-a" "${STRUCTURE_SOURCE}|${GENERATED_SOURCE}"
+  STDIN = ""
+END BUILD;
+
+BUILD "${BUILD_DIR}/employee.rxbin"
+  BUILD_NAME = employee
+  RULE = compile_program
+  INPUT = "${GENERATED_SOURCE}"
+  DEPENDS_ON_BUILD = generate_employee
+END BUILD;
+
+BUILD "${BUILD_DIR}/structure_sample.rxbin"
+  BUILD_NAME = structure_sample
+  RULE = compile_program
+  INPUT = "${TEST_SOURCE}"
+  DEPENDS_ON_BUILD = employee
+END BUILD;
+
+BUILD "run-structure-test"
+  BUILD_NAME = run_structure_sample
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/structure_sample.rxbin"
+  DEPENDS_ON_BUILD = structure_sample
+  WORK_DIR = "${BUILD_DIR}"
+  STDIN = ""
+END BUILD;
+
+DEFAULT_BUILD = run_structure_sample;

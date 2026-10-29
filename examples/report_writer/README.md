@@ -69,3 +69,29 @@ To preprocess, compile, assemble, and run the RXPP source directly with
 The `-i` option supplies the module directory needed while compiling the
 imported `reportreader` namespace. `##EXTERNAL` supplies the modules for the
 runtime or link stage.
+
+## Structure generator extension
+
+The `structure-sample/` project demonstrates the scalar data-class generator
+extension described in `structure_generator_extension_design.docx`. A
+`DATA-CLASS` definition is the source of truth for the generated fields,
+factory, value-based `.ObjectEquatable` implementation, and deterministic
+`.ObjectPrintable` representation.
+
+Run the complete sample with:
+
+```powershell
+.\cmake-build-release\bin\crexx.exe `
+  examples\report_writer\structure-sample\structure_generator.graph.build
+```
+
+The sample generates `Employee`, compares separate instances by field values,
+rejects a changed city as unequal, and verifies this representation:
+
+```text
+Employee { employeeId=001, name=Alice, department=Sales, city=Munich }
+```
+
+The first version supports scalar `string`, `int`, and `boolean` fields. Array,
+nested-object, binary, null-like, custom-formatting, private, and transient
+field policies remain outside this extension.
