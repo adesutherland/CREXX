@@ -350,7 +350,7 @@ create_exe: procedure = .int
 run_program: procedure = .int
   arg program = .string, workdir = .string, argument = .string, argument_value = .string, stdin = .string
   argv = .string[]
-  argv[1] = tool('rxtvm')
+  argv[1] = tool('rxvm')
   argv[2] = '-l'
   if workdir = '' then argv[3] = project_path(dirname(program))
   else argv[3] = project_path(workdir)
@@ -439,7 +439,7 @@ compile_application: procedure = .int
   if rc <> 0 then return rc
   generated_source = generated_root || '/' || source_stem(source) || '_generated.crexx'
   argv = .string[]
-  argv[1] = tool('rxtvm')
+  argv[1] = tool('rxvm')
   argv[2] = project_path(dir) || '/' || compiler || '.rxbin'
   argv[3] = '-a'
   argv[4] = project_path(source)
