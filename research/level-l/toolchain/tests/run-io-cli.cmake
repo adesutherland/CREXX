@@ -139,6 +139,47 @@ foreach(_case branch dag-values)
   endforeach()
 endforeach()
 
+# Ordinary string writes preserve the other components; whole register returns
+# retain ownership and snapshots. Empty output is bounded by literal sentinels.
+set(_strings_expected "literal-empty\nempty-begin\n\nempty-end\n73\n512\nliteral-unicode\ncafé λ🙂\n73\n512\nowned-first\nowned λ\n11\n256\nowned-repeat\nowned λ\n11\n256\nborrowed\nbefore λ\n17\n256\nrebound\nbefore λ\n17\n256\nstring-snapshot\nbefore λ\n23\n512\nwhole-snapshot\nbefore λ\n17\n256\nactual-after\nafter\n17\n256\nindependent-cert\ncafé λ🙂\n17\n512\nwhole-move\nmoved λ\n19\n256\nmove-source\nempty-begin\n\nempty-end\n0\n0")
+foreach(_mode conservative cleaned)
+  set(_cleanup_option)
+  if(_mode STREQUAL "conservative")
+    set(_cleanup_option --no-cleanup)
+  endif()
+  set(_product "${WORK}/strings-${_mode}")
+  run_checked("inline ordinary string components (${_mode})" "${VM}" "${CLI}" ${RUNTIME} -a
+    --module io-strings.rxas --profile closed-main-default-halt.v1 ${_cleanup_option}
+    -o "${_product}.rxas" "${FIXTURES}/io-strings.rxas")
+  caller_instructions("${_product}.rxas" main _caller)
+  set(_moves 0)
+  set(_copies 0)
+  set(_string_copies 0)
+  foreach(_instruction IN LISTS _caller)
+    if(_instruction MATCHES "^[ \t]*(call[0-9]*|swapcall|settpswapcall|settpcall)[ \t]")
+      message(FATAL_ERROR "${_mode} string caller retained a selected ordinary helper")
+    endif()
+    if(_instruction MATCHES "^[ \t]*move[ \t]")
+      math(EXPR _moves "${_moves} + 1")
+    elseif(_instruction MATCHES "^[ \t]*copy[ \t]")
+      math(EXPR _copies "${_copies} + 1")
+    elseif(_instruction MATCHES "^[ \t]*scopy[ \t]")
+      math(EXPR _string_copies "${_string_copies} + 1")
+    endif()
+  endforeach()
+  if(NOT _moves EQUAL 5 OR NOT _copies EQUAL 4 OR NOT _string_copies EQUAL 1)
+    message(FATAL_ERROR "${_mode} string caller lost required component snapshots or whole return ownership")
+  endif()
+  run_checked("assemble ordinary string components (${_mode})" "${ASSEMBLER}" -n
+    -o "${_product}" "${_product}.rxas")
+  run_checked("execute ordinary string components (${_mode})" "${VM}" "${_product}.rxbin")
+  string(REPLACE "\r\n" "\n" _normalized "${_last_stdout}")
+  string(STRIP "${_normalized}" _result)
+  if(NOT _result STREQUAL _strings_expected)
+    message(FATAL_ERROR "${_mode} ordinary string value/component/ABI output differs: '${_result}'")
+  endif()
+endforeach()
+
 # Presence is compiler ABI status, independently of integer zero and NOTSYM.
 # The fifth pair proves sequential defaults on two aliases of the same cell;
 # the last pairs distinguish status-only ACOPY from integer-only ICOPY.

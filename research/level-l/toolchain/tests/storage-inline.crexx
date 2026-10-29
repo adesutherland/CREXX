@@ -472,22 +472,40 @@ retainedwindow: procedure = .int
   failures = failures + check(body.locals() = 6 & swaps = 4,'window plus outside storage needs six cells and keeps its reverse permutation')
   return failures
 
+stringlifetime: procedure = .int
+  failures = 0
+  original = .lltarget..module; result = .lltarget..module; changed = .llinline..change; item = .lltarget..record; body = .lltarget..body
+  draft = .lltarget..draft('storage.string','fixture:storage.string',0)
+  at = draft.synthetic('ordinary string retains its authored lifetime operation'); root = draft.procedure('main',8,at)
+  ignored = two(root,'load',root.reg('r',7),.lltarget..operand.string('payload λ' as .binary),at)
+  lifeid = one(root,'endlife',root.reg('r',7),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'ordinary string lifetime is valid typed input')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','ordinary string has proved unique dense placement')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main')); item = result.at(changed.operation(lifeid))
+  failures = failures + check(body.locals() = 1 & item.mnemonic() = 'endlife','string-bearing ENDLIFE remains executable without widening integer-only lifetime deletion')
+  return failures
+
 hidden: procedure = .int
-  /* This is a pending noninteger analysis category, not a VM prohibition on
-   * placement. Its current specific keep must preserve the owned input. */
+  /* Binary payload proof remains a separate pending category. Ordinary strings
+   * above are no longer rejected merely because they have a side component. */
   failures = 0; original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
   draft = .lltarget..draft('storage.hidden','fixture:storage.hidden',0)
   at = draft.synthetic('unproved hidden lifetime cannot be made fresh by allocation'); root = draft.procedure('main',8,at)
-  ignored = two(root,'load',root.reg('r',7),.lltarget..operand.string('payload' as .binary),at)
+  ignored = two(root,'load',root.reg('r',7),.lltarget..operand.literal('B','0x00FF' as .binary),at)
   ignored = one(root,'endlife',root.reg('r',7),at); ignored = one(root,'ret',.lltarget..operand.integer(0),at)
   original = draft.finish(); graph = dereference original.ir(); before = graph.binary()
   changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
   kept = changed.result(); graph = dereference kept.ir()
-  failures = failures + check(changed.status() = 'keep' & changed.reason() = 'profile.scalar.literal.pending','broader noninteger analysis remains explicitly pending')
+  failures = failures + check(changed.status() = 'keep' & changed.reason() = 'profile.scalar.literal.pending','binary payload analysis remains explicitly pending')
   failures = failures + check(bin2x(graph.binary()) = bin2x(before),'hidden release state is preserved rather than reset to admit reuse')
   return failures
 
 main: procedure = .int
-  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + hidden()
+  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + hidden()
   say 'STORAGE_INLINE|failures=' || failures
   return failures

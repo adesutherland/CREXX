@@ -702,6 +702,7 @@ expandmany: procedure = .llinline..change
               ignored = code.two(targetbody,'load',tempcell,value,childat)
               ignored = code.two(targetbody,'icopy',resultcell,tempcell,childat)
             end
+            else if value.kind() = 'S' then ignored = code.two(targetbody,'load',resultcell,value,childat)
             else do
               mapped = fields[1] as .lltarget..operand
               if facts.returnactionat(input.id(),childrecord.id()) = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)

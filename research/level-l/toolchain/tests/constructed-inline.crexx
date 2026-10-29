@@ -669,6 +669,192 @@ nestedDAG: procedure = .int
   end
   return failures
 
+/** Literal returns replace only string state. Register returns still transfer
+ * the whole value, with own-base MOVE versus borrowed/rebound COPY. */
+stringmodel: procedure = .lltarget..module
+  arg variant = .int
+  fields = .object[]; utf8 = 'café λ🙂' as .binary
+  draft = .lltarget..draft('strings.' || variant,'constructed.strings',0); at = draft.synthetic('ordinary UTF8 string components')
+  root = draft.procedure('main',6,at)
+  ignored = one(root,'null',root.reg('r',0),at)
+  initial = 0
+  if variant >= 4 then initial = 17
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(initial),at)
+  if variant >= 4 then do
+    ignored = two(root,'settp',root.reg('r',0),.lltarget..operand.integer(256),at)
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.string(utf8),at)
+  end
+  ignored = one(root,'null',root.reg('r',1),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(73),at)
+  ignored = two(root,'settp',root.reg('r',1),.lltarget..operand.integer(512),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.string('old' as .binary),at)
+  if variant = 8 then do
+    ignored = one(root,'null',root.reg('r',2),at)
+    ignored = two(root,'settp',root.reg('r',2),.lltarget..operand.integer(512),at)
+    ignored = two(root,'acopy',root.reg('r',0),root.reg('r',2),at)
+  end
+  if variant = 6 | variant = 7 then do
+    fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.procedure('text') as .object
+    fields[3] = root.reg('r',0) as .object; fields[4] = root.reg('r',0) as .object
+    ignored = root.emit('call2',fields,at)
+  end
+  else ignored = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('text'),root.reg('r',0),at)
+  if variant = 3 then ignored = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('text'),root.reg('r',0),at)
+  ignored = two(root,'icopy',root.reg('r',4),root.reg('r',1),at)
+  ignored = three(root,'getandtp',root.reg('r',5),root.reg('r',1),.lltarget..operand.integer(768),at)
+  ignored = one(root,'say',root.reg('r',1),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  locals = 0
+  if variant = 3 | (variant >= 5 & variant <= 7) then locals = 1
+  leaf = draft.procedure('text',locals,at)
+  select variant
+    when 1 then ignored = one(leaf,'ret',.lltarget..operand.string(''x as .binary),at)
+    when 2 then ignored = one(leaf,'ret',.lltarget..operand.string(utf8),at)
+    when 3 then do
+      ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(11),at)
+      ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.string(utf8),at)
+      ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(256),at)
+      ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    end
+    when 5 then do
+      ignored = two(leaf,'link',leaf.reg('r',0),leaf.reg('a',1),at)
+      ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    end
+    when 6 then do
+      ignored = one(leaf,'null',leaf.reg('r',0),at)
+      ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(23),at)
+      ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(512),at)
+      ignored = two(leaf,'scopy',leaf.reg('r',0),leaf.reg('a',1),at)
+      ignored = two(leaf,'load',leaf.reg('a',2),.lltarget..operand.string('after' as .binary),at)
+      ignored = three(leaf,'ichkrng',leaf.reg('r',0),.lltarget..operand.integer(23),.lltarget..operand.integer(23),at)
+      ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    end
+    when 7 then do
+      ignored = two(leaf,'copy',leaf.reg('r',0),leaf.reg('a',1),at)
+      ignored = two(leaf,'load',leaf.reg('a',2),.lltarget..operand.string('after' as .binary),at)
+      ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    end
+    otherwise ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  end
+  return draft.finish()
+
+stringarguments: procedure = .int
+  failures = 0; variant = .int; i = .int; j = .int; callid = .int; retid = .int; moves = .int; copies_found = .int; snapshots = .int
+  integer = .int; whole = .int; mode = .int; exactliteral = .int; expected = .string
+  ids = .int[]; wanted = .binary
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module; body = .lltarget..body
+  item = .lltarget..record; value = .lltarget..operand
+  facts = .lltargetfacts..analysis; request = .llinline..binding; changed = .llinline..change; limited = .llinline..change
+  requests = .object[]
+  do variant = 1 to 8
+    graph = .llir..module; before = .binary
+    original = stringmodel(variant); assembler setattrs ids,0
+    failures = failures + check(original.valid(),'ordinary UTF8 component fixture validates ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    body = original.body(original.procedureid('main'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = 'instruction' & wordpos(item.mnemonic(),'call1 call2') > 0 then ids[ids[0] + 1] = item.id()
+    end
+    body = original.body(original.procedureid('text'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = 'instruction' & item.mnemonic() = 'ret' then retid = item.id()
+    end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(facts.status() = 'ok','ordinary strings have independent component/ownership proof ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    callid = ids[1]
+    if variant <= 2 then do
+      projection = .llirgraph..access
+      projection = dereference facts.access()
+      integer = facts.integerdomain(facts.storage(callid,1)); whole = facts.wholedomain(facts.storage(callid,1))
+      failures = failures + check(projection.writes(callid,integer) = 0 & projection.kills(callid,integer) = 0 & projection.kills(callid,whole) = 0,'RET S never claims an integer write/kill or a whole-value kill')
+    end
+    else do
+      expected = 'copy'
+      if variant = 3 | variant = 6 | variant = 7 then expected = 'move'
+      do i = 1 to ids[0]
+        failures = failures + check(facts.returnactionat(ids[i],retid) = expected,'string register RET retains exact own-base versus borrowed/rebound ownership ' || variant)
+      end
+    end
+    call objectarraydrop requests
+    do i = 1 to ids[0]
+      request = llinline..bind(reference original,ids[i],reference original,original.procedureid('text'))
+      requests[i] = request as .object
+    end
+    changed = llinline..expandmany(requests,'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'changed','ordinary string sites expand atomically ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    result = changed.result(); body = result.body(result.procedureid('main')); moves = 0; copies_found = 0; snapshots = 0; exactliteral = 0
+    wanted = ''x as .binary
+    if variant = 2 then wanted = 'café λ🙂' as .binary
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'move' then moves = moves + 1
+      if item.mnemonic() = 'copy' then copies_found = copies_found + 1
+      if item.mnemonic() = 'scopy' then snapshots = snapshots + 1
+      if variant <= 2 & item.mnemonic() = 'load' then do
+        value = item.operand(2)
+        if value.kind() = 'S' then do
+          if bin2x(value.bytes()) = bin2x(wanted) then exactliteral = exactliteral + 1
+        end
+      end
+    end
+    if variant <= 2 then failures = failures + check(exactliteral = 1 & moves = 0 & copies_found = 0,'literal return lowers to exact partial string LOAD, including empty/Unicode bytes')
+    if variant = 3 then failures = failures + check(moves = 2,'both repeated own-local string returns retain true MOVE reset')
+    if variant = 4 | variant = 5 | variant = 8 then failures = failures + check(copies_found = 1 & moves = 0,'borrowed/rebound string return remains COPY and never resets caller storage')
+    if variant = 6 then failures = failures + check(snapshots = 1 & moves = 1,'aliased string mutation retains the pre-mutation SCOPY snapshot and owned return')
+    if variant = 7 then failures = failures + check(copies_found = 1 & moves = 1,'whole snapshot preserves nonstring fields before aliased mutation')
+    graph = dereference original.ir(); before = graph.binary()
+    if variant = 1 then do mode = 1 to 3
+      limitedgraph = .llir..module
+      select mode
+        when 1 then limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1)
+        when 2 then limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1000000,1000000,1)
+        otherwise limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1000000,1000000,67108864,0)
+      end
+      kept = limited.result(); limitedgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & bin2x(limitedgraph.binary()) = bin2x(before),'string work/byte/frame refusal retains exact original ' || mode)
+    end
+  end
+  return failures
+
+stringhistory: procedure = .int
+  arg attempts = 2
+  failures = 0
+  graph = .llir..module; keptgraph = .llir..module; before = .binary
+  original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change; request = .llinline..binding
+  draft = .lltarget..draft('strings.history','constructed.strings.history',0); at = draft.synthetic('unreset string certificate history')
+  root = draft.procedure('main',3,at)
+  ignored = one(root,'null',root.reg('r',0),at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.string('café λ🙂' as .binary),at)
+  callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('reused'),root.reg('r',0),at)
+  if attempts = 2 then callid = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('reused'),root.reg('r',0),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('reused',2,at)
+  ignored = two(leaf,'load',leaf.reg('r',1),.lltarget..operand.integer(0),at)
+  ignored = two(leaf,'acopy',leaf.reg('a',1),leaf.reg('r',0),at)
+  ignored = two(leaf,'scopy',leaf.reg('r',1),leaf.reg('a',1),at)
+  ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.string('λ' as .binary),at)
+  ignored = one(leaf,'ret',leaf.reg('r',1),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'unreset certificate case is valid target input')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  graph = dereference original.ir(); before = graph.binary()
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('reused'))
+  changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result()
+  if attempts = 1 then do
+    failures = failures + check(changed.status() = 'changed','the first certificate copy succeeds from native fresh private state')
+    if changed.status() <> 'changed' then say changed.reason()
+    return failures
+  end
+  keptgraph = dereference kept.ir()
+  failures = failures + check(changed.status() = 'keep' & changed.reason() = 'string.component.unproved' & bin2x(keptgraph.binary()) = bin2x(before),'unreset copied certificates retain the exact call instead of inventing fresh string metadata')
+  if changed.reason() <> 'string.component.unproved' then say changed.reason()
+  return failures
+
 dagpositive: procedure = .int
   arg variant = .int
   failures = 0; i = .int; callid = .int; firstret = .int; secondret = .int; branchid = .int; mode = .int
@@ -1471,5 +1657,6 @@ main: procedure = .int
   failures = failures + calleetail()
   failures = failures + dagpositive(1) + dagpositive(2) + dagpositive(3) + dagkeeps()
   failures = failures + optionalarguments() + optionalkeeps() + optionalhistory() + abiedges() + nestedDAG()
+  failures = failures + stringarguments() + stringhistory(1) + stringhistory()
   say 'CONSTRUCTED_INLINE|failures=' || failures
   return failures

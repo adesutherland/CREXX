@@ -124,8 +124,8 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, and finite padded optional scalar prologues are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; counted implicit windows keep graph transport until adjacency or equivalent alias-window mapping is proved. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, and ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string component/recycler proof with retained string ENDLIFE, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; counted implicit windows keep graph transport until adjacency or equivalent alias-window mapping is proved. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -980,6 +980,68 @@ precise negative keeps and atomic work/byte/frame limits. Run conservative
 and cleaned output through native `rxas -n` and one VM. The broader recursive,
 imported, aggregate, exceptional and general counted-window transport
 categories remain open.
+
+### Reviewed ordinary string-component increment
+
+This INL-STEP04 increment admits ordinary UTF-8 string literals and `SCOPY` within the
+existing closed-root, normal-return call profile: `LOAD R,S`, `SCOPY`, whole
+COPY/MOVE and `RET R`/`RET S`. This is a component transfer, not a claim that
+all string-bearing values are plain integers. The target and VM already own
+the opcodes, UTF-8 operand validation, string constant bytes and copy/return
+handlers; no ISA or generic L API change is selected. Keep reference/native
+payloads and attributes absent by proof for this first slice. Binary loads,
+native copy hooks, references, aggregate attributes and abrupt exits are
+separate categories, not inferred safe from a string value.
+
+At the target facts owner, retain integer availability, bounded intervals,
+ABI status and `_plain` as their existing independent proofs. Add string
+component availability/entry independence, covering bytes together with
+VM-private UTF-8/cache flags and protected normalization certificates, and
+ordinary-scalar absence of
+hidden reference/native payload or attributes. Fresh/reset cells establish
+an independent empty string and payload absence; unreset recycled contents
+lose unproved component facts. A string LOAD establishes only the string
+component and preserves integer/public-status/attribute state while following
+the VM's reference/native-payload release. SCOPY copies only string bytes and
+the related VM-private/normalization certificates, preserving the destination
+integer, public ABI status, reference/native payload and attributes. Whole
+COPY/MOVE carry the complete proved state; MOVE resets its source. Meet every
+component separately across feasible paths. Do not widen `_plain` to admit
+string-bearing storage into the current integer-only reuse or ENDLIFE deletion.
+ACOPY may replace string certificates without changing string bytes. Their
+entry-independence then follows the source status, even when its certificate
+bits describe different bytes; preserve the VM's actual copied bits rather
+than infer semantic validity. A recycled source with unproved status loses
+that independence; ABI-bit knowledge alone cannot certify string metadata.
+A recycled string LOAD does not upgrade whole-cell entry independence.
+An explicit ENDLIFE on an admitted ordinary string remains executable unless
+a separate lifetime proof makes it removable.
+
+Normalize a string actual only with proved component availability and safe
+ordinary ownership; a callee read of another unproved component still keeps
+the call. A register RET keeps the original own-base MOVE versus borrowed or
+rebound COPY rule and requires whole-state independence for its whole transfer.
+An immediate `RET S` writes only the captured result's string component: emit
+`LOAD capturedResult,S` at that return, exactly matching `set_const_string`.
+It must preserve the destination's integer/public status and may release its
+reference/native payload as the VM would. An ignored result performs no write.
+Extend the per-return access summary so a string-only return does not claim an
+integer possible write or definite kill; only whole COPY/MOVE claim a whole
+kill. Project string accesses conservatively into the existing whole domain;
+this may retain dead string stores, and adds no separate string-liveness API.
+Preserve source/TRACE and exact literal bytes under the existing target
+writer.
+
+Focused constructed and handwritten RXAS controls cover borrowed string COPY,
+owned local MOVE, rebound local COPY, SCOPY snapshots through aliased actuals,
+string/int/status coexistence after partial writes, and `RET S` into a
+preloaded result with independently checked integer and ABI flags. Include
+empty and non-ASCII Unicode literals, repeated MOVE-reset versus unreset
+side-component history, precise unchanged keeps for hidden payload/unknown
+components, and atomic work/byte/frame limits. Inspect emitted operations and
+run conservative and cleaned RXAS with native assembler optimization disabled
+and one VM. String-bearing reuse and binary/reference/aggregate expansion
+remain INL-STEP04/05 work.
 
 ### Required native bootstrap correctness repair
 

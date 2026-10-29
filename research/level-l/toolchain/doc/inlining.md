@@ -1106,6 +1106,33 @@ keeps a wide frame and binding glue under this guard, so alias-aware reuse
 remains INL-STEP05 work. Imported bodies, deeper recursion, aggregates and
 abrupt exits remain separate categories.
 
+### Ordinary string components
+
+The closed-root normal-return profile admits ordinary UTF-8 string literals,
+`SCOPY`, whole COPY/MOVE and register or immediate-string RET. The facts owner
+tracks integer availability/bounds, ABI status, string bytes with VM-private
+flags and normalization certificates, and absence of reference/native payload
+or attributes separately. Fresh or reset cells establish independent empty
+string state; an unreset recycled local does not inherit those facts. LOAD S
+replaces only the string component while preserving integer and public status;
+SCOPY copies only that component. ACOPY copies the status word, including string
+certificates, without copying bytes. Its certificate independence therefore
+comes from the source status, even if its bits differ from the destination's
+bytes. An unproved recycled source prevents the copy from certifying the
+destination string metadata. Whole COPY/MOVE transfer the complete proved
+state, and MOVE resets the source.
+
+An immediate-string RET lowers to LOAD S on the entry-captured result cell,
+matching the VM's partial setter; an ignored result has no write. A register
+RET retains the original own-base MOVE versus borrowed/rebound COPY test and
+requires whole-state independence. String-only writes have no integer-write
+or integer-kill fact. The current liveness owner receives conservative whole
+reads and partial writes for strings; it may leave dead string stores in place.
+`_plain` remains the narrower integer-only reuse/lifetime-deletion premise,
+so an ordinary string ENDLIFE stays executable. Binary loads, hidden payloads,
+aggregate attributes, string-bearing storage reuse and abrupt exits still need
+separate proof before expansion or removal.
+
 ### Acyclic caller cleanup
 
 The graph path analyzes the exact frozen expanded caller using `llirgraph`

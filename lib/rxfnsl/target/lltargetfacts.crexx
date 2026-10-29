@@ -71,6 +71,11 @@ cells: class
   _abiindependent = .int[]
   _wholeknown = .int[]
   _zeroed = .int[]
+  /* Availability certifies independent bytes. The second row additionally
+   * covers the VM-private and normalization metadata copied by SCOPY. */
+  _stringdefined = .int[]
+  _stringindependent = .int[]
+  _ordinary = .int[]
   *: factory
     return
   add: method = .int
@@ -80,6 +85,7 @@ cells: class
     _wholeknown[n] = 1; _zeroed[n] = 0
     _bounded[n] = defined & known; _low[n] = value; _high[n] = value
     _abiknown[n] = 768; _abibits[n] = 0; _abiindependent[n] = 1
+    _stringdefined[n] = 1; _stringindependent[n] = 1; _ordinary[n] = 1
     return n
   defined: method = .int
     arg id = .int
@@ -102,6 +108,15 @@ cells: class
   plain: method = .int
     arg id = .int
     return _plain[id]
+  ordinary: method = .int
+    arg id = .int
+    return _ordinary[id]
+  stringdefined: method = .int
+    arg id = .int
+    return _stringdefined[id]
+  stringindependent: method = .int
+    arg id = .int
+    return _stringindependent[id]
   abiknown: method = .int
     arg id = .int
     return _abiknown[id]
@@ -150,6 +165,9 @@ cells: class
       end
       else do; _low[i] = 0; _high[i] = 0; end
       _plain[i] = _plain[i] & other.plain(i)
+      _ordinary[i] = _ordinary[i] & other.ordinary(i)
+      _stringdefined[i] = _stringdefined[i] & other.stringdefined(i)
+      _stringindependent[i] = _stringindependent[i] & other.stringindependent(i)
       _wholeknown[i] = _wholeknown[i] & other.wholeknown(i)
       _zeroed[i] = _zeroed[i] & other.zeroed(i)
       otherknown = other.abiknown(i); otherbits = other.abibits(i); bits = _abibits[i]
@@ -176,6 +194,7 @@ cells: class
     _defined[id] = 0; _known[id] = 0; _wholeknown[id] = 0; _zeroed[id] = 0
     _bounded[id] = 0; _low[id] = 0; _high[id] = 0
     _abiknown[id] = 0; _abibits[id] = 0; _abiindependent[id] = 0
+    _stringdefined[id] = 0; _stringindependent[id] = 0
     return
   integer: method = .void
     arg id = .int, known = .int, value = 0
@@ -199,6 +218,7 @@ cells: class
     _wholeknown[id] = 1; _zeroed[id] = 1
     _bounded[id] = 1; _low[id] = 0; _high[id] = 0
     _abiknown[id] = 768; _abibits[id] = 0; _abiindependent[id] = 1
+    _stringdefined[id] = 1; _stringindependent[id] = 1; _ordinary[id] = 1
     return
   copy: method = .void
     arg destination = .int, source = .int, whole = 1
@@ -206,6 +226,9 @@ cells: class
     _bounded[destination] = _bounded[source]; _low[destination] = _low[source]; _high[destination] = _high[source]
     if whole then do
       _plain[destination] = _plain[source]
+      _ordinary[destination] = _ordinary[source]
+      _stringdefined[destination] = _stringdefined[source]
+      _stringindependent[destination] = _stringindependent[source]
       _abiknown[destination] = _abiknown[source]; _abibits[destination] = _abibits[source]
       _abiindependent[destination] = _abiindependent[source]
       _wholeknown[destination] = _wholeknown[source]; _zeroed[destination] = _zeroed[source]
@@ -238,11 +261,23 @@ cells: class
     _abiknown[destination] = _abiknown[source]; _abibits[destination] = _abibits[source]
     _abiindependent[destination] = _abiindependent[source]
     _wholeknown[destination] = _wholeknown[destination] & _wholeknown[source]
+    /* Bytes remain available, but ACOPY replaces the string's VM-private
+     * and normalization certificates along with every other status band. */
+    _stringindependent[destination] = _stringdefined[destination] & _stringindependent[source]
     _zeroed[destination] = 0
     return
   string: method = .void
     arg id = .int
     _plain[id] = 0; _zeroed[id] = 0
+    _stringdefined[id] = 1; _stringindependent[id] = 1
+    return
+  copystring: method = .void
+    arg destination = .int, source = .int
+    if destination = source then return
+    _stringdefined[destination] = _stringdefined[source]
+    _stringindependent[destination] = _stringindependent[source]
+    _plain[destination] = 0; _zeroed[destination] = 0
+    _wholeknown[destination] = _wholeknown[destination] & _stringindependent[source]
     return
 
 frame: class
@@ -432,6 +467,7 @@ callproof: class
   _left = .numbers[]
   _right = .numbers[]
   _written = .int
+  _writeinteger = .int
   _killinteger = .int
   _killwhole = .int
   *: factory
@@ -456,7 +492,8 @@ callproof: class
     _sites[_sites[0] + 1] = site; _action[ordinal] = action
     _left[ordinal] = .numbers(left); _right[ordinal] = .numbers(right)
     _written = _written | (action <> 'none')
-    _killinteger = _killinteger & (action <> 'none')
+    _writeinteger = _writeinteger | (action = 'integer' | action = 'copy' | action = 'move')
+    _killinteger = _killinteger & (action = 'integer' | action = 'copy' | action = 'move')
     _killwhole = _killwhole & (action = 'copy' | action = 'move')
     return
   returns: method = .int
@@ -478,6 +515,8 @@ callproof: class
     return _right[ordinal].at(pair)
   written: method = .int
     return _written
+  writeinteger: method = .int
+    return _writeinteger
   killinteger: method = .int
     return _killinteger
   killwhole: method = .int
@@ -675,9 +714,9 @@ analysis: class
   /* Include transient and retained deep copies, not an assumed VM COW path. */
   pathallowance: method = .int
     arg cells = .int, slots = .int
-    if reserve(cells,448) = 0 | reserve(slots,128) = 0 | reserve(1,320) = 0 then return 0
-    if cells > _work / 56 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-    if spend(cells * 56) = 0 then return 0
+    if reserve(cells,544) = 0 | reserve(slots,128) = 0 | reserve(1,320) = 0 then return 0
+    if cells > _work / 68 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(cells * 68) = 0 then return 0
     if slots > _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     return spend(slots * 16)
   joinpath: method = .int
@@ -713,9 +752,9 @@ analysis: class
       if _ownedready[childid] = 0 then do
         if spend(module.procedures()) = 0 then return 0
         child = module.body(childid)
-        if child.locals() >= _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-        if reserve(child.locals() + 1,168) = 0 | reserve(1,32) = 0 then return 0
-        if spend((child.locals() + 1) * 16) = 0 then return 0
+        if child.locals() >= _work / 20 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+        if reserve(child.locals() + 1,192) = 0 | reserve(1,32) = 0 then return 0
+        if spend((child.locals() + 1) * 20) = 0 then return 0
         owned = empty
         do j = 1 to child.locals() + 1
           id = state.add(); owned[j] = id
@@ -740,6 +779,10 @@ analysis: class
     if hasresult & item.operands() = 1 then do
       value = item.operand(1)
       if value.kind() = 'I' then do; action = 'integer'; call state.integer(destination,1,value.index()); end
+      else if value.kind() = 'S' then do
+        if state.ordinary(destination) = 0 then return reject('lifetime.hidden.payload.unproved')
+        action = 'string'; call state.string(destination)
+      end
       else do
         id = view.storage(value)
         if value.bank() = 'r' & id = view.base(value) then do; action = 'move'; call state.move(destination,id); end
@@ -905,9 +948,9 @@ analysis: class
         if refinementid > 0 then do
           /* This extra status-refined snapshot is distinct from both the
            * immutable predecessor and the ordinary stored incoming copy. */
-          if reserve(state.size(),96) = 0 then return 0
-          if state.size() > _work / 12 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-          if spend(state.size() * 12) = 0 | spend(1) = 0 then return 0
+          if reserve(state.size(),120) = 0 then return 0
+          if state.size() > _work / 15 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+          if spend(state.size() * 15) = 0 | spend(1) = 0 then return 0
           path_ref = reference path; edgepath = snapshot path_ref
           call edgepath.refineabi(refinementid,refinementmask,edge = 1)
           source_ref = reference edgepath
@@ -1040,6 +1083,7 @@ analysis: class
     arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1, returnwhole = 1, history = 1
     i = .int; j = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
     opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
+    integerwrite = .int
     selected = .int; checked = .int[]; limits = .int[]
     leftlow = .int; lefthigh = .int; rightlow = .int; righthigh = .int; resultlow = .int; resulthigh = .int
     source = .lltarget..operand; bank = .lltarget..operand; reference_value = .lltarget..operand; option = .lltarget..operand
@@ -1132,11 +1176,13 @@ analysis: class
         value = item.operand(1)
         if value.kind() = 'R' then do
           id = view.storage(value)
-          if id = 0 | state.defined(id) = 0 then return reject('local.recycler.history.unproved')
+          if id = 0 then return reject('local.recycler.history.unproved')
+          if state.defined(id) = 0 & state.stringdefined(id) = 0 then return reject('local.recycler.history.unproved')
+          if state.ordinary(id) = 0 then return reject('argument.scalar.state.unproved')
           if returnwhole & state.wholeknown(id) = 0 then return reject('local.recycler.history.unproved')
           call insert(reference reads,domain(id,1))
         end
-        else if value.kind() <> 'I' then return reject('profile.return.component.pending')
+        else if value.kind() <> 'I' & value.kind() <> 'S' then return reject('profile.return.component.pending')
       end
     end
     else if name = 'cnop' | (_graphmode & wordpos(name,'br brt brf brtf brtpandt') > 0) then nop
@@ -1207,7 +1253,7 @@ analysis: class
       end
       if record then _mapping[item.id()] = 1
     end
-    else if wordpos(name,'null load copy icopy move acopy settp getandtp endlife iadd isub imult itos say') > 0 then do
+    else if wordpos(name,'null load copy icopy scopy move acopy settp getandtp endlife iadd isub imult itos say') > 0 then do
       if name = 'say' then do
         if private then return reject('profile.callee.external.effect.pending')
         value = item.operand(1)
@@ -1216,14 +1262,16 @@ analysis: class
       else do
         left = item.operand(1); destination = view.storage(left)
         if destination = 0 then return reject('profile.external.storage.pending')
+        integerwrite = 1
         if name = 'null' then call state.reset(destination)
         else if name = 'endlife' then do
-          if state.plain(destination) = 0 then return reject('lifetime.hidden.payload.unproved')
+          if state.ordinary(destination) = 0 then return reject('lifetime.hidden.payload.unproved')
         end
         else if name = 'settp' then do
           value = item.operand(2); call state.status(destination,value.index())
         end
         else if name = 'acopy' then do
+          integerwrite = 0
           right = item.operand(2); sourceid = view.storage(right)
           if sourceid = 0 then return reject('profile.external.storage.pending')
           if globalcell(sourceid) & state.wholeknown(sourceid) = 0 then return reject('global.definition.unproved')
@@ -1241,20 +1289,38 @@ analysis: class
         end
         else if name = 'load' then do
           value = item.operand(2)
-          if value.kind() <> 'I' then return reject('profile.scalar.literal.pending')
-          call state.integer(destination,1,value.index())
+          if value.kind() = 'I' then call state.integer(destination,1,value.index())
+          else if value.kind() = 'S' then do
+            if state.ordinary(destination) = 0 then return reject('lifetime.hidden.payload.unproved')
+            integerwrite = 0; call state.string(destination)
+          end
+          else return reject('profile.scalar.literal.pending')
         end
         else if name = 'itos' then do
           if private then return reject('profile.callee.component.pending')
           if state.defined(destination) = 0 then return reject('local.recycler.history.unproved')
           call insert(reference reads,domain(destination))
-          call state.string(destination)
+          integerwrite = 0; call state.string(destination)
+        end
+        else if name = 'scopy' then do
+          right = item.operand(2); sourceid = view.storage(right)
+          if sourceid = 0 then return reject('profile.external.storage.pending')
+          if state.ordinary(destination) = 0 | state.ordinary(sourceid) = 0 then return reject('argument.scalar.state.unproved')
+          if state.stringdefined(sourceid) = 0 | state.stringindependent(sourceid) = 0 then return reject('string.component.unproved')
+          call insert(reference reads,domain(sourceid,1))
+          integerwrite = 0; call state.copystring(destination,sourceid)
         end
         else if wordpos(name,'copy icopy move') > 0 then do
           right = item.operand(2); sourceid = view.storage(right)
-          if sourceid = 0 | state.defined(sourceid) = 0 then return reject('local.recycler.history.unproved')
-          if name <> 'icopy' & state.wholeknown(sourceid) = 0 then return reject('local.recycler.history.unproved')
-          if state.plain(sourceid) = 0 & private then return reject('argument.scalar.state.unproved')
+          if sourceid = 0 then return reject('local.recycler.history.unproved')
+          if name = 'icopy' then do
+            if state.defined(sourceid) = 0 then return reject('local.recycler.history.unproved')
+          end
+          else do
+            if state.defined(sourceid) = 0 & state.stringdefined(sourceid) = 0 then return reject('local.recycler.history.unproved')
+            if state.wholeknown(sourceid) = 0 then return reject('local.recycler.history.unproved')
+          end
+          if state.ordinary(sourceid) = 0 & private then return reject('argument.scalar.state.unproved')
           call insert(reference reads,domain(sourceid,name <> 'icopy'))
           if name = 'move' then call state.move(destination,sourceid)
           else call state.copy(destination,sourceid,name <> 'icopy')
@@ -1305,16 +1371,17 @@ analysis: class
           end
           call state.interval(destination,resultlow,resulthigh)
         end
-        /* A whole-cell domain observes every numeric/status side component.
-         * Definite scalar kills are narrower; whole copy/move/null kill both. */
+        /* String accesses conservatively use the whole observation domain.
+         * A string-only write neither writes nor kills the integer domain,
+         * and cannot kill surviving status or other whole-cell components. */
         if name <> 'endlife' then do
-          if name <> 'acopy' then call insert(reference writes,domain(destination))
+          if integerwrite then call insert(reference writes,domain(destination))
           call insert(reference writes,domain(destination,1))
         end
         if wordpos(name,'null copy move') > 0 then do
           call insert(reference kills,domain(destination)); call insert(reference kills,domain(destination,1))
         end
-        else if wordpos(name,'load icopy getandtp iadd isub imult') > 0 then call insert(reference kills,domain(destination))
+        else if integerwrite & wordpos(name,'load icopy getandtp iadd isub imult') > 0 then call insert(reference kills,domain(destination))
         if history then _plain[destination] = state.plain(destination)
       end
     end
@@ -1361,7 +1428,12 @@ analysis: class
       if private = 0 & value.bank() <> 'r' & value.bank() <> 'g' then do; ignored = reject('argument.storage.unproved'); return .callshape(); end
       id = view.storage(value)
       if globalcell(id) & state.wholeknown(id) = 0 then do; ignored = reject('global.definition.unproved'); return .callshape(); end
-      if id = 0 | state.defined(id) = 0 | state.plain(id) = 0 | state.wholeknown(id) = 0 then do; ignored = reject('argument.scalar.state.unproved'); return .callshape(); end
+      if id = 0 | state.ordinary(id) = 0 then do; ignored = reject('argument.scalar.state.unproved'); return .callshape(); end
+      /* A string actual need not invent an integer component. The exact
+       * child transfer still checks every component that its body reads. */
+      if (state.defined(id) = 0 | state.wholeknown(id) = 0) & (state.stringdefined(id) = 0 | state.stringindependent(id) = 0) then do
+        ignored = reject('argument.scalar.state.unproved'); return .callshape()
+      end
       actuals[i] = id; positions[i] = view.position(value) - 1
     end
     return .callshape(bodyid,name,count,first,destination,name = 'call' & item.operands() = 2,countstorage,positions,actuals)
@@ -1468,7 +1540,7 @@ analysis: class
       else child = .frame(state_ref,callee.locals(),actuals,0,view.context(),owned)
     end
     else do
-      if reserve(callee.locals() + 1,120) = 0 then return 0
+      if reserve(callee.locals() + 1,144) = 0 then return 0
       if _globals[0] > 0 then do
         if spend(callee.locals() + 1) = 0 then return 0
         do i = 1 to callee.locals(); owned[i] = state.add(); end
@@ -1519,10 +1591,11 @@ analysis: class
       if finishreturn(record,child,state,destination,hasresult,proof) = 0 then return 0
     end
     if tracking & hasresult then _plain[destination] = state.plain(destination)
-    if publish & proof.written() then do
-      call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
-      if proof.killinteger() then call insert(reference kills,domain(destination))
-      if proof.killwhole() then call insert(reference kills,domain(destination,1))
+    if publish & (proof.written() | shape.clear()) then do
+      if proof.writeinteger() | shape.clear() then call insert(reference writes,domain(destination))
+      call insert(reference writes,domain(destination,1))
+      if proof.killinteger() | shape.clear() then call insert(reference kills,domain(destination))
+      if proof.killwhole() | shape.clear() then call insert(reference kills,domain(destination,1))
     end
     do i = 1 to callee.locals()
       call callhistory.exited(child.ownedbase(i),state.zeroed(child.ownedbase(i)))
@@ -1627,11 +1700,11 @@ analysis: class
     if spend(body.locals() + 1) = 0 then return
     state = .cells(); empty = .int[]
     if module.globals() = 0 then do
-      if reserve(body.locals() + 1,144) = 0 then return
+      if reserve(body.locals() + 1,168) = 0 then return
       view = .frame(reference state,body.locals(),empty,1)
     end
     else do
-      if reserve(body.locals() + 1,168) = 0 | reserve(module.globals(),168) = 0 then return
+      if reserve(body.locals() + 1,192) = 0 | reserve(module.globals(),192) = 0 then return
       if spend(body.locals() + 1) = 0 | spend(module.globals()) = 0 | spend(module.globals()) = 0 then return
       /* Keep root r StorageIds 1..L. Module bases persist independently of
        * every procedure's physical r/g/a map and owned local/a0 cache. */
