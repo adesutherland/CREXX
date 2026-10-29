@@ -6,7 +6,7 @@ and argument handling to Classic Rexx, then gave the code to Level L.
 Run the cREXX walkthrough with an existing cREXX research build:
 
 ```sh
-./run.sh /path/to/CREXX/cmake-build-debug
+./run.sh /path/to/CREXX/cmake-build-debug  # Build and run the cREXX walkthrough.
 ```
 
 ## 1. Import the code
@@ -15,8 +15,8 @@ The Classic frontend uses a Level L grammar to turn the source into an
 **abstract syntax tree**: nodes for assignments, expressions, branches and loops.
 
 ```rexx
-front = .llcfrontend..request(source,runtime,'fdsqrt-new.rexx')
-tree = front.ast()
+front = .llcfrontend..request(source,runtime,'fdsqrt-new.rexx') /* Create a Classic Rexx parsing request. */
+tree = front.ast()                                          /* Get the parsed source tree. */
 ```
 
 ## 2. Walk the tree
@@ -25,10 +25,10 @@ tree = front.ast()
 uses it to print the loop:
 
 ```rexx
-children = node.each()
-do while children.next()
-  call showtree(children.node(),depth + visible)
-end
+children = node.each()                           /* Prepare to visit this node's children. */
+do while children.next()                         /* Advance to each child until none remain. */
+  call showtree(children.node(),depth + visible)  /* Print the child and visit its children. */
+end                                             /* Finish this node's child loop. */
 ```
 
 ```text
@@ -49,9 +49,9 @@ return. Level L connects these into a **flow graph**, which follows the routes
 through the code.
 
 ```rexx
-flowtree = sqrtflow..lower(reference tree)
-flow = sqrtflow..execution(reference flowtree)
-call branches(reference flow,guard)
+flowtree = sqrtflow..lower(reference tree)       /* Translate syntax nodes into execution roles. */
+flow = sqrtflow..execution(reference flowtree)   /* Connect those roles into a flow graph. */
+call branches(reference flow,guard)             /* Print the exit test's true and false routes. */
 ```
 
 ```text
@@ -69,8 +69,8 @@ estimate on that route.
 `X` is the routine's argument; we supply it as assigned at entry.
 
 ```rexx
-facts = flow.definiteassignment('X')
-say yesno(facts.before(guard).assigned('NEXT'))
+facts = flow.definiteassignment('X')           /* Check assignments, with argument X assigned at entry. */
+say yesno(facts.before(guard).assigned('NEXT')) /* Report whether every route to the test assigns NEXT. */
 ```
 
 ```text
@@ -80,7 +80,7 @@ yes
 Now change one line:
 
 ```rexx
-if x>1 then next=(guess+(x/guess))/2
+if x>1 then next=(guess+(x/guess))/2 /* Assign NEXT only when X is greater than 1. */
 ```
 
 Run the same analysis:
@@ -101,11 +101,11 @@ operations grouped into **blocks**, each a straight sequence. Level L supplies
 standard graph algorithms for the jumps between blocks.
 
 ```rexx
-graph = front.graph()
-index = .llirgraph..index(reference graph)
-loops = index.loops()
-value = op.result(1)
-useid = index.use(value.id(),1)
+graph = front.graph()                     /* Get the compiler's operation graph. */
+index = .llirgraph..index(reference graph) /* Index blocks, jumps and value uses. */
+loops = index.loops()                     /* Find cycles and loop regions. */
+value = op.result(1)                      /* Get the selected division's first result. */
+useid = index.use(value.id(),1)           /* Find the first operation that consumes it. */
 ```
 
 For the division operation, following its result gives:
