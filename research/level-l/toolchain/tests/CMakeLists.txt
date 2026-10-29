@@ -47,8 +47,41 @@ crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/signal-inline.rxbi
 add_custom_target(levell_rxas_signal_test_prep DEPENDS
   "${CMAKE_CURRENT_BINARY_DIR}/signal-inline.rxbin")
 add_dependencies(levell_rxas_signal_test_prep llrxinline)
+crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/fused-inline.rxbin"
+  COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+    -i "${CMAKE_CURRENT_BINARY_DIR}/imports"
+    -o "${CMAKE_CURRENT_BINARY_DIR}/fused-inline"
+    "${CMAKE_CURRENT_SOURCE_DIR}/fused-inline.crexx"
+  COMMAND $<TARGET_FILE:rxas> "${CMAKE_CURRENT_BINARY_DIR}/fused-inline"
+  DEPENDS rxc rxas levell_rxas_io_test_imports ${_imports}
+    "${CMAKE_CURRENT_SOURCE_DIR}/fused-inline.crexx" VERBATIM)
+crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/io-fused-generated.rxas"
+  COMMAND $<TARGET_FILE:rxc> -n -x --no-exe-import
+    -i "${CMAKE_CURRENT_BINARY_DIR}/imports"
+    -o "${CMAKE_CURRENT_BINARY_DIR}/io-fused-generated"
+    "${CMAKE_CURRENT_SOURCE_DIR}/io-fused-generated.crexx"
+  DEPENDS rxc levell_rxas_io_test_imports ${_imports}
+    "${CMAKE_CURRENT_SOURCE_DIR}/io-fused-generated.crexx" VERBATIM)
+add_custom_target(levell_rxas_fused_test_prep DEPENDS
+  "${CMAKE_CURRENT_BINARY_DIR}/fused-inline.rxbin"
+  "${CMAKE_CURRENT_BINARY_DIR}/io-fused-generated.rxas")
+add_dependencies(levell_rxas_fused_test_prep llrxinline)
 if(TARGET rxbvm)
   get_target_property(_cli llrxinline LLRXINLINE_BYTECODE)
+  add_test(NAME levell_rxas_fused
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DCONSTRUCTED=${CMAKE_CURRENT_BINARY_DIR}/fused-inline.rxbin"
+      "-DGENERATED=${CMAKE_CURRENT_BINARY_DIR}/io-fused-generated.rxas"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/fused-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-fused.cmake")
+  set_tests_properties(levell_rxas_fused PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_FUSED[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_fused
+    TARGETS levell_rxas_fused_test_prep rxbvm rxas)
   add_test(NAME levell_rxas_named_signal
     COMMAND ${CMAKE_COMMAND}
       "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"

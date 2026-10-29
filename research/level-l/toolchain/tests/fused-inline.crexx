@@ -1,0 +1,250 @@
+/* cREXX License (MIT). Constructed fused-call identity and transaction controls. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import llinline
+
+check: procedure = .int
+  arg passed = .int, message = .string
+  if passed then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+
+specimen: class
+  _module = .lltarget..module
+  _call = .int
+  _ordinary = .int
+  _outside = .int
+  _trace = .int
+  _source = .int
+  _label = .int
+  *: factory
+    arg variant = .int
+    fields = .object[]; at = .llir..origin; ignored = .int
+    draft = .lltarget..draft('fused.' || variant,'fixture:fused.' || variant,0)
+    file = draft.source('fused-control.rxas','fused call' as .binary); at = file.origin(0,10)
+    if variant = 12 | variant = 13 then do
+      fields[1] = .lltarget..operand.procedure('missing') as .object
+      fields[2] = .lltarget..operand.symbol('fused.missing') as .object
+      ignored = draft.record('.import',fields,at)
+    end
+    root = draft.procedure('main',6,at)
+    count = 1
+    if variant = 2 | variant = 3 then count = 2
+    if variant = 4 then count = 0
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(count),at)
+    ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(10),at)
+    ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(2),at)
+    ignored = two(root,'load',root.reg('r',4),.lltarget..operand.integer(77),at)
+    if variant = 5 | variant = 10 then do
+      call objectarraydrop fields
+      fields[1] = root.reg('r',2) as .object; fields[2] = root.reg('r',4) as .object
+      fields[3] = .lltarget..operand.integer(65536) as .object
+      ignored = root.emit('getandtp',fields,at)
+    end
+    if variant = 6 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(99),at)
+    if variant = 7 then ignored = one(root,'sighalt',.lltarget..operand.string('ERROR' as .binary),at)
+    if variant >= 8 & variant <= 11 then do
+      call objectarraydrop fields
+      fields[1] = root.reg('r',4) as .object; fields[2] = .lltarget..operand.procedure('identity') as .object
+      fields[3] = root.reg('r',1) as .object
+      _ordinary = root.emit('call1',fields,at)
+    end
+    if variant = 15 then ignored = one(root,'br',.lltarget..operand.symbol('invoke'),at)
+    call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('invoke') as .object
+    _label = root.record('label',fields,at)
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.integer(1) as .object; fields[2] = fields[1]
+    fields[3] = .lltarget..operand.integer(0) as .object
+    fields[4] = .lltarget..operand.string('fused-control.rxas' as .binary) as .object
+    fields[5] = .lltarget..operand.integer(1) as .object
+    fields[6] = .lltarget..operand.integer(0) as .object
+    fields[7] = .lltarget..operand.integer(10) as .object
+    fields[8] = .lltarget..operand.string('fused call' as .binary) as .object
+    _source = root.record('.srcstep',fields,at)
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.string('V' as .binary) as .object
+    fields[2] = .lltarget..operand.integer(4) as .object
+    fields[3] = .lltarget..operand.string('R' as .binary) as .object
+    fields[4] = .lltarget..operand.string('I' as .binary) as .object
+    fields[5] = .lltarget..operand.string('r' as .binary) as .object
+    fields[6] = .lltarget..operand.integer(0) as .object
+    fields[7] = .lltarget..operand.integer(1) as .object; fields[8] = fields[7]
+    fields[9] = .lltarget..operand.integer(0) as .object
+    fields[10] = .lltarget..operand.string('count' as .binary) as .object
+    fields[11] = .lltarget..operand.string(''x as .binary) as .object
+    _trace = root.record('.traceevent',fields,at)
+    call objectarraydrop fields
+    fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('sum') as .object
+    fields[3] = root.reg('r',0) as .object; fields[4] = root.reg('r',0) as .object
+    fields[5] = root.reg('r',2) as .object; name = 'swapcall'
+    if variant = 1 then do
+      name = 'settpswapcall'; fields[5] = .lltarget..operand.integer(256) as .object
+      fields[6] = root.reg('r',2) as .object
+    end
+    if variant = 2 | variant = 4 then do
+      name = 'settpcall'; fields[1] = root.reg('r',4) as .object
+      fields[4] = root.reg('r',1) as .object; fields[5] = .lltarget..operand.integer(256) as .object
+      if variant = 4 then fields[2] = .lltarget..operand.procedure('bare') as .object
+    end
+    if variant = 3 then do
+      fields[1] = root.reg('r',4) as .object
+      fields[4] = root.reg('r',1) as .object; fields[5] = fields[4]
+    end
+    if variant = 12 | variant = 13 then fields[2] = .lltarget..operand.procedure('missing') as .object
+    if variant = 11 then do
+      call objectarraydrop fields
+      fields[1] = root.reg('r',4) as .object; fields[2] = .lltarget..operand.procedure('sum') as .object
+      fields[3] = root.reg('r',1) as .object; fields[4] = root.reg('r',2) as .object
+      name = 'call2'
+    end
+    _call = root.emit(name,fields,at)
+    if variant <> 2 & variant <> 3 & variant <> 4 & variant <> 11 then ignored = two(root,'swap',root.reg('r',0),root.reg('r',2),at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    leaf = draft.procedure('sum',1,at)
+    if variant = 14 then ignored = two(leaf,'metalinkpreg',leaf.reg('r',0),leaf.reg('r',0),at)
+    call objectarraydrop fields; fields[1] = leaf.reg('r',0) as .object
+    fields[2] = leaf.reg('a',1) as .object; fields[3] = leaf.reg('a',2) as .object
+    ignored = leaf.emit('iadd',fields,at); ignored = one(leaf,'ret',leaf.reg('r',0),at)
+    leaf = draft.procedure('identity',0,at); ignored = one(leaf,'ret',leaf.reg('a',1),at)
+    leaf = draft.procedure('bare',0,at); call objectarraydrop fields; ignored = leaf.emit('ret',fields,at)
+    if variant >= 8 & variant <= 11 then do
+      outside = draft.procedure('outside',3,at)
+      call objectarraydrop fields; fields[1] = outside.reg('r',2) as .object
+      fields[2] = .lltarget..operand.procedure('identity') as .object
+      fields[3] = outside.reg('r',0) as .object
+      name = 'call1'
+      if variant = 9 then do
+        name = 'swapcall'; fields[4] = outside.reg('r',1) as .object; fields[5] = fields[4]
+      end
+      _outside = outside.emit(name,fields,at); ignored = one(outside,'ret',.lltarget..operand.integer(0),at)
+    end
+    _module = draft.finish()
+    return
+  module: method = .lltarget..module
+    return _module
+  callid: method = .int
+    return _call
+  ordinary: method = .int
+    return _ordinary
+  outside: method = .int
+    return _outside
+  traceid: method = .int
+    return _trace
+  sourceid: method = .int
+    return _source
+  labelid: method = .int
+    return _label
+
+foreignprovider: procedure = .lltarget..module
+  draft = .lltarget..draft('fused-provider','fixture:fused-provider',0)
+  at = draft.synthetic('exact supplied exported body')
+  leaf = draft.procedure('sum',0,at,'fused.missing')
+  ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  return draft.finish()
+
+main: procedure = .int
+  failures = 0; variant = .int; i = .int; mode = .int
+  selected = .lltarget..record; neighbor = .lltarget..record; changed = .llinline..change
+  bindings = .object[]; input = .lltarget..module; result = .lltarget..module; retained = .lltarget..module; provider = .lltarget..module
+  owner = reference .lltarget..module; graph_ref = reference .llir..module; provider_ref = reference .lltarget..module
+  do variant = 0 to 15
+    fixture = .specimen(variant)
+    input = fixture.module()
+    owner = reference input
+    failures = failures + check(input.valid(),'valid independent constructed fixture ' || variant)
+    if input.valid() = 0 then do; say input.error(); iterate; end
+    selected = input.at(fixture.callid()); target = selected.operand(2)
+    request = llinline..bind(owner,fixture.callid(),owner,input.procedureid(target.text()))
+    if variant = 13 then do
+      provider = foreignprovider(); provider_ref = reference provider
+      request = llinline..bind(owner,fixture.callid(),provider_ref,provider.procedureid('sum'))
+    end
+    call objectarraydrop bindings; bindings[1] = request as .object
+    if variant >= 8 & variant <= 11 then do
+      bindings[2] = llinline..bind(owner,fixture.ordinary(),owner,input.procedureid('identity')) as .object
+      bindings[3] = llinline..bind(owner,fixture.outside(),owner,input.procedureid('identity')) as .object
+    end
+    if variant = 10 then do
+      bindings[1] = bindings[3]; bindings[3] = bindings[2]; bindings[2] = request as .object
+    end
+    graph_ref = input.ir()
+    graph = dereference graph_ref
+    before = graph.binary()
+    changed = llinline..expandmany(bindings,'closed-main-default-halt.v1')
+    if variant >= 5 & variant <= 7 | variant = 9 | variant = 10 | variant >= 12 then do
+      expected = 'argument.count.unproved'
+      if variant = 6 then expected = 'argument.window.unproved'
+      if variant = 7 then expected = 'signal.fused.scope.pending'
+      if variant = 9 then expected = 'signal.root.context.unproved'
+      if variant = 12 then expected = 'body.unavailable'
+      if variant = 13 then expected = 'profile.imported.body.pending'
+      if variant = 14 then expected = 'profile.scalar.operation.pending'
+      if variant = 15 then expected = 'profile.caller.cfg.pending'
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected,'precise refusal ' || variant || ': ' || changed.reason())
+      retained = changed.result()
+      graph_ref = retained.ir()
+      keptgraph = dereference graph_ref
+      failures = failures + check(retained.identity() = input.identity() & bin2x(keptgraph.binary()) = bin2x(before),'refusal returns exact original owner ' || variant)
+      failures = failures + check(changed.callers() = 0 & changed.operation(fixture.callid()) = fixture.callid(),'refusal has no changed caller or projected mapping')
+      if variant = 9 then do
+        failures = failures + check(changed.sites() = 3 & changed.site(1) = fixture.callid() & changed.site(3) = fixture.outside(),'rollback preserves original request IDs/order')
+        failures = failures + check(changed.statusat(fixture.callid()) = 'keep' & changed.reasonat(fixture.callid()) = 'batch.fused.site.retained','eligible fused candidate receives rollback reason')
+        failures = failures + check(changed.reasonat(fixture.ordinary()) = 'batch.fused.site.retained' & changed.reasonat(fixture.outside()) = expected,'ordinary candidate and actual fused refusal remain distinct')
+      end
+      if variant = 10 then do
+        failures = failures + check(changed.site(1) = fixture.outside() & changed.site(2) = fixture.callid(),'ordinary-first mixed failure keeps original IDs/order')
+        failures = failures + check(changed.reasonat(fixture.outside()) = 'signal.root.context.unproved' & changed.reasonat(fixture.callid()) = expected,'overall reason comes from refused fused site despite first ordinary keep')
+      end
+      iterate
+    end
+    failures = failures + check(changed.status() = 'changed','fused form expands ' || variant || ': ' || changed.reason())
+    if changed.status() <> 'changed' then iterate
+    result = changed.result(); failures = failures + check(result.valid() & changed.operation(fixture.callid()) = 0,'expanded original call maps to removed identity')
+    failures = failures + check(changed.site(1) = fixture.callid() & changed.statusat(fixture.callid()) = 'changed','site decisions use original fused ID')
+    selected = result.at(changed.operation(fixture.traceid())); neighbor = result.at(selected.addressid())
+    expected = 'swap'
+    if variant = 1 | variant = 2 | variant = 4 then expected = 'settp'
+    if variant = 11 then expected = 'link'
+    failures = failures + check(neighbor.mnemonic() = expected & neighbor.origin().filename() = 'fused-control.rxas','original point observation precedes first preparation')
+    selected = result.at(changed.operation(fixture.labelid()))
+    failures = failures + check(selected.addressid() = neighbor.id(),'original label enters before all preparation')
+    selected = result.at(changed.operation(fixture.sourceid()))
+    failures = failures + check(selected.kind() = '.srcstep' & selected.addressid() = neighbor.id(),'original source step retains original ID mapping and first-preparation address')
+    if variant = 8 | variant = 11 then do
+      failures = failures + check(changed.statusat(fixture.outside()) = 'keep' & changed.reasonat(fixture.outside()) = 'signal.root.context.unproved','ordinary nonroot keep coexists with fused success')
+      selected = result.at(changed.operation(fixture.outside()))
+      failures = failures + check(selected.mnemonic() = 'call1','independently kept ordinary site remains ordinary')
+    end
+    if variant = 0 then do
+      inspected = llinline..inspect(request,'closed-main-default-halt.v1')
+      failures = failures + check(inspected.status() = 'legal' & inspected.arguments() = 2 & inspected.remaining() < 1000000,'inspect uses prepared count and charged work')
+      do mode = 1 to 5
+        select mode
+          when 1 then limited = llinline..expand(request,'closed-main-default-halt.v1',1)
+          when 2 then limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1)
+          when 3 then limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,1)
+          when 4 then limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,0)
+          otherwise limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,65536,1)
+        end
+        retained = limited.result()
+        graph_ref = retained.ir()
+        limitgraph = dereference graph_ref
+        failures = failures + check(limited.status() = 'limit' & retained.identity() = input.identity() & bin2x(limitgraph.binary()) = bin2x(before),'atomic request allowance ' || mode)
+        failures = failures + check(limited.statusat(fixture.callid()) <> 'changed' & limited.callers() = 0,'limit publishes no provisional success')
+      end
+      replay = llinline..expand(request,'closed-main-default-halt.v1')
+      failures = failures + check(replay.status() = 'changed' & replay.operation(fixture.callid()) = 0,'same binding succeeds after all cap refusals')
+    end
+  end
+  say 'FUSED_INLINE|failures=' || failures
+  return failures

@@ -1429,6 +1429,64 @@ nesting, dynamic varargs, reference/aggregate,
 imported/foreign-global and wider context coverage remains open in
 INL-STEP04/05.
 
+### Same-module fused counted root calls
+
+`SWAPCALL R,P,R,R,R`, `SETTPSWAPCALL R,P,R,R,I,R` and
+`SETTPCALL R,P,R,R,I` are admitted for selected linear-root `main` calls to
+exact same-module scalar bytecode bodies under
+`closed-main-default-halt.v1`. This slice has no module globals or authored
+signal instructions in the caller. Existing finite count/window, callee,
+component, recycler, nested-child, numeric and return proofs still apply.
+Imported/native/unavailable targets, fused calls inside cloned callees,
+branched roots, handler lanes and physical-frame observations retain their
+current proof or body-availability boundaries.
+
+One private checked target projection emits the canonical preparation followed
+by an ordinary three-operand CALL: SWAPCALL swaps operands four/five;
+SETTPSWAPCALL sets operand four's status from operand five, then swaps operands
+four/six; SETTPCALL sets operand four's status from operand five. The result
+pointer, count storage/value and argument pointers are captured after that
+preparation by the existing ordinary-call facts owner. The counted form never
+acquires the separate zero-argument result-clearing behavior. Repeated operands,
+self-swaps, result/count/actual overlap and aliased pointers remain admitted
+when those exact facts succeed. Status writes retain the VM's low-32-bit,
+band-preserving public-write semantics; swaps exchange both pointer and slot
+identity, even when distinct slots point to one value.
+
+The projection and expansion are one public transaction. Ordinary-only batches
+keep their existing behavior. A batch requesting fused sites publishes only
+when every requested fused site expands; ordinary requested sites may remain
+unchanged with their own keep reasons. A fused keep rolls the whole batch back
+to the original owner. Actual refusal reasons remain on their original sites;
+otherwise provisional successes become `keep` with
+`batch.fused.site.retained`. The overall reason comes from the first refused
+fused site in request order, or the shared proof failure when no individual
+cause is available. Invalid/limit outcomes publish no changed-site decision or
+changed caller. No merely defused retained call escapes. Unrequested fused
+records are copied unchanged and can still cause the existing proof refusal.
+
+Bindings borrow the one persistent projected owner and map both record and
+body identities. Successful publication composes original-to-projection and
+projection-to-result maps; expanded original call IDs map to zero, while site
+decisions retain original IDs/order. Original labels, source steps and TRACE
+points precede the first preparation instruction. Inert unreferenced labels
+are zero-effect records under the checked single-route linear proof; a real
+root branch still requires the separate root CFG expansion proof. Preparation
+retains the original logical origin, and callee contributor/scoped metadata
+mapping remains with its existing owner. Public service/CLI signatures and
+current RXAS/ISA/RXBIN contracts are unchanged.
+
+One allowance bounds the private stages: work quarters cover preparation
+tables, projection construction/validation, ordinary analysis/expansion and
+result translation; entries/bytes are divided among tables and the two new
+owners, and encoded cells between the code owners. Unused partitions are not
+borrowed; the frame cap remains an output-frame bound. Inspection uses the
+same preparation and ordinary legality proof, with preparation work charged.
+Conservative output keeps preparation and normal restoration. Separately
+disabled cleanup removes only proved outer permutations and preserves required
+snapshots, status observations, captured results and retained-child windows.
+This coverage does not complete INL-STEP04/05 or standalone acceptance.
+
 ### Direct target CFG prerequisite
 
 Target schema version 2 separates source-visible control records from ordinary

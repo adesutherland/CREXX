@@ -2533,7 +2533,7 @@ analysis: class
       if scopeobserve(item,view,state_ref,reference observations) = 0 then return 0
     end
     if item.kind() <> 'instruction' then do
-      if wordpos(item.kind(),'.srcstep .srcfile .srcline') > 0 | ((private | _graphmode) & item.kind() = 'label') then nop
+      if wordpos(item.kind(),'.srcstep .srcfile .srcline label') > 0 then nop
       else if item.kind() = '.meta' then do
         if item.operands() > 1 then do
           option = item.operand(2)

@@ -75,6 +75,8 @@ decision: class
 inspect: procedure = .llinline..decision
   arg request = .llinline..binding, profile = 'unknown', work = 1000000
   if request.valid() = 0 then return .decision('invalid','binding.expired')
+  source = dereference request.caller(); selected = source.at(request.callid())
+  if fusedform(selected) > 0 then return inspectfused(request,profile,work)
   if profile = 'closed-main-static-exact-default-halt.v1' then return inspectimports(request,work)
   return inspectlocal(request,profile,work)
 
@@ -565,8 +567,287 @@ expand: procedure = .llinline..change
 
 expandmany: procedure = .llinline..change
   arg bindings = .object[], profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
+  request = .binding; selected = .lltarget..record
+  do i = 1 to bindings[0]
+    if bindings[i] is .binding then do
+      request = bindings[i] as .binding
+      if request.valid() then do
+        source = dereference request.caller(); selected = source.at(request.callid())
+        if fusedform(selected) > 0 then return expandfusedmany(bindings,profile,work,entries,bytes,frame,cells)
+      end
+    end
+  end
   if profile = 'closed-main-static-exact-default-halt.v1' then return expandimports(bindings,work,entries,bytes,frame,cells)
   return expandlocalmany(bindings,profile,work,entries,bytes,frame,cells)
+
+/** Canonical signatures, not a mnemonic-only interpretation of opaque calls. */
+fusedform: procedure = .int
+  arg item = .lltarget..record
+  if item.valid() = 0 then return 0
+  if item.kind() <> 'instruction' then return 0
+  catalog = .llrxascatalog..catalog(); opcode = item.opcode()
+  if opcode = catalog.find('swapcall','RPRRR') then return 1
+  if opcode = catalog.find('settpswapcall','RPRRIR') then return 2
+  if opcode = catalog.find('settpcall','RPRRI') then return 3
+  return 0
+
+/** One request owns all stages. Work quarters cover discovery/tables/maps,
+ * projection construction/validation, ordinary proof/expansion and translation.
+ * Entries/bytes are partitioned among tables, projection and expanded owner;
+ * encoded cells between the two code owners. Unused quotas are not borrowed. */
+fusedprojection: class
+  _input = .object[]
+  _owner = reference .lltarget..module
+  _module = .lltarget..module
+  _operations = .int[]
+  _functions = .int[]
+  _kinds = .int[]
+  _sites = .int[]
+  _fused = .int[]
+  _same = .int[]
+  _decisions = .object[]
+  _work = .int
+  _tableentries = .int
+  _tablebytes = .int
+  _entries = .int
+  _bytes = .int
+  _cells = .int
+  _stage = .int
+  _status = .string
+  _reason = .string
+  _hasowner = .int
+  _trigger = .int
+  *: factory
+    arg bindings = .object[], work = .int, entries = .int, bytes = .int, cells = .int
+    _input = bindings; _stage = work / 4; _work = _stage
+    _entries = entries / 3; _bytes = bytes / 3; _cells = cells / 2
+    _tableentries = _entries; _tablebytes = _bytes; _status = 'building'
+    return
+  fail: method = .int
+    arg status = .string, reason = .string
+    _status = status; _reason = reason; return 0
+  spend: method = .int
+    arg count = .int
+    if count < 0 | count > _work then return fail('limit','fused.work')
+    _work = _work - count; return 1
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 | count > _tableentries then return fail('limit','fused.entries')
+    if count > _tablebytes / width then return fail('limit','fused.bytes')
+    _tableentries = _tableentries - count; _tablebytes = _tablebytes - count * width
+    return 1
+  modelerror: method = .int
+    arg reason = .string
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',reason) > 0 then status = 'limit'
+    return fail(status,reason)
+  prepare: method = .void
+    bindings = _input; request = .binding; previous = .binding
+    item = .lltarget..record; value = .lltarget..operand; body = .lltarget..body
+    draft = .lltarget..draft; targetbody = .lltarget..bodydraft; at = .llir..origin
+    fields = .object[]; prefix = .object[]; bodies = .object[]; sources = .object[]; origins = .object[]
+    i = .int; j = .int; ignored = .int; kind = .int; firstkeep = .int; root = .int
+    do
+    if bindings[0] = 0 then do; ignored = fail('keep','binding.empty'); return; end
+    if bindings[1] is .binding then request = bindings[1] as .binding
+    else do; ignored = fail('invalid','binding.type'); return; end
+    if request.valid() = 0 then do; ignored = fail('invalid','binding.expired'); return; end
+    _owner = request.caller(); _hasowner = 1; source = dereference _owner; graph = dereference source.ir(); store = dereference graph.storage()
+    if _stage < 1 | _entries < 1 | _bytes < 1 | _cells < 1 then do; ignored = fail('limit','fused.allowances'); return; end
+    /* Sparse target record IDs belong to the arena's full operation domain. */
+    if reserve(graph.operations() * 3,16) = 0 | reserve(graph.functions() * 2,64) = 0 then return
+    if reserve(store.count(8) + store.count(9),128) = 0 | reserve(bindings[0] * 12,128) = 0 then return
+    root = source.procedureid('main')
+    do i = 1 to bindings[0]
+      if spend(1 + i) = 0 then return
+      if bindings[i] is .binding then request = bindings[i] as .binding
+      else do; ignored = fail('invalid','binding.type'); return; end
+      if request.valid() = 0 then do; ignored = fail('invalid','binding.expired'); return; end
+      caller_ref = request.caller(); provider_ref = request.provider()
+      if (caller_ref <refsame> _owner) = 0 then do; ignored = fail('invalid','binding.foreign.caller'); return; end
+      do j = 1 to i - 1
+        previous = bindings[j] as .binding
+        if previous.callid() = request.callid() then do; ignored = fail('invalid','binding.duplicate.site'); return; end
+      end
+      item = source.at(request.callid())
+      if item.valid() = 0 then do; ignored = fail('invalid','call.identity'); return; end
+      if item.kind() <> 'instruction' then do; ignored = fail('invalid','call.not.instruction'); return; end
+      _sites[i] = item.id(); kind = fusedform(item); _fused[i] = kind; _same[i] = caller_ref <refsame> provider_ref
+      reason = ''
+      if root = 0 | item.procedureid() <> root then reason = 'signal.root.context.unproved'
+      else if kind = 0 & wordpos(item.mnemonic(),'call call1 call2 call3 call4') = 0 then reason = 'call.form.pending'
+      else if _same[i] = 0 then reason = 'profile.imported.body.pending'
+      else if kind > 0 then do
+        value = item.operand(2); actualbody = source.procedureid(value.text())
+        if actualbody = 0 then reason = 'body.unavailable'
+        else if actualbody <> request.bodyid() then do; ignored = fail('invalid','binding.target.mismatch'); return; end
+        else if source.globals() > 0 then reason = 'global.counted.call.pending'
+      end
+      if reason <> '' then do
+        _decisions[i] = .decision('keep',reason) as .object
+        if kind > 0 & firstkeep = 0 then firstkeep = i
+      end
+      else _decisions[i] = .decision('candidate','') as .object
+      if kind > 0 then _kinds[item.id()] = kind
+    end
+    if firstkeep > 0 then do
+      _trigger = firstkeep; checked = _decisions[firstkeep] as .decision; ignored = fail('keep',checked.reason()); return
+    end
+    /* Existing named/event handler lanes use this profile too. Do not acquire
+     * them accidentally through the ordinary-call proof after defusion. */
+    do i = 1 to source.records()
+      if spend(1) = 0 then return
+      item = source.record(i)
+      if item.procedureid() = root & item.kind() = 'instruction' then do
+        if left(item.mnemonic(),3) = 'sig' then do; ignored = fail('keep','signal.fused.scope.pending'); return; end
+      end
+    end
+    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),_entries,_bytes,_stage)
+    code = .emitter(_cells); graph_ref = source.ir()
+    do i = 1 to source.records()
+      item = source.record(i)
+      if draft.preflight(1 + item.operands() + item.registerrefs(),0) = 0 then do; ignored = modelerror(draft.error()); return; end
+      at = copyorigin(graph_ref,item.origin(),reference draft,reference sources,reference origins)
+      if draft.error() <> '' then do; ignored = modelerror(draft.error()); return; end
+      if item.kind() = 'procedure' then do
+        if draft.preflight(source.procedures(),0) = 0 then do; ignored = modelerror(draft.error()); return; end
+        body = source.body(item.procedureid()); targetbody = draft.procedure(body.name(),body.locals(),at,body.expose())
+        bodies[item.procedureid()] = targetbody as .object; _functions[item.procedureid()] = targetbody.functionid()
+        _operations[item.id()] = targetbody.headerid(); iterate
+      end
+      if item.procedureid() = 0 then do
+        call objectarraydrop fields
+        do j = 1 to item.operands(); fields[j] = item.operand(j) as .object; end
+        _operations[item.id()] = draft.record(item.kind(),fields,at); iterate
+      end
+      targetbody = bodies[item.procedureid()] as .lltarget..bodydraft; fields = clonefields(item,targetbody); kind = _kinds[item.id()]
+      if kind > 0 then do
+        if kind > 1 then do
+          call objectarraydrop prefix; prefix[1] = fields[4]; prefix[2] = fields[5]
+          ignored = code.emit(targetbody,'settp',prefix,at)
+        end
+        if kind < 3 then do
+          call objectarraydrop prefix; prefix[1] = fields[4]
+          if kind = 1 then prefix[2] = fields[5]
+          else prefix[2] = fields[6]
+          ignored = code.emit(targetbody,'swap',prefix,at)
+        end
+        call objectarraydrop prefix
+        do j = 1 to 3; prefix[j] = fields[j]; end
+        _operations[item.id()] = code.emit(targetbody,'call',prefix,at)
+      end
+      else if item.kind() = 'instruction' then _operations[item.id()] = code.emit(targetbody,item.mnemonic(),fields,at)
+      else _operations[item.id()] = targetbody.record(item.kind(),fields,at)
+      if code.error() <> '' then do; ignored = fail('limit',code.error()); return; end
+    end
+    if draft.error() <> '' then do; ignored = modelerror(draft.error()); return; end
+    _module = draft.finish()
+    if _module.valid() = 0 then do; ignored = modelerror(_module.error()); return; end
+    _status = 'ok'
+    return
+    on signal as problem
+      status = 'invalid'
+      if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
+      ignored = fail(status,'LL_FUSED: ' || problem.name() || ': ' || problem.message())
+    end
+    return
+  status: method = .string
+    return _status
+  reason: method = .string
+    return _reason
+  bindings: method = .object[]
+    result = .object[]; request = .binding; provider = reference .lltarget..module
+    do i = 1 to _input[0]
+      request = _input[i] as .binding
+      if _same[i] then result[i] = .binding(reference _module,_operations[request.callid()],reference _module,_functions[request.bodyid()]) as .object
+      else do
+        provider = request.provider()
+        result[i] = .binding(reference _module,_operations[request.callid()],provider,request.bodyid()) as .object
+      end
+    end
+    return result
+  refusal: method = .llinline..change
+    arg status = .string, reason = .string
+    request = .binding; checked = .decision
+    sites = .int[]; decisions = .object[]; empty = .int[]; callers = .int[]
+    do i = 1 to _input[0]
+      if _input[i] is .binding then do
+        request = _input[i] as .binding; sites[sites[0] + 1] = request.callid()
+        if i <= _decisions[0] then checked = _decisions[i] as .decision
+        else checked = .decision('candidate','')
+        if checked.status() <> 'keep' then do
+          if status = 'keep' & _trigger > 0 then checked = .decision('keep','batch.fused.site.retained')
+          else checked = .decision(status,reason)
+        end
+        decisions[decisions[0] + 1] = checked as .object
+      end
+    end
+    if _hasowner = 0 then return .change(status,reason)
+    source = dereference _owner
+    return .change(status,reason,source,empty,callers,sites,decisions)
+  translate: method = .llinline..change
+    arg changed = .llinline..change, work = .int
+    decisions = .object[]; mapping = .int[]; callers = .int[]; checked = .decision; request = .binding
+    source = dereference _owner; i = .int; old = .int; refused = 0
+    do i = 1 to _sites[0]
+      if work < 1 then return refusal('limit','fused.translation.work')
+      work = work - 1
+      if changed.sites() = 0 then checked = .decision(changed.status(),changed.reason())
+      else checked = .decision(changed.statusat(_operations[_sites[i]]),changed.reasonat(_operations[_sites[i]]))
+      if changed.status() <> 'changed' & checked.status() = 'changed' then checked = .decision(changed.status(),changed.reason())
+      if _fused[i] > 0 & checked.status() <> 'changed' & refused = 0 then refused = i
+      _decisions[i] = checked as .object
+    end
+    if changed.status() <> 'changed' then do
+      if changed.status() = 'keep' & refused > 0 then do
+        checked = _decisions[refused] as .decision
+        return refusal('keep',checked.reason())
+      end
+      return refusal(changed.status(),changed.reason())
+    end
+    if refused > 0 then do
+      checked = _decisions[refused] as .decision
+      do i = 1 to _decisions[0]
+        previous = _decisions[i] as .decision
+        if previous.status() = 'changed' then _decisions[i] = .decision('keep','batch.fused.site.retained') as .object
+      end
+      return refusal('keep',checked.reason())
+    end
+    do i = 1 to source.records()
+      if work < 1 then return refusal('limit','fused.translation.work')
+      work = work - 1; input = source.record(i); old = _operations[input.id()]
+      if _kinds[input.id()] > 0 then mapping[input.id()] = 0
+      else mapping[input.id()] = changed.operation(old)
+    end
+    do i = 1 to changed.callers(); callers[i] = changed.caller(i); end
+    return .change('changed','closed.root.scalar',changed.result(),mapping,callers,_sites,_decisions)
+
+expandfusedmany: procedure = .llinline..change
+  arg bindings = .object[], profile = .string, work = .int, entries = .int, bytes = .int, frame = .int, cells = .int
+  request = .binding
+  if bindings[1] is .binding then request = bindings[1] as .binding
+  else return .change('invalid','binding.type')
+  if request.valid() = 0 then return .change('invalid','binding.expired')
+  source = dereference request.caller()
+  if work < 4 | entries < 3 | bytes < 3 | cells < 2 | frame < 0 then return importrefusal(bindings,'limit','fused.allowances',source)
+  prepared = .fusedprojection(bindings,work,entries,bytes,cells)
+  call prepared.prepare()
+  if prepared.status() <> 'ok' then return prepared.refusal(prepared.status(),prepared.reason())
+  if profile <> 'closed-main-default-halt.v1' then return prepared.refusal('keep','profile.signal.policy.unproved')
+  projected = prepared.bindings()
+  changed = expandlocalmany(projected,profile,work / 4,entries / 3,bytes / 3,frame,cells / 2)
+  return prepared.translate(changed,work / 4)
+
+inspectfused: procedure = .llinline..decision
+  arg request = .binding, profile = .string, work = .int
+  bindings = .object[]; bindings[1] = request as .object
+  if work < 4 then return .decision('limit','fused.allowances')
+  prepared = .fusedprojection(bindings,work,1000000,67108864,2000000)
+  call prepared.prepare()
+  if prepared.status() <> 'ok' then return .decision(prepared.status(),prepared.reason())
+  if profile <> 'closed-main-default-halt.v1' then return .decision('keep','profile.signal.policy.unproved')
+  projected = prepared.bindings(); selected = projected[1] as .binding
+  return inspectlocal(selected,profile,work / 4)
 
 /** The sole expansion algorithm. Imported bodies enter it only after checked
  * private projection; no projected definition can reach public output. */

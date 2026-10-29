@@ -130,12 +130,137 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure and stable-register scoped META re-entry on direct acyclic calls and the checked runtime-selector suffix are focused-qualified. Complete broader imported, aliasing, dynamic varargs, prefix/LINKARG-group scoped META re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, transactional private normalization of selected root same-module scalar counted SWAPCALL/SETTPSWAPCALL/SETTPCALL under the default-HALT profile, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure and stable-register scoped META re-entry on direct acyclic calls and the checked runtime-selector suffix are focused-qualified. Complete broader imported, aliasing, dynamic varargs, prefix/LINKARG-group scoped META re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Selected fused-root preparation is preserved conservatively and its proved outer setup/restoration is removed through the existing cleanup service; mixed fused batches retain exact original owners and site decisions on refusal. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
 INL-STEP06 is the named standalone integration milestone.
+
+### Reviewed direct fused-call normalization increment
+
+This bounded INL-STEP04/05 development increment serves INL-AC02/05/06/07
+and is implemented and focused-qualified under its reviewed contract. It admits
+selected linear-root `main` calls to exact same-module scalar
+bytecode bodies under `closed-main-default-halt.v1`, with a proved finite
+count/window and the existing ordinary counted-call body, component, alias,
+recycler, numeric and normal-return proofs. This first slice has no module
+globals. Existing admitted scalar bodies and ordinary retained children keep
+their current proof gates; fused calls inside cloned callees, imported/native
+or unresolved targets, dynamic dispatch, handler lanes and physical-frame
+observations are not newly admitted. These remain specific proof/body/scope
+refusals, not an inherent impossibility claim. INL-STEP06 and the complete
+INL criteria remain open; the demand audit establishes no speed benefit.
+
+Use one private, checked defusion projection before the existing ordinary-call
+analysis and expansion, rather than widening ordinary-call mnemonic tests in
+the facts and cleanup owners. Match the canonical opcode/signature and replace
+only requested fused sites, in this exact order:
+
+- `SWAPCALL R,P,R,R,R`: `SWAP op4,op5`; `CALL op1,op2,op3`.
+- `SETTPSWAPCALL R,P,R,R,I,R`: `SETTP op4,op5`; `SWAP op4,op6`;
+  `CALL op1,op2,op3`.
+- `SETTPCALL R,P,R,R,I`: `SETTP op4,op5`; `CALL op1,op2,op3`.
+
+Each projected record is owned target data, not reparsed source text. The
+ordinary analysis captures result storage, count storage/value and ordered
+actual pointers only after all preparation. Preserve the counted CALL's lack
+of zero-argument result clearing. SETTP retains the VM's low-32-bit public-band
+write semantics; status belongs to storage and is observable through aliases.
+SWAP exchanges both active pointers and slot identities. Repeated operands,
+self-swaps, result/count/actual overlaps and distinct slots aliasing one value
+are permitted when that post-preparation proof succeeds. In particular, do not
+reuse a pre-swap count fact or capture the result pointer before the swap.
+
+The projection and subsequent expansion form one public transaction. Preserve
+ordinary-only batch behavior. For a batch requesting any fused site, publish a
+changed result only if every requested fused site is ultimately expanded;
+ordinary requested sites may still be kept unchanged with their existing
+per-site reasons. If any requested fused site is kept by scope, facts or policy,
+discard the entire projected/expanded batch and return the exact original
+owner. Thus an ordinary site provisionally expanded in that batch is also
+rolled back. Do not attempt retained-fused reconstruction in this first slice,
+and never expose a merely defused retained call. Unrequested fused records stay
+unchanged and may cause an existing analysis refusal; normalization does not
+silently broaden their scope.
+
+Keep public site IDs and request order original. On the fused-batch rollback,
+preserve actual keep reasons for independently refused sites; change every
+otherwise provisional `changed` decision to `keep` with
+`batch.fused.site.retained`. The overall keep reason is the first refused fused
+site's actual reason in request order. If shared facts refuses the candidate
+set without a site-specific cause, report that shared reason for its affected
+sites instead of inventing individual diagnoses. Invalid/limit failures keep
+their existing failure status and original-owner behavior, and cannot leave a
+`changed` site decision. No rollback result lists a changed caller.
+
+Maintain original-record to projection-record and projection-record to final
+record maps, plus the original selected fused ID to its projected ordinary
+CALL ID and original body to projected body identities. Rebind checked requests
+to the private owner, then compose maps and translate decisions back before
+publication. A successfully expanded original fused call maps to zero under
+the existing removed-call convention; other original records map through
+composition. Original labels enter before the first preparation instruction.
+Original source/TRACE point records remain before that preparation, preserving
+the original fused-point register observation; preparation and CALL keep the
+original logical origin. Existing callee contributing origins, fresh labels,
+scopes and metadata relocation retain their owners. `inspect` uses the same
+projection/admission path and charges its preparation. Public bind/inspect/
+expand/expandmany/change and CLI signatures remain unchanged; no new ISA,
+RXBIN feature, metadata assertion or producer proof is selected.
+
+Charge both private stages, maps, complete copied records/origins/literals and
+every added encoded cell within the request's work/entry/byte/frame/cell caps;
+do not grant the second stage a fresh allowance. Keep immutable input and
+last-good publication on all scope, proof, policy, resource and I/O refusals.
+The default-HALT profile has no resumed nonlocal continuation; no handler
+admission follows from defusion. Preserve delivered signal tag/payload and
+logical fault source under the approved observation policy. Inherited branch/
+SIGRET and resumable departures still need their own preparation/window and
+unwind closure proof.
+
+An unreferenced root label is an inert source/address record, not an alternate
+execution path. The existing complete-normal-CFG and single-route linear proof
+already excludes unsupported reachable control, cycles and executable detached
+tails. Admit the label as a zero-effect transfer in that checked linear lane,
+retain its original relocation/address mapping, and keep the existing CFG
+proof for referenced entries. The fused controls retain an unreferenced label
+before source/TRACE and preparation; a separate direct-branch root control
+retains the exact original owner with `profile.caller.cfg.pending`, since
+branched-root expansion is outside this slice's ordinary linear proof.
+This prerequisite repairs facts
+coverage without weakening either observation or control-flow expectations.
+
+Conservative expansion retains preparation and normal caller restoration.
+Separately disabled cleanup receives the resulting primitive stream and may
+remove outer setup and reverse swaps only through its existing complete
+storage/permutation, status, snapshot, result and observation proof. Retained
+child windows and body-authored swaps stay governed by their current facts.
+Do not let new expansion support accidentally authorize cleanup of a retained
+compound call. A simple reordered leaf must lose proved outer setup/restoration
+in cleaned output; aliases/snapshots must retain necessary transport.
+
+The focused panel uses constructed-model and handwritten RXAS controls for
+all three forms, plus one actual native-generated fused consumer through the
+existing reader. Set independent expected values/status before native
+comparison. Cover post-swap count/result capture with initial
+`r0=1,r1=10,r2=2`, `swapcall r0,sum(),r0,r0,r2`, then `swap r0,r2`: a two-argument
+sum must leave `1,10,11`. Its SETTPSWAPCALL counterpart must write status on the
+original r0 storage before that storage becomes argument two. Add repeated
+mutable aliases versus a required snapshot, self-swap, repeated activations,
+zero/high-bit status writes and zero-count void-return result preservation.
+Unknown post-swap count despite a known pre-swap count, invalid window,
+imported/native target and handler/physical-observer controls retain precise
+reasons and the exact original owner. Mixed batches cover all-fused success,
+ordinary keep plus fused success, a fused keep rolling back another fused and
+an ordinary provisional expansion, and unchanged ordinary-only behavior.
+Assert original IDs/per-site decisions, label/source/TRACE mapping and atomic
+work/entry/byte/frame/cell refusal. Inspect conservative and cleaned operations;
+execute both with native `rxas -n` and one normal VM. Reuse prepared normal
+tools and compile only the changed target/service fixtures and the consumer;
+broader functional/platform/sanitizer campaigns are not commissioned by this
+source-only increment. Coordinator review of this contract and the first
+coherent source/representative RXAS precedes freeze and focused execution.
 
 ### Reviewed finite counted-window increment
 
