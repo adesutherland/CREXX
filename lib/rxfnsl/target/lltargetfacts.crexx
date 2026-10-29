@@ -673,6 +673,9 @@ analysis: class
   _namedhandlerbr = .int
   _namedjoin = .int
   _namedcheck = .int
+  _namedlow = .int
+  _namedhigh = .int
+  /* Feasible continuations: 1 normal, 2 handler, 3 both. */
   _namedoutcome = .int
   _namedactive = .int
   *: factory
@@ -712,7 +715,7 @@ analysis: class
     if _graphmode then return reject('signal.exceptional.cfg.pending')
     if _profile <> 'closed-main-default-halt.v1' then return reject('signal.named.profile.pending')
     if module.globals() <> 0 then return reject('signal.global.storage.pending')
-    if reserve(12,16) = 0 then return 0
+    if reserve(14,16) = 0 then return 0
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
@@ -761,7 +764,7 @@ analysis: class
           if wordpos(name,'link unlink swap swapn linkarg') > 0 then return reject('signal.caller.binding.pending')
           if wordpos(name,'mkref deref linkref setref setobjtype setobjuninit setattrs linkattr1') > 0 then return reject('signal.storage.plain.unproved')
           if catalog.signalstate(item.opcode()) <> 0 then return reject('signal.caller.failure.pending')
-          if wordpos(name,'null load copy icopy settp itos say numsci') = 0 then return reject('signal.caller.operation.pending')
+          if wordpos(name,'null load copy icopy settp getandtp itos say numsci') = 0 then return reject('signal.caller.operation.pending')
         end
       end
     end
@@ -812,9 +815,9 @@ analysis: class
         field = item.operand(1)
         if field.bank() <> 'a' | field.index() <> 1 then return reject('signal.callee.check.pending')
         field = item.operand(2)
-        if field.index() <> 0 then return reject('signal.callee.check.pending')
+        _namedlow = field.index()
         field = item.operand(3)
-        if field.index() <> 10 then return reject('signal.callee.check.pending')
+        _namedhigh = field.index()
         /* These are canonical signal enum fields, not copied opcode numbers.
          * BEFORE_WRITES=1, KNOWN=1; no partial value/context write is allowed. */
         if catalog.signalstate(item.opcode()) <> 1 | catalog.signalphase(item.opcode()) <> 1 | catalog.signalnames(item.opcode()) <> 'OUT_OF_RANGE' | catalog.failurecomponents(item.opcode()) <> 0 | catalog.failurecontext(item.opcode()) <> 0 then return reject('signal.callee.phase.unproved')
@@ -829,15 +832,22 @@ analysis: class
     if instructions <> 2 | _namedcheck = 0 then return reject('signal.callee.check.pending')
     return 1
   /** Two explicitly bounded paths, not a second general graph scheduler.
-   * The ordinary invoke/return transfer supplies the conditional normal path;
-   * before-write failure restores its captured caller state before the handler. */
+   * Invocation proves the syntactic normal return even when failure is known;
+   * its result transfer never enters the before-write handler snapshot. */
   namedrun: method = .int
     arg expose view = .frame, expose state = .cells, expose previous = .history
-    i = .int; id = .int; returned = .int; branch = .int
-    item = .lltarget..record; field = .lltarget..operand; before = .cells
-    normal = .cells; handlerstate = .cells; state_ref = reference .cells
+    i = .int; id = .int; returned = .int; normalpossible = .int; handlerpossible = .int
+    item = .lltarget..record; field = .lltarget..operand; ownedrow = .numbers
+    before = .cells; normal = .cells; handlerstate = .cells
+    beforeview = .frame; normalview = .frame; handlerframe = .frame
+    beforehistory = .history; normalhistory = .history; handlerhistory = .history
+    state_ref = reference .cells; view_ref = reference .frame; history_ref = reference .history
+    actuals = .int[]; owned = .int[]
     module = dereference _owner
     if namedleaf() = 0 then return 0
+    /* Stable identities precede both snapshots. Fresh identities themselves
+     * imply neither activation nor initialized recycled contents. */
+    if preparechildren(_function,reference state,reference previous,1) = 0 then return 0
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
@@ -848,35 +858,59 @@ analysis: class
         field = item.operand(1); id = view.storage(field)
         if id = 0 | state.plain(id) = 0 | state.ordinary(id) = 0 | state.wholeknown(id) = 0 then return reject('signal.storage.plain.unproved')
         field = item.operand(3); id = view.storage(field)
-        if id = 0 | state.plain(id) = 0 | state.wholeknown(id) = 0 | state.known(id) = 0 then return reject('signal.argument.value.unproved')
-        branch = state.value(id) < 0 | state.value(id) > 10
+        if id = 0 | state.plain(id) = 0 | state.wholeknown(id) = 0 | state.defined(id) = 0 then return reject('signal.argument.value.unproved')
+        normalpossible = _namedlow <= _namedhigh; handlerpossible = 1
+        if normalpossible & state.bounded(id) then do
+          normalpossible = state.high(id) >= _namedlow & state.low(id) <= _namedhigh
+          handlerpossible = state.low(id) < _namedlow | state.high(id) > _namedhigh
+        end
+        _namedoutcome = normalpossible + 2 * handlerpossible
         if pathallowance(state.size(),view.slots()) = 0 then return 0
-        state_ref = reference state; before = snapshot state_ref
+        state_ref = reference state; view_ref = reference view; history_ref = reference previous
+        before = snapshot state_ref; beforeview = snapshot view_ref; beforehistory = snapshot history_ref
         _namedactive = 1
         if invoke(item,view,reference state,previous) = 0 then return 0
-        _namedactive = 0; _namedoutcome = 1 + branch
-        /* Retain the syntactic normal-return transport even for a proved
-         * failure; it stays unreachable at runtime. Do not transfer that
-         * hypothetical result into the handler's incoming caller state. */
+        _namedactive = 0
         if pathallowance(state.size(),view.slots()) = 0 then return 0
-        handlerstate = before
+        state_ref = reference before; history_ref = reference beforehistory
+        handlerstate = snapshot state_ref; handlerhistory = snapshot history_ref
+        /* The failure has entered the same zero-local child, resetting its
+         * private a0, but never reached RET. Use the existing frame owner for
+         * that activation; caller values remain exactly the captured state. */
+        ownedrow = _owned[_body[item.id()]] as .numbers; owned[1] = ownedrow.at(1)
+        actuals[1] = id
+        handlerframe = .frame(reference handlerstate,0,actuals,0,beforeview.context(),owned)
+        call handlerhistory.activated(handlerframe.ownedbase(1)); call handlerhistory.exited(handlerframe.ownedbase(1),0)
       end
       else if item.id() = _namedhandler then do
-        state_ref = reference state; normal = snapshot state_ref; state = handlerstate
+        if pathallowance(state.size(),view.slots()) = 0 then return 0
+        state_ref = reference state; view_ref = reference view; history_ref = reference previous
+        normal = snapshot state_ref; normalview = snapshot view_ref; normalhistory = snapshot history_ref
+        state = handlerstate; view = beforeview; previous = handlerhistory
       end
       else if item.id() = _namedjoin then do
-        if branch = 0 then state = normal
+        if normalpossible & handlerpossible then do
+          if spend(state.size() * 22 + view.slots() * 3) = 0 then return 0
+          if joinpath(reference state,reference view,reference previous,normal,normalview,normalhistory) = 0 then return 0
+        end
+        else if normalpossible then do; state = normal; view = normalview; previous = normalhistory; end
       end
       /* Leave these opaque policy/control rows undescribed in the normal-only
        * access projection. It must remain incomplete, even when queried by a
        * consumer which bypasses the explicit cleanup guard. */
       else if item.id() = _namedpush | item.id() = _namedinstall | item.id() = _namednormalpop | item.id() = _namednormalbr | item.id() = _namedhandlerpop | item.id() = _namedhandlerbr then nop
       else do
+        /* Infeasible normal/handler observations do not execute. Their rows
+         * remain opaque in this deliberately incomplete access projection. */
+        if item.id() > _namedcall & item.id() < _namedhandler & normalpossible = 0 then iterate
+        if item.id() > _namedhandler & item.id() < _namedjoin & handlerpossible = 0 then iterate
         if step(item,view,reference state) = 0 then return 0
         if item.kind() = 'instruction' & item.mnemonic() = 'ret' then returned = 1
       end
     end
     if returned = 0 then return reject('return.missing')
+    if spend(state.size()) = 0 then return 0
+    do i = 1 to state.size(); _plain[i] = state.plain(i); end
     return 1
   /* META scope is lexical address state, independent of whether the
    * declaration's own machine group executes. Resolve its storage later at
@@ -1431,15 +1465,18 @@ analysis: class
         value = item.operand(i)
         if value.kind() = 'R' then do
           id = view.storage(value)
-          if id = 0 | state.known(id) = 0 then return reject('argument.range.unproved')
+          if id = 0 | state.defined(id) = 0 then return reject('argument.range.unproved')
+          /* Only the checked named leaf has a separate before-write handler
+           * path. Other ICHKRNG sites still require their exact-value proof. */
+          if state.known(id) = 0 then do
+            if _namedactive = 0 | item.id() <> _namedcheck | i <> 1 then return reject('argument.range.unproved')
+          end
           limits[i] = state.value(id); call insert(reference reads,domain(id))
         end
         else if value.kind() = 'I' then limits[i] = value.index()
         else return reject('argument.range.unproved')
       end
-      if limits[1] < limits[2] | limits[1] > limits[3] then do
-        if _namedactive = 0 | item.id() <> _namedcheck then return reject('argument.range.failure.unproved')
-      end
+      if (_namedactive = 0 | item.id() <> _namedcheck) & (limits[1] < limits[2] | limits[1] > limits[3]) then return reject('argument.range.failure.unproved')
     end
     else if name = 'linkarg' then do
       if private = 0 then return reject('argument.bank.root.unproved')
@@ -1863,8 +1900,12 @@ analysis: class
     if publish & (proof.written() | shape.clear()) then do
       if proof.writeinteger() | shape.clear() then call insert(reference writes,domain(destination))
       call insert(reference writes,domain(destination,1))
-      if proof.killinteger() | shape.clear() then call insert(reference kills,domain(destination))
-      if proof.killwhole() | shape.clear() then call insert(reference kills,domain(destination,1))
+      /* A named before-write failure preserves the captured destination. Its
+       * conditional normal return is therefore never a definite result kill. */
+      if _namedactive = 0 | _namedoutcome = 1 then do
+        if proof.killinteger() | shape.clear() then call insert(reference kills,domain(destination))
+        if proof.killwhole() | shape.clear() then call insert(reference kills,domain(destination,1))
+      end
     end
     do i = 1 to callee.locals()
       call callhistory.exited(child.ownedbase(i),state.zeroed(child.ownedbase(i)))
@@ -2159,6 +2200,7 @@ analysis: class
   handleroutcome: method = .int
     arg callid = .int
     call require()
+    /* Internal feasible-path mask: normal=1, handler=2, both=3. */
     if callid = _namedcall then return _namedoutcome
     return 0
   index: method = reference .llirgraph..index

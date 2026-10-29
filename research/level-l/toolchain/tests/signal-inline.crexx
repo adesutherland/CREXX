@@ -39,6 +39,14 @@ model: procedure = .lltarget..module
   ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(input),at)
   ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(99),at)
   ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(0),at)
+  if (variant >= 9 & variant <= 12) | variant = 14 then do
+    flags = 0
+    if variant = 10 | variant = 12 then flags = 256
+    ignored = two(root,'settp',root.reg('r',3),.lltarget..operand.integer(flags),at)
+    /* GETANDTP deliberately publishes a defined, nonconstant integer fact
+     * for both runtime status inputs. Neither test is constant-specialized. */
+    ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',3),.lltarget..operand.integer(256),at)
+  end
   if variant = 6 then ignored = two(root,'mkref',root.reg('r',0),root.reg('r',1),at)
   name = 'sigpush'
   if variant = 2 then name = 'sigret'
@@ -49,25 +57,38 @@ model: procedure = .lltarget..module
   ignored = two(root,'sigbr',.lltarget..operand.symbol(target),.lltarget..operand.string('OUT_OF_RANGE'),at)
   name = 'call1'
   if variant = 7 then name = 'call'
-  callid = three(root,name,root.reg('r',1),.lltarget..operand.procedure('checked_identity'),root.reg('r',0),at)
+  destination = root.reg('r',1); actual = root.reg('r',0)
+  if variant = 11 | variant = 12 then destination = root.reg('r',0)
+  if variant = 15 then actual = root.reg('a',1)
+  callid = three(root,name,destination,.lltarget..operand.procedure('checked_identity'),actual,at)
   if variant = 8 then ignored = two(root,'load',root.reg('r',3),.lltarget..operand.literal('B','0x00FF' as .binary),at)
   ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(1),at)
+  if variant = 14 then ignored = three(root,'numsci',.lltarget..operand.integer(20),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
   ignored = one(root,'sigpop',.lltarget..operand.string('OUT_OF_RANGE'),at)
   ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
   handlerid = label(root,'caught',at)
   ignored = one(root,'sigpop',.lltarget..operand.string('OUT_OF_RANGE'),at)
   ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(2),at)
+  if variant = 14 then ignored = three(root,'numsci',.lltarget..operand.integer(21),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
   ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
   ignored = label(root,'joined',at)
+  /* Reads after the join retain both the conditional result and path marker. */
+  ignored = two(root,'copy',root.reg('r',3),destination,at)
+  ignored = two(root,'copy',root.reg('r',3),root.reg('r',2),at)
   ignored = one(root,'ret',.lltarget..operand.integer(0),at)
   leaf = draft.procedure('checked_identity',0,at)
   fields = .object[]; fields[1] = .lltarget..operand.string('value') as .object
   fields[2] = .lltarget..operand.string('b') as .object; fields[3] = .lltarget..operand.string('.int') as .object
   fields[4] = leaf.reg('a',1) as .object; ignored = leaf.record('.meta',fields,at)
   if variant = 3 then ignored = one(leaf,'sigignore',.lltarget..operand.string('OUT_OF_RANGE'),at)
-  file = draft.source('named_signal.g','assembler ichkrng value,0,10' as .binary)
-  fault = file.origin(0,28)
-  ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(0),.lltarget..operand.integer(10),fault)
+  low = 0; high = 10
+  if variant >= 9 then do; low = -5; high = 5; end
+  if variant = 13 then do; low = 7; high = 7; end
+  if variant = 16 then do; low = 5; high = -5; end
+  checktext = 'assembler ichkrng value,' || low || ',' || high
+  file = draft.source('named_signal.g',checktext as .binary)
+  fault = file.origin(0,length(checktext))
+  ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(low),.lltarget..operand.integer(high),fault)
   ignored = one(leaf,'ret',leaf.reg('a',1),at)
   fields = .object[]; fields[1] = .lltarget..operand.string('value') as .object
   ignored = leaf.record('.meta',fields,at)
@@ -85,7 +106,10 @@ main: procedure = .int
   expected[7] = 'signal.storage.plain.unproved'
   expected[8] = 'signal.call.window.pending'
   expected[9] = 'signal.caller.failure.pending'
-  do variant = 0 to 8
+  /* NUMSCI can fail before the join; this profile rejects that caller shape. */
+  expected[15] = 'signal.caller.failure.pending'
+  expected[16] = 'signal.argument.value.unproved'
+  do variant = 0 to 16
     original = model(variant,callid,handlerid)
     if variant = 4 | variant = 5 then do
       failures = failures + check(original.valid() = 0 & pos('LL_TARGET_BINDING: unresolved branch label',original.error()) > 0,'target rejects absent or foreign handler label ' || variant)
@@ -96,17 +120,28 @@ main: procedure = .int
     graph = dereference original.ir(); before = graph.binary()
     request = llinline..bind(reference original,callid,reference original,original.procedureid('checked_identity'))
     changed = llinline..expand(request,'closed-main-default-halt.v1')
-    if variant > 1 then do
+    if (variant > 1 & variant < 9) | variant = 14 | variant = 15 then do
       failures = failures + check(changed.status() = 'keep' & changed.reason() = expected[variant + 1],'precise signal keep ' || variant)
       if changed.reason() <> expected[variant + 1] then say changed.reason()
+      kept = changed.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(bin2x(keptgraph.binary()) = bin2x(before),'signal keep returns exact frozen caller ' || variant)
     end
     else do
       failures = failures + check(changed.status() = 'changed','named scope expands ' || variant)
       if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
       facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
-      failures = failures + check(facts.status() = 'ok' & facts.handlercall(handlerid) = callid & facts.handleroutcome(callid) = variant + 1,'exact-owner handler and outcome')
+      outcome = variant + 1
+      if variant >= 9 & variant <= 12 then outcome = 3
+      if variant = 13 then outcome = 1
+      if variant = 16 then outcome = 2
+      failures = failures + check(facts.status() = 'ok' & facts.handlercall(handlerid) = callid & facts.handleroutcome(callid) = outcome,'exact-owner handler and feasible outcomes ' || variant)
       access = dereference facts.access()
       failures = failures + check(access.complete(original.procedureid('main')) = 0,'normal-only access projection stays incomplete')
+      if outcome <> 1 then do
+        cell = 2
+        if variant = 11 | variant = 12 then cell = 1
+        failures = failures + check(access.kills(callid,facts.integerdomain(cell)) = 0 & access.kills(callid,facts.wholedomain(cell)) = 0,'failure preserves result; no definite kill ' || variant)
+      end
       result = changed.result(); instructions = 0; closure = 0; lifetimes = 0; clears = 0; inhandler = 0; source = 0
       do i = 1 to result.records()
         item = result.record(i)
@@ -129,8 +164,8 @@ main: procedure = .int
       failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'storage.exceptional.cfg.pending','assignment retains exceptional graph')
       limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,65536,1)
       failures = failures + check(limited.status() = 'limit' & limited.reason() = 'inline.code.cells','signal expansion cell cap')
-      kept = limited.result(); keptgraph = dereference kept.ir()
-      failures = failures + check(bin2x(keptgraph.binary()) = bin2x(before),'cell refusal preserves frozen owner')
+      limitedresult = limited.result(); limitedgraph = dereference limitedresult.ir()
+      failures = failures + check(bin2x(limitedgraph.binary()) = bin2x(before),'cell refusal preserves frozen owner')
       limited = llinline..expand(request,'closed-main-default-halt.v1',1)
       failures = failures + check(limited.status() = 'limit','signal proof work cap')
       limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,128)

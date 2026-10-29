@@ -476,10 +476,12 @@ The current root/default-HALT profile does not qualify these producer paths.
 The existing `closed-main-default-halt.v1` profile recognizes one source-authored,
 unbound G-shaped `OUT_OF_RANGE` scope in fresh standalone `main`: `SIGPUSH`,
 `SIGBR`, one same-module `CALL1`, separate normal/handler `SIGPOP` paths and one
-join. Its selected zero-local leaf has exactly `ICHKRNG a1,0,10` and `RET a1`;
-source/TRACE and ordinary scalar metadata are retained. Actual and result must
-be proved plain ordinary scalar storage, and the actual integer must determine
-the check outcome. Unknown values, additional control entries, nested scopes,
+join. Its selected zero-local leaf has exactly `ICHKRNG a1,lo,hi` with literal
+integer bounds, followed by `RET a1`. Source/TRACE and ordinary scalar metadata
+are retained. Actual and result must
+be proved plain ordinary scalar storage. A defined, entry-independent actual
+may be unknown at analysis time; root-side non-signalling `GETANDTP` is one
+admitted producer. Additional control entries, nested scopes,
 counted windows, callee policy/context changes and physical observers retain
 specific pending/unproved reasons. This is an initial representable category,
 not complete G or Classic C signal coverage.
@@ -487,10 +489,18 @@ not complete G or Classic C signal coverage.
 `lltargetfacts` derives a request-local exact-owner structured overlay from the
 original record identities and canonical signal phase. The existing call
 normalization, scalar transfers and borrowed-result COPY rule produce the
-conditional normal path. Its before-write failure path starts from the captured
-caller state, so it cannot inherit a hypothetical result write or normal-only
-TRACE/value observations. The two bounded paths reuse existing state snapshots;
-they add no target schema, public service signature, wire record, instruction or
+conditional normal path. Known values and bounded intervals determine feasible
+check outcomes; an unbounded defined value keeps both. Before forking, the
+existing child preparation reserves stable owned StorageIds without asserting
+activation. Snapshot caller cells, frame bindings and recycler history at the
+call. The before-write failure path starts from that captured caller state,
+with only the existing child-frame activation of private `a0`, so it cannot
+inherit a hypothetical result write or normal-only TRACE/value observations.
+Normal and handler paths meet component/status, bindings and history at the
+join through the existing owners; incompatible bindings retain the call.
+Failure feasibility prevents a definite result kill. The bounded paths reuse
+existing state snapshots and add no target schema, public service signature,
+wire record, instruction or
 general graph scheduler. The frozen target's normal graph stays incomplete.
 
 Conservative expansion retains the check and syntactic normal-return transport.
