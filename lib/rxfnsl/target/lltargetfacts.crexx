@@ -650,6 +650,14 @@ selection: class
   storage: method = .int
     arg ordinal = .int
     return _bindings[ordinal]
+  live: method = .int
+    arg ordinal = .int, record = .int
+    proof_ref = reference _proofs[ordinal]; proof = dereference proof_ref
+    return proof.live(record)
+  choice: method = .int
+    arg ordinal = .int, record = .int
+    proof_ref = reference _proofs[ordinal]; proof = dereference proof_ref
+    return proof.choice(record)
   action: method = .string
     arg ordinal = .int, returned = .int
     proof_ref = reference _proofs[ordinal]; proof = dereference proof_ref
@@ -1784,20 +1792,28 @@ analysis: class
    * register LINKARG and a scalar linear suffix. Return2 leaves the exact path
    * responsible; return1 has separately proved every finite normal arm. */
   runtimeselection: method = .int
-    arg guard = .lltarget..record, ordinal = .int, bodyid = .int, expose view = .frame, state_ref = reference .cells, expose previous = .history, destination = .int, hasresult = .int, expose proof = .callproof, publish = .int, callid = .int, outerCallId = .int, depth = .int, tracking = .int
+    arg guard = .lltarget..record, ordinal = .int, bodyid = .int, expose view = .frame, state_ref = reference .cells, expose previous = .history, destination = .int, hasresult = .int, expose proof = .callproof, publish = .int, callid = .int, outerCallId = .int, depth = .int, tracking = .int, graph = 0
     i = .int; j = .int; next = .int; returned = .int; id = .int; selectorid = .int; raw = .int; selected = .int; low = .int; high = .int; offset = .int
     arm = .int; width = .int; bound = .int; childcalls = .int
     state_copy = reference .cells; view_copy = reference .frame; history_copy = reference .history; proof_copy = reference .callproof
     field = .lltarget..operand; selector = .lltarget..operand; target = .lltarget..operand; source = .lltarget..operand
     item = .lltarget..record; operation = .lltarget..record; terminal = .lltarget..record
+    row = .numbers
     branchstate = .cells; merged = .cells; branchview = .frame; branchhistory = .history; mergedhistory = .history
     branchproof = .callproof; aggregate = .callproof; cases = .callproof[]; bindings = .int[]; limits = .int[]; checked = .int[]
-    state = dereference state_ref; module = dereference _owner; row = _linear[bodyid] as .numbers
+    state = dereference state_ref; module = dereference _owner
     selector = guard.operand(1)
     if selector.kind() <> 'R' then return 2
     selectorid = view.storage(selector)
     if selectorid = 0 then return 2
     if state.known(selectorid) then return 2
+    if graph then do
+      row = selectorpath(guard,bodyid)
+      if _status <> 'building' then return 0
+      if row.size() = 0 then return 2
+      ordinal = 1
+    end
+    else row = _linear[bodyid] as .numbers
     do i = ordinal + 1 to row.size()
       if spend(1) = 0 then return 0
       item = module.at(row.at(i))
@@ -1849,7 +1865,58 @@ analysis: class
     if checked[1] = 0 then return reject('argument.selector.overflow.unproved')
     if selected < 0 | checked[2] > view.arguments() then return reject('argument.selector.bank.unproved')
     target = operation.operand(1)
-    do i = next + 1 to row.size()
+    if graph then do
+      /* Original reachability, dominance and source ordinals bound the
+       * continued region; no second CFG or source-order solver is built. */
+      do i = 1 to _index.functionoperations(bodyid)
+        if spend(1) = 0 then return 0
+        id = _index.functionoperation(bodyid,i)
+        if _index.opcode(id) <= 16 | _index.reachable(_index.opblock(id)) = 0 then iterate
+        item = module.at(id)
+        if item.kind() = 'instruction' & item.mnemonic() = 'ret' then do
+          if returned > 0 then return reject('argument.selector.tail.return.pending')
+          returned = id; terminal = item
+        end
+        if proof.live(_recordordinal[id]) then iterate
+        bound = 0
+        do j = 1 to row.size()
+          if spend(1) = 0 then return 0
+          if row.at(j) = id then bound = 1
+        end
+        if bound then iterate
+        if _index.dominates(_index.opblock(operation.id()),_index.opblock(id)) = 0 then return reject('argument.selector.tail.entry.pending')
+        if item.kind() <> 'instruction' then iterate
+        if item.mnemonic() = 'linkarg' & id <> operation.id() then return reject('argument.selector.tail.selector.pending')
+        if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+          childcalls = childcalls + 1
+          if childcalls > 1 then return reject('argument.selector.tail.call.pending')
+          if selectorleaf(item) = 0 then return 0
+        end
+      end
+      if returned = 0 then return reject('return.missing')
+      do i = 1 to _index.functionoperations(bodyid)
+        if spend(1) = 0 then return 0
+        id = _index.functionoperation(bodyid,i)
+        if _index.opcode(id) <= 16 | _index.reachable(_index.opblock(id)) = 0 then iterate
+        item = module.at(id)
+        if item.kind() <> '.meta' then iterate
+        if item.operands() <> 1 & item.operands() <> 4 then iterate
+        if _index.dominates(_index.opblock(id),_index.opblock(returned)) = 0 then return reject('metadata.scope.cfg.pending')
+        if _index.opblock(id) = _index.opblock(returned) then do
+          if _index.opposition(id) >= _index.opposition(returned) then return reject('metadata.scope.cfg.pending')
+        end
+        /* An early-layout return would close this lexical binding before
+         * later blocks. Per-block binding re-entry is a separate proof. */
+        if item.operands() = 4 then do j = 1 to _index.functionoperations(bodyid)
+          if spend(1) = 0 then return 0
+          id = _index.functionoperation(bodyid,j)
+          if _index.opcode(id) <= 16 | _index.reachable(_index.opblock(id)) = 0 then iterate
+          item = module.at(id)
+          if item.kind() = 'instruction' & _recordordinal[id] > _recordordinal[returned] then return reject('metadata.scope.cfg.pending')
+        end
+      end
+    end
+    else do i = next + 1 to row.size()
       if spend(1) = 0 then return 0
       item = module.at(row.at(i))
       if item.kind() <> 'instruction' then iterate
@@ -1890,7 +1957,8 @@ analysis: class
       state_copy = reference state; view_copy = reference view; history_copy = reference previous; proof_copy = reference proof
       branchstate = snapshot state_copy; branchview = snapshot view_copy; branchhistory = snapshot history_copy; branchproof = snapshot proof_copy
       call branchstate.integer(selectorid,1,raw)
-      do i = ordinal to returned
+      bound = returned; if graph then bound = next
+      do i = ordinal to bound
         if spend(1) = 0 then return 0
         item = module.at(row.at(i)); call branchproof.visit(_recordordinal[item.id()])
         if item.kind() = 'instruction' & item.mnemonic() = 'call1' then do
@@ -1903,7 +1971,11 @@ analysis: class
           source = branchview.argument(_lastselector); bindings[raw - low + 1] = branchview.storage(source)
         end
       end
-      if finishreturn(terminal,branchview,branchstate,destination,hasresult,branchproof) = 0 then return 0
+      if graph then do
+        if dag(bodyid,branchview,branchstate,branchhistory,destination,hasresult,branchproof,checked,0,outerCallId,0,depth,operation.id()) = 0 then return 0
+        if branchproof.returns() <> 1 | branchproof.site(1) <> terminal.id() then return reject('argument.selector.tail.return.pending')
+      end
+      else if finishreturn(terminal,branchview,branchstate,destination,hasresult,branchproof) = 0 then return 0
       if spend(_recordcount[bodyid]) = 0 then return 0
       if view.slots() > _work / 4 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
       if spend(view.slots() * 4) = 0 then return 0
@@ -1934,10 +2006,61 @@ analysis: class
       _rebinding[callid] = 1
     end
     return 1
+  /* Find only the checked operation path and validate its linear entry. The
+   * returned row ends at LINKARG; suffix transfer remains DAG-owned. */
+  selectorpath: method = .numbers
+    arg guard = .lltarget..record, bodyid = .int
+    b = .int; opid = .int; visited = .int; ignored = .int
+    values = .int[]; empty = .int[]; item = .lltarget..record
+    module = dereference _owner; catalog = .llrxascatalog..catalog()
+    if reserve(_index.functionoperations(bodyid),16) = 0 | reserve(1,64) = 0 then return .numbers(empty)
+    b = _index.opblock(guard.id()); opid = guard.id()
+    do while b > 0
+      if spend(1) = 0 then return .numbers(empty)
+      visited = visited + 1
+      if visited > _index.functionblocks(bodyid) then do; ignored = reject('argument.selector.tail.entry.pending'); return .numbers(empty); end
+      do while opid > 0
+        if spend(1) = 0 then return .numbers(empty)
+        if _index.opcode(opid) > 16 then do
+          item = module.at(opid); values[values[0] + 1] = opid
+          if opid <> guard.id() & item.kind() = 'instruction' then do
+            if item.mnemonic() <> 'linkarg' then return .numbers(empty)
+            /* A linear original entry rules out bypass and extra ingress. */
+            b = _index.functionentry(bodyid); visited = 0
+            do while b > 0
+              if spend(1) = 0 then return .numbers(empty)
+              visited = visited + 1
+              if visited > _index.functionblocks(bodyid) then leave
+              opid = _index.firstop(b)
+              do while opid > 0
+                if spend(1) = 0 then return .numbers(empty)
+                if opid = guard.id() then return .numbers(values)
+                if _index.opcode(opid) > 16 then do
+                  item = module.at(opid)
+                  if item.kind() = 'instruction' then do
+                    if catalog.flow(item.opcode()) <> 0 | wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+                      ignored = reject('argument.selector.tail.entry.pending'); return .numbers(empty)
+                    end
+                  end
+                end
+                opid = _index.nextop(opid)
+              end
+              if _index.successors(b) <> 1 then leave
+              b = _index.successor(b,1)
+            end
+            ignored = reject('argument.selector.tail.entry.pending'); return .numbers(empty)
+          end
+        end
+        opid = _index.nextop(opid)
+      end
+      if _index.successors(b) <> 1 then return .numbers(empty)
+      b = _index.successor(b,1); opid = _index.firstop(b)
+    end
+    return .numbers(empty)
   /* One finite forward pass over the shared graph's DAG order. These rows
    * hold target transfer snapshots; edges and scheduling stay index-owned. */
   dag: method = .int
-    arg bodyid = .int, expose entryframe = .frame, expose state = .cells, expose callhistory = .history, destination = .int, hasresult = .int, expose proof = .callproof, expose selectors = .int[], publish = 1, callid = 0, root = 0, depth = 0
+    arg bodyid = .int, expose entryframe = .frame, expose state = .cells, expose callhistory = .history, destination = .int, hasresult = .int, expose proof = .callproof, expose selectors = .int[], publish = 1, callid = 0, root = 0, depth = 0, startafter = 0
     i = .int; b = .int; opid = .int; target = .int; edge = .int; choice = .int; returned = .int; exits = .int; id = .int; j = .int; retid = .int
     incoming = .cells[]; frames = .frame[]; histories = .history[]; present = .int[]
     path = .cells; edgepath = .cells; merged = .cells; view = .frame; item = .lltarget..record; value = .lltarget..operand
@@ -1945,7 +2068,7 @@ analysis: class
     source_ref = reference .cells; view_ref = reference .frame; path_ref = reference .cells; pathview_ref = reference .frame
     history_ref = reference .history; pathhistory_ref = reference .history
     name = .string; flow = .int; mask = .int; known = .int; bits = .int; selected = .int
-    refinementid = .int; refinementmask = .int
+    refinementid = .int; refinementmask = .int; runtime = .int
     module = dereference _owner; catalog = .llrxascatalog..catalog()
     if _cyclesready = 0 then do
       _cycles = _index.loops(_work,_bytelimit)
@@ -1966,9 +2089,13 @@ analysis: class
     /* Two invocation levels are already admitted from a root, one from an
      * outer callee. Preallocation follows only those finite static targets;
      * invoke still checks a reached recursion/depth/body before using a row. */
-    if preparechildren(bodyid,reference state,reference callhistory,1 - depth + root) = 0 then return 0
+    if startafter = 0 then do
+      if preparechildren(bodyid,reference state,reference callhistory,1 - depth + root) = 0 then return 0
+    end
     if reserve(_index.blocks(),40) = 0 | pathallowance(state.size(),entryframe.slots()) = 0 then return 0
-    b = _index.functionentry(bodyid); source_ref = reference state; view_ref = reference entryframe
+    b = _index.functionentry(bodyid)
+    if startafter > 0 then b = _index.opblock(startafter)
+    source_ref = reference state; view_ref = reference entryframe
     history_ref = reference callhistory
     incoming[b] = snapshot source_ref; frames[b] = snapshot view_ref; histories[b] = snapshot history_ref; present[b] = 1; exits = 0
     do i = 1 to _index.rposize()
@@ -1979,6 +2106,9 @@ analysis: class
       source_ref = reference incoming[b]; view_ref = reference frames[b]; history_ref = reference histories[b]
       path = snapshot source_ref; view = snapshot view_ref; previous = snapshot history_ref
       choice = 0; returned = 0; refinementid = 0; refinementmask = 0; opid = _index.firstop(b)
+      if startafter > 0 then do
+        if b = _index.opblock(startafter) then opid = _index.nextop(startafter)
+      end
       do while opid > 0
         if spend(1) = 0 then return 0
         if _index.opcode(opid) <= 16 then do; opid = _index.nextop(opid); iterate; end
@@ -1993,6 +2123,11 @@ analysis: class
         end
         if item.kind() = 'instruction' then do
           name = item.mnemonic(); flow = catalog.flow(item.opcode())
+          if root = 0 & publish & startafter = 0 & name = 'ichkrng' then do
+            runtime = runtimeselection(item,0,bodyid,view,reference path,previous,destination,hasresult,proof,publish,callid,callid,depth,0,1)
+            if runtime = 0 then return 0
+            if runtime = 1 then do; state = path; callhistory = previous; return 1; end
+          end
           if wordpos(name,'call call1 call2 call3 call4') > 0 then do
             if invoke(item,view,reference path,previous,root,callid,depth + (root = 0),0) = 0 then return 0
             opid = _index.nextop(opid); iterate
@@ -3361,6 +3496,20 @@ analysis: class
     if casekey(callid,ordinal) = 0 then return 0
     row_ref = reference _selections[callid]; row = dereference row_ref
     return row.storage(ordinal)
+  argumentcaselive: method = .int
+    arg callid = .int, ordinal = .int, recordid = .int
+    if casekey(callid,ordinal) = 0 then return 0
+    record = recordkey(callid,recordid)
+    if record = 0 then return 0
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.live(ordinal,record)
+  argumentcasechoice: method = .int
+    arg callid = .int, ordinal = .int, recordid = .int
+    if casekey(callid,ordinal) = 0 then return 0
+    record = recordkey(callid,recordid)
+    if record = 0 then return 0
+    row_ref = reference _selections[callid]; row = dereference row_ref
+    return row.choice(ordinal,record)
   argumentcaseaction: method = .string
     arg callid = .int, ordinal = .int
     if casekey(callid,ordinal) = 0 then return ''

@@ -242,6 +242,7 @@ metascopes: class
   _dag = .int[]
   _continuations = .string[]
   _labelsites = .int[]
+  _labelarms = .int[]
   _oldlabels = .binary[]
   _newlabels = .string[]
   _serial = .int
@@ -313,7 +314,7 @@ metascopes: class
     return 0
   prepare: method = .void
     arg functionid = .int, site = .int, slot = .int, facts_ref = reference .lltargetfacts..analysis
-    i = .int; attempt = .int; collision = .int; width = .int
+    i = .int; attempt = .int; collision = .int; width = .int; arm = .int
     suffix = .string
     draft = dereference _owner; facts = dereference facts_ref; attempt = 0
     _dag[slot] = (_branched[functionid] <> 0) | (facts.returns(site) > 1) | (facts.argumentcases(site) > 0)
@@ -353,11 +354,15 @@ metascopes: class
         if _sourcefn[i] <> functionid | _sourcekind[i] = 0 then iterate
         if facts.recordlive(site,_sourcerecord[i]) = 0 then iterate
         ignored = newlabel(site,_names[i])
+        do arm = 1 to facts.argumentcases(site)
+          if claim(1,0) = 0 then return
+          if facts.argumentcaselive(site,arm,_sourcerecord[i]) then ignored = newlabel(site,_names[i],arm)
+        end
       end
     end
     return
   newlabel: method = .string
-    arg site = .int, old = .binary
+    arg site = .int, old = .binary, arm = 0
     candidate = .string
     do forever
       if guard(1,192) = 0 then return ''
@@ -367,17 +372,18 @@ metascopes: class
       draft = dereference _owner
       if draft.error() <> '' then return ''
     end
-    if claim(<blen>(old) + length(candidate) + 1,<blen>(old) + length(candidate) + 48) = 0 then return ''
-    at = _labelsites[0] + 1; _labelsites[at] = site; _oldlabels[at] = old; _newlabels[at] = candidate
+    if claim(<blen>(old) + length(candidate) + 1,<blen>(old) + length(candidate) + 56) = 0 then return ''
+    at = _labelsites[0] + 1; _labelsites[at] = site; _labelarms[at] = arm; _oldlabels[at] = old; _newlabels[at] = candidate
     call remember(candidate as .binary)
     return candidate
   label: method = .string
-    arg site = .int, old = .binary
+    arg site = .int, old = .binary, arm = 0
     width = <blen>(old) + 1
     if _labelsites[0] > 2147483647 / width then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline label lookup"
     if claim(_labelsites[0] * width,0) = 0 then return ''
     do i = 1 to _labelsites[0]
       if _labelsites[i] <> site then iterate
+      if _labelarms[i] <> arm then iterate
       if bincompare(_oldlabels[i],old) = 0 then return _newlabels[i]
     end
     assembler signal "ERROR","LL_INLINE_LABEL: missing live label mapping"
@@ -748,7 +754,9 @@ expandlocalmany: procedure = .llinline..change
         if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
         childrecord = source.record(j)
         if childrecord.procedureid() <> callee.functionid() | childrecord.kind() = 'procedure' then iterate
-        if facts.recordlive(input.id(),childrecord.id()) = 0 then iterate
+        if facts.recordlive(input.id(),childrecord.id()) = 0 then do
+          if runtime = 0 | childrecord.kind() <> '.srcstep' then iterate
+        end
         if childrecord.kind() = '.srcstep' then do
           value = childrecord.operand(1); call freshidentity(steps,value.index(),higheststep)
           value = childrecord.operand(2); call freshidentity(clauses,value.index(),highestclause)
@@ -758,11 +766,22 @@ expandlocalmany: procedure = .llinline..change
           value = childrecord.operand(8); call freshidentity(clauses,value.index(),highestclause)
         end
       end
+      /* A whole case is emitted before selecting the next one. Its sole RET
+       * can precede another reached block in source order. */
+      do forever
       do j = 1 to source.records()
         if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
         childrecord = source.record(j)
         if childrecord.procedureid() <> callee.functionid() | childrecord.kind() = 'procedure' then iterate
-        if facts.recordlive(input.id(),childrecord.id()) = 0 then iterate
+        if runtimearm > 1 & j <= runtimestart then iterate
+        if runtimearm > 0 then do
+          if facts.argumentcaselive(input.id(),runtimearm,childrecord.id()) = 0 then do
+            /* Source rows describe lexical addresses, including a live row
+             * following an omitted dead neighbor. They are not executed. */
+            if childrecord.kind() <> '.srcstep' then iterate
+          end
+        end
+        else if facts.recordlive(input.id(),childrecord.id()) = 0 then iterate
         if childrecord.kind() = '.meta' & (childrecord.operands() = 3 | childrecord.operands() = 5) then iterate
         if childrecord.kind() = 'instruction' & childrecord.mnemonic() = 'numsci' then iterate
         oldat = childrecord.origin()
@@ -783,7 +802,7 @@ expandlocalmany: procedure = .llinline..change
         fields = lltarget..remapmetadata(childrecord,fields,scope,steps,clauses)
         if childrecord.kind() = 'label' then do
           value = childrecord.operand(1)
-          fields[1] = .lltarget..operand.symbol(scopes.label(input.id(),value.bytes())) as .object
+          fields[1] = .lltarget..operand.symbol(scopes.label(input.id(),value.bytes(),runtimearm)) as .object
         end
         if childrecord.kind() <> 'instruction' then do
           ignored = targetbody.record(childrecord.kind(),fields,childat)
@@ -791,11 +810,13 @@ expandlocalmany: procedure = .llinline..change
           if childrecord.kind() = '.meta' then call scopes.observe(fields,childat)
         end
         else if catalog.flow(childrecord.opcode()) = 1 | catalog.flow(childrecord.opcode()) = 2 then do
-          flow = catalog.flow(childrecord.opcode()); choice = facts.branchchoice(input.id(),childrecord.id())
+          flow = catalog.flow(childrecord.opcode())
+          if runtimearm > 0 then choice = facts.argumentcasechoice(input.id(),runtimearm,childrecord.id())
+          else choice = facts.branchchoice(input.id(),childrecord.id())
           if flow = 2 & choice > 0 then do
             if childrecord.mnemonic() = 'brtf' | choice = 1 then do
               value = childrecord.operand(choice)
-              ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.label(input.id(),value.bytes())),childat)
+              ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.label(input.id(),value.bytes(),runtimearm)),childat)
             end
             else do
               /* A selected fallthrough keeps an executable source address for
@@ -808,7 +829,7 @@ expandlocalmany: procedure = .llinline..change
             do k = 1 to childrecord.operands()
               if catalog.branch(childrecord.opcode(),k) = 0 then iterate
               value = childrecord.operand(k)
-              fields[k] = .lltarget..operand.symbol(scopes.label(input.id(),value.bytes())) as .object
+              fields[k] = .lltarget..operand.symbol(scopes.label(input.id(),value.bytes(),runtimearm)) as .object
             end
             ignored = code.emit(targetbody,childrecord.mnemonic(),fields,childat)
           end
@@ -969,21 +990,14 @@ expandlocalmany: procedure = .llinline..change
             ignored = code.one(targetbody,'endlife',anchor,childat)
           end
           if dag then do
-            ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.continuation(accepted[input.id()])),childat)
-            if runtimearm > 0 & runtimearm < runtimeextent then do
-              runtimearm = runtimearm + 1
+            if runtimearm > 0 & scopes.hasbindings() then do k = 1 to scopes.closings()
+              if scopes.active(k) = 0 then iterate
               call objectarraydrop fields
-              fields[1] = .lltarget..operand.symbol(caseLabels[runtimearm]) as .object
-              ignored = targetbody.record('label',fields,runtimeorigin)
-              if runtimestep[0] > 0 then ignored = targetbody.record('.srcstep',runtimestep,runtimeorigin)
-              call scopes.resume(targetbody,runtimeorigin)
-              swaprecord = source.record(runtimestart)
-              field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
-              field = .lltarget..operand.bound(0,0,0,'a',facts.argumentcase(input.id(),runtimearm))
-              value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
-              ignored = code.two(targetbody,'link',destination,value,runtimeorigin)
-              j = runtimestart
+              fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
+              ignored = targetbody.record('.meta',fields,childat)
+              call scopes.observe(fields,childat)
             end
+            ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.continuation(accepted[input.id()])),childat)
             iterate
           end
           if scopes.hasbindings() then do
@@ -1003,6 +1017,19 @@ expandlocalmany: procedure = .llinline..change
            * at the reachable caller continuation. The original body is kept. */
           leave
         end
+      end
+      if runtimearm = 0 | runtimearm >= runtimeextent then leave
+      runtimearm = runtimearm + 1
+      call objectarraydrop fields
+      fields[1] = .lltarget..operand.symbol(caseLabels[runtimearm]) as .object
+      ignored = targetbody.record('label',fields,runtimeorigin)
+      if runtimestep[0] > 0 then ignored = targetbody.record('.srcstep',runtimestep,runtimeorigin)
+      call scopes.resume(targetbody,runtimeorigin)
+      swaprecord = source.record(runtimestart)
+      field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
+      field = .lltarget..operand.bound(0,0,0,'a',facts.argumentcase(input.id(),runtimearm))
+      value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
+      ignored = code.two(targetbody,'link',destination,value,runtimeorigin)
       end
       if dag then do
         call objectarraydrop fields

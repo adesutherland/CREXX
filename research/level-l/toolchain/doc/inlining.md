@@ -1788,8 +1788,8 @@ an ISA limitation; the current explicit leaf gate retains them with
 `argument.selector.tail.call.pending`. Existing scalar component transfers
 prove every child operation and its arithmetic success separately in each
 selector case. Calls beyond that shape retain the same specific call reason;
-acyclic suffix branches and additional runtime selectors remain later stages,
-using existing CFG and `argument.selector.tail.selector.pending` reasons.
+additional runtime selectors remain a later stage, using
+`argument.selector.tail.selector.pending`.
 
 The child preparation owner reserves its immutable local/a0 StorageIds and
 recycler history before any selector fork. Per-case invoke uses the original
@@ -1823,6 +1823,34 @@ remains an optional separately reviewed harness extension.
 The separate serial `levell_rxas_runtime_selector` and
 `levell_rxas_runtime_child` panels share prepared producers and extend the
 maintained constructed argument-selection owner and handwritten RXAS controls.
+The bounded acyclic continuation additionally admits the existing direct DAG
+branches after LINKARG, joining at one shared source RET. It saves the immutable
+pre-check state separately from the post-LINKARG intra-block cursor. Each raw
+selector case transfers the authored check and rebinding, then resumes the
+same graph owner with independent cells/frame/history at every suffix block.
+Conditions can remain dynamic inside one case. Arithmetic still needs success
+on every feasible edge; integer branches add no invented interval refinement.
+Writes to selector storage invalidate ordinary value facts while the emitted
+dispatcher keeps its stable original snapshot. A conditional retained leaf
+uses the qualified child owner; skipped paths activate no child and define no
+result.
+
+The sealed case proof supplies record liveness and branch choices to the
+emitter. Source labels and targets are private to each call/case, and the
+complete case region is emitted before another case starts. A shared RET can
+precede a later reached source block; its normal closure branches to caller
+continuation while the later block retains its own case labels. Original
+lexical source rows remain truthful when a dead instruction is omitted.
+Branch-local META without the existing dominance/order proof retains
+`metadata.scope.cfg.pending`. Early-RET layouts containing any reachable scoped
+META opening also retain that reason, including an opening already closed
+before RET: per-block lexical re-entry remains unproved. Source/TRACE-only
+early-RET layouts are admitted. Multiple RETs retain
+`argument.selector.tail.return.pending`; incompatible pointer joins keep the
+existing join reason even when values match. No binding-compatibility rule is
+weakened. `levell_rxas_runtime_branch` provides the separate serial constructed
+and paired RXAS branch/CANCEL controls; multi-RET remains the next slice.
+
 Current cleanup retains the conservative runtime dispatch when its independent
 range/access proof returns `argument.range.unproved`; branch-aware reduction of
 its generated register and closure work remains a separate cleanup increment.

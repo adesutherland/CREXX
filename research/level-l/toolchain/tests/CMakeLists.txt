@@ -107,6 +107,20 @@ if(TARGET rxbvm)
     RUN_SERIAL TRUE TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_runtime_child
     TARGETS levell_constructed_inline llrxinline rxbvm rxas)
+  add_test(NAME levell_rxas_runtime_branch
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}"
+      "-DCONSTRUCTED=${CMAKE_BINARY_DIR}/lib/rxfnsl/target/constructed-inline-linked.rxbin"
+      "-DRUNTIME=${_runtime}" "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/runtime-branch-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-runtime-branch.cmake")
+  set_tests_properties(levell_rxas_runtime_branch PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_RUNTIME_BRANCH[|]failures=0"
+    # Shared preparation; keep this bounded DAG panel separate and serial.
+    RUN_SERIAL TRUE TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_runtime_branch
+    TARGETS levell_constructed_inline llrxinline rxbvm rxas)
   add_test(NAME levell_rxas_io_service
     COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/io-service.rxbin" ${_runtime})
   set_tests_properties(levell_rxas_io_service PROPERTIES
