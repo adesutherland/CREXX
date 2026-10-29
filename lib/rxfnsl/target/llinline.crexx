@@ -305,6 +305,32 @@ metascopes: class
     draft = dereference _owner
     if bytes < 0 | bytes > 2147483647 - _held then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata temporary bytes"
     return draft.preflight(work,_held + bytes)
+  /** Account transient remap/constructor rows before borrowing the original
+   * payload into them. Record storage itself stays with the frozen source. */
+  recordcopies: method = .int
+    arg item = .lltarget..record, copies = .int
+    i = .int; count = .int; width = .int; value = .lltarget..operand
+    count = item.operands()
+    if copies < 1 | count > (2147483647 - 64) / 80 / copies then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline group operand copies"
+    if claim(count * copies + 1,count * copies * 80 + 64) = 0 then return 0
+    do i = 1 to count
+      value = item.operand(i); width = value.length()
+      if width > 2147483647 / 2 / copies then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline group payload copies"
+      if claim(width * copies + 1,width * copies * 2) = 0 then return 0
+    end
+    return 1
+  fieldcopies: method = .int
+    arg expose fields = .object[], copies = .int
+    i = .int; count = .int; width = .int; value = .lltarget..operand
+    count = fields[0]
+    if copies < 1 | count > (2147483647 - 64) / 80 / copies then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline source checkpoint copies"
+    if claim(count * copies + 1,count * copies * 80 + 64) = 0 then return 0
+    do i = 1 to count
+      value = fields[i] as .lltarget..operand; width = value.length()
+      if width > 2147483647 / 2 / copies then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline source checkpoint bytes"
+      if claim(width * copies + 1,width * copies * 2) = 0 then return 0
+    end
+    return 1
   contains: method = .int
     arg name = .binary
     width = <blen>(name) + 1
@@ -316,9 +342,10 @@ metascopes: class
     return 0
   prepare: method = .void
     arg functionid = .int, site = .int, slot = .int, facts_ref = reference .lltargetfacts..analysis
-    i = .int; attempt = .int; collision = .int; width = .int; arm = .int
+    i = .int; attempt = .int; collision = .int; width = .int; arm = .int; selectedgroup = .int; grouped = .int
     suffix = .string
     draft = dereference _owner; facts = dereference facts_ref; attempt = 0
+    selectedgroup = facts.argumentruntime(site)
     _dag[slot] = (_branched[functionid] <> 0) | (facts.returns(site) > 1) | (facts.argumentcases(site) > 0)
     do forever
       if claim(1,0) = 0 then return
@@ -329,7 +356,9 @@ metascopes: class
         if claim(1,0) = 0 then return
         if _sourcefn[i] <> functionid then iterate
         if _sourcearity[i] <> 1 & _sourcearity[i] <> 4 then iterate
-        if facts.recordlive(site,_sourcerecord[i]) = 0 & facts.scopereentry(site) = 0 then iterate
+        grouped = 0
+        if selectedgroup > 0 then grouped = facts.scopeaddress(site,_sourcerecord[i]) = selectedgroup
+        if facts.recordlive(site,_sourcerecord[i]) = 0 & facts.scopereentry(site) = 0 & grouped = 0 then iterate
         width = <blen>(_names[i]) + length(suffix)
         if guard(width + 1,width * 3) = 0 then return
         if contains(_names[i] || (suffix as .binary)) then collision = 1
@@ -344,7 +373,9 @@ metascopes: class
       if claim(1,0) = 0 then return
       if _sourcefn[i] <> functionid then iterate
       if _sourcearity[i] <> 1 & _sourcearity[i] <> 4 then iterate
-      if facts.recordlive(site,_sourcerecord[i]) = 0 & facts.scopereentry(site) = 0 then iterate
+      grouped = 0
+      if selectedgroup > 0 then grouped = facts.scopeaddress(site,_sourcerecord[i]) = selectedgroup
+      if facts.recordlive(site,_sourcerecord[i]) = 0 & facts.scopereentry(site) = 0 & grouped = 0 then iterate
       width = <blen>(_names[i]) + length(suffix)
       if guard(width + 1,width * 3) = 0 then return
       call remember(_names[i] || (suffix as .binary))
@@ -354,11 +385,13 @@ metascopes: class
       do i = 1 to _sourcecount
         if claim(1,0) = 0 then return
         if _sourcefn[i] <> functionid | _sourcekind[i] = 0 then iterate
-        if facts.recordlive(site,_sourcerecord[i]) = 0 then iterate
+        grouped = 0
+        if selectedgroup > 0 then grouped = facts.scopeaddress(site,_sourcerecord[i]) = selectedgroup
+        if facts.recordlive(site,_sourcerecord[i]) = 0 & grouped = 0 then iterate
         ignored = newlabel(site,_names[i])
         do arm = 1 to facts.argumentcases(site)
           if claim(1,0) = 0 then return
-          if facts.argumentcaselive(site,arm,_sourcerecord[i]) then ignored = newlabel(site,_names[i],arm)
+          if grouped | facts.argumentcaselive(site,arm,_sourcerecord[i]) then ignored = newlabel(site,_names[i],arm)
         end
       end
     end
@@ -449,20 +482,16 @@ metascopes: class
       _entryorigin[i] = _openorigin[_start + i - 1]
     end
     return
+  /** Legacy linear admission has an exact emitted incoming checkpoint too.
+   * Restore it through the same delta owner, before any authored group row. */
   resume: method = .void
-    arg body = .lltarget..bodydraft, at = .llir..origin
-    i = .int; k = .int; ignored = .int; held = .int; width = .int; fields = .object[]
-    do i = _start to _bindings[0]
-      if claim(1,0) = 0 then return
-      if _active[i] = 0 then iterate
-      if claim(<blen>(_bindings[i]) + 1,<blen>(_bindings[i]) + 64) = 0 then return
-      call objectarraydrop fields
-      fields[1] = .lltarget..operand.string(_bindings[i]) as .object
-      ignored = body.record('.meta',fields,at); _active[i] = 0
-    end
+    arg body = .lltarget..bodydraft, expose code = .emitter, at = .llir..origin
+    i = .int; k = .int; count = .int; held = .int; width = .int
+    fields = .object[]; origins = .llir..origin[]
     do i = 1 to _entrycount
-      if claim(8,320) = 0 then return
+      if claim(1,0) = 0 then return
       if _entryactive[i] = 0 then iterate
+      if claim(8,384) = 0 then return
       held = 0
       do k = 1 to 4
         width = _entryfields[(i - 1) * 4 + k].length()
@@ -470,11 +499,11 @@ metascopes: class
         held = held + width * 2
       end
       if claim(held + 4,held) = 0 then return
-      call objectarraydrop fields
-      do k = 1 to 4; fields[k] = _entryfields[(i - 1) * 4 + k] as .object; end
-      ignored = body.record('.meta',fields,_entryorigin[i])
-      _active[_start + i - 1] = 1
+      count = count + 1
+      do k = 1 to 4; fields[(count - 1) * 4 + k] = _entryfields[(i - 1) * 4 + k] as .object; end
+      origins[count] = _entryorigin[i]
     end
+    call reconcile(body,code,fields,origins,at)
     return
   /** Reconcile already-proved mapped descriptors, without interpreting source
    * scopes again. One distinct carrier precedes the untouched authored group. */
@@ -859,6 +888,7 @@ expandlocalmany: procedure = .llinline..change
   dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int; abrupt = .int; samepair = .int
   direct = .int; callerstep = .int
   runtime = .int; runtimearm = .int; runtimestart = .int; runtimeextent = .int; restores = .int
+  runtimeid = .int; runtimefirst = .int; runtimegroup = .int; runtimegroupstep = .int
   lexical = .int; scopeaddress = .int; lastscopeaddress = .int; scopeid = .int; groupalive = .int
   desiredscopes = .object[]; desiredorigins = .llir..origin[]; emptyorigins = .llir..origin[]
   runtimeentryscopes = .object[]; runtimeentryorigins = .llir..origin[]
@@ -1036,9 +1066,14 @@ expandlocalmany: procedure = .llinline..change
       callee = source.body(facts.bodyid(input.id())); count = facts.arguments(input.id()); base = offsets[input.id()]
       direct = facts.handlerdirect(input.id())
       runtime = facts.argumentcases(input.id()); runtimearm = 0
+      runtimeid = facts.argumentruntime(input.id()); runtimefirst = 0; runtimestart = 0; runtimegroupstep = 0
+      if runtime > 0 then do
+        if scopes.claim(8,64) = 0 then return .change('limit',result.error(),source,empty)
+      end
       lexical = facts.scopereentry(input.id()); lastscopeaddress = 0
       call objectarraydrop runtimeentryscopes
       runtimeentryorigins = emptyorigins
+      call objectarraydrop runtimestep
       scope = scopes.begin(accepted[input.id()])
       dag = scopes.dag(accepted[input.id()])
       /* Retained counted children observe adjacency across r/a bank borders,
@@ -1094,8 +1129,17 @@ expandlocalmany: procedure = .llinline..change
         if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
         childrecord = source.record(j)
         if childrecord.procedureid() <> callee.functionid() | childrecord.kind() = 'procedure' then iterate
+        runtimegroup = 0
+        if runtimeid > 0 then runtimegroup = facts.scopeaddress(input.id(),childrecord.id()) = runtimeid
+        if runtimegroup then do
+          if runtimefirst = 0 then runtimefirst = j
+          if childrecord.id() = runtimeid then runtimestart = j
+          if childrecord.kind() = '.srcstep' then runtimegroupstep = 1
+        end
         if facts.recordlive(input.id(),childrecord.id()) = 0 then do
-          if (runtime = 0 & lexical = 0) | childrecord.kind() <> '.srcstep' then iterate
+          if runtimegroup = 0 then do
+            if (runtime = 0 & lexical = 0) | childrecord.kind() <> '.srcstep' then iterate
+          end
         end
         if childrecord.kind() = '.srcstep' then do
           value = childrecord.operand(1); call freshidentity(steps,value.index(),higheststep)
@@ -1106,6 +1150,7 @@ expandlocalmany: procedure = .llinline..change
           value = childrecord.operand(8); call freshidentity(clauses,value.index(),highestclause)
         end
       end
+      if runtime > 0 & (runtimefirst = 0 | runtimestart < runtimefirst) then assembler signal "ERROR","LL_INLINE: missing original runtime selector group"
       /* A whole case is emitted before selecting the next one. Its sole RET
        * can precede another reached block in source order. */
       do forever
@@ -1113,6 +1158,7 @@ expandlocalmany: procedure = .llinline..change
         if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
         childrecord = source.record(j)
         if childrecord.procedureid() <> callee.functionid() | childrecord.kind() = 'procedure' then iterate
+        runtimegroup = runtime > 0 & j >= runtimefirst & j <= runtimestart
         groupalive = 0; scopeaddress = 0
         if lexical then do
           scopeaddress = facts.scopeaddress(input.id(),childrecord.id())
@@ -1121,8 +1167,9 @@ expandlocalmany: procedure = .llinline..change
             else groupalive = facts.recordlive(input.id(),scopeaddress)
           end
         end
-        if runtimearm > 1 & j <= runtimestart then iterate
-        if runtimearm > 0 then do
+        if runtimegroup then groupalive = 1
+        if runtimearm > 1 & j < runtimefirst then iterate
+        if runtimearm > 0 & runtimegroup = 0 then do
           if facts.argumentcaselive(input.id(),runtimearm,childrecord.id()) = 0 then do
             /* Source rows describe lexical addresses, including a live row
              * following an omitted dead neighbor. They are not executed. */
@@ -1132,14 +1179,16 @@ expandlocalmany: procedure = .llinline..change
             end
           end
         end
-        else if facts.recordlive(input.id(),childrecord.id()) = 0 then do
+        else if runtimegroup = 0 & facts.recordlive(input.id(),childrecord.id()) = 0 then do
           if lexical = 0 then iterate
           if childrecord.kind() <> '.srcstep' then do
             if childrecord.kind() <> '.meta' | groupalive = 0 then iterate
             if childrecord.operands() <> 1 & childrecord.operands() <> 4 then iterate
           end
         end
-        if childrecord.kind() = '.meta' & (childrecord.operands() = 3 | childrecord.operands() = 5) then iterate
+        if childrecord.kind() = '.meta' & (childrecord.operands() = 3 | childrecord.operands() = 5) then do
+          if runtime = 0 | j <> runtimefirst then iterate
+        end
         if childrecord.kind() = 'instruction' & childrecord.mnemonic() = 'numsci' & lexical = 0 then iterate
         oldat = childrecord.origin()
         ignoredorigin = copyorigin(graph_ref,oldat,reference result,reference sources,reference origins)
@@ -1150,11 +1199,14 @@ expandlocalmany: procedure = .llinline..change
         childat = result.contributingorigin(file,oldat.first(),oldat.last(),'composite',contributors)
         if lexical & groupalive & scopeaddress <> lastscopeaddress then do
           carrierorigin = result.origin(file,oldat.first(),oldat.last(),'derived',childat)
+          if runtimearm > 1 & j = runtimefirst then call scopes.reconcile(targetbody,code,runtimeentryscopes,runtimeentryorigins,carrierorigin)
+          else do
           call objectarraydrop desiredscopes
           desiredorigins = emptyorigins
           do a = 1 to facts.scopebindings(input.id(),childrecord.id())
             if scopes.claim(8,384) = 0 then return .change('limit',result.error(),source,empty)
-            scopeid = facts.scopebinding(input.id(),childrecord.id(),a); scoperecord = source.at(scopeid)
+            scopeid = facts.scopebinding(input.id(),childrecord.id(),a)
+            scoperecord = source.at(scopeid)
             call objectarraydrop replacements
             do k = 1 to scoperecord.registerrefs()
               field = scoperecord.registerref(k)
@@ -1169,15 +1221,93 @@ expandlocalmany: procedure = .llinline..change
             end
             scopeorigin = scoperecord.origin()
             ignoredorigin = copyorigin(graph_ref,scopeorigin,reference result,reference sources,reference origins)
-            scopegraph = dereference graph_ref; scopestore = dereference scopegraph.storage(); fileid = scopestore.get(9,scopeorigin.id(),1)
+            fileid = store.get(9,scopeorigin.id(),1)
             file = sources[fileid] as .llir..sourcefile
             call objectarraydrop contributors
             contributors[1] = ignoredorigin as .object; contributors[2] = at as .object
             desiredorigins[a] = result.contributingorigin(file,scopeorigin.first(),scopeorigin.last(),'composite',contributors)
           end
           call scopes.reconcile(targetbody,code,desiredscopes,desiredorigins,carrierorigin)
+          end
           if result.error() <> '' then return .change('limit',result.error(),source,empty)
           lastscopeaddress = scopeaddress
+        end
+        if runtime > 0 & j = runtimefirst then do
+          if runtimearm = 0 then do
+            /* Borrow the complete original group by its indexed bounds. No
+             * authored row or alias label has reached the draft yet. */
+            runtimearm = 1; runtimeextent = runtime
+            swaprecord = source.record(runtimestart); scopeorigin = swaprecord.origin()
+            ignoredorigin = copyorigin(graph_ref,scopeorigin,reference result,reference sources,reference origins)
+            fileid = store.get(9,scopeorigin.id(),1)
+            file = sources[fileid] as .llir..sourcefile
+            call objectarraydrop contributors
+            contributors[1] = ignoredorigin as .object; contributors[2] = at as .object
+            runtimeorigin = result.contributingorigin(file,scopeorigin.first(),scopeorigin.last(),'composite',contributors)
+            if lexical = 0 then call scopes.checkpoint()
+            else do a = 1 to desiredorigins[0]
+              /* Save the original incoming projection before this group's
+               * opens/clears, never its later active emitter state. */
+              if scopes.claim(8,384) = 0 then return .change('limit',result.error(),source,empty)
+              runtimeentryorigins[a] = desiredorigins[a]
+              do k = 1 to 4
+                value = desiredscopes[(a - 1) * 4 + k] as .lltarget..operand
+                if scopes.claim(value.length() + 1,value.length() * 2) = 0 then return .change('limit',result.error(),source,empty)
+                runtimeentryscopes[(a - 1) * 4 + k] = value as .object
+              end
+            end
+            if runtimegroupstep = 0 then do
+              if scopes.fieldcopies(lastchildstep,2) = 0 then return .change('limit',result.error(),source,empty)
+              runtimestep = lastchildstep
+              if runtimestep[0] = 0 then do
+                if callerstep > 0 then do
+                  if scopes.recordcopies(source.at(callerstep),3) = 0 then return .change('limit',result.error(),source,empty)
+                  runtimestep = clonefields(source.at(callerstep),targetbody)
+                end
+                else do
+                  if scopes.claim(16,1344) = 0 then return .change('limit',result.error(),source,empty)
+                  runtimestep[1] = .lltarget..operand.integer(0) as .object; runtimestep[2] = runtimestep[1]
+                  runtimestep[3] = .lltarget..operand.integer(6) as .object
+                  runtimestep[4] = .lltarget..operand.string('') as .object
+                  do k = 5 to 7; runtimestep[k] = .lltarget..operand.integer(0) as .object; end
+                  runtimestep[8] = .lltarget..operand.string('') as .object
+                end
+              end
+            end
+            field = swaprecord.operand(2)
+            selectorcopy = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
+            ignored = code.one(targetbody,'null',tempcell,runtimeorigin)
+            ignored = code.two(targetbody,'icopy',tempcell,selectorcopy,runtimeorigin)
+            compare = targetbody.reg('r',compares[input.id()])
+            ignored = code.one(targetbody,'null',compare,runtimeorigin)
+            do a = 1 to runtimeextent
+              caseLabels[a] = scopes.newlabel(input.id(),('runtime.' || a) as .binary)
+            end
+            do a = 1 to runtimeextent - 1
+              call objectarraydrop replacements
+              replacements[1] = compare as .object; replacements[2] = tempcell as .object
+              replacements[3] = .lltarget..operand.integer(facts.argumentraw(input.id(),a)) as .object
+              ignored = code.emit(targetbody,'isub',replacements,runtimeorigin)
+              ignored = code.two(targetbody,'brf',.lltarget..operand.symbol(caseLabels[a]),compare,runtimeorigin)
+            end
+            ignored = code.one(targetbody,'br',.lltarget..operand.symbol(caseLabels[runtimeextent]),runtimeorigin)
+          end
+          else if lexical = 0 then call scopes.resume(targetbody,code,runtimeorigin)
+          if result.error() <> '' then return .change('limit',result.error(),source,empty)
+          call objectarraydrop replacements
+          replacements[1] = .lltarget..operand.symbol(caseLabels[runtimearm]) as .object
+          ignored = targetbody.record('label',replacements,runtimeorigin)
+          if runtimegroupstep = 0 then do
+            if scopes.fieldcopies(runtimestep,2) = 0 then return .change('limit',result.error(),source,empty)
+            ignored = targetbody.record('.srcstep',runtimestep,runtimeorigin)
+            lastchildstep = runtimestep
+          end
+        end
+        /* Callable and opaque inline declarations stay on the retained
+         * definition. They still participate in the staged group bounds. */
+        if childrecord.kind() = '.meta' & (childrecord.operands() = 3 | childrecord.operands() = 5) then iterate
+        if runtimegroup then do
+          if scopes.recordcopies(childrecord,4) = 0 then return .change('limit',result.error(),source,empty)
         end
         call objectarraydrop replacements
         do k = 1 to childrecord.registerrefs()
@@ -1233,53 +1363,7 @@ expandlocalmany: procedure = .llinline..change
            * LINK/SWAP effects. Its immutable entry anchor has other semantics.
            * The site-specific proof captured the index before rebinding the
            * destination, including when that slot held the selector itself. */
-          if runtime > 0 & childrecord.id() = facts.argumentruntime(input.id()) then do
-            runtimestart = j; runtimearm = 1; runtimeextent = runtime
-            runtimeorigin = childat; runtimestep = lastchildstep
-            if lexical = 0 then call scopes.checkpoint()
-            else do a = 1 to desiredorigins[0]
-              /* The preceding whole-group reconciliation used the original
-               * LINKARG incoming row. Save that mapped checkpoint, not the
-               * emitter's later activity or a case's visited declarations. */
-              if scopes.claim(8,384) = 0 then return .change('limit',result.error(),source,empty)
-              runtimeentryorigins[a] = desiredorigins[a]
-              do k = 1 to 4
-                value = desiredscopes[(a - 1) * 4 + k] as .lltarget..operand
-                if scopes.claim(value.length() + 1,value.length() * 2) = 0 then return .change('limit',result.error(),source,empty)
-                runtimeentryscopes[(a - 1) * 4 + k] = value as .object
-              end
-            end
-            if runtimestep[0] = 0 then do
-              if callerstep > 0 then runtimestep = clonefields(source.at(callerstep),targetbody)
-              else do
-                runtimestep[1] = .lltarget..operand.integer(0) as .object; runtimestep[2] = runtimestep[1]
-                runtimestep[3] = .lltarget..operand.integer(6) as .object
-                runtimestep[4] = .lltarget..operand.string('') as .object
-                do k = 5 to 7; runtimestep[k] = .lltarget..operand.integer(0) as .object; end
-                runtimestep[8] = .lltarget..operand.string('') as .object
-              end
-            end
-            selectorcopy = fields[2] as .lltarget..operand
-            ignored = code.one(targetbody,'null',tempcell,childat)
-            ignored = code.two(targetbody,'icopy',tempcell,selectorcopy,childat)
-            compare = targetbody.reg('r',compares[input.id()])
-            ignored = code.one(targetbody,'null',compare,childat)
-            do a = 1 to runtimeextent
-              caseLabels[a] = scopes.newlabel(input.id(),('runtime.' || a) as .binary)
-            end
-            do a = 1 to runtimeextent - 1
-              call objectarraydrop replacements
-              replacements[1] = compare as .object; replacements[2] = tempcell as .object
-              replacements[3] = .lltarget..operand.integer(facts.argumentraw(input.id(),a)) as .object
-              ignored = code.emit(targetbody,'isub',replacements,childat)
-              ignored = code.two(targetbody,'brf',.lltarget..operand.symbol(caseLabels[a]),compare,childat)
-            end
-            ignored = code.one(targetbody,'br',.lltarget..operand.symbol(caseLabels[runtimeextent]),childat)
-            call objectarraydrop replacements
-            replacements[1] = .lltarget..operand.symbol(caseLabels[1]) as .object
-            ignored = targetbody.record('label',replacements,childat)
-            position = facts.argumentcase(input.id(),runtimearm)
-          end
+          if runtime > 0 & childrecord.id() = runtimeid then position = facts.argumentcase(input.id(),runtimearm)
           else position = facts.argumentselector(input.id(),childrecord.id())
           field = .lltarget..operand.bound(0,0,0,'a',position)
           value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
@@ -1438,21 +1522,9 @@ expandlocalmany: procedure = .llinline..change
       end
       if runtimearm = 0 | runtimearm >= runtimeextent then leave
       runtimearm = runtimearm + 1
-      if lexical then do
-        call scopes.reconcile(targetbody,code,runtimeentryscopes,runtimeentryorigins,runtimeorigin)
-        if result.error() <> '' then return .change('limit',result.error(),source,empty)
-        lastscopeaddress = 0
-      end
-      call objectarraydrop fields
-      fields[1] = .lltarget..operand.symbol(caseLabels[runtimearm]) as .object
-      ignored = targetbody.record('label',fields,runtimeorigin)
-      if runtimestep[0] > 0 then ignored = targetbody.record('.srcstep',runtimestep,runtimeorigin)
-      if lexical = 0 then call scopes.resume(targetbody,runtimeorigin)
-      swaprecord = source.record(runtimestart)
-      field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
-      field = .lltarget..operand.bound(0,0,0,'a',facts.argumentcase(input.id(),runtimearm))
-      value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
-      ignored = code.two(targetbody,'link',destination,value,runtimeorigin)
+      /* The next pass starts at the whole original binding group. Its
+       * incoming delta precedes its label; authored rows are replayed once. */
+      lastscopeaddress = 0
       end
       if dag then do
         call objectarraydrop fields

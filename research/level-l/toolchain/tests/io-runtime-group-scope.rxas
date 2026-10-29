@@ -1,0 +1,92 @@
+/* Authored ordered observations belong to each pre-binding LINK address. */
+.globals=0
+main() .locals=10
+  load r7,0x00
+  load r8,0x00
+  bineq r0,r7,0x01
+  bineq r6,r8,0x01
+  iadd r0,r0,r6
+  iadd r0,r0,1
+  load r1,10
+  load r1,"ten"
+  settp r1,256
+  iadd r1,r1,r6
+  load r2,20
+  load r2,"twenty"
+  settp r2,512
+  load r3,30
+  load r3,"thirty"
+  settp r3,768
+  copy r6,r0
+  .srcstep 3 3 17 "scoped-caller.rxas" 3 1 21 "result = helper(flag)"
+  call4 r4,helper(),r0,r1,r2,r3
+  .traceevent "F" 4 "R" "O" "r" 4 3 3 0 "helper" ""
+  call4 r5,helper(),r6,r1,r2,r3
+  .traceevent "F" 4 "R" "O" "r" 5 3 3 0 "helper" ""
+  itos r4
+  say r4
+  icopy r9,r5
+  itos r9
+  say r9
+  say r5
+  getandtp r9,r5,768
+  itos r9
+  say r9
+  icopy r9,r1
+  itos r9
+  say r9
+  ret 0
+helper() .locals=5
+  null r0
+  load r0,91
+  .meta "prefix.r"="b" ".int" r0
+  .meta "prefix.a0"="b" ".int" a0
+  .meta "prefix.a1"="b" ".int" a1
+  .meta "prefix.const"="b" ".string" "prefix-literal"
+  .meta "prefix.closed"="b" ".int" r0
+  cnop
+  .meta "prefix.closed"
+  .srcstep 20 20 17 "prefix-body.rxas" 20 1 7 "checked"
+  null r3
+  icopy r3,a0
+  isub r3,r3,1
+  ichkrng a1,1,r3
+group_alias0:
+  .meta "prefix.r"
+  .meta "group.r"="b" ".int" r0
+  .meta "group.r"="b" ".int" r0
+  .srcstep 40 7 17 "group-body.rxas" 40 2 19 "bind selected item"
+  .traceevent "V" 6 "R" "I" "r" 3 40 7 0 "pre-destination" "resolved-pre-destination"
+group_alias1:
+  .meta "group.const"="b" ".string" "binding-literal"
+  .traceevent "V" 6 "R" "I" "a" 1 40 7 0 "pre-selector" "resolved-pre-selector"
+  .meta "group.callable"="b" ".int" helper() ""
+  .meta "group.inline"=".inline" "opaque-inline-control"
+  linkarg r3,a1,1
+  .srcstep 21 21 17 "prefix-body.rxas" 21 1 7 "selected"
+  null r1
+  isub r1,r3,10
+  brf late,r1
+  iadd r3,r3,9
+  .srcstep 2 2 17 "prefix-body.rxas" 2 1 11 "return borrowed"
+  ret r3
+skipped:
+  .meta "suffix.hidden"="b" ".int" r1
+  cnop
+owned:
+  copy r4,r3
+  unlink r3
+  .srcstep 4 4 17 "prefix-body.rxas" 4 1 11 "return owned"
+  ret r4
+late:
+  .meta "suffix.left"="b" ".int" r1
+  iadd r3,r3,7
+  br owned
+  .meta "prefix.r"
+  .meta "prefix.a0"
+  .meta "prefix.a1"
+  .meta "prefix.const"
+  .meta "suffix.hidden"
+  .meta "suffix.left"
+  .meta "group.r"
+  .meta "group.const"

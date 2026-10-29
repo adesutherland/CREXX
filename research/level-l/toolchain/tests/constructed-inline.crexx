@@ -2355,13 +2355,73 @@ runtimechildcontrols: procedure = .int
   return failures
 
 /** Branches consume selected storage; original CFG alone owns their joins. */
+runtimegroup: procedure = .void
+  arg leaf = .lltarget..bodydraft, variant = .int, selected = .lltarget..operand, at = .llir..origin
+  ignored = .int; i = .int; fields = .object[]; observed = .lltarget..operand
+  ignored = namedlabel(leaf,'group.alias0',at)
+  ignored = scopeclose(leaf,'prefix.r',at)
+  if variant = 46 then ignored = scopeclose(leaf,'prefix.a1',at)
+  observed = leaf.reg('r',0)
+  if variant = 49 then observed = leaf.reg('a',1)
+  if variant = 50 then observed = selected
+  if variant = 51 then observed = leaf.reg('r',1)
+  if variant = 53 then observed = leaf.reg('g',0)
+  ignored = scopeopen(leaf,'group.r',observed,at)
+  if variant = 48 then observed = leaf.reg('r',1)
+  ignored = scopeopen(leaf,'group.r',observed,at)
+  call objectarraydrop fields
+  if variant = 47 then do
+    fields[1] = .lltarget..operand.string('group-legacy.rxas') as .object
+    ignored = leaf.record('.srcfile',fields,at)
+    fields[1] = .lltarget..operand.integer(40) as .object
+    ignored = leaf.record('.srcline',fields,at)
+  end
+  else do
+    fields[1] = .lltarget..operand.integer(40) as .object; fields[2] = .lltarget..operand.integer(7) as .object
+    fields[3] = .lltarget..operand.integer(17) as .object; fields[4] = .lltarget..operand.string('group-body.rxas') as .object
+    fields[5] = .lltarget..operand.integer(40) as .object; fields[6] = .lltarget..operand.integer(2) as .object
+    fields[7] = .lltarget..operand.integer(19) as .object; fields[8] = .lltarget..operand.string('bind selected item') as .object
+    ignored = leaf.record('.srcstep',fields,at)
+  end
+  do i = 1 to 2
+    if i = 2 then do
+      ignored = namedlabel(leaf,'group.alias1',at)
+      ignored = scopeopen(leaf,'group.const',.lltarget..operand.string('binding-literal'),at)
+    end
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.string('V') as .object; fields[2] = .lltarget..operand.integer(6) as .object
+    fields[3] = .lltarget..operand.string('R') as .object; fields[4] = .lltarget..operand.string('I') as .object
+    fields[5] = .lltarget..operand.string(selected.bank()) as .object; fields[6] = .lltarget..operand.integer(selected.index()) as .object
+    if i = 2 then do
+      fields[5] = .lltarget..operand.string('a') as .object; fields[6] = .lltarget..operand.integer(1) as .object
+    end
+    fields[7] = .lltarget..operand.integer(40) as .object; fields[8] = .lltarget..operand.integer(7) as .object
+    if variant = 47 then do; fields[7] = .lltarget..operand.integer(0) as .object; fields[8] = fields[7]; end
+    fields[9] = .lltarget..operand.integer(0) as .object
+    name = 'pre-destination'; if i = 2 then name = 'pre-selector'
+    fields[10] = .lltarget..operand.string(name) as .object; fields[11] = .lltarget..operand.string('resolved-' || name) as .object
+    ignored = leaf.record('.traceevent',fields,at)
+  end
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.string('group.callable') as .object; fields[2] = .lltarget..operand.string('b') as .object
+  fields[3] = .lltarget..operand.string('.int') as .object; fields[4] = .lltarget..operand.procedure('pick') as .object
+  fields[5] = .lltarget..operand.string('') as .object
+  ignored = leaf.record('.meta',fields,at)
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.string('group.inline') as .object; fields[2] = .lltarget..operand.string('.inline') as .object
+  fields[3] = .lltarget..operand.string('opaque-inline-control') as .object
+  ignored = leaf.record('.meta',fields,at)
+  return
+
 runtimebranchmodel: procedure = .lltarget..module
   arg variant = .int, expose callid = .int, expose branchid = .int
   ignored = .int; i = .int; fields = .object[]
   child = .lltarget..bodydraft
-  draft = .lltarget..draft('runtime.branch.' || variant,'constructed.runtime.branch',0)
+  globals = 0; if variant = 53 then globals = 1
+  draft = .lltarget..draft('runtime.branch.' || variant,'constructed.runtime.branch',globals)
   at = draft.synthetic('checked runtime selector DAG continuation')
   root = draft.procedure('main',8,at)
+  if variant = 53 then ignored = one(root,'null',root.reg('g',0),at)
   ignored = two(root,'load',root.reg('r',6),.lltarget..operand.literal('B','0x01' as .binary),at)
   ignored = three(root,'bineq',root.reg('r',0),root.reg('r',6),.lltarget..operand.literal('B','0x01' as .binary),at)
   ignored = three(root,'bineq',root.reg('r',5),root.reg('r',6),.lltarget..operand.literal('B','0x02' as .binary),at)
@@ -2372,7 +2432,7 @@ runtimebranchmodel: procedure = .lltarget..module
     ignored = two(root,'load',root.reg('r',i),.lltarget..operand.string('value' || i),at)
     ignored = two(root,'settp',root.reg('r',i),.lltarget..operand.integer(i * 256),at)
   end
-  if variant = 1 | variant = 11 | variant = 12 | variant = 22 | variant = 27 | variant = 35 then ignored = three(root,'iadd',root.reg('r',1),root.reg('r',1),root.reg('r',5),at)
+  if variant = 1 | variant = 11 | variant = 12 | variant = 22 | variant = 27 | variant = 35 | variant >= 45 then ignored = three(root,'iadd',root.reg('r',1),root.reg('r',1),root.reg('r',5),at)
   if variant = 11 then ignored = two(root,'copy',root.reg('r',2),root.reg('r',1),at)
   if variant = 21 | variant = 23 then do
     ignored = two(root,'load',root.reg('r',4),.lltarget..operand.integer(99),at)
@@ -2382,9 +2442,9 @@ runtimebranchmodel: procedure = .lltarget..module
   fields[1] = root.reg('r',4) as .object; fields[2] = .lltarget..operand.procedure('pick') as .object
   do i = 0 to 3; fields[i + 3] = root.reg('r',i) as .object; end
   if variant = 29 then do i = 1 to 3; fields[i + 3] = root.reg('r',1) as .object; end
-  if variant = 34 | variant = 35 | variant = 42 then ignored = two(root,'copy',root.reg('r',6),root.reg('r',0),at)
+  if variant = 34 | variant = 35 | variant = 42 | variant = 45 | variant = 51 then ignored = two(root,'copy',root.reg('r',6),root.reg('r',0),at)
   callid = root.emit('call4',fields,at)
-  if variant = 34 | variant = 35 | variant = 42 then do
+  if variant = 34 | variant = 35 | variant = 42 | variant = 45 | variant = 51 then do
     fields[1] = root.reg('r',7) as .object; fields[3] = root.reg('r',6) as .object
     ignored = root.emit('call4',fields,at)
   end
@@ -2416,8 +2476,11 @@ runtimebranchmodel: procedure = .lltarget..module
     fields[3] = .lltarget..operand.string('.int') as .object; fields[4] = leaf.reg('a',1) as .object
     ignored = leaf.record('.meta',fields,at)
   end
+  if variant >= 45 then ignored = one(leaf,'null',leaf.reg('r',3),at)
+  if variant = 48 then ignored = one(leaf,'null',leaf.reg('r',1),at)
   ignored = two(leaf,'icopy',leaf.reg('r',3),leaf.reg('a',0),at)
   ignored = three(leaf,'isub',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(1),at)
+  if variant = 52 then ignored = two(leaf,'brt',.lltarget..operand.symbol('group.alias0'),leaf.reg('a',1),at)
   if variant = 10 then ignored = two(leaf,'brt',.lltarget..operand.symbol('selected'),leaf.reg('a',1),at)
   ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(1),leaf.reg('r',3),at)
   if variant = 10 then ignored = namedlabel(leaf,'selected',at)
@@ -2448,7 +2511,16 @@ runtimebranchmodel: procedure = .lltarget..module
     ignored = leaf.record('.meta',fields,at)
   end
   if variant >= 36 & variant <= 39 then ignored = namedlabel(leaf,'group_alias',at)
-  ignored = three(leaf,'linkarg',leaf.reg('r',3),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  selected = leaf.reg('r',3); if variant = 46 then selected = leaf.reg('a',1)
+  if variant >= 45 then call runtimegroup(leaf,variant,selected,at)
+  ignored = three(leaf,'linkarg',selected,leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  if variant = 46 then do
+    ignored = three(leaf,'iadd',leaf.reg('a',1),leaf.reg('a',1),.lltarget..operand.integer(7),at)
+    ignored = two(leaf,'copy',leaf.reg('r',4),leaf.reg('a',1),at)
+    ignored = one(leaf,'unlink',leaf.reg('a',1),at)
+    ignored = one(leaf,'ret',leaf.reg('r',4),at)
+    return draft.finish()
+  end
   if variant = 40 then ignored = two(leaf,'link',leaf.reg('a',1),leaf.reg('a',2),at)
   if variant = 43 | variant = 44 then do
     ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(7),at)
@@ -2464,7 +2536,7 @@ runtimebranchmodel: procedure = .lltarget..module
     if variant = 28 | variant = 29 then observedslot = leaf.reg('r',3)
     ignored = scopeopen(leaf,'scope.shared',observedslot,at)
     if variant = 41 then ignored = scopeopen(leaf,'suffix.argument',leaf.reg('a',1),at)
-    if variant = 35 then do
+    if variant = 35 | variant >= 45 then do
       branchid = two(leaf,'brf',.lltarget..operand.symbol('scope_late'),leaf.reg('r',1),at)
       ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(9),at)
       ignored = one(leaf,'ret',leaf.reg('r',3),at)
@@ -2629,7 +2701,6 @@ runtimescopes: procedure = .int
     changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
     expected = ''
     if variant = 28 then expected = 'metadata.binding.change.pending'
-    if variant = 33 then expected = 'metadata.scope.linkarg.group.pending'
     if expected <> '' then do
       keptgraph = .llir..module
       kept = changed.result(); keptgraph = dereference kept.ir()
@@ -2643,6 +2714,38 @@ runtimescopes: procedure = .int
     failures = failures + check(facts.status() = 'ok','runtime lexical facts are sealed ' || variant)
     if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
     failures = failures + check(facts.scopereentry(callid) & facts.argumentcases(callid) = 3,'one lexical owner covers all three selector cases ' || variant)
+    if variant = 33 then do
+      entryselected = -1; entryselector = .int; entrychoice = .int; entryrows = .int; entryj = .int
+      entrybindings = 0; entryseen = .int[]
+      entrymeta = .lltarget..record; entryvalue = .lltarget..operand; entrysource = .lltarget..operand
+      do entrychoice = 1 to 3; entryseen[entrychoice] = 0; end
+      result = changed.result()
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.procedureid() <> result.procedureid('main') | item.kind() <> 'instruction' then iterate
+        if item.mnemonic() = 'ichkrng' then do
+          entryvalue = item.operand(1); entryselector = entryvalue.index()
+          entryvalue = item.operand(3); entryselected = entryvalue.index()
+        end
+        if item.mnemonic() <> 'link' | entryselected < 0 then iterate
+        entryvalue = item.operand(1); entrysource = item.operand(2)
+        if entryvalue.bank() <> 'r' | entryvalue.index() <> entryselected | entrysource.bank() <> 'r' then iterate
+        entrychoice = entrysource.index() - entryselector
+        if entrychoice < 1 | entrychoice > 3 then iterate
+        entrybindings = entrybindings + 1; entryseen[entrychoice] = entryseen[entrychoice] + 1; entryrows = 0
+        do entryj = 1 to result.records()
+          entrymeta = result.record(entryj)
+          if entrymeta.kind() <> '.meta' | entrymeta.operands() <> 4 | entrymeta.addressid() <> item.id() then iterate
+          entryvalue = entrymeta.operand(1)
+          if left(entryvalue.text(),11) = 'scope.entry' then entryrows = entryrows + 1
+        end
+        failures = failures + check(entryrows = 1,'fresh entry scope is attached once to the selected case LINK ' || entrychoice)
+      end
+      failures = failures + check(entrybindings = 3,'fresh entry scope has three independent case binding addresses')
+      do entrychoice = 1 to 3
+        failures = failures + check(entryseen[entrychoice] = 1,'fresh entry scope preserves selector choice ' || entrychoice)
+      end
+    end
     if variant = 29 then failures = failures + check(facts.returns(callid) = 1,'repeated identical actuals preserve one stable selected StorageId')
     else do
       failures = failures + check(facts.returns(callid) = 2,'distinct source RETs keep separate runtime scope exits ' || variant)
@@ -2687,7 +2790,6 @@ runtimeprefixscopes: procedure = .int
     end
     changed = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000)
     expected = ''
-    if variant >= 36 & variant <= 39 then expected = 'metadata.scope.linkarg.group.pending'
     if variant = 40 | variant = 44 then expected = 'metadata.binding.change.pending'
     if variant = 41 then expected = 'metadata.scope.cfg.pending'
     if variant = 42 then expected = 'metadata.runtime.observer.unproved'
@@ -2746,6 +2848,178 @@ runtimeprefixscopes: procedure = .int
       limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1000000,67108864,65536,requiredcells - 1)
       kept = limited.result(); keptgraph = dereference kept.ir()
       failures = failures + check(limited.status() = 'limit' & limited.reason() = 'inline.code.cells' & bin2x(keptgraph.binary()) = bin2x(image),'nonempty checkpoint carriers obey the atomic output-cell cap')
+    end
+  end
+  return failures
+
+runtimegroupscopes: procedure = .int
+  failures = 0; variant = .int; callid = .int; branchid = .int; i = .int; j = .int; k = .int
+  guards = .int; bindings = .int; local = .int; selected = .int; selector = .int; step = .int; clause = .int
+  declarations = .int; requiredcells = .int; n = .int; id = .int; casechoice = .int; caseordinal = .int
+  expected = .string; tags = .string; tag = .string; name = .string; image = .binary; requests = .object[]
+  ids = .int[]; destinations = .int[]; selectors = .int[]; locals = .int[]; caseseen = .int[]
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module
+  changed = .llinline..change; limited = .llinline..change; item = .lltarget..record
+  value = .lltarget..operand; field = .lltarget..operand
+  do variant = 45 to 53
+    original = runtimebranchmodel(variant,callid,branchid)
+    failures = failures + check(original.valid(),'ordered binding-group fixture is valid ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    graph = dereference original.ir(); image = graph.binary()
+    call objectarraydrop requests
+    do i = 1 to original.records()
+      item = original.record(i)
+      if item.procedureid() <> original.procedureid('main') | item.mnemonic() <> 'call4' then iterate
+      requests[requests[0] + 1] = llinline..bind(reference original,item.id(),reference original,original.procedureid('pick')) as .object
+    end
+    changed = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000)
+    expected = ''
+    select variant
+      when 48 then expected = 'metadata.scope.address.pending'
+      when 49 then expected = 'metadata.scope.cfg.pending'
+      when 50 then expected = 'metadata.binding.change.pending'
+      when 51 then expected = 'metadata.runtime.observer.unproved'
+      when 52 then expected = 'argument.selector.tail.entry.pending'
+      when 53 then expected = 'argument.selector.global.pending'
+      otherwise nop
+    end
+    if expected <> '' then do
+      refusedgraph = .llir..module
+      kept = changed.result(); refusedgraph = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(refusedgraph.binary()) = bin2x(image),'binding-group refusal preserves exact frozen owner ' || variant)
+      if changed.reason() <> expected then say variant || ':' || changed.reason()
+      iterate
+    end
+    failures = failures + check(changed.status() = 'changed','ordered binding group expands ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    result = changed.result(); guards = 0; bindings = 0; declarations = 0; selected = -1
+    do i = 1 to result.records()
+      item = result.record(i)
+      if item.kind() = '.meta' then do
+        value = item.operand(1); name = value.text()
+        if name = 'group.callable' | name = 'group.inline' then do
+          declarations = declarations + 1
+          failures = failures + check(item.procedureid() = result.procedureid('pick'),'callable and opaque inline META remain only on original definition')
+        end
+      end
+      if item.procedureid() <> result.procedureid('main') | item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'call4' then failures = failures + check(0,'selected staged call disappears')
+      if item.mnemonic() = 'load' then do
+        value = item.operand(2)
+        if value.kind() = 'I' & value.index() = 91 then do; value = item.operand(1); local = value.index(); end
+      end
+      if item.mnemonic() = 'ichkrng' then do
+        guards = guards + 1; value = item.operand(1); selector = value.index()
+        value = item.operand(3); selected = value.index()
+        if variant = 46 then selected = selector
+        do n = 1 to 3; caseseen[(guards - 1) * 3 + n] = 0; end
+      end
+      if item.mnemonic() <> 'link' | selected < 0 then iterate
+      value = item.operand(1); if value.bank() <> 'r' | value.index() <> selected then iterate
+      /* Authored UNLINK also lowers to LINK of this destination. Only the
+       * selected binding borrows an active a2/a3/a4 cell immediately after
+       * the independently identified active a1 selector slot. */
+      field = item.operand(2); if field.bank() <> 'r' then iterate
+      casechoice = field.index() - selector
+      if casechoice < 1 | casechoice > 3 then iterate
+      caseordinal = (guards - 1) * 3 + casechoice
+      caseseen[caseordinal] = caseseen[caseordinal] + 1
+      bindings = bindings + 1; ids[bindings] = item.id(); destinations[bindings] = selected
+      selectors[bindings] = selector; locals[bindings] = local
+    end
+    failures = failures + check(guards = requests[0] & bindings = requests[0] * 3 & declarations = 2,'one guard and three exact staged bindings per root; definition-only META unchanged')
+    do i = 1 to guards * 3
+      failures = failures + check(caseseen[i] = 1,'each root/selector choice has exactly one staged binding ' || i)
+    end
+    do j = 1 to bindings
+      tags = ''; step = 0; clause = 0
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.procedureid() <> result.procedureid('main') | item.addressid() <> ids[j] | item.kind() = 'instruction' then iterate
+        tag = ''
+        select item.kind()
+          when 'label' then tag = 'L'
+          when '.srcfile' then do
+            tag = 'F'; value = item.operand(1)
+            failures = failures + check(value.text() = 'group-legacy.rxas','legacy source filename remains exact at LINK')
+          end
+          when '.srcline' then do
+            tag = 'N'; value = item.operand(1)
+            failures = failures + check(value.index() = 40,'legacy source line remains exact at LINK')
+          end
+          when '.srcstep' then do
+            value = item.operand(5)
+            if value.index() = 40 then do
+              tag = 'S'; value = item.operand(1); step = value.index(); value = item.operand(2); clause = value.index()
+              failures = failures + check(step <> clause,'step and clause identities remain distinct at staged binding')
+            end
+          end
+          when '.meta' then do
+            value = item.operand(1); name = value.text()
+            if left(name,8) = 'prefix.r' & item.operands() = 1 then tag = 'C'
+            if left(name,9) = 'prefix.a1' & item.operands() = 1 then tag = 'X'
+            if left(name,7) = 'group.r' then do
+              tag = 'R'; value = item.operand(4)
+              failures = failures + check(value.bank() = 'r' & value.index() = locals[j],'group REG observes the independent LOAD91 slot')
+            end
+            if left(name,11) = 'group.const' then do
+              tag = 'K'; value = item.operand(4)
+              failures = failures + check(value.kind() = 'S' & value.text() = 'binding-literal','group CONST literal remains exact')
+            end
+          end
+          when '.traceevent' then do
+            value = item.operand(10); name = value.text()
+            if name = 'pre-destination' | name = 'pre-selector' then do
+              tag = 'D'; id = destinations[j]
+              if name = 'pre-selector' then do; tag = 'I'; id = selectors[j]; end
+              value = item.operand(5); field = item.operand(6)
+              failures = failures + check(value.text() = 'r' & field.index() = id,'TRACE keeps its typed active pre-binding slot ' || name)
+              value = item.operand(7); field = item.operand(8)
+              failures = failures + check(value.index() = step & field.index() = clause,'TRACE uses exactly the staged source/clause identities')
+            end
+          end
+          otherwise nop
+        end
+        tags = tags || tag
+      end
+      expected = 'LLCRRSDLKI'
+      if variant = 46 then expected = 'LLCXRRSDLKI'
+      if variant = 47 then expected = 'LLCRRFNDLKI'
+      failures = failures + check(tags = expected,'alias labels and ordered rows share the actual LINK address ' || variant || ':' || j || ':' || tags)
+    end
+    graph = dereference original.ir()
+    failures = failures + check(bin2x(graph.binary()) = bin2x(image),'staging leaves exact original input frozen')
+    if variant = 45 then do n = 1 to 5
+      limitgraph = .llir..module
+      select n
+        when 1 then do
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1)
+          expected = 'target.facts.work'
+        end
+        when 2 then do
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1)
+          expected = 'LL_RESOURCE_LIMIT: ir.entries budget 1; increase the host budget'
+        end
+        when 3 then do
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1000000,1)
+          expected = 'target.facts.bytes'
+        end
+        when 4 then do
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1000000,67108864,0)
+          expected = 'inline.frame'
+        end
+        otherwise do
+          requiredcells = 0
+          do k = 1 to result.records()
+            item = result.record(k)
+            if item.kind() = 'instruction' then requiredcells = requiredcells + 1 + item.operands()
+          end
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1000000,67108864,65536,requiredcells - 1)
+          expected = 'inline.code.cells'
+        end
+      end
+      kept = limited.result(); limitgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & limited.reason() = expected & bin2x(limitgraph.binary()) = bin2x(image),'binding-group work/entry/byte/frame/code refusal is specific and atomic ' || n)
     end
   end
   return failures
@@ -2891,6 +3165,11 @@ main: procedure = .int
   failures = .int
   lane = ''
   if argv[0] = 1 then lane = argv[1]
+  if lane = 'runtime-group-scope' then do
+    failures = runtimegroupscopes()
+    say 'RUNTIME_GROUP_SCOPE|failures=' || failures
+    return failures
+  end
   if lane = 'runtime-prefix-scope' then do
     failures = runtimeprefixscopes()
     say 'RUNTIME_PREFIX_SCOPE|failures=' || failures

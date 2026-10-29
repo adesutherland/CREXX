@@ -1991,10 +1991,10 @@ all cases and exits. Independent sites may therefore use different actual
 cells without weakening the within-call storage obligation. Suffix-local new
 `aN`/`gN` re-entry remains outside this profile.
 
-This new prefix profile requires the original selected LINKARG address group
-to contain no META, source-step or TRACE record. New layouts needing such
-staging retain `metadata.scope.linkarg.group.pending`; existing suffix-only
-and qualified legacy layouts keep their handling. The saved checkpoint is the
+The initial stable-prefix profile qualified an observation-free selected
+LINKARG address group. Its implemented group-staging follow-on below admits
+the bounded observation-bearing profile; existing suffix-only and qualified
+legacy layouts keep their admission. The saved checkpoint is the
 original group's incoming descriptors, mapped with the fresh call identities.
 Later cases reconcile to it from the actual preceding lexical state before
 their labels/binding, using one preceding counted carrier only when needed.
@@ -2007,8 +2007,47 @@ Actual return-commit addresses and retained lexical return-source rows have
 separate readback assertions: a source row retained after removal of its RET
 does not establish execution or live scoped bindings. Per-case minimum return
 membership remains required when conservative summaries retain extra exits.
-LINKARG-group observation staging, changing-storage splitting, loops and broader
-runtime selectors remain later work in the authoritative plan.
+The LINKARG-group slice has implemented source and maintained tests under the
+coordinator-reviewed contract in the authoritative plan. Focused group, scope,
+prefix and branch panels passed, including a paired multi-RET positive. It stages
+the entire original selected address group, including alias labels and ordered
+META/source/TRACE rows, separately from the group's incoming scope and source
+checkpoints.
+Prefix/check/snapshot/dispatcher execute once before that group. Each feasible
+case reconciles to the same incoming scoped projection, then emits its case
+label, cloneable original rows and alias labels in original relative order,
+followed by direct LINK. A required delta carrier precedes the whole group;
+labels still target LINK. The group is consumed once per case rather than also
+being replayed by suffix traversal.
+
+Register TRACE events stay on LINK's address with the original typed active-slot
+mapping, so they observe the pre-binding pointers and values, including when
+the selector is held in LINKARG's destination. They do not observe the selected
+destination after LINK, an entry anchor or dispatcher scratch. Canonical event
+order/count and full payload survive; only the executed case delivers a batch.
+The existing site/declaration StorageId and whole-state proof covers the group
+and every suffix observation. Group REG `rN`/CONST opens and ordinary clears
+use the qualified profile; stable prefix `aN` descriptors may be carried/cleared,
+while new group/suffix-local `aN`/`gN` opens remain outside this bounded slice.
+Changing observed storage and conflicting same-name rows retain their precise
+refusals. META can observe a proved fresh null whole state without establishing
+an integer-defined arithmetic or TRACE operand; repeated activation without a
+proved whole reset loses that premise. Callable five-field and opaque inline
+three-field META retain their existing original-definition-only rule, rather
+than becoming case declarations.
+
+An authored group source-step is copied once in its original order, without an
+extra replay of its last row as a checkpoint. If the group has no source-step,
+the existing synthetic source owner restores its incoming checkpoint, including
+empty context. Legacy `.srcfile`/`.srcline` model rows remain with the staged
+group and have constructed coverage; native RXAS controls use `.srcstep`.
+Generated glue adds no authored source-step or TRACE event. The implementation
+retains legacy/suffix-only compatibility, matched case/RET closure, caller source
+restoration and independent conservative output. Group/snapshot payloads,
+constructor copies, per-case replay and delta carriers are charged before
+growth through the existing resource owners. Group-local `aN`/`gN`,
+changing-storage splitting, loops, broader selectors and standalone
+POC/milestone acceptance remain open in the plan.
 
 Current cleanup retains the conservative runtime dispatch when its independent
 range/access proof returns `argument.range.unproved`; branch-aware reduction of

@@ -831,7 +831,6 @@ analysis: class
   _scopechecked = .int[]
   _scopeindexed = .int[]
   _scopeselector = .int[]
-  _scopegroupblocked = .int[]
   _scopereentry = .int[]
   _scopeaddress = .int[]
   _scopeincoming = .numbers[]
@@ -1813,16 +1812,13 @@ analysis: class
       call insert(observations_ref,domain(id,1))
     end
     return 1
-  scoperefusal: method = .string
-    arg functionid = .int
-    if _scopegroupblocked[functionid] then return 'metadata.scope.linkarg.group.pending'
-    return 'metadata.scope.cfg.pending'
   /* Preserve legacy paths. New prefix scopes use the same original-address
-   * projection, with typed a-bank descriptors only before an empty LINKARG
-   * group. Suffix-local a/g declarations remain on their existing path. */
+   * projection, with typed a-bank declarations strictly before LINKARG's
+   * group. That group's ordinary r/CONST rows are staged by the expander;
+   * new group/suffix-local a/g declarations keep their legacy path. */
   prepareinlinescopes: method = .int
     arg functionid = .int
-    i = .int; scoped = .int; selected = .int; prefix = .int; blocked = .int; selectorid = .int
+    i = .int; scoped = .int; selected = .int; selectorid = .int
     item = .lltarget..record; value = .lltarget..operand
     if _scopechecked[functionid] then return 1
     if reserve(1,16) = 0 then return 0
@@ -1836,26 +1832,18 @@ analysis: class
       item = module.record(i)
       if item.procedureid() = functionid & item.mnemonic() = 'linkarg' then selected = 1
       if item.procedureid() <> functionid then iterate
-      if selectorid > 0 & _scopeaddress[item.id()] = selectorid then do
-        if wordpos(item.kind(),'.meta .srcstep .traceevent') > 0 then blocked = 1
-      end
       if item.kind() <> '.meta' then iterate
       if item.operands() = 1 | item.operands() = 4 then do
-        if _selectorcount[functionid] = 1 & selected = 0 then prefix = 1
         scoped = 1
       end
       if item.operands() <> 4 then iterate
       value = item.operand(4)
       if value.kind() = 'R' & value.bank() <> 'r' then do
         if value.bank() <> 'a' | selectorid = 0 | selected then return 1
+        if _scopeaddress[item.id()] = selectorid then return 1
       end
     end
     if scoped = 0 then return 1
-    if prefix & blocked then do
-      if reserve(1,8) = 0 then return 0
-      _scopegroupblocked[functionid] = 1
-      return 1
-    end
     if preparescopes(functionid,1,selectorid) = 0 then return 0
     _scopereentry[functionid] = 1
     return 1
@@ -2100,9 +2088,9 @@ analysis: class
         do k = 1 to returns[0]
           if spend(1) = 0 then return 0
           retid = returns[k]
-          if _index.dominates(_index.opblock(id),_index.opblock(retid)) = 0 then return reject(scoperefusal(bodyid))
+          if _index.dominates(_index.opblock(id),_index.opblock(retid)) = 0 then return reject('metadata.scope.cfg.pending')
           if _index.opblock(id) = _index.opblock(retid) then do
-            if _index.opposition(id) >= _index.opposition(retid) then return reject(scoperefusal(bodyid))
+            if _index.opposition(id) >= _index.opposition(retid) then return reject('metadata.scope.cfg.pending')
           end
         end
         /* An early-layout return would close this lexical binding before
@@ -2112,7 +2100,7 @@ analysis: class
           id = _index.functionoperation(bodyid,j)
           if _index.opcode(id) <= 16 | _index.reachable(_index.opblock(id)) = 0 then iterate
           item = module.at(id)
-          if item.kind() = 'instruction' & _recordordinal[id] > _recordordinal[returned] then return reject(scoperefusal(bodyid))
+          if item.kind() = 'instruction' & _recordordinal[id] > _recordordinal[returned] then return reject('metadata.scope.cfg.pending')
         end
       end
     end
@@ -2466,9 +2454,9 @@ analysis: class
       do j = 1 to proof.returns()
         if spend(1) = 0 then return 0
         retid = proof.site(j)
-        if _index.dominates(_index.opblock(opid),_index.opblock(retid)) = 0 then return reject(scoperefusal(bodyid))
+        if _index.dominates(_index.opblock(opid),_index.opblock(retid)) = 0 then return reject('metadata.scope.cfg.pending')
         if _index.opblock(opid) = _index.opblock(retid) then do
-          if _index.opposition(opid) >= _index.opposition(retid) then return reject(scoperefusal(bodyid))
+          if _index.opposition(opid) >= _index.opposition(retid) then return reject('metadata.scope.cfg.pending')
         end
       end
     end
