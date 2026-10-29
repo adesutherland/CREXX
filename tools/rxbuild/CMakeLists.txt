@@ -215,5 +215,5 @@ if(BUILD_TESTING)
                 --source "${CMAKE_SOURCE_DIR}")
     set_tests_properties(rxbuild_graph PROPERTIES
         LABELS "tools;rxbuild;essential" TIMEOUT 180
-        CREXX_PREP_TARGETS "rxbuild;crexx")
+        CREXX_PREP_TARGETS "rxbuild;crexx;${CREXX_DEFAULT_VM_TARGET}")
 endif()
