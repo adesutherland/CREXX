@@ -1,0 +1,46 @@
+/* cREXX License (MIT). Read-only Classic source/Level L graph comparison. */
+options levelb
+import rxfnsb
+import llast
+import llir
+import llirgraph
+import llcfrontend
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 3 then do
+    say 'usage: analyse source-file routine-name artifact-directory'
+    return 2
+  end
+  source = readbinary(argv[1])
+  marker = argv[2] || ':'
+  first = pos(marker,source as .string)
+  if first = 0 then do; say 'ERROR|missing routine marker'; return 1; end
+  front = .llcfrontend..request(source,argv[3],argv[2] || '.rexx')
+  if front.status() <> 0 then do
+    say 'ERROR|frontend|' || front.diagnostic()
+    return 1
+  end
+  graph = front.graph()
+  if graph.error() <> '' then do; say 'ERROR|IR|' || graph.error(); return 1; end
+  index = .llirgraph..index(reference graph,1000000,67108864)
+  if index.status() <> 'ok' then do; say 'ERROR|graph|' || index.message(); return 1; end
+  loops = index.loops()
+  if loops.status() <> 'ok' then do; say 'ERROR|loops|' || loops.message(); return 1; end
+  cyclic = 0
+  do component = 1 to loops.components()
+    if loops.cyclic(component) then cyclic = cyclic + 1
+  end
+  say 'IR|functions=' || graph.functions() || '|blocks=' || graph.blocks() || '|operations=' || graph.operations() || '|cyclic=' || cyclic
+  tree = front.ast(); walk = tree.walk('parents first'); found = 0
+  do while walk.next()
+    node = walk.node()
+    if node.kind() <> 'CDo' | node.start() < first - 1 then iterate
+    header = node.child('header')
+    form = 'condition-or-group'
+    if header.count('repetition') > 0 then form = header.child('repetition').kind()
+    say 'AST|form=' || form || '|first=' || node.start() || '|last=' || node.finish()
+    found = found + 1
+  end
+  if found = 0 then do; say 'ERROR|routine has no DO loop'; return 1; end
+  return 0

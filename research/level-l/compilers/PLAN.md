@@ -330,6 +330,30 @@ the logical filename never grants a resource base. `llctarget` supplies existing
 runtime semantic helpers in the prepared image, without a compiler backend,
 assembler or linker.
 
+## SLAM square-root comparison experiment
+
+This is a separate, opt-in research consumer of the completed Classic C
+frontend, requested after the C closure. It compares the published old and
+revised `FDSqrt` bodies and the Vision square-root comparator on Tom Dyer's 29
+inputs, crediting Tom's SLAM design and the published fixture authors. It
+changes no compiler, grammar, runtime, Level L service or release scope.
+Per-input exact-rational checks are independent of the three program outputs.
+Source/IR graph facts describe the code actually
+analysed; general termination and correctness remain unknown.
+
+| Stable criterion | Observable condition |
+|---|---|
+| **SLAM-AC01** | The three adapted Classic Rexx routines run through the existing Level C entry on all 29 published inputs at `NUMERIC DIGITS 9`; input and output text are retained exactly in the comparison report. Invalid input and nonpositive-domain policy are explicit. |
+| **SLAM-AC02** | An independent exact-rational checker classifies each result for relative error at most `1e-8` and nearest nine significant digits, separating agreement from proof and retaining failed cases. Its own true/false/tampered-certificate controls fail closed. |
+| **SLAM-AC03** | A Level B consumer uses the existing Classic frontend and Level L graph index to report source-linked loop form and checked CFG cycle facts for each routine. A failed parse, IR build or graph index is reported as failure, not an empty graph. |
+| **SLAM-AC04** | One focused local run checks the expected old/new contrast and the three agreement-versus-rounding examples. The report labels sample observations, per-input proofs and unproved all-input claims distinctly; no compiler-wide or publication qualification follows. |
+
+| Stable step | Current status and dependency |
+|---|---|
+| **SLAM-STEP01 — done** | Record the fixture provenance, exact analysis/proof boundaries and focused check plan before implementation; AC01–04. |
+| **SLAM-STEP02 — done** | Add the standalone Classic fixtures, Level L analysis consumer and exact-rational comparison driver; AC01–03. |
+| **SLAM-STEP03 — done** | Inspect representative source/IR/RXAS, run focused normal checks on one VM, update the user-facing explanation and report results; AC01–04. |
+
 ## Outside current C closure
 
 **G21 unread scalar writes** remains a generic/G forwarding opportunity only:
