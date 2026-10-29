@@ -1,0 +1,108 @@
+/* Separate experimental graph build grammar.  It intentionally does not
+ * share the rxBuild grammar or its reader contract. */
+
+options levell
+namespace rxgraphgrammar
+
+ruleword: token
+buildword: token
+defaultword: token
+actionword: token
+descriptionword: token
+inputword: token
+dependsword: token
+dependsbuildword: token
+buildnameword: token
+defaultbuildword: token
+workdirword: token
+argumentword: token
+stdinword: token
+endword: token
+identifier: token
+equals: token
+terminator: token
+string: token
+
+comment: comments nested "/*" "*/"
+scan: lexer input utf8bytes
+  letter: charset = U+0041 to U+005A | U+0061 to U+007A | U+005F
+  digit: charset = U+0030 to U+0039
+  hspace: charset = U+0009 | U+0020
+  newline: charset = U+000A | U+000D
+  string.body: charset = U+0020 to U+0021 | U+0023 to U+00FF | U+0009
+  name.pattern: pattern = letter (letter | digit)*
+  whitespace: rule = (hspace | newline)+ then skip
+  string.literal: rule = '"' (string.body | '""')* '"' then emit string
+  equals.literal: rule = "=" then emit equals
+  terminator.literal: rule = ";" then emit terminator
+  name.literal: rule = name.pattern then emit identifier
+
+parse: parser semantics contextfree input tokens start program
+  program: rule = statement*
+  statement: rule = assignment.statement | rule.statement | build.statement | default.statement | default.build.statement
+  assignment.statement: rule = identifier equals string terminator
+  rule.statement: rule = ruleword identifier rule.attributes endword ruleword terminator
+  rule.attributes: rule = rule.attribute*
+  rule.attribute: rule = action.attribute | description.attribute
+  action.attribute: rule = actionword equals string
+  description.attribute: rule = descriptionword equals string
+  build.statement: rule = buildword string build.attributes endword buildword terminator
+  build.attributes: rule = build.attribute*
+  build.attribute: rule = rule.reference.attribute | build.name.attribute | input.attribute | depends.attribute | depends.build.attribute | workdir.attribute | argument.attribute | stdin.attribute
+  rule.reference.attribute: rule = ruleword equals identifier
+  build.name.attribute: rule = buildnameword equals identifier
+  input.attribute: rule = inputword equals string
+  depends.attribute: rule = dependsword equals string
+  depends.build.attribute: rule = dependsbuildword equals identifier
+  workdir.attribute: rule = workdirword equals string
+  argument.attribute: rule = argumentword equals string string
+  stdin.attribute: rule = stdinword equals string
+  default.statement: rule = defaultword string terminator
+  default.build.statement: rule = defaultbuildword equals identifier terminator
+
+classify: tokenstage start 1
+  word.rule:
+    transform stage classify state 1
+      take identifier text "RULE" emit ruleword next 1
+  word.build:
+    transform stage classify state 1
+      take identifier text "BUILD" emit buildword next 1
+  word.default:
+    transform stage classify state 1
+      take identifier text "DEFAULT" emit defaultword next 1
+  word.action:
+    transform stage classify state 1
+      take identifier text "ACTION" emit actionword next 1
+  word.description:
+    transform stage classify state 1
+      take identifier text "DESCRIPTION" emit descriptionword next 1
+  word.input:
+    transform stage classify state 1
+      take identifier text "INPUT" emit inputword next 1
+  word.depends:
+    transform stage classify state 1
+      take identifier text "DEPENDS_ON" emit dependsword next 1
+  word.depends.build:
+    transform stage classify state 1
+      take identifier text "DEPENDS_ON_BUILD" emit dependsbuildword next 1
+  word.build.name:
+    transform stage classify state 1
+      take identifier text "BUILD_NAME" emit buildnameword next 1
+  word.default.build:
+    transform stage classify state 1
+      take identifier text "DEFAULT_BUILD" emit defaultbuildword next 1
+  word.workdir:
+    transform stage classify state 1
+      take identifier text "WORK_DIR" emit workdirword next 1
+  word.argument:
+    transform stage classify state 1
+      take identifier text "ARGUMENT" emit argumentword next 1
+  word.stdin:
+    transform stage classify state 1
+      take identifier text "STDIN" emit stdinword next 1
+  word.end:
+    transform stage classify state 1
+      take identifier text "END" emit endword next 1
+  word.other:
+    transform stage classify state 1
+      take any emit copy next 1

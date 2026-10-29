@@ -111,6 +111,34 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
  
  rxpath=rxpath||dirsep /* to avoid having to start -l with a slash */
 
+ /* A .graph.build file belongs to the separate graph plan runner. Keep this
+  * dispatch before the ordinary .build suffix because .graph.build also ends
+  * in .build. The graph reader owns its own options and target selection. */
+ graph_index = 0
+ graph_i = .int
+ command_i = .int
+ do graph_i = 1 to fn[0]
+   if lower(right(fn.graph_i,12)) = '.graph.build' then do
+     graph_index = graph_i
+     leave
+   end
+ end
+ if graph_index <> 0 then do
+   graphCommand = .string[]
+   graphCommand[1] = rxpath || 'bin' || dirsep || 'rxbuild'
+   if platformUpper = 'WINDOWS' then graphCommand[1] = graphCommand[1] || '.exe'
+   graphCommand[2] = fn.graph_index
+   commandIndex = 3
+   do command_i = 1 to fn[0]
+     if command_i <> graph_index then do
+       graphCommand[commandIndex] = fn.command_i
+       commandIndex = commandIndex + 1
+     end
+   end
+   address crexx 'run :graphCommand[]'
+   return rc
+ end
+
  /* A .build file belongs to the Level L rxbuild plan runner. Keep this
   * dispatch deliberately small so the main driver does not duplicate the
   * plan language or its build orchestration. */
@@ -120,7 +148,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
      return 2
    end
    buildCommand = .string[]
-   buildCommand[1] = rxpath || 'bin' || dirsep || 'rxbuild'
+   buildCommand[1] = rxpath || 'bin' || dirsep || 'rxbuild-legacy'
    if platformUpper = 'WINDOWS' then buildCommand[1] = buildCommand[1] || '.exe'
    buildCommand[2] = fn.1
    address crexx 'run :buildCommand[]'

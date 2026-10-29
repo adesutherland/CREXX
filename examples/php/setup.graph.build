@@ -1,0 +1,131 @@
+/* Experimental graph form of the PHP setup.  Dependencies are ordered:
+ * grammar, reader, then reusable PHP runtime where applicable. */
+BUILD_DIR = ".crexx-build/php-graph";
+GRAMMAR_SOURCE = "examples/php/grammar/php.levell";
+ARRAY_SOURCE = "examples/php/php_array.crexx";
+READER_SOURCE = "examples/php/php_reader.crexx";
+APPLICATION_SOURCE = "examples/php/migration.php";
+FUNCTIONS_SOURCE = "examples/php/php-functions-sample.php";
+STRING_SOURCE = "examples/php/php-string-sample.php";
+NUMERIC_SOURCE = "examples/php/php-numeric-sample.php";
+
+RULE compile_grammar
+  ACTION = "COMPILE GRAMMAR"
+  DESCRIPTION = "GRAMMAR $out"
+END RULE;
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "PROGRAM $out"
+END RULE;
+
+RULE compile_reader
+  ACTION = "COMPILE READER"
+  DESCRIPTION = "READER $out"
+END RULE;
+
+RULE compile_application
+  ACTION = "COMPILE APPLICATION"
+  DESCRIPTION = "APPLICATION $out"
+END RULE;
+
+RULE run_application
+  ACTION = "RUN"
+  DESCRIPTION = "RUN $in"
+END RULE;
+
+BUILD "${BUILD_DIR}/phpgrammar.rxbin"
+  BUILD_NAME = grammar
+  RULE = compile_grammar
+  INPUT = "${GRAMMAR_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/php_array.rxbin"
+  BUILD_NAME = php_array
+  RULE = compile_program
+  INPUT = "${ARRAY_SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/php_reader.rxbin"
+  BUILD_NAME = reader
+  RULE = compile_reader
+  INPUT = "${READER_SOURCE}"
+  DEPENDS_ON_BUILD = grammar
+END BUILD;
+
+BUILD "${BUILD_DIR}/migration.rxbin"
+  BUILD_NAME = migration
+  RULE = compile_application
+  INPUT = "${APPLICATION_SOURCE}"
+  DEPENDS_ON_BUILD = grammar
+  DEPENDS_ON_BUILD = reader
+  DEPENDS_ON_BUILD = php_array
+END BUILD;
+
+BUILD "${BUILD_DIR}/php-functions-sample.rxbin"
+  BUILD_NAME = php_functions
+  RULE = compile_application
+  INPUT = "${FUNCTIONS_SOURCE}"
+  DEPENDS_ON_BUILD = grammar
+  DEPENDS_ON_BUILD = reader
+  DEPENDS_ON_BUILD = php_array
+END BUILD;
+
+BUILD "${BUILD_DIR}/php-string-sample.rxbin"
+  BUILD_NAME = php_string
+  RULE = compile_application
+  INPUT = "${STRING_SOURCE}"
+  DEPENDS_ON_BUILD = grammar
+  DEPENDS_ON_BUILD = reader
+  DEPENDS_ON_BUILD = php_array
+END BUILD;
+
+BUILD "${BUILD_DIR}/php-numeric-sample.rxbin"
+  BUILD_NAME = php_numeric
+  RULE = compile_application
+  INPUT = "${NUMERIC_SOURCE}"
+  DEPENDS_ON_BUILD = grammar
+  DEPENDS_ON_BUILD = reader
+  DEPENDS_ON_BUILD = php_array
+END BUILD;
+
+BUILD "run-php-functions"
+  BUILD_NAME = run_php_functions
+  RULE = run_application
+  INPUT = "${BUILD_DIR}/php-functions-sample.rxbin"
+  DEPENDS_ON_BUILD = php_functions
+  WORK_DIR = "${BUILD_DIR}"
+  STDIN = ""
+END BUILD;
+
+BUILD "run-php-string"
+  BUILD_NAME = run_php_string
+  RULE = run_application
+  INPUT = "${BUILD_DIR}/php-string-sample.rxbin"
+  DEPENDS_ON_BUILD = php_string
+  DEPENDS_ON_BUILD = run_php_functions
+  WORK_DIR = "${BUILD_DIR}"
+  STDIN = ""
+END BUILD;
+
+BUILD "run-php-numeric"
+  BUILD_NAME = run_php_numeric
+  RULE = run_application
+  INPUT = "${BUILD_DIR}/php-numeric-sample.rxbin"
+  DEPENDS_ON_BUILD = php_numeric
+  DEPENDS_ON_BUILD = run_php_string
+  WORK_DIR = "${BUILD_DIR}"
+  STDIN = ""
+END BUILD;
+
+BUILD "run-php-migration"
+  BUILD_NAME = run_php_migration
+  RULE = run_application
+  INPUT = "${BUILD_DIR}/migration.rxbin"
+  DEPENDS_ON_BUILD = migration
+  DEPENDS_ON_BUILD = run_php_numeric
+  WORK_DIR = "${BUILD_DIR}"
+  STDIN = ""
+END BUILD;
+
+DEFAULT_BUILD = run_php_string;

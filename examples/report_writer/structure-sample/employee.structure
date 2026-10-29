@@ -1,0 +1,6 @@
+DATA-CLASS Employee
+  FIELD employeeId string[6]
+  FIELD name string[32]
+  FIELD department string[24]
+  FIELD city string[24]
+END DATA-CLASS
