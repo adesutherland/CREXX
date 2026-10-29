@@ -698,11 +698,20 @@ analysis: class
     arg reason = .string
     _status = 'keep'; _reason = reason
     return 0
+  namedtag: method = .int
+    arg name = .string
+    if name = 'OUT_OF_RANGE' | name = 'INVALID_ARGUMENTS' then return 1
+    if name = 'FAILURE' then return reject('signal.activation.failure.pending')
+    if wordpos(name,'KILL CANCEL QUIT TERM POSIX_INT POSIX_HUP POSIX_USR1 POSIX_USR2 POSIX_CHLD NOTREADY OTHER BREAKPOINT') > 0 then return reject('signal.asynchronous.tag.pending')
+    if name = 'CHANNEL_ERROR' | name = 'TASK_FAILURE' then return reject('signal.event.delivery.pending')
+    return reject('signal.named.tag.pending')
   /** Recognize one complete source-authored G-shaped scope. No user proof,
    * target-schema mutation or exceptional edge is added to the normal index. */
   namedshape: method = .int
-    i = .int; policies = .int; labels = .int; calls = .int; pops = .int; branches = .int; returns = .int
+    i = .int; j = .int; found = .int; policies = .int; labels = .int; calls = .int; pops = .int; branches = .int; returns = .int
+    installs = .int; range = .int; lastpush = .int; firstinstall = .int
     handler = .string; joined = .string; name = .string
+    tags = .string[]; installed = .int[]; poptags = .string[]; popids = .int[]
     item = .lltarget..record; field = .lltarget..operand; target = .lltarget..operand
     module = dereference _owner; catalog = .llrxascatalog..catalog()
     do i = 1 to module.records()
@@ -729,24 +738,44 @@ analysis: class
       name = item.mnemonic()
       select name
         when 'sigpush' then do
-          if _namedpush <> 0 then return reject('signal.nested.scope.pending')
+          if installs > 0 then return reject('signal.named.push.order.pending')
+          if calls > 0 | pops > 0 | branches > 0 then return reject('signal.nested.scope.pending')
           field = item.operand(1)
-          if field.text() <> 'OUT_OF_RANGE' then return reject('signal.named.tag.pending')
-          _namedpush = item.id()
+          if namedtag(field.text()) = 0 then return 0
+          if spend(tags[0]) = 0 then return 0
+          do j = 1 to tags[0]
+            if tags[j] = field.text() then return reject('signal.named.push.duplicate.pending')
+          end
+          /* The two admitted synchronous tags bound this distinct list. */
+          if reserve(1,64) = 0 | reserve(field.length(),1) = 0 then return 0
+          j = tags[0] + 1; tags[j] = field.text(); installed[j] = 0
+          if field.text() = 'OUT_OF_RANGE' then range = 1
+          if _namedpush = 0 then _namedpush = item.id()
+          lastpush = item.id()
         end
         when 'sigbr' then do
-          if _namedinstall <> 0 then return reject('signal.nested.scope.pending')
+          if calls > 0 | pops > 0 | branches > 0 then return reject('signal.nested.scope.pending')
           field = item.operand(2); target = item.operand(1)
-          if field.text() <> 'OUT_OF_RANGE' then return reject('signal.named.tag.pending')
+          if namedtag(field.text()) = 0 then return 0
+          found = 0
+          if spend(tags[0]) = 0 then return 0
+          do j = 1 to tags[0]
+            if tags[j] = field.text() then found = j
+          end
+          if found = 0 then return reject('signal.named.install.mismatch.pending')
+          if installed[found] then return reject('signal.named.install.duplicate.pending')
+          if installs > 0 & target.text() <> handler then return reject('signal.handler.mismatch.pending')
+          installed[found] = 1; installs = installs + 1
+          if firstinstall = 0 then firstinstall = item.id()
           handler = target.text(); _namedinstall = item.id()
         end
         when 'sigpop' then do
           field = item.operand(1)
-          if field.text() <> 'OUT_OF_RANGE' then return reject('signal.named.tag.pending')
+          if namedtag(field.text()) = 0 then return 0
+          if reserve(1,24) = 0 | reserve(field.length(),1) = 0 then return 0
           pops = pops + 1
-          if pops = 1 then _namednormalpop = item.id()
-          else if pops = 2 then _namedhandlerpop = item.id()
-          else return reject('signal.named.pop.pending')
+          poptags[pops] = field.text(); popids[pops] = item.id()
+          if pops > 2 * tags[0] then return reject('signal.named.pop.count.pending')
         end
         when 'sigret' then return reject('signal.inherited.return.pending')
         when 'sigbrv' then return reject('signal.bound.handler.pending')
@@ -768,7 +797,18 @@ analysis: class
         end
       end
     end
-    if calls <> 1 | pops <> 2 | branches <> 2 | labels <> 2 | returns <> 1 then return reject('signal.named.shape.pending')
+    if tags[0] = 0 then return reject('signal.named.push.missing.pending')
+    if range = 0 then return reject('signal.named.range.missing.pending')
+    if installs <> tags[0] then return reject('signal.named.install.missing.pending')
+    if pops <> 2 * tags[0] then return reject('signal.named.pop.count.pending')
+    if spend(pops) = 0 then return 0
+    do j = 1 to tags[0]
+      if poptags[j] <> tags[tags[0] - j + 1] then return reject('signal.named.normal.pop.order.pending')
+      if poptags[tags[0] + j] <> tags[tags[0] - j + 1] then return reject('signal.named.handler.pop.order.pending')
+    end
+    _namednormalpop = popids[1]; _namedhandlerpop = popids[tags[0] + 1]
+    if labels <> 2 then return reject('signal.named.entry.pending')
+    if calls <> 1 | branches <> 2 | returns <> 1 then return reject('signal.named.shape.pending')
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
@@ -782,15 +822,18 @@ analysis: class
     end
     if _namedhandler = 0 then return reject('signal.handler.target.unproved')
     if _namedjoin = 0 then return reject('signal.named.join.pending')
-    if _namedpush = 0 | _namedinstall <= _namedpush | _namedcall <= _namedinstall | _namednormalpop <= _namedcall | _namednormalbr <= _namednormalpop | _namedhandler <= _namednormalbr | _namedhandlerpop <= _namedhandler | _namedhandlerbr <= _namedhandlerpop | _namedjoin <= _namedhandlerbr then return reject('signal.named.order.pending')
+    if firstinstall <= lastpush | _namedcall <= _namedinstall | _namednormalpop <= _namedcall | _namednormalbr <= popids[tags[0]] | _namedhandler <= _namednormalbr | _namedhandlerpop <= _namedhandler | _namedhandlerbr <= popids[pops] | _namedjoin <= _namedhandlerbr then return reject('signal.named.order.pending')
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
       if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
       if item.mnemonic() = 'ret' & item.id() < _namedjoin then return reject('signal.named.departure.pending')
-      if item.id() > _namedpush & item.id() < _namedcall & item.id() <> _namedinstall then return reject('signal.named.setup.pending')
-      if item.id() > _namednormalpop & item.id() < _namedhandler & item.id() <> _namednormalbr then return reject('signal.named.departure.pending')
+      name = item.mnemonic()
+      if item.id() > _namedpush & item.id() < _namedcall & name <> 'sigpush' & name <> 'sigbr' then return reject('signal.named.setup.pending')
+      if item.id() > _namednormalpop & item.id() < popids[tags[0]] & name <> 'sigpop' then return reject('signal.named.normal.pop.interleaved.pending')
+      if item.id() > _namednormalpop & item.id() < _namedhandler & name <> 'sigpop' & item.id() <> _namednormalbr then return reject('signal.named.departure.pending')
       if item.id() > _namedhandler & item.id() < _namedhandlerpop then return reject('signal.named.departure.pending')
+      if item.id() > _namedhandlerpop & item.id() < popids[pops] & name <> 'sigpop' then return reject('signal.named.handler.pop.interleaved.pending')
       if item.id() > _namedhandlerbr & item.id() < _namedjoin then return reject('signal.named.departure.pending')
     end
     return 1
@@ -898,7 +941,7 @@ analysis: class
       /* Leave these opaque policy/control rows undescribed in the normal-only
        * access projection. It must remain incomplete, even when queried by a
        * consumer which bypasses the explicit cleanup guard. */
-      else if item.id() = _namedpush | item.id() = _namedinstall | item.id() = _namednormalpop | item.id() = _namednormalbr | item.id() = _namedhandlerpop | item.id() = _namedhandlerbr then nop
+      else if item.kind() = 'instruction' & (wordpos(item.mnemonic(),'sigpush sigbr sigpop') > 0 | item.id() = _namednormalbr | item.id() = _namedhandlerbr) then nop
       else do
         /* Infeasible normal/handler observations do not execute. Their rows
          * remain opaque in this deliberately incomplete access projection. */

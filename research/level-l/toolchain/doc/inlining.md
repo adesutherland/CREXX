@@ -474,17 +474,34 @@ The current root/default-HALT profile does not qualify these producer paths.
 ### Caller-owned named range-handler slice
 
 The existing `closed-main-default-halt.v1` profile recognizes one source-authored,
-unbound G-shaped `OUT_OF_RANGE` scope in fresh standalone `main`: `SIGPUSH`,
-`SIGBR`, one same-module `CALL1`, separate normal/handler `SIGPOP` paths and one
-join. Its selected zero-local leaf has exactly `ICHKRNG a1,lo,hi` with literal
+unbound G-shaped named scope in fresh standalone `main`. Its distinct explicit
+list contains `OUT_OF_RANGE` and optionally `INVALID_ARGUMENTS`, bounding the
+list at two synchronous policies. All `SIGPUSH` rows precede every `SIGBR`, each
+pushed tag is installed exactly once at the same local handler, and separate
+normal/handler paths pop the exact reverse pushed list before one join. Install
+order may differ from push order because every install captures the same marker.
+There is one same-module `CALL1`; its selected zero-local leaf has exactly
+`ICHKRNG a1,lo,hi` with literal
 integer bounds, followed by `RET a1`. Source/TRACE and ordinary scalar metadata
 are retained. Actual and result must
-be proved plain ordinary scalar storage. A defined, entry-independent actual
+be proved plain ordinary scalar storage. Only `OUT_OF_RANGE` is a feasible leaf
+signal; the extra policy checks common-marker ordering without inventing a
+second callee failure. A defined, entry-independent actual
 may be unknown at analysis time; root-side non-signalling `GETANDTP` is one
 admitted producer. Additional control entries, nested scopes,
 counted windows, callee policy/context changes and physical observers retain
 specific pending/unproved reasons. This is an initial representable category,
 not complete G or Classic C signal coverage.
+
+`FAILURE` retains `signal.activation.failure.pending`: removing `CALL1` removes
+its frame-allocation failure event. `CANCEL`, POSIX and other external delivery
+policies retain `signal.asynchronous.tag.pending`; channel/task event policies
+retain `signal.event.delivery.pending`. Other names remain outside this finite
+slice with `signal.named.tag.pending`. Full G catch-all is a separate proof:
+the emitter expands it to 29 named policies, including `FAILURE` and `CANCEL`;
+`ANY` is not a VM signal name. A single before-call snapshot cannot describe
+asynchronous delivery after setup or result writes. No new metadata can assert
+allocation success or supply that missing unwind state.
 
 `lltargetfacts` derives a request-local exact-owner structured overlay from the
 original record identities and canonical signal phase. The existing call
@@ -508,7 +525,10 @@ The original handler label first unlinks the fresh argument/result anchors,
 expires only the fresh ordinary count/return temporary, and closes renamed
 callee metadata. Those disjoint anchors can be unlinked before, during or after
 setup without touching borrowed caller values. The original policy save,
-installation and both pops remain executable and ordered. In particular, no
+installation and both complete pop lists remain executable and ordered. Missing,
+duplicate or mismatched registrations, wrong normal/handler pop order,
+interleaved setup/restoration and alternate handlers or entries retain exact
+input with distinct reasons. In particular, no
 successful-save premise is inferred from `SIGPUSH`/`SIGPOP`; failed-save and
 installation/pop errors retain their original runtime behavior.
 

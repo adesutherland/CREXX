@@ -1,0 +1,37 @@
+/* Common-marker handler must run once; expected handler, 12, 99, 2. */
+.globals=0
+main() .locals=3
+  load r0,12
+  load r1,99
+  load r2,0
+  sigpush "OUT_OF_RANGE"
+  sigpush "INVALID_ARGUMENTS"
+  sigbr caught,"OUT_OF_RANGE"
+  sigbr caught,"INVALID_ARGUMENTS"
+  call1 r1,checked_identity(),r0
+  .traceevent "F" 4 "R" "I" "r" 1 0 0 0 "checked_identity" ""
+  load r2,1
+  say "normal"
+  sigpop "INVALID_ARGUMENTS"
+  sigpop "OUT_OF_RANGE"
+  br joined
+caught:
+  sigpop "INVALID_ARGUMENTS"
+  sigpop "OUT_OF_RANGE"
+  load r2,2
+  say "handler"
+  br joined
+joined:
+  itos r0
+  say r0
+  itos r1
+  say r1
+  itos r2
+  say r2
+  ret 0
+checked_identity() .locals=0
+  .meta "checked_identity.value"="b" ".int" a1
+  .srcstep 1 1 17 "named_signal.g" 8 3 29 "  assembler ichkrng value,0,10"
+  ichkrng a1,0,10
+  ret a1
+  .meta "checked_identity.value"

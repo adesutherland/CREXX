@@ -35,13 +35,13 @@ model: procedure = .lltarget..module
   draft = .lltarget..draft('signal.' || variant,'constructed.signal.' || variant,0)
   at = draft.synthetic('independent caller-owned named scope')
   root = draft.procedure('main',4,at); input = 7
-  if variant = 1 then input = 12
+  if variant = 1 | variant = 18 then input = 12
   ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(input),at)
   ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(99),at)
   ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(0),at)
-  if (variant >= 9 & variant <= 12) | variant = 14 then do
+  if (variant >= 9 & variant <= 12) | variant = 14 | variant = 19 | variant = 20 then do
     flags = 0
-    if variant = 10 | variant = 12 then flags = 256
+    if variant = 10 | variant = 12 | variant = 20 then flags = 256
     ignored = two(root,'settp',root.reg('r',3),.lltarget..operand.integer(flags),at)
     /* GETANDTP deliberately publishes a defined, nonconstant integer fact
      * for both runtime status inputs. Neither test is constant-specialized. */
@@ -50,24 +50,50 @@ model: procedure = .lltarget..module
   if variant = 6 then ignored = two(root,'mkref',root.reg('r',0),root.reg('r',1),at)
   name = 'sigpush'
   if variant = 2 then name = 'sigret'
-  ignored = one(root,name,.lltarget..operand.string('OUT_OF_RANGE'),at)
+  firsttag = 'OUT_OF_RANGE'; secondtag = 'INVALID_ARGUMENTS'
+  multiple = variant >= 17 & variant <> 36
+  if variant = 31 then secondtag = 'FAILURE'
+  if variant = 32 then secondtag = 'CANCEL'
+  if variant = 33 then secondtag = 'POSIX_INT'
+  if variant = 34 then secondtag = 'CHANNEL_ERROR'
+  if variant = 35 then secondtag = 'ERROR'
+  if variant = 36 then firsttag = 'INVALID_ARGUMENTS'
+  ignored = one(root,name,.lltarget..operand.string(firsttag),at)
+  if variant = 22 then ignored = one(root,'sigpush',.lltarget..operand.string(firsttag),at)
+  if variant = 39 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(0),at)
+  if multiple & variant <> 21 & variant <> 28 then ignored = one(root,'sigpush',.lltarget..operand.string(secondtag),at)
   target = 'caught'
   if variant = 4 then target = 'missing'
   if variant = 5 then target = 'foreign'
-  ignored = two(root,'sigbr',.lltarget..operand.symbol(target),.lltarget..operand.string('OUT_OF_RANGE'),at)
+  if variant = 40 then ignored = two(root,'sigbr',.lltarget..operand.symbol(target),.lltarget..operand.string(secondtag),at)
+  ignored = two(root,'sigbr',.lltarget..operand.symbol(target),.lltarget..operand.string(firsttag),at)
+  if variant = 28 then ignored = one(root,'sigpush',.lltarget..operand.string(secondtag),at)
+  if multiple & variant <> 23 & variant <> 40 then do
+    secondhandler = target
+    if variant = 29 then secondhandler = 'joined'
+    ignored = two(root,'sigbr',.lltarget..operand.symbol(secondhandler),.lltarget..operand.string(secondtag),at)
+    if variant = 24 then ignored = two(root,'sigbr',.lltarget..operand.symbol(secondhandler),.lltarget..operand.string(secondtag),at)
+  end
+  if variant = 30 then ignored = label(root,'alternate',at)
   name = 'call1'
   if variant = 7 then name = 'call'
   destination = root.reg('r',1); actual = root.reg('r',0)
-  if variant = 11 | variant = 12 then destination = root.reg('r',0)
+  if variant = 11 | variant = 12 | variant = 19 | variant = 20 then destination = root.reg('r',0)
   if variant = 15 then actual = root.reg('a',1)
   callid = three(root,name,destination,.lltarget..operand.procedure('checked_identity'),actual,at)
   if variant = 8 then ignored = two(root,'load',root.reg('r',3),.lltarget..operand.literal('B','0x00FF' as .binary),at)
   ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(1),at)
   if variant = 14 then ignored = three(root,'numsci',.lltarget..operand.integer(20),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
-  ignored = one(root,'sigpop',.lltarget..operand.string('OUT_OF_RANGE'),at)
+  if variant = 25 then ignored = one(root,'sigpop',.lltarget..operand.string(firsttag),at)
+  if multiple & variant <> 27 then ignored = one(root,'sigpop',.lltarget..operand.string(secondtag),at)
+  if variant = 37 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(1),at)
+  if variant <> 25 then ignored = one(root,'sigpop',.lltarget..operand.string(firsttag),at)
   ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
   handlerid = label(root,'caught',at)
-  ignored = one(root,'sigpop',.lltarget..operand.string('OUT_OF_RANGE'),at)
+  if variant = 26 then ignored = one(root,'sigpop',.lltarget..operand.string(firsttag),at)
+  if multiple then ignored = one(root,'sigpop',.lltarget..operand.string(secondtag),at)
+  if variant = 38 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(0),at)
+  if variant <> 26 then ignored = one(root,'sigpop',.lltarget..operand.string(firsttag),at)
   ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(2),at)
   if variant = 14 then ignored = three(root,'numsci',.lltarget..operand.integer(21),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
   ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
@@ -82,7 +108,7 @@ model: procedure = .lltarget..module
   fields[4] = leaf.reg('a',1) as .object; ignored = leaf.record('.meta',fields,at)
   if variant = 3 then ignored = one(leaf,'sigignore',.lltarget..operand.string('OUT_OF_RANGE'),at)
   low = 0; high = 10
-  if variant >= 9 then do; low = -5; high = 5; end
+  if (variant >= 9 & variant <= 16) | variant = 19 | variant = 20 then do; low = -5; high = 5; end
   if variant = 13 then do; low = 7; high = 7; end
   if variant = 16 then do; low = 5; high = -5; end
   checktext = 'assembler ichkrng value,' || low || ',' || high
@@ -100,6 +126,7 @@ model: procedure = .lltarget..module
 
 main: procedure = .int
   failures = 0; callid = .int; handlerid = .int
+  i = .int; item = .lltarget..record; field = .lltarget..operand
   expected = .string[]
   expected[3] = 'signal.inherited.return.pending'
   expected[4] = 'signal.callee.policy.pending'
@@ -109,7 +136,26 @@ main: procedure = .int
   /* NUMSCI can fail before the join; this profile rejects that caller shape. */
   expected[15] = 'signal.caller.failure.pending'
   expected[16] = 'signal.argument.value.unproved'
-  do variant = 0 to 16
+  expected[22] = 'signal.named.install.mismatch.pending'
+  expected[23] = 'signal.named.push.duplicate.pending'
+  expected[24] = 'signal.named.install.missing.pending'
+  expected[25] = 'signal.named.install.duplicate.pending'
+  expected[26] = 'signal.named.normal.pop.order.pending'
+  expected[27] = 'signal.named.handler.pop.order.pending'
+  expected[28] = 'signal.named.pop.count.pending'
+  expected[29] = 'signal.named.push.order.pending'
+  expected[30] = 'signal.handler.mismatch.pending'
+  expected[31] = 'signal.named.entry.pending'
+  expected[32] = 'signal.activation.failure.pending'
+  expected[33] = 'signal.asynchronous.tag.pending'
+  expected[34] = 'signal.asynchronous.tag.pending'
+  expected[35] = 'signal.event.delivery.pending'
+  expected[36] = 'signal.named.tag.pending'
+  expected[37] = 'signal.named.range.missing.pending'
+  expected[38] = 'signal.named.normal.pop.interleaved.pending'
+  expected[39] = 'signal.named.handler.pop.interleaved.pending'
+  expected[40] = 'signal.named.setup.pending'
+  do variant = 0 to 40
     original = model(variant,callid,handlerid)
     if variant = 4 | variant = 5 then do
       failures = failures + check(original.valid() = 0 & pos('LL_TARGET_BINDING: unresolved branch label',original.error()) > 0,'target rejects absent or foreign handler label ' || variant)
@@ -120,7 +166,7 @@ main: procedure = .int
     graph = dereference original.ir(); before = graph.binary()
     request = llinline..bind(reference original,callid,reference original,original.procedureid('checked_identity'))
     changed = llinline..expand(request,'closed-main-default-halt.v1')
-    if (variant > 1 & variant < 9) | variant = 14 | variant = 15 then do
+    if (variant > 1 & variant < 9) | variant = 14 | variant = 15 | (variant >= 21 & variant <= 39) then do
       failures = failures + check(changed.status() = 'keep' & changed.reason() = expected[variant + 1],'precise signal keep ' || variant)
       if changed.reason() <> expected[variant + 1] then say changed.reason()
       kept = changed.result(); keptgraph = dereference kept.ir()
@@ -134,21 +180,34 @@ main: procedure = .int
       if variant >= 9 & variant <= 12 then outcome = 3
       if variant = 13 then outcome = 1
       if variant = 16 then outcome = 2
+      if variant = 17 | variant = 40 then outcome = 1
+      if variant = 18 then outcome = 2
+      if variant = 19 | variant = 20 then outcome = 3
       failures = failures + check(facts.status() = 'ok' & facts.handlercall(handlerid) = callid & facts.handleroutcome(callid) = outcome,'exact-owner handler and feasible outcomes ' || variant)
       access = dereference facts.access()
       failures = failures + check(access.complete(original.procedureid('main')) = 0,'normal-only access projection stays incomplete')
       if outcome <> 1 then do
         cell = 2
-        if variant = 11 | variant = 12 then cell = 1
+        if variant = 11 | variant = 12 | variant = 19 | variant = 20 then cell = 1
         failures = failures + check(access.kills(callid,facts.integerdomain(cell)) = 0 & access.kills(callid,facts.wholedomain(cell)) = 0,'failure preserves result; no definite kill ' || variant)
       end
       result = changed.result(); instructions = 0; closure = 0; lifetimes = 0; clears = 0; inhandler = 0; source = 0
+      policy = .string; originalpolicy = .string
+      do i = 1 to original.records()
+        item = original.record(i)
+        if item.procedureid() <> original.procedureid('main') | item.kind() <> 'instruction' then iterate
+        if wordpos(item.mnemonic(),'sigpush sigbr sigpop') = 0 then iterate
+        field = item.operand(item.operands()); originalpolicy = originalpolicy || item.mnemonic() || ':' || field.text() || ';'
+      end
       do i = 1 to result.records()
         item = result.record(i)
         if item.procedureid() <> result.procedureid('main') then iterate
         if item.kind() = 'label' then do; field = item.operand(1); inhandler = field.text() = 'caught'; end
         if inhandler & item.kind() = '.meta' & item.operands() = 1 then clears = clears + 1
         if item.kind() <> 'instruction' then iterate
+        if wordpos(item.mnemonic(),'sigpush sigbr sigpop') > 0 then do
+          field = item.operand(item.operands()); policy = policy || item.mnemonic() || ':' || field.text() || ';'
+        end
         if item.mnemonic() = 'call1' then instructions = instructions + 1
         if item.mnemonic() = 'ichkrng' then source = item.origin().filename() = 'named_signal.g'
         if inhandler then do
@@ -158,6 +217,7 @@ main: procedure = .int
         end
       end
       failures = failures + check(instructions = 0 & closure = 2 & lifetimes = 2 & clears = 1 & source,'fresh binding/metadata closure precedes original handler pop')
+      failures = failures + check(policy = originalpolicy,'all named policies retain original push/install/reverse-pop order ' || variant)
       cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
       failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'transport.exceptional.cfg.pending','transport retains exceptional graph')
       cleaned = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
