@@ -75,8 +75,14 @@ decision: class
 inspect: procedure = .llinline..decision
   arg request = .llinline..binding, profile = 'unknown', work = 1000000
   if request.valid() = 0 then return .decision('invalid','binding.expired')
-  source = dereference request.caller(); caller_ref = request.caller(); provider_ref = request.provider()
   if profile = 'closed-main-static-exact-default-halt.v1' then return inspectimports(request,work)
+  return inspectlocal(request,profile,work)
+
+/** Private projection has already checked foreign binding and public storage.
+ * Keep its selected profile for the single shared facts/expansion algorithm. */
+inspectlocal: procedure = .llinline..decision
+  arg request = .llinline..binding, profile = .string, work = .int
+  source = dereference request.caller(); caller_ref = request.caller(); provider_ref = request.provider()
   if (caller_ref <refsame> provider_ref) = 0 then return .decision('keep','profile.imported.body.pending')
   selected = source.at(request.callid())
   if selected.valid() = 0 then return .decision('invalid','call.identity')
@@ -949,6 +955,10 @@ importprojection: class
   _importexports = .string[]
   _exportnames = .string[]
   _exportproviders = .int[]
+  _globalowners = .int[]
+  _globalslots = .int[]
+  _globalnames = .string[]
+  _globalcallers = .int[]
   _module = .lltarget..module
   _status = .string
   _reason = .string
@@ -1096,7 +1106,7 @@ importprojection: class
       _caches[_pairprovider[i]] = cache as .object
     end
     if _work < 1 | _held >= bytes then do; ignored = fail('limit','import.allowances'); return; end
-    draft = .lltarget..draft(source.name(),source.artifact(),0,entries,bytes - _held,_work)
+    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes - _held,_work)
     graph_ref = source.ir(); bodies = .object[]
     do i = 1 to source.records()
       item = source.record(i)
@@ -1141,7 +1151,9 @@ importprojection: class
         if item.procedureid() <> body.functionid() | item.kind() = 'procedure' then iterate
         if draft.preflight(1 + item.operands() + item.registerrefs(),0) = 0 then do; ignored = failedmodel(draft.error()); return; end
         at = cache.copy(graph_ref,item.origin(),reference draft)
-        fields = clonefields(item,targetbody); fields = cache.metadata(item,fields)
+        fields = providerfields(item,targetbody,_pairprovider[i])
+        if _status <> 'building' then return
+        fields = cache.metadata(item,fields)
         if item.kind() = '.meta' & item.operands() = 5 then fields[4] = .lltarget..operand.procedure(_pairname[i]) as .object
         if item.kind() = 'label' then do
           value = item.operand(1); renamed = projectlabel(i,value.bytes(),reference draft)
@@ -1250,13 +1262,37 @@ importprojection: class
   scanmodule: method = .int
     arg owner = reference .lltarget..module, provider = .int
     source = dereference owner; item = .lltarget..record; name = .lltarget..operand; option = .lltarget..operand
+    declaration = .lltarget..record; external = .lltarget..operand
     i = .int; j = .int; k = .int; providerindex = .int
     providerindex = 0; if provider then providerindex = _providers[0] + 1
-    if source.globals() <> 0 then return fail('keep','import.global.storage.pending')
     if provider & source.procedureid('main') > 0 then return fail('keep','import.provider.main.pending')
     do i = 1 to source.records()
       if spend(1) = 0 then return 0
       item = source.record(i)
+      if item.kind() = '.globalexpose' then do
+        name = item.operand(1); option = item.operand(2)
+        if name.index() < 0 | name.index() >= source.globals() | option.text() = '' then return fail('invalid','import.global.declaration.invalid')
+        do j = 1 to _globalnames[0]
+          if spend(option.length() + 1) = 0 then return 0
+          if _globalowners[j] <> providerindex then iterate
+          if _globalslots[j] = name.index() | _globalnames[j] == option.text() then return fail('invalid','import.global.declaration.ambiguous')
+        end
+        /* RXAS uses one external-name namespace for global exposures,
+         * exported procedures and imports. Scan this immutable module in both
+         * declaration orders; charge every record and compared name. */
+        do k = 1 to source.records()
+          if spend(1) = 0 then return 0
+          declaration = source.record(k)
+          if declaration.kind() = '.import' then external = declaration.operand(2)
+          else if declaration.kind() = 'procedure' then external = declaration.operand(3)
+          else iterate
+          if spend(option.length() + 1) = 0 then return 0
+          if external.text() == option.text() then return fail('invalid','import.global.callable.collision')
+        end
+        if reserve(option.length() + 64,1) = 0 then return 0
+        j = _globalnames[0] + 1; _globalowners[j] = providerindex
+        _globalslots[j] = name.index(); _globalnames[j] = option.text(); _globalcallers[j] = 0
+      end
       if item.kind() = '.meta' & item.operands() > 1 then do
         option = item.operand(2)
         if spend(option.length() + 1) = 0 then return 0
@@ -1300,6 +1336,39 @@ importprojection: class
       end
     end
     return 1
+  /** Existing public sharing is a name contract, never a provider gN ABI.
+   * Compact rows avoid allocating a table for an unreferenced global bank. */
+  globalindex: method = .int
+    arg provider = .int, slot = .int
+    row = 0; i = .int; ignored = .int
+    do i = 1 to _globalnames[0]
+      if spend(1) = 0 then return -1
+      if _globalowners[i] = provider & _globalslots[i] = slot then row = i
+    end
+    if row = 0 then do; ignored = fail('keep','import.global.private.pending'); return -1; end
+    if _globalcallers[row] > 0 then return _globalcallers[row] - 1
+    do i = 1 to _globalnames[0]
+      if spend(length(_globalnames[row]) + 1) = 0 then return -1
+      if _globalowners[i] = 0 & _globalnames[i] == _globalnames[row] then do
+        _globalcallers[row] = _globalslots[i] + 1
+        return _globalslots[i]
+      end
+    end
+    ignored = fail('keep','import.global.caller.alias.missing')
+    return -1
+  providerfields: method = .object[]
+    arg item = .lltarget..record, target = .lltarget..bodydraft, provider = .int
+    replacements = .object[]; value = .lltarget..operand; index = .int; i = .int
+    do i = 1 to item.registerrefs()
+      if spend(1) = 0 then return replacements
+      value = item.registerref(i); index = value.index()
+      if value.bank() = 'g' then do
+        index = globalindex(provider,index)
+        if _status <> 'building' then return replacements
+      end
+      replacements[i] = target.reg(value.bank(),index) as .object
+    end
+    return lltarget..remapregisters(item,replacements)
   intern: method = .int
     arg providerindex = .int, body = .lltarget..body
     i = .int; pair = .int; header = .int
@@ -1371,11 +1440,23 @@ importprojection: class
       item = source.record(i)
       if item.procedureid() <> body.functionid() then iterate
       if item.kind() = 'procedure' then iterate
+      do j = 1 to item.registerrefs()
+        if spend(1) = 0 then return 0
+        value = item.registerref(j)
+        if value.bank() = 'g' then do
+          ignored = globalindex(_pairprovider[pair],value.index())
+          if _status <> 'building' then return 0
+        end
+      end
       if item.kind() = 'instruction' then do
         /* The checked target CFG and shared scalar facts own control
          * admission, feasible paths, return actions and cycle refusal. */
         field = 0
         if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+          /* A counted child's implicit physical window can cross the original
+           * provider's global bank even without a spelled g operand. The
+           * caller-bank projection has not proved that layout transport. */
+          if source.globals() > 0 then return fail('keep','import.global.nested.call.pending')
           field = 2; if item.operands() = 1 then field = 1
         end
         if wordpos(item.mnemonic(),'dcall swapcall settpcall settpswapcall') > 0 then return fail('keep','import.child.call.form.pending')
@@ -1488,7 +1569,9 @@ expandimports: procedure = .llinline..change
     call prepared.prepare()
     if prepared.status() <> 'ok' then return importrefusal(bindings,prepared.status(),prepared.reason(),source)
     projected = prepared.bindings()
-    changed = expandlocalmany(projected,'closed-main-default-halt.v1',stage,entries,bytes,frame,cells)
+    localprofile = 'closed-main-default-halt.v1'
+    if source.globals() > 0 then localprofile = 'closed-main-static-exact-default-halt.v1'
+    changed = expandlocalmany(projected,localprofile,stage,entries,bytes,frame,cells)
     do i = 1 to bindings[0]
       request = bindings[i] as .binding; old = request.callid(); projectedid = prepared.operation(old)
       sites[i] = old
@@ -1599,7 +1682,9 @@ inspectimports: procedure = .llinline..decision
     call prepared.prepare()
     if prepared.status() <> 'ok' then return .decision(prepared.status(),prepared.reason())
     projected = prepared.bindings(); selected = projected[1] as .binding
-    return inspect(selected,'closed-main-default-halt.v1',stage)
+    source = dereference selected.caller(); localprofile = 'closed-main-default-halt.v1'
+    if source.globals() > 0 then localprofile = 'closed-main-static-exact-default-halt.v1'
+    return inspectlocal(selected,localprofile,stage)
   on signal as problem
     status = 'invalid'
     if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'

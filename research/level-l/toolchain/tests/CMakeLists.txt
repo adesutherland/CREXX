@@ -145,4 +145,16 @@ if(TARGET rxbvm)
     TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_imported_nested
     TARGETS llrxinline rxbvm rxas rxlink)
+  add_test(NAME levell_rxas_imported_global
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DLINKER=$<TARGET_FILE:rxlink>" "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/import-global-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-import-global.cmake")
+  set_tests_properties(levell_rxas_imported_global PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_IMPORTED_GLOBAL[|]failures=0"
+    TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_imported_global
+    TARGETS llrxinline rxbvm rxas rxlink)
 endif()

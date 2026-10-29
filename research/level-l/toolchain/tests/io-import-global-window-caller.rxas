@@ -1,0 +1,10 @@
+/* A wrong zero-global projection would make the child see a0=1 as a1. */
+.globals=0
+foreign() .expose=fixture.global.window.outer
+child_left() .expose=fixture.global.window.child
+main() .locals=2
+  load r0,7
+  call1 r1,foreign(),r0
+  itos r1
+  say r1
+  ret 0

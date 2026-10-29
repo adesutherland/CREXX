@@ -83,6 +83,10 @@ provider: procedure = .lltarget..module
     ignored = leaf.record('.meta',fields,at)
   end
   select variant
+    when 1 then do
+      ignored = three(leaf,'iadd',leaf.reg('g',0),leaf.reg('g',0),leaf.reg('a',1),at)
+      ignored = one(leaf,'ret',leaf.reg('g',0),at)
+    end
     when 10 then do
       /* Original owned RET moves and resets this snapshot before reuse. */
       ignored = two(leaf,'icopy',leaf.reg('r',0),leaf.reg('a',1),at)
@@ -147,6 +151,7 @@ caller: procedure = .lltarget..module
   fields[8] = .lltarget..operand.string('caller' as .binary) as .object
   ignored = root.record('.srcstep',fields,at)
   ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(5),at)
+  if variant = 5 then ignored = two(root,'link',root.reg('g',0),root.reg('r',0),at)
   ignored = two(root,'icopy',root.reg('r',1),root.reg('r',0),at)
   call objectarraydrop fields
   fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('left') as .object
@@ -477,6 +482,204 @@ nestedcontrols: procedure = .int
   end
   return failures
 
+/** Public sharing uses different authored banks and one persistent StorageId.
+ * Variant changes retain precise missing premises, never synthetic exposures. */
+globalprovider: procedure = .lltarget..module
+  arg variant = 0
+  draft = .lltarget..draft('globalprovider','fixture:globalprovider',2)
+  at = draft.synthetic('existing public foreign scalar storage')
+  fields = .object[]
+  fields[1] = .lltarget..operand.integer(1) as .object
+  fields[2] = .lltarget..operand.symbol('fixture.shared') as .object
+  if variant <> 1 then ignored = draft.record('.globalexpose',fields,at)
+  if variant = 2 then do
+    fields[1] = .lltarget..operand.integer(0) as .object
+    ignored = draft.record('.globalexpose',fields,at)
+  end
+  if variant = 3 then do
+    fields[2] = .lltarget..operand.symbol('fixture.second') as .object
+    ignored = draft.record('.globalexpose',fields,at)
+  end
+  if variant = 4 then ignored = startup(draft,'leaf','.initializer',at)
+  exposed = 'fixture.bump'; if variant = 7 then exposed = 'fixture.shared'
+  leaf = draft.procedure('leaf',0,at,exposed)
+  if variant = 5 then ignored = two(leaf,'link',leaf.reg('g',1),leaf.reg('a',1),at)
+  if variant = 6 then ignored = one(leaf,'endlife',leaf.reg('g',1),at)
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.string('shared' as .binary) as .object
+  fields[2] = .lltarget..operand.string('b' as .binary) as .object
+  fields[3] = .lltarget..operand.string('.int' as .binary) as .object; fields[4] = leaf.reg('g',1) as .object
+  ignored = leaf.record('.meta',fields,at)
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.string('V' as .binary) as .object; fields[2] = .lltarget..operand.integer(4) as .object
+  fields[3] = .lltarget..operand.string('R' as .binary) as .object; fields[4] = .lltarget..operand.string('I' as .binary) as .object
+  fields[5] = .lltarget..operand.string('g' as .binary) as .object; fields[6] = .lltarget..operand.integer(1) as .object
+  do i = 7 to 9; fields[i] = .lltarget..operand.integer(0) as .object; end
+  fields[10] = .lltarget..operand.string('shared' as .binary) as .object; fields[11] = .lltarget..operand.string(''x as .binary) as .object
+  ignored = leaf.record('.traceevent',fields,at)
+  ignored = three(leaf,'iadd',leaf.reg('a',1),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  ignored = three(leaf,'iadd',leaf.reg('g',1),leaf.reg('g',1),leaf.reg('a',1),at)
+  ignored = one(leaf,'ret',leaf.reg('g',1),at)
+  return draft.finish()
+
+globalcaller: procedure = .lltarget..module
+  arg variant = 0
+  draft = .lltarget..draft('globalcaller','fixture:globalcaller',3)
+  at = draft.synthetic('existing caller public alias and unrelated global')
+  fields = .object[]; fields[1] = .lltarget..operand.integer(2) as .object
+  fields[2] = .lltarget..operand.symbol('fixture.shared') as .object
+  if variant = 2 then fields[2] = .lltarget..operand.symbol('fixture.other') as .object
+  if variant <> 1 then ignored = draft.record('.globalexpose',fields,at)
+  if variant = 3 then do
+    fields[1] = .lltarget..operand.integer(1) as .object
+    ignored = draft.record('.globalexpose',fields,at)
+  end
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.procedure('left') as .object; fields[2] = .lltarget..operand.symbol('fixture.bump') as .object
+  if variant = 7 then fields[2] = .lltarget..operand.symbol('fixture.shared') as .object
+  ignored = draft.record('.import',fields,at)
+  if variant = 6 then ignored = startup(draft,'main','.initializer',at)
+  root = draft.procedure('main',5,at)
+  ignored = one(root,'null',root.reg('g',0),at)
+  ignored = two(root,'load',root.reg('g',0),.lltarget..operand.integer(99),at)
+  if variant <> 5 then do
+    ignored = one(root,'null',root.reg('g',2),at)
+    ignored = two(root,'load',root.reg('g',2),.lltarget..operand.integer(10),at)
+    ignored = two(root,'settp',root.reg('g',2),.lltarget..operand.integer(256),at)
+  end
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(2),at)
+  if variant = 4 then ignored = two(root,'link',root.reg('g',2),root.reg('r',0),at)
+  ignored = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('left'),root.reg('r',0),at)
+  ignored = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('left'),root.reg('g',2),at)
+  ignored = three(root,'ichkrng',root.reg('r',0),.lltarget..operand.integer(3),.lltarget..operand.integer(3),at)
+  ignored = three(root,'ichkrng',root.reg('r',1),.lltarget..operand.integer(13),.lltarget..operand.integer(13),at)
+  ignored = three(root,'ichkrng',root.reg('r',2),.lltarget..operand.integer(28),.lltarget..operand.integer(28),at)
+  ignored = three(root,'ichkrng',root.reg('g',2),.lltarget..operand.integer(28),.lltarget..operand.integer(28),at)
+  ignored = three(root,'ichkrng',root.reg('g',0),.lltarget..operand.integer(99),.lltarget..operand.integer(99),at)
+  ignored = three(root,'getandtp',root.reg('r',3),root.reg('r',1),.lltarget..operand.integer(768),at)
+  ignored = three(root,'getandtp',root.reg('r',4),root.reg('r',2),.lltarget..operand.integer(768),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  return draft.finish()
+
+globalrequests: procedure = .object[]
+  arg source = reference .lltarget..module, target = reference .lltarget..module
+  caller = dereference source; provider = dereference target; result = .object[]; item = .lltarget..record
+  do i = 1 to caller.records()
+    item = caller.record(i)
+    if item.kind() = 'instruction' & item.mnemonic() = 'call1' then result[result[0] + 1] = llinline..bind(source,item.id(),target,provider.procedureid('leaf')) as .object
+  end
+  return result
+
+/** The counted window after provider r0 is g0,a0, even when no operand spells
+ * a global. A zero-global caller must not reinterpret that window as a0,a1. */
+globalwindow: procedure = .int
+  arg profile = .string
+  draft = .lltarget..draft('globalwindow.provider','fixture:globalwindow.provider',1)
+  at = draft.synthetic('implicit private-global counted child window')
+  outer = draft.procedure('outer',1,at,'fixture.global.window.outer')
+  ignored = two(outer,'load',outer.reg('r',0),.lltarget..operand.integer(2),at)
+  ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure('child'),outer.reg('r',0),at)
+  ignored = one(outer,'ret',outer.reg('r',0),at)
+  child = draft.procedure('child',0,at,'fixture.global.window.child')
+  ignored = one(child,'ret',child.reg('a',1),at)
+  target = draft.finish(); providerid = target.identity()
+  draft = .lltarget..draft('globalwindow.caller','fixture:globalwindow.caller',0)
+  at = draft.synthetic('zero-global caller imports both exact exported bodies')
+  fields = .object[]; fields[1] = .lltarget..operand.procedure('left') as .object
+  fields[2] = .lltarget..operand.symbol('fixture.global.window.outer') as .object
+  ignored = draft.record('.import',fields,at)
+  fields[1] = .lltarget..operand.procedure('child_left') as .object
+  fields[2] = .lltarget..operand.symbol('fixture.global.window.child') as .object
+  ignored = draft.record('.import',fields,at)
+  root = draft.procedure('main',2,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  callid = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('left'),root.reg('r',0),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  source = draft.finish(); bindings = .object[]
+  bindings[1] = llinline..bind(reference source,callid,reference target,target.procedureid('outer')) as .object
+  refused = llinline..expandmany(bindings,profile,12000000)
+  return unchanged(refused,source,'keep','import.global.nested.call.pending') + check(target.identity() = providerid,'implicit-window refusal preserves its exact provider')
+
+globalcontrols: procedure = .int
+  arg profile = .string
+  variant = .int; alternate = .lltarget..module; alternatebindings = .object[]
+  status = .string; refused = .llinline..change
+  failures = 0; source = globalcaller(); target = globalprovider(); sourceid = source.identity(); providerid = target.identity()
+  bindings = globalrequests(reference source,reference target)
+  changed = llinline..expandmany(bindings,profile,12000000)
+  failures = failures + check(changed.status() = 'changed','existing shared public globals expand through their symbol map')
+  if changed.status() = 'changed' then do
+    result = changed.result(); item = .lltarget..record; value = .lltarget..operand; other = .lltarget..operand
+    exposures = 0; imports = 0; globals = 0; metadata = 0; traces = 0; copies = 0
+    do i = 1 to result.records()
+      item = result.record(i)
+      if item.kind() = '.globalexpose' then do
+        exposures = exposures + 1; value = item.operand(1); other = item.operand(2)
+        failures = failures + check(value.index() = 2 & other.text() = 'fixture.shared','published exposure is the exact original caller declaration')
+      end
+      if item.kind() = '.import' then imports = imports + 1
+      if item.kind() = '.meta' & item.operands() = 4 then do
+        value = item.operand(4)
+        if value.kind() = 'R' & value.bank() = 'g' then do
+          metadata = metadata + 1; failures = failures + check(value.index() = 2,'scoped metadata follows the existing shared cell')
+        end
+      end
+      if item.kind() = '.traceevent' then do
+        value = item.operand(5); other = item.operand(6)
+        if value.text() = 'g' then do
+          traces = traces + 1; failures = failures + check(other.index() = 2,'provider TRACE global follows the caller alias')
+        end
+      end
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'iadd' then do
+        value = item.operand(1)
+        if value.bank() = 'g' then do
+          globals = globals + 1; failures = failures + check(value.index() = 2,'provider global index is translated by public symbol')
+        end
+      end
+      if item.mnemonic() = 'copy' then do
+        value = item.operand(2)
+        if value.bank() = 'g' & value.index() = 2 then copies = copies + 1
+      end
+      if item.mnemonic() = 'endlife' then do
+        value = item.operand(1); failures = failures + check(value.bank() <> 'g','shared globals never acquire frame lifetime cleanup')
+      end
+    end
+    failures = failures + check(result.name() = source.name() & result.artifact() = source.artifact() & result.globals() = 3 & result.procedures() = 1,'publication retains caller identity and complete original global bank')
+    failures = failures + check(exposures = 1 & imports = 1 & globals = 2 & copies = 2 & metadata = 2 & traces = 2 & instructions(result,'call1') = 0,'shared effects, copied returns and observations survive without surrogate calls')
+    cleaned = llcleanup..transport(reference result,result.procedureid('main'),profile,12000000)
+    failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'transport.global.storage.pending','public-global cleanup retains its conservative global guard')
+  end
+  failures = failures + check(source.identity() = sourceid & target.identity() = providerid,'shared-global transformation preserves both frozen modules')
+  reasons = .string[]
+  reasons[1] = 'import.global.private.pending'; reasons[2] = 'import.global.declaration.ambiguous'; reasons[3] = reasons[2]
+  reasons[4] = 'import.startup.metadata.pending'; reasons[5] = 'global.callee.binding.pending'; reasons[6] = 'global.lifetime.pending'
+  reasons[7] = 'import.global.callable.collision'
+  do variant = 1 to 7
+    alternate = globalprovider(variant); alternatebindings = globalrequests(reference source,reference alternate)
+    status = 'keep'; if variant = 2 | variant = 3 | variant = 7 then status = 'invalid'
+    refused = llinline..expandmany(alternatebindings,profile,12000000)
+    failures = failures + unchanged(refused,source,status,reasons[variant])
+  end
+  reasons[1] = 'import.global.caller.alias.missing'; reasons[2] = reasons[1]; reasons[3] = 'import.global.declaration.ambiguous'
+  reasons[4] = 'global.binding.unproved'; reasons[5] = 'global.definition.unproved'; reasons[6] = 'import.startup.metadata.pending'
+  reasons[7] = 'import.global.callable.collision'
+  do variant = 1 to 7
+    alternate = globalcaller(variant); alternatebindings = globalrequests(reference alternate,reference target)
+    status = 'keep'; if variant = 3 | variant = 7 then status = 'invalid'
+    refused = llinline..expandmany(alternatebindings,profile,12000000)
+    failures = failures + unchanged(refused,alternate,status,reasons[variant])
+  end
+  do variant = 1 to 3
+    select variant
+      when 1 then refused = llinline..expandmany(bindings,profile,3)
+      when 2 then refused = llinline..expandmany(bindings,profile,12000000,1000000,64)
+      otherwise refused = llinline..expandmany(bindings,profile,12000000,1000000,67108864,65536,1)
+    end
+    failures = failures + check(refused.status() = 'limit' & refused.result().identity() = sourceid,'shared-global resource refusal preserves the exact input ' || variant)
+  end
+  return failures + globalwindow(profile)
+
 main: procedure = .int
   alternate = .lltarget..module; alternatebindings = .object[]; status = .string; reason = .string
   refused = .llinline..change; variant = .int; i = .int
@@ -533,7 +736,7 @@ main: procedure = .int
     alternate = provider(variant); alternatebindings = requests(reference source,reference alternate)
     status = 'keep'; reason = ''
     select variant
-      when 1 then reason = 'import.global.storage.pending'
+      when 1 then reason = 'import.global.private.pending'
       when 3 then do; status = 'invalid'; reason = 'binding.target.mismatch'; end
       when 4 then reason = 'import.provider.main.pending'
       when 5 then reason = 'import.startup.metadata.pending'
@@ -553,7 +756,7 @@ main: procedure = .int
       when 2 then do; status = 'invalid'; reason = 'binding.import.ambiguous'; end
       when 3 then do; status = 'invalid'; reason = 'binding.import.local.collision'; end
       when 4 then reason = 'import.startup.metadata.pending'
-      when 5 then reason = 'import.global.storage.pending'
+      when 5 then reason = 'global.binding.unproved'
     end
     failures = failures + check(alternate.valid(),'negative caller model is valid: ' || variant)
     refused = llinline..expandmany(alternatebindings,profile,6000000)
@@ -577,5 +780,6 @@ main: procedure = .int
   failures = failures + check(replayed.status() = 'changed' & source.identity() = original & target.identity() = providerid,'small replay after refusals retains both valid owners')
   failures = failures + privatecontrols(profile)
   failures = failures + nestedcontrols(profile)
+  failures = failures + globalcontrols(profile)
   say 'IMPORTED_INLINE|failures=' || failures
   return failures

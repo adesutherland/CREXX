@@ -186,7 +186,7 @@ endforeach()
 expect_keep(old-profile closed-main-default-halt.v1 "profile.imported.body.pending"
   --body io-import-provider.rxas "${_provider}")
 expect_keep(missing-body "${_profile}" "unavailable exact body foreign")
-expect_keep(global-provider "${_profile}" "import.global.storage.pending"
+expect_keep(global-provider "${_profile}" "import.global.private.pending"
   --body io-import-provider-global.rxas "${FIXTURES}/io-import-provider-global.rxas")
 expect_keep(nested-provider "${_profile}" "import.child.private.pending"
   --body io-import-provider-nested.rxas "${FIXTURES}/io-import-provider-nested.rxas")

@@ -1142,10 +1142,45 @@ imported scalar body with a finite declared private local count. A retained
 direct child may be a same-provider exported bytecode leaf when the caller
 already imports that exact child, as specified below. Straight-line bodies and finite direct acyclic
 branch bodies use the existing same-owner scalar proof. The caller has
-the only `main`; caller and providers have no globals, providers have no
-imports, and the complete caller import set resolves uniquely over the
+the only `main`; providers have no imports, and the complete caller import set resolves uniquely over the
 distinct bound providers. The CLI also
 rejects unused `--body` inputs. Existing profiles retain foreign calls.
+
+The existing public-global follow-on also permits caller/provider global banks.
+Every referenced provider global must already have one public `.expose` symbol,
+and the caller must already expose a unique global under that same symbol.
+For example, provider `g1 .expose=counter.value` maps to an existing caller
+`g2 .expose=counter.value`, irrespective of their physical indices. Matching
+names across modules intentionally share one VM value cell; the pass neither
+creates exposure names nor appends global slots. The exact original module
+set/order, provider artifacts, caller global count/exposures and procedure
+imports remain intact, preserving allocation ownership and provider selection
+even after the selected calls disappear.
+
+The bounded projection validates within-module symbol/slot uniqueness, global
+bounds and the shared external-name namespace: a global exposure cannot collide
+with an imported or exported procedure name. It rewrites typed instruction, scoped metadata and TRACE
+references through that existing-symbol map. Scalar facts therefore see the
+same caller Global StorageId for the mapped provider global and an aliased
+actual. The static-exact facts profile independently checks exposure uniqueness;
+ordinary profiles retain their exposure refusal. Caller global bindings must
+be canonical at every call. Callee global rebinding, global lifetime operations,
+unproved global contents/components, nested global calls and unsupported control
+retain their existing precise proof reasons. Whole global returns copy their
+value/status and do not acquire frame cleanup. Both cleanup services keep their
+conservative global guards. Private foreign globals and missing/mismatched
+caller aliases retain calls with separate reasons. Initializers, autoload and
+dynamic ingress retain their existing startup boundary; no `.meta` attestation,
+private alias directive, RXBIN feature or VM operation is introduced.
+
+A provider with any global bank retains its nested calls before projection,
+including bodies with no explicit global operand. A counted child's implicit
+window can cross from its provider's local bank into private globals and then
+arguments; substituting the caller's global count would reinterpret that window.
+Such sites retain `import.global.nested.call.pending` until original-bank window
+transport is proved. Constructed and executable handwritten controls cover a
+zero-global caller whose imported outer procedure's child receives provider
+`g0=0`, rather than the projected outer `a0=1`.
 
 This profile requires subsequent assembly, linking and loading of the exact
 immutable caller/provider sources, without alternative providers or pre-entry

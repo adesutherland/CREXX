@@ -1,0 +1,37 @@
+/* Independent values: 2 becomes3; shared10 becomes13, then aliases to28.
+ * Both whole returns copy flags256; the first result remains13. */
+.globals=3
+g2 .expose=fixture.global.value
+foreign() .expose=fixture.global.bump
+
+main() .locals=5
+  null g0
+  load g0,99
+  null g2
+  load g2,10
+  settp g2,256
+  load r0,2
+  call1 r1,foreign(),r0
+  call1 r2,foreign(),g2
+  ichkrng r0,3,3
+  ichkrng r1,13,13
+  ichkrng r2,28,28
+  ichkrng g2,28,28
+  ichkrng g0,99,99
+  getandtp r3,r1,768
+  getandtp r4,r2,768
+  itos r0
+  say r0
+  itos r1
+  say r1
+  itos r2
+  say r2
+  itos g2
+  say g2
+  itos g0
+  say g0
+  itos r3
+  say r3
+  itos r4
+  say r4
+  ret 0

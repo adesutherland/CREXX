@@ -1,0 +1,9 @@
+/* The child call's implicit window after r0 is provider g0,a0. */
+.globals=1
+outer() .locals=1 .expose=fixture.global.window.outer
+  load r0,2
+  call r0,child(),r0
+  ret r0
+
+child() .locals=0 .expose=fixture.global.window.child
+  ret a1

@@ -2018,6 +2018,7 @@ analysis: class
     id = .int; slot = .int; integer = .int; whole = .int; barrier = .int; definition = .int
     references = .numbers; plain = .numbers; actuals = .numbers; destination = .lltarget..operand; linearrow = .numbers
     ownedroot = .int[]; view = .frame; rootproof = .callproof; selectors = .int[]
+    exposedslots = .int[]; exposednames = .string[]; exposedslot = .lltarget..operand; exposedname = .lltarget..operand
     callhistory = .history
     item = .lltarget..record; value = .lltarget..operand; option = .lltarget..operand; catalog = .llrxascatalog..catalog
     do
@@ -2058,7 +2059,22 @@ analysis: class
         end
       end
       if module.globals() > 0 then do
-        if item.kind() = '.globalexpose' then do; ignored = reject('global.exposure.pending'); return; end
+        if item.kind() = '.globalexpose' then do
+          if _profile <> 'closed-main-static-exact-default-halt.v1' then do; ignored = reject('global.exposure.pending'); return; end
+          /* Static-exact delivery excludes hidden entry and changing providers.
+           * Unique module-local names cannot alias distinct local global slots;
+           * foreign references were mapped by their existing exposure symbols. */
+          exposedslot = item.operand(1); exposedname = item.operand(2)
+          if exposedname.text() = '' then do; _status = 'invalid'; _reason = 'global.exposure.invalid'; return; end
+          do j = 1 to exposedslots[0]
+            if spend(exposedname.length() + 1) = 0 then return
+            if exposedslots[j] = exposedslot.index() | exposednames[j] == exposedname.text() then do
+              _status = 'invalid'; _reason = 'global.exposure.ambiguous'; return
+            end
+          end
+          if reserve(exposedname.length() + 32,1) = 0 then return
+          j = exposedslots[0] + 1; exposedslots[j] = exposedslot.index(); exposednames[j] = exposedname.text()
+        end
         if item.kind() = '.meta' & item.operands() > 1 then do
           option = item.operand(2)
           if option.text() = '.initializer' then do; ignored = reject('global.initializer.pending'); return; end
