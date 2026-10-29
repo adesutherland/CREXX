@@ -357,7 +357,12 @@ graphtransport: procedure = .llinline..change
       if input.procedureid() <> procedureId | input.kind() = 'procedure' then iterate
       if input.kind() = 'instruction' then nextmachine = input.id()
       groups[input.id()] = nextmachine
-      if nextmachine > 0 & wordpos(input.kind(),'.srcstep .traceevent') > 0 then protected[nextmachine] = 1
+      if nextmachine > 0 then do
+        /* META is lexical even on an unexecuted address. Point records may
+         * leave with dead code; a retained META group still needs a carrier. */
+        if input.kind() = '.meta' then protected[nextmachine] = 2
+        else if wordpos(input.kind(),'.srcstep .traceevent') > 0 then protected[nextmachine] = max(protected[nextmachine],1)
+      end
       if input.kind() = 'label' then do
         value = input.operand(1); width = value.length()
         if width + 1 > work then return .llinline..change('limit','transport.address.work',source,empty)
@@ -373,7 +378,13 @@ graphtransport: procedure = .llinline..change
       if input.procedureid() <> procedureId | input.kind() = 'procedure' then iterate
       group = groups[input.id()]
       if input.kind() = 'instruction' then do
-        if facts.rootlive(input.id()) = 0 then do; removed[input.id()] = 1; changed = 1; iterate; end
+        if facts.rootlive(input.id()) = 0 then do
+          if protected[input.id()] <> 2 then do; removed[input.id()] = 1; changed = 1; iterate; end
+          call objectarraydrop fields
+          plans[input.id()] = .plan(fields,'cnop') as .object
+          if input.mnemonic() <> 'cnop' then changed = 1
+          iterate
+        end
       end
       else if wordpos(input.kind(),'.srcstep .traceevent') > 0 & group > 0 then do
         if facts.rootlive(group) = 0 then do; removed[input.id()] = 1; changed = 1; iterate; end

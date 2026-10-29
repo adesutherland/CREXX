@@ -130,7 +130,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure and stable-register scoped META re-entry on direct acyclic calls are focused-qualified. Complete broader imported, aliasing, dynamic varargs, runtime-selector scoped META re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -2387,6 +2387,142 @@ then freeze for the coordinator's focused serial constructed/handwritten panel
 and affected existing paths, reusing prepared producers and valid results.
 Broader INL-STEP06, metadata re-entry, loops and initiative acceptance stay open;
 no compiler-wide, sanitizer, platform or performance panel is commissioned.
+
+### Scoped lexical metadata re-entry increment
+
+**Status: direct acyclic slice implemented and focused-qualified; runtime
+selector reuse and milestone QA todo.** This INL-STEP04/05 increment replaces the
+conservative scoped-META dominance/early-layout gates only where the original
+lexical address state can be reproduced with stable observed storage. First
+qualify the current direct acyclic scalar call path. Then admit the checked
+runtime-selector DAG through the same projection/reconciler if its case-local
+publication satisfies the identical contract. Retain all existing caller,
+arity, operation, successful-arithmetic, child/depth, module and terminal-signal
+gates. There is no new source-language rule, RXAS syntax, ISA, wire record,
+linker/VM algorithm, producer proof META, graph solver or register-reuse slice.
+The original `.meta "name"="b" "type" rN` declaration and
+`.meta "name"` clear express the contract for handwritten RXAS too.
+New re-entry admits REG `rN` only. Preserve the already-qualified common-entry
+`aN` path and its shared closure; branch-local/changing `aN` metadata retains
+its existing unsupported boundary rather than gaining re-entry support.
+
+A bounded static source-layout sample found 243 scoped acyclic definitions,
+39 with multiple reachable RETs and 8 with branch-local openings in the 112
+unoptimized goldens; the 112 optimized goldens had 122/19/3, and the maintained
+Prolog RXAS example 77/49/19. These counts indicate practical layout demand;
+they are neither eligible call-site counts nor application/hot-path rates.
+
+Build one bounded target-owned lexical projection from the frozen original
+procedure's source-ordered address groups. Carry supported ordinary REG/CONST
+descriptors and matching clears, their complete operands, declaration identity
+and origin. Include authored rows on skipped or structurally unreachable
+machine groups when they determine the state at a later surviving address;
+META does not execute conditionally. Keep the incoming state before each
+address group distinct from that group's ordered authored records. Detached
+body-end rows retain their existing non-cloning contract. The projection uses
+the shared target record/address identities and existing scope owner; it is
+not another CFG or predecessor-state solver. At a CFG join, the desired scope
+state belongs to the original lexical address, rather than being a meet of
+the scopes encountered on incoming execution paths.
+
+Use the existing path-local frame/cells proof to observe every register
+descriptor live at every reached original address, including one whose opening
+record's machine group is skipped. Preserve whole-state entry independence
+and the current stable `_scopestorage` obligation per original declaration
+through its matching clear: all feasible observations, including selector
+cases, must resolve the same StorageId. Keep `metadata.binding.change.pending`
+when that storage changes; keep the existing precise recycler/undefined or
+runtime-observer refusal when a live observation lacks its proof. A declaration
+point alone cannot discharge its whole lexical interval. Constants need no
+invented register observation. Preserve all existing reference, ownership and
+physical-observer gates. Changing-storage scope splitting and DAG reuse remain
+separate follow-ons, even if conservative physical glue could represent more.
+
+Reconcile the currently emitted lexical descriptors with the projected incoming
+state before each surviving original group, after applying the existing
+site/case register and metadata-identity maps. Emit only the required delta:
+one opening replaces a different descriptor, and one clear removes a descriptor
+which should be absent. Never synthesize a clear followed by a reopening of
+the same name at the same address. Keep names fresh against every destination
+declaration using the existing owner; do not let closure clear an authored
+caller binding. Preserve the current direct-DAG shared closure when its one
+carrier already closes the whole clone before continuation. Runtime selector
+exits retain their existing per-(case,RET) closure, followed by the same
+reconciler at any later emitted original group and at the next case. A RET
+neither terminates source-order traversal nor makes later groups conditional
+metadata. Restore the caller's original lexical/source state before its
+continuation observations.
+
+Same-address order is part of the contract. `METALOADDATA` returns records in
+canonical forward-chain order; `rxdb`/`symbol` scan addresses backwards and
+accept the first matching scope row in a group. A last-record-wins fold is
+therefore invalid. Copy an admitted authored group's records in their original
+order. The first slice admits at most one distinct scoped transition for a
+name in one original address group; repeated identical rows keep their order.
+Conflicting same-name REG/CONST/CLEAR rows at one original address retain
+`metadata.scope.address.pending` until their consumer-specific ordered meaning
+has a separate proof. This boundary does not change existing linear support.
+
+When a synthetic delta must restore inherited state visible to an `addr-1`
+lookup at the first resumed instruction, attach it to one generated `CNOP`
+immediately before the entire original address group and its alias labels.
+The prior generated exit clear and this reopening then occupy distinct
+executable addresses. Labels still target the mapped original instruction;
+metadata does not require execution of the carrier. Emit a carrier only when
+the required incoming-state delta needs that separate address, sharing it
+across all names in that delta. Keep the original group's directives on its
+mapped original instruction address, rather than moving its authored opening
+or clear to the earlier carrier. Give generated carriers truthful generated/
+contributing origins, without duplicating authored source-step or TRACE
+events. Preserve source-step/clause identities, TRACE register operands, a
+removed neighbor's lexical source context and caller restoration through the
+existing source owner. Cleanup must preserve these address carriers and scope
+observations; it may keep the conservative expanded result when its independent
+transport/storage proof is unavailable.
+
+Independent constructed and paired handwritten RXAS controls establish an
+expected lexical descriptor table at original logical anchors, including
+lookup at the mapped instruction address and its preceding address. The
+small direct-DAG panel covers: a common live entry binding with an early RET
+before a later reached block; a binding already closed before that RET, which
+must not be spuriously reopened; disjoint branch openings/clears and separate
+RETs; an opening or clear on a skipped machine group which still governs a
+later live address; and the same name redeclared at distinct addresses with a
+different descriptor. Include an original missing clear deliberately: its
+binding remains lexically visible in a later arm even when execution skipped
+the opening. Do not invent branch-local lifetime semantics to tidy that case.
+Use stable observed storage, independently expected return values and current
+borrowed COPY/owned MOVE/none behavior. Two inline sites and an authored suffix
+collision check fresh names and caller-scope restoration.
+
+After that direct-DAG result is reviewed, reuse the same controls on the
+current width-at-most-three runtime selector, including two feasible RETs in
+one case and different feasible RET sets across cases. Convert the maintained
+`pick.which` early/multiple-RET and disjoint-scope controls to positives only
+where the lexical/storage proof now succeeds. Assert exact case labels,
+matched feasible exit closure, no cross-case metadata bleed and correct
+source/TRACE on distinct returns. Compare conservative and cleaned artifacts
+with native assembler optimization disabled and one normal VM. Inspect the
+native metadata readback in a separate existing-style probe; this does not
+admit physical metadata/frame observers into the expansion profile. Reuse
+unchanged scalar, child, return/CANCEL and guard proof rather than expanding
+this metadata-only increment into their full panels.
+
+Negative controls cover conflicting same-name transitions at one original
+address, a lexically live but recycler-dependent/undefined register after a
+skipped opening, changing observed StorageIds before a clear, unsupported
+metadata/physical observers and exact input retention. Existing incompatible
+joins, cycles, unsupported control and child/selector gates stay intact. Charge
+original group/declaration indexes, complete descriptor operands, every
+coexisting scope snapshot, per-case remapping/reconciliation and each emitted
+delta/carrier before growth. Include variable name/type/literal lengths and
+constructor copies; no assumed COW or uncharged sealed-query copies. Tight
+work/entry/byte/frame/code controls must retain the exact input owner and the
+CLI's last-good output without partial publication. Inspect one coherent
+re-entry region early, batch fixes, then freeze for the coordinator's focused
+serial constructed/handwritten panel using prepared producers. INL-STEP06,
+changing-storage metadata, loops, wider cleanup and initiative acceptance stay
+open; no broad compiler, sanitizer, platform or performance panel is selected.
 
 ### Reviewed same-module global scalar increment
 

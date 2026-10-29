@@ -1493,7 +1493,43 @@ against all module label and constant names, and rewrites only declared branch
 operands. Each return branches to one post-arm closure. A common-entry scoped
 binding whose original clear is detached at the callee end closes there, then
 one `CNOP` carries the clear before caller continuation. A branch-local scope
-requires further observation proof and stays a call in this slice.
+uses the separately staged lexical projection below; other unproved scopes
+retain their specific call/refusal boundary.
+
+The direct-DAG scoped-metadata follow-on is implemented and focused-qualified.
+Its one `preparescopes` owner projects all original lexical
+address groups, including declarations and clears whose machine groups are
+skipped. Incoming descriptors remain separate from the authored group and
+its observations. Sealed `scopereentry`, `scopeaddress`, `scopebindings` and
+`scopebinding` queries borrow original group/declaration identities from the
+checked call's body. Every reached group observes all live register scopes;
+new re-entry requires `rN`, whole-state independence and one stable StorageId
+per declaration through its clear. Changing storage retains
+`metadata.binding.change.pending`. The qualified legacy common-entry `aN`
+path remains intact; branch-local `aN` gains no support.
+
+The emitter reconciles mapped descriptors before a surviving original group,
+then copies that group's authored ordered records. A declaration on skipped
+code can still govern a later arm; an untaken clear can likewise remove it.
+An authored missing clear retains that lexical visibility. Synthetic deltas
+use one opening to replace a descriptor or one clear to remove it. Their
+single `CNOP` carrier precedes the entire resumed group and its labels, so
+an `addr-1` lookup sees the inherited state and a generated clear/reopen never
+shares one address. The carrier uses the shared executable-cell ledger.
+Original groups on a redundant NUMSCI keep a CNOP at that address. Caller
+source state is restored before continuation TRACE.
+Graph cleanup also preserves an inert address carrier for retained META on
+unexecuted code; point-only dead source/TRACE groups can still leave with the
+dead instruction. An unobserved dead CNOP remains removable.
+
+Canonical same-address metadata chain order is preserved. The first slice
+retains conflicting same-name REG/CONST/CLEAR transitions at one original
+address with `metadata.scope.address.pending`; it never assumes last-wins.
+The maintained `scope-reentry` constructed lane and `levell_rxas_scope_reentry`
+panel compare independent lexical expectations, native metadata readback and
+ordinary conservative/cleaned executions. Milestone qualification is still open.
+Runtime-selector metadata re-entry, changing-storage scope splitting and new
+DAG reuse remain outside this direct-DAG increment.
 
 The opt-in graph cleanup below handles an acyclic, closed-root scalar caller
 after expansion. The existing straight-line cleanup still compacts callers

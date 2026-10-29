@@ -825,6 +825,11 @@ analysis: class
   _scopes = .numbers[]
   _scopeslot = .int[]
   _scopestorage = .int[]
+  _scopechecked = .int[]
+  _scopereentry = .int[]
+  _scopeaddress = .int[]
+  _scopeincoming = .numbers[]
+  _scopeobserved = .numbers[]
   _bytelimit = .int
   _retained = .int
   /* Analysis-private two-path overlay. Original source identities remain the
@@ -1653,14 +1658,41 @@ analysis: class
    * declaration's own machine group executes. Resolve its storage later at
    * every feasible point in the scope, including its matching clear. */
   preparescopes: method = .int
-    i = .int; j = .int; found = .int; closing = .int; opening = .int
-    item = .lltarget..record; name = .lltarget..operand; value = .lltarget..operand
+    arg functionid = 0, strict = 0
+    i = .int; j = .int; k = .int; found = .int; closing = .int; opening = .int; groupid = .int; previous = .int
+    item = .lltarget..record; prior = .lltarget..record; name = .lltarget..operand; value = .lltarget..operand; other = .lltarget..operand
     names = .binary[]; sizes = .int[]; active = .int[]; values = .int[]; empty = .int[]
+    grouprecords = .int[]; observed = .int[]
     module = dereference _owner
+    if functionid = 0 then functionid = _function
+    /* One reverse address index avoids record.addressid's repeated suffix
+     * scan. The same source groups serve observations and sealed emission. */
+    do i = module.records() to 1 by -1
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> functionid | item.kind() = 'procedure' then iterate
+      if reserve(1,8) = 0 then return 0
+      if item.kind() = 'instruction' then groupid = item.id()
+      _scopeaddress[item.id()] = groupid
+    end
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
-      if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      if item.procedureid() <> functionid | item.kind() = 'procedure' then iterate
+      groupid = _scopeaddress[item.id()]
+      if strict & groupid <> previous then do
+        if previous > 0 then do
+          if reserve(observed[0],16) = 0 | reserve(1,32) = 0 then return 0
+          _scopeobserved[previous] = .numbers(observed)
+        end
+        values = empty
+        if spend(active[0]) = 0 | reserve(active[0],32) = 0 | reserve(1,64) = 0 then return 0
+        do j = 1 to active[0]
+          if active[j] > 0 then values[values[0] + 1] = active[j]
+        end
+        if groupid > 0 then _scopeincoming[groupid] = .numbers(values)
+        observed = values; grouprecords = empty; previous = groupid
+      end
       closing = 0; opening = 0; found = 0
       if item.kind() = '.meta' then do
         name = item.operand(1)
@@ -1671,15 +1703,34 @@ analysis: class
         end
         closing = item.operands() = 1
         if item.operands() = 4 then do
-          value = item.operand(4); opening = value.kind() = 'R'
+          value = item.operand(4); opening = (value.kind() = 'R') | strict
           if opening then do
-            if value.bank() <> 'r' then return reject('graph.external.storage.pending')
+            if value.kind() = 'R' & value.bank() <> 'r' then return reject('graph.external.storage.pending')
             if found = 0 then do
               if reserve(1,32) = 0 | reserve(name.length(),1) = 0 then return 0
               found = names[0] + 1; names[found] = name.bytes(); sizes[found] = name.length()
             end
-            active[found] = item.id(); _scopeslot[item.id()] = value.index() + 1
+            active[found] = item.id()
+            if value.kind() = 'R' then _scopeslot[item.id()] = value.index() + 1
           end
+        end
+        if strict & (opening | closing) & groupid > 0 then do
+          /* Canonical same-address order is not last-wins. Admit repeated
+           * identical rows; conflicting transitions need a separate proof. */
+          do j = 1 to grouprecords[0]
+            prior = module.at(grouprecords[j]); other = prior.operand(1)
+            if spend(name.length() + other.length() + 1) = 0 then return 0
+            if bincompare(name.bytes(),other.bytes()) <> 0 then iterate
+            if prior.operands() <> item.operands() then return reject('metadata.scope.address.pending')
+            do k = 1 to item.operands()
+              value = item.operand(k); other = prior.operand(k)
+              if spend(value.length() + other.length() + 1) = 0 then return 0
+              if value.kind() <> other.kind() | value.bank() <> other.bank() | value.index() <> other.index() then return reject('metadata.scope.address.pending')
+              if bincompare(value.bytes(),other.bytes()) <> 0 then return reject('metadata.scope.address.pending')
+            end
+          end
+          if reserve(1,8) = 0 then return 0
+          grouprecords[grouprecords[0] + 1] = item.id()
         end
         if opening = 0 & closing = 0 & found > 0 then active[found] = 0
       end
@@ -1689,17 +1740,28 @@ analysis: class
         if active[j] > 0 then values[values[0] + 1] = active[j]
       end
       _scopes[item.id()] = .numbers(values)
+      if strict then do j = 1 to values[0]
+        if spend(observed[0] + 1) = 0 | reserve(1,8) = 0 then return 0
+        call insert(reference observed,values[j])
+      end
       if closing & found > 0 then active[found] = 0
+    end
+    if strict & previous > 0 then do
+      if reserve(observed[0],16) = 0 | reserve(1,32) = 0 then return 0
+      _scopeobserved[previous] = .numbers(observed)
     end
     return 1
   scopeobserve: method = .int
     arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, observations_ref = reference .int[]
     i = .int; declaration = .int; id = .int
-    row_ref = reference _scopes[item.id()]; row = dereference row_ref
+    if _scopereentry[item.procedureid()] then row_ref = reference _scopeobserved[_scopeaddress[item.id()]]
+    else row_ref = reference _scopes[item.id()]
+    row = dereference row_ref
     state = dereference state_ref; observations = dereference observations_ref
     if spend(row.size()) = 0 | reserve(row.size(),8) = 0 then return 0
     do i = 1 to row.size()
       declaration = row.at(i)
+      if _scopeslot[declaration] = 0 then iterate
       value = .lltarget..operand.bound(0,0,0,'r',_scopeslot[declaration] - 1)
       id = view.storage(value)
       if id = 0 then return reject('graph.external.storage.pending')
@@ -1709,6 +1771,29 @@ analysis: class
       if spend(observations[0] + 1) = 0 then return 0
       call insert(observations_ref,domain(id,1))
     end
+    return 1
+  /* Preserve legacy common-entry a/g scopes. Only the new direct-DAG
+   * re-entry path uses the r-only lexical projection; selectors stay gated. */
+  prepareinlinescopes: method = .int
+    arg functionid = .int
+    i = .int; scoped = .int; item = .lltarget..record; value = .lltarget..operand
+    if _scopechecked[functionid] then return 1
+    if reserve(1,16) = 0 then return 0
+    _scopechecked[functionid] = 1
+    if _selectorcount[functionid] > 0 then return 1
+    module = dereference _owner
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> functionid | item.kind() <> '.meta' then iterate
+      if item.operands() = 1 | item.operands() = 4 then scoped = 1
+      if item.operands() <> 4 then iterate
+      value = item.operand(4)
+      if value.kind() = 'R' & value.bank() <> 'r' then return 1
+    end
+    if scoped = 0 then return 1
+    if preparescopes(functionid,1) = 0 then return 0
+    _scopereentry[functionid] = 1
     return 1
   /* Include transient and retained deep copies, not an assumed VM COW path. */
   pathallowance: method = .int
@@ -2128,7 +2213,11 @@ analysis: class
     history_ref = reference .history; pathhistory_ref = reference .history
     name = .string; flow = .int; mask = .int; known = .int; bits = .int; selected = .int
     refinementid = .int; refinementmask = .int; runtime = .int
+    scopeobservations = .int[]; emptyscopeobservations = .int[]
     module = dereference _owner; catalog = .llrxascatalog..catalog()
+    if root = 0 & startafter = 0 then do
+      if prepareinlinescopes(bodyid) = 0 then return 0
+    end
     if _cyclesready = 0 then do
       _cycles = _index.loops(_work,_bytelimit)
       if _cycles.status() <> 'ok' then do; _status = _cycles.status(); _reason = _cycles.message(); return 0; end
@@ -2172,6 +2261,10 @@ analysis: class
         if spend(1) = 0 then return 0
         if _index.opcode(opid) <= 16 then do; opid = _index.nextop(opid); iterate; end
         item = module.at(opid); call proof.visit(_recordordinal[opid])
+        if root = 0 & _scopereentry[bodyid] then do
+          scopeobservations = emptyscopeobservations
+          if scopeobserve(item,view,reference path,reference scopeobservations) = 0 then return 0
+        end
         if root then do
           _runtime[opid] = 1
           do j = 1 to item.registerrefs()
@@ -2293,7 +2386,7 @@ analysis: class
     /* Until the metadata owner proves path-local binding reconciliation,
      * common post-arm closure requires every live open/clear to precede each
      * feasible RET. Detached tails were never visited and cannot count. */
-    if root = 0 then do i = 1 to _index.functionoperations(bodyid)
+    if root = 0 & _scopereentry[bodyid] = 0 then do i = 1 to _index.functionoperations(bodyid)
       if spend(1) = 0 then return 0
       opid = _index.functionoperation(bodyid,i)
       if _index.opcode(opid) <= 16 then iterate
@@ -3482,6 +3575,30 @@ analysis: class
     if ordinal = 0 then return 0
     p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
     return row.live(ordinal)
+  /** Borrow sealed original-address scope rows. These queries neither scan
+   * source suffixes nor copy descriptors after facts publication. */
+  scopereentry: method = .int
+    arg callid = .int
+    if proofid(callid) = 0 then return 0
+    return _scopereentry[_body[callid]]
+  scopeaddress: method = .int
+    arg callid = .int, recordid = .int
+    if recordkey(callid,recordid) = 0 then return 0
+    return _scopeaddress[recordid]
+  scopebindings: method = .int
+    arg callid = .int, recordid = .int
+    groupid = scopeaddress(callid,recordid)
+    if groupid = 0 | scopereentry(callid) = 0 then return 0
+    row_ref = reference _scopeincoming[groupid]; row = dereference row_ref
+    return row.size()
+  scopebinding: method = .int
+    arg callid = .int, recordid = .int, ordinal = .int
+    groupid = scopeaddress(callid,recordid)
+    if groupid = 0 | scopereentry(callid) = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original inline scope group"; return 0
+    end
+    row_ref = reference _scopeincoming[groupid]; row = dereference row_ref
+    return row.at(ordinal)
   branchchoice: method = .int
     arg callid = .int, recordid = .int
     ordinal = recordkey(callid,recordid)

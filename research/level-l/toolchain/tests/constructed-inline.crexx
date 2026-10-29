@@ -1178,6 +1178,212 @@ stringhistory: procedure = .int
   if changed.reason() <> 'string.component.unproved' then say changed.reason()
   return failures
 
+scopeopen: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.string(name) as .object
+  fields[2] = .lltarget..operand.string('b') as .object
+  typename = '.int'; if value.kind() = 'S' then typename = '.string'
+  fields[3] = .lltarget..operand.string(typename) as .object; fields[4] = value as .object
+  return body.record('.meta',fields,at)
+scopeclose: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.string(name) as .object
+  return body.record('.meta',fields,at)
+
+/** Independent lexical layouts: branches do not execute META transitions. */
+scopemodel: procedure = .lltarget..module
+  arg variant = .int
+  draft = .lltarget..draft('scope.' || variant,'constructed.scope.' || variant,0)
+  at = draft.synthetic('original lexical scope groups')
+  root = draft.procedure('main',4,at)
+  if variant = 11 then ignored = three(root,'numsci',.lltarget..operand.integer(18),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
+  ignored = two(root,'load',root.reg('r',3),.lltarget..operand.integer(5),at)
+  ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',3),.lltarget..operand.integer(768),at)
+  ignored = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('helper'),root.reg('r',0),at)
+  if variant = 8 then ignored = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('helper'),root.reg('r',0),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('helper',3,at)
+  ignored = one(leaf,'null',leaf.reg('r',0),at)
+  ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(41),at)
+  ignored = one(leaf,'null',leaf.reg('r',1),at)
+  ignored = two(leaf,'load',leaf.reg('r',1),.lltarget..operand.integer(73),at)
+  if wordpos(variant as .string,'1 2 5 7 9 11') > 0 then ignored = scopeopen(leaf,'scope.live',leaf.reg('r',0),at)
+  if variant = 2 | variant = 7 then do
+    ignored = zero(leaf,'cnop',at)
+    ignored = scopeclose(leaf,'scope.live',at)
+    if variant = 7 then ignored = scopeopen(leaf,'scope.live',leaf.reg('r',1),at)
+  end
+  if variant = 11 then ignored = three(leaf,'numsci',.lltarget..operand.integer(18),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
+  if variant = 12 then ignored = scopeopen(leaf,'scope.literal',.lltarget..operand.string('exact'),at)
+  if variant = 4 | variant = 5 | variant = 8 then do
+    ignored = one(leaf,'br',.lltarget..operand.symbol('later'),at)
+    ignored = namedlabel(leaf,'skipped',at)
+    if variant = 5 then ignored = scopeclose(leaf,'scope.live',at)
+    else do
+      slot = 0; if variant = 8 then slot = 2
+      ignored = scopeopen(leaf,'scope.hidden',leaf.reg('r',slot),at)
+    end
+    ignored = zero(leaf,'cnop',at)
+  end
+  else do
+    ignored = two(leaf,'brf',.lltarget..operand.symbol('later'),leaf.reg('a',1),at)
+    if variant = 3 | variant = 6 then ignored = scopeopen(leaf,'scope.left',leaf.reg('r',0),at)
+    if variant = 10 then ignored = scopeopen(leaf,'scope.left',leaf.reg('a',1),at)
+    if variant = 9 then ignored = two(leaf,'link',leaf.reg('r',0),leaf.reg('a',1),at)
+    ignored = one(leaf,'ret',leaf.reg('r',0),at)
+  end
+  ignored = namedlabel(leaf,'later',at)
+  if variant = 3 then ignored = scopeopen(leaf,'scope.right',leaf.reg('r',1),at)
+  if variant = 6 then ignored = scopeopen(leaf,'scope.left',leaf.reg('r',1),at)
+  ignored = one(leaf,'ret',leaf.reg('r',1),at)
+  return draft.finish()
+
+/** Metadata protects an unexecuted address; an unobserved CNOP still leaves. */
+scopecarriers: procedure = .int
+  failures = 0; variant = .int; carrierid = .int; metaid = .int; mappedcarrier = .int
+  original = .lltarget..module; result = .lltarget..module; item = .lltarget..record
+  do variant = 0 to 2
+    draft = .lltarget..draft('scope.carrier.' || variant,'constructed.scope.carrier',0)
+    at = draft.synthetic('lexical carrier independent of CFG execution')
+    root = draft.procedure('main',1,at)
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(11),at)
+    ignored = one(root,'br',.lltarget..operand.symbol('after_carrier'),at)
+    if variant = 1 then metaid = scopeopen(root,'scope.carrier',root.reg('r',0),at)
+    if variant = 2 then metaid = scopeopen(root,'scope.carrier',.lltarget..operand.string('constant'),at)
+    carrierid = zero(root,'cnop',at)
+    ignored = namedlabel(root,'after_carrier',at)
+    if variant > 0 then ignored = scopeclose(root,'scope.carrier',at)
+    ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+    original = draft.finish()
+    failures = failures + check(original.valid(),'independent address-carrier input verifies ' || variant)
+    changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'changed' | changed.status() = 'keep','address-carrier cleanup has a complete result ' || variant)
+    if changed.status() <> 'changed' & changed.status() <> 'keep' then do; say changed.reason(); iterate; end
+    mappedcarrier = changed.operation(carrierid)
+    if variant = 0 then failures = failures + check(mappedcarrier = 0,'unreachable unobserved CNOP remains removable')
+    else do
+      result = changed.result()
+      failures = failures + check(mappedcarrier > 0,'unexecuted REG/CONST metadata group keeps a carrier ' || variant)
+      if mappedcarrier = 0 then iterate
+      item = result.at(mappedcarrier)
+      failures = failures + check(item.mnemonic() = 'cnop','unexecuted metadata group retains an inert carrier ' || variant)
+      item = result.at(changed.operation(metaid))
+      failures = failures + check(item.addressid() = mappedcarrier,'REG/CONST metadata remains on its original logical carrier ' || variant)
+    end
+  end
+  return failures
+
+scopereentry: procedure = .int
+  failures = 0; variant = .int; i = .int; j = .int; callid = .int; terminal = .int; hidden = .int
+  opened = .int; cleared = .int; carrierid = .int; mode = .int; requiredcells = .int; expected = .string
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module; body = .lltarget..body
+  item = .lltarget..record; nextitem = .lltarget..record; value = .lltarget..operand
+  request = .llinline..binding; changed = .llinline..change; limited = .llinline..change; facts = .lltargetfacts..analysis
+  do variant = 1 to 12
+    original = scopemodel(variant); callid = 0; terminal = 0; hidden = 0
+    failures = failures + check(original.valid(),'independent scoped DAG is valid ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    body = original.body(original.procedureid('main'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.mnemonic() = 'call1' then callid = item.id()
+    end
+    body = original.body(original.procedureid('helper'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.mnemonic() = 'ret' then terminal = item.id()
+      if item.kind() = '.meta' & item.operands() = 4 then do
+        value = item.operand(1)
+        if value.text() = 'scope.hidden' then hidden = item.id()
+      end
+    end
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('helper'))
+    graph = dereference original.ir(); image = graph.binary()
+    changed = llinline..expand(request,'closed-main-default-halt.v1'); result = changed.result()
+    expected = ''
+    select variant
+      when 7 then expected = 'metadata.scope.address.pending'
+      when 8 then expected = 'metadata.runtime.observer.unproved'
+      when 9 then expected = 'metadata.binding.change.pending'
+      when 10 then expected = 'metadata.scope.cfg.pending'
+      otherwise nop
+    end
+    if expected <> '' then do
+      keptgraph = .llir..module
+      keptgraph = dereference result.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(keptgraph.binary()) = bin2x(image),'scoped refusal retains exact input and specific boundary ' || variant)
+      if changed.reason() <> expected then say changed.reason()
+      iterate
+    end
+    failures = failures + check(changed.status() = 'changed','stable original-address scope expands ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(facts.status() = 'ok','independent lexical analysis runs before sealed queries ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    failures = failures + check(facts.valid() & facts.scopereentry(callid),'sealed lexical rows belong to the direct call ' || variant)
+    if variant = 3 | variant = 6 | variant = 12 then failures = failures + check(facts.scopebindings(callid,terminal) = 1,'later group inherits the earlier lexical opening before its authored rows ' || variant)
+    if variant = 4 then do
+      failures = failures + check(facts.recordlive(callid,hidden) = 0 & facts.scopeaddress(callid,hidden) > 0,'skipped opening remains a checked original body identity')
+      failures = failures + check(facts.scopebindings(callid,terminal) = 1 & facts.scopebinding(callid,terminal,1) = hidden,'later live group inherits the skipped original declaration')
+    end
+    if variant = 5 then failures = failures + check(facts.scopebindings(callid,terminal) = 0,'skipped original clear removes the later incoming binding')
+    body = result.body(result.procedureid('main')); opened = 0; cleared = 0; carrierid = 0
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.mnemonic() = 'call1' then failures = failures + check(0,'selected scoped call must disappear')
+      if item.kind() <> '.meta' then iterate
+      if item.operands() = 4 then opened = opened + 1
+      if item.operands() = 1 then cleared = cleared + 1
+      if variant = 4 & item.operands() = 4 then do
+        value = item.operand(1)
+        if left(value.text(),12) = 'scope.hidden' then carrierid = item.addressid()
+      end
+      if variant = 5 & item.operands() = 1 then carrierid = item.addressid()
+      if variant = 11 & item.operands() = 4 then carrierid = item.addressid()
+    end
+    if variant = 2 then failures = failures + check(opened = 1 & cleared = 1,'a closed common scope is not reopened after the early RET')
+    if variant = 3 then failures = failures + check(opened = 2 & cleared = 2,'missing original clear preserves both later-arm names through shared closure')
+    if variant = 4 | variant = 5 | variant = 11 then do
+      failures = failures + check(carrierid > 0,'scope transition has an executable address carrier ' || variant)
+      if carrierid > 0 then do
+        item = result.at(carrierid)
+        failures = failures + check(item.mnemonic() = 'cnop','re-entry or omitted NUMSCI scope owns its distinct CNOP ' || variant)
+        if variant = 4 | variant = 5 then do i = 1 to body.records() - 1
+          item = body.record(i)
+          if item.id() <> carrierid then iterate
+          nextitem = body.record(i + 1)
+          failures = failures + check(nextitem.kind() = 'label','synthetic scope carrier precedes the original target label ' || variant)
+        end
+      end
+    end
+    originalgraph = dereference original.ir()
+    failures = failures + check(bin2x(originalgraph.binary()) = bin2x(image),'scope expansion preserves the frozen original ' || variant)
+    if variant = 4 then do
+      keptgraph = .llir..module
+      requiredcells = 0
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.kind() = 'instruction' then requiredcells = requiredcells + 1 + item.operands()
+      end
+      limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,65536,requiredcells - 1)
+      kept = limited.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & limited.reason() = 'inline.code.cells' & bin2x(keptgraph.binary()) = bin2x(image),'one-below-output cell cap counts the synthetic re-entry carrier')
+    end
+    if variant = 4 then do mode = 1 to 5
+      keptgraph = .llir..module
+      select mode
+        when 1 then limited = llinline..expand(request,'closed-main-default-halt.v1',1)
+        when 2 then limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1)
+        when 3 then limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,1)
+        when 4 then limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,0)
+        otherwise limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,65536,1)
+      end
+      kept = limited.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & bin2x(keptgraph.binary()) = bin2x(image),'scope work/entry/byte/frame/code refusal is atomic ' || mode)
+    end
+  end
+  return failures
+
 dagpositive: procedure = .int
   arg variant = .int
   failures = 0; i = .int; callid = .int; firstret = .int; secondret = .int; branchid = .int; mode = .int
@@ -2451,8 +2657,14 @@ nonuniformrestore: procedure = .int
 
 main: procedure = .int
   arg argv = .string[]
+  failures = .int
   lane = ''
   if argv[0] = 1 then lane = argv[1]
+  if lane = 'scope-reentry' then do
+    failures = scopereentry() + scopecarriers() + dagpositive(1)
+    say 'SCOPE_REENTRY|failures=' || failures
+    return failures
+  end
   if lane = 'runtime' then do
     runtimefailures = runtimecontrols()
     say 'RUNTIME_SELECTOR|failures=' || runtimefailures
