@@ -330,31 +330,35 @@ the logical filename never grants a resource base. `llctarget` supplies existing
 runtime semantic helpers in the prepared image, without a compiler backend,
 assembler or linker.
 
-## SLAM square-root comparison experiment
+## SLAM-inspired Classic code analysis examples
 
-The current deliverable is a short cREXX walkthrough of Tom's Classic-adapted
-FDSqrt: import code, inspect its syntax tree, lower it to execution roles,
-follow branches, prove definite assignment, introduce a missing assignment,
-then inspect compiler operations with loop and dominance algorithms. The
-story pairs each code snippet with its output. Sources are bundled in a ZIP.
-The user's revised scope removes Python and the numerical comparison report.
+The deliverable in [classic-audit](examples/classic-audit/README.md) is a short,
+runnable cREXX explanation of two useful audits on imported Classic Rexx:
+a zero check protecting a division, and a counter update
+on every trip around a loop. Use the existing Classic parser and its actual
+Level L IR; remove the FDSqrt-specific flow reconstruction. Small, explicit
+audit rules combine source nodes, indexed value definitions, dominance and
+loop membership. The same rules run on working and broken source variants,
+including a list-processing routine with early restarts for invalid readings.
+The post explains what each result establishes, with commented snippets and
+actual output. Bundle the runnable source in a ZIP. Python remains excluded.
 
 | Stable criterion | Observable condition |
 |---|---|
-| **SLAM-AC01** | The cREXX entry imports the attributed Classic FDSqrt through the existing frontend and prints its loop's syntax tree. |
-| **SLAM-AC02** | A checked Level L lowering preserves source locations and maps FDSqrt constructs to execution roles. The story shows the true/false successors of its loop-exit test. |
-| **SLAM-AC03** | Level L definite-assignment analysis establishes NEXT assigned on every path to the original exit test; a conditional-assignment variant produces a located unsafe-read diagnostic and a witness path. |
-| **SLAM-AC04** | The existing Classic IR supports actual use/definition, dominance and strongly-connected-component queries with concrete findings in the walkthrough. |
-| **SLAM-AC05** | The guide is a concise import/tree/flow/proof/error journey: short cREXX snippets, actual output and technical terms explained on first use. |
+| **SLAM-AC01** | The tool accepts Classic source files through the existing frontend. AST and IR observations carry the source's names and locations; no program-specific graph or presumed input assignment is supplied. |
+| **SLAM-AC02** | The division audit derives the divisor, zero comparison and branch from actual IR. Its successful result requires the nonzero route to cover every route to the division and no possible intervening change to the checked value in the admitted static scalar program. Late/missing guards and intervening writes receive useful explanations. |
+| **SLAM-AC03** | The loop audit uses Level L loop and dominance queries to establish whether the tested counter's update occurs on every return to the loop header. An ITERATE-before-update variant demonstrates the bypass. A larger filtering routine exercises both audits across several rejection routes. This is a control-flow property; numerical termination requires a separate argument. |
+| **SLAM-AC04** | The analysis uses real indexed definitions and slot writers to follow compiler temporaries, and refuses unsupported dynamic effects or source forms rather than treating them as harmless. Renamed and restructured controls distinguish the rule from fixture recognition. |
+| **SLAM-AC05** | The concise forum-ready explanation starts with the Rexx and a useful question, then shows commented cREXX snippets and actual output. Explain necessary terms and distinguish the demo's audit rule from the Level L service that establishes its premises. |
 | **SLAM-AC06** | A shell launcher builds and runs the cREXX sources against prepared images. Python and superseded demo machinery are removed. |
 | **SLAM-AC07** | A focused ordinary run verifies the story and source/flow controls; the runnable source bundle opens and runs after extraction. |
 
 | Stable step | Current status and dependency |
 |---|---|
-| **SLAM-STEP01 — done** | Record the revised story, asset and cREXX-only scope; AC01–07. |
-| **SLAM-STEP02 — done** | Replace the report harness with the cREXX journey and flow lowering; AC01–04/06. |
-| **SLAM-STEP03 — done** | Run one focused ordinary VM check and inspect representative RXAS; AC01–04/07. Reuse prepared images. |
-| **SLAM-STEP04 — done** | Edit the concise story against the output, remove superseded assets, package and check the ZIP; AC05–07. |
+| **SLAM-STEP01 — done** | Re-review Tom's questions and existing APIs; record the two source-driven audits and their contracts; AC01–07. |
+| **SLAM-STEP02 — done** | Implement the audits against existing AST/IR APIs and readable Classic examples; remove the tailored flow model; AC01–04/06. |
+| **SLAM-STEP03 — done** | Review the rules and run focused normal-VM source variations with human-readable expectations; inspect representative RXAS; AC01–04/07. Reuse prepared images. |
+| **SLAM-STEP04 — done** | Write and independently edit the short explanation against actual output; package and run the extracted ZIP; AC05–07. |
 
 ## Outside current C closure
 

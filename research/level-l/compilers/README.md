@@ -26,6 +26,8 @@ compiler replacement are outside scope; existing shared/G specifications remain.
 - [Authoritative plan](PLAN.md): stable acceptance, decisions and remaining work.
 - [Level L user guide](../../../langtools/doc/user-guide.md): the reusable
   SDK/tools independently of these compiler consumers.
+- [Classic code analysis examples](examples/classic-audit/README.md): import
+  Rexx source, check a divisor's guard and find loop routes that skip an update.
 - [Frontend](doc/frontends.md), [IR](doc/trees-and-ir.md),
   [backend](doc/backend.md) and [walkthrough](doc/pipeline-walkthrough.md):
   implementation references and worked C/G examples. Earlier examples retain

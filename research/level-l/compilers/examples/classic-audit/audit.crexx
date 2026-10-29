@@ -1,0 +1,409 @@
+/* cREXX License (MIT). Two small audits of the Classic compiler's actual IR. */
+options levelb
+import rxfnsb
+import llast
+import llsource
+import llir
+import llirgraph
+import llcfrontend
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 2 then do; say 'usage: audit source.rexx runtime-directory'; return 2; end
+  filename = substr(argv[1],lastpos('/',argv[1]) + 1)
+  source = readbinary(argv[1])
+  front = .llcfrontend..request(source,argv[2],filename,100000)
+  if front.status() then do; say front.diagnostic(); return 2; end
+  tree = front.ast(); graph = front.graph()
+  index = .llirgraph..index(reference graph)
+  if index.status() <> 'ok' then do; say index.message(); return 2; end
+  check = .audit(reference tree,reference graph,reference index)
+  say filename || ':'
+  message = check.admit()
+  if message <> '' then do; say '  Cannot audit:' message; return 2; end
+  call check.divisions()
+  call check.loops()
+  if check.error() <> '' then do; say '  Cannot finish:' check.error(); return 2; end
+  return 0
+
+/* This is the demo's explicit language profile, not a generic effect proof.
+ * With no handlers, user routines or dynamic names, scalar reads/arithmetic
+ * cannot resume through user code that changes the pool. The three admitted
+ * BIFs inspect their values; SAY writes output, not scalar variables.
+ */
+audit: class
+  _tree = reference .llast..tree
+  _graph = reference .llir..module
+  _index = reference .llirgraph..index
+  _positions = .llsource..index
+  _steps = .int
+  _error = .string
+  *: factory
+    arg tree = reference .llast..tree, graph = reference .llir..module, index = reference .llirgraph..index
+    _tree = tree; _graph = graph; _index = index; _steps = 0; _error = ''
+    owner = dereference tree; _positions = .llsource..index(owner.source())
+    _error = _positions.error()
+    return
+  tick: method = .int
+    _steps = _steps + 1
+    if _steps > 1000000 then _error = 'the bounded audit work limit was reached.'
+    return _error = ''
+  error: method = .string
+    return _error
+  line: method = .int
+    arg id = .int
+    graph = dereference _graph; origin = graph.operation(id).origin()
+    point = _positions.position(origin.first())
+    if point.error() <> '' then _error = point.error()
+    return point.line()
+  scalar: method = .int
+    arg name = .string
+    if name = '' then return 0
+    return verify(name,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_!?$#@') = 0
+  admit: method = .string
+    allowed = .string
+    if _error <> '' then return _error
+    tree = dereference _tree; walk = tree.walk('parents first')
+    do while walk.next()
+      if tick() = 0 then return _error
+      node = walk.node(); kind = node.kind(); reason = ''
+      select
+        when kind = 'Name' then do
+          if scalar(node.text('spelling')) = 0 then reason = 'only simple scalar names are admitted.'
+        end
+        when kind = 'Assignment' then do
+          if scalar(node.text('name')) = 0 then reason = 'a compound or dynamic assignment is outside this audit.'
+        end
+        when kind = 'Call' then do
+          if wordpos(upper(node.text('name')),'WORDS WORD DATATYPE') = 0 then reason = 'only WORDS, WORD and DATATYPE calls are admitted.'
+        end
+        when kind = 'Parse' then do
+          if upper(node.child('source').text('kind')) <> 'ARG' then reason = 'only PARSE ARG is admitted.'
+        end
+        when kind = 'CDo' then do
+          header = node.child('header')
+          if header.count('repetition') > 0 then reason = 'only grouping DO and DO WHILE are admitted.'
+          if header.count('condition') then do
+            if header.child('condition').kind() <> 'DoWhile' then reason = 'only DO WHILE is admitted as a loop.'
+          end
+        end
+        when kind = 'Leave' | kind = 'Iterate' then do
+          if node.count('name') then reason = 'named LEAVE and ITERATE are outside this audit.'
+        end
+        otherwise do
+          allowed = 'Program Sequence IfThen IfElse Return Nop Say Chain Group Prefix Number String Constant Arguments Argument DoHeader DoWhile DoEnd ParseSource ParseTemplates ParseTemplate ParseTarget ParseDrop CArg'
+          operators = 'assign plus minus times divide power integerdivide remainder eq ne lt gt le ge strict strictne strictlt strictgt strictle strictge concat blank abut and or xor not'
+          if wordpos(kind,allowed || ' ' || operators) = 0 then reason = kind || ' is outside the static scalar audit.'
+        end
+      end
+      if reason <> '' then return 'line ' || node.line() || ': ' || reason
+    end
+    /* Check the executable vocabulary too, rather than assuming that every
+     * context operation is harmless because its source looked familiar. */
+    graph = dereference _graph
+    allowed = 'load store add sub mul div pow idiv rem eq ne lt le gt ge strict strictne strictlt strictgt strictle strictge positive negative not concat blank abut and or xor truth while.truth say parse.source parse.execute clause.begin source.map arguments.empty arguments.append bif return.present return.absent return.empty entry.test entry.invalid'
+    do id = 1 to graph.operations()
+      if tick() = 0 then return _error
+      op = graph.operation(id); name = op.name()
+      if left(name,5) = 'core.' then do
+        if name = 'core.protect' then return 'line ' || line(id) || ': protected or handler control is outside this audit.'
+        iterate
+      end
+      if left(name,8) <> 'crexx.c.' then return 'line ' || line(id) || ': unsupported operation ' || name || '.'
+      if wordpos(substr(name,9),allowed) = 0 then return 'line ' || line(id) || ': unsupported operation ' || name || '.'
+      if name = 'crexx.c.bif' then do
+        if wordpos(upper(op.attribute('name') as .string),'WORDS WORD DATATYPE') = 0 then return 'line ' || line(id) || ': unsupported BIF.'
+      end
+      if name = 'crexx.c.parse.source' then do
+        if upper(op.attribute('kind') as .string) <> 'ARG' then return 'line ' || line(id) || ': only argument parsing is admitted.'
+      end
+    end
+    return ''
+  /* Follow an actual value definition, including compiler spill slots. A slot
+   * is transparent only with one writer which precedes/dominates this load.
+   * This does not equate two independent reads of a Rexx pool variable.
+   */
+  producer: method = .int
+    arg value = .int
+    graph = dereference _graph; index = dereference _index
+    do while value > 0
+      if tick() = 0 then return 0
+      id = index.definition(value); op = graph.operation(id)
+      if op.name() <> 'core.load' then return id
+      slot = index.opslot(id)
+      if index.slotwrites(slot) <> 1 then return 0
+      writer = index.slotwrite(slot,1)
+      if before(writer,id) = 0 then return 0
+      value = graph.operation(writer).input(1).id()
+    end
+    return 0
+  before: method = .int
+    arg first = .int, last = .int
+    index = dereference _index; a = index.opblock(first); b = index.opblock(last)
+    if a = b then return index.opposition(first) < index.opposition(last)
+    return index.dominates(a,b)
+  read: method = .int
+    arg value = .int
+    id = producer(value)
+    if id = 0 then return 0
+    graph = dereference _graph; op = graph.operation(id)
+    if op.name() <> 'crexx.c.load' then return 0
+    if scalar(op.attribute('name') as .string) = 0 then return 0
+    return id
+  name: method = .string
+    arg id = .int
+    graph = dereference _graph
+    return upper(graph.operation(id).attribute('name') as .string)
+  literal: method = .int
+    arg value = .int, expected = .int
+    id = producer(value)
+    if id = 0 then return 0
+    graph = dereference _graph; op = graph.operation(id)
+    if op.name() <> 'core.constant' then return 0
+    /* Recognize only the exact Classic value bytes needed by these rules.
+     * No host coercion or rounding may turn 0.5 into zero or 1.5 into one. */
+    handle = op.result(); bytes = handle.bytes()
+    if expected = 0 then return bincompare(bytes,'30'x as .binary) = 0
+    if expected = 1 then return bincompare(bytes,'31'x as .binary) = 0
+    return 0
+  /* Return the real pool read used in a scalar-versus-zero comparison. */
+  compared: method = .int
+    arg id = .int
+    graph = dereference _graph; op = graph.operation(id)
+    if literal(op.input(2).id(),0) then return read(op.input(1).id())
+    if literal(op.input(1).id(),0) then return read(op.input(2).id())
+    return 0
+  /* A PARSE ARG can write several scalars. Its actual source span identifies
+   * the targets without treating its immutable parse-program bytes as a graph.
+   */
+  changes: method = .int
+    arg id = .int, symbol = .string
+    graph = dereference _graph; op = graph.operation(id)
+    if op.name() = 'crexx.c.store' then return name(id) = symbol
+    if op.name() <> 'crexx.c.parse.execute' then return 0
+    origin = op.origin(); tree = dereference _tree; walk = tree.walk()
+    do while walk.next()
+      if tick() = 0 then return 1
+      node = walk.node()
+      if node.kind() <> 'ParseTarget' then iterate
+      if node.start() < origin.first() | node.finish() > origin.last() then iterate
+      if upper(node.child('name').text('spelling')) = symbol then return 1
+    end
+    return 0
+  /* Walk the original operations with clean/changed states. A new execution
+   * of this same guard read starts a new check, so writes before it do not
+   * invalidate the current one. Only a changed route reaching the divisor read
+   * counts: a write on a route which returns elsewhere is irrelevant.
+   */
+  changed: method = .int
+    arg guardread = .int, divisorread = .int, symbol = .string
+    at = .int
+    graph = dereference _graph; index = dereference _index
+    pending = .int[]; cause = .int[]; clean = .int[]; dirty = .int[]
+    pending[1] = index.nextop(guardread); cause[1] = 0; cursor = 1
+    do while cursor <= pending[0]
+      if tick() = 0 then return 0
+      id = pending[cursor]; write = cause[cursor]; cursor = cursor + 1
+      if id = 0 | id = guardread then iterate
+      if id = divisorread then do
+        if write > 0 then return write
+        /* A clean first use can be followed by another loop iteration with a
+         * stale check. Keep following the graph until the guard is re-read. */
+      end
+      if write = 0 then do
+        if clean[id] then iterate
+        clean[id] = 1
+      end
+      else do
+        if dirty[id] then iterate
+        dirty[id] = 1
+      end
+      if changes(id,symbol) then write = id
+      next = index.nextop(id)
+      if next > 0 then do
+        at = pending[0] + 1; pending[at] = next; cause[at] = write
+      end
+      else do edge = 1 to graph.operation(id).successors()
+        at = pending[0] + 1
+        pending[at] = index.firstop(graph.operation(id).successor(edge)); cause[at] = write
+      end
+    end
+    return 0
+  divisions: method = .void
+    graph = dereference _graph; index = dereference _index
+    do division = 1 to graph.operations()
+      if tick() = 0 then return
+      op = graph.operation(division)
+      if op.name() <> 'crexx.c.div' then iterate
+      if index.reachable(index.opblock(division)) = 0 then iterate
+      divisor = read(op.input(2).id())
+      if divisor = 0 then do
+        say '  Line' line(division) || ': the divisor is not a simple scalar; this check is not applied.'
+        iterate
+      end
+      symbol = name(divisor); covering = 0; overwritten = 0; checkedline = 0
+      do branch = 1 to graph.operations()
+        if tick() = 0 then return
+        terminal = graph.operation(branch)
+        if terminal.name() <> 'core.branch' then iterate
+        truth = producer(terminal.input(1).id())
+        if truth = 0 then iterate
+        test = graph.operation(truth)
+        if test.name() <> 'crexx.c.truth' then iterate
+        comparison = producer(test.input(1).id())
+        if comparison = 0 then iterate
+        compare = graph.operation(comparison)
+        if wordpos(compare.name(),'crexx.c.eq crexx.c.ne') = 0 then iterate
+        guardread = compared(comparison)
+        if guardread = 0 then iterate
+        if name(guardread) <> symbol then iterate
+        nonzero = 2; if compare.name() = 'crexx.c.ne' then nonzero = 1
+        successor = terminal.successor(nonzero); branchblock = index.opblock(branch)
+        /* Dominance of a block alone would not prove which edge was taken.
+         * The selected successor must belong solely to this branch edge. */
+        if index.predecessors(successor) <> 1 then iterate
+        if index.predecessor(successor,1) <> branchblock then iterate
+        if index.dominates(branchblock,index.opblock(division)) = 0 then iterate
+        if index.dominates(successor,index.opblock(division)) = 0 then iterate
+        write = changed(guardread,divisor,symbol)
+        if _error <> '' then return
+        if write = 0 then do; covering = branch; leave; end
+        overwritten = write; checkedline = line(branch)
+      end
+      select
+        when covering > 0 then say '  Line' line(division) || ': division by' symbol 'is protected by the zero check on line' line(covering) || '.'
+        when overwritten > 0 then say '  Line' line(division) || ':' symbol 'is changed on line' line(overwritten) 'after its zero check on line' checkedline || '.'
+        otherwise say '  Line' line(division) || ': no covering zero check found for division by' symbol || '.'
+      end
+    end
+    return
+  /* Recognize COUNTER = COUNTER - 1 from the actual stored value and its
+   * operands. Identical source text or a store's spelling alone is insufficient.
+   */
+  decrement: method = .int
+    arg id = .int, symbol = .string
+    graph = dereference _graph; op = graph.operation(id)
+    if op.name() <> 'crexx.c.store' then return 0
+    if name(id) <> symbol then return 0
+    value = producer(op.input(2).id())
+    if value = 0 then return 0
+    expression = graph.operation(value)
+    if expression.name() <> 'crexx.c.sub' then return 0
+    if literal(expression.input(2).id(),1) = 0 then return 0
+    original = read(expression.input(1).id())
+    if original = 0 then return 0
+    return name(original) = symbol
+  /* Find a real route from the loop body back to its header while avoiding
+   * the decrement. This confirms a bypass, rather than inferring one merely
+   * because a dominance test did not prove the positive result.
+   */
+  bypass: method = .int
+    arg header = .int, body = .int, update = .int, regionref = reference .llirgraph..cycles
+    at = .int
+    graph = dereference _graph; index = dereference _index; regions = dereference regionref
+    pending = .int[]; seen = .int[]; hint = .int[]; pending[1] = index.firstop(body); hint[1] = 0; cursor = 1
+    do while cursor <= pending[0]
+      if tick() = 0 then return 0
+      id = pending[cursor]; location = hint[cursor]; cursor = cursor + 1
+      if id = 0 | id = update then iterate
+      if regions.loopcontains(header,index.opblock(id)) = 0 then iterate
+      if index.opblock(id) = header then do
+        if location > 0 then return location
+        return -1
+      end
+      if seen[id] then iterate
+      seen[id] = 1
+      op = graph.operation(id); origin = op.origin(); tree = dereference _tree; walk = tree.walk()
+      if op.name() = 'core.jump' then do while walk.next()
+        if tick() = 0 then return 0
+        node = walk.node()
+        if node.kind() = 'Iterate' then do
+          if node.start() = origin.first() & node.finish() = origin.last() then location = node.line()
+        end
+      end
+      next = index.nextop(id)
+      if next > 0 then do
+        at = pending[0] + 1; pending[at] = next; hint[at] = location
+      end
+      else do edge = 1 to op.successors()
+        at = pending[0] + 1; pending[at] = index.firstop(op.successor(edge)); hint[at] = location
+      end
+    end
+    return 0
+  loops: method = .void
+    id = .int
+    graph = dereference _graph; index = dereference _index; tree = dereference _tree
+    regions = index.loops()
+    if regions.status() <> 'ok' then do; _error = regions.message(); return; end
+    walk = tree.walk('parents first')
+    do while walk.next()
+      if tick() = 0 then return
+      node = walk.node()
+      if node.kind() <> 'CDo' then iterate
+      headernode = node.child('header')
+      if headernode.count('condition') = 0 then iterate
+      condition = headernode.child('condition'); branch = 0; symbol = ''; header = 0
+      do id = 1 to graph.operations()
+        op = graph.operation(id)
+        if op.name() <> 'core.branch' then iterate
+        truth = producer(op.input(1).id())
+        if truth = 0 then iterate
+        test = graph.operation(truth); origin = test.origin()
+        if test.name() <> 'crexx.c.while.truth' | origin.first() <> condition.start() then iterate
+        comparison = producer(test.input(1).id())
+        if comparison = 0 then iterate
+        compare = graph.operation(comparison)
+        if compare.name() <> 'crexx.c.gt' then iterate
+        if literal(compare.input(2).id(),0) = 0 then iterate
+        counter = read(compare.input(1).id())
+        if counter = 0 then iterate
+        symbol = name(counter); branch = id; header = index.opblock(id); leave
+      end
+      if branch = 0 then do
+        say '  Loop on line' node.line() || ': this check needs a simple counter > 0 test.'
+        iterate
+      end
+      natural = 0
+      do h = 1 to regions.loopheaders()
+        if regions.loopheader(h) = header then natural = 1
+      end
+      if natural = 0 then do
+        say '  Loop on line' node.line() || ': there is no returning route to check.'
+        iterate
+      end
+      update = 0; updates = 0; other = 0
+      do id = 1 to graph.operations()
+        if tick() = 0 then return
+        if regions.loopcontains(header,index.opblock(id)) = 0 then iterate
+        if changes(id,symbol) = 0 then iterate
+        if decrement(id,symbol) then do; update = id; updates = updates + 1; end
+        else other = id
+      end
+      if other > 0 | updates > 1 then do
+        say '  Loop on line' node.line() || ':' symbol 'has other or multiple updates; progress is not established.'
+        iterate
+      end
+      every = update > 0; returns = 0
+      do p = 1 to index.predecessors(header)
+        source = index.predecessor(header,p)
+        if regions.backedge(source,header) = 0 then iterate
+        returns = returns + 1
+        if update = 0 then iterate
+        if index.dominates(index.opblock(update),source) = 0 then every = 0
+        /* In its own backedge block, the store must precede the terminator. */
+        if index.opblock(update) = source & index.nextop(update) = 0 then every = 0
+      end
+      if returns = 0 then every = 0
+      if every then do
+        say '  Loop on line' node.line() || ': every route back to the test executes' symbol '=' symbol '- 1 (line' line(update) || ').'
+        iterate
+      end
+      route = bypass(header,graph.operation(branch).successor(1),update,reference regions)
+      if _error <> '' then return
+      if route <> 0 then do
+        say '  Loop on line' node.line() || ': a route back to the test skips the decrement of' symbol || '.'
+        if route > 0 then say '    ITERATE on line' route 'bypasses the decrement.'
+      end
+      else say '  Loop on line' node.line() || ': an update on every returning route was not established.'
+    end
+    return
