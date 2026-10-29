@@ -640,6 +640,7 @@ dirname: procedure = .string
   arg path = .string
   slash = lastpos('/',path)
   if slash = 0 then return '.'
+  if slash = 1 then return left(path,1)
   return left(path,slash-1)
 
 basename_no_suffix: procedure = .string
@@ -685,6 +686,7 @@ native_executable_path: procedure = .string
 
 ensure_directory_tree: procedure = .int
   arg path = .string
+  if path = '' then path = '.'
   if .rxfs..isdir(path) <> 0 then return 0
   parent = .rxfs..abspath(path || '/..')
   if parent <> path then do
