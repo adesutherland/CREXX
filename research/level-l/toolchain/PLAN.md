@@ -130,7 +130,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar suffix through one RET, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar suffix through one RET including one retained same-module scalar CALL1, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader imported, aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -1670,8 +1670,8 @@ gaps requires a new ISA merely because the present frame meet is exact.
 
 ### Reviewed dependent selected-alias continuation
 
-**Status: first linear slice implemented and focused-qualified; retained CALL1,
-acyclic branches and milestone QA todo.** This INL-STEP04/05 continuation serves
+**Status: first linear slice focused-qualified; retained CALL1 implemented with
+focused QA pending; acyclic branches and milestone QA todo.** This INL-STEP04/05 continuation serves
 INL-AC02/03/04/05/06/07 by carrying each finite runtime LINKARG binding through
 its actual scalar consumers, writes and returns. It extends the qualified
 width-at-most-three selector contract above; it does not complete general
@@ -1880,6 +1880,140 @@ prepared producers and valid existing results. Cleanup may keep conservative
 code until its separate range/access/storage proof is complete. The coordinator
 owns preparation/execution; no broad compiler, sanitizer, platform or
 performance panel is commissioned by this increment.
+
+#### Second slice: one retained scalar CALL1 in the linear suffix
+
+**Status: implemented and focused-qualified; acyclic suffix branches and milestone QA todo.**
+Keep the first slice's one reached outer RET, linear caller/callee,
+width-at-most-three checked selector, exact arity, zero globals and closed-main
+default-terminal policy. Admit at most one suffix `CALL1` whose target resolves
+to one existing same-module bytecode body. Validate this child explicitly as a
+straight-line scalar leaf with one reached RET: no child call, LINKARG, branch,
+handler/policy change, changed numeric context, initializer ingress,
+native/dynamic target, reference/aggregate/native-payload operation or declared
+physical/frame/address observer. Existing checked identical `NUMSCI` context
+setup and source/TRACE/scoped metadata remain valid. Do not inherit the broader
+forms accepted by ordinary `invoke` merely because that owner can transfer
+them. Other suffix calls retain `argument.selector.tail.call.pending`; an
+unproved terminal policy/cleanup obligation retains
+`argument.selector.tail.unwind.pending`. Keep existing specific scalar,
+arithmetic, depth, metadata and budget reasons when those are the failed proof.
+Prefix calls, a second runtime selector, suffix branches and deeper nesting
+remain later slices. Exact-selector inputs keep their existing path.
+The first bounded child gate also retains child binding changes, ACOPY and
+explicit lifetime operations with the call reason. These ordinary-scalar
+forms can be assessed under the same ownership contract in a later extension;
+their retention is a profile boundary, not an ISA impossibility.
+
+Thread the original root `outerCallId`, invocation depth and tracking mode into
+`runtimeselection`; do not substitute the child's source record ID for the
+root's publication identity. Before taking any selector state/history/proof
+snapshot, run `preparechildren(outerBody,state,history,1)` once through its
+existing bounded owner. Its cached child local/a0 StorageIds must be present in
+every fork, including an arm which has not yet activated the child. Preparation
+is not activation or admission. Each arm then transfers the retained row with
+`invoke(row,armFrame,armCells,armHistory,0,outerCallId,depth+1,0)` and keeps that
+arm's resulting cells and recycler history through authored UNLINK and outer
+`finishreturn`. The child uses the same immutable owned bases as other arms and
+repeated sites; it must not allocate a fresh symbolic recycler per case.
+Existing recursion/depth, uncertain recycled-cell reads, component availability
+and child-return COPY/MOVE/none proofs remain binding. Balance `_active` through
+the existing invocation owner and do not publish child call/proof/selector rows
+as independent root sites or mutate global `_plain` while exploring one arm.
+The existing full refresh from the merged exited caller cells owns tracking.
+
+The CALL1 result and actual are resolved to current StorageIds before entering
+the child, just as VM fixed calls capture explicit pointers before activation.
+Repeated actual aliases and a result which aliases that actual remain one
+cell. The child mutates the selected cell before its own return commit; the
+outer captured caller result commits only at the reached outer RET. A child
+result written into the LINKARG destination therefore follows that slot's
+current borrowed pointer, whereas the maintained producer's separate `r4`
+result remains its own storage until outer RET. Authored `UNLINK r3` restores
+r3's immutable original base, without copyback or resetting the selected
+actual. Use the existing per-case return/restoration rows and common aggregate
+summary; never substitute case1 for a nonuniform result, binding or kill.
+Reads/writes include all feasible child effects and definite result kills are
+claimed only when all cases prove them. The child's `IADD a1,a1,7` requires a
+successful write for every feasible selected interval; the selector ICHKRNG
+does not settle overflow, whose default response is IGNORE.
+
+The emitter keeps the child definition and target binding, and replays exactly
+one remapped CALL1 in each finite outer arm. Only its explicit result/actual
+register operands are mapped; no child register bank, body expansion, counted
+window, reverse-window swap or arithmetic replacement is synthesized. Reuse
+the first slice's scoped-binding checkpoint, arm source/TRACE relocation,
+authored UNLINK, per-case normal teardown and caller-source restoration.
+Preserve the CALL1 source step separately from the child definition's steps,
+the following function-result TRACE and outer RET. Charge leaf validation,
+preparation, every per-arm invoke/return/history transfer, proof construction
+and all additional emitted rows before growth; sealed queries continue to
+borrow immutable proof rows.
+
+Default terminal CANCEL may arrive in the retained child before outer UNLINK.
+The owning VM proof is `rxvm_release_frame_reference_lifetimes`, `free_frame`,
+`clear_frame` and final frame-pool draining in `interpreter/rxvmintp.c`:
+local/a0 lifetime release and final value destruction visit immutable
+`baselocals`, not active linked pointers, and incoming a1+ pointers are borrowed.
+The retained child has the same borrowed actual and native recycler in both
+artifacts. The removed outer frame's hidden owned bases become caller-owned
+synthetic bases, whose final teardown likewise cannot expire a selected
+borrowed value. Under this scalar-only, no-observer, no-resume profile, neither
+route resumes and neither needs synthetic normal UNLINK/copyback/ENDLIFE on
+the interrupted path. Existing whole-cell/reference/payload guards remain
+essential to that argument. Prove deterministic tag, payload and logical source
+from the unchanged retained-child instruction or correctly relocated outer
+origin, including the boundary before outer result commit. Do not demand the
+same physical stack or infrastructure allocation opportunities. The selected
+resource-pressure tolerance remains separate from deterministic signal/state
+preservation.
+
+Required controls extend the maintained constructed and handwritten runtime
+selector panel, using its BINEQ/IADD unknown interval 1..3 and two repeated
+calls. Copy the maintained native noopt
+`mutateTailIndirect` guard/LINKARG/CALL1/UNLINK/TRACE/RET shape and `bumpOne`
+leaf, with independently preloaded 10/20/30, ordinary text and public status.
+Execute all choices and check V+7 then V+14, final selected V+14, unchanged
+other actuals and preserved text/status. Require `argumentcases > 0`, finite
+dispatch, the original child target, one CALL1 per arm, authored UNLINK and
+separate return closures. The unchanged native fixture's literal `which=2`
+caller is a producer/old-exact-path control, not evidence of runtime-selector
+admission. Include repeated actuals, prior active-slot SWAP, selected
+result/actual overlap, separate result, selector/destination overlap, repeated
+child recycler use and supported per-case outer return actions. Inspect the
+representative emitted arm before extending the panel. Missing/deeper/counted/
+native child, child branch/selector/context/policy/observer, unsafe arithmetic
+and finite-work/byte refusal controls keep exact input and last-good output.
+
+Mandatory abrupt controls use ordinary CLI main original/expanded pairs with
+test-only CANCEL injection after transformation at child entry, after child
+mutation before child RET, and after child return before outer UNLINK. Keep
+the same stable logical injection source in both artifacts. Fresh test scratch
+may print the boundary selected integer/text/status without changing the
+selected cell; verify independent boundary values, rc0, empty stderr and no
+prevented result/continuation TRACE or output. Pair this executable evidence
+with the owned-base teardown and result-commit source review above. Default
+CANCEL is silent HALT, so the runner does not observe its tag/source in stderr
+or read root locals after teardown, and these controls make neither claim.
+Keep the existing invalid-selector-before-mutation and overflow-IGNORE refusal
+controls. Authored SIGNAL probes are injected only into paired transformed
+artifacts; they do not expand the admitted child opcode/policy profile.
+
+An exact event/payload/source observer is optional supplementary evidence and
+requires a separately reviewed bounded native test-harness change. The existing
+scoped initializer-fault sink captures SILENT_HALT before teardown only when
+`ext_proc == invocation_fault_entry`; it cannot be armed for implicit-main
+entry by setting a sink alone. A possible test-only adapter selects the same
+main as explicit entry, reproduces CLI a0=1 and its one argv-array a1, leaves
+ext_ret NULL/default policies, and restores all sink/entry/external-call fields
+on every exit. It must call ordinary `run`, not initializer execution, which
+rewrites a captured silent fault into initializer status. A boundary CANCEL
+payload can snapshot selected scalar state and the owned event can be inspected
+after run; this is not post-teardown root storage observation. No new VM/public
+API, production profile, signal policy, resolver algorithm or native mutation
+helper is authorized. Lack of this optional observer alone does not retain a
+case whose mandatory paired controls and ownership/source proof are complete;
+any concrete failure of that proof is reported before product admission.
 
 ### Reviewed same-module global scalar increment
 

@@ -1948,7 +1948,10 @@ runtimemodel: procedure = .lltarget..module
   end
   else ignored = one(leaf,'ret',destination,at)
   if variant = 21 then do
-    child = draft.procedure('child',0,at)
+    child = draft.procedure('child',1,at)
+    ignored = three(child,'call1',child.reg('r',0),.lltarget..operand.procedure('grandchild'),child.reg('a',1),at)
+    ignored = one(child,'ret',child.reg('r',0),at)
+    child = draft.procedure('grandchild',0,at)
     ignored = one(child,'ret',child.reg('a',1),at)
   end
   return draft.finish()
@@ -2021,6 +2024,130 @@ runtimecontrols: procedure = .int
   failures = failures + check(changed.status() = 'limit' & changed.result().identity() = id,'runtime dispatch growth refusal preserves original owner')
   return failures
 
+/** The native mutateTailIndirect suffix, with genuinely unknown selection. */
+runtimechildmodel: procedure = .lltarget..module
+  arg variant = .int, expose firstcall = .int, expose secondcall = .int
+  ignored = .int; i = .int; fields = .object[]
+  draft = .lltarget..draft('runtime.child.' || variant,'constructed.runtime.child',0)
+  at = draft.synthetic('checked runtime selector retained scalar child')
+  root = draft.procedure('main',8,at)
+  ignored = three(root,'numsci',.lltarget..operand.integer(18),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
+  ignored = two(root,'load',root.reg('r',6),.lltarget..operand.literal('B','0x01' as .binary),at)
+  ignored = three(root,'bineq',root.reg('r',0),root.reg('r',6),.lltarget..operand.literal('B','0x01' as .binary),at)
+  ignored = three(root,'bineq',root.reg('r',5),root.reg('r',6),.lltarget..operand.literal('B','0x02' as .binary),at)
+  ignored = three(root,'iadd',root.reg('r',0),root.reg('r',0),root.reg('r',5),at)
+  ignored = three(root,'iadd',root.reg('r',0),root.reg('r',0),.lltarget..operand.integer(1),at)
+  do i = 1 to 3
+    ignored = two(root,'load',root.reg('r',i),.lltarget..operand.integer(i * 10),at)
+    ignored = two(root,'load',root.reg('r',i),.lltarget..operand.string('value' || i),at)
+    ignored = two(root,'settp',root.reg('r',i),.lltarget..operand.integer(i * 256),at)
+  end
+  fields[1] = root.reg('r',4) as .object
+  if variant = 2 then fields[1] = root.reg('r',2) as .object
+  fields[2] = .lltarget..operand.procedure('pick') as .object
+  do i = 0 to 3; fields[i + 3] = root.reg('r',i) as .object; end
+  if variant = 1 then fields[5] = root.reg('r',1) as .object
+  firstcall = root.emit('call4',fields,at)
+  fields[1] = root.reg('r',7) as .object
+  secondcall = root.emit('call4',fields,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('pick',5,at)
+  ignored = three(leaf,'numsci',.lltarget..operand.integer(18),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
+  if variant = 3 then ignored = two(leaf,'swap',leaf.reg('a',2),leaf.reg('a',3),at)
+  ignored = two(leaf,'icopy',leaf.reg('r',3),leaf.reg('a',0),at)
+  ignored = three(leaf,'isub',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(1),at)
+  ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(1),leaf.reg('r',3),at)
+  ignored = three(leaf,'linkarg',leaf.reg('r',3),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  if variant = 4 then do
+    ignored = three(leaf,'call1',leaf.reg('r',3),.lltarget..operand.procedure('bumpOne'),leaf.reg('r',3),at)
+    ignored = two(leaf,'copy',leaf.reg('r',4),leaf.reg('r',3),at)
+  end
+  else if variant = 17 then ignored = three(leaf,'call',leaf.reg('r',4),.lltarget..operand.procedure('bumpOne'),leaf.reg('r',3),at)
+  else ignored = three(leaf,'call1',leaf.reg('r',4),.lltarget..operand.procedure('bumpOne'),leaf.reg('r',3),at)
+  if variant = 12 then ignored = three(leaf,'call1',leaf.reg('r',4),.lltarget..operand.procedure('bumpOne'),leaf.reg('r',3),at)
+  ignored = one(leaf,'unlink',leaf.reg('r',3),at)
+  ignored = one(leaf,'ret',leaf.reg('r',4),at)
+  child = draft.procedure('bumpOne',1,at)
+  if variant = 10 then do
+    ignored = two(child,'brt',.lltarget..operand.symbol('later'),child.reg('a',1),at)
+    ignored = namedlabel(child,'later',at)
+  end
+  if variant = 11 then ignored = two(child,'linkarg',child.reg('r',0),.lltarget..operand.integer(1),at)
+  if variant = 13 then ignored = three(child,'numsci',.lltarget..operand.integer(9),.lltarget..operand.integer(1),.lltarget..operand.integer(1),at)
+  if variant = 15 then ignored = one(child,'say',child.reg('a',1),at)
+  if variant = 18 then ignored = three(child,'call1',child.reg('r',0),.lltarget..operand.procedure('grandchild'),child.reg('a',1),at)
+  if variant = 14 then ignored = three(child,'iadd',child.reg('a',1),child.reg('a',1),.lltarget..operand.integer(9223372036854775807),at)
+  else ignored = three(child,'iadd',child.reg('a',1),child.reg('a',1),.lltarget..operand.integer(7),at)
+  if variant = 5 then do
+    ignored = one(child,'null',child.reg('r',0),at)
+    ignored = two(child,'copy',child.reg('r',0),child.reg('a',1),at)
+    ignored = one(child,'ret',child.reg('r',0),at)
+  end
+  else ignored = one(child,'ret',child.reg('a',1),at)
+  if variant = 18 then do
+    child = draft.procedure('grandchild',0,at)
+    ignored = one(child,'ret',child.reg('a',1),at)
+  end
+  return draft.finish()
+
+runtimechildcontrols: procedure = .int
+  failures = 0; variant = .int; firstcall = .int; secondcall = .int; i = .int; j = .int; id = .int
+  calls = .int; guards = .int; branches = .int; actions = .int; kept = .int; remaining = .int
+  original = .lltarget..module; result = .lltarget..module; facts = .lltargetfacts..analysis
+  request = .llinline..binding; changed = .llinline..change; item = .lltarget..record; target = .lltarget..operand
+  reasons = .string[]
+  reasons[10] = 'argument.selector.tail.call.pending'; reasons[11] = reasons[10]; reasons[12] = reasons[10]
+  reasons[13] = 'context.numeric.restore.unproved'; reasons[14] = 'arithmetic.write.availability.unproved'
+  reasons[15] = reasons[10]; reasons[17] = reasons[10]; reasons[18] = reasons[10]
+  do variant = 0 to 18
+    if variant > 5 & variant < 10 then iterate
+    if variant = 16 then iterate
+    original = runtimechildmodel(variant,firstcall,secondcall); id = original.identity()
+    failures = failures + check(original.valid(),'runtime child model verifies ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    request = llinline..bind(reference original,firstcall,reference original,original.procedureid('pick'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
+    if variant <= 5 then do
+      failures = failures + check(changed.status() = 'changed','runtime child expands ' || variant)
+      if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+      facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
+      failures = failures + check(facts.status() = 'ok','repeated child recycler facts ' || variant)
+      if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+      failures = failures + check(facts.calls() = 2 & facts.argumentcases(firstcall) = 3 & facts.argumentcases(secondcall) = 3,'only root sites publish three child alternatives')
+      remaining = facts.remaining()
+      do i = 1 to 3
+        failures = failures + check(facts.argumentcaseaction(firstcall,i) = 'move' & facts.argumentcaseaction(secondcall,i) = 'move','separate child result keeps outer owned return ' || i)
+      end
+      failures = failures + check(facts.remaining() = remaining,'child case queries borrow sealed proof')
+      result = changed.result(); calls = 0; guards = 0; branches = 0; actions = 0; kept = 0
+      do j = 1 to result.records()
+        item = result.record(j)
+        if item.procedureid() <> result.procedureid('main') | item.kind() <> 'instruction' then iterate
+        if item.mnemonic() = 'call1' then do
+          target = item.operand(2)
+          failures = failures + check(lower(target.text()) = 'bumpone','retained child target remains exact')
+          calls = calls + 1
+        end
+        if item.mnemonic() = 'ichkrng' then guards = guards + 1
+        if item.mnemonic() = 'brf' then branches = branches + 1
+        if item.mnemonic() = 'move' then actions = actions + 1
+        if item.mnemonic() = 'call4' then kept = kept + 1
+      end
+      failures = failures + check(calls = 3 & guards = 1 & branches = 2 & actions = 3 & kept = 1,'finite child arms retain exact call and separate closure ' || variant)
+    end
+    else do
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = reasons[variant] & changed.result().identity() = id,'bounded child refusal preserves owner ' || variant)
+      if changed.reason() <> reasons[variant] then say variant || ':' || changed.reason()
+    end
+  end
+  original = runtimechildmodel(0,firstcall,secondcall); id = original.identity()
+  request = llinline..bind(reference original,firstcall,reference original,original.procedureid('pick'))
+  changed = llinline..expand(request,'closed-main-default-halt.v1',100)
+  failures = failures + check(changed.status() = 'limit' & changed.result().identity() = id,'finite child work refusal is atomic')
+  changed = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,256)
+  failures = failures + check(changed.status() = 'limit' & changed.result().identity() = id,'finite child byte refusal is atomic')
+  return failures
+
 main: procedure = .int
   arg argv = .string[]
   lane = ''
@@ -2029,6 +2156,11 @@ main: procedure = .int
     runtimefailures = runtimecontrols()
     say 'RUNTIME_SELECTOR|failures=' || runtimefailures
     return runtimefailures
+  end
+  if lane = 'runtime-child' then do
+    childfailures = runtimechildcontrols()
+    say 'RUNTIME_CHILD|failures=' || childfailures
+    return childfailures
   end
   failures = 0
   draft = .lltarget..draft('constructed','constructed.fixture',0)

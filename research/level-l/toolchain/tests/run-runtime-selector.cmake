@@ -283,7 +283,7 @@ foreach(_case unguarded wide bank changed unknown-bound overflow-tail nested-tai
     set(_reason arithmetic.write.availability.unproved)
   elseif(_case STREQUAL "nested-tail")
     string(REPLACE "  ret r0" "  call1 r1,child(),r0\n  ret r1" _source "${_source}")
-    string(APPEND _source "\nchild() .locals=0\nret a1\n")
+    string(APPEND _source "\nchild() .locals=1\ncall1 r0,grandchild(),a1\nret r0\ngrandchild() .locals=0\nret a1\n")
     set(_reason argument.selector.tail.call.pending)
   elseif(_case STREQUAL "extra-selector")
     string(REPLACE "  ret r0" "  linkarg r1,a1,1\n  ret r0" _source "${_source}")

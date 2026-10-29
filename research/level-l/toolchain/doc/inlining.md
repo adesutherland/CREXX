@@ -1779,11 +1779,49 @@ in every arm, and the common continuation restores the caller source before
 its TRACE or next instruction. No ISA, type proof annotation or call frame is
 added. Width limits use `argument.selector.width.policy`; guard, bank,
 overflow, suffix and ownership gaps retain specific reasons and exact input
-identity. Nested CALL1 and acyclic source suffixes remain separate reviewed
-stages, with `argument.selector.tail.call.pending` and existing CFG reasons;
-additional suffix selectors retain `argument.selector.tail.selector.pending`.
-The native indirect-mutation fixture's child call remains outside this first
-linear slice. The separate serial `levell_rxas_runtime_selector` panel extends the
+identity. One retained exact same-module bytecode CALL1 is also supported in
+the linear suffix. Its child must be a checked linear scalar leaf with one
+RET, unchanged numeric context, no further call/selector, handler, opaque
+effect or reference/native payload. Child binding changes, ACOPY and
+explicit lifetime operations remain a bounded profile follow-on, rather than
+an ISA limitation; the current explicit leaf gate retains them with
+`argument.selector.tail.call.pending`. Existing scalar component transfers
+prove every child operation and its arithmetic success separately in each
+selector case. Calls beyond that shape retain the same specific call reason;
+acyclic suffix branches and additional runtime selectors remain later stages,
+using existing CFG and `argument.selector.tail.selector.pending` reasons.
+
+The child preparation owner reserves its immutable local/a0 StorageIds and
+recycler history before any selector fork. Per-case invoke uses the original
+root call identity and depth, without publishing child proof rows or changing
+global tracking during exploration. The joined caller state owns the final
+component/lifetime refresh. The emitter keeps the original child definition
+and emits one ordinary remapped CALL1 per arm, with captured explicit result
+and actual pointers. It adds no child register bank or replacement arithmetic.
+Child result/actual overlap and mutation precede authored outer UNLINK and the
+outer result commit, preserving the qualified per-case return/closure proof.
+The maintained native `mutateTailIndirect` suffix is the required producer
+shape. Its literal caller index alone does not exercise unknown selection;
+constructed and handwritten controls require three sealed cases and finite
+dispatch while checking all actual integers, text and public status across
+repeated calls.
+
+Default terminal cancellation can occur while the selected local is linked.
+VM return/final teardown releases local/a0 lifetime and contents through
+immutable owned `baselocals`, never the selected borrowed active pointer.
+Under this ordinary-scalar/no-resume/no-physical-observer profile, terminal
+unwind requires no synthesized UNLINK, copyback or borrowed-cell ENDLIFE.
+Unproved policy/teardown keeps `argument.selector.tail.unwind.pending`.
+Paired post-transformation CANCEL probes at child entry, after mutation before
+child RET and immediately after retained CALL1 before authored UNLINK check
+boundary scalar state, silent termination and absence of prevented normal
+observations. The source/VM ownership review supplies the cleanup and logical
+origin proof. Silent CANCEL has no stderr event oracle, and the tests do not
+claim post-teardown root-local observation. A scoped native event-sink probe
+remains an optional separately reviewed harness extension.
+
+The separate serial `levell_rxas_runtime_selector` and
+`levell_rxas_runtime_child` panels share prepared producers and extend the
 maintained constructed argument-selection owner and handwritten RXAS controls.
 Current cleanup retains the conservative runtime dispatch when its independent
 range/access proof returns `argument.range.unproved`; branch-aware reduction of

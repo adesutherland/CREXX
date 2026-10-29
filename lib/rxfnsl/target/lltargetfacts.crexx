@@ -1754,13 +1754,39 @@ analysis: class
     end
     call proof.addreturn(_retordinal[item.id()],item.id(),action,left,right)
     return 1
+  /* Ordinary invoke accepts broader bodies. This continuation admits only
+   * one retained fixed scalar leaf, before allocating any per-case state. */
+  selectorleaf: method = .int
+    arg item = .lltarget..record
+    i = .int; childid = .int
+    field = .lltarget..operand; record = .lltarget..record; row = .numbers
+    module = dereference _owner
+    if item.mnemonic() <> 'call1' | item.operands() <> 3 then return reject('argument.selector.tail.call.pending')
+    field = item.operand(2)
+    if field.kind() <> 'P' then return reject('argument.selector.tail.call.pending')
+    if spend(module.procedures()) = 0 then return 0
+    childid = module.procedureid(field.text())
+    if childid = 0 then return reject('argument.selector.tail.call.pending')
+    if _active[childid] then return reject('call.recursion.active')
+    if linear(childid,'argument.selector.tail.call.pending') = 0 then return 0
+    if reserve(_linearcount[childid],16) = 0 | spend(_linearcount[childid]) = 0 then return 0
+    row = _linear[childid] as .numbers
+    do i = 1 to row.size()
+      if spend(1) = 0 then return 0
+      record = module.at(row.at(i))
+      if record.kind() <> 'instruction' then iterate
+      /* Transfers below still prove component availability, context equality,
+       * successful writes and recycler ownership for the current actual. */
+      if wordpos(record.mnemonic(),'numsci ret cnop ichkrng null load copy icopy scopy bcopy move settp iadd isub imult') = 0 then return reject('argument.selector.tail.call.pending')
+    end
+    return 1
   /** A checked normal successor of ICHKRNG, immediately followed by one
    * register LINKARG and a scalar linear suffix. Return2 leaves the exact path
    * responsible; return1 has separately proved every finite normal arm. */
   runtimeselection: method = .int
-    arg guard = .lltarget..record, ordinal = .int, bodyid = .int, expose view = .frame, state_ref = reference .cells, expose previous = .history, destination = .int, hasresult = .int, expose proof = .callproof, publish = .int, callid = .int
+    arg guard = .lltarget..record, ordinal = .int, bodyid = .int, expose view = .frame, state_ref = reference .cells, expose previous = .history, destination = .int, hasresult = .int, expose proof = .callproof, publish = .int, callid = .int, outerCallId = .int, depth = .int, tracking = .int
     i = .int; j = .int; next = .int; returned = .int; id = .int; selectorid = .int; raw = .int; selected = .int; low = .int; high = .int; offset = .int
-    arm = .int; width = .int; bound = .int
+    arm = .int; width = .int; bound = .int; childcalls = .int
     state_copy = reference .cells; view_copy = reference .frame; history_copy = reference .history; proof_copy = reference .callproof
     field = .lltarget..operand; selector = .lltarget..operand; target = .lltarget..operand; source = .lltarget..operand
     item = .lltarget..record; operation = .lltarget..record; terminal = .lltarget..record
@@ -1828,11 +1854,22 @@ analysis: class
       item = module.at(row.at(i))
       if item.kind() <> 'instruction' then iterate
       if returned > 0 then return reject('argument.selector.tail.return.pending')
-      if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then return reject('argument.selector.tail.call.pending')
+      if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
+        childcalls = childcalls + 1
+        if childcalls > 1 then return reject('argument.selector.tail.call.pending')
+        if selectorleaf(item) = 0 then return 0
+      end
       if item.mnemonic() = 'linkarg' then return reject('argument.selector.tail.selector.pending')
       if item.mnemonic() = 'ret' then do; returned = i; terminal = item; end
     end
     if returned = 0 then return reject('argument.selector.suffix.pending')
+    /* Child IDs and history dimensions must be shared by every selector
+     * fork. Preparation neither activates nor admits the retained child. */
+    if childcalls > 0 then do
+      if depth >= 1 then return reject('nested.call.depth.pending')
+      if _namedhandler > 0 | _namedactive then return reject('argument.selector.tail.unwind.pending')
+      if preparechildren(bodyid,state_ref,reference previous,1) = 0 then return 0
+    end
     if reserve(width,256) = 0 | reserve(view.slots(),32) = 0 then return 0
     if reserve(_recordcount[bodyid],32) = 0 | reserve(_retcount[bodyid],120) = 0 then return 0
     if spend(_recordcount[bodyid] + _retcount[bodyid]) = 0 then return 0
@@ -1856,7 +1893,12 @@ analysis: class
       do i = ordinal to returned
         if spend(1) = 0 then return 0
         item = module.at(row.at(i)); call branchproof.visit(_recordordinal[item.id()])
-        if step(item,branchview,reference branchstate,1,0,hasresult,0) = 0 then return 0
+        if item.kind() = 'instruction' & item.mnemonic() = 'call1' then do
+          /* Per-arm transfers never publish a root row or update _plain.
+           * The merged caller refresh below owns the incoming tracking mode. */
+          if invoke(item,branchview,reference branchstate,branchhistory,0,outerCallId,depth + 1,0) = 0 then return 0
+        end
+        else if step(item,branchview,reference branchstate,1,0,hasresult,0) = 0 then return 0
         if i = next then do
           source = branchview.argument(_lastselector); bindings[raw - low + 1] = branchview.storage(source)
         end
@@ -1882,6 +1924,10 @@ analysis: class
       end
     end
     state = merged; previous = mergedhistory; proof = aggregate
+    if tracking then do
+      if spend(state.size()) = 0 then return 0
+      do i = 1 to state.size(); _plain[i] = state.plain(i); end
+    end
     if publish then do
       _selectioncount[callid] = width
       _selections[callid] = .selection(guard.id(),operation.id(),terminal.id(),low,offset,bindings,cases)
@@ -2706,7 +2752,7 @@ analysis: class
       record = module.at(recordid)
       call proof.visit(_recordordinal[recordid])
       if record.kind() = 'instruction' & record.mnemonic() = 'ichkrng' then do
-        runtime = runtimeselection(record,i,bodyid,child,state_ref,callhistory,destination,hasresult,proof,publish,item.id())
+        runtime = runtimeselection(record,i,bodyid,child,state_ref,callhistory,destination,hasresult,proof,publish,item.id(),outerCallId,depth,tracking)
         if runtime = 0 then return 0
         if runtime = 1 then do; returned = proof.site(1); leave; end
       end
@@ -2735,11 +2781,7 @@ analysis: class
       end
     end
     if tracking then do
-      if runtime = 1 & _dagbody[bodyid] = 0 then do
-        if spend(state.size()) = 0 then return 0
-        do i = 1 to state.size(); _plain[i] = state.plain(i); end
-      end
-      else if hasresult then _plain[destination] = state.plain(destination)
+      if runtime <> 1 & hasresult then _plain[destination] = state.plain(destination)
     end
     if publish & (proof.written() | shape.clear()) then do
       if proof.writeinteger() | shape.clear() then call insert(reference writes,domain(destination))
