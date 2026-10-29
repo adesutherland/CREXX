@@ -2,7 +2,9 @@
 options levelb
 import rxfnsb
 import llir
+import llirgraph
 import lltarget
+import lltargetfacts
 import llcleanup
 import llinline
 
@@ -246,7 +248,7 @@ backwarddag: procedure = .int
 graphkeeps: procedure = .int
   failures = 0; variant = .int; service = .int; expected = .string; ignored = .int
   original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
-  do variant = 1 to 3
+  do variant = 1 to 2
     draft = .lltarget..draft('storage.graph.keep.' || variant,'fixture:storage.graph.keep',0)
     at = draft.synthetic('specific missing graph proof'); root = draft.procedure('main',4,at)
     if variant = 1 then do
@@ -259,18 +261,12 @@ graphkeeps: procedure = .int
       ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',3),.lltarget..operand.integer(768),at)
       ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(11),at)
       ignored = two(root,'brt',.lltarget..operand.symbol('changed'),root.reg('r',0),at)
-      if variant = 3 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(22),at)
       ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
       ignored = namedlabel(root,'changed',at)
-      if variant = 3 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(33),at)
-      else ignored = two(root,'link',root.reg('r',1),root.reg('r',0),at)
+      ignored = two(root,'link',root.reg('r',1),root.reg('r',0),at)
       ignored = namedlabel(root,'joined',at)
-      /* Availability survives this join, but the distinct 22/33 constants do
-       * not. The current checked-overflow proof needs an exact IADD input. */
-      if variant = 3 then ignored = three(root,'iadd',root.reg('r',2),root.reg('r',2),root.reg('r',1),at)
       ignored = one(root,'ret',.lltarget..operand.integer(0),at)
       expected = 'join.binding.unproved'
-      if variant = 3 then expected = 'arithmetic.write.availability.unproved'
     end
     original = draft.finish()
     failures = failures + check(original.valid(),'graph negative has valid target structure ' || variant)
@@ -282,6 +278,105 @@ graphkeeps: procedure = .int
       kept = changed.result(); keptgraph = dereference kept.ir()
       failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(keptgraph.binary()) = bin2x(before),'missing graph proof has exact reason and unchanged owner ' || variant || '/' || service)
       if changed.reason() <> expected then say changed.reason()
+    end
+  end
+  return failures
+
+/** Bounded joins preserve write success without inventing an exact value,
+ * resetting status, or conflating the integer and whole-value domains. */
+boundedmodel: procedure = .lltarget..module
+  arg variant = .int
+  constant HIGHEST = 9223372036854775807
+  constant LOWEST = -9223372036854775807 - 1
+  lhslo = 22; lhshi = 33; rhslo = 11; rhshi = 11; opname = 'iadd'; destination = 2
+  select variant
+    when 2 then do; opname = 'isub'; rhslo = 5; rhshi = 5; end
+    when 3 then do; opname = 'imult'; lhslo = -3; lhshi = 4; rhslo = -2; rhshi = 5; end
+    when 4 then do; opname = 'imult'; lhslo = LOWEST; lhshi = HIGHEST; rhslo = 0; rhshi = 0; end
+    when 5 then do; lhslo = HIGHEST - 1; lhshi = HIGHEST; rhslo = 1; rhshi = 1; end
+    when 6 then do; opname = 'isub'; lhslo = LOWEST; lhshi = LOWEST + 1; rhslo = 1; rhshi = 1; end
+    when 7 then do; opname = 'imult'; lhslo = LOWEST; lhshi = -2; rhslo = -1; rhshi = -1; end
+    otherwise nop
+  end
+  if variant > 4 then destination = 4
+  draft = .lltarget..draft('storage.bounded.' || variant,'fixture:storage.bounded',0)
+  at = draft.synthetic('bounded joined checked arithmetic'); root = draft.procedure('main',10,at)
+  ignored = two(root,'load',root.reg('r',7),.lltarget..operand.integer(5),at)
+  ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',7),.lltarget..operand.integer(768),at)
+  if variant > 4 then ignored = two(root,'load',root.reg('r',4),.lltarget..operand.integer(77),at)
+  ignored = two(root,'settp',root.reg('r',destination),.lltarget..operand.integer(256),at)
+  if variant = 8 then ignored = three(root,'getandtp',root.reg('r',2),root.reg('r',7),.lltarget..operand.integer(768),at)
+  ignored = two(root,'brt',.lltarget..operand.symbol('bounded_true'),root.reg('r',0),at)
+  if variant <> 8 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(lhslo),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(rhslo),at)
+  ignored = one(root,'br',.lltarget..operand.symbol('bounded_join'),at)
+  ignored = namedlabel(root,'bounded_true',at)
+  if variant <> 8 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(lhshi),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(rhshi),at)
+  ignored = namedlabel(root,'bounded_join',at)
+  ignored = three(root,opname,root.reg('r',destination),root.reg('r',2),root.reg('r',1),at)
+  if variant = 4 then ignored = three(root,'ichkrng',root.reg('r',destination),.lltarget..operand.integer(0),.lltarget..operand.integer(0),at)
+  ignored = two(root,'copy',root.reg('r',5),root.reg('r',destination),at)
+  ignored = three(root,'getandtp',root.reg('r',3),root.reg('r',5),.lltarget..operand.integer(768),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  return draft.finish()
+
+boundedpositive: procedure = .int
+  arg variant = .int
+  failures = 0; i = .int; opid = .int; storageid = .int; integer = .int; whole = .int; mode = .int
+  original = .lltarget..module; projected = .lltarget..module; result = .lltarget..module; kept = .lltarget..module
+  facts = .lltargetfacts..analysis; changed = .llinline..change; allocated = .llinline..change; limited = .llinline..change
+  item = .lltarget..record; body = .lltarget..body; projection = .llirgraph..access
+  original = boundedmodel(variant)
+  failures = failures + check(original.valid(),'bounded arithmetic control is valid typed input ' || variant)
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  body = original.body(original.procedureid('main'))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = 'instruction' & wordpos(item.mnemonic(),'iadd isub imult') > 0 then opid = item.id()
+  end
+  facts = lltargetfacts..analysegraph(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(facts.status() = 'ok','every bounded endpoint proves a successful joined write ' || variant)
+  if facts.status() <> 'ok' then do; say facts.reason(); return failures; end
+  projection_ref = facts.access()
+  projection = dereference projection_ref
+  storageid = facts.storage(opid,1); integer = facts.integerdomain(storageid); whole = facts.wholedomain(storageid)
+  failures = failures + check(integer > 0 & whole > 0 & projection.kills(opid,integer) & projection.kills(opid,whole) = 0,'bounded arithmetic kills only its integer component ' || variant)
+  failures = failures + check(projection.reads(opid,integer),'aliased destination reads its incoming integer before publishing new bounds ' || variant)
+  changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','bounded join admits graph transport ' || variant)
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  projected = changed.result()
+  item = projected.at(changed.operation(opid))
+  failures = failures + check(wordpos(item.mnemonic(),'iadd isub imult') > 0,'checked arithmetic remains executable after transport ' || variant)
+  allocated = llcleanup..storage(reference projected,projected.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(allocated.status() = 'changed','bounded caller receives unique dense placement ' || variant)
+  if allocated.status() <> 'changed' then do; say allocated.reason(); return failures; end
+  result = allocated.result(); body = result.body(result.procedureid('main'))
+  failures = failures + check(body.locals() = 6,'six distinct bounded caller cells remain distinct under DAG placement ' || variant)
+  graph = dereference original.ir(); before = graph.binary()
+  if variant = 1 then do mode = 1 to 2
+    if mode = 1 then limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1)
+    else limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,1)
+    kept = limited.result(); limitedgraph = dereference kept.ir()
+    failures = failures + check(limited.status() = 'limit' & bin2x(limitedgraph.binary()) = bin2x(before),'bounded state allowances fail atomically ' || mode)
+  end
+  return failures
+
+boundedkeeps: procedure = .int
+  failures = 0; variant = .int; service = .int
+  original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
+  do variant = 5 to 8
+    original = boundedmodel(variant)
+    failures = failures + check(original.valid(),'overflow or unbounded control is valid typed input ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    graph = dereference original.ir(); before = graph.binary()
+    do service = 1 to 2
+      if service = 1 then changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+      else changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+      kept = changed.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = 'arithmetic.write.availability.unproved' & bin2x(keptgraph.binary()) = bin2x(before),'one unsafe endpoint or unbounded operand retains exact original ' || variant || '/' || service)
+      if changed.status() <> 'keep' then say changed.reason()
     end
   end
   return failures
@@ -393,6 +488,6 @@ hidden: procedure = .int
   return failures
 
 main: procedure = .int
-  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + hidden()
+  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + hidden()
   say 'STORAGE_INLINE|failures=' || failures
   return failures

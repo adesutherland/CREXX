@@ -125,7 +125,7 @@ require separate decisions.
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, and acyclic direct-branch scalar multiple returns are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, optional presence/defaults and dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage meets and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage meets, bounded integer success across acyclic joins and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -837,10 +837,40 @@ platforms remain for the agreed standalone milestone. The representative
 cleaned two-arm caller must have a dense frame without selected CALL, LINK,
 UNLINK or SWAP glue while required MOVE/COPY remain. This structural obligation
 does not establish a performance verdict.
-Unknown joined values still need a checked arithmetic range/success proof
-before a following IADD can be transformed; a fixture needing distinct arm
-results computes each IADD before joining. The remaining AC05 obligations stay
-open.
+Unknown joined values now have the bounded integer success proof below for
+admitted checked arithmetic. Other components and unbounded values retain
+their specific missing-proof reasons. The remaining AC05 obligations stay open.
+
+### Reviewed bounded integer success increment
+
+INL-STEP05 extends the same `lltargetfacts.cells` owner with a bounded integer
+interval per StorageId. Exact LOAD/NULL values create singleton bounds;
+COPY/MOVE carry bounds with the integer component and MOVE resets the source.
+Unknown GETANDTP results, uncertain recycled content and absent definitions
+have no bounds. A feasible acyclic join retains the hull only if every incoming
+path has a defined bounded integer; exact knownness is retained only for a
+singleton. Status, whole-cell, plain/lifetime, zeroed and storage identities
+remain separate facts. Snapshot and work/byte allowances include the added
+state rows. No new graph, schema, ISA or runtime arithmetic owner is added.
+
+Before an aliased destination write, gather both operand bounds. IADD checks
+the lower/lower and upper/upper sums; ISUB checks lower/upper and upper/lower;
+IMULT checks all four endpoint products. Use the existing checked scalar
+`arithmetic` helper at each endpoint; an unbounded operand or any failed check
+retains the original with `arithmetic.write.availability.unproved`. Do not
+evaluate an unchecked width, negated MIN or overflowing intermediate. Only a
+proved successful write publishes integer availability, a result interval and
+the existing integer-component kill. It must not assert a whole-cell kill,
+freshness or known status. Branch, LINKARG and ICHKRNG selection retain their
+existing exact-value rules. This deliberately loses correlations such as
+`x-x` across paths until a separate identity proof exists.
+
+The unequal-value joined-IADD control now succeeds; negative regressions retain
+the exact input where one feasible endpoint can overflow or an operand has no
+bounds. Subtraction/multiplication boundaries, aliased destination, status
+preservation and tight resource limits have focused controls in the existing
+storage/CLI development lane with native assembler optimization disabled and
+one VM. Broader acceptance stays INL-STEP06.
 
 ### Required native bootstrap correctness repair
 

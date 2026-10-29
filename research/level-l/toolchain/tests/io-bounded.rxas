@@ -1,0 +1,49 @@
+/* GETANDTP supplies defined runtime0/256, unknown to static value selection.
+ * Joined x is22/33. Independent outputs are33/17/-44/256 and44/28/-66/256. */
+.globals=0
+main() .locals=10
+  load r9,5
+  getandtp r0,r9,768
+  load r1,0
+  load r2,0
+  call3 r3,bounded(),r0,r1,r2
+  settp r9,256
+  getandtp r0,r9,768
+  load r4,0
+  load r5,0
+  call3 r6,bounded(),r0,r4,r5
+  getandtp r7,r3,768
+  getandtp r8,r6,768
+  itos r1
+  say r1
+  itos r2
+  say r2
+  itos r3
+  say r3
+  itos r7
+  say r7
+  itos r4
+  say r4
+  itos r5
+  say r5
+  itos r6
+  say r6
+  itos r8
+  say r8
+  ret 0
+bounded() .locals=2
+  null r0
+  null r1
+  settp r0,256
+  brt bounded_true,a1
+  load r0,22
+  br bounded_join
+bounded_true:
+  load r0,33
+bounded_join:
+  iadd r1,r0,11
+  copy a2,r1
+  isub r1,r0,5
+  copy a3,r1
+  imult r0,r0,-2
+  ret r0

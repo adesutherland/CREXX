@@ -63,6 +63,9 @@ cells: class
   _known = .int[]
   _values = .int[]
   _plain = .int[]
+  _bounded = .int[]
+  _low = .int[]
+  _high = .int[]
   _flags = .int[]
   _flagsknown = .int[]
   _wholeknown = .int[]
@@ -74,6 +77,7 @@ cells: class
     n = _defined[0] + 1
     _defined[n] = defined; _known[n] = known; _values[n] = value; _plain[n] = 1; _flags[n] = 0
     _wholeknown[n] = 1; _zeroed[n] = 0; _flagsknown[n] = 1
+    _bounded[n] = defined & known; _low[n] = value; _high[n] = value
     return n
   defined: method = .int
     arg id = .int
@@ -84,6 +88,15 @@ cells: class
   value: method = .int
     arg id = .int
     return _values[id]
+  bounded: method = .int
+    arg id = .int
+    return _bounded[id]
+  low: method = .int
+    arg id = .int
+    return _low[id]
+  high: method = .int
+    arg id = .int
+    return _high[id]
   plain: method = .int
     arg id = .int
     return _plain[id]
@@ -102,8 +115,14 @@ cells: class
     if size() <> other.size() then return 0
     do i = 1 to size()
       _defined[i] = _defined[i] & other.defined(i)
-      _known[i] = _defined[i] & _known[i] & other.known(i) & (_values[i] = other.value(i))
-      if _known[i] = 0 then _values[i] = 0
+      _bounded[i] = _defined[i] & _bounded[i] & other.bounded(i)
+      _known[i] = 0; _values[i] = 0
+      if _bounded[i] then do
+        if other.low(i) < _low[i] then _low[i] = other.low(i)
+        if other.high(i) > _high[i] then _high[i] = other.high(i)
+        if _low[i] = _high[i] then do; _known[i] = 1; _values[i] = _low[i]; end
+      end
+      else do; _low[i] = 0; _high[i] = 0; end
       _plain[i] = _plain[i] & other.plain(i)
       _wholeknown[i] = _wholeknown[i] & other.wholeknown(i)
       _zeroed[i] = _zeroed[i] & other.zeroed(i)
@@ -122,19 +141,34 @@ cells: class
     /* The scalar profile proves no native/reference payload was created.
      * Recycled ordinary components/status still cannot be assumed fresh. */
     _defined[id] = 0; _known[id] = 0; _wholeknown[id] = 0; _zeroed[id] = 0; _flagsknown[id] = 0
+    _bounded[id] = 0; _low[id] = 0; _high[id] = 0
     return
   integer: method = .void
     arg id = .int, known = .int, value = 0
     _defined[id] = 1; _known[id] = known; _values[id] = value; _zeroed[id] = 0
+    _bounded[id] = known; _low[id] = value; _high[id] = value
+    return
+  /* Successful arithmetic changes only its integer component. Bounds are
+   * not a whole-cell equality, status, freshness or lifetime assertion. */
+  interval: method = .void
+    arg id = .int, low = .int, high = .int
+    if low > high then do
+      assembler signal "ERROR","LL_TARGET_FACTS_DIMENSIONS: inverted integer bounds"; return
+    end
+    _defined[id] = 1; _bounded[id] = 1; _low[id] = low; _high[id] = high; _zeroed[id] = 0
+    _known[id] = low = high; _values[id] = 0
+    if _known[id] then _values[id] = low
     return
   reset: method = .void
     arg id = .int
     _defined[id] = 1; _known[id] = 1; _values[id] = 0; _plain[id] = 1; _flags[id] = 0
     _wholeknown[id] = 1; _zeroed[id] = 1; _flagsknown[id] = 1
+    _bounded[id] = 1; _low[id] = 0; _high[id] = 0
     return
   copy: method = .void
     arg destination = .int, source = .int, whole = 1
     _defined[destination] = _defined[source]; _known[destination] = _known[source]; _values[destination] = _values[source]
+    _bounded[destination] = _bounded[source]; _low[destination] = _low[source]; _high[destination] = _high[source]
     if whole then do
       _plain[destination] = _plain[source]; _flags[destination] = _flags[source]
       _flagsknown[destination] = _flagsknown[source]
@@ -547,9 +581,9 @@ analysis: class
   /* Include transient and retained deep copies, not an assumed VM COW path. */
   pathallowance: method = .int
     arg cells = .int, slots = .int
-    if reserve(cells,256) = 0 | reserve(slots,128) = 0 | reserve(1,256) = 0 then return 0
-    if cells > _work / 32 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-    if spend(cells * 32) = 0 then return 0
+    if reserve(cells,352) = 0 | reserve(slots,128) = 0 | reserve(1,256) = 0 then return 0
+    if cells > _work / 44 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(cells * 44) = 0 then return 0
     if slots > _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     return spend(slots * 16)
   joinpath: method = .int
@@ -822,9 +856,10 @@ analysis: class
     return
   step: method = .int
     arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1, returnwhole = 1, history = 1
-    i = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
+    i = .int; j = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
     opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
     selected = .int; checked = .int[]; limits = .int[]
+    leftlow = .int; lefthigh = .int; rightlow = .int; righthigh = .int; resultlow = .int; resulthigh = .int
     source = .lltarget..operand; bank = .lltarget..operand; reference_value = .lltarget..operand; option = .lltarget..operand
     digits = .lltarget..operand; casetype = .lltarget..operand; standard = .lltarget..operand
     if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: transfer state is sealed"
@@ -1037,21 +1072,49 @@ analysis: class
         end
         else do
           left = item.operand(2); right = item.operand(3)
+          /* Capture both incoming intervals before a possibly aliased
+           * destination can change either operand's component facts. */
           if left.kind() = 'R' then do
             sourceid = view.storage(left)
-            if sourceid = 0 | state.known(sourceid) = 0 then return reject('arithmetic.write.availability.unproved')
-            lhs = state.value(sourceid); call insert(reference reads,domain(sourceid))
+            if sourceid = 0 | state.defined(sourceid) = 0 | state.bounded(sourceid) = 0 then return reject('arithmetic.write.availability.unproved')
+            leftlow = state.low(sourceid); lefthigh = state.high(sourceid); call insert(reference reads,domain(sourceid))
           end
-          else lhs = left.index()
+          else do; leftlow = left.index(); lefthigh = leftlow; end
           if right.kind() = 'R' then do
             rightid = view.storage(right)
-            if rightid = 0 | state.known(rightid) = 0 then return reject('arithmetic.write.availability.unproved')
-            rhs = state.value(rightid); call insert(reference reads,domain(rightid))
+            if rightid = 0 | state.defined(rightid) = 0 | state.bounded(rightid) = 0 then return reject('arithmetic.write.availability.unproved')
+            rightlow = state.low(rightid); righthigh = state.high(rightid); call insert(reference reads,domain(rightid))
           end
-          else rhs = right.index()
-          checked = arithmetic(name,lhs,rhs)
-          if checked[1] = 0 then return reject('arithmetic.write.availability.unproved')
-          call state.integer(destination,1,checked[2])
+          else do; rightlow = right.index(); righthigh = rightlow; end
+          if spend(32) = 0 | reserve(4,16) = 0 then return 0
+          if name = 'imult' then do
+            do i = 1 to 2
+              lhs = leftlow
+              if i = 2 then lhs = lefthigh
+              do j = 1 to 2
+                rhs = rightlow
+                if j = 2 then rhs = righthigh
+                checked = arithmetic(name,lhs,rhs)
+                if checked[1] = 0 then return reject('arithmetic.write.availability.unproved')
+                if i = 1 & j = 1 then do; resultlow = checked[2]; resulthigh = checked[2]; end
+                else do
+                  if checked[2] < resultlow then resultlow = checked[2]
+                  if checked[2] > resulthigh then resulthigh = checked[2]
+                end
+              end
+            end
+          end
+          else do
+            lhs = rightlow; rhs = righthigh
+            if name = 'isub' then do; lhs = righthigh; rhs = rightlow; end
+            checked = arithmetic(name,leftlow,lhs)
+            if checked[1] = 0 then return reject('arithmetic.write.availability.unproved')
+            resultlow = checked[2]
+            checked = arithmetic(name,lefthigh,rhs)
+            if checked[1] = 0 then return reject('arithmetic.write.availability.unproved')
+            resulthigh = checked[2]
+          end
+          call state.interval(destination,resultlow,resulthigh)
         end
         /* A whole-cell domain observes every numeric/status side component.
          * Definite scalar kills are narrower; whole copy/move/null kill both. */
@@ -1199,7 +1262,7 @@ analysis: class
       else child = .frame(state_ref,callee.locals(),actuals,0,view.context(),owned)
     end
     else do
-      if reserve(callee.locals() + 1,88) = 0 then return 0
+      if reserve(callee.locals() + 1,112) = 0 then return 0
       if _globals[0] > 0 then do
         if spend(callee.locals() + 1) = 0 then return 0
         do i = 1 to callee.locals(); owned[i] = state.add(); end
@@ -1355,11 +1418,11 @@ analysis: class
     if spend(body.locals() + 1) = 0 then return
     state = .cells(); empty = .int[]
     if module.globals() = 0 then do
-      if reserve(body.locals() + 1,112) = 0 then return
+      if reserve(body.locals() + 1,136) = 0 then return
       view = .frame(reference state,body.locals(),empty,1)
     end
     else do
-      if reserve(body.locals() + 1,136) = 0 | reserve(module.globals(),136) = 0 then return
+      if reserve(body.locals() + 1,160) = 0 | reserve(module.globals(),160) = 0 then return
       if spend(body.locals() + 1) = 0 | spend(module.globals()) = 0 | spend(module.globals()) = 0 then return
       /* Keep root r StorageIds 1..L. Module bases persist independently of
        * every procedure's physical r/g/a map and owned local/a0 cache. */

@@ -962,7 +962,11 @@ The original callable declarations and inline payload stay with their body.
 liveness service. Its current transfer profile covers straight-line integer
 storage, aliases/permutations, status, selected numeric setup and observations.
 Checked integer arithmetic requires a range proof before its destination is
-treated as available: overflow may be ignored without writing a value. A local
+treated as available: overflow may be ignored without writing a value. The
+current proof carries bounded integer intervals across acyclic joins and checks
+all extremal add/subtract/product outcomes before treating the write as
+successful; unbounded operands or any failing endpoint retain the call. Bounds
+do not prove whole-cell equality, status, freshness or lifetime. A local
 return uses MOVE/reset only after proving original owned storage. Repeated
 activation must account for recycled local contents; the current proof admits
 the private return cell reset by the preceding successful MOVE and retains
@@ -1080,11 +1084,11 @@ remain distinct; unreferenced cells may disappear without inventing a reset.
 The linear source-order reuse/reset schedule remains limited to its proven
 straight-line profile. A backward-lexical DAG can execute the later source
 cell first, so cross-block sharing needs a separate interference or arrival
-reset proof. An unknown joined integer constant is available but not a known
-exact value: checked arithmetic following that join still needs a range and
-successful-write proof. This is a current proof gap, not an infeasible RXAS
-shape. Typed end-anchor observers and more general CFG/alias cleanup remain
-open under INL-STEP05.
+reset proof. An integer may be available but not an exact constant at a join;
+bounded hulls now prove successful checked arithmetic when every extremal
+operation succeeds. Unbounded operands, failing endpoints and value
+correlations such as `x-x` retain their specific proof gap. Typed end-anchor
+observers and more general CFG/alias cleanup remain open under INL-STEP05.
 
 ### Straight-line callee rebinding contract
 
