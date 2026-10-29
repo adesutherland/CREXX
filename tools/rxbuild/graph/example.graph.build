@@ -1,0 +1,20 @@
+BUILD_DIR = ".crexx-build/graph";
+SOURCE = "tools/rxbuild/build_demo.crexx";
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "PROGRAM $out"
+END RULE;
+
+BUILD "${BUILD_DIR}/grammar.rxbin"
+  RULE = compile_program
+  INPUT = "${SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/reader.rxbin"
+  RULE = compile_program
+  INPUT = "${SOURCE}"
+  DEPENDS_ON = "${BUILD_DIR}/grammar.rxbin"
+END BUILD;
+
+DEFAULT "${BUILD_DIR}/reader.rxbin";

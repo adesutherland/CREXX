@@ -48,6 +48,23 @@ output against an independent tree.
 
 ## Embedded source example
 
+## Supported functions
+
+The current reader supports the following function forms:
+
+- User-defined scalar functions with parameters, `return` expressions, and
+  calls used inside expressions.
+- String functions: `strlen`, `strtoupper`, `strtolower`, `trim`, `ltrim`,
+  `rtrim`, `strrev`, `substr`, `strpos`, and string-only `str_replace`.
+- Numeric functions: `abs`, `min`, `max`, `intval`, `floatval`, `round`,
+  `ceil`, and `floor`.
+
+String and numeric built-ins currently accept scalar arguments. PHP-specific
+conversion details for arrays, booleans, `null`, invalid numeric strings,
+negative substring offsets, and array-based replacement/search are not yet
+implemented. The supported surface and deferred cases are maintained in
+[`design-php.md`](design-php.md).
+
 [`php_embedded.rxpp`](php_embedded.rxpp) demonstrates keeping a PHP example
 visible inside an RXPP member. `##DALIAS PHP` collects the `PHP ... END PHP`
 block into an array and calls `exec_to_process`. The sample callback only

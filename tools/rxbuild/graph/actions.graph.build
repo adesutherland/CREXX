@@ -1,0 +1,36 @@
+/* Graph action example: native packaging and execution. */
+BUILD_DIR = ".crexx-build/graph-actions";
+SOURCE = "tools/rxbuild/build_demo.crexx";
+
+RULE create_exe
+  ACTION = "CREATE EXE"
+  DESCRIPTION = "EXE $out"
+END RULE;
+
+RULE run_program
+  ACTION = "RUN"
+  DESCRIPTION = "RUN $in"
+END RULE;
+
+RULE compile_program
+  ACTION = "COMPILE PROGRAM"
+  DESCRIPTION = "PROGRAM $out"
+END RULE;
+
+BUILD "${BUILD_DIR}/build_demo"
+  RULE = create_exe
+  INPUT = "${SOURCE}"
+END BUILD;
+
+BUILD "${BUILD_DIR}/build_demo.rxbin"
+  RULE = compile_program
+  INPUT = "${SOURCE}"
+END BUILD;
+
+BUILD "run-build-demo"
+  RULE = run_program
+  INPUT = "${BUILD_DIR}/build_demo.rxbin"
+  DEPENDS_ON = "${BUILD_DIR}/build_demo.rxbin"
+END BUILD;
+
+DEFAULT "run-build-demo";

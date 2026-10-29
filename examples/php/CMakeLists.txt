@@ -14,6 +14,18 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
 
 # This source-only reader control belongs to ordinary QA, not native-memory panels.
 if(BUILD_TESTING AND NOT CREXX_QA_AUDIT_NATIVE_SOURCES)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME example_php_build_plan_parity
+        COMMAND ${Python3_EXECUTABLE}
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/check-build-plan-parity.py
+                --crexx $<TARGET_FILE:crexx>
+                --source ${CMAKE_SOURCE_DIR})
+    set_tests_properties(example_php_build_plan_parity PROPERTIES
+        LABELS "examples;php;build;graph;essential"
+        TIMEOUT 240)
+    crexx_register_test_prep_targets(TESTS example_php_build_plan_parity
+        TARGETS crexx rxbuild rxbuild_legacy)
+
     set(_php_reader "${CMAKE_CURRENT_SOURCE_DIR}/php_reader.crexx")
     set(_php_group_template "${CMAKE_CURRENT_SOURCE_DIR}/php_reader_group_smoke.crexx.in")
     set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_php_reader}")

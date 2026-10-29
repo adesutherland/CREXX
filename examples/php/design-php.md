@@ -275,7 +275,8 @@ greater
     - calls used in expressions, such as `name($value, 2)`.
 
     Explicitly deferred: defaults, type hints, references, variadics, closures,
-    nested functions, generators, and built-in PHP functions.
+    nested functions, generators, and built-in PHP functions not listed in the
+    later string and numeric compatibility slices.
 
     - **PHP-FUNCTION-AC01:** a named function parses and becomes a cREXX
       procedure with typed scalar arguments;
@@ -326,6 +327,19 @@ greater
     - **PHP-NUMERIC-AC03:** existing PHP samples remain valid.
 
     The focused fixture is `php-numeric-sample.php`.
+
+    Current function summary:
+    - user-defined scalar functions with parameters, returns, and expression
+      calls;
+    - string functions: `strlen`, `strtoupper`, `strtolower`, `trim`, `ltrim`,
+      `rtrim`, `strrev`, `substr`, `strpos`, and string-only `str_replace`;
+    - numeric functions: `abs`, `min`, `max`, `intval`, `floatval`, `round`,
+      `ceil`, and `floor`.
+
+    These built-ins currently operate on scalar arguments. PHP-specific
+    conversion rules for arrays, booleans, `null`, invalid numeric strings,
+    negative substring offsets, and array-based string operations remain
+    deferred.
 
 18. Named grouping-node correction
     The named tree preserves the grammar's `group.value` rule, including its

@@ -215,3 +215,59 @@ driver remains unchanged.
 - STEP-36: Update user and component documentation, rebuild the packaged tools,
   and run direct-failure, controlled-success, and regression checks. Serves
   AC-41.
+
+## Parallel Ninja-like graph reader increment
+
+### Vision and intended outcomes
+
+Make the graph language the canonical input for `rxbuild`. It uses its own
+Level L grammar, cREXX reader, example plans and focused tests. Existing
+`.build` plans remain supported by the separately named `rxbuild-legacy`
+compatibility executable, and `crexx.exe` dispatches `.graph.build` and
+`.build` plans to the corresponding runner.
+
+The graph language supports named rules with typed actions, physical outputs,
+logical build names, physical and logical dependencies, string variables,
+timestamp-based incremental decisions, physical or logical default targets,
+and clear diagnostics. It deliberately does not implement generic shell
+commands, parallel execution, or the complete Ninja language.
+
+### Acceptance criteria
+
+- GAC-01: **Met locally.** Canonical `rxbuild` parses graph syntax through its
+  own grammar and reader without loading the legacy `.build` grammar or
+  reader.
+- GAC-02: **Met locally.** The graph reader constructs rules and targets,
+  expands variables, resolves physical or logical defaults and explicit
+  targets, and reports unknown rules, duplicate targets, missing
+  inputs/dependencies, duplicate logical names, ambiguous defaults and cycles.
+- GAC-03: **Met locally.** The reader recursively visits dependencies before a
+  target, executes supported typed actions only when appropriate, and rejects
+  a successful action that does not produce its declared output.
+- GAC-04: **Met locally.** Maintained examples demonstrate physical and
+  logical dependency forms, logical target selection, default selection,
+  incremental no-op behavior and PHP graph execution.
+- GAC-05: **Met locally.** Focused graph, PHP parity, and legacy compatibility
+  tests pass; broader project QA remains a later integration milestone.
+- GAC-06: **Met locally.** `BUILD_NAME`, `DEPENDS_ON_BUILD`, and
+  `DEFAULT_BUILD` provide logical graph names while preserving physical
+  `DEPENDS_ON` and `DEFAULT` syntax.
+
+### Implementation steps
+
+- GSTEP-01: **Complete locally.** Add the graph grammar, reader, example build
+  descriptions and component documentation. Serves GAC-01 and GAC-04.
+- GSTEP-02: **Complete locally.** Add graph construction, variable expansion,
+  physical/logical target selection, dependency traversal and
+  cycle/duplicate/missing diagnostics. Serves GAC-02 and GAC-06.
+- GSTEP-03: **Complete locally.** Add typed compilation, output/freshness
+  checks, execution, native packaging and missing-output validation. Serves
+  GAC-03.
+- GSTEP-04: **Complete locally.** Add focused CMake/Python tests for parsing,
+  dependency ordering, logical-name resolution, incremental no-op/rebuild
+  behavior and negative cases; rerun PHP parity and legacy compatibility
+  checks. Serves GAC-05 and GAC-06.
+- GSTEP-05: **Complete locally.** Add typed grammar, reader and application
+  actions to the graph reader, with ordered grammar/reader dependencies, and
+  provide the PHP graph example with logical names and runnable targets.
+  Serves GAC-03 and GAC-04.
