@@ -975,7 +975,7 @@ integer values alone do not justify removing a copy. Required snapshots and
 retained counted-call windows remain intact. The typed assignment owner now
 compacts complete live cells and reuses disjoint fresh-root plain scalar cells
 only with checked entry, component/status and whole-reset premises. Sparse
-registers alone do not meet the wider reuse requirement. General CFG, deeper
+registers alone do not meet the wider reuse requirement. Wider CFG, deeper
 nesting, optional presence/defaults, dynamic varargs, reference/aggregate,
 imported/foreign-global and wider context coverage remains open in
 INL-STEP04/05.
@@ -1004,9 +1004,9 @@ end-address metadata tails for runtime transfer. A selected callee's tail
 remains in its original declaration and is not cloned into the caller's
 continuation. The original straight-line fact path retains source branches,
 cycles and multiple returns; the acyclic proof below admits a selected subset.
-The current linear cleanup keeps
-changed callers with branches or typed end-anchor observations before making
-source-order storage assignments.
+The linear cleanup keeps changed callers with branches or typed end-anchor
+observations before making source-order storage assignments. The separately
+proved acyclic caller path below handles its admitted branch profile.
 
 The constructed CFG regression checks ordered branches, forward/alias labels,
 backward lexical acyclic flow, multiple RET, end-address metadata and
@@ -1044,13 +1044,47 @@ binding whose original clear is detached at the callee end closes there, then
 one `CNOP` carries the clear before caller continuation. A branch-local scope
 requires further observation proof and stays a call in this slice.
 
-The current transport and storage cleanup keeps a newly branched caller, so
-register frames can remain sparse after a correct DAG expansion. Graph-aware
-placement and branch cleanup are the next code-quality work; the existing
-straight-line cleanup still compacts callers with a single-return `CNOP`
-carrier. The target draft also checks initial catalogue allocations before
-using their handles, preserving a resource-limit diagnosis for very small
-entry budgets and allowing the inliner to return the unchanged original.
+The opt-in graph cleanup below handles an acyclic, closed-root scalar caller
+after expansion. The existing straight-line cleanup still compacts callers
+with a single-return `CNOP` carrier. The target draft also checks initial
+catalogue allocations before using their handles, preserving a resource-limit
+diagnosis for very small entry budgets and allowing the inliner to return the
+unchanged original.
+
+### Acyclic caller cleanup
+
+The graph path analyzes the exact frozen expanded caller using `llirgraph`
+RPO/SCC and projected access liveness. It admits a complete acyclic,
+register-only, closed-root scalar CFG. Each reached instruction has incoming
+storage identities and independent value, component and status facts; joins
+require compatible active/base/identity/context bindings. Root restoration
+requires both canonical identity and active pointer equality to its base at
+every normal RET. Retained calls, module globals, exceptional exits, opaque
+physical-frame observers, changing scoped metadata bindings and unsupported
+operations keep the unmodified owner with a specific reason.
+
+`llcleanup.transport` uses reached storage identities, never equal values or
+lexically simulated bindings, to remove proved LINK/UNLINK/SWAP mapping glue.
+It retains required COPY/MOVE snapshots, checked numeric writes and lifetime
+effects. It deletes only proved plain ENDLIFE, dead scalar setup and
+same-storage copies, folds proved branch choices and preserves necessary
+earlier-arm exits. Scoped META_REG remains observable through its matching
+clear; matching names compare as exact binary values. Point source/TRACE
+records follow their executable address group, and a closure `CNOP` retains
+the clear's address before caller continuation. All changes publish through a
+checked new target or return the exact frozen input.
+
+After transport, `llcleanup.storage` reanalyzes that new owner and uses the
+existing assignment service in injective dense mode. Distinct reached cells
+remain distinct; unreferenced cells may disappear without inventing a reset.
+The linear source-order reuse/reset schedule remains limited to its proven
+straight-line profile. A backward-lexical DAG can execute the later source
+cell first, so cross-block sharing needs a separate interference or arrival
+reset proof. An unknown joined integer constant is available but not a known
+exact value: checked arithmetic following that join still needs a range and
+successful-write proof. This is a current proof gap, not an infeasible RXAS
+shape. Typed end-anchor observers and more general CFG/alias cleanup remain
+open under INL-STEP05.
 
 ### Straight-line callee rebinding contract
 

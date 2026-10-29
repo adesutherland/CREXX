@@ -125,7 +125,7 @@ require separate decisions.
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, and acyclic direct-branch scalar multiple returns are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, optional presence/defaults and dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage meets and the fresh-root private-scalar reuse slice are focused-qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Current linear cleanup keeps branched callers and typed end-anchor observations; graph-aware placement, broader control/component, alias and lifetime reuse remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage meets and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -753,8 +753,8 @@ generated clear must not lie lexically before a later arm: `rxdb` scans prior
 addresses statically and could hide a binding inside that arm. Initially admit
 only metadata scopes whose entry/exit state has a compatible proof across
 feasible arms; a branch-local scope without one keeps its call with a precise
-observation reason. The current source-order transport/storage cleanup keeps the
-newly branched caller until a separately reviewed graph-aware proof exists.
+observation reason. Source-order cleanup does not assign a newly branched
+caller; the separately reviewed graph-aware path below owns that proof.
 
 Independent controls include both `0` and nonzero `2` arms of the same
 reference-mutating helper (results `9`, `11`, final caller `y=99`), an unknown
@@ -774,6 +774,73 @@ the arena's `LL_RESOURCE_LIMIT` when its initial function/block/record cannot
 be allocated; no invalid handle may replace that diagnosis with an owner
 error. The inliner checks the draft error before provenance or emission and
 returns the exact frozen input with status `limit`.
+
+### Reviewed branched-caller cleanup increment
+
+INL-STEP05 analyzes the exact frozen post-expansion caller, not a callee's
+old facts. The opt-in `analysegraph(owner,fn,profile,work,bytes)` at the
+existing target-facts owner returns the same sealed analysis class while
+`analyse()` and the linear expansion contract remain unchanged. Reuse the
+shared `llirgraph` RPO/SCC, reachability and access liveness owners. Initially
+admit a complete acyclic r-only closed-root scalar CFG with compatible active,
+base, identity and context bindings at every join. Snapshot each cell's
+independent components/status and frame map on paths; a root retained call,
+global, exceptional continuation or opaque physical-frame observer keeps this
+cleanup with a precise reason until its path-local proof exists. Publish
+readonly `rootlive(recordId)`, `rootbranchchoice(branchId)` (0=both, 1/2=one
+edge), `rootrestored()` and `scopestorage(metaDeclarationId)` plus existing
+storage/plain/access queries, all checked against the exact frozen owner.
+`rootrestored()` requires active pointer==base and canonical slot identity at
+every normal root RET; the existing identity-only `frame.canonical()` is not
+that proof. Do not create a target-private graph or another assignment owner.
+
+The graph transport path in `llcleanup` uses those sealed per-record incoming
+StorageIds, not one lexical mutable mapping. Only with every mapping
+obligation discharged may it remove LINK/UNLINK/SWAP and rewrite executable,
+TRACE and other typed references to the reached base slot across the entire
+region. Equal values never imply storage identity. Preserve required COPY/MOVE
+snapshots, status/component effects, call windows, lifetime and numeric/signal
+obligations. Changing scoped META_REG bindings keep transport until metadata
+splitting is proved; stable bindings retain scope and address meaning. The
+facts access rows must carry each live META_REG binding through its matching
+clear, not observe only its declaration point. Use
+projected CFG liveness only for proved plain dead NULL/LOAD, same-storage copy
+and effect-free ENDLIFE deletion. Fold only proved branch choices, retain
+necessary earlier-arm branches to shared closure, and remove fallthrough BR
+only when its address has no observation. Point source/TRACE records follow
+their machine group; lexical META and source-file/line state reaching surviving
+addresses must remain. Build address groups once from indexed records rather
+than repeated suffix scans.
+
+After transport, reanalyze the frozen result and call the **existing**
+`llrxas.assignment.finish('dense')` with its independent validator. Enumerate
+explicit, implicit, metadata, TRACE and window references; drop a virtual cell
+only with complete absence proof. Dense placement is injective and needs no
+reset, so it is safe across opposite lexical and execution orders. The current
+source-order interval reuse/reset schedule is not a DAG interference proof:
+even two cells each used in one different block can execute in reverse lexical
+order and expose stale status. Cross-block sharing remains open pending a
+checked same-block restriction or every-arrival reset/interference extension
+at the assignment owner. Preserve the current linear reuse path.
+
+Both cleanup services retain atomic `change` results and exact-owner mapping.
+Charge graph snapshots, scoped/address rows, liveness and rewrite work before
+allocation; carry remaining budgets forward, check draft errors before using
+handles, and validate the rebuilt target. Independent controls use the existing
+known and runtime 0/256 DAG results, required MOVE/COPY, outer transport
+removal, shared clear/CNOP location and a sparse DAG with an independently
+counted distinct-cell frame. A backward-lexical DAG prevents unsafe reuse;
+incompatible joins/cycles/observers and tight limits retain the exact original
+with specific reasons. One warm affected B/L build, constructed/storage and
+ordinary CLI checks on one VM are the development scope; broader modes and
+platforms remain for the agreed standalone milestone. The representative
+cleaned two-arm caller must have a dense frame without selected CALL, LINK,
+UNLINK or SWAP glue while required MOVE/COPY remain. This structural obligation
+does not establish a performance verdict.
+Unknown joined values still need a checked arithmetic range/success proof
+before a following IADD can be transformed; a fixture needing distinct arm
+results computes each IADD before joining. The remaining AC05 obligations stay
+open.
 
 ### Required native bootstrap correctness repair
 

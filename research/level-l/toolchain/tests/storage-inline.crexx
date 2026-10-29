@@ -23,6 +23,14 @@ three: procedure = .int
   arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, third = .lltarget..operand, at = .llir..origin
   fields = .object[]; fields[1] = first as .object; fields[2] = second as .object; fields[3] = third as .object
   return body.emit(name,fields,at)
+namedlabel: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+nooperand: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]
+  return body.emit(name,fields,at)
 tracepoint: procedure = .int
   arg body = .lltarget..bodydraft, index = .int, at = .llir..origin
   fields = .object[]
@@ -45,6 +53,25 @@ binding: procedure = .int
     fields[4] = body.reg('r',index) as .object
   end
   return body.record('.meta',fields,at)
+
+closedaddress: procedure = .int
+  arg owner = reference .lltarget..module, sumid = .int, clearid = .int, carrierid = .int, continuationid = .int
+  failures = 0; i = .int; sumordinal = .int; clearordinal = .int; carrierordinal = .int; continuationordinal = .int
+  body = .lltarget..body; item = .lltarget..record
+  source = dereference owner; body = source.body(source.procedureid('main'))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.id() = sumid then sumordinal = i
+    if item.id() = clearid then clearordinal = i
+    if item.id() = carrierid then carrierordinal = i
+    if item.id() = continuationid then continuationordinal = i
+  end
+  failures = failures + check(sumordinal > 0 & clearordinal > sumordinal & carrierordinal = clearordinal + 1 & continuationordinal > carrierordinal,'stable shared scope closes after both lexical arm computations and before caller output')
+  item = source.at(clearid)
+  failures = failures + check(item.addressid() = carrierid,'stable shared clear retains its own executable address before continuation')
+  item = source.at(carrierid)
+  failures = failures + check(item.mnemonic() = 'cnop','stable shared clear keeps its immediate CNOP carrier')
+  return failures
 
 sparse: procedure = .int
   failures = 0; item = .lltarget..record; left = .lltarget..operand; right = .lltarget..operand
@@ -91,6 +118,172 @@ sparse: procedure = .int
   failures = failures + check(limited.status() = 'limit' & bin2x(graph.binary()) = bin2x(before),'output cell refusal publishes the complete original')
   changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
   failures = failures + check(changed.status() = 'changed','ordinary storage request succeeds after bounded failures')
+  return failures
+
+/** Dense placement counts complete distinct references, independent of arm
+ * order; it introduces neither sharing nor an arrival reset. */
+sparsedag: procedure = .int
+  failures = 0; mode = .int; service = .int; resets_found = .int; i = .int
+  original = .lltarget..module; projected = .lltarget..module; result = .lltarget..module; kept = .lltarget..module; body = .lltarget..body
+  item = .lltarget..record; left = .lltarget..operand; right = .lltarget..operand; condition = .lltarget..operand
+  changed = .llinline..change; limited = .llinline..change; transported = .llinline..change
+  draft = .lltarget..draft('storage.dag','fixture:storage.dag',0); at = draft.synthetic('three distinct DAG cells')
+  root = draft.procedure('main',15,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(5),at)
+  conditionid = three(root,'getandtp',root.reg('r',0),root.reg('r',0),.lltarget..operand.integer(768),at)
+  named = two(root,'load',root.reg('r',8),.lltarget..operand.integer(11),at)
+  metaid = binding(root,'dagvisible',8,at)
+  ignored = two(root,'brt',.lltarget..operand.symbol('dag_true'),root.reg('r',0),at)
+  ignored = two(root,'load',root.reg('r',14),.lltarget..operand.integer(22),at)
+  ignored = three(root,'iadd',root.reg('r',14),root.reg('r',14),root.reg('r',8),at)
+  ignored = one(root,'br',.lltarget..operand.symbol('dag_join'),at)
+  ignored = namedlabel(root,'dag_true',at)
+  ignored = two(root,'load',root.reg('r',14),.lltarget..operand.integer(33),at)
+  /* Exact operands prove success in each arm. The unequal 33/44 result is
+   * available but unknown after the join; sumid anchors its last lexical arm. */
+  sumid = three(root,'iadd',root.reg('r',14),root.reg('r',14),root.reg('r',8),at)
+  ignored = namedlabel(root,'dag_join',at)
+  lifeid = one(root,'endlife',root.reg('r',0),at)
+  traceid = tracepoint(root,14,at); clearid = binding(root,'dagvisible',-1,at)
+  carrierid = nooperand(root,'cnop',at)
+  continuationid = one(root,'itos',root.reg('r',14),at); ignored = one(root,'say',root.reg('r',14),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'sparse DAG is valid typed input')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  transported = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(transported.status() = 'changed' & transported.operation(lifeid) = 0,'stable-scope graph transport removes the proved plain condition lifetime ending')
+  if transported.status() <> 'changed' then do; say transported.reason(); return failures; end
+  projected = transported.result()
+  failures = failures + closedaddress(reference projected,transported.operation(sumid),transported.operation(clearid),transported.operation(carrierid),transported.operation(continuationid))
+  changed = llcleanup..storage(reference projected,projected.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','sparse DAG receives unique dense placement')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  item = result.at(changed.operation(transported.operation(conditionid))); condition = item.operand(1)
+  item = result.at(changed.operation(transported.operation(named))); left = item.operand(1)
+  item = result.at(changed.operation(transported.operation(sumid))); right = item.operand(1)
+  failures = failures + check(body.locals() = 3 & left.index() <> right.index() & left.index() <> condition.index() & right.index() <> condition.index(),'three referenced logical DAG cells remain distinct in exactly three physical cells')
+  item = result.at(changed.operation(transported.operation(metaid))); condition = item.operand(4)
+  failures = failures + check(condition.index() = left.index(),'common-entry META_REG retains its dense logical binding')
+  item = result.at(changed.operation(transported.operation(traceid))); condition = item.operand(6)
+  failures = failures + check(condition.index() = right.index(),'joined point TRACE follows its dense value')
+  condition = item.operand(10)
+  failures = failures + check(condition.text() = 'r14,quoted','dense DAG projection preserves literal metadata text')
+  failures = failures + closedaddress(reference result,changed.operation(transported.operation(sumid)),changed.operation(transported.operation(clearid)),changed.operation(transported.operation(carrierid)),changed.operation(transported.operation(continuationid)))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = 'instruction' & item.mnemonic() = 'null' then resets_found = resets_found + 1
+  end
+  failures = failures + check(resets_found = 0,'unique DAG placement invents no arrival reset')
+  graph = dereference original.ir(); before = graph.binary()
+  do service = 1 to 2
+    do mode = 1 to 4
+      if service = 1 then do
+        select mode
+          when 1 then limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1)
+          when 2 then limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,1)
+          when 3 then limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,0)
+          otherwise limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,65536,1)
+        end
+      end
+      else do
+        select mode
+          when 1 then limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1)
+          when 2 then limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,1)
+          when 3 then limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,2)
+          otherwise limited = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,67108864,65536,1)
+        end
+      end
+      kept = limited.result(); limitedgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & limited.reason() <> '' & bin2x(limitedgraph.binary()) = bin2x(before),'tight DAG cleanup allowances retain exact original ' || service || '/' || mode)
+    end
+  end
+  return failures
+
+/** The first lexical lifetime executes second. Source-order interval reuse
+ * would put its reset before the wrong arrival and leak compiler status256. */
+backwarddag: procedure = .int
+  failures = 0; i = .int; resets_found = .int
+  original = .lltarget..module; result = .lltarget..module; body = .lltarget..body
+  item = .lltarget..record; first = .lltarget..operand; second = .lltarget..operand
+  changed = .llinline..change
+  draft = .lltarget..draft('storage.backward','fixture:storage.backward',0); at = draft.synthetic('reverse lexical scalar lifetimes')
+  root = draft.procedure('main',8,at)
+  ignored = one(root,'br',.lltarget..operand.symbol('first'),at)
+  ignored = namedlabel(root,'second',at)
+  secondid = two(root,'load',root.reg('r',3),.lltarget..operand.integer(22),at)
+  ignored = two(root,'copy',root.reg('r',1),root.reg('r',3),at)
+  ignored = one(root,'br',.lltarget..operand.symbol('done'),at)
+  ignored = namedlabel(root,'first',at)
+  firstid = two(root,'load',root.reg('r',5),.lltarget..operand.integer(11),at)
+  ignored = two(root,'settp',root.reg('r',5),.lltarget..operand.integer(256),at)
+  ignored = two(root,'copy',root.reg('r',0),root.reg('r',5),at)
+  ignored = one(root,'br',.lltarget..operand.symbol('second'),at)
+  ignored = namedlabel(root,'done',at)
+  ignored = three(root,'getandtp',root.reg('r',6),root.reg('r',0),.lltarget..operand.integer(768),at)
+  ignored = three(root,'getandtp',root.reg('r',7),root.reg('r',1),.lltarget..operand.integer(768),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'backward-lexical DAG is valid and acyclic')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(changed.status() = 'changed','backward-lexical DAG receives dense placement')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  item = result.at(changed.operation(firstid)); first = item.operand(1)
+  item = result.at(changed.operation(secondid)); second = item.operand(1)
+  failures = failures + check(body.locals() = 6 & first.index() <> second.index(),'six required cells stay distinct; reverse-order private temporaries cannot use a lexical reset schedule')
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = 'instruction' & item.mnemonic() = 'null' then resets_found = resets_found + 1
+  end
+  failures = failures + check(resets_found = 0,'backward DAG dense mode inserts no unproved cross-block reset')
+  return failures
+
+/** These missing graph proofs preserve the original input; they are pending
+ * analysis categories, not claims that the machine shapes are infeasible. */
+graphkeeps: procedure = .int
+  failures = 0; variant = .int; service = .int; expected = .string; ignored = .int
+  original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
+  do variant = 1 to 3
+    draft = .lltarget..draft('storage.graph.keep.' || variant,'fixture:storage.graph.keep',0)
+    at = draft.synthetic('specific missing graph proof'); root = draft.procedure('main',4,at)
+    if variant = 1 then do
+      ignored = namedlabel(root,'cycle',at)
+      ignored = one(root,'br',.lltarget..operand.symbol('cycle'),at)
+      expected = 'root.cfg.cycle.pending'
+    end
+    else do
+      ignored = two(root,'load',root.reg('r',3),.lltarget..operand.integer(5),at)
+      ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',3),.lltarget..operand.integer(768),at)
+      ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(11),at)
+      ignored = two(root,'brt',.lltarget..operand.symbol('changed'),root.reg('r',0),at)
+      if variant = 3 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(22),at)
+      ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
+      ignored = namedlabel(root,'changed',at)
+      if variant = 3 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(33),at)
+      else ignored = two(root,'link',root.reg('r',1),root.reg('r',0),at)
+      ignored = namedlabel(root,'joined',at)
+      /* Availability survives this join, but the distinct 22/33 constants do
+       * not. The current checked-overflow proof needs an exact IADD input. */
+      if variant = 3 then ignored = three(root,'iadd',root.reg('r',2),root.reg('r',2),root.reg('r',1),at)
+      ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+      expected = 'join.binding.unproved'
+      if variant = 3 then expected = 'arithmetic.write.availability.unproved'
+    end
+    original = draft.finish()
+    failures = failures + check(original.valid(),'graph negative has valid target structure ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    graph = dereference original.ir(); before = graph.binary()
+    do service = 1 to 2
+      if service = 1 then changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+      else changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+      kept = changed.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(keptgraph.binary()) = bin2x(before),'missing graph proof has exact reason and unchanged owner ' || variant || '/' || service)
+      if changed.reason() <> expected then say changed.reason()
+    end
+  end
   return failures
 
 scoped: procedure = .int
@@ -200,6 +393,6 @@ hidden: procedure = .int
   return failures
 
 main: procedure = .int
-  failures = sparse() + scoped() + reuse() + reuse(1) + retainedwindow() + hidden()
+  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + hidden()
   say 'STORAGE_INLINE|failures=' || failures
   return failures

@@ -1,6 +1,6 @@
 /* cREXX License (MIT). RXAS scalar/storage transfers over shared L analyses. */
 options levelb
-namespace lltargetfacts expose analysis analyse arithmetic
+namespace lltargetfacts expose analysis analyse analysegraph arithmetic
 import rxfnsb
 import llir
 import llirgraph
@@ -280,6 +280,11 @@ frame: class
       if _identity[i] <> i then return 0
     end
     return 1
+  restored: method = .int
+    do i = 1 to _identity[0]
+      if _identity[i] <> i | _map[i] <> _base[i] then return 0
+    end
+    return 1
   context: method = .string
     return _context
   numeric: method = .void
@@ -450,11 +455,18 @@ analysis: class
   _proofs = .callproof[]
   _cycles = .llirgraph..cycles
   _cyclesready = .int
+  _graphmode = .int
+  _rootchoice = .int[]
+  _rootrestored = .int
+  _scopes = .numbers[]
+  _scopeslot = .int[]
+  _scopestorage = .int[]
   _bytelimit = .int
   _retained = .int
   *: factory
-    arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864
+    arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864, graphmode = 0
     _owner = owner; _function = functionId; _profile = profile; _work = work; _status = 'building'; _reason = ''; _bytelimit = bytes
+    _graphmode = graphmode
     return
   spend: method = .int
     arg amount = .int
@@ -471,6 +483,67 @@ analysis: class
     arg reason = .string
     _status = 'keep'; _reason = reason
     return 0
+  /* META scope is lexical address state, independent of whether the
+   * declaration's own machine group executes. Resolve its storage later at
+   * every feasible point in the scope, including its matching clear. */
+  preparescopes: method = .int
+    i = .int; j = .int; found = .int; closing = .int; opening = .int
+    item = .lltarget..record; name = .lltarget..operand; value = .lltarget..operand
+    names = .binary[]; sizes = .int[]; active = .int[]; values = .int[]; empty = .int[]
+    module = dereference _owner
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      closing = 0; opening = 0; found = 0
+      if item.kind() = '.meta' then do
+        name = item.operand(1)
+        if spend(name.length()) = 0 then return 0
+        do j = 1 to names[0]
+          if spend(name.length() + sizes[j] + 1) = 0 then return 0
+          if bincompare(names[j],name.bytes()) = 0 then found = j
+        end
+        closing = item.operands() = 1
+        if item.operands() = 4 then do
+          value = item.operand(4); opening = value.kind() = 'R'
+          if opening then do
+            if value.bank() <> 'r' then return reject('graph.external.storage.pending')
+            if found = 0 then do
+              if reserve(1,32) = 0 | reserve(name.length(),1) = 0 then return 0
+              found = names[0] + 1; names[found] = name.bytes(); sizes[found] = name.length()
+            end
+            active[found] = item.id(); _scopeslot[item.id()] = value.index() + 1
+          end
+        end
+        if opening = 0 & closing = 0 & found > 0 then active[found] = 0
+      end
+      if spend(active[0]) = 0 | reserve(active[0],16) = 0 | reserve(1,32) = 0 then return 0
+      values = empty
+      do j = 1 to active[0]
+        if active[j] > 0 then values[values[0] + 1] = active[j]
+      end
+      _scopes[item.id()] = .numbers(values)
+      if closing & found > 0 then active[found] = 0
+    end
+    return 1
+  scopeobserve: method = .int
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, observations_ref = reference .int[]
+    i = .int; declaration = .int; id = .int
+    row_ref = reference _scopes[item.id()]; row = dereference row_ref
+    state = dereference state_ref; observations = dereference observations_ref
+    if spend(row.size()) = 0 | reserve(row.size(),8) = 0 then return 0
+    do i = 1 to row.size()
+      declaration = row.at(i)
+      value = .lltarget..operand.bound(0,0,0,'r',_scopeslot[declaration] - 1)
+      id = view.storage(value)
+      if id = 0 then return reject('graph.external.storage.pending')
+      if _scopestorage[declaration] = 0 then _scopestorage[declaration] = id
+      else if _scopestorage[declaration] <> id then return reject('metadata.binding.change.pending')
+      if state.wholeknown(id) = 0 then return reject('metadata.runtime.observer.unproved')
+      if spend(observations[0] + 1) = 0 then return 0
+      call insert(observations_ref,domain(id,1))
+    end
+    return 1
   /* Include transient and retained deep copies, not an assumed VM COW path. */
   pathallowance: method = .int
     arg cells = .int, slots = .int
@@ -523,7 +596,7 @@ analysis: class
   /* One finite forward pass over the shared graph's DAG order. These rows
    * hold target transfer snapshots; edges and scheduling stay index-owned. */
   dag: method = .int
-    arg bodyid = .int, expose entryframe = .frame, expose state = .cells, destination = .int, hasresult = .int, expose proof = .callproof, expose selectors = .int[], publish = 1, callid = 0
+    arg bodyid = .int, expose entryframe = .frame, expose state = .cells, destination = .int, hasresult = .int, expose proof = .callproof, expose selectors = .int[], publish = 1, callid = 0, root = 0
     i = .int; b = .int; opid = .int; target = .int; edge = .int; choice = .int; returned = .int; exits = .int; id = .int; j = .int; retid = .int
     incoming = .cells[]; frames = .frame[]; present = .int[]
     path = .cells; merged = .cells; view = .frame; item = .lltarget..record; value = .lltarget..operand
@@ -540,7 +613,10 @@ analysis: class
       if spend(1) = 0 then return 0
       b = _index.functionblock(bodyid,i)
       if _index.reachable(b) then do
-        if _cycles.cyclic(_cycles.component(b)) then return reject('callee.cfg.cycle.pending')
+        if _cycles.cyclic(_cycles.component(b)) then do
+          if root then return reject('root.cfg.cycle.pending')
+          return reject('callee.cfg.cycle.pending')
+        end
       end
     end
     if reserve(_index.blocks(),32) = 0 | pathallowance(state.size(),entryframe.slots()) = 0 then return 0
@@ -558,9 +634,20 @@ analysis: class
         if spend(1) = 0 then return 0
         if _index.opcode(opid) <= 16 then do; opid = _index.nextop(opid); iterate; end
         item = module.at(opid); call proof.visit(_recordordinal[opid])
+        if root then do
+          _runtime[opid] = 1
+          do j = 1 to item.registerrefs()
+            if spend(1) = 0 then return 0
+            value = item.registerref(j)
+            if value.bank() <> 'r' then return reject('graph.external.storage.pending')
+          end
+        end
         if item.kind() = 'instruction' then do
           name = item.mnemonic(); flow = catalog.flow(item.opcode())
-          if wordpos(name,'call call1 call2 call3 call4') > 0 then return reject('call.branch.history.pending')
+          if wordpos(name,'call call1 call2 call3 call4') > 0 then do
+            if root then return reject('graph.call.history.pending')
+            return reject('call.branch.history.pending')
+          end
           if flow = 1 | flow = 2 then do
             if name = 'br' then choice = 1
             else if wordpos(name,'brt brf brtf') > 0 then do
@@ -574,13 +661,27 @@ analysis: class
             end
             else return reject('profile.callee.cfg.pending')
             call proof.visit(_recordordinal[opid],choice)
+            if root then do
+              _rootchoice[opid] = choice
+              if step(item,view,reference path,0,1,1,0) = 0 then return 0
+            end
           end
           else do
-            if flow <> 0 & name <> 'ret' then return reject('profile.callee.exit.pending')
-            if step(item,view,reference path,1,0,hasresult,0) = 0 then return 0
+            if flow <> 0 & name <> 'ret' then do
+              if root then return reject('graph.exit.pending')
+              return reject('profile.callee.exit.pending')
+            end
+            if root then do
+              if catalog.unbounded(item.opcode()) then return reject('graph.physical.observer.pending')
+            end
+            if step(item,view,reference path,root = 0,root,root | hasresult,0) = 0 then return 0
             if publish & name = 'linkarg' then selectors[_selectorordinal[opid]] = _lastselector
             if publish & wordpos(name,'link unlink swap linkarg') > 0 then _rebinding[callid] = 1
             if name = 'ret' then do
+              if root then do
+                if exits = 0 then _rootrestored = 1
+                _rootrestored = _rootrestored & view.restored()
+              end
               if finishreturn(item,view,path,destination,hasresult,proof) = 0 then return 0
               if pathallowance(state.size(),entryframe.slots()) = 0 then return 0
               if exits = 0 then do; path_ref = reference path; merged = snapshot path_ref; end
@@ -589,7 +690,7 @@ analysis: class
             end
           end
         end
-        else if step(item,view,reference path,1,0,hasresult,0) = 0 then return 0
+        else if step(item,view,reference path,root = 0,root,root | hasresult,0) = 0 then return 0
         opid = _index.nextop(opid)
       end
       if returned then iterate
@@ -610,7 +711,7 @@ analysis: class
     /* Until the metadata owner proves path-local binding reconciliation,
      * common post-arm closure requires every live open/clear to precede each
      * feasible RET. Detached tails were never visited and cannot count. */
-    do i = 1 to _index.functionoperations(bodyid)
+    if root = 0 then do i = 1 to _index.functionoperations(bodyid)
       if spend(1) = 0 then return 0
       opid = _index.functionoperation(bodyid,i)
       if _index.opcode(opid) <= 16 then iterate
@@ -742,8 +843,11 @@ analysis: class
       references[i] = id; plain[i] = state.plain(id)
     end
     if record then do; _references[item.id()] = .numbers(references) as .object; _beforeplain[item.id()] = .numbers(plain) as .object; end
+    if _graphmode & record then do
+      if scopeobserve(item,view,state_ref,reference observations) = 0 then return 0
+    end
     if item.kind() <> 'instruction' then do
-      if wordpos(item.kind(),'.srcstep .srcfile .srcline') > 0 | (private & item.kind() = 'label') then nop
+      if wordpos(item.kind(),'.srcstep .srcfile .srcline') > 0 | ((private | _graphmode) & item.kind() = 'label') then nop
       else if item.kind() = '.meta' then do
         if item.operands() > 1 then do
           option = item.operand(2)
@@ -818,7 +922,7 @@ analysis: class
         else if value.kind() <> 'I' then return reject('profile.return.component.pending')
       end
     end
-    else if name = 'cnop' then nop
+    else if name = 'cnop' | (_graphmode & wordpos(name,'br brt brf brtf') > 0) then nop
     else if name = 'ichkrng' then do
       if spend(3) = 0 | reserve(3,8) = 0 then return 0
       do i = 1 to 3
@@ -1179,12 +1283,13 @@ analysis: class
     ignored = .int; returned = .int; previous = .int
     id = .int; slot = .int; integer = .int; whole = .int; barrier = .int; definition = .int
     references = .numbers; plain = .numbers; actuals = .numbers; destination = .lltarget..operand; linearrow = .numbers
-    ownedroot = .int[]; view = .frame
+    ownedroot = .int[]; view = .frame; rootproof = .callproof; selectors = .int[]
     item = .lltarget..record; value = .lltarget..operand; option = .lltarget..operand; catalog = .llrxascatalog..catalog
     do
     if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _reason = 'owner.expired'; return; end
     module = dereference _owner; catalog = .llrxascatalog..catalog()
     if module.valid() = 0 then do; _status = 'invalid'; _reason = module.error(); return; end
+    if _graphmode & module.globals() > 0 then do; ignored = reject('graph.global.storage.pending'); return; end
     if _profile <> 'closed-main-default-halt.v1' then do; ignored = reject('signal.policy.unproved'); return; end
     body = module.body(_function)
     if body.name() <> 'main' then do; ignored = reject('signal.root.context.unproved'); return; end
@@ -1196,6 +1301,9 @@ analysis: class
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
     if reserve(graph.operations(),200) = 0 | reserve(graph.functions(),80) = 0 then return
+    if _graphmode then do
+      if reserve(graph.operations(),32) = 0 then return
+    end
     if module.globals() > 0 then do
       if reserve(graph.operations(),8) = 0 then return
     end
@@ -1224,6 +1332,7 @@ analysis: class
       if item.kind() = '.meta' & item.operands() > 1 then do
         option = item.operand(2)
         if left(option.text(),1) = '.' & option.text() <> '.inline' then do
+          if _graphmode then do; ignored = reject('metadata.runtime.observer.unproved'); return; end
           if spend(graph.operations() - item.id()) = 0 then return
           if item.addressid() <> 0 | _index.reachable(item.blockid()) then do; ignored = reject('metadata.runtime.observer.unproved'); return; end
         end
@@ -1233,8 +1342,14 @@ analysis: class
       j = item.procedureid(); _selectorcount[j] = _selectorcount[j] + 1
       _selectorordinal[item.id()] = _selectorcount[j]
     end
-    if linear(_function,'profile.caller.cfg.pending') = 0 then return
-    linearrow = _linear[_function] as .numbers
+    if _graphmode then do
+      if module.normalcfgcomplete(_function) = 0 then do; ignored = reject('graph.cfg.pending'); return; end
+      if preparescopes() = 0 then return
+    end
+    else do
+      if linear(_function,'profile.caller.cfg.pending') = 0 then return
+      linearrow = _linear[_function] as .numbers
+    end
     _access = .llirgraph..access(reference _index,'rxas.scalar.storage.v1',1000000,_bytelimit,_work)
     if body.locals() >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return; end
     if spend(body.locals() + 1) = 0 then return
@@ -1258,6 +1373,16 @@ analysis: class
     end
     do i = 1 to body.locals(); _plain[i] = 1; end
     region = 0; nextregion = 0; returned = 0; _active[_function] = 1
+    if _graphmode then do
+      if reserve(_recordcount[_function],32) = 0 | reserve(_retcount[_function],112) = 0 | reserve(1,256) = 0 then return
+      if spend(_recordcount[_function]) = 0 | spend(_retcount[_function]) = 0 then return
+      rootproof = .callproof(_recordcount[_function],_retcount[_function])
+      if dag(_function,view,state,0,0,rootproof,selectors,0,0,1) = 0 then return
+      if spend(state.size()) = 0 then return
+      do i = 1 to state.size(); _plain[i] = state.plain(i); end
+      returned = 1
+    end
+    else do
     do i = 1 to _linearcount[_function]
       item = module.at(linearrow.at(i))
       if item.kind() = 'instruction' & returned then do; ignored = reject('profile.caller.control.pending'); return; end
@@ -1271,6 +1396,7 @@ analysis: class
       _regions[item.id()] = region
       if view.canonical() then region = 0
       if item.kind() = 'instruction' & item.mnemonic() = 'ret' then returned = 1
+    end
     end
     if returned = 0 then do; ignored = reject('return.missing'); return; end
     _active[_function] = 0
@@ -1308,8 +1434,9 @@ analysis: class
         item = module.at(i)
         if item.procedureid() = _function & item.kind() <> 'procedure' then do
           if _runtime[i] then iterate
-          /* linear() proved this detached metadata has no runtime storage
-           * observation. Consumers still receive explicit empty row objects. */
+          /* Unvisited source rows have no runtime access in this projection.
+           * Lexical META observations are carried by their surviving scope
+           * points in graph mode, not by an invented declaration execution. */
           if reserve(2,32) = 0 then return
           _references[i] = .numbers(empty) as .object; _beforeplain[i] = .numbers(empty) as .object
         end
@@ -1324,7 +1451,7 @@ analysis: class
      * handing the remaining work allowance to a placement consumer. */
     if spend(body.locals()) = 0 | reserve(body.locals(),8) = 0 then return
     do i = 1 to body.locals(); _reuse[i] = 0; end
-    if _access.complete(_function) & _globals[0] = 0 then do i = 1 to module.records()
+    if _graphmode = 0 & _access.complete(_function) & _globals[0] = 0 then do i = 1 to module.records()
       if spend(1) = 0 then return
       item = module.record(i)
       if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
@@ -1405,6 +1532,50 @@ analysis: class
     call require(); return reference _index
   access: method = reference .llirgraph..access
     call require(); return reference _access
+  rootkey: method = .int
+    arg recordid = .int
+    call require()
+    if valid() = 0 then return 0
+    if _graphmode = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_PROFILE: graph-root query requires analysegraph"; return 0
+    end
+    if recordid < 1 | recordid > _recordordinal[0] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root record identity"; return 0
+    end
+    if _recordordinal[recordid] = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original root record identity"; return 0
+    end
+    if _index.blockfunction(_index.opblock(recordid)) <> _function then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: foreign root record"; return 0
+    end
+    return recordid
+  /** Graph-root queries borrow sealed rows. Unvisited source records are
+   * valid identities with no runtime access. META scope is lexical instead. */
+  rootlive: method = .int
+    arg recordid = .int
+    if rootkey(recordid) = 0 then return 0
+    return _runtime[recordid] <> 0
+  rootbranchchoice: method = .int
+    arg recordid = .int
+    if rootkey(recordid) = 0 then return 0
+    return _rootchoice[recordid]
+  rootrestored: method = .int
+    call require()
+    if valid() = 0 then return 0
+    if _graphmode = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_PROFILE: graph-root query requires analysegraph"; return 0
+    end
+    return _rootrestored
+  scopestorage: method = .int
+    arg declarationid = .int
+    if rootkey(declarationid) = 0 then return 0
+    if declarationid > _scopeslot[0] then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original scoped META_REG declaration"; return 0
+    end
+    if _scopeslot[declarationid] = 0 then do
+      assembler signal "ERROR","LL_TARGET_FACTS_ID: original scoped META_REG declaration"; return 0
+    end
+    return _scopestorage[declarationid]
   calls: method = .int
     call require(); return _calls[0]
   callid: method = .int
@@ -1658,3 +1829,9 @@ analysis: class
 analyse: procedure = .lltargetfacts..analysis
   arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864
   return .analysis(owner,functionId,profile,work,bytes)
+
+/** Opt-in root CFG facts for cleanup of one exact frozen expanded owner.
+ * The linear expansion analysis and its entry contract remain unchanged. */
+analysegraph: procedure = .lltargetfacts..analysis
+  arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864
+  return .analysis(owner,functionId,profile,work,bytes,1)

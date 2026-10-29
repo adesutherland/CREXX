@@ -90,6 +90,47 @@ dagmodel: procedure = .lltarget..module
   end
   return draft.finish()
 
+/** Cleanup may remove the last arm's fallthrough BR, but cannot move the
+ * common clear before that arm's return transfer or onto caller continuation. */
+dagclosed: procedure = .int
+  arg owner = reference .lltarget..module, continuationid = .int
+  failures = 0; i = .int; opens = .int; clears = .int; clearordinal = .int; clearaddress = .int
+  lasttransfer = .int; sharedlabel = .int; lastglue = .int; continued = .int
+  freshname = ''; clearname = ''; targetname = ''
+  body = .lltarget..body; item = .lltarget..record; value = .lltarget..operand
+  source = dereference owner; body = source.body(source.procedureid('main'))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() = '.meta' then do
+      value = item.operand(1)
+      if item.operands() = 4 then do; opens = opens + 1; freshname = value.text(); end
+      if item.operands() = 1 then do
+        clears = clears + 1; clearname = value.text(); clearordinal = i; clearaddress = item.addressid()
+      end
+    end
+    if item.kind() = 'label' then do
+      value = item.operand(1)
+      if value.text() = targetname then sharedlabel = i
+    end
+    if item.kind() <> 'instruction' then iterate
+    if item.id() = continuationid then continued = 1
+    else if continued = 0 then lastglue = item.id()
+    if wordpos(item.mnemonic(),'move copy') > 0 then lasttransfer = i
+    if item.mnemonic() = 'br' & targetname = '' then do; value = item.operand(1); targetname = value.text(); end
+  end
+  failures = failures + check(opens = 1 & clears = 1 & freshname <> '' & freshname = clearname,'graph cleanup preserves the one shared scope pair')
+  failures = failures + check(sharedlabel > lasttransfer & clearordinal > sharedlabel,'cleaned shared clear still follows both arm transfers')
+  failures = failures + check(continued & clearaddress = lastglue & clearaddress <> continuationid,'cleaned DAG scope closes before continuation addr-1')
+  if clearaddress > 0 then do
+    item = source.at(clearaddress)
+    failures = failures + check(item.mnemonic() = 'cnop','graph cleanup retains the shared metadata CNOP')
+  end
+  if clearordinal > 0 & clearordinal < body.records() then do
+    item = body.record(clearordinal + 1)
+    failures = failures + check(item.kind() = 'instruction' & item.id() = clearaddress,'cleaned clear remains immediately before its executable carrier')
+  end
+  return failures
+
 dagpositive: procedure = .int
   arg variant = .int
   failures = 0; i = .int; callid = .int; firstret = .int; secondret = .int; branchid = .int; mode = .int
@@ -100,7 +141,7 @@ dagpositive: procedure = .int
   firsttarget = ''
   original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module
   item = .lltarget..record; value = .lltarget..operand; body = .lltarget..body
-  facts = .lltargetfacts..analysis; request = .llinline..binding; changed = .llinline..change; limited = .llinline..change
+  facts = .lltargetfacts..analysis; request = .llinline..binding; changed = .llinline..change; limited = .llinline..change; cleaned = .llinline..change
   original = dagmodel(variant)
   failures = failures + check(original.valid(),'DAG control has valid typed source ' || variant)
   if original.valid() = 0 then do; say original.error(); return failures; end
@@ -207,6 +248,21 @@ dagpositive: procedure = .int
     failures = failures + check(item.kind() = '.meta' & item.operands() = 4 & value.text() = 'daglive','retained helper keeps its original scope declaration')
     item = result.at(changed.operation(clearid)); value = item.operand(1)
     failures = failures + check(item.addressid() = 0 & item.operands() = 1 & value.text() = 'daglive','original detached clear remains in the retained helper')
+    daggraph = dereference result.ir(); dagimage = daggraph.binary()
+    /* a1's active slot is restored before the shared clear. Splitting that
+     * changing lexical binding is pending; a wrong direct remap is unsafe. */
+    cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'metadata.binding.change.pending','changing cloned argument scope has a precise transport proof refusal')
+    if cleaned.status() <> 'keep' then do; say cleaned.reason(); return failures; end
+    continuationid = cleaned.operation(continuationid); result = cleaned.result()
+    failures = failures + dagclosed(reference result,continuationid)
+    cleaned = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'metadata.binding.change.pending','changing scope is retained until its placement observation proof exists')
+    if cleaned.status() <> 'keep' then do; say cleaned.reason(); return failures; end
+    continuationid = cleaned.operation(continuationid); result = cleaned.result()
+    failures = failures + dagclosed(reference result,continuationid)
+    keptgraph = dereference result.ir()
+    failures = failures + check(bin2x(keptgraph.binary()) = bin2x(dagimage),'both changing-scope cleanup refusals preserve exact expanded owner')
   end
   graph = dereference original.ir(); image = graph.binary()
   if variant = 1 then do mode = 1 to 4

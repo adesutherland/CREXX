@@ -265,9 +265,13 @@ keeps: procedure = .int
       iterate
     end
     changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
-    failures = failures + check(changed.status() = 'keep' & changed.reason() = 'transport.cfg.pending' & bin2x(graph.binary()) = bin2x(image),'linear transport keeps branches or typed end anchors ' || variant)
+    expected = 'transport.cfg.pending'
+    if variant = 1 then expected = 'graph.call.history.pending'
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(graph.binary()) = bin2x(image),'transport keeps the specific unproved call history or typed end anchor ' || variant)
     changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
-    failures = failures + check(changed.status() = 'keep' & changed.reason() = 'storage.cfg.pending' & bin2x(graph.binary()) = bin2x(image),'linear placement keeps branches or typed end anchors ' || variant)
+    expected = 'storage.cfg.pending'
+    if variant = 1 then expected = 'graph.call.history.pending'
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(graph.binary()) = bin2x(image),'placement keeps the specific unproved call history or typed end anchor ' || variant)
     changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1); kept = changed.result(); graph = dereference kept.ir()
     failures = failures + check(changed.status() = 'limit' & changed.reason() = 'transport.cfg.work' & bin2x(graph.binary()) = bin2x(image),'control scan fuel refusal is atomic ' || variant)
   end
