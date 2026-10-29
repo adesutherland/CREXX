@@ -433,14 +433,56 @@ new inliner runtime algorithm.
 
 Signal policy requires more than adding normal-path `SIGPOP`s. `SIGPUSH`/
 `SIGPOP` can save/restore known scoped policies, with all pushes before related
-branch-handler installations and reverse pops on normal exits. But inherited
-`SIGRET`, branch-style handlers, handler calls, CANCEL/unwind, pending delivery
-and handler-stack markers can make the removed frame observable even if the
-callee never installs a handler. Prove the exact possible responses and
+branch-handler installations and reverse pops on normal exits. A lexical pair
+alone is insufficient: `SIGPUSH` may fail to save its entry, so restoration
+requires a successful-push proof or a stronger runtime scope contract.
+Inherited `SIGRET`, branch-style handlers, handler calls, CANCEL/unwind,
+pending delivery and handler-stack markers can make the removed frame
+observable even when the callee never installs a handler. Prove the exact
+possible responses and
 continuations; remap logical return/branch cleanup and call-window restoration
 for every admitted abrupt path. Unknown inherited return policy plus a raising
 operation is not proved safe. The proposal assumes no generic VM instruction
 that virtualizes arbitrary child-frame unwinding.
+
+### Signal needs from language producers
+
+Level G simple-DO `ON SIGNAL` blocks are a required producer shape. B/G emission
+saves every distinct covered policy with `SIGPUSH` before installing any
+`SIGBR`/`SIGBRV`; all installed branches capture the same stack marker. Normal
+completion skips handlers; normal and handler departures restore policies in
+reverse order. Earlier clauses keep priority over a later overlapping
+catch-all. `RETURN`, `LEAVE`, `LEAVE WITH`, nested blocks, catch-all `CANCEL`,
+a bound `.signal`, relay and crossed reference/window cleanup require distinct
+paths.
+The repository G HTTP and LLM libraries contain such blocks, so a blanket
+signal-bearing-body refusal would exclude real consumers. Their presence does
+not measure how often those bodies are inline candidates or signals fire.
+
+Level C adds a different layer. Classic `SIGNAL ON/OFF` and delayed `CALL ON/OFF`
+are activation-owned condition policies; direct Classic `SIGNAL` is a
+same-invocation branch. Native C lowers SYNTAX to VM branch handlers and other
+Classic conditions through a typed `CLASSIC_CONDITION` dispatcher. Research
+L C adds protected-invocation capture, selection and origin-preserving relay.
+It currently installs a standard `SIGPUSH`/`SIGBRV` protection layer in
+ordinary generated procedure bodies, including bodies without authored
+`SIGNAL ON`. Inlining must preserve the
+Classic activation, one-shot and delayed delivery, original event payload and
+origin, and clause/SIGL/RC state; VM policy alone is not the Classic policy.
+The current root/default-HALT profile does not qualify these producer paths.
+
+Assess practical demand using named independent B/G programs and static/dynamic
+C consumers separately from conformance fixtures. Inventory source constructs,
+then inspect emitted RXAS at *reachable candidate calls* for inherited and
+installed policy, possible responses, continuation, nested call and cleanup.
+Report affected programs and sites separately from signal firing rates. A rare
+event still has to behave correctly; absence from a bounded corpus means only
+that it was not observed. Use this evidence to order implementation and propose
+specific retained-call policy for low-value raw forms, with explicit contract
+approval. It cannot silently turn an unimplemented representable case into an
+infeasible one or close INL-AC03.
+
+### Source and physical observations
 
 Ordinary source spans, clauses, source-step and TRACE operand locations must
 remain truthful and use fresh remapped identities. Preserve call-site and body
@@ -627,14 +669,20 @@ equivalent: an untaken branch must not trigger side effects or a new cycle.
 
 For broader context/lifetime/abrupt-exit coverage, an optional explicit
 `INLINE_ENTER`/`INLINE_LEAVE` plus typed region descriptor could own logical
-base/argument bindings, private slot identities, changed numeric/signal state,
-lifetime cleanup and initialization origin. The VM would run the same scoped
-cleanup on every normal, branch, return and CANCEL/unwind departure. This could
-simplify proofs that are otherwise duplicated as glue on every edge. It is
-active runtime semantics, not passive metadata; regions need validated nesting,
+return continuation, handler-policy/stack boundary, base/argument bindings,
+private slot identities, changed numeric/signal state, lifetime cleanup and
+initialization origin. The dispatcher would treat crossed logical regions as
+unwind boundaries, so inherited `SIGRET` ends the logical callee rather than
+returning the physical caller, while a retained real child still returns only
+itself. The VM would run the same scoped cleanup on every normal, branch,
+return and CANCEL/unwind departure. This could simplify proofs that are
+otherwise duplicated as glue on every edge. It is active runtime semantics,
+not passive metadata; regions need validated nesting,
 failure/partial-entry cleanup, zero-allocation unwind, recursion and callback
-rules. Reuse existing frame/context/lifetime owners rather than creating a
-second initializer, reference or signal algorithm. Evaluate its cost against
+rules. A signal-policy snapshot pair alone would not fix `SIGRET` or branch
+handler frame/stack-marker identity. Reuse existing frame/context/lifetime
+owners rather than creating a second initializer, reference or signal
+algorithm. Evaluate a representative G block and C capture/relay path against
 plain glue before adoption; simple bodies need no active region machinery.
 
 ### Inline provenance and producer facts
@@ -1313,5 +1361,10 @@ corresponding catalog/proof/profile review:
   [L IR transformation](../../../../lib/rxfnsl/rexx/llirservices.crexx),
   [L graph analysis](../../../../lib/rxfnsl/analysis/llirgraph.crexx) and
   [selected binary metadata reader](../../../../langtools/common/llbinmeta.crexx).
+- [G block-handler language contract](../../../../docs/books/crexx_language_reference/statements.md),
+  [B/G signal emission](../../../../compiler/rxcp_emit_flow.c),
+  [Classic activation policy](../../../../lib/rxfnsc/RexxActivationArguments.crexx),
+  [research C signal emission](../../compilers/levelc/llcrxas.crexx) and
+  [research C architecture](../../compilers/doc/levelc-architecture.md).
 - [Native/future inlining boundary](../../../../compiler/docs/inlining_design.md#future-inlining-boundary-review)
   and [authoritative toolchain plan](../PLAN.md).

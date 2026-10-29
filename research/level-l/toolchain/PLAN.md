@@ -131,6 +131,64 @@ require separate decisions.
 Per-feature checks and execution allocation follow the repository instructions;
 INL-STEP06 is the named standalone integration milestone.
 
+### Signal coverage and practical-demand decision
+
+Adrian confirmed on 29 October 2026 that signal design should be tuned to real
+language and optimization needs. A specifically characterized, low-value signal
+form may rationally retain its call. This is not approval to reject every body
+with signal policy, nor to close INL-AC03 by treating an unimplemented
+representable case as infeasible. Any accepted exclusion or narrower preservation
+profile needs its exact semantics, retained-call reason, independent negative
+control and an explicit update to the affected acceptance contract.
+
+INL-STEP04/05 must account for Level G simple-DO `ON SIGNAL` blocks: named and
+catch-all handlers, optional bound `.signal`, nested policy, normal and handler
+departures, `RETURN`, `LEAVE`, `LEAVE WITH`, relay and crossed reference/
+call-window cleanup. Earlier source clauses retain priority when a later
+catch-all overlaps.
+The B/G emitter installs all `SIGPUSH` saves before related `SIGBR`/`SIGBRV`
+branches and restores in reverse order; the VM's branch-handler stack marker
+depends on that ordering. Repository G HTTP and LLM library code uses these
+structures. This establishes a real consumer shape, not its workload frequency.
+
+Level C needs a separate contract, not a relabelled G block. Classic
+`SIGNAL ON/OFF` and delayed `CALL ON/OFF` use activation-owned condition policy;
+direct `SIGNAL` is a same-invocation control transfer. Their lowering differs:
+native C lowers SYNTAX to VM branch handlers and other Classic conditions
+through a typed `CLASSIC_CONDITION` dispatcher.
+Research L C adds protected-invocation capture, selection and origin-preserving
+relay. Its emitter installs a standard VM policy capture layer in ordinary
+generated procedures, even without authored `SIGNAL ON`. Preserve the Classic
+activation, one-shot and delayed delivery rules, original event and
+clause/SIGL/RC observations when selecting
+or moving a compiled call. Source-level SIGNAL counts alone would miss these
+generated effects.
+
+Before selecting new ISA or declaring a rare-form retention policy, inventory
+named independent B/G libraries/applications and representative static/dynamic
+C programs separately from conformance fixtures. Reuse prepared producers to
+inspect emitted RXAS at reachable candidate call sites: inherited and installed
+policy, possible response, continuation, nested calls, cleanup and exact keep
+reason. Report affected programs and candidate sites separately from observed
+signal firing; a seldom-triggered condition can still make frame removal wrong.
+Treat an absent form in that bounded sample as *not observed*, not impossible
+or proven rare. Keep transient counts/results in conversation, and retain only
+durable coverage decisions and limits here.
+
+Try the existing ISA first for proved unchanged context and bounded structured
+policy scopes. An isolated signal save/restore pair cannot generally reproduce
+inherited `SIGRET`, whose VM response returns the current physical frame, or
+branch handlers bound to a physical frame/stack marker. Compare a representative
+G block and C capture/relay lowering against a versioned active logical-call
+region (`INLINE_ENTER`/`INLINE_LEAVE` with typed descriptor). Such a region
+would need a logical return continuation and dispatcher-owned unwind/cleanup;
+it must reuse VM signal/frame/lifetime owners, enter atomically and avoid
+allocation during unwind. It is optional for simple bodies and remains an
+explicit ISA/runtime/assembler/linker decision gate, not an approved opcode.
+Specific raw `SIGRET`, action-handler or physical-observer sites may
+provisionally remain calls under a selected profile while G blocks and
+C-generated protection are developed.
+
 ### Reviewed shared CFG prerequisite
 
 INL-STEP02/04 extend the existing generic L IR owner for real machine CFGs.
