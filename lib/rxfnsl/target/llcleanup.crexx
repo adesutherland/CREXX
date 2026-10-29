@@ -49,6 +49,16 @@ location: procedure = .int
   assembler signal "ERROR","LL_TARGET_TRANSPORT: required owned storage is unavailable"
   return -1
 
+/** Binary LOAD can raise FAILURE even when its result is dead. Keep that
+ * operation executable; other admitted NULL/LOAD forms retain their policy. */
+deaddefinitioncandidate: procedure = .int
+  arg item = .lltarget..record
+  value = .lltarget..operand
+  if item.mnemonic() = 'null' then return 1
+  if item.mnemonic() <> 'load' then return 0
+  value = item.operand(2)
+  return value.kind() <> 'B'
+
 /** The current cleanup plans walk source order, not mutually exclusive paths.
  * Return -1 for exhaustion, 2 for incomplete/observed tails, 1 for branches,
  * or 0 for linear. The graph path establishes its own semantic proof.
@@ -129,7 +139,7 @@ transport: procedure = .llinline..change
           id = facts.storage(input.id(),1)
           if facts.plainbefore(input.id(),1) then discard = 1
         end
-        else if wordpos(name,'null load') > 0 then do
+        else if deaddefinitioncandidate(input) then do
           id = facts.storage(input.id(),1); integer = facts.integerdomain(id); whole = facts.wholedomain(id)
           observed = 0
           if integer > 0 then do
@@ -317,7 +327,7 @@ graphtransport: procedure = .llinline..change
         if (catalog.field(input.opcode(),5) as .int) <> 0 then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
         if facts.mapping(input.id()) then discard = 1
         else if name = 'endlife' then discard = facts.plainbefore(input.id(),1)
-        else if wordpos(name,'null load') > 0 then do
+        else if deaddefinitioncandidate(input) then do
           id = facts.storage(input.id(),1); integer = facts.integerdomain(id); whole = facts.wholedomain(id); observed = 0
           if integer > 0 then do
             if querybound > work then return .llinline..change('limit','transport.work',source,empty)

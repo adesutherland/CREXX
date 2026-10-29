@@ -490,22 +490,54 @@ stringlifetime: procedure = .int
   failures = failures + check(body.locals() = 1 & item.mnemonic() = 'endlife','string-bearing ENDLIFE remains executable without widening integer-only lifetime deletion')
   return failures
 
-hidden: procedure = .int
-  /* Binary payload proof remains a separate pending category. Ordinary strings
-   * above are no longer rejected merely because they have a side component. */
-  failures = 0; original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
-  draft = .lltarget..draft('storage.hidden','fixture:storage.hidden',0)
-  at = draft.synthetic('unproved hidden lifetime cannot be made fresh by allocation'); root = draft.procedure('main',8,at)
+/** A dead allocating write still has a FAILURE successor. Ordinary binary
+ * lifetime cleanup and dense placement cannot erase it, even in a DAG. */
+binarylifetime: procedure = .int
+  arg branched = 0
+  failures = 0; service = .int; i = .int; loads_found = .int; lifetimes = .int; expected = .int; ignored = .int
+  original = .lltarget..module; result = .lltarget..module; changed = .llinline..change
+  body = .lltarget..body; item = .lltarget..record; value = .lltarget..operand
+  draft = .lltarget..draft('storage.binary.' || branched,'fixture:storage.binary',0)
+  at = draft.synthetic('ordinary binary lifetime and dead allocating write'); root = draft.procedure('main',8,at)
+  bytes = 'load r6,0xDEAD' as .binary; file = draft.source('storage.binary.rxas',bytes); loadat = file.origin(0,14)
+  if branched then do
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(5),at)
+    ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',0),.lltarget..operand.integer(768),at)
+    ignored = two(root,'brt',.lltarget..operand.symbol('joined'),root.reg('r',0),at)
+    ignored = nooperand(root,'cnop',at); ignored = namedlabel(root,'joined',at)
+  end
   ignored = two(root,'load',root.reg('r',7),.lltarget..operand.literal('B','0x00FF' as .binary),at)
-  ignored = one(root,'endlife',root.reg('r',7),at); ignored = one(root,'ret',.lltarget..operand.integer(0),at)
-  original = draft.finish(); graph = dereference original.ir(); before = graph.binary()
-  changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
-  kept = changed.result(); graph = dereference kept.ir()
-  failures = failures + check(changed.status() = 'keep' & changed.reason() = 'profile.scalar.literal.pending','binary payload analysis remains explicitly pending')
-  failures = failures + check(bin2x(graph.binary()) = bin2x(before),'hidden release state is preserved rather than reset to admit reuse')
+  ignored = one(root,'endlife',root.reg('r',7),at)
+  ignored = two(root,'load',root.reg('r',6),.lltarget..operand.literal('B','0xDEAD' as .binary),loadat)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish(); failures = failures + check(original.valid(),'binary lifetime/dead-write source validates ' || branched)
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  do service = 1 to 2
+    if service = 1 then changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    else changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'changed' | changed.status() = 'keep','binary cleanup remains a checked result ' || branched || '/' || service)
+    if changed.status() <> 'changed' & changed.status() <> 'keep' then do; say changed.reason(); iterate; end
+    result = changed.result(); body = result.body(result.procedureid('main')); loads_found = 0; lifetimes = 0
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'endlife' then lifetimes = lifetimes + 1
+      if item.mnemonic() <> 'load' then iterate
+      value = item.operand(2)
+      if value.kind() <> 'B' then iterate
+      if value.text() <> '0xDEAD' then iterate
+      loads_found = loads_found + 1
+      failures = failures + check(item.origin().filename() = 'storage.binary.rxas' & item.origin().first() = 0 & item.origin().last() = 14,'failure-capable dead LOAD retains its exact logical source span')
+    end
+    failures = failures + check(loads_found = 1 & lifetimes = 1,'linear/graph cleanup retains the dead allocating LOAD and binary ENDLIFE ' || branched || '/' || service)
+    if service = 2 then do
+      expected = 2 + branched
+      failures = failures + check(changed.status() = 'changed' & body.locals() = expected,'binary cells receive distinct dense storage without integer-only reuse')
+    end
+  end
   return failures
 
 main: procedure = .int
-  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + hidden()
+  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1)
   say 'STORAGE_INLINE|failures=' || failures
   return failures

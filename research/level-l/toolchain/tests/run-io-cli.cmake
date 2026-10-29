@@ -180,6 +180,50 @@ foreach(_mode conservative cleaned)
   endif()
 endforeach()
 
+# Ordinary binary bytes have independent integer/string/status components.
+# The dead literal write remains observable through its possible FAILURE.
+set(_binary_expected "empty\n1\nowned-repeat\n1\n1\nowned λ\n11\n256\nborrowed\n1\ncoexist λ\n17\n256\nrebound\n1\nsnapshot\n1\nsnapshot λ\n23\n512\nactual-after\n1\nobserver-alias\n1\n1\n256\nmismatch\n0")
+foreach(_mode conservative cleaned)
+  set(_cleanup_option)
+  if(_mode STREQUAL "conservative")
+    set(_cleanup_option --no-cleanup)
+  endif()
+  set(_product "${WORK}/binary-${_mode}")
+  run_checked("inline ordinary binary components (${_mode})" "${VM}" "${CLI}" ${RUNTIME} -a
+    --module io-binary.rxas --profile closed-main-default-halt.v1 ${_cleanup_option}
+    -o "${_product}.rxas" "${FIXTURES}/io-binary.rxas")
+  caller_instructions("${_product}.rxas" main _caller)
+  set(_moves 0)
+  set(_copies 0)
+  set(_binary_copies 0)
+  set(_dead_loads 0)
+  foreach(_instruction IN LISTS _caller)
+    if(_instruction MATCHES "^[ \t]*(call[0-9]*|swapcall|settpswapcall|settpcall)[ \t]")
+      message(FATAL_ERROR "${_mode} binary caller retained a selected ordinary helper")
+    endif()
+    if(_instruction MATCHES "^[ \t]*move[ \t]")
+      math(EXPR _moves "${_moves} + 1")
+    elseif(_instruction MATCHES "^[ \t]*copy[ \t]")
+      math(EXPR _copies "${_copies} + 1")
+    elseif(_instruction MATCHES "^[ \t]*bcopy[ \t]")
+      math(EXPR _binary_copies "${_binary_copies} + 1")
+    elseif(_instruction MATCHES "^[ \t]*load[ \t]+r[0-9]+,[ \t]*0[xX][dD][eE][aA][dD]([ \t]|$)")
+      math(EXPR _dead_loads "${_dead_loads} + 1")
+    endif()
+  endforeach()
+  if(NOT _moves EQUAL 4 OR NOT _copies EQUAL 2 OR NOT _binary_copies EQUAL 1 OR NOT _dead_loads EQUAL 1)
+    message(FATAL_ERROR "${_mode} binary caller lost ownership/snapshot work or the failure-capable dead LOAD")
+  endif()
+  run_checked("assemble ordinary binary components (${_mode})" "${ASSEMBLER}" -n
+    -o "${_product}" "${_product}.rxas")
+  run_checked("execute ordinary binary components (${_mode})" "${VM}" "${_product}.rxbin")
+  string(REPLACE "\r\n" "\n" _normalized "${_last_stdout}")
+  string(STRIP "${_normalized}" _result)
+  if(NOT _result STREQUAL _binary_expected)
+    message(FATAL_ERROR "${_mode} binary bytes/component/ABI output differs: '${_result}'")
+  endif()
+endforeach()
+
 # Presence is compiler ABI status, independently of integer zero and NOTSYM.
 # The fifth pair proves sequential defaults on two aliases of the same cell;
 # the last pairs distinguish status-only ACOPY from integer-only ICOPY.

@@ -1133,6 +1133,31 @@ so an ordinary string ENDLIFE stays executable. Binary loads, hidden payloads,
 aggregate attributes, string-bearing storage reuse and abrupt exits still need
 separate proof before expansion or removal.
 
+### Ordinary binary components
+
+Binary values have no immediate `RET B` opcode; a binary-returning procedure
+uses `RET R` with the original owned-local MOVE or borrowed/rebound COPY rule.
+The closed-root default-FAILURE-HALT profile can admit ordinary `LOAD R,B` and
+two-register `BCOPY` while carrying binary availability and entry independence
+separately from integer, string, status and `_plain`. Fresh/reset storage has
+an independent empty binary. Unreset recycled storage does not inherit it.
+LOAD B establishes literal bytes only after normal completion, preserves other
+ordinary components and clears the VM-private flags. BCOPY copies binary bytes
+and ordinary native-payload state without copying integer/string/public status;
+identical source and destination are an exact no-op. Both require absence of
+reference/native payload and attributes for the current proof.
+
+LOAD B remains executable even when its result is dead: its allocation can
+raise FAILURE, which halts under the checked profile. BCOPY can abort on
+allocation failure or invoke a native hook on a hook-backed source; the latter
+is outside the ordinary profile. The target transfer specializes the reviewed
+handler's normal successor without treating the canonical UNKNOWN signal row
+as generally safe. A later resumed FAILURE profile needs its partial effects
+and cleanup proved independently. Root-only BINEQ against a binary literal is
+an exact non-raising byte observer for this profile; it reads before writing
+its integer result, including an aliased source/destination. Binary-bearing
+ENDLIFE remains executable and integer-only storage reuse stays excluded.
+
 ### Acyclic caller cleanup
 
 The graph path analyzes the exact frozen expanded caller using `llirgraph`
