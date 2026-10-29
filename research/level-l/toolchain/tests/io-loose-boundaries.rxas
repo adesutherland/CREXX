@@ -1,0 +1,77 @@
+/* Independent loose-comparison booleans; each helper activates once. */
+.globals=0
+main() .locals=6
+  numsci 18,1,1
+  null r0
+  null r1
+  null r2
+  null r3
+  call4 r4,space_pairs(),r0,r1,r2,r3
+  icopy r5,r0
+  itos r5
+  say r5
+  icopy r5,r1
+  itos r5
+  say r5
+  icopy r5,r2
+  itos r5
+  say r5
+  icopy r5,r3
+  itos r5
+  say r5
+  call4 r4,empty_unicode(),r0,r1,r2,r3
+  icopy r5,r0
+  itos r5
+  say r5
+  icopy r5,r1
+  itos r5
+  say r5
+  icopy r5,r2
+  itos r5
+  say r5
+  icopy r5,r3
+  itos r5
+  say r5
+  call4 r4,nul_long(),r0,r1,r2,r3
+  icopy r5,r0
+  itos r5
+  say r5
+  icopy r5,r1
+  itos r5
+  say r5
+  icopy r5,r2
+  itos r5
+  say r5
+  icopy r5,r3
+  itos r5
+  say r5
+  ret 0
+
+space_pairs() .locals=2
+  load r0,"beta "
+  load r1,"beta"
+  req a1,r0,r1
+  rne a2,r0,r1
+  load r0," beta"
+  req a3,r0,"beta"
+  rne a4,r0,"beta"
+  ret 0
+
+empty_unicode() .locals=2
+  null r0
+  req a1,r0,"   "
+  rne a2,r0,"   "
+  load r1,"xé"
+  req a3,"xé",r1
+  rne a4,"xé",r1
+  ret 0
+
+nul_long() .locals=2
+  load r1,"a\x00y"
+  req a1,"a\x00z",r1
+  rne a2,"a\x00z",r1
+  load r0,"00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+  load r1,"1"
+  req a3,r0,r1
+  rne a4,r0,r1
+  ret 0

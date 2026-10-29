@@ -1815,6 +1815,39 @@ The constructed and paired native panels passed on one normal VM, with
 cleanup-disabled and cleaned output and exact negative/last-good controls.
 Full standalone acceptance remains open.
 
+### Loose string equality transfer follow-on
+
+The authoritative plan records a focused-qualified REQ/RNE slice for the existing
+scalar call and shared cleanup profile. It covers each operation's canonical
+R,R,R / R,R,S / R,S,R forms. Every register source requires ordinary storage
+and independently available string-component bytes/metadata; unproved recycled
+strings retain `string.component.unproved`. The output must also be ordinary
+because REG_RETURN_INT may release reference/native payloads. `state.plain`
+would wrongly exclude ordinary string/binary side components. All source
+StorageIds and premises are captured before an aliased integer write.
+
+Conservative expansion retains the exact original opcode and source/TRACE
+boundary. The existing VM comparator owns locale-sensitive numeric conversion
+and length-aware right-space padding, including converter scratch and fallback
+behavior. The transfer adds no parser, normalizer, comparison helper or locale
+assumption. It always publishes a defined integer interval `[0,1]`; it performs
+no exact content folding, same-storage shortcut or new branch refinement.
+Sources use the existing whole-observation domain; the output has integer and
+whole-observation writes with only an integer kill. Other components/status,
+whole-state/recycler facts and binding/lifetime obligations stay separate.
+
+Constructed controls cover all six forms, Unicode, length/NUL boundaries and
+aliased/repeated actuals. Paired native RXAS executes all six forms with
+independent loose numeric/text/space, Unicode, NUL and long-numeric outcomes,
+plus surviving string/status data in conservative and cleaned output. Recycled
+string and existing nonordinary/profile negatives retain exact input owners;
+the new fixed work charge has an atomic CLI last-good control. Existing literal
+byte/frame/state/code ledgers remain authoritative. Strict string predicates,
+RSEQ, ordered loose comparisons, private ITOS, exact folding, selector-child
+whitelist growth and full standalone acceptance remain later work. The
+constructed component panel and paired native RXAS/VM panel passed with an exact
+recycled-string refusal and CLI last-good control.
+
 ### Straight-line callee rebinding contract
 
 For admitted callee LINK/UNLINK/SWAP, `lltargetfacts.analysis` supplies exact

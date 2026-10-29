@@ -658,7 +658,74 @@ predicateundefined: procedure = .int
   end
   return failures
 
+/** Loose equality deliberately learns no value, even for identical strings. */
+loosepredicates: procedure = .int
+  failures = 0; relation = .int; form = .int; sample = .int; i = .int; ordinal = .int
+  destination = .int; opid = .int; storageid = .int; integer = .int; whole = .int
+  lhs = .binary; rhs = .binary; opname = .string
+  left = .lltarget..operand; right = .lltarget..operand; original = .lltarget..module; facts = .lltargetfacts..analysis
+  looseitem = .lltarget..record
+  do relation = 1 to 2
+    opname = word('req rne',relation)
+    do form = 1 to 3
+      do sample = 1 to 8
+        lhs = '01' as .binary; rhs = '1' as .binary
+        select sample
+          when 2 then do; lhs = 'beta ' as .binary; rhs = 'beta' as .binary; end
+          when 3 then do; lhs = ' beta' as .binary; rhs = 'beta' as .binary; end
+          when 4 then do; lhs = ''x as .binary; rhs = '   ' as .binary; end
+          when 5 then do; lhs = '78c3a9'x as .binary; rhs = '7865cc81'x as .binary; end
+          when 6 then do; lhs = '61007a'x as .binary; rhs = '610079'x as .binary; end
+          when 7 then do; lhs = (copies('0',256) || '1') as .binary; rhs = '1' as .binary; end
+          when 8 then do
+            if form <> 1 then iterate
+            lhs = 'same' as .binary; rhs = lhs
+          end
+          otherwise nop
+        end
+        destination = sample % 3
+        draft = .lltarget..draft('loose.' || relation || '.' || form || '.' || sample,'fixture:loose',0)
+        at = draft.synthetic('whole string reads and an unknown boolean write'); root = draft.procedure('main',6,at)
+        do i = 0 to 5; ignored = one(root,'null',root.reg('r',i),at); end
+        if sample <> 4 then ignored = two(root,'load',root.reg('r',0),.lltarget..operand.string(lhs),at)
+        ignored = two(root,'load',root.reg('r',1),.lltarget..operand.string(rhs),at)
+        if sample = 8 then ignored = two(root,'link',root.reg('r',1),root.reg('r',0),at)
+        if destination = 2 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.string('keep'),at)
+        ignored = two(root,'load',root.reg('r',destination),.lltarget..operand.integer(-7),at)
+        ignored = two(root,'settp',root.reg('r',destination),.lltarget..operand.integer(512),at)
+        left = root.reg('r',0); right = root.reg('r',1)
+        if form = 2 then right = .lltarget..operand.string(rhs)
+        if form = 3 then left = .lltarget..operand.string(lhs)
+        opid = three(root,opname,root.reg('r',destination),left,right,at)
+        ignored = two(root,'copy',root.reg('r',3),root.reg('r',destination),at)
+        ignored = three(root,'iadd',root.reg('r',4),root.reg('r',destination),.lltarget..operand.integer(1),at)
+        branch = two(root,'brf',.lltarget..operand.symbol('loose_false'),root.reg('r',destination),at)
+        yesret = one(root,'ret',.lltarget..operand.integer(1),at)
+        ignored = namedlabel(root,'loose_false',at)
+        noret = one(root,'ret',.lltarget..operand.integer(0),at)
+        original = draft.finish()
+        failures = failures + check(original.valid(),'canonical loose form and byte span are valid ' || relation || '/' || form || '/' || sample)
+        if original.valid() = 0 then do; say original.error(); iterate; end
+        facts = lltargetfacts..analysegraph(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+        failures = failures + check(facts.status() = 'ok','loose equality preserves ordinary side components ' || relation || '/' || form || '/' || sample)
+        if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+        looseaccess = .llirgraph..access
+        looseaccess = dereference facts.access()
+        storageid = facts.storage(opid,1); integer = facts.integerdomain(storageid); whole = facts.wholedomain(storageid)
+        failures = failures + check(looseaccess.writes(opid,integer) & looseaccess.writes(opid,whole) & looseaccess.kills(opid,integer) & looseaccess.kills(opid,whole) = 0,'loose predicate has integer-only kill and both write domains')
+        looseitem = original.at(opid)
+        do ordinal = 2 to looseitem.registerrefs()
+          storageid = facts.storage(opid,ordinal)
+          failures = failures + check(looseaccess.reads(opid,facts.wholedomain(storageid)) & looseaccess.reads(opid,facts.integerdomain(storageid)) = 0,'loose register sources use the whole-observation domain only')
+        end
+        failures = failures + check(facts.rootbranchchoice(branch) = 0 & facts.rootlive(yesret) & facts.rootlive(noret),'no content/identity folding: both boolean routes remain ' || sample)
+        if sample = 8 then failures = failures + check(facts.storage(opid,2) = facts.storage(opid,3),'repeated encoded inputs resolve before the aliased write')
+      end
+    end
+  end
+  return failures
+
 main: procedure = .int
-  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1) + predicates() + predicateunknown() + predicateundefined()
+  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1) + predicates() + predicateunknown() + predicateundefined() + loosepredicates()
   say 'STORAGE_INLINE|failures=' || failures
   return failures
