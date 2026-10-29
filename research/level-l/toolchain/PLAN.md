@@ -124,8 +124,8 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, and finite padded optional scalar prologues are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, and finite padded optional scalar prologues are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; counted implicit windows keep graph transport until adjacency or equivalent alias-window mapping is proved. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -928,6 +928,58 @@ the union mask: false clears both, while true leaves the member unresolved.
 Check conservative and cleaned RXAS with native assembler optimization disabled
 and one VM, plus the affected constructed/target/CLI lanes. Wider aggregate,
 dynamic-count and exception coverage remains open in INL-STEP04/05.
+
+### Reviewed path-local retained-child DAG increment
+
+INL-STEP04 next admits a same-module scalar child call in a reached branch of
+an acyclic outer callee, under the existing direct/closed-root signal and depth
+contract. The child remains an ordinary executable call in the expanded outer
+body. Reuse its existing normalization and scalar transfer; do not add a
+second child expansion, call ABI, CFG owner or allocator. A counted child forces
+the complete ordered outer active/anchor layout even when only one branch
+contains it. The emitter already remaps the retained call; prove its captured
+result, current argument bindings, source/inverse swaps and normal return
+restoration at every reached outer exit. Other unproved call forms, targets,
+context, signals and recursion retain the exact call with specific reasons.
+
+Before outer path forking, allocate one stable owned-base StorageId row for
+each reachable admitted child procedure, charged to the fact budget. These
+rows are identities, not initialized values or execution events. Carry mutable
+per-procedure activation and last-exit reset history beside the cell and frame
+snapshots. Each branch enters with its own history. At a join, activation is
+the union of possible histories; a reset guarantee is kept only for paths that
+have activated that child and prove its last exit reset the relevant base.
+A never-activated path contributes the native fresh-entry case, not a fake
+prior reset or an extra sequential activation. If either feasible history
+could leave an observed recycled component unknown, the child proof must keep
+the outer call rather than invent a NULL or copy. Preserve the active recursion
+stack while simulating a synchronous child, and keep child return/selector/swap
+ledgers separate from the outer expansion plan. A child's possible effects
+contribute to the outer call access summary; a definite kill requires every
+normal child exit to perform it.
+
+The exact expanded root can contain retained children. `analysegraph` may use
+the same path-local child transfer to publish their access and call-window
+facts for cleanup. Keep the existing graph-transport implicit-storage guard
+for counted calls: rewriting only the explicit count register does not prove
+the required adjacent argument pointers. The graph assignment service may
+place such a window densely only with its existing `assignment.window` and
+fixed-slot constraints. A later transport admission requires proof that each
+reached argument StorageId occupies `countStorageId + j` after mapping, or a
+separately proved alias-window construction; repeated/noncontiguous aliases
+cannot be erased by visible-operand rewriting alone. Fixed-argument calls have
+explicit operands but still require the child/profile and access proof.
+
+Independent constructed and RXAS controls exercise unknown 0/256 branches
+with a mutating retained child in both arms, one-arm activation followed by a
+later child call, repeated outer activation and child MOVE-reset/history,
+aliased snapshots, and a counted r/a-crossing window with setup/reverse
+swaps. Assert removal of the selected outer CALL, retention of the child CALL
+and its required window, per-exit restoration, no leaked child plan rows,
+precise negative keeps and atomic work/byte/frame limits. Run conservative
+and cleaned output through native `rxas -n` and one VM. The broader recursive,
+imported, aggregate, exceptional and general counted-window transport
+categories remain open.
 
 ### Required native bootstrap correctness repair
 

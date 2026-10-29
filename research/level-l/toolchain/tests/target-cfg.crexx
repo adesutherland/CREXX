@@ -232,8 +232,8 @@ malformed: procedure = .int
   end
   return failures
 
-/** Caller CFG and cleanup proofs remain pending; a callee's known branch
- * now has a positive expansion control rather than the old blanket refusal. */
+/** Expansion still requires a linear root. Graph cleanup can prove the
+ * known-branch retained child; typed tail observations retain their guard. */
 keeps: procedure = .int
   failures = 0; variant = .int; ignored = .int; callid = .int; expected = .string
   original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
@@ -279,14 +279,23 @@ keeps: procedure = .int
       failures = failures + check(bin2x(originalgraph.binary()) = bin2x(image),'known branch expansion preserves the exact original owner')
       iterate
     end
+    if variant = 1 then do
+      changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result()
+      failures = failures + check(changed.status() = 'changed' & kept.valid() & changed.operation(callid) > 0,'graph transport folds the known caller branch while retaining its explicit child call')
+      if changed.status() <> 'changed' then say changed.reason()
+      originalproof = dereference original.ir()
+      failures = failures + check(bin2x(originalproof.binary()) = bin2x(image),'successful graph transport preserves its original frozen input')
+      changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result()
+      storageproof = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = 'storage.no.change' & bin2x(storageproof.binary()) = bin2x(image),'both referenced caller cells are already dense and distinct; graph placement keeps exact input')
+      iterate
+    end
     changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
     expected = 'transport.cfg.pending'
-    if variant = 1 then expected = 'graph.call.history.pending'
-    failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(graph.binary()) = bin2x(image),'transport keeps the specific unproved call history or typed end anchor ' || variant)
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(graph.binary()) = bin2x(image),'transport preserves the typed end-anchor observation ' || variant)
     changed = llcleanup..storage(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result(); graph = dereference kept.ir()
     expected = 'storage.cfg.pending'
-    if variant = 1 then expected = 'graph.call.history.pending'
-    failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(graph.binary()) = bin2x(image),'placement keeps the specific unproved call history or typed end anchor ' || variant)
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(graph.binary()) = bin2x(image),'placement preserves the typed end-anchor observation ' || variant)
     changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1); kept = changed.result(); graph = dereference kept.ir()
     failures = failures + check(changed.status() = 'limit' & changed.reason() = 'transport.cfg.work' & bin2x(graph.binary()) = bin2x(image),'control scan fuel refusal is atomic ' || variant)
   end

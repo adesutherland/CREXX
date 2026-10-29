@@ -483,6 +483,47 @@ callproof: class
   killwhole: method = .int
     return _killwhole
 
+/** Conditional last-exit guarantees for procedure-owned bases. All bases of
+ * an activation, including a0, are marked together. A never-activated path is
+ * neutral at a meet: its first entry is fresh, not a recycled unreset value.
+ * Owned StorageIds are immutable analysis data; these rows are path data. */
+history: class
+  _seen = .int[]
+  _reset = .int[]
+  *: factory
+    return
+  extend: method = .void
+    arg cells = .int
+    i = .int
+    do i = _seen[0] + 1 to cells; _seen[i] = 0; _reset[i] = 0; end
+    return
+  size: method = .int
+    return _seen[0]
+  seen: method = .int
+    arg id = .int
+    return _seen[id]
+  reset: method = .int
+    arg id = .int
+    return _reset[id]
+  activated: method = .void
+    arg id = .int
+    _seen[id] = 1
+    return
+  exited: method = .void
+    arg id = .int, reset = .int
+    _reset[id] = reset
+    return
+  meet: method = .int
+    arg other = .history
+    i = .int
+    if size() <> other.size() then return 0
+    do i = 1 to size()
+      if other.seen(i) = 0 then iterate
+      if _seen[i] then _reset[i] = _reset[i] & other.reset(i)
+      else do; _seen[i] = 1; _reset[i] = other.reset(i); end
+    end
+    return 1
+
 /** Facts are bound to one exact frozen target owner and shared graph/access
  * projection. The projection supplies accesses to the existing L liveness
  * solver; this target owner supplies VM-specific transfer and storage facts. */
@@ -518,10 +559,9 @@ analysis: class
   _mapping = .int[]
   _windowblocked = .int[]
   _profile = .string
-  _activations = .int[]
   _active = .int[]
   _owned = .object[]
-  _reset = .object[]
+  _ownedready = .int[]
   _rebinding = .int[]
   _ordered = .int[]
   _selectorordinal = .int[]
@@ -635,16 +675,57 @@ analysis: class
   /* Include transient and retained deep copies, not an assumed VM COW path. */
   pathallowance: method = .int
     arg cells = .int, slots = .int
-    if reserve(cells,384) = 0 | reserve(slots,128) = 0 | reserve(1,256) = 0 then return 0
-    if cells > _work / 48 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-    if spend(cells * 48) = 0 then return 0
+    if reserve(cells,448) = 0 | reserve(slots,128) = 0 | reserve(1,320) = 0 then return 0
+    if cells > _work / 56 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(cells * 56) = 0 then return 0
     if slots > _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     return spend(slots * 16)
   joinpath: method = .int
-    arg cells_ref = reference .cells, frame_ref = reference .frame, incoming = .cells, incomingframe = .frame
-    state = dereference cells_ref; view = dereference frame_ref
+    arg cells_ref = reference .cells, frame_ref = reference .frame, history_ref = reference .history, incoming = .cells, incomingframe = .frame, incominghistory = .history
+    state = dereference cells_ref; view = dereference frame_ref; previous = dereference history_ref
     if view.compatible(incomingframe) = 0 then return reject('join.binding.unproved')
     if state.meet(incoming) = 0 then return reject('join.storage.unproved')
+    if previous.meet(incominghistory) = 0 then return reject('join.history.unproved')
+    return 1
+  /* Reserve immutable child base identities before any enclosing path copy.
+   * Resolving a target here is not activation or acceptance: only a reached
+   * invoke proves its body, arguments, depth, signal and scalar contract. */
+  preparechildren: method = .int
+    arg bodyid = .int, state_ref = reference .cells, history_ref = reference .history, levels = .int
+    i = .int; j = .int; id = .int; childid = .int; opid = .int
+    item = .lltarget..record; target = .lltarget..operand; child = .lltarget..body
+    owned = .int[]; empty = .int[]
+    module = dereference _owner; state = dereference state_ref; previous = dereference history_ref
+    if levels < 1 then return 1
+    do i = 1 to _index.functionoperations(bodyid)
+      if spend(1) = 0 then return 0
+      opid = _index.functionoperation(bodyid,i)
+      if _index.opcode(opid) <= 16 | _index.reachable(_index.opblock(opid)) = 0 then iterate
+      item = module.at(opid)
+      if item.kind() <> 'instruction' then iterate
+      if wordpos(item.mnemonic(),'call call1 call2 call3 call4') = 0 then iterate
+      if item.operands() = 1 then target = item.operand(1)
+      else target = item.operand(2)
+      if target.kind() <> 'P' then iterate
+      if spend(module.procedures()) = 0 then return 0
+      childid = module.procedureid(target.text())
+      if childid = 0 | _active[childid] then iterate
+      if _ownedready[childid] = 0 then do
+        if spend(module.procedures()) = 0 then return 0
+        child = module.body(childid)
+        if child.locals() >= _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+        if reserve(child.locals() + 1,168) = 0 | reserve(1,32) = 0 then return 0
+        if spend((child.locals() + 1) * 16) = 0 then return 0
+        owned = empty
+        do j = 1 to child.locals() + 1
+          id = state.add(); owned[j] = id
+        end
+        _owned[childid] = .numbers(owned) as .object
+        _ownedready[childid] = 1
+        call previous.extend(state.size())
+      end
+      if preparechildren(childid,state_ref,history_ref,levels - 1) = 0 then return 0
+    end
     return 1
   /* Transfer into the pointer captured at call entry before deriving the
    * inverse reached permutation. A source r is owned only at its own base. */
@@ -684,11 +765,13 @@ analysis: class
   /* One finite forward pass over the shared graph's DAG order. These rows
    * hold target transfer snapshots; edges and scheduling stay index-owned. */
   dag: method = .int
-    arg bodyid = .int, expose entryframe = .frame, expose state = .cells, destination = .int, hasresult = .int, expose proof = .callproof, expose selectors = .int[], publish = 1, callid = 0, root = 0
+    arg bodyid = .int, expose entryframe = .frame, expose state = .cells, expose callhistory = .history, destination = .int, hasresult = .int, expose proof = .callproof, expose selectors = .int[], publish = 1, callid = 0, root = 0, depth = 0
     i = .int; b = .int; opid = .int; target = .int; edge = .int; choice = .int; returned = .int; exits = .int; id = .int; j = .int; retid = .int
-    incoming = .cells[]; frames = .frame[]; present = .int[]
+    incoming = .cells[]; frames = .frame[]; histories = .history[]; present = .int[]
     path = .cells; edgepath = .cells; merged = .cells; view = .frame; item = .lltarget..record; value = .lltarget..operand
+    previous = .history; mergedhistory = .history
     source_ref = reference .cells; view_ref = reference .frame; path_ref = reference .cells; pathview_ref = reference .frame
+    history_ref = reference .history; pathhistory_ref = reference .history
     name = .string; flow = .int; mask = .int; known = .int; bits = .int; selected = .int
     refinementid = .int; refinementmask = .int
     module = dereference _owner; catalog = .llrxascatalog..catalog()
@@ -708,16 +791,21 @@ analysis: class
         end
       end
     end
-    if reserve(_index.blocks(),32) = 0 | pathallowance(state.size(),entryframe.slots()) = 0 then return 0
+    /* Two invocation levels are already admitted from a root, one from an
+     * outer callee. Preallocation follows only those finite static targets;
+     * invoke still checks a reached recursion/depth/body before using a row. */
+    if preparechildren(bodyid,reference state,reference callhistory,1 - depth + root) = 0 then return 0
+    if reserve(_index.blocks(),40) = 0 | pathallowance(state.size(),entryframe.slots()) = 0 then return 0
     b = _index.functionentry(bodyid); source_ref = reference state; view_ref = reference entryframe
-    incoming[b] = snapshot source_ref; frames[b] = snapshot view_ref; present[b] = 1; exits = 0
+    history_ref = reference callhistory
+    incoming[b] = snapshot source_ref; frames[b] = snapshot view_ref; histories[b] = snapshot history_ref; present[b] = 1; exits = 0
     do i = 1 to _index.rposize()
       if spend(1) = 0 then return 0
       b = _index.rpo(i)
       if _index.blockfunction(b) <> bodyid | present[b] = 0 then iterate
       if pathallowance(state.size(),entryframe.slots()) = 0 then return 0
-      source_ref = reference incoming[b]; view_ref = reference frames[b]
-      path = snapshot source_ref; view = snapshot view_ref
+      source_ref = reference incoming[b]; view_ref = reference frames[b]; history_ref = reference histories[b]
+      path = snapshot source_ref; view = snapshot view_ref; previous = snapshot history_ref
       choice = 0; returned = 0; refinementid = 0; refinementmask = 0; opid = _index.firstop(b)
       do while opid > 0
         if spend(1) = 0 then return 0
@@ -734,8 +822,8 @@ analysis: class
         if item.kind() = 'instruction' then do
           name = item.mnemonic(); flow = catalog.flow(item.opcode())
           if wordpos(name,'call call1 call2 call3 call4') > 0 then do
-            if root then return reject('graph.call.history.pending')
-            return reject('call.branch.history.pending')
+            if invoke(item,view,reference path,previous,root,callid,depth + (root = 0),0) = 0 then return 0
+            opid = _index.nextop(opid); iterate
           end
           if flow = 1 | flow = 2 then do
             if name = 'br' then choice = 1
@@ -792,8 +880,14 @@ analysis: class
               end
               if finishreturn(item,view,path,destination,hasresult,proof) = 0 then return 0
               if pathallowance(state.size(),entryframe.slots()) = 0 then return 0
-              if exits = 0 then do; path_ref = reference path; merged = snapshot path_ref; end
-              else if merged.meet(path) = 0 then return reject('join.storage.unproved')
+              if exits = 0 then do
+                path_ref = reference path; pathhistory_ref = reference previous
+                merged = snapshot path_ref; mergedhistory = snapshot pathhistory_ref
+              end
+              else do
+                if merged.meet(path) = 0 then return reject('join.storage.unproved')
+                if mergedhistory.meet(previous) = 0 then return reject('join.history.unproved')
+              end
               exits = exits + 1; returned = 1
             end
           end
@@ -820,13 +914,13 @@ analysis: class
         end
         else source_ref = reference path
         if present[target] = 0 then do
-          pathview_ref = reference view
-          incoming[target] = snapshot source_ref; frames[target] = snapshot pathview_ref; present[target] = 1
+          pathview_ref = reference view; pathhistory_ref = reference previous
+          incoming[target] = snapshot source_ref; frames[target] = snapshot pathview_ref; histories[target] = snapshot pathhistory_ref; present[target] = 1
         end
         else if refinementid > 0 then do
-          if joinpath(reference incoming[target],reference frames[target],edgepath,view) = 0 then return 0
+          if joinpath(reference incoming[target],reference frames[target],reference histories[target],edgepath,view,previous) = 0 then return 0
         end
-        else if joinpath(reference incoming[target],reference frames[target],path,view) = 0 then return 0
+        else if joinpath(reference incoming[target],reference frames[target],reference histories[target],path,view,previous) = 0 then return 0
       end
     end
     if exits = 0 then return reject('return.missing')
@@ -850,7 +944,7 @@ analysis: class
         end
       end
     end
-    state = merged
+    state = merged; callhistory = mergedhistory
     return 1
   /* Cache only the operation order of an already indexed linear CFG. The
    * shared index owns edges/reachability; this is not a second graph. Core
@@ -1272,11 +1366,11 @@ analysis: class
     end
     return .callshape(bodyid,name,count,first,destination,name = 'call' & item.operands() = 2,countstorage,positions,actuals)
   invoke: method = .int
-    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, publish = 1, outerCallId = 0, depth = 0
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, expose callhistory = .history, publish = 1, outerCallId = 0, depth = 0, tracking = 1
     i = .int; j = .int; ignored = .int; repeated = .int
     id = .int; destination = .int; bodyid = .int; recordid = .int; returned = .int; hasresult = .int
     callee = .lltarget..body; child = .frame; record = .lltarget..record; shape = .callshape
-    value = .lltarget..operand; ownedrow = .numbers; resetrow = .numbers; action = .string; linearrow = .numbers
+    value = .lltarget..operand; ownedrow = .numbers; action = .string; linearrow = .numbers
     selectors = .int[]; banks = .string; proof = .callproof; p = .int
     if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
     module = dereference _owner; state = dereference state_ref
@@ -1302,8 +1396,19 @@ analysis: class
     if reserve(_recordcount[bodyid],32) = 0 | reserve(_retcount[bodyid],112) = 0 | reserve(1,256) = 0 then return 0
     if spend(_recordcount[bodyid]) = 0 | spend(_retcount[bodyid]) = 0 then return 0
     proof = .callproof(_recordcount[bodyid],_retcount[bodyid])
-    actuals = .int[]; positions = .int[]; references = .int[]; owned = .int[]; reset = .int[]; swaps = .int[]
+    actuals = .int[]; positions = .int[]; references = .int[]; plain = .int[]; owned = .int[]; swaps = .int[]
     reads = .int[]; observations = .int[]; writes = .int[]; kills = .int[]
+    if publish then do
+      if spend(item.registerrefs()) = 0 | reserve(item.registerrefs(),32) = 0 | reserve(1,32) = 0 then return 0
+      do i = 1 to item.registerrefs()
+        value = item.registerref(i); id = view.storage(value)
+        references[i] = id; plain[i] = state.plain(id)
+      end
+      _beforeplain[item.id()] = .numbers(plain) as .object
+      if _graphmode then do
+        if scopeobserve(item,view,state_ref,reference observations) = 0 then return 0
+      end
+    end
     if spend(count) = 0 then return 0
     banks = ''
     do i = 1 to count
@@ -1332,7 +1437,13 @@ analysis: class
      * active map and resets slot identities. Keep those StorageIds stable.
      * Only a proved whole reset lets a later inline site assume fresh state;
      * mapping-only operands neither read nor overwrite the owned value. */
-    repeated = _activations[bodyid] > 0; _active[bodyid] = 1
+    repeated = 0
+    if _ownedready[bodyid] then do
+      ownedrow = _owned[bodyid] as .numbers
+      if ownedrow.at(callee.locals() + 1) > state.size() then return reject('join.storage.unproved')
+      repeated = callhistory.seen(ownedrow.at(callee.locals() + 1))
+    end
+    _active[bodyid] = 1
     if count >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     if callee.locals() > _work - count - 1 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     if spend(callee.locals() + count + 1) = 0 then return 0
@@ -1346,12 +1457,11 @@ analysis: class
       if spend(_selectorcount[bodyid]) = 0 | reserve(_selectorcount[bodyid],16) = 0 | reserve(1,32) = 0 then return 0
       do i = 1 to _selectorcount[bodyid]; selectors[i] = -1; end
     end
-    if repeated then do
-      ownedrow = _owned[bodyid] as .numbers; resetrow = _reset[bodyid] as .numbers
+    if _ownedready[bodyid] then do
       do i = 1 to callee.locals() + 1
         owned[i] = ownedrow.at(i)
-        if i <= callee.locals() then do
-          if resetrow.at(i) = 0 then call state.uncertain(owned[i])
+        if repeated & i <= callee.locals() then do
+          if callhistory.reset(owned[i]) = 0 then call state.uncertain(owned[i])
         end
       end
       if _globals[0] > 0 then child = .frame(state_ref,callee.locals(),actuals,0,view.context(),owned,_globals)
@@ -1368,12 +1478,17 @@ analysis: class
       else child = .frame(state_ref,callee.locals(),actuals,0,view.context())
       do i = 1 to callee.locals() + 1; owned[i] = child.ownedbase(i); end
       _owned[bodyid] = .numbers(owned) as .object
+      _ownedready[bodyid] = 1
+      call callhistory.extend(state.size())
     end
-    _activations[bodyid] = _activations[bodyid] + 1; returned = 0
+    do i = 1 to callee.locals() + 1; call callhistory.activated(owned[i]); end
+    returned = 0
     if _dagbody[bodyid] then do
-      if dag(bodyid,child,state,destination,hasresult,proof,selectors,publish,item.id()) = 0 then return 0
-      if spend(state.size()) = 0 then return 0
-      do i = 1 to state.size(); _plain[i] = state.plain(i); end
+      if dag(bodyid,child,state,callhistory,destination,hasresult,proof,selectors,publish,item.id(),0,depth) = 0 then return 0
+      if tracking then do
+        if spend(state.size()) = 0 then return 0
+        do i = 1 to state.size(); _plain[i] = state.plain(i); end
+      end
     end
     else do
     do i = 1 to _linearcount[bodyid]
@@ -1383,9 +1498,9 @@ analysis: class
       call proof.visit(_recordordinal[recordid])
       if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
       if record.kind() = 'instruction' & wordpos(record.mnemonic(),'call call1 call2 call3 call4') > 0 then do
-        if invoke(record,child,state_ref,0,outerCallId,depth + 1) = 0 then return 0
+        if invoke(record,child,state_ref,callhistory,0,outerCallId,depth + 1,tracking) = 0 then return 0
       end
-      else if step(record,child,state_ref,1,0,hasresult) = 0 then return 0
+      else if step(record,child,state_ref,1,0,hasresult,tracking) = 0 then return 0
       if publish & record.kind() = 'instruction' & record.mnemonic() = 'linkarg' then do
         if _lastselector < 0 then return reject('argument.selector.unproved')
         selectors[_selectorordinal[record.id()]] = _lastselector
@@ -1403,16 +1518,16 @@ analysis: class
       record = module.at(returned)
       if finishreturn(record,child,state,destination,hasresult,proof) = 0 then return 0
     end
-    if hasresult then _plain[destination] = state.plain(destination)
+    if tracking & hasresult then _plain[destination] = state.plain(destination)
     if publish & proof.written() then do
       call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
       if proof.killinteger() then call insert(reference kills,domain(destination))
       if proof.killwhole() then call insert(reference kills,domain(destination,1))
     end
     do i = 1 to callee.locals()
-      reset[i] = state.zeroed(child.ownedbase(i))
+      call callhistory.exited(child.ownedbase(i),state.zeroed(child.ownedbase(i)))
     end
-    _reset[bodyid] = .numbers(reset) as .object
+    call callhistory.exited(child.ownedbase(callee.locals() + 1),0)
     _active[bodyid] = 0
     if publish = 0 then return 1
     if _selectorcount[bodyid] > 0 then _selectors[item.id()] = .numbers(selectors) as .object
@@ -1424,9 +1539,6 @@ analysis: class
     _swaps[item.id()] = .numbers(swaps) as .object; _swapcount[item.id()] = swaps[0]
     do i = 1 to actuals[0]
       call insert(reference writes,domain(actuals[i])); call insert(reference writes,domain(actuals[i],1))
-    end
-    do i = 1 to item.registerrefs()
-      value = item.registerref(i); references[i] = view.storage(value)
     end
     _references[item.id()] = .numbers(references) as .object
     _counts[item.id()] = count; _first[item.id()] = first; _body[item.id()] = bodyid
@@ -1443,6 +1555,7 @@ analysis: class
     id = .int; slot = .int; integer = .int; whole = .int; barrier = .int; definition = .int
     references = .numbers; plain = .numbers; actuals = .numbers; destination = .lltarget..operand; linearrow = .numbers
     ownedroot = .int[]; view = .frame; rootproof = .callproof; selectors = .int[]
+    callhistory = .history
     item = .lltarget..record; value = .lltarget..operand; option = .lltarget..operand; catalog = .llrxascatalog..catalog
     do
     if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _reason = 'owner.expired'; return; end
@@ -1530,13 +1643,15 @@ analysis: class
       ownedroot[body.locals() + 1] = state.add(1,1,0)
       view = .frame(reference state,body.locals(),empty,1,'',ownedroot,_globals)
     end
+    if reserve(state.size(),16) = 0 | spend(state.size()) = 0 then return
+    callhistory = .history(); call callhistory.extend(state.size())
     do i = 1 to body.locals(); _plain[i] = 1; end
     region = 0; nextregion = 0; returned = 0; _active[_function] = 1
     if _graphmode then do
       if reserve(_recordcount[_function],32) = 0 | reserve(_retcount[_function],112) = 0 | reserve(1,256) = 0 then return
       if spend(_recordcount[_function]) = 0 | spend(_retcount[_function]) = 0 then return
       rootproof = .callproof(_recordcount[_function],_retcount[_function])
-      if dag(_function,view,state,0,0,rootproof,selectors,0,0,1) = 0 then return
+      if dag(_function,view,state,callhistory,0,0,rootproof,selectors,0,0,1) = 0 then return
       if spend(state.size()) = 0 then return
       do i = 1 to state.size(); _plain[i] = state.plain(i); end
       returned = 1
@@ -1547,7 +1662,7 @@ analysis: class
       if item.kind() = 'instruction' & returned then do; ignored = reject('profile.caller.control.pending'); return; end
       previous = view.canonical()
       if item.kind() = 'instruction' & wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
-        if invoke(item,view,reference state) = 0 then return
+        if invoke(item,view,reference state,callhistory) = 0 then return
         if region > 0 & item.mnemonic() = 'call' & _counts[item.id()] > 0 then _blocked[region] = 1
       end
       else if step(item,view,reference state) = 0 then return

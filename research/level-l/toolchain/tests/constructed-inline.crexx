@@ -466,6 +466,209 @@ abiedges: procedure = .int
   end
   return failures
 
+/** A conditional first activation and the later common call share child
+ * identity, while their activation/reset history follows the reached path. */
+nestedDAGmodel: procedure = .lltarget..module
+  arg variant = .int
+  fields = .object[]
+  draft = .lltarget..draft('nested.dag.' || variant,'constructed.nested.dag',0)
+  at = draft.synthetic('path-local retained scalar child'); root = draft.procedure('main',6,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(5),at)
+  ignored = three(root,'getandtp',root.reg('r',1),root.reg('r',0),.lltarget..operand.integer(768),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(10),at)
+  ignored = two(root,'load',root.reg('r',5),.lltarget..operand.integer(20),at)
+  do site = 1 to 2
+    if site = 2 & variant > 2 then leave
+    if site = 2 then do
+      ignored = two(root,'settp',root.reg('r',0),.lltarget..operand.integer(256),at)
+      ignored = three(root,'getandtp',root.reg('r',1),root.reg('r',0),.lltarget..operand.integer(768),at)
+    end
+    call objectarraydrop fields; fields[1] = root.reg('r',site + 2) as .object
+    fields[2] = .lltarget..operand.procedure('outer') as .object
+    if variant = 2 then do
+      fields[3] = root.reg('r',2) as .object; fields[4] = root.reg('r',5) as .object; fields[5] = root.reg('r',1) as .object
+      ignored = root.emit('call3',fields,at)
+    end
+    else do
+      fields[3] = root.reg('r',1) as .object; fields[4] = root.reg('r',2) as .object
+      ignored = root.emit('call2',fields,at)
+    end
+  end
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  locals = 2
+  if variant = 2 then locals = 1
+  outer = draft.procedure('outer',locals,at)
+  ignored = one(outer,'null',outer.reg('r',0),at)
+  if variant = 2 then do
+    ignored = two(outer,'link',outer.reg('a',0),outer.reg('a',2),at)
+    ignored = two(outer,'load',outer.reg('r',0),.lltarget..operand.integer(2),at)
+    ignored = two(outer,'brt',.lltarget..operand.symbol('cross_swapped'),outer.reg('a',3),at)
+    ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure('child'),outer.reg('r',0),at)
+    ignored = one(outer,'unlink',outer.reg('a',0),at)
+    ignored = one(outer,'ret',outer.reg('r',0),at)
+    ignored = namedlabel(outer,'cross_swapped',at)
+    ignored = two(outer,'swap',outer.reg('a',0),outer.reg('a',1),at)
+    ignored = three(outer,'call',outer.reg('r',0),.lltarget..operand.procedure('child'),outer.reg('r',0),at)
+    ignored = two(outer,'swap',outer.reg('a',0),outer.reg('a',1),at)
+    ignored = one(outer,'unlink',outer.reg('a',0),at)
+    ignored = one(outer,'ret',outer.reg('r',0),at)
+  end
+  else do
+    ignored = one(outer,'null',outer.reg('r',1),at)
+    ignored = two(outer,'icopy',outer.reg('r',0),outer.reg('a',2),at)
+    ignored = two(outer,'brt',.lltarget..operand.symbol('activate_child'),outer.reg('a',1),at)
+    ignored = one(outer,'br',.lltarget..operand.symbol('common_child'),at)
+    ignored = namedlabel(outer,'activate_child',at)
+    ignored = three(outer,'call1',outer.reg('r',1),.lltarget..operand.procedure('child'),outer.reg('a',2),at)
+    ignored = namedlabel(outer,'common_child',at)
+    ignored = three(outer,'call1',outer.reg('r',1),.lltarget..operand.procedure('child'),outer.reg('a',2),at)
+    ignored = three(outer,'iadd',outer.reg('r',0),outer.reg('r',0),outer.reg('r',1),at)
+    ignored = one(outer,'ret',outer.reg('r',0),at)
+  end
+  locals = 1
+  if variant = 2 then locals = 0
+  child = draft.procedure('child',locals,at)
+  if variant = 2 then do
+    ignored = three(child,'iadd',child.reg('a',1),child.reg('a',1),.lltarget..operand.integer(1),at)
+    ignored = one(child,'ret',child.reg('a',2),at)
+  end
+  else if variant = 3 then do
+    /* First activation is fresh; repeating the whole COPY without a reset
+     * cannot assume that the private source has fresh whole-value state. */
+    ignored = two(child,'load',child.reg('r',0),.lltarget..operand.integer(1),at)
+    ignored = two(child,'copy',child.reg('a',1),child.reg('r',0),at)
+    ignored = one(child,'ret',child.reg('a',1),at)
+  end
+  else do
+    if variant = 4 then ignored = one(child,'null',child.reg('r',0),at)
+    else ignored = two(child,'load',child.reg('r',0),.lltarget..operand.integer(0),at)
+    if variant = 4 then ignored = two(child,'call',child.reg('r',0),.lltarget..operand.procedure('grandchild'),at)
+    else do
+      ignored = three(child,'iadd',child.reg('r',0),child.reg('a',1),.lltarget..operand.integer(1),at)
+      ignored = two(child,'icopy',child.reg('a',1),child.reg('r',0),at)
+    end
+    ignored = one(child,'ret',child.reg('r',0),at)
+  end
+  if variant = 4 then do
+    child = draft.procedure('grandchild',0,at)
+    ignored = one(child,'ret',.lltarget..operand.integer(0),at)
+  end
+  return draft.finish()
+
+nestedDAGstructure: procedure = .int
+  arg owner = reference .lltarget..module, variant = .int
+  failures = 0; i = .int; calls = .int; snapshots = .int; sums = .int; paired = .int; counter = .int
+  snapshotcell = -1
+  body = .lltarget..body; item = .lltarget..record; neighbor = .lltarget..record
+  value = .lltarget..operand; left = .lltarget..operand; right = .lltarget..operand
+  source = dereference owner; body = source.body(source.procedureid('main'))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if variant = 1 & item.mnemonic() = 'icopy' then do
+      value = item.operand(1); snapshotcell = value.index(); snapshots = snapshots + 1
+    end
+    if variant = 1 & item.mnemonic() = 'iadd' then do
+      value = item.operand(2)
+      if value.index() = snapshotcell then sums = sums + 1
+    end
+    if wordpos(item.mnemonic(),'call call1 call2 call3 call4') = 0 then iterate
+    calls = calls + 1; value = item.operand(2)
+    failures = failures + check(value.text() = 'child','only retained child calls survive DAG expansion')
+    if variant = 1 then do
+      failures = failures + check(item.mnemonic() = 'call1' & snapshotcell >= 0,'conditional/common fixed child retains the prior integer snapshot')
+      iterate
+    end
+    failures = failures + check(item.mnemonic() = 'call' & item.operands() = 3,'branch retains its counted r/a-crossing child call')
+    value = item.operand(3); counter = value.index()
+    failures = failures + check(value.bank() = 'r' & counter + 2 < body.locals(),'counter and implicit a0/a1 actuals stay contiguous and within the emitted frame')
+    if i <= 1 | i >= body.records() then iterate
+    neighbor = body.record(i - 1)
+    if neighbor.kind() <> 'instruction' | neighbor.mnemonic() <> 'swap' then iterate
+    left = neighbor.operand(1); right = neighbor.operand(2)
+    failures = failures + check((left.index() = counter + 1 & right.index() = counter + 2) | (left.index() = counter + 2 & right.index() = counter + 1),'source swap acts on the exact implicit window')
+    neighbor = body.record(i + 1)
+    if neighbor.kind() = 'instruction' & neighbor.mnemonic() = 'swap' then do
+      left = neighbor.operand(1); right = neighbor.operand(2)
+      if (left.index() = counter + 1 & right.index() = counter + 2) | (left.index() = counter + 2 & right.index() = counter + 1) then paired = paired + 1
+    end
+  end
+  failures = failures + check(calls = 4,'two repeated outer sites retain both branch/common child instructions')
+  if variant = 1 then failures = failures + check(snapshots = 2 & sums = 2,'both pre-child snapshots remain inputs to their post-child sums')
+  else failures = failures + check(paired = 2,'each swapped arm restores its counted window immediately after the retained child')
+  return failures
+
+nestedDAG: procedure = .int
+  failures = 0; variant = .int; i = .int; j = .int; mode = .int; expected = .int; reason = .string
+  original = .lltarget..module; result = .lltarget..module; nextowner = .lltarget..module; kept = .lltarget..module
+  facts = .lltargetfacts..analysis; request = .llinline..binding; changed = .llinline..change; cleaned = .llinline..change; limited = .llinline..change
+  item = .lltarget..record; body = .lltarget..body; ids = .int[]; rets = .int[]; requests = .object[]
+  do variant = 1 to 4
+    original = nestedDAGmodel(variant)
+    failures = failures + check(original.valid(),'retained-child DAG has valid source structure ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    graph = dereference original.ir(); before = graph.binary()
+    body = original.body(original.procedureid('main'))
+    assembler setattrs ids,0
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = 'instruction' & wordpos(item.mnemonic(),'call2 call3') > 0 then ids[ids[0] + 1] = item.id()
+    end
+    if variant > 2 then do
+      reason = 'local.recycler.history.unproved'
+      if variant = 4 then reason = 'nested.call.depth.pending'
+      request = llinline..bind(reference original,ids[1],reference original,original.procedureid('outer'))
+      changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result()
+      keptgraph = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = reason & bin2x(keptgraph.binary()) = bin2x(before),'path-local history/depth refusal preserves exact original ' || variant)
+      if changed.reason() <> reason then say changed.reason()
+      iterate
+    end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(facts.status() = 'ok' & facts.calls() = 2,'child path simulation publishes only the two original root sites ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    body = original.body(original.procedureid('outer'))
+    assembler setattrs rets,0
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = 'instruction' & item.mnemonic() = 'ret' then rets[rets[0] + 1] = item.id()
+    end
+    call objectarraydrop requests
+    do i = 1 to ids[0]
+      failures = failures + check(facts.bodyid(ids[i]) = original.procedureid('outer') & facts.returns(ids[i]) = rets[0],'outer RET ledger never becomes a child ledger')
+      expected = (variant = 2)
+      failures = failures + check(facts.orderedslots(ids[i]) = expected & facts.rebinding(ids[i]) = expected,'counted crossing and source binding changes select the complete ordered layout')
+      do j = 1 to rets[0]
+        failures = failures + check(facts.returnactionat(ids[i],rets[j]) = 'move' & facts.restores(ids[i],rets[j]) = 0,'owned outer return follows its own reached, already restored permutation')
+      end
+      request = llinline..bind(reference original,ids[i],reference original,original.procedureid('outer'))
+      requests[i] = request as .object
+    end
+    changed = llinline..expandmany(requests,'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'changed','both unknown-branch outer activations expand atomically ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    do i = 1 to ids[0]; failures = failures + check(changed.operation(ids[i]) = 0,'selected outer identity is removed'); end
+    result = changed.result(); failures = failures + nestedDAGstructure(reference result,variant)
+    cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(cleaned.status() = 'changed' | cleaned.status() = 'keep','DAG transport preserves admitted retained children')
+    if cleaned.status() <> 'changed' & cleaned.status() <> 'keep' then do; say cleaned.reason(); iterate; end
+    nextowner = cleaned.result()
+    cleaned = llcleanup..storage(reference nextowner,nextowner.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(cleaned.status() = 'changed' | cleaned.status() = 'keep','DAG assignment preserves retained child windows')
+    if cleaned.status() <> 'changed' & cleaned.status() <> 'keep' then do; say cleaned.reason(); iterate; end
+    result = cleaned.result(); failures = failures + nestedDAGstructure(reference result,variant)
+    do mode = 1 to 3
+      select mode
+        when 1 then limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1)
+        when 2 then limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1000000,1000000,1)
+        otherwise limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1000000,1000000,67108864,0)
+      end
+      kept = limited.result(); limitedgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & bin2x(limitedgraph.binary()) = bin2x(before),'retained-child DAG work/byte/frame refusal is atomic ' || mode)
+    end
+  end
+  return failures
+
 dagpositive: procedure = .int
   arg variant = .int
   failures = 0; i = .int; callid = .int; firstret = .int; secondret = .int; branchid = .int; mode = .int
@@ -690,13 +893,22 @@ dagkeeps: procedure = .int
       when 1 then expected = 'join.binding.unproved'
       when 2 then expected = 'callee.cfg.cycle.pending'
       when 3 then expected = 'branch.condition.unproved'
-      when 4 then expected = 'call.branch.history.pending'
+      when 4 then expected = ''
       when 5 then expected = 'profile.callee.exit.pending'
       otherwise expected = 'argument.selector.unproved'
     end
     graph = dereference original.ir(); image = graph.binary()
     request = llinline..bind(reference original,callid,reference original,original.procedureid('helper'))
     decision = llinline..inspect(request,'closed-main-default-halt.v1')
+    if variant = 4 then do
+      failures = failures + check(decision.status() = 'legal','feasible void child in a DAG arm now has a proved call transfer')
+      changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result()
+      failures = failures + check(changed.status() = 'changed' & changed.operation(callid) = 0 & kept.valid(),'DAG arm retains its ordinary child while the selected outer call expands')
+      if changed.status() <> 'changed' then say changed.reason()
+      originalgraph = dereference original.ir()
+      failures = failures + check(bin2x(originalgraph.binary()) = bin2x(image),'DAG-child admission preserves its frozen original')
+      iterate
+    end
     failures = failures + check(decision.status() = 'keep' & decision.reason() = expected,'DAG missing proof has its specific pending reason ' || variant)
     if decision.reason() <> expected then say decision.reason()
     changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result()
@@ -1258,6 +1470,6 @@ main: procedure = .int
   failures = failures + globalscalar()
   failures = failures + calleetail()
   failures = failures + dagpositive(1) + dagpositive(2) + dagpositive(3) + dagkeeps()
-  failures = failures + optionalarguments() + optionalkeeps() + optionalhistory() + abiedges()
+  failures = failures + optionalarguments() + optionalkeeps() + optionalhistory() + abiedges() + nestedDAG()
   say 'CONSTRUCTED_INLINE|failures=' || failures
   return failures

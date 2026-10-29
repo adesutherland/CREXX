@@ -1,6 +1,6 @@
 /* Independent nested-call values. Raw count describes slots, not presence. */
 .globals=0
-main() .locals=10
+main() .locals=24
   load r0,5
   call2 r1,outerfixed(),r0,r0
   load r2,10
@@ -11,6 +11,24 @@ main() .locals=10
   load r7,30
   load r8,40
   call2 r9,outerordered(),r7,r8
+  load r15,5
+  getandtp r10,r15,768
+  load r11,10
+  call2 r12,dagconditional(),r10,r11
+  icopy r13,r11
+  settp r15,256
+  getandtp r10,r15,768
+  call2 r14,dagconditional(),r10,r11
+  settp r15,0
+  getandtp r18,r15,768
+  load r16,10
+  load r17,20
+  call3 r20,dagcounted(),r16,r17,r18
+  icopy r21,r16
+  icopy r22,r17
+  settp r15,256
+  getandtp r18,r15,768
+  call3 r23,dagcounted(),r16,r17,r18
   say "fixed-snapshot"
   itos r1
   say r1
@@ -36,6 +54,30 @@ main() .locals=10
   say r7
   itos r8
   say r8
+  say "dag-conditional-first"
+  itos r12
+  say r12
+  itos r13
+  say r13
+  say "dag-conditional-repeat"
+  itos r14
+  say r14
+  itos r11
+  say r11
+  say "dag-counted-first"
+  itos r20
+  say r20
+  itos r21
+  say r21
+  itos r22
+  say r22
+  say "dag-counted-repeat"
+  itos r23
+  say r23
+  itos r16
+  say r16
+  itos r17
+  say r17
   ret 0
 
 outerfixed() .locals=2
@@ -65,3 +107,44 @@ outerordered() .locals=1
 bumpsecond() .locals=0
   iadd a2,a2,1
   ret a1
+
+/* flag0 executes the common child once: snapshot10 +11=21, actual11.
+ * The repeated flag256 activation adds twice: snapshot11 +13=24, actual13. */
+dagconditional() .locals=2
+  null r0
+  null r1
+  icopy r0,a2
+  brt dag_activate,a1
+  br dag_common
+dag_activate:
+  call1 r1,dagstep(),a2
+dag_common:
+  call1 r1,dagstep(),a2
+  iadd r0,r0,r1
+  ret r0
+dagstep() .locals=1
+  /* LOAD defines only integer state; owned RET must reset the reused cell. */
+  load r0,0
+  iadd r0,a1,1
+  icopy a1,r0
+  ret r0
+
+/* The count r0's following actuals are a0/a1, crossing the bank boundary.
+ * a0 borrows y. Flag0 increments y; flag256 swaps the window to increment x. */
+dagcounted() .locals=1
+  null r0
+  link a0,a2
+  load r0,2
+  brt dag_cross_swapped,a3
+  call r0,dagcrossleaf(),r0
+  unlink a0
+  ret r0
+dag_cross_swapped:
+  swap a0,a1
+  call r0,dagcrossleaf(),r0
+  swap a0,a1
+  unlink a0
+  ret r0
+dagcrossleaf() .locals=0
+  iadd a1,a1,1
+  ret a2

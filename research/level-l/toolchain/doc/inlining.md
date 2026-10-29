@@ -1035,8 +1035,9 @@ an integer constant only when every incoming path proves the same value;
 known bits for `VAL` and `NOTSYM`.
 An unknown but defined integer branch condition takes both zero and nonzero
 arms, including values other than one. Incompatible bindings, undefined
-conditions, cycles, abrupt exits and nested calls in branch bodies retain the
-ordinary call with a specific pending reason.
+conditions, cycles, abrupt exits and deeper or unproved nested calls retain
+the ordinary call with a specific pending reason. One same-module scalar
+child in a reached branch uses the path-local history proof below.
 
 Each reached RET has its own typed copy/move/integer/bare action and inverse
 permutation. The result transfers before inverse swaps, active/base restoration
@@ -1078,6 +1079,33 @@ stays an ordinary call. Unsupported masks, missing physical cells and unproved
 count/window retain their exact input with specific reasons. This is finite
 physical-cell specialization; arbitrary dynamic varargs remain open.
 
+### Retained child calls in acyclic callee branches
+
+The current scalar proof admits one same-module child call on a reached branch
+of an acyclic outer callee. The child remains a real machine call in the
+expanded caller. Before forking the outer paths, the facts owner allocates
+stable child owned-storage IDs. The IDs do not imply execution or initialized
+contents. Each path snapshots whether the child may have run and which owned
+bases its last normal exit reset. At a join, a never-activated path contributes
+fresh-entry behavior; an activated path with unreset observed state prevents
+an unsupported recycled-state proof. Cell values, ABI bits and frame bindings
+meet independently. Reached child calls use the existing normalization and
+scalar transfer; their return and selector rows do not enter the outer
+expansion plan.
+
+A counted child still observes a contiguous implicit window, including slots
+crossing the outer `r`/`a` boundary. The expanded caller keeps the source
+setup and inverse swaps and preserves the exact window. Root graph analysis
+now summarizes retained child accesses, so cleanup can reason about reached
+fixed-argument calls. Graph transport continues to keep counted calls under
+its implicit-storage guard: remapping the visible count register alone could
+change the unspelled actual pointers. Dense placement may preserve a window
+with fixed contiguous slots; removing its setup requires a separate adjacency
+or constructed alias-window proof. The repeated counted example currently
+keeps a wide frame and binding glue under this guard, so alias-aware reuse
+remains INL-STEP05 work. Imported bodies, deeper recursion, aggregates and
+abrupt exits remain separate categories.
+
 ### Acyclic caller cleanup
 
 The graph path analyzes the exact frozen expanded caller using `llirgraph`
@@ -1086,9 +1114,11 @@ register-only, closed-root scalar CFG. Each reached instruction has incoming
 storage identities and independent value, component and status facts; joins
 require compatible active/base/identity/context bindings. Root restoration
 requires both canonical identity and active pointer equality to its base at
-every normal RET. Retained calls, module globals, exceptional exits, opaque
-physical-frame observers, changing scoped metadata bindings and unsupported
-operations keep the unmodified owner with a specific reason.
+every normal RET. Reached admitted scalar child calls have effect summaries;
+counted implicit windows still keep transport under the guard above. Module
+globals, exceptional exits, opaque physical-frame observers, changing scoped
+metadata bindings and unsupported operations keep the unmodified owner with
+a specific reason.
 
 `llcleanup.transport` uses reached storage identities, never equal values or
 lexically simulated bindings, to remove proved LINK/UNLINK/SWAP mapping glue.
