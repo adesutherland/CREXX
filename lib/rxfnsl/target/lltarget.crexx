@@ -263,6 +263,7 @@ controlarity: procedure = .int
   name = catalog.mnemonic(opcode); signature = catalog.signature(opcode)
   if flow = 1 & name = 'br' & signature = 'L' then return 1
   if flow = 2 & wordpos(name,'brt brf') > 0 & signature = 'LR' then return 2
+  if flow = 2 & name = 'brtpandt' & signature = 'LRI' then return 2
   if flow = 2 & name = 'brtf' & signature = 'LLR' then return 2
   return -2
 
@@ -487,7 +488,7 @@ bodycursor: class
     arg opcode = .int
     catalog = .llrxascatalog..catalog()
     if catalog.flow(opcode) = 0 then do; _after = 1; return; end
-    if wordpos(catalog.mnemonic(opcode),'brt brf') > 0 & controlarity(opcode) = 2 then do
+    if wordpos(catalog.mnemonic(opcode),'brt brf brtpandt') > 0 & controlarity(opcode) = 2 then do
       _current = _fallthrough; _after = 0; _ended = 0
     end
     else do; _ended = 1; _after = 0; end
@@ -984,7 +985,7 @@ cfgcheck: class
         if store.get(2,b,3) <> id then do; _error = 'LL_TARGET_CFG: control instruction is not last in its block'; return; end
         if arity = -2 then do; _complete[f] = 0; iterate; end
         labelcount = arity
-        if wordpos(item.mnemonic(),'brt brf') > 0 then labelcount = 1
+        if wordpos(item.mnemonic(),'brt brf brtpandt') > 0 then labelcount = 1
         do ordinal = 1 to labelcount
           field = item.operand(ordinal); found = 0
           name = field.text()

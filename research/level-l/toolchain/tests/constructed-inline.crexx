@@ -131,6 +131,341 @@ dagclosed: procedure = .int
   end
   return failures
 
+/** Physical cells are already padded; VAL controls the default, independently
+ * of NOTSYM and of the captured count. Aliases see earlier defaults in order. */
+optionalmodel: procedure = .lltarget..module
+  arg variant = .int
+  flags = 0; initial = 0; count = 2; mask = 256
+  if variant <= 4 then flags = (variant - 1) * 256
+  if variant = 3 | variant = 4 | variant >= 7 then initial = 7
+  if variant >= 7 then flags = 256
+  if variant = 6 then count = 3
+  if variant = 9 then mask = 1024
+  if variant = 10 then count = 1
+  if variant = 12 then count = 100
+  draft = .lltarget..draft('optional.' || variant,'constructed.optional',0); at = draft.synthetic('finite padded optional arguments')
+  root = draft.procedure('main',6,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(count),at)
+  ignored = one(root,'null',root.reg('r',1),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(initial),at)
+  if variant = 1 then ignored = two(root,'settp',root.reg('r',1),.lltarget..operand.integer(768),at)
+  ignored = two(root,'settp',root.reg('r',1),.lltarget..operand.integer(flags),at)
+  if variant = 2 then ignored = two(root,'settp',root.reg('r',1),.lltarget..operand.integer(1024),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(9),at)
+  secondflags = 256
+  if variant = 7 | variant = 8 then secondflags = 512
+  ignored = two(root,'settp',root.reg('r',2),.lltarget..operand.integer(secondflags),at)
+  if variant = 5 then ignored = two(root,'link',root.reg('r',2),root.reg('r',1),at)
+  if variant = 6 | variant = 11 then do
+    ignored = two(root,'load',root.reg('r',4),.lltarget..operand.integer(5),at)
+    if variant = 6 then ignored = three(root,'getandtp',root.reg('r',3),root.reg('r',4),.lltarget..operand.integer(768),at)
+    else ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',4),.lltarget..operand.integer(768),at)
+  end
+  if variant = 7 then ignored = two(root,'acopy',root.reg('r',1),root.reg('r',2),at)
+  if variant = 8 then ignored = two(root,'icopy',root.reg('r',1),root.reg('r',2),at)
+  ignored = three(root,'call',root.reg('r',5),.lltarget..operand.procedure('optional'),root.reg('r',0),at)
+  if variant = 5 then ignored = one(root,'unlink',root.reg('r',2),at)
+  ignored = three(root,'getandtp',root.reg('r',4),root.reg('r',5),.lltarget..operand.integer(768),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('optional',1,at)
+  ignored = one(leaf,'null',leaf.reg('r',0),at)
+  if variant = 7 | variant = 8 then do
+    ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(9),at)
+    ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(512),at)
+    if variant = 7 then ignored = two(leaf,'acopy',leaf.reg('a',1),leaf.reg('r',0),at)
+    else ignored = two(leaf,'icopy',leaf.reg('a',1),leaf.reg('r',0),at)
+    expected = 7
+    if variant = 8 then expected = 9
+    ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(expected),.lltarget..operand.integer(expected),at)
+    ignored = one(leaf,'ret',leaf.reg('a',1),at)
+    return draft.finish()
+  end
+  if variant = 6 then do
+    ignored = two(leaf,'brt',.lltarget..operand.symbol('abi_supplied'),leaf.reg('a',3),at)
+    ignored = two(leaf,'settp',leaf.reg('a',1),.lltarget..operand.integer(0),at)
+    ignored = one(leaf,'br',.lltarget..operand.symbol('abi_join'),at)
+    ignored = namedlabel(leaf,'abi_supplied',at)
+    ignored = two(leaf,'settp',leaf.reg('a',1),.lltarget..operand.integer(256),at)
+    ignored = namedlabel(leaf,'abi_join',at)
+  end
+  ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(44),at)
+  ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(256),at)
+  ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('first_present'),leaf.reg('a',1),.lltarget..operand.integer(mask),at)
+  ignored = two(leaf,'icopy',leaf.reg('a',1),leaf.reg('r',0),at)
+  ignored = two(leaf,'acopy',leaf.reg('a',1),leaf.reg('r',0),at)
+  ignored = namedlabel(leaf,'first_present',at)
+  ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('second_present'),leaf.reg('a',2),.lltarget..operand.integer(256),at)
+  ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(88),at)
+  ignored = two(leaf,'icopy',leaf.reg('a',2),leaf.reg('r',0),at)
+  ignored = two(leaf,'acopy',leaf.reg('a',2),leaf.reg('r',0),at)
+  ignored = namedlabel(leaf,'second_present',at)
+  ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('any_abi'),leaf.reg('a',1),.lltarget..operand.integer(768),at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(-1),at)
+  ignored = namedlabel(leaf,'any_abi',at)
+  ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('nonsymbol'),leaf.reg('a',1),.lltarget..operand.integer(512),at)
+  ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  ignored = namedlabel(leaf,'nonsymbol',at)
+  ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  return draft.finish()
+
+optionalarguments: procedure = .int
+  failures = 0; variant = .int; i = .int; callid = .int; firstbranch = .int; secondbranch = .int; anybranch = .int; symbolbranch = .int
+  copyid = .int; expected = .int; count = .int; domain = .int; whole = .int; sourcewhole = .int; mode = .int
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module; body = .lltarget..body
+  item = .lltarget..record; value = .lltarget..operand
+  facts = .lltargetfacts..analysis; request = .llinline..binding; changed = .llinline..change; limited = .llinline..change
+  do variant = 1 to 8
+    callid = 0; firstbranch = 0; secondbranch = 0; anybranch = 0; symbolbranch = 0; copyid = 0
+    original = optionalmodel(variant)
+    failures = failures + check(original.valid(),'finite optional source is valid ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    body = original.body(original.procedureid('main'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'call' then callid = item.id()
+      if wordpos(item.mnemonic(),'acopy icopy') > 0 then copyid = item.id()
+    end
+    body = original.body(original.procedureid('optional'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() <> 'instruction' | item.mnemonic() <> 'brtpandt' then iterate
+      value = item.operand(1)
+      select value.text()
+        when 'first_present' then firstbranch = item.id()
+        when 'second_present' then secondbranch = item.id()
+        when 'any_abi' then anybranch = item.id()
+        when 'nonsymbol' then symbolbranch = item.id()
+        otherwise nop
+      end
+    end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(facts.status() = 'ok','source-order optional/status proof succeeds ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    count = 2
+    if variant = 6 then count = 3
+    failures = failures + check(facts.arguments(callid) = count,'captured physical arity is independent of optional presence ' || variant)
+    if variant <= 6 then do
+      expected = 2
+      if variant = 2 | variant = 4 then expected = 1
+      if variant = 6 then expected = 0
+      failures = failures + check(facts.branchchoice(callid,firstbranch) = expected,'VAL presence differs from zero, NOTSYM and unknown ABI ' || variant)
+      failures = failures + check(facts.branchchoice(callid,secondbranch) = 1,'second formal observes an earlier aliased default rather than its entry snapshot ' || variant)
+      failures = failures + check(facts.branchchoice(callid,anybranch) = 1,'successful default guarantees some compiler ABI bit at the final check ' || variant)
+      expected = 2
+      if variant = 4 then expected = 1
+      failures = failures + check(facts.branchchoice(callid,symbolbranch) = expected,'NOTSYM is independent and a default ACOPY carries replacement ABI status ' || variant)
+    end
+    else do
+      projection = .llirgraph..access
+      projection = dereference facts.access()
+      domain = facts.integerdomain(facts.storage(copyid,1)); whole = facts.wholedomain(facts.storage(copyid,1)); sourcewhole = facts.wholedomain(facts.storage(copyid,2))
+      if variant = 7 then failures = failures + check(projection.reads(copyid,sourcewhole) & projection.writes(copyid,whole) & projection.writes(copyid,domain) = 0 & projection.kills(copyid,domain) = 0 & projection.kills(copyid,whole) = 0,'ACOPY changes only status, never integer availability or whole-value identity')
+      else failures = failures + check(projection.kills(copyid,domain) & projection.kills(copyid,whole) = 0,'ICOPY changes integer availability while preserving status')
+    end
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('optional'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'changed' & changed.operation(callid) = 0,'finite padded optional call expands ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    if variant = 1 then do
+      graph = dereference original.ir(); before = graph.binary()
+      do mode = 1 to 4
+        select mode
+          when 1 then limited = llinline..expand(request,'closed-main-default-halt.v1',1)
+          when 2 then limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1)
+          when 3 then limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,1)
+          otherwise limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,0)
+        end
+        kept = limited.result(); limitedgraph = dereference kept.ir()
+        failures = failures + check(limited.status() = 'limit' & bin2x(limitedgraph.binary()) = bin2x(before),'optional work/entry/byte/frame refusal is atomic ' || mode)
+      end
+    end
+  end
+  return failures
+
+optionalkeeps: procedure = .int
+  failures = 0; variant = .int; i = .int; callid = .int; reason = .string
+  original = .lltarget..module; kept = .lltarget..module; item = .lltarget..record; body = .lltarget..body
+  request = .llinline..binding; changed = .llinline..change
+  do variant = 9 to 12
+    original = optionalmodel(variant)
+    failures = failures + check(original.valid(),'unproved optional call has valid source structure ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    body = original.body(original.procedureid('main'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = 'instruction' & item.mnemonic() = 'call' then callid = item.id()
+    end
+    select variant
+      when 9 then reason = 'status.mask.unproved'
+      when 10 then reason = 'argument.slot.unproved'
+      when 11 then reason = 'argument.count.unproved'
+      otherwise reason = 'argument.window.unproved'
+    end
+    graph = dereference original.ir(); before = graph.binary()
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('optional'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result()
+    keptgraph = dereference kept.ir()
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = reason & bin2x(keptgraph.binary()) = bin2x(before),'optional missing proof has exact reason and unchanged original ' || variant)
+    if changed.reason() <> reason then say changed.reason()
+  end
+  return failures
+
+/** The first activation sets a private ABI bit without returning/moving that
+ * local. A later activation may not treat its recycled entry as caller data. */
+optionalhistory: procedure = .int
+  failures = 0
+  original = .lltarget..module; kept = .lltarget..module
+  request = .llinline..binding; changed = .llinline..change
+  draft = .lltarget..draft('optional.history','constructed.optional.history',0)
+  at = draft.synthetic('recycled private ABI observation'); root = draft.procedure('main',3,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(1),at)
+  ignored = three(root,'call1',root.reg('r',1),.lltarget..operand.procedure('reused'),root.reg('r',0),at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(0),at)
+  callid = three(root,'call1',root.reg('r',2),.lltarget..operand.procedure('reused'),root.reg('r',0),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('reused',1,at)
+  ignored = two(leaf,'brt',.lltarget..operand.symbol('initialize'),leaf.reg('a',1),at)
+  ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('was_set'),leaf.reg('r',0),.lltarget..operand.integer(256),at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(22),at)
+  ignored = namedlabel(leaf,'was_set',at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(11),at)
+  ignored = namedlabel(leaf,'initialize',at)
+  ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(256),at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'recycled optional status control has valid target structure')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  graph = dereference original.ir(); before = graph.binary()
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('reused'))
+  changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result()
+  keptgraph = dereference kept.ir()
+  failures = failures + check(changed.status() = 'keep' & changed.reason() = 'local.recycler.observation.unproved' & bin2x(keptgraph.binary()) = bin2x(before),'unreset private ABI observation retains exact original instead of assuming fresh or caller-independent status')
+  if changed.reason() <> 'local.recycler.observation.unproved' then say changed.reason()
+  return failures
+
+/** Refine ABI knowledge on separate successors. The combined-mask true edge
+ * is a disjunction; only its false edge establishes both bits clear. */
+abiedgemodel: procedure = .lltarget..module
+  arg mask = .int
+  fields = .object[]
+  draft = .lltarget..draft('abi.edge.' || mask,'constructed.abi.edge',0); at = draft.synthetic('independent ABI successor assumptions')
+  root = draft.procedure('main',5,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  ignored = two(root,'load',root.reg('r',4),.lltarget..operand.integer(5),at)
+  ignored = three(root,'getandtp',root.reg('r',1),root.reg('r',4),.lltarget..operand.integer(768),at)
+  ignored = three(root,'getandtp',root.reg('r',2),root.reg('r',4),.lltarget..operand.integer(768),at)
+  fields[1] = root.reg('r',3) as .object; fields[2] = .lltarget..operand.procedure('probe') as .object
+  fields[3] = root.reg('r',0) as .object; fields[4] = root.reg('r',1) as .object; fields[5] = root.reg('r',2) as .object
+  ignored = root.emit('call3',fields,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('probe',0,at)
+  ignored = two(leaf,'brt',.lltarget..operand.symbol('nonzero_abi'),leaf.reg('a',2),at)
+  ignored = two(leaf,'settp',leaf.reg('a',1),.lltarget..operand.integer(0),at)
+  ignored = one(leaf,'br',.lltarget..operand.symbol('edge_probe'),at)
+  ignored = namedlabel(leaf,'nonzero_abi',at)
+  if mask = 768 then do
+    ignored = two(leaf,'brt',.lltarget..operand.symbol('nonsym_abi'),leaf.reg('a',3),at)
+    ignored = two(leaf,'settp',leaf.reg('a',1),.lltarget..operand.integer(256),at)
+    ignored = one(leaf,'br',.lltarget..operand.symbol('edge_probe'),at)
+    ignored = namedlabel(leaf,'nonsym_abi',at)
+    ignored = two(leaf,'settp',leaf.reg('a',1),.lltarget..operand.integer(512),at)
+  end
+  else ignored = two(leaf,'settp',leaf.reg('a',1),.lltarget..operand.integer(mask),at)
+  ignored = namedlabel(leaf,'edge_probe',at)
+  ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('edge_true'),leaf.reg('a',1),.lltarget..operand.integer(mask),at)
+  testmask = mask
+  if mask = 768 then testmask = 256
+  ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('false_bad'),leaf.reg('a',1),.lltarget..operand.integer(testmask),at)
+  if mask = 768 then ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('false_bad_more'),leaf.reg('a',1),.lltarget..operand.integer(512),at)
+  falsevalue = 22
+  if mask = 768 then falsevalue = 0
+  ignored = one(leaf,'ret',.lltarget..operand.integer(falsevalue),at)
+  ignored = namedlabel(leaf,'false_bad',at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(-1),at)
+  if mask = 768 then do
+    ignored = namedlabel(leaf,'false_bad_more',at)
+    ignored = one(leaf,'ret',.lltarget..operand.integer(-2),at)
+  end
+  ignored = namedlabel(leaf,'edge_true',at)
+  ignored = three(leaf,'brtpandt',.lltarget..operand.symbol('true_ok'),leaf.reg('a',1),.lltarget..operand.integer(testmask),at)
+  falsevalue = -2
+  if mask = 768 then falsevalue = 2
+  ignored = one(leaf,'ret',.lltarget..operand.integer(falsevalue),at)
+  ignored = namedlabel(leaf,'true_ok',at)
+  truevalue = 11
+  if mask = 768 then truevalue = 1
+  ignored = one(leaf,'ret',.lltarget..operand.integer(truevalue),at)
+  return draft.finish()
+
+abiedges: procedure = .int
+  failures = 0; mode = .int; mask = .int; i = .int; callid = .int
+  firstbranch = .int; falsebranch = .int; falsemore = .int; truebranch = .int
+  firstret = .int; secondret = .int; thirdret = .int; badret = .int; badmore = .int
+  masks = .int[]; masks[1] = 256; masks[2] = 512; masks[3] = 768
+  original = .lltarget..module; body = .lltarget..body; item = .lltarget..record; value = .lltarget..operand
+  facts = .lltargetfacts..analysis; request = .llinline..binding; changed = .llinline..change
+  do mode = 1 to masks[0]
+    mask = masks[mode]; callid = 0; firstbranch = 0; falsebranch = 0; falsemore = 0; truebranch = 0
+    firstret = 0; secondret = 0; thirdret = 0; badret = 0; badmore = 0
+    original = abiedgemodel(mask)
+    failures = failures + check(original.valid(),'ABI edge probe has valid target structure ' || mask)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    body = original.body(original.procedureid('main'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = 'instruction' & item.mnemonic() = 'call3' then callid = item.id()
+    end
+    body = original.body(original.procedureid('probe'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() <> 'instruction' then iterate
+      if item.mnemonic() = 'brtpandt' then do
+        value = item.operand(1)
+        select value.text()
+          when 'edge_true' then firstbranch = item.id()
+          when 'false_bad' then falsebranch = item.id()
+          when 'false_bad_more' then falsemore = item.id()
+          when 'true_ok' then truebranch = item.id()
+          otherwise nop
+        end
+      end
+      if item.mnemonic() = 'ret' then do
+        value = item.operand(1)
+        select value.index()
+          when -1 then badret = item.id()
+          when -2 then badmore = item.id()
+          when 0 then firstret = item.id()
+          when 1 then secondret = item.id()
+          when 2 then thirdret = item.id()
+          when 11 then firstret = item.id()
+          when 22 then secondret = item.id()
+          otherwise nop
+        end
+      end
+    end
+    graph = dereference original.ir(); before = graph.binary()
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(facts.status() = 'ok','entry-independent ABI edge assumptions preserve legality ' || mask)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    failures = failures + check(facts.branchchoice(callid,firstbranch) = 0,'initial unknown ABI test preserves both successors ' || mask)
+    failures = failures + check(facts.branchchoice(callid,falsebranch) = 2 & facts.recordlive(callid,badret) = 0,'false successor independently knows its tested ABI bit is clear ' || mask)
+    failures = failures + check(facts.recordlive(callid,firstret) & facts.recordlive(callid,secondret),'distinct normal returns on both ABI successors remain live ' || mask)
+    if mask = 768 then do
+      failures = failures + check(facts.branchchoice(callid,falsemore) = 2 & facts.recordlive(callid,badmore) = 0,'false combined-mask successor clears both VAL and NOTSYM')
+      failures = failures + check(facts.branchchoice(callid,truebranch) = 0 & facts.recordlive(callid,thirdret) & facts.returns(callid) = 3,'true combined-mask successor cannot invent either individual bit or lose its two possible returns')
+    end
+    else do
+      failures = failures + check(facts.branchchoice(callid,truebranch) = 1 & facts.recordlive(callid,badmore) = 0 & facts.returns(callid) = 2,'true single-bit knowledge does not leak into the sibling false successor ' || mask)
+    end
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('probe'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1')
+    failures = failures + check(changed.status() = 'changed' & changed.operation(callid) = 0,'ABI successor proof expands with its distinct reached returns ' || mask)
+    if changed.status() <> 'changed' then say changed.reason()
+    failures = failures + check(bin2x(graph.binary()) = bin2x(before),'ABI edge proof preserves its exact frozen input ' || mask)
+  end
+  return failures
+
 dagpositive: procedure = .int
   arg variant = .int
   failures = 0; i = .int; callid = .int; firstret = .int; secondret = .int; branchid = .int; mode = .int
@@ -923,5 +1258,6 @@ main: procedure = .int
   failures = failures + globalscalar()
   failures = failures + calleetail()
   failures = failures + dagpositive(1) + dagpositive(2) + dagpositive(3) + dagkeeps()
+  failures = failures + optionalarguments() + optionalkeeps() + optionalhistory() + abiedges()
   say 'CONSTRUCTED_INLINE|failures=' || failures
   return failures

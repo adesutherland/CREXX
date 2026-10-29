@@ -79,6 +79,7 @@ shapes: procedure = .int
   failures = 0; i = .int; direct = .int; falseexit = .int; trueexit = .int; sourceid = .int; traceid = .int
   aliasid = .int; labelid = .int; tailid = .int; clearid = .int; backward = .int; backexit = .int
   falsebranch = .int; dualbranch = .int; samebranch = .int; exitid = .int; cleartail = .int; edge = .int
+  statusbranch = .int; statusfall = .int
   headid = .int; loadid = .int; addid = .int; endret = .int
   original = .lltarget..module; restored = .lltarget..module; rejected = .lltarget..module
   draft = .lltarget..draft; root = .lltarget..bodydraft; leaf = .lltarget..bodydraft
@@ -119,6 +120,13 @@ shapes: procedure = .int
   leaf = draft.procedure('sameedge',1,at)
   samebranch = three(leaf,'brtf',.lltarget..operand.symbol('same_target'),.lltarget..operand.symbol('same_target'),leaf.reg('r',0),at)
   ignored = namedlabel(leaf,'same_target',at); ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('statusbranch',1,at)
+  ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(0),at)
+  ignored = two(leaf,'settp',leaf.reg('r',0),.lltarget..operand.integer(256),at)
+  statusbranch = three(leaf,'brtpandt',.lltarget..operand.symbol('status_present'),leaf.reg('r',0),.lltarget..operand.integer(256),at)
+  statusfall = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  ignored = namedlabel(leaf,'status_present',at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(1),at)
   leaf = draft.procedure('exitonly',0,at)
   exitid = one(leaf,'exit',.lltarget..operand.integer(0),at)
   leaf = draft.procedure('cleartail',0,at)
@@ -169,6 +177,8 @@ shapes: procedure = .int
   failures = failures + check(op.successors() = 2 & op.successor(1) = body.labelblock('dual_yes') & op.successor(2) = body.labelblock('dual_no'),'BRTF edges follow its target operand order')
   body = original.body(original.procedureid('sameedge')); op = graph.operation(samebranch)
   failures = failures + check(op.successors() = 2 & op.successor(1) = op.successor(2),'same-name BRTF retains both ordered edges')
+  body = original.body(original.procedureid('statusbranch')); op = graph.operation(statusbranch); item = original.at(statusfall)
+  failures = failures + check(body.normalcfgcomplete() & op.successors() = 2 & op.successor(1) = body.labelblock('status_present') & op.successor(2) = item.blockid(),'BRTPANDT has its exact label edge followed by lexical fallthrough')
   op = graph.operation(exitid); item = original.at(exitid)
   failures = failures + check(op.successors() = 0 & item.mnemonic() = 'exit','EXIT is terminal without becoming a normal RET')
   body = original.body(original.procedureid('cleartail')); item = original.at(cleartail)
@@ -180,6 +190,11 @@ shapes: procedure = .int
   failures = failures + check(decoded.error() = '','wrong same-function edge remains structurally well-formed generic IR')
   rejected = .lltarget..module(decoded)
   failures = failures + check(rejected.valid() = 0,'target validation rejects well-formed edge that disagrees with branch label')
+  op = graph.operation(statusbranch); edge = store.get(3,statusbranch,8)
+  damaged = tablefield(image,7,edge,1,op.successor(2)); decoded = llir..loadbinary(contract,damaged)
+  failures = failures + check(decoded.error() = '','wrong BRTPANDT target is well-formed generic same-function IR')
+  rejected = .lltarget..module(decoded)
+  failures = failures + check(rejected.valid() = 0 & pos('LL_TARGET_CFG',rejected.error()) > 0,'decoded target validates BRTPANDT target/fallthrough independently')
   /* Keep the block's first/last rows and all ownership intact. Only its two
    * interior source instructions exchange execution order: facts would see
    * LOAD1,IADD3,LOAD2 while source-order rendering still emits LOAD1,LOAD2,IADD3. */

@@ -980,7 +980,7 @@ retained counted-call windows remain intact. The typed assignment owner now
 compacts complete live cells and reuses disjoint fresh-root plain scalar cells
 only with checked entry, component/status and whole-reset premises. Sparse
 registers alone do not meet the wider reuse requirement. Wider CFG, deeper
-nesting, optional presence/defaults, dynamic varargs, reference/aggregate,
+nesting, dynamic varargs, reference/aggregate,
 imported/foreign-global and wider context coverage remains open in
 INL-STEP04/05.
 
@@ -989,7 +989,7 @@ INL-STEP04/05.
 Target schema version 2 separates source-visible control records from ordinary
 records. The draft cursor creates real L blocks for RXAS address groups, and
 structural label-entry jumps resolve forward and alias declarations without
-appearing in rendered RXAS. `BR`, `BRT`, `BRF` and `BRTF` have checked ordered
+appearing in rendered RXAS. `BR`, `BRT`, `BRF`, `BRTF` and `BRTPANDT` have checked ordered
 normal edges; `RET` and `EXIT` have none. Other flow forms remain transportable
 with an incomplete normal CFG proof. A signal-capable normal instruction does
 not by itself make its represented normal edges incomplete. The target
@@ -1031,7 +1031,8 @@ linear profile. The shared `llirgraph` RPO/SCC index supplies reachability and
 cycle checks. Each feasible path snapshots the complete scalar component and
 status state and the active/base/identity/context frame bindings. A join keeps
 an integer constant only when every incoming path proves the same value;
-`wholeknown` remains entry-independence and status has a separate known bit.
+`wholeknown` remains entry-independence and compiler ABI status has separate
+known bits for `VAL` and `NOTSYM`.
 An unknown but defined integer branch condition takes both zero and nonzero
 arms, including values other than one. Incompatible bindings, undefined
 conditions, cycles, abrupt exits and nested calls in branch bodies retain the
@@ -1054,6 +1055,28 @@ with a single-return `CNOP` carrier. The target draft also checks initial
 catalogue allocations before using their handles, preserving a resource-limit
 diagnosis for very small entry budgets and allowing the inliner to return the
 unchanged original.
+
+### Finite optional scalar prologues
+
+An admitted caller supplies the actual physical argument cells, including any
+padded omitted cells, and a proved count/window. Expansion does not create
+missing cells or equate count with presence. The callee's executable prologue
+runs in source order against current active bindings, so an earlier default
+can change a later test when formals alias. `BRTPANDT` reads the VM's readable
+status band; the proof handles masks 256 (`VAL`), 512 (`NOTSYM`) and their union
+768, with per-bit knownness independent of integer value and whole-cell
+identity. `SETTP` follows public-band write semantics; NULL resets the ABI
+band, whole COPY/MOVE and ACOPY carry it, and ICOPY preserves it. Required
+copies and status writes remain executable in the conservative expansion.
+
+For an unknown but caller-independent one-bit presence test, the taken and
+fallthrough successors receive separate facts with that bit respectively set
+and clear. A false union test clears both; a true union test alone does not
+identify either bit. Joins retain only facts true on all incoming paths.
+An unreset recycled local whose status can depend on an earlier activation
+stays an ordinary call. Unsupported masks, missing physical cells and unproved
+count/window retain their exact input with specific reasons. This is finite
+physical-cell specialization; arbitrary dynamic varargs remain open.
 
 ### Acyclic caller cleanup
 
@@ -1142,8 +1165,9 @@ is bounded by captured entry arity, even if the body changes the integer in
 so preceding SWAP/LINK effects remain visible. A known-passing `ICHKRNG`
 keeps its exact instruction; unproved or failing guards retain the call under
 the current signal profile. Raw LINKARG gains no invented range signal.
-Status presence, conditional guards and optional defaults still need their
-separate component/control proof.
+Finite padded optional presence and defaults use the separate ABI-bit and
+control proof above. Dynamic-count access and other component/status bands
+remain open.
 
 Private same-module scalar globals now use one persistent module StorageId per
 `gN`, shared through fresh and recycled callee frames. The physical frame order

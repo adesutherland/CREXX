@@ -139,6 +139,47 @@ foreach(_case branch dag-values)
   endforeach()
 endforeach()
 
+# Presence is compiler ABI status, independently of integer zero and NOTSYM.
+# The fifth pair proves sequential defaults on two aliases of the same cell;
+# the last pairs distinguish status-only ACOPY from integer-only ICOPY.
+foreach(_mode conservative cleaned)
+  set(_cleanup_option)
+  if(_mode STREQUAL "conservative")
+    set(_cleanup_option --no-cleanup)
+  endif()
+  set(_product "${WORK}/optional-${_mode}")
+  run_checked("inline finite optional prologues (${_mode})" "${VM}" "${CLI}" ${RUNTIME} -a
+    --module io-optional.rxas --profile closed-main-default-halt.v1 ${_cleanup_option}
+    -o "${_product}.rxas" "${FIXTURES}/io-optional.rxas")
+  caller_instructions("${_product}.rxas" main _caller)
+  set(_attribute_copies 0)
+  set(_integer_copies 0)
+  set(_return_copies 0)
+  foreach(_instruction IN LISTS _caller)
+    if(_instruction MATCHES "^[ \t]*(call[0-9]*|swapcall|settpswapcall|settpcall)[ \t]")
+      message(FATAL_ERROR "${_mode} optional caller retained a selected finite call")
+    endif()
+    if(_instruction MATCHES "^[ \t]*acopy[ \t]")
+      math(EXPR _attribute_copies "${_attribute_copies} + 1")
+    elseif(_instruction MATCHES "^[ \t]*icopy[ \t]")
+      math(EXPR _integer_copies "${_integer_copies} + 1")
+    elseif(_instruction MATCHES "^[ \t]*copy[ \t]")
+      math(EXPR _return_copies "${_return_copies} + 1")
+    endif()
+  endforeach()
+  if(NOT _attribute_copies EQUAL 4 OR NOT _integer_copies EQUAL 4 OR NOT _return_copies EQUAL 7)
+    message(FATAL_ERROR "${_mode} optional caller lost required default/status/integer or borrowed-return copies")
+  endif()
+  run_checked("assemble finite optional prologues (${_mode})" "${ASSEMBLER}" -n
+    -o "${_product}" "${_product}.rxas")
+  run_checked("execute finite optional prologues (${_mode})" "${VM}" "${_product}.rxbin")
+  string(REPLACE "\r\n" "\n" _normalized "${_last_stdout}")
+  string(STRIP "${_normalized}" _result)
+  if(NOT _result STREQUAL "44\n256\n0\n256\n44\n256\n7\n768\n44\n256\n7\n512\n9\n256")
+    message(FATAL_ERROR "${_mode} optional caller differs from independent value/status pairs: '${_result}'")
+  endif()
+endforeach()
+
 # Checked arithmetic after an unequal-value join succeeds on every feasible
 # endpoint. Integer writes preserve the compiler flag band on the returned cell.
 foreach(_mode conservative cleaned)

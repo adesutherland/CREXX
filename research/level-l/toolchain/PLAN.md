@@ -124,8 +124,8 @@ require separate decisions.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The recommended preservation policy, shared target expansion/cleanup boundary and private-global binding direction are accepted. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Exact-bound imported helpers and broader profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, and acyclic direct-branch scalar multiple returns are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, optional presence/defaults and dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
-| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage meets, bounded integer success across acyclic joins and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf, finite LINKARG/known-passing ICHKRNG, private same-module scalar globals, acyclic direct-branch scalar multiple returns, and finite padded optional scalar prologues are implemented and focused-qualified. Direct target CFG transport/validation and detached-scope closure are focused-qualified. Complete broader aliasing, dynamic varargs, branch-local metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
@@ -687,7 +687,8 @@ linear cleanup keeps a changed branched caller until its graph-aware mapping
 and placement proofs are reviewed. Meet caller-visible and recycled owned-base
 state after each feasible return transfer; a recycled cell is known reset only
 when every normal exit proves it. Full
-optional/default/presence, loops and exceptional unwinding are later categories.
+Finite padded optional presence/defaults are qualified below; dynamic varargs,
+loops and exceptional unwinding remain later categories.
 
 ### Reviewed acyclic multi-return increment
 
@@ -871,6 +872,62 @@ bounds. Subtraction/multiplication boundaries, aliased destination, status
 preservation and tight resource limits have focused controls in the existing
 storage/CLI development lane with native assembler optimization disabled and
 one VM. Broader acceptance stays INL-STEP06.
+
+### Reviewed finite optional scalar prologue increment
+
+INL-STEP04 next admits direct calls whose caller already supplies a fixed,
+captured set of physical argument cells, including genuinely padded omitted
+optional cells. The original arity, current active pointer for each cell and
+the result target remain the call contract. A raw CALL with fewer physical
+cells acquires neither padding nor default values. Count is not presence:
+`REGTP_VAL` (256) and `REGTP_NOTSYM` (512) are independent ABI bits. Evaluate
+each callee prologue in source order against its reached StorageId; an earlier
+default or alias write may affect a later formal. Preserve default operations,
+source/TRACE and scoped metadata and required copy/snapshot/status effects.
+
+The existing BRTPANDT LRI opcode gains a truthful two-edge target CFG: one
+label edge and one fallthrough edge, in draft construction and independent
+decoded-graph validation. This uses the existing generic L terminal contract
+and unchanged ISA/VM behavior. The scalar fact owner tracks the compiler ABI
+status band separately from integer exactness, payload and whole-cell state.
+SETTP replaces only requested public bands; a zero/public-empty request clears
+the ABI band, while a non-ABI public write preserves it. NULL resets it,
+whole COPY/MOVE and status-only ACOPY carry it, and ICOPY leaves it unchanged.
+The first branch proof admits masks 256, 512 and 768, testing the actual
+readable status bits at the current active source. ABI entry-independence is a
+separate per-storage fact: fresh/reset or definite ABI writes establish it,
+whole/status copies carry it, and feasible joins meet it. Unknown but
+entry-independent ABI state explores both edges; an unreset recycled local
+whose status may depend on a prior activation keeps the call. Unsupported
+masks keep the call with a specific reason.
+An ACOPY changes status only, never the integer component, and the proof does
+not infer other status bands from ABI knowledge. Existing checked arithmetic,
+slot identity, recycled-history and return obligations still apply.
+
+Constructed target CFG controls include wrong-but-well-formed edges. Native B
+noopt optional output and a small independently authored scalar prologue
+provide behavioral patterns, not native correctness authority. Focused
+positive cases cover omitted, supplied-zero and nonzero values, VAL/NOTSYM
+combinations, sequential defaults, aliased actuals and required status copies.
+Unknown count/window, missing physical cells, unsupported masks and unproved
+recycled ABI history keep the exact input with stable reasons; tight budgets
+remain atomic.
+When an entry-independent BRTPANDT result is unknown, carry separate path
+states for its two successors. For a one-bit VAL or NOTSYM mask, the taken
+edge knows that bit set and the fallthrough edge knows it clear; a zero result
+for the combined 768 mask clears both bits. Retain independence and all other
+component facts. Meet these refined states at a join, and charge their copies
+to the existing path/resource budget. This permits later presence checks to
+use facts established by an earlier test without assuming a value on the
+opposite edge. The combined-mask taken edge remains a disjunction unless other
+facts already identify its member; it must not manufacture a particular bit.
+Constructed controls probe repeated presence tests in both successors for
+each one-bit mask, with distinct reached returns, so a sibling-state leak or
+missing edge refinement is observable. A three-way 0/VAL/NOTSYM input probes
+the union mask: false clears both, while true leaves the member unresolved.
+Check conservative and cleaned RXAS with native assembler optimization disabled
+and one VM, plus the affected constructed/target/CLI lanes. Wider aggregate,
+dynamic-count and exception coverage remains open in INL-STEP04/05.
 
 ### Required native bootstrap correctness repair
 

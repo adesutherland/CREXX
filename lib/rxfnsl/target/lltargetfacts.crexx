@@ -66,8 +66,9 @@ cells: class
   _bounded = .int[]
   _low = .int[]
   _high = .int[]
-  _flags = .int[]
-  _flagsknown = .int[]
+  _abiknown = .int[]
+  _abibits = .int[]
+  _abiindependent = .int[]
   _wholeknown = .int[]
   _zeroed = .int[]
   *: factory
@@ -75,9 +76,10 @@ cells: class
   add: method = .int
     arg defined = 0, known = 0, value = 0
     n = _defined[0] + 1
-    _defined[n] = defined; _known[n] = known; _values[n] = value; _plain[n] = 1; _flags[n] = 0
-    _wholeknown[n] = 1; _zeroed[n] = 0; _flagsknown[n] = 1
+    _defined[n] = defined; _known[n] = known; _values[n] = value; _plain[n] = 1
+    _wholeknown[n] = 1; _zeroed[n] = 0
     _bounded[n] = defined & known; _low[n] = value; _high[n] = value
+    _abiknown[n] = 768; _abibits[n] = 0; _abiindependent[n] = 1
     return n
   defined: method = .int
     arg id = .int
@@ -100,18 +102,42 @@ cells: class
   plain: method = .int
     arg id = .int
     return _plain[id]
-  flags: method = .int
+  abiknown: method = .int
     arg id = .int
-    return _flags[id]
-  flagsknown: method = .int
+    return _abiknown[id]
+  abibits: method = .int
     arg id = .int
-    return _flagsknown[id]
+    return _abibits[id]
+  abiindependent: method = .int
+    arg id = .int
+    return _abiindependent[id]
+  /* Refine a validated branch edge, not the runtime value. No integer,
+   * payload, freshness or entry-independence fact changes with the test. */
+  refineabi: method = .void
+    arg id = .int, mask = .int, taken = .int
+    known = .int; bits = .int; other = .int
+    known = _abiknown[id]; bits = _abibits[id]
+    if taken = 0 | mask <> 768 then do
+      other = 768 - mask
+      assembler iand known,known,other
+      assembler iand bits,bits,other
+      known = known + mask
+      if taken then bits = bits + mask
+      _abiknown[id] = known; _abibits[id] = bits
+    end
+    /* A true combined test is an OR, not two set bits. Only an already
+     * known-clear member identifies which other member must be set. */
+    else if bits = 0 & (known = 256 | known = 512) then do
+      _abiknown[id] = 768; _abibits[id] = 768 - known
+    end
+    return
   size: method = .int
     return _defined[0]
   /* Whole-known means entry independence, not identical bits across paths.
-   * The status token tracks authored public flags, never protected VM bits. */
+   * Exact status knowledge is limited to the separately tracked ABI bits. */
   meet: method = .int
     arg other = .cells
+    known = .int; different = .int; same = .int; otherknown = .int; otherbits = .int; bits = .int
     if size() <> other.size() then return 0
     do i = 1 to size()
       _defined[i] = _defined[i] & other.defined(i)
@@ -126,8 +152,15 @@ cells: class
       _plain[i] = _plain[i] & other.plain(i)
       _wholeknown[i] = _wholeknown[i] & other.wholeknown(i)
       _zeroed[i] = _zeroed[i] & other.zeroed(i)
-      _flagsknown[i] = _flagsknown[i] & other.flagsknown(i) & (_flags[i] = other.flags(i))
-      if _flagsknown[i] = 0 then _flags[i] = 0
+      otherknown = other.abiknown(i); otherbits = other.abibits(i); bits = _abibits[i]
+      known = _abiknown[i]
+      assembler iand known,known,otherknown
+      assembler ixor different,bits,otherbits
+      same = 768 - different
+      assembler iand known,known,same
+      assembler iand bits,bits,known
+      _abiknown[i] = known; _abibits[i] = bits
+      _abiindependent[i] = _abiindependent[i] & other.abiindependent(i)
     end
     return 1
   wholeknown: method = .int
@@ -140,8 +173,9 @@ cells: class
     arg id = .int
     /* The scalar profile proves no native/reference payload was created.
      * Recycled ordinary components/status still cannot be assumed fresh. */
-    _defined[id] = 0; _known[id] = 0; _wholeknown[id] = 0; _zeroed[id] = 0; _flagsknown[id] = 0
+    _defined[id] = 0; _known[id] = 0; _wholeknown[id] = 0; _zeroed[id] = 0
     _bounded[id] = 0; _low[id] = 0; _high[id] = 0
+    _abiknown[id] = 0; _abibits[id] = 0; _abiindependent[id] = 0
     return
   integer: method = .void
     arg id = .int, known = .int, value = 0
@@ -161,17 +195,19 @@ cells: class
     return
   reset: method = .void
     arg id = .int
-    _defined[id] = 1; _known[id] = 1; _values[id] = 0; _plain[id] = 1; _flags[id] = 0
-    _wholeknown[id] = 1; _zeroed[id] = 1; _flagsknown[id] = 1
+    _defined[id] = 1; _known[id] = 1; _values[id] = 0; _plain[id] = 1
+    _wholeknown[id] = 1; _zeroed[id] = 1
     _bounded[id] = 1; _low[id] = 0; _high[id] = 0
+    _abiknown[id] = 768; _abibits[id] = 0; _abiindependent[id] = 1
     return
   copy: method = .void
     arg destination = .int, source = .int, whole = 1
     _defined[destination] = _defined[source]; _known[destination] = _known[source]; _values[destination] = _values[source]
     _bounded[destination] = _bounded[source]; _low[destination] = _low[source]; _high[destination] = _high[source]
     if whole then do
-      _plain[destination] = _plain[source]; _flags[destination] = _flags[source]
-      _flagsknown[destination] = _flagsknown[source]
+      _plain[destination] = _plain[source]
+      _abiknown[destination] = _abiknown[source]; _abibits[destination] = _abibits[source]
+      _abiindependent[destination] = _abiindependent[source]
       _wholeknown[destination] = _wholeknown[source]; _zeroed[destination] = _zeroed[source]
     end
     else _zeroed[destination] = 0
@@ -184,7 +220,25 @@ cells: class
     return
   status: method = .void
     arg id = .int, flags = .int
-    _flags[id] = flags; _zeroed[id] = 0; _flagsknown[id] = 1
+    publicbits = .int; abi = .int
+    /* rxflags_public_write: public bits are 8..30, compiler ABI is 8..9.
+     * Masking also performs the VM's uint32_t truncation for these bands.
+     * A nonzero request in another band leaves the compiler band intact. */
+    assembler iand publicbits,flags,2147483392
+    assembler iand abi,flags,768
+    if publicbits = 0 then do; _abiknown[id] = 768; _abibits[id] = 0; _abiindependent[id] = 1; end
+    else if abi <> 0 then do; _abiknown[id] = 768; _abibits[id] = abi; _abiindependent[id] = 1; end
+    _zeroed[id] = 0
+    return
+  statuscopy: method = .void
+    arg destination = .int, source = .int
+    /* ACOPY copies the native full status word. Only its ABI subfacts are
+     * interpreted here; no integer/payload or whole-known proof follows from
+     * ABI knowledge alone. Preserve the instruction for all other bands. */
+    _abiknown[destination] = _abiknown[source]; _abibits[destination] = _abibits[source]
+    _abiindependent[destination] = _abiindependent[source]
+    _wholeknown[destination] = _wholeknown[destination] & _wholeknown[source]
+    _zeroed[destination] = 0
     return
   string: method = .void
     arg id = .int
@@ -581,9 +635,9 @@ analysis: class
   /* Include transient and retained deep copies, not an assumed VM COW path. */
   pathallowance: method = .int
     arg cells = .int, slots = .int
-    if reserve(cells,352) = 0 | reserve(slots,128) = 0 | reserve(1,256) = 0 then return 0
-    if cells > _work / 44 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-    if spend(cells * 44) = 0 then return 0
+    if reserve(cells,384) = 0 | reserve(slots,128) = 0 | reserve(1,256) = 0 then return 0
+    if cells > _work / 48 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(cells * 48) = 0 then return 0
     if slots > _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     return spend(slots * 16)
   joinpath: method = .int
@@ -633,9 +687,10 @@ analysis: class
     arg bodyid = .int, expose entryframe = .frame, expose state = .cells, destination = .int, hasresult = .int, expose proof = .callproof, expose selectors = .int[], publish = 1, callid = 0, root = 0
     i = .int; b = .int; opid = .int; target = .int; edge = .int; choice = .int; returned = .int; exits = .int; id = .int; j = .int; retid = .int
     incoming = .cells[]; frames = .frame[]; present = .int[]
-    path = .cells; merged = .cells; view = .frame; item = .lltarget..record; value = .lltarget..operand
+    path = .cells; edgepath = .cells; merged = .cells; view = .frame; item = .lltarget..record; value = .lltarget..operand
     source_ref = reference .cells; view_ref = reference .frame; path_ref = reference .cells; pathview_ref = reference .frame
-    name = .string; flow = .int
+    name = .string; flow = .int; mask = .int; known = .int; bits = .int; selected = .int
+    refinementid = .int; refinementmask = .int
     module = dereference _owner; catalog = .llrxascatalog..catalog()
     if _cyclesready = 0 then do
       _cycles = _index.loops(_work,_bytelimit)
@@ -663,7 +718,7 @@ analysis: class
       if pathallowance(state.size(),entryframe.slots()) = 0 then return 0
       source_ref = reference incoming[b]; view_ref = reference frames[b]
       path = snapshot source_ref; view = snapshot view_ref
-      choice = 0; returned = 0; opid = _index.firstop(b)
+      choice = 0; returned = 0; refinementid = 0; refinementmask = 0; opid = _index.firstop(b)
       do while opid > 0
         if spend(1) = 0 then return 0
         if _index.opcode(opid) <= 16 then do; opid = _index.nextop(opid); iterate; end
@@ -684,6 +739,25 @@ analysis: class
           end
           if flow = 1 | flow = 2 then do
             if name = 'br' then choice = 1
+            else if name = 'brtpandt' then do
+              value = item.operand(3); mask = value.index()
+              if mask <> 256 & mask <> 512 & mask <> 768 then return reject('status.mask.unproved')
+              value = item.operand(2)
+              if value.bank() = 'a' then do
+                if value.index() > view.arguments() then return reject('argument.slot.unproved')
+              end
+              id = view.storage(value)
+              if id = 0 then return reject('argument.slot.unproved')
+              if globalcell(id) & path.wholeknown(id) = 0 then return reject('global.definition.unproved')
+              if path.abiindependent(id) = 0 then return reject('local.recycler.observation.unproved')
+              if spend(4) = 0 then return 0
+              known = path.abiknown(id); bits = path.abibits(id)
+              assembler iand selected,bits,mask
+              assembler iand known,known,mask
+              if selected <> 0 then choice = 1
+              else if known = mask then choice = 2
+              if choice = 0 then do; refinementid = id; refinementmask = mask; end
+            end
             else if wordpos(name,'brt brf brtf') > 0 then do
               value = item.operand(item.operands()); id = view.storage(value)
               if id = 0 | path.defined(id) = 0 then return reject('branch.condition.unproved')
@@ -734,9 +808,23 @@ analysis: class
         if choice > 0 & edge <> choice then iterate
         target = _index.successor(b,edge)
         if pathallowance(state.size(),entryframe.slots()) = 0 then return 0
+        if refinementid > 0 then do
+          /* This extra status-refined snapshot is distinct from both the
+           * immutable predecessor and the ordinary stored incoming copy. */
+          if reserve(state.size(),96) = 0 then return 0
+          if state.size() > _work / 12 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+          if spend(state.size() * 12) = 0 | spend(1) = 0 then return 0
+          path_ref = reference path; edgepath = snapshot path_ref
+          call edgepath.refineabi(refinementid,refinementmask,edge = 1)
+          source_ref = reference edgepath
+        end
+        else source_ref = reference path
         if present[target] = 0 then do
-          path_ref = reference path; pathview_ref = reference view
-          incoming[target] = snapshot path_ref; frames[target] = snapshot pathview_ref; present[target] = 1
+          pathview_ref = reference view
+          incoming[target] = snapshot source_ref; frames[target] = snapshot pathview_ref; present[target] = 1
+        end
+        else if refinementid > 0 then do
+          if joinpath(reference incoming[target],reference frames[target],edgepath,view) = 0 then return 0
         end
         else if joinpath(reference incoming[target],reference frames[target],path,view) = 0 then return 0
       end
@@ -925,7 +1013,7 @@ analysis: class
     if catalog.policyeffect(opcode) <> 0 & (name <> 'ichkrng' | item.operands() <> 3) then return reject('signal.policy.unproved')
     /* Native canonical component/cleanup metadata supplies the use adapter;
      * transfer code below still proves write availability and plain ownership. */
-    if wordpos(name,'link unlink swap linkarg endlife') = 0 then do i = 1 to item.operands()
+    if wordpos(name,'link unlink swap linkarg endlife acopy') = 0 then do i = 1 to item.operands()
         value = item.operand(i)
         if value.kind() <> 'R' then iterate
         id = view.storage(value)
@@ -957,7 +1045,7 @@ analysis: class
         else if value.kind() <> 'I' then return reject('profile.return.component.pending')
       end
     end
-    else if name = 'cnop' | (_graphmode & wordpos(name,'br brt brf brtf') > 0) then nop
+    else if name = 'cnop' | (_graphmode & wordpos(name,'br brt brf brtf brtpandt') > 0) then nop
     else if name = 'ichkrng' then do
       if spend(3) = 0 | reserve(3,8) = 0 then return 0
       do i = 1 to 3
@@ -1025,7 +1113,7 @@ analysis: class
       end
       if record then _mapping[item.id()] = 1
     end
-    else if wordpos(name,'null load copy icopy move settp getandtp endlife iadd isub imult itos say') > 0 then do
+    else if wordpos(name,'null load copy icopy move acopy settp getandtp endlife iadd isub imult itos say') > 0 then do
       if name = 'say' then do
         if private then return reject('profile.callee.external.effect.pending')
         value = item.operand(1)
@@ -1040,6 +1128,13 @@ analysis: class
         end
         else if name = 'settp' then do
           value = item.operand(2); call state.status(destination,value.index())
+        end
+        else if name = 'acopy' then do
+          right = item.operand(2); sourceid = view.storage(right)
+          if sourceid = 0 then return reject('profile.external.storage.pending')
+          if globalcell(sourceid) & state.wholeknown(sourceid) = 0 then return reject('global.definition.unproved')
+          call insert(reference reads,domain(sourceid,1))
+          call state.statuscopy(destination,sourceid)
         end
         else if name = 'getandtp' then do
           if private then return reject('profile.callee.status.observer.pending')
@@ -1119,7 +1214,8 @@ analysis: class
         /* A whole-cell domain observes every numeric/status side component.
          * Definite scalar kills are narrower; whole copy/move/null kill both. */
         if name <> 'endlife' then do
-          call insert(reference writes,domain(destination)); call insert(reference writes,domain(destination,1))
+          if name <> 'acopy' then call insert(reference writes,domain(destination))
+          call insert(reference writes,domain(destination,1))
         end
         if wordpos(name,'null copy move') > 0 then do
           call insert(reference kills,domain(destination)); call insert(reference kills,domain(destination,1))
@@ -1262,7 +1358,7 @@ analysis: class
       else child = .frame(state_ref,callee.locals(),actuals,0,view.context(),owned)
     end
     else do
-      if reserve(callee.locals() + 1,112) = 0 then return 0
+      if reserve(callee.locals() + 1,120) = 0 then return 0
       if _globals[0] > 0 then do
         if spend(callee.locals() + 1) = 0 then return 0
         do i = 1 to callee.locals(); owned[i] = state.add(); end
@@ -1418,11 +1514,11 @@ analysis: class
     if spend(body.locals() + 1) = 0 then return
     state = .cells(); empty = .int[]
     if module.globals() = 0 then do
-      if reserve(body.locals() + 1,136) = 0 then return
+      if reserve(body.locals() + 1,144) = 0 then return
       view = .frame(reference state,body.locals(),empty,1)
     end
     else do
-      if reserve(body.locals() + 1,160) = 0 | reserve(module.globals(),160) = 0 then return
+      if reserve(body.locals() + 1,168) = 0 | reserve(module.globals(),168) = 0 then return
       if spend(body.locals() + 1) = 0 | spend(module.globals()) = 0 | spend(module.globals()) = 0 then return
       /* Keep root r StorageIds 1..L. Module bases persist independently of
        * every procedure's physical r/g/a map and owned local/a0 cache. */
