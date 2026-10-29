@@ -192,6 +192,153 @@ catchmodel: procedure = .lltarget..module
   ignored = leaf.record('.meta',fields,at)
   return draft.finish()
 
+boundprojection: procedure = .void
+  arg root = .lltarget..bodydraft, kind = .int, output = .int, event = .int, raw = .int, field = .int, variant = .int, at = .llir..origin
+  ignored = three(root,'linkattr1',root.reg('r',raw),root.reg('r',event),.lltarget..operand.integer(5),at)
+  index = .lltarget..operand.integer(kind)
+  if variant = 13 & kind = 1 then index = .lltarget..operand.integer(2)
+  if variant = 14 & kind = 1 then index = root.reg('r',3)
+  ignored = three(root,'linkattr1',root.reg('r',field),root.reg('r',raw),index,at)
+  name = 'copy'; if kind = 5 & variant <> 15 then name = 'scopy'
+  ignored = two(root,name,root.reg('r',output),root.reg('r',field),at)
+  if variant = 12 & kind = 1 then ignored = one(root,'null',root.reg('r',field),at)
+  ignored = one(root,'unlink',root.reg('r',field),at)
+  ignored = one(root,'unlink',root.reg('r',raw),at)
+  ignored = one(root,'null',root.reg('r',field),at)
+  ignored = one(root,'null',root.reg('r',raw),at)
+  return
+
+boundmodel: procedure = .lltarget..module
+  arg variant = .int, expose callid = .int, expose handlerid = .int
+  draft = .lltarget..draft('bound.' || variant,'constructed.bound.' || variant,0)
+  at = draft.synthetic('caller-owned bound event and exact restored consumers')
+  root = draft.procedure('main',12,at); i = .int
+  tags = 'FAILURE ERROR OVERFLOW_UNDERFLOW DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OUT_OF_RANGE UNICODE_ERROR REFERENCE_INVALID OBJECT_NOT_INITIALIZED RXBIN_CORRUPTION UNKNOWN_INSTRUCTION FUNCTION_NOT_FOUND NOT_IMPLEMENTED INVALID_SIGNAL_CODE NOTREADY CANCEL QUIT TERM POSIX_INT POSIX_HUP POSIX_USR1 POSIX_USR2 POSIX_CHLD CHANNEL_ERROR TASK_FAILURE CLASSIC_SYNTAX CLASSIC_CONDITION OTHER'
+  event = 4; raw = 5; field = 6; code = 7
+  if variant = 7 then event = 0
+  if variant = 8 then code = 0
+  if variant = 9 then field = raw
+  input = 3; if variant = 1 then input = 12
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(input),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(99),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(0),at)
+  if variant >= 2 & variant <= 5 then do
+    flags = 0; if variant = 3 | variant = 5 then flags = 256
+    ignored = two(root,'settp',root.reg('r',3),.lltarget..operand.integer(flags),at)
+    ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',3),.lltarget..operand.integer(256),at)
+  end
+  if variant <> 11 then ignored = one(root,'null',root.reg('r',event),at)
+  ignored = two(root,'load',root.reg('r',event),.lltarget..operand.integer(321),at)
+  if variant <> 10 then ignored = one(root,'null',root.reg('r',raw),at)
+  ignored = one(root,'null',root.reg('r',field),at)
+  ignored = two(root,'load',root.reg('r',7),.lltarget..operand.integer(55),at)
+  ignored = two(root,'load',root.reg('r',8),.lltarget..operand.string('preloaded-name'),at)
+  ignored = two(root,'load',root.reg('r',9),.lltarget..operand.integer(77),at)
+  ignored = two(root,'load',root.reg('r',9),.lltarget..operand.string('preloaded-message'),at)
+  ignored = two(root,'settp',root.reg('r',9),.lltarget..operand.integer(256),at)
+  if variant = 23 then ignored = two(root,'link',root.reg('r',raw),root.reg('r',3),at)
+  do i = 1 to words(tags); ignored = one(root,'sigpush',.lltarget..operand.string(word(tags,i)),at); end
+  do i = 1 to words(tags)
+    if variant = 18 & i = 1 then ignored = two(root,'sigbr',.lltarget..operand.symbol('caught'),.lltarget..operand.string(word(tags,i)),at)
+    else do
+      destination = event; if variant = 19 & i = 2 then destination = 3
+      ignored = three(root,'sigbrv',.lltarget..operand.symbol('caught'),root.reg('r',destination),.lltarget..operand.string(word(tags,i)),at)
+    end
+  end
+  result = 1; if variant = 4 | variant = 5 then result = 0
+  callid = three(root,'call1',root.reg('r',result),.lltarget..operand.procedure('checked_identity'),root.reg('r',0),at)
+  if variant = 20 then ignored = one(root,'sigpush',.lltarget..operand.string('CANCEL'),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(1),at)
+  do i = words(tags) to 1 by -1; ignored = one(root,'sigpop',.lltarget..operand.string(word(tags,i)),at); end
+  ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
+  handlerid = label(root,'caught',at)
+  do i = words(tags) to 1 by -1; ignored = one(root,'sigpop',.lltarget..operand.string(word(tags,i)),at); end
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(2),at)
+  if variant = 22 then ignored = label(root,'alternate',at)
+  if variant = 16 then do
+    fields = .object[]; fields[1] = .lltarget..operand.string('escaped-field') as .object; fields[2] = .lltarget..operand.string('b') as .object
+    fields[3] = .lltarget..operand.string('.int') as .object; fields[4] = root.reg('r',field) as .object
+    ignored = root.record('.meta',fields,at)
+  end
+  if variant = 17 then ignored = two(root,'copy',root.reg('r',10),root.reg('r',event),at)
+  if variant <> 6 then do
+    call boundprojection(root,1,code,event,raw,field,variant,at)
+    call boundprojection(root,4,8,event,raw,field,variant,at)
+    call boundprojection(root,5,9,event,raw,field,variant,at)
+  end
+  ignored = one(root,'null',root.reg('r',event),at)
+  ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
+  ignored = label(root,'joined',at)
+  if variant = 24 then ignored = two(root,'copy',root.reg('r',10),root.reg('r',9),at)
+  else ignored = two(root,'icopy',root.reg('r',10),root.reg('r',9),at)
+  ignored = three(root,'getandtp',root.reg('r',11),root.reg('r',9),.lltarget..operand.integer(768),at)
+  ignored = two(root,'copy',root.reg('r',10),root.reg('r',8),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('checked_identity',0,at)
+  if variant = 21 then ignored = three(leaf,'iadd',leaf.reg('a',1),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(-5),.lltarget..operand.integer(5),at)
+  ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  return draft.finish()
+
+boundcontrols: procedure = .int
+  failures = 0; variant = .int; callid = .int; handlerid = .int; i = .int; mode = .int
+  original = .lltarget..module; result = .lltarget..module; request = .llinline..binding
+  changed = .llinline..change; facts = .lltargetfacts..analysis; cleaned = .llinline..change
+  item = .lltarget..record; expected = .string[]
+  limited = .llinline..change
+  expected[7] = 'signal.bound.mapping.pending'; expected[8] = expected[7]; expected[9] = expected[7]
+  expected[10] = 'signal.bound.state.unproved'; expected[11] = expected[10]
+  do i = 12 to 17; expected[i] = 'signal.bound.consumer.pending'; end
+  expected[18] = 'signal.bound.handler.pending'; expected[19] = 'signal.bound.mapping.pending'
+  expected[20] = 'signal.named.push.order.pending'; expected[21] = 'signal.callee.operation.pending'
+  expected[22] = 'signal.named.entry.pending'; expected[23] = 'signal.bound.mapping.pending'; expected[24] = 'signal.bound.state.unproved'
+  do variant = 0 to 24
+    original = boundmodel(variant,callid,handlerid)
+    failures = failures + check(original.valid(),'bound event model verifies ' || variant)
+    if original.valid() = 0 then iterate
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('checked_identity'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
+    if variant <= 6 then do
+      failures = failures + check(changed.status() = 'changed','complete bound event lane expands ' || variant)
+      if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+      facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
+      failures = failures + check(facts.status() = 'ok' & facts.handlerdirect(callid),'bound event lane shares direct read-only transport ' || variant)
+      result = changed.result(); calls = 0; attributes = 0; lifetimes = 0; policies = 0
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.procedureid() <> result.procedureid('main') | item.kind() <> 'instruction' then iterate
+        if item.mnemonic() = 'call1' then calls = calls + 1
+        if item.mnemonic() = 'linkattr1' then attributes = attributes + 1
+        if item.mnemonic() = 'endlife' then lifetimes = lifetimes + 1
+        if wordpos(item.mnemonic(),'sigpush sigbrv sigpop') > 0 then policies = policies + 1
+      end
+      extent = 6; if variant = 6 then extent = 0
+      failures = failures + check(result.body(result.procedureid('main')).locals() = 12 & calls = 0 & attributes = extent & lifetimes = 0 & policies = 116,'bound policies, consumers and frame remain intact ' || variant)
+      cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+      failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'transport.exceptional.cfg.pending','bound consumer transport stays exceptional')
+      cleaned = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+      failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'storage.exceptional.cfg.pending','bound consumer storage stays exceptional')
+    end
+    else do
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected[variant] & changed.result().identity() = original.identity(),'specific atomic bound refusal ' || variant)
+      if changed.reason() <> expected[variant] then say changed.reason()
+    end
+  end
+  original = boundmodel(0,callid,handlerid); identity = original.identity()
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('checked_identity'))
+  do mode = 1 to 4
+    select mode
+      when 1 then limited = llinline..expand(request,'closed-main-default-halt.v1',1)
+      when 2 then limited = llinline..expand(request,'closed-main-default-halt.v1',12000000,1)
+      when 3 then limited = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,64)
+      otherwise limited = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,67108864,65536,1)
+    end
+    failures = failures + check(limited.status() = 'limit' & limited.result().identity() = identity,'bound event resource refusal is atomic ' || mode)
+  end
+  changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
+  failures = failures + check(changed.status() = 'changed' & original.identity() = identity,'bound event replays after refused requests')
+  return failures
+
 main: procedure = .int
   failures = 0; callid = .int; handlerid = .int
   i = .int; item = .lltarget..record; field = .lltarget..operand
@@ -370,5 +517,6 @@ main: procedure = .int
       failures = failures + check(bin2x(catchkeptgraph.binary()) = bin2x(before),'catch-all refusal returns exact owner')
     end
   end
+  failures = failures + boundcontrols()
   say 'SIGNAL_INLINE|failures=' || failures
   return failures

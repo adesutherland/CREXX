@@ -78,6 +78,7 @@ cells: class
   _binarydefined = .int[]
   _binaryindependent = .int[]
   _ordinary = .int[]
+  _runtimeevent = .int[]
   *: factory
     return
   add: method = .int
@@ -89,6 +90,7 @@ cells: class
     _abiknown[n] = 768; _abibits[n] = 0; _abiindependent[n] = 1
     _stringdefined[n] = 1; _stringindependent[n] = 1; _ordinary[n] = 1
     _binarydefined[n] = 1; _binaryindependent[n] = 1
+    _runtimeevent[n] = 0
     return n
   defined: method = .int
     arg id = .int
@@ -114,6 +116,9 @@ cells: class
   ordinary: method = .int
     arg id = .int
     return _ordinary[id]
+  runtimeevent: method = .int
+    arg id = .int
+    return _runtimeevent[id]
   stringdefined: method = .int
     arg id = .int
     return _stringdefined[id]
@@ -175,6 +180,7 @@ cells: class
       else do; _low[i] = 0; _high[i] = 0; end
       _plain[i] = _plain[i] & other.plain(i)
       _ordinary[i] = _ordinary[i] & other.ordinary(i)
+      _runtimeevent[i] = _runtimeevent[i] & other.runtimeevent(i)
       _stringdefined[i] = _stringdefined[i] & other.stringdefined(i)
       _stringindependent[i] = _stringindependent[i] & other.stringindependent(i)
       _binarydefined[i] = _binarydefined[i] & other.binarydefined(i)
@@ -207,6 +213,29 @@ cells: class
     _abiknown[id] = 0; _abibits[id] = 0; _abiindependent[id] = 0
     _stringdefined[id] = 0; _stringindependent[id] = 0
     _binarydefined[id] = 0; _binaryindependent[id] = 0
+    _runtimeevent[id] = 0
+    return
+  /** Whole VM overwrite at an executable SIGBRV predecessor. The wrapper
+   * carries owned arbitrary payloads, never scalar or reusable-cell proof. */
+  event: method = .void
+    arg id = .int
+    call uncertain(id)
+    _plain[id] = 0; _ordinary[id] = 0; _runtimeevent[id] = 1
+    return
+  /** Raw code/name are freshly built ordinary fields; message copies only
+   * bytes/metadata from an arbitrary payload's string view. Its integer,
+   * public flags, ownership and string certificates are not inferred. */
+  eventfield: method = .void
+    arg id = .int, kind = .int
+    if kind = 5 then do
+      _stringdefined[id] = 1; _stringindependent[id] = 0
+      _plain[id] = 0; _wholeknown[id] = 0; _zeroed[id] = 0
+    end
+    else do
+      call reset(id)
+      if kind = 1 then call integer(id,0)
+      else call string(id)
+    end
     return
   integer: method = .void
     arg id = .int, known = .int, value = 0
@@ -232,6 +261,7 @@ cells: class
     _abiknown[id] = 768; _abibits[id] = 0; _abiindependent[id] = 1
     _stringdefined[id] = 1; _stringindependent[id] = 1; _ordinary[id] = 1
     _binarydefined[id] = 1; _binaryindependent[id] = 1
+    _runtimeevent[id] = 0
     return
   copy: method = .void
     arg destination = .int, source = .int, whole = 1
@@ -240,6 +270,7 @@ cells: class
     if whole then do
       _plain[destination] = _plain[source]
       _ordinary[destination] = _ordinary[source]
+      _runtimeevent[destination] = _runtimeevent[source]
       _stringdefined[destination] = _stringdefined[source]
       _stringindependent[destination] = _stringindependent[source]
       _binarydefined[destination] = _binarydefined[source]
@@ -679,6 +710,16 @@ analysis: class
   _namedoutcome = .int
   _namedactive = .int
   _namedcatchall = .int
+  _namedbound = .int
+  _boundevent = .int
+  _boundraw = .int
+  _boundfield = .int
+  _boundoutputs = .int[]
+  _boundphases = .int[]
+  _boundkinds = .int[]
+  _boundclear = .int
+  _boundlastpop = .int
+  _boundreset = .int[]
   *: factory
     arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864, graphmode = 0
     _owner = owner; _function = functionId; _profile = profile; _work = work; _status = 'building'; _reason = ''; _bytelimit = bytes
@@ -714,7 +755,7 @@ analysis: class
   namedshape: method = .int
     i = .int; j = .int; found = .int; policies = .int; labels = .int; calls = .int; pops = .int; branches = .int; returns = .int
     installs = .int; range = .int; lastpush = .int; firstinstall = .int; pushes = .int
-    handler = .string; joined = .string; name = .string
+    handler = .string; joined = .string; name = .string; policy = .string
     tags = .string[]; installed = .int[]; poptags = .string[]; popids = .int[]
     item = .lltarget..record; field = .lltarget..operand; target = .lltarget..operand
     module = dereference _owner; catalog = .llrxascatalog..catalog()
@@ -724,9 +765,11 @@ analysis: class
       if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
       if left(item.mnemonic(),3) = 'sig' then policies = policies + 1
       if item.mnemonic() = 'sigpush' then pushes = pushes + 1
+      if item.mnemonic() = 'sigbrv' then _namedbound = 1
     end
     if policies = 0 then return 1
     _namedcatchall = pushes >= 29
+    if _namedbound & _namedcatchall = 0 then return reject('signal.bound.handler.pending')
     if _graphmode then return reject('signal.exceptional.cfg.pending')
     if _profile <> 'closed-main-default-halt.v1' then return reject('signal.named.profile.pending')
     if module.globals() <> 0 then return reject('signal.global.storage.pending')
@@ -741,8 +784,9 @@ analysis: class
       if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
       if item.kind() = 'label' then do; labels = labels + 1; iterate; end
       if item.kind() <> 'instruction' then iterate
-      name = item.mnemonic()
-      select name
+      name = item.mnemonic(); policy = name
+      if name = 'sigbrv' then policy = 'sigbr'
+      select policy
         when 'sigpush' then do
           if installs > 0 then return reject('signal.named.push.order.pending')
           if calls > 0 | pops > 0 | branches > 0 then return reject('signal.nested.scope.pending')
@@ -762,7 +806,15 @@ analysis: class
         end
         when 'sigbr' then do
           if calls > 0 | pops > 0 | branches > 0 then return reject('signal.nested.scope.pending')
-          field = item.operand(2); target = item.operand(1)
+          target = item.operand(1)
+          if _namedbound then do
+            if name <> 'sigbrv' then return reject('signal.bound.handler.pending')
+            field = item.operand(2)
+            if field.kind() <> 'R' | field.bank() <> 'r' then return reject('signal.bound.mapping.pending')
+            if _boundevent > 0 & _boundevent <> field.index() + 1 then return reject('signal.bound.mapping.pending')
+            _boundevent = field.index() + 1; field = item.operand(3)
+          end
+          else field = item.operand(2)
           if namedtag(field.text()) = 0 then return 0
           found = 0
           if spend(tags[0]) = 0 then return 0
@@ -785,7 +837,6 @@ analysis: class
           if pops > 2 * tags[0] then return reject('signal.named.pop.count.pending')
         end
         when 'sigret' then return reject('signal.inherited.return.pending')
-        when 'sigbrv' then return reject('signal.bound.handler.pending')
         when 'br' then do
           field = item.operand(1); branches = branches + 1
           if branches = 1 then do; _namednormalbr = item.id(); joined = field.text(); end
@@ -795,8 +846,10 @@ analysis: class
         when 'call1' then do; calls = calls + 1; _namedcall = item.id(); end
         when 'ret' then returns = returns + 1
         otherwise do
+          if _namedbound & wordpos(name,'linkattr1 unlink scopy') > 0 then iterate
           if left(name,3) = 'sig' then return reject('signal.caller.policy.pending')
           if wordpos(name,'call call2 call3 call4 swapcall settpcall settpswapcall dcall') > 0 then return reject('signal.call.window.pending')
+          if _namedbound & wordpos(name,'link swap swapn linkarg') > 0 then return reject('signal.bound.mapping.pending')
           if wordpos(name,'link unlink swap swapn linkarg') > 0 then return reject('signal.caller.binding.pending')
           if wordpos(name,'mkref deref linkref setref setobjtype setobjuninit setattrs linkattr1') > 0 then return reject('signal.storage.plain.unproved')
           if catalog.signalstate(item.opcode()) <> 0 then return reject('signal.caller.failure.pending')
@@ -815,6 +868,7 @@ analysis: class
       if poptags[tags[0] + j] <> tags[tags[0] - j + 1] then return reject('signal.named.handler.pop.order.pending')
     end
     _namednormalpop = popids[1]; _namedhandlerpop = popids[tags[0] + 1]
+    _boundlastpop = popids[pops]
     if labels <> 2 then return reject('signal.named.entry.pending')
     if calls <> 1 | branches <> 2 | returns <> 1 then return reject('signal.named.shape.pending')
     do i = 1 to module.records()
@@ -837,12 +891,146 @@ analysis: class
       if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
       if item.mnemonic() = 'ret' & item.id() < _namedjoin then return reject('signal.named.departure.pending')
       name = item.mnemonic()
-      if item.id() > _namedpush & item.id() < _namedcall & name <> 'sigpush' & name <> 'sigbr' then return reject('signal.named.setup.pending')
+      if item.id() > _namedpush & item.id() < _namedcall & name <> 'sigpush' & name <> 'sigbr' & name <> 'sigbrv' then return reject('signal.named.setup.pending')
       if item.id() > _namednormalpop & item.id() < popids[tags[0]] & name <> 'sigpop' then return reject('signal.named.normal.pop.interleaved.pending')
       if item.id() > _namednormalpop & item.id() < _namedhandler & name <> 'sigpop' & item.id() <> _namednormalbr then return reject('signal.named.departure.pending')
       if item.id() > _namedhandler & item.id() < _namedhandlerpop then return reject('signal.named.departure.pending')
       if item.id() > _namedhandlerpop & item.id() < popids[pops] & name <> 'sigpop' then return reject('signal.named.handler.pop.interleaved.pending')
       if item.id() > _namedhandlerbr & item.id() < _namedjoin then return reject('signal.named.departure.pending')
+    end
+    if _namedbound then return boundshape()
+    return 1
+  /** Exact post-restoration consumer groups. These rows stay executable and
+   * opaque to normal-only cleanup. No transient attribute storage can escape. */
+  boundshape: method = .int
+    module = dereference _owner; selected = module.at(_namedcall)
+    actual = selected.operand(3); result = selected.operand(1)
+    item = .lltarget..record; value = .lltarget..operand; source = .lltarget..operand; index = .lltarget..operand
+    phase = 0; kind = 0; i = .int; j = .int; slot = .int; expected = .int
+    if actual.bank() <> 'r' | result.bank() <> 'r' then return reject('signal.bound.mapping.pending')
+    graph = dereference module.ir()
+    if reserve(graph.operations(),16) = 0 | reserve(module.body(_function).locals(),8) = 0 then return 0
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
+      if item.id() <= _boundlastpop | item.id() >= _namedhandlerbr then iterate
+      if phase = 0 then do
+        if item.mnemonic() = 'linkattr1' then do
+          if _boundclear > 0 | item.operands() <> 3 then return reject('signal.bound.consumer.pending')
+          value = item.operand(1); source = item.operand(2); index = item.operand(3)
+          if value.bank() <> 'r' | source.bank() <> 'r' | source.index() + 1 <> _boundevent then return reject('signal.bound.mapping.pending')
+          if index.kind() <> 'I' | index.index() <> 5 then return reject('signal.bound.consumer.pending')
+          if _boundraw > 0 & _boundraw <> value.index() + 1 then return reject('signal.bound.mapping.pending')
+          _boundraw = value.index() + 1; phase = 1
+        end
+        else if item.mnemonic() = 'null' then do
+          value = item.operand(1)
+          if value.bank() = 'r' & value.index() + 1 = _boundevent then do
+            if _boundclear > 0 then return reject('signal.bound.consumer.pending')
+            _boundclear = item.id()
+          end
+        end
+        else if _boundclear > 0 then return reject('signal.bound.consumer.pending')
+      end
+      else do
+        if phase = 1 then do
+          if item.mnemonic() <> 'linkattr1' | item.operands() <> 3 then return reject('signal.bound.consumer.pending')
+          value = item.operand(1); source = item.operand(2); index = item.operand(3)
+          if value.bank() <> 'r' | source.bank() <> 'r' | source.index() + 1 <> _boundraw then return reject('signal.bound.mapping.pending')
+          if index.kind() <> 'I' then return reject('signal.bound.consumer.pending')
+          kind = index.index()
+          if kind <> 1 & kind <> 4 & kind <> 5 then return reject('signal.bound.consumer.pending')
+          if _boundfield > 0 & _boundfield <> value.index() + 1 then return reject('signal.bound.mapping.pending')
+          _boundfield = value.index() + 1
+        end
+        else if phase = 2 then do
+          if (kind = 5 & item.mnemonic() <> 'scopy') | (kind <> 5 & item.mnemonic() <> 'copy') | item.operands() <> 2 then return reject('signal.bound.consumer.pending')
+          value = item.operand(1); source = item.operand(2)
+          if value.bank() <> 'r' | source.bank() <> 'r' | source.index() + 1 <> _boundfield then return reject('signal.bound.mapping.pending')
+          if _boundoutputs[kind] > 0 then return reject('signal.bound.consumer.pending')
+          _boundoutputs[kind] = value.index() + 1; _boundkinds[item.id()] = kind
+        end
+        else do
+          expected = _boundfield
+          if phase = 4 | phase = 6 then expected = _boundraw
+          if (phase < 5 & item.mnemonic() <> 'unlink') | (phase >= 5 & item.mnemonic() <> 'null') | item.operands() <> 1 then return reject('signal.bound.consumer.pending')
+          value = item.operand(1)
+          if value.bank() <> 'r' | value.index() + 1 <> expected then return reject('signal.bound.consumer.pending')
+        end
+        phase = phase + 1
+      end
+      if phase > 0 then _boundphases[item.id()] = phase
+      if phase = 7 then phase = 0
+    end
+    if phase <> 0 | _boundclear = 0 then return reject('signal.bound.consumer.pending')
+    slots = .int[]; slots[1] = _boundevent; slots[2] = _boundraw; slots[3] = _boundfield
+    slots[4] = _boundoutputs[1]; slots[5] = _boundoutputs[4]; slots[6] = _boundoutputs[5]
+    do i = 1 to slots[0]
+      if slots[i] = 0 then iterate
+      if slots[i] = actual.index() + 1 | slots[i] = result.index() + 1 then return reject('signal.bound.mapping.pending')
+      do j = 1 to i - 1
+        if slots[j] > 0 & slots[j] = slots[i] then return reject('signal.bound.mapping.pending')
+      end
+    end
+    /* Reject physical/scratch observations even in metadata or TRACE rows.
+     * Only pre-scope scalar writes, checked group slots and final event NULL
+     * can mention these three cells. */
+    do i = 1 to module.records()
+      if spend(1) = 0 then return 0
+      item = module.record(i)
+      if item.procedureid() <> _function then iterate
+      do j = 1 to item.registerrefs()
+        if spend(1) = 0 then return 0
+        value = item.registerref(j)
+        if value.bank() <> 'r' then iterate
+        slot = value.index() + 1
+        if slot <> _boundevent & slot <> _boundraw & slot <> _boundfield then iterate
+        if _boundphases[item.id()] > 0 then iterate
+        if item.kind() = 'instruction' then do
+          if item.mnemonic() = 'sigbrv' & slot = _boundevent then iterate
+          if item.id() = _boundclear & slot = _boundevent then iterate
+          if item.id() < _namedpush & j = 1 then do
+            if item.mnemonic() = 'null' then do; _boundreset[slot] = 1; iterate; end
+            if slot = _boundevent & wordpos(item.mnemonic(),'load copy icopy settp') > 0 then iterate
+          end
+        end
+        return reject('signal.bound.consumer.pending')
+      end
+      if item.kind() = 'instruction' & wordpos(item.mnemonic(),'linkattr1 unlink scopy') > 0 & _boundphases[item.id()] = 0 then return reject('signal.bound.consumer.pending')
+    end
+    return 1
+  boundentry: method = .int
+    arg view = .frame, state = .cells
+    if reserve(6,8) = 0 | spend(6) = 0 then return 0
+    slots = .int[]; slots[1] = _boundevent; slots[2] = _boundraw; slots[3] = _boundfield
+    slots[4] = _boundoutputs[1]; slots[5] = _boundoutputs[4]; slots[6] = _boundoutputs[5]
+    value = .lltarget..operand; id = .int; i = .int
+    do i = 1 to slots[0]
+      if slots[i] = 0 then iterate
+      value = .lltarget..operand.bound(0,0,0,'r',slots[i] - 1); id = view.storage(value)
+      if id = 0 | id <> view.base(value) | view.identityat(view.position(value)) <> slots[i] then return reject('signal.bound.mapping.pending')
+      if state.ordinary(id) = 0 | state.wholeknown(id) = 0 then return reject('signal.bound.state.unproved')
+      if i <= 3 & _boundreset[slots[i]] = 0 then return reject('signal.bound.state.unproved')
+      if (i = 2 | i = 3) & state.zeroed(id) = 0 then return reject('signal.bound.state.unproved')
+    end
+    return 1
+  boundevent: method = .int
+    arg expose state = .cells, view = .frame
+    if spend(32) = 0 then return 0
+    value = .lltarget..operand.bound(0,0,0,'r',_boundevent - 1); id = view.storage(value)
+    if id = 0 | id <> view.base(value) then return reject('signal.bound.mapping.pending')
+    call state.event(id)
+    return 1
+  boundjoin: method = .int
+    arg expose target = .cells, expose targetview = .frame, expose history = .history, source = .cells, view = .frame, previous = .history
+    if pathallowance(source.size(),view.slots()) = 0 then return 0
+    source_ref = reference source; delivered = snapshot source_ref
+    if boundevent(delivered,view) = 0 then return 0
+    if spend(source.size() * 22 + view.slots() * 3) = 0 then return 0
+    if joinpath(reference target,reference targetview,reference history,delivered,view,previous) = 0 then do
+      if _status = 'keep' then return reject('signal.bound.state.unproved')
+      return 0
     end
     return 1
   namedleaf: method = .int
@@ -912,6 +1100,9 @@ analysis: class
       if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
       _runtime[item.id()] = 1
       if returned & item.kind() = 'instruction' then return reject('signal.named.departure.pending')
+      if _namedbound & item.id() = _namedpush then do
+        if boundentry(view,state) = 0 then return 0
+      end
       if item.id() = _namedcall then do
         field = item.operand(1); id = view.storage(field)
         if id = 0 | state.plain(id) = 0 | state.ordinary(id) = 0 | state.wholeknown(id) = 0 then return reject('signal.storage.plain.unproved')
@@ -942,15 +1133,26 @@ analysis: class
         actuals[1] = id
         handlerframe = .frame(reference handlerstate,0,actuals,0,beforeview.context(),owned)
         call handlerhistory.activated(handlerframe.ownedbase(1)); call handlerhistory.exited(handlerframe.ownedbase(1),0)
+        if _namedbound then do
+          if boundevent(handlerstate,beforeview) = 0 then return 0
+        end
         if _namedcatchall then do
           /* Delivery during the unchanged push/install prefix or before the
            * result COPY has the pre-call state. Delivery after COPY has the
            * committed state. Meet both without changing the normal path.
            * The prefix contains no caller writes; the leaf check is read-only. */
-          if spend(state.size() * 44 + view.slots() * 6) = 0 then return 0
-          if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,before,view,beforehistory) = 0 then return 0
-          if normalpossible then do
-            if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,state,view,previous) = 0 then return 0
+          if _namedbound then do
+            if boundjoin(handlerstate,beforeview,handlerhistory,before,view,beforehistory) = 0 then return 0
+            if normalpossible then do
+              if boundjoin(handlerstate,beforeview,handlerhistory,state,view,previous) = 0 then return 0
+            end
+          end
+          else do
+            if spend(state.size() * 44 + view.slots() * 6) = 0 then return 0
+            if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,before,view,beforehistory) = 0 then return 0
+            if normalpossible then do
+              if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,state,view,previous) = 0 then return 0
+            end
           end
         end
       end
@@ -970,20 +1172,41 @@ analysis: class
       /* Leave these opaque policy/control rows undescribed in the normal-only
        * access projection. It must remain incomplete, even when queried by a
        * consumer which bypasses the explicit cleanup guard. */
-      else if item.kind() = 'instruction' & (wordpos(item.mnemonic(),'sigpush sigbr sigpop') > 0 | item.id() = _namednormalbr | item.id() = _namedhandlerbr) then nop
+      else if item.kind() = 'instruction' & (wordpos(item.mnemonic(),'sigpush sigbr sigbrv sigpop') > 0 | item.id() = _namednormalbr | item.id() = _namedhandlerbr) then nop
       else do
         /* Infeasible normal/handler observations do not execute. Their rows
          * remain opaque in this deliberately incomplete access projection. */
         if item.id() > _namedcall & item.id() < _namedhandler & normalpossible = 0 then iterate
         if item.id() > _namedhandler & item.id() < _namedjoin & handlerpossible = 0 then iterate
-        if step(item,view,reference state) = 0 then return 0
+        if _namedbound & _boundphases[item.id()] > 0 then do
+          field = .lltarget..operand.bound(0,0,0,'r',_boundevent - 1)
+          if state.runtimeevent(view.storage(field)) = 0 then return reject('signal.bound.state.unproved')
+          if _boundphases[item.id()] = 3 then do
+            field = item.operand(1); id = view.storage(field)
+            if id = 0 | id <> view.base(field) then return reject('signal.bound.mapping.pending')
+            if state.ordinary(id) = 0 then return reject('signal.bound.state.unproved')
+            call state.eventfield(id,_boundkinds[item.id()])
+          end
+          else if _boundphases[item.id()] = 6 | _boundphases[item.id()] = 7 then do
+            field = item.operand(1); call state.reset(view.base(field))
+          end
+        end
+        else if step(item,view,reference state) = 0 then do
+          if _namedbound & _status = 'keep' & wordpos(_reason,'local.recycler.history.unproved local.recycler.observation.unproved') > 0 then return reject('signal.bound.state.unproved')
+          return 0
+        end
         if _namedcatchall & normalpossible & item.kind() = 'instruction' & item.id() > _namedcall & item.id() < _namednormalpop then do
           /* Every original normal instruction remains executable. An event
            * after an earlier write/observation must not rewind to call entry.
            * The unchanged pop prefixes write no cells/bindings; delivery there
            * has this same last state, including repeated handler entry. */
-          if spend(state.size() * 22 + view.slots() * 3) = 0 then return 0
-          if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,state,view,previous) = 0 then return 0
+          if _namedbound then do
+            if boundjoin(handlerstate,beforeview,handlerhistory,state,view,previous) = 0 then return 0
+          end
+          else do
+            if spend(state.size() * 22 + view.slots() * 3) = 0 then return 0
+            if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,state,view,previous) = 0 then return 0
+          end
         end
         if item.kind() = 'instruction' & item.mnemonic() = 'ret' then returned = 1
       end
@@ -1056,9 +1279,9 @@ analysis: class
   /* Include transient and retained deep copies, not an assumed VM COW path. */
   pathallowance: method = .int
     arg cells = .int, slots = .int
-    if reserve(cells,608) = 0 | reserve(slots,128) = 0 | reserve(1,320) = 0 then return 0
-    if cells > _work / 76 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
-    if spend(cells * 76) = 0 then return 0
+    if reserve(cells,624) = 0 | reserve(slots,128) = 0 | reserve(1,320) = 0 then return 0
+    if cells > _work / 80 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+    if spend(cells * 80) = 0 then return 0
     if slots > _work / 16 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
     return spend(slots * 16)
   joinpath: method = .int
@@ -1639,7 +1862,16 @@ analysis: class
         else if name = 'getandtp' then do
           if private then return reject('profile.callee.status.observer.pending')
           right = item.operand(2); sourceid = view.storage(right)
-          if sourceid = 0 | state.wholeknown(sourceid) = 0 then return reject('local.recycler.observation.unproved')
+          if sourceid = 0 then return reject('local.recycler.observation.unproved')
+          if state.wholeknown(sourceid) = 0 then do
+            if _namedbound = 0 then return reject('local.recycler.observation.unproved')
+            value = item.operand(3)
+            /* A message SCOPY preserves the destination's independently
+             * proved public ABI flags; it proves no string certificate or
+             * whole payload. Only this explicit masked observation uses it. */
+            if right.bank() <> 'r' | right.index() + 1 <> _boundoutputs[5] | state.ordinary(sourceid) = 0 | state.abiindependent(sourceid) = 0 | value.kind() <> 'I' then return reject('signal.bound.state.unproved')
+            if value.index() <> 0 & value.index() <> 256 & value.index() <> 512 & value.index() <> 768 then return reject('signal.bound.consumer.pending')
+          end
           call insert(reference reads,domain(sourceid,1))
           /* This non-signalling status observation always defines its integer
            * result. It does not reset destination status or other components. */

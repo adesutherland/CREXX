@@ -680,6 +680,120 @@ retain precise reasons. The focused slice does not close general G blocks,
 Classic C protection, inherited `SIGRET`, general exceptional cleanup or
 INL-AC03/04/05. It is not a production performance claim.
 
+### Bounded caller-owned bound-event increment
+
+**Status: implemented and focused-qualified.** This
+INL-STEP04 follow-on serves AC02/03/04/06/07 without changing the existing
+ISA, target wire schema, public service API or VM/library event ABI. It is a
+bounded event-delivery and consumption prerequisite for G bound handlers and
+C capture, not qualification of their complete producer lowerings or evidence
+of application acceleration. Keep INL-AC03/04/05 and INL-STEP06 open.
+
+Keep the preceding full 29-name, fresh standalone `main`, zero-global,
+single-scope contract and exact same-module zero-local
+`ICHKRNG a1,lo,hi; RET a1` leaf. All installed rows are `SIGBRV` with the same
+local handler and the same caller `rEvent`; all saves precede every install,
+and both departures retain their exact complete reverse-pop lists. Preserve
+the original tag order, policy instructions, labels and departures. Mixed
+bound/unbound installs, multiple event destinations, smaller bound tag sets,
+nested scopes, additional control entries, callee policy/context or retained
+calls remain separate categories. The existing smaller unbound profiles keep
+their contracts.
+
+Require canonical, distinct caller cells for `rEvent`, `rRaw`, `rField` and
+each projection output; none may alias the selected actual or result. Actual
+and result may still alias each other under the existing borrowed-return
+proof. `rEvent` must have an explicit whole reset before the scope and may
+then receive ordinary scalar preloads; it has no source write in the protected
+region. `rRaw`/`rField` have reset owned bases and no active links at scope
+entry. No other binding change, reference or object operation is admitted.
+Keep the read-only direct actual mapping, call-site `CNOP` and normal whole
+result `COPY`; introduce no fresh frame/window cells or handler prologue.
+
+The `lltargetfacts` owner extends its existing bounded overlay with a private
+VM-event shape, not a general object algorithm. `SIGBRV` installation records
+an encoded destination slot and does not define its value. On each exceptional
+predecessor, resolve that slot's current active cell, apply the VM's whole
+runtime-event overwrite, then meet handler states. Derive the event shape from
+the executable installation and existing VM handlers, never from `.meta`
+attestations or a copied opcode/code table. The event is nonplain/nonordinary;
+do not grant it scalar component facts or plain lifetime/reuse permission.
+Its raw wrapper, tag/code and message/payload remain owned by the existing
+`rxsignal_populate_raw_interrupt`/`rxsignal_populate_runtime_signal` ABI and
+`lib/rxfnsb/rexx/signal.crexx`.
+
+After the handler's entire reverse-pop list, admit at most one projection of
+each of code, name and message, in source order. Each uses an immediate-index
+group beginning `LINKATTR1 rRaw,rEvent,5; LINKATTR1 rField,rRaw,k`. For `k=1`
+(code) or `k=4` (name), retain `COPY rOut,rField`, matching the ordinary scalar
+fields constructed by the VM and C's maintained `rawcondition` pattern. For
+`k=5`, retain `SCOPY rOut,rField` for the string message view only; the typed
+payload and its object/native/reference ownership are neither copied nor
+classified as ordinary. Every group ends with `UNLINK rField; UNLINK rRaw;
+NULL rField; NULL rRaw`, and the handler then executes `NULL rEvent` before
+its existing branch to the join. Outputs are distinct ordinary owned cells;
+only their proved integer/string/status components survive the join. Preserve
+partial-copy semantics and string certificates independently of integer and
+whole-cell facts. All projection, unlink and reset operations remain executable.
+The exact VM-produced attribute extents establish successful `LINKATTR1` here;
+no general exception-to-success specialization is selected.
+
+No branch or alternate entry may enter a projection group. Its scratch links
+cannot outlive that group or escape through metadata/TRACE operands. Raw
+module/address fields (`k=2/3`), dynamic or other attribute indices, field
+mutation, whole-event/payload copies or returns, relay, arbitrary calls and
+runtime-event register observations retain `signal.bound.consumer.pending`.
+Event/scratch/output alias or noncanonical binding retains
+`signal.bound.mapping.pending`; unproved reset/component or joined state
+retains `signal.bound.state.unproved`. Malformed/duplicate policies retain
+their existing specific diagnostics. These are current missing-proof limits,
+not inherent G/C language exclusions.
+
+At every original policy row and generated instruction boundary, use the
+actual already-performed caller writes and observations. A failed check has
+no result COPY; asynchronous delivery before COPY sees the old result and
+delivery after it sees the committed result. Each delivery overwrites `rEvent`
+with that new event before any handler read, including re-entry during a pop
+prefix. Projection starts only after all scope policies have been restored,
+so such re-entry cannot strand projection links. Preserve existing failed-save,
+installation and repeated-pop outcomes and the checked outer default policy;
+do not infer successful saves or repair G restoration semantics. The accepted
+removed-frame infrastructure-pressure difference remains unchanged.
+
+Source/TRACE remapping keeps the callee check's authored origin, fresh source
+identities, original call-site boundary and restored caller continuation;
+the original result TRACE executes only on normal completion. Do not assign
+the caller location to the event's fault or invent a value event for transport.
+The approved physical-traceback difference does not admit raw address or
+register-bank observation. A test-only observer may resolve the delivered
+origin through the existing metadata owner and compare authored source fields;
+it must not become an inliner fact or widen the admitted consumer lane.
+
+Independent constructed and handwritten controls cover known and
+analysis-unknown normal/fault actuals, preloaded result/event/output cells,
+result/actual overlap, all three consumed projections and scratch/event closure.
+Paired ordinary original/expanded RXAS through `rxas -n` and one VM must observe
+the expected code/name/message, scalar values/status and normal-path preloads.
+Inject deterministic pending CANCEL with a nonempty message before/after COPY
+and after an earlier normal observation; retain the existing priority and
+second-event/restoration terminal controls. Check logical fault source and
+normal-only result TRACE independently. Constructed/handwritten negatives cover
+event/actual/result/output alias, rebound or unreset scratch, bad/physical or
+dynamic projections, missing/unordered unlink/reset, escaped event/payload,
+alternate entry, mixed installs, nested policy and callee mutation. Keep one
+retained negative executable against its independent expected behavior.
+
+Reuse the existing signal fixtures/runners and prepared producers. Inspect the
+first conservative output early: original call absent, one required return
+COPY, unchanged policies/projections, no fresh cells or lifetime elision.
+`llcleanup` transport/storage must still return their exceptional-CFG pending
+reasons; handler observations cannot justify normal-only deletion or reuse.
+Charge event/projection facts, predecessor snapshots, joins, work and bytes
+before growth; tight work/entry/byte/cell limits, replay and failed publication
+retain the exact source owner and CLI last-good output. The coordinator owns
+the focused build and this bounded panel on one normal VM; this plan draft
+commissions no broader functional, sanitizer, platform or performance campaign.
+
 ### Pending atomic signal-scope decision
 
 The current G emitter's duplicate normal/handler reverse-pop lists cannot

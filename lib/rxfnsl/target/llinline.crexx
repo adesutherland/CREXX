@@ -641,7 +641,9 @@ expandlocalmany: procedure = .llinline..change
       end
       if direct then do
         /* Keep the pre-entry source boundary of CALL as one ordinary, inert
-         * instruction. The checked leaf needs no a0, private cell or binding. */
+         * instruction. The checked leaf needs no a0, private cell or binding.
+         * Bound-event scopes use this same transport: their original SIGBRV
+         * destinations and post-pop projections need no emitted prologue. */
         actual = targetbody.reg(facts.argumentbank(input.id(),1),facts.argument(input.id(),1))
         call objectarraydrop fields
         ignored = code.emit(targetbody,'cnop',fields,at)

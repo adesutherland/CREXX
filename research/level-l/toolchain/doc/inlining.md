@@ -493,6 +493,39 @@ counted windows, callee policy/context changes and physical observers retain
 specific pending/unproved reasons. This is an initial representable category,
 not complete G or Classic C signal coverage.
 
+The bounded bound-event follow-on admits the full 29-name scope with every
+installation expressed as `SIGBRV` to one canonical caller event cell. The
+event and both projection scratch cells have explicit pre-scope whole resets;
+they and each output are distinct from actual/result storage. Existing smaller
+unbound profiles retain their contracts. Mixed policies, changing bindings,
+nested scopes and physical event observations remain precise refusals.
+
+The facts owner applies the VM's whole runtime-event overwrite separately to
+each exceptional predecessor before meeting states, including partial install,
+pre-result, committed-result and later normal-write boundaries. This private
+shape is nonordinary and nonplain. It certifies only the existing wrapper's
+raw attribute5 and raw code1/name4/message5 consumer layout. After complete
+reverse pops, each admitted group retains its two immediate `LINKATTR1` rows,
+`COPY` for code/name or `SCOPY` for message, then both `UNLINK` and both scratch
+`NULL` operations in order. The event is finally nulled before the join.
+No scratch binding or event/payload value can escape through instructions,
+metadata or TRACE. The normal path keeps its event/output preloads.
+
+Code/name whole copies define the VM's ordinary scalar fields. Message SCOPY
+proves string availability alone: it preserves existing destination integer and
+public ABI status facts, without granting whole-value, payload ownership,
+ordinary-state or string-certificate proof. Only the already proved ordinary
+destination and explicit ABI-mask observations can use those retained status
+facts. Whole message/payload copies, relay, module/address consumers, dynamic
+indices and incomplete closures retain calls. Current G method-call consumers
+and C whole-payload capture remain separate categories.
+
+The expander reuses the read-only direct actual mapping, original call-site
+CNOP and conditional normal return COPY. It adds no frame cells or handler
+prologue, preserves all executable policies/projections and keeps exceptional
+cleanup guards. This is a bounded VM-event consumer lane, not complete bound
+G or Classic C handler qualification.
+
 The smaller named-list profile still retains `FAILURE` with
 `signal.activation.failure.pending`. Adrian accepted that reasonable inlining
 may change infrastructure-pressure error paths as its resource use changes,
