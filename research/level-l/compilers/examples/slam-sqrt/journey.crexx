@@ -1,0 +1,170 @@
+/* cREXX License (MIT). A short journey from Classic Rexx to code analysis. */
+options levelb
+import rxfnsb
+import llast
+import llflow
+import llir
+import llirgraph
+import llcfrontend
+import sqrtflow
+
+main: procedure = .int
+  arg argv = .string[]
+  if argv[0] <> 2 then do; say 'usage: journey assets-directory runtime-directory'; return 2; end
+  source = readbinary(argv[1] || '/fdsqrt-new.rexx')
+  front = .llcfrontend..request(source,argv[2],'fdsqrt-new.rexx')
+  if front.status() <> 0 then do; say front.diagnostic(); return 1; end
+  tree = front.ast(); loopnode = findloop(reference tree)
+  say '1. Import the Classic Rexx routine'
+  say '   FDSqrt parsed; DO FOREVER is on line' loopnode.line()
+
+  say ''
+  say '2. Walk its syntax tree'
+  call showtree(loopnode,1)
+  body = tree.root().child('body')
+  call showtree(body.child('items',body.count('items')),1)
+
+  flowtree = sqrtflow..lower(reference tree)
+  if flowtree.status() <> 0 then do; say flowtree.error(); return 1; end
+  flow = sqrtflow..execution(reference flowtree)
+  facts = flow.definiteassignment('X')
+  if facts.error() <> '' then do; say facts.error(); return 1; end
+  guard = exitguard(reference flowtree)
+  assigned = facts.before(guard).assigned('NEXT')
+  say ''
+  say '3. Follow the flow through the loop'
+  call branches(reference flow,guard)
+  say '   NEXT has an assignment on every path to this test:' yesno(assigned)
+  if assigned = 0 | facts.count() <> 0 then return 1
+
+  broken = readbinary(argv[1] || '/fdsqrt-broken.rexx')
+  badfront = .llcfrontend..request(broken,argv[2],'fdsqrt-broken.rexx')
+  if badfront.status() <> 0 then do; say badfront.diagnostic(); return 1; end
+  badtree = badfront.ast(); badflowtree = sqrtflow..lower(reference badtree)
+  if badflowtree.status() <> 0 then do; say badflowtree.error(); return 1; end
+  badflow = sqrtflow..execution(reference badflowtree)
+  badfacts = badflow.definiteassignment('X')
+  if badfacts.error() <> '' then do; say badfacts.error(); return 1; end
+  badguard = exitguard(reference badflowtree)
+  say ''
+  say '4. Introduce an error'
+  say '   Change the assignment to: if x>1 then next=(guess+(x/guess))/2'
+  say '   NEXT assigned on every path to the test:' yesno(badfacts.before(badguard).assigned('NEXT'))
+  if badfacts.count() = 0 then return 1
+  problem = badfacts.node(1)
+  say '   Line' problem.line() || ':' badfacts.message(1)
+  say '   ' || badfacts.witness(1)
+  if badfacts.before(badguard).assigned('NEXT') then return 1
+
+  say ''
+  say '5. Go down to compiler operations'
+  graph = front.graph(); index = .llirgraph..index(reference graph)
+  if index.status() <> 'ok' then do; say index.message(); return 1; end
+  loops = index.loops()
+  if loops.status() <> 'ok' then do; say loops.message(); return 1; end
+  cyclic = 0
+  do component = 1 to loops.components()
+    if loops.cyclic(component) then cyclic = cyclic + 1
+  end
+  say '   Loop analysis found' cyclic 'loop region.'
+  found = 0
+  do i = 1 to graph.operations()
+    op = graph.operation(i)
+    if op.name() <> 'crexx.c.div' then iterate
+    value = op.result(1)
+    if index.uses(value.id()) = 0 then iterate
+    useid = index.use(value.id(),1); useop = graph.operation(useid)
+    origin = op.origin()
+    expression = compact(binsubstr(origin.sourcebytes(),origin.first() + 1,origin.last() - origin.first()) as .string)
+    dominates = index.dominates(index.opblock(i),index.opblock(useid))
+    say '   Value path:' expression '->' opname(useop.name())
+    say '   Every path to that addition passes the division block:' yesno(dominates)
+    if dominates = 0 | useop.name() <> 'crexx.c.add' then return 1
+    found = 1; leave
+  end
+  if found = 0 | cyclic <> 1 then return 1
+  return 0
+
+yesno: procedure = .string
+  arg value = .int
+  if value then return 'yes'
+  return 'no'
+
+compact: procedure = .string
+  arg text = .string
+  return strip(changestr('0A'x as .string,text,' '))
+
+opname: procedure = .string
+  arg name = .string
+  if name = 'crexx.c.add' then return 'addition'
+  return name
+
+findloop: procedure = .llast..node
+  arg owner = reference .llast..tree
+  tree = dereference owner; walk = tree.walk('parents first')
+  do while walk.next()
+    node = walk.node()
+    if node.kind() = 'CDo' then return node
+  end
+  absent = .llast..node
+  assembler signal 'ERROR','FDSqrt has no loop'
+  return absent
+
+exitguard: procedure = .llast..node
+  arg owner = reference .llast..tree
+  tree = dereference owner; walk = tree.walk('parents first')
+  do while walk.next()
+    node = walk.node()
+    if node.kind() <> 'If' then iterate
+    if node.child('yes').kind() = 'Break' then return node
+  end
+  absent = .llast..node
+  assembler signal 'ERROR','FDSqrt has no conditional loop exit'
+  return absent
+
+showtree: procedure = .void
+  arg node = .llast..node, depth = .int
+  kind = node.kind(); text = ''; visible = 1
+  select kind
+    when 'CDo' then text = 'Loop forever'
+    when 'Assignment' then text = 'Set ' || node.text('name') || ' = ' || compact(node.child('value').sourcetext())
+    when 'IfThen' then text = 'If ' || compact(node.child('condition').sourcetext())
+    when 'Leave' then text = 'Leave loop'
+    when 'Return' then text = compact(node.sourcetext())
+    otherwise visible = 0
+  end
+  if visible then say copies('  ',depth) || text
+  children = node.each()
+  do while children.next()
+    call showtree(children.node(),depth + visible)
+  end
+  return
+
+branches: procedure = .void
+  arg owner = reference .llflow..graph, guard = .llast..node
+  graph = dereference owner
+  do point = 1 to graph.points()
+    if graph.op(point) <> 'branch' then iterate
+    if graph.node(point).id() <> guard.id() then iterate
+    say '   Test:' compact(guard.child('condition').sourcetext())
+    do edge = 1 to graph.edges()
+      if graph.from(edge) <> point then iterate
+      say '     ' || graph.label(edge) || ' -> ' || nextaction(owner,graph.destination(edge))
+    end
+  end
+  return
+
+nextaction: procedure = .string
+  arg owner = reference .llflow..graph, start = .int
+  graph = dereference owner; pending = .int[]; seen = .int[]
+  pending[1] = start; cursor = 1
+  do while cursor <= pending[0]
+    point = pending[cursor]; cursor = cursor + 1
+    if seen[point] then iterate
+    seen[point] = 1
+    if wordpos(graph.op(point),'write break return') > 0 then return compact(graph.node(point).sourcetext())
+    do edge = 1 to graph.edges()
+      if graph.from(edge) = point then pending[pending[0] + 1] = graph.destination(edge)
+    end
+  end
+  return 'end'

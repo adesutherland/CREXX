@@ -332,42 +332,29 @@ assembler or linker.
 
 ## SLAM square-root comparison experiment
 
-This is a separate, opt-in research consumer of the completed Classic C
-frontend, requested after the C closure. It compares the published old and
-revised `FDSqrt` bodies and the Vision square-root comparator on Tom Dyer's 29
-inputs, crediting Tom's SLAM design and the published fixture authors. It
-changes no compiler, grammar, runtime, Level L service or release scope.
-Per-input exact-rational checks are independent of the three program outputs.
-Source/IR graph facts describe the code actually
-analysed; general termination and correctness remain unknown.
-
-The next demonstration increment makes the Level L contribution inspectable:
-routine boundaries come from parsed labels; source trees expose the recurrence,
-guards, division operands and exits; checked CFG/effect queries retain their
-actual premises and refusal reasons. A deliberately limited AST normalizer
-compares consistent simple-variable renaming while preserving operators and
-constants. Renamed, one-step, missing-exit, zero-divisor and changed-operator
-controls exercise that policy.
-Python retains the independent per-input arithmetic certificates. This is a
-worked frontend/analysis contribution to SLAM, not an implementation of SLAM's
-search, scoring, composition or evidence database.
+The current deliverable is a short cREXX walkthrough of Tom's Classic-adapted
+FDSqrt: import code, inspect its syntax tree, lower it to execution roles,
+follow branches, prove definite assignment, introduce a missing assignment,
+then inspect compiler operations with loop and dominance algorithms. The
+story pairs each code snippet with its output. Sources are bundled in a ZIP.
+The user's revised scope removes Python and the numerical comparison report.
 
 | Stable criterion | Observable condition |
 |---|---|
-| **SLAM-AC01** | The three adapted Classic Rexx routines run through the existing Level C entry on all 29 published inputs at `NUMERIC DIGITS 9`; input and output text are retained exactly in the comparison report. Invalid input and nonpositive-domain policy are explicit. |
-| **SLAM-AC02** | An independent exact-rational checker classifies each result for relative error at most `1e-8` and nearest nine significant digits, separating agreement from proof and retaining failed cases. Its own true/false/tampered-certificate controls fail closed. |
-| **SLAM-AC03** | A Level B consumer uses the existing Classic frontend and Level L graph index to report source-linked loop form and checked CFG cycle facts for each routine. A failed parse, IR build or graph index is reported as failure, not an empty graph. |
-| **SLAM-AC04** | One focused local run checks the expected old/new contrast and the three agreement-versus-rounding examples. The report labels sample observations, per-input proofs and unproved all-input claims distinctly; no compiler-wide or publication qualification follows. |
-| **SLAM-AC05** | The cREXX consumer locates the selected routine through AST labels and emits readable located assignments, guards, loop/return relationships and division obligations. It distinguishes direct syntax, consumer flow interpretation and checked IR facts; neither a source guard nor an IR slot proves a Classic value/alias invariant. |
-| **SLAM-AC06** | Consistent simple-variable renaming has the same explicit normalized AST representation; changing the iteration constant, arithmetic operator, divisor or exit changes it. The normalizer preserves expression operators, literals and admitted ABS calls and rejects unsupported forms; shape equality is not semantic equivalence. Missing-exit, zero-divisor and changed-operator variants are analysed only. |
-| **SLAM-AC07** | Runnable cREXX snippets exercise real graph/effect proof queries and small explicit pure/opaque API controls, displaying proved and unknown with their scope/reasons. No projected/premised proof is attributed to the original numerical routine. The guide explains these boundaries and the connection to SLAM. |
+| **SLAM-AC01** | The cREXX entry imports the attributed Classic FDSqrt through the existing frontend and prints its loop's syntax tree. |
+| **SLAM-AC02** | A checked Level L lowering preserves source locations and maps FDSqrt constructs to execution roles. The story shows the true/false successors of its loop-exit test. |
+| **SLAM-AC03** | Level L definite-assignment analysis establishes NEXT assigned on every path to the original exit test; a conditional-assignment variant produces a located unsafe-read diagnostic and a witness path. |
+| **SLAM-AC04** | The existing Classic IR supports actual use/definition, dominance and strongly-connected-component queries with concrete findings in the walkthrough. |
+| **SLAM-AC05** | The guide is a concise import/tree/flow/proof/error journey: short cREXX snippets, actual output and technical terms explained on first use. |
+| **SLAM-AC06** | A shell launcher builds and runs the cREXX sources against prepared images. Python and superseded demo machinery are removed. |
+| **SLAM-AC07** | A focused ordinary run verifies the story and source/flow controls; the runnable source bundle opens and runs after extraction. |
 
 | Stable step | Current status and dependency |
 |---|---|
-| **SLAM-STEP01 — done** | Record the fixture provenance, exact analysis/proof boundaries and focused check plan before implementation; AC01–04. |
-| **SLAM-STEP02 — done** | Add the standalone Classic fixtures, Level L analysis consumer and exact-rational comparison driver; AC01–03. |
-| **SLAM-STEP03 — done** | Inspect representative source/IR/RXAS, run focused normal checks on one VM, update the user-facing explanation and report results; AC01–04. |
-| **SLAM-STEP04 — done** | Extend the cREXX AST/graph consumer, controlled fixtures and worked guide; AC05–07. Source/representative analyser RXAS review and one focused ordinary VM run cover the independent numerical baseline and negative/unknown controls using prepared images. Grammar regeneration, broader QA and publication remain outside this increment. |
+| **SLAM-STEP01 — done** | Record the revised story, asset and cREXX-only scope; AC01–07. |
+| **SLAM-STEP02 — done** | Replace the report harness with the cREXX journey and flow lowering; AC01–04/06. |
+| **SLAM-STEP03 — done** | Run one focused ordinary VM check and inspect representative RXAS; AC01–04/07. Reuse prepared images. |
+| **SLAM-STEP04 — done** | Edit the concise story against the output, remove superseded assets, package and check the ZIP; AC05–07. |
 
 ## Outside current C closure
 
