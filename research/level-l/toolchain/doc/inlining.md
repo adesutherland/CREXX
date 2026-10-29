@@ -493,8 +493,13 @@ counted windows, callee policy/context changes and physical observers retain
 specific pending/unproved reasons. This is an initial representable category,
 not complete G or Classic C signal coverage.
 
-`FAILURE` retains `signal.activation.failure.pending`: removing `CALL1` removes
-its frame-allocation failure event. `CANCEL`, POSIX and other external delivery
+The finite profile still retains `FAILURE` with
+`signal.activation.failure.pending`. Adrian accepted that reasonable inlining
+may change infrastructure-pressure error paths as its resource use changes,
+including the `FAILURE` opportunity caused by an eliminated call-frame
+allocation. Deterministic failures from retained operations and call-entry
+semantics remain obligations. The full catch-all state/unwind proof remains
+open. `CANCEL`, POSIX and other external delivery
 policies retain `signal.asynchronous.tag.pending`; channel/task event policies
 retain `signal.event.delivery.pending`. Other names remain outside this finite
 slice with `signal.named.tag.pending`. Full G catch-all is a separate proof:
@@ -684,16 +689,20 @@ startup, VM and linker contracts. An ordinary handwritten RXAS producer must
 also be able to express what those consumers require. The earlier paired
 `META_GLOBAL_BINDING`/`META_SOURCE_ARTIFACT` proposal, especially its
 source-hash witness and long binary payload, is withdrawn. If private aliases
-are selected later, choose a concise, documented source directive for an
-exact module/slot binding and one typed linker/loader representation. This
-could be a dedicated metadata kind or a first-class binding/relocation table;
-its encoding and feature gate remain an explicit compatibility decision.
-The linker would resolve against its exact selected module
-set and publish direct checked ModuleRefs; the loader would bind same-image
+are selected later, the candidate handwritten spelling gives the provider a
+stable module-local symbol (`g7 .symbol="count"`) and the importer an exact
+module/name alias (`g2 .alias="counter.rxas","count"`). The consumer never
+names the provider's allocated `gN` slot. A typed symbol declaration and a
+typed symbolic-then-resolved alias record would serve linker/loader semantics,
+not certify the inliner. Their encoding and feature gate remain an explicit
+compatibility decision. The linker would resolve against its exact selected
+module set and publish checked image-local module/slot references; the loader
+would bind same-image
 worker-overlay storage before initialization. Owned/public cells are allocated
 first, alias destinations skipped, and importer aliases use
 `globals_dont_free=1`. The codec, disassembler, relinker and VM must agree on
-one eventual typed representation and reject unsupported versions.
+the typed representation, retain enough symbol identity to print the same
+handwritten alias, and reject unsupported versions.
 
 Qualification reuses the maintained exposed-global bounds, program-generation
 control and module-initializer fixtures. Their observations must be checked
@@ -1154,9 +1163,11 @@ transport/storage cleanup has no child body and returns `keep: body.unavailable`
 preserving conservative expanded RXAS. Provider-aware cleanup and removal of
 outer counted-window machinery need a separately reviewed lifecycle; this
 slice makes neither claim. A counted child can retain the authored swap/inverse
-pair plus a redundant linear reverse replay at outer RET; the provider-aware
-INL-STEP05 cleanup must prove and remove that extra pair without disturbing
-the child's required window. Provider images and their source/TRACE records stay
+pair plus a redundant linear reverse replay at outer RET; a separately bounded
+generated-replay normalization can cancel that extra pair without provider
+facts, while provider-aware cleanup is still needed for broader transport.
+The child's required window remains intact. Provider images and their
+source/TRACE records stay
 unchanged, while copied observations retain their logical provider origins.
 
 The single request work allowance is partitioned into preparation/projection,

@@ -316,9 +316,10 @@ separately reviewed provider-aware cleanup lifecycle exists. This increment
 does not claim private imported nesting or outer counted-window cleanup. In
 the selected counted example, linear expansion replays the authored swap pair
 and conservatively replays its reverse again at outer RET. The latter pair is
-redundant for that restored window; INL-STEP05 owns its removal after
-provider-aware cleanup can prove the retained child, with a structural check
-that keeps the child-required swap and inverse.
+redundant for that restored window; the following INL-STEP05 generated inverse
+normalization owns its removal without requiring provider facts, with a
+structural check that keeps the child-required swap and inverse. Broader outer
+transport cleanup still needs the provider-aware lifecycle.
 
 Independent constructed and handwritten linked controls check repeated fixed
 aliased actuals and counted windows with required swaps, a two-arm acyclic
@@ -330,6 +331,29 @@ images. Missing/misbound child import, hidden child, deeper/recursive/dynamic
 or unproved windows, startup/global/physical-observer barriers and tight limits
 retain exact caller/provider owners and CLI last-good output. INL-AC03/04/05/07
 and the final INL-STEP06 panel remain open.
+
+### Reviewed generated inverse-swap normalization
+
+The next INL-STEP05 slice simplifies only the linear inverse SWAP replay
+generated at an expanded outer `RET`. After mapping each recorded pair to its
+actual output register identities, cancel adjacent equal unordered pairs in
+that contiguous generated replay. This bounded lookahead does not claim a
+general permutation normal form.
+The VM SWAP exchanges both value pointers and local identities, so repeating
+the same physical pair is identity even for aliases. This proof crosses no
+source/TRACE record, call, signal point or authored operation. Preserve the
+result COPY/MOVE, every authored swap around a retained child, lifetime and
+binding closure, and remaining inverse swaps. Charge bounded preparation/work
+for the replay; refusal remains atomic. No provider body, new public API,
+metadata, ISA, VM or linker change is selected.
+
+The imported counted-child control should have exactly its authored pre/post
+swaps across two activations in conservative output with `rxas -n`, and still
+produce the independently expected values. A distinct overlapping pair and
+noncancelling permutation retain their necessary inverses; aliases and result
+overlap retain their values. Structural assertions inspect child-window order
+and source/TRACE. Caller-only cleanup still returns `body.unavailable`; the
+broader provider-aware cleanup and INL-AC05 remain open.
 
 ### Signal coverage and practical-demand decision
 
@@ -506,12 +530,16 @@ refusal. No wire, metadata, API, ISA, VM or language change is selected.
 
 This is a named-list prerequisite, not full G catch-all. The G emitter expands
 catch-all into 29 named registrations, including `FAILURE` and `CANCEL`; `ANY`
-is not a VM signal name. A removed `CALL1` also removes its frame-allocation
-`FAILURE` event, which a catch-all could observe. `CANCEL` can arrive after
-setup or return writes, so a single pre-call handler snapshot is insufficient.
-Full catch-all needs a separate decision on activation-failure observation or
-runtime logical activation, followed by interruptible path/cleanup proof.
-Handwritten metadata cannot prove allocation success or replace unwind state.
+is not a VM signal name. Adrian accepted on 29 October 2026 that reasonable
+inlining may change error paths caused by infrastructure pressure when it
+removes or reshapes that infrastructure, including the `FAILURE` opportunity
+from allocating an eliminated call frame. This does not excuse deterministic
+language failures from retained work or other call-entry semantics. `CANCEL`
+can arrive after setup or return writes, so a single pre-call handler snapshot
+is insufficient. Full catch-all
+still needs interruptible path/cleanup proof; a runtime logical activation
+fallback remains a separate API/ISA decision if that proof requires one.
+Handwritten metadata cannot replace unwind state.
 The bounded named-list slice excludes `FAILURE`, `CANCEL` and other externally
 delivered asynchronous tags; their frequency in real programs is unmeasured.
 
@@ -524,31 +552,33 @@ preserves the caller and CLI last-good output; the cleanup guard stays active.
 The full catch-all, bound `SIGBRV`, nested scope and Level C protection layers
 remain open under INL-AC03/04/05.
 
-### Pending private-global alias and logical-activation decisions
+### Pending private-global symbol and logical-activation decisions
 
-A candidate handwritten RXAS declaration is `g2 .alias="counter.rxas",g0`:
-the importer's private `g2` binds exactly named provider `counter.rxas` slot
-`g0`, without exposing a public symbol. One typed RXBIN007 global-alias record
-would carry destination slot, tagged exact-name/image-local ModuleRef and
-provider slot under a mandatory feature bit. Link resolves exact selected
-module names and relocates image-local IDs; loader binds the owner cell in
-each worker overlay before preparation/initialization, skips alias allocation
-and frees only the owner. Codec, disassembler and relinker must round-trip the
-same handwritten declaration; basename fallback, source hashes and compiler
-proof payloads are excluded. Initially require an unexposed ultimate owner;
-alias cycles/conflicts fail. Binding itself proves no initializer ingress, so
-the exact all-ready imported profile remains until that separate contract.
-The source spelling, typed feature extension and round-trip identity are an
-explicit compatibility decision before product implementation.
+The earlier numeric-provider alias spelling is withdrawn: a handwritten
+consumer cannot rely on a compiled provider keeping a value in `g0`. The
+candidate source contract instead declares a stable provider-local linker
+symbol (`g7 .symbol="count"`) and lets a consumer write
+`g2 .alias="counter.rxas","count"`. The provider's own allocation can later
+move `count` to `g0` without changing consumer source. `.symbol` is module-
+qualified link visibility, not public `.expose` or a compiler proof fact.
+Two typed RXBIN007 records would persist the symbol declaration and a symbolic
+alias in relocatable input; the linker checks the exact selected module/name,
+then lowers the alias to its image-local module/slot. Loader binding remains
+worker-local, before initialization, with one owning cell. Disassembly/relink
+must recover the stable name, not print a provider register number. No source
+hash, attestation or inliner-side META payload is selected. Binding itself
+proves no initializer ingress, so the exact all-ready imported profile remains.
+The source spellings, typed feature extension, stable module-name round trip
+and strict symbol/alias validation are a pending compatibility decision before
+product implementation.
 
-Full G catch-all includes `FAILURE` and `CANCEL`. A removed `CALL1` can remove
-its frame-allocation `FAILURE`; `CANCEL` can observe several states after call
-setup and return writes. Strict preservation either retains such calls or
-requires a call-equivalent fallible logical activation. A relaxed resource
-contract could permit elimination of that allocation failure, but still needs
-atomic logical enter/return/unwind semantics for `CANCEL` and inherited
-`SIGRET`. Any `INLINE_ENTER`/`INLINE_LEAVE` ISA/VM fallback and the resource
-contract require an explicit decision; neither is implied by metadata.
+The approved resource rule permits modest variation in infrastructure-pressure
+error paths, including elimination of `FAILURE` from removed call-frame
+allocation. Full catch-all still needs exact state and unwind semantics for
+`CANCEL`, inherited `SIGRET`, partial setup and atomic
+return; an `INLINE_ENTER`/`INLINE_LEAVE` ISA/VM fallback remains an explicit
+decision if existing instructions cannot express them. Neither follows from
+private-global metadata.
 
 ### Reviewed shared CFG prerequisite
 
