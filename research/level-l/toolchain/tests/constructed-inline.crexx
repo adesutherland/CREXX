@@ -2152,6 +2152,7 @@ runtimechildcontrols: procedure = .int
 runtimebranchmodel: procedure = .lltarget..module
   arg variant = .int, expose callid = .int, expose branchid = .int
   ignored = .int; i = .int; fields = .object[]
+  child = .lltarget..bodydraft
   draft = .lltarget..draft('runtime.branch.' || variant,'constructed.runtime.branch',0)
   at = draft.synthetic('checked runtime selector DAG continuation')
   root = draft.procedure('main',8,at)
@@ -2165,8 +2166,13 @@ runtimebranchmodel: procedure = .lltarget..module
     ignored = two(root,'load',root.reg('r',i),.lltarget..operand.string('value' || i),at)
     ignored = two(root,'settp',root.reg('r',i),.lltarget..operand.integer(i * 256),at)
   end
-  if variant = 1 | variant = 11 | variant = 12 then ignored = three(root,'iadd',root.reg('r',1),root.reg('r',1),root.reg('r',5),at)
+  if variant = 1 | variant = 11 | variant = 12 | variant = 22 then ignored = three(root,'iadd',root.reg('r',1),root.reg('r',1),root.reg('r',5),at)
   if variant = 11 then ignored = two(root,'copy',root.reg('r',2),root.reg('r',1),at)
+  if variant = 21 | variant = 23 then do
+    ignored = two(root,'load',root.reg('r',4),.lltarget..operand.integer(99),at)
+    ignored = two(root,'load',root.reg('r',4),.lltarget..operand.string('seed'),at)
+    ignored = two(root,'settp',root.reg('r',4),.lltarget..operand.integer(512),at)
+  end
   fields[1] = root.reg('r',4) as .object; fields[2] = .lltarget..operand.procedure('pick') as .object
   do i = 0 to 3; fields[i + 3] = root.reg('r',i) as .object; end
   callid = root.emit('call4',fields,at)
@@ -2184,6 +2190,68 @@ runtimebranchmodel: procedure = .lltarget..module
   ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(1),leaf.reg('r',3),at)
   if variant = 10 then ignored = namedlabel(leaf,'selected',at)
   ignored = three(leaf,'linkarg',leaf.reg('r',3),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  if variant = 21 | variant = 23 | variant = 24 | variant = 25 then do
+    ignored = one(leaf,'null',leaf.reg('r',1),at)
+    if variant = 21 then do
+      ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('a',1),.lltarget..operand.integer(3),at)
+      branchid = two(leaf,'brf',.lltarget..operand.symbol('bare'),leaf.reg('r',1),at)
+      ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+      ignored = two(leaf,'brf',.lltarget..operand.symbol('owned'),leaf.reg('r',1),at)
+      ignored = one(leaf,'br',.lltarget..operand.symbol('shared'),at)
+      ignored = namedlabel(leaf,'owned',at)
+      ignored = one(leaf,'unlink',leaf.reg('r',3),at)
+      ignored = one(leaf,'null',leaf.reg('r',3),at)
+      ignored = two(leaf,'load',leaf.reg('r',3),.lltarget..operand.integer(71),at)
+      ignored = two(leaf,'load',leaf.reg('r',3),.lltarget..operand.string('owned'),at)
+      ignored = two(leaf,'settp',leaf.reg('r',3),.lltarget..operand.integer(256),at)
+      ignored = two(leaf,'swap',leaf.reg('a',2),leaf.reg('a',3),at)
+      ignored = one(leaf,'br',.lltarget..operand.symbol('shared'),at)
+      ignored = namedlabel(leaf,'bare',at)
+      ignored = zero(leaf,'ret',at)
+      ignored = namedlabel(leaf,'shared',at)
+      ignored = one(leaf,'ret',leaf.reg('r',3),at)
+    end
+    else if variant = 23 then do
+      ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+      branchid = two(leaf,'brf',.lltarget..operand.symbol('bare'),leaf.reg('r',1),at)
+      ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('a',1),.lltarget..operand.integer(2),at)
+      ignored = two(leaf,'brf',.lltarget..operand.symbol('integer'),leaf.reg('r',1),at)
+      ignored = one(leaf,'ret',.lltarget..operand.string('λ'),at)
+      ignored = namedlabel(leaf,'bare',at)
+      ignored = zero(leaf,'ret',at)
+      ignored = namedlabel(leaf,'integer',at)
+      ignored = one(leaf,'ret',.lltarget..operand.integer(37),at)
+    end
+    else if variant = 24 then do
+      ignored = one(leaf,'null',leaf.reg('r',4),at)
+      ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('r',3),.lltarget..operand.integer(10),at)
+      branchid = two(leaf,'brf',.lltarget..operand.symbol('child'),leaf.reg('r',1),at)
+      ignored = two(leaf,'load',leaf.reg('r',4),.lltarget..operand.integer(-1),at)
+      ignored = one(leaf,'unlink',leaf.reg('r',3),at)
+      ignored = one(leaf,'ret',leaf.reg('r',4),at)
+      ignored = namedlabel(leaf,'child',at)
+      ignored = three(leaf,'call1',leaf.reg('r',4),.lltarget..operand.procedure('bump'),leaf.reg('r',3),at)
+      ignored = one(leaf,'unlink',leaf.reg('r',3),at)
+      ignored = one(leaf,'ret',leaf.reg('r',4),at)
+      child = draft.procedure('bump',0,at)
+      ignored = three(child,'iadd',child.reg('a',1),child.reg('a',1),.lltarget..operand.integer(7),at)
+      ignored = one(child,'ret',child.reg('a',1),at)
+    end
+    else do
+      ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+      branchid = two(leaf,'brf',.lltarget..operand.symbol('branchA'),leaf.reg('r',1),at)
+      call objectarraydrop fields
+      fields[1] = .lltarget..operand.string('branch.B') as .object; fields[2] = .lltarget..operand.string('b') as .object
+      fields[3] = .lltarget..operand.string('.int') as .object; fields[4] = leaf.reg('r',3) as .object
+      ignored = leaf.record('.meta',fields,at)
+      ignored = one(leaf,'ret',leaf.reg('r',3),at)
+      ignored = namedlabel(leaf,'branchA',at)
+      fields[1] = .lltarget..operand.string('branch.A') as .object
+      ignored = leaf.record('.meta',fields,at)
+      ignored = one(leaf,'ret',leaf.reg('r',3),at)
+    end
+    return draft.finish()
+  end
   if variant = 20 then do
     call objectarraydrop fields; fields[1] = .lltarget..operand.string('selected') as .object
     ignored = leaf.record('.meta',fields,at)
@@ -2226,7 +2294,7 @@ runtimebranchmodel: procedure = .lltarget..module
   if variant = 11 then ignored = two(leaf,'link',leaf.reg('r',3),leaf.reg('a',3),at)
   else if variant = 3 | variant = 17 then ignored = three(leaf,'call1',leaf.reg('r',4),.lltarget..operand.procedure('bump'),leaf.reg('r',3),at)
   else ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(7),at)
-  if variant = 14 then ignored = one(leaf,'ret',leaf.reg('r',3),at)
+  if variant = 14 | variant = 22 then ignored = one(leaf,'ret',leaf.reg('r',3),at)
   else if variant = 19 then ignored = one(leaf,'br',.lltarget..operand.symbol('add7'),at)
   else ignored = one(leaf,'br',.lltarget..operand.symbol('joined'),at)
   if variant <> 2 & variant <> 18 & variant <> 20 then do
@@ -2251,7 +2319,7 @@ runtimebranchcontrols: procedure = .int
   expected = .int; reasons = .string[]
   reasons[10] = 'argument.selector.tail.entry.pending'; reasons[11] = 'join.binding.unproved'
   reasons[12] = 'arithmetic.write.availability.unproved'; reasons[13] = 'metadata.scope.cfg.pending'
-  reasons[14] = 'argument.selector.tail.return.pending'; reasons[15] = 'branch.condition.unproved'
+  reasons[15] = 'branch.condition.unproved'
   reasons[16] = 'argument.selector.tail.selector.pending'; reasons[17] = 'local.recycler.history.unproved'
   reasons[18] = 'metadata.scope.cfg.pending'; reasons[19] = 'callee.cfg.cycle.pending'; reasons[20] = 'metadata.scope.cfg.pending'
   do variant = 0 to 20
@@ -2261,13 +2329,14 @@ runtimebranchcontrols: procedure = .int
     if original.valid() = 0 then do; say original.error(); iterate; end
     request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
     changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
-    if variant <= 5 then do
+    if variant <= 5 | variant = 14 then do
       failures = failures + check(changed.status() = 'changed','runtime DAG continuation expands ' || variant)
       if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
       facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
       failures = failures + check(facts.status() = 'ok','runtime DAG facts seal ' || variant)
       if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
-      failures = failures + check(facts.argumentcases(callid) = 3 & facts.returns(callid) = 1,'three cases share one original RET')
+      expected = 1; if variant = 14 then expected = 2
+      failures = failures + check(facts.argumentcases(callid) = 3 & facts.returns(callid) = expected,'three cases retain their exact original RET set')
       remaining = facts.remaining()
       do i = 1 to 3
         expected = 2; if i = 1 then expected = 1
@@ -2293,6 +2362,93 @@ runtimebranchcontrols: procedure = .int
   failures = failures + check(changed.status() = 'limit' & changed.result().identity() = id,'runtime DAG frame refusal is atomic')
   return failures
 
+runtimereturncontrols: procedure = .int
+  failures = 0; variant = .int; n = .int; i = .int; j = .int; callid = .int; branchid = .int; id = .int
+  borrowed = .int; owned = .int; shared = .int; bare = .int; count = .int; expected = .int; remaining = .int; resultid = .int
+  variants = .int[]; variants[1] = 14; variants[2] = 21; variants[3] = 22; variants[4] = 23; variants[5] = 24; variants[6] = 25
+  original = .lltarget..module; facts = .lltargetfacts..analysis; changed = .llinline..change; request = .llinline..binding
+  do n = 1 to variants[0]
+    variant = variants[n]; original = runtimebranchmodel(variant,callid,branchid); id = original.identity()
+    failures = failures + check(original.valid(),'runtime multiple-RET model verifies ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
+    if variant = 25 then do
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = 'metadata.scope.cfg.pending' & changed.result().identity() = id,'disjoint case-local scopes obey original cross-RET lexical gate')
+      if changed.status() <> 'keep' then say changed.reason()
+      iterate
+    end
+    failures = failures + check(changed.status() = 'changed','runtime multiple-RET expands ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
+    failures = failures + check(facts.status() = 'ok','runtime multiple-RET facts seal ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    expected = 2; if variant = 23 then expected = 3
+    failures = failures + check(facts.argumentcases(callid) = 3 & facts.returns(callid) = expected,'aggregate is the union of original reached RETs')
+    remaining = facts.remaining()
+    do i = 2 to facts.returns(callid)
+      failures = failures + check(facts.returnsite(callid,i - 1) < facts.returnsite(callid,i),'RET enumeration follows source order')
+    end
+    count = 0
+    do i = 1 to 3
+      count = count + facts.argumentcasereturns(callid,i)
+      do j = 1 to facts.argumentcasereturns(callid,i)
+        id = facts.argumentcasereturnsite(callid,i,j)
+        failures = failures + check(facts.argumentcaselive(callid,i,id) & facts.argumentcaseactionat(callid,i,id) <> '','case membership has its exact RET action')
+      end
+    end
+    expected = 3; if variant = 22 then expected = 4
+    failures = failures + check(count = expected,'feasible exits are not width times static RETs ' || variant)
+    if variant = 14 | variant = 22 then do
+      borrowed = facts.returnsite(callid,1); owned = facts.returnsite(callid,2)
+      failures = failures + check(facts.argumentcaselive(callid,1,borrowed) & facts.argumentcaseactionat(callid,1,borrowed) = 'copy','linked selected RET borrows its caller cell')
+      failures = failures + check(facts.argumentcaselive(callid,2,borrowed) = 0 & facts.argumentcaseactionat(callid,2,owned) = 'move' & facts.argumentcaseactionat(callid,3,owned) = 'move','other cases keep the distinct owned RET')
+      failures = failures + check(facts.argumentcaselive(callid,1,owned) = (variant = 22),'one selector case can reach both RETs')
+    end
+    if variant = 21 then do
+      bare = facts.returnsite(callid,1); shared = facts.returnsite(callid,2)
+      failures = failures + check(facts.argumentcaseactionat(callid,1,shared) = 'move' & facts.argumentcaseactionat(callid,2,shared) = 'copy' & facts.argumentcaseactionat(callid,3,bare) = 'none','same source RET has exact case ownership and sibling bare RET')
+      failures = failures + check(facts.returnactionat(callid,shared) = '' & facts.argumentcaselive(callid,3,shared) = 0,'no first-case action or infeasible NONE row')
+      failures = failures + check(facts.argumentcaserestoresat(callid,1,shared) = 1 & facts.argumentcaserestoresat(callid,2,shared) = 0,'same source RET keeps distinct per-case inverse')
+      failures = failures + check(facts.argumentcaseleftat(callid,1,shared,1) = 7 & facts.argumentcaserightat(callid,1,shared,1) = 8,'only reached argument SWAP needs its inverse')
+    end
+    if variant = 23 then do
+      failures = failures + check(facts.argumentcaseactionat(callid,1,facts.argumentcasereturnsite(callid,1,1)) = 'none' & facts.argumentcaseactionat(callid,2,facts.argumentcasereturnsite(callid,2,1)) = 'integer' & facts.argumentcaseactionat(callid,3,facts.argumentcasereturnsite(callid,3,1)) = 'string','bare and component return actions remain distinct')
+    end
+    if variant = 21 | variant = 23 then do
+      projection = dereference facts.access(); resultid = facts.storage(callid,1)
+      failures = failures + check(projection.kills(callid,facts.integerdomain(resultid)) = 0 & projection.kills(callid,facts.wholedomain(resultid)) = 0,'bare/component exits forbid false definite result kills')
+    end
+    failures = failures + check(facts.remaining() = remaining,'case-and-RET queries borrow sealed rows')
+  end
+  original = runtimebranchmodel(22,callid,branchid); id = original.identity()
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
+  changed = llinline..expand(request,'closed-main-default-halt.v1',100)
+  failures = failures + check(changed.status() = 'limit' & changed.result().identity() = id,'multiple-RET work refusal is atomic')
+  changed = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,256)
+  failures = failures + check(changed.status() = 'limit' & changed.result().identity() = id,'multiple-RET byte refusal is atomic')
+  changed = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,67108864,8)
+  failures = failures + check(changed.status() = 'limit' & changed.result().identity() = id,'multiple-RET frame refusal is atomic')
+  return failures
+
+infeasiblereturn: procedure = .int
+  callid = .int; branchid = .int
+  original = runtimebranchmodel(14,callid,branchid)
+  facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
+  retid = facts.argumentcasereturnsite(callid,2,1)
+  ignored = facts.argumentcaseactionat(callid,1,retid)
+  say 'UNEXPECTED_CASE_RET:' || ignored
+  return 1
+
+nonuniformrestore: procedure = .int
+  callid = .int; branchid = .int
+  original = runtimebranchmodel(21,callid,branchid)
+  facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
+  retid = facts.returnsite(callid,2)
+  ignored = facts.restores(callid,retid)
+  say 'UNEXPECTED_LEGACY_RESTORE:' || ignored
+  return 1
+
 main: procedure = .int
   arg argv = .string[]
   lane = ''
@@ -2309,9 +2465,12 @@ main: procedure = .int
   end
   if lane = 'runtime-branch' then do
     branchfailures = runtimebranchcontrols()
+    branchfailures = branchfailures + runtimereturncontrols()
     say 'RUNTIME_BRANCH|failures=' || branchfailures
     return branchfailures
   end
+  if lane = 'runtime-infeasible-return' then return infeasiblereturn()
+  if lane = 'runtime-nonuniform-restore' then return nonuniformrestore()
   failures = 0
   draft = .lltarget..draft('constructed','constructed.fixture',0)
   at = draft.synthetic('constructed scalar call')

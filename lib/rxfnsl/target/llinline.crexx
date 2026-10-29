@@ -887,6 +887,18 @@ expandlocalmany: procedure = .llinline..change
         end
         else if childrecord.mnemonic() <> 'ret' then ignored = code.emit(targetbody,childrecord.mnemonic(),fields,childat)
         else do
+          if runtimearm > 0 then do
+            action = facts.argumentcaseactionat(input.id(),runtimearm,childrecord.id())
+            if hasresult = 0 | childrecord.operands() = 0 then do
+              if action <> 'none' then assembler signal "ERROR","LL_INLINE: invalid case RET no-result action"
+            end
+            else do
+              value = childrecord.operand(1)
+              if value.kind() = 'I' & action <> 'integer' then assembler signal "ERROR","LL_INLINE: invalid case RET integer action"
+              if value.kind() = 'S' & action <> 'string' then assembler signal "ERROR","LL_INLINE: invalid case RET string action"
+              if value.kind() = 'R' & action <> 'move' & action <> 'copy' then assembler signal "ERROR","LL_INLINE: invalid case RET register action"
+            end
+          end
           if hasresult & childrecord.operands() = 1 then do
             value = childrecord.operand(1)
             if value.kind() = 'I' then do
@@ -896,7 +908,7 @@ expandlocalmany: procedure = .llinline..change
             else if value.kind() = 'S' then ignored = code.two(targetbody,'load',resultcell,value,childat)
             else do
               mapped = fields[1] as .lltarget..operand
-              if runtimearm > 0 then action = facts.argumentcaseaction(input.id(),runtimearm)
+              if runtimearm > 0 then action = facts.argumentcaseactionat(input.id(),runtimearm,childrecord.id())
               else action = facts.returnactionat(input.id(),childrecord.id())
               if action = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
               else ignored = code.two(targetbody,'copy',resultcell,mapped,childat)
@@ -930,12 +942,12 @@ expandlocalmany: procedure = .llinline..change
           end
           if ordered then do
             if dag then do
-              if runtimearm > 0 then restores = facts.argumentcaserestores(input.id(),runtimearm)
+              if runtimearm > 0 then restores = facts.argumentcaserestoresat(input.id(),runtimearm,childrecord.id())
               else restores = facts.restores(input.id(),childrecord.id())
               do k = 1 to restores
               if runtimearm > 0 then do
-                pairleft = facts.argumentcaseleft(input.id(),runtimearm,k)
-                pairright = facts.argumentcaseright(input.id(),runtimearm,k)
+                pairleft = facts.argumentcaseleftat(input.id(),runtimearm,childrecord.id(),k)
+                pairright = facts.argumentcaserightat(input.id(),runtimearm,childrecord.id(),k)
               end
               else do
                 pairleft = facts.restoreleft(input.id(),childrecord.id(),k)

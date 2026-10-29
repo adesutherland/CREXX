@@ -1824,7 +1824,7 @@ The separate serial `levell_rxas_runtime_selector` and
 `levell_rxas_runtime_child` panels share prepared producers and extend the
 maintained constructed argument-selection owner and handwritten RXAS controls.
 The bounded acyclic continuation additionally admits the existing direct DAG
-branches after LINKARG, joining at one shared source RET. It saves the immutable
+branches after LINKARG through one or more reached source RETs. It saves the immutable
 pre-check state separately from the post-LINKARG intra-block cursor. Each raw
 selector case transfers the authored check and rebinding, then resumes the
 same graph owner with independent cells/frame/history at every suffix block.
@@ -1837,19 +1837,38 @@ result.
 
 The sealed case proof supplies record liveness and branch choices to the
 emitter. Source labels and targets are private to each call/case, and the
-complete case region is emitted before another case starts. A shared RET can
-precede a later reached source block; its normal closure branches to caller
-continuation while the later block retains its own case labels. Original
-lexical source rows remain truthful when a dead instruction is omitted.
-Branch-local META without the existing dominance/order proof retains
-`metadata.scope.cfg.pending`. Early-RET layouts containing any reachable scoped
-META opening also retain that reason, including an opening already closed
-before RET: per-block lexical re-entry remains unproved. Source/TRACE-only
-early-RET layouts are admitted. Multiple RETs retain
-`argument.selector.tail.return.pending`; incompatible pointer joins keep the
-existing join reason even when values match. No binding-compatibility rule is
-weakened. `levell_rxas_runtime_branch` provides the separate serial constructed
-and paired RXAS branch/CANCEL controls; multi-RET remains the next slice.
+complete case region is emitted before another case starts. Each feasible
+case/RET row supplies its own COPY/MOVE/component/none action and exact inverse
+permutation. Separate exit blocks finish before caller cells/history merge;
+they do not force incompatible sibling frame maps through a synthetic join.
+Actual CFG joins retain the existing exact binding requirement, even for equal
+values. A bare RET preserves the captured result's components while preceding
+alias writes remain visible. Every emitted exit commits its own result and
+closes its own bindings/owned bases before branching to caller continuation.
+An early-layout RET does not suppress later reached source blocks.
+
+The common proof absorbs each whole selector case once. It enumerates the
+union of feasible original RETs in source order, unions possible accesses and
+intersects definite result kills over every exit. A missing case/RET is
+infeasible rather than action `none`; exact queries reject that pair. Actions
+and inverse pairs aggregate only over reaching cases and become unavailable
+to legacy queries when nonuniform. Singleton queries require one RET in their
+scope; the implementation stores no first-return stand-in for multiple RETs.
+Sealed case/RET queries borrow their proof rows, and construction charges
+enumeration, aggregate copies and restoration vectors before growth.
+
+Original lexical source rows remain truthful when dead instructions are
+omitted. Before selector forks, every structurally reachable outer scoped
+META opening/clear must dominate and precede every structurally reachable
+outer RET, independently of case feasibility. Otherwise
+`metadata.scope.cfg.pending` retains the call, including disjoint scopes whose
+individual case paths would pass their own dominance check. An opening plus
+an early-layout RET followed by another reachable instruction also retains
+that reason even after a common clear: block-local lexical re-entry remains
+unproved. Source/TRACE-only early and multiple-RET layouts are admitted.
+`levell_rxas_runtime_branch` shares prepared producers for the maintained
+constructed and paired RXAS branch/return/CANCEL controls. General scoped
+metadata reconciliation, loops and broader runtime selectors remain open.
 
 Current cleanup retains the conservative runtime dispatch when its independent
 range/access proof returns `argument.range.unproved`; branch-aware reduction of
