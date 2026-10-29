@@ -2372,7 +2372,7 @@ runtimebranchmodel: procedure = .lltarget..module
     ignored = two(root,'load',root.reg('r',i),.lltarget..operand.string('value' || i),at)
     ignored = two(root,'settp',root.reg('r',i),.lltarget..operand.integer(i * 256),at)
   end
-  if variant = 1 | variant = 11 | variant = 12 | variant = 22 | variant = 27 then ignored = three(root,'iadd',root.reg('r',1),root.reg('r',1),root.reg('r',5),at)
+  if variant = 1 | variant = 11 | variant = 12 | variant = 22 | variant = 27 | variant = 35 then ignored = three(root,'iadd',root.reg('r',1),root.reg('r',1),root.reg('r',5),at)
   if variant = 11 then ignored = two(root,'copy',root.reg('r',2),root.reg('r',1),at)
   if variant = 21 | variant = 23 then do
     ignored = two(root,'load',root.reg('r',4),.lltarget..operand.integer(99),at)
@@ -2382,9 +2382,31 @@ runtimebranchmodel: procedure = .lltarget..module
   fields[1] = root.reg('r',4) as .object; fields[2] = .lltarget..operand.procedure('pick') as .object
   do i = 0 to 3; fields[i + 3] = root.reg('r',i) as .object; end
   if variant = 29 then do i = 1 to 3; fields[i + 3] = root.reg('r',1) as .object; end
+  if variant = 34 | variant = 35 | variant = 42 then ignored = two(root,'copy',root.reg('r',6),root.reg('r',0),at)
   callid = root.emit('call4',fields,at)
+  if variant = 34 | variant = 35 | variant = 42 then do
+    fields[1] = root.reg('r',7) as .object; fields[3] = root.reg('r',6) as .object
+    ignored = root.emit('call4',fields,at)
+  end
   ignored = one(root,'ret',.lltarget..operand.integer(0),at)
   leaf = draft.procedure('pick',5,at)
+  if variant >= 34 then do
+    ignored = one(leaf,'null',leaf.reg('r',0),at)
+    ignored = two(leaf,'load',leaf.reg('r',0),.lltarget..operand.integer(91),at)
+    observedprefix = leaf.reg('r',0)
+    if variant = 42 then observedprefix = leaf.reg('r',1)
+    ignored = scopeopen(leaf,'prefix.r',observedprefix,at)
+    ignored = scopeopen(leaf,'prefix.a0',leaf.reg('a',0),at)
+    ignored = scopeopen(leaf,'prefix.a1',leaf.reg('a',1),at)
+    ignored = scopeopen(leaf,'prefix.const',.lltarget..operand.string('prefix-literal'),at)
+    ignored = scopeopen(leaf,'prefix.closed',leaf.reg('r',0),at)
+    ignored = zero(leaf,'cnop',at)
+    ignored = scopeclose(leaf,'prefix.closed',at)
+    if variant = 44 then do
+      ignored = two(leaf,'link',leaf.reg('a',1),leaf.reg('a',2),at)
+      ignored = one(leaf,'unlink',leaf.reg('a',1),at)
+    end
+  end
   if variant = 30 | variant = 32 then ignored = scopeopen(leaf,'scope.prefix',leaf.reg('r',1),at)
   if variant = 32 then ignored = zero(leaf,'cnop',at)
   if variant = 31 | variant = 32 then ignored = scopeclose(leaf,'scope.prefix',at)
@@ -2400,13 +2422,61 @@ runtimebranchmodel: procedure = .lltarget..module
   ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(1),leaf.reg('r',3),at)
   if variant = 10 then ignored = namedlabel(leaf,'selected',at)
   if variant = 33 then ignored = scopeopen(leaf,'scope.entry',leaf.reg('r',1),at)
+  if variant = 36 then ignored = scopeclose(leaf,'prefix.r',at)
+  if variant = 37 then do
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.integer(0) as .object; fields[2] = fields[1]
+    fields[3] = .lltarget..operand.integer(6) as .object; fields[4] = .lltarget..operand.string('') as .object
+    do i = 5 to 7; fields[i] = .lltarget..operand.integer(0) as .object; end
+    fields[8] = .lltarget..operand.string('') as .object
+    ignored = leaf.record('.srcstep',fields,at)
+  end
+  if variant = 38 then do
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.string('V') as .object; fields[2] = .lltarget..operand.integer(4) as .object
+    fields[3] = .lltarget..operand.string('R') as .object; fields[4] = .lltarget..operand.string('I') as .object
+    fields[5] = .lltarget..operand.string('a') as .object; fields[6] = .lltarget..operand.integer(1) as .object
+    do i = 7 to 9; fields[i] = .lltarget..operand.integer(0) as .object; end
+    fields[10] = .lltarget..operand.string('prefix') as .object; fields[11] = .lltarget..operand.string('') as .object
+    ignored = leaf.record('.traceevent',fields,at)
+  end
+  if variant = 39 then do
+    call objectarraydrop fields
+    fields[1] = .lltarget..operand.string('probe.helper') as .object; fields[2] = .lltarget..operand.string('b') as .object
+    fields[3] = .lltarget..operand.string('.int') as .object; fields[4] = .lltarget..operand.procedure('pick') as .object
+    fields[5] = .lltarget..operand.string('') as .object
+    ignored = leaf.record('.meta',fields,at)
+  end
+  if variant >= 36 & variant <= 39 then ignored = namedlabel(leaf,'group_alias',at)
   ignored = three(leaf,'linkarg',leaf.reg('r',3),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  if variant = 40 then ignored = two(leaf,'link',leaf.reg('a',1),leaf.reg('a',2),at)
+  if variant = 43 | variant = 44 then do
+    ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(7),at)
+    ignored = two(leaf,'copy',leaf.reg('r',4),leaf.reg('r',3),at)
+    ignored = one(leaf,'unlink',leaf.reg('r',3),at)
+    ignored = one(leaf,'ret',leaf.reg('r',4),at)
+    return draft.finish()
+  end
   if variant >= 26 then do
     ignored = one(leaf,'null',leaf.reg('r',1),at)
     ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('r',3),.lltarget..operand.integer(10),at)
     observedslot = leaf.reg('r',1)
     if variant = 28 | variant = 29 then observedslot = leaf.reg('r',3)
     ignored = scopeopen(leaf,'scope.shared',observedslot,at)
+    if variant = 41 then ignored = scopeopen(leaf,'suffix.argument',leaf.reg('a',1),at)
+    if variant = 35 then do
+      branchid = two(leaf,'brf',.lltarget..operand.symbol('scope_late'),leaf.reg('r',1),at)
+      ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(9),at)
+      ignored = one(leaf,'ret',leaf.reg('r',3),at)
+      ignored = namedlabel(leaf,'scope_owned',at)
+      ignored = two(leaf,'copy',leaf.reg('r',4),leaf.reg('r',3),at)
+      ignored = one(leaf,'unlink',leaf.reg('r',3),at)
+      ignored = one(leaf,'ret',leaf.reg('r',4),at)
+      ignored = namedlabel(leaf,'scope_late',at)
+      ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(7),at)
+      ignored = one(leaf,'br',.lltarget..operand.symbol('scope_owned'),at)
+      return draft.finish()
+    end
     branchid = two(leaf,'brf',.lltarget..operand.symbol('scope_owned'),leaf.reg('r',1),at)
     ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(9),at)
     ignored = scopeopen(leaf,'scope.left',leaf.reg('r',1),at)
@@ -2559,7 +2629,7 @@ runtimescopes: procedure = .int
     changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
     expected = ''
     if variant = 28 then expected = 'metadata.binding.change.pending'
-    if variant >= 30 then expected = 'metadata.scope.cfg.pending'
+    if variant = 33 then expected = 'metadata.scope.linkarg.group.pending'
     if expected <> '' then do
       keptgraph = .llir..module
       kept = changed.result(); keptgraph = dereference kept.ir()
@@ -2597,6 +2667,89 @@ runtimescopes: procedure = .int
   end
   return failures
 
+runtimeprefixscopes: procedure = .int
+  failures = 0; variant = .int; callid = .int; branchid = .int; i = .int; n = .int; requiredcells = .int
+  secondcall = .int; borrowedret = .int
+  expected = .string; image = .binary; requests = .object[]
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module
+  changed = .llinline..change; limited = .llinline..change; facts = .lltargetfacts..analysis
+  item = .lltarget..record; request = .llinline..binding
+  do variant = 34 to 44
+    original = runtimebranchmodel(variant,callid,branchid)
+    failures = failures + check(original.valid(),'typed runtime prefix fixture is valid ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    graph = dereference original.ir(); image = graph.binary()
+    call objectarraydrop requests
+    do i = 1 to original.records()
+      item = original.record(i)
+      if item.procedureid() <> original.procedureid('main') | item.mnemonic() <> 'call4' then iterate
+      requests[requests[0] + 1] = llinline..bind(reference original,item.id(),reference original,original.procedureid('pick')) as .object
+    end
+    changed = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000)
+    expected = ''
+    if variant >= 36 & variant <= 39 then expected = 'metadata.scope.linkarg.group.pending'
+    if variant = 40 | variant = 44 then expected = 'metadata.binding.change.pending'
+    if variant = 41 then expected = 'metadata.scope.cfg.pending'
+    if variant = 42 then expected = 'metadata.runtime.observer.unproved'
+    if expected <> '' then do
+      keptgraph = .llir..module
+      kept = changed.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(keptgraph.binary()) = bin2x(image),'precise prefix refusal preserves exact original ' || variant)
+      if changed.reason() <> expected then say variant || ':' || changed.reason()
+      iterate
+    end
+    failures = failures + check(changed.status() = 'changed','stable prefix descriptors expand ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
+    failures = failures + check(facts.status() = 'ok','prefix scopes have sealed independent facts ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    failures = failures + check(facts.calls() = requests[0] & facts.scopereentry(callid) & facts.argumentcases(callid) = 3,'one site ledger spans all cases without merging distinct root sites ' || variant)
+    if variant = 34 | variant = 35 then failures = failures + check(facts.calls() = 2,'two sites pass distinct equal-valued a1 actual cells')
+    if variant = 43 then failures = failures + check(facts.returns(callid) = 1,'straight-line suffix uses the same prefix projection')
+    if variant = 34 then do n = 1 to 4
+      keptgraph = .llir..module
+      select n
+        when 1 then do
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',1)
+          expected = 'target.facts.work'
+        end
+        when 2 then do
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1)
+          expected = 'LL_RESOURCE_LIMIT: ir.entries budget 1; increase the host budget'
+        end
+        when 3 then do
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1000000,1)
+          expected = 'target.facts.bytes'
+        end
+        otherwise do
+          limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1000000,67108864,0)
+          expected = 'inline.frame'
+        end
+      end
+      kept = limited.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & limited.reason() = expected & bin2x(keptgraph.binary()) = bin2x(image),'prefix work/entry/byte/frame refusal is specific and atomic ' || n)
+      if limited.reason() <> expected then say limited.reason()
+    end
+    if variant = 35 then do
+      keptgraph = .llir..module
+      failures = failures + check(facts.argumentcasereturns(callid,1) = 2 & facts.argumentcaseactionat(callid,1,facts.argumentcasereturnsite(callid,1,1)) = 'copy' & facts.argumentcaseactionat(callid,1,facts.argumentcasereturnsite(callid,1,2)) = 'move','late-layout case1 reaches both source-ordered COPY/MOVE exits')
+      secondcall = facts.callid(2); borrowedret = facts.returnsite(secondcall,1)
+      failures = failures + check(facts.argumentcases(secondcall) = 3 & facts.argumentcasereturns(secondcall,1) = 2 & facts.argumentcaseactionat(secondcall,1,facts.argumentcasereturnsite(secondcall,1,1)) = 'copy' & facts.argumentcaseactionat(secondcall,1,facts.argumentcasereturnsite(secondcall,1,2)) = 'move','second site case1 preserves both mandatory source RETs')
+      do n = 2 to 3
+        failures = failures + check(facts.argumentcasereturns(secondcall,n) >= 1 & facts.argumentcaseactionat(secondcall,n,borrowedret) = 'copy','second site case retains its mandatory borrowed RET, allowing conservative extra exits ' || n)
+      end
+      result = changed.result(); requiredcells = 0
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.kind() = 'instruction' then requiredcells = requiredcells + 1 + item.operands()
+      end
+      limited = llinline..expandmany(requests,'closed-main-default-halt.v1',12000000,1000000,67108864,65536,requiredcells - 1)
+      kept = limited.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & limited.reason() = 'inline.code.cells' & bin2x(keptgraph.binary()) = bin2x(image),'nonempty checkpoint carriers obey the atomic output-cell cap')
+    end
+  end
+  return failures
+
 runtimebranchcontrols: procedure = .int
   failures = 0; variant = .int; callid = .int; branchid = .int; i = .int; id = .int; remaining = .int
   original = .lltarget..module; facts = .lltargetfacts..analysis; changed = .llinline..change; request = .llinline..binding
@@ -2613,7 +2766,7 @@ runtimebranchcontrols: procedure = .int
     if original.valid() = 0 then do; say original.error(); iterate; end
     request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
     changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
-    if variant <= 5 | variant = 14 then do
+    if variant <= 5 | variant = 14 | variant = 18 | variant = 20 then do
       failures = failures + check(changed.status() = 'changed','runtime DAG continuation expands ' || variant)
       if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
       facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
@@ -2738,6 +2891,11 @@ main: procedure = .int
   failures = .int
   lane = ''
   if argv[0] = 1 then lane = argv[1]
+  if lane = 'runtime-prefix-scope' then do
+    failures = runtimeprefixscopes()
+    say 'RUNTIME_PREFIX_SCOPE|failures=' || failures
+    return failures
+  end
   if lane = 'runtime-scope' then do
     failures = runtimescopes()
     say 'RUNTIME_SCOPE|failures=' || failures

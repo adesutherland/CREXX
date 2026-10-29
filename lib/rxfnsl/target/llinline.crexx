@@ -861,6 +861,7 @@ expandlocalmany: procedure = .llinline..change
   runtime = .int; runtimearm = .int; runtimestart = .int; runtimeextent = .int; restores = .int
   lexical = .int; scopeaddress = .int; lastscopeaddress = .int; scopeid = .int; groupalive = .int
   desiredscopes = .object[]; desiredorigins = .llir..origin[]; emptyorigins = .llir..origin[]
+  runtimeentryscopes = .object[]; runtimeentryorigins = .llir..origin[]
   scoperecord = .lltarget..record; scopeorigin = .llir..origin; carrierorigin = .llir..origin
   caseLabels = .string[]; compare = .lltarget..operand; selectorcopy = .lltarget..operand
   catalog = .llrxascatalog..catalog
@@ -1036,6 +1037,8 @@ expandlocalmany: procedure = .llinline..change
       direct = facts.handlerdirect(input.id())
       runtime = facts.argumentcases(input.id()); runtimearm = 0
       lexical = facts.scopereentry(input.id()); lastscopeaddress = 0
+      call objectarraydrop runtimeentryscopes
+      runtimeentryorigins = emptyorigins
       scope = scopes.begin(accepted[input.id()])
       dag = scopes.dag(accepted[input.id()])
       /* Retained counted children observe adjacency across r/a bank borders,
@@ -1234,6 +1237,18 @@ expandlocalmany: procedure = .llinline..change
             runtimestart = j; runtimearm = 1; runtimeextent = runtime
             runtimeorigin = childat; runtimestep = lastchildstep
             if lexical = 0 then call scopes.checkpoint()
+            else do a = 1 to desiredorigins[0]
+              /* The preceding whole-group reconciliation used the original
+               * LINKARG incoming row. Save that mapped checkpoint, not the
+               * emitter's later activity or a case's visited declarations. */
+              if scopes.claim(8,384) = 0 then return .change('limit',result.error(),source,empty)
+              runtimeentryorigins[a] = desiredorigins[a]
+              do k = 1 to 4
+                value = desiredscopes[(a - 1) * 4 + k] as .lltarget..operand
+                if scopes.claim(value.length() + 1,value.length() * 2) = 0 then return .change('limit',result.error(),source,empty)
+                runtimeentryscopes[(a - 1) * 4 + k] = value as .object
+              end
+            end
             if runtimestep[0] = 0 then do
               if callerstep > 0 then runtimestep = clonefields(source.at(callerstep),targetbody)
               else do
@@ -1424,9 +1439,7 @@ expandlocalmany: procedure = .llinline..change
       if runtimearm = 0 | runtimearm >= runtimeextent then leave
       runtimearm = runtimearm + 1
       if lexical then do
-        call objectarraydrop desiredscopes
-        desiredorigins = emptyorigins
-        call scopes.reconcile(targetbody,code,desiredscopes,desiredorigins,runtimeorigin)
+        call scopes.reconcile(targetbody,code,runtimeentryscopes,runtimeentryorigins,runtimeorigin)
         if result.error() <> '' then return .change('limit',result.error(),source,empty)
         lastscopeaddress = 0
       end

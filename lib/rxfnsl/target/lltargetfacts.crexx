@@ -825,7 +825,13 @@ analysis: class
   _scopes = .numbers[]
   _scopeslot = .int[]
   _scopestorage = .int[]
+  _inlinescopesite = .int[]
+  _inlinescopedeclaration = .int[]
+  _inlinescopestorage = .int[]
   _scopechecked = .int[]
+  _scopeindexed = .int[]
+  _scopeselector = .int[]
+  _scopegroupblocked = .int[]
   _scopereentry = .int[]
   _scopeaddress = .int[]
   _scopeincoming = .numbers[]
@@ -1657,14 +1663,11 @@ analysis: class
   /* META scope is lexical address state, independent of whether the
    * declaration's own machine group executes. Resolve its storage later at
    * every feasible point in the scope, including its matching clear. */
-  preparescopes: method = .int
-    arg functionid = 0, strict = 0
-    i = .int; j = .int; k = .int; found = .int; closing = .int; opening = .int; groupid = .int; previous = .int
-    item = .lltarget..record; prior = .lltarget..record; name = .lltarget..operand; value = .lltarget..operand; other = .lltarget..operand
-    names = .binary[]; sizes = .int[]; active = .int[]; values = .int[]; empty = .int[]
-    grouprecords = .int[]; observed = .int[]
+  scopeaddresses: method = .int
+    arg functionid = .int
+    i = .int; groupid = .int; item = .lltarget..record
+    if _scopeindexed[functionid] then return 1
     module = dereference _owner
-    if functionid = 0 then functionid = _function
     /* One reverse address index avoids record.addressid's repeated suffix
      * scan. The same source groups serve observations and sealed emission. */
     do i = module.records() to 1 by -1
@@ -1673,13 +1676,30 @@ analysis: class
       if item.procedureid() <> functionid | item.kind() = 'procedure' then iterate
       if reserve(1,8) = 0 then return 0
       if item.kind() = 'instruction' then groupid = item.id()
+      if item.mnemonic() = 'linkarg' then do
+        if reserve(1,8) = 0 then return 0
+        _scopeselector[functionid] = item.id()
+      end
       _scopeaddress[item.id()] = groupid
     end
+    if reserve(1,8) = 0 then return 0
+    _scopeindexed[functionid] = 1
+    return 1
+  preparescopes: method = .int
+    arg functionid = 0, strict = 0, prefixselector = 0
+    i = .int; j = .int; k = .int; found = .int; closing = .int; opening = .int; groupid = .int; previous = .int; selected = .int
+    item = .lltarget..record; prior = .lltarget..record; name = .lltarget..operand; value = .lltarget..operand; other = .lltarget..operand
+    names = .binary[]; sizes = .int[]; active = .int[]; values = .int[]; empty = .int[]
+    grouprecords = .int[]; observed = .int[]
+    module = dereference _owner
+    if functionid = 0 then functionid = _function
+    if scopeaddresses(functionid) = 0 then return 0
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
       if item.procedureid() <> functionid | item.kind() = 'procedure' then iterate
       groupid = _scopeaddress[item.id()]
+      if item.id() = prefixselector then selected = 1
       if strict & groupid <> previous then do
         if previous > 0 then do
           if reserve(observed[0],16) = 0 | reserve(1,32) = 0 then return 0
@@ -1705,7 +1725,9 @@ analysis: class
         if item.operands() = 4 then do
           value = item.operand(4); opening = (value.kind() = 'R') | strict
           if opening then do
-            if value.kind() = 'R' & value.bank() <> 'r' then return reject('graph.external.storage.pending')
+            if value.kind() = 'R' & value.bank() <> 'r' then do
+              if value.bank() <> 'a' | prefixselector = 0 | selected | groupid = prefixselector then return reject('graph.external.storage.pending')
+            end
             if found = 0 then do
               if reserve(1,32) = 0 | reserve(name.length(),1) = 0 then return 0
               found = names[0] + 1; names[found] = name.bytes(); sizes[found] = name.length()
@@ -1752,8 +1774,10 @@ analysis: class
     end
     return 1
   scopeobserve: method = .int
-    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, observations_ref = reference .int[]
-    i = .int; declaration = .int; id = .int
+    arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, observations_ref = reference .int[], site = 0
+    i = .int; j = .int; declaration = .int; id = .int; found = .int
+    opening = .lltarget..record; value = .lltarget..operand
+    module = dereference _owner
     if _scopereentry[item.procedureid()] then row_ref = reference _scopeobserved[_scopeaddress[item.id()]]
     else row_ref = reference _scopes[item.id()]
     row = dereference row_ref
@@ -1762,41 +1786,77 @@ analysis: class
     do i = 1 to row.size()
       declaration = row.at(i)
       if _scopeslot[declaration] = 0 then iterate
-      value = .lltarget..operand.bound(0,0,0,'r',_scopeslot[declaration] - 1)
+      /* The original declaration owns the complete typed operand. The slot
+       * marker distinguishes REG from CONST; it is not an r-bank encoding. */
+      opening = module.at(declaration); value = opening.operand(4)
       id = view.storage(value)
       if id = 0 then return reject('graph.external.storage.pending')
-      if _scopestorage[declaration] = 0 then _scopestorage[declaration] = id
-      else if _scopestorage[declaration] <> id then return reject('metadata.binding.change.pending')
+      if site = 0 then do
+        if _scopestorage[declaration] = 0 then _scopestorage[declaration] = id
+        else if _scopestorage[declaration] <> id then return reject('metadata.binding.change.pending')
+      end
+      else do
+        found = 0
+        do j = 1 to _inlinescopesite[0]
+          if spend(1) = 0 then return 0
+          if _inlinescopesite[j] = site & _inlinescopedeclaration[j] = declaration then found = j
+        end
+        if found = 0 then do
+          if reserve(3,8) = 0 then return 0
+          found = _inlinescopesite[0] + 1
+          _inlinescopesite[found] = site; _inlinescopedeclaration[found] = declaration; _inlinescopestorage[found] = id
+        end
+        else if _inlinescopestorage[found] <> id then return reject('metadata.binding.change.pending')
+      end
       if state.wholeknown(id) = 0 then return reject('metadata.runtime.observer.unproved')
       if spend(observations[0] + 1) = 0 then return 0
       call insert(observations_ref,domain(id,1))
     end
     return 1
-  /* Preserve legacy common-entry a/g scopes. Selector re-entry uses the
-   * same r-only projection only with an empty scoped prefix through LINKARG. */
+  scoperefusal: method = .string
+    arg functionid = .int
+    if _scopegroupblocked[functionid] then return 'metadata.scope.linkarg.group.pending'
+    return 'metadata.scope.cfg.pending'
+  /* Preserve legacy paths. New prefix scopes use the same original-address
+   * projection, with typed a-bank descriptors only before an empty LINKARG
+   * group. Suffix-local a/g declarations remain on their existing path. */
   prepareinlinescopes: method = .int
     arg functionid = .int
-    i = .int; scoped = .int; selected = .int; item = .lltarget..record; value = .lltarget..operand
+    i = .int; scoped = .int; selected = .int; prefix = .int; blocked = .int; selectorid = .int
+    item = .lltarget..record; value = .lltarget..operand
     if _scopechecked[functionid] then return 1
     if reserve(1,16) = 0 then return 0
     _scopechecked[functionid] = 1
     if _selectorcount[functionid] > 1 then return 1
+    if scopeaddresses(functionid) = 0 then return 0
+    selectorid = _scopeselector[functionid]
     module = dereference _owner
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
       if item.procedureid() = functionid & item.mnemonic() = 'linkarg' then selected = 1
-      if item.procedureid() <> functionid | item.kind() <> '.meta' then iterate
+      if item.procedureid() <> functionid then iterate
+      if selectorid > 0 & _scopeaddress[item.id()] = selectorid then do
+        if wordpos(item.kind(),'.meta .srcstep .traceevent') > 0 then blocked = 1
+      end
+      if item.kind() <> '.meta' then iterate
       if item.operands() = 1 | item.operands() = 4 then do
-        if _selectorcount[functionid] = 1 & selected = 0 then return 1
+        if _selectorcount[functionid] = 1 & selected = 0 then prefix = 1
         scoped = 1
       end
       if item.operands() <> 4 then iterate
       value = item.operand(4)
-      if value.kind() = 'R' & value.bank() <> 'r' then return 1
+      if value.kind() = 'R' & value.bank() <> 'r' then do
+        if value.bank() <> 'a' | selectorid = 0 | selected then return 1
+      end
     end
     if scoped = 0 then return 1
-    if preparescopes(functionid,1) = 0 then return 0
+    if prefix & blocked then do
+      if reserve(1,8) = 0 then return 0
+      _scopegroupblocked[functionid] = 1
+      return 1
+    end
+    if preparescopes(functionid,1,selectorid) = 0 then return 0
     _scopereentry[functionid] = 1
     return 1
   /* Include transient and retained deep copies, not an assumed VM COW path. */
@@ -2040,9 +2100,9 @@ analysis: class
         do k = 1 to returns[0]
           if spend(1) = 0 then return 0
           retid = returns[k]
-          if _index.dominates(_index.opblock(id),_index.opblock(retid)) = 0 then return reject('metadata.scope.cfg.pending')
+          if _index.dominates(_index.opblock(id),_index.opblock(retid)) = 0 then return reject(scoperefusal(bodyid))
           if _index.opblock(id) = _index.opblock(retid) then do
-            if _index.opposition(id) >= _index.opposition(retid) then return reject('metadata.scope.cfg.pending')
+            if _index.opposition(id) >= _index.opposition(retid) then return reject(scoperefusal(bodyid))
           end
         end
         /* An early-layout return would close this lexical binding before
@@ -2052,7 +2112,7 @@ analysis: class
           id = _index.functionoperation(bodyid,j)
           if _index.opcode(id) <= 16 | _index.reachable(_index.opblock(id)) = 0 then iterate
           item = module.at(id)
-          if item.kind() = 'instruction' & _recordordinal[id] > _recordordinal[returned] then return reject('metadata.scope.cfg.pending')
+          if item.kind() = 'instruction' & _recordordinal[id] > _recordordinal[returned] then return reject(scoperefusal(bodyid))
         end
       end
     end
@@ -2110,7 +2170,7 @@ analysis: class
         item = module.at(row.at(i)); call branchproof.visit(_recordordinal[item.id()])
         if _scopereentry[bodyid] then do
           scopeobservations = emptyscopeobservations
-          if scopeobserve(item,branchview,reference branchstate,reference scopeobservations) = 0 then return 0
+          if scopeobserve(item,branchview,reference branchstate,reference scopeobservations,outerCallId) = 0 then return 0
         end
         if item.kind() = 'instruction' & item.mnemonic() = 'call1' then do
           /* Per-arm transfers never publish a root row or update _plain.
@@ -2272,7 +2332,7 @@ analysis: class
         item = module.at(opid); call proof.visit(_recordordinal[opid])
         if root = 0 & _scopereentry[bodyid] then do
           scopeobservations = emptyscopeobservations
-          if scopeobserve(item,view,reference path,reference scopeobservations) = 0 then return 0
+          if scopeobserve(item,view,reference path,reference scopeobservations,callid) = 0 then return 0
         end
         if root then do
           _runtime[opid] = 1
@@ -2406,9 +2466,9 @@ analysis: class
       do j = 1 to proof.returns()
         if spend(1) = 0 then return 0
         retid = proof.site(j)
-        if _index.dominates(_index.opblock(opid),_index.opblock(retid)) = 0 then return reject('metadata.scope.cfg.pending')
+        if _index.dominates(_index.opblock(opid),_index.opblock(retid)) = 0 then return reject(scoperefusal(bodyid))
         if _index.opblock(opid) = _index.opblock(retid) then do
-          if _index.opposition(opid) >= _index.opposition(retid) then return reject('metadata.scope.cfg.pending')
+          if _index.opposition(opid) >= _index.opposition(retid) then return reject(scoperefusal(bodyid))
         end
       end
     end
@@ -2922,6 +2982,7 @@ analysis: class
     callee = .lltarget..body; child = .frame; record = .lltarget..record; shape = .callshape
     value = .lltarget..operand; ownedrow = .numbers; action = .string; linearrow = .numbers
     selectors = .int[]; banks = .string; proof = .callproof; p = .int
+    scopeobservations = .int[]; emptyscopeobservations = .int[]
     if _status <> 'building' then assembler signal "ERROR","LL_TARGET_FACTS_FROZEN: call state is sealed"
     module = dereference _owner; state = dereference state_ref
     if _globals[0] > 0 then do
@@ -3041,6 +3102,9 @@ analysis: class
       end
     end
     else do
+    if publish & _selectorcount[bodyid] = 1 then do
+      if prepareinlinescopes(bodyid) = 0 then return 0
+    end
     runtime = 0
     do i = 1 to _linearcount[bodyid]
       if spend(1) = 0 then return 0
@@ -3051,6 +3115,10 @@ analysis: class
         runtime = runtimeselection(record,i,bodyid,child,state_ref,callhistory,destination,hasresult,proof,publish,item.id(),outerCallId,depth,tracking)
         if runtime = 0 then return 0
         if runtime = 1 then do; completed = 1; leave; end
+      end
+      if _scopereentry[bodyid] then do
+        scopeobservations = emptyscopeobservations
+        if scopeobserve(record,child,state_ref,reference scopeobservations,outerCallId) = 0 then return 0
       end
       if record.kind() = 'instruction' & returned then return reject('profile.callee.control.pending')
       if record.kind() = 'instruction' & wordpos(record.mnemonic(),'call call1 call2 call3 call4') > 0 then do

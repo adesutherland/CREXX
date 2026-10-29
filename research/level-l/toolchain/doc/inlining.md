@@ -1967,10 +1967,9 @@ constructed and paired RXAS branch/return/CANCEL controls.
 The suffix-only lexical re-entry follow-on is implemented and focused-qualified.
 It uses the qualified original-address projection only when
 no scoped REG/CONST opening or clear occurs in the common prefix through the
-selected LINKARG address group. Prefix-scoped and non-r metadata retain their
-legacy path and refusal; no nonempty prefix checkpoint or LINKARG-group staging
-is added. Suffix observations use one stable StorageId per original declaration
-across every feasible case, including skipped lexical groups. A declaration
+selected LINKARG address group. Suffix observations use one stable StorageId
+per original declaration and root call site across every feasible case,
+including skipped lexical groups. A declaration
 over distinct selected actuals retains `metadata.binding.change.pending`,
 while repeated actuals can satisfy the same storage obligation.
 
@@ -1982,8 +1981,34 @@ and code ledger own all clear/reopen carriers, and metadata address protection
 survives independent cleanup. `levell_rxas_runtime_scope_reentry` adds compact
 case/RET/storage/prefix controls and one paired handwritten consumer through
 the existing native scope/source/TRACE readback. Milestone qualification remains open.
-Nonempty prefix scopes, changing-storage splitting, loops and broader runtime
-selectors remain later work in the authoritative plan.
+The focused-qualified stable-prefix follow-on extends that same projection to
+ordinary prefix REG `rN`/`aN` and CONST declarations and clears, including a
+closed pair, in both straight-line and acyclic suffix bodies. Every observation
+resolves the original typed operand through the current frame; `a0` remains
+the mutable owned count cell. One
+declaration-to-StorageId ledger belongs to each root site and spans its prefix,
+all cases and exits. Independent sites may therefore use different actual
+cells without weakening the within-call storage obligation. Suffix-local new
+`aN`/`gN` re-entry remains outside this profile.
+
+This new prefix profile requires the original selected LINKARG address group
+to contain no META, source-step or TRACE record. New layouts needing such
+staging retain `metadata.scope.linkarg.group.pending`; existing suffix-only
+and qualified legacy layouts keep their handling. The saved checkpoint is the
+original group's incoming descriptors, mapped with the fresh call identities.
+Later cases reconcile to it from the actual preceding lexical state before
+their labels/binding, using one preceding counted carrier only when needed.
+They neither replay prefix effects nor clear and reopen an unchanged name at
+one address. Source checkpoints remain separate. The maintained
+`levell_rxas_runtime_prefix_scope_reentry` control checks complete native META
+payloads against mapped executable operands, case-entry addresses, same-address
+transition counts, distinct root-site actuals and caller continuation source.
+Actual return-commit addresses and retained lexical return-source rows have
+separate readback assertions: a source row retained after removal of its RET
+does not establish execution or live scoped bindings. Per-case minimum return
+membership remains required when conservative summaries retain extra exits.
+LINKARG-group observation staging, changing-storage splitting, loops and broader
+runtime selectors remain later work in the authoritative plan.
 
 Current cleanup retains the conservative runtime dispatch when its independent
 range/access proof returns `argument.range.unproved`; branch-aware reduction of
