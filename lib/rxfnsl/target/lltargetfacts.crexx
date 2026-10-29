@@ -528,6 +528,7 @@ callproof: class
   _action = .string[]
   _left = .numbers[]
   _right = .numbers[]
+  _restoreknown = .int[]
   _written = .int
   _writeinteger = .int
   _killinteger = .int
@@ -553,11 +554,42 @@ callproof: class
     if _sites[0] = 0 then do; _killinteger = 1; _killwhole = 1; end
     _sites[_sites[0] + 1] = site; _action[ordinal] = action
     _left[ordinal] = .numbers(left); _right[ordinal] = .numbers(right)
+    _restoreknown[ordinal] = 1
     _written = _written | (action <> 'none')
     _writeinteger = _writeinteger | (action = 'integer' | action = 'copy' | action = 'move')
     _killinteger = _killinteger & (action = 'integer' | action = 'copy' | action = 'move')
     _killwhole = _killwhole & (action = 'copy' | action = 'move')
     return
+  /** Aggregate one reached linear RET over independent selector cases. The
+   * case rows retain ownership; mixed action is never a case1 premise. */
+  caseexit: method = .int
+    arg incoming_ref = reference .callproof, ordinal = .int, site = .int
+    incoming = dereference incoming_ref; i = .int; left = .int[]; right = .int[]
+    if _live[0] <> incoming.records() then return 0
+    do i = 1 to _live[0]
+      if incoming.live(i) = 0 then iterate
+      if _live[i] & _choice[i] <> incoming.choice(i) then _choice[i] = 0
+      else if _live[i] = 0 then _choice[i] = incoming.choice(i)
+      _live[i] = 1
+    end
+    if _sites[0] = 0 then do
+      do i = 1 to incoming.restores(ordinal)
+        left[i] = incoming.left(ordinal,i); right[i] = incoming.right(ordinal,i)
+      end
+      call addreturn(ordinal,site,incoming.action(ordinal),left,right)
+      return 1
+    end
+    if _sites[0] <> 1 | _sites[1] <> site then return 0
+    if _left[ordinal].size() <> incoming.restores(ordinal) then _restoreknown[ordinal] = 0
+    else do i = 1 to incoming.restores(ordinal)
+      if _left[ordinal].at(i) <> incoming.left(ordinal,i) | _right[ordinal].at(i) <> incoming.right(ordinal,i) then _restoreknown[ordinal] = 0
+    end
+    if _action[ordinal] <> incoming.action(ordinal) then _action[ordinal] = 'cases'
+    _written = _written | incoming.written(); _writeinteger = _writeinteger | incoming.writeinteger()
+    _killinteger = _killinteger & incoming.killinteger(); _killwhole = _killwhole & incoming.killwhole()
+    return 1
+  records: method = .int
+    return _live[0]
   returns: method = .int
     return _sites[0]
   site: method = .int
@@ -568,12 +600,15 @@ callproof: class
     return _action[ordinal]
   restores: method = .int
     arg ordinal = .int
+    if _restoreknown[ordinal] = 0 then assembler signal "ERROR","LL_TARGET_FACTS_RETURN: case-aware restoration required"
     return _left[ordinal].size()
   left: method = .int
     arg ordinal = .int, pair = .int
+    if _restoreknown[ordinal] = 0 then assembler signal "ERROR","LL_TARGET_FACTS_RETURN: case-aware restoration required"
     return _left[ordinal].at(pair)
   right: method = .int
     arg ordinal = .int, pair = .int
+    if _restoreknown[ordinal] = 0 then assembler signal "ERROR","LL_TARGET_FACTS_RETURN: case-aware restoration required"
     return _right[ordinal].at(pair)
   written: method = .int
     return _written
@@ -1720,18 +1755,17 @@ analysis: class
     call proof.addreturn(_retordinal[item.id()],item.id(),action,left,right)
     return 1
   /** A checked normal successor of ICHKRNG, immediately followed by one
-   * register LINKARG and direct RET. Return2 leaves the existing exact path
+   * register LINKARG and a scalar linear suffix. Return2 leaves the exact path
    * responsible; return1 has separately proved every finite normal arm. */
   runtimeselection: method = .int
     arg guard = .lltarget..record, ordinal = .int, bodyid = .int, expose view = .frame, state_ref = reference .cells, expose previous = .history, destination = .int, hasresult = .int, expose proof = .callproof, publish = .int, callid = .int
     i = .int; j = .int; next = .int; returned = .int; id = .int; selectorid = .int; raw = .int; selected = .int; low = .int; high = .int; offset = .int
     arm = .int; width = .int; bound = .int
     state_copy = reference .cells; view_copy = reference .frame; history_copy = reference .history; proof_copy = reference .callproof
-    action = .string; firstaction = .string
     field = .lltarget..operand; selector = .lltarget..operand; target = .lltarget..operand; source = .lltarget..operand
     item = .lltarget..record; operation = .lltarget..record; terminal = .lltarget..record
     branchstate = .cells; merged = .cells; branchview = .frame; branchhistory = .history; mergedhistory = .history
-    branchproof = .callproof; cases = .callproof[]; bindings = .int[]; limits = .int[]; checked = .int[]
+    branchproof = .callproof; aggregate = .callproof; cases = .callproof[]; bindings = .int[]; limits = .int[]; checked = .int[]
     state = dereference state_ref; module = dereference _owner; row = _linear[bodyid] as .numbers
     selector = guard.operand(1)
     if selector.kind() <> 'R' then return 2
@@ -1793,13 +1827,16 @@ analysis: class
       if spend(1) = 0 then return 0
       item = module.at(row.at(i))
       if item.kind() <> 'instruction' then iterate
-      if returned > 0 | item.mnemonic() <> 'ret' | item.operands() <> 1 then return reject('argument.selector.suffix.pending')
-      field = item.operand(1)
-      if field.kind() <> 'R' | field.bank() <> target.bank() | field.index() <> target.index() then return reject('argument.selector.suffix.pending')
-      returned = i; terminal = item
+      if returned > 0 then return reject('argument.selector.tail.return.pending')
+      if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then return reject('argument.selector.tail.call.pending')
+      if item.mnemonic() = 'linkarg' then return reject('argument.selector.tail.selector.pending')
+      if item.mnemonic() = 'ret' then do; returned = i; terminal = item; end
     end
     if returned = 0 then return reject('argument.selector.suffix.pending')
-    if reserve(width,256) = 0 then return 0
+    if reserve(width,256) = 0 | reserve(view.slots(),32) = 0 then return 0
+    if reserve(_recordcount[bodyid],32) = 0 | reserve(_retcount[bodyid],120) = 0 then return 0
+    if spend(_recordcount[bodyid] + _retcount[bodyid]) = 0 then return 0
+    aggregate = .callproof(_recordcount[bodyid],_retcount[bodyid])
     do arm = 1 to width
       raw = low + (arm - 1)
       if spend(2) = 0 then return 0
@@ -1825,9 +1862,10 @@ analysis: class
         end
       end
       if finishreturn(terminal,branchview,branchstate,destination,hasresult,branchproof) = 0 then return 0
-      action = branchproof.action(_retordinal[terminal.id()])
-      if raw = low then firstaction = action
-      else if action <> firstaction then return reject('argument.selector.ownership.pending')
+      if spend(_recordcount[bodyid]) = 0 then return 0
+      if view.slots() > _work / 4 then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
+      if spend(view.slots() * 4) = 0 then return 0
+      if aggregate.caseexit(reference branchproof,_retordinal[terminal.id()],terminal.id()) = 0 then return reject('argument.selector.tail.summary.pending')
       do j = 1 to module.body(bodyid).locals()
         call branchhistory.exited(branchview.ownedbase(j),branchstate.zeroed(branchview.ownedbase(j)))
       end
@@ -1843,7 +1881,7 @@ analysis: class
         if mergedhistory.meet(branchhistory) = 0 then return reject('join.history.unproved')
       end
     end
-    state = merged; previous = mergedhistory; proof = cases[1]
+    state = merged; previous = mergedhistory; proof = aggregate
     if publish then do
       _selectioncount[callid] = width
       _selections[callid] = .selection(guard.id(),operation.id(),terminal.id(),low,offset,bindings,cases)
@@ -2563,7 +2601,7 @@ analysis: class
       if linear(bodyid,'profile.callee.cfg.pending') = 0 then return 0
       linearrow = _linear[bodyid] as .numbers
     end
-    if reserve(_recordcount[bodyid],32) = 0 | reserve(_retcount[bodyid],112) = 0 | reserve(1,256) = 0 then return 0
+    if reserve(_recordcount[bodyid],32) = 0 | reserve(_retcount[bodyid],120) = 0 | reserve(1,256) = 0 then return 0
     if spend(_recordcount[bodyid]) = 0 | spend(_retcount[bodyid]) = 0 then return 0
     proof = .callproof(_recordcount[bodyid],_retcount[bodyid])
     actuals = .int[]; positions = .int[]; references = .int[]; plain = .int[]; owned = .int[]; swaps = .int[]
@@ -2696,7 +2734,13 @@ analysis: class
         if finishreturn(record,child,state,destination,hasresult,proof) = 0 then return 0
       end
     end
-    if tracking & hasresult then _plain[destination] = state.plain(destination)
+    if tracking then do
+      if runtime = 1 & _dagbody[bodyid] = 0 then do
+        if spend(state.size()) = 0 then return 0
+        do i = 1 to state.size(); _plain[i] = state.plain(i); end
+      end
+      else if hasresult then _plain[destination] = state.plain(destination)
+    end
     if publish & (proof.written() | shape.clear()) then do
       if proof.writeinteger() | shape.clear() then call insert(reference writes,domain(destination))
       call insert(reference writes,domain(destination,1))
@@ -2852,7 +2896,7 @@ analysis: class
       returned = 1
     end
     else if _graphmode then do
-      if reserve(_recordcount[_function],32) = 0 | reserve(_retcount[_function],112) = 0 | reserve(1,256) = 0 then return
+      if reserve(_recordcount[_function],32) = 0 | reserve(_retcount[_function],120) = 0 | reserve(1,256) = 0 then return
       if spend(_recordcount[_function]) = 0 | spend(_retcount[_function]) = 0 then return
       rootproof = .callproof(_recordcount[_function],_retcount[_function])
       if dag(_function,view,state,callhistory,0,0,rootproof,selectors,0,0,1) = 0 then return
@@ -3170,6 +3214,7 @@ analysis: class
     ordinal = returnkey(callid,retid)
     if ordinal = 0 then return ''
     p = _proofindex[callid]; row_ref = reference _proofs[p]; row = dereference row_ref
+    if row.action(ordinal) = 'cases' then return ''
     return row.action(ordinal)
   restores: method = .int
     arg callid = .int, retid = .int
@@ -3329,6 +3374,7 @@ analysis: class
     if returns(callid) <> 1 then do
       assembler signal "ERROR","LL_TARGET_FACTS_RETURN: use per-RET facts"; return ''
     end
+    if _returnaction[callid] = 'cases' then return ''
     return _returnaction[callid]
   swaps: method = .int
     arg callid = .int

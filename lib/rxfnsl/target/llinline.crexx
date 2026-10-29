@@ -248,6 +248,12 @@ metascopes: class
   _catalog = .llrxascatalog..catalog
   _bindings = .binary[]
   _active = .int[]
+  _opening = .lltarget..operand[]
+  _openorigin = .llir..origin[]
+  _entryactive = .int[]
+  _entryfields = .lltarget..operand[]
+  _entryorigin = .llir..origin[]
+  _entrycount = .int
   _start = .int
   _held = .int
   *: factory
@@ -387,8 +393,8 @@ metascopes: class
     _start = _bindings[0] + 1
     return _suffixes[site]
   observe: method = .void
-    arg fields = .object[]
-    i = .int; found = .int; opened = .int; name = .lltarget..operand
+    arg fields = .object[], at = .llir..origin
+    i = .int; k = .int; found = .int; opened = .int; held = .int; width = .int; name = .lltarget..operand; value = .lltarget..operand
     if fields[0] <> 1 & fields[0] <> 4 then return
     name = fields[1] as .lltarget..operand; opened = fields[0] = 4; found = 0
     width = name.length() + 1; count = _bindings[0] - _start + 1
@@ -401,7 +407,66 @@ metascopes: class
       if claim(name.length() + 1,name.length() + 32) = 0 then return
       found = _bindings[0] + 1; _bindings[found] = name.bytes()
     end
-    if found > 0 then _active[found] = opened
+    if found > 0 then do
+      _active[found] = opened
+      if opened then do
+        held = 320
+        do k = 1 to 4
+          value = fields[k] as .lltarget..operand
+          if value.length() > (2147483647 - held) / 2 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata opening bytes"
+          held = held + value.length() * 2
+        end
+        if claim(held + 4,held) = 0 then return
+        do k = 1 to 4; _opening[(found - 1) * 4 + k] = fields[k] as .lltarget..operand; end
+        _openorigin[found] = at
+      end
+    end
+    return
+  checkpoint: method = .void
+    i = .int; k = .int; held = .int; width = .int
+    _entrycount = _bindings[0] - _start + 1
+    if _entrycount > 2147483647 / 400 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata checkpoint"
+    if claim(_entrycount * 8,_entrycount * 400) = 0 then return
+    do i = 1 to _entrycount
+      _entryactive[i] = _active[_start + i - 1]
+      if _entryactive[i] = 0 then iterate
+      held = 0
+      do k = 1 to 4
+        width = _opening[(_start + i - 2) * 4 + k].length()
+        if width > (2147483647 - held) / 2 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata checkpoint bytes"
+        held = held + width * 2
+      end
+      if claim(held + 4,held) = 0 then return
+      do k = 1 to 4; _entryfields[(i - 1) * 4 + k] = _opening[(_start + i - 2) * 4 + k]; end
+      _entryorigin[i] = _openorigin[_start + i - 1]
+    end
+    return
+  resume: method = .void
+    arg body = .lltarget..bodydraft, at = .llir..origin
+    i = .int; k = .int; ignored = .int; held = .int; width = .int; fields = .object[]
+    do i = _start to _bindings[0]
+      if claim(1,0) = 0 then return
+      if _active[i] = 0 then iterate
+      if claim(<blen>(_bindings[i]) + 1,<blen>(_bindings[i]) + 64) = 0 then return
+      call objectarraydrop fields
+      fields[1] = .lltarget..operand.string(_bindings[i]) as .object
+      ignored = body.record('.meta',fields,at); _active[i] = 0
+    end
+    do i = 1 to _entrycount
+      if claim(8,320) = 0 then return
+      if _entryactive[i] = 0 then iterate
+      held = 0
+      do k = 1 to 4
+        width = _entryfields[(i - 1) * 4 + k].length()
+        if width > (2147483647 - held) / 2 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata resume bytes"
+        held = held + width * 2
+      end
+      if claim(held + 4,held) = 0 then return
+      call objectarraydrop fields
+      do k = 1 to 4; fields[k] = _entryfields[(i - 1) * 4 + k] as .object; end
+      ignored = body.record('.meta',fields,_entryorigin[i])
+      _active[_start + i - 1] = 1
+    end
     return
   hasbindings: method = .int
     if claim(_bindings[0] - _start + 1,0) = 0 then return 0
@@ -723,7 +788,7 @@ expandlocalmany: procedure = .llinline..change
         if childrecord.kind() <> 'instruction' then do
           ignored = targetbody.record(childrecord.kind(),fields,childat)
           if childrecord.kind() = '.srcstep' then lastchildstep = fields
-          if childrecord.kind() = '.meta' then call scopes.observe(fields)
+          if childrecord.kind() = '.meta' then call scopes.observe(fields,childat)
         end
         else if catalog.flow(childrecord.opcode()) = 1 | catalog.flow(childrecord.opcode()) = 2 then do
           flow = catalog.flow(childrecord.opcode()); choice = facts.branchchoice(input.id(),childrecord.id())
@@ -756,6 +821,7 @@ expandlocalmany: procedure = .llinline..change
           if runtime > 0 & childrecord.id() = facts.argumentruntime(input.id()) then do
             runtimestart = j; runtimearm = 1; runtimeextent = runtime
             runtimeorigin = childat; runtimestep = lastchildstep
+            call scopes.checkpoint()
             if runtimestep[0] = 0 then do
               if callerstep > 0 then runtimestep = clonefields(source.at(callerstep),targetbody)
               else do
@@ -809,8 +875,8 @@ expandlocalmany: procedure = .llinline..change
             else if value.kind() = 'S' then ignored = code.two(targetbody,'load',resultcell,value,childat)
             else do
               mapped = fields[1] as .lltarget..operand
-              action = facts.returnactionat(input.id(),childrecord.id())
               if runtimearm > 0 then action = facts.argumentcaseaction(input.id(),runtimearm)
+              else action = facts.returnactionat(input.id(),childrecord.id())
               if action = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
               else ignored = code.two(targetbody,'copy',resultcell,mapped,childat)
             end
@@ -843,8 +909,8 @@ expandlocalmany: procedure = .llinline..change
           end
           if ordered then do
             if dag then do
-              restores = facts.restores(input.id(),childrecord.id())
               if runtimearm > 0 then restores = facts.argumentcaserestores(input.id(),runtimearm)
+              else restores = facts.restores(input.id(),childrecord.id())
               do k = 1 to restores
               if runtimearm > 0 then do
                 pairleft = facts.argumentcaseleft(input.id(),runtimearm,k)
@@ -910,6 +976,7 @@ expandlocalmany: procedure = .llinline..change
               fields[1] = .lltarget..operand.symbol(caseLabels[runtimearm]) as .object
               ignored = targetbody.record('label',fields,runtimeorigin)
               if runtimestep[0] > 0 then ignored = targetbody.record('.srcstep',runtimestep,runtimeorigin)
+              call scopes.resume(targetbody,runtimeorigin)
               swaprecord = source.record(runtimestart)
               field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
               field = .lltarget..operand.bound(0,0,0,'a',facts.argumentcase(input.id(),runtimearm))

@@ -1894,7 +1894,7 @@ runtimemodel: procedure = .lltarget..module
   if variant = 11 then ignored = three(root,'getandtp',root.reg('r',1),root.reg('r',5),.lltarget..operand.integer(768),at)
   if variant = 2 then ignored = two(root,'link',root.reg('r',2),root.reg('r',1),at)
   fields[1] = root.reg('r',4) as .object
-  if variant = 3 then fields[1] = root.reg('r',2) as .object
+  if variant = 3 | variant = 22 then fields[1] = root.reg('r',2) as .object
   fields[2] = .lltarget..operand.procedure('pick') as .object
   do i = 0 to 3; fields[i + 3] = root.reg('r',i) as .object; end
   callid = root.emit('call4',fields,at)
@@ -1932,7 +1932,25 @@ runtimemodel: procedure = .lltarget..module
   source = selector; if variant = 13 then source = leaf.reg('a',2)
   ignored = three(leaf,'linkarg',destination,source,.lltarget..operand.integer(offset),at)
   if variant = 15 then ignored = two(leaf,'load',destination,.lltarget..operand.integer(99),at)
-  ignored = one(leaf,'ret',destination,at)
+  if variant = 17 | variant = 18 | variant = 22 then ignored = three(leaf,'iadd',destination,destination,.lltarget..operand.integer(7),at)
+  if variant = 18 then do
+    ignored = one(leaf,'null',leaf.reg('r',1),at)
+    ignored = two(leaf,'icopy',leaf.reg('r',1),destination,at)
+    ignored = one(leaf,'unlink',destination,at)
+    destination = leaf.reg('r',1)
+  end
+  if variant = 19 then ignored = three(leaf,'iadd',destination,destination,.lltarget..operand.integer(9223372036854775807),at)
+  if variant = 20 then ignored = two(leaf,'load',destination,.lltarget..operand.string('changed'),at)
+  if variant = 21 then ignored = three(leaf,'call1',leaf.reg('r',1),.lltarget..operand.procedure('child'),destination,at)
+  if variant = 22 then do
+    call objectarraydrop fields
+    ignored = leaf.emit('ret',fields,at)
+  end
+  else ignored = one(leaf,'ret',destination,at)
+  if variant = 21 then do
+    child = draft.procedure('child',0,at)
+    ignored = one(child,'ret',child.reg('a',1),at)
+  end
   return draft.finish()
 
 runtimecontrols: procedure = .int
@@ -1942,24 +1960,38 @@ runtimecontrols: procedure = .int
   reasons[7] = 'argument.selector.width.policy'; reasons[8] = 'argument.selector.bank.unproved'
   reasons[9] = 'argument.selector.overflow.unproved'; reasons[11] = 'argument.range.unproved'
   reasons[12] = 'argument.selector.unproved'; reasons[13] = 'argument.selector.guard.unproved'
-  reasons[14] = 'argument.selector.ownership.pending'; reasons[15] = 'argument.selector.suffix.pending'
-  do variant = 0 to 16
+  reasons[19] = 'arithmetic.write.availability.unproved'; reasons[21] = 'argument.selector.tail.call.pending'
+  do variant = 0 to 22
     original = runtimemodel(variant,callid)
     failures = failures + check(original.valid(),'runtime selector model verifies ' || variant)
     if original.valid() = 0 then do; say original.error(); iterate; end
     id = original.identity()
     request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
     changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
-    if variant <= 6 | variant = 10 | variant = 16 then do
+    if variant <= 6 | variant = 10 | variant = 14 | variant = 15 | variant = 16 | variant = 17 | variant = 18 | variant = 20 | variant = 22 then do
       failures = failures + check(changed.status() = 'changed','checked runtime selector expands ' || variant)
       if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
       facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
       failures = failures + check(facts.status() = 'ok','runtime alternatives have checked facts ' || variant)
       if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
       failures = failures + check(facts.argumentcases(callid) = 3,'three sealed normal alternatives ' || variant)
-      expectedaction = 'copy'; if variant = 16 then expectedaction = 'move'
+      expectedaction = 'copy'; if variant = 16 | variant = 18 then expectedaction = 'move'
+      if variant = 22 then expectedaction = 'none'
+      remaining = facts.remaining()
       do i = 1 to facts.argumentcases(callid)
+        if variant = 14 then do
+          expectedaction = 'copy'; if i = 1 then expectedaction = 'move'
+        end
         failures = failures + check(facts.argumentcaseaction(callid,i) = expectedaction & facts.argumentcasestorage(callid,i) > 0,'case keeps its own whole return and binding ' || i)
+      end
+      failures = failures + check(facts.remaining() = remaining,'case queries borrow the sealed proof ' || variant)
+      if variant = 14 then failures = failures + check(facts.returnaction(callid) = '' & facts.returnactionat(callid,facts.returnsite(callid,1)) = '','mixed actions have no legacy case1 action')
+      if variant = 20 then do i = 1 to 3
+        failures = failures + check(facts.plain(facts.argumentstorage(callid,i + 1)) = 0,'selected component write refreshes every possibly mutated actual ' || i)
+      end
+      if variant = 22 then do
+        projection = dereference facts.access()
+        failures = failures + check(projection.kills(callid,facts.wholedomain(facts.argumentstorage(callid,3))) = 0,'bare RET and partial alias writes do not kill the whole result')
       end
       result = changed.result(); calls = 0; guards = 0; branches = 0; moves = 0; copies = 0
       do i = 1 to result.records()
@@ -1973,6 +2005,9 @@ runtimecontrols: procedure = .int
       end
       expectedmoves = 0; expectedcopies = 3
       if variant = 16 then do; expectedmoves = 3; expectedcopies = 0; end
+      if variant = 18 then do; expectedmoves = 3; expectedcopies = 0; end
+      if variant = 14 then do; expectedmoves = 1; expectedcopies = 2; end
+      if variant = 22 then expectedcopies = 0
       failures = failures + check(calls = 0 & guards = 1 & branches = 2 & moves = expectedmoves & copies = expectedcopies,'single check and three independently closed returns ' || variant)
     end
     else do

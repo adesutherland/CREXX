@@ -1737,7 +1737,12 @@ remain open.
 
 One additional straight-line scalar shape admits a runtime-unknown selector:
 an authored ICHKRNG immediately precedes one register-plus-immediate LINKARG,
-and the only executable suffix is RET of its destination. The checked selector
+followed by a proved linear scalar suffix and one reached RET. The suffix may
+read or write selected storage, use ordinary scalar temporaries, perform
+authored UNLINK and return an owned, borrowed, immediate or absent value.
+Existing component transfers and arithmetic-success proofs apply to every
+case; possible overflow cannot be treated as an exit because its default
+response ignores the unwritten operation. The checked selector
 and both bounds resolve through the current bindings. Bounds must be known;
 their nonempty normal interval, optionally intersected with existing integer
 bounds, contains at most three values. Checked offset addition must put every
@@ -1750,21 +1755,35 @@ policy and absence of a resumable handler are checked independently of normal
 arm refinement. Each case uses its own existing cells/frame/history and RET
 proof, so differing active argument pointers are never met as one frame.
 Only returned caller states meet; per-case actions and inverse permutations
-remain sealed under their original call/selector identities. Mixed owned and
-borrowed return actions retain `argument.selector.ownership.pending` in this
-first slice; dependent alias mutation/use suffixes remain named follow-on work.
+remain sealed under their original call/selector identities. The common proof
+aggregates live records and possible writes, and intersects definite-kill
+guarantees. Mixed COPY/MOVE cases remain separate: legacy action queries return
+an unavailable empty value, and a nonuniform legacy restoration query requires
+the case-aware interface. No first-case action or binding supplies a general
+premise. Mutated actuals, including non-result cells, refresh merged component
+and plain-lifetime facts before later caller analysis.
 
 Expansion captures the selector into an initialized owned scratch before any
 LINK. A separate initialized compare cell reads that stable snapshot for each
-small, independently checked ISUB/BRF test. Each direct-LINK arm retains its
+small, independently checked ISUB/BRF test. Each direct-LINK arm executes its
+whole proved suffix and retains its
 own original return action, inverse swaps, complete UNLINK and owned ENDLIFE
 closure before the common continuation. Borrowed selected cells are copied,
-never moved or ended. Original LINKARG and RET source states remain distinct
+never moved or ended by synthesized closure. Authored scalar writes and UNLINK
+keep their actual effects and immutable-base meaning. The metadata owner
+snapshots live selector-entry declarations and re-establishes them for later
+arms, so an earlier suffix clear cannot hide later names. Saved/replayed
+operands are charged by their actual byte lengths and copy work.
+Original LINKARG and RET source states remain distinct
 in every arm, and the common continuation restores the caller source before
 its TRACE or next instruction. No ISA, type proof annotation or call frame is
 added. Width limits use `argument.selector.width.policy`; guard, bank,
 overflow, suffix and ownership gaps retain specific reasons and exact input
-identity. The separate serial `levell_rxas_runtime_selector` panel extends the
+identity. Nested CALL1 and acyclic source suffixes remain separate reviewed
+stages, with `argument.selector.tail.call.pending` and existing CFG reasons;
+additional suffix selectors retain `argument.selector.tail.selector.pending`.
+The native indirect-mutation fixture's child call remains outside this first
+linear slice. The separate serial `levell_rxas_runtime_selector` panel extends the
 maintained constructed argument-selection owner and handwritten RXAS controls.
 Current cleanup retains the conservative runtime dispatch when its independent
 range/access proof returns `argument.range.unproved`; branch-aware reduction of
