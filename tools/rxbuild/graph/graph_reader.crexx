@@ -638,9 +638,12 @@ ensure_project_directories: procedure = .int
 
 dirname: procedure = .string
   arg path = .string
-  slash = lastpos('/',path)
+  slash = lastpos('\\',path)
+  alt_slash = lastpos('/',path)
+  if alt_slash > slash then slash = alt_slash
   if slash = 0 then return '.'
   if slash = 1 then return left(path,1)
+  if slash = 3 & substr(path,2,1) = ':' then return left(path,3)
   return left(path,slash-1)
 
 basename_no_suffix: procedure = .string
@@ -688,9 +691,12 @@ ensure_directory_tree: procedure = .int
   arg path = .string
   if path = '' then path = '.'
   if .rxfs..isdir(path) <> 0 then return 0
-  slash = lastpos('/',path)
+  slash = lastpos('\\',path)
+  alt_slash = lastpos('/',path)
+  if alt_slash > slash then slash = alt_slash
   if slash = 0 then parent = '.'
   else if slash = 1 then parent = left(path,1)
+  else if slash = 3 & substr(path,2,1) = ':' then parent = left(path,3)
   else parent = left(path,slash-1)
   if parent <> path & parent <> '' then do
     if ensure_directory_tree(parent) <> 0 then return 1
