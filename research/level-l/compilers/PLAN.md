@@ -341,18 +341,33 @@ Per-input exact-rational checks are independent of the three program outputs.
 Source/IR graph facts describe the code actually
 analysed; general termination and correctness remain unknown.
 
+The next demonstration increment makes the Level L contribution inspectable:
+routine boundaries come from parsed labels; source trees expose the recurrence,
+guards, division operands and exits; checked CFG/effect queries retain their
+actual premises and refusal reasons. A deliberately limited AST normalizer
+compares consistent simple-variable renaming while preserving operators and
+constants. Renamed, one-step, missing-exit, zero-divisor and changed-operator
+controls exercise that policy.
+Python retains the independent per-input arithmetic certificates. This is a
+worked frontend/analysis contribution to SLAM, not an implementation of SLAM's
+search, scoring, composition or evidence database.
+
 | Stable criterion | Observable condition |
 |---|---|
 | **SLAM-AC01** | The three adapted Classic Rexx routines run through the existing Level C entry on all 29 published inputs at `NUMERIC DIGITS 9`; input and output text are retained exactly in the comparison report. Invalid input and nonpositive-domain policy are explicit. |
 | **SLAM-AC02** | An independent exact-rational checker classifies each result for relative error at most `1e-8` and nearest nine significant digits, separating agreement from proof and retaining failed cases. Its own true/false/tampered-certificate controls fail closed. |
 | **SLAM-AC03** | A Level B consumer uses the existing Classic frontend and Level L graph index to report source-linked loop form and checked CFG cycle facts for each routine. A failed parse, IR build or graph index is reported as failure, not an empty graph. |
 | **SLAM-AC04** | One focused local run checks the expected old/new contrast and the three agreement-versus-rounding examples. The report labels sample observations, per-input proofs and unproved all-input claims distinctly; no compiler-wide or publication qualification follows. |
+| **SLAM-AC05** | The cREXX consumer locates the selected routine through AST labels and emits readable located assignments, guards, loop/return relationships and division obligations. It distinguishes direct syntax, consumer flow interpretation and checked IR facts; neither a source guard nor an IR slot proves a Classic value/alias invariant. |
+| **SLAM-AC06** | Consistent simple-variable renaming has the same explicit normalized AST representation; changing the iteration constant, arithmetic operator, divisor or exit changes it. The normalizer preserves expression operators, literals and admitted ABS calls and rejects unsupported forms; shape equality is not semantic equivalence. Missing-exit, zero-divisor and changed-operator variants are analysed only. |
+| **SLAM-AC07** | Runnable cREXX snippets exercise real graph/effect proof queries and small explicit pure/opaque API controls, displaying proved and unknown with their scope/reasons. No projected/premised proof is attributed to the original numerical routine. The guide explains these boundaries and the connection to SLAM. |
 
 | Stable step | Current status and dependency |
 |---|---|
 | **SLAM-STEP01 — done** | Record the fixture provenance, exact analysis/proof boundaries and focused check plan before implementation; AC01–04. |
 | **SLAM-STEP02 — done** | Add the standalone Classic fixtures, Level L analysis consumer and exact-rational comparison driver; AC01–03. |
 | **SLAM-STEP03 — done** | Inspect representative source/IR/RXAS, run focused normal checks on one VM, update the user-facing explanation and report results; AC01–04. |
+| **SLAM-STEP04 — done** | Extend the cREXX AST/graph consumer, controlled fixtures and worked guide; AC05–07. Source/representative analyser RXAS review and one focused ordinary VM run cover the independent numerical baseline and negative/unknown controls using prepared images. Grammar regeneration, broader QA and publication remain outside this increment. |
 
 ## Outside current C closure
 

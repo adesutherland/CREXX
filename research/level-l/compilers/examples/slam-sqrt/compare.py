@@ -10,7 +10,6 @@ import argparse
 from decimal import Decimal, InvalidOperation
 from fractions import Fraction
 from pathlib import Path
-import re
 import shutil
 import subprocess
 import tempfile
@@ -22,6 +21,14 @@ ROUTINES = (
     ("new", "fdsqrt-new.rexx", "FDSqrt"),
     ("vision", "vision-sqrt.rexx", "rx_vision_sqrt"),
 )
+VARIATIONS = (
+    ("renamed", "fdsqrt-renamed.rexx", "FDSqrt"),
+    ("one-step", "fdsqrt-one-step.rexx", "FDSqrt"),
+    ("no-exit", "fdsqrt-no-exit.rexx", "FDSqrt"),
+    ("zero-divisor", "fdsqrt-zero-divisor.rexx", "FDSqrt"),
+    ("subtract", "fdsqrt-subtract.rexx", "FDSqrt"),
+)
+ANALYSIS_ONLY = {"no-exit", "zero-divisor", "subtract"}
 TOLERANCE = Fraction(1, 100_000_000)
 
 
@@ -122,11 +129,14 @@ def analyse(vm: Path, image: Path, source: Path, routine: str,
             artifacts: Path) -> list[str]:
     lines = run([str(vm), str(image), "-a", str(source), routine,
                  str(artifacts)]).splitlines()
-    if not lines or not lines[0].startswith("IR|"):
+    if not lines or not lines[0].startswith("ROUTINE|"):
         raise RuntimeError(f"missing checked IR graph report: {lines!r}")
-    if any(not line.startswith("AST|") for line in lines[1:]):
+    allowed = ("ROUTINE|", "NODE|", "SHAPE|", "FLOW|", "IR|", "CFG|", "LIVENESS|",
+               "PROOF|", "OBLIGATION|", "LIMIT|")
+    if any(not line.startswith(allowed) for line in lines):
         raise RuntimeError(f"unrecognised source analysis: {lines!r}")
-    if not lines[1:]:
+    if not any(line.startswith("SHAPE|") for line in lines) or not any(
+            line.startswith("PROOF|") for line in lines):
         raise RuntimeError("no source-linked routine loop")
     return lines
 
@@ -149,7 +159,7 @@ def prepare_analyser(build: Path, work: Path) -> Path:
              "llcsrcmap", "llcdiagnostics", "llcparseprogram",
              "llcprocedureprotocol", "llcsignalprotocol", "llcdoprotocol",
              "llcclauseprotocol", "llccommandprotocol", "llcparse",
-             "llcfrontend", "llcgraph")
+             "llcfrontend", "llcgraph", "llceffects")
     modules.extend(classic / f"{name}.rxbin" for name in names)
     modules.extend(build / "bin" / f"{name}.rxbin" for name in
                    ("rxfnsl-analysis", "rxfnsl", "library"))
@@ -194,12 +204,59 @@ def results(build: Path, work: Path, imports: Path, label: str,
     return outputs
 
 
+def check_analysis(structures: dict[str, list[str]], controls: list[str]) -> None:
+    """Independent expectations from the authored control cases, not IR IDs."""
+    def require(condition: bool, message: str) -> None:
+        if not condition:
+            raise AssertionError(message)
+
+    require(any("direct exit when next>=guess" in row for row in structures["new"]),
+            "revised source's exit condition was lost")
+    require(any("this exit bypasses: guess=next" in row for row in structures["new"]),
+            "LEAVE path must bypass the update")
+    require(any("no direct conditional LEAVE" in row for row in structures["no-exit"]),
+            "missing-exit control was not identified")
+    require(any("nonzero divisor 2|proved|" in row for row in structures["new"]),
+            "literal two must satisfy the bounded tree rule")
+    require(any("nonzero divisor guess|unknown|" in row for row in structures["new"]),
+            "tree rule must not invent a variable invariant")
+    require(any("nonzero divisor 0|disproved|" in row for row in structures["zero-divisor"]),
+            "literal zero must fail the nonzero obligation")
+    for label, rows in structures.items():
+        require(any(row == "PROOF|Classic division result available|unknown|completion.edge.unknown"
+                    for row in rows), f"unexpected full Classic proof disposition: {label}")
+    require(controls == [
+        "CONTROL|unrelated-write|proved|state.preserved.in.acyclic.interval",
+        "CONTROL|estimate-write|unknown|state.or.observation.changed",
+        "CONTROL|missing-premise|unknown|effect.unknown",
+    ], "proof controls lost their independent proved/unknown distinctions")
+
+
+def negative_analysis_checks(vm: Path, image: Path, work: Path, artifacts: Path) -> None:
+    """Grammar failure and unsupported semantics must not yield a shape."""
+    for label, text, diagnostic in (
+        ("malformed", "FDSqrt: procedure\ndo forever\n", "ERROR|frontend|"),
+        ("unsupported", "FDSqrt: procedure expose x\nreturn x\n", "EXPOSE is outside"),
+        ("missing", "say 'FDSqrt: is only text'\n", "missing top-level routine label"),
+    ):
+        source = work / f"negative-{label}.rexx"
+        source.write_text(text)
+        completed = subprocess.run([str(vm), str(image), "-a", str(source),
+                                    "FDSqrt", str(artifacts)],
+                                   capture_output=True, text=True, timeout=30)
+        evidence = completed.stdout + completed.stderr
+        if completed.returncode == 0 or diagnostic not in evidence or "SHAPE|" in evidence:
+            raise AssertionError(f"failed negative analysis control {label}: {evidence}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, default=Path("cmake-build-debug"))
     parser.add_argument("--values", type=Path, default=HERE / "values.txt")
     parser.add_argument("--check", action="store_true",
                         help="check the published 29-value contrast")
+    parser.add_argument("--analysis-only", action="store_true",
+                        help="show cREXX tree/graph/proof findings without numerical execution")
     args = parser.parse_args()
     build = args.build.resolve()
     values = read_values(args.values)
@@ -220,25 +277,86 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="slam-sqrt-") as temporary:
         work = Path(temporary)
         image = prepare_analyser(build, work)
-        imports = prepare_runtime(build, work)
-        for label, file, routine in ROUTINES:
+        controls = run([vm, image, "-a", "--proof-controls"]).splitlines()
+        if args.check:
+            negative_analysis_checks(vm, image, work, build / "bin")
+        imports = prepare_runtime(build, work) if not args.analysis_only else None
+        for label, file, routine in (*ROUTINES, *VARIATIONS):
             source = work / f"{label}.rexx"
             source.write_text(program((HERE / file).read_text(), routine))
-            structures[label] = analyse(vm, image, source, routine, build / "bin")
-            output[label] = results(build, work, imports, label, source, values)
+            # Analyse the authored fixture directly: its reported lines are
+            # useful to readers and do not include the execution wrapper.
+            structures[label] = analyse(vm, image, HERE / file, routine, build / "bin")
+            if not args.analysis_only and label not in ANALYSIS_ONLY:
+                output[label] = results(build, work, imports, label, source, values)
+        domain = {}
+        if not args.analysis_only:
+            for label, file, routine in ROUTINES[:2]:
+                # Reuse each compiled program; these concrete domain probes
+                # are observations, outside the sqrt certificate's domain.
+                domain[label] = run([vm, "--no-autoload", work / f"{label}-linked.rxbin",
+                                     "-a", "-1 0"]).splitlines()
 
     print("# SLAM square-root comparison (Classic Rexx / Level L)")
     print(f"Inputs: {len(values)}; NUMERIC DIGITS 9; VM: {vm.name}")
-    print("Domain: nonnegative finite decimal input; negative/nonnumeric input is rejected before execution.")
+    print("Numerical certificates use nonnegative inputs. Separate domain probes retain routine behaviour.")
     print("\n## Source and graph facts")
-    for label, _, _ in ROUTINES:
-        print(f"{label}: {structures[label][0]}")
-        for row in structures[label][1:]:
-            match = re.fullmatch(r"AST\|form=([^|]+)\|first=(\d+)\|last=(\d+)", row)
-            if not match:
-                raise RuntimeError(f"malformed AST row: {row!r}")
-            print(f"  {match[1]} at source bytes {match[2]}..{match[3]}")
-    print("Graph cycles are CFG facts; they do not prove termination.")
+    originals = {item[0] for item in ROUTINES}
+    for label, _, _ in (*ROUTINES, *VARIATIONS):
+        print(f"\n### {label}")
+        for row in structures[label]:
+            if row.startswith("SHAPE|"):
+                continue
+            if row.startswith("NODE|"):
+                _, depth, line, kind, text = row.split("|", 4)
+                if label not in originals and kind != "CDo":
+                    continue
+                print(f"{'  ' * int(depth)}- line {line}: {kind}: {text}")
+            elif row.startswith("FLOW|"):
+                _, line, text = row.split("|", 2)
+                print(f"- Source flow interpretation, line {line}: {text}")
+            elif row.startswith("OBLIGATION|"):
+                _, line, claim, status, basis = row.split("|", 4)
+                print(f"- Tree rule, line {line}: {claim}: **{status}** ({basis}).")
+            elif row.startswith("PROOF|"):
+                _, claim, status, reason = row.split("|", 3)
+                print(f"- Checked effect query: {claim}: **{status}** (`{reason}`).")
+            elif row.startswith("LIMIT|"):
+                continue
+            else:
+                name, text = row.split("|", 1)
+                print(f"- {name}: {text}")
+    shape = lambda label: next(row for row in structures[label] if row.startswith("SHAPE|"))
+    print("\n## Controlled AST comparisons (computed by cREXX)")
+    comparisons = (("new", "renamed", True), ("old", "one-step", False),
+                   ("new", "no-exit", False), ("old", "zero-divisor", False),
+                   ("new", "subtract", False))
+    for left, right, expected in comparisons:
+        same = shape(left) == shape(right)
+        print(f"{left} / {right}: normalized shape {'same' if same else 'different'}")
+        if args.check and same != expected:
+            raise AssertionError(f"unexpected shape comparison: {left}/{right}")
+    print("no-exit, zero-divisor and subtract: ANALYSIS ONLY; never executed. Shape equality is not semantic equivalence.")
+    print("\n## Bounded proof API controls (separate illustrative IR)")
+    print("| Step premise | Checked outcome | Reason |")
+    print("|---|---|---|")
+    for row in controls:
+        _, premise, status, reason = row.split("|", 3)
+        print(f"| {premise} | {status} | `{reason}` |")
+    print("These proofs check explicit effect premises in a tiny acyclic IR, not Newton arithmetic.")
+    print("Numerical variable invariants, convergence and all-input termination remain unknown.")
+    if args.check:
+        check_analysis(structures, controls)
+        print("Tree/graph/proof controls: PASS")
+    if args.analysis_only:
+        return 0
+
+    print("\n## Domain observations (not sqrt certificates)")
+    for label, rows in domain.items():
+        print(f"{label}: " + ", ".join(rows))
+        if args.check and rows != ["-1|0", "0|0"]:
+            raise AssertionError(f"unexpected domain behaviour: {label}")
+    print("Vision negative-input exception was not ported: no negative Vision execution or equivalence claim.")
 
     print("\n## Per-input evidence")
     print("| Input | Old | Revised | Vision | Revised=Vision | Old within 1e-8 | Revised within 1e-8 | Revised nearest 9 |")
@@ -266,11 +384,17 @@ def main() -> int:
     print("Agreed with Vision but outside nearest-nine certificate: " +
           (", ".join(agreement_off) if agreement_off else "none"))
     print("All-input correctness and termination: UNKNOWN (no general proof attempted).")
+    renamed_same = output["renamed"] == output["new"]
+    one_step_bad = sum(not within(rational(x), rational(r))
+                       for x, r in zip(values, output["one-step"]))
+    print(f"Renamed outputs equal revised on this set: {renamed_same}; one-step failures: {one_step_bad}/{len(values)}.")
     if args.check:
         if len(values) != 29 or old_bad != 12 or new_bad != 0 or \
            set(not_nearest) != {"0.5", "99.5", "2000000000"} or \
            set(agreement_off) != set(not_nearest):
             raise AssertionError("Classic results differ from the published SLAM contrast")
+        if not renamed_same or one_step_bad != 28:
+            raise AssertionError("controlled numerical variation differed from its independent expectation")
         print("Published 29-value contrast: PASS")
     return 0
 
