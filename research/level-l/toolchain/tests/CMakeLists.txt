@@ -53,14 +53,17 @@ if(TARGET rxbvm)
     COMMAND ${CMAKE_COMMAND}
       "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
       "-DCLI=${_cli}" "-DCONSTRUCTED=${CMAKE_CURRENT_BINARY_DIR}/signal-inline.rxbin"
+      "-DNATIVE_PAYLOAD_PLUGIN=$<TARGET_FILE:_testfuncs_dynamic>"
       "-DRUNTIME=${_runtime}" "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
       "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/named-signal-work"
       -P "${CMAKE_CURRENT_SOURCE_DIR}/run-named-signal.cmake")
   set_tests_properties(levell_rxas_named_signal PROPERTIES
     PASS_REGULAR_EXPRESSION "RXAS_NAMED_SIGNAL[|]failures=0"
-    TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
+    # Three bounded lanes share prepared producers, but each ordinary
+    # original/expanded RXAS pair starts nested assembler and VM processes.
+    TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_named_signal
-    TARGETS levell_rxas_signal_test_prep rxbvm rxas)
+    TARGETS levell_rxas_signal_test_prep rxbvm rxas _testfuncs_dynamic)
   add_test(NAME levell_rxas_io_service
     COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/io-service.rxbin" ${_runtime})
   set_tests_properties(levell_rxas_io_service PROPERTIES

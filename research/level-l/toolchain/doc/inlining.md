@@ -526,6 +526,35 @@ prologue, preserves all executable policies/projections and keeps exceptional
 cleanup guards. This is a bounded VM-event consumer lane, not complete bound
 G or Classic C handler qualification.
 
+One authored `COPY rSaved,rEvent` can additionally capture the runtime event
+after the handler's complete reverse-pop list and before its projections.
+The saved destination is a canonical owned cell with an explicit pre-scope
+whole NULL, no later pre-capture write and no live attribute/reference aliases.
+It is distinct from delivery, scratch, output, actual and result storage.
+The copy remains at its authored executable point; capture before complete
+restoration retains `signal.snapshot.phase.pending`.
+
+Only the completed normal successor inherits opaque runtime-event shape in
+the saved owner. The existing VM COPY still performs recursive attribute
+copy, diagnostic/native hooks and reference-descriptor retention. Copied
+storage belongs to the saved owner; referenced targets and native resources
+follow their existing lifetime/hook contracts. No detached referent, prolonged
+target lifetime, scalar payload, allocation-success or resumed partial-copy
+fact follows from this transfer. Abrupt departures retain the restored outer
+policy and the unchanged native operation.
+
+Saved projections use the same checked code/name/message lane. The authored
+event NULL may precede those projections, but saved NULL must follow their
+last use, and both resets must precede the handler's join departure. No copy
+or reset can run with an open attribute link. ENDLIFE cannot replace either
+NULL; an authored ENDLIFE after its corresponding reset remains executable.
+At the join the handler carries two reset ordinary event cells, while the
+normal path retains its original preloads. Alias/binding, reset/state,
+closure and consumer refusals use the `signal.snapshot.*` family. Additional
+copies, MOVE, payload transport/relay and opaque event escape remain outside
+this increment. Exceptional cleanup still cannot delete copies or resets or
+reuse opaque storage.
+
 The smaller named-list profile still retains `FAILURE` with
 `signal.activation.failure.pending`. Adrian accepted that reasonable inlining
 may change infrastructure-pressure error paths as its resource use changes,

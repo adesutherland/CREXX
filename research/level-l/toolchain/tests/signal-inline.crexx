@@ -289,6 +289,7 @@ boundcontrols: procedure = .int
   expected[7] = 'signal.bound.mapping.pending'; expected[8] = expected[7]; expected[9] = expected[7]
   expected[10] = 'signal.bound.state.unproved'; expected[11] = expected[10]
   do i = 12 to 17; expected[i] = 'signal.bound.consumer.pending'; end
+  expected[17] = 'signal.snapshot.consumer.pending'
   expected[18] = 'signal.bound.handler.pending'; expected[19] = 'signal.bound.mapping.pending'
   expected[20] = 'signal.named.push.order.pending'; expected[21] = 'signal.callee.operation.pending'
   expected[22] = 'signal.named.entry.pending'; expected[23] = 'signal.bound.mapping.pending'; expected[24] = 'signal.bound.state.unproved'
@@ -337,6 +338,171 @@ boundcontrols: procedure = .int
   end
   changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
   failures = failures + check(changed.status() = 'changed' & original.identity() = identity,'bound event replays after refused requests')
+  return failures
+
+snapshotcapture: procedure = .void
+  arg root = .lltarget..bodydraft, saved = .int, variant = .int, at = .llir..origin
+  if variant = 24 then ignored = one(root,'null',root.reg('r',4),at)
+  name = 'copy'; if variant = 19 then name = 'move'
+  target = root.reg('r',saved); if variant = 27 then target = root.reg('a',0)
+  ignored = two(root,name,target,root.reg('r',4),at)
+  if variant = 14 then ignored = two(root,'copy',target,root.reg('r',4),at)
+  if variant = 6 then ignored = one(root,'null',root.reg('r',4),at)
+  if variant = 20 then ignored = two(root,'copy',root.reg('r',10),target,at)
+  return
+
+/** Independent record producer adds one authored owned capture to the
+ * maintained bound scope; it never calls the pass to construct an oracle. */
+snapshotmodel: procedure = .lltarget..module
+  arg variant = .int, expose callid = .int, expose handlerid = .int
+  ignored = .int
+  base = 0; if variant <= 5 then base = variant
+  if variant = 7 then base = 1
+  if variant = 25 then base = 13
+  source = boundmodel(base,callid,handlerid); oldcall = callid; oldhandler = handlerid
+  draft = .lltarget..draft('snapshot.' || variant,'constructed.snapshot.' || variant,0)
+  at = draft.synthetic('authored post-pop owned runtime-event capture')
+  saved = 12
+  if variant = 9 then saved = 0
+  if variant = 10 then saved = 4
+  if variant = 11 then saved = 7
+  prelude = 0; captured = 0; bodies = .object[]
+  item = .lltarget..record; body = .lltarget..bodydraft; value = .lltarget..operand; oldbody = .lltarget..body
+  i = .int; id = .int; fields = .object[]
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then do
+      oldbody = source.body(item.procedureid()); extent = oldbody.locals()
+      if oldbody.name() = 'main' then extent = 13
+      body = draft.procedure(oldbody.name(),extent,at,oldbody.expose()); bodies[item.procedureid()] = body as .object
+      iterate
+    end
+    if item.procedureid() = 0 then do
+      call objectarraydrop fields
+      do j = 1 to item.operands(); fields[j] = item.operand(j) as .object; end
+      ignored = draft.record(item.kind(),fields,at); iterate
+    end
+    body = bodies[item.procedureid()] as .lltarget..bodydraft
+    fields = llinline..clonefields(item,body)
+    if source.body(item.procedureid()).name() = 'main' & item.kind() = 'instruction' then do
+      if prelude = 0 & item.mnemonic() = 'sigpush' then do
+        if variant <> 12 then ignored = one(body,'null',body.reg('r',saved),at)
+        if variant = 13 then ignored = two(body,'load',body.reg('r',saved),.lltarget..operand.integer(0),at)
+        if variant = 22 then do
+          ignored = two(body,'setattrs',body.reg('r',saved),.lltarget..operand.integer(1),at)
+          ignored = three(body,'linkattr1',body.reg('r',6),body.reg('r',saved),.lltarget..operand.integer(1),at)
+        end
+        if variant = 23 then ignored = two(body,'link',body.reg('r',saved),body.reg('r',3),at)
+        prelude = 1
+      end
+      if item.mnemonic() = 'linkattr1' then do
+        value = item.operand(2)
+        if value.bank() = 'r' & value.index() = 4 then do
+          if captured = 0 then do
+            call snapshotcapture(body,saved,variant,at); captured = 1
+            if variant = 18 then ignored = one(body,'null',body.reg('r',saved),at)
+          end
+          fields[2] = body.reg('r',saved) as .object
+        end
+      end
+      if item.mnemonic() = 'null' then do
+        value = item.operand(1)
+        if value.bank() = 'r' & value.index() = 4 & item.id() > oldcall then do
+          if variant = 21 then ignored = three(body,'linkattr1',body.reg('r',10),body.reg('r',saved),.lltarget..operand.integer(5),at)
+          if variant <> 6 & variant <> 15 then ignored = one(body,'null',body.reg('r',4),at)
+          if variant <> 16 & variant <> 18 then do
+            name = 'null'; if variant = 17 then name = 'endlife'
+            ignored = one(body,name,body.reg('r',saved),at)
+          end
+          if variant = 7 then do
+            ignored = one(body,'endlife',body.reg('r',4),at)
+            ignored = one(body,'endlife',body.reg('r',saved),at)
+          end
+          iterate
+        end
+      end
+    end
+    if item.kind() = 'instruction' then id = body.emit(item.mnemonic(),fields,at)
+    else id = body.record(item.kind(),fields,at)
+    if item.id() = oldcall then callid = id
+    if item.id() = oldhandler then do
+      handlerid = id
+      if variant = 8 then do; call snapshotcapture(body,saved,variant,at); captured = 1; end
+    end
+  end
+  return draft.finish()
+
+snapshotcontrols: procedure = .int
+  failures = 0; variant = .int; callid = .int; handlerid = .int; i = .int; mode = .int
+  identity = .int
+  original = .lltarget..module; result = .lltarget..module; request = .llinline..binding
+  changed = .llinline..change; limited = .llinline..change; cleaned = .llinline..change
+  item = .lltarget..record; value = .lltarget..operand; source = .lltarget..operand
+  expected = .string[]
+  expected[8] = 'signal.snapshot.phase.pending'
+  do i = 9 to 11; expected[i] = 'signal.snapshot.mapping.pending'; end
+  expected[12] = 'signal.snapshot.state.unproved'; expected[13] = expected[12]
+  expected[14] = 'signal.snapshot.consumer.pending'
+  do i = 15 to 18; expected[i] = 'signal.snapshot.cleanup.pending'; end
+  expected[19] = 'signal.snapshot.consumer.pending'; expected[20] = expected[19]
+  do i = 21 to 23; expected[i] = 'signal.snapshot.mapping.pending'; end
+  expected[24] = 'signal.snapshot.cleanup.pending'; expected[25] = 'signal.snapshot.consumer.pending'
+  expected[27] = 'signal.snapshot.mapping.pending'
+  do variant = 0 to 27
+    if variant = 26 then iterate
+    original = snapshotmodel(variant,callid,handlerid)
+    failures = failures + check(original.valid(),'owned event model verifies ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    identity = original.identity()
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('checked_identity'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
+    if variant <= 7 then do
+      failures = failures + check(changed.status() = 'changed','owned event capture expands ' || variant)
+      if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+      result = changed.result(); captures = 0; calls = 0; projections = 0; closed = 0; lifetimes = 0
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.procedureid() <> result.procedureid('main') | item.kind() <> 'instruction' then iterate
+        if item.mnemonic() = 'call1' then calls = calls + 1
+        if item.mnemonic() = 'copy' then do
+          value = item.operand(1); source = item.operand(2)
+          if value.bank() = 'r' & value.index() = 12 & source.bank() = 'r' & source.index() = 4 then captures = captures + 1
+        end
+        if item.mnemonic() = 'linkattr1' then do
+          source = item.operand(2)
+          if source.bank() = 'r' & source.index() = 12 then projections = projections + 1
+        end
+        if item.mnemonic() = 'null' then do
+          value = item.operand(1)
+          if value.bank() = 'r' & value.index() = 12 then closed = closed + 1
+        end
+        if item.mnemonic() = 'endlife' then lifetimes = lifetimes + 1
+      end
+      expectedlifetimes = 0; if variant = 7 then expectedlifetimes = 2
+      failures = failures + check(result.body(result.procedureid('main')).locals() = 13 & calls = 0 & captures = 1 & projections = 3 & closed = 2 & lifetimes = expectedlifetimes,'one authored event COPY and both resets survive without added cells ' || variant)
+      cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+      failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'transport.exceptional.cfg.pending','owned event transport remains exceptional')
+      cleaned = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+      failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'storage.exceptional.cfg.pending','owned event storage remains exceptional')
+    end
+    else do
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected[variant] & changed.result().identity() = identity,'precise owned-event refusal ' || variant)
+      if changed.reason() <> expected[variant] then say changed.reason()
+    end
+  end
+  original = snapshotmodel(0,callid,handlerid); identity = original.identity()
+  request = llinline..bind(reference original,callid,reference original,original.procedureid('checked_identity'))
+  do mode = 1 to 4
+    select mode
+      when 1 then limited = llinline..expand(request,'closed-main-default-halt.v1',1)
+      when 2 then limited = llinline..expand(request,'closed-main-default-halt.v1',12000000,1)
+      when 3 then limited = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,64)
+      otherwise limited = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,67108864,65536,1)
+    end
+    failures = failures + check(limited.status() = 'limit' & limited.result().identity() = identity,'owned-event cap preserves exact caller ' || mode)
+  end
+  changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
+  failures = failures + check(changed.status() = 'changed' & original.identity() = identity,'owned event replay after refusals')
   return failures
 
 main: procedure = .int
@@ -518,5 +684,6 @@ main: procedure = .int
     end
   end
   failures = failures + boundcontrols()
+  failures = failures + snapshotcontrols()
   say 'SIGNAL_INLINE|failures=' || failures
   return failures

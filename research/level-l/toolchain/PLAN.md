@@ -794,6 +794,135 @@ retain the exact source owner and CLI last-good output. The coordinator owns
 the focused build and this bounded panel on one normal VM; this plan draft
 commissions no broader functional, sanitizer, platform or performance campaign.
 
+### Runtime-event owned-copy increment
+
+**Status: implemented and focused-qualified.** This
+INL-STEP04 follow-on serves AC02/03/04/06/07 within the preceding full 29-name
+bound scope and exact read-only range-leaf contract. It admits one existing
+authored `COPY rSaved,rEvent` after the handler's complete reverse-pop list,
+before its projections. This is the owned-event capture needed by G HTTP
+cleanup and research C `signal.capture`; it does not admit those complete
+producer bodies. Keep INL-AC03/04/05 and INL-STEP06 open. No ISA, target wire
+schema, public API, VM algorithm or inliner `.meta` proof is added.
+
+`rSaved` is a canonical owned caller cell, distinct from `rEvent`, scratch,
+outputs, actual and result, with an explicit pre-scope whole NULL and no
+subsequent write before capture. Require its whole-reset state and absence of
+live attribute/reference aliases into its destination tree at capture: COPY
+into a previously linked attribute tree can write through borrowed links.
+Preserve the one authored COPY row, its operands and its exact executable
+position. Do not synthesize a copy,
+move it across a pop, add a capture guard or assert once-only first-event
+capture. Capture before complete restoration retains
+`signal.snapshot.phase.pending`: delivery during the pop prefix can re-enter
+the handler and change dynamic COPY/finalizer counts, and a register guard
+cannot close that interruptible gap. Keep existing save/pop failure and
+re-entry behavior, with the same checked outer default policy.
+
+The existing VM `copy_value` owner recursively copies value components and
+attributes and retains reference descriptors. It may allocate and invoke native
+copy/finalizer hooks, including diagnostic ownership. The result owns its copied
+storage/descriptors; it is not a detached clone of referenced targets or native
+resources. Native retention/sharing follows the existing hook contract; copying
+a reference descriptor does not extend its target's language lifetime.
+The built-in raw diagnostic hook
+retains its existing immutable diagnostic owner; it does not recapture source
+or stack. A copied descriptor still shares its target, and source-owner reset
+can invalidate it. Retain the
+exact authored COPY and resets, including their order and hook effects, without
+elision, conversion to LINK/MOVE or a second event-copy implementation. Prove
+the completed-copy normal successor separately from any abrupt departure;
+neither allocation success nor a resumed partial-copy state follows from
+the event shape or the opcode's normal catalogue row.
+
+`lltargetfacts` adds only the bounded exact-owner transfer for this checked
+COPY row. Its destination inherits runtime-event shape/provenance and opaque
+payload ownership, not ordinary/plain, scalar, independent-referent or reusable
+storage facts. Preserve integer/string/status/component uncertainty, logical
+source origin and owned diagnostic carrier. A later overwrite/reset of `rEvent` does not by itself erase
+the copied wrapper/attribute shape in `rSaved`; it also cannot certify payload
+referent validity. No analysis materializes or traverses the runtime payload.
+Native/reference callback, abrupt-state or physical-observation obligations
+must be justified by the unchanged instruction placement and existing owning
+contracts, rather than inferred from the public event class name.
+
+The bounded code/name/message projection groups now read `rSaved`, using the
+same immediate fields, COPY versus SCOPY semantics and complete scratch
+unlink/reset groups as the preceding increment. Each group still begins only
+after full policy restoration, with no entry/interleaving or escaped scratch
+link. Require both an authored `NULL rEvent` after capture and an authored
+`NULL rSaved` after the last saved-event use, before the existing handler
+branch to the join; preserve their source order and positions. `rEvent` may
+be reset before saved-event projection only when the latter uses the saved
+wrapper's own code/name/message fields, with no payload dereference or target
+liveness inference. At the join both event cells are ordinary reset cells on
+the handler path; normal-path preloads retain their existing scalar proof.
+Carry no opaque event into the continuation in this increment.
+
+NULL recursively resets/releases nested ownership and restores owned attribute
+pointers. ENDLIFE releases reference identities/descriptors while leaving
+ordinary/native contents intact; it cannot replace either NULL. An existing
+ENDLIFE after the corresponding explicit reset may remain executable, with
+no new lifetime deletion or storage reuse. Neither copy nor reset may execute
+with open attribute links into either event. Do not borrow a payload pointer
+through the copy or extend a target's reference lifetime to make a control pass.
+
+Retain precise current reasons for malformed scope and projection shapes.
+Saved/event/scratch/output alias, rebinding or foreign-bank destinations retain
+`signal.snapshot.mapping.pending`; unproved reset/component or joined state
+retains `signal.snapshot.state.unproved`; missing or premature closure retains
+`signal.snapshot.cleanup.pending`. Additional event copies, MOVE, whole-event
+or payload return/argument/global escape, payload COPY/dereference/mutation,
+raw module/address reads, arbitrary calls/relay and unsupported observations
+retain `signal.snapshot.consumer.pending`. Existing direct-event projection
+inputs keep their earlier contract. These limits do not classify the pending
+G/C forms as inherently infeasible.
+
+Delivery still writes `rEvent` at each actual exceptional predecessor before
+handler entry, never at installation. Preserve caller state before/after the
+normal result COPY and every prior write/observation; an older copied event
+must not become the new event until its authored COPY completes. Preserve
+all policy rows and every possible second-event outcome during restoration.
+Point source/TRACE remains attached to the real capture/reset/projection
+instruction boundaries. The saved event preserves tag/payload and logical
+fault origin under the approved observation contract; no physical traceback,
+raw-address or new semantic result-event guarantee is introduced.
+
+Independent constructed and handwritten controls cover normal/fault/unknown
+actuals, ordinary event/output preloads, result/actual overlap, saved
+code/name/message projections and explicit closure of both event cells and
+scratch. Include a
+case that resets `rEvent` before projecting `rSaved`, with empty and nonempty
+messages. Check name whole-COPY state and message SCOPY's preserved numeric
+component/public status separately. A paired delivery/observation harness may
+supply nested object, reference and native-hook payloads outside the admitted
+transformation input: verify descriptor retention and target invalidation
+against the maintained VM rules, diagnostic/native hook counts and reset
+ordering, without asserting independent or prolonged referent lifetimes.
+Use test-only reference identity/lifetime probes, and distinguish NULL's native
+release from ENDLIFE's lack of native finalization. Include a destination-tree
+alias refusal; whole NULL must not be replaced by a scalar overwrite.
+Compare each ordinary original/expanded artifact through `rxas -n` and one VM.
+
+Reuse existing pending-CANCEL before/after result commit, earlier-observation,
+priority, restoration terminal, logical-source and normal-only result-TRACE
+controls. Add independent negatives for before-pop capture, alias/rebound or
+unreset saved storage, duplicate copies, missing either NULL, ENDLIFE substituted
+for NULL, open links at copy/reset and escaped event/payload. Execute one
+retained negative with independent expectations. Inspect conservative output
+early for the unchanged authored event COPY/NULL rows, unchanged policies and
+projections, absent selected call and no fresh cells or lifetime elision.
+
+Keep the exceptional-CFG transport/storage guards and exact-owner atomic
+publication. Charge added facts, snapshots, joins, work/entries/bytes before
+growth; tight limits, failed output and replay preserve the frozen input and
+CLI last-good output. Reuse prepared producers and the current signal runners;
+the coordinator owns the focused one-VM development checks. G method selection,
+general object/reference aliases, C field-5 whole payload transport, capture
+before restoration, Classic activation/relay and atomic restoration remain open.
+This contract does not commission broader functional, sanitizer, platform or
+performance qualification.
+
 ### Pending atomic signal-scope decision
 
 The current G emitter's duplicate normal/handler reverse-pop lists cannot
