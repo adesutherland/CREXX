@@ -74,4 +74,16 @@ if(TARGET rxbvm)
     TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_linked_window
     TARGETS llrxinline rxbvm rxas)
+  add_test(NAME levell_rxas_imported_leaf
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DLINKER=$<TARGET_FILE:rxlink>" "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/import-leaf-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-import-leaf.cmake")
+  set_tests_properties(levell_rxas_imported_leaf PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_IMPORTED_LEAF[|]failures=0"
+    TIMEOUT 180 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_imported_leaf
+    TARGETS llrxinline rxbvm rxas rxlink)
 endif()

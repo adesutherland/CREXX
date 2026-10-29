@@ -53,7 +53,7 @@ main: procedure = .int
   end
   if sourcepath = '' | destination = '' | logical = '' then return usage('source, --module and -o are required')
   if wordpos(policy,'default all-legal never') = 0 then return usage('unknown selection policy ' || policy)
-  if profile <> 'unknown' & profile <> 'closed-main-default-halt.v1' then return usage('unknown preservation profile ' || profile)
+  if profile <> 'unknown' & profile <> 'closed-main-default-halt.v1' & profile <> 'closed-main-static-exact-default-halt.v1' then return usage('unknown preservation profile ' || profile)
   if artifact = '' then artifact = sourcepath
   do
     limits = .lllimits..policy(); inputbytes = 67108864
@@ -160,6 +160,9 @@ applybatch: procedure = .int
   bindings = .object[]; names = .string[]; failed = 0; procedureid = .int; i = .int
   bindings = collectbindings(reference target,supplied,failed)
   if failed then return 1
+  if profile = 'closed-main-static-exact-default-halt.v1' then do
+    if checkstaticproviders(reference target,supplied,bindings,workbudget) <> 0 then return 1
+  end
   if bindings[0] = 0 then return 0
   change = llinline..expandmany(bindings,profile,workbudget)
   do i = 1 to change.sites()
@@ -189,11 +192,36 @@ applybatch: procedure = .int
   end
   return 0
 
+/** The service sees only owners present in its binding batch. Reject unused
+ * CLI inputs so an unexamined provider cannot join the declared static bundle.
+ * No metadata or source-text assertion is manufactured for this contract. */
+checkstaticproviders: procedure = .int
+  arg owner = reference .lltarget..module, supplied = reference .lltarget..module[], bindings = .object[], work = .int
+  bodies = dereference supplied; candidate = .lltarget..module
+  request = .llinline..binding; used = .int; i = .int; j = .int
+  do i = 1 to bodies[0]
+    if work < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: import.providers.work'; return 1; end
+    work = work - 1
+    candidate = bodies[i]; used = 0; candidate_ref = reference bodies[i]
+    do j = 1 to bindings[0]
+      if work < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: import.providers.work'; return 1; end
+      work = work - 1
+      request = bindings[j] as .llinline..binding; provider_ref = request.provider()
+      if (provider_ref <refsame> owner) = 0 & (provider_ref <refsame> candidate_ref) then used = 1
+    end
+    if used = 0 then do
+      call lineout 'stderr','LL_INLINE_BINDING: unused supplied provider ' || candidate.name()
+      return 1
+    end
+  end
+  return 0
+
 usage: procedure = .int
   arg reason = ''
   if reason <> '' then call lineout 'stderr','LL_INLINE_OPTIONS: ' || reason
-  call lineout 'stderr','Usage: llrxinline --module logical -o output.rxas [--artifact identity] [--body logical source.rxas] [--profile closed-main-default-halt.v1] [--policy default|all-legal|never] [--work positive-decimal] [--no-cleanup] source.rxas'
+  call lineout 'stderr','Usage: llrxinline --module logical -o output.rxas [--artifact identity] [--body logical source.rxas] [--profile closed-main-default-halt.v1|closed-main-static-exact-default-halt.v1] [--policy default|all-legal|never] [--work positive-decimal] [--no-cleanup] source.rxas'
   call lineout 'stderr','The closed-main profile requires a fresh standalone root with default HALT policy; unknown profile retains calls.'
+  call lineout 'stderr','Static-exact additionally requires delivery from the exact caller and provider sources, with no alternate providers or pre-entry invocation.'
   return 2
 
 /** Read bytes under the source adapter's allowance before accumulating them.

@@ -609,25 +609,21 @@ The private alias record is the recommended lower-cost option. Synthetic public
 load-order semantics. A private alias is missing infrastructure, not a permanent
 inlining exclusion.
 
-The reviewed native increment uses the following opt-in 007 profile; these
-records are not implemented yet. Append `META_GLOBAL_BINDING=23` and
-`META_SOURCE_ARTIFACT=24`, guarded by feature bit `1 << 8`. After the existing
-16-byte metadata wire prefix, a binding stores u32 destination-global,
-provider-name StringRef, provider-global, provider-ModuleRef and flags, then
-32 SHA256 bytes (68-byte payload total). A source witness stores u32 schema 1
-and 32 SHA256 bytes (52-byte payload total). Both have address zero. Unresolved
-bindings have zero flags and ModuleRef `RXBIN007_NONE`; linked bindings have
-only `RESOLVED=1` and a checked same-image ModuleRef. Reject unknown flags,
-schema, conflicting exposures/destinations, invalid slots and ownerless cycles
-through one binutils-owned binding-plan helper.
-
-The source form is `g7 .bind = "exact.logical.provider.module" 3 "64hex-sha"`.
-RXLINK uniquely matches the full provider identity and derived source witness,
-retains that module through its existing selection queue, then publishes direct
-ModuleRefs. The loader uses same-image worker-overlay storage, never public
-name/callable substitution. Allocate owned/public cells first, skip alias
-destinations, then bind them with `globals_dont_free=1` before initialization.
-Resolved input images remap their existing ModuleRefs on relink.
+Adrian accepts essential typed metadata for compiler call signatures,
+startup, VM and linker contracts. An ordinary handwritten RXAS producer must
+also be able to express what those consumers require. The earlier paired
+`META_GLOBAL_BINDING`/`META_SOURCE_ARTIFACT` proposal, especially its
+source-hash witness and long binary payload, is withdrawn. If private aliases
+are selected later, choose a concise, documented source directive for an
+exact module/slot binding and one typed linker/loader representation. This
+could be a dedicated metadata kind or a first-class binding/relocation table;
+its encoding and feature gate remain an explicit compatibility decision.
+The linker would resolve against its exact selected module
+set and publish direct checked ModuleRefs; the loader would bind same-image
+worker-overlay storage before initialization. Owned/public cells are allocated
+first, alias destinations skipped, and importer aliases use
+`globals_dont_free=1`. The codec, disassembler, relinker and VM must agree on
+one eventual typed representation and reject unsupported versions.
 
 Qualification reuses the maintained exposed-global bounds, program-generation
 control and module-initializer fixtures. Their observations must be checked
@@ -638,22 +634,13 @@ private aliases. Current `rxvm_call` initializes all loaded modules before
 dispatch; retaining a provider alone does not establish exact-site initializer
 ingress for other entry paths.
 
-For this RXAS-first profile, the witness is SHA256 of the exact immutable UTF-8
-provider source acquired by B/L and actually assembled. An opt-in native
-assembler setting derives the witness from its input; supplied declarations
-are not proof. A matching explicit logical module-name option keeps serialized
-name/description stable across source/output directories. It does not grant a
-runtime search base. Use existing SHA256 primitives and input/relocation owners;
-there is no normalized-image hash subsystem or native encoding backend in a
-B/L request. The semantic-graph digest does not hash executable bodies.
-
-Providers must be finalized before dependent acquisition/assembly. Rewriting or
-re-rendering a provider invalidates dependent bindings until reacquisition/
-re-inlining or an explicitly proved driver rebinding. Cyclic source witnesses
-require such a driver proof, not a hash fixed point. Disassembly/reassembly
-creates new source identity; binary codec roundtrip preserves the actual fields.
-This is source provenance under the ordinary assembler/build contract, not
-proof that arbitrary existing RXBIN bytes came from supplied RXAS.
+The first imported-body profile instead declares an immutable exact-source
+bundle: the driver must assemble and link the supplied provider sources as
+the selected modules. This is an explicit delivery obligation, not a claim
+that arbitrary later RXBIN bytes are certified by metadata. A future product
+identity or rebinding mechanism needs its own typed contract that a handwritten
+producer can use, plus approval. Rewriting a provider invalidates dependent inlining until the
+driver rechecks the exact binding and reruns the pass.
 
 ### Initialization ingress and active regions
 
@@ -687,8 +674,9 @@ plain glue before adoption; simple bodies need no active region machinery.
 
 ### Inline provenance and producer facts
 
-A passive typed `INLINE_ORIGIN` chain can relate each emitted instruction to
-its logical callee/provider origin and parent call site. An updated diagnostic
+A future first-class debug/provenance map could relate each emitted instruction
+to its logical callee/provider origin and parent call site. It would not be a
+new `.meta` inlining side channel. An updated diagnostic
 walker could reconstruct logical inline calls, including real nested frames
 whose call site lies inside an inline region. Define fault versus next/resume
 addresses, source/TRACE ordering, relocation, strip policy and feature/version
@@ -700,8 +688,10 @@ recommended relaxed physical-traceback policy and active cleanup regions.
 Useful producer facts include definite component/status initialization,
 non-escaping borrowed storage, no rebinding, no frame inspection, numeric-state
 invariance, finite argument access, and an exact frozen target. They can reduce
-proof cost and eliminate glue. Admit only checked, versioned contracts bound to
-the executable body; a hint/annotation or native AST template is not proof.
+proof cost and eliminate glue. Prefer compiler-local facts and existing
+call-signature contracts; any exported fact needs a separately approved typed
+contract bound to the executable body. A hint/annotation or native AST template
+is not proof.
 New `noinline`/inline-request, ownership/effect or lexical-lifetime declarations
 would be language decisions, with unsafe assertions/verification rules explicit.
 They may enable a case; they may not redefine existing Rexx value/EXPOSE,
@@ -998,6 +988,47 @@ expansion uses fresh argument/result anchors and retains caller marshalling;
 outer setup/reverse-swap elimination remains required by INL-STEP05/AC05.
 Independent constructed-model fixtures exercise the service and its output;
 they do not complete the real RXAS adapter or the full approved POC profile.
+
+### Exact imported-leaf development contract
+
+The opt-in `closed-main-static-exact-default-halt.v1` profile admits an exact
+imported scalar leaf with zero private locals, no labels/branches and no nested
+executable procedure references. The caller has the only `main`; caller and
+providers have no globals, providers have no imports, and the complete caller
+import set resolves uniquely over the distinct bound providers. The CLI also
+rejects unused `--body` inputs. Existing profiles retain foreign calls.
+
+This profile requires subsequent assembly, linking and loading of the exact
+immutable caller/provider sources, without alternative providers or pre-entry
+invocation. It is a declared static delivery contract, not an RXBIN witness or
+a general proof of loader selection. Initializer/autoload and unknown startup
+metadata retain calls. The metadata gate positively admits the existing `b`
+compiler signature/register/constant record shapes and opaque three-field
+`.inline` transport elsewhere; a selected leaf containing that transport is
+retained explicitly. No new inliner metadata is created or consumed as proof.
+The existing scalar facts owner still decides operations, argument status,
+ownership, signal policy and normal-return legality.
+
+`llinline` privately copies checked target records into a transient projection,
+interning one surrogate per exact frozen provider arena/procedure pair. Separate
+source/origin caches and fresh observation IDs prevent numeric IDs from two
+modules colliding. The existing same-owner proof and expander run once; a final
+checked rebuild removes surrogate definitions and refuses any surviving
+surrogate reference. Only the original caller module, with all original
+imports, can be published. Record and changed-caller mappings compose through
+both private owners, while cloned source bytes, spans and contributor chains
+remain attached to the provider's logical source.
+
+The single request work allowance is partitioned into preparation/projection,
+existing proof/expansion, and deprojection quotas. The first two receive one
+third each; final publication receives the remainder. Unused quota is not
+borrowed, so an uneven request may need an explicitly larger allowance. Entry,
+byte and instruction-cell limits apply to each checked owned stage; at most
+three new owned models coexist. Private map, name and provenance tables are
+preflighted alongside their stage's model allowance. Every refusal, exhausted
+allowance or invalid rebuild returns the exact original caller. Private-local
+recycler histories, DAG labels, nested imports and initializer ingress remain
+open in INL-STEP04.
 
 ### Scalar expansion and transport development contract
 

@@ -1705,7 +1705,7 @@ analysis: class
     module = dereference _owner; catalog = .llrxascatalog..catalog()
     if module.valid() = 0 then do; _status = 'invalid'; _reason = module.error(); return; end
     if _graphmode & module.globals() > 0 then do; ignored = reject('graph.global.storage.pending'); return; end
-    if _profile <> 'closed-main-default-halt.v1' then do; ignored = reject('signal.policy.unproved'); return; end
+    if _profile <> 'closed-main-default-halt.v1' & _profile <> 'closed-main-static-exact-default-halt.v1' then do; ignored = reject('signal.policy.unproved'); return; end
     body = module.body(_function)
     if body.name() <> 'main' then do; ignored = reject('signal.root.context.unproved'); return; end
     graph_ref = module.ir(); graph = dereference graph_ref; _store = graph.storage(); _revision = module.identity()

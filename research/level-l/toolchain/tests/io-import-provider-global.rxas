@@ -1,0 +1,4 @@
+/* Global storage stays outside the first imported-leaf proof. */
+.globals=1
+foreignstep() .locals=0 .expose=fixture.import.bump
+  ret a2

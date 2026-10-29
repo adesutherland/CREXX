@@ -76,6 +76,7 @@ inspect: procedure = .llinline..decision
   arg request = .llinline..binding, profile = 'unknown', work = 1000000
   if request.valid() = 0 then return .decision('invalid','binding.expired')
   source = dereference request.caller(); caller_ref = request.caller(); provider_ref = request.provider()
+  if profile = 'closed-main-static-exact-default-halt.v1' then return inspectimports(request,work)
   if (caller_ref <refsame> provider_ref) = 0 then return .decision('keep','profile.imported.body.pending')
   selected = source.at(request.callid())
   if selected.valid() = 0 then return .decision('invalid','call.identity')
@@ -434,6 +435,13 @@ expand: procedure = .llinline..change
   return expandmany(bindings,profile,work,entries,bytes,frame,cells)
 
 expandmany: procedure = .llinline..change
+  arg bindings = .object[], profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
+  if profile = 'closed-main-static-exact-default-halt.v1' then return expandimports(bindings,work,entries,bytes,frame,cells)
+  return expandlocalmany(bindings,profile,work,entries,bytes,frame,cells)
+
+/** The sole expansion algorithm. Imported leaves enter it only after checked
+ * private projection; no projected definition can reach public output. */
+expandlocalmany: procedure = .llinline..change
   arg bindings = .object[], profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
   i = .int; j = .int; k = .int; a = .int; ignored = .int; count = .int; required = .int
   locals = .int; base = .int; higheststep = .int; highestclause = .int
@@ -801,3 +809,562 @@ expandmany: procedure = .llinline..change
     return .change(status,'LL_INLINE: ' || problem.name() || ': ' || problem.message(),source,empty)
   end
   return .change('invalid','inline.no.result',source,empty)
+
+/** One cache per exact input owner. Numeric source/origin and observation IDs
+ * from two modules never share a lookup table. */
+importorigins: class
+  _sources = .object[]
+  _origins = .object[]
+  _steps = .int[]
+  _clauses = .int[]
+  *: factory
+    return
+  copy: method = .llir..origin
+    arg owner = reference .llir..module, at = .llir..origin, target = reference .lltarget..draft
+    return copyorigin(owner,at,target,reference _sources,reference _origins)
+  prepare: method = .void
+    arg item = .lltarget..record, expose higheststep = .int, expose highestclause = .int
+    value = .lltarget..operand
+    if item.kind() = '.srcstep' then do
+      value = item.operand(1); call freshidentity(_steps,value.index(),higheststep)
+      value = item.operand(2); call freshidentity(_clauses,value.index(),highestclause)
+    end
+    else if item.kind() = '.traceevent' then do
+      value = item.operand(7); call freshidentity(_steps,value.index(),higheststep)
+      value = item.operand(8); call freshidentity(_clauses,value.index(),highestclause)
+    end
+    return
+  steps: method = .int
+    return _steps[0] / 2
+  clauses: method = .int
+    return _clauses[0] / 2
+  metadata: method = .object[]
+    arg item = .lltarget..record, fields = .object[]
+    return lltarget..remapmetadata(item,fields,'',_steps,_clauses)
+
+/** Request-local checked projection, not an executable merged module. The
+ * public static-exact profile declares the exact sources used for delivery;
+ * this class checks all facts expressible by the current target schema. */
+importprojection: class
+  _owner = reference .lltarget..module
+  _input = .object[]
+  _providers = .object[]
+  _caches = .object[]
+  _pairprovider = .int[]
+  _pairbody = .int[]
+  _pairheader = .int[]
+  _pairname = .string[]
+  _pairfunction = .int[]
+  _callpair = .int[]
+  _operations = .int[]
+  _functions = .int[]
+  _reserved = .string[]
+  _importnames = .string[]
+  _importexports = .string[]
+  _exportnames = .string[]
+  _exportproviders = .int[]
+  _module = .lltarget..module
+  _status = .string
+  _reason = .string
+  _work = .int
+  _bytes = .int
+  _entries = .int
+  _held = .int
+  _serial = .int
+  _lastheader = .int
+  _namebytes = .int
+  *: factory
+    arg bindings = .object[], work = .int, entries = .int, bytes = .int
+    _input = bindings; _work = work; _entries = entries; _bytes = bytes; _status = 'building'
+    return
+  prepare: method = .void
+    bindings = _input; work = _work; entries = _entries; bytes = _bytes
+    request = .binding; previous = .binding; candidate = .binding
+    selected = .lltarget..record; item = .lltarget..record
+    value = .lltarget..operand
+    body = .lltarget..body; cache = .importorigins; targetbody = .lltarget..bodydraft
+    provider = .lltarget..module; at = .llir..origin
+    draft = .lltarget..draft; message = .string; status = .string
+    fields = .object[]; sourcecache = .importorigins()
+    providerindex = .int; pair = .int; found = .int; called = .string
+    i = .int; j = .int; higheststep = .int; highestclause = .int; ignored = .int
+    do
+    if bindings[0] = 0 then do; ignored = fail('keep','binding.empty'); return; end
+    if bindings[1] is .binding then request = bindings[1] as .binding
+    else do; ignored = fail('invalid','binding.type'); return; end
+    if request.valid() = 0 then do; ignored = fail('invalid','binding.expired'); return; end
+    _owner = request.caller(); source = dereference _owner
+    if work < 1 | entries < 1 | bytes < 1 then do; ignored = fail('limit','import.allowances'); return; end
+    /* Sparse original IDs can be large before the first selected site. Charge
+     * their complete containing tables before any indexed write grows them. */
+    graph = dereference source.ir()
+    if reserve(graph.operations(),24) = 0 | reserve(graph.functions(),512) = 0 | origincapacity(_owner) = 0 then return
+    if scanmodule(_owner,0) = 0 then return
+    do i = 1 to bindings[0]
+      if spend(1) = 0 | reserve(1,512) = 0 then return
+      if bindings[i] is .binding then request = bindings[i] as .binding
+      else do; ignored = fail('invalid','binding.type'); return; end
+      if request.valid() = 0 then do; ignored = fail('invalid','binding.expired'); return; end
+      caller_ref = request.caller(); provider_ref = request.provider()
+      if (caller_ref <refsame> _owner) = 0 then do; ignored = fail('invalid','binding.foreign.caller'); return; end
+      do j = 1 to i - 1
+        if spend(1) = 0 then return
+        previous = bindings[j] as .binding
+        if previous.callid() = request.callid() then do; ignored = fail('invalid','binding.duplicate.site'); return; end
+      end
+      selected = source.at(request.callid())
+      if selected.valid() = 0 then do; ignored = fail('invalid','call.identity'); return; end
+      if selected.kind() <> 'instruction' then do; ignored = fail('invalid','call.not.instruction'); return; end
+      if (provider_ref <refsame> _owner) then iterate
+      if selected.procedureid() <> source.procedureid('main') then do; ignored = fail('keep','signal.root.context.unproved'); return; end
+      if wordpos(selected.mnemonic(),'call call1 call2 call3 call4') = 0 then do; ignored = fail('keep','call.form.pending'); return; end
+      if selected.operands() = 1 then value = selected.operand(1)
+      else value = selected.operand(2)
+      if value.kind() <> 'P' then do; ignored = fail('invalid','binding.target.mismatch'); return; end
+      called = value.text(); found = 0
+      do j = 1 to _importnames[0]
+        if spend(length(called) + 1) = 0 then return
+        if _importnames[j] == called then found = j
+      end
+      if found = 0 then do; ignored = fail('invalid','binding.import.missing'); return; end
+      provider_entry = dereference provider_ref; provider = provider_entry; providerindex = 0
+      do j = 1 to _providers[0]
+        if spend(1) = 0 then return
+        candidate = _providers[j] as .binding
+        if sameimportowner(candidate.provider(),provider_ref) then providerindex = j
+      end
+      if providerindex = 0 then do
+        if scanmodule(provider_ref,1) = 0 | reserve(1,128) = 0 then return
+        providerindex = _providers[0] + 1; _providers[providerindex] = request as .object
+        _caches[providerindex] = .importorigins() as .object
+      end
+      pair = 0
+      do j = 1 to provider.procedures()
+        if spend(1) = 0 then return
+        body = provider.procedure(j)
+        if body.functionid() = request.bodyid() then pair = j
+      end
+      if pair = 0 then do; ignored = fail('invalid','binding.body.identity'); return; end
+      body = provider.procedure(pair)
+      if body.expose() = '' | body.expose() <> _importexports[found] then do; ignored = fail('invalid','binding.target.mismatch'); return; end
+      if leaf(provider_ref,body) = 0 then return
+      pair = 0
+      do j = 1 to _pairbody[0]
+        if spend(1) = 0 then return
+        if _pairprovider[j] = providerindex & _pairbody[j] = request.bodyid() then pair = j
+      end
+      if pair = 0 then do
+        if reserve(1,96) = 0 then return
+        pair = _pairbody[0] + 1; _pairprovider[pair] = providerindex; _pairbody[pair] = request.bodyid()
+        _pairheader[pair] = _lastheader
+        _pairname[pair] = newname()
+        if _status <> 'building' then return
+        _namebytes = _namebytes + length(_pairname[pair])
+      end
+      _callpair[request.callid()] = pair
+    end
+    /* Imports remain dependencies even when all their executable uses vanish. */
+    do i = 1 to _importexports[0]
+      found = 0
+      do j = 1 to _exportnames[0]
+        if spend(length(_importexports[i]) + 1) = 0 then return
+        if _exportproviders[j] > 0 & _exportnames[j] == _importexports[i] then found = found + 1
+      end
+      if found <> 1 then do; ignored = fail('keep','binding.import.unresolved'); return; end
+    end
+    do i = 1 to _providers[0]
+      request = _providers[i] as .binding
+      if origincapacity(request.provider()) = 0 then return
+    end
+    do i = 1 to source.records()
+      if spend(1) = 0 then return
+      item = source.record(i)
+      if item.kind() = '.srcstep' then do
+        value = item.operand(1); higheststep = max(higheststep,value.index())
+        value = item.operand(2); highestclause = max(highestclause,value.index())
+      end
+      else if item.kind() = '.traceevent' then do
+        value = item.operand(7); higheststep = max(higheststep,value.index())
+        value = item.operand(8); highestclause = max(highestclause,value.index())
+      end
+    end
+    do i = 1 to _pairbody[0]
+      request = _providers[_pairprovider[i]] as .binding
+      provider_metadata = dereference request.provider(); provider = provider_metadata
+      cache = _caches[_pairprovider[i]] as .importorigins; body = provider.body(_pairbody[i])
+      do j = 1 to provider.records()
+        if spend(1) = 0 then return
+        item = provider.record(j)
+        if item.procedureid() <> body.functionid() | item.kind() = 'procedure' then iterate
+        if item.kind() = '.srcstep' | item.kind() = '.traceevent' then do
+          /* freshidentity scans each existing pair before insertion. Charge
+           * both lookup lengths before either request-local map can grow. */
+          if spend(cache.steps() + 1) = 0 then return
+          if spend(cache.clauses() + 1) = 0 then return
+        end
+        if reserve(1,32) = 0 then return
+        call cache.prepare(item,higheststep,highestclause)
+      end
+      _caches[_pairprovider[i]] = cache as .object
+    end
+    if _work < 1 | _held >= bytes then do; ignored = fail('limit','import.allowances'); return; end
+    draft = .lltarget..draft(source.name(),source.artifact(),0,entries,bytes - _held,_work)
+    graph_ref = source.ir(); bodies = .object[]
+    do i = 1 to source.records()
+      item = source.record(i)
+      if draft.preflight(1 + item.operands() + item.registerrefs(),0) = 0 then do; ignored = failedmodel(draft.error()); return; end
+      at = sourcecache.copy(graph_ref,item.origin(),reference draft)
+      if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
+      if item.kind() = 'procedure' then do
+        if draft.preflight(source.procedures(),0) = 0 then do; ignored = failedmodel(draft.error()); return; end
+        body = source.body(item.procedureid()); targetbody = draft.procedure(body.name(),body.locals(),at,body.expose())
+        if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
+        bodies[item.procedureid()] = targetbody as .object; _functions[item.procedureid()] = targetbody.functionid()
+        _operations[item.id()] = targetbody.headerid(); iterate
+      end
+      if item.procedureid() = 0 then do
+        call objectarraydrop fields
+        do j = 1 to item.operands(); fields[j] = item.operand(j) as .object; end
+        _operations[item.id()] = draft.record(item.kind(),fields,at); iterate
+      end
+      targetbody = bodies[item.procedureid()] as .lltarget..bodydraft
+      fields = clonefields(item,targetbody); pair = _callpair[item.id()]
+      if pair > 0 then do
+        j = 2; if item.operands() = 1 then j = 1
+        fields[j] = .lltarget..operand.procedure(_pairname[pair]) as .object
+      end
+      if item.kind() = 'instruction' then _operations[item.id()] = targetbody.emit(item.mnemonic(),fields,at)
+      else _operations[item.id()] = targetbody.record(item.kind(),fields,at)
+    end
+    do i = 1 to _pairbody[0]
+      request = _providers[_pairprovider[i]] as .binding
+      provider_body = dereference request.provider(); provider = provider_body
+      cache = _caches[_pairprovider[i]] as .importorigins; body = provider.body(_pairbody[i]); graph_ref = provider.ir()
+      item = provider.at(_pairheader[i]); at = cache.copy(graph_ref,item.origin(),reference draft)
+      if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
+      targetbody = draft.procedure(_pairname[i],0,at)
+      if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
+      _pairfunction[i] = targetbody.functionid()
+      do j = 1 to provider.records()
+        if draft.preflight(1,0) = 0 then do; ignored = failedmodel(draft.error()); return; end
+        item = provider.record(j)
+        if item.procedureid() <> body.functionid() | item.kind() = 'procedure' then iterate
+        if draft.preflight(1 + item.operands() + item.registerrefs(),0) = 0 then do; ignored = failedmodel(draft.error()); return; end
+        at = cache.copy(graph_ref,item.origin(),reference draft)
+        fields = clonefields(item,targetbody); fields = cache.metadata(item,fields)
+        if item.kind() = '.meta' & item.operands() = 5 then fields[4] = .lltarget..operand.procedure(_pairname[i]) as .object
+        if item.kind() = 'instruction' then ignored = targetbody.emit(item.mnemonic(),fields,at)
+        else ignored = targetbody.record(item.kind(),fields,at)
+      end
+      _caches[_pairprovider[i]] = cache as .object
+    end
+    _module = draft.finish()
+    if _module.valid() = 0 then do; ignored = failedmodel(_module.error()); return; end
+    _status = 'ok'
+    return
+    on signal as problem
+      if initialized(draft) then do
+        message = draft.error()
+        if message <> '' then do; ignored = failedmodel(message); return; end
+      end
+      status = 'invalid'
+      if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
+      ignored = fail(status,'LL_IMPORT: ' || problem.name() || ': ' || problem.message())
+    end
+    return
+  fail: method = .int
+    arg status = .string, reason = .string
+    _status = status; _reason = reason
+    return 0
+  spend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _work then return fail('limit','import.work')
+    _work = _work - amount
+    return 1
+  reserve: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 | count > (_bytes - _held) / width then return fail('limit','import.bytes')
+    _held = _held + count * width
+    return 1
+  failedmodel: method = .int
+    arg reason = .string
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',reason) > 0 then status = 'limit'
+    return fail(status,reason)
+  origincapacity: method = .int
+    arg owner = reference .lltarget..module
+    source = dereference owner; graph = dereference source.ir(); store = dereference graph.storage()
+    return reserve(store.count(8) + store.count(9),128)
+  remember: method = .int
+    arg name = .string
+    if spend(length(name) + 1) = 0 | reserve(length(name) + 32,1) = 0 then return 0
+    _reserved[_reserved[0] + 1] = name
+    return 1
+  newname: method = .string
+    i = .int; collision = .int; ignored = .int; name = .string
+    do forever
+      if _serial >= 2147483647 then do; ignored = fail('limit','import.names'); return ''; end
+      _serial = _serial + 1; name = '_import.body.' || _serial; collision = 0
+      do i = 1 to _reserved[0]
+        if spend(length(name) + length(_reserved[i]) + 1) = 0 then return ''
+        if _reserved[i] == name then collision = 1
+      end
+      if collision = 0 then leave
+    end
+    if remember(name) = 0 then return ''
+    return name
+  scanmodule: method = .int
+    arg owner = reference .lltarget..module, provider = .int
+    source = dereference owner; item = .lltarget..record; name = .lltarget..operand; option = .lltarget..operand
+    i = .int; j = .int; k = .int; providerindex = .int
+    providerindex = 0; if provider then providerindex = _providers[0] + 1
+    if source.globals() <> 0 then return fail('keep','import.global.storage.pending')
+    if provider & source.procedureid('main') > 0 then return fail('keep','import.provider.main.pending')
+    do i = 1 to source.records()
+      if spend(1) = 0 then return 0
+      item = source.record(i)
+      if item.kind() = '.meta' & item.operands() > 1 then do
+        option = item.operand(2)
+        if spend(option.length() + 1) = 0 then return 0
+        /* Current typed compiler signatures/register/constant observations
+         * use b. The only other inert supported shape is opaque .inline;
+         * selected leaves reject that transport below. Unknown options do
+         * not establish absence of a startup/linker/VM contract. */
+        if option.text() = 'b' & (item.operands() = 4 | item.operands() = 5) then nop
+        else if option.text() = '.inline' & item.operands() = 3 then nop
+        else return fail('keep','import.startup.metadata.pending')
+      end
+      if item.kind() = '.import' then do
+        if provider then return fail('keep','import.provider.imports.pending')
+        name = item.operand(1); option = item.operand(2)
+        if spend(source.procedures()) = 0 then return 0
+        if source.procedureid(name.text()) > 0 then return fail('invalid','binding.import.local.collision')
+        do j = 1 to _importnames[0]
+          if spend(name.length() + 1) = 0 then return 0
+          if _importnames[j] == name.text() then return fail('invalid','binding.import.ambiguous')
+        end
+        if reserve(name.length() + option.length() + 64,1) = 0 then return 0
+        j = _importnames[0] + 1; _importnames[j] = name.text(); _importexports[j] = option.text()
+      end
+      if item.kind() = 'procedure' then do
+        name = item.operand(3)
+        if name.text() <> '' then do
+          do j = 1 to _exportnames[0]
+            if spend(name.length() + 1) = 0 then return 0
+            if _exportnames[j] == name.text() then return fail('invalid','binding.export.ambiguous')
+          end
+          if reserve(name.length() + 64,1) = 0 then return 0
+          j = _exportnames[0] + 1; _exportnames[j] = name.text(); _exportproviders[j] = providerindex
+        end
+      end
+      do k = 1 to item.operands()
+        if spend(1) = 0 then return 0
+        name = item.operand(k)
+        if name.kind() = 'P' | name.kind() = 'L' then do
+          if remember(name.text()) = 0 then return 0
+        end
+      end
+    end
+    return 1
+  leaf: method = .int
+    arg owner = reference .lltarget..module, body = .lltarget..body
+    source = dereference owner; item = .lltarget..record; value = .lltarget..operand; catalog = .llrxascatalog..catalog()
+    i = .int; j = .int; returns = .int
+    if body.locals() <> 0 then return fail('keep','import.leaf.locals.pending')
+    _lastheader = 0
+    do i = 1 to source.records()
+      if spend(1) = 0 then return 0
+      item = source.record(i)
+      if item.procedureid() <> body.functionid() then iterate
+      if item.kind() = 'procedure' then do; _lastheader = item.id(); iterate; end
+      if item.kind() = 'label' then return fail('keep','import.leaf.control.pending')
+      if item.kind() = 'instruction' then do
+        if returns > 0 then return fail('keep','import.leaf.control.pending')
+        if catalog.flow(item.opcode()) = 1 | catalog.flow(item.opcode()) = 2 then return fail('keep','import.leaf.control.pending')
+        do j = 1 to item.operands()
+          if spend(1) = 0 then return 0
+          value = item.operand(j)
+          if value.kind() = 'P' then return fail('keep','import.leaf.nested.pending')
+        end
+        if item.mnemonic() = 'ret' then returns = returns + 1
+      end
+      else if item.kind() = '.meta' & item.operands() = 5 then do
+        value = item.operand(4)
+        if value.kind() <> 'P' | value.text() <> body.name() then return fail('keep','import.leaf.metadata.reference.pending')
+      end
+      else if item.kind() = '.meta' & item.operands() > 1 then do
+        value = item.operand(2)
+        if value.text() = '.inline' then return fail('keep','import.leaf.inline.transport.pending')
+      end
+    end
+    if returns <> 1 then return fail('keep','import.leaf.control.pending')
+    return 1
+  status: method = .string
+    return _status
+  reason: method = .string
+    return _reason
+  operation: method = .int
+    arg original = .int
+    return _operations[original]
+  bindings: method = .object[]
+    request = .binding; result = .object[]; i = .int; body = .int
+    do i = 1 to _input[0]
+      request = _input[i] as .binding
+      if _callpair[request.callid()] > 0 then body = _pairfunction[_callpair[request.callid()]]
+      else body = _functions[request.bodyid()]
+      result[i] = .binding(reference _module,_operations[request.callid()],reference _module,body) as .object
+    end
+    return result
+  surrogate: method = .int
+    arg name = .string, target = reference .lltarget..draft
+    draft = dereference target
+    if draft.preflight(_namebytes + _pairname[0] * (length(name) + 1),0) = 0 then return 0
+    do i = 1 to _pairname[0]
+      if _pairname[i] == name then return 1
+    end
+    return 0
+
+/** Work is one request allowance, explicitly partitioned between preparation,
+ * the existing proof/expander, and final publication. Unused stage quota is
+ * not borrowed. Each owned stage has its entries/bytes/cells cap; at most three
+ * new owners coexist, so their aggregate is bounded by three such caps. */
+expandimports: procedure = .llinline..change
+  arg bindings = .object[], work = .int, entries = .int, bytes = .int, frame = .int, cells = .int
+  request = .binding; checked = .decision; prepared = .importprojection
+  input = .lltarget..record; value = .lltarget..operand; body = .lltarget..body
+  targetbody = .lltarget..bodydraft; cache = .importorigins()
+  empty = .int[]; sites = .int[]; decisions = .object[]; callers = .int[]; mapping = .int[]; published = .int[]; functions = .int[]
+  fields = .object[]; bodies = .object[]; i = .int; j = .int; old = .int; projectedid = .int; stage = .int
+  draft = .lltarget..draft
+  if bindings[0] = 0 then return .change('keep','binding.empty')
+  if bindings[1] is .binding then request = bindings[1] as .binding
+  else return .change('invalid','binding.type')
+  if request.valid() = 0 then return .change('invalid','binding.expired')
+  source = dereference request.caller()
+  if work < 3 | entries < 1 | bytes < 1 | frame < 0 | cells < 1 then return .change('limit','import.allowances',source,empty)
+  stage = work / 3
+  do
+    prepared = .importprojection(bindings,stage,entries,bytes)
+    call prepared.prepare()
+    if prepared.status() <> 'ok' then return importrefusal(bindings,prepared.status(),prepared.reason(),source)
+    projected = prepared.bindings()
+    changed = expandlocalmany(projected,'closed-main-default-halt.v1',stage,entries,bytes,frame,cells)
+    do i = 1 to bindings[0]
+      request = bindings[i] as .binding; old = request.callid(); projectedid = prepared.operation(old)
+      sites[i] = old
+      if changed.sites() = 0 then decisions[i] = .decision(changed.status(),changed.reason()) as .object
+      else decisions[i] = .decision(changed.statusat(projectedid),changed.reasonat(projectedid)) as .object
+    end
+    if changed.status() <> 'changed' then return .change(changed.status(),changed.reason(),source,empty,callers,sites,decisions)
+    expanded = changed.result(); graph_ref = expanded.ir(); graph = dereference graph_ref
+    held = .int
+    if graph.operations() > bytes / 64 then return .change('limit','import.publication.bytes',source,empty)
+    held = graph.operations() * 64; store = dereference graph.storage()
+    if graph.functions() > (bytes - held) / 512 then return .change('limit','import.publication.bytes',source,empty)
+    held = held + graph.functions() * 512
+    if store.count(8) + store.count(9) > (bytes - held) / 128 then return .change('limit','import.publication.bytes',source,empty)
+    held = held + (store.count(8) + store.count(9)) * 128
+    if held >= bytes then return .change('limit','import.publication.bytes',source,empty)
+    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes - held,work - stage * 2)
+    code = .emitter(cells); skip = 0
+    do i = 1 to expanded.records()
+      input = expanded.record(i)
+      if draft.preflight(1 + input.operands() + input.registerrefs(),0) = 0 then return importfailure(draft.error(),source)
+      if input.kind() = 'procedure' then do
+        if draft.preflight(expanded.procedures(),0) = 0 then return importfailure(draft.error(),source)
+        body = expanded.body(input.procedureid()); skip = prepared.surrogate(body.name(),reference draft)
+        if skip then iterate
+      end
+      else if input.procedureid() > 0 & skip then iterate
+      do j = 1 to input.operands()
+        value = input.operand(j)
+        if value.kind() = 'P' then do
+          if prepared.surrogate(value.text(),reference draft) then return .change('keep','import.surrogate.reference.pending',source,empty)
+        end
+      end
+      at = cache.copy(graph_ref,input.origin(),reference draft)
+      if draft.error() <> '' then return importfailure(draft.error(),source)
+      if input.kind() = 'procedure' then do
+        targetbody = draft.procedure(body.name(),body.locals(),at,body.expose())
+        if draft.error() <> '' then return importfailure(draft.error(),source)
+        bodies[input.procedureid()] = targetbody as .object; functions[input.procedureid()] = targetbody.functionid()
+        published[input.id()] = targetbody.headerid(); iterate
+      end
+      if input.procedureid() = 0 then do
+        call objectarraydrop fields
+        do j = 1 to input.operands(); fields[j] = input.operand(j) as .object; end
+        published[input.id()] = draft.record(input.kind(),fields,at); iterate
+      end
+      targetbody = bodies[input.procedureid()] as .lltarget..bodydraft; fields = clonefields(input,targetbody)
+      if input.kind() = 'instruction' then published[input.id()] = code.emit(targetbody,input.mnemonic(),fields,at)
+      else published[input.id()] = targetbody.record(input.kind(),fields,at)
+    end
+    if draft.error() <> '' then return importfailure(draft.error(),source)
+    if code.error() <> '' then return .change('limit',code.error(),source,empty)
+    if draft.preflight(source.records() + changed.callers(),0) = 0 then return importfailure(draft.error(),source)
+    target = draft.finish()
+    if target.valid() = 0 then return importfailure(target.error(),source)
+    do i = 1 to source.records()
+      input = source.record(i); old = changed.operation(prepared.operation(input.id()))
+      if old > 0 then mapping[input.id()] = published[old]
+      else mapping[input.id()] = 0
+    end
+    do i = 1 to changed.callers(); callers[i] = functions[changed.caller(i)]; end
+    return .change('changed','closed.root.imported.scalar',target,mapping,callers,sites,decisions)
+  on signal as problem
+    if initialized(draft) then do
+      if draft.error() <> '' then return importfailure(draft.error(),source)
+    end
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
+    return .change(status,'LL_IMPORT: ' || problem.name() || ': ' || problem.message(),source,empty)
+  end
+  return .change('invalid','import.no.result',source,empty)
+
+importfailure: procedure = .llinline..change
+  arg reason = .string, source = .lltarget..module
+  status = 'invalid'; empty = .int[]
+  if pos('LL_RESOURCE_LIMIT',reason) > 0 then status = 'limit'
+  return .change(status,reason,source,empty)
+
+/** Direct references recognize the common immutable provider-array case.
+ * Frozen wrapper copies retain llir.nextidentity's globally unique arena ID;
+ * their borrowed storage-wrapper addresses need not compare equal. Binding
+ * validity has already checked each captured owner and arena for freshness. */
+sameimportowner: procedure = .int
+  arg first = reference .lltarget..module, second = reference .lltarget..module
+  if first <refsame> second then return 1
+  left = dereference first; right = dereference second
+  return left.identity() = right.identity()
+
+/** A preparation refusal still identifies original sites for CLI diagnostics.
+ * Reading a binding's integer call ID does not dereference an expired owner. */
+importrefusal: procedure = .llinline..change
+  arg bindings = .object[], status = .string, reason = .string, source = .lltarget..module
+  sites = .int[]; callers = .int[]; empty = .int[]; decisions = .object[]; request = .binding
+  do i = 1 to bindings[0]
+    if bindings[i] is .binding then do
+      request = bindings[i] as .binding; sites[sites[0] + 1] = request.callid()
+      decisions[decisions[0] + 1] = .decision(status,reason) as .object
+    end
+  end
+  return .change(status,reason,source,empty,callers,sites,decisions)
+
+inspectimports: procedure = .llinline..decision
+  arg request = .binding, work = .int
+  bindings = .object[]; bindings[1] = request as .object
+  stage = .int; selected = .binding
+  if work < 3 then return .decision('limit','import.work')
+  stage = work / 3
+  do
+    prepared = .importprojection(bindings,stage,1000000,67108864)
+    call prepared.prepare()
+    if prepared.status() <> 'ok' then return .decision(prepared.status(),prepared.reason())
+    projected = prepared.bindings(); selected = projected[1] as .binding
+    return inspect(selected,'closed-main-default-halt.v1',stage)
+  on signal as problem
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
+    return .decision(status,'LL_IMPORT: ' || problem.name() || ': ' || problem.message())
+  end
+  return .decision('invalid','import.no.inspection')

@@ -1,0 +1,28 @@
+/* Exact standalone bundle: both occurrences borrow the same mutable value.
+ * The first call changes5 to12; the second changes12 to19. Independent
+ * snapshots preserve5 and12, giving sums17 and31 despite result overlap. */
+.globals=0
+foreign() .expose=fixture.import.bump
+main() .locals=6
+  null r0
+  load r0,5
+  icopy r1,r0
+  .srcstep 1 1 0 "io-import-caller.rxas" 12 3 26 "  call2 r0,foreign(),r0,r0"
+  .traceevent "V" 4 "R" "I" "r" 0 1 1 0 "caller-first" ""
+  call2 r0,foreign(),r0,r0
+  icopy r2,r0
+  icopy r3,r0
+  .srcstep 2 2 0 "io-import-caller.rxas" 17 3 26 "  call2 r0,foreign(),r0,r0"
+  .traceevent "V" 4 "R" "I" "r" 0 2 2 0 "caller-second" ""
+  call2 r0,foreign(),r0,r0
+  iadd r4,r1,r2
+  iadd r5,r3,r0
+  itos r4
+  say r4
+  itos r2
+  say r2
+  itos r5
+  say r5
+  itos r0
+  say r0
+  ret 0
