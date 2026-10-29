@@ -134,6 +134,19 @@ if(TARGET rxbvm)
     RUN_SERIAL TRUE TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
   crexx_register_test_prep_targets(TESTS levell_rxas_scope_reentry
     TARGETS levell_constructed_inline llrxinline rxbvm rxas)
+  add_test(NAME levell_rxas_runtime_scope_reentry
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME_SCOPE=ON"
+      "-DCONSTRUCTED=${CMAKE_BINARY_DIR}/lib/rxfnsl/target/constructed-inline-linked.rxbin"
+      "-DRUNTIME=${_runtime}" "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/runtime-scope-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-scope-reentry.cmake")
+  set_tests_properties(levell_rxas_runtime_scope_reentry PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_RUNTIME_SCOPE[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 360 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_runtime_scope_reentry
+    TARGETS levell_constructed_inline llrxinline rxbvm rxas)
   add_test(NAME levell_rxas_io_service
     COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/io-service.rxbin" ${_runtime})
   set_tests_properties(levell_rxas_io_service PROPERTIES

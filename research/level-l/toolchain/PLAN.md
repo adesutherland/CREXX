@@ -130,7 +130,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
-| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure and stable-register scoped META re-entry on direct acyclic calls are focused-qualified. Complete broader imported, aliasing, dynamic varargs, runtime-selector scoped META re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
+| **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure and stable-register scoped META re-entry on direct acyclic calls and the checked runtime-selector suffix are focused-qualified. Complete broader imported, aliasing, dynamic varargs, prefix/LINKARG-group scoped META re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
 | **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
@@ -2523,6 +2523,164 @@ re-entry region early, batch fixes, then freeze for the coordinator's focused
 serial constructed/handwritten panel using prepared producers. INL-STEP06,
 changing-storage metadata, loops, wider cleanup and initiative acceptance stay
 open; no broad compiler, sanitizer, platform or performance panel is selected.
+
+#### Runtime-selector scoped lexical metadata follow-on
+
+**Status: suffix-only increment implemented and focused-qualified; prefix and
+LINKARG-group metadata plus milestone QA todo.** Extend the qualified original-address
+projection/reconciler to the checked runtime LINKARG acyclic multi-RET path.
+Keep the existing linear closed-main caller, exact same-module body/arity,
+zero globals, width at most three, successful linear prefix, one authored
+ICHKRNG/LINKARG pair, acyclic suffix, admitted scalar operations and branch
+forms, at most one static conditional CALL1 under its exact leaf/depth gate,
+and default terminal signal policy. Reuse the current per-case cells/frame/
+history and case/RET facts. No new source rule, ISA, wire record, VM/linker
+algorithm, proof META, graph solver, reuse or signal category is selected.
+New re-entry remains ordinary REG `rN`/CONST plus clear. Preserve qualified
+legacy common-entry `aN` behavior; a body requiring new re-entry of `aN`/`gN`
+retains its existing metadata/storage boundary rather than silently stripping
+or changing those declarations.
+
+Enable this first follow-on only when the original common prefix through the
+complete selected LINKARG address group contains no scoped opening or clear:
+no supported four-field REG/CONST declaration and no one-field clear anywhere
+in that source-order span, independent of case feasibility or whether a pair
+would leave the final state empty. Ordinary procedure metadata and the current
+source/TRACE records retain their existing handling. Prefix scoped rows leave
+the existing runtime metadata path and its gates intact: already-qualified
+layouts remain admitted, while layouts needing new lexical re-entry retain
+`metadata.scope.cfg.pending` (or an earlier, more specific existing refusal).
+Do not newly reject qualified common-entry `aN` or claim it gains re-entry.
+
+Prepare the same frozen original lexical projection once before the runtime
+fork, including the checked empty-scoped prefix/entry and full suffix. Do
+not make its incoming/observed rows case-specific or rebuild them from a
+case's visited META. Every reached original group observes its projected
+register scopes through the existing path-local frame/cells: the common
+prefix, each case's transferred guard/LINKARG rows, and every suffix route.
+The existing guard-entry checkpoint and separate post-LINKARG cursor retain
+their execution-state meanings; neither is a substitute for lexical group
+incoming state. Prefix effects and emitted guard run once, while case proofs
+still refine and transfer their own normal guard/LINKARG successor exactly
+once. Retained child scopes keep their unchanged owner.
+
+Keep one `_scopestorage` obligation per original declaration across the whole
+call, all feasible selector cases and exits. A case can establish the first
+observed StorageId but cannot clear that ledger before the next case; every
+later observation must agree and prove whole-state entry independence.
+Different values may inhabit that same storage. Equal values in different
+storage do not discharge the obligation. In particular, a declaration over a
+LINKARG-selected cell normally retains `metadata.binding.change.pending`
+when different cases select distinct actual StorageIds; repeated actuals may
+pass when the existing alias/binding proof identifies the same storage on
+every observation. Keep the existing recycler/runtime-observer refusal for
+missing independence. Do not turn this increment into per-case scope splitting
+or broaden aggregate/reference/component proof.
+
+Emit the common prefix, authored check and stable selector snapshot/dispatcher
+once. Keep their qualified source/TRACE placement and the existing case-entry
+binding operation; no LINKARG-group record staging or relocation is selected.
+The prefix eligibility check establishes an empty scoped entry checkpoint,
+distinct from the existing possibly nonempty lexical source context. At each
+case entry reconcile scoped descriptors to that empty state using the same
+fresh call mapping, without reactivating the runtime frame or replaying prefix
+effects. Reuse the existing case labels, source checkpoint and checked binding
+placement. Labels still name the mapped original address, not a preceding
+scope carrier. No authored observation is duplicated around the dispatcher.
+
+Each case owns its emitted lexical cursor. Case 1 starts from the actually
+emitted prefix state; a later case starts from the previous emitted region's
+actual lexical end state, then reconciles to the same empty scoped entry state.
+Reset source-group traversal bookkeeping at every case. Do not seed it from
+case 1's visited records, stale emitter activity, or a new activation of the
+runtime frame. The new profile needs no nonempty prefix scope replay; preserve
+the qualified legacy checkpoint path. Emit the
+whole reached suffix of one case before another case begins. A scoped opening
+or clear in skipped code can still govern a later live group of that case,
+even when that opening lies on another case's untaken edge. Query group
+survival from that exact case's instruction liveness, never aggregate union
+liveness. Retain original missing-clear semantics.
+
+At every feasible `(case,RET)`, perform its existing result action, inverse
+restoration and owned closure, close that exit's active clone bindings before
+its branch to caller continuation, and update the emitted scope state. Later
+source-layout blocks in the same case must re-establish their projected
+incoming descriptors through the same reconciler; an early RET cannot leave
+them cleared. Case transitions likewise remove residual suffix bindings and
+restore the empty scoped checkpoint. Use one delta carrier before the resumed
+group/entry labels when needed for `addr-1`, with at most one effective
+transition per name at an address: replace by one opening or remove by one
+clear, never clear+reopen together. Preserve canonical authored group order
+and `metadata.scope.address.pending` for conflicting same-name transitions.
+Reuse the qualified all-META address protection, including unexecuted carriers
+and omitted NUMSCI groups, and charge carriers through the shared code ledger.
+
+Preserve each case's original lexical source state, including an empty entry
+context, removed neighbors, distinct branch/RET source steps and original
+clause/TRACE/register relationships. Dispatcher/carrier glue gets truthful
+generated/contributing origins without invented authored TRACE events. Restore
+caller source before continuation TRACE even when no fresh caller source row
+intervenes. Fresh scoped names remain collision-free against caller and other
+inline sites; no case closure may clear an authored caller name. Fresh physical
+identities follow the existing owner rather than inventing a logical inline
+stack. Conservative output remains the correctness baseline; independent
+cleanup may retain it for its existing range/storage proof reasons.
+
+Remove the runtime whole-original-CFG dominance/early-layout META refusal and
+the per-case DAG metadata gate only when the no-prefix-scope eligibility and
+shared lexical proof are enabled and complete for the exact body/case. An
+incomplete projection, unsupported
+bank or failed observation keeps the original with its precise existing
+metadata/storage reason. All guard/entry, arithmetic, frame-join, cycle,
+selector/child/depth, signal and per-RET summary gates remain unchanged. In
+particular, case feasibility cannot justify omitting an original lexical row,
+and a per-case-only StorageId check cannot replace the whole-call obligation.
+
+Independent constructed and paired handwritten controls use genuinely unknown
+selector facts and the maintained three-choice value/status oracle. Cover
+suffix branch-local opens/clears, two feasible RETs inside
+one case and different feasible RET sets across cases, an early RET before a
+later reached block, skipped lexical openings/clears and an original missing
+clear. Assert empty scoped state at every case entry while retaining the
+qualified possibly nonempty source context. Include a
+skipped/reached retained child under its unchanged gate, repeated activations,
+caller name collisions, and one repeated-actual positive versus equal-valued
+distinct-actual negative. Check exact per-case return actions and feasible
+closure membership; do not count width times static RETs as reached coverage.
+Use the existing separate native metadata probe to inspect scopes both at
+mapped anchors and at preceding addresses across case entries/early exits,
+plus caller continuation source/TRACE. Assert carrier survival in cleaned
+output, prefix/check/snapshot uniqueness and no cross-case labels or scopes.
+
+Negatives retain a prefix scoped opening, a prefix clear, a prefix pair which
+is already closed, and a scoped transition sharing the selected LINKARG group;
+pair these with an unchanged qualified legacy prefix positive and assert
+`metadata.scope.cfg.pending` for the new re-entry layouts. Also retain mixed
+same-address transitions, changing StorageIds across
+two cases or within one interval, a recycler-dependent scope in one repeated
+activation, unsupported branch-local `aN`, incompatible joins, guard bypass/
+extra ingress, cycles, extra selectors/children and resumable/physical
+observers. Charge the one original projection and prefix eligibility scan,
+all simultaneous case-entry/emitter snapshots, descriptor operands/origins,
+per-case observation/reconciliation work, every feasible exit delta and every
+carrier before growth. Include constructor copies and variable operand lengths
+without assumed COW; sealed queries borrow. Work/entry/byte/frame/code refusal
+keeps the exact frozen input and CLI last-good output with the specific limit
+diagnostic, including a one-below-output-cell cap that counts all carriers.
+Review one coherent three-case emitted region early, then freeze for the
+coordinator's focused serial constructed/paired panel on one normal VM with
+native assembler optimization disabled, reusing qualified direct-DAG and
+unchanged return/child/signal results. Broader selectors, changing-storage
+scope splitting, loops, INL-STEP06 and initiative acceptance remain open.
+
+**Later todo in this same increment family:** prove nonempty prefix scoped
+checkpoints and transitions on the selected LINKARG address group. That follow-on
+must distinguish incoming descriptors from the authored group's ordered records,
+keep prefix/check/dispatcher effects single, and place META/source/TRACE/alias
+records at each case's original logical binding address without attaching them
+to dispatcher scratch or duplicating observations. Review its exact group
+staging, prefix restoration and compatibility controls before product edits;
+the suffix-only proof does not discharge that boundary.
 
 ### Reviewed same-module global scalar increment
 

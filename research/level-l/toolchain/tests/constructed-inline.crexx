@@ -2372,7 +2372,7 @@ runtimebranchmodel: procedure = .lltarget..module
     ignored = two(root,'load',root.reg('r',i),.lltarget..operand.string('value' || i),at)
     ignored = two(root,'settp',root.reg('r',i),.lltarget..operand.integer(i * 256),at)
   end
-  if variant = 1 | variant = 11 | variant = 12 | variant = 22 then ignored = three(root,'iadd',root.reg('r',1),root.reg('r',1),root.reg('r',5),at)
+  if variant = 1 | variant = 11 | variant = 12 | variant = 22 | variant = 27 then ignored = three(root,'iadd',root.reg('r',1),root.reg('r',1),root.reg('r',5),at)
   if variant = 11 then ignored = two(root,'copy',root.reg('r',2),root.reg('r',1),at)
   if variant = 21 | variant = 23 then do
     ignored = two(root,'load',root.reg('r',4),.lltarget..operand.integer(99),at)
@@ -2381,9 +2381,13 @@ runtimebranchmodel: procedure = .lltarget..module
   end
   fields[1] = root.reg('r',4) as .object; fields[2] = .lltarget..operand.procedure('pick') as .object
   do i = 0 to 3; fields[i + 3] = root.reg('r',i) as .object; end
+  if variant = 29 then do i = 1 to 3; fields[i + 3] = root.reg('r',1) as .object; end
   callid = root.emit('call4',fields,at)
   ignored = one(root,'ret',.lltarget..operand.integer(0),at)
   leaf = draft.procedure('pick',5,at)
+  if variant = 30 | variant = 32 then ignored = scopeopen(leaf,'scope.prefix',leaf.reg('r',1),at)
+  if variant = 32 then ignored = zero(leaf,'cnop',at)
+  if variant = 31 | variant = 32 then ignored = scopeclose(leaf,'scope.prefix',at)
   if variant = 18 | variant = 20 then do
     call objectarraydrop fields
     fields[1] = .lltarget..operand.string('selected') as .object; fields[2] = .lltarget..operand.string('b') as .object
@@ -2395,7 +2399,30 @@ runtimebranchmodel: procedure = .lltarget..module
   if variant = 10 then ignored = two(leaf,'brt',.lltarget..operand.symbol('selected'),leaf.reg('a',1),at)
   ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(1),leaf.reg('r',3),at)
   if variant = 10 then ignored = namedlabel(leaf,'selected',at)
+  if variant = 33 then ignored = scopeopen(leaf,'scope.entry',leaf.reg('r',1),at)
   ignored = three(leaf,'linkarg',leaf.reg('r',3),leaf.reg('a',1),.lltarget..operand.integer(1),at)
+  if variant >= 26 then do
+    ignored = one(leaf,'null',leaf.reg('r',1),at)
+    ignored = three(leaf,'isub',leaf.reg('r',1),leaf.reg('r',3),.lltarget..operand.integer(10),at)
+    observedslot = leaf.reg('r',1)
+    if variant = 28 | variant = 29 then observedslot = leaf.reg('r',3)
+    ignored = scopeopen(leaf,'scope.shared',observedslot,at)
+    branchid = two(leaf,'brf',.lltarget..operand.symbol('scope_owned'),leaf.reg('r',1),at)
+    ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(9),at)
+    ignored = scopeopen(leaf,'scope.left',leaf.reg('r',1),at)
+    ignored = one(leaf,'ret',leaf.reg('r',3),at)
+    ignored = namedlabel(leaf,'scope_skipped',at)
+    ignored = scopeopen(leaf,'scope.hidden',leaf.reg('r',1),at)
+    ignored = zero(leaf,'cnop',at)
+    ignored = namedlabel(leaf,'scope_owned',at)
+    ignored = scopeopen(leaf,'scope.right',leaf.reg('r',1),at)
+    ignored = three(leaf,'iadd',leaf.reg('r',3),leaf.reg('r',3),.lltarget..operand.integer(7),at)
+    ignored = two(leaf,'copy',leaf.reg('r',4),leaf.reg('r',3),at)
+    ignored = scopeclose(leaf,'scope.shared',at)
+    ignored = one(leaf,'unlink',leaf.reg('r',3),at)
+    ignored = one(leaf,'ret',leaf.reg('r',4),at)
+    return draft.finish()
+  end
   if variant = 21 | variant = 23 | variant = 24 | variant = 25 then do
     ignored = one(leaf,'null',leaf.reg('r',1),at)
     if variant = 21 then do
@@ -2519,12 +2546,63 @@ runtimebranchmodel: procedure = .lltarget..module
   end
   return draft.finish()
 
+runtimescopes: procedure = .int
+  failures = 0; variant = .int; callid = .int; branchid = .int; i = .int; expected = .string; requiredcells = .int
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module
+  facts = .lltargetfacts..analysis; request = .llinline..binding; changed = .llinline..change; limited = .llinline..change
+  item = .lltarget..record
+  do variant = 26 to 33
+    original = runtimebranchmodel(variant,callid,branchid)
+    failures = failures + check(original.valid(),'independent runtime suffix scope is valid ' || variant)
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
+    graph = dereference original.ir(); image = graph.binary()
+    changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
+    expected = ''
+    if variant = 28 then expected = 'metadata.binding.change.pending'
+    if variant >= 30 then expected = 'metadata.scope.cfg.pending'
+    if expected <> '' then do
+      keptgraph = .llir..module
+      kept = changed.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(keptgraph.binary()) = bin2x(image),'cross-case storage or excluded prefix retains exact original ' || variant)
+      if changed.reason() <> expected then say changed.reason()
+      iterate
+    end
+    failures = failures + check(changed.status() = 'changed','suffix-only runtime lexical proof expands ' || variant)
+    if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+    facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1',12000000)
+    failures = failures + check(facts.status() = 'ok','runtime lexical facts are sealed ' || variant)
+    if facts.status() <> 'ok' then do; say facts.reason(); iterate; end
+    failures = failures + check(facts.scopereentry(callid) & facts.argumentcases(callid) = 3,'one lexical owner covers all three selector cases ' || variant)
+    if variant = 29 then failures = failures + check(facts.returns(callid) = 1,'repeated identical actuals preserve one stable selected StorageId')
+    else do
+      failures = failures + check(facts.returns(callid) = 2,'distinct source RETs keep separate runtime scope exits ' || variant)
+      if variant = 26 then failures = failures + check(facts.argumentcaseactionat(callid,1,facts.argumentcasereturnsite(callid,1,1)) = 'move','first selector owns its scalar result')
+      failures = failures + check(facts.argumentcaseactionat(callid,2,facts.argumentcasereturnsite(callid,2,1)) = 'copy','second selector returns borrowed storage')
+    end
+    if variant = 27 then do
+      failures = failures + check(facts.argumentcasereturns(callid,1) = 2 & facts.argumentcasereturns(callid,2) = 1,'one case owns both RETs while the next owns only its feasible RET')
+      failures = failures + check(facts.argumentcaseactionat(callid,1,facts.argumentcasereturnsite(callid,1,1)) = 'copy' & facts.argumentcaseactionat(callid,1,facts.argumentcasereturnsite(callid,1,2)) = 'move','the two feasible case1 exits retain source-ordered COPY and MOVE')
+    end
+    if variant = 27 then do
+      keptgraph = .llir..module
+      result = changed.result(); requiredcells = 0
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.kind() = 'instruction' then requiredcells = requiredcells + 1 + item.operands()
+      end
+      limited = llinline..expand(request,'closed-main-default-halt.v1',12000000,1000000,67108864,65536,requiredcells - 1)
+      kept = limited.result(); keptgraph = dereference kept.ir()
+      failures = failures + check(limited.status() = 'limit' & limited.reason() = 'inline.code.cells' & bin2x(keptgraph.binary()) = bin2x(image),'runtime re-entry carriers obey the whole output-cell cap atomically')
+    end
+  end
+  return failures
+
 runtimebranchcontrols: procedure = .int
   failures = 0; variant = .int; callid = .int; branchid = .int; i = .int; id = .int; remaining = .int
   original = .lltarget..module; facts = .lltargetfacts..analysis; changed = .llinline..change; request = .llinline..binding
   expected = .int; reasons = .string[]
   reasons[10] = 'argument.selector.tail.entry.pending'; reasons[11] = 'join.binding.unproved'
-  reasons[12] = 'arithmetic.write.availability.unproved'; reasons[13] = 'metadata.scope.cfg.pending'
+  reasons[12] = 'arithmetic.write.availability.unproved'; reasons[13] = 'metadata.binding.change.pending'
   reasons[15] = 'branch.condition.unproved'
   reasons[16] = 'argument.selector.tail.selector.pending'; reasons[17] = 'local.recycler.history.unproved'
   reasons[18] = 'metadata.scope.cfg.pending'; reasons[19] = 'callee.cfg.cycle.pending'; reasons[20] = 'metadata.scope.cfg.pending'
@@ -2580,7 +2658,7 @@ runtimereturncontrols: procedure = .int
     request = llinline..bind(reference original,callid,reference original,original.procedureid('pick'))
     changed = llinline..expand(request,'closed-main-default-halt.v1',12000000)
     if variant = 25 then do
-      failures = failures + check(changed.status() = 'keep' & changed.reason() = 'metadata.scope.cfg.pending' & changed.result().identity() = id,'disjoint case-local scopes obey original cross-RET lexical gate')
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = 'metadata.binding.change.pending' & changed.result().identity() = id,'disjoint scopes over different selected actuals retain the cross-case storage boundary')
       if changed.status() <> 'keep' then say changed.reason()
       iterate
     end
@@ -2660,6 +2738,11 @@ main: procedure = .int
   failures = .int
   lane = ''
   if argv[0] = 1 then lane = argv[1]
+  if lane = 'runtime-scope' then do
+    failures = runtimescopes()
+    say 'RUNTIME_SCOPE|failures=' || failures
+    return failures
+  end
   if lane = 'scope-reentry' then do
     failures = scopereentry() + scopecarriers() + dagpositive(1)
     say 'SCOPE_REENTRY|failures=' || failures

@@ -1894,17 +1894,38 @@ Sealed case/RET queries borrow their proof rows, and construction charges
 enumeration, aggregate copies and restoration vectors before growth.
 
 Original lexical source rows remain truthful when dead instructions are
-omitted. Before selector forks, every structurally reachable outer scoped
-META opening/clear must dominate and precede every structurally reachable
+omitted. The legacy prefix-scoped path requires every structurally reachable outer scoped
+META opening/clear to dominate and precede every structurally reachable
 outer RET, independently of case feasibility. Otherwise
 `metadata.scope.cfg.pending` retains the call, including disjoint scopes whose
 individual case paths would pass their own dominance check. An opening plus
 an early-layout RET followed by another reachable instruction also retains
 that reason even after a common clear: block-local lexical re-entry remains
-unproved. Source/TRACE-only early and multiple-RET layouts are admitted.
+unproved on that legacy path. Source/TRACE-only early and multiple-RET layouts
+remain admitted.
 `levell_rxas_runtime_branch` shares prepared producers for the maintained
-constructed and paired RXAS branch/return/CANCEL controls. General scoped
-metadata reconciliation, loops and broader runtime selectors remain open.
+constructed and paired RXAS branch/return/CANCEL controls.
+
+The suffix-only lexical re-entry follow-on is implemented and focused-qualified.
+It uses the qualified original-address projection only when
+no scoped REG/CONST opening or clear occurs in the common prefix through the
+selected LINKARG address group. Prefix-scoped and non-r metadata retain their
+legacy path and refusal; no nonempty prefix checkpoint or LINKARG-group staging
+is added. Suffix observations use one stable StorageId per original declaration
+across every feasible case, including skipped lexical groups. A declaration
+over distinct selected actuals retains `metadata.binding.change.pending`,
+while repeated actuals can satisfy the same storage obligation.
+
+Emission queries each case's group liveness and re-establishes its projected
+incoming scopes after early RET closure. Each later case reconciles to the
+empty scoped checkpoint before its label and starts a fresh group cursor;
+the existing source checkpoint can still be nonempty. The shared reconciler
+and code ledger own all clear/reopen carriers, and metadata address protection
+survives independent cleanup. `levell_rxas_runtime_scope_reentry` adds compact
+case/RET/storage/prefix controls and one paired handwritten consumer through
+the existing native scope/source/TRACE readback. Milestone qualification remains open.
+Nonempty prefix scopes, changing-storage splitting, loops and broader runtime
+selectors remain later work in the authoritative plan.
 
 Current cleanup retains the conservative runtime dispatch when its independent
 range/access proof returns `argument.range.unproved`; branch-aware reduction of

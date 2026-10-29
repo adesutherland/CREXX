@@ -832,14 +832,20 @@ expandlocalmany: procedure = .llinline..change
         groupalive = 0; scopeaddress = 0
         if lexical then do
           scopeaddress = facts.scopeaddress(input.id(),childrecord.id())
-          if scopeaddress > 0 then groupalive = facts.recordlive(input.id(),scopeaddress)
+          if scopeaddress > 0 then do
+            if runtimearm > 0 then groupalive = facts.argumentcaselive(input.id(),runtimearm,scopeaddress)
+            else groupalive = facts.recordlive(input.id(),scopeaddress)
+          end
         end
         if runtimearm > 1 & j <= runtimestart then iterate
         if runtimearm > 0 then do
           if facts.argumentcaselive(input.id(),runtimearm,childrecord.id()) = 0 then do
             /* Source rows describe lexical addresses, including a live row
              * following an omitted dead neighbor. They are not executed. */
-            if childrecord.kind() <> '.srcstep' then iterate
+            if childrecord.kind() <> '.srcstep' then do
+              if lexical = 0 | childrecord.kind() <> '.meta' | groupalive = 0 then iterate
+              if childrecord.operands() <> 1 & childrecord.operands() <> 4 then iterate
+            end
           end
         end
         else if facts.recordlive(input.id(),childrecord.id()) = 0 then do
@@ -946,7 +952,7 @@ expandlocalmany: procedure = .llinline..change
           if runtime > 0 & childrecord.id() = facts.argumentruntime(input.id()) then do
             runtimestart = j; runtimearm = 1; runtimeextent = runtime
             runtimeorigin = childat; runtimestep = lastchildstep
-            call scopes.checkpoint()
+            if lexical = 0 then call scopes.checkpoint()
             if runtimestep[0] = 0 then do
               if callerstep > 0 then runtimestep = clonefields(source.at(callerstep),targetbody)
               else do
@@ -1136,11 +1142,18 @@ expandlocalmany: procedure = .llinline..change
       end
       if runtimearm = 0 | runtimearm >= runtimeextent then leave
       runtimearm = runtimearm + 1
+      if lexical then do
+        call objectarraydrop desiredscopes
+        desiredorigins = emptyorigins
+        call scopes.reconcile(targetbody,code,desiredscopes,desiredorigins,runtimeorigin)
+        if result.error() <> '' then return .change('limit',result.error(),source,empty)
+        lastscopeaddress = 0
+      end
       call objectarraydrop fields
       fields[1] = .lltarget..operand.symbol(caseLabels[runtimearm]) as .object
       ignored = targetbody.record('label',fields,runtimeorigin)
       if runtimestep[0] > 0 then ignored = targetbody.record('.srcstep',runtimestep,runtimeorigin)
-      call scopes.resume(targetbody,runtimeorigin)
+      if lexical = 0 then call scopes.resume(targetbody,runtimeorigin)
       swaprecord = source.record(runtimestart)
       field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
       field = .lltarget..operand.bound(0,0,0,'a',facts.argumentcase(input.id(),runtimearm))

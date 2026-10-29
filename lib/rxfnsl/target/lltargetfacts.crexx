@@ -1772,21 +1772,25 @@ analysis: class
       call insert(observations_ref,domain(id,1))
     end
     return 1
-  /* Preserve legacy common-entry a/g scopes. Only the new direct-DAG
-   * re-entry path uses the r-only lexical projection; selectors stay gated. */
+  /* Preserve legacy common-entry a/g scopes. Selector re-entry uses the
+   * same r-only projection only with an empty scoped prefix through LINKARG. */
   prepareinlinescopes: method = .int
     arg functionid = .int
-    i = .int; scoped = .int; item = .lltarget..record; value = .lltarget..operand
+    i = .int; scoped = .int; selected = .int; item = .lltarget..record; value = .lltarget..operand
     if _scopechecked[functionid] then return 1
     if reserve(1,16) = 0 then return 0
     _scopechecked[functionid] = 1
-    if _selectorcount[functionid] > 0 then return 1
+    if _selectorcount[functionid] > 1 then return 1
     module = dereference _owner
     do i = 1 to module.records()
       if spend(1) = 0 then return 0
       item = module.record(i)
+      if item.procedureid() = functionid & item.mnemonic() = 'linkarg' then selected = 1
       if item.procedureid() <> functionid | item.kind() <> '.meta' then iterate
-      if item.operands() = 1 | item.operands() = 4 then scoped = 1
+      if item.operands() = 1 | item.operands() = 4 then do
+        if _selectorcount[functionid] = 1 & selected = 0 then return 1
+        scoped = 1
+      end
       if item.operands() <> 4 then iterate
       value = item.operand(4)
       if value.kind() = 'R' & value.bank() <> 'r' then return 1
@@ -1928,6 +1932,7 @@ analysis: class
     row = .numbers
     branchstate = .cells; merged = .cells; branchview = .frame; branchhistory = .history; mergedhistory = .history
     branchproof = .callproof; aggregate = .callproof; cases = .callproof[]; bindings = .int[]; limits = .int[]; checked = .int[]; returns = .int[]
+    scopeobservations = .int[]; emptyscopeobservations = .int[]
     state = dereference state_ref; module = dereference _owner
     selector = guard.operand(1)
     if selector.kind() <> 'R' then return 2
@@ -2023,7 +2028,7 @@ analysis: class
         end
       end
       if returned = 0 then return reject('return.missing')
-      do i = 1 to _index.functionoperations(bodyid)
+      if _scopereentry[bodyid] = 0 then do i = 1 to _index.functionoperations(bodyid)
         if spend(1) = 0 then return 0
         id = _index.functionoperation(bodyid,i)
         if _index.opcode(id) <= 16 | _index.reachable(_index.opblock(id)) = 0 then iterate
@@ -2103,6 +2108,10 @@ analysis: class
       do i = ordinal to bound
         if spend(1) = 0 then return 0
         item = module.at(row.at(i)); call branchproof.visit(_recordordinal[item.id()])
+        if _scopereentry[bodyid] then do
+          scopeobservations = emptyscopeobservations
+          if scopeobserve(item,branchview,reference branchstate,reference scopeobservations) = 0 then return 0
+        end
         if item.kind() = 'instruction' & item.mnemonic() = 'call1' then do
           /* Per-arm transfers never publish a root row or update _plain.
            * The merged caller refresh below owns the incoming tracking mode. */
