@@ -427,12 +427,16 @@ The bounded nonfixture producer shortlist for that survey is G
 `lib/rxfnsg/rexx/llm.crexx` (fallback/object return) and
 `lib/rxfnsg/rexx/http.crexx` (nested handlers, relay, references and cleanup);
 B `examples/franz-lotto/crexx/lotto.crexx` with `lotto_logic.crexx`
-(caller catch-all and imported stream-owning helper); and Classic C
+(caller catch-all and imported stream-owning helper),
+`examples/php/php_reader.crexx` (imported read under catch-all), and
+`lib/rxfnsb/rexx/rxjson.crexx` (named conversion scopes); and Classic C
 `packages/rexx-csv/classic/rexx_csv.rexx` with
 `packages/rexx-csv/examples/classic_demo.rexx` (internal calls and external
-source calls). The C pair has no authored SIGNAL in the selected source, yet
-the L C emitter normally adds protection; confirm its emitted sites rather
-than inferring a signal-free body. These source candidates are not workload
+source calls). The C pair has no authored SIGNAL in the selected source. Full
+L C capture/protection depends on signal handlers or dynamic execution, but
+its emitter still installs a per-procedure bound fallback policy; dynamic
+source calls add a second child layer. Confirm emitted sites rather than
+inferring a signal-free body. These source candidates are not workload
 frequency evidence. Maintained signal/dynamic fixtures supplement, but do
 not substitute for, the nonfixture set.
 The bounded prepared G sample contains real unbound, bound, nested and
@@ -442,6 +446,13 @@ insufficient. Raw `SIGRET` and action handlers were not observed in that
 sample, which supports a provisional specific retention policy, not a claim
 of rarity or absence. B Lotto and C CSV have source-only evidence here; the
 C emitter's generated protection still needs emitted-site inspection.
+The available prepared B RXJSON RXAS retains its named conversion scopes but
+has already reduced the protected source calls to native `bclear` instructions.
+Lexical call counts therefore cannot stand in for actual RXAS candidates.
+The selected real G/B sites are chiefly bound, nested, object/reference,
+stream or cleanup cases; the bounded range-leaf catch-all slice has no
+observed match in this purposive sample. It remains a semantic prerequisite
+rather than measured application acceleration.
 
 Try the existing ISA first for proved unchanged context and bounded structured
 policy scopes. An isolated signal save/restore pair cannot generally reproduce
@@ -577,7 +588,8 @@ remain open under INL-AC03/04/05.
 
 ### Reviewed bounded G catch-all follow-on
 
-The next INL-STEP04 signal slice admits the G emitter's complete, explicit
+**Status: implemented and focused-qualified.** This INL-STEP04 signal slice
+admits the G emitter's complete, explicit
 29-name catch-all around one same-module `CALL1` in fresh standalone `main`.
 The selected callee is exactly zero-local `ICHKRNG a1,lo,hi; RET a1`, with
 literal bounds, a proved defined plain scalar actual and result, and no
@@ -622,6 +634,32 @@ branch, nested scope, nonplain actual, callee mutation, and physical observers
 retain precise reasons. The focused slice does not close general G blocks,
 Classic C protection, inherited `SIGRET`, general exceptional cleanup or
 INL-AC03/04/05. It is not a production performance claim.
+
+### Pending atomic signal-scope decision
+
+The current G emitter's duplicate normal/handler reverse-pop lists cannot
+reliably recover from delivery partway through normal restoration. A handler
+may pop an already removed name, raising `INVALID_SIGNAL_CODE`; with an outer
+same-name save, it may instead consume the outer scope silently. Marker
+rebasing fixes pointer lifetime but cannot identify lexical ownership.
+Making `SIGPOP` lenient, or recording pop progress in an ordinary register,
+does not close the interruptible update gap or protect an outer same-name save.
+The bounded inliner may preserve the existing RXAS behavior but cannot claim
+that it repairs this G producer defect.
+
+Consider a versioned, frame-owned atomic scope acquisition and restoration
+contract, expressed by handwritten RXAS such as `sigscope rAcquired,"A B"`
+and `sigrestore scopeLabel`. Acquisition would prepare the private policy and
+all saves before publishing an identified scope, return a checked success
+flag for a producer-chosen failed-acquisition continuation, and expose no
+partial policy on failure. Restoration would validate the current scope and
+restore it in one VM instruction without allocation or an intermediate
+dispatch, never searching by name into an outer scope. The assembler/linker
+would treat `scopeLabel` as a relocatable same-procedure identity; inline
+clones need fresh identities. Exact failure, pending-native-signal, signal
+effect, RXBIN feature and G lowering contracts require review before any
+API/ISA/runtime adoption. This would solve policy restoration, not inherited
+physical `SIGRET`, arbitrary callee cleanup or Classic activation relay.
 
 ### Pending private-global symbol and logical-activation decisions
 

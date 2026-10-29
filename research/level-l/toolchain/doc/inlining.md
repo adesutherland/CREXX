@@ -493,13 +493,13 @@ counted windows, callee policy/context changes and physical observers retain
 specific pending/unproved reasons. This is an initial representable category,
 not complete G or Classic C signal coverage.
 
-The finite profile still retains `FAILURE` with
+The smaller named-list profile still retains `FAILURE` with
 `signal.activation.failure.pending`. Adrian accepted that reasonable inlining
 may change infrastructure-pressure error paths as its resource use changes,
 including the `FAILURE` opportunity caused by an eliminated call-frame
 allocation. Deterministic failures from retained operations and call-entry
-semantics remain obligations. The full catch-all state/unwind proof remains
-open. `CANCEL`, POSIX and other external delivery
+semantics remain obligations. In that smaller profile, `CANCEL`, POSIX and
+other external delivery
 policies retain `signal.asynchronous.tag.pending`; channel/task event policies
 retain `signal.event.delivery.pending`. Other names remain outside this finite
 slice with `signal.named.tag.pending`. Full G catch-all is a separate proof:
@@ -545,6 +545,73 @@ reads cannot justify any deletion or storage reuse through that normal-only
 index. General exceptional cleanup and bound/catch-all/nested handlers remain
 open in INL-STEP04/05. Inherited `SIGRET`, callee-owned policy and Classic
 capture/relay retain their separate contracts and gates.
+
+### Bounded caller-owned G catch-all
+
+The implementation also recognizes a complete explicit 29-name unbound scope
+around that exact zero-local `ICHKRNG a1,lo,hi; RET a1` leaf. The smaller named
+profile and its specific retention reasons remain available. All distinct
+policies must be pushed before any installation, every branch must select the
+same local handler, and both departures must pop the precise reverse list.
+The ordinary RXAS records are the authority; there is no `ANY` operation or
+inliner proof metadata. Missing, duplicate, interleaved, bound, nested or
+alternate-entry forms retain their specific pending reason.
+
+This complete scope uses a proved direct mapping of the read-only `a1` to its
+defined ordinary scalar actual. The leaf cannot access `a0`, private storage,
+another binding or a physical observer, including through metadata/TRACE
+operands. Its normal borrowed return remains one whole `COPY` to the captured
+result, including when result and actual overlap. An ordinary `CNOP` preserves
+the pre-entry call-site source boundary. There are no fresh frame cells,
+count/argument/result anchors or handler cleanup instructions. The normal
+metadata scope closes after COPY, and the active caller source anchor is
+restored at the original continuation, before its original result TRACE event.
+If the caller has no preceding source step, the established empty
+`.srcstep 0 0 6 "" 0 0 0 ""` reset is emitted; a preceding procedure cannot
+supply the caller's step. Body source anchors keep fresh remapped identities.
+No semantic result event is invented for the new transport.
+
+The existing facts owner extends its bounded overlay with both pre-commit and
+post-commit handler states. Every original normal instruction before the pop
+prefix contributes its already performed cell/status writes to handler entry;
+their instructions and observations remain in order. The push/install prefix
+has no caller writes, the leaf check is read-only, and both unchanged pop
+prefixes change policy without changing caller cells or bindings. These facts
+cover delivery at those instruction boundaries without rewinding to a single
+pre-call snapshot. A failed check never reaches COPY. Asynchronous delivery
+keeps the handler feasible even for a statically passing check. Incompatible
+storage/binding/history meets or unproved direct-return facts retain the call.
+The normal-only access projection stays incomplete; transport and assignment
+still report their exceptional-CFG pending reasons.
+
+This slice preserves the original restoration behavior, including its limits.
+In the current G emitter order, an event after a reverse-pop prefix can enter
+the handler's full pop list again. A repeated missing pop raises
+`INVALID_SIGNAL_CODE`; if that policy is still installed, handler re-entry can
+repeat. The VM marker-lifetime repair does not provide idempotent G block
+cleanup. The inliner neither reorders those policies nor claims successful
+recovery during that prefix. The maintained canonical-order fixture is kept
+separate from a reordered handwritten 29-tag negative control: it restores
+`INVALID_SIGNAL_CODE` first, so a second CANCEL during restoration terminates
+with that signal under an explicitly installed outer HALT policy. Paired originals/expansions
+check the same terminal outcome. Changing general G restoration semantics
+belongs to its existing emitter/runtime owners.
+An atomic, frame-owned scope acquisition/restoration operation is a candidate
+for that owner: it would identify the lexical save set and restore it in one
+VM instruction, without searching by tag into an outer same-name scope. It
+needs explicit ISA, RXBIN, assembler/linker, failure-continuation and G
+language-lowering decisions before adoption. It would not by itself replace
+inherited physical `SIGRET` or Classic activation relay.
+
+Focused controls include known and analysis-unknown normal/fault values,
+preloaded result, result/actual overlap, source/TRACE, cleanup refusal and
+atomic resource refusal. Deterministic pending-CANCEL injection into paired
+artifacts checks entry, before/after COPY, and an earlier normal observation.
+An ordinary signal-call activation queues ERROR and CANCEL to check canonical
+delivery priority. These controlled boundaries do not qualify external POSIX
+timing. General G handlers, callee policy/context, references/windows, bound
+events, inherited `SIGRET` and Classic protection/relay remain open; this is no
+new ISA or general logical-activation guarantee.
 
 Assess practical demand using named independent B/G programs and static/dynamic
 C consumers separately from conformance fixtures. Inventory source constructs,

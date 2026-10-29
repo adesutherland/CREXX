@@ -447,6 +447,7 @@ expandlocalmany: procedure = .llinline..change
   locals = .int; base = .int; higheststep = .int; highestclause = .int
   extent = .int; fileid = .int; hasresult = .int; ordered = .int; slots = .int; activebase = .int; position = .int
   dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int; abrupt = .int; samepair = .int
+  direct = .int; callerstep = .int
   catalog = .llrxascatalog..catalog
   scope = .string; status = .string; scopes = .metascopes
   request = .binding; selected = .lltarget..record; input = .lltarget..record; childrecord = .lltarget..record; swaprecord = .lltarget..record
@@ -508,7 +509,8 @@ expandlocalmany: procedure = .llinline..change
     if selected.procedureid() <> functionid then return .change('invalid','binding.foreign.procedure',source,empty)
     if facts.bodyid(request.callid()) <> request.bodyid() then return .change('invalid','binding.target.mismatch',source,empty)
     callee = source.body(request.bodyid()); count = facts.arguments(request.callid())
-    if facts.rebinding(request.callid()) | facts.orderedslots(request.callid()) then do
+    if facts.handlerdirect(request.callid()) then required = 0
+    else if facts.rebinding(request.callid()) | facts.orderedslots(request.callid()) then do
       if frame < 2 | count >= frame then return .change('limit','inline.frame',source,empty)
       if callee.locals() > frame - count - 1 then return .change('limit','inline.frame',source,empty)
       slots = callee.locals() + count + 1
@@ -564,7 +566,9 @@ expandlocalmany: procedure = .llinline..change
     do i = 1 to source.records()
       if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
       input = source.record(i); at = copyorigin(graph_ref,input.origin(),reference result,reference sources,reference origins)
+      if input.kind() = '.srcstep' & input.procedureid() = functionid then callerstep = input.id()
       if input.kind() = 'procedure' then do
+        callerstep = 0
         oldbody = source.body(input.procedureid()); extent = oldbody.locals()
         if input.procedureid() = functionid then extent = locals
         targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose())
@@ -584,7 +588,7 @@ expandlocalmany: procedure = .llinline..change
         else maps[input.id()] = targetbody.record(input.kind(),fields,at)
         if input.kind() = 'label' then do
           abrupt = facts.handlercall(input.id())
-          if abrupt > 0 then do
+          if abrupt > 0 & facts.handlerdirect(abrupt) = 0 then do
             if accepted[abrupt] = 0 then return .change('invalid','inline.signal.site.unselected',source,empty)
             /* This sole zero-local CALL1 owns four disjoint fresh cells.
              * UNLINK is safe before, during and after its setup; it never
@@ -606,24 +610,37 @@ expandlocalmany: procedure = .llinline..change
         iterate
       end
       callee = source.body(facts.bodyid(input.id())); count = facts.arguments(input.id()); base = offsets[input.id()]
+      direct = facts.handlerdirect(input.id())
       scope = scopes.begin(accepted[input.id()])
       dag = scopes.dag(accepted[input.id()])
       /* Retained counted children observe adjacency across r/a bank borders,
        * even when the outer body never explicitly rebinds a slot. */
       ordered = facts.rebinding(input.id()) | facts.orderedslots(input.id())
-      resultcell = targetbody.reg('r',base); hasresult = input.operands() > 1
+      hasresult = input.operands() > 1
       slots = callee.locals() + count + 1; activebase = base + slots + 2
-      if ordered then do
-        countcell = targetbody.reg('r',activebase + callee.locals()); tempcell = targetbody.reg('r',base + 1)
-      end
-      else do
-        countcell = targetbody.reg('r',base + count + 1); tempcell = targetbody.reg('r',base + count + 2)
+      if direct = 0 then do
+        resultcell = targetbody.reg('r',base)
+        if ordered then do
+          countcell = targetbody.reg('r',activebase + callee.locals()); tempcell = targetbody.reg('r',base + 1)
+        end
+        else do
+          countcell = targetbody.reg('r',base + count + 1); tempcell = targetbody.reg('r',base + count + 2)
+        end
       end
       if hasresult then do
         oldresult = input.operand(1); destination = targetbody.reg(oldresult.bank(),oldresult.index())
         if input.mnemonic() = 'call' & input.operands() = 2 then ignored = code.one(targetbody,'null',destination,at)
-        ignored = code.two(targetbody,'link',resultcell,destination,at)
+        if direct then resultcell = destination
+        else ignored = code.two(targetbody,'link',resultcell,destination,at)
       end
+      if direct then do
+        /* Keep the pre-entry source boundary of CALL as one ordinary, inert
+         * instruction. The checked leaf needs no a0, private cell or binding. */
+        actual = targetbody.reg(facts.argumentbank(input.id(),1),facts.argument(input.id(),1))
+        call objectarraydrop fields
+        ignored = code.emit(targetbody,'cnop',fields,at)
+      end
+      else do
       ignored = code.one(targetbody,'null',countcell,at)
       ignored = code.two(targetbody,'load',countcell,.lltarget..operand.integer(count),at)
       if ordered then do a = 0 to slots - 1
@@ -639,6 +656,7 @@ expandlocalmany: procedure = .llinline..change
         anchor = targetbody.reg('r',base + a)
         actual = targetbody.reg(facts.argumentbank(input.id(),a),facts.argument(input.id(),a))
         ignored = code.two(targetbody,'link',anchor,actual,at)
+      end
       end
       steps = empty; clauses = empty
       do j = 1 to source.records()
@@ -672,7 +690,8 @@ expandlocalmany: procedure = .llinline..change
         call objectarraydrop replacements
         do k = 1 to childrecord.registerrefs()
           field = childrecord.registerref(k)
-          value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
+          if direct then value = actual
+          else value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
           replacements[k] = value as .object
         end
         fields = lltarget..remapregisters(childrecord,replacements)
@@ -738,6 +757,32 @@ expandlocalmany: procedure = .llinline..change
               if facts.returnactionat(input.id(),childrecord.id()) = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
               else ignored = code.two(targetbody,'copy',resultcell,mapped,childat)
             end
+          end
+          if direct then do
+            /* COPY is the sole caller-visible return commit, just like the
+             * borrowed RET. No cleanup instruction may expose a partial
+             * return or expire borrowed storage. Scope/source records close
+             * at the original continuation address, before its TRACE event. */
+            if scopes.hasbindings() then do k = 1 to scopes.closings()
+              if scopes.active(k) = 0 then iterate
+              call objectarraydrop fields
+              fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
+              ignored = targetbody.record('.meta',fields,childat)
+            end
+            if callerstep > 0 then fields = clonefields(source.at(callerstep),targetbody)
+            else do
+              call objectarraydrop fields
+              fields[1] = .lltarget..operand.integer(0) as .object
+              fields[2] = .lltarget..operand.integer(0) as .object
+              fields[3] = .lltarget..operand.integer(6) as .object
+              fields[4] = .lltarget..operand.string('') as .object
+              fields[5] = .lltarget..operand.integer(0) as .object
+              fields[6] = .lltarget..operand.integer(0) as .object
+              fields[7] = .lltarget..operand.integer(0) as .object
+              fields[8] = .lltarget..operand.string('') as .object
+            end
+            ignored = targetbody.record('.srcstep',fields,at)
+            leave
           end
           if ordered then do
             if dag then do k = 1 to facts.restores(input.id(),childrecord.id())

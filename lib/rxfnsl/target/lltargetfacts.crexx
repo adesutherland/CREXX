@@ -678,6 +678,7 @@ analysis: class
   /* Feasible continuations: 1 normal, 2 handler, 3 both. */
   _namedoutcome = .int
   _namedactive = .int
+  _namedcatchall = .int
   *: factory
     arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864, graphmode = 0
     _owner = owner; _function = functionId; _profile = profile; _work = work; _status = 'building'; _reason = ''; _bytelimit = bytes
@@ -700,6 +701,9 @@ analysis: class
     return 0
   namedtag: method = .int
     arg name = .string
+    /* Recognize the emitted explicit list, never an ANY proof annotation.
+     * These are source spellings, not copied VM signal/opcode identities. */
+    if _namedcatchall & wordpos(name,'FAILURE ERROR OVERFLOW_UNDERFLOW DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OUT_OF_RANGE UNICODE_ERROR REFERENCE_INVALID OBJECT_NOT_INITIALIZED RXBIN_CORRUPTION UNKNOWN_INSTRUCTION FUNCTION_NOT_FOUND NOT_IMPLEMENTED INVALID_SIGNAL_CODE NOTREADY CANCEL QUIT TERM POSIX_INT POSIX_HUP POSIX_USR1 POSIX_USR2 POSIX_CHLD CHANNEL_ERROR TASK_FAILURE CLASSIC_SYNTAX CLASSIC_CONDITION OTHER') > 0 then return 1
     if name = 'OUT_OF_RANGE' | name = 'INVALID_ARGUMENTS' then return 1
     if name = 'FAILURE' then return reject('signal.activation.failure.pending')
     if wordpos(name,'KILL CANCEL QUIT TERM POSIX_INT POSIX_HUP POSIX_USR1 POSIX_USR2 POSIX_CHLD NOTREADY OTHER BREAKPOINT') > 0 then return reject('signal.asynchronous.tag.pending')
@@ -709,7 +713,7 @@ analysis: class
    * target-schema mutation or exceptional edge is added to the normal index. */
   namedshape: method = .int
     i = .int; j = .int; found = .int; policies = .int; labels = .int; calls = .int; pops = .int; branches = .int; returns = .int
-    installs = .int; range = .int; lastpush = .int; firstinstall = .int
+    installs = .int; range = .int; lastpush = .int; firstinstall = .int; pushes = .int
     handler = .string; joined = .string; name = .string
     tags = .string[]; installed = .int[]; poptags = .string[]; popids = .int[]
     item = .lltarget..record; field = .lltarget..operand; target = .lltarget..operand
@@ -719,8 +723,10 @@ analysis: class
       item = module.record(i)
       if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
       if left(item.mnemonic(),3) = 'sig' then policies = policies + 1
+      if item.mnemonic() = 'sigpush' then pushes = pushes + 1
     end
     if policies = 0 then return 1
+    _namedcatchall = pushes >= 29
     if _graphmode then return reject('signal.exceptional.cfg.pending')
     if _profile <> 'closed-main-default-halt.v1' then return reject('signal.named.profile.pending')
     if module.globals() <> 0 then return reject('signal.global.storage.pending')
@@ -746,7 +752,8 @@ analysis: class
           do j = 1 to tags[0]
             if tags[j] = field.text() then return reject('signal.named.push.duplicate.pending')
           end
-          /* The two admitted synchronous tags bound this distinct list. */
+          /* The complete catch-all is bounded at the emitter's 29 distinct
+           * names; a smaller list retains the existing synchronous profile. */
           if reserve(1,64) = 0 | reserve(field.length(),1) = 0 then return 0
           j = tags[0] + 1; tags[j] = field.text(); installed[j] = 0
           if field.text() = 'OUT_OF_RANGE' then range = 1
@@ -798,6 +805,7 @@ analysis: class
       end
     end
     if tags[0] = 0 then return reject('signal.named.push.missing.pending')
+    if _namedcatchall & tags[0] <> 29 then return reject('signal.catchall.tags.pending')
     if range = 0 then return reject('signal.named.range.missing.pending')
     if installs <> tags[0] then return reject('signal.named.install.missing.pending')
     if pops <> 2 * tags[0] then return reject('signal.named.pop.count.pending')
@@ -838,7 +846,7 @@ analysis: class
     end
     return 1
   namedleaf: method = .int
-    i = .int; instructions = .int; bodyid = .int
+    i = .int; j = .int; instructions = .int; bodyid = .int
     item = .lltarget..record; selected = .lltarget..record; field = .lltarget..operand
     module = dereference _owner; catalog = .llrxascatalog..catalog(); selected = module.at(_namedcall)
     field = selected.operand(2); bodyid = module.procedureid(field.text())
@@ -851,6 +859,13 @@ analysis: class
       item = module.record(i)
       if item.procedureid() <> bodyid | item.kind() = 'procedure' then iterate
       if item.kind() = 'label' then return reject('signal.callee.control.pending')
+      if _namedcatchall then do j = 1 to item.registerrefs()
+        if spend(1) = 0 then return 0
+        field = item.registerref(j)
+        /* Direct transport has no a0/private base or entry-binding anchor.
+         * Metadata and TRACE operands must satisfy the same exact mapping. */
+        if field.bank() <> 'a' | field.index() <> 1 then return reject('signal.catchall.mapping.pending')
+      end
       if item.kind() <> 'instruction' then iterate
       instructions = instructions + 1
       if left(item.mnemonic(),3) = 'sig' then return reject('signal.callee.policy.pending')
@@ -902,11 +917,13 @@ analysis: class
         if id = 0 | state.plain(id) = 0 | state.ordinary(id) = 0 | state.wholeknown(id) = 0 then return reject('signal.storage.plain.unproved')
         field = item.operand(3); id = view.storage(field)
         if id = 0 | state.plain(id) = 0 | state.wholeknown(id) = 0 | state.defined(id) = 0 then return reject('signal.argument.value.unproved')
+        if _namedcatchall & state.ordinary(id) = 0 then return reject('signal.storage.plain.unproved')
         normalpossible = _namedlow <= _namedhigh; handlerpossible = 1
         if normalpossible & state.bounded(id) then do
           normalpossible = state.high(id) >= _namedlow & state.low(id) <= _namedhigh
           handlerpossible = state.low(id) < _namedlow | state.high(id) > _namedhigh
         end
+        if _namedcatchall then handlerpossible = 1
         _namedoutcome = normalpossible + 2 * handlerpossible
         if pathallowance(state.size(),view.slots()) = 0 then return 0
         state_ref = reference state; view_ref = reference view; history_ref = reference previous
@@ -914,6 +931,7 @@ analysis: class
         _namedactive = 1
         if invoke(item,view,reference state,previous) = 0 then return 0
         _namedactive = 0
+        if _namedcatchall & (_returnaction[item.id()] <> 'copy' | _rebinding[item.id()] | _ordered[item.id()] | _counts[item.id()] <> 1) then return reject('signal.catchall.mapping.pending')
         if pathallowance(state.size(),view.slots()) = 0 then return 0
         state_ref = reference before; history_ref = reference beforehistory
         handlerstate = snapshot state_ref; handlerhistory = snapshot history_ref
@@ -924,6 +942,17 @@ analysis: class
         actuals[1] = id
         handlerframe = .frame(reference handlerstate,0,actuals,0,beforeview.context(),owned)
         call handlerhistory.activated(handlerframe.ownedbase(1)); call handlerhistory.exited(handlerframe.ownedbase(1),0)
+        if _namedcatchall then do
+          /* Delivery during the unchanged push/install prefix or before the
+           * result COPY has the pre-call state. Delivery after COPY has the
+           * committed state. Meet both without changing the normal path.
+           * The prefix contains no caller writes; the leaf check is read-only. */
+          if spend(state.size() * 44 + view.slots() * 6) = 0 then return 0
+          if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,before,view,beforehistory) = 0 then return 0
+          if normalpossible then do
+            if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,state,view,previous) = 0 then return 0
+          end
+        end
       end
       else if item.id() = _namedhandler then do
         if pathallowance(state.size(),view.slots()) = 0 then return 0
@@ -948,6 +977,14 @@ analysis: class
         if item.id() > _namedcall & item.id() < _namedhandler & normalpossible = 0 then iterate
         if item.id() > _namedhandler & item.id() < _namedjoin & handlerpossible = 0 then iterate
         if step(item,view,reference state) = 0 then return 0
+        if _namedcatchall & normalpossible & item.kind() = 'instruction' & item.id() > _namedcall & item.id() < _namednormalpop then do
+          /* Every original normal instruction remains executable. An event
+           * after an earlier write/observation must not rewind to call entry.
+           * The unchanged pop prefixes write no cells/bindings; delivery there
+           * has this same last state, including repeated handler entry. */
+          if spend(state.size() * 22 + view.slots() * 3) = 0 then return 0
+          if joinpath(reference handlerstate,reference beforeview,reference handlerhistory,state,view,previous) = 0 then return 0
+        end
         if item.kind() = 'instruction' & item.mnemonic() = 'ret' then returned = 1
       end
     end
@@ -2246,6 +2283,12 @@ analysis: class
     /* Internal feasible-path mask: normal=1, handler=2, both=3. */
     if callid = _namedcall then return _namedoutcome
     return 0
+  /** Internal exact-owner transport query. This proves the complete read-only
+   * leaf mapping; it is not a producer-supplied effect/ownership assertion. */
+  handlerdirect: method = .int
+    arg callid = .int
+    call require()
+    return _namedcatchall & callid = _namedcall
   index: method = reference .llirgraph..index
     call require(); return reference _index
   access: method = reference .llirgraph..access

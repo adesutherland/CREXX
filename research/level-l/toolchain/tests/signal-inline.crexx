@@ -124,9 +124,82 @@ model: procedure = .lltarget..module
   end
   return draft.finish()
 
+/** Independent complete unbound scope. The list is executable RXAS policy,
+ * with no producer-side effect/ownership annotation. */
+catchmodel: procedure = .lltarget..module
+  arg variant = .int, expose callid = .int, expose handlerid = .int
+  i = .int
+  draft = .lltarget..draft('catchall.' || variant,'constructed.catchall.' || variant,0)
+  at = draft.synthetic('independent complete unbound G scope')
+  root = draft.procedure('main',4,at)
+  tags = 'FAILURE ERROR OVERFLOW_UNDERFLOW DIVISION_BY_ZERO CONVERSION_ERROR INVALID_ARGUMENTS OUT_OF_RANGE UNICODE_ERROR REFERENCE_INVALID OBJECT_NOT_INITIALIZED RXBIN_CORRUPTION UNKNOWN_INSTRUCTION FUNCTION_NOT_FOUND NOT_IMPLEMENTED INVALID_SIGNAL_CODE NOTREADY CANCEL QUIT TERM POSIX_INT POSIX_HUP POSIX_USR1 POSIX_USR2 POSIX_CHLD CHANNEL_ERROR TASK_FAILURE CLASSIC_SYNTAX CLASSIC_CONDITION OTHER'
+  input = 7
+  if variant = 1 then input = 12
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(input),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(99),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(0),at)
+  if variant >= 2 & variant <= 5 then do
+    flags = 0
+    if variant = 3 | variant = 5 then flags = 256
+    ignored = two(root,'settp',root.reg('r',3),.lltarget..operand.integer(flags),at)
+    ignored = three(root,'getandtp',root.reg('r',0),root.reg('r',3),.lltarget..operand.integer(256),at)
+  end
+  if variant = 13 then ignored = two(root,'mkref',root.reg('r',0),root.reg('r',1),at)
+  do i = 1 to words(tags)
+    ignored = one(root,'sigpush',.lltarget..operand.string(word(tags,i)),at)
+    if i = 1 & variant = 7 then ignored = one(root,'sigpush',.lltarget..operand.string(word(tags,i)),at)
+    if i = 1 & variant = 8 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(0),at)
+  end
+  do i = 1 to words(tags)
+    if i = 1 & variant = 6 then iterate
+    target = 'caught'
+    if i = 2 & variant = 9 then target = 'joined'
+    if i = 1 & variant = 10 then ignored = three(root,'sigbrv',.lltarget..operand.symbol(target),root.reg('r',3),.lltarget..operand.string(word(tags,i)),at)
+    else ignored = two(root,'sigbr',.lltarget..operand.symbol(target),.lltarget..operand.string(word(tags,i)),at)
+  end
+  if variant = 14 then ignored = label(root,'alternate',at)
+  destination = root.reg('r',1)
+  if variant = 4 | variant = 5 then destination = root.reg('r',0)
+  callid = three(root,'call1',destination,.lltarget..operand.procedure('checked_identity'),root.reg('r',0),at)
+  if variant = 15 then ignored = one(root,'sigpush',.lltarget..operand.string('CANCEL'),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(1),at)
+  do i = words(tags) to 1 by -1
+    ignored = one(root,'sigpop',.lltarget..operand.string(word(tags,i)),at)
+  end
+  ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
+  handlerid = label(root,'caught',at)
+  do i = words(tags) to 1 by -1
+    ignored = one(root,'sigpop',.lltarget..operand.string(word(tags,i)),at)
+  end
+  /* Observe the interrupted result/flag before any handler overwrite. */
+  ignored = two(root,'copy',root.reg('r',3),destination,at)
+  ignored = two(root,'copy',root.reg('r',3),root.reg('r',2),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(2),at)
+  ignored = one(root,'br',.lltarget..operand.symbol('joined'),at)
+  ignored = label(root,'joined',at)
+  ignored = two(root,'copy',root.reg('r',3),destination,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('checked_identity',0,at)
+  fields = .object[]; fields[1] = .lltarget..operand.string('value') as .object
+  fields[2] = .lltarget..operand.string('b') as .object; fields[3] = .lltarget..operand.string('.int') as .object
+  source = leaf.reg('a',1)
+  if variant = 12 then source = leaf.reg('a',0)
+  fields[4] = source as .object; ignored = leaf.record('.meta',fields,at)
+  if variant = 11 then ignored = one(leaf,'sigignore',.lltarget..operand.string('CANCEL'),at)
+  ignored = three(leaf,'ichkrng',leaf.reg('a',1),.lltarget..operand.integer(0),.lltarget..operand.integer(10),at)
+  ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  fields = .object[]; fields[1] = .lltarget..operand.string('value') as .object
+  ignored = leaf.record('.meta',fields,at)
+  return draft.finish()
+
 main: procedure = .int
   failures = 0; callid = .int; handlerid = .int
   i = .int; item = .lltarget..record; field = .lltarget..operand
+  variant = .int; outcome = .int; instructions = .int; closure = .int; inhandler = .int
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module
+  before = .binary
+  request = .llinline..binding; changed = .llinline..change
+  cleaned = .llinline..change; limited = .llinline..change; facts = .lltargetfacts..analysis
   expected = .string[]
   expected[3] = 'signal.inherited.return.pending'
   expected[4] = 'signal.callee.policy.pending'
@@ -156,6 +229,7 @@ main: procedure = .int
   expected[39] = 'signal.named.handler.pop.interleaved.pending'
   expected[40] = 'signal.named.setup.pending'
   do variant = 0 to 40
+    graph = .llir..module
     original = model(variant,callid,handlerid)
     if variant = 4 | variant = 5 then do
       failures = failures + check(original.valid() = 0 & pos('LL_TARGET_BINDING: unresolved branch label',original.error()) > 0,'target rejects absent or foreign handler label ' || variant)
@@ -169,6 +243,7 @@ main: procedure = .int
     if (variant > 1 & variant < 9) | variant = 14 | variant = 15 | (variant >= 21 & variant <= 39) then do
       failures = failures + check(changed.status() = 'keep' & changed.reason() = expected[variant + 1],'precise signal keep ' || variant)
       if changed.reason() <> expected[variant + 1] then say changed.reason()
+      keptgraph = .llir..module
       kept = changed.result(); keptgraph = dereference kept.ir()
       failures = failures + check(bin2x(keptgraph.binary()) = bin2x(before),'signal keep returns exact frozen caller ' || variant)
     end
@@ -235,6 +310,65 @@ main: procedure = .int
     end
     graph = dereference original.ir()
     failures = failures + check(bin2x(graph.binary()) = bin2x(before),'all signal paths preserve original source owner')
+  end
+  catchreason = .string[]
+  catchreason[7] = 'signal.named.install.missing.pending'
+  catchreason[8] = 'signal.named.push.duplicate.pending'
+  catchreason[9] = 'signal.named.setup.pending'
+  catchreason[10] = 'signal.handler.mismatch.pending'
+  catchreason[11] = 'signal.bound.handler.pending'
+  catchreason[12] = 'signal.callee.policy.pending'
+  catchreason[13] = 'signal.catchall.mapping.pending'
+  catchreason[14] = 'signal.storage.plain.unproved'
+  catchreason[15] = 'signal.named.entry.pending'
+  catchreason[16] = 'signal.named.push.order.pending'
+  do variant = 0 to 15
+    catchgraph = .llir..module
+    original = catchmodel(variant,callid,handlerid)
+    failures = failures + check(original.valid(),'constructed catch-all owner ' || variant)
+    if original.valid() = 0 then do; say original.error(); iterate; end
+    catchgraph = dereference original.ir(); before = catchgraph.binary()
+    request = llinline..bind(reference original,callid,reference original,original.procedureid('checked_identity'))
+    changed = llinline..expand(request,'closed-main-default-halt.v1')
+    if variant >= 6 then do
+      failures = failures + check(changed.status() = 'keep' & changed.reason() = catchreason[variant + 1],'precise catch-all keep ' || variant)
+      if changed.reason() <> catchreason[variant + 1] then say changed.reason()
+    end
+    else do
+      failures = failures + check(changed.status() = 'changed','complete catch-all expands ' || variant)
+      if changed.status() <> 'changed' then do; say changed.reason(); iterate; end
+      facts = lltargetfacts..analyse(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+      outcome = 3
+      if variant = 1 then outcome = 2
+      failures = failures + check(facts.status() = 'ok' & facts.handlerdirect(callid) & facts.handleroutcome(callid) = outcome,'catch-all admits pre/post-commit handler states ' || variant)
+      result = changed.result(); instructions = 0; closure = 0; copies = 0; policies = 0; inhandler = 0; firsthandler = .string
+      do i = 1 to result.records()
+        item = result.record(i)
+        if item.procedureid() <> result.procedureid('main') then iterate
+        if item.kind() = 'label' then do; field = item.operand(1); inhandler = field.text() = 'caught'; end
+        if item.kind() <> 'instruction' then iterate
+        if inhandler & firsthandler = '' then firsthandler = item.mnemonic()
+        if item.mnemonic() = 'call1' then instructions = instructions + 1
+        if wordpos(item.mnemonic(),'link unlink endlife') > 0 then closure = closure + 1
+        if item.mnemonic() = 'copy' & inhandler = 0 & policies = 58 then copies = copies + 1
+        if wordpos(item.mnemonic(),'sigpush sigbr sigpop') > 0 then policies = policies + 1
+      end
+      failures = failures + check(instructions = 0 & closure = 0 & copies = 1 & policies = 116 & firsthandler = 'sigpop','direct catch-all has one return COPY and no fresh cleanup ' || variant)
+      failures = failures + check(result.body(result.procedureid('main')).locals() = 4,'direct catch-all adds no frame cells')
+      cleaned = llcleanup..transport(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+      failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'transport.exceptional.cfg.pending','catch-all transport keeps exceptional graph')
+      cleaned = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+      failures = failures + check(cleaned.status() = 'keep' & cleaned.reason() = 'storage.exceptional.cfg.pending','catch-all storage keeps exceptional graph')
+      limited = llinline..expand(request,'closed-main-default-halt.v1',1000000,1000000,67108864,3)
+      failures = failures + check(limited.status() = 'limit' & limited.reason() = 'inline.frame','catch-all respects original frame cap')
+    end
+    catchgraph = dereference original.ir()
+    failures = failures + check(bin2x(catchgraph.binary()) = bin2x(before),'catch-all preserves frozen source owner')
+    if changed.status() = 'keep' then do
+      catchkeptgraph = .llir..module
+      kept = changed.result(); catchkeptgraph = dereference kept.ir()
+      failures = failures + check(bin2x(catchkeptgraph.binary()) = bin2x(before),'catch-all refusal returns exact owner')
+    end
   end
   say 'SIGNAL_INLINE|failures=' || failures
   return failures
