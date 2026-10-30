@@ -1,12 +1,34 @@
 # Level L target-toolchain research
 
-**Status: standalone inliner architecture approved; implementation in progress.**
+**Status: inliner POC authorized; revised short architecture under review.**
 Adrian has requested a standalone, effective RXAS inliner proof of concept and,
 approved this plan for implementation. The [inliner contract](doc/inlining.md)
 and INL criteria/steps below own that selected outcome within this single plan.
 The wider assembler/reassembler/linker proposal remains proposed; all TGT
 acceptance criteria remain open. Implementation and reviewed local commits for
 the INL outcome are authorized; native replacement and publication are not.
+
+The remaining INL implementation is one coherent database-driven expansion
+and shared flow/cleanup increment, followed by focused qualification. In-module
+calls are expanded during assembly before optimization; cross-module calls
+are expanded during linking after exact provider selection, followed by bounded
+cleanup. The standalone POC supplies both contexts to one service. Native or
+dynamically loaded bodies without exact link-time selection remain calls.
+Cross-module expansion also needs a checked runtime binding that cannot silently
+resolve to a different provider through the context-wide export table.
+Link-time private globals are in scope through checked module/global mapping
+without exposing them by name or adding inliner proof metadata.
+
+The [short architecture](doc/inlining.md) records the shared call/return/signal
+exit model, Level L graph and component/flag proof requirements, early
+read-before-write clear/warning, and minimal post-link cleanup. Do not admit
+ordinary mnemonics one at a time through scalar transfer functions. Preserve
+bounded prior results as regressions while replacing that admission gate.
+Existing ordinary-clone work is unqualified foundation, not complete call or
+signal coverage. The earlier mirrored `INLINE_ENTER`/`INLINE_LEAVE` family is
+superseded as an unapproved proposal. The small runtime context/ISA, dynamic
+argument-bank and private-global binding contracts need concrete owner review
+before product edits; no new opcode is approved here.
 
 ## Vision and boundaries
 
@@ -98,16 +120,15 @@ stopping at scalar leaf calls. Stage growth through aliases/rebinding,
 omissions/varargs, nested calls, multiple returns, objects/binaries/references,
 state and imported helpers.
 Specific unproved cases remain calls while implementation is incomplete;
-they are not automatically reclassified as inherently infeasible or accepted
-exclusions. Native/dynamic targets without one bound bytecode body, foreign private
-globals without a binding mechanism, and physical-frame observations without an
-equivalent are explicit current-boundary cases, not permanent impossibility
-claims. The linker-private global alias option has been reviewed and is not
-selected for this POC; review exact-site
-initialization ingress alongside virtual inline provenance and useful language
-effect/ownership facts. Recursion/growth policy is distinct from semantic
-feasibility. API/ISA, language/platform changes and production default replacement
-require separate decisions.
+they are not automatically reclassified as infeasible or accepted exclusions.
+Native/unresolved/dynamically loaded targets without one selected executable
+body and physical-frame observations without an equivalent are current
+boundaries. Cross-module private globals are intended to map to the selected
+provider's storage; the exact checked representation is open. Review exact-site
+initialization ingress and useful language effect/ownership facts without
+turning `.meta` into an inliner proof side channel. Recursion/growth policy is
+distinct from semantic feasibility. API/ISA, language/platform changes and
+production default replacement require separate decisions.
 Inlining preserves deterministic language values, control, ownership, delivered
 signals, logical source and cancellation/unwind. It need not reproduce slight
 differences in resource-pressure failure paths caused solely by removed or
@@ -118,8 +139,8 @@ exists; such hypothetical opportunities alone do not retain a call.
 |---|---|
 | **INL-AC01 — shared service and real adapter** | One B/L checked target-model inliner serves an ordinary RXAS CLI, a callable B client and an independent handwritten/DSL-style producer. No AST inline payload, copied parser/framework or native backend is required. Input/output, unknown/unsupported forms and atomic publication have explicit contracts. |
 | **INL-AC02 — exact call/storage mapping** | All admitted direct, counted, fixed and fused forms preserve actual evaluation, counts/presence/defaults, active and entry argument bindings, slot identity/permutations, status components, explicit reference/value behavior, nested calls and return copy/move ownership. Independent executable and structural controls include repeated actuals, mutable aliases and abrupt exits. |
-| **INL-AC03 — full representable profile** | The architecture's coverage catalogue is implemented and checked, including rebinding, varargs, multiple returns, aggregate/reference lifetimes, context/cleanup and exact-bound imported helpers. Every retained case has a specific semantic, missing-proof, body-availability or policy reason. Unimplemented representable categories keep this criterion open. |
-| **INL-AC04 — module and observation integrity** | Globals keep their module/storage owner; initialization, poison/cycle ingress, dependencies, numeric/signal state, reference expiry, source/TRACE/diagnostic and declared physical-frame observations remain equivalent. Evaluate linked private aliases and narrowly scoped runtime/metadata or language additions; record the selected compatibility/observation contract before implementation. Cases lacking an approved equivalent stay calls. |
+| **INL-AC03 — full representable profile** | The canonical effect inventory and checked target profile support rebinding, varargs, multiple returns, aggregate/reference lifetimes, context/cleanup and exact-bound imported helpers. Every retained case has a specific semantic, missing-proof, body-availability or policy reason. Unimplemented representable categories keep this criterion open. |
+| **INL-AC04 — module and observation integrity** | Globals keep their module/storage owner, including linker-selected private globals without public exposure or inliner proof metadata; initialization, poison/cycle ingress, dependencies, numeric/signal state, reference expiry, source/TRACE/diagnostic and declared physical-frame observations remain equivalent. Record the checked cross-module binding and minimal runtime compatibility contract before implementation. Cases lacking an approved equivalent stay calls. |
 | **INL-AC05 — effective bounded cleanup** | Expansion is correct with cleanup and assembler optimization disabled. Separately prove status/transport/copy elision, constants/presence, branch/reachability cleanup and alias-aware storage reuse on changed callers. Eliminate caller setup and reverse call-window swaps made redundant by direct actual-register mapping, using storage/permutation proof across the entire call region. A simple reordered-actual leaf has no original call or outer setup/restoration swaps; an alias/snapshot case retains required copies, and a retained nested call keeps a valid window. Preserve once-only actual order, result/entry/base/slot identities, abrupt-exit restoration and swaps required by body semantics. Previously optimized modules are covered without assuming their old analysis facts remain valid. |
 | **INL-AC06 — deterministic policy and resources** | Separate legality, availability and profitability decisions. Explicit recursion, depth, code/register/metadata growth and work limits terminate predictably, support diagnostics and forced-legal/disabled controls, and preserve ordinary calls on policy refusal. Malformed input or failed transformation publishes no partial output. |
 | **INL-AC07 — metadata and lifecycle** | Relocate executable and observation references together; keep runtime graph/provider/task/source contracts, source/module identity and initializer dependencies. Prune only under explicit reachability/consumer rules. Invalid/repeated/interleaved/resource/cancellation/I/O cases retain owned results and last-good publication. |
@@ -127,7 +148,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 
 | Stable step | Status, dependency and decision gate |
 |---|---|
-| **INL-STEP01 — architecture and contract** | Architecture approved; AC01–08. The preservation policy and shared target expansion/cleanup boundary are accepted; foreign private globals retain calls under the selected current-format profile. Record and internally review concrete APIs/schema/profile details for each coherent increment before product edits; unverified implementation criteria remain open. |
+| **INL-STEP01 — architecture and contract** | Original POC approved; revised short architecture recorded for review; AC01–08. Assembly-local and link-selected cross-module placement, one shared target service, private-global mapping intent and database-driven flow are governing requirements. Exact scoped runtime/context, dynamic argument-bank, private-global binding and early clear/warning contracts remain decision gates before product edits; unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, transactional private normalization of selected root same-module scalar counted SWAPCALL/SETTPSWAPCALL/SETTPCALL under the default-HALT profile, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, six signed integer predicates, REQ/RNE loose equality, CONCAT/SCONCAT and register-backed typed string TRACE in the exact-bound scalar profile, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure, stable-register scoped META re-entry on direct acyclic calls and checked runtime-selector suffixes, and stable nonempty REG rN/aN/CONST runtime prefix scopes and selected LINKARG-group META/source/TRACE staging are focused-qualified. Complete broader imported, aliasing, dynamic varargs, group-local aN/gN re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
@@ -136,6 +157,12 @@ exists; such hypothetical opportunities alone do not retain a call.
 
 Per-feature checks and execution allocation follow the repository instructions;
 INL-STEP06 is the named standalone integration milestone.
+
+The reviewed increment entries below describe what the *current bounded
+implementation* proved or rejected at the time. Their per-opcode admission
+rules, private-global retention and proposed activation ISA are historical,
+not the governing architecture. The short [inliner design](doc/inlining.md)
+and INL criteria above supersede them for the integrated implementation.
 
 ### Reviewed direct fused-call normalization increment
 
@@ -4034,8 +4061,11 @@ provider indexes and task-binding digests/placeholders. Autoload hints do not
 discover link inputs. Reuse the committed mandatory-core provider policy and
 generated canonical declarations, with checking implemented in B/L: retain
 all provider/map metadata and omit only validated core bindings from external
-archive requirements. Linking changes references/encoding where necessary but
-does not optimize, expand or otherwise rewrite instruction sequences.
+archive requirements. The baseline linker mode changes references/encoding
+where necessary and does not otherwise rewrite instruction sequences. Its
+selected module/body set is also the input to the optional cross-module
+inliner and bounded cleanup before final relocation/sealing; this uses the
+same service as assembler-local inlining, not a second linker algorithm.
 
 Naive expansion is one language-neutral target service, independent of source
 compiler AST inline transport. Begin with proven direct local scalar calls;
@@ -4079,7 +4109,9 @@ Every criterion is **open**; passing an early subset cannot close the profile.
 5. **TGT-AC05 — complete module linker.** Selection, signatures, globals,
    initializers, providers, interfaces, stripping, graph/task resealing and all
    relocation domains pass independent multi-input and negative fixtures.
-   Instruction sequences remain unchanged apart from required reference remaps.
+   With inlining disabled, instruction sequences remain unchanged apart from
+   required reference remaps; enabled inlining is qualified under INL-AC02–07
+   and TGT-AC06/07.
 6. **TGT-AC06 — shared naive expansion.** The staged profile above uses one
    service for generated and handwritten callers. Structural expansion/call-
    retention assertions plus once-only, alias/state, omission, nested and
