@@ -1,6 +1,6 @@
 # Level L target-toolchain research
 
-**Status: inliner POC authorized; revised short architecture under review.**
+**Status: inliner POC authorized; shared Level L foundation first.**
 Adrian has requested a standalone, effective RXAS inliner proof of concept and,
 approved this plan for implementation. The [inliner contract](doc/inlining.md)
 and INL criteria/steps below own that selected outcome within this single plan.
@@ -30,6 +30,10 @@ signal coverage. The earlier mirrored `INLINE_ENTER`/`INLINE_LEAVE` family is
 superseded as an unapproved proposal. The small runtime context/ISA, dynamic
 argument-bank and private-global binding contracts need concrete owner review
 before product edits; no new opcode is approved here.
+Adrian has selected completion and focused QA of all shared Level L capabilities
+required by this architecture before integrating them into the inliner. The
+approved native opcode-database read/write extension follows this Level L
+foundation; present catalogue gaps yield explicit unknown facts during its QA.
 
 ## Vision and boundaries
 
@@ -146,18 +150,80 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-AC06 — deterministic policy and resources** | Separate legality, availability and profitability decisions. Explicit recursion, depth, code/register/metadata growth and work limits terminate predictably, support diagnostics and forced-legal/disabled controls, and preserve ordinary calls on policy refusal. Malformed input or failed transformation publishes no partial output. |
 | **INL-AC07 — metadata and lifecycle** | Relocate executable and observation references together; keep runtime graph/provider/task/source contracts, source/module identity and initializer dependencies. Prune only under explicit reachability/consumer rules. Invalid/repeated/interleaved/resource/cancellation/I/O cases retain owned results and last-good publication. |
 | **INL-AC08 — reviewed research delivery** | Early coherent implementation and representative RXAS review, focused development checks and a final compact integration panel qualify both expanded and retained cases against independent expectations. Guides, coverage/limits and this plan are current. No production-speed, full toolchain, wider platform, SAN-clean or publication claim follows automatically. |
+| **INL-AC09 — shared Level L target foundation** | A checked canonical transfer/reference view, typed normal/exceptional machine CFG, reusable typed remapping, storage/component/individual-flag point and edge facts, liveness/lifetime, early entry-dependent read clear/warning, and direct/transitive procedure summaries serve independent target clients before inliner adoption. Unknown, recursion, malformed data, stale owners and resource limits never imply an absent effect or known value. Focused constructed and ordinary RXAS controls qualify the Level L algorithms against independent expectations; opcode completeness remains a separate database gate. |
 
 | Stable step | Status, dependency and decision gate |
 |---|---|
-| **INL-STEP01 — architecture and contract** | Original POC approved; revised short architecture recorded for review; AC01–08. Assembly-local and link-selected cross-module placement, one shared target service, private-global mapping intent and database-driven flow are governing requirements. Exact scoped runtime/context, dynamic argument-bank, private-global binding and early clear/warning contracts remain decision gates before product edits; unverified implementation criteria remain open. |
+| **INL-STEP01 — architecture and contract** | Original POC approved; revised short architecture recorded for review; AC01–09. Assembly-local and link-selected cross-module placement, one shared target service, private-global mapping intent and database-driven flow are governing requirements. Exact scoped runtime/context, dynamic argument-bank and private-global binding remain later decision gates; the Level L early clear/warning contract is selected in STEP03F before its source edit. Unverified implementation criteria remain open. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
+| **INL-STEP03F — shared Level L foundation** | todo; after 03 and before further 04/05 integration; AC02–05/07/09. Implement the one checked target transfer/edge, remap, fact, lifetime/normalization and procedure-summary stack described below; freeze and run its independent one-VM owner panel. Current native catalogue incompleteness is represented as unknown, not repaired inside this step. No inliner admission or cleanup rule switches to the new service before this gate passes. |
 | **INL-STEP04 — complete representable expansion** | in progress; after 03; AC02–04/06/07. Scalar/metadata/batch, transactional private normalization of selected root same-module scalar counted SWAPCALL/SETTPSWAPCALL/SETTPCALL under the default-HALT profile, straight-line callee LINK/UNLINK/SWAP, one retained same-module scalar nested leaf in straight-line and acyclic branch bodies, finite LINKARG/known-passing ICHKRNG, checked runtime LINKARG with at most three choices and a straight-line scalar or bounded acyclic suffix through multiple reached RETs including a conditional retained same-module scalar CALL1 under its leaf gate, private same-module scalar globals, acyclic direct-branch scalar multiple returns, finite padded optional scalar prologues, ordinary UTF-8 string LOAD/SCOPY/whole-return and immediate-string return, ordinary binary LOAD/BCOPY/whole register return, six signed integer predicates, REQ/RNE loose equality, CONCAT/SCONCAT and register-backed typed string TRACE in the exact-bound scalar profile, exact global-free straight-line and acyclic branch imported scalar bodies with proved private locals plus one retained already-imported exported scalar child, existing public-global mapping for imported bodies, and bounded caller-owned unbound G-style signal scopes through the full 29-name catch-all, bound event capture and one guarded post-join owner projection around a checked range leaf are implemented and focused-qualified. Direct target CFG transport/validation, detached-scope closure, stable-register scoped META re-entry on direct acyclic calls and checked runtime-selector suffixes, and stable nonempty REG rN/aN/CONST runtime prefix scopes and selected LINKARG-group META/source/TRACE staging are focused-qualified. Complete broader imported, aliasing, dynamic varargs, group-local aN/gN re-entry, changing-storage metadata, recursive nesting, aggregate/reference and state/cleanup categories. Classify each hard boundary; do not leave feasible categories silently outside the finish line. |
 | **INL-STEP05 — proof and cleanup** | in progress; after each coherent conservative category, with final qualification after 04; AC02–07. Shared access/liveness, canonical fact extraction, scalar transport, typed assignment/checking, per-path scalar status/storage/activation meets, bounded integer success across acyclic joins, ABI-bit presence and branch refinement, ordinary string/binary component and recycler proof with retained nonplain ENDLIFE and failure-capable binary LOAD, and the fresh-root private-scalar reuse slice are focused-qualified. The acyclic closed-root r-only graph path removes proved mapping and plain-lifetime glue, simplifies proved branches and assigns distinct reached cells densely; linear cleanup remains separately qualified. Retained branch-child calls have root graph access summaries; reached same-module counted children with one to four proved actuals now use explicit CALL1–CALL4 pointers, removing proved caller setup/inverse swaps. Reached exact same-module counts above four now use a fresh linked pointer window under the checked profile; zero, unknown and unproved implicit forms remain open. Shared backward liveness uses reverse RPO and transport query charges match bounded block suffixes; larger CLI requests can select an explicit per-stage work allowance. Runtime prefix metadata uses original typed operands, one stable StorageId ledger per root site and original incoming checkpoints through the shared bounded reconciler; argument-bank root reuse remains outside this proof. Private same-module globals retain a conservative expanded caller under explicit cleanup guards. Typed end-anchor observations, changing scoped bindings, broader control/component, alias and lifetime reuse, and checked cross-block sharing remain open. Selected fused-root preparation is preserved conservatively and its proved outer setup/restoration is removed through the existing cleanup service; mixed fused batches retain exact original owners and site decisions on refusal. Retain independent no-cleanup results; inspect simple and alias-heavy output, not only execution. |
-| **INL-STEP06 — standalone research acceptance** | todo; after 03–05; AC01–08. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
+| **INL-STEP06 — standalone research acceptance** | todo; after 03F–05; AC01–09. Freeze and run the compact agreed integration panel through the matching assembler/linker/VM profile (current tools for the unchanged contract; explicitly approved owner extensions when selected), plus CLI/service/DSL, negative/lifecycle and structural cases. Use one normal VM; broaden only for specific unresolved risks. Commit reviewed authorized paths locally; no push/default switch. Wider TGT criteria remain open. |
 
 Per-feature checks and execution allocation follow the repository instructions;
 INL-STEP06 is the named standalone integration milestone.
+
+### INL-STEP03F implementation contract
+
+This is one coherent Level L owner increment, not a series of opcode admissions.
+Before source edits, use the following ordered interfaces and keep existing
+bounded inliner behavior unchanged:
+
+1. The optional target owner exposes a checked, frozen instruction transfer
+   view derived from the generated canonical catalogue; independent sealed
+   rich effect profiles may exercise the same Level L algorithms before
+   native catalogue completion, but no target mnemonic table fills its gaps.
+   The view includes typed
+   explicit/implicit references, ordered compound actions, component/flag
+   may/must writes, numeric and signal dependencies, failure phases and
+   activation observations. Must availability/kills are qualified by the
+   actual edge and exit; a success-only write does not kill state on a resumed
+   before/partial-write path. Missing catalogue precision is a named unknown,
+   never an empty effect.
+2. One authoritative target machine CFG validates normal/table, signal-skip,
+   handler, resumed, asynchronous-entry, unwind, terminal and unknown paths.
+   Each edge identifies its role, source operation, successor or boundary
+   identity, signal phase and per-normal/per-exceptional completeness.
+   The shared Level L graph consumes typed edges and edge-sensitive transfers.
+   Nonlocal departures are boundary exits, not illegal cross-function
+   successors; handler registration is not an executed branch.
+3. Reusable remapping and point/edge facts distinguish register spelling,
+   active/base/entry storage, slot identity, canonical published component
+   and individual-flag domains,
+   derived values and availability. Liveness and lifetime
+   include implicit windows, TRACE/metadata, aliases, references and all
+   departures. Possible writes are not definite kills.
+4. A separate early target normalization diagnoses proven entry-dependent
+   owned-local reads and inserts a safe whole-cell `NULL` at that owned
+   local's activation entry before authored writes, or an equivalent
+   path-specific clear proved not to erase a valid component. It does not move
+   a clear across effects, clear linked borrowed targets or argument/global
+   storage, treat a copied but unobserved unknown component as an error, or
+   publish a partial rewrite. Before this source edit, the coordinator and
+   source reviewer freeze the exact warning trigger, placement, provenance,
+   idempotence and async-entry contract. Native assembler adoption remains
+   a later integration action.
+5. An immutable procedure-fact service derives direct and transitive may/must/
+   unknown summaries from the same graph/facts, including numeric, signal,
+   return, symbolic argument/global, alias/ownership, call and external
+   effects. Recursive SCCs use conservative seeds and bounded fixed points;
+   no-return guarantees are nonvacuous. Exact owner/revision/catalog/binding/
+   premise checks invalidate stale results and affected callers.
+
+The focused owner panel constructs independent graph/effect cases for signal
+phases and resume/departure, overlapping swaps and per-flag/component values,
+owned-local clear/warning versus borrowed cells with idempotence, conditional
+and conflicting normal returns, no-return recursion, numeric effects internal
+to an activation versus caller-visible effects, argument/global aliases,
+direct/recursive/unknown procedure calls, changed dependencies, stale/foreign
+owners and tiny budgets. One handwritten RXAS client invokes the new services,
+checks their results, then compiles, assembles, links and executes on one
+normal VM. Existing affected target-CFG/constructed controls run only
+where the shared inputs change. Correct Level L inference from checked
+premises is the result of this step; complete native opcode coverage is not
+claimed until the approved database extension and its own cross-check.
 
 The reviewed increment entries below describe what the *current bounded
 implementation* proved or rejected at the time. Their per-opcode admission

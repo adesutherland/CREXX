@@ -1,8 +1,8 @@
 # RXAS inlining architecture
 
 **Status: short design summary for review; implementation and ISA details remain
-open.** The [toolchain plan](../PLAN.md) owns INL-AC01–08 and
-INL-STEP01–06. This document records the governing architecture before a
+open.** The [toolchain plan](../PLAN.md) owns INL-AC01–09 and
+INL-STEP01–06, including STEP03F. This document records the governing architecture before a
 detailed instruction or implementation design. The earlier per-opcode admission
 history and mirrored `INLINE_ENTER`/`INLINE_LEAVE` proposal are superseded;
 neither is an approved ISA. Existing bounded implementation results remain
@@ -102,8 +102,8 @@ is never observed, and no call or whole-value operation exposes the cell.
 
 Level L also needs a reusable **procedure-summary service** over the same
 checked target IR, CFG, point facts and canonical opcode effects. The optional
-RXAS target owner supplies RXAS-specific fact domains; there is one effect and
-proof algorithm, not a second interpretation of instructions inside the
+RXAS target owner supplies RXAS-specific fact domains; they share one canonical
+effect interpretation, not a second interpretation of instructions inside the
 inliner. Summaries are inferred from executable bodies, including handwritten
 RXAS, not asserted by compiler `.meta` or imported inline templates.
 Generic worklists, graph traversal and proof lifecycle remain with the
@@ -122,7 +122,7 @@ Its useful fact families are:
 
 | Family | Questions the inliner and later RXAS tools can ask |
 |---|---|
-| Numeric and other context | Which inherited numeric settings, plugin/locale state or external context are read? Which settings have known values at a point, can change, or need restoration at an exit? A read dependency alone does not require a save; a local change needs restoration on every departing path. |
+| Numeric and other context | Which inherited numeric settings, plugin/locale state or external context are read? Which settings have known values at a point, can change, or need restoration at an exit? A read dependency alone does not require a save; any caller-visible difference must be restored or proved absent or unobservable on that exit. |
 | Signal and control | Which named/implicit signals may arise, at what phase and with which partial writes? Which are handled, ignored or resumed internally, and which can leave the activation? How can policy/handler stacks change? Can the body return, fail, terminate or unwind? Inherited and asynchronous delivery remain separate obligations even without authored SIGNAL. |
 | Values and registers | Which components and individual flags of arguments, globals and result may be read/written, read before definition or must be overwritten? Which argument-count or dynamic-selector facts hold? Are a return component, type, range or relation to an input known on a particular exit under explicit entry assumptions? |
 | Storage and lifetime | Which symbolic argument or exact module/global slot is read, borrowed, rebound, escaped or mutated through aliases? Which references and owned payloads can outlive a path, and which physical frame/TRACE/source observations occur? |
