@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Optional checked machine-target records over Level L IR. */
 options levelb
-namespace lltarget expose draft bodydraft module body record operand operandcodec schema isrecord remapregisters remapmetadata
+namespace lltarget expose draft bodydraft module body record operand operandcodec schema isrecord remapregisters remapmetadata normalsuccessors normalfallthrough
 import rxfnsb
 import llir
 import llrxascatalog
@@ -253,19 +253,47 @@ isrecord: procedure = .int
   arg name = .string
   return name = 'rxas.target.record' | name = 'rxas.target.control'
 
-/** -1 is ordinary fallthrough, -2 is an unrepresented normal transfer. The
- * finite profile preserves encoded target order, not Boolean edge polarity. */
-controlarity: procedure = .int
+/** Count explicit direct-label targets from the existing canonical operand
+ * inventory. Unknown effects, indirect transfer and nonlabel targets do not
+ * acquire invented successors. No extended catalogue fields are required. */
+normaltargets: procedure = .int
   arg opcode = .int
+  catalog = .llrxascatalog..catalog()
+  if opcode < 0 | opcode >= catalog.count() then return -1
+  if catalog.classification(opcode) <> 0 then return -1
+  /* RXOP_SEM_INDIRECT_BRANCH is part of the existing semantic-mask ABI. */
+  if (catalog.semantics(opcode) <idiv> 4096) % 2 then return -1
+  signature = catalog.signature(opcode); targets = 0
+  do i = 1 to length(signature)
+    if catalog.branch(opcode,i) = 0 then iterate
+    if substr(signature,i,1) <> 'L' then return -1
+    targets = targets + 1
+  end
+  return targets
+
+/** -1 is ordinary fallthrough, -2 is an unrepresented normal transfer.
+ * Existing flow values are NEXT/JUMP/COND/TERM, in that order. A NEXT label
+ * reference can install a handler; it does not execute a normal branch.
+ * Direct targets retain operand order, with lexical fallthrough last. */
+normalsuccessors: procedure = .int
+  arg opcode = .int
+  targets = normaltargets(opcode)
+  if targets < 0 then return -2
   catalog = .llrxascatalog..catalog(); flow = catalog.flow(opcode)
   if flow = 0 then return -1
-  if flow = 3 then return 0
-  name = catalog.mnemonic(opcode); signature = catalog.signature(opcode)
-  if flow = 1 & name = 'br' & signature = 'L' then return 1
-  if flow = 2 & wordpos(name,'brt brf') > 0 & signature = 'LR' then return 2
-  if flow = 2 & name = 'brtpandt' & signature = 'LRI' then return 2
-  if flow = 2 & name = 'brtf' & signature = 'LLR' then return 2
+  if flow = 1 & targets = 1 then return 1
+  if flow = 2 & (targets = 1 | targets = 2) then return 2
+  if flow = 3 & targets = 0 then return 0
   return -2
+
+/** A one-target conditional has lexical fallthrough; a two-target
+ * conditional supplies both successors explicitly. */
+normalfallthrough: procedure = .int
+  arg opcode = .int
+  targets = normaltargets(opcode)
+  if targets < 0 then return 0
+  catalog = .llrxascatalog..catalog()
+  return catalog.flow(opcode) = 2 & targets = 1
 
 integerbits: procedure = .binary
   arg value = .int
@@ -472,23 +500,23 @@ bodycursor: class
     return
   targets: method = .object[]
     arg opcode = .int, fields = .object[]
-    edges = .object[]; field = .operand
-    arity = controlarity(opcode); catalog = .llrxascatalog..catalog()
+    edges = .object[]; field = .operand; i = .int
+    arity = normalsuccessors(opcode); catalog = .llrxascatalog..catalog()
     if arity > 0 then do
-      field = fields[1] as .operand; edges[1] = labelentry(field.text()) as .object
-      if arity = 2 then do
-        if catalog.mnemonic(opcode) = 'brtf' then do
-          field = fields[2] as .operand; edges[2] = labelentry(field.text()) as .object
-        end
-        else do; _fallthrough = newgroup(); edges[2] = _fallthrough as .object; end
+      do i = 1 to fields[0]
+        if catalog.branch(opcode,i) = 0 then iterate
+        field = fields[i] as .operand
+        edges[edges[0] + 1] = labelentry(field.text()) as .object
+      end
+      if normalfallthrough(opcode) then do
+        _fallthrough = newgroup(); edges[edges[0] + 1] = _fallthrough as .object
       end
     end
     return edges
   after: method = .void
     arg opcode = .int
-    catalog = .llrxascatalog..catalog()
-    if catalog.flow(opcode) = 0 then do; _after = 1; return; end
-    if wordpos(catalog.mnemonic(opcode),'brt brf brtpandt') > 0 & controlarity(opcode) = 2 then do
+    if normalsuccessors(opcode) = -1 then do; _after = 1; return; end
+    if normalfallthrough(opcode) then do
       _current = _fallthrough; _after = 0; _ended = 0
     end
     else do; _ended = 1; _after = 0; end
@@ -620,6 +648,12 @@ bodydraft: class
     return _function
   headerid: method = .int
     return _header
+  locals: method = .int
+    return _locals
+  globals: method = .int
+    return _globals
+  storage: method = reference .llir..arena
+    return _owner
   reg: method = .lltarget..operand
     arg bank = .string, index = .int
     store = dereference _owner; work = dereference _fuel
@@ -867,7 +901,7 @@ cfgcheck: class
   *: factory
     arg owner = reference .llir..module, records_ref = reference .int[], work = .int
     i = .int; j = .int; b = .int; f = .int; id = .int; at = .int; prior = .int
-    arity = .int; found = .int; labelcount = .int; code = .int; first = .int; last = .int; ordinal = .int; activefn = .int
+    arity = .int; found = .int; operand = .int; code = .int; first = .int; last = .int; ordinal = .int; activefn = .int
     name = .string; expectedname = .string; bits = .binary
     item = .record; field = .operand; op = .llir..opview
     blockkind = .int[]; nextgroup = .int[]; lastgroup = .int[]; sequence = .int[]
@@ -971,23 +1005,21 @@ cfgcheck: class
           end
           iterate
         end
-        arity = controlarity(item.opcode())
+        arity = normalsuccessors(item.opcode())
         if arity = -1 then do
           if op.name() <> 'rxas.target.record' | op.successors() <> 0 then do; _error = 'LL_TARGET_CFG: fallthrough instruction edges'; return; end
-          do j = 1 to item.operands()
-            if work < 1 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
-            work = work - 1
-            if catalog.branch(item.opcode(),j) then _complete[f] = 0
-          end
           iterate
         end
         if op.name() <> 'rxas.target.control' | op.successors() <> max(0,arity) then do; _error = 'LL_TARGET_CFG: canonical control arity'; return; end
         if store.get(2,b,3) <> id then do; _error = 'LL_TARGET_CFG: control instruction is not last in its block'; return; end
         if arity = -2 then do; _complete[f] = 0; iterate; end
-        labelcount = arity
-        if wordpos(item.mnemonic(),'brt brf brtpandt') > 0 then labelcount = 1
-        do ordinal = 1 to labelcount
-          field = item.operand(ordinal); found = 0
+        ordinal = 0
+        do operand = 1 to item.operands()
+          if work < 1 then do; _error = 'LL_RESOURCE_LIMIT: target.cfg work'; return; end
+          work = work - 1
+          if catalog.branch(item.opcode(),operand) = 0 then iterate
+          ordinal = ordinal + 1
+          field = item.operand(operand); found = 0
           name = field.text()
           if _names[0] > work / (length(name) + 1) then do; _error = 'LL_RESOURCE_LIMIT: target.cfg labels'; return; end
           work = work - _names[0] * (length(name) + 1)
@@ -997,8 +1029,8 @@ cfgcheck: class
           if found = 0 then do; _error = 'LL_TARGET_BINDING: unresolved branch label ' || field.text(); return; end
           if op.successor(ordinal) <> _entries[found] then do; _error = 'LL_TARGET_CFG: branch edge disagrees with label'; return; end
         end
-        if arity = 2 & labelcount = 1 then do
-          if nextgroup[b] = 0 | op.successor(2) <> nextgroup[b] then do; _error = 'LL_TARGET_CFG: conditional fallthrough edge'; return; end
+        if normalfallthrough(item.opcode()) then do
+          if nextgroup[b] = 0 | op.successor(ordinal + 1) <> nextgroup[b] then do; _error = 'LL_TARGET_CFG: conditional fallthrough edge'; return; end
           if firstmachine[nextgroup[b]] = 0 then _complete[f] = 0
         end
       end

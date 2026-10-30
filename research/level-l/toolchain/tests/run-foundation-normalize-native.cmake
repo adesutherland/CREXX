@@ -1,0 +1,38 @@
+cmake_minimum_required(VERSION 3.24)
+
+foreach(_name VM ASSEMBLER LINKER CLIENT WORK)
+  if(NOT DEFINED ${_name})
+    message(FATAL_ERROR "Missing ${_name}")
+  endif()
+endforeach()
+
+file(REMOVE_RECURSE "${WORK}")
+file(MAKE_DIRECTORY "${WORK}")
+execute_process(COMMAND "${VM}" "${CLIENT}" -a --emit-rxas
+  RESULT_VARIABLE _status OUTPUT_VARIABLE _source ERROR_VARIABLE _error)
+if(NOT _status EQUAL 0 OR NOT _error STREQUAL "")
+  message(FATAL_ERROR "Level L normalized RXAS producer failed: ${_status}: ${_error}")
+endif()
+if(NOT _source MATCHES "(^|\n)null r0\n")
+  message(FATAL_ERROR "Level L normalized RXAS omitted the owned-local entry clear")
+endif()
+set(_stem "${WORK}/normalized-client")
+file(WRITE "${_stem}.rxas" "${_source}")
+execute_process(COMMAND "${ASSEMBLER}" "${_stem}"
+  RESULT_VARIABLE _status OUTPUT_VARIABLE _output ERROR_VARIABLE _error)
+if(NOT _status EQUAL 0 OR NOT _error STREQUAL "")
+  message(FATAL_ERROR "Native assembler rejected normalized RXAS: ${_status}: ${_error}")
+endif()
+execute_process(COMMAND "${LINKER}" -s -o "${_stem}-linked" "${_stem}"
+  RESULT_VARIABLE _status OUTPUT_VARIABLE _output ERROR_VARIABLE _error)
+if(NOT _status EQUAL 0 OR NOT _error STREQUAL "")
+  message(FATAL_ERROR "Native linker rejected normalized RXAS: ${_status}: ${_error}")
+endif()
+execute_process(COMMAND "${VM}" "${_stem}-linked.rxbin"
+  RESULT_VARIABLE _status OUTPUT_VARIABLE _output ERROR_VARIABLE _error)
+string(REPLACE "\r\n" "\n" _output "${_output}")
+if(NOT _status EQUAL 0 OR NOT _error STREQUAL "" OR NOT _output STREQUAL "kept\n")
+  message(FATAL_ERROR "Normalized RXAS execution differed: ${_status}: ${_output}: ${_error}")
+endif()
+file(REMOVE_RECURSE "${WORK}")
+message("FOUNDATION_NATIVE|failures=0")

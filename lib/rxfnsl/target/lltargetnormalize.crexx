@@ -1,0 +1,245 @@
+/* cREXX License (MIT). Diagnosed owned-local entry-state normalization. */
+options levelb
+namespace lltargetnormalize expose warning change normalize
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetflow
+import lltargetremap
+
+/** An owned warning snapshot, located at the first original observation.
+ * The byte column follows the target's byte-offset source convention. */
+warning: class
+  _procedure = .string
+  _local = .int
+  _component = .string
+  _operation = .int
+  _origin = .llir..origin
+  _filename = .string
+  _first = .int
+  _last = .int
+  _line = .int
+  _column = .int
+  *: factory
+    arg routineName = .string, ownedIndex = .int, component = .string, operation = .int, at = .llir..origin
+    _procedure = routineName; _local = ownedIndex; _component = component; _operation = operation; _origin = at
+    _filename = at.filename(); _first = at.first(); _last = at.last(); _line = 1; _column = 1
+    source = at.sourcebytes()
+    do i = 0 to _first - 1
+      if <at..u8>(i) source = 10 then do; _line = _line + 1; _column = 1; end
+      else _column = _column + 1
+    end
+    return
+  code: method = .string
+    return 'LL_RXAS_ENTRY_READ'
+  procedure: method = .string
+    return _procedure
+  local: method = .int
+    return _local
+  component: method = .string
+    return _component
+  operation: method = .int
+    return _operation
+  origin: method = .llir..origin
+    return _origin
+  filename: method = .string
+    return _filename
+  first: method = .int
+    return _first
+  last: method = .int
+    return _last
+  line: method = .int
+    return _line
+  column: method = .int
+    return _column
+  message: method = .string
+    return 'owned local r' || _local || ' component ' || _component || ' may be observed before definition in ' || _procedure
+  diagnostic: method = .string
+    return _filename || ':' || _line || ':' || _column || ': ' || code() || ': ' || message()
+
+/** Normalize only flow-proved entry-dependent observations. A whole-cell NULL
+ * deliberately defines the existing VM reset state and can release/finalize
+ * recycled payloads. It is never inserted for an otherwise valid local.
+ * Input uncertainty, unsafe alternate/async entry or any failed stage retains
+ * the exact input; warnings and output publish together after validation.
+ * @param owner Exact checked source module.
+ * @param flow Exact live point/edge proof owner for that module.
+ * @param work Whole-request elementary work allowance.
+ * @param bytes Whole-request logical retained bytes.
+ */
+change: class
+  _owner = reference .lltarget..module
+  _flow = reference .lltargetflow..analysis
+  _status = .string
+  _message = .string
+  _worklimit = .int
+  _bytelimit = .int
+  _work = .int
+  _bytes = .int
+  _hasresult = .int
+  _result = .lltarget..module
+  _mapping = .int[]
+  _warnings = .warning[]
+  *: factory
+    arg owner = reference .lltarget..module, flow = reference .lltargetflow..analysis, work = 1000000, bytes = 67108864
+    _owner = owner; _flow = flow; _worklimit = work; _bytelimit = bytes; _status = 'building'
+    return
+  fail: method = .void
+    arg status = .string, message = .string
+    _status = status; _message = message
+    return
+  spend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _worklimit - _work then do; call fail('limit','normalization.work.exhausted'); return 0; end
+    _work = _work + amount; return 1
+  reserve: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _bytelimit - _bytes then do; call fail('limit','normalization.bytes.exhausted'); return 0; end
+    _bytes = _bytes + amount; return 1
+  run: method = .void
+    if _status <> 'building' then return
+    owner = _owner; flowref = _flow
+    item = .lltarget..record; body = .lltarget..body
+    witness = .lltargetflow..entryread; previous = .lltargetflow..entryread; selected = .lltargetflow..entryread[]
+    staged = .warning[]; functions = .int[]; locals = .int[]; observations = .int[]; anchors = .int[]; stagedmap = .int[]; operands = .object[]
+    operand = .lltarget..operand; remap = .lltargetremap..change; origin = .llir..origin
+    profile_ref = reference .lltargettransfer..profile
+    i = .int; j = .int; found = .int; fn = .int; ownedIndex = .int; next = .int; slot = .int
+    a = .int; b = .int; value = .int; first = .int; mapped = .int; flowid = .int
+    do
+      source = .lltarget..module; proof = .lltargetflow..analysis
+      if _worklimit < 1 | _bytelimit < 1 then do; call fail('limit','normalization.budgets.must.be.positive'); return; end
+      if <refvalid>(owner) = 0 then do; call fail('invalid','normalization.owner.expired'); return; end
+      source = dereference owner; _result = source; _hasresult = 1
+      if source.valid() = 0 then do; call fail('invalid',source.error()); return; end
+      if <refvalid>(flowref) = 0 then do; call fail('invalid','normalization.flow.expired'); return; end
+      proof = dereference flowref
+      if proof.status() <> 'ok' then do; call fail(proof.status(),proof.message()); return; end
+      if proof.matches(owner) = 0 then do; call fail('invalid','normalization.flow.foreign'); return; end
+      flowid = proof.identity()
+      /* Absence of witnesses from an incomplete analysis is not a proof. */
+      do i = 1 to source.procedures()
+        if spend(1) = 0 then return
+        body = source.procedure(i); fn = body.functionid()
+        if proof.complete(fn,'entry-normalization') = 0 then do
+          call fail('keep','normalization.entry.unproved: ' || proof.unknownreason(fn,'entry-normalization')); return
+        end
+      end
+      do i = 1 to proof.entryobservations()
+        if spend(1) = 0 then return
+        witness = proof.entryobservation(i)
+        if witness.valid() = 0 then do; call fail('invalid','normalization.witness.expired'); return; end
+        fn = witness.function(); ownedIndex = witness.ownedindex(); body = source.body(fn); item = source.at(witness.operation())
+        if witness.bank() <> 'r' | ownedIndex < 0 | ownedIndex >= body.locals() | item.procedureid() <> fn then do
+          call fail('invalid','normalization.witness.not.owned.base'); return
+        end
+        found = 0
+        do j = 1 to selected[0]
+          if spend(1) = 0 then return
+          previous = selected[j]
+          if previous.function() = fn & previous.ownedindex() = ownedIndex & previous.domainkey() = witness.domainkey() then do; found = j; leave; end
+        end
+        if found > 0 then do
+          previous = selected[found]
+          if witness.operation() < previous.operation() then selected[found] = witness
+        end
+        else do
+          if reserve(160) = 0 then return
+          selected[selected[0] + 1] = witness
+        end
+      end
+      if selected[0] = 0 then do; call fail('keep','normalization.no.entry.read'); return; end
+      /* One prelude clear per owned base; first observation supplies origin. */
+      do i = 1 to selected[0]
+        witness = selected[i]; fn = witness.function(); ownedIndex = witness.ownedindex(); found = 0
+        do j = 1 to functions[0]
+          if spend(1) = 0 then return
+          if functions[j] = fn & locals[j] = ownedIndex then do; found = j; leave; end
+        end
+        if found = 0 then do
+          if reserve(32) = 0 then return
+          next = functions[0] + 1; functions[next] = fn; locals[next] = ownedIndex; observations[next] = witness.operation()
+        end
+        else if witness.operation() < observations[found] then observations[found] = witness.operation()
+      end
+      /* Stable procedure/local order also fixes multiple insertions at anchor. */
+      do a = 2 to functions[0]
+        b = a
+        do while b > 1
+          if spend(1) = 0 then return
+          if functions[b - 1] < functions[b] then leave
+          if functions[b - 1] = functions[b] & locals[b - 1] <= locals[b] then leave
+          value = functions[b - 1]; functions[b - 1] = functions[b]; functions[b] = value
+          value = locals[b - 1]; locals[b - 1] = locals[b]; locals[b] = value
+          value = observations[b - 1]; observations[b - 1] = observations[b]; observations[b] = value
+          b = b - 1
+        end
+      end
+      graphref = source.ir(); graph = dereference graphref; storeref = graph.storage(); store = dereference storeref
+      do i = 1 to selected[0]
+        witness = selected[i]; origin = witness.origin(); bits = origin.filename() as .binary; key = witness.domainkey() as .binary
+        if reserve(160 + <blen>(bits) + <blen>(key)) = 0 then return
+        if spend(origin.first() + 1) = 0 then return
+      end
+      do i = 1 to functions[0]
+        body = source.body(functions[i])
+        if body.records() < 1 then do; call fail('invalid','normalization.missing.entry.record'); return; end
+        item = body.record(1); anchors[i] = item.id(); slot = 0
+        do j = 1 to store.count(5)
+          if spend(1) = 0 then return
+          if store.get(5,j,1) = functions[i] & store.text(store.get(5,j,3)) = ('r' || locals[i]) then do; slot = j; leave; end
+        end
+        if slot = 0 then do; call fail('invalid','normalization.owned.slot.missing'); return; end
+        operand = .lltarget..operand.bound(store.identity(),functions[i],slot,'r',locals[i])
+        operands[i] = operand as .object
+      end
+      if reserve(graph.operations() * 8) = 0 then return
+      if spend(source.records()) = 0 then return
+      profile_ref = proof.operationalprofile()
+      remap = .lltargetremap..change(owner,_worklimit - _work,_bytelimit - _bytes)
+      ignored = remap.useprofile(profile_ref)
+      do i = 1 to functions[0]
+        operand = operands[i] as .lltarget..operand
+        ignored = remap.insertnullbefore(anchors[i],operand,observations[i])
+      end
+      call remap.run()
+      if remap.status() <> 'changed' then do; call fail(remap.status(),remap.message()); return; end
+      if proof.matches(owner) = 0 | proof.identity() <> flowid then do; call fail('invalid','normalization.proof.changed'); return; end
+      candidate = remap.result()
+      do i = 1 to selected[0]
+        witness = selected[i]; body = source.body(witness.function()); mapped = remap.operation(witness.operation()); item = candidate.at(mapped)
+        staged[i] = .warning(body.name(),witness.ownedindex(),witness.domainkey(),mapped,item.origin())
+      end
+      do i = 1 to source.records(); item = source.record(i); stagedmap[item.id()] = remap.operation(item.id()); end
+      _result = candidate; _mapping = stagedmap; _warnings = staged; _status = 'changed'; _message = 'normalization.entry.reads.cleared'
+    on signal as problem
+      call fail('invalid','normalization.failed: ' || problem.name() || ': ' || problem.message())
+    end
+    return
+  status: method = .string
+    call run(); return _status
+  message: method = .string
+    call run(); return _message
+  reason: method = .string
+    return message()
+  result: method = .lltarget..module
+    call run()
+    if _hasresult = 0 then assembler signal "ERROR","LL_TARGET_NORMALIZE: input owner expired"
+    return _result
+  operation: method = .int
+    arg old = .int
+    call run()
+    if _status <> 'changed' then return old
+    return _mapping[old]
+  warnings: method = .int
+    call run(); return _warnings[0]
+  warning: method = .lltargetnormalize..warning
+    arg ordinal = .int
+    call run()
+    if ordinal < 1 | ordinal > _warnings[0] then assembler signal "ERROR","LL_TARGET_NORMALIZE: warning ordinal"
+    return _warnings[ordinal]
+
+normalize: procedure = .lltargetnormalize..change
+  arg owner = reference .lltarget..module, flow = reference .lltargetflow..analysis, work = 1000000, bytes = 67108864
+  return .change(owner,flow,work,bytes)

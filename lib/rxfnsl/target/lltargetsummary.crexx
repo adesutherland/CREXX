@@ -1,0 +1,667 @@
+/* cREXX License (MIT). Inferred procedure facts over shared target evidence. */
+options levelb
+namespace lltargetsummary expose analysis analyse summary effectfact returnfact
+import rxfnsb
+import llirgraph
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+
+boot: initialiser expose serial
+  serial = 0
+  return
+nextidentity: procedure = .int expose serial
+  if serial = 9223372036854775807 then assembler signal "ERROR","LL_TARGET_SUMMARY: identities exhausted"
+  serial = serial + 1
+  return serial
+
+/** Sparse conservative effect set. Missing families remain explicit unknowns;
+ * an unknown signal set does not erase an independently complete numeric set. */
+row: class
+  _family = .string[]
+  _kind = .string[]
+  _domain = .string[]
+  _operation = .int[]
+  _definite = .int[]
+  _unknown = .string[]
+  *: factory
+    return
+  count: method = .int
+    return _family[0]
+  family: method = .string
+    arg ordinal = .int
+    return _family[ordinal]
+  kind: method = .string
+    arg ordinal = .int
+    return _kind[ordinal]
+  domain: method = .string
+    arg ordinal = .int
+    return _domain[ordinal]
+  operation: method = .int
+    arg ordinal = .int
+    return _operation[ordinal]
+  definite: method = .int
+    arg ordinal = .int
+    return _definite[ordinal]
+  add: method = .int
+    arg family = .string, kind = .string, domain = .string, operation = 0, definite = 0
+    i = .int
+    do i = 1 to _family[0]
+      if _family[i] = family & _kind[i] = kind & _domain[i] = domain & _operation[i] = operation & _definite[i] = definite then return 0
+    end
+    call append(family,kind,domain,operation,definite)
+    return 1
+  append: method = .void
+    arg family = .string, kind = .string, domain = .string, operation = .int, definite = .int
+    i = _family[0] + 1; _family[i] = family; _kind[i] = kind; _domain[i] = domain; _operation[i] = operation; _definite[i] = definite
+    return
+  unknown: method = .int
+    arg family = .string
+    i = .int
+    do i = 1 to _unknown[0]; if _unknown[i] = family then return 0; end
+    _unknown[_unknown[0] + 1] = family
+    return 1
+  isunknown: method = .int
+    arg family = .string
+    do i = 1 to _unknown[0]; if _unknown[i] = family | _unknown[i] = '*' then return 1; end
+    return 0
+  unknowns: method = .int
+    return _unknown[0]
+  unknownat: method = .string
+    arg ordinal = .int
+    return _unknown[ordinal]
+  has: method = .int
+    arg family = .string, kind = .string, domain = '*'
+    do i = 1 to _family[0]
+      if _family[i] = family & _kind[i] = kind & (domain = '*' | _domain[i] = domain | _domain[i] = '*') then return 1
+    end
+    return 0
+  bytes: method = .int
+    i = .int
+    result = 64 + _family[0] * 80 + _unknown[0] * 16
+    do i = 1 to _family[0]; result = result + length(_family[i]) + length(_kind[i]) + length(_domain[i]); end
+    do i = 1 to _unknown[0]; result = result + length(_unknown[i]); end
+    return result
+  copy: method = .lltargetsummary..row
+    i = .int; ignored = .int
+    result = .row()
+    do i = 1 to _family[0]
+      call result.append(_family[i],_kind[i],_domain[i],_operation[i],_definite[i])
+    end
+    do i = 1 to _unknown[0]; ignored = result.unknown(_unknown[i]); end
+    return result
+
+effectfact: class
+  _owner = reference .lltargetsummary..analysis
+  _identity = .int
+  _may = .int
+  _must = .int
+  _unknown = .int
+  _reason = .string
+  _limited = .int
+  *: factory
+    arg owner = reference .analysis, may = .int, must = .int, unknown = .int, reason = '', limited = 0
+    _owner = owner; parent = dereference owner; _identity = parent.identity()
+    _may = may; _must = must; _unknown = unknown
+    _reason = reason; _limited = limited
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner; return owner.valid() & owner.identity() = _identity
+  status: method = .string
+    if valid() = 0 then return 'invalid'
+    if _limited then return 'limit'
+    if _unknown then return 'unknown'
+    return 'proved'
+  reason: method = .string
+    if valid() = 0 then return 'target.summary.owner.expired.or.replaced'
+    if _reason <> '' then return _reason
+    if _unknown then return 'target.summary.effect.incomplete'
+    return ''
+  may: method = .int
+    if valid() = 0 then return 1
+    return _may | _unknown
+  must: method = .int
+    return valid() & _must
+  unknown: method = .int
+    return valid() = 0 | _unknown
+
+returnfact: class
+  _owner = reference .lltargetsummary..analysis
+  _identity = .int
+  _known = .int
+  _literal = .lltarget..operand
+  _reason = .string
+  *: factory
+    arg owner = reference .analysis, known = .int, literal = .lltarget..operand, reason = .string
+    _owner = owner; parent = dereference owner; _identity = parent.identity()
+    _known = known; _literal = literal; _reason = reason
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner; return owner.valid() & owner.identity() = _identity
+  status: method = .string
+    if valid() = 0 then return 'invalid'
+    if _known then return 'proved'
+    return 'unknown'
+  reason: method = .string
+    if valid() = 0 then return 'target.summary.owner.expired.or.replaced'
+    return _reason
+  known: method = .int
+    return valid() & _known
+  literal: method = .lltarget..operand
+    if known() then return _literal
+    return .lltarget..operand()
+
+/** An immutable procedure/mode view. Direct effects do not include callee
+ * bodies; transitive may effects include the exact locally bound closure. */
+summary: class
+  _owner = reference .lltargetsummary..analysis
+  _identity = .int
+  _function = .int
+  _mode = .string
+  *: factory
+    arg owner = reference .analysis, functionid = .int, mode = .string
+    _owner = owner; parent = dereference owner; _identity = parent.identity()
+    _function = functionid; _mode = mode
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner; return owner.valid() & owner.identity() = _identity
+  status: method = .string
+    if valid() then return 'ok'
+    return 'invalid'
+  reason: method = .string
+    if valid() then return ''
+    return 'target.summary.owner.expired.or.replaced'
+  require: method = .void
+    if valid() = 0 then assembler signal "ERROR","LL_TARGET_SUMMARY: expired or replaced procedure view"
+    return
+  function: method = .int
+    call require()
+    return _function
+  mode: method = .string
+    call require()
+    return _mode
+  effect: method = .lltargetsummary..effectfact
+    arg family = .string, kind = .string, domain = '*', depth = 64
+    call require(); owner = dereference _owner; return owner.effect(_function,_mode,family,kind,domain,depth)
+  outwardeffect: method = .lltargetsummary..effectfact
+    arg family = .string, kind = .string, domain = '*'
+    call require(); owner = dereference _owner; return owner.outwardeffect(_function,_mode,family,kind,domain)
+  calls: method = .int
+    call require(); owner = dereference _owner; return owner.calls(_function)
+  calltarget: method = .int
+    arg ordinal = .int
+    call require(); owner = dereference _owner; return owner.calltarget(_function,ordinal)
+  returns: method = .int
+    call require(); owner = dereference _owner; return owner.returns(_function)
+  returnoperation: method = .int
+    arg ordinal = .int
+    call require(); owner = dereference _owner; return owner.returnoperation(_function,ordinal)
+  returnvalue: method = .lltargetsummary..returnfact
+    arg domain = .int
+    call require(); owner = dereference _owner; return owner.returnvalue(_function,domain)
+  mayreturn: method = .lltargetsummary..effectfact
+    call require(); owner = dereference _owner; return owner.returnpossible(_function)
+
+/** Module analysis shares the exact point/edge owner and its dependency
+ * identity. Fixed points grow may sets from direct events; child uncertainty
+ * widens affected families, never establishes a must effect or constant. */
+analysis: class
+  _flow = reference .lltargetflow..analysis
+  _flowid = .int
+  _identity = .int
+  _status = .string
+  _message = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _direct = .object[]
+  _transitive = .object[]
+  _callfunction = .int[]
+  _calloperation = .int[]
+  _calltarget = .int[]
+  _retfunction = .int[]
+  _retoperation = .int[]
+  _retaction = .int[]
+  _returnpossible = .int[]
+  _returnunknown = .int[]
+  _querywork = .int
+  _querylimit = .int
+  _queryreason = .string
+  *: factory
+    arg flow = reference .lltargetflow..analysis, work = 1000000, bytes = 67108864
+    _flow = flow; _identity = nextidentity(); _status = 'building'
+    _worklimit = work; _bytelimit = bytes
+    return
+  fail: method = .int
+    arg status = .string, message = .string
+    _status = status; _message = message
+    return 0
+  spend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _worklimit - _work then return fail('limit','target.summary.work')
+    _work = _work + amount
+    return 1
+  reserve: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _bytelimit - _bytes then return fail('limit','target.summary.bytes')
+    _bytes = _bytes + amount
+    return 1
+  queryspend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _worklimit - _work - _querywork then do; _querylimit = 1; _queryreason = 'target.summary.must.work'; return 0; end
+    _querywork = _querywork + amount
+    return 1
+  boundchild: method = .int
+    arg instruction = .lltargettransfer..instruction, action = .lltargettransfer..action
+    literal = .lltarget..operand(); refview = .lltargettransfer..refview; i = .int
+    flow = dereference _flow; source_ref = flow.owner(); source = dereference source_ref
+    if action.sourcekind() = 'literal' then literal = action.literal()
+    else if action.sourcekind() = 'reference' then do
+      do i = 1 to instruction.references()
+        refview = instruction.ref(i)
+        if refview.id() = action.sourceid() then literal = refview.operand()
+      end
+    end
+    else do i = 1 to instruction.references()
+      refview = instruction.ref(i)
+      if refview.kind() = 'procedure' then do
+        if literal.kind() <> '' then return 0
+        literal = refview.operand()
+      end
+    end
+    if literal.kind() <> 'P' then return 0
+    return source.procedureid(literal.text())
+  symboliceffect: method = .void
+    arg expose result = .row, instruction = .lltargettransfer..instruction, refid = .int, operation = .string, key = .string, profile = .lltargettransfer..profile, ordinal = .int
+    ignored = .int; i = .int
+    if refid = 0 then return
+    refview = profile.ref(refid)
+    if refview.bank() = '' then return
+    /* Point facts are at instruction entry. A compound can change active
+     * bindings before this subevent. Until a prefix binding proof is queried,
+     * widen the affected symbolic families instead of attributing to entry. */
+    if refview.anchor() = 'active' then do i = 1 to ordinal - 1
+      preceding = instruction.action(i)
+      if wordpos(preceding.kind(),'link unlink swap unknown') > 0 then do
+        ignored = result.unknown('arguments'); ignored = result.unknown('globals'); ignored = result.unknown('ownership'); return
+      end
+    end
+    flow = dereference _flow
+    location = flow.storageat(instruction.opid(),refview.bank(),refview.index())
+    storage = location.active()
+    if refview.anchor() = 'base' then storage = location.base()
+    else if refview.anchor() = 'entry' then storage = location.entry()
+    else if refview.anchor() <> 'active' then storage = 0
+    bank = flow.storagebank(storage)
+    if storage = 0 | bank = '' then do
+      ignored = result.unknown('arguments'); ignored = result.unknown('globals'); ignored = result.unknown('ownership'); return
+    end
+    if bank = 'a' then ignored = result.add('arguments',operation,'argument.' || flow.storageindex(storage) || '.' || key,instruction.opid(),0)
+    else if bank = 'g' then ignored = result.add('globals',operation,'global.' || flow.revision() || '.' || flow.storageindex(storage) || '.' || key,instruction.opid(),0)
+    /* Without call-site no-alias premises, mutation through a borrowed or
+     * global storage can also be visible through another incoming alias. */
+    if (operation = 'write' | operation = 'release') & (bank = 'a' | bank = 'g') then do
+      ignored = result.unknown('arguments'); ignored = result.unknown('globals')
+    end
+    return
+  eventrow: method = .void
+    arg expose result = .row, instruction = .lltargettransfer..instruction, action = .lltargettransfer..action, profile = .lltargettransfer..profile
+    domain = .lltargettransfer..domain; refview = .lltargettransfer..refview
+    ignored = .int
+    kind = action.kind(); family = 'components'; key = '*'; whole = action.domain() = 0
+    if action.domain() > 0 then do
+      domain = profile.domain(action.domain()); key = domain.key()
+      whole = domain.kind() = 'whole'
+      if domain.kind() = 'context' then family = 'numeric'
+      else if domain.kind() = 'flag' then family = 'flags'
+    end
+    observedfamily = family
+    select kind
+      when 'read' then operation = 'read'
+      when 'observe' then do; family = 'observations'; operation = 'read'; end
+      when 'transport' then operation = 'write'
+      when 'write' then operation = 'write'
+      when 'clear' then operation = 'write'
+      when 'derive' then operation = 'write'
+      when 'flagwrite' then do; family = 'flags'; operation = 'write'; end
+      when 'context' then do; family = 'numeric'; operation = 'write'; end
+      when 'policy' then do; family = 'signals'; operation = 'policy'; key = action.detail(); end
+      when 'raise' then do
+        family = 'signals'; operation = 'raise'; name = action.literal()
+        if action.sourcekind() = 'literal' & name.kind() = 'S' then key = name.text()
+        else do; key = '*'; ignored = result.unknown('signals'); end
+      end
+      when 'edge' then do; family = 'control'; operation = action.detail(); end
+      when 'link' then do; family = 'bindings'; operation = 'change'; end
+      when 'unlink' then do; family = 'bindings'; operation = 'change'; end
+      when 'swap' then do; family = 'bindings'; operation = 'change'; end
+      when 'lifetime' then do; family = 'ownership'; operation = 'release'; end
+      when 'call' then do; family = 'calls'; operation = 'call'; key = action.detail(); end
+      when 'return' then do; family = 'return'; operation = 'return'; end
+      when 'unknown' then do; ignored = result.unknown('*'); return; end
+      otherwise do; ignored = result.unknown('effects'); return; end
+    end
+    definite = action.certainty() = 'must' & action.path() <> 'failure'
+    if definite & action.path() = 'normal' then do
+      flow = dereference _flow; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+      do e = 1 to cfg.outedges(instruction.opid())
+        edge = cfg.outedge(instruction.opid(),e)
+        if edge.role() <> 'normal' & edge.role() <> 'table' & edge.phase() <> 'none' & edge.targetblock() > 0 then definite = 0
+      end
+    end
+    ignored = result.add(family,operation,key,instruction.opid(),definite)
+    if kind = 'observe' then ignored = result.add(observedfamily,'read',key,instruction.opid(),definite)
+    if whole & wordpos(kind,'read observe transport write clear derive') > 0 then do
+      ignored = result.add('flags',operation,'*',instruction.opid(),definite)
+      if kind = 'transport' & action.sourcekind() = 'reference' then ignored = result.add('flags','read','*',instruction.opid(),0)
+    end
+    if action.certainty() = 'unknown' then ignored = result.unknown(family)
+    call symboliceffect(result,instruction,action.subject(),operation,key,profile,action.ordinal())
+    if action.sourcekind() = 'reference' & wordpos(kind,'transport derive write flagwrite') > 0 then do
+      ignored = result.add(family,'read',key,instruction.opid(),0)
+      call symboliceffect(result,instruction,action.sourceid(),'read',key,profile,action.ordinal())
+    end
+    return
+  run: method = .void
+    if _status <> 'building' then return
+    direct = .row; result = .row; child = .row
+    action = .lltargettransfer..action; instruction = .lltargettransfer..instruction
+    f = .int; i = .int; j = .int; n = .int; c = .int; ignored = .int
+    target = .int; changed = .int; familyordinal = .int
+    do
+      if _worklimit < 1 | _bytelimit < 1 then do; ignored = fail('limit','target.summary.budgets'); return; end
+      if <refvalid>(_flow) = 0 then do; ignored = fail('invalid','target.summary.owner.expired'); return; end
+      flow = dereference _flow
+      if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.message()); return; end
+      _flowid = flow.identity(); source_ref = flow.owner(); source = dereference source_ref
+      profile_ref = flow.transfers(); profile = dereference profile_ref
+      cfg_ref = flow.cfg(); cfg = dereference cfg_ref; index_ref = cfg.index(); index = dereference index_ref
+      if reserve(index.functions() * 64) = 0 then return
+      do f = 2 to index.functions()
+        _direct[f] = .row() as .object; _returnpossible[f] = 0; _returnunknown[f] = 0
+        if cfg.normalcomplete(f) = 0 | cfg.exceptionalcomplete(f) = 0 | cfg.asynchronouscomplete(f) = 0 then _returnunknown[f] = 1
+      end
+      do i = 1 to source.records()
+        if spend(1) = 0 then return
+        record = source.record(i); f = record.procedureid()
+        if f < 2 | record.kind() = 'procedure' then iterate
+        instruction = profile.instruction(record.id()); direct = _direct[f] as .row
+        do familyordinal = 1 to 12
+          family = word('effects references components flags numeric signals order control values observations ownership calls',familyordinal)
+          if instruction.complete(family) = 0 then ignored = direct.unknown(family)
+        end
+        if cfg.projectedop(record.id()) = 0 then do; ignored = direct.unknown('control'); _direct[f] = direct as .object; iterate; end
+        if index.reachable(cfg.projectedblock(record.id())) = 0 then do; _direct[f] = direct as .object; iterate; end
+        do j = 1 to instruction.actions()
+          if spend(direct.count() + instruction.references() + 1) = 0 | reserve(128) = 0 then return
+          action = instruction.action(j); call eventrow(direct,instruction,action,profile)
+          if action.kind() = 'call' then do
+            n = _callfunction[0] + 1; _callfunction[n] = f; _calloperation[n] = record.id(); _calltarget[n] = boundchild(instruction,action)
+            if _calltarget[n] = 0 then do; ignored = direct.unknown('calls'); _returnunknown[f] = 1; end
+          end
+          if action.kind() = 'return' then do
+            n = _retfunction[0] + 1; _retfunction[n] = f; _retoperation[n] = record.id(); _retaction[n] = action.id()
+          end
+        end
+        if direct.isunknown('control') | direct.isunknown('signals') then _returnunknown[f] = 1
+        _direct[f] = direct as .object
+      end
+      do f = 2 to index.functions(); direct = _direct[f] as .row; _transitive[f] = direct.copy() as .object; end
+      changed = 1
+      do while changed
+        changed = 0
+        do c = 1 to _callfunction[0]
+          if spend(1) = 0 then return
+          target = _calltarget[c]; f = _callfunction[c]
+          if target > 0 then do
+            if _returnunknown[target] & _returnunknown[f] = 0 then do; _returnunknown[f] = 1; changed = 1; end
+          end
+        end
+      end
+      changed = 1
+      do while changed & _status = 'building'
+        changed = 0
+        do f = 2 to index.functions()
+          prior = _transitive[f] as .row; result = prior.copy()
+          do c = 1 to _callfunction[0]
+            if _callfunction[c] <> f then iterate
+            target = _calltarget[c]
+            if target = 0 then do; changed = changed | result.unknown('*'); iterate; end
+            prior = _transitive[target] as .row; child = prior.copy()
+            do n = 1 to child.count()
+              if spend(result.count() + 1) = 0 | reserve(96) = 0 then return
+              /* Callee argument symbols need a call-site binding before they
+               * can be renamed to the caller's formals or global aliases. */
+              if child.family(n) = 'arguments' then do; changed = changed | result.unknown('arguments'); iterate; end
+              changed = changed | result.add(child.family(n),child.kind(n),child.domain(n),0,0)
+            end
+            do n = 1 to child.unknowns(); changed = changed | result.unknown(child.unknownat(n)); end
+          end
+          _transitive[f] = result as .object
+        end
+      end
+      /* Least fixed point of finite normal-return paths. A recursive call
+       * with no returning base case cannot justify its own continuation. */
+      changed = 1
+      do while changed & _status = 'building'
+        changed = 0
+        do f = 2 to index.functions()
+          if _returnpossible[f] then iterate
+          if spend(index.blocks() + cfg.edges() + _callfunction[0] + 1) = 0 then return
+          if finitepath(f,cfg,index) then do; _returnpossible[f] = 1; changed = 1; end
+        end
+      end
+      _status = 'ok'
+      return
+      on signal as problem
+        if _status = 'building' then ignored = fail('invalid','target.summary.' || problem.name() || ': ' || problem.message())
+    end
+    return
+  finitepath: method = .int
+    arg functionid = .int, cfg = .lltargetcfg..graph, index = .llirgraph..index
+    reachable = .int[]; pending = .int[]; head = 1; b = .int
+    if index.blocks() > (_bytelimit - _bytes) / 16 then do; ignored = fail('limit','target.summary.path.bytes'); return 0; end
+    do b = 1 to index.blocks(); reachable[b] = 0; end
+    entry = index.functionentry(functionid); reachable[entry] = 1; pending[1] = entry
+    do while head <= pending[0]
+      if spend(1) = 0 then return 0
+      b = pending[head]; head = head + 1
+      do r = 1 to _retfunction[0]
+        if spend(1) = 0 then return 0
+        if _retfunction[r] = functionid & cfg.projectedblock(_retoperation[r]) = b then return 1
+      end
+      do e = 1 to cfg.edges()
+        if spend(1) = 0 then return 0
+        edge = cfg.edge(e)
+        if edge.sourceblock() <> b | edge.targetblock() = 0 then iterate
+        blocked = 0
+        if edge.role() = 'normal' | edge.role() = 'table' | edge.phase() = 'none' then do c = 1 to _callfunction[0]
+          if spend(1) = 0 then return 0
+          if _calloperation[c] <> edge.sourceop() then iterate
+          target = _calltarget[c]
+          if target > 0 then blocked = _returnpossible[target] = 0 & _returnunknown[target] = 0
+        end
+        if blocked then iterate
+        next = edge.targetblock()
+        if reachable[next] = 0 then do; reachable[next] = 1; pending[pending[0] + 1] = next; end
+      end
+    end
+    return 0
+  status: method = .string
+    call run()
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    call run()
+    if _status = 'ok' & valid() = 0 then return 'target.summary.owner.expired.or.replaced'
+    return _message
+  reason: method = .string
+    return message()
+  valid: method = .int
+    if _status <> 'ok' | <refvalid>(_flow) = 0 then return 0
+    flow = dereference _flow; return flow.valid() & flow.identity() = _flowid
+  identity: method = .int
+    return _identity
+  flow: method = reference .lltargetflow..analysis
+    return _flow
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+  procedure: method = .lltargetsummary..summary
+    arg functionid = .int, mode = 'transitive'
+    call run()
+    if valid() = 0 | functionid < 2 | functionid > _direct[0] | wordpos(mode,'direct transitive') = 0 then assembler signal "ERROR","LL_TARGET_SUMMARY: invalid procedure query"
+    return .summary(reference self,functionid,mode)
+  effect: method = .lltargetsummary..effectfact
+    arg functionid = .int, mode = .string, family = .string, kind = .string, domain = '*', depth = 64
+    call run(); current = .row
+    if valid() = 0 then return .effectfact(reference self,1,0,1)
+    if mode = 'direct' then current = _direct[functionid] as .row
+    else current = _transitive[functionid] as .row
+    may = current.has(family,kind,domain); unknown = current.isunknown(family)
+    if wordpos(family,'effects references components flags numeric signals order control values observations ownership calls arguments globals return bindings') = 0 then unknown = 1
+    if depth < 0 then assembler signal "ERROR","LL_TARGET_SUMMARY: negative must-query depth"
+    if may = 0 & unknown = 0 then return .effectfact(reference self,0,0,0)
+    if depth = 0 then return .effectfact(reference self,may,0,1,'target.summary.must.depth',1)
+    /* Each recursive step receives its own active vector. Preflight their
+     * worst permitted logical extent before the first vector is allocated. */
+    levels = min(depth,max(1,_direct[0])) + 2
+    if _direct[0] > (_bytelimit - _bytes) / 8 / levels then return .effectfact(reference self,may,0,1,'target.summary.must.bytes',1)
+    _querywork = 0; _querylimit = 0; _queryreason = ''
+    if queryspend(_direct[0]) = 0 then return .effectfact(reference self,may,0,1,_queryreason,1)
+    active = .int[]
+    do i = 1 to _direct[0]; active[i] = 0; end
+    must = mustproof(functionid,mode,family,kind,domain,active,0,depth)
+    if _querylimit then return .effectfact(reference self,may,0,1,_queryreason,1)
+    return .effectfact(reference self,may,must,unknown)
+  /** Outward effects describe an actual retained call after NORMAL return.
+   * Internal numeric/policy changes are isolated by that real frame. This
+   * query cannot authorize deleting an inline restoration mechanism. */
+  outwardeffect: method = .lltargetsummary..effectfact
+    arg functionid = .int, mode = .string, family = .string, kind = .string, domain = '*'
+    call run()
+    if valid() = 0 then return .effectfact(reference self,1,0,1)
+    if (family = 'numeric' & kind = 'write') | (family = 'signals' & kind = 'policy') then do
+      if _returnpossible[functionid] = 0 then return .effectfact(reference self,1,0,1)
+      return .effectfact(reference self,0,0,0)
+    end
+    return effect(functionid,mode,family,kind,domain)
+  /** A bounded sufficient must proof: each applicable normal return is
+   * dominated by a definite event, or by an exact child call with the same
+   * guarantee. Active recursion cannot prove its own guarantee. */
+  mustproof: method = .int
+    arg functionid = .int, mode = .string, family = .string, kind = .string, domain = .string, active = .int[], depth = .int, maximum = .int
+    direct = .row; edge = .lltargetcfg..edge
+    sourceblock = .int
+    if depth >= maximum then do; _querylimit = 1; _queryreason = 'target.summary.must.depth'; return 0; end
+    if queryspend(active[0] + 1) = 0 then return 0
+    if valid() = 0 | _returnpossible[functionid] = 0 | _returnunknown[functionid] then return 0
+    if active[functionid] then return 0
+    active[functionid] = 1
+    flow = dereference _flow; cfg_ref = flow.cfg(); cfg = dereference cfg_ref; index_ref = cfg.index(); index = dereference index_ref
+    if cfg.normalcomplete(functionid) = 0 | cfg.exceptionalcomplete(functionid) = 0 then return 0
+    direct = _direct[functionid] as .row
+    if direct.isunknown(family) then return 0
+    returns = 0
+    do r = 1 to _retfunction[0]
+      if queryspend(1) = 0 then return 0
+      if _retfunction[r] <> functionid then iterate
+      returns = returns + 1; covered = 0; targetblock = cfg.projectedblock(_retoperation[r])
+      do i = 1 to direct.count()
+        if queryspend(1) = 0 then return 0
+        if direct.family(i) <> family | direct.kind(i) <> kind | direct.definite(i) = 0 then iterate
+        if domain <> '*' & direct.domain(i) <> domain then iterate
+        sourceblock = cfg.projectedblock(direct.operation(i))
+        /* Same-operation subevent order needs a separate event-order proof. */
+        if sourceblock <> targetblock & index.dominates(sourceblock,targetblock) then covered = 1
+      end
+      if mode = 'transitive' & covered = 0 then do c = 1 to _callfunction[0]
+        if queryspend(1) = 0 then return 0
+        if _callfunction[c] <> functionid | _calltarget[c] = 0 then iterate
+        sourceblock = cfg.projectedblock(_calloperation[c])
+        if sourceblock = targetblock | index.dominates(sourceblock,targetblock) = 0 then iterate
+        safe = 1
+        if queryspend(1) = 0 then return 0
+        do e = 1 to cfg.outedges(_calloperation[c])
+          /* Indexed edge lookup follows e linked rows. Charge its full scan. */
+          if queryspend(e) = 0 then return 0
+          edge = cfg.outedge(_calloperation[c],e)
+          if edge.role() <> 'normal' & edge.role() <> 'table' & edge.phase() <> 'none' & edge.targetblock() > 0 then safe = 0
+        end
+        if safe then do
+          if mustproof(_calltarget[c],'transitive',family,kind,domain,active,depth + 1,maximum) then covered = 1
+        end
+      end
+      if covered = 0 then return 0
+    end
+    return returns > 0
+  calls: method = .int
+    arg functionid = .int
+    count = 0
+    do i = 1 to _callfunction[0]; if _callfunction[i] = functionid then count = count + 1; end
+    return count
+  calltarget: method = .int
+    arg functionid = .int, ordinal = .int
+    count = 0
+    do i = 1 to _callfunction[0]
+      if _callfunction[i] <> functionid then iterate
+      count = count + 1
+      if count = ordinal then return _calltarget[i]
+    end
+    return 0
+  returns: method = .int
+    arg functionid = .int
+    count = 0
+    do i = 1 to _retfunction[0]; if _retfunction[i] = functionid then count = count + 1; end
+    return count
+  returnoperation: method = .int
+    arg functionid = .int, ordinal = .int
+    count = 0
+    do i = 1 to _retfunction[0]
+      if _retfunction[i] <> functionid then iterate
+      count = count + 1
+      if count = ordinal then return _retoperation[i]
+    end
+    return 0
+  returnpossible: method = .lltargetsummary..effectfact
+    arg functionid = .int
+    call run()
+    return .effectfact(reference self,_returnpossible[functionid],0,_returnunknown[functionid])
+  returnvalue: method = .lltargetsummary..returnfact
+    arg functionid = .int, domainid = .int
+    call run()
+    literal = .lltarget..operand(); candidate = .lltarget..operand()
+    action = .lltargettransfer..action; refview = .lltargettransfer..refview
+    flow = dereference _flow; profile_ref = flow.transfers(); profile = dereference profile_ref
+    if valid() = 0 then return .returnfact(reference self,0,literal,'target.summary.owner.invalid')
+    if _returnpossible[functionid] = 0 then return .returnfact(reference self,0,literal,'target.summary.no.finite.normal.return')
+    if _returnunknown[functionid] then return .returnfact(reference self,0,literal,'target.summary.return.paths.unknown')
+    count = 0
+    do i = 1 to _retfunction[0]
+      if _retfunction[i] <> functionid then iterate
+      count = count + 1; action = profile.action(_retaction[i]); instruction = profile.instruction(_retoperation[i])
+      candidate = .lltarget..operand()
+      if action.domain() <> domainid then return .returnfact(reference self,0,literal,'target.summary.return.component.unknown')
+      if action.sourcekind() = 'literal' then candidate = action.literal()
+      else do j = 1 to instruction.references()
+        refview = instruction.ref(j)
+        if refview.id() <> action.subject() & refview.id() <> action.sourceid() then iterate
+        fact = flow.componentat(_retoperation[i],refview.bank(),refview.index(),domainid)
+        if fact.known() then candidate = fact.literal()
+      end
+      if candidate.kind() = '' then return .returnfact(reference self,0,literal,'target.summary.return.value.unknown')
+      if count = 1 then literal = candidate
+      else if literal.kind() <> candidate.kind() | literal.index() <> candidate.index() | bin2x(literal.bytes()) <> bin2x(candidate.bytes()) then return .returnfact(reference self,0,literal,'target.summary.return.values.conflict')
+    end
+    if count = 0 then return .returnfact(reference self,0,literal,'target.summary.no.normal.return')
+    return .returnfact(reference self,1,literal,'')
+
+analyse: procedure = .lltargetsummary..analysis
+  arg flow = reference .lltargetflow..analysis, work = 1000000, bytes = 67108864
+  return .analysis(flow,work,bytes)

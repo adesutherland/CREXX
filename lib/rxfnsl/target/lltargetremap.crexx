@@ -1,0 +1,1008 @@
+/* cREXX License (MIT). Typed target remapping and atomic insertion. */
+options levelb
+namespace lltargetremap expose mapping recordchange change copyorigin modulemap modulebinding globalref mappedrecord
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import llrxascatalog
+
+bad: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** Copy all L contributors in topological order. Sources/origins are
+ * cached by their existing owner IDs; no returned handle borrows a local arena. */
+copyorigin: procedure = .llir..origin
+  arg owner = reference .llir..module, old = .llir..origin, target = reference .lltarget..draft, source_ref = reference .object[], origin_ref = reference .object[]
+  i = .int; j = .int; fileid = .int; parentid = .int
+  file = .llir..sourcefile; at = .llir..origin; parent = .llir..origin; copied = .llir..origin
+  parents = .object[]
+  sources = dereference source_ref; origins = dereference origin_ref; draft = dereference target
+  graph = dereference owner; store_ref = graph.storage(); store = dereference store_ref
+  do i = origins[0] + 1 to old.id()
+    if draft.preflight(1,0) = 0 then return draft.synthetic('failed provenance')
+    at = .llir..origin(store_ref,i); fileid = store.get(9,i,1)
+    if fileid > sources[0] then do; file = draft.source(at.filename(),at.sourcebytes()); sources[fileid] = file as .object; end
+    else if sources[fileid] is .llir..sourcefile then file = sources[fileid] as .llir..sourcefile
+    else do; file = draft.source(at.filename(),at.sourcebytes()); sources[fileid] = file as .object; end
+    if draft.preflight(at.parents(),0) = 0 then return draft.synthetic('failed provenance')
+    call objectarraydrop parents
+    do j = 1 to at.parents()
+      parent = at.parent(j); parentid = parent.id(); parents[j] = origins[parentid]
+    end
+    copied = draft.contributingorigin(file,at.first(),at.last(),at.kind(),parents)
+    origins[i] = copied as .object
+  end
+  return origins[old.id()] as .llir..origin
+
+/** Borrow one sealed operational profile from the exact source owner. Missing
+ * catalogue coverage never becomes an empty activation-observation set. */
+relocationpremise: class
+  _owner = reference .lltarget..module
+  _profile = reference .lltargettransfer..profile
+  _revision = .int
+  _identity = .int
+  _provided = .int
+  _accepted = .int
+  *: factory
+    arg owner = reference .lltarget..module, ?profile_ref = reference .lltargettransfer..profile
+    _owner = owner
+    if <refvalid>(owner) = 0 then return
+    source = dereference owner
+    if source.valid() = 0 then return
+    _revision = source.identity(); _accepted = 1
+    if ?profile_ref = 0 then return
+    _provided = 1; _profile = profile_ref
+    if <refvalid>(profile_ref) = 0 then do; _accepted = 0; return; end
+    view = dereference profile_ref
+    if view.sealed() = 0 then do; _accepted = 0; return; end
+    if view.matches(owner) = 0 then do; _accepted = 0; return; end
+    _identity = view.identity()
+    return
+  valid: method = .int
+    if _accepted = 0 | <refvalid>(_owner) = 0 then return 0
+    source = dereference _owner
+    if source.valid() = 0 | source.identity() <> _revision then return 0
+    if _provided = 0 then return 1
+    if <refvalid>(_profile) = 0 then return 0
+    profile_ref = _profile; view = dereference profile_ref
+    return view.matches(_owner) & view.identity() = _identity
+  provided: method = .int
+    return _provided
+  identity: method = .int
+    return _identity
+  profile: method = reference .lltargettransfer..profile
+    if valid() = 0 | _provided = 0 then call bad('LL_TARGET_OWNER: relocation profile unavailable')
+    return _profile
+  querywork: method = .int
+    /* Unknown rows are unique across the fifteen supported transfer families. */
+    return 16
+  reason: method = .string
+    arg opid = .int
+    if valid() = 0 then return 'remap.relocation.profile.invalid'
+    if _provided = 0 then return 'remap.relocation.unknown'
+    profile_ref = _profile; view = dereference profile_ref
+    if view.premise() = 'canonical' then return 'remap.relocation.unknown'
+    if view.complete(opid,'relocation') = 0 then return 'remap.relocation.unknown'
+    return ''
+
+recordchange: class
+  _evidence = .relocationpremise
+  _hasevidence = .int
+  _status = .string
+  _message = .string
+  _kind = .string
+  _opcode = .int
+  _fields = .object[]
+  _origin = .llir..origin
+  _target = reference .lltarget..bodydraft
+  _targetstore = reference .llir..arena
+  _targetfunction = .int
+  _targetrevision = .int
+  _hastarget = .int
+  *: factory
+    arg status = .string, message = .string, kind = .string, opcode = .int, fields = .object[], origin = .llir..origin, ?evidence = .relocationpremise
+    _status = status; _message = message; _kind = kind; _opcode = opcode; _fields = fields; _origin = origin
+    if ?evidence then do; _evidence = evidence; _hasevidence = 1; end
+    return
+  /** Successful direct results borrow the exact destination as well as their
+   * source premises. A different body in the same arena is a replacement. */
+  bound: factory
+    arg status = .string, message = .string, kind = .string, opcode = .int, fields = .object[], origin = .llir..origin, evidence = .relocationpremise, target = reference .lltarget..bodydraft
+    _status = status; _message = message; _kind = kind; _opcode = opcode; _fields = fields; _origin = origin
+    _evidence = evidence; _hasevidence = 1; _target = target; _hastarget = 1
+    if status <> 'ok' then return
+    if <refvalid>(target) = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: rewrite destination expired'; return; end
+    destination = dereference target; _targetfunction = destination.functionid()
+    if _targetfunction < 2 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: rewrite destination invalid'; return; end
+    _targetstore = destination.storage()
+    if <refvalid>(_targetstore) = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: rewrite destination storage expired'; return; end
+    store = dereference _targetstore; _targetrevision = store.identity()
+    return
+  targetvalid: method = .int
+    if _hastarget = 0 then return 1
+    if <refvalid>(_target) = 0 | <refvalid>(_targetstore) = 0 then return 0
+    destination = dereference _target
+    if destination.functionid() <> _targetfunction then return 0
+    current = destination.storage(); store = dereference _targetstore
+    if (current <refsame> _targetstore) = 0 | store.identity() <> _targetrevision then return 0
+    return _origin.valid() & _origin.belongs(_targetstore)
+  status: method = .string
+    if _status = 'ok' & _hasevidence then do; if _evidence.valid() = 0 then return 'invalid'; end
+    if _status = 'ok' & targetvalid() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    if _status = 'ok' & _hasevidence then do; if _evidence.valid() = 0 then return 'LL_TARGET_OWNER: stale relocation profile'; end
+    if _status = 'ok' & targetvalid() = 0 then return 'LL_TARGET_OWNER: stale rewrite destination'
+    return _message
+  kind: method = .string
+    return _kind
+  opcode: method = .int
+    return _opcode
+  fields: method = .object[]
+    if status() <> 'ok' then call bad('LL_TARGET_REMAP: unavailable rewritten fields')
+    return _fields
+  origin: method = .llir..origin
+    if status() <> 'ok' then call bad('LL_TARGET_REMAP: unavailable rewritten origin')
+    return _origin
+
+/** A checked source-to-draft map. Missing required identities never silently
+ * retain a foreign label, slot, source/clause or provenance reference. A
+ * supplied profile describes source observations; it does not prove inlining. */
+mapping: class
+  _owner = reference .lltarget..module
+  _target = reference .lltarget..bodydraft
+  _targetstore = reference .llir..arena
+  _targetrevision = .int
+  _targetfunction = .int
+  _revision = .int
+  _catalog = .string
+  _relocation = .relocationpremise
+  _started = .int
+  _status = .string
+  _message = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _old = .lltarget..operand[]
+  _new = .lltarget..operand[]
+  _originpresent = .int[]
+  _neworigin = .llir..origin[]
+  _steps = .int[]
+  _clauses = .int[]
+  _stepold = .int[]
+  _clauseold = .int[]
+  *: factory
+    arg owner = reference .lltarget..module, target = reference .lltarget..bodydraft, work = 1000000, bytes = 67108864
+    _owner = owner; _target = target; _worklimit = work; _bytelimit = bytes; _status = 'ok'
+    if <refvalid>(owner) = 0 | <refvalid>(target) = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: remap input expired'; return; end
+    source = dereference owner; destination = dereference target
+    if source.valid() = 0 | destination.functionid() < 2 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: remap input invalid'; return; end
+    _targetfunction = destination.functionid()
+    _targetstore = destination.storage()
+    if <refvalid>(_targetstore) = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: remap destination storage expired'; return; end
+    targetstore = dereference _targetstore; _targetrevision = targetstore.identity()
+    if _targetfunction > targetstore.count(1) | targetstore.error() <> '' then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: remap destination function invalid'; return; end
+    _revision = source.identity(); catalog = .llrxascatalog..catalog(); _catalog = catalog.fingerprint()
+    if work < 1 | bytes < 1 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap budgets'; end
+    _relocation = .relocationpremise(owner)
+    if _status = 'ok' & _relocation.valid() = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: relocation profile is not sealed for source owner'; end
+    if _status = 'ok' then do; _work = 1; _bytes = 96; if bytes < _bytes then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap profile'; end; end
+    return
+  /** Attach an exact sealed operational profile before the first rewrite.
+   * A required reference keeps the imported B method contract explicit. */
+  useprofile: method = .int
+    arg profile_ref = reference .lltargettransfer..profile
+    if _status <> 'ok' then return 0
+    if valid() = 0 then do; call reject('invalid','LL_TARGET_OWNER: stale remap input'); return 0; end
+    if _started | _relocation.provided() then do; call reject('invalid','LL_TARGET_REMAP: relocation profile already fixed'); return 0; end
+    if reserve(96,1) = 0 then return 0
+    evidence = .relocationpremise(_owner,profile_ref)
+    if evidence.valid() = 0 then do; call reject('invalid','LL_TARGET_OWNER: relocation profile is not sealed for source owner'); return 0; end
+    _relocation = evidence
+    return 1
+  reserve: method = .int
+    arg bytes = .int, work = .int
+    if _status <> 'ok' then return 0
+    if bytes < 0 | work < 0 | bytes > _bytelimit - _bytes | work > _worklimit - _work then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap work/bytes'; return 0
+    end
+    _bytes = _bytes + bytes; _work = _work + work
+    return 1
+  reject: method = .void
+    arg state = .string, message = .string
+    if _status = 'ok' then do; _status = state; _message = message; end
+    return
+  valid: method = .int
+    if _status <> 'ok' | <refvalid>(_owner) = 0 | <refvalid>(_target) = 0 then return 0
+    if _relocation.valid() = 0 then return 0
+    source = dereference _owner; catalog = .llrxascatalog..catalog(); destination = dereference _target
+    if destination.functionid() <> _targetfunction then return 0
+    if <refvalid>(_targetstore) = 0 then return 0
+    other = destination.storage(); targetstore = dereference _targetstore
+    return source.valid() & source.identity() = _revision & catalog.fingerprint() = _catalog & (other <refsame> _targetstore) & targetstore.identity() = _targetrevision
+  status: method = .string
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    if _status = 'ok' & valid() = 0 then return 'LL_TARGET_OWNER: remap input replaced'
+    return _message
+  bind: method = .int
+    arg old = .lltarget..operand, replacement = .lltarget..operand
+    if valid() = 0 then return 0
+    if old.kind() <> replacement.kind() | wordpos(old.kind(),'R L P') = 0 then do; call reject('invalid','LL_TARGET_REMAP: typed binding mismatch'); return 0; end
+    source = dereference _owner; destination = dereference _target
+    if old.kind() = 'R' then do
+      if old.owner() <> _revision then do; call reject('invalid','LL_TARGET_OWNER: foreign source register'); return 0; end
+      checked = destination.reg(replacement.bank(),replacement.index())
+      if checked.owner() <> replacement.owner() | checked.procedureid() <> replacement.procedureid() | checked.slotid() <> replacement.slotid() then do; call reject('invalid','LL_TARGET_OWNER: foreign destination register'); return 0; end
+    end
+    do i = 1 to _old[0]
+      if reserve(0,1) = 0 then return 0
+      prior = _old[i]
+      same = prior.kind() = old.kind() & prior.bytes() = old.bytes()
+      if old.kind() = 'R' then same = same & prior.procedureid() = old.procedureid() & prior.bank() = old.bank() & prior.index() = old.index()
+      if same = 0 then iterate
+      prior = _new[i]
+      if prior.kind() <> replacement.kind() | prior.bank() <> replacement.bank() | prior.index() <> replacement.index() | prior.bytes() <> replacement.bytes() | prior.owner() <> replacement.owner() | prior.procedureid() <> replacement.procedureid() then call reject('invalid','LL_TARGET_REMAP: conflicting binding')
+      return _status = 'ok'
+    end
+    if reserve(128 + old.length() + replacement.length(),1) = 0 then return 0
+    id = _old[0] + 1; _old[id] = old; _new[id] = replacement
+    return 1
+  label: method = .int
+    arg old = .string, replacement = .string
+    return bind(.lltarget..operand.symbol(old),.lltarget..operand.symbol(replacement))
+  procedure: method = .int
+    arg old = .string, replacement = .string
+    return bind(.lltarget..operand.procedure(old),.lltarget..operand.procedure(replacement))
+  sourceid: method = .int
+    arg old = .int, replacement = .int
+    if old <= 0 then return 1
+    do i = 1 to _stepold[0]
+      if reserve(0,1) = 0 then return 0
+      if _stepold[i] = old then do
+        if _steps[i] <> replacement then call reject('invalid','LL_TARGET_REMAP: conflicting source identity')
+        return _status = 'ok'
+      end
+    end
+    if replacement <= 0 then do; call reject('invalid','LL_TARGET_REMAP: invalid source identity'); return 0; end
+    if reserve(16,1) = 0 then return 0
+    id = _stepold[0] + 1; _stepold[id] = old; _steps[id] = replacement
+    return 1
+  clauseid: method = .int
+    arg old = .int, replacement = .int
+    if old <= 0 then return 1
+    do i = 1 to _clauseold[0]
+      if reserve(0,1) = 0 then return 0
+      if _clauseold[i] = old then do
+        if _clauses[i] <> replacement then call reject('invalid','LL_TARGET_REMAP: conflicting clause identity')
+        return _status = 'ok'
+      end
+    end
+    if replacement <= 0 then do; call reject('invalid','LL_TARGET_REMAP: invalid clause identity'); return 0; end
+    if reserve(16,1) = 0 then return 0
+    id = _clauseold[0] + 1; _clauseold[id] = old; _clauses[id] = replacement
+    return 1
+  origin: method = .int
+    arg old = .llir..origin, replacement = .llir..origin
+    if valid() = 0 | old.valid() = 0 | replacement.valid() = 0 then return 0
+    if replacement.belongs(_targetstore) = 0 then do; call reject('invalid','LL_TARGET_OWNER: foreign destination origin'); return 0; end
+    source = dereference _owner; graph_ref = source.ir(); graph = dereference graph_ref; store_ref = graph.storage()
+    if old.belongs(store_ref) = 0 then do; call reject('invalid','LL_TARGET_OWNER: foreign source origin'); return 0; end
+    id = old.id()
+    if id > _originpresent[0] then do
+      first = _originpresent[0] + 1; count = id - _originpresent[0]
+      if reserve(count * 40,count) = 0 then return 0
+      do i = first to id; _originpresent[i] = 0; end
+    end
+    if _originpresent[id] then do
+      prior = _neworigin[id]
+      if prior.id() <> replacement.id() then call reject('invalid','LL_TARGET_REMAP: conflicting origin')
+      return _status = 'ok'
+    end
+    if reserve(0,1) = 0 then return 0
+    _originpresent[id] = 1; _neworigin[id] = replacement
+    return 1
+  mapped: method = .lltarget..operand
+    arg value = .lltarget..operand
+    do i = 1 to _old[0]
+      if reserve(0,1) = 0 then return .lltarget..operand()
+      old = _old[i]
+      same = old.kind() = value.kind() & old.bytes() = value.bytes()
+      if value.kind() = 'R' then same = same & old.owner() = value.owner() & old.procedureid() = value.procedureid() & old.bank() = value.bank() & old.index() = value.index()
+      if same then return _new[i]
+    end
+    call reject('keep','remap.reference.missing')
+    return .lltarget..operand()
+  identity: method = .int
+    arg old = .int, family = .string
+    i = .int
+    if old <= 0 then return old
+    if family = 'source' then do
+      do i = 1 to _stepold[0]
+        if reserve(0,1) = 0 then return 0
+        if _stepold[i] = old then return _steps[i]
+      end
+    end
+    else do
+      do i = 1 to _clauseold[0]
+        if reserve(0,1) = 0 then return 0
+        if _clauseold[i] = old then return _clauses[i]
+      end
+    end
+    call reject('keep','remap.' || family || '.missing'); return 0
+  rewrite: method = .lltargetremap..recordchange
+    arg opid = .int
+    i = .int; step = .int; clause = .int
+    fields = .object[]; registers = .object[]; value = .lltarget..operand; at = .llir..origin
+    _started = 1
+    if valid() = 0 then do
+      call reject('invalid','LL_TARGET_OWNER: stale remap input')
+      return .lltargetremap..recordchange(status(),message(),'instruction',-1,fields,at)
+    end
+    source = dereference _owner; destination = dereference _target; item = source.at(opid)
+    if item.valid() = 0 then do; call reject('invalid','LL_TARGET_REMAP: invalid source operation'); return .lltargetremap..recordchange(status(),message(),'',-1,fields,at); end
+    if item.procedureid() < 2 | item.kind() = 'procedure' then do
+      call reject('keep','remap.module.declaration.requires.module.map')
+      return .lltargetremap..recordchange(status(),message(),item.kind(),item.opcode(),fields,at)
+    end
+    if reserve(96,item.operands() + item.registerrefs() + 1) = 0 then return .lltargetremap..recordchange(status(),message(),item.kind(),item.opcode(),fields,at)
+    do i = 1 to item.registerrefs(); registers[i] = mapped(item.registerref(i)) as .object; end
+    if status() = 'ok' then fields = lltarget..remapregisters(item,registers)
+    do i = 1 to fields[0]
+      value = fields[i] as .lltarget..operand
+      if value.kind() = 'P' then fields[i] = mapped(value) as .object
+      if value.kind() = 'L' & (item.kind() = 'instruction' | item.kind() = 'label') then fields[i] = mapped(value) as .object
+    end
+    if item.kind() = '.srcstep' | item.kind() = '.traceevent' then do
+      step = 1; clause = 2
+      if item.kind() = '.traceevent' then do; step = 7; clause = 8; end
+      if fields[0] >= clause then do
+        value = fields[step] as .lltarget..operand; fields[step] = .lltarget..operand.integer(identity(value.index(),'source')) as .object
+        value = fields[clause] as .lltarget..operand; fields[clause] = .lltarget..operand.integer(identity(value.index(),'clause')) as .object
+      end
+    end
+    oldat = item.origin()
+    if oldat.id() <= _originpresent[0] then do
+      if _originpresent[oldat.id()] then at = _neworigin[oldat.id()]
+    end
+    if at.valid() = 0 then call reject('keep','remap.origin.missing')
+    if item.kind() = 'instruction' then do
+      catalog = .llrxascatalog..catalog()
+      if reserve(0,_relocation.querywork()) then do
+        reason = _relocation.reason(opid)
+        if reason <> '' then call reject('keep',reason)
+      end
+      if catalog.implicit(item.opcode()) <> 0 then do
+        body = source.body(item.procedureid()); layout = body.locals() = destination.locals() & source.globals() = destination.globals()
+        do i = 1 to _old[0]
+          old = _old[i]; replacement = _new[i]
+          if old.kind() = 'R' & (old.bank() <> replacement.bank() | old.index() <> replacement.index()) then layout = 0
+        end
+        if layout = 0 then call reject('keep','remap.implicit.window.unproved')
+      end
+    end
+    if status() <> 'ok' then call objectarraydrop fields
+    return .lltargetremap..recordchange.bound(status(),message(),item.kind(),item.opcode(),fields,at,_relocation,_target)
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+
+/** Private whole-module transaction for safe entry normalization. A failure
+ * returns the unchanged input owner; staged fields never leak to publication. */
+change: class
+  _owner = reference .lltarget..module
+  _relocation = .relocationpremise
+  _revision = .int
+  _status = .string
+  _message = .string
+  _worklimit = .int
+  _bytelimit = .int
+  _anchors = .int[]
+  _inserthead = .int[]
+  _inserttail = .int[]
+  _insertnext = .int[]
+  _stagingwork = .int
+  _stagingbytes = .int
+  _registers = .lltarget..operand[]
+  _observations = .int[]
+  _operations = .int[]
+  _result = .lltarget..module
+  *: factory
+    arg owner = reference .lltarget..module, work = 1000000, bytes = 67108864
+    _owner = owner; _worklimit = work; _bytelimit = bytes; _status = 'staged'
+    if <refvalid>(owner) = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: expired insertion owner'; return; end
+    source = dereference owner; _revision = source.identity()
+    if source.valid() = 0 then do; _status = 'invalid'; _message = source.error(); end
+    if work < 1 | bytes < 1 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap budgets'; end
+    if _status <> 'staged' then return
+    _relocation = .relocationpremise(owner)
+    if _relocation.valid() = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: relocation profile is not sealed for insertion source'; return; end
+    graph_ref = source.ir(); graph = dereference graph_ref
+    if graph.operations() > work | bytes < 96 | graph.operations() > (bytes - 96) <idiv> 32 then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap staging index'; return
+    end
+    _stagingwork = graph.operations(); _stagingbytes = graph.operations() * 32 + 96
+    do i = 1 to graph.operations(); _inserthead[i] = 0; _inserttail[i] = 0; end
+    return
+  /** Attach once while the transaction is staged, before publication. */
+  useprofile: method = .int
+    arg profile_ref = reference .lltargettransfer..profile
+    if _status <> 'staged' then return 0
+    if _relocation.valid() = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: insertion source replaced'; return 0; end
+    if _relocation.provided() then do; _status = 'invalid'; _message = 'LL_TARGET_REMAP: relocation profile already fixed'; return 0; end
+    if 1 > _worklimit - _stagingwork | 96 > _bytelimit - _stagingbytes then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap profile'; return 0
+    end
+    _stagingwork = _stagingwork + 1; _stagingbytes = _stagingbytes + 96
+    evidence = .relocationpremise(_owner,profile_ref)
+    if evidence.valid() = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: relocation profile is not sealed for insertion source'; return 0; end
+    _relocation = evidence
+    return 1
+  insertnullbefore: method = .int
+    arg sourceop = .int, value = .lltarget..operand, observation = 0
+    if _status <> 'staged' then return 0
+    if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: insertion input expired'; return 0; end
+    source = dereference _owner; anchor = source.at(sourceop)
+    if source.identity() <> _revision | value.kind() <> 'R' | value.bank() <> 'r' | value.owner() <> _revision | anchor.valid() = 0 | anchor.procedureid() <> value.procedureid() then do
+      _status = 'invalid'; _message = 'LL_TARGET_REMAP: insertion requires owned same-body local'; return 0
+    end
+    if observation = 0 then observation = sourceop
+    witness = source.at(observation)
+    if witness.valid() = 0 | witness.procedureid() <> value.procedureid() then do; _status = 'invalid'; _message = 'LL_TARGET_REMAP: foreign insertion observation'; return 0; end
+    if 1 > _worklimit - _stagingwork | 96 > _bytelimit - _stagingbytes then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap insertions'; return 0
+    end
+    _stagingwork = _stagingwork + 1; _stagingbytes = _stagingbytes + 96
+    id = _anchors[0] + 1; _anchors[id] = sourceop; _registers[id] = value; _observations[id] = observation
+    _insertnext[id] = 0
+    if _inserttail[sourceop] > 0 then _insertnext[_inserttail[sourceop]] = id
+    else _inserthead[sourceop] = id
+    _inserttail[sourceop] = id
+    return 1
+  run: method = .void
+    i = .int; j = .int; step = .int; clause = .int; f = .int; opid = .int; remaining = .int; insertion = .int; activefunction = .int
+    item = .lltarget..record; body = .lltarget..body; targetbody = .lltarget..bodydraft
+    mapper = .lltargetremap..mapping
+    bodies = .lltarget..bodydraft[]
+    sources = .object[]; origins = .object[]; fields = .object[]; contributors = .object[]
+    value = .lltarget..operand; prior = .lltarget..operand
+    mapwork = .int; mapbytes = .int
+    headerorigins = .llir..origin[]
+    if _status <> 'staged' then return
+    if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: insertion owner expired'; return; end
+    if _relocation.valid() = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: insertion relocation profile replaced'; return; end
+    source = dereference _owner
+    if source.identity() <> _revision then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: insertion owner replaced'; return; end
+    if _anchors[0] = 0 then do; _status = 'keep'; _message = 'remap.no.change'; return; end
+    remaining = (_worklimit - _stagingwork) <idiv> 2; remainingbytes = (_bytelimit - _stagingbytes) <idiv> 2
+    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),remaining,remainingbytes,remaining)
+    graph_ref = source.ir(); activefunction = 0
+    do i = 1 to source.records()
+      item = source.record(i); opid = item.id(); f = item.procedureid()
+      if draft.preflight(item.operands() + 1,0) = 0 then leave
+      at = copyorigin(graph_ref,item.origin(),reference draft,reference sources,reference origins)
+      if item.kind() = 'procedure' then do
+        activefunction = f
+        body = source.body(f); bodies[f] = draft.procedure(body.name(),body.locals(),at,body.expose())
+        body_ref = reference bodies[f]
+        mapper = .lltargetremap..mapping(_owner,body_ref,remaining,remainingbytes)
+        if _relocation.provided() then do
+          profile_ref = _relocation.profile()
+          ignored = mapper.useprofile(profile_ref)
+        end
+        if mapper.status() <> 'ok' then do; _status = mapper.status(); _message = mapper.message(); return; end
+        mapwork = mapper.usedwork(); mapbytes = mapper.usedbytes()
+        remaining = remaining - mapwork; remainingbytes = remainingbytes - mapbytes
+        if remaining < 1 | remainingbytes < 1 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap mapper'; return; end
+        headerorigins[f] = at; _operations[opid] = bodies[f].headerid(); iterate
+      end
+      if f < 2 then do
+        if item.kind() = '.import' then activefunction = 0
+        call objectarraydrop fields
+        do j = 1 to item.operands(); fields[j] = item.operand(j) as .object; end
+        _operations[opid] = draft.record(item.kind(),fields,at); iterate
+      end
+      if f <> activefunction then do; _status = 'invalid'; _message = 'LL_TARGET_REMAP: noncontiguous source procedure'; return; end
+      targetbody = bodies[f]
+      ignored = mapper.origin(item.origin(),at)
+      do j = 1 to item.registerrefs()
+        value = item.registerref(j); ignored = mapper.bind(value,targetbody.reg(value.bank(),value.index()))
+      end
+      do j = 1 to item.operands()
+        value = item.operand(j)
+        if value.kind() = 'L' then ignored = mapper.label(value.text(),value.text())
+        if value.kind() = 'P' then ignored = mapper.procedure(value.text(),value.text())
+      end
+      if item.kind() = '.srcstep' | item.kind() = '.traceevent' then do
+        step = 1; clause = 2
+        if item.kind() = '.traceevent' then do; step = 7; clause = 8; end
+        value = item.operand(step); ignored = mapper.sourceid(value.index(),value.index())
+        value = item.operand(clause); ignored = mapper.clauseid(value.index(),value.index())
+      end
+      insertion = _inserthead[opid]
+      do while insertion > 0
+        value = _registers[insertion]; clear = targetbody.reg('r',value.index())
+        witness = source.at(_observations[insertion]); witnessat = copyorigin(graph_ref,witness.origin(),reference draft,reference sources,reference origins)
+        body = source.body(f)
+        file = draft.source(witnessat.filename(),witnessat.sourcebytes())
+        call objectarraydrop contributors
+        contributors[1] = headerorigins[f] as .object; contributors[2] = witnessat as .object
+        clearat = draft.contributingorigin(file,witnessat.first(),witnessat.last(),'synthetic',contributors)
+        call objectarraydrop fields; fields[1] = clear as .object
+        ignored = targetbody.emit('null',fields,clearat)
+        insertion = _insertnext[insertion]
+      end
+      rewritten = mapper.rewrite(opid)
+      if rewritten.status() <> 'ok' then do; _status = rewritten.status(); _message = rewritten.message(); return; end
+      fields = rewritten.fields()
+      if item.kind() = 'instruction' then _operations[opid] = targetbody.emit(item.mnemonic(),fields,rewritten.origin())
+      else _operations[opid] = targetbody.record(item.kind(),fields,rewritten.origin())
+      remaining = remaining - (mapper.usedwork() - mapwork); mapwork = mapper.usedwork()
+      remainingbytes = remainingbytes - (mapper.usedbytes() - mapbytes); mapbytes = mapper.usedbytes()
+      if remaining < 1 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: target.remap work'; return; end
+    end
+    if draft.error() <> '' then do
+      _status = 'invalid'; _message = draft.error()
+      if pos('LL_RESOURCE_LIMIT:',_message) > 0 then _status = 'limit'
+      return
+    end
+    candidate = draft.finish()
+    if candidate.valid() = 0 then do; _status = 'invalid'; _message = candidate.error(); return; end
+    _result = candidate; _status = 'changed'
+    return
+  status: method = .string
+    return _status
+  message: method = .string
+    return _message
+  changed: method = .int
+    return _status = 'changed'
+  result: method = .lltarget..module
+    if _status = 'changed' then return _result
+    if <refvalid>(_owner) = 0 then do; call bad('LL_TARGET_OWNER: insertion input expired'); return _result; end
+    original = dereference _owner
+    return original
+  operation: method = .int
+    arg old = .int
+    if _status <> 'changed' then return old
+    if old < 1 | old > _operations[0] then call bad('LL_TARGET_REMAP: source operation ordinal')
+    return _operations[old]
+
+/** A selected module is identified by its exact frozen owner and image-local
+ * module ID. Names and basenames are diagnostics, never binding keys. */
+modulebinding: class
+  _owner = reference .lltarget..module
+  _revision = .int
+  _imageid = .int
+  *: factory
+    arg ?owner = reference .lltarget..module, imageid = 0
+    if ?owner = 0 then return
+    _owner = owner; source = dereference owner; _revision = source.identity(); _imageid = imageid
+    return
+  valid: method = .int
+    if _imageid < 1 | <refvalid>(_owner) = 0 then return 0
+    source = dereference _owner
+    return source.valid() & source.identity() = _revision
+  matches: method = .int
+    arg owner = reference .lltarget..module
+    return valid() & (_owner <refsame> owner)
+  owner: method = reference .lltarget..module
+    if valid() = 0 then call bad('LL_TARGET_OWNER: selected module expired or replaced')
+    return _owner
+  revision: method = .int
+    return _revision
+  imageid: method = .int
+    return _imageid
+
+/** A borrowed global names original selected storage, not a caller gN alias.
+ * It carries no public name, visibility grant or initializer action. */
+globalref: class
+  _provider = .lltargetremap..modulebinding
+  _index = .int
+  *: factory
+    arg provider = .lltargetremap..modulebinding, index = .int
+    _provider = provider; _index = index
+    return
+  valid: method = .int
+    if _provider.valid() = 0 | _index < 0 then return 0
+    owner_ref = _provider.owner(); owner = dereference owner_ref
+    return _index < owner.globals()
+  provider: method = .lltargetremap..modulebinding
+    return _provider
+  index: method = .int
+    return _index
+  moduleid: method = .int
+    return _provider.imageid()
+  revision: method = .int
+    return _provider.revision()
+  owned: method = .int
+    return 0
+  renderable: method = .int
+    arg receiver = reference .lltarget..module
+    return valid() & _provider.matches(receiver)
+
+/** Model-only remapping result. Qualified globals/procedures are carried next
+ * to ordinary fields and are never silently rendered as caller-relative gN/P.
+ * Rendering unavailable is separate from a valid selected-provider binding. */
+mappedrecord: class
+  _evidence = .relocationpremise
+  _hasevidence = .int
+  _source = reference .lltarget..module
+  _receiver = reference .lltarget..module
+  _sourceid = .int
+  _receiverid = .int
+  _status = .string
+  _message = .string
+  _kind = .string
+  _opcode = .int
+  _fields = .object[]
+  _globals = .lltargetremap..globalref[]
+  _positions = .int[]
+  _procedures = .lltargetremap..modulebinding[]
+  _origin = .llir..origin
+  _renderreason = .string
+  _sourceop = .int
+  *: factory
+    arg source = reference .lltarget..module, receiver = reference .lltarget..module, state = .string, message = .string, kind = .string, opcode = .int, fields = .object[], globals = .lltargetremap..globalref[], positions = .int[], procedures = .lltargetremap..modulebinding[], origin = .llir..origin, renderreason = .string, sourceopid = 0, ?evidence = .relocationpremise
+    _source = source; _receiver = receiver; _status = state; _message = message
+    _kind = kind; _opcode = opcode; _fields = fields; _globals = globals; _positions = positions; _procedures = procedures
+    _origin = origin; _renderreason = renderreason; _sourceop = sourceopid
+    if ?evidence then do; _evidence = evidence; _hasevidence = 1; end
+    if state <> 'ok' then return
+    if <refvalid>(source) = 0 | <refvalid>(receiver) = 0 then do
+      _status = 'invalid'; _message = 'LL_TARGET_OWNER: mapped record owner expired'; return
+    end
+    original = dereference source; destination = dereference receiver
+    _sourceid = original.identity(); _receiverid = destination.identity()
+    return
+  valid: method = .int
+    i = .int
+    if _status <> 'ok' | <refvalid>(_source) = 0 | <refvalid>(_receiver) = 0 then return 0
+    if _hasevidence then do; if _evidence.valid() = 0 then return 0; end
+    source = dereference _source; receiver = dereference _receiver
+    if source.valid() = 0 | receiver.valid() = 0 | source.identity() <> _sourceid | receiver.identity() <> _receiverid then return 0
+    do i = 1 to _globals[0]; value = _globals[i]; if value.valid() = 0 then return 0; end
+    do i = 1 to _procedures[0]
+      provider = _procedures[i]
+      if provider.imageid() > 0 & provider.valid() = 0 then return 0
+    end
+    return 1
+  require: method = .void
+    if valid() = 0 then call bad('LL_TARGET_OWNER: unavailable or stale mapped record')
+    return
+  status: method = .string
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    if _status = 'ok' & valid() = 0 then return 'LL_TARGET_OWNER: stale module mapping result'
+    return _message
+  kind: method = .string
+    call require(); return _kind
+  opcode: method = .int
+    call require(); return _opcode
+  fields: method = .object[]
+    call require(); return _fields
+  globalrefs: method = .int
+    call require(); return _globals[0]
+  globalref: method = .lltargetremap..globalref
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _globals[0] then call bad('LL_TARGET_REMAP: global-reference ordinal')
+    return _globals[ordinal]
+  globaloperand: method = .int
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _positions[0] then call bad('LL_TARGET_REMAP: global operand ordinal')
+    return _positions[ordinal]
+  provider: method = .lltargetremap..modulebinding
+    arg operand = .int
+    call require()
+    if operand < 1 | operand > _procedures[0] then call bad('LL_TARGET_REMAP: procedure operand ordinal')
+    return _procedures[operand]
+  origin: method = .llir..origin
+    call require(); return _origin
+  sourceop: method = .int
+    call require(); return _sourceop
+  sourceowner: method = reference .lltarget..module
+    call require(); return _source
+  receiver: method = reference .lltarget..module
+    call require(); return _receiver
+  renderable: method = .int
+    return valid() & _renderreason = ''
+  renderreason: method = .string
+    call require(); return _renderreason
+
+/** Checked module-level link mapping. Selection is exact-owner based; no hash
+ * witness, synthetic exposure, RXAS opcode or .meta proof record is invented.
+ * All mappings are operational identities and selectors, never equivalence
+ * assertions. Foreign qualified operands remain model data until a runtime
+ * binding representation has been approved. */
+modulemap: class
+  _receiver = reference .lltarget..module
+  _revision = .int
+  _catalog = .string
+  _status = .string
+  _message = .string
+  _sealed = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _work = .int
+  _bytes = .int
+  _modules = .lltargetremap..modulebinding[]
+  _relocations = .relocationpremise[]
+  _bindingsource = .int[]
+  _bindingfunction = .int[]
+  _bindingkind = .string[]
+  _bindingold = .string[]
+  _bindingnew = .string[]
+  _bindingtarget = .int[]
+  _registerold = .lltarget..operand[]
+  _registernew = .lltarget..operand[]
+  _receiverentry = .int
+  *: factory
+    arg receiver = reference .lltarget..module, work = 1000000, bytes = 67108864
+    _receiver = receiver; _status = 'building'; _worklimit = work; _bytelimit = bytes
+    if <refvalid>(receiver) = 0 then do; _status = 'invalid'; _message = 'LL_TARGET_OWNER: module-map receiver expired'; return; end
+    target = dereference receiver; _revision = target.identity(); catalog = .llrxascatalog..catalog(); _catalog = catalog.fingerprint()
+    if target.valid() = 0 then do; _status = 'invalid'; _message = target.error(); end
+    if work < 1 | bytes < 1 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: module-map budgets'; end
+    return
+  reserve: method = .int
+    arg bytes = .int, work = .int
+    if _status <> 'building' & _status <> 'ok' then return 0
+    if bytes < 0 | work < 0 | bytes > _bytelimit - _bytes | work > _worklimit - _work then do
+      _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: module-map work/bytes'; return 0
+    end
+    _bytes = _bytes + bytes; _work = _work + work
+    return 1
+  reject: method = .void
+    arg state = .string, message = .string
+    if _status = 'building' | _status = 'ok' then do; _status = state; _message = message; end
+    return
+  mutable: method = .int
+    if _sealed then do; call reject('invalid','LL_TARGET_REMAP: module-map is sealed'); return 0; end
+    return _status = 'building'
+  selectmodule: method = .int
+    arg owner = reference .lltarget..module, imageid = .int
+    return addselection(owner,imageid)
+  /** Select a provider with its required exact sealed operational profile. */
+  selectprofile: method = .int
+    arg owner = reference .lltarget..module, imageid = .int, profile_ref = reference .lltargettransfer..profile
+    return addselection(owner,imageid,profile_ref)
+  addselection: method = .int
+    arg owner = reference .lltarget..module, imageid = .int, ?profile_ref = reference .lltargettransfer..profile
+    if mutable() = 0 then return 0
+    if <refvalid>(owner) = 0 | imageid < 1 then do; call reject('invalid','LL_TARGET_REMAP: invalid selected module'); return 0; end
+    target = dereference owner
+    if target.valid() = 0 then do; call reject('invalid',target.error()); return 0; end
+    if ?profile_ref then evidence = .relocationpremise(owner,profile_ref)
+    else evidence = .relocationpremise(owner)
+    if evidence.valid() = 0 then do; call reject('invalid','LL_TARGET_OWNER: relocation profile is not sealed for selected source'); return 0; end
+    do i = 1 to _modules[0]
+      if reserve(0,1) = 0 then return 0
+      selected = _modules[i]
+      if selected.matches(owner) then do
+        if selected.imageid() <> imageid then call reject('invalid','LL_TARGET_REMAP: conflicting selected module ID')
+        prior = _relocations[i]
+        if prior.identity() <> evidence.identity() | prior.provided() <> evidence.provided() then call reject('invalid','LL_TARGET_REMAP: conflicting selected relocation profile')
+        if _receiver <refsame> owner then _receiverentry = i
+        return i
+      end
+      if selected.imageid() = imageid then do; call reject('invalid','LL_TARGET_REMAP: duplicate selected module ID'); return 0; end
+    end
+    if reserve(160,1) = 0 then return 0
+    id = _modules[0] + 1; _modules[id] = .lltargetremap..modulebinding(owner,imageid); _relocations[id] = evidence
+    if _receiver <refsame> owner then _receiverentry = id
+    return id
+  selected: method = .int
+    arg owner = reference .lltarget..module
+    do i = 1 to _modules[0]
+      if reserve(0,1) = 0 then return 0
+      selected = _modules[i]
+      if selected.matches(owner) then return i
+    end
+    call reject('keep','remap.selected.module.missing'); return 0
+  bind: method = .int
+    arg old = .lltarget..operand, replacement = .lltarget..operand
+    i = .int
+    if mutable() = 0 then return 0
+    if old.kind() <> 'R' | replacement.kind() <> 'R' | old.bank() = 'g' | replacement.owner() <> _revision then do
+      call reject('invalid','LL_TARGET_REMAP: module register binding requires non-global source and receiver register'); return 0
+    end
+    found = 0
+    do i = 1 to _modules[0]
+      if reserve(0,1) = 0 then return 0
+      candidate = _modules[i]
+      if candidate.revision() <> old.owner() then iterate
+      source_ref = candidate.owner(); source = dereference source_ref; sourcegraph_ref = source.ir(); sourcegraph = dereference sourcegraph_ref
+      sourcestore_ref = sourcegraph.storage(); sourcestore = dereference sourcestore_ref
+      if old.slotid() > 0 & old.slotid() <= sourcestore.count(5) then do
+        found = sourcestore.get(5,old.slotid(),1) = old.procedureid() & sourcestore.text(sourcestore.get(5,old.slotid(),3)) = (old.bank() || old.index())
+      end
+    end
+    if found = 0 then do; call reject('invalid','LL_TARGET_REMAP: source slot is not a selected owned binding'); return 0; end
+    target = dereference _receiver; graph_ref = target.ir(); graph = dereference graph_ref; store_ref = graph.storage(); store = dereference store_ref
+    if replacement.slotid() < 1 | replacement.slotid() > store.count(5) then do; call reject('invalid','LL_TARGET_REMAP: receiver slot bounds'); return 0; end
+    if store.get(5,replacement.slotid(),1) <> replacement.procedureid() | store.text(store.get(5,replacement.slotid(),3)) <> (replacement.bank() || replacement.index()) then do
+      call reject('invalid','LL_TARGET_REMAP: receiver slot identity'); return 0
+    end
+    do i = 1 to _registerold[0]
+      if reserve(0,1) = 0 then return 0
+      value = _registerold[i]
+      if value.owner() = old.owner() & value.procedureid() = old.procedureid() & value.bank() = old.bank() & value.index() = old.index() then do
+        value = _registernew[i]
+        if value.owner() <> replacement.owner() | value.procedureid() <> replacement.procedureid() | value.bank() <> replacement.bank() | value.index() <> replacement.index() then call reject('invalid','LL_TARGET_REMAP: conflicting module register map')
+        return _status = 'building'
+      end
+    end
+    if reserve(128,1) = 0 then return 0
+    id = _registerold[0] + 1; _registerold[id] = old; _registernew[id] = replacement
+    return 1
+  named: method = .int
+    arg source = reference .lltarget..module, kind = .string, functionid = .int, old = .string, replacement = .string, target = reference .lltarget..module
+    i = .int; found = .int
+    if mutable() = 0 then return 0
+    sourceid = selected(source); targetid = selected(target)
+    if sourceid = 0 | targetid = 0 then return 0
+    if wordpos(kind,'procedure label source clause module') = 0 | old = '' | replacement = '' then do; call reject('invalid','LL_TARGET_REMAP: named binding shape'); return 0; end
+    original = dereference source; destination = dereference target
+    if kind = 'label' then do
+      if functionid < 2 then do; call reject('invalid','LL_TARGET_REMAP: label requires source function'); return 0; end
+      found = 0
+      do i = 1 to original.records()
+        if reserve(0,1) = 0 then return 0
+        item = original.record(i)
+        if item.kind() = 'label' & item.procedureid() = functionid then do
+          value = item.operand(1); if value.text() = old then found = 1
+        end
+      end
+      if found = 0 then do; call reject('invalid','LL_TARGET_REMAP: source label missing'); return 0; end
+    end
+    if kind = 'procedure' & destination.procedureid(replacement) = 0 then do; call reject('invalid','LL_TARGET_REMAP: selected procedure definition missing'); return 0; end
+    do i = 1 to _bindingold[0]
+      if reserve(0,1) = 0 then return 0
+      if _bindingsource[i] = sourceid & _bindingfunction[i] = functionid & _bindingkind[i] = kind & _bindingold[i] = old then do
+        if _bindingnew[i] <> replacement | _bindingtarget[i] <> targetid then call reject('invalid','LL_TARGET_REMAP: conflicting named binding')
+        return _status = 'building'
+      end
+    end
+    if reserve(64 + length(old) + length(replacement),1) = 0 then return 0
+    id = _bindingold[0] + 1; _bindingsource[id] = sourceid; _bindingfunction[id] = functionid
+    _bindingkind[id] = kind; _bindingold[id] = old; _bindingnew[id] = replacement; _bindingtarget[id] = targetid
+    return 1
+  procedure: method = .int
+    arg source = reference .lltarget..module, old = .string, target = reference .lltarget..module, replacement = .string
+    return named(source,'procedure',0,old,replacement,target)
+  label: method = .int
+    arg source = reference .lltarget..module, functionid = .int, old = .string, replacement = .string
+    return named(source,'label',functionid,old,replacement,_receiver)
+  sourceid: method = .int
+    arg source = reference .lltarget..module, old = .int, replacement = .int
+    if old <= 0 | replacement <= 0 then do; call reject('invalid','LL_TARGET_REMAP: source identity must be positive'); return 0; end
+    return named(source,'source',0,old as .string,replacement as .string,_receiver)
+  clauseid: method = .int
+    arg source = reference .lltarget..module, old = .int, replacement = .int
+    if old <= 0 | replacement <= 0 then do; call reject('invalid','LL_TARGET_REMAP: clause identity must be positive'); return 0; end
+    return named(source,'clause',0,old as .string,replacement as .string,_receiver)
+  seal: method = .int
+    if _sealed then return valid()
+    if _status <> 'building' then return 0
+    if _receiverentry = 0 then do; call reject('invalid','LL_TARGET_REMAP: receiver is not selected'); return 0; end
+    _sealed = 1; _status = 'ok'
+    return valid()
+  valid: method = .int
+    if _sealed = 0 | _status <> 'ok' | _receiverentry = 0 | <refvalid>(_receiver) = 0 then return 0
+    target = dereference _receiver; catalog = .llrxascatalog..catalog()
+    if target.valid() = 0 | target.identity() <> _revision | catalog.fingerprint() <> _catalog then return 0
+    do i = 1 to _modules[0]
+      selected = _modules[i]; if selected.valid() = 0 then return 0
+      evidence = _relocations[i]; if evidence.valid() = 0 then return 0
+    end
+    return 1
+  status: method = .string
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    if _status = 'ok' & valid() = 0 then return 'LL_TARGET_OWNER: selected module replaced'
+    return _message
+  global: method = .lltargetremap..globalref
+    arg owner = reference .lltarget..module, index = .int
+    id = selected(owner)
+    if id = 0 then return .lltargetremap..globalref(.lltargetremap..modulebinding(),-1)
+    target = dereference owner
+    if index < 0 | index >= target.globals() then do
+      call reject('invalid','LL_TARGET_REMAP: selected global bounds'); return .lltargetremap..globalref(_modules[id],-1)
+    end
+    return .lltargetremap..globalref(_modules[id],index)
+  lookup: method = .int
+    arg moduleid = .int, kind = .string, functionid = .int, name = .string
+    do i = 1 to _bindingold[0]
+      if reserve(0,1) = 0 then return 0
+      if _bindingsource[i] = moduleid & _bindingkind[i] = kind & _bindingfunction[i] = functionid & _bindingold[i] = name then return i
+    end
+    return 0
+  rewrite: method = .lltargetremap..mappedrecord
+    arg owner = reference .lltarget..module, opid = .int
+    i = .int; j = .int; step = .int; clause = .int; ordinal = .int; found = .int; kind = .string; functionid = .int
+    evidence = .lltargetremap..relocationpremise
+    replacement = .lltarget..operand
+    fields = .object[]; globals = .lltargetremap..globalref[]; positions = .int[]; providers = .lltargetremap..modulebinding[]
+    value = .lltarget..operand; item = .lltarget..record; renderreason = ''; resultstate = 'ok'; reason = ''
+    at = .llir..origin
+    if <refvalid>(owner) = 0 | valid() = 0 then return .lltargetremap..mappedrecord(owner,_receiver,'invalid','LL_TARGET_OWNER: module map unavailable','',-1,fields,globals,positions,providers,at,'')
+    source = dereference owner
+    if source.valid() = 0 then return .lltargetremap..mappedrecord(owner,_receiver,'invalid','LL_TARGET_OWNER: source module unavailable','',-1,fields,globals,positions,providers,at,'')
+    item = source.at(opid)
+    if item.valid() = 0 then return .lltargetremap..mappedrecord(owner,_receiver,'invalid','LL_TARGET_REMAP: source record identity','',-1,fields,globals,positions,providers,at,'')
+    at = item.origin()
+    moduleid = selected(owner)
+    if moduleid = 0 then return .lltargetremap..mappedrecord(owner,_receiver,status(),message(),item.kind(),item.opcode(),fields,globals,positions,providers,at,'')
+    if reserve((item.operands() + item.registerrefs()) * 160 + 96,item.operands() + item.registerrefs()) = 0 then return .lltargetremap..mappedrecord(owner,_receiver,status(),message(),item.kind(),item.opcode(),fields,globals,positions,providers,at,'')
+    registers = .object[]
+    do i = 1 to item.registerrefs()
+      value = item.registerref(i); replacement = value
+      if value.bank() = 'g' then do
+        selectedglobal = global(owner,value.index()); id = globals[0] + 1; globals[id] = selectedglobal; positions[id] = i
+        if selectedglobal.renderable(_receiver) = 0 then renderreason = 'remap.foreign.global.binding.unavailable'
+      end
+      else do
+        found = 0
+        do j = 1 to _registerold[0]
+          if reserve(0,1) = 0 then leave
+          old = _registerold[j]
+          if old.owner() = value.owner() & old.procedureid() = value.procedureid() & old.bank() = value.bank() & old.index() = value.index() then do; replacement = _registernew[j]; found = 1; leave; end
+        end
+        if found = 0 & value.owner() <> _revision then do; resultstate = 'keep'; reason = 'remap.register.binding.missing'; end
+      end
+      registers[i] = replacement as .object
+    end
+    if resultstate = 'ok' then fields = lltarget..remapregisters(item,registers)
+    do i = 1 to fields[0]
+      providers[i] = .lltargetremap..modulebinding(); value = fields[i] as .lltarget..operand
+      kind = ''; functionid = 0
+      if value.kind() = 'P' then kind = 'procedure'
+      if value.kind() = 'L' & (item.kind() = 'instruction' | item.kind() = 'label') then do; kind = 'label'; functionid = item.procedureid(); end
+      if kind = '' then iterate
+      found = lookup(moduleid,kind,functionid,value.text())
+      if found = 0 then do; resultstate = 'keep'; reason = 'remap.' || kind || '.binding.missing'; iterate; end
+      if kind = 'label' then fields[i] = .lltarget..operand.symbol(_bindingnew[found]) as .object
+      else do
+        fields[i] = .lltarget..operand.procedure(_bindingnew[found]) as .object; providers[i] = _modules[_bindingtarget[found]]
+        provider = providers[i]
+        if provider.matches(_receiver) = 0 & renderreason = '' then renderreason = 'remap.foreign.procedure.binding.unavailable'
+      end
+    end
+    if item.kind() = '.srcstep' | item.kind() = '.traceevent' then do
+      step = 1; clause = 2
+      if item.kind() = '.traceevent' then do; step = 7; clause = 8; end
+      do i = 1 to 2
+        ordinal = step; kind = 'source'
+        if i = 2 then do; ordinal = clause; kind = 'clause'; end
+        value = fields[ordinal] as .lltarget..operand
+        if value.index() <= 0 then iterate
+        found = lookup(moduleid,kind,0,value.index() as .string)
+        if found = 0 then do; resultstate = 'keep'; reason = 'remap.' || kind || '.binding.missing'; end
+        else fields[ordinal] = .lltarget..operand.integer(_bindingnew[found] as .int) as .object
+      end
+    end
+    if item.kind() = 'instruction' then do
+      catalog = .llrxascatalog..catalog(); evidence = _relocations[moduleid]
+      if reserve(0,evidence.querywork()) then do
+        relocationreason = evidence.reason(opid)
+        if relocationreason <> '' then do; resultstate = 'keep'; reason = relocationreason; end
+      end
+      if catalog.implicit(item.opcode()) <> 0 & source.identity() <> _revision then do; resultstate = 'keep'; reason = 'remap.implicit.window.unproved'; end
+    end
+    if status() <> 'ok' then do; resultstate = status(); reason = message(); end
+    if resultstate <> 'ok' then call objectarraydrop fields
+    evidence = _relocations[moduleid]
+    return .lltargetremap..mappedrecord(owner,_receiver,resultstate,reason,item.kind(),item.opcode(),fields,globals,positions,providers,at,renderreason,opid,evidence)
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes

@@ -4,6 +4,7 @@ namespace llinline expose binding bind decision inspect change expand expandmany
 import rxfnsb
 import llir
 import lltarget
+import lltargetremap
 import lltargetfacts
 import llrxascatalog
 
@@ -158,30 +159,10 @@ change: class
     end
     return 'binding.site.unavailable'
 
-/** Copy all L contributors in topological order. Sources/origins are
- * cached by their existing owner IDs; no returned handle borrows a local arena. */
+/** Compatibility surface; target provenance copying has one shared owner. */
 copyorigin: procedure = .llir..origin
   arg owner = reference .llir..module, old = .llir..origin, target = reference .lltarget..draft, source_ref = reference .object[], origin_ref = reference .object[]
-  i = .int; j = .int; fileid = .int; parentid = .int
-  file = .llir..sourcefile; at = .llir..origin; parent = .llir..origin; copied = .llir..origin
-  parents = .object[]
-  sources = dereference source_ref; origins = dereference origin_ref; draft = dereference target
-  graph = dereference owner; store_ref = graph.storage(); store = dereference store_ref
-  do i = origins[0] + 1 to old.id()
-    if draft.preflight(1,0) = 0 then return draft.synthetic('failed provenance')
-    at = .llir..origin(store_ref,i); fileid = store.get(9,i,1)
-    if fileid > sources[0] then do; file = draft.source(at.filename(),at.sourcebytes()); sources[fileid] = file as .object; end
-    else if sources[fileid] is .llir..sourcefile then file = sources[fileid] as .llir..sourcefile
-    else do; file = draft.source(at.filename(),at.sourcebytes()); sources[fileid] = file as .object; end
-    if draft.preflight(at.parents(),0) = 0 then return draft.synthetic('failed provenance')
-    call objectarraydrop parents
-    do j = 1 to at.parents()
-      parent = at.parent(j); parentid = parent.id(); parents[j] = origins[parentid]
-    end
-    copied = draft.contributingorigin(file,at.first(),at.last(),at.kind(),parents)
-    origins[i] = copied as .object
-  end
-  return origins[old.id()] as .llir..origin
+  return lltargetremap..copyorigin(owner,old,target,source_ref,origin_ref)
 
 clonefields: procedure = .object[]
   arg input = .lltarget..record, target = .lltarget..bodydraft

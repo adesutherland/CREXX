@@ -1,0 +1,130 @@
+/* cREXX License (MIT). Independent diagnosed-entry normalization controls. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetnormalize
+import llrxasinput
+import llrxasoutput
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+
+/** These are independently declared fixture premises, never production opcode
+ * descriptions. Arithmetic adds zero, so its no-failure premise is exact for
+ * every signed integer; no constant result is asserted for incoming state. */
+premises: procedure = .lltargettransfer..profile
+  arg owner = reference .lltarget..module, unknown = 0
+  source = dereference owner; builder = .lltargettransfer..profiledraft(owner,'independent.normalization.v1')
+  integer = builder.domain('component','integer'); string = builder.domain('component','string')
+  item = .lltarget..record; value = .lltarget..operand
+  dest = .int; input = .int; ignored = .int; first = .int
+  do i = 1 to source.records()
+    item = source.record(i); ignored = builder.operation(item.id())
+    if item.kind() <> 'instruction' then iterate
+    ignored = builder.relocation(item.id(),'none')
+    if first = 0 then first = item.id()
+    select
+      when item.mnemonic() = 'null' then do
+        dest = builder.ref(item.id(),1)
+        ignored = builder.event(item.id(),'clear',dest,0)
+      end
+      when item.mnemonic() = 'load' then do
+        dest = builder.ref(item.id(),1); value = item.operand(2)
+        ignored = builder.event(item.id(),'write',dest,string,'literal',0,value)
+      end
+      when item.mnemonic() = 'copy' then do
+        dest = builder.ref(item.id(),1); input = builder.ref(item.id(),2)
+        ignored = builder.event(item.id(),'transport',dest,0,'reference',input)
+      end
+      when item.mnemonic() = 'iadd' then do
+        dest = builder.ref(item.id(),1); input = builder.ref(item.id(),2)
+        ignored = builder.event(item.id(),'observe',input,integer)
+        ignored = builder.event(item.id(),'write',dest,integer)
+      end
+      when item.mnemonic() = 'say' then do
+        input = builder.ref(item.id(),1)
+        ignored = builder.event(item.id(),'observe',input,string)
+      end
+      when item.mnemonic() = 'ret' then do
+        value = item.operand(1)
+        if value.kind() = 'R' then do
+          input = builder.ref(item.id(),1)
+          ignored = builder.event(item.id(),'observe',input,integer)
+        end
+      end
+      otherwise call builder.unknown(item.id(),'effects','fixture.unspecified')
+    end
+  end
+  if unknown then call builder.unknown(first,'signals','fixture.unknown.signal')
+  return builder.finish()
+
+main: procedure = .int
+  arg arguments = .string[]
+  source = .lltarget..module; normalized = .lltarget..module; foreign = .lltarget..module
+  profile = .lltargettransfer..profile; repeatedprofile = .lltargettransfer..profile; uncertainprofile = .lltargettransfer..profile
+  cfg = .lltargetcfg..graph; repeatedcfg = .lltargetcfg..graph; uncertaincfg = .lltargetcfg..graph
+  facts = .lltargetflow..analysis; repeatedfacts = .lltargetflow..analysis; uncertainfacts = .lltargetflow..analysis
+  changed = .lltargetnormalize..change; repeated = .lltargetnormalize..change; refused = .lltargetnormalize..change
+  item = .lltarget..record; original = .lltarget..record; value = .lltarget..operand; warning = .lltargetnormalize..warning
+  failures = 0; nl = '0a'x
+  /* The copied but unobserved integer is diagnosed only at the later IADD.
+   * Its original owner r0 is cleared; r1's value transport remains intact. */
+  text = '.globals=1' || nl || 'main() .locals=3' || nl || 'again:' || nl || 'load r0,"kept"' || nl || 'copy r1,r0' || nl || 'iadd r2,r1,0' || nl || 'iadd r2,r1,0' || nl || 'say r0' || nl || 'ret r2' || nl || 'borrowed() .locals=1' || nl || 'iadd r0,a1,0' || nl || 'iadd r0,g0,0' || nl || 'ret r0' || nl || 'transportonly() .locals=2' || nl || 'copy r1,r0' || nl || 'ret 0' || nl
+  frontend = .llrxasinput..reader(); parsed = frontend.parse(text as .binary,'foundation-normalize.rxas','fixture:normalization')
+  failures = failures + check(parsed.status() = 0,'handwritten ordinary RXAS parses')
+  if parsed.status() <> 0 then do; say parsed.diagnostic(); return failures; end
+  source = parsed.result(); graphref = source.ir(); graph = dereference graphref; saved = graph.binary()
+  profile = premises(reference source); cfg = .lltargetcfg..graph(reference source,reference profile)
+  facts = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(facts.status() = 'ok','independent entry facts constructed')
+  if facts.status() <> 'ok' then do; say facts.message(); return failures; end
+  changed = lltargetnormalize..normalize(reference source,reference facts)
+  failures = failures + check(changed.status() = 'changed','owned entry-dependent observation is normalized')
+  if changed.status() <> 'changed' then do; say changed.message(); return failures; end
+  normalized = changed.result(); body = normalized.body(normalized.procedureid('main'))
+  item = body.record(1); value = item.operand(1)
+  failures = failures + check(item.kind() = 'instruction' & item.mnemonic() = 'null' & value.bank() = 'r' & value.index() = 0,'only original owned r0 receives entry NULL')
+  item = body.record(2)
+  failures = failures + check(item.kind() = 'label','authored loop label remains after prelude')
+  item = body.record(3); value = item.operand(2)
+  failures = failures + check(item.mnemonic() = 'load' & value.text() = 'kept','entry clear precedes and preserves authored string definition')
+  failures = failures + check(changed.warnings() = 1,'repeated reads deduplicate one component warning')
+  if changed.warnings() = 1 then do
+    warning = changed.warning(1)
+    failures = failures + check(warning.code() = 'LL_RXAS_ENTRY_READ' & warning.local() = 0 & warning.component() = 'integer' & warning.procedure() = 'main','warning identifies entry owner rather than copied active spelling')
+    failures = failures + check(warning.first() = pos('iadd r2',text) - 1 & warning.line() = 6,'warning locates first observation rather than COPY')
+  end
+  item = body.record(1); at = item.origin()
+  failures = failures + check(at.kind() = 'synthetic' & at.parents() >= 2,'clear has synthetic procedure/observation provenance')
+  borrowed = normalized.body(normalized.procedureid('borrowed')); item = borrowed.record(1)
+  failures = failures + check(item.mnemonic() = 'iadd','borrowed argument/global cells receive no NULL')
+  transported = normalized.body(normalized.procedureid('transportonly')); item = transported.record(1)
+  failures = failures + check(item.mnemonic() = 'copy','unobserved whole-cell transport creates no warning or clear')
+  failures = failures + check(bin2x(graph.binary()) == bin2x(saved),'normalization preserves immutable source')
+  repeatedprofile = premises(reference normalized); repeatedcfg = .lltargetcfg..graph(reference normalized,reference repeatedprofile)
+  repeatedfacts = .lltargetflow..analysis(reference normalized,reference repeatedprofile,reference repeatedcfg)
+  repeated = lltargetnormalize..normalize(reference normalized,reference repeatedfacts)
+  failures = failures + check(repeated.status() = 'keep' & repeated.warnings() = 0 & repeated.message() = 'normalization.no.entry.read','normalization is idempotent')
+  refused = lltargetnormalize..normalize(reference source,reference facts,1)
+  failures = failures + check(refused.status() = 'limit' & refused.warnings() = 0 & refused.result().identity() = source.identity(),'tiny budget publishes no partial clears or warnings')
+  foreign = source; refused = lltargetnormalize..normalize(reference foreign,reference facts)
+  failures = failures + check(refused.status() = 'invalid' & refused.warnings() = 0,'foreign owner cannot reuse entry proof')
+  uncertainprofile = premises(reference source,1); uncertaincfg = .lltargetcfg..graph(reference source,reference uncertainprofile)
+  uncertainfacts = .lltargetflow..analysis(reference source,reference uncertainprofile,reference uncertaincfg)
+  refused = lltargetnormalize..normalize(reference source,reference uncertainfacts)
+  failures = failures + check(refused.status() = 'keep' & pos('normalization.entry.unproved',refused.message()) = 1 & refused.warnings() = 0,'unknown signal/entry obligations retain original')
+  if arguments[0] > 0 then if arguments[1] = '--emit-rxas' then do
+    if failures > 0 then return failures
+    emitted = llrxasoutput..render(reference normalized); output = emitted.output()
+    if emitted.error() <> '' then do; say emitted.error(); return 1; end
+    say output.text(); return 0
+  end
+  say 'FOUNDATION_NORMALIZE|failures=' || failures
+  return failures

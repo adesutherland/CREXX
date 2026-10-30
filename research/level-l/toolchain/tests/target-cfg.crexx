@@ -6,6 +6,7 @@ import llirgraph
 import lltarget
 import llinline
 import llcleanup
+import llrxascatalog
 
 check: procedure = .int
   arg condition = .int, message = .string
@@ -232,6 +233,74 @@ malformed: procedure = .int
   end
   return failures
 
+/** Exercise the complete direct-label inventory through the public target
+ * owner. Expected target order comes from operand positions, with lexical
+ * fallthrough last; no list of selected branch mnemonics lives in the test. */
+branchcatalog: procedure = .int
+  failures = 0; opcode = .int; operand = .int; ignored = .int; ordinal = .int
+  atindex = .int; signature = .string; kind = .string
+  opcodes = .int[]; branches = .int[]; falls = .int[]; procedures = .int[]
+  branchfields = .object[]; original = .lltarget..module; item = .lltarget..record
+  root = .lltarget..bodydraft; body = .lltarget..body; op = .llir..opview
+  catalog = .llrxascatalog..catalog()
+  failures = failures + check(lltarget..normalsuccessors(-1) = -2 & lltarget..normalsuccessors(catalog.count()) = -2,'invalid opcode bounds remain unknown control')
+  failures = failures + check(lltarget..normalfallthrough(-1) = 0,'invalid opcode cannot claim lexical fallthrough')
+  registration = catalog.find('sigbr','LS'); indirect = catalog.find('jumps','RB')
+  failures = failures + check(registration >= 0 & lltarget..normalsuccessors(registration) = -1 & lltarget..normalfallthrough(registration) = 0,'handler registration label does not execute a normal branch')
+  failures = failures + check(indirect >= 0 & lltarget..normalsuccessors(indirect) = -2 & lltarget..normalfallthrough(indirect) = 0,'unrepresented indirect target remains incomplete')
+  draft = .lltarget..draft('cfg.catalog','fixture:cfg.catalog',0)
+  at = draft.synthetic('canonical direct-label CFG inventory')
+  do opcode = 0 to catalog.count() - 1
+    if catalog.sourcevisible(opcode) = 0 then iterate
+    if catalog.flow(opcode) <> 1 & catalog.flow(opcode) <> 2 then iterate
+    if lltarget..normalsuccessors(opcode) < 0 then iterate
+    root = draft.procedure('cfg_' || opcode,1,at)
+    ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(1),at)
+    call objectarraydrop branchfields
+    signature = catalog.signature(opcode)
+    do operand = 1 to length(signature)
+      kind = substr(signature,operand,1)
+      select
+        when kind = 'R' then branchfields[operand] = root.reg('r',0) as .object
+        when kind = 'I' then branchfields[operand] = .lltarget..operand.integer(1) as .object
+        when kind = 'L' & catalog.branch(opcode,operand) then branchfields[operand] = .lltarget..operand.symbol('cfg_target_' || opcode || '_' || operand) as .object
+        otherwise do
+          failures = failures + check(0,'direct branch has an unconstructed operand ' || opcode || ':' || operand)
+          return failures
+        end
+      end
+    end
+    atindex = opcodes[0] + 1; opcodes[atindex] = opcode
+    branches[atindex] = root.emit(catalog.mnemonic(opcode),branchfields,at)
+    procedures[atindex] = root.functionid()
+    falls[atindex] = 0
+    if lltarget..normalfallthrough(opcode) then falls[atindex] = one(root,'ret',.lltarget..operand.integer(0),at)
+    do operand = 1 to length(signature)
+      if catalog.branch(opcode,operand) = 0 then iterate
+      ignored = namedlabel(root,'cfg_target_' || opcode || '_' || operand,at)
+      ignored = one(root,'ret',.lltarget..operand.integer(1),at)
+    end
+  end
+  original = draft.finish()
+  failures = failures + check(original.valid(),'all canonical direct-label branch forms verify together')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  graph = dereference original.ir()
+  do atindex = 1 to opcodes[0]
+    opcode = opcodes[atindex]; body = original.body(procedures[atindex])
+    op = graph.operation(branches[atindex]); ordinal = 0
+    failures = failures + check(body.normalcfgcomplete() & op.successors() = lltarget..normalsuccessors(opcode),'canonical direct branch is complete ' || opcode)
+    do operand = 1 to length(catalog.signature(opcode))
+      if catalog.branch(opcode,operand) = 0 then iterate
+      ordinal = ordinal + 1
+      failures = failures + check(op.successor(ordinal) = body.labelblock('cfg_target_' || opcode || '_' || operand),'canonical target operand order ' || opcode || ':' || operand)
+    end
+    if lltarget..normalfallthrough(opcode) then do
+      item = original.at(falls[atindex])
+      failures = failures + check(op.successor(ordinal + 1) = item.blockid(),'canonical lexical fallthrough ' || opcode)
+    end
+  end
+  return failures
+
 /** Expansion still requires a linear root. Graph cleanup can prove the
  * known-branch retained child; typed tail observations retain their guard. */
 keeps: procedure = .int
@@ -320,6 +389,6 @@ incomplete: procedure = .int
   return failures
 
 main: procedure = .int
-  failures = shapes() + malformed() + keeps() + incomplete()
+  failures = shapes() + malformed() + branchcatalog() + keeps() + incomplete()
   say 'TARGET_CFG|failures=' || failures
   return failures

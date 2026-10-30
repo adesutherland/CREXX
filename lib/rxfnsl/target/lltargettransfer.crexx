@@ -1,0 +1,638 @@
+/* cREXX License (MIT). Checked operational target transfers, never proofs. */
+options levelb
+namespace lltargettransfer expose profile profiledraft instruction refview action domain
+import rxfnsb
+import llir
+import lltarget
+import llrxascatalog
+
+boot: initialiser expose serial
+  serial = 0
+  return
+nextidentity: procedure = .int expose serial
+  if serial = 9223372036854775807 then assembler signal "ERROR","LL_TARGET_TRANSFER: identities exhausted"
+  serial = serial + 1
+  return serial
+bad: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+
+/** A domain names one published component/flag/context bit. Native bit values
+ * are opaque selectors extracted from the catalogue, not a copied flag ABI.
+ * Whole domains cover components and flags, never ambient context. */
+domain: class
+  _id = .int
+  _kind = .string
+  _key = .string
+  _nativebit = .int
+  *: factory
+    arg id = .int, kind = .string, key = .string, nativebit = 0
+    _id = id; _kind = kind; _key = key; _nativebit = nativebit
+    return
+  id: method = .int
+    return _id
+  kind: method = .string
+    return _kind
+  key: method = .string
+    return _key
+  nativebit: method = .int
+    return _nativebit
+  complete: method = .int
+    return 1
+
+/** Reference selectors preserve bank/slot identity and entry/base roles.
+ * An implicit window with unknown extent remains one symbolic reference. */
+refview: class
+  _id = .int
+  _op = .int
+  _ordinal = .int
+  _kind = .string
+  _anchor = .string
+  _extentknown = .int
+  _extent = .int
+  _value = .lltarget..operand
+  *: factory
+    arg id = .int, opid = .int, ordinal = .int, kind = .string, anchor = .string, value = .lltarget..operand, extentknown = 1, extent = 1
+    _id = id; _op = opid; _ordinal = ordinal; _kind = kind; _anchor = anchor
+    _value = value; _extentknown = extentknown; _extent = extent
+    return
+  id: method = .int
+    return _id
+  opid: method = .int
+    return _op
+  kind: method = .string
+    return _kind
+  operandordinal: method = .int
+    return _ordinal
+  operand: method = .lltarget..operand
+    return _value
+  bank: method = .string
+    return _value.bank()
+  index: method = .int
+    return _value.index()
+  slot: method = .int
+    return _value.slotid()
+  function: method = .int
+    return _value.procedureid()
+  anchor: method = .string
+    return _anchor
+  extentknown: method = .int
+    return _extentknown
+  extent: method = .int
+    return _extent
+  unknownreason: method = .string
+    if _extentknown = 0 then return 'reference.window.extent.unknown'
+    return ''
+
+/** Ordered operational event. A read is a dependency, not necessarily a typed
+ * observation; transport does not demand availability of unobserved payloads.
+ * Must writes apply only on the indicated normal/failure event family. */
+action: class
+  _id = .int
+  _op = .int
+  _ordinal = .int
+  _kind = .string
+  _subject = .int
+  _domain = .int
+  _sourcekind = .string
+  _source = .int
+  _literal = .lltarget..operand
+  _certainty = .string
+  _when = .string
+  _phase = .string
+  _detail = .string
+  *: factory
+    arg id = .int, opid = .int, ordinal = .int, kind = .string, subject = .int, domainid = .int, sourcekind = .string, sourceid = .int, literal = .lltarget..operand, certainty = .string, path = .string, phase = .string, detail = .string
+    _id = id; _op = opid; _ordinal = ordinal; _kind = kind; _subject = subject; _domain = domainid
+    _sourcekind = sourcekind; _source = sourceid; _literal = literal; _certainty = certainty
+    _when = path; _phase = phase; _detail = detail
+    return
+  id: method = .int
+    return _id
+  opid: method = .int
+    return _op
+  ordinal: method = .int
+    return _ordinal
+  kind: method = .string
+    return _kind
+  subject: method = .int
+    return _subject
+  domain: method = .int
+    return _domain
+  sourcekind: method = .string
+    return _sourcekind
+  sourceid: method = .int
+    return _source
+  literal: method = .lltarget..operand
+    return _literal
+  value: method = .lltarget..operand
+    return _literal
+  certainty: method = .string
+    return _certainty
+  path: method = .string
+    return _when
+  phase: method = .string
+    return _phase
+  visibility: method = .string
+    return _when
+  detail: method = .string
+    return _detail
+  unknownreason: method = .string
+    if _certainty = 'unknown' | _kind = 'unknown' then return _detail
+    return ''
+
+instruction: class
+  _profile = reference .lltargettransfer..profile
+  _profileid = .int
+  _op = .int
+  *: factory
+    arg owner = reference .lltargettransfer..profile, opid = .int
+    _profile = owner; _op = opid
+    view = dereference owner; _profileid = view.identity()
+    return
+  require: method = .void
+    if <refvalid>(_profile) = 0 then do; call bad('LL_TARGET_OWNER: expired instruction profile'); return; end
+    view = dereference _profile
+    if view.valid() = 0 | view.identity() <> _profileid then call bad('LL_TARGET_OWNER: replaced instruction profile')
+    return
+  opid: method = .int
+    return _op
+  record: method = .lltarget..record
+    call require()
+    view = dereference _profile; target_ref = view.owner(); target = dereference target_ref
+    return target.at(_op)
+  function: method = .int
+    item = record(); return item.procedureid()
+  references: method = .int
+    call require()
+    view = dereference _profile; return view.references(_op)
+  ref: method = .lltargettransfer..refview
+    arg ordinal = .int
+    call require()
+    view = dereference _profile; return view.referenceat(_op,ordinal)
+  actions: method = .int
+    call require()
+    view = dereference _profile; return view.actions(_op)
+  action: method = .lltargettransfer..action
+    arg ordinal = .int
+    call require()
+    view = dereference _profile; return view.actionat(_op,ordinal)
+  complete: method = .int
+    arg family = .string
+    call require()
+    view = dereference _profile; return view.complete(_op,family)
+  unknownreason: method = .string
+    arg family = .string
+    call require()
+    view = dereference _profile; return view.unknownreason(_op,family)
+
+/** Immutable operational profile bound to one exact published target owner.
+ * Canonical profiles never infer missing mnemonic semantics. Rich profiles
+ * supply independent operational premises, not asserted analysis results. */
+profile: class
+  _owner = reference .lltarget..module
+  _graph = reference .llir..module
+  _identity = .int
+  _revision = .int
+  _catalog = .string
+  _premise = .string
+  _status = .string
+  _message = .string
+  _sealed = .int
+  _prepared = .int
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _declared = .int[]
+  _relocationknown = .int[]
+  _refs = .lltargettransfer..refview[]
+  _acts = .lltargettransfer..action[]
+  _domains = .lltargettransfer..domain[]
+  _rfirst = .int[]
+  _rlast = .int[]
+  _rnext = .int[]
+  _rcount = .int[]
+  _afirst = .int[]
+  _alast = .int[]
+  _anext = .int[]
+  _acount = .int[]
+  _unknownop = .int[]
+  _unknownfirst = .int[]
+  _unknownnext = .int[]
+  _unknownfamily = .string[]
+  _unknownreason = .string[]
+  *: factory
+    arg owner = reference .lltarget..module, work = 1000000, bytes = 67108864
+    _identity = nextidentity(); _owner = owner; _premise = 'canonical'
+    _status = 'building'; _worklimit = work; _bytelimit = bytes
+    return
+  premises: factory
+    arg owner = reference .lltarget..module, premiseid = .string, work = 1000000, bytes = 67108864
+    _identity = nextidentity(); _owner = owner; _premise = premiseid
+    _status = 'building'; _worklimit = work; _bytelimit = bytes
+    if premiseid = '' | premiseid = 'canonical' then do
+      _status = 'invalid'; _message = 'LL_TARGET_TRANSFER: independent premise identity required'
+    end
+    return
+  ensureprepared: method = .void
+    if _prepared | _status <> 'building' then return
+    _prepared = 1
+    call prepare(_owner,_premise,_worklimit,_bytelimit)
+    return
+  run: method = .void
+    if _status <> 'building' then return
+    call ensureprepared()
+    if _premise = 'canonical' & _status = 'building' then do
+      call canonical(); ignored = seal()
+    end
+    return
+  prepare: method = .void
+    arg owner = reference .lltarget..module, premiseid = .string, work = .int, bytes = .int
+    _owner = owner; _premise = premiseid
+    if work < 1 | bytes < 1 then do; call reject('limit','LL_RESOURCE_LIMIT: target.transfer budgets'); return; end
+    if <refvalid>(owner) = 0 then do; call reject('invalid','LL_TARGET_OWNER: expired transfer owner'); return; end
+    target = dereference owner
+    if target.valid() = 0 then do; call reject('invalid',target.error()); return; end
+    _graph = target.ir(); graph = dereference _graph; _revision = graph.identity()
+    catalog = .llrxascatalog..catalog(); _catalog = catalog.fingerprint()
+    if reserve(graph.operations() * 72,graph.operations() + 1) = 0 then return
+    do i = 1 to graph.operations()
+      _declared[i] = 0; _rfirst[i] = 0; _rlast[i] = 0; _rcount[i] = 0
+      _relocationknown[i] = 0
+      _afirst[i] = 0; _alast[i] = 0; _acount[i] = 0
+      _unknownfirst[i] = 0
+    end
+    return
+  reserve: method = .int
+    arg bytes = .int, work = .int
+    if _status <> 'building' then return 0
+    if bytes < 0 | work < 0 | bytes > _bytelimit - _bytes | work > _worklimit - _work then do
+      call reject('limit','LL_RESOURCE_LIMIT: target.transfer work/bytes'); return 0
+    end
+    _bytes = _bytes + bytes; _work = _work + work
+    return 1
+  reject: method = .void
+    arg state = .string, message = .string
+    if _status = 'building' then do; _status = state; _message = message; end
+    return
+  operation: method = .int
+    arg opid = .int
+    call ensureprepared()
+    if _status <> 'building' then return 0
+    graph = dereference _graph
+    if opid < 1 | opid > graph.operations() then do; call reject('invalid','LL_TARGET_TRANSFER: operation identity'); return 0; end
+    item = .lltarget..record(_graph,opid)
+    if item.valid() = 0 then do; call reject('invalid','LL_TARGET_TRANSFER: operation is not a source record'); return 0; end
+    if reserve(0,1) = 0 then return 0
+    _declared[opid] = 1
+    return 1
+  adddomain: method = .int
+    arg kind = .string, key = .string, nativebit = 0
+    call ensureprepared()
+    value = .lltargettransfer..domain
+    if wordpos(kind,'component flag context whole') = 0 | key = '' | nativebit < 0 then do
+      call reject('invalid','LL_TARGET_TRANSFER: domain shape'); return 0
+    end
+    do i = 1 to _domains[0]
+      if reserve(0,1) = 0 then return 0
+      value = _domains[i]
+      if value.key() = key then do
+        if value.kind() <> kind | value.nativebit() <> nativebit then call reject('invalid','LL_TARGET_TRANSFER: conflicting domain')
+        return i
+      end
+    end
+    if reserve(64 + length(kind) + length(key),1) = 0 then return 0
+    id = _domains[0] + 1; _domains[id] = .lltargettransfer..domain(id,kind,key,nativebit)
+    return id
+  addref: method = .int
+    arg opid = .int, ordinal = .int, kind = 'explicit', anchor = 'active', extentknown = 1, extent = 1
+    if operation(opid) = 0 then return 0
+    item = .lltarget..record(_graph,opid); value = .lltarget..operand
+    if wordpos(kind,'explicit window metadata label procedure source clause module') = 0 | wordpos(anchor,'active base entry symbolic') = 0 then do
+      call reject('invalid','LL_TARGET_TRANSFER: reference kind/anchor'); return 0
+    end
+    if ordinal < 0 | ordinal > item.operands() | wordpos(extentknown,'0 1') = 0 | extent < 0 then do
+      call reject('invalid','LL_TARGET_TRANSFER: reference selector'); return 0
+    end
+    if ordinal = 0 then do
+      if kind <> 'metadata' | item.registerrefs() = 0 then do; call reject('invalid','LL_TARGET_TRANSFER: metadata selector'); return 0; end
+      value = item.registerref(item.registerrefs())
+    end
+    else value = item.operand(ordinal)
+    if wordpos(kind,'explicit window metadata') > 0 & value.kind() <> 'R' then do
+      call reject('invalid','LL_TARGET_TRANSFER: register selector expected'); return 0
+    end
+    if kind = 'label' & value.kind() <> 'L' then do; call reject('invalid','LL_TARGET_TRANSFER: label selector expected'); return 0; end
+    if kind = 'procedure' & value.kind() <> 'P' then do; call reject('invalid','LL_TARGET_TRANSFER: procedure selector expected'); return 0; end
+    if wordpos(kind,'source clause') > 0 & value.kind() <> 'I' then do; call reject('invalid','LL_TARGET_TRANSFER: source/clause identity expected'); return 0; end
+    if reserve(112 + value.length(),1) = 0 then return 0
+    id = _refs[0] + 1; _refs[id] = .lltargettransfer..refview(id,opid,ordinal,kind,anchor,value,extentknown,extent)
+    _rnext[id] = 0
+    if _rlast[opid] > 0 then _rnext[_rlast[opid]] = id
+    else _rfirst[opid] = id
+    _rlast[opid] = id; _rcount[opid] = _rcount[opid] + 1
+    return id
+  event: method = .int
+    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = ''
+    ref = .lltargettransfer..refview; referenced = .lltarget..record
+    if operation(opid) = 0 then return 0
+    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap context policy call return lifetime edge raise unknown') = 0 | wordpos(sourcekind,'none reference literal unknown') = 0 | wordpos(certainty,'must may unknown') = 0 | wordpos(path,'normal failure all') = 0 | wordpos(phase,'none before partial after unknown') = 0 then do
+      call reject('invalid','LL_TARGET_TRANSFER: event tags'); return 0
+    end
+    if subject < 0 | subject > _refs[0] | domainid < 0 | domainid > _domains[0] | sourceid < 0 | sourceid > _refs[0] then do
+      call reject('invalid','LL_TARGET_TRANSFER: event reference/domain'); return 0
+    end
+    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap lifetime') > 0 & subject = 0 then do
+      call reject('invalid','LL_TARGET_TRANSFER: storage event requires a subject'); return 0
+    end
+    if domainid > 0 then do
+      described = _domains[domainid]
+      if kind = 'flagwrite' & described.kind() <> 'flag' then do; call reject('invalid','LL_TARGET_TRANSFER: flag domain expected'); return 0; end
+      if kind = 'context' & described.kind() <> 'context' then do; call reject('invalid','LL_TARGET_TRANSFER: context domain expected'); return 0; end
+    end
+    item = .lltarget..record(_graph,opid)
+    if subject > 0 then do
+      ref = _refs[subject]; referenced = .lltarget..record(_graph,ref.opid())
+      if referenced.procedureid() <> item.procedureid() then do; call reject('invalid','LL_TARGET_TRANSFER: foreign subject'); return 0; end
+    end
+    if sourcekind = 'reference' then do
+      if sourceid = 0 then do; call reject('invalid','LL_TARGET_TRANSFER: missing source reference'); return 0; end
+      ref = _refs[sourceid]; referenced = .lltarget..record(_graph,ref.opid())
+      if referenced.procedureid() <> item.procedureid() then do; call reject('invalid','LL_TARGET_TRANSFER: foreign source'); return 0; end
+    end
+    else if sourceid <> 0 then do; call reject('invalid','LL_TARGET_TRANSFER: unexpected source reference'); return 0; end
+    if ?literal = 0 then literal = .lltarget..operand()
+    if sourcekind = 'literal' then do
+      if literal.kind() = '' | literal.kind() = 'R' then do; call reject('invalid','LL_TARGET_TRANSFER: typed literal expected'); return 0; end
+    end
+    else if literal.kind() <> '' then do; call reject('invalid','LL_TARGET_TRANSFER: unexpected literal'); return 0; end
+    if reserve(160 + literal.length() + length(detail),1) = 0 then return 0
+    id = _acts[0] + 1; ordinal = _acount[opid] + 1
+    _acts[id] = .lltargettransfer..action(id,opid,ordinal,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail)
+    _anext[id] = 0
+    if _alast[opid] > 0 then _anext[_alast[opid]] = id
+    else _afirst[opid] = id
+    _alast[opid] = id; _acount[opid] = ordinal
+    return id
+  unknown: method = .void
+    arg opid = .int, family = .string, reason = .string
+    if _status <> 'building' then return
+    if wordpos(family,'references components flags numeric signals order control values observations ownership effects bindings failure calls relocation') = 0 | reason = '' then do
+      call reject('invalid','LL_TARGET_TRANSFER: unknown family/reason'); return
+    end
+    if operation(opid) = 0 then return
+    prior = _unknownfirst[opid]
+    do while prior > 0
+      if reserve(0,1) = 0 then return
+      if _unknownfamily[prior] = family then return
+      prior = _unknownnext[prior]
+    end
+    if reserve(48 + length(family) + length(reason),1) = 0 then return
+    id = _unknownop[0] + 1; _unknownop[id] = opid; _unknownfamily[id] = family; _unknownreason[id] = reason
+    _unknownnext[id] = _unknownfirst[opid]; _unknownfirst[opid] = id
+    return
+  /** Describe activation-relative observations, not an equivalence result.
+   * An explicit empty set is required; omitted descriptions stay unknown.
+   * Nonempty/unknown sets are retained until an owning adapter exists. */
+  relocation: method = .int
+    arg opid = .int, observation = 'none'
+    if operation(opid) = 0 then return 0
+    if _premise = 'canonical' | wordpos(observation,'none frame module code debug unknown') = 0 then do
+      call reject('invalid','LL_TARGET_TRANSFER: independent relocation description required'); return 0
+    end
+    if reserve(0,1) = 0 then return 0
+    if observation = 'none' then _relocationknown[opid] = 1
+    else call unknown(opid,'relocation','transfer.relocation.observer.' || observation)
+    return _status = 'building'
+  maskevents: method = .void
+    arg opid = .int, kind = .string, refid = .int, mask = .int, certainty = .string, path = .string, phase = .string
+    bit = 1; ordinal = 0
+    do while mask > 0
+      if reserve(0,1) = 0 then return
+      if mask % 2 then do
+        id = adddomain('component','component.bit.' || ordinal,bit)
+        ignored = event(opid,kind,refid,id,'none',0,.lltarget..operand(),certainty,path,phase)
+      end
+      mask = mask <idiv> 2; ordinal = ordinal + 1
+      if mask > 0 then bit = bit * 2
+    end
+    return
+  canonical: method = .void
+    j = .int; mask = .int
+    target = dereference _owner; catalog = .llrxascatalog..catalog(); value = .lltarget..operand
+    do n = 1 to target.records()
+      item = target.record(n); opid = item.id()
+      if operation(opid) = 0 then return
+      if item.kind() <> 'instruction' then do
+        do j = 1 to item.operands()
+          value = item.operand(j)
+          if value.kind() = 'R' then ignored = addref(opid,j,'metadata')
+        end
+        if item.kind() = '.traceevent' & item.registerrefs() > 0 then ignored = addref(opid,0,'metadata')
+        if item.registerrefs() > 0 then call unknown(opid,'observations','catalog.metadata.observation.unclassified')
+        iterate
+      end
+      code = item.opcode(); phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
+      call unknown(opid,'relocation','catalog.relocation.observation.unknown')
+      if catalog.classification(code) <> 0 then call unknown(opid,'effects','catalog.effects.unknown')
+      if (catalog.semantics(code) <idiv> 2) % 2 then do
+        ignored = event(opid,'call',0,0,'none',0,.lltarget..operand(),'unknown','all','unknown','catalog.call.callee.unknown')
+        call unknown(opid,'calls','catalog.call.callee.unknown')
+      end
+      if (catalog.semantics(code) <idiv> 8) % 2 then ignored = event(opid,'return',0,0)
+      do j = 1 to item.operands()
+        value = item.operand(j); refid = 0
+        if value.kind() = 'R' then refid = addref(opid,j)
+        else if value.kind() = 'L' then ignored = addref(opid,j,'label','symbolic')
+        else if value.kind() = 'P' then ignored = addref(opid,j,'procedure','symbolic')
+        if refid = 0 then iterate
+        if catalog.reads(code,j) then do
+          mask = catalog.readcomponents(code,j)
+          if mask > 0 then call maskevents(opid,'read',refid,mask,'must','normal','none')
+          else call unknown(opid,'components','catalog.read.components.unknown')
+          call unknown(opid,'observations','catalog.read.observation.unclassified')
+        end
+        if catalog.writes(code,j) then do
+          /* Component coverage does not prove a definite definition or a
+           * value-independent kill (COPY can transport unavailable state). */
+          certainty = 'may'
+          mask = catalog.writecomponents(code,j)
+          if mask > 0 then call maskevents(opid,'write',refid,mask,certainty,'normal','none')
+          /* The committed catalogue supplies possible component writes, but
+           * no proof that its component list is exhaustive. */
+          call unknown(opid,'components','catalog.write.components.unknown')
+          mask = catalog.clearcomponents(code,j)
+          if mask > 0 then call maskevents(opid,'clear',refid,mask,certainty,'normal','none')
+          call unknown(opid,'flags','catalog.write.flags.unknown')
+          call unknown(opid,'values','catalog.value.transfer.unknown')
+        end
+        if catalog.failurewrites(code,j) then call maskevents(opid,'write',refid,catalog.failurecomponents(code),'may','failure',phase)
+      end
+      if catalog.implicit(code) <> 0 then call unknown(opid,'references','catalog.implicit.reference.selector.unknown')
+      /* HEAD has no complete binding-action classifier. In particular an
+       * ordinary register copy may establish an alias without an alias flag. */
+      call unknown(opid,'bindings','catalog.binding.order.unknown')
+      call unknown(opid,'order','catalog.binding.order.unknown')
+      if catalog.contextreads(code) <> 0 | catalog.contextwrites(code) <> 0 | catalog.failurecontext(code) <> 0 | catalog.signaldependencies(code) % 2 then do
+        contextid = adddomain('context','context.numeric',0)
+        ignored = event(opid,'context',0,contextid,'none',0,.lltarget..operand(),'may','all',phase,'catalog.numeric.dependency')
+      end
+      call unknown(opid,'numeric','catalog.numeric.read.coverage.unknown')
+      if catalog.signalstate(code) = 2 then call unknown(opid,'signals','catalog.signal.contract.unknown')
+      else if catalog.signalstate(code) <> 0 then do
+        if catalog.signalsource(code) <> 1 then call unknown(opid,'signals','catalog.signal.names.unknown')
+      end
+      if catalog.policyeffect(code) <> 0 then do
+        ignored = event(opid,'policy',0,0,'none',0,.lltarget..operand(),'may','all',phase,'catalog.policy.' || catalog.policyeffect(code))
+        call unknown(opid,'order','catalog.policy.transfer.unknown')
+      end
+      if lltarget..normalsuccessors(code) = -2 then call unknown(opid,'control','catalog.normal.successors.unknown')
+      if catalog.unbounded(code) then call unknown(opid,'ownership','catalog.indirect.ownership.unknown')
+    end
+    return
+  seal: method = .int
+    call ensureprepared()
+    if _sealed then return _status = 'ok'
+    if _status <> 'building' then return 0
+    _sealed = 1; _status = 'ok'
+    return 1
+  sealed: method = .int
+    return _sealed
+  status: method = .string
+    call run()
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    if _status = 'ok' & valid() = 0 then return 'LL_TARGET_OWNER: stale transfer owner'
+    return _message
+  valid: method = .int
+    call run()
+    if _sealed = 0 | _status <> 'ok' | <refvalid>(_owner) = 0 | <refvalid>(_graph) = 0 then return 0
+    target = dereference _owner; graph = dereference _graph; catalog = .llrxascatalog..catalog()
+    if target.valid() = 0 | graph.error() <> '' | graph.identity() <> _revision | catalog.fingerprint() <> _catalog then return 0
+    other = target.ir(); return other <refsame> _graph
+  matches: method = .int
+    arg owner = reference .lltarget..module
+    return valid() & (_owner <refsame> owner)
+  require: method = .void
+    if valid() = 0 then call bad('LL_TARGET_OWNER: transfer expired, incomplete or replaced')
+    return
+  identity: method = .int
+    return _identity
+  revision: method = .int
+    return _revision
+  catalog: method = .string
+    return _catalog
+  premise: method = .string
+    return _premise
+  owner: method = reference .lltarget..module
+    call require(); return _owner
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+  instruction: method = .lltargettransfer..instruction
+    arg opid = .int
+    call require(); item = .lltarget..record(_graph,opid)
+    if item.valid() = 0 then call bad('LL_TARGET_TRANSFER: not a source operation')
+    return .lltargettransfer..instruction(reference self,opid)
+  unknownreason: method = .string
+    arg opid = .int, family = .string
+    call require()
+    if wordpos(family,'references components flags numeric signals order control values observations ownership effects bindings failure calls relocation') = 0 then return 'transfer.family.unknown'
+    if opid < 1 | opid > _declared[0] then return 'transfer.operation.unavailable'
+    if _declared[opid] = 0 then return 'transfer.operation.undeclared'
+    i = _unknownfirst[opid]
+    do while i > 0
+      if _unknownop[i] = opid & _unknownfamily[i] = family then return _unknownreason[i]
+      if _unknownop[i] = opid & _unknownfamily[i] = 'effects' then return _unknownreason[i]
+      if _unknownop[i] = opid & family = 'bindings' & _unknownfamily[i] = 'order' then return _unknownreason[i]
+      if _unknownop[i] = opid & family = 'failure' & _unknownfamily[i] = 'signals' then return _unknownreason[i]
+      i = _unknownnext[i]
+    end
+    if family = 'relocation' & _relocationknown[opid] = 0 then return 'transfer.relocation.undeclared'
+    return ''
+  complete: method = .int
+    arg opid = .int, family = .string
+    return unknownreason(opid,family) = ''
+  domains: method = .int
+    call require(); return _domains[0]
+  domain: method = .lltargettransfer..domain
+    arg id = .int
+    call require()
+    if id < 1 | id > _domains[0] then call bad('LL_TARGET_TRANSFER: domain ordinal')
+    return _domains[id]
+  references: method = .int
+    arg opid = .int
+    call checkop(opid); return _rcount[opid]
+  checkop: method = .void
+    arg opid = .int
+    call require()
+    if opid < 1 | opid > _declared[0] then call bad('LL_TARGET_TRANSFER: source operation ordinal')
+    return
+  ref: method = .lltargettransfer..refview
+    arg id = .int
+    call require()
+    if id < 1 | id > _refs[0] then call bad('LL_TARGET_TRANSFER: reference ordinal')
+    return _refs[id]
+  referenceat: method = .lltargettransfer..refview
+    arg opid = .int, ordinal = .int
+    call checkop(opid)
+    if ordinal < 1 | ordinal > _rcount[opid] then call bad('LL_TARGET_TRANSFER: instruction reference ordinal')
+    id = _rfirst[opid]
+    do i = 2 to ordinal; id = _rnext[id]; end
+    return _refs[id]
+  actions: method = .int
+    arg opid = .int
+    call checkop(opid); return _acount[opid]
+  action: method = .lltargettransfer..action
+    arg id = .int
+    call require()
+    if id < 1 | id > _acts[0] then call bad('LL_TARGET_TRANSFER: action ordinal')
+    return _acts[id]
+  actionat: method = .lltargettransfer..action
+    arg opid = .int, ordinal = .int
+    call checkop(opid)
+    if ordinal < 1 | ordinal > _acount[opid] then call bad('LL_TARGET_TRANSFER: instruction action ordinal')
+    id = _afirst[opid]
+    do i = 2 to ordinal; id = _anext[id]; end
+    return _acts[id]
+
+/** Construction accepts operational events, never claimed values, purity,
+ * restoration or summary conclusions. Unmentioned operations stay unknown. */
+profiledraft: class
+  _profile = .lltargettransfer..profile
+  *: factory
+    arg owner = reference .lltarget..module, premiseid = .string, work = 1000000, bytes = 67108864
+    _profile = .lltargettransfer..profile.premises(owner,premiseid,work,bytes)
+    return
+  operation: method = .int
+    arg opid = .int
+    return _profile.operation(opid)
+  /** Declare the complete activation-relative observation set for one source
+   * operation. 'none' is an empty operational set, never an inline proof. */
+  relocation: method = .int
+    arg opid = .int, observation = 'none'
+    return _profile.relocation(opid,observation)
+  domain: method = .int
+    arg kind = .string, key = .string, nativebit = 0
+    return _profile.adddomain(kind,key,nativebit)
+  ref: method = .int
+    arg opid = .int, ordinal = .int, kind = 'explicit', anchor = 'active', extentknown = 1, extent = 1
+    return _profile.addref(opid,ordinal,kind,anchor,extentknown,extent)
+  event: method = .int
+    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = ''
+    if ?literal = 0 then literal = .lltarget..operand()
+    return _profile.event(opid,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail)
+  unknown: method = .void
+    arg opid = .int, family = .string, reason = .string
+    call _profile.unknown(opid,family,reason)
+    return
+  status: method = .string
+    return _profile.status()
+  message: method = .string
+    return _profile.message()
+  finish: method = .lltargettransfer..profile
+    ignored = _profile.seal(); return _profile

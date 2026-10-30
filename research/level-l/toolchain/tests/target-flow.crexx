@@ -1,0 +1,199 @@
+/* cREXX License (MIT). Independent operational point/edge fact controls. */
+options levelb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+label: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+stalewitness: procedure = .int
+  arg view = .lltargetflow..entryread, property = .string
+  do
+    if property = 'origin' then do
+      at = view.origin()
+      return at.id() < 0
+    end
+    return view.operation() < 0
+    on signal
+      return 1
+  end
+  return 0
+
+main: procedure = .int
+  failures = 0; ignored = .int; i = .int; normaledge = .int; beforeedge = .int; partialedge = .int; afteredge = .int
+  haswitness = 0
+  ref0 = .int; ref1 = .int; ref2 = .int; labelref = .int
+  value = .lltargetflow..valuefact; witness = .lltargetflow..entryread
+  lifetime = .lltargetflow..lifetimefact
+  edge = .lltargetcfg..edge; record = .lltarget..record
+  literal = .lltarget..operand
+  draft = .lltarget..draft('target.flow','fixture:target.flow',0)
+  at = draft.synthetic('independent ordered transfer and signal-phase contract')
+  body = draft.procedure('main',3,at)
+  seed = two(body,'load',body.reg('r',0),.lltarget..operand.integer(10),at)
+  changed = two(body,'load',body.reg('r',0),.lltarget..operand.integer(99),at)
+  joined = label(body,'joined',at)
+  transported = two(body,'copy',body.reg('r',2),body.reg('r',1),at)
+  observed = one(body,'say',body.reg('r',2),at)
+  firstswap = two(body,'swap',body.reg('r',0),body.reg('r',2),at)
+  secondswap = two(body,'swap',body.reg('r',2),body.reg('r',1),at)
+  ended = one(body,'endlife',body.reg('r',0),at)
+  renewed = two(body,'load',body.reg('r',0),.lltarget..operand.integer(0),at)
+  countread = one(body,'say',body.reg('a',0),at)
+  returned = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('uncertain',2,at)
+  uncertainseed = two(body,'load',body.reg('r',0),.lltarget..operand.integer(10),at)
+  uncertainmap = two(body,'link',body.reg('r',0),body.reg('r',1),at)
+  uncertainread = one(body,'say',body.reg('r',0),at)
+  uncertainret = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('deriver',1,at)
+  deriveseed = two(body,'load',body.reg('r',0),.lltarget..operand.integer(10),at)
+  derived = one(body,'itos',body.reg('r',0),at)
+  deriveread = one(body,'say',body.reg('r',0),at)
+  deriveret = one(body,'ret',.lltarget..operand.integer(0),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'constructed source owner')
+  if target.valid() = 0 then do; say target.error(); say 'TARGET_FLOW|failures=' || failures; return failures; end
+  premise = .lltargettransfer..profiledraft(reference target,'fixture.flow.phases.v1')
+  integer = premise.domain('component','fixture.integer')
+  floating = premise.domain('component','fixture.float')
+  stringdomain = premise.domain('component','fixture.string')
+  flag = premise.domain('flag','flag.bit.8')
+  do i = 1 to target.records()
+    record = target.record(i)
+    if record.procedureid() > 1 & record.kind() <> 'procedure' then ignored = premise.operation(record.id())
+  end
+  ref0 = premise.ref(seed,1)
+  ignored = premise.event(seed,'write',ref0,integer,'literal',0,.lltarget..operand.integer(10))
+  ignored = premise.event(seed,'flagwrite',ref0,flag,'literal',0,.lltarget..operand.integer(1))
+  ref0 = premise.ref(changed,1)
+  /* The same ordered write is visible on normal/after edges, absent before,
+   * and only possible on the explicitly partial edge. */
+  ignored = premise.event(changed,'write',ref0,integer,'literal',0,.lltarget..operand.integer(99),'must','all','after')
+  labelref = premise.ref(joined,1,'label','symbolic')
+  ignored = premise.event(changed,'edge',labelref,0,'none',0,.lltarget..operand(),'must','failure','before','skip')
+  ignored = premise.event(changed,'edge',labelref,0,'none',0,.lltarget..operand(),'must','failure','partial','skip')
+  ignored = premise.event(changed,'edge',labelref,0,'none',0,.lltarget..operand(),'must','failure','after','skip')
+  ref2 = premise.ref(transported,1); ref1 = premise.ref(transported,2)
+  ignored = premise.event(transported,'transport',ref2,0,'reference',ref1)
+  ref2 = premise.ref(observed,1)
+  ignored = premise.event(observed,'observe',ref2,integer)
+  ref0 = premise.ref(firstswap,1); ref2 = premise.ref(firstswap,2)
+  ignored = premise.event(firstswap,'swap',ref0,0,'reference',ref2)
+  ref2 = premise.ref(secondswap,1); ref1 = premise.ref(secondswap,2)
+  ignored = premise.event(secondswap,'swap',ref2,0,'reference',ref1)
+  ref0 = premise.ref(ended,1)
+  ignored = premise.event(ended,'lifetime',ref0,0,'none',0,.lltarget..operand(),'must','normal','none','end')
+  ref0 = premise.ref(renewed,1)
+  ignored = premise.event(renewed,'lifetime',ref0,0,'none',0,.lltarget..operand(),'must','normal','none','begin')
+  ignored = premise.event(renewed,'write',ref0,integer,'literal',0,.lltarget..operand.integer(0))
+  countref = premise.ref(countread,1)
+  ignored = premise.event(countread,'read',countref,integer)
+  ignored = premise.event(returned,'return',0,integer,'literal',0,.lltarget..operand.integer(0))
+  ref0 = premise.ref(uncertainseed,1)
+  ignored = premise.event(uncertainseed,'write',ref0,integer,'literal',0,.lltarget..operand.integer(10))
+  ref0 = premise.ref(uncertainmap,1); ref1 = premise.ref(uncertainmap,2)
+  ignored = premise.event(uncertainmap,'link',ref0,0,'reference',ref1,.lltarget..operand(),'may')
+  ref0 = premise.ref(uncertainread,1)
+  ignored = premise.event(uncertainread,'observe',ref0,integer)
+  ignored = premise.event(uncertainret,'return',0,integer,'literal',0,.lltarget..operand.integer(0))
+  ref0 = premise.ref(deriveseed,1)
+  ignored = premise.event(deriveseed,'write',ref0,integer,'literal',0,.lltarget..operand.integer(10))
+  ref0 = premise.ref(derived,1)
+  ignored = premise.event(derived,'observe',ref0,integer)
+  ignored = premise.event(derived,'derive',ref0,stringdomain,'reference',ref0)
+  ref0 = premise.ref(deriveread,1)
+  ignored = premise.event(deriveread,'observe',ref0,stringdomain)
+  ignored = premise.event(deriveret,'return',0,integer,'literal',0,.lltarget..operand.integer(0))
+  profile = premise.finish()
+  failures = failures + check(profile.status() = 'ok','independent operational profile seals')
+  if profile.status() <> 'ok' then do; say profile.message(); say 'TARGET_FLOW|failures=' || failures; return failures; end
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  failures = failures + check(cfg.status() = 'ok','one typed machine CFG')
+  if cfg.status() <> 'ok' then do; say cfg.message(); say 'TARGET_FLOW|failures=' || failures; return failures; end
+  flow = lltargetflow..analyse(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','point and edge fixed point')
+  if flow.status() <> 'ok' then do; say flow.message(); say 'TARGET_FLOW|failures=' || failures; return failures; end
+  normaledge = 0; beforeedge = 0; partialedge = 0; afteredge = 0
+  do i = 1 to cfg.outedges(changed)
+    edge = cfg.outedge(changed,i)
+    if edge.role() = 'normal' then normaledge = edge.id()
+    else if edge.phase() = 'before' then beforeedge = edge.id()
+    else if edge.phase() = 'partial' then partialedge = edge.id()
+    else if edge.phase() = 'after' then afteredge = edge.id()
+  end
+  failures = failures + check(normaledge > 0 & beforeedge > 0 & partialedge > 0 & afteredge > 0,'parallel normal/before/partial/after identities retained')
+  if normaledge > 0 & beforeedge > 0 & partialedge > 0 & afteredge > 0 then do
+    value = flow.componenton(normaledge,'r',0,integer); literal = value.literal()
+    failures = failures + check(value.known() & literal.index() = 99,'normal successor owns new value')
+    value = flow.componenton(beforeedge,'r',0,integer); literal = value.literal()
+    failures = failures + check(value.known() & literal.index() = 10,'before-write resumption retains incoming value')
+    value = flow.componenton(afteredge,'r',0,integer); literal = value.literal()
+    failures = failures + check(value.known() & literal.index() = 99,'after-write resumption sees committed value')
+    value = flow.componenton(partialedge,'r',0,integer)
+    failures = failures + check(value.known() = 0,'partial write cannot become an exact value')
+    value = flow.flagon(partialedge,'r',0,flag); literal = value.literal()
+    failures = failures + check(value.known() & literal.index() = 1,'unrelated individual flag survives partial integer write')
+    lifetime = flow.lifetimeon(beforeedge,'r',0)
+    failures = failures + check(lifetime.state() = 'live','resumed before-write edge retains activation lifetime')
+  end
+  value = flow.componentat(changed,'r',0,integer); literal = value.literal()
+  failures = failures + check(value.known() & literal.index() = 10,'saved predecessor remains intact after all sibling transfers')
+  value = flow.componentat(transported,'r',0,integer)
+  failures = failures + check(value.known() = 0,'diamond join does not select one sibling value')
+  failures = failures + check(flow.entryobservations() = 1,'whole transport alone is not a typed observation')
+  if flow.entryobservations() = 1 then do
+    witness = flow.entryobservation(1)
+    haswitness = 1
+    failures = failures + check(witness.operation() = observed & witness.ownedindex() = 1 & witness.activeindex() = 2 & witness.domain() = integer,'transport carries entry provenance to exact observed owned base')
+  end
+  source0 = flow.storageat(seed,'r',0); source1 = flow.storageat(transported,'r',1); source2 = flow.storageat(transported,'r',2)
+  mapped0 = flow.storageat(returned,'r',0); mapped1 = flow.storageat(returned,'r',1); mapped2 = flow.storageat(returned,'r',2)
+  failures = failures + check(mapped0.active() = source2.base() & mapped1.active() = source0.base() & mapped2.active() = source1.base(),'overlapping swaps compose in event order')
+  failures = failures + check(mapped0.slotidentity() = source2.slotidentity() & mapped1.slotidentity() = source0.slotidentity(),'slot identities move with permutations')
+  expired = flow.lifetimeat(renewed,'r',0); lifetime = flow.lifetimeat(returned,'r',0)
+  failures = failures + check(expired.state() = 'ended' & lifetime.state() = 'live' & expired.generation() <> lifetime.generation(),'explicit end and begin carry distinct storage lifetime generations')
+  do i = 1 to cfg.outedges(returned)
+    edge = cfg.outedge(returned,i)
+    if edge.role() = 'terminal' then do
+      lifetime = flow.lifetimeon(edge.id(),'r',1)
+      failures = failures + check(lifetime.state() = 'ended','normal departure expires every owned local base')
+      lifetime = flow.lifetimeon(edge.id(),'a',0)
+      failures = failures + check(lifetime.state() = 'ended','normal departure expires the frame-owned argument count a0')
+    end
+  end
+  lifetime = flow.lifetimeat(uncertainread,'r',0)
+  failures = failures + check(lifetime.state() = 'unknown','unknown active binding cannot prove a lifetime')
+  failures = failures + check(flow.complete(target.procedureid('uncertain'),'entry-observation') = 0,'unknown observed binding is incomplete without a speculative warning')
+  projection_ref = flow.projection(); projection = dereference projection_ref
+  failures = failures + check(projection.status() = 'ok' & projection.complete(target.procedureid('uncertain')) = 0,'unknown observed storage pins liveness instead of becoming an empty access')
+  value = flow.componentat(deriveread,'r',0,stringdomain)
+  failures = failures + check(value.status() = 'unknown' & flow.complete(target.procedureid('deriver'),'entry-observation') = 0,'cross-component derivation cannot invent a source-domain dependency')
+  failures = failures + check(projection.complete(target.procedureid('deriver')) = 0,'missing derivation selector pins liveness rather than reading the destination domain')
+  limited = lltargetflow..analyse(reference target,reference profile,reference cfg,1)
+  failures = failures + check(limited.status() = 'limit' & limited.entryobservations() = 0,'tiny fuel produces no partial observations')
+  prior = flow.componentat(changed,'r',0,integer)
+  flow = lltargetflow..analyse(reference target,reference profile,reference cfg)
+  status = flow.status()
+  failures = failures + check(prior.valid() = 0,'replacing analysis invalidates old value view')
+  if haswitness then failures = failures + check(witness.valid() = 0 & stalewitness(witness,'operation') & stalewitness(witness,'origin'),'stale observation getters and provenance reject a replacement owner')
+  if failures = 0 then say 'TARGET_FLOW|failures=0'
+  else say 'TARGET_FLOW|failures=' || failures
+  return failures

@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Indexed, bounded analysis of frozen executable IR. */
 options levelb
-namespace llirgraph expose index cycles access live
+namespace llirgraph expose edgeprofile index cycles access live
 import rxfnsb
 import llir
 
@@ -16,6 +16,195 @@ bad: procedure = .void
   assembler signal "ERROR",message
   return
 
+/** Sealed typed annotations of actual ordered successors. Adapters split
+ * edge-bearing operations into terminal positions before constructing this
+ * profile. Boundary rows never invent cross-function IR successors.
+ * @param owner Exact frozen projection owner.
+ * @param work Maximum construction/validation work.
+ * @param bytes Maximum retained logical bytes.
+ */
+edgeprofile: class
+  _owner = reference .llir..module
+  _revision = .int
+  _identity = .int
+  _status = .string
+  _message = .string
+  _sealed = .int
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _source = .int[]
+  _head = .int[]
+  _next = .int[]
+  _successor = .int[]
+  _role = .string[]
+  _phase = .string[]
+  _signal = .string[]
+  _boundarykind = .string[]
+  _boundaryid = .string[]
+  _complete = .int[]
+  _reason = .string[]
+  *: factory
+    arg owner = reference .llir..module, work = 1000000, bytes = 67108864
+    _owner = owner; _identity = nextidentity(); _status = 'building'; _worklimit = work; _bytelimit = bytes
+    if work < 1 | bytes < 1 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: ir.edges budgets must be positive'; return; end
+    if <refvalid>(owner) = 0 then do; _status = 'invalid'; _message = 'LL_IR_EDGE_OWNER: module expired'; return; end
+    graph = dereference owner; _revision = graph.identity()
+    if graph.error() <> '' then do; _status = 'invalid'; _message = graph.error(); return; end
+    if graph.operations() > bytes <idiv> 8 then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: ir.edges index exhausted'; return; end
+    _bytes = graph.operations() * 8
+    if graph.operations() > work then do; _status = 'limit'; _message = 'LL_RESOURCE_LIMIT: ir.edges.work exhausted'; return; end
+    _work = graph.operations()
+    do op = 1 to graph.operations(); _head[op] = 0; end
+    return
+  reject: method = .void
+    arg status = .string, message = .string
+    if _status = 'building' then do; _status = status; _message = message; end
+    return
+  spend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _worklimit - _work then do; call reject('limit','LL_RESOURCE_LIMIT: ir.edges.work exhausted'); return 0; end
+    _work = _work + amount; return 1
+  ownerlive: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    graph = dereference _owner
+    return graph.identity() = _revision & graph.error() = ''
+  mutable: method = .int
+    if _sealed then call bad('LL_IR_EDGE_FROZEN: profile is sealed')
+    if _status <> 'building' then return 0
+    if ownerlive() = 0 then do; call reject('invalid','LL_IR_EDGE_OWNER: module expired or replaced'); return 0; end
+    return 1
+  put: method = .void
+    arg op = .int, successor = .int, role = .string, phase = .string, signalname = ''
+    call append(op,successor,role,phase,'','',signalname,1,'')
+    return
+  boundary: method = .void
+    arg op = .int, role = .string, phase = .string, kind = .string, id = .string, signalname = '', complete = 1, reason = ''
+    call append(op,0,role,phase,kind,id,signalname,complete,reason)
+    return
+  append: method = .void
+    arg op = .int, successor = .int, role = .string, phase = .string, kind = .string, id = .string, signalname = .string, complete = .int, reason = .string
+    i = .int; row = .int; amount = .int
+    if mutable() = 0 then return
+    graph = dereference _owner
+    if op < 1 | op > graph.operations() then do; call reject('invalid','LL_IR_EDGE_ID: operation outside owner'); return; end
+    if role = '' | wordpos(phase,'none before partial after unknown') = 0 | (complete <> 0 & complete <> 1) then do
+      call reject('invalid','LL_IR_EDGE: invalid role, phase or completeness'); return
+    end
+    operation = graph.operation(op); store = dereference graph.storage(); block = store.get(3,op,2)
+    if store.get(2,block,3) <> op then do; call reject('invalid','LL_IR_EDGE: source is not its block terminator'); return; end
+    if successor < 0 | successor > operation.successors() then do; call reject('invalid','LL_IR_EDGE_ID: successor outside operation'); return; end
+    if successor = 0 & kind = '' then do; call reject('invalid','LL_IR_EDGE: boundary kind is empty'); return; end
+    if successor > 0 & (kind <> '' | id <> '' | complete = 0) then do; call reject('invalid','LL_IR_EDGE: successor cannot be a boundary'); return; end
+    if complete = 0 & reason = '' then do; call reject('invalid','LL_IR_EDGE: incomplete boundary needs reason'); return; end
+    i = _head[op]
+    do while i > 0
+      if spend(1) = 0 then return
+      if _successor[i] = successor then do
+        if successor > 0 | (_boundarykind[i] = kind & _boundaryid[i] = id & _role[i] = role & _signal[i] = signalname) then do
+          call reject('invalid','LL_IR_EDGE: duplicate successor/boundary annotation'); return
+        end
+      end
+      i = _next[i]
+    end
+    bits = role as .binary; amount = 104 + <blen>(bits)
+    bits = phase as .binary; amount = amount + <blen>(bits)
+    bits = kind as .binary; amount = amount + <blen>(bits)
+    bits = id as .binary; amount = amount + <blen>(bits)
+    bits = signalname as .binary; amount = amount + <blen>(bits)
+    bits = reason as .binary; amount = amount + <blen>(bits)
+    if amount > _bytelimit - _bytes then do; call reject('limit','LL_RESOURCE_LIMIT: ir.edges.bytes exhausted'); return; end
+    if spend(1) = 0 then return
+    _bytes = _bytes + amount; row = _source[0] + 1
+    _source[row] = op; _successor[row] = successor; _role[row] = role; _phase[row] = phase; _signal[row] = signalname
+    _boundarykind[row] = kind; _boundaryid[row] = id; _complete[row] = complete; _reason[row] = reason
+    _next[row] = _head[op]; _head[op] = row
+    return
+  seal: method = .int
+    op = .int; ordinal = .int; row = .int; found = .int
+    if _sealed then return valid()
+    if mutable() = 0 then do; _sealed = 1; return 0; end
+    graph = dereference _owner
+    do op = 1 to graph.operations()
+      if spend(1) = 0 then leave
+      operation = graph.operation(op)
+      do ordinal = 1 to operation.successors()
+        found = 0
+        row = _head[op]
+        do while row > 0
+          if spend(1) = 0 then leave
+          if _successor[row] = ordinal then do; found = 1; leave; end
+          row = _next[row]
+        end
+        if _status <> 'building' then leave
+        if found = 0 then do; call reject('invalid','LL_IR_EDGE: actual successor lacks annotation'); leave; end
+      end
+      if _status <> 'building' then leave
+    end
+    _sealed = 1
+    if _status = 'building' then _status = 'ok'
+    return valid()
+  valid: method = .int
+    return _sealed & _status = 'ok' & ownerlive()
+  matches: method = .int
+    arg owner = reference .llir..module
+    return valid() & (_owner <refsame> owner)
+  status: method = .string
+    if _status = 'ok' & ownerlive() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    if _status = 'ok' & ownerlive() = 0 then return 'LL_IR_EDGE_OWNER: module expired or replaced'
+    return _message
+  identity: method = .int
+    return _identity
+  revision: method = .int
+    return _revision
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes
+  require: method = .void
+    if valid() = 0 then call bad('LL_IR_EDGE_OWNER: profile unavailable or expired: ' || message())
+    return
+  checkrow: method = .void
+    arg row = .int
+    call require()
+    if row < 1 | row > _source[0] then call bad('LL_IR_EDGE_ID: row outside profile')
+    return
+  rows: method = .int
+    call require(); return _source[0]
+  sourceop: method = .int
+    arg row = .int
+    call checkrow(row); return _source[row]
+  successor: method = .int
+    arg row = .int
+    call checkrow(row); return _successor[row]
+  isboundary: method = .int
+    arg row = .int
+    call checkrow(row); return _successor[row] = 0
+  role: method = .string
+    arg row = .int
+    call checkrow(row); return _role[row]
+  phase: method = .string
+    arg row = .int
+    call checkrow(row); return _phase[row]
+  signalname: method = .string
+    arg row = .int
+    call checkrow(row); return _signal[row]
+  boundarykind: method = .string
+    arg row = .int
+    call checkrow(row); return _boundarykind[row]
+  boundaryid: method = .string
+    arg row = .int
+    call checkrow(row); return _boundaryid[row]
+  complete: method = .int
+    arg row = .int
+    call checkrow(row); return _complete[row]
+  reason: method = .string
+    arg row = .int
+    call checkrow(row); return _reason[row]
+
 /** One index borrows one exact frozen module variable. Structural queries
  * describe its declared CFG, including both protect setup edges. Nonreturning
  * or opaque extensions do not prevent indexing. They conservatively pin the
@@ -28,6 +217,9 @@ bad: procedure = .void
  */
 index: class
   _owner = reference .llir..module
+  _edgeprofile = reference .llirgraph..edgeprofile
+  _edgeprofileid = .int
+  _typed = .int
   _revision = .int
   _schema = .int
   _identity = .int
@@ -105,9 +297,16 @@ index: class
     _identity = nextidentity(); _owner = owner; _status = 'building'; _message = ''
     _worklimit = work; _bytelimit = bytes; _work = 0; _bytes = 0
     return
+  typed: factory
+    arg owner = reference .llir..module, profile = reference .llirgraph..edgeprofile, work = 1000000, bytes = 67108864
+    _identity = nextidentity(); _owner = owner; _edgeprofile = profile; _typed = 1; _status = 'building'; _message = ''
+    _worklimit = work; _bytelimit = bytes; _work = 0; _bytes = 0
+    return
   run: method = .void
     if _status <> 'building' then return
     work = _worklimit; bytes = _bytelimit; owner = _owner
+    profile = .llirgraph..edgeprofile
+    profile_ref = _edgeprofile
     f = .int; b = .int; v = .int; s = .int; op = .int; i = .int; target = .int; link = .int
     root = .int; top = .int; p = .int; a = .int; c = .int; parent = .int; child = .int
     if work < 1 | bytes < 1 then do
@@ -118,6 +317,14 @@ index: class
     end
     graph = dereference owner
     if graph.error() <> '' then do; call reject('invalid',graph.error()); return; end
+    if _typed then do
+      if <refvalid>(_edgeprofile) = 0 then do; call reject('invalid','LL_IR_EDGE_OWNER: profile expired'); return; end
+    end
+    if _typed then profile = dereference profile_ref
+    if _typed then do
+      if profile.matches(owner) = 0 then do; call reject('invalid','LL_IR_EDGE_OWNER: profile unavailable or foreign'); return; end
+      _edgeprofileid = profile.identity()
+    end
     _revision = graph.identity(); store = dereference graph.storage()
     contract = dereference store.contract(); _schema = contract.identity(); schema = dereference contract.data()
     _functions = graph.functions(); _blocks = graph.blocks(); _operations = graph.operations()
@@ -195,6 +402,10 @@ index: class
     end
     /* Flatten the append-only lists once. Ordinal public queries are O(1),
      * including high-degree predecessor and many-use value queries. */
+    if _typed then do row = 1 to profile.rows()
+      if spend(1) = 0 then return
+      if profile.complete(row) = 0 then _pinned[_blockfn[_opblock[profile.sourceop(row)]]] = 1
+    end
     start = 1
     do b = 1 to _blocks
       if spend(1) = 0 then return
@@ -352,7 +563,13 @@ index: class
     if _status <> 'ok' then return 0
     if <refvalid>(_owner) = 0 then return 0
     graph = dereference _owner
-    return graph.identity() = _revision & graph.error() = ''
+    if graph.identity() <> _revision | graph.error() <> '' then return 0
+    if _typed then do
+      if <refvalid>(_edgeprofile) = 0 then return 0
+      profile_ref = _edgeprofile; profile = dereference profile_ref
+      return profile.matches(_owner) & profile.identity() = _edgeprofileid
+    end
+    return 1
   matches: method = .int
     arg owner = reference .llir..module
     return valid() & (_owner <refsame> owner)
@@ -361,6 +578,10 @@ index: class
     return
   owner: method = reference .llir..module
     call require(); return _owner
+  typedmode: method = .int
+    call require(); return _typed
+  edgeprofile: method = reference .llirgraph..edgeprofile
+    call require(); return _edgeprofile
   identity: method = .int
     return _identity
   revision: method = .int
@@ -425,6 +646,9 @@ index: class
   firstop: method = .int
     arg b = .int
     call checkid(b,_blocks); return _firstop[b]
+  lastop: method = .int
+    arg b = .int
+    call checkid(b,_blocks); return _lastop[b]
   nextop: method = .int
     arg op = .int
     call checkid(op,_operations); return _nextop[op]
@@ -434,6 +658,19 @@ index: class
   successor: method = .int
     arg b = .int, i = .int
     call checkid(b,_blocks); call checkid(i,_succcount[b]); return _edgeto[_succstart[b] + i - 1]
+  edges: method = .int
+    call require(); return _edgeto[0]
+  edgeid: method = .int
+    arg op = .int, ordinal = .int
+    call checkid(op,_operations); b = _opblock[op]
+    if _lastop[b] <> op then call bad('LL_IR_EDGE_ID: operation is not a block terminator')
+    call checkid(ordinal,_succcount[b]); return _succstart[b] + ordinal - 1
+  edgeop: method = .int
+    arg edge = .int
+    call checkid(edge,_edgeto[0]); return _lastop[_edgefrom[edge]]
+  edgeordinal: method = .int
+    arg edge = .int
+    call checkid(edge,_edgeto[0]); return edge - _succstart[_edgefrom[edge]] + 1
   predecessors: method = .int
     arg b = .int
     call checkid(b,_blocks); return _predcount[b]
@@ -726,6 +963,15 @@ access: class
   _fnstart = .int[]
   _fncount = .int[]
   _members = .int[]
+  _edgestart = .int[]
+  _edgecount = .int[]
+  _edgeknown = .int[]
+  _edgedomain = .int[]
+  _edgekind = .int[]
+  _boundarystart = .int[]
+  _boundarycount = .int[]
+  _boundaryknown = .int[]
+  _boundarydomain = .int[]
   *: factory
     arg owner = reference .llirgraph..index, profile = .string, entries = 1000000, bytes = 67108864, work = 1000000
     graph = .llirgraph..index
@@ -749,14 +995,24 @@ access: class
     if ownerlive() = 0 then do; call reject('invalid','LL_IR_GRAPH_OWNER: access index expired or replaced'); return; end
     owner = _owner; graph = dereference owner; profilebits = _profile as .binary
     if reserve(0,<blen>(profilebits),1) = 0 then return
-    if reserve(_operations,_operations,24) = 0 then return
+    if reserve(_operations,_operations,48) = 0 then return
+    if reserve(graph.edges(),graph.edges(),24) = 0 then return
     if reserve(_functions,_functions,24) = 0 then return
     if reserve(_core,_core,32) = 0 then return
     if spend(_operations + _functions + _core) = 0 then return
     do f = 1 to _functions; _pinned[f] = 0; _fncount[f] = 0; _fnstart[f] = 0; end
+    if graph.typedmode() then do
+      typedref = graph.edgeprofile(); typedprofile = dereference typedref
+      if spend(typedprofile.rows()) = 0 then return
+      do row = 1 to typedprofile.rows()
+        if typedprofile.complete(row) = 0 then _pinned[graph.blockfunction(graph.opblock(typedprofile.sourceop(row)))] = 1
+      end
+    end
+    do edge = 1 to graph.edges(); _edgestart[edge] = 0; _edgecount[edge] = 0; _edgeknown[edge] = 0; end
     do d = 1 to _core; _domainfn[d] = graph.slotfunction(d); _keys[d] = ''; end
     do op = 1 to _operations
       _known[op] = graph.opcode(op) <= 16; _start[op] = _accessdomain[0] + 1; _count[op] = 0
+      _boundarystart[op] = 0; _boundarycount[op] = 0; _boundaryknown[op] = 0
       if graph.opcode(op) = 10 then _pinned[graph.blockfunction(graph.opblock(op))] = 1
       slot = graph.opslot(op)
       if slot = 0 then iterate
@@ -872,6 +1128,96 @@ access: class
     end
     _known[op] = 1
     return
+  /** Edge actions occur after the common operation transfer. Kills here apply
+   * only to this actual successor, never to sibling failure/resume paths. */
+  edgeput: method = .void
+    arg op = .int, ordinal = .int, reads = .int[], observations = .int[], writes = .int[], kills = .int[]
+    graph = .llirgraph..index; list = .int[]
+    f = .int; edge = .int; amount = .int; kind = .int; i = .int; j = .int; d = .int; found = .int; mask = .int; next = .int
+    if mutable() = 0 then return
+    graph = dereference _owner
+    if op < 1 | op > _operations then do; call reject('invalid','LL_IR_ACCESS_ID: edge operation outside index'); return; end
+    b = graph.opblock(op)
+    if graph.nextop(op) <> 0 | ordinal < 1 | ordinal > graph.successors(b) then do
+      call reject('invalid','LL_IR_ACCESS_ID: edge is not an actual terminal successor'); return
+    end
+    edge = graph.edgeid(op,ordinal)
+    if _edgeknown[edge] then do; call reject('invalid','LL_IR_ACCESS: duplicate edge description'); return; end
+    if graph.opcode(op) <= 16 & (writes[0] > 0 | kills[0] > 0) then do; call reject('invalid','LL_IR_ACCESS: core edge cannot redefine canonical writes'); return; end
+    f = graph.blockfunction(b); amount = 0
+    do kind = 1 to 4
+      select
+        when kind = 1 then list = reads
+        when kind = 2 then list = observations
+        when kind = 3 then list = writes
+        otherwise list = kills
+      end
+      if list[0] > _entrylimit - amount then do; call reject('limit','LL_RESOURCE_LIMIT: ir.access edge entries exhausted'); return; end
+      amount = amount + list[0]
+      do i = 1 to list[0]
+        if spend(1) = 0 then return
+        d = list[i]
+        if d < 1 | d > _domains then do; call reject('invalid','LL_IR_ACCESS_ID: edge domain outside projection'); return; end
+        if _domainfn[d] <> f then do; call reject('invalid','LL_IR_ACCESS_DOMAIN: foreign edge domain'); return; end
+        do j = 1 to i - 1
+          if spend(1) = 0 then return
+          if list[j] = d then do; call reject('invalid','LL_IR_ACCESS: duplicate edge domain'); return; end
+        end
+        if kind <> 4 then iterate
+        found = 0
+        do j = 1 to writes[0]
+          if spend(1) = 0 then return
+          if writes[j] = d then do; found = 1; leave; end
+        end
+        if found = 0 then do; call reject('invalid','LL_IR_ACCESS: edge kill is not a possible write'); return; end
+      end
+    end
+    if reserve(amount,amount,16) = 0 then return
+    if spend(amount) = 0 then return
+    _edgestart[edge] = _edgedomain[0] + 1
+    do kind = 1 to 4
+      select
+        when kind = 1 then list = reads
+        when kind = 2 then list = observations
+        when kind = 3 then list = writes
+        otherwise list = kills
+      end
+      mask = 1
+      if kind = 2 then mask = 2
+      if kind = 3 then mask = 4
+      if kind = 4 then mask = 8
+      do i = 1 to list[0]
+        next = _edgedomain[0] + 1; _edgedomain[next] = list[i]; _edgekind[next] = mask; _edgecount[edge] = _edgecount[edge] + 1
+      end
+    end
+    _edgeknown[edge] = 1
+    return
+  /** Aggregate observations of terminal/nonlocal boundary exits. Boundary
+   * identities remain in the typed edge profile; liveness needs their union. */
+  boundaryput: method = .void
+    arg op = .int, observations = .int[]
+    graph = .llirgraph..index; i = .int; j = .int; d = .int; f = .int
+    if mutable() = 0 then return
+    graph = dereference _owner
+    if op < 1 | op > _operations then do; call reject('invalid','LL_IR_ACCESS_ID: boundary operation outside index'); return; end
+    if graph.nextop(op) <> 0 then do; call reject('invalid','LL_IR_ACCESS: boundary source is not terminal'); return; end
+    if _boundaryknown[op] then do; call reject('invalid','LL_IR_ACCESS: duplicate boundary description'); return; end
+    f = graph.blockfunction(graph.opblock(op))
+    do i = 1 to observations[0]
+      if spend(1) = 0 then return
+      d = observations[i]
+      if d < 1 | d > _domains then do; call reject('invalid','LL_IR_ACCESS_ID: boundary domain outside projection'); return; end
+      if _domainfn[d] <> f then do; call reject('invalid','LL_IR_ACCESS_DOMAIN: foreign boundary domain'); return; end
+      do j = 1 to i - 1
+        if spend(1) = 0 then return
+        if observations[j] = d then do; call reject('invalid','LL_IR_ACCESS: duplicate boundary domain'); return; end
+      end
+    end
+    if reserve(observations[0],observations[0],8) = 0 then return
+    if spend(observations[0]) = 0 then return
+    _boundarystart[op] = _boundarydomain[0] + 1; _boundarycount[op] = observations[0]; _boundaryknown[op] = 1
+    do i = 1 to observations[0]; _boundarydomain[_boundarydomain[0] + 1] = observations[i]; end
+    return
   seal: method = .int
     graph = .llirgraph..index; op = .int; d = .int; f = .int; next = .int
     if _sealed then return valid()
@@ -978,6 +1324,29 @@ access: class
   kills: method = .int
     arg op = .int, d = .int
     return has(op,d,8)
+  edgeaccesses: method = .int
+    arg op = .int, ordinal = .int
+    call checkid(op,_operations); graph = dereference _owner
+    return _edgecount[graph.edgeid(op,ordinal)]
+  edgehas: method = .int
+    arg op = .int, ordinal = .int, d = .int, kind = .int
+    i = .int; edge = .int
+    call checkid(op,_operations); call checkid(d,_domains); graph = dereference _owner; edge = graph.edgeid(op,ordinal)
+    do i = _edgestart[edge] to _edgestart[edge] + _edgecount[edge] - 1
+      if _edgedomain[i] = d & _edgekind[i] = kind then return 1
+    end
+    return 0
+  boundaryaccesses: method = .int
+    arg op = .int
+    call checkid(op,_operations); return _boundarycount[op]
+  boundaryobserves: method = .int
+    arg op = .int, d = .int
+    i = .int
+    call checkid(op,_operations); call checkid(d,_domains)
+    do i = _boundarystart[op] to _boundarystart[op] + _boundarycount[op] - 1
+      if _boundarydomain[i] = d then return 1
+    end
+    return 0
 
 /** Backwards finite slot liveness, plus block-local value use intervals.
  * Every slot/value storage in protected or opaque functions is conservatively
@@ -1100,9 +1469,22 @@ live: class
         if spend(1) = 0 then return
         s = functiondomain(f,i); at = offset + s - 1; after = 0
         if pinnedfunction(f) then after = 1
-        else do j = 1 to graph.successors(b)
-          if spend(1) = 0 then return
-          target = graph.successor(b,j); after = after | <at..u8>((target - 1) * _slots + s - 1) _in
+        else do
+          terminal = graph.lastop(b)
+          if _projected then do
+            if spend(projection.boundaryaccesses(terminal) + 1) = 0 then return
+            after = projection.boundaryobserves(terminal,s)
+          end
+          do j = 1 to graph.successors(b)
+            if spend(1) = 0 then return
+            target = graph.successor(b,j); incoming = <at..u8>((target - 1) * _slots + s - 1) _in
+            if _projected then do
+              if spend(projection.edgeaccesses(terminal,j) * 3 + 1) = 0 then return
+              edgeuse = projection.edgehas(terminal,j,s,1) | projection.edgehas(terminal,j,s,2)
+              incoming = edgeuse | (incoming & (projection.edgehas(terminal,j,s,8) = 0))
+            end
+            after = after | incoming
+          end
         end
         before = <at..u8>(at) use | (after & (<at..u8>(at) kill = 0))
         <at..u8>(at) _out = after
@@ -1219,6 +1601,22 @@ live: class
   domainafter: method = .int
     arg op = .int, d = .int
     return domainpoint(op,d,1)
+  /** Demand immediately before one edge's transfer, after common actions. */
+  domainedge: method = .int
+    arg op = .int, ordinal = .int, d = .int
+    graph = .llirgraph..index; projection = .llirgraph..access
+    call require(); graph = dereference _owner; call graph.checkid(op,graph.operations()); call graph.checkid(d,_slots)
+    b = graph.opblock(op)
+    if graph.nextop(op) <> 0 then call bad('LL_IR_EDGE_ID: liveness edge source is not terminal')
+    call graph.checkid(ordinal,graph.successors(b))
+    if graph.blockfunction(b) <> domainfunction(d) then return 0
+    if pinnedfunction(domainfunction(d)) then return 1
+    if graph.reachable(b) = 0 then return 0
+    target = graph.successor(b,ordinal); incoming = domainin(target,d)
+    if _projected = 0 then return incoming
+    projection = dereference _projection
+    if projection.edgeaccesses(op,ordinal) * 3 + 1 > _worklimit then call bad('LL_RESOURCE_LIMIT: ir.live.edge query work exhausted')
+    return projection.edgehas(op,ordinal,d,1) | projection.edgehas(op,ordinal,d,2) | (incoming & (projection.edgehas(op,ordinal,d,8) = 0))
   domainpoint: method = .int
     arg op = .int, d = .int, after = .int
     graph = .llirgraph..index; projection = .llirgraph..access

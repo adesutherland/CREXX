@@ -1,0 +1,209 @@
+/* cREXX License (MIT). Selected private globals remain qualified model data. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetremap
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+
+expiredowner: procedure = reference .lltarget..module
+  local = .lltarget..module
+  return reference local
+
+/** Only the relocation-observation family is described here. These concrete
+ * LOAD/COPY/RET records have no activation-relative observer outside declared
+ * typed operands; private gN storage remains a qualified operand. Unrelated
+ * operational families stay unknown. A selected exception exercises
+ * omission or a deliberately supplied observer without claiming a VM fact. */
+relocationpremises: procedure = .lltargettransfer..profile
+  arg owner = reference .lltarget..module, exception = 0, observation = 'none'
+  source = dereference owner; builder = .lltargettransfer..profiledraft(owner,'independent.module.remap.relocation.v1')
+  do i = 1 to source.records()
+    item = source.record(i); ignored = builder.operation(item.id())
+    if item.kind() <> 'instruction' then iterate
+    if wordpos(item.mnemonic(),'load copy ret') = 0 then do
+      call builder.unknown(item.id(),'effects','fixture.unspecified'); iterate
+    end
+    families = 'references components flags numeric signals order control values observations ownership bindings failure calls'
+    do f = 1 to words(families)
+      family = word(families,f)
+      call builder.unknown(item.id(),family,'fixture.relocation.only')
+    end
+    if item.id() = exception then do
+      if observation <> 'omitted' then ignored = builder.relocation(item.id(),observation)
+    end
+    else ignored = builder.relocation(item.id(),'none')
+  end
+  return builder.finish()
+
+main: procedure = .int
+  failures = 0; fields = .object[]; value = .lltarget..operand
+  caller = .lltarget..module; provider = .lltarget..module
+  draft = .lltarget..draft('module.map.caller','fixture:module.map.caller',1)
+  at = draft.synthetic('caller with its own g0'); root = draft.procedure('main',2,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(1) as .object
+  callerload = root.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.integer(2) as .object
+  callersecond = root.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; callerreturn = root.emit('ret',fields,at)
+  caller = draft.finish()
+  draft = .lltarget..draft('module.map.provider','fixture:module.map.provider',1)
+  at = draft.synthetic('private selected provider g0'); root = draft.procedure('helper',1,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('g',0) as .object
+  providerload = root.emit('copy',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; ignored = root.emit('ret',fields,at)
+  provider = draft.finish()
+  failures = failures + check(caller.valid() & provider.valid(),'independent caller/provider modules validate')
+  if caller.valid() = 0 | provider.valid() = 0 then do
+    if caller.valid() = 0 then say caller.error()
+    if provider.valid() = 0 then say provider.error()
+    say 'TARGET_MODULE_REMAP|failures=' || failures; return failures
+  end
+  caller_ref = caller.ir(); callerir = dereference caller_ref; callerimage = callerir.binary()
+  provider_ref = provider.ir(); providerir = dereference provider_ref; providerimage = providerir.binary()
+  callerprofile = relocationpremises(reference caller); providerprofile = relocationpremises(reference provider)
+  failures = failures + check(callerprofile.complete(callerload,'relocation') & providerprofile.complete(providerload,'relocation'),'explicit empty relocation-observation sets are available')
+  link = .lltargetremap..modulemap(reference caller)
+  ignored = link.selectprofile(reference caller,3,reference callerprofile); ignored = link.selectprofile(reference provider,9,reference providerprofile)
+  input = provider.at(providerload); output = caller.at(callerload)
+  ignored = link.bind(input.operand(1),output.operand(1))
+  ignored = link.procedure(reference provider,'helper',reference provider,'helper')
+  failures = failures + check(link.seal(),'checked selected-module map seals without proof metadata')
+  mapped = link.rewrite(reference provider,providerload)
+  failures = failures + check(mapped.status() = 'ok' & mapped.valid(),'cross-module record has checked typed mapping')
+  if mapped.status() = 'ok' then do
+    failures = failures + check(mapped.globalrefs() = 1 & mapped.globaloperand(1) = 2,'private global retains its exact operand position')
+    storage = mapped.globalref(1); selected = storage.provider()
+    failures = failures + check(storage.valid() & storage.moduleid() = 9 & storage.index() = 0 & storage.owned() = 0,'borrowed global names selected provider overlay and slot')
+    failures = failures + check(selected.matches(reference provider) & selected.matches(reference caller) = 0,'provider g0 cannot alias caller g0 by spelling')
+    failures = failures + check(mapped.renderable() = 0 & mapped.renderreason() = 'remap.foreign.global.binding.unavailable','ordinary RXAS rendering explicitly awaits foreign-global binding')
+    fields = mapped.fields(); value = fields[1] as .lltarget..operand
+    failures = failures + check(value.owner() = caller.identity(),'ordinary local uses checked receiver binding')
+    origin = mapped.origin(); failures = failures + check(origin.filename() = 'private selected provider g0','logical source provenance stays with provider')
+    callerstorage = link.global(reference caller,0)
+    failures = failures + check(callerstorage.moduleid() = 3 & callerstorage.renderable(reference caller),'same-module global remains ordinarily representable')
+  end
+  else say mapped.message()
+  localmap = .lltargetremap..modulemap(reference caller)
+  ignored = localmap.selectprofile(reference caller,3,reference callerprofile)
+  sameinput = caller.at(callerload); sameoutput = caller.at(callersecond)
+  ignored = localmap.bind(sameinput.operand(1),sameoutput.operand(1)); ignored = localmap.seal()
+  localmapped = localmap.rewrite(reference caller,callerload)
+  failures = failures + check(localmapped.status() = 'ok' & localmapped.renderable(),'same-module explicit remapping is representable')
+  if localmapped.status() = 'ok' then do
+    fields = localmapped.fields(); value = fields[1] as .lltarget..operand
+    failures = failures + check(value.owner() = caller.identity() & value.bank() = 'r' & value.index() = 1,'explicit same-module r0 to r1 map overrides identity')
+  end
+  fallback = localmap.rewrite(reference caller,callersecond)
+  failures = failures + check(fallback.status() = 'ok' & fallback.renderable(),'unmapped receiver register retains identity')
+  if fallback.status() = 'ok' then do
+    fields = fallback.fields(); value = fields[1] as .lltarget..operand
+    failures = failures + check(value.index() = 1,'identity fallback preserves unmapped r1')
+  end
+  missingprofile = .lltargetremap..modulemap(reference caller)
+  ignored = missingprofile.selectmodule(reference caller,3); ignored = missingprofile.seal()
+  missing = missingprofile.rewrite(reference caller,callerload)
+  failures = failures + check(missing.status() = 'keep' & missing.message() = 'remap.relocation.unknown','missing operational profile never implies relocation safety')
+  canonical = .lltargettransfer..profile(reference caller)
+  failures = failures + check(canonical.status() = 'ok','canonical profile is sealed before remap admission')
+  canonicalmap = .lltargetremap..modulemap(reference caller)
+  ignored = canonicalmap.selectprofile(reference caller,3,reference canonical); ignored = canonicalmap.seal()
+  canonicalresult = canonicalmap.rewrite(reference caller,callerload)
+  failures = failures + check(canonicalresult.status() = 'keep' & canonicalresult.message() = 'remap.relocation.unknown','committed catalogue leaves relocation observations unknown')
+  omittedprofile = relocationpremises(reference caller,callerload,'omitted')
+  omittedmap = .lltargetremap..modulemap(reference caller)
+  ignored = omittedmap.selectprofile(reference caller,3,reference omittedprofile); ignored = omittedmap.seal()
+  omitted = omittedmap.rewrite(reference caller,callerload)
+  failures = failures + check(omitted.status() = 'keep' & omitted.message() = 'remap.relocation.unknown','undeclared relocation family remains unknown in a rich profile')
+  observedprofile = relocationpremises(reference caller,callerload,'frame')
+  observedmap = .lltargetremap..modulemap(reference caller)
+  ignored = observedmap.selectprofile(reference caller,3,reference observedprofile); ignored = observedmap.seal()
+  observed = observedmap.rewrite(reference caller,callerload)
+  failures = failures + check(observed.status() = 'keep' & observed.message() = 'remap.relocation.unknown','a described activation observer needs an owning adapter')
+  foreignprofile = .lltargetremap..modulemap(reference caller)
+  ignored = foreignprofile.selectprofile(reference provider,9,reference callerprofile)
+  failures = failures + check(foreignprofile.status() = 'invalid','profile must belong to the exact selected source owner')
+  unsealedprofile = .lltargettransfer..profile.premises(reference caller,'independent.unsealed')
+  unsealedmap = .lltargetremap..modulemap(reference caller)
+  ignored = unsealedmap.selectprofile(reference caller,3,reference unsealedprofile)
+  failures = failures + check(unsealedmap.status() = 'invalid','unsealed rich profile cannot authorize a rewrite')
+  replaceableprofile = relocationpremises(reference caller)
+  replaceablemap = .lltargetremap..modulemap(reference caller)
+  ignored = replaceablemap.selectprofile(reference caller,3,reference replaceableprofile); ignored = replaceablemap.seal()
+  profileview = replaceablemap.rewrite(reference caller,callerload)
+  failures = failures + check(profileview.valid(),'control result is valid before profile replacement')
+  replaceableprofile = relocationpremises(reference caller)
+  failures = failures + check(replaceablemap.valid() = 0 & profileview.valid() = 0,'profile replacement invalidates map and returned view')
+  targetdraft = .lltarget..draft('direct.map','fixture:direct.map',1)
+  targetat = targetdraft.synthetic('direct map'); targetbody = targetdraft.procedure('target',2,targetat)
+  direct = .lltargetremap..mapping(reference caller,reference targetbody)
+  ignored = direct.useprofile(reference callerprofile)
+  ignored = direct.bind(sameinput.operand(1),targetbody.reg('r',1)); ignored = direct.origin(sameinput.origin(),targetat)
+  directresult = direct.rewrite(callerload)
+  failures = failures + check(directresult.status() = 'ok','source-to-draft mapping accepts an exact sealed relocation description')
+  directtail = direct.rewrite(callerreturn)
+  failures = failures + check(directtail.status() = 'ok','one mapper retains prior bindings and provenance across two source records')
+  if directtail.status() = 'ok' then do
+    fields = directtail.fields(); value = fields[1] as .lltarget..operand
+    failures = failures + check(value.index() = 1 & value.owner() = targetbody.reg('r',1).owner(),'later RET reuses the earlier r0 to r1 binding without rebinding')
+  end
+  nodirect = .lltargetremap..mapping(reference caller,reference targetbody)
+  ignored = nodirect.bind(sameinput.operand(1),targetbody.reg('r',1)); ignored = nodirect.origin(sameinput.origin(),targetat)
+  nodirectresult = nodirect.rewrite(callerload)
+  failures = failures + check(nodirectresult.status() = 'keep' & nodirectresult.message() = 'remap.relocation.unknown','source-to-draft mapping also refuses absent relocation coverage')
+  invalidtarget = .lltarget..bodydraft()
+  invaliddirect = .lltargetremap..mapping(reference caller,reference invalidtarget)
+  failures = failures + check(invaliddirect.status() = 'invalid','default destination body is rejected before storage dereference')
+  savedtarget = targetbody
+  targetbody = targetdraft.procedure('other_target',2,targetat)
+  failures = failures + check(direct.status() = 'invalid' & directresult.status() = 'invalid','same-arena destination body replacement invalidates map and direct result')
+  targetbody = savedtarget
+  targetdraft = .lltarget..draft('replacement.target','fixture:replacement.target',1)
+  failures = failures + check(direct.status() = 'invalid' & directresult.status() = 'invalid','destination arena replacement invalidates returned fields and origin')
+  tightbytes = callerir.operations() * 32 + 96 + 95
+  bytebound = .lltargetremap..change(reference caller,1000000,tightbytes)
+  accepted = bytebound.insertnullbefore(callerload,sameinput.operand(1))
+  failures = failures + check(accepted = 0 & bytebound.status() = 'limit','insertion bytes are charged after the existing staging index')
+  unchanged = bytebound.result(); unchanged_ref = unchanged.ir(); unchangedir = dereference unchanged_ref
+  failures = failures + check(bin2x(unchangedir.binary()) = bin2x(callerimage),'insertion byte refusal retains the exact original artifact')
+  workbound = .lltargetremap..change(reference caller,callerir.operations(),67108864)
+  accepted = workbound.insertnullbefore(callerload,sameinput.operand(1))
+  failures = failures + check(accepted = 0 & workbound.status() = 'limit','insertion work is charged after the existing staging index')
+  insertion = .lltargetremap..change(reference caller)
+  ignored = insertion.insertnullbefore(callerload,sameinput.operand(1)); call insertion.run()
+  failures = failures + check(insertion.status() = 'keep' & insertion.message() = 'remap.relocation.unknown','atomic insertion refuses missing relocation coverage')
+  failures = failures + check(bin2x(callerir.binary()) = bin2x(callerimage) & bin2x(providerir.binary()) = bin2x(providerimage),'module mapping leaves both input artifacts unchanged')
+  foreign = provider
+  rejected = link.rewrite(reference foreign,providerload)
+  failures = failures + check(rejected.status() = 'keep' & rejected.valid() = 0,'equal foreign source owner yields a checked unavailable result')
+  missingreceiver = .lltargetremap..modulemap(reference caller)
+  ignored = missingreceiver.selectmodule(reference provider,9)
+  failures = failures + check(missingreceiver.seal() = 0 & missingreceiver.status() = 'invalid','receiver needs its own selected image identity')
+  tiny = .lltargetremap..modulemap(reference caller,1,1)
+  ignored = tiny.selectmodule(reference caller,3)
+  failures = failures + check(tiny.status() = 'limit','tiny module-map budget refuses before retaining selection')
+  /* An independent valid map exercises a dead reference at the API boundary. */
+  safe = .lltargetremap..modulemap(reference caller)
+  ignored = safe.selectprofile(reference caller,3,reference callerprofile); ignored = safe.selectprofile(reference provider,9,reference providerprofile); ignored = safe.seal()
+  dangling = expiredowner()
+  failures = failures + check(<refvalid>(dangling) = 0,'control owner reference has expired')
+  expired = safe.rewrite(dangling,providerload)
+  failures = failures + check(expired.status() = 'invalid' & expired.valid() = 0,'expired owner cannot be dereferenced while constructing refusal')
+  conflict = .lltargetremap..modulemap(reference caller)
+  ignored = conflict.selectmodule(reference caller,3); ignored = conflict.selectmodule(reference provider,3)
+  failures = failures + check(conflict.status() = 'invalid','two selected owners cannot share an image-local module identity')
+  draft = .lltarget..draft('replacement.provider','fixture:replacement.provider',1)
+  at = draft.synthetic('replacement'); root = draft.procedure('helper',0,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object; ignored = root.emit('ret',fields,at)
+  provider = draft.finish()
+  failures = failures + check(mapped.valid() = 0 & safe.valid() = 0,'changed selected owner invalidates mapped result and dependencies')
+  stale = safe.rewrite(reference provider,providerload)
+  failures = failures + check(stale.status() = 'invalid','stale provider fails before inspecting old record ID')
+  say 'TARGET_MODULE_REMAP|failures=' || failures
+  return failures

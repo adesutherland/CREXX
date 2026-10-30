@@ -1,0 +1,1181 @@
+/* cREXX License (MIT). Point and edge facts over the shared target CFG. */
+options levelb
+namespace lltargetflow expose analysis analyse valuefact storagefact lifetimefact entryread
+import rxfnsb
+import llir
+import llirgraph
+import lltarget
+import lltargettransfer
+import lltargetcfg
+
+boot: initialiser expose serial
+  serial = 0
+  return
+nextidentity: procedure = .int expose serial
+  if serial = 9223372036854775807 then assembler signal "ERROR","LL_TARGET_FLOW: identities exhausted"
+  serial = serial + 1
+  return serial
+
+/** A sparse set for one executable continuation. */
+accessrow: class
+  _reads = .int[]
+  _observations = .int[]
+  _writes = .int[]
+  _kills = .int[]
+  _complete = .int
+  *: factory
+    _complete = 1
+    return
+  add: method = .void
+    arg kind = .string, domain = .int
+    list = .int[]
+    if domain < 1 then do; _complete = 0; return; end
+    select kind
+      when 'read' then list = _reads
+      when 'observe' then list = _observations
+      when 'write' then list = _writes
+      otherwise list = _kills
+    end
+    do i = 1 to list[0]; if list[i] = domain then return; end
+    list[list[0] + 1] = domain
+    select kind
+      when 'read' then _reads = list
+      when 'observe' then _observations = list
+      when 'write' then _writes = list
+      otherwise _kills = list
+    end
+    return
+  reads: method = .int[]
+    return _reads
+  observations: method = .int[]
+    return _observations
+  writes: method = .int[]
+    return _writes
+  kills: method = .int[]
+    return _kills
+  complete: method = .int
+    return _complete
+
+/** An internal immutable abstract value. Entry provenance is independent of
+ * value presence: an absent/cleared component is a definition, not unknown. */
+cell: class
+  _kind = .string
+  _value = .int
+  _entry = .int
+  _availability = .string
+  _presence = .string
+  _literal = .lltarget..operand
+  *: factory
+    arg kind = 'unknown', value = 0, entry = 0, availability = 'unknown', presence = 'unknown', ?literal = .lltarget..operand
+    _kind = kind; _value = value; _entry = entry
+    _availability = availability; _presence = presence
+    if ?literal then _literal = literal
+    else _literal = .lltarget..operand()
+    return
+  kind: method = .string
+    return _kind
+  value: method = .int
+    return _value
+  entry: method = .int
+    return _entry
+  availability: method = .string
+    return _availability
+  presence: method = .string
+    return _presence
+  literal: method = .lltarget..operand
+    return _literal
+  known: method = .int
+    return _literal.kind() <> ''
+  bytes: method = .int
+    return 96 + _literal.length()
+  key: method = .string
+    return _kind || '|' || _value || '|' || _entry || '|' || _availability || '|' || _presence || '|' || _literal.kind() || '|' || _literal.index() || '|' || bin2x(_literal.bytes())
+  merged: method = .lltargetflow..cell
+    arg other = .cell
+    incoming = .lltarget..operand
+    if key() == other.key() then return self
+    entry = _entry
+    if entry <> other.entry() then do
+      if entry = 0 then entry = other.entry()
+      else if other.entry() <> 0 then entry = -1
+    end
+    availability = _availability
+    if availability <> other.availability() then availability = 'mixed'
+    if availability = 'unknown' | other.availability() = 'unknown' then availability = 'unknown'
+    presence = _presence
+    if presence <> other.presence() then presence = 'unknown'
+    if known() & other.known() then do
+      incoming = other.literal()
+      if _literal.kind() = incoming.kind() & _literal.index() = incoming.index() & bin2x(_literal.bytes()) == bin2x(incoming.bytes()) then return .cell('constant',0,entry,availability,presence,_literal)
+    end
+    return .cell('phi',0,entry,availability,presence)
+
+/** Sparse storage/domain rows. Unwritten rows denote their exact entry
+ * parameter; they do not pretend that recycled locals start at zero. */
+state: class
+  _ready = .int
+  _map = .int[]
+  _slots = .int[]
+  _storage = .int[]
+  _domain = .int[]
+  _cells = .object[]
+  _unknown = .int
+  _lifetime = .string[]
+  _generation = .int[]
+  *: factory
+    arg ?bases = .int[]
+    if ?bases then do
+      _ready = 1
+      do i = 1 to bases[0]
+        _map[i] = bases[i]; _slots[i] = i
+        _lifetime[i] = 'live'; _generation[i] = i
+      end
+    end
+    return
+  ready: method = .int
+    return _ready
+  count: method = .int
+    return _cells[0]
+  registers: method = .int
+    return _map[0]
+  isunknown: method = .int
+    return _unknown
+  initialize: method = .void
+    arg ready = .int, unknown = .int
+    _ready = ready; _unknown = unknown
+    return
+  copy: method = .lltargetflow..state
+    i = .int; value = .cell
+    result = .state()
+    call result.initialize(_ready,_unknown)
+    do i = 1 to _map[0]
+      call result.bind(i,_map[i]); call result.bindsidentity(i,_slots[i])
+      call result.setlifetime(i,_lifetime[i],_generation[i])
+    end
+    do i = 1 to _cells[0]
+      value = _cells[i] as .cell
+      call result.append(_storage[i],_domain[i],value)
+    end
+    return result
+  cellstorage: method = .int
+    arg ordinal = .int
+    return _storage[ordinal]
+  celldomain: method = .int
+    arg ordinal = .int
+    return _domain[ordinal]
+  cellat: method = .lltargetflow..cell
+    arg ordinal = .int
+    return _cells[ordinal] as .cell
+  bytes: method = .int
+    result = 64 + _map[0] * 48 + _cells[0] * 64
+    do i = 1 to _cells[0]; value = _cells[i] as .cell; result = result + value.bytes(); end
+    return result
+  mapping: method = .int
+    arg reg = .int
+    if reg < 1 | reg > _map[0] then return 0
+    return _map[reg]
+  slot: method = .int
+    arg reg = .int
+    if reg < 1 | reg > _slots[0] then return 0
+    return _slots[reg]
+  bind: method = .void
+    arg reg = .int, storage = .int
+    _map[reg] = storage
+    return
+  bindsidentity: method = .void
+    arg reg = .int, identity = .int
+    _slots[reg] = identity
+    return
+  setlifetime: method = .void
+    arg storage = .int, lifetime = .string, generation = .int
+    if storage > 0 then do; _lifetime[storage] = lifetime; _generation[storage] = generation; end
+    return
+  lifetime: method = .string
+    arg storage = .int
+    if storage < 1 | storage > _lifetime[0] then return 'unknown'
+    return _lifetime[storage]
+  generation: method = .int
+    arg storage = .int
+    if storage < 1 | storage > _generation[0] then return 0
+    return _generation[storage]
+  clobberbindings: method = .void
+    do i = 1 to _map[0]; _map[i] = 0; _slots[i] = 0; end
+    return
+  exchange: method = .void
+    arg first = .int, second = .int
+    value = _map[first]; _map[first] = _map[second]; _map[second] = value
+    value = _slots[first]; _slots[first] = _slots[second]; _slots[second] = value
+    return
+  at: method = .lltargetflow..cell
+    arg storage = .int, domain = .int, entryvalue = .int
+    if storage = 0 then return .cell()
+    do i = 1 to _cells[0]
+      if _storage[i] = storage & _domain[i] = domain then return _cells[i] as .cell
+    end
+    if _unknown then return .cell()
+    return .cell('entry',entryvalue,storage,'entry','unknown')
+  put: method = .void
+    arg storage = .int, domain = .int, value = .cell
+    i = .int
+    if storage = 0 then do; call clobber(); return; end
+    do i = 1 to _cells[0]
+      if _storage[i] = storage & _domain[i] = domain then do; _cells[i] = value as .object; return; end
+    end
+    call append(storage,domain,value)
+    return
+  append: method = .void
+    arg storage = .int, domain = .int, value = .cell
+    i = _cells[0] + 1; _storage[i] = storage; _domain[i] = domain; _cells[i] = value as .object
+    return
+  clobber: method = .void
+    _unknown = 1
+    call objectarraydrop _cells
+    assembler setattrs _storage,0
+    assembler setattrs _domain,0
+    do i = 1 to _lifetime[0]; _lifetime[i] = 'unknown'; _generation[i] = 0; end
+    return
+  merge: method = .lltargetflow..state
+    arg other = .state, domains = .int
+    value = .cell; incoming = .cell
+    i = .int; storage = .int; domain = .int
+    if _ready = 0 then return other.copy()
+    if other.ready() = 0 then return copy()
+    result = copy()
+    if _map[0] <> other.registers() then do; call result.clobber(); return result; end
+    do i = 1 to _map[0]
+      if _map[i] <> other.mapping(i) then call result.bind(i,0)
+      if _slots[i] <> other.slot(i) then call result.bindsidentity(i,0)
+      if _lifetime[i] <> other.lifetime(i) | _generation[i] <> other.generation(i) then call result.setlifetime(i,'unknown',0)
+    end
+    if _unknown | other.isunknown() then do; call result.clobber(); return result; end
+    /* Entry defaults participate in a join even if only the other path has
+     * an explicit definition. No path silently donates that definition. */
+    do i = 1 to _cells[0]
+      value = _cells[i] as .cell
+      incoming = other.at(_storage[i],_domain[i],(_storage[i] - 1) * domains + _domain[i])
+      call result.put(_storage[i],_domain[i],value.merged(incoming))
+    end
+    do i = 1 to other.count()
+      storage = other.cellstorage(i); domain = other.celldomain(i)
+      value = at(storage,domain,(storage - 1) * domains + domain)
+      incoming = other.cellat(i)
+      call result.put(storage,domain,value.merged(incoming))
+    end
+    return result
+  same: method = .int
+    arg other = .state
+    value = .cell; incoming = .cell
+    i = .int
+    if _ready <> other.ready() | _unknown <> other.isunknown() | _map[0] <> other.registers() | _cells[0] <> other.count() then return 0
+    do i = 1 to _map[0]
+      if _map[i] <> other.mapping(i) | _slots[i] <> other.slot(i) then return 0
+      if _lifetime[i] <> other.lifetime(i) | _generation[i] <> other.generation(i) then return 0
+    end
+    do i = 1 to _cells[0]
+      value = _cells[i] as .cell; incoming = other.at(_storage[i],_domain[i],0)
+      if value.key() <> incoming.key() then return 0
+    end
+    return 1
+
+/** Borrowed facts validate their analysis owner on every public query. */
+valuefact: class
+  _owner = reference .lltargetflow..analysis
+  _analysisid = .int
+  _value = .cell
+  _storage = .int
+  _domain = .int
+  *: factory
+    arg owner = reference .analysis, value = .cell, storage = .int, domain = .int
+    _owner = owner; _value = value; _storage = storage; _domain = domain
+    parent = dereference owner; _analysisid = parent.identity()
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner; return owner.valid() & owner.identity() = _analysisid
+  status: method = .string
+    if valid() = 0 then return 'invalid'
+    if _value.kind() = 'unknown' then return 'unknown'
+    return 'ok'
+  reason: method = .string
+    if valid() = 0 then return 'target.flow.owner.expired.or.replaced'
+    if _value.kind() = 'unknown' then return 'target.flow.value.unknown'
+    return ''
+  storage: method = .int
+    if valid() = 0 then return 0
+    return _storage
+  domain: method = .int
+    if valid() = 0 then return 0
+    return _domain
+  valueid: method = .int
+    if valid() = 0 then return 0
+    return _value.value()
+  kind: method = .string
+    if valid() = 0 then return 'unknown'
+    return _value.kind()
+  availability: method = .string
+    if valid() = 0 then return 'unknown'
+    return _value.availability()
+  presence: method = .string
+    if valid() = 0 then return 'unknown'
+    return _value.presence()
+  entrydependent: method = .int
+    if valid() = 0 then return 0
+    return _value.entry() <> 0
+  known: method = .int
+    return valid() & _value.known()
+  literal: method = .lltarget..operand
+    if known() then return _value.literal()
+    return .lltarget..operand()
+
+storagefact: class
+  _owner = reference .lltargetflow..analysis
+  _analysisid = .int
+  _active = .int
+  _base = .int
+  _entry = .int
+  _slot = .int
+  *: factory
+    arg owner = reference .analysis, active = .int, base = .int, entry = .int, slot = .int
+    _owner = owner; _active = active; _base = base; _entry = entry; _slot = slot
+    parent = dereference owner; _analysisid = parent.identity()
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner; return owner.valid() & owner.identity() = _analysisid
+  status: method = .string
+    if valid() = 0 then return 'invalid'
+    if _active = 0 then return 'unknown'
+    return 'ok'
+  reason: method = .string
+    if valid() = 0 then return 'target.flow.owner.expired.or.replaced'
+    if _active = 0 then return 'target.flow.binding.unknown'
+    return ''
+  active: method = .int
+    if valid() = 0 then return 0
+    return _active
+  base: method = .int
+    if valid() = 0 then return 0
+    return _base
+  entry: method = .int
+    if valid() = 0 then return 0
+    return _entry
+  slotidentity: method = .int
+    if valid() = 0 then return 0
+    return _slot
+
+/** Storage lifetime is independent of payload presence and active register
+ * spelling. A generation identifies an operational begin/end site; unknown
+ * joins cannot prove reference validity or permission to reuse storage. */
+lifetimefact: class
+  _owner = reference .lltargetflow..analysis
+  _analysisid = .int
+  _storage = .int
+  _lifetime = .string
+  _generation = .int
+  *: factory
+    arg owner = reference .analysis, storage = .int, lifetime = .string, generation = .int
+    _owner = owner; parent = dereference owner; _analysisid = parent.identity()
+    _storage = storage; _lifetime = lifetime; _generation = generation
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner; return owner.valid() & owner.identity() = _analysisid
+  status: method = .string
+    if valid() = 0 then return 'invalid'
+    if _lifetime = 'unknown' then return 'unknown'
+    return 'proved'
+  reason: method = .string
+    if valid() = 0 then return 'target.flow.owner.expired.or.replaced'
+    if _lifetime = 'unknown' then return 'target.flow.lifetime.unknown'
+    return ''
+  storage: method = .int
+    if valid() = 0 then return 0
+    return _storage
+  state: method = .string
+    if valid() = 0 then return 'unknown'
+    return _lifetime
+  generation: method = .int
+    if valid() = 0 then return 0
+    return _generation
+
+/** Only an explicit typed observation can create this witness. Its bank and
+ * index identify the owned base to clear, not a possibly linked spelling. */
+entryread: class
+  _owner = reference .lltargetflow..analysis
+  _analysisid = .int
+  _operation = .int
+  _function = .int
+  _storage = .int
+  _index = .int
+  _domain = .int
+  _key = .string
+  _activebank = .string
+  _activeindex = .int
+  *: factory
+    arg owner = reference .analysis, operation = .int, functionid = .int, storage = .int, index = .int, domain = .int, key = .string, activebank = .string, activeindex = .int
+    _owner = owner; _operation = operation; _function = functionid
+    _storage = storage; _index = index; _domain = domain; _key = key
+    _activebank = activebank; _activeindex = activeindex
+    parent = dereference owner; _analysisid = parent.identity()
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner; return owner.valid() & owner.identity() = _analysisid
+  status: method = .string
+    if valid() then return 'ok'
+    return 'invalid'
+  reason: method = .string
+    if valid() then return ''
+    return 'target.flow.owner.expired.or.replaced'
+  require: method = .void
+    if valid() = 0 then assembler signal "ERROR","LL_TARGET_FLOW: expired or replaced entry-observation view"
+    return
+  operation: method = .int
+    call require()
+    return _operation
+  function: method = .int
+    call require()
+    return _function
+  bank: method = .string
+    call require()
+    return 'r'
+  index: method = .int
+    call require()
+    return _index
+  ownedindex: method = .int
+    call require()
+    return _index
+  activebank: method = .string
+    call require()
+    return _activebank
+  activeindex: method = .int
+    call require()
+    return _activeindex
+  storage: method = .int
+    call require()
+    return _storage
+  domain: method = .int
+    call require()
+    return _domain
+  domainkey: method = .string
+    call require()
+    return _key
+  origin: method = .llir..origin
+    call require()
+    owner = dereference _owner; source_ref = owner.owner(); source = dereference source_ref
+    record = source.at(_operation); return record.origin()
+
+/** Shared point analysis. It interprets only operational transfer events,
+ * never RXAS mnemonics. Sparse state rows and iteration are budgeted; an
+ * incomplete profile remains usable for independently complete fact families.
+ * @param owner Exact frozen target owner.
+ * @param transfers Checked operational premises for that same owner.
+ * @param cfg Its sole checked machine-CFG projection.
+ * @param work Maximum elementary traversals and retained-state preparation.
+ * @param bytes Maximum conservative retained logical bytes.
+ */
+analysis: class
+  _owner = reference .lltarget..module
+  _transfers = reference .lltargettransfer..profile
+  _cfg = reference .lltargetcfg..graph
+  _index = reference .llirgraph..index
+  _revision = .int
+  _identity = .int
+  _profileid = .int
+  _cfgid = .int
+  _schema = .int
+  _catalog = .string
+  _premise = .string
+  _status = .string
+  _message = .string
+  _work = .int
+  _worklimit = .int
+  _bytes = .int
+  _bytelimit = .int
+  _domains = .int
+  _regfunction = .int[]
+  _regbank = .string[]
+  _regindex = .int[]
+  _bases = .int[]
+  _storefunction = .int[]
+  _storebank = .string[]
+  _storeindex = .int[]
+  _before = .object[]
+  _after = .object[]
+  _edge = .object[]
+  _incoming = .object[]
+  _beforepresent = .int[]
+  _afterpresent = .int[]
+  _edgepresent = .int[]
+  _incomingpresent = .int[]
+  _edgehead = .int[]
+  _edgenext = .int[]
+  _outhead = .int[]
+  _outnext = .int[]
+  _instructions = .int[]
+  _witnesses = .entryread[]
+  _witnesskeys = .string[]
+  _entrycomplete = .int[]
+  _projection = .llirgraph..access
+  _projected = .int
+  *: factory
+    arg owner = reference .lltarget..module, transfers = reference .lltargettransfer..profile, cfg = reference .lltargetcfg..graph, work = 1000000, bytes = 67108864
+    _owner = owner; _transfers = transfers; _cfg = cfg; _identity = nextidentity()
+    _worklimit = work; _bytelimit = bytes; _status = 'building'; _message = ''
+    return
+  fail: method = .int
+    arg status = .string, message = .string
+    _status = status; _message = message
+    return 0
+  spend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _worklimit - _work then return fail('limit','target.flow.work')
+    _work = _work + amount
+    return 1
+  reserve: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _bytelimit - _bytes then return fail('limit','target.flow.bytes')
+    _bytes = _bytes + amount
+    return 1
+  scratch: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then return fail('invalid','target.flow.scratch.dimensions')
+    if count > (_bytelimit - _bytes) / width then return fail('limit','target.flow.scratch.bytes')
+    return 1
+  scaledwork: method = .int
+    arg count = .int, width = .int
+    if count < 0 | width < 1 then return fail('invalid','target.flow.work.dimensions')
+    if count > (_worklimit - _work) / width then return fail('limit','target.flow.work')
+    return spend(count * width)
+  save: method = .int
+    arg expose rows = .object[], expose present = .int[], id = .int, value = .state
+    old = .state
+    if id < 1 then return fail('invalid','target.flow.state.identity')
+    if spend(value.count() + value.registers() + 1) = 0 then return 0
+    if present[id] then do; old = rows[id] as .state; _bytes = _bytes - old.bytes(); end
+    if reserve(value.bytes()) = 0 then return 0
+    rows[id] = value.copy() as .object
+    present[id] = 1
+    return 1
+  registerslot: method = .int
+    arg functionid = .int, bank = .string, number = .int
+    storage = .int; i = .int
+    do i = 1 to _regfunction[0]
+      if spend(1) = 0 then return 0
+      if _regfunction[i] = functionid & _regbank[i] = bank & _regindex[i] = number then return i
+    end
+    if reserve(64) = 0 then return 0
+    n = _regfunction[0] + 1
+    _regfunction[n] = functionid; _regbank[n] = bank; _regindex[n] = number
+    storage = 0
+    if bank = 'g' then do i = 1 to _storefunction[0]
+      if spend(1) = 0 then return 0
+      if _storebank[i] = 'g' & _storeindex[i] = number then storage = i
+    end
+    if storage = 0 then do
+      if reserve(48) = 0 then return 0
+      storage = _storefunction[0] + 1; _storefunction[storage] = functionid
+      _storebank[storage] = bank; _storeindex[storage] = number
+    end
+    _bases[n] = storage
+    return n
+  findregister: method = .int
+    arg functionid = .int, bank = .string, number = .int
+    do i = 1 to _regfunction[0]
+      if _regfunction[i] = functionid & _regbank[i] = bank & _regindex[i] = number then return i
+    end
+    return 0
+  refreg: method = .int
+    arg instruction = .lltargettransfer..instruction, referenceid = .int
+    refview = .lltargettransfer..refview
+    do i = 1 to instruction.references()
+      refview = instruction.ref(i)
+      if refview.id() <> referenceid then iterate
+      if refview.bank() = '' | refview.extentknown() = 0 | refview.extent() <> 1 then return 0
+      return findregister(instruction.function(),refview.bank(),refview.index())
+    end
+    return 0
+  refstorage: method = .int
+    arg instruction = .lltargettransfer..instruction, referenceid = .int, current = .state
+    refview = .lltargettransfer..refview
+    do i = 1 to instruction.references()
+      refview = instruction.ref(i)
+      if refview.id() <> referenceid then iterate
+      reg = refreg(instruction,referenceid)
+      if reg = 0 then return 0
+      if refview.anchor() = 'base' | refview.anchor() = 'entry' then return _bases[reg]
+      if refview.anchor() <> 'active' then return 0
+      return current.mapping(reg)
+    end
+    return 0
+  entryvalue: method = .int
+    arg storage = .int, domain = .int
+    return (storage - 1) * _domains + domain
+  ownedbase: method = .int
+    arg storage = .int
+    if storage < 1 | storage > _storebank[0] then return 0
+    if _storebank[storage] = 'r' | _storebank[storage] = 'context' then return 1
+    return _storebank[storage] = 'a' & _storeindex[storage] = 0
+  cellat: method = .lltargetflow..cell
+    arg current = .state, storage = .int, domain = .int
+    return current.at(storage,domain,entryvalue(storage,domain))
+  applies: method = .int
+    arg action = .lltargettransfer..action, exceptional = .int, phase = 'unknown'
+    if exceptional = 0 then return action.path() = 'normal' | action.path() = 'all'
+    if action.path() <> 'failure' & action.path() <> 'all' then return 0
+    if action.phase() = 'none' | action.phase() = phase then return 1
+    /* The edge is before any write; an explicitly after-write event cannot
+     * occur there. Other incomplete/partial phase relations are possible,
+     * never definite. */
+    if phase = 'before' & action.phase() = 'after' then return 0
+    return 2
+  writecell: method = .int
+    arg expose current = .state, storage = .int, domain = .int, value = .cell, definite = .int
+    old = .cell
+    if spend(current.count() * 2 + _storefunction[0] + 1) = 0 then return 0
+    /* Symbolic incoming arguments/globals can alias. A possible alias loses
+     * precision, but never receives the exact value written through another. */
+    if storage > 0 & ownedbase(storage) = 0 then do i = 1 to _storefunction[0]
+      if i <> storage & ownedbase(i) = 0 then call current.put(i,domain,.cell())
+    end
+    if definite = 0 then do
+      old = cellat(current,storage,domain); value = old.merged(value)
+    end
+    call current.put(storage,domain,value)
+    return 1
+  transfer: method = .lltargetflow..state
+    arg instruction = .lltargettransfer..instruction, incoming = .state, exceptional = 0, observe = 0, phase = 'unknown'
+    s = .int; d = .int
+    if scratch(incoming.bytes(),4) = 0 | spend(incoming.count() + incoming.registers() + 1) = 0 then return incoming
+    current = incoming.copy(); action = .lltargettransfer..action; domain = .lltargettransfer..domain
+    value = .cell; prior = .cell; literal = .lltarget..operand
+    profile = dereference _transfers
+    do ordinal = 1 to instruction.actions()
+      action = instruction.action(ordinal)
+      applicable = applies(action,exceptional,phase)
+      if applicable = 0 then iterate
+      if scaledwork(current.count() * 8 + _regfunction[0] * 3 + 8,max(1,_domains)) = 0 then return current
+      if scratch(current.bytes() + 160 * max(1,_domains),3) = 0 then return current
+      subject = refreg(instruction,action.subject()); storage = refstorage(instruction,action.subject(),current)
+      source = refreg(instruction,action.sourceid()); sourceStorage = refstorage(instruction,action.sourceid(),current)
+      kind = action.kind()
+      if wordpos(kind,'link unlink swap') > 0 then do
+        if subject = 0 | action.certainty() <> 'must' | applicable <> 1 then do; call current.clobberbindings(); iterate; end
+        if kind = 'unlink' then call current.bind(subject,_bases[subject])
+        else if kind = 'link' then call current.bind(subject,sourceStorage)
+        else if source > 0 then call current.exchange(subject,source)
+        else call current.bind(subject,0)
+        iterate
+      end
+      if kind = 'unknown' then do; call current.clobber(); call current.clobberbindings(); iterate; end
+      if kind = 'call' then do
+        /* Until an instantiated outward summary supplies a narrower transfer,
+         * a child can mutate exposed values. Context belongs to the retained
+         * caller frame; value uncertainty does not invent its modification. */
+        do s = 1 to _storefunction[0]
+          if _storebank[s] = 'context' then iterate
+          call current.setlifetime(s,'unknown',0)
+          do d = 1 to _domains
+            domain = profile.domain(d)
+            if domain.kind() = 'component' | domain.kind() = 'flag' then call current.put(s,d,.cell())
+          end
+        end
+        iterate
+      end
+      if kind = 'lifetime' then do
+        lifetime = 'unknown'; generation = 0
+        if action.certainty() = 'must' & applicable = 1 then do
+          generation = _storefunction[0] + action.id() * 2
+          if action.detail() = 'begin' then lifetime = 'live'
+          else if action.detail() = '' | action.detail() = 'end' | action.detail() = 'release' | action.detail() = 'expire' then lifetime = 'ended'
+        end
+        if storage > 0 then do
+          if ownedbase(storage) = 0 then do s = 1 to _storefunction[0]
+            if s <> storage & ownedbase(s) = 0 then call current.setlifetime(s,'unknown',0)
+          end
+          call current.setlifetime(storage,lifetime,generation)
+        end
+        else do s = 1 to _storefunction[0]; call current.setlifetime(s,'unknown',0); end
+        iterate
+      end
+      if wordpos(kind,'read observe transport write clear derive flagwrite context') = 0 then iterate
+      if kind = 'context' & action.domain() = 0 then iterate
+      first = action.domain(); last = first
+      if first = 0 then do; first = 1; last = _domains; end
+      else do
+        domain = profile.domain(first)
+        if domain.kind() = 'whole' then do; first = 1; last = _domains; end
+      end
+      do d = first to last
+        domain = profile.domain(d)
+        if domain.kind() = 'whole' then iterate
+        if action.domain() = 0 & domain.kind() = 'context' then iterate
+        selected = action.domain()
+        if selected > 0 then do
+          declared = profile.domain(selected)
+          if declared.kind() = 'whole' & domain.kind() = 'context' then iterate
+        end
+        target = storage
+        if domain.kind() = 'context' then do
+          reg = findregister(instruction.function(),'context',0)
+          if reg > 0 then target = _bases[reg]
+        end
+        prior = cellat(current,target,d)
+        if kind = 'observe' & observe & applicable = 1 then do
+          if witness(instruction,action,subject,target,d,prior) = 0 then return current
+        end
+        if kind = 'read' | kind = 'observe' then iterate
+        value = .cell('write',(_storefunction[0] + action.id()) * _domains + d,0,'defined','unknown')
+        if kind = 'derive' then do
+          /* The current event format has no source-component selector.
+           * Reading the destination domain from the source would invent a
+           * conversion dependency. Explicit source observations still run;
+           * the derived relation remains unavailable. */
+          value = .cell()
+        end
+        else if action.sourcekind() = 'reference' then do
+          value = cellat(current,sourceStorage,d)
+          if kind <> 'transport' then value = .cell('derived',(_storefunction[0] + action.id()) * _domains + d,value.entry(),value.availability(),'unknown')
+        end
+        else if action.sourcekind() = 'literal' then do
+          literal = action.literal()
+          value = .cell('constant',(_storefunction[0] + action.id()) * _domains + d,0,'defined','present',literal)
+        end
+        else if kind = 'transport' then value = .cell()
+        if kind = 'clear' then value = .cell('absent',(_storefunction[0] + action.id()) * _domains + d,0,'defined','absent')
+        if action.certainty() = 'unknown' then value = .cell()
+        if writecell(current,target,d,value,action.certainty() = 'must' & applicable = 1) = 0 then return current
+      end
+    end
+    if instruction.complete('effects') = 0 | instruction.complete('components') = 0 | instruction.complete('references') = 0 then call current.clobber()
+    if instruction.complete('bindings') = 0 then call current.clobberbindings()
+    return current
+  witness: method = .int
+    arg instruction = .lltargettransfer..instruction, action = .lltargettransfer..action, reg = .int, storage = .int, domainid = .int, value = .cell
+    i = .int
+    f = instruction.function()
+    if value.kind() = 'unknown' | value.availability() = 'unknown' then do; _entrycomplete[f] = 0; return 1; end
+    if value.entry() = 0 then return 1
+    if value.entry() < 1 | value.availability() = 'unknown' then do; _entrycomplete[f] = 0; return 1; end
+    base = value.entry()
+    if base > _storefunction[0] then return fail('invalid','target.flow.entry.storage')
+    if _storebank[base] <> 'r' | _storefunction[base] <> f then return 1
+    if reg = 0 then do; _entrycomplete[f] = 0; return 1; end
+    key = instruction.opid() || '|' || base || '|' || domainid
+    do i = 1 to _witnesskeys[0]
+      if spend(length(key) + 1) = 0 then return 0
+      if _witnesskeys[i] = key then return 1
+    end
+    if reserve(160 + length(key)) = 0 then return 0
+    profile = dereference _transfers; domain = profile.domain(domainid)
+    i = _witnesses[0] + 1
+    _witnesskeys[i] = key
+    _witnesses[i] = .entryread(reference self,instruction.opid(),f,base,_storeindex[base],domainid,domain.key(),_regbank[reg],_regindex[reg])
+    return 1
+  run: method = .void
+    if _status <> 'building' then return
+    instruction = .lltargettransfer..instruction; refview = .lltargettransfer..refview
+    edge = .lltargetcfg..edge; before = .state; current = .state; previous = .state; joined = .state
+    next = .state; ignoredstate = .state; record = .lltarget..record
+    i = .int; j = .int; n = .int; f = .int; op = .int; b = .int; e = .int
+    projected = .int; position = .int; targetblock = .int; changed = .int; normal = .int; exceptional = .int; ignored = .int; s = .int
+    do
+      if _worklimit < 1 | _bytelimit < 1 then do; ignored = fail('limit','target.flow.budgets'); return; end
+      if <refvalid>(_owner) = 0 | <refvalid>(_transfers) = 0 | <refvalid>(_cfg) = 0 then do; ignored = fail('invalid','target.flow.owner.expired'); return; end
+      owner_ref = _owner; transfers_ref = _transfers; cfg_ref = _cfg
+      target = dereference owner_ref; profile = dereference transfers_ref; cfg = dereference cfg_ref
+      if target.valid() = 0 | profile.matches(_owner) = 0 | cfg.matches(_owner,_transfers) = 0 then do; ignored = fail('invalid','target.flow.owner.mismatch'); return; end
+      _revision = target.identity(); _profileid = profile.identity(); _cfgid = cfg.identity()
+      _catalog = profile.catalog(); _premise = profile.premise(); _domains = profile.domains()
+      _index = cfg.index(); index = dereference _index; graph_ref = cfg.ir(); graph = dereference graph_ref
+      store = dereference graph.storage(); contract = dereference store.contract(); _schema = contract.identity()
+      if graph.operations() > _bytelimit / 48 | index.blocks() > _bytelimit / 32 then do; ignored = fail('limit','target.flow.index.bytes'); return; end
+      if reserve(graph.operations() * 48 + index.blocks() * 32) = 0 then return
+      /* Typed primitive vectors require their full indexed extent before a
+       * first read; zero is the explicit empty adjacency-list sentinel. */
+      do b = 1 to index.blocks()
+        _edgehead[b] = 0; _outhead[b] = 0; _incomingpresent[b] = 0
+      end
+      do e = 1 to cfg.edges()
+        _edgenext[e] = 0; _outnext[e] = 0; _edgepresent[e] = 0
+      end
+      sourcegraph_ref = target.ir(); sourcegraph = dereference sourcegraph_ref
+      do op = 1 to sourcegraph.operations(); _beforepresent[op] = 0; _afterpresent[op] = 0; end
+      do f = 2 to index.functions(); _entrycomplete[f] = 1; ignored = registerslot(f,'context',0); end
+      do i = 1 to target.records()
+        if spend(1) = 0 then return
+        record = target.record(i)
+        if record.procedureid() < 2 | record.kind() = 'procedure' then iterate
+        op = record.id(); _instructions[_instructions[0] + 1] = op
+        instruction = profile.instruction(op)
+        do j = 1 to instruction.references()
+          refview = instruction.ref(j)
+          if refview.bank() = '' then iterate
+          if refview.extentknown() = 0 then do; _entrycomplete[instruction.function()] = 0; iterate; end
+          if refview.extent() > _worklimit - _work then do; ignored = fail('limit','target.flow.window.work'); return; end
+          do n = 0 to refview.extent() - 1
+            ignored = registerslot(instruction.function(),refview.bank(),refview.index() + n)
+            if _status <> 'building' then return
+          end
+        end
+      end
+      if _domains > 0 then do
+        if _storefunction[0] > 9223372036854775807 / _domains - 1 then do; ignored = fail('limit','target.flow.value.identity'); return; end
+      end
+      do e = 1 to cfg.edges()
+        if spend(1) = 0 | reserve(32) = 0 then return
+        edge = cfg.edge(e); b = edge.sourceblock(); targetblock = edge.targetblock()
+        _outnext[e] = _outhead[b]; _outhead[b] = e
+        if targetblock > 0 then do; _edgenext[e] = _edgehead[targetblock]; _edgehead[targetblock] = e; end
+      end
+      changed = 1
+      do while changed & _status = 'building'
+        changed = 0
+        do position = 1 to index.rposize()
+          b = index.rpo(position); f = index.blockfunction(b); joined = .state()
+          if b = index.functionentry(f) then joined = .state(_bases)
+          e = _edgehead[b]
+          do while e > 0
+            if spend(1) = 0 then return
+            if _edgepresent[e] then do
+                current = _edge[e] as .state
+                size = joined.count() + current.count() + _regfunction[0] + 1
+                if scaledwork(size,size * 3) = 0 | scratch(joined.bytes() + current.bytes(),3) = 0 then return
+                joined = joined.merge(current,_domains)
+            end
+            e = _edgenext[e]
+          end
+          if joined.ready() = 0 then iterate
+          if save(_incoming,_incomingpresent,b,joined) = 0 then return
+          current = joined.copy(); projected = index.firstop(b)
+          do while projected > 0
+            if spend(1) = 0 then return
+            op = cfg.sourceop(projected)
+            if op > 0 then do
+              record = target.at(op)
+              if record.procedureid() > 1 & record.kind() <> 'procedure' then do
+                instruction = profile.instruction(op); before = current.copy()
+                if save(_before,_beforepresent,op,before) = 0 then return
+                current = transfer(instruction,before)
+                if _status <> 'building' then return
+                if save(_after,_afterpresent,op,current) = 0 then return
+              end
+            end
+            projected = index.nextop(projected)
+          end
+          e = _outhead[b]
+          do while e > 0
+            edge = cfg.edge(e); next = current.copy(); op = edge.sourceop()
+            if op > 0 & edge.phase() <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table' then do
+              if _beforepresent[op] then do
+                  before = _before[op] as .state; instruction = profile.instruction(op)
+                  next = transfer(instruction,before,1,0,edge.phase())
+              end
+            end
+            if edge.role() = 'async' | edge.role() = 'unknown' | edge.complete() = 0 then call next.clobber()
+            if edge.targetblock() = 0 & edge.complete() then do
+              if edge.role() = 'terminal' | edge.role() = 'unwind' then do s = 1 to _storefunction[0]
+                if _storefunction[s] = edge.function() & ownedbase(s) & _storebank[s] <> 'context' then call next.setlifetime(s,'ended',_storefunction[0] + edge.id() * 2 + 1)
+              end
+            end
+            previous = .state()
+            if _edgepresent[e] then previous = _edge[e] as .state
+            if next.same(previous) = 0 then do
+              changed = 1; if save(_edge,_edgepresent,e,next) = 0 then return
+            end
+            e = _outnext[e]
+          end
+        end
+      end
+      /* Observe only the frozen solution, never a transient iteration. */
+      do i = 1 to _instructions[0]
+        op = _instructions[i]
+        if _beforepresent[op] then do
+          before = _before[op] as .state; instruction = profile.instruction(op)
+          normal = cfg.outedges(op) = 0
+          do j = 1 to cfg.outedges(op)
+            edge = cfg.outedge(op,j)
+            if edge.role() = 'normal' | edge.role() = 'table' | edge.phase() = 'none' then normal = 1
+            else ignoredstate = transfer(instruction,before,1,1,edge.phase())
+          end
+          if normal then ignoredstate = transfer(instruction,before,0,1)
+          if _status <> 'building' then return
+        end
+      end
+      _status = 'ok'
+      on signal as problem
+        if _status = 'building' then ignored = fail('invalid','target.flow.' || problem.name() || ': ' || problem.message())
+    end
+    return
+  status: method = .string
+    call run()
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    call run()
+    if _status = 'ok' & valid() = 0 then return 'target.flow.owner.expired.or.replaced'
+    return _message
+  reason: method = .string
+    return message()
+  valid: method = .int
+    if _status <> 'ok' | <refvalid>(_owner) = 0 | <refvalid>(_transfers) = 0 | <refvalid>(_cfg) = 0 then return 0
+    target = dereference _owner; profile = dereference _transfers; cfg = dereference _cfg
+    return target.identity() = _revision & profile.identity() = _profileid & cfg.identity() = _cfgid & profile.matches(_owner) & cfg.matches(_owner,_transfers)
+  matches: method = .int
+    arg owner = reference .lltarget..module
+    return valid() & (_owner <refsame> owner)
+  owner: method = reference .lltarget..module
+    return _owner
+  transfers: method = reference .lltargettransfer..profile
+    return _transfers
+  /** Borrow the exact sealed operational premises used by this analysis.
+   * A replacement body, profile or CFG rejects the borrow before a client
+   * can use those premises to construct a normalization/remapping clone. */
+  operationalprofile: method = reference .lltargettransfer..profile
+    call run()
+    if valid() = 0 then assembler signal "ERROR","LL_TARGET_FLOW: operational profile unavailable, expired or replaced"
+    return _transfers
+  cfg: method = reference .lltargetcfg..graph
+    return _cfg
+  revision: method = .int
+    return _revision
+  identity: method = .int
+    return _identity
+  schemaid: method = .int
+    return _schema
+  catalog: method = .string
+    return _catalog
+  premise: method = .string
+    return _premise
+  profileid: method = .int
+    return _profileid
+  cfgid: method = .int
+    return _cfgid
+  storagebank: method = .string
+    arg storage = .int
+    if valid() = 0 | storage < 1 | storage > _storebank[0] then return ''
+    return _storebank[storage]
+  storageindex: method = .int
+    arg storage = .int
+    if valid() = 0 | storage < 1 | storage > _storeindex[0] then return -1
+    return _storeindex[storage]
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    if _projected then return _bytes + _projection.usedbytes()
+    return _bytes
+  complete: method = .int
+    arg functionid = .int, family = .string
+    call run()
+    if valid() = 0 then return 0
+    profile = dereference _transfers; cfg = dereference _cfg; target = dereference _owner
+    if family = 'entry-normalization' then return complete(functionid,'entry-observation') & cfg.asynchronouscomplete(functionid)
+    if family = 'entry-observation' then do
+      if functionid < 2 | functionid > _entrycomplete[0] | _entrycomplete[functionid] = 0 then return 0
+      family = 'observations'
+    end
+    do i = 1 to _instructions[0]
+      record = target.at(_instructions[i])
+      if record.procedureid() = functionid & profile.complete(record.id(),family) = 0 then return 0
+    end
+    return cfg.normalcomplete(functionid) & cfg.exceptionalcomplete(functionid)
+  unknownreason: method = .string
+    arg functionid = .int, family = .string
+    if valid() = 0 then return message()
+    if complete(functionid,family) then return ''
+    return 'target.flow.' || family || '.incomplete'
+  pointstate: method = .lltargetflow..state
+    arg operation = .int, after = 0
+    result = .state
+    call run()
+    if valid() = 0 then return .state()
+    if after then do
+      if operation > 0 & operation <= _afterpresent[0] then do; if _afterpresent[operation] then do; result = _after[operation] as .state; return result.copy(); end; end
+    end
+    else if operation > 0 & operation <= _beforepresent[0] then do; if _beforepresent[operation] then do; result = _before[operation] as .state; return result.copy(); end; end
+    return .state()
+  edgestate: method = .lltargetflow..state
+    arg edgeid = .int
+    result = .state
+    call run()
+    if valid() = 0 then return .state()
+    if edgeid > 0 & edgeid <= _edgepresent[0] then do; if _edgepresent[edgeid] then do; result = _edge[edgeid] as .state; return result.copy(); end; end
+    return .state()
+  storageat: method = .lltargetflow..storagefact
+    arg operation = .int, bank = .string, number = .int, after = 0
+    current = pointstate(operation,after); target = dereference _owner; record = target.at(operation)
+    reg = findregister(record.procedureid(),bank,number)
+    if reg = 0 then return .storagefact(reference self,0,0,0,0)
+    return .storagefact(reference self,current.mapping(reg),_bases[reg],_bases[reg],current.slot(reg))
+  storageon: method = .lltargetflow..storagefact
+    arg edgeid = .int, bank = .string, number = .int
+    current = edgestate(edgeid); cfg = dereference _cfg; edge = cfg.edge(edgeid)
+    reg = findregister(edge.function(),bank,number)
+    if reg = 0 then return .storagefact(reference self,0,0,0,0)
+    return .storagefact(reference self,current.mapping(reg),_bases[reg],_bases[reg],current.slot(reg))
+  componentat: method = .lltargetflow..valuefact
+    arg operation = .int, bank = .string, number = .int, domain = .int, after = 0
+    current = pointstate(operation,after); target = dereference _owner; record = target.at(operation)
+    reg = findregister(record.procedureid(),bank,number); storage = current.mapping(reg)
+    if domain < 1 | domain > _domains then return .valuefact(reference self,.cell(),0,domain)
+    return .valuefact(reference self,cellat(current,storage,domain),storage,domain)
+  componenton: method = .lltargetflow..valuefact
+    arg edgeid = .int, bank = .string, number = .int, domain = .int
+    current = edgestate(edgeid); cfg = dereference _cfg; edge = cfg.edge(edgeid)
+    reg = findregister(edge.function(),bank,number); storage = current.mapping(reg)
+    if domain < 1 | domain > _domains then return .valuefact(reference self,.cell(),0,domain)
+    return .valuefact(reference self,cellat(current,storage,domain),storage,domain)
+  lifetimeat: method = .lltargetflow..lifetimefact
+    arg operation = .int, bank = .string, number = .int, after = 0
+    current = pointstate(operation,after); target = dereference _owner; record = target.at(operation)
+    reg = findregister(record.procedureid(),bank,number); storage = current.mapping(reg)
+    return .lifetimefact(reference self,storage,current.lifetime(storage),current.generation(storage))
+  lifetimeon: method = .lltargetflow..lifetimefact
+    arg edgeid = .int, bank = .string, number = .int
+    current = edgestate(edgeid); cfg = dereference _cfg; edge = cfg.edge(edgeid)
+    reg = findregister(edge.function(),bank,number); storage = current.mapping(reg)
+    return .lifetimefact(reference self,storage,current.lifetime(storage),current.generation(storage))
+  flagat: method = .lltargetflow..valuefact
+    arg operation = .int, bank = .string, number = .int, domain = .int, after = 0
+    return componentat(operation,bank,number,domain,after)
+  flagon: method = .lltargetflow..valuefact
+    arg edgeid = .int, bank = .string, number = .int, domain = .int
+    return componenton(edgeid,bank,number,domain)
+  entryobservations: method = .int
+    call run()
+    if valid() = 0 then return 0
+    return _witnesses[0]
+  entryobservation: method = .lltargetflow..entryread
+    arg ordinal = .int
+    call run()
+    if valid() = 0 | ordinal < 1 | ordinal > _witnesses[0] then assembler signal "ERROR","LL_TARGET_FLOW: unavailable entry-observation witness"
+    return _witnesses[ordinal]
+  accessdomain: method = .int
+    arg functionid = .int, storage = .int, domainid = .int
+    if storage = 0 then return 0
+    return _projection.domain(functionid,'target.storage.' || storage || '.domain.' || domainid)
+  projectpath: method = .lltargetflow..accessrow
+    arg instruction = .lltargettransfer..instruction, incoming = .state, exceptional = .int, phase = 'unknown'
+    row = .accessrow(); current = incoming.copy()
+    profile = dereference _transfers; action = .lltargettransfer..action
+    domain = .lltargettransfer..domain; declared = .lltargettransfer..domain
+    do ordinal = 1 to instruction.actions()
+      action = instruction.action(ordinal)
+      applicable = applies(action,exceptional,phase)
+      if applicable = 0 then iterate
+      if spend(current.count() + _regfunction[0] + _domains * 3 + 1) = 0 then return row
+      subject = refreg(instruction,action.subject()); source = refreg(instruction,action.sourceid())
+      storage = refstorage(instruction,action.subject(),current); sourceStorage = refstorage(instruction,action.sourceid(),current)
+      kind = action.kind()
+      if kind = 'derive' then do; call row.add('read',0); iterate; end
+      if wordpos(kind,'link unlink swap') > 0 & (action.certainty() <> 'must' | applicable <> 1) then do; call current.clobberbindings(); iterate; end
+      if kind = 'link' & subject > 0 then call current.bind(subject,sourceStorage)
+      else if kind = 'unlink' & subject > 0 then call current.bind(subject,_bases[subject])
+      else if kind = 'swap' & subject > 0 & source > 0 then call current.exchange(subject,source)
+      if wordpos(kind,'read observe transport write clear derive flagwrite context lifetime') = 0 then iterate
+      first = action.domain(); last = first; whole = first = 0
+      if first > 0 then do; domain = profile.domain(first); whole = domain.kind() = 'whole'; end
+      if whole then do; first = 1; last = _domains; end
+      do d = first to last
+        domain = profile.domain(d)
+        if domain.kind() = 'whole' | (whole & domain.kind() = 'context') then iterate
+        target = storage
+        if domain.kind() = 'context' then do
+          reg = findregister(instruction.function(),'context',0)
+          if reg > 0 then target = _bases[reg]
+        end
+        id = accessdomain(instruction.function(),target,d)
+        if kind = 'read' then call row.add('read',id)
+        else if kind = 'observe' then call row.add('observe',id)
+        else if kind = 'lifetime' then call row.add('observe',id)
+        else do
+          if action.sourcekind() = 'reference' then call row.add('read',accessdomain(instruction.function(),sourceStorage,d))
+          call row.add('write',id)
+          /* Borrowed/global may aliases prohibit an exact external kill. */
+          if action.certainty() = 'must' & applicable = 1 & target > 0 then do
+            if ownedbase(target) then call row.add('kill',id)
+          end
+          if target > 0 then do
+            if ownedbase(target) = 0 then do s = 1 to _storefunction[0]
+              if ownedbase(s) = 0 then call row.add('write',accessdomain(instruction.function(),s,d))
+            end
+          end
+        end
+      end
+    end
+    return row
+  buildprojection: method = .void
+    call run()
+    if valid() = 0 | _projected then return
+    cfg = dereference _cfg; profile = dereference _transfers; index = dereference _index
+    _projection = .llirgraph..access(_index,'rxas.target.flow.v1.' || _profileid,1000000,max(1,_bytelimit - _bytes),max(1,_worklimit - _work))
+    row = .accessrow; empty = .int[]; before = .state; boundaryrow = .accessrow
+    paths = .object[]
+    action = .lltargettransfer..action; j = .int; k = .int
+    edge = .lltargetcfg..edge
+    do i = 1 to _instructions[0]
+      op = _instructions[i]; projected = cfg.projectedop(op)
+      if projected = 0 | index.opcode(projected) <= 16 then iterate
+      instruction = profile.instruction(op)
+      f = instruction.function()
+      /* An omitted description pins shared liveness. Missing observation or
+       * implicit-selector precision is never represented by empty vectors. */
+      if instruction.complete('effects') = 0 | instruction.complete('references') = 0 | instruction.complete('components') = 0 | instruction.complete('observations') = 0 | instruction.complete('bindings') = 0 then iterate
+      hascall = 0
+      do j = 1 to instruction.actions(); action = instruction.action(j); if action.kind() = 'call' then hascall = 1; end
+      if hascall then iterate
+      if _beforepresent[op] then before = _before[op] as .state
+      else iterate
+      if cfg.outedges(op) = 0 then do
+        row = projectpath(instruction,before,0)
+        if _status <> 'ok' then leave
+        if row.complete() = 0 then iterate
+        call _projection.put(projected,row.reads(),row.observations(),row.writes(),row.kills())
+      end
+      else do
+        complete = 1; call objectarraydrop paths
+        do j = 1 to cfg.outedges(op)
+          edge = cfg.outedge(op,j)
+          exceptional = edge.phase() <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table'
+          row = projectpath(instruction,before,exceptional,edge.phase())
+          if _status <> 'ok' then leave
+          paths[j] = row as .object
+          if row.complete() = 0 then complete = 0
+        end
+        if _status <> 'ok' then leave
+        if complete = 0 then iterate
+        call _projection.put(projected,empty,empty,empty,empty)
+        boundaryrow = .accessrow(); hasboundary = 0
+        do j = 1 to cfg.outedges(op)
+          edge = cfg.outedge(op,j); row = paths[j] as .accessrow
+          if edge.successorordinal() > 0 then call _projection.edgeput(projected,edge.successorordinal(),row.reads(),row.observations(),row.writes(),row.kills())
+          else do
+            /* Departure reads include copied values, live borrowed storage
+             * and explicit lifetime observations. Boundary kills do not
+             * claim to erase caller-owned state. */
+            hasboundary = 1; list = row.reads(); observations = row.observations()
+            do k = 1 to list[0]; call boundaryrow.add('observe',list[k]); end
+            do k = 1 to observations[0]; call boundaryrow.add('observe',observations[k]); end
+          end
+        end
+        if hasboundary then call _projection.boundaryput(projected,boundaryrow.observations())
+      end
+    end
+    if _status <> 'ok' then call _projection.reject(_status,'target.flow.projection.' || _message)
+    ignored = _projection.seal(); _projected = 1
+    /* A stronger liveness capability cannot invalidate already frozen point
+     * facts if its separate projection budget is unavailable. */
+    if _status = 'limit' then do; _status = 'ok'; _message = ''; end
+    return
+  projection: method = reference .llirgraph..access
+    call buildprojection()
+    return reference _projection
+  liveness: method = .llirgraph..live
+    arg work = 1000000, bytes = 67108864
+    call buildprojection()
+    index = dereference _index
+    return index.accessliveness(reference _projection,work,bytes)
+
+analyse: procedure = .lltargetflow..analysis
+  arg owner = reference .lltarget..module, transfers = reference .lltargettransfer..profile, cfg = reference .lltargetcfg..graph, work = 1000000, bytes = 67108864
+  return .analysis(owner,transfers,cfg,work,bytes)

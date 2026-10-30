@@ -1,0 +1,133 @@
+/* cREXX License (MIT). Independent operational transfers and split CFG. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetremap
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+emitone: procedure = .int
+  arg body = .lltarget..bodydraft, mnemonic = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(mnemonic,fields,at)
+emittwo: procedure = .int
+  arg body = .lltarget..bodydraft, mnemonic = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(mnemonic,fields,at)
+label: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+
+main: procedure = .int
+  failures = 0; i = .int; normal = .int; exceptional = .int; synthetic = .int
+  original = .lltarget..module; copied = .lltarget..module; changed = .lltarget..module
+  item = .lltarget..record; row = .lltargetcfg..edge; graph = .lltargetcfg..graph
+  draft = .lltarget..draft('target.transfer.fixture','fixture:target.transfer',0)
+  at = draft.synthetic('independent transfer control')
+  root = draft.procedure('main',2,at)
+  entryid = label(root,'entry',at)
+  before = emittwo(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  failurepoint = emittwo(root,'load',root.reg('r',1),.lltarget..operand.integer(9),at)
+  after = emittwo(root,'load',root.reg('r',0),.lltarget..operand.integer(99),at)
+  ignored = emitone(root,'ret',.lltarget..operand.integer(0),at)
+  handler = label(root,'handler',at)
+  ignored = emitone(root,'ret',.lltarget..operand.integer(1),at)
+  leaf = draft.procedure('parallel',0,at)
+  fields = .object[]; fields[1] = .lltarget..operand.symbol('same') as .object
+  fields[2] = .lltarget..operand.symbol('same') as .object; fields[3] = leaf.reg('a',1) as .object
+  parallel = leaf.emit('brtf',fields,at)
+  ignored = label(leaf,'same',at); ignored = emitone(leaf,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('catalogue_gaps',3,at)
+  numericgetter = emitone(leaf,'getnumdgts',leaf.reg('r',0),at)
+  copiedload = emittwo(leaf,'load',leaf.reg('r',1),leaf.reg('r',0),at)
+  fields = .object[]; fields[1] = leaf.reg('r',0) as .object
+  fields[2] = leaf.reg('r',1) as .object; fields[3] = leaf.reg('r',2) as .object
+  extract = leaf.emit('fextr',fields,at)
+  ignored = emitone(leaf,'ret',.lltarget..operand.integer(0),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'source with first label and duplicate edges validates')
+  if original.valid() = 0 then do; say original.error(); say 'TARGET_TRANSFER_CFG|failures=' || failures; return failures; end
+  ir_ref = original.ir(); ir = dereference ir_ref; sourceimage = ir.binary()
+  canonical = .lltargettransfer..profile(reference original)
+  failures = failures + check(canonical.status() = 'ok','canonical transfer profile is callable')
+  failures = failures + check(canonical.complete(before,'numeric') = 0,'missing numeric read coverage stays unknown')
+  failures = failures + check(canonical.complete(before,'invented-family') = 0,'unknown query family is not known empty')
+  failures = failures + check(canonical.complete(numericgetter,'numeric') = 0 & canonical.complete(extract,'signals') = 0,'getter and FEXTR catalogue gaps cannot imply absent effects')
+  failures = failures + check(canonical.complete(copiedload,'bindings') = 0,'register copy cannot certify absent binding effects')
+  copied = original
+  failures = failures + check(canonical.matches(reference copied) = 0,'equal copied module is a foreign owner')
+  tiny = .lltargettransfer..profile(reference original,1,1)
+  failures = failures + check(tiny.status() = 'limit','tiny transfer allowance refuses before publication')
+  invalid = .lltargettransfer..profiledraft(reference original,'conflicting-domains')
+  ignored = invalid.domain('component','same-domain',1); ignored = invalid.domain('flag','same-domain',1)
+  invalidprofile = invalid.finish()
+  failures = failures + check(invalidprofile.status() = 'invalid','conflicting operational domain declarations are rejected')
+  premises = .lltargettransfer..profiledraft(reference original,'independent-operational-fixture')
+  do i = 1 to original.records()
+    item = original.record(i); ignored = premises.operation(item.id())
+    if item.kind() = 'instruction' then ignored = premises.relocation(item.id(),'none')
+  end
+  integer = premises.domain('component','component.bit.0',1)
+  refbefore = premises.ref(before,1)
+  reffailure = premises.ref(failurepoint,1)
+  refhandler = premises.ref(handler,1,'label','symbolic')
+  ignored = premises.event(before,'write',refbefore,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premises.event(failurepoint,'write',reffailure,integer,'literal',0,.lltarget..operand.integer(9),'must','normal')
+  ignored = premises.event(failurepoint,'edge',refhandler,0,'literal',0,.lltarget..operand.string('ERROR' as .binary),'must','failure','before','handler')
+  rich = premises.finish()
+  failures = failures + check(rich.status() = 'ok','independent checked operational stream seals')
+  if rich.status() <> 'ok' then do; say rich.message(); say 'TARGET_TRANSFER_CFG|failures=' || failures; return failures; end
+  graph = .lltargetcfg..graph(reference original,reference rich)
+  failures = failures + check(graph.status() = 'ok','typed CFG uses one checked split projection')
+  if graph.status() = 'ok' then do
+    normal = 0; exceptional = 0; synthetic = 0
+    do i = 1 to graph.edges()
+      row = graph.edge(i)
+      if row.sourceop() = failurepoint & row.role() = 'normal' then normal = row.targetblock() = graph.projectedblock(after)
+      if row.sourceop() = failurepoint & row.role() = 'handler' then exceptional = row.targetblock() = graph.projectedblock(handler) & row.phase() = 'before'
+      if row.sourceop() = 0 & row.boundarykind() = 'synthetic-end' then synthetic = synthetic + 1
+    end
+    failures = failures + check(normal & exceptional,'failure edge leaves its own instruction before a later write')
+    failures = failures + check(graph.sourceop(graph.projectedop(failurepoint)) = failurepoint,'source/projection mapping is reversible')
+    failures = failures + check(graph.outedges(parallel) = 2,'parallel successors retain two edge identities')
+    first = graph.outedge(parallel,1); second = graph.outedge(parallel,2)
+    failures = failures + check(first.targetblock() = second.targetblock() & first.successorordinal() <> second.successorordinal(),'equal targets retain ordered successor distinction')
+    failures = failures + check(synthetic > 0,'synthetic terminal boundary is visible')
+    wrong = .lltargetcfg..graph(reference copied,reference rich)
+    failures = failures + check(wrong.status() = 'invalid','CFG refuses mismatched exact owner')
+  end
+  else say graph.message()
+  canonicalgraph = .lltargetcfg..graph(reference original,reference canonical)
+  failures = failures + check(canonicalgraph.status() = 'ok','canonical graph keeps unknown boundaries explicitly')
+  if canonicalgraph.status() = 'ok' then do
+    failures = failures + check(canonicalgraph.exceptionalcomplete(original.procedureid('catalogue_gaps')) = 0,'unknown synchronous targets remain incomplete')
+    failures = failures + check(canonicalgraph.asynchronouscomplete(original.procedureid('main')) = 0,'body without SIGNAL does not certify inherited asynchronous policy')
+  end
+  tinygraph = .lltargetcfg..graph(reference original,reference rich,1,1)
+  failures = failures + check(tinygraph.status() = 'limit','tiny CFG allowance refuses atomically')
+  transaction = .lltargetremap..change(reference original)
+  ignored = transaction.useprofile(reference rich)
+  item = original.at(before); owned = item.operand(1)
+  ignored = transaction.insertnullbefore(entryid,owned,before)
+  call transaction.run(); changed = transaction.result()
+  failures = failures + check(transaction.status() = 'changed' & changed.valid(),'shared remapper publishes checked insertion')
+  if transaction.status() = 'changed' then do
+    body = changed.body(changed.procedureid('main')); firstrecord = body.record(1); secondrecord = body.record(2)
+    origin = firstrecord.origin()
+    failures = failures + check(firstrecord.mnemonic() = 'null' & secondrecord.kind() = 'label','entry prelude precedes original labels')
+    failures = failures + check(origin.kind() = 'synthetic' & origin.parents() = 2,'clear provenance retains header and first observation')
+    changedir_ref = changed.ir(); changedir = dereference changedir_ref; image = changedir.binary()
+    call transaction.run(); repeated = transaction.result(); repeated_ref = repeated.ir(); repeatedir = dereference repeated_ref
+    failures = failures + check(bin2x(repeatedir.binary()) = bin2x(image),'repeated transaction run cannot duplicate insertion')
+  end
+  else say transaction.message()
+  failures = failures + check(bin2x(ir.binary()) = bin2x(sourceimage),'analysis and remapping preserve frozen source bytes')
+  say 'TARGET_TRANSFER_CFG|failures=' || failures
+  return failures

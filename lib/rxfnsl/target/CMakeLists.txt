@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 
 # Explicit optional target tools; core/bootstrap packages have no reverse edge.
-set(_modules lltarget lltargetfacts llinline llcleanup)
+set(_modules lltarget lltargettransfer lltargetcfg lltargetremap
+  lltargetflow lltargetsummary lltargetnormalize lltargetfacts llinline llcleanup)
 set_property(GLOBAL PROPERTY RXFNSL_TARGET_SELECTORS "${_modules}")
 set(_imports "${CMAKE_CURRENT_BINARY_DIR}/imports")
 crexx_add_import_root(rxfnsl_target_imports DIRECTORY "${_imports}"
@@ -16,10 +17,32 @@ if(CREXX_LEVEL_L_NOOPT)
   list(APPEND _flags -n)
 endif()
 set(_bins)
+set(_previous_module "")
 foreach(_module IN LISTS _modules)
   set(_deps)
+  # rxc scans the shared local import directory. Finish each image before
+  # starting the next reader so parallel builds never inspect a partial RXBIN.
+  if(_previous_module)
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/${_previous_module}.rxbin")
+  endif()
   if(NOT _module STREQUAL "lltarget")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltarget.rxbin")
+  endif()
+  if(_module STREQUAL "lltargetcfg" OR _module STREQUAL "lltargetremap"
+      OR _module STREQUAL "lltargetflow")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargettransfer.rxbin")
+  endif()
+  if(_module STREQUAL "lltargetflow")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetcfg.rxbin")
+  endif()
+  if(_module STREQUAL "lltargetsummary" OR _module STREQUAL "lltargetnormalize")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetflow.rxbin")
+  endif()
+  if(_module STREQUAL "lltargetnormalize")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetremap.rxbin")
+  endif()
+  if(_module STREQUAL "llinline")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetremap.rxbin")
   endif()
   if(_module STREQUAL "llinline" OR _module STREQUAL "llcleanup")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetfacts.rxbin")
@@ -37,6 +60,7 @@ foreach(_module IN LISTS _modules)
       "${CMAKE_CURRENT_SOURCE_DIR}/${_module}.crexx"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
   list(APPEND _bins "${CMAKE_CURRENT_BINARY_DIR}/${_module}.rxbin")
+  set(_previous_module "${_module}")
 endforeach()
 set(_control "${CMAKE_CURRENT_BINARY_DIR}/target.ctl")
 set(_target_control "")
@@ -229,6 +253,69 @@ if(BUILD_TESTING)
     crexx_register_test_prep_targets(TESTS levell_target_cfg_rxbvm
       TARGETS levell_target_cfg rxbvm)
   endif()
+
+  # One bounded owner panel for the shared Level L target foundation.
+  foreach(_foundation_case IN ITEMS
+      target-transfer-cfg target-module-remap target-flow target-summary foundation-normalize)
+    if(_foundation_case STREQUAL "foundation-normalize" AND NOT CREXX_BUILD_TARGET_IO)
+      continue()
+    endif()
+    string(REPLACE "-" "_" _foundation_name "${_foundation_case}")
+    string(TOUPPER "${_foundation_name}" _foundation_marker)
+    set(_foundation_images ${_images})
+    set(_foundation_imports "${_test_imports}")
+    set(_foundation_deps levell_target_test_imports ${_test_files})
+    if(_foundation_case STREQUAL "foundation-normalize")
+      list(APPEND _foundation_images "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin")
+      list(APPEND _foundation_images "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin")
+      set(_foundation_imports "${CMAKE_CURRENT_BINARY_DIR}/foundation-normalize-imports")
+      crexx_add_import_root(levell_foundation_normalize_imports
+        DIRECTORY "${_foundation_imports}" OUTPUT_VARIABLE _foundation_import_files
+        FILES ${_foundation_images}
+        DEPENDS library rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_target rxfnsl_target_io llrxastext)
+      set(_foundation_deps levell_foundation_normalize_imports ${_foundation_import_files})
+    endif()
+    set(_foundation_source
+      "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/${_foundation_case}.crexx")
+    set(_foundation_output
+      "${CMAKE_CURRENT_BINARY_DIR}/${_foundation_case}-linked.rxbin")
+    crexx_add_fixture_command(OUTPUT "${_foundation_output}"
+      COMMAND $<TARGET_FILE:rxc> -x --no-exe-import -i "${_foundation_imports}"
+        -o "${_foundation_case}" "${_foundation_source}"
+      COMMAND $<TARGET_FILE:rxas> "${_foundation_case}"
+      COMMAND $<TARGET_FILE:rxlink> -s -o "${_foundation_case}-linked"
+        "${_foundation_case}" ${_foundation_images}
+      DEPENDS rxc rxas rxlink ${_foundation_deps}
+        "${_foundation_source}"
+      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+    add_custom_target(levell_${_foundation_name}
+      DEPENDS "${_foundation_output}")
+    if(TARGET rxbvm)
+      add_test(NAME levell_${_foundation_name}_rxbvm
+        COMMAND $<TARGET_FILE:rxbvm> "${_foundation_output}")
+      set_tests_properties(levell_${_foundation_name}_rxbvm PROPERTIES
+        PASS_REGULAR_EXPRESSION "${_foundation_marker}[|]failures=0"
+        FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+        TIMEOUT 120 LABELS "level-l;research;target-foundation")
+      crexx_register_test_prep_targets(TESTS levell_${_foundation_name}_rxbvm
+        TARGETS levell_${_foundation_name} rxbvm)
+      if(_foundation_case STREQUAL "foundation-normalize")
+        add_test(NAME levell_foundation_normalize_native
+          COMMAND ${CMAKE_COMMAND}
+            -DVM=$<TARGET_FILE:rxbvm>
+            -DASSEMBLER=$<TARGET_FILE:rxas>
+            -DLINKER=$<TARGET_FILE:rxlink>
+            -DCLIENT=${_foundation_output}
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/foundation-normalize-native-work
+            -P ${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/run-foundation-normalize-native.cmake)
+        set_tests_properties(levell_foundation_normalize_native PROPERTIES
+          PASS_REGULAR_EXPRESSION "FOUNDATION_NATIVE[|]failures=0"
+          TIMEOUT 120 LABELS "level-l;research;target-foundation")
+        crexx_register_test_prep_targets(TESTS levell_foundation_normalize_native
+          TARGETS levell_foundation_normalize rxbvm rxas rxlink)
+      endif()
+    endif()
+  endforeach()
 endif()
 
 option(CREXX_BUILD_TARGET_IO "Build the optional Level L target RXAS adapters" OFF)

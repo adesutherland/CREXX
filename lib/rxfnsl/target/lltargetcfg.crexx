@@ -1,0 +1,404 @@
+/* cREXX License (MIT). One checked, split machine CFG over shared L IR. */
+options levelb
+namespace lltargetcfg expose graph edge
+import rxfnsb
+import llir
+import llirgraph
+import lltarget
+import lltargettransfer
+import llrxascatalog
+
+bad: procedure = .void
+  arg message = .string
+  assembler signal "ERROR",message
+  return
+bits: procedure = .binary
+  arg value = .int
+  result = .binary; call binresize result,8; <at..i64>(0) result = value
+  return result
+contract: procedure = .llir..contract
+  schema = .llir..schema(); family = schema.family('rxas.target.analysis',1)
+  integer = family.type('source',.llir..intcodec() as .object)
+  point = family.operation('point'); call point.attribute('source',integer)
+  /* This operation is an analysis control marker, not execution of the source
+   * instruction. Source effects live in the checked transfer profile and
+   * missing departures are explicit incomplete typed boundary rows. */
+  call point.state('none'); call point.failure('none'); call point.termination('returns')
+  call point.control('terminal',0,65536)
+  return schema.finish()
+
+/** Edge rows are typed observations of actual projection successors or checked
+ * boundary departures. Duplicate successor blocks retain distinct ordinals. */
+edge: class
+  _id = .int
+  _source = .int
+  _projected = .int
+  _block = .int
+  _function = .int
+  _role = .string
+  _ordinal = .int
+  _target = .int
+  _boundary = .string
+  _boundaryid = .string
+  _signal = .string
+  _phase = .string
+  _complete = .int
+  _reason = .string
+  *: factory
+    arg id = .int, source = .int, projected = .int, block = .int, functionid = .int, role = .string, ordinal = .int, target = .int, boundary = .string, boundaryid = .string, signalname = .string, phase = .string, complete = .int, reason = .string
+    _id = id; _source = source; _projected = projected; _block = block; _function = functionid
+    _role = role; _ordinal = ordinal; _target = target; _boundary = boundary; _boundaryid = boundaryid
+    _signal = signalname; _phase = phase; _complete = complete; _reason = reason
+    return
+  id: method = .int
+    return _id
+  sourceop: method = .int
+    return _source
+  projectedop: method = .int
+    return _projected
+  sourceblock: method = .int
+    return _block
+  function: method = .int
+    return _function
+  role: method = .string
+    return _role
+  successorordinal: method = .int
+    return _ordinal
+  targetblock: method = .int
+    return _target
+  boundarykind: method = .string
+    return _boundary
+  boundaryid: method = .string
+    return _boundaryid
+  signalname: method = .string
+    return _signal
+  phase: method = .string
+    return _phase
+  complete: method = .int
+    return _complete
+  unknownreason: method = .string
+    return _reason
+
+graph: class
+  _owner = reference .lltarget..module
+  _profile = reference .lltargettransfer..profile
+  _profileid = .int
+  _revision = .int
+  _ir = .llir..module
+  _edges = .llirgraph..edgeprofile
+  _index = .llirgraph..index
+  _status = .string
+  _message = .string
+  _work = .int
+  _bytes = .int
+  _worklimit = .int
+  _bytelimit = .int
+  _source = .int[]
+  _projected = .int[]
+  _block = .int[]
+  _next = .int[]
+  _group = .int[]
+  _normal = .int[]
+  _exceptional = .int[]
+  _async = .int[]
+  _from = .int[]
+  _stagefirst = .int[]
+  _stagelast = .int[]
+  _stagenext = .int[]
+  _outfirst = .int[]
+  _outlast = .int[]
+  _outnext = .int[]
+  _outcount = .int[]
+  _to = .int[]
+  _roles = .string[]
+  _phases = .string[]
+  _bounds = .string[]
+  _boundids = .string[]
+  _signals = .string[]
+  _known = .int[]
+  _reasons = .string[]
+  _rows = .lltargetcfg..edge[]
+  *: factory
+    arg owner = reference .lltarget..module, profile = reference .lltargettransfer..profile, work = 1000000, bytes = 67108864
+    _owner = owner; _profile = profile; _worklimit = work; _bytelimit = bytes; _status = 'building'
+    return
+  reserve: method = .int
+    arg bytes = .int, work = .int
+    if _status <> 'building' then return 0
+    if bytes < 0 | work < 0 | bytes > _bytelimit - _bytes | work > _worklimit - _work then do
+      call reject('limit','LL_RESOURCE_LIMIT: target.cfg work/bytes'); return 0
+    end
+    _bytes = _bytes + bytes; _work = _work + work
+    return 1
+  reject: method = .void
+    arg state = .string, message = .string
+    if _status = 'building' then do; _status = state; _message = message; end
+    return
+  stage: method = .void
+    arg source = .int, target = .int, role = .string, phase = 'none', boundary = '', boundaryid = '', signalname = '', complete = 1, reason = ''
+    if wordpos(role,'normal table skip handler resumed async unwind terminal unknown') = 0 | wordpos(phase,'none before partial after unknown') = 0 | (target = 0 & boundary = '') | (target > 0 & boundary <> '') | (complete = 0 & reason = '') then do
+      call reject('invalid','LL_TARGET_CFG: edge shape'); return
+    end
+    if reserve(160 + length(boundaryid) + length(signalname) + length(reason),1) = 0 then return
+    id = _from[0] + 1; _from[id] = source; _to[id] = target; _roles[id] = role; _phases[id] = phase
+    _bounds[id] = boundary; _boundids[id] = boundaryid; _signals[id] = signalname; _known[id] = complete; _reasons[id] = reason
+    _stagenext[id] = 0
+    if _stagelast[source] > 0 then _stagenext[_stagelast[source]] = id
+    else _stagefirst[source] = id
+    _stagelast[source] = id
+    return
+  indexrow: method = .void
+    arg source = .int, row = .int
+    key = source + 1; _outnext[row] = 0
+    if _outlast[key] > 0 then _outnext[_outlast[key]] = row
+    else _outfirst[key] = row
+    _outlast[key] = row; _outcount[key] = _outcount[key] + 1
+    return
+  resolveblock: method = .int
+    arg oldblock = .int
+    target = dereference _owner; source_ref = target.ir(); source = dereference source_ref; store_ref = source.storage(); store = dereference store_ref
+    do steps = 1 to source.blocks() + 1
+      if reserve(0,1) = 0 then return 0
+      if oldblock < 1 | oldblock > _group[0] then return 0
+      if _group[oldblock] > 0 then return _group[oldblock]
+      last = store.get(2,oldblock,3); op = source.operation(last)
+      if op.successors() <> 1 then return 0
+      oldblock = op.successor(1)
+    end
+    return 0
+  run: method = .void
+    if _status <> 'building' then return
+    i = .int; j = .int; n = .int; id = .int; f = .int; row = .int; ordinal = .int; dest = .int
+    phase = .string; signalname = .string; role = .string; reason = .string; known = .int
+    body = .lltarget..body; item = .lltarget..record; field = .lltarget..operand
+    action = .lltargettransfer..action; ref = .lltargettransfer..refview
+    fn = .llir..function; point = .llir..opdraft; result = .llir..opview
+    blocks = .llir..block[]; functions = .llir..function[]; first = .int[]; last = .int[]
+    if _worklimit < 1 | _bytelimit < 1 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg budgets'); return; end
+    if <refvalid>(_owner) = 0 | <refvalid>(_profile) = 0 then do; call reject('invalid','LL_TARGET_OWNER: expired CFG input'); return; end
+    target = dereference _owner; profile = dereference _profile
+    if target.valid() = 0 | profile.matches(_owner) = 0 then do; call reject('invalid','LL_TARGET_OWNER: CFG profile mismatch'); return; end
+    _revision = target.identity(); _profileid = profile.identity(); source_ref = target.ir(); source = dereference source_ref; store_ref = source.storage(); store = dereference store_ref
+    if source.operations() > (_bytelimit - _bytes) <idiv> 512 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg projection'); return; end
+    if reserve(source.operations() * 512 + source.blocks() * 16 + source.functions() * 32,source.operations() + source.blocks() + source.functions()) = 0 then return
+    do i = 1 to source.operations()
+      _projected[i] = 0; _block[i] = 0; _next[i] = 0; _stagefirst[i] = 0; _stagelast[i] = 0
+    end
+    do i = 1 to source.operations() + 1; _outfirst[i] = 0; _outlast[i] = 0; _outcount[i] = 0; end
+    do i = 1 to source.blocks(); _group[i] = 0; end
+    schema = contract(); builder = .llir..builder(schema,_worklimit,_bytelimit)
+    origin = builder.synthetic('checked target analysis projection')
+    fn = builder.function('$target.catalogue',schema.voidtype()); sentinel = fn.block('catalogue'); call sentinel.returnvoid(origin)
+    do n = 1 to target.procedures()
+      body = target.procedure(n); f = body.functionid(); fn = builder.function(body.name(),schema.voidtype()); functions[f] = fn
+      _normal[f] = target.normalcfgcomplete(f); _exceptional[f] = 1; _async[f] = 1; first[f] = 0; last[f] = 0
+      do j = 1 to body.records()
+        if reserve(0,1) = 0 then return
+        item = body.record(j)
+        if item.kind() = 'procedure' then iterate
+        id = item.id(); blocks[id] = fn.block('point.' || id); _block[id] = blocks[id].id()
+        if first[f] = 0 then first[f] = id
+        if last[f] > 0 then _next[last[f]] = id
+        last[f] = id
+        if _group[item.blockid()] = 0 then _group[item.blockid()] = id
+      end
+      if first[f] = 0 then do
+        sentinel = fn.block('empty'); call sentinel.returnvoid(origin)
+        _normal[f] = 0; _exceptional[f] = 0; _async[f] = 0
+      end
+    end
+    catalog = .llrxascatalog..catalog()
+    do n = 1 to target.records()
+      if reserve(0,1) = 0 then return
+      item = target.record(n); id = item.id(); f = item.procedureid()
+      if f < 2 | item.kind() = 'procedure' then iterate
+      if item.kind() <> 'instruction' then do
+        if _next[id] > 0 then call stage(id,_next[id],'normal')
+        else call stage(id,0,'terminal','none','end',f as .string)
+        iterate
+      end
+      op = source.operation(id); code = item.opcode(); arity = lltarget..normalsuccessors(code)
+      if arity = -2 then do
+        call stage(id,0,'unknown','unknown','normal-target',id as .string,'',0,'normal.successor.unknown'); _normal[f] = 0
+      end
+      else if op.successors() > 0 then do
+        do ordinal = 1 to op.successors()
+          dest = resolveblock(op.successor(ordinal))
+          if dest = 0 then do
+            call stage(id,0,'unknown','none','normal-target',id || '.' || ordinal,'',0,'normal.target.unavailable'); _normal[f] = 0
+          end
+          else call stage(id,dest,'normal')
+        end
+      end
+      else if arity = -1 | lltarget..normalfallthrough(code) then do
+        if _next[id] > 0 then call stage(id,_next[id],'normal')
+        else do
+          call stage(id,0,'unknown','none','falloff',id as .string,'',0,'normal.falloff.unknown'); _normal[f] = 0
+        end
+      end
+      else call stage(id,0,'terminal','none','departure',id as .string)
+      if profile.premise() = 'canonical' then do
+        if catalog.signalstate(code) <> 0 then do
+          phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
+          call stage(id,0,'unknown',phase,'signal-policy',id as .string,catalog.signalnames(code),0,'signal.destination.unknown')
+          _exceptional[f] = 0
+        end
+        call stage(id,0,'async','unknown','asynchronous-policy',id as .string,'',0,'asynchronous.policy.unknown'); _async[f] = 0
+      end
+      else do
+        view = profile.instruction(id)
+        if view.complete('signals') = 0 then do
+          call stage(id,0,'unknown','unknown','signal-contract',id as .string,'',0,view.unknownreason('signals')); _exceptional[f] = 0
+        end
+        do a = 1 to view.actions()
+          if reserve(0,1) = 0 then return
+          action = view.action(a)
+          if action.kind() <> 'edge' & action.kind() <> 'raise' then iterate
+          role = action.detail(); phase = action.phase(); signalname = ''; field = action.literal()
+          if action.sourcekind() = 'literal' & field.kind() = 'S' then signalname = field.text()
+          if wordpos(role,'normal table skip handler resumed async unwind terminal unknown') = 0 then role = 'unknown'
+          dest = 0
+          if action.subject() > 0 then do
+            ref = profile.ref(action.subject()); field = ref.operand()
+            if ref.kind() <> 'label' then do; call reject('invalid','LL_TARGET_CFG: edge subject is not label'); return; end
+            dest = resolveblock(target.labelblock(f,field.text()))
+            if dest = 0 then do; call reject('invalid','LL_TARGET_CFG: unresolved operational edge'); return; end
+          end
+          if dest > 0 then call stage(id,dest,role,phase,'','',signalname)
+          else do
+            known = action.certainty() <> 'unknown' & role <> 'unknown'; reason = ''
+            if known = 0 then reason = 'operational.edge.destination.unknown'
+            call stage(id,0,role,phase,'operational-' || role,action.id() as .string,signalname,known,reason)
+            if known = 0 then _exceptional[f] = 0
+          end
+        end
+      end
+    end
+    do n = 1 to target.records()
+      item = target.record(n); id = item.id(); f = item.procedureid()
+      if f < 2 | item.kind() = 'procedure' then iterate
+      point = blocks[id].operation(schema.operation('rxas.target.analysis.point'),origin)
+      call point.attribute('source',bits(id))
+      row = _stagefirst[id]
+      do while row > 0
+        if reserve(0,1) = 0 then return
+        if _to[row] > 0 then call point.successor(blocks[_to[row]])
+        row = _stagenext[row]
+      end
+      result = point.finish(); _projected[id] = result.id(); _source[result.id()] = id
+    end
+    if builder.error() <> '' then do; call reject('invalid',builder.error()); return; end
+    _ir = builder.finish()
+    if _ir.error() <> '' then do; call reject('invalid',_ir.error()); return; end
+    _edges = .llirgraph..edgeprofile(reference _ir,_worklimit - _work,_bytelimit - _bytes)
+    ordinals = .int[]
+    do i = 1 to _ir.operations(); ordinals[i] = 0; end
+    do row = 1 to _from[0]
+      id = _from[row]; projected = _projected[id]; ordinal = 0; dest = 0
+      if _to[row] > 0 then do
+        ordinal = ordinals[projected] + 1; ordinals[projected] = ordinal; dest = _block[_to[row]]
+        call _edges.put(projected,ordinal,_roles[row],_phases[row],_signals[row])
+      end
+      else call _edges.boundary(projected,_roles[row],_phases[row],_bounds[row],_boundids[row],_signals[row],_known[row],_reasons[row])
+      item = target.at(id)
+      _rows[row] = .lltargetcfg..edge(row,id,projected,_block[id],item.procedureid(),_roles[row],ordinal,dest,_bounds[row],_boundids[row],_signals[row],_phases[row],_known[row],_reasons[row])
+      call indexrow(id,row)
+    end
+    /* Synthetic catalogue/empty blocks have no actual successors. Their
+     * terminal boundaries are visible too, with source operation zero. */
+    projectionstore_ref = _ir.storage(); projectionstore = dereference projectionstore_ref
+    do b = 1 to _ir.blocks()
+      lastop = projectionstore.get(2,b,3)
+      if lastop <= _source[0] then do; if _source[lastop] > 0 then iterate; end
+      if reserve(160,1) = 0 then return
+      row = _rows[0] + 1; f = projectionstore.get(2,b,1)
+      call _edges.boundary(lastop,'terminal','none','synthetic-end',b as .string)
+      _rows[row] = .lltargetcfg..edge(row,0,lastop,b,f,'terminal',0,0,'synthetic-end',b as .string,'','none',1,'')
+      call indexrow(0,row)
+    end
+    if _edges.seal() = 0 then do; call reject(_edges.status(),_edges.message()); return; end
+    _work = _work + _edges.usedwork(); _bytes = _bytes + _edges.usedbytes()
+    _index = .llirgraph..index.typed(reference _ir,reference _edges,_worklimit - _work,_bytelimit - _bytes)
+    if _index.status() <> 'ok' then do; call reject(_index.status(),_index.message()); return; end
+    _work = _work + _index.usedwork(); _bytes = _bytes + _index.usedbytes(); _status = 'ok'
+    return
+  valid: method = .int
+    call run()
+    if _status <> 'ok' | <refvalid>(_owner) = 0 | <refvalid>(_profile) = 0 then return 0
+    target = dereference _owner; profile = dereference _profile
+    return target.valid() & target.identity() = _revision & profile.matches(_owner) & profile.identity() = _profileid & _index.valid()
+  matches: method = .int
+    arg owner = reference .lltarget..module, profile = reference .lltargettransfer..profile
+    return valid() & (_owner <refsame> owner) & (_profile <refsame> profile)
+  require: method = .void
+    if valid() = 0 then call bad('LL_TARGET_OWNER: CFG expired, incomplete or replaced')
+    return
+  status: method = .string
+    call run()
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  message: method = .string
+    if _status = 'ok' & valid() = 0 then return 'LL_TARGET_OWNER: stale CFG input'
+    return _message
+  identity: method = .int
+    call run()
+    if _status <> 'ok' then return 0
+    return _index.identity()
+  revision: method = .int
+    return _revision
+  owner: method = reference .lltarget..module
+    call require(); return _owner
+  profile: method = reference .lltargettransfer..profile
+    call require(); return _profile
+  ir: method = reference .llir..module
+    call require(); return reference _ir
+  index: method = reference .llirgraph..index
+    call require(); return reference _index
+  sourceop: method = .int
+    arg projected = .int
+    call require()
+    if projected < 1 | projected > _ir.operations() then call bad('LL_TARGET_CFG: projected operation ordinal')
+    if projected > _source[0] then return 0
+    return _source[projected]
+  projectedop: method = .int
+    arg source = .int
+    call require()
+    if source < 1 | source > _projected[0] then call bad('LL_TARGET_CFG: source operation ordinal')
+    return _projected[source]
+  projectedblock: method = .int
+    arg source = .int
+    call require()
+    if source < 1 | source > _block[0] then call bad('LL_TARGET_CFG: source block ordinal')
+    return _block[source]
+  edges: method = .int
+    call require(); return _rows[0]
+  edge: method = .lltargetcfg..edge
+    arg id = .int
+    call require()
+    if id < 1 | id > _rows[0] then call bad('LL_TARGET_CFG: edge ordinal')
+    return _rows[id]
+  outedges: method = .int
+    arg source = .int
+    call require()
+    if source < 0 | source + 1 > _outcount[0] then call bad('LL_TARGET_CFG: source edge identity')
+    return _outcount[source + 1]
+  outedge: method = .lltargetcfg..edge
+    arg source = .int, ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > outedges(source) then call bad('LL_TARGET_CFG: source edge ordinal')
+    row = _outfirst[source + 1]
+    do i = 2 to ordinal; row = _outnext[row]; end
+    return _rows[row]
+  normalcomplete: method = .int
+    arg functionid = .int
+    call require(); return _normal[functionid]
+  exceptionalcomplete: method = .int
+    arg functionid = .int
+    call require(); return _exceptional[functionid]
+  asynchronouscomplete: method = .int
+    arg functionid = .int
+    call require(); return _async[functionid]
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytes

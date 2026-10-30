@@ -7,8 +7,53 @@ import llireffects
 import llirservices
 
 main: procedure = .int
-  failures = diamond() + cycles() + protection() + effects() + accessdomains() + declaredcontrol()
+  failures = diamond() + cycles() + protection() + effects() + accessdomains() + declaredcontrol() + typededges()
   say 'failures=' || failures
+  return failures
+
+/** Success overwrites a component; a resumed-before-write sibling still
+ * observes its incoming value. Repeated destinations keep distinct phases. */
+typededges: procedure = .int
+  contract = .llir..contract; graph = .llir..module; foreign = .llir..module
+  profile = .llirgraph..edgeprofile; badprofile = .llirgraph..edgeprofile; tiny = .llirgraph..edgeprofile
+  index = .llirgraph..index; refused = .llirgraph..index; projection = .llirgraph..access; live = .llirgraph..live
+  empty = .int[]; values = .int[]; flags = .int[]; failures = .int; ignored = .int; domain = .int; flag = .int
+  contract = controlcontract(); graph = controlgraph(contract); saved = graph.binary()
+  profile = .llirgraph..edgeprofile(reference graph)
+  call profile.put(1,1,'normal','after'); call profile.put(1,2,'resume','before','ERROR'); call profile.put(1,3,'normal','after')
+  call profile.boundary(3,'terminal','none','return','routes')
+  ignored = profile.seal()
+  failures = check(ignored & profile.rows() = 4 & profile.isboundary(4) & profile.phase(2) = 'before','typed successor and boundary annotations seal')
+  index = .llirgraph..index.typed(reference graph,reference profile)
+  failures = failures + check(index.status() = 'ok' & index.typedmode() & index.edges() = 3,'typed index uses actual ordered graph edges')
+  if index.status() <> 'ok' then do; say index.message(); return failures; end
+  failures = failures + check(index.edgeid(1,1) <> index.edgeid(1,3) & index.edgeordinal(index.edgeid(1,2)) = 2,'duplicate destinations preserve successor identity')
+  projection = .llirgraph..access(reference index,'independent.typed')
+  domain = projection.domain(1,'cell.integer'); flag = projection.domain(1,'cell.flag.256'); values[1] = domain; flags[1] = flag
+  call projection.put(1,empty,empty,empty,empty); call projection.put(2,empty,empty,empty,empty); call projection.put(4,empty,empty,empty,empty)
+  call projection.edgeput(1,1,empty,empty,values,values); call projection.edgeput(1,3,empty,empty,values,values)
+  call projection.boundaryput(3,values); call projection.boundaryput(2,flags)
+  ignored = projection.seal(); live = index.accessliveness(reference projection)
+  failures = failures + check(ignored & live.status() = 'ok' & live.complete(1),'edge-qualified liveness is complete')
+  if live.status() <> 'ok' then do; say live.message(); return failures; end
+  failures = failures + check(live.domainedge(1,1,domain) = 0 & live.domainedge(1,3,domain) = 0 & live.domainedge(1,2,domain),'success kills do not kill resumed incoming state')
+  failures = failures + check(live.domainbefore(1,domain) & live.domainbefore(1,flag) & live.domainedge(1,1,flag),'independent flags and boundary observations remain live')
+  foreign = graph; refused = .llirgraph..index.typed(reference foreign,reference profile)
+  failures = failures + check(refused.status() = 'invalid' & index.valid() & live.valid(),'copied module cannot borrow a typed profile')
+  badprofile = .llirgraph..edgeprofile(reference graph); call badprofile.put(1,1,'normal','none'); ignored = badprofile.seal()
+  failures = failures + check(ignored = 0 & badprofile.status() = 'invalid','missing actual successor annotation is refused')
+  badprofile = .llirgraph..edgeprofile(reference graph); call badprofile.put(1,1,'normal','none'); call badprofile.put(1,1,'normal','none'); ignored = badprofile.seal()
+  failures = failures + check(ignored = 0 & badprofile.status() = 'invalid','duplicate annotation is refused atomically')
+  tiny = .llirgraph..edgeprofile(reference graph,1,67108864)
+  failures = failures + check(tiny.seal() = 0 & tiny.status() = 'limit' & bin2x(graph.binary()) == bin2x(saved),'tiny profile budget leaves source and prior results intact')
+  profile = .llirgraph..edgeprofile(reference graph)
+  call profile.put(1,1,'normal','after'); call profile.put(1,2,'resume','before'); call profile.put(1,3,'normal','after')
+  call profile.boundary(1,'unknown','unknown','unknown-signal','', '',0,'independent.unknown.signal'); ignored = profile.seal()
+  failures = failures + check(index.valid() = 0 & live.valid() = 0,'replaced edge-profile owner invalidates index and liveness')
+  index = .llirgraph..index.typed(reference graph,reference profile); projection = .llirgraph..access(reference index,'independent.unknown')
+  domain = projection.domain(1,'cell.integer'); call projection.put(1,empty,empty,empty,empty); call projection.put(2,empty,empty,empty,empty); call projection.put(4,empty,empty,empty,empty)
+  ignored = projection.seal(); live = index.accessliveness(reference projection)
+  failures = failures + check(ignored & live.status() = 'ok' & live.complete(1) = 0 & live.domainbefore(1,domain),'unknown boundary remains conservatively pinned')
   return failures
 
 /** Both diamond arms define a, so a is live into the join but not out. A dead

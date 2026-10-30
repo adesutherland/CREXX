@@ -232,6 +232,16 @@ executing module, so this needs an explicit checked target/runtime binding
 representation; merely spelling the callee's `gN` in the caller, or exposing a
 private global by public name, is wrong. Untaken calls must not trigger an
 initializer early, and retained nested calls need the right logical origin.
+The shared Level L `modulemap` now records the exact selected provider owner,
+image-local module ID and global slot beside remapped fields. It reports a
+foreign private global as unrenderable in ordinary RXAS. The linker/runtime
+binding representation that will make that qualified reference executable is
+still a separate decision; the Level L result adds no `.meta` proof payload.
+Code relocation also needs a checked operational profile that explicitly
+accounts for frame, module, code and debug observations at each moved
+instruction. The committed opcode catalogue cannot certify their absence, so
+its Level L profile remains unknown for this purpose. Constructed profiles
+can provide that proof inside Level L; it is not serialized as RXAS metadata.
 
 Private inline locals have an analysis-only availability marker at activation
 and an end marker on every departure; these are not emitted instructions. Code

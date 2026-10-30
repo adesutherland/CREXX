@@ -1,0 +1,183 @@
+/* cREXX License (MIT). Independent direct/transitive procedure summaries. */
+options levelb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetsummary
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+label: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+stalequery: procedure = .int
+  arg view = .lltargetsummary..summary
+  do
+    claim = view.effect('numeric','write')
+    return claim.valid() = 0
+    on signal
+      return 1
+  end
+  return 0
+
+main: procedure = .int
+  failures = 0; ignored = .int; i = .int; refid = .int
+  record = .lltarget..record; body = .lltarget..bodydraft
+  draft = .lltarget..draft('target.summary','fixture:target.summary',0)
+  at = draft.synthetic('independent procedure effect and return contracts')
+  body = draft.procedure('main',1,at)
+  called = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('leaf'),at)
+  mainret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('leaf',1,at)
+  write = two(body,'load',body.reg('r',0),.lltarget..operand.integer(9),at)
+  leafret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('conditional',1,at)
+  branch = two(body,'brt',.lltarget..operand.symbol('other'),body.reg('r',0),at)
+  maybe = two(body,'load',body.reg('r',0),.lltarget..operand.integer(9),at)
+  firstret = one(body,'ret',.lltarget..operand.integer(7),at)
+  ignored = label(body,'other',at)
+  secondret = one(body,'ret',.lltarget..operand.integer(8),at)
+  body = draft.procedure('recursive',1,at)
+  recursed = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('recursive'),at)
+  recursiveret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('unknownchild',1,at)
+  unknowncall = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('leaf'),at)
+  unknownret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('unknownsignal',0,at)
+  signalret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('unknownreturnparent',1,at)
+  unknownreturncall = two(body,'call',body.reg('r',0),.lltarget..operand.procedure('unknownsignal'),at)
+  unknownreturnret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('compoundalias',1,at)
+  compound = two(body,'copy',body.reg('r',0),body.reg('a',1),at)
+  compoundret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('observedcontext',1,at)
+  contextread = one(body,'say',body.reg('r',0),at)
+  contextret = one(body,'ret',.lltarget..operand.integer(7),at)
+  body = draft.procedure('namedsignal',0,at)
+  namedret = one(body,'ret',.lltarget..operand.integer(7),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'summary source owner')
+  if target.valid() = 0 then do; say target.error(); say 'TARGET_SUMMARY|failures=' || failures; return failures; end
+  premise = .lltargettransfer..profiledraft(reference target,'fixture.summary.v1')
+  integer = premise.domain('component','fixture.integer')
+  numericdomain = premise.domain('context','context.numeric')
+  do i = 1 to target.records()
+    record = target.record(i)
+    if record.procedureid() > 1 & record.kind() <> 'procedure' then ignored = premise.operation(record.id())
+  end
+  refid = premise.ref(called,2,'procedure','symbolic')
+  ignored = premise.event(called,'call',0,0,'reference',refid)
+  refid = premise.ref(recursed,2,'procedure','symbolic')
+  ignored = premise.event(recursed,'call',0,0,'reference',refid)
+  ignored = premise.event(unknowncall,'call',0,0,'unknown')
+  ignored = premise.event(write,'context',0,numericdomain,'literal',0,.lltarget..operand.integer(9))
+  ignored = premise.event(maybe,'context',0,numericdomain,'literal',0,.lltarget..operand.integer(9))
+  ignored = premise.event(mainret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premise.event(leafret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premise.event(firstret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premise.event(secondret,'return',0,integer,'literal',0,.lltarget..operand.integer(8))
+  ignored = premise.event(recursiveret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premise.event(unknownret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premise.event(signalret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  refid = premise.ref(unknownreturncall,2,'procedure','symbolic')
+  ignored = premise.event(unknownreturncall,'call',0,0,'reference',refid)
+  ignored = premise.event(unknownreturnret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  destination = premise.ref(compound,1); borrowed = premise.ref(compound,2)
+  ignored = premise.event(compound,'link',destination,0,'reference',borrowed)
+  ignored = premise.event(compound,'write',destination,integer,'literal',0,.lltarget..operand.integer(42))
+  ignored = premise.event(compoundret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  refid = premise.ref(contextread,1)
+  ignored = premise.event(contextread,'observe',refid,numericdomain)
+  ignored = premise.event(contextret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  ignored = premise.event(namedret,'raise',0,0,'literal',0,.lltarget..operand.string('FIXTURE_SIGNAL' as .binary),'must','failure','before','unwind')
+  ignored = premise.event(namedret,'return',0,integer,'literal',0,.lltarget..operand.integer(7))
+  call premise.unknown(signalret,'signals','independent unknown delivered signal set')
+  profile = premise.finish()
+  failures = failures + check(profile.status() = 'ok','summary operational profile seals')
+  if profile.status() <> 'ok' then do; say profile.message(); say 'TARGET_SUMMARY|failures=' || failures; return failures; end
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  failures = failures + check(cfg.status() = 'ok','summary machine CFG verifies')
+  if cfg.status() <> 'ok' then do; say cfg.message(); say 'TARGET_SUMMARY|failures=' || failures; return failures; end
+  flow = lltargetflow..analyse(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','summary point owner verifies')
+  if flow.status() <> 'ok' then do; say flow.message(); say 'TARGET_SUMMARY|failures=' || failures; return failures; end
+  summaries = lltargetsummary..analyse(reference flow)
+  failures = failures + check(summaries.status() = 'ok','procedure inference')
+  if summaries.status() <> 'ok' then do; say summaries.message(); say 'TARGET_SUMMARY|failures=' || failures; return failures; end
+  leaf = summaries.procedure(target.procedureid('leaf'),'direct')
+  claim = leaf.effect('numeric','write')
+  failures = failures + check(claim.may() & claim.must() & claim.unknown() = 0,'direct definite numeric effect has positive must proof')
+  claim = leaf.outwardeffect('numeric','write')
+  failures = failures + check(claim.may() = 0 & claim.unknown() = 0,'real callee frame isolates outward numeric change while retaining its internal effect')
+  caller = summaries.procedure(target.procedureid('main'),'direct')
+  claim = caller.effect('numeric','write')
+  failures = failures + check(claim.may() = 0 & claim.unknown() = 0,'direct body excludes child numeric effect')
+  caller = summaries.procedure(target.procedureid('main'),'transitive')
+  claim = caller.effect('numeric','write')
+  failures = failures + check(claim.may() & claim.must() & claim.unknown() = 0,'guaranteed bound child contributes transitive may and must')
+  limitedclaim = caller.effect('numeric','write','*',1)
+  failures = failures + check(limitedclaim.status() = 'limit' & limitedclaim.must() = 0 & limitedclaim.may(),'must-depth refusal cannot invent absence or a guarantee')
+  failures = failures + check(summaries.valid(),'failed optional must query preserves frozen summary owner')
+  functions = target.procedures() + 1
+  bytebound = summaries.usedbytes() + functions * (functions + 2) * 8 - 1
+  bytebounded = lltargetsummary..analyse(reference flow,1000000,bytebound)
+  failures = failures + check(bytebounded.status() = 'ok','near-byte-limit summary construction remains valid')
+  if bytebounded.status() = 'ok' then do
+    byteview = bytebounded.procedure(target.procedureid('main'),'transitive')
+    byteclaim = byteview.effect('numeric','write')
+    failures = failures + check(byteclaim.status() = 'limit' & byteclaim.must() = 0 & byteclaim.may() & bytebounded.valid(),'outer and cutoff active vectors are included in must-query byte preflight')
+  end
+  failures = failures + check(caller.calls() = 1 & caller.calltarget(1) = target.procedureid('leaf'),'exact child dependency identity')
+  conditional = summaries.procedure(target.procedureid('conditional'),'direct')
+  claim = conditional.effect('numeric','write')
+  failures = failures + check(claim.may() & claim.must() = 0,'one conditional write is not a must effect')
+  answer = conditional.returnvalue(integer)
+  failures = failures + check(answer.known() = 0 & answer.reason() = 'target.summary.return.values.conflict','conflicting normal return literals stay unknown')
+  answer = leaf.returnvalue(integer); literal = answer.literal()
+  failures = failures + check(answer.known() & literal.index() = 7,'nonvacuous normal return literal')
+  recursive = summaries.procedure(target.procedureid('recursive'))
+  claim = recursive.mayreturn(); answer = recursive.returnvalue(integer)
+  failures = failures + check(claim.may() = 0 & claim.unknown() = 0 & answer.known() = 0,'recursive call without base case cannot prove a returning constant')
+  unknown = summaries.procedure(target.procedureid('unknownchild'),'transitive')
+  claim = unknown.effect('numeric','write')
+  failures = failures + check(claim.unknown() & claim.may(),'unresolved child cannot imply no numeric effect')
+  unknown = summaries.procedure(target.procedureid('unknownsignal'),'direct')
+  claim = unknown.effect('numeric','write')
+  failures = failures + check(claim.unknown() = 0 & claim.may() = 0,'unknown signal set preserves independently absent numeric write')
+  unknown = summaries.procedure(target.procedureid('unknownreturnparent'))
+  answer = unknown.returnvalue(integer)
+  failures = failures + check(answer.known() = 0,'unknown child return path cannot justify a parent constant')
+  compoundview = summaries.procedure(target.procedureid('compoundalias'),'direct')
+  claim = compoundview.effect('arguments','write')
+  failures = failures + check(claim.may() & claim.unknown(),'binding-sensitive compound cannot falsely certify no argument mutation')
+  contextview = summaries.procedure(target.procedureid('observedcontext'),'direct')
+  claim = contextview.effect('numeric','read')
+  failures = failures + check(claim.may() & claim.unknown() = 0,'typed context observation retains numeric read dependency')
+  namedview = summaries.procedure(target.procedureid('namedsignal'),'direct')
+  claim = namedview.effect('signals','raise','FIXTURE_SIGNAL')
+  failures = failures + check(claim.may() & claim.unknown() = 0,'raised signal uses literal name')
+  claim = namedview.effect('signals','raise','unwind')
+  failures = failures + check(claim.may() = 0 & claim.unknown() = 0,'routing role is not a signal name')
+  limited = lltargetsummary..analyse(reference flow,1)
+  failures = failures + check(limited.status() = 'limit','summary fuel is bounded')
+  prior = leaf
+  summaries = lltargetsummary..analyse(reference flow)
+  status = summaries.status()
+  failures = failures + check(prior.valid() = 0 & stalequery(prior),'replacing a valid summary owner rejects old view queries')
+  say 'TARGET_SUMMARY|failures=' || failures
+  return failures
