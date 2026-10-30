@@ -20,7 +20,8 @@ Link-time private globals are in scope through checked module/global mapping
 without exposing them by name or adding inliner proof metadata.
 
 The [short architecture](doc/inlining.md) records the shared call/return/signal
-exit model, Level L graph and component/flag proof requirements, early
+exit model, Level L graph, reusable procedure summaries and component/flag
+proof requirements, early
 read-before-write clear/warning, and minimal post-link cleanup. Do not admit
 ordinary mnemonics one at a time through scalar transfer functions. Preserve
 bounded prior results as regressions while replacing that admission gate.
@@ -139,7 +140,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 |---|---|
 | **INL-AC01 — shared service and real adapter** | One B/L checked target-model inliner serves an ordinary RXAS CLI, a callable B client and an independent handwritten/DSL-style producer. No AST inline payload, copied parser/framework or native backend is required. Input/output, unknown/unsupported forms and atomic publication have explicit contracts. |
 | **INL-AC02 — exact call/storage mapping** | All admitted direct, counted, fixed and fused forms preserve actual evaluation, counts/presence/defaults, active and entry argument bindings, slot identity/permutations, status components, explicit reference/value behavior, nested calls and return copy/move ownership. Independent executable and structural controls include repeated actuals, mutable aliases and abrupt exits. |
-| **INL-AC03 — full representable profile** | The canonical effect inventory and checked target profile support rebinding, varargs, multiple returns, aggregate/reference lifetimes, context/cleanup and exact-bound imported helpers. Every retained case has a specific semantic, missing-proof, body-availability or policy reason. Unimplemented representable categories keep this criterion open. |
+| **INL-AC03 — full representable profile** | The canonical effect inventory, reusable procedure/point facts and checked target profile support rebinding, varargs, multiple returns, aggregate/reference lifetimes, context/cleanup and exact-bound imported helpers. Procedure summaries distinguish direct/transitive and proved/conditional/unknown effects; their use does not turn optional value precision into a structural-cloning admission gate. Every retained case has a specific semantic, missing-proof, body-availability or policy reason. Unimplemented representable categories keep this criterion open. |
 | **INL-AC04 — module and observation integrity** | Globals keep their module/storage owner, including linker-selected private globals without public exposure or inliner proof metadata; initialization, poison/cycle ingress, dependencies, numeric/signal state, reference expiry, source/TRACE/diagnostic and declared physical-frame observations remain equivalent. Record the checked cross-module binding and minimal runtime compatibility contract before implementation. Cases lacking an approved equivalent stay calls. |
 | **INL-AC05 — effective bounded cleanup** | Expansion is correct with cleanup and assembler optimization disabled. Separately prove status/transport/copy elision, constants/presence, branch/reachability cleanup and alias-aware storage reuse on changed callers. Eliminate caller setup and reverse call-window swaps made redundant by direct actual-register mapping, using storage/permutation proof across the entire call region. A simple reordered-actual leaf has no original call or outer setup/restoration swaps; an alias/snapshot case retains required copies, and a retained nested call keeps a valid window. Preserve once-only actual order, result/entry/base/slot identities, abrupt-exit restoration and swaps required by body semantics. Previously optimized modules are covered without assuming their old analysis facts remain valid. |
 | **INL-AC06 — deterministic policy and resources** | Separate legality, availability and profitability decisions. Explicit recursion, depth, code/register/metadata growth and work limits terminate predictably, support diagnostics and forced-legal/disabled controls, and preserve ordinary calls on policy refusal. Malformed input or failed transformation publishes no partial output. |
@@ -4094,6 +4095,8 @@ Every criterion is **open**; passing an early subset cannot close the profile.
    model represents the entire profile, typed reference domains and provenance.
    Canonical catalog/schema alignment and independent constructed-model tests
    prove operand identities, graph contracts and rejection of stale references.
+   Reusable procedure summaries and point proofs expose explicit unknowns and
+   reject stale body, catalog or exact-binding revisions.
 2. **TGT-AC02 — L grammar and diagnostics.** Full current UTF-8 RXAS parses
    through L with correct byte/source spans, literal bytes, precedence and EOF.
    Independent positive/negative fixtures cover directives and grammar errors;

@@ -87,8 +87,8 @@ with the POC exercising the cleanup queries it uses.
 Component-aware liveness marks a private cell's first availability and last
 use on each path; return and signal/unwind responses that leave the logical
 activation end its lifetime. Resumed signals retain the activation and its
-partial-write state. Interference includes every live component, flag, alias, address, reference,
-TRACE/metadata observation and complete call window. This supports safe
+partial-write state. Interference includes every live component, flag, alias,
+address, reference, TRACE/metadata observation and complete call window. This supports safe
 register reuse, including sharing a cell between nonoverlapping integer and
 float values when string conversion, argument exposure and other observations
 do not require the old component. Allocation begins with distinct cells and
@@ -97,6 +97,76 @@ coalesces only after the shared proof.
 For example, one physical cell may carry unrelated integer and float
 components when neither conversion depends on the other, its string component
 is never observed, and no call or whole-value operation exposes the cell.
+
+## Procedure facts and proofs
+
+Level L also needs a reusable **procedure-summary service** over the same
+checked target IR, CFG, point facts and canonical opcode effects. The optional
+RXAS target owner supplies RXAS-specific fact domains; there is one effect and
+proof algorithm, not a second interpretation of instructions inside the
+inliner. Summaries are inferred from executable bodies, including handwritten
+RXAS, not asserted by compiler `.meta` or imported inline templates.
+Generic worklists, graph traversal and proof lifecycle remain with the
+existing Level L owners; RXAS transfers and summary queries belong to the
+optional target owner. The canonical numeric-context inventory must separate
+reads from writes, including getters and decimal/plugin operations; the
+current conversion-derivation read query and combined activation mask are
+insufficient for a complete procedure proof.
+
+Each summary distinguishes direct body effects from transitive effects of
+exactly bound child calls, and internal activation effects from caller-visible
+effects after departure. It records *may*, *must* and *unknown* separately for
+each fact family; an unknown signal set does not erase an independently proved
+numeric fact.
+Its useful fact families are:
+
+| Family | Questions the inliner and later RXAS tools can ask |
+|---|---|
+| Numeric and other context | Which inherited numeric settings, plugin/locale state or external context are read? Which settings have known values at a point, can change, or need restoration at an exit? A read dependency alone does not require a save; a local change needs restoration on every departing path. |
+| Signal and control | Which named/implicit signals may arise, at what phase and with which partial writes? Which are handled, ignored or resumed internally, and which can leave the activation? How can policy/handler stacks change? Can the body return, fail, terminate or unwind? Inherited and asynchronous delivery remain separate obligations even without authored SIGNAL. |
+| Values and registers | Which components and individual flags of arguments, globals and result may be read/written, read before definition or must be overwritten? Which argument-count or dynamic-selector facts hold? Are a return component, type, range or relation to an input known on a particular exit under explicit entry assumptions? |
+| Storage and lifetime | Which symbolic argument or exact module/global slot is read, borrowed, rebound, escaped or mutated through aliases? Which references and owned payloads can outlive a path, and which physical frame/TRACE/source observations occur? |
+| Calls and external effects | Which exact bodies are called, which targets are unresolved/native/dynamic, and which initializer, allocation, external, plugin, locale or diagnostic effects may occur? What call-window and bounded code/register/metadata growth does expansion require? |
+
+Known values are conditional proof results, not unconditional labels on a
+procedure. A summary may say that a defined return component equals an
+argument or constant **if** required actual, numeric context, flag, alias,
+global-state, signal-policy and path conditions hold. The call-site query
+instantiates those premises with the caller's current facts. Normal returns,
+resumed signal paths and each abrupt departure retain distinct exit facts;
+incompatible joins become unknown. A must-guarantee intersects applicable
+normal-return paths and records whether any such path exists, so a no-return
+body cannot prove a result by vacuity. Return facts preserve component setters
+versus whole-value COPY/MOVE ownership.
+
+Retained real child frames isolate their local context changes from the
+parent, while their outward effects remain visible. In particular, a summary
+that says caller numeric or handler state is unchanged after a real call
+cannot justify omitting restoration after deleting that frame: the callee may
+have changed it internally. Caller-owned argument/global mutations are not
+restored merely because the frame departs. Module readiness is a call-site
+runtime fact, not a permanent property of the callee procedure.
+
+Compute transitive summaries through the exact bound call graph with a
+bounded monotone fixed point for recursive components. An unresolved,
+dynamically rebound or native child contributes conservative effects unless
+an independently checked contract narrows them. A work/precision limit yields
+`unknown`, never a false absence or constant. Immutable summary views are
+checked against frozen body revision, catalog/flow contract, exact link binding
+and recorded entry premises. A body rewrite, provider selection, changed
+dependency or premise invalidates affected summaries and callers. Queries
+distinguish proved, conditional, unknown, budget limit and invalid inputs.
+The service exposes both procedure queries and point/edge proofs so other
+Level L RXAS tools can use the same evidence. A summary does not replace the
+point proof required to remove a particular swap, flag write, copy or lifetime
+operation.
+
+The inliner uses these facts to avoid unnecessary numeric/signal context
+operations, choose exact call/return mapping, preserve copies and lifetime
+events, specialize known values and flags, simplify branches, and estimate
+profitability. Missing optional value facts reduce cleanup, not generic
+structural cloning. An unknown activation or unwind obligation still requires
+the conservative runtime mechanism or a retained call with a specific reason.
 
 ## One call, return and signal-exit model
 
@@ -228,6 +298,8 @@ this summary does not close it or claim product performance or publication.
   binding, with handwritten RXAS and RXBIN 007 feature/version rules.
 - Complete and independently validate ordered compound effects, signal CFG
   and published component/flag/cursor definitions in the canonical database.
+- Specify procedure-summary domains, conservative recursive seeds, widening
+  and dependency invalidation before implementing the SCC fixed point.
 - Set the exact early clear/warning contract, including partial components and
   source locations; keep physical frame observations as named retention cases.
 - Define the assembler/linker driver interfaces, frozen selected-body identity,
