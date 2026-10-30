@@ -460,15 +460,38 @@ unchanged generator artifacts; normal version relinks can intentionally miss.
 
 <a id="dfa-construction-backlog"></a>
 
-## Backlog: DFA construction cost and Unicode reuse
+## DFA construction cost and Unicode reuse
 
-**L-UNICODE-REUSE-01 — investigation complete; improvements unapproved.**
+**L-UNICODE-REUSE-01 — serial and rebuild repair selected-qualified; parallel trial open.**
+Adrian approved addressing avoidable Level L lexer construction and rebuilds on
+30 October 2026, before the next inliner source batch. Keep lexical output,
+priority, longest-match, spans, limits and failure publication unchanged. First
+remove measured serial work and redundant invalidation; trial parallel DFA
+frontier work against the remaining closure/key cost. This is a
+research development increment, not a production performance verdict.
 The bounded busy-host probe used a Unicode XID identifier/space lexer, an
 independent ASCII lexer and a small LR control. DFA construction dominated the
 Unicode case; property loading, set algebra, UTF-8 lowering and NFA construction
-were comparatively small. This locates a phase, not avoidable cost or a reason
-to change it. The full C grammar and individual DFA subphases remain unprofiled;
-retaining the current implementation is a valid outcome.
+were comparatively small. The prepared RXAS grammar confirmed negligible
+byte-class partition time, repeated mostly-negative transition probes and
+substantial remaining closure/key work. The full C grammar remains unprofiled;
+these scoped observations are not a production performance claim.
+
+The prepared RXAS grammar now uses the checked generator-source/seed-tool
+identity instead of the whole `rxlang` executable fingerprint. Its linker input
+is the compiled main object plus supporting library, excluding the separate
+inline service because `rxlink -s` returns before invoking it. Standalone
+callers retain exact executable fingerprints. Generation has a success stamp,
+content-preserving RXAS publication and separate assembly; non-Ninja builds
+check for a missing RXAS byproduct. The owning generation guide records this
+dependency and recovery contract.
+
+| Acceptance criterion | Observable check |
+|---|---|
+| **L-UNICODE-REUSE-AC01 — exact lexer** | Cold and reused generation retain byte-identical generated RXAS and capsule behavior on the same inputs; small and Unicode lexical controls preserve tokens, priority, spans, errors and limits. A hash/index collision must be checked by exact subset equality. |
+| **L-UNICODE-REUSE-AC02 — bounded construction** | DFA lookup and class work have deterministic bounded storage/work; failure and low-limit controls retain their diagnostics and last-good publication. Compare the same prepared RXAS grammar before and after, reporting scoped elapsed/resource observations without a production claim. |
+| **L-UNICODE-REUSE-AC03 — rebuild ownership** | A genuine changed lexical generator or grammar invalidates the right artifacts. An unrelated relink with unchanged lexical semantics avoids repeated expensive construction and unchanged downstream outputs; no-op, missing-cache and interrupted-generation controls remain correct. |
+| **L-UNICODE-REUSE-AC04 — delivery boundary** | One normal build and focused independent lexer/cache/consumer checks qualify the serial increment. Record the chosen key and dependency contract in the owning generation guide; resume the inliner on the resulting prepared toolchain. The parallel worker trial remains separately open. |
 
 Unicode properties, interval algebra, UTF-8 lowering and source decoding already
 have shared owners (`llproperties`, `llcharset`, `llsource`). The combined DFA
@@ -480,9 +503,99 @@ show VM storage-owner searches; that does not exclude their cost in other phases
 | Stable step / status | Possible follow-up and decision gate |
 |---|---|
 | **L-UNICODE-REUSE-STEP01 — complete** | Bounded phase investigation; findings and limits above. No lexer algorithm change. |
-| **L-UNICODE-REUSE-STEP02 — backlog; benefit gate** | If warranted, isolate byte-class partitioning, closure/sorting, subset lookup and table filling. Assess an exact binary-key subset index or cheaper byte-class construction against current code, including hashing/storage/maintenance costs. Preserve exact collision equality, discovery order, matching, spans, diagnostics and limits. Implement only if the benefit justifies the complexity. |
-| **L-UNICODE-REUSE-STEP03 — backlog; separate design gates** | Consider compact prefix-factored byte-set fragments, a scalar/class alphabet or relink-tolerant semantic cache identity only if needed. Share Unicode data/algorithms; preserve occurrence mappings and logical budget charging. Current LRUSE cache admission stays unchanged. |
-| **L-UNICODE-REUSE-STEP04 — unapproved implementation** | Review the selected contract first; then use independent small/Unicode lexers, exact token/span oracles and focused collision, priority/longest-match, invalid UTF-8, limit/failure and cold/reused checks where affected. No speed claim follows from phase timing or asymptotic reasoning alone. |
+| **L-UNICODE-REUSE-STEP02 — done** | Exact binary-key subset index, sparse closure key and bounded accepted-class map retain ordered discovery and exact collision equality; fallback handles dense maps. |
+| **L-UNICODE-REUSE-STEP03 — done** | Prepared identity, success stamp, equal-output preservation and non-Ninja missing-byproduct guard distinguish linker-service relinks from semantic inputs. Prefix-factored fragments or a scalar/class alphabet remain backlog options if needed. |
+| **L-UNICODE-REUSE-STEP04 — done, focused QA** | One normal build, real RXAS grammar identity, independent small/Unicode and generated-consumer controls, cache/negative/publication checks, no-op and inline-service relink controls pass locally. Broader milestone QA remains open; no production speed claim follows. |
+| **L-UNICODE-REUSE-STEP05 — done, focused local QA** | One Level B closure/key kernel serves serial and actual 1/2/4/8-worker construction over the existing sealed RXAS task boundary; one ordered reducer owns canonical DFA IDs, limits and publication. Exact output/capsule parity, independent token/span controls, limits, transport lifecycle, service reuse and maintained RXAS default/override/no-op checks pass locally. The RXAS grammar defaults to four workers; general defaults remain serial. Broader initiative and milestone QA remain open. |
+
+**STEP05 implementation contract.** Preserve AC01–04 and the current byte-class,
+priority, longest-match and diagnostic contracts. Remove repeated N-sized
+membership clearing for empty/sparse transitions inside this same increment;
+the previous subset-index and canonical-key repairs remain qualified inputs.
+Worker count zero is serial; explicit 1/2/4/8 requests use real pools or fail,
+never silently claim parallel work after a fallback. Append `workers=0` to the
+regex builder and expose actual `workersused()` plus read-only
+`failedstate()`/`failedclass()` (zero when absent) without changing error text.
+
+**Approved default policy:** retain serial zero for the callable
+builder/request, CLI and general maintained-build selection. A worker snapshot
+fits at most 61,662–61,665 NFA states
+(class-count dependent), below the existing 65,536-state default allowance;
+changing the general default would therefore narrow admitted inputs. Only the
+single maintained RXAS grammar owner defaults to four workers, through
+`CREXX_RXAS_GRAMMAR_LEXER_WORKERS=4`; set that option to zero for serial
+construction. The same-source cold comparison preserves exact RXAS/capsule
+bytes and reduces elapsed generation cost with higher resident memory. This
+target-specific decision does not qualify other grammars for parallel defaults
+or multiply four-worker generators across the build. Concurrent generators
+still need an explicit memory budget; a single-generator result is not an
+aggregate memory bound. Keep named worker-limit failures without fallback.
+
+The bootstrap-safe `lllextransport` RXAS shim uses existing CHAN operations,
+authored `.task1` metadata and linker-owned sealing for the ordinary B
+`llregular.worker(.binary)->.binary` callable. It owns RXCV framing only;
+there is no classlib dependency, invented RXTB, new ISA/provider or second DFA
+algorithm. Each shard is one one-worker/admission-one pool. Open/start/wait/
+release/close have explicit status failures; the controller releases successful
+requests and cancels/closes every opened pool on error or cancellation.
+
+Private packets use fixed u32 fields and owned binary bytes. `LNF1` has
+magic/version/NFA-count/class-count, ordered class representatives, then exactly
+NFA-count 272-byte rows. `LLW1` has magic/op/sequence/count: INIT op 1 carries
+`count` snapshot bytes; WORK op 2 carries `count` rows of
+state/first-class/last-class/member-count followed by ordered consuming-state
+IDs. `LLR1` has magic/status/sequence/row-count; each complete row contains
+state/first-class/last-class/pair-count followed by ordered nonempty
+class/key-count/sorted-NFA-subset-member-ID rows. Workers return canonical key
+bytes containing NFA member IDs, never a DFA ID. Empty classes are absent only from
+a successful complete row. Validate extents, IDs, ordering, complete task
+coverage and current bounds before using data. One INIT transfers the immutable
+snapshot to each worker; subsequent requests contain frontier data only.
+
+Freeze at most 4096 state/class pairs per batch. Workers compute closures and
+keys; the controller consumes original state then class order, checks exact
+subset equality after bucket selection, and applies the existing DFA limit at
+the same first failing transition. No worker assigns DFA IDs or publishes an
+artifact. Dispatch one-state/class-interval tiles whose worst reply is
+`32 + class-span * (8 + 4 * NFA-count)` bytes. Bound each worker reply by the
+existing packet ceiling, and adapt parallel intervals toward two to four tiles
+per worker per frontier. Serial execution uses the full class interval and
+the same kernel directly into owned keys, without local packet encode/decode
+or a transport ceiling, preserving its previous admitted domain even if one
+key exceeds the worker packet capacity.
+Restrict candidate indexing to each tile's sorted class interval using lower
+bounds; narrow intervals may use direct mask scans instead of rescanning all
+accepted classes. Queue only compact descriptors, keeping at most one request
+outstanding per worker. Poll busy workers in rotating order, release and refill
+each completed slot immediately, and use a finite wait when none is ready.
+The internal `observe(channel,ticket,waitus)` returns empty only for native
+WOULD_BLOCK (10) at zero wait or TIMEOUT (11) at positive microseconds; these do
+not observe, release or cancel a ticket. All other failures retain named errors.
+Validate every assigned tile exactly once before the original ordered reducer;
+`tilesused()` reports actual WORK submissions/executions for focused controls.
+The shared kernel encodes its checked membership directly as ascending signed
+i32 NFA IDs, using one sparse/dense encoder owner rather than sorting every
+transition queue. Reuse worker-local sparse block marks, clear touched marks,
+and choose dense linear scanning for dense sets. Sparse work is
+`O(K + N/32 + 32*T)` for K queued states and T touched blocks; dense work is
+`O(N)`, with no strict sparse `O(K)` claim. Encode before clearing active
+membership, verify the unique member count, then clear every pending active
+cell. Public `subsetkey` retains its arbitrary-queue sorting contract. This
+repair changes neither worker response bounds nor exact reducer/limit order.
+Failure/cancellation discards the frontier and exposes no partial
+generation/cache output. Worker scheduling is not semantic identity: generated
+RXAS and lexical capsule bytes agree across serial and worker modes; existing
+source/tool/lexical input invalidation, output locks and manifest-last atomic
+publication remain authoritative. Register any new maintained source in the
+existing generator stamp closure; keep generated-language runtime independent
+of worker/cache services.
+
+Focused qualification uses independent ASCII and Unicode priority/span
+controls, 0/1/2/4/8 exact RXAS/capsule equality, deterministic low-limit
+state/class failure, malformed/uninitialized worker requests, cancellation and
+cleanup, then the same prepared RXAS grammar and one no-op/cache-invalidation
+check. Root owns builds, execution and scoped elapsed/resource observations;
+no broad suite, sanitizer matrix or production performance verdict is selected.
 
 ## Repository architecture and cleanup
 

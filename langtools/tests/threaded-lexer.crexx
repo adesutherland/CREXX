@@ -1,0 +1,360 @@
+/* cREXX License (MIT). Independent threaded DFA and raw worker contracts. */
+options levelb
+import rxfnsb
+import llcore
+import llmunch
+import llregular
+import lllimits
+import llgenerate
+import lllextransport
+
+main: procedure = .int expose checks failures channels checkpoint
+  arg argv = .string[]
+  checks = 0; failures = 0; channels = .int[]
+  checkpoint = 'dispatch'
+  selector = 'regular'; if argv[0] > 0 then selector = argv[1]
+  do
+    select selector
+      when 'regular' then do
+        call regular(0); call regular(1); call regular(2); call regular(4); call regular(8)
+      end
+      when 'transport' then call transport()
+      when 'tiles' then do
+        call tiles(0); call tiles(4)
+      end
+      when 'service' then do
+        if argv[0] <> 2 then return 2
+        call service(readbinary(argv[2]))
+      end
+      otherwise return 2
+    end
+  on signal as problem
+    failures = failures + 1
+    say 'FAIL|unexpected ' || problem.name() || ' at ' || checkpoint || ': ' || problem.message()
+  end
+  call closeall()
+  say 'THREADED_LEXER|' || selector || '|checks=' || checks || '|failures=' || failures
+  return failures
+check: procedure = .void expose checks failures
+  arg passed = .int, label = .string
+  checks = checks + 1
+  if passed then return
+  failures = failures + 1; say 'FAIL|' || label
+  return
+
+/* This exact four-state oracle predates the worker implementation. Zero-kind
+ * acceptance and duplicate roots make rule priority and canonical IDs visible. */
+regular: procedure = .void
+  arg workers = .int
+  byte = .int; state = .int; cls = .int; ok = .int
+  graph = .llcore..grammar('contextfree')
+  a = graph.add(1,97,0,'a',1); b = graph.add(1,98,0,'b',1)
+  range = graph.add(11,97,99,'a to c',1)
+  pair = graph.add(2,a,b,'ab',1); duplicate = graph.add(4,a,a,'duplicate a',1)
+  mask = graph.characters('a' as .binary,0,'a mask',1)
+  roots = .int[]; kinds = .int[]
+  roots[1] = a; kinds[1] = 0
+  roots[2] = range; kinds[2] = 2
+  roots[3] = pair; kinds[3] = 3
+  roots[4] = duplicate; kinds[4] = 7
+  roots[5] = mask; kinds[5] = 8
+  built = .llregular..builder(graph,roots,kinds,.lllimits..policy(),workers)
+  call check(built.error() = '', 'oracle admission workers=' || workers || ': ' || built.error())
+  actual = built.automaton(); expected = .llmunch..automaton(4,4)
+  do byte = 0 to 255
+    cls = 0
+    if byte = 97 then cls = 1
+    if byte = 98 then cls = 2
+    if byte = 99 then cls = 3
+    ok = expected.mapping(byte,cls)
+  end
+  do state = 1 to 4
+    ok = expected.accepting(state,0)
+    do cls = 0 to 3; ok = expected.transition(state,cls,0); end
+  end
+  ok = expected.transition(1,1,2); ok = expected.transition(1,2,3)
+  ok = expected.transition(1,3,3); ok = expected.transition(2,2,4)
+  ok = expected.accepting(3,2); ok = expected.accepting(4,3)
+  call check(expected.verify() = 1 & actual.image() = expected.image(),'independent DFA bytes and discovery order workers=' || workers)
+  call check(built.workersused() = workers,'requested cold worker channels actually initialized ' || workers)
+  limits = .lllimits..policy(); ok = limits.set('dfa.states',2)
+  limited = .llregular..builder(graph,roots,kinds,limits,workers)
+  call check(pos('LL_RESOURCE_LIMIT: dfa.states budget 2, required at least 3',limited.error()) > 0,'low DFA limit diagnostic workers=' || workers)
+  call check(limited.failedstate() = 1 & limited.failedclass() = 3,'first failure is state1 / construction class3 (byte b) workers=' || workers)
+  failed = limited.automaton()
+  call check(failed.states() = 0,'failed reducer publishes no partial DFA workers=' || workers)
+  call check(actual.image() = expected.image(),'later failure preserves prior owned DFA workers=' || workers)
+  return
+
+/* Every byte has its own rule. Discovery is byte order, so state byte+2
+ * accepts kind byte and has no outgoing edge. This has only 1023 NFA nodes,
+ * while 256 classes force the worker queue to submit several safe class tiles. */
+tiles: procedure = .void
+  arg workers = .int
+  byte = .int; state = .int; cls = .int; target = .int; kind = .int; ok = .int
+  graph = .llcore..grammar('contextfree'); roots = .int[]; kinds = .int[]
+  do byte = 0 to 255
+    roots[byte + 1] = graph.add(1,byte,0,'byte ' || byte,1)
+    kinds[byte + 1] = byte
+  end
+  built = .llregular..builder(graph,roots,kinds,.lllimits..policy(),workers)
+  call check(built.error() = '', 'high-class tile admission workers=' || workers || ': ' || built.error())
+  actual = built.automaton(); expected = .llmunch..automaton(257,256)
+  do byte = 0 to 255; ok = expected.mapping(byte,byte); end
+  do state = 1 to 257
+    kind = 0; if state > 1 then kind = state - 2
+    ok = expected.accepting(state,kind)
+    do cls = 0 to 255
+      target = 0; if state = 1 then target = cls + 2
+      ok = expected.transition(state,cls,target)
+    end
+  end
+  call check(expected.verify() = 1 & actual.image() = expected.image(),'independent 256-class discovery and terminal-state image workers=' || workers)
+  call check(built.nfastates() = 1023 & built.workersused() = workers,'bounded NFA and actual initialized tile pools workers=' || workers)
+  if workers = 0 then call check(built.tilesused() = actual.states(),'serial executes one safe tile per DFA state')
+  else call check(built.tilesused() > actual.states(),'parallel construction executes multiple safe tiles per frontier')
+  return
+
+service: procedure = .void
+  arg source = .binary
+  i = .int; count = .int
+  modes = .int[]; modes[1] = 0; modes[2] = 1; modes[3] = 2; modes[4] = 4; modes[5] = 8
+  serial = .llgenerate..request(source,'rxas','threaded.rxl',.lllimits..policy(),1,67108864,''x as .binary,0)
+  call check(serial.status() = 0 & serial.workersused() = 0,'serial service construction')
+  image = serial.output(); capsule = serial.lexical(); saved = capsule
+  call check(image.bytes() > 0 & <blen>(capsule) > 0,'prepared service produces both owned artifacts')
+  do i = 2 to modes[0]
+    count = modes[i]
+    request = .llgenerate..request(source,'rxas','threaded.rxl',.lllimits..policy(),1,67108864,''x as .binary,count)
+    call check(request.status() = 0 & request.workersused() = count,'actual worker service selection ' || count || ': ' || request.error())
+    current = request.output()
+    call check(current.text() == image.text() & bincompare(request.lexical(),capsule) = 0,'service output/capsule equality ' || count)
+  end
+  warm = .llgenerate..request(source,'rxas','threaded.rxl',.lllimits..policy(),1,67108864,capsule,8)
+  call check(warm.status() = 0 & warm.reused() = 1 & warm.workersused() = 0,'capsule hit performs no frontier worker construction')
+  limits = .lllimits..policy(); ignored = limits.set('dfa.states',1)
+  failed = .llgenerate..request(source,'rxas','threaded.rxl',limits,1,67108864,capsule,4)
+  call check(failed.status() <> 0 & failed.output().bytes() = 0 & <blen>(failed.lexical()) = 0,'failed threaded reduction publishes no output or capsule')
+  call check(bincompare(capsule,saved) = 0 & serial.output().text() == image.text(),'failed request preserves last owned successful results')
+  return
+
+/* Independent data packets use three NFA nodes: consume -> epsilon -> accept.
+ * The complete closure is {2,3}; workers must never assign a target DFA ID. */
+nfaimage: procedure = .binary expose checkpoint
+  arg accepted = .int, classes = 2
+  i = .int
+  checkpoint = 'fixture.nfaimage.allocate'
+  data = .binary; call binresize data,16 + classes * 4 + 3 * 272
+  checkpoint = 'fixture.nfaimage.header'
+  <at..i32>(0) data = 826691148; <at..i32>(4) data = 1
+  <at..i32>(8) data = 3; <at..i32>(12) data = classes
+  do i = 1 to classes
+    byte = i + 96
+    if classes = 256 then byte = i - 1
+    <at..i32>(16 + (i - 1) * 4) data = byte
+  end
+  base = 16 + classes * 4
+  <at..i32>(base) data = 1; <at..i32>(base + 4) data = 2
+  if accepted < 0 then do i = 0 to 255; <at..u8>(base + 16 + i) data = 1; end
+  else <at..u8>(base + 16 + accepted) data = 1
+  <at..i32>(base + 272) data = 0; <at..i32>(base + 276) data = 3
+  <at..i32>(base + 544) data = 2; <at..i32>(base + 556) data = 7
+  checkpoint = 'fixture.nfaimage.complete'
+  return data
+packet: procedure = .binary expose checkpoint
+  arg operation = .int, sequence = .int, count = .int, payload = .binary
+  checkpoint = 'fixture.packet.allocate'
+  data = .binary; call binresize data,16 + <blen>(payload)
+  <at..i32>(0) data = 827804748; <at..i32>(4) data = operation
+  <at..i32>(8) data = sequence; <at..i32>(12) data = count
+  ignored = bincopy(data,16,payload,0,<blen>(payload))
+  checkpoint = 'fixture.packet.complete'
+  return data
+initialization: procedure = .binary
+  arg data = .binary, sequence = 1
+  return packet(1,sequence,<blen>(data),data)
+workpacket: procedure = .binary
+  arg sequence = 2, rows = 1, classes = 2
+  i = .int; data = .binary; call binresize data,rows * 20
+  do i = 0 to rows - 1
+    at = i * 20
+    <at..i32>(at) data = i + 7; <at..i32>(at + 4) data = 1
+    <at..i32>(at + 8) data = classes; <at..i32>(at + 12) data = 1
+    <at..i32>(at + 16) data = 1
+  end
+  return packet(2,sequence,rows,data)
+mixedwork: procedure = .binary
+  arg sequence = .int
+  data = .binary; call binresize data,40
+  do i = 0 to 1
+    at = i * 20
+    <at..i32>(at) data = i + 7; <at..i32>(at + 4) data = i + 1
+    <at..i32>(at + 8) data = i + 1; <at..i32>(at + 12) data = 1
+    <at..i32>(at + 16) data = 1
+  end
+  return packet(2,sequence,2,data)
+expected: procedure = .binary
+  arg sequence = .int, selected = .int
+  pairs = 1; if selected = 0 then pairs = 2
+  data = .binary; call binresize data,32 + pairs * 16
+  <at..i32>(0) data = 827477068; <at..i32>(4) data = 0
+  <at..i32>(8) data = sequence; <at..i32>(12) data = 1
+  <at..i32>(16) data = 7; <at..i32>(20) data = 1
+  <at..i32>(24) data = 2; <at..i32>(28) data = pairs
+  do i = 1 to pairs
+    at = 32 + (i - 1) * 16
+    cls = selected; if selected = 0 then cls = i
+    <at..i32>(at) data = cls; <at..i32>(at + 4) data = 2
+    <at..i32>(at + 8) data = 2; <at..i32>(at + 12) data = 3
+  end
+  return data
+mixedexpected: procedure = .binary
+  arg sequence = .int
+  data = .binary; call binresize data,80
+  <at..i32>(0) data = 827477068; <at..i32>(4) data = 0
+  <at..i32>(8) data = sequence; <at..i32>(12) data = 2
+  do i = 0 to 1
+    at = 16 + i * 32
+    <at..i32>(at) data = i + 7; <at..i32>(at + 4) data = i + 1
+    <at..i32>(at + 8) data = i + 1; <at..i32>(at + 12) data = 1
+    <at..i32>(at + 16) data = i + 1; <at..i32>(at + 20) data = 2
+    <at..i32>(at + 24) data = 2; <at..i32>(at + 28) data = 3
+  end
+  return data
+openone: procedure = .int expose channels checkpoint
+  checkpoint = 'transport.open'
+  channel = lllextransport..open()
+  checkpoint = 'transport.open.complete'
+  channels[channels[0] + 1] = channel
+  return channel
+closeone: procedure = .void expose channels
+  arg channel = .int, cancel = 0
+  call lllextransport..close(channel,cancel)
+  do i = 1 to channels[0]; if channels[i] = channel then channels[i] = 0; end
+  return
+closeall: procedure = .void expose channels
+  do i = 1 to channels[0]
+    if channels[i] > 0 then call lllextransport..close(channels[i],1)
+    channels[i] = 0
+  end
+  return
+roundtrip: procedure = .binary expose checkpoint
+  arg channel = .int, message = .binary
+  checkpoint = 'transport.start'
+  ticket = lllextransport..start(channel,message)
+  checkpoint = 'transport.wait'
+  result = lllextransport..wait(channel,ticket)
+  checkpoint = 'transport.release'
+  call lllextransport..release(channel,ticket)
+  checkpoint = 'transport.roundtrip.complete'
+  return result
+refusal: procedure = .void
+  arg message = .binary, label = .string, initialize = 1
+  channel = openone(); caught = 0; result = .binary
+  do
+    if initialize then result = roundtrip(channel,initialization(nfaimage(97)))
+    result = roundtrip(channel,message)
+  on signal as problem
+    caught = pos('LL_LEXER_WORKER',problem.message()) > 0
+    if caught = 0 then say 'DIAG|' || label || '|name=' || problem.name() || '|message=' || problem.message()
+  end
+  call closeone(channel,1)
+  call check(caught,label || ' has an owned worker error')
+  return
+transport: procedure = .void
+  result = .binary
+  left = openone(); right = openone()
+  original = nfaimage(97); held = original
+  acknowledged = roundtrip(left,initialization(original))
+  call check(<blen>(acknowledged) = 16 & <at..i32>(0) acknowledged = 827477068 & <at..i32>(4) acknowledged = 0 & <at..i32>(8) acknowledged = 1 & <at..i32>(12) acknowledged = 0,'INIT has checked header and no frontier result rows')
+  acknowledged = roundtrip(right,initialization(nfaimage(98)))
+  /* Replacement and mutation of caller values cannot change either worker. */
+  <at..i32>(0) original = 0
+  a = roundtrip(left,workpacket(2)); b = roundtrip(right,workpacket(2))
+  call check(bincompare(a,expected(2,1)) = 0,'first worker complete closure and canonical subset')
+  call check(bincompare(b,expected(2,2)) = 0,'second worker owns a distinct immutable snapshot')
+  repeated = roundtrip(left,workpacket(3))
+  call check(bincompare(repeated,expected(3,1)) = 0 & bincompare(held,nfaimage(97)) = 0,'persistent worker snapshot and caller value survive interleaving')
+  call closeone(left,0)
+  repeated = roundtrip(right,workpacket(4))
+  call check(bincompare(repeated,expected(4,2)) = 0,'closing one channel preserves the other worker')
+  ticket = lllextransport..start(right,workpacket(5))
+  call closeone(right,1)
+  caught = 0
+  do
+    repeated = lllextransport..wait(right,ticket)
+  on signal as problem
+    caught = pos('LL_LEXER_WORKER',problem.message()) > 0
+    if caught = 0 then say 'DIAG|cancel-close wait|name=' || problem.name() || '|message=' || problem.message()
+  end
+  call check(caught,'cancel-close invalidates outstanding ticket without publishing a result')
+  call refusal(workpacket(),'uninitialized WORK',0)
+  message = workpacket(); <at..i32>(12) message = 2147483647
+  call refusal(message,'truncated row count')
+  message = workpacket(); <at..i32>(32) message = 4
+  call refusal(message,'out-of-range consuming NFA identity')
+  message = initialization(nfaimage(97)); <at..i32>(12) message = 2147483647
+  call refusal(message,'oversized declared snapshot',0)
+  channel = openone(); acknowledged = roundtrip(channel,initialization(nfaimage(-1,256)))
+  caught = 0
+  do
+    result = roundtrip(channel,workpacket(2,17,256))
+  on signal as problem
+    caught = pos('LL_LEXER_WORKER',problem.message()) > 0
+    if caught = 0 then say 'DIAG|bounded class pairs|name=' || problem.name() || '|message=' || problem.message()
+  end
+  call closeone(channel,1)
+  call check(caught,'more than 4096 class pairs refuses before partial publication')
+  channel = openone(); acknowledged = roundtrip(channel,initialization(nfaimage(-1)))
+  result = roundtrip(channel,workpacket())
+  call check(<blen>(result) = 64 & bincompare(result,expected(2,0)) = 0,'complete two-class pair payload has two sorted closure keys')
+  result = roundtrip(channel,mixedwork(3))
+  call check(bincompare(result,mixedexpected(3)) = 0,'one worker preserves distinct per-row class intervals and exact row order')
+  call closeone(channel,0)
+  channel = openone(); acknowledged = roundtrip(channel,initialization(nfaimage(97)))
+  result = roundtrip(channel,workpacket())
+  call check(bincompare(result,expected(2,1)) = 0,'fresh worker succeeds after failed/cancelled channels')
+  call closeone(channel,0)
+  call observations()
+  return
+/* Empty-channel probes deterministically exercise WOULD_BLOCK and TIMEOUT.
+ * Active work may finish before observe, so either pending or its exact result
+ * is valid. Authority errors are checked after a real terminal observation. */
+observations: procedure = .void expose checkpoint
+  result = .binary; caught = .int; ticket = .int; waitus = .int
+  channel = openone()
+  checkpoint = 'transport.observe.empty.nonblocking'
+  result = lllextransport..observe(channel,0,0)
+  call check(<blen>(result) = 0,'empty nonblocking observation is pending')
+  checkpoint = 'transport.observe.empty.timed'
+  result = lllextransport..observe(channel,0,1000)
+  call check(<blen>(result) = 0,'empty positive-wait observation times out without a result')
+  acknowledged = roundtrip(channel,initialization(nfaimage(-1)))
+  do sequence = 2 to 3
+    waitus = 0; if sequence = 3 then waitus = 1000
+    ticket = lllextransport..start(channel,workpacket(sequence))
+    checkpoint = 'transport.observe.active wait=' || waitus
+    result = lllextransport..observe(channel,ticket,waitus)
+    if <blen>(result) = 0 then result = lllextransport..wait(channel,ticket)
+    call check(bincompare(result,expected(sequence,0)) = 0,'bounded observation preserves exact completion wait=' || waitus)
+    call lllextransport..release(channel,ticket)
+  end
+  caught = 0
+  do
+    call lllextransport..release(channel,ticket)
+  on signal as problem
+    caught = pos('LL_LEXER_WORKER',problem.message()) > 0
+    if caught = 0 then say 'DIAG|released observation ticket|name=' || problem.name() || '|message=' || problem.message()
+  end
+  call check(caught,'released observation ticket cannot retain request authority')
+  ticket = lllextransport..start(channel,workpacket(4)); caught = 0
+  do
+    result = lllextransport..wait(channel,ticket + 1)
+  on signal as problem
+    caught = pos('LL_LEXER_WORKER',problem.message()) > 0
+    if caught = 0 then say 'DIAG|observed ticket mismatch|name=' || problem.name() || '|message=' || problem.message()
+  end
+  call check(caught,'available completion must match the expected ticket')
+  call lllextransport..release(channel,ticket)
+  call closeone(channel,0)
+  return

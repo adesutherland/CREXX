@@ -8,7 +8,7 @@ endif()
 set(RXFNSL_REXX_MODULES
   lllimits llprepared lludata llproperties llir llirservices
   llcore llcheck llcap llcfg lllr llmunch llproject llstage llcharset
-  llregular llcomments llsource llpeg llforest llearley llpratt llregional lllanguage llrecover lltree llast llannotation llflow
+  lllextransport llregular llcomments llsource llpeg llforest llearley llpratt llregional lllanguage llrecover lltree llast llannotation llflow
 )
 
 set(RXFNSL_REXX_BINS)
@@ -42,7 +42,7 @@ set(RXFNSL_DEPS_llmunch lllimits llcore llprepared)
 set(RXFNSL_DEPS_llproject lllimits llcore llprepared)
 set(RXFNSL_DEPS_llstage lllimits llcore llprepared)
 set(RXFNSL_DEPS_llcharset llcore)
-set(RXFNSL_DEPS_llregular llcore llmunch lllimits)
+set(RXFNSL_DEPS_llregular llcore llmunch lllimits lllextransport)
 set(RXFNSL_DEPS_llpeg lllimits llcore llcheck llcap)
 set(RXFNSL_DEPS_llearley lllimits llcore llcfg llcheck llcap llforest)
 set(RXFNSL_DEPS_llpratt lllimits llcore llcheck llcap)
@@ -57,6 +57,21 @@ set(RXFNSL_DEPS_llannotation llast)
 set(RXFNSL_DEPS_llflow llast llsource)
 foreach(_binfile IN LISTS RXFNSL_REXX_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
+
+  # Existing public RXAS task metadata provides the bootstrap-safe sealing
+  # boundary. This module has no classlib or source-compiler dependency.
+  if(_basename STREQUAL "lllextransport")
+    crexx_add_fixture_command(
+      OUTPUT "${_binfile}"
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/lllextransport.rxas"
+        "${CMAKE_CURRENT_BINARY_DIR}/lllextransport.rxas"
+      COMMAND $<TARGET_FILE:rxas> ${_ll_flags}
+        "${CMAKE_CURRENT_BINARY_DIR}/lllextransport"
+      DEPENDS rxas "${CMAKE_CURRENT_SOURCE_DIR}/lllextransport.rxas"
+      VERBATIM)
+    continue()
+  endif()
 
   set(_module_source "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
   if(_basename STREQUAL "lludata")

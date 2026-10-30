@@ -1,10 +1,412 @@
 /* cREXX License (MIT). Regular graph to Thompson NFA to byte-class DFA. */
 options levelb
-namespace llregular expose builder
+namespace llregular expose builder worker
 import rxfnsb
 import llcore
 import llmunch
 import lllimits
+import lllextransport
+
+/** Shared closure/key operations. Workers and the serial reducer use this
+ * one implementation over immutable NFA bytes and owned touched-state scratch. */
+epsilonwalk: procedure = .void
+  arg nfa_ref = reference .binary, expose active = .binary, expose pending = .int[]
+  nfa = dereference nfa_ref
+  at = 1; state = .int
+  do while at <= pending[0]
+    state = pending[at]; at = at + 1; base = (state - 1) * 272
+    if <at..i32>(base) nfa <> 0 then iterate
+    do edge = 1 to 2
+      target = <at..i32>(base + edge * 4) nfa
+      if target > 0 then do
+        if <at..u8>(target - 1) active = 0 then do
+          <at..u8>(target - 1) active = 1
+          pending[pending[0] + 1] = target
+        end
+      end
+    end
+  end
+  return
+
+canonicalpending: procedure = .binary
+  arg keys = .int[]
+  width = 1; size = keys[0]; current = .binary; scratch = .binary
+  first = .int; middle = .int; last = .int; a = .int; b = .int; out = .int
+  leftkey = .int; rightkey = .int; value = .int
+  if size > 1152921504606846975 then do
+    assembler signal "ERROR","LL_REPRESENTATION_LIMIT: lexical subset byte extent"
+    return ''x as .binary
+  end
+  call binresize current,size * 8
+  call binresize scratch,size * 8
+  do out = 0 to size - 1
+    <at..i64>(out * 8) current = keys[out + 1]
+  end
+  /* Sort full integer values before the existing i32 key encoding. Packed
+   * work buffers avoid boxed-array copies after every merge pass; keys is
+   * read-only, preserving its ordinary public argument contract. */
+  do while width < size
+    first = 0
+    do while first < size
+      middle = first + min(width,size - first)
+      last = middle + min(width,size - middle)
+      a = first; b = middle
+      do out = first to last - 1
+        if a < middle then do
+          if b >= last then do
+            value = <at..i64>(a * 8) current; a = a + 1
+          end
+          else do
+            leftkey = <at..i64>(a * 8) current
+            rightkey = <at..i64>(b * 8) current
+            if leftkey <= rightkey then do
+              value = leftkey; a = a + 1
+            end
+            else do
+              value = rightkey; b = b + 1
+            end
+          end
+        end
+        else do
+          value = <at..i64>(b * 8) current; b = b + 1
+        end
+        <at..i64>(out * 8) scratch = value
+      end
+      first = last
+    end
+    assembler swap current,scratch
+    if width >= size - width then width = size
+    else width = width * 2
+  end
+  result = .binary; call binresize result,size * 4
+  do out = 0 to size - 1
+    value = <at..i64>(out * 8) current
+    <at..i32>(out * 4) result = value
+  end
+  return result
+
+/** Exact dense membership encoding shared by construction and public helpers. */
+densemembership: procedure = .binary
+  arg active = .binary, expected = .int, capacity = .int
+  extent = <blen>(active)
+  if extent <> capacity | expected < 0 | expected > capacity | expected > 2305843009213693951 then do
+    assembler signal "ERROR","LL_LEX_SUBSET: invalid membership dimensions"
+    return ''x as .binary
+  end
+  result = .binary; call binresize result,expected * 4
+  at = 0; count = 0; bit = .int; chunk = .int
+  do while at < extent
+    width = extent - at
+    if width > 8 then width = 8
+    if width = 8 then do
+      chunk = <at..i64>(at) active
+      if chunk = 0 then do
+        at = at + 8; iterate
+      end
+    end
+    last = at + width
+    do while at < last
+      bit = <at..u8>(at) active
+      if bit <> 0 & bit <> 1 then do
+        assembler signal "ERROR","LL_LEX_SUBSET: invalid membership bit"
+        return ''x as .binary
+      end
+      if bit = 1 then do
+        if count >= expected then do
+          assembler signal "ERROR","LL_LEX_SUBSET: membership count exceeds queue"
+          return ''x as .binary
+        end
+        <at..i32>(count * 4) result = at + 1
+        count = count + 1
+      end
+      at = at + 1
+    end
+  end
+  if count <> expected then do
+    assembler signal "ERROR","LL_LEX_SUBSET: membership count differs from queue"
+    return ''x as .binary
+  end
+  return result
+
+/** Reusable touched-block scratch; exact keys have one sparse/dense owner. */
+membershipkeys: class
+  _count = .int
+  _blocks = .int
+  _marked = .binary
+  *: factory
+    arg count = .int
+    _count = count; _blocks = (count + 31) <idiv> 32
+    call binresize _marked,_blocks
+    return
+  encode: method = .binary
+    arg active = .binary, pending = .int[]
+    expected = pending[0]
+    if <blen>(active) <> _count | expected < 0 | expected > _count then do
+      assembler signal "ERROR","LL_LEX_SUBSET: invalid sparse membership dimensions"
+      return ''x as .binary
+    end
+    if expected > (_count <idiv> 64) then return densemembership(active,expected,_count)
+    do i = 1 to expected
+      state = pending[i]
+      if state < 1 | state > _count then do
+        assembler signal "ERROR","LL_LEX_SUBSET: invalid sparse membership state"
+        return ''x as .binary
+      end
+      <at..u8>((state - 1) <idiv> 32) _marked = 1
+    end
+    result = .binary; call binresize result,expected * 4
+    count = 0
+    do block = 0 to _blocks - 1
+      if <at..u8>(block) _marked = 0 then iterate
+      <at..u8>(block) _marked = 0
+      first = block * 32; last = min(_count,first + 32)
+      do at = first to last - 1
+        bit = <at..u8>(at) active
+        if bit <> 0 & bit <> 1 then do
+          assembler signal "ERROR","LL_LEX_SUBSET: invalid membership bit"
+          return ''x as .binary
+        end
+        if bit = 1 then do
+          if count >= expected then do
+            assembler signal "ERROR","LL_LEX_SUBSET: membership count exceeds queue"
+            return ''x as .binary
+          end
+          <at..i32>(count * 4) result = at + 1
+          count = count + 1
+        end
+      end
+    end
+    if count <> expected then do
+      assembler signal "ERROR","LL_LEX_SUBSET: membership count differs from queue"
+      return ''x as .binary
+    end
+    return result
+
+/** One immutable NFA and reusable membership scratch per construction worker.
+ * There are no DFA identities or publication operations in this owner. */
+frontier: class
+  _nfa = .binary
+  _count = .int
+  _representatives = .int[]
+  _counts = .int[]
+  _offsets = .int[]
+  _classes = .binary
+  _mapped = .int
+  _active = .binary
+  _maxraw = .int
+  _keyencoder = .membershipkeys
+  *: factory
+    arg nfa = .binary, count = .int, representatives = .int[], maxraw = 16773120
+    state = .int; base = .int; cls = .int; at = .int
+    _nfa = nfa; _count = count; _representatives = representatives; _maxraw = maxraw
+    call binresize _active,count
+    _keyencoder = .membershipkeys(count)
+    total = 0
+    do state = 1 to count
+      base = (state - 1) * 272
+      _offsets[state] = total; _counts[state] = 0
+      if <at..i32>(base) _nfa <> 1 then iterate
+      do cls = 1 to representatives[0]
+        if <at..u8>(base + 16 + representatives[cls]) _nfa = 0 then iterate
+        _counts[state] = _counts[state] + 1; total = total + 1
+      end
+    end
+    _mapped = total <= 2097152
+    if _mapped then do
+      call binresize _classes,total * 4
+      do state = 1 to count
+        base = (state - 1) * 272; at = _offsets[state]
+        if <at..i32>(base) _nfa <> 1 then iterate
+        do cls = 1 to representatives[0]
+          if <at..u8>(base + 16 + representatives[cls]) _nfa = 0 then iterate
+          <at..u32>(at * 4) _classes = cls; at = at + 1
+        end
+      end
+    end
+    return
+  /** First accepted-class entry at or above the requested class. */
+  lowerclass: method = .int
+    arg state = .int, cls = .int
+    first = _offsets[state]; last = first + _counts[state]
+    do while first < last
+      middle = first + ((last - first) <idiv> 2)
+      if <at..u32>(middle * 4) _classes < cls then first = middle + 1
+      else last = middle
+    end
+    return first
+  /** Complete one state/class interval. Nonempty rows contain exact sorted
+   * NFA members. Empty classes never allocate or clear an NFA-sized vector. */
+  complete: method = .binary
+    arg members = .binary, first = .int, last = .int, expose destination = .binary[], keyoffset = .int, wire = .int
+    state = .int; base = .int; cls = .int; member = .int; target = .int; node = .int; entry = .int; i = .int; offset = .int
+    start = .int; finish = .int
+    result = .binary; pairs = 0
+    if wire then call binresize result,4
+    heads = .int[]; tails = .int[]; candidates = .binary; ranges = .binary; candidatecount = 0
+    seeds = .int[]; empty = .int[]; following = .binary
+    if first < 1 | last > _representatives[0] | first > last | <blen>(members) % 4 <> 0 then assembler signal "ERROR","LL_LEXER_WORKER: class interval"
+    indexed = _mapped & last - first >= 2
+    if indexed then call binresize ranges,<blen>(members) * 2
+    previous = 0
+    do member = 0 to <blen>(members) - 1 by 4
+      state = <at..u32>(member) members
+      if state <= previous | state > _count then assembler signal "ERROR","LL_LEXER_WORKER: consuming member order"
+      previous = state; base = (state - 1) * 272
+      if <at..i32>(base) _nfa <> 1 then assembler signal "ERROR","LL_LEXER_WORKER: consuming member kind"
+      if indexed then do
+        start = _offsets[state]; finish = start + _counts[state]
+        if first > 1 then start = lowerclass(state,first)
+        if last < _representatives[0] then finish = lowerclass(state,last + 1)
+        <at..u32>(member * 2) ranges = start; <at..u32>(member * 2 + 4) ranges = finish
+        candidatecount = candidatecount + finish - start
+      end
+    end
+    usemap = indexed & candidatecount <= 1048576
+    if usemap then do
+      call binresize candidates,candidatecount * 8
+      heads[_representatives[0]] = 0; tails[_representatives[0]] = 0; node = 0
+      do member = 0 to <blen>(members) - 1 by 4
+        state = <at..u32>(member) members; base = (state - 1) * 272
+        target = <at..i32>(base + 4) _nfa
+        start = <at..u32>(member * 2) ranges; finish = <at..u32>(member * 2 + 4) ranges
+        do entry = start to finish - 1
+          cls = <at..u32>(entry * 4) _classes
+          node = node + 1; <at..u32>((node - 1) * 8) candidates = target
+          if heads[cls] = 0 then heads[cls] = node
+          else <at..u32>((tails[cls] - 1) * 8 + 4) candidates = node
+          tails[cls] = node
+        end
+      end
+    end
+    do cls = first to last
+      seeds = empty
+      if usemap then do
+        node = heads[cls]
+        do while node > 0
+          target = <at..u32>((node - 1) * 8) candidates
+          if <at..u8>(target - 1) _active = 0 then do
+            <at..u8>(target - 1) _active = 1; seeds[seeds[0] + 1] = target
+          end
+          node = <at..u32>((node - 1) * 8 + 4) candidates
+        end
+      end
+      else do member = 0 to <blen>(members) - 1 by 4
+        state = <at..u32>(member) members; base = (state - 1) * 272
+        if <at..u8>(base + 16 + _representatives[cls]) _nfa = 0 then iterate
+        target = <at..i32>(base + 4) _nfa
+        if <at..u8>(target - 1) _active = 0 then do
+          <at..u8>(target - 1) _active = 1; seeds[seeds[0] + 1] = target
+        end
+      end
+      if seeds[0] = 0 then iterate
+      call epsilonwalk(reference _nfa,_active,seeds)
+      following = _keyencoder.encode(_active,seeds)
+      /* Scratch clearing is proportional to the reached closure, not N. */
+      do i = 1 to seeds[0]; <at..u8>(seeds[i] - 1) _active = 0; end
+      if wire then do
+        offset = <blen>(result)
+        if _maxraw > 0 then do
+          if <blen>(following) > _maxraw - offset - 8 then assembler signal "ERROR","LL_RESOURCE_LIMIT: lexer worker result"
+        end
+        call binresize result,offset + 8
+        <at..u32>(offset) result = cls; <at..u32>(offset + 4) result = seeds[0]
+        call binappend result,following
+      end
+      else destination[keyoffset + cls] = following
+      pairs = pairs + 1
+    end
+    if wire then <at..u32>(0) result = pairs
+    return result
+
+  /** Serial collection uses the exact producer without a local wire copy. */
+  collect: method = .void
+    arg members = .binary, first = .int, last = .int, expose destination = .binary[], keyoffset = .int
+    ignored = complete(members,first,last,destination,keyoffset,0)
+    return
+
+  packet: method = .binary
+    arg request = .binary
+    state = .int; first = .int; last = .int; count = .int; out = .int
+    members = .binary; completed = .binary; unused = .binary[]
+    constant REQUEST_MAGIC = 827804748
+    constant RESULT_MAGIC = 827477068
+    extent = <blen>(request)
+    if extent < 16 | (_maxraw > 0 & extent > _maxraw) then assembler signal "ERROR","LL_LEXER_WORKER: request extent"
+    if <at..u32>(0) request <> REQUEST_MAGIC | <at..u32>(4) request <> 2 then assembler signal "ERROR","LL_LEXER_WORKER: request kind"
+    rows = <at..u32>(12) request
+    result = .binary; call binresize result,16
+    <at..u32>(0) result = RESULT_MAGIC; <at..u32>(8) result = <at..u32>(8) request
+    if rows > 4096 then assembler signal "ERROR","LL_RESOURCE_LIMIT: lexer worker rows"
+    offset = 16; workpairs = 0
+    do row = 1 to rows
+      if offset > extent - 16 then assembler signal "ERROR","LL_LEXER_WORKER: truncated work row"
+      state = <at..u32>(offset) request; first = <at..u32>(offset + 4) request; last = <at..u32>(offset + 8) request; count = <at..u32>(offset + 12) request
+      if state < 1 | first < 1 | last < first then assembler signal "ERROR","LL_LEXER_WORKER: work row identity"
+      offset = offset + 16
+      if count > (extent - offset) / 4 then assembler signal "ERROR","LL_LEXER_WORKER: truncated work membership"
+      members = binsubstr(request,offset + 1,count * 4); offset = offset + count * 4
+      workpairs = workpairs + last - first + 1
+      if workpairs > 4096 then assembler signal "ERROR","LL_RESOURCE_LIMIT: lexer worker pairs"
+      completed = complete(members,first,last,unused,0,1)
+      out = <blen>(result)
+      if _maxraw > 0 then do
+        if <blen>(completed) > _maxraw - out - 12 then assembler signal "ERROR","LL_RESOURCE_LIMIT: lexer worker result"
+      end
+      call binresize result,out + 12
+      <at..u32>(out) result = state; <at..u32>(out + 4) result = first; <at..u32>(out + 8) result = last
+      call binappend result,completed
+    end
+    if offset <> extent then assembler signal "ERROR","LL_LEXER_WORKER: trailing work bytes"
+    <at..u32>(12) result = rows
+    return result
+
+workerboot: initialiser expose worker_machine worker_ready
+  worker_machine = .frontier
+  worker_ready = 0
+  return
+
+/** Existing task1 invokes this ordinary B callable with copied binary data.
+ * INIT is private to one one-worker channel; work cannot borrow controller data. */
+worker: procedure = .binary expose worker_machine worker_ready
+  arg request = .binary
+  constant REQUEST_MAGIC = 827804748
+  constant RESULT_MAGIC = 827477068
+  constant SNAPSHOT_MAGIC = 826691148
+  extent = <blen>(request)
+  if extent < 16 | extent > 16773120 then assembler signal "ERROR","LL_LEXER_WORKER: request extent"
+  if <at..u32>(0) request <> REQUEST_MAGIC then assembler signal "ERROR","LL_LEXER_WORKER: request magic"
+  operation = <at..u32>(4) request; sequence = <at..u32>(8) request; rows = <at..u32>(12) request
+  result = .binary; call binresize result,16
+  <at..u32>(0) result = RESULT_MAGIC; <at..u32>(8) result = sequence
+  if operation = 1 then do
+    worker_ready = 0
+    if rows <> extent - 16 | rows < 16 then assembler signal "ERROR","LL_LEXER_WORKER: snapshot extent"
+    if <at..u32>(16) request <> SNAPSHOT_MAGIC | <at..u32>(20) request <> 1 then assembler signal "ERROR","LL_LEXER_WORKER: snapshot version"
+    count = <at..u32>(24) request; classes = <at..u32>(28) request
+    if count < 1 | classes < 1 | classes > 256 then assembler signal "ERROR","LL_LEXER_WORKER: snapshot dimensions"
+    if count > (rows - 16 - classes * 4) / 272 | rows <> 16 + classes * 4 + count * 272 then assembler signal "ERROR","LL_LEXER_WORKER: snapshot dimensions"
+    representatives = .int[]; prior = -1
+    do cls = 1 to classes
+      byte = <at..u32>(32 + (cls - 1) * 4) request
+      if byte <= prior | byte > 255 then assembler signal "ERROR","LL_LEXER_WORKER: class representative order"
+      representatives[cls] = byte; prior = byte
+    end
+    nfa = binsubstr(request,33 + classes * 4,count * 272)
+    do state = 1 to count
+      base = (state - 1) * 272; type = <at..i32>(base) nfa
+      if type < 0 | type > 2 then assembler signal "ERROR","LL_LEXER_WORKER: NFA node kind"
+      do edge = 1 to 2
+        target = <at..i32>(base + edge * 4) nfa
+        if type = 2 then iterate
+        if type = 1 & edge = 2 then iterate
+        if target < 0 | target > count | (type = 1 & target = 0) then assembler signal "ERROR","LL_LEXER_WORKER: NFA edge"
+      end
+    end
+    worker_machine = .frontier(nfa,count,representatives); worker_ready = 1
+    return result
+  end
+  if operation <> 2 | worker_ready = 0 then assembler signal "ERROR","LL_LEXER_WORKER: work before initialization"
+  return worker_machine.packet(request)
 
 /** Bounded construction; recursive lexical definitions and nullable tokens fail.
  * UTF-8 is validated by the source stage; this machine consumes exact bytes.
@@ -23,10 +425,15 @@ builder: class
   _built = .int
   _dfa = .llmunch..automaton
   _limits = .lllimits..policy
+  _workers = .int
+  _workersused = .int
+  _failedstate = .int
+  _failedclass = .int
+  _tilesused = .int
   *: factory
-    arg graph = .llcore..grammar, roots = .int[], kinds = .int[], ?limits = .lllimits..policy
+    arg graph = .llcore..grammar, roots = .int[], kinds = .int[], ?limits = .lllimits..policy, workers = 0
     if ?limits = 0 then limits = .lllimits..policy()
-    _limits = limits
+    _limits = limits; _workers = workers
     _graph = graph; _count = 0; _root = 0; _depth = 0; _error = ''
     _dfa = .llmunch..automaton(0,0)
     _roots = roots; _kinds = kinds; _built = 0
@@ -34,6 +441,9 @@ builder: class
   build: method = .void
     if _built then return
     _built = 1; roots = _roots; kinds = _kinds
+    if wordpos(_workers as .string,'0 1 2 4 8') = 0 then do
+      _error = 'LL_USAGE: lexer workers must be 0, 1, 2, 4 or 8'; return
+    end
     if _limits.error() <> '' then do
       _error = _limits.error(); return
     end
@@ -130,127 +540,91 @@ builder: class
    * walk here so its public value wrapper and determinization share it. */
   closurewalk: method = .void
     arg expose active = .binary, expose pending = .int[]
-    at = 1; state = .int
-    do while at <= pending[0]
-      state = pending[at]; at = at + 1; base = (state - 1) * 272
-      if <at..i32>(base) _nfa <> 0 then iterate
-      do edge = 1 to 2
-        target = <at..i32>(base + edge * 4) _nfa
-        if target > 0 then do
-          if <at..u8>(target - 1) active = 0 then do
-            <at..u8>(target - 1) active = 1
-            pending[pending[0] + 1] = target
-          end
-        end
-      end
-    end
+    call epsilonwalk(reference _nfa,active,pending)
     return
   /** Internal construction queues contain exactly the complete membership,
    * once per state. Encode that checked invariant in ascending ID order;
    * public closure still sorts its potentially different caller queue. */
   membershipkey: method = .binary
     arg active = .binary, expected = .int
-    extent = <blen>(active)
-    if extent <> _count | expected < 0 | expected > _count | expected > 2305843009213693951 then do
-      assembler signal "ERROR","LL_LEX_SUBSET: invalid membership dimensions"
-      return ''x as .binary
-    end
-    result = .binary; call binresize result,expected * 4
-    at = 0; count = 0; bit = .int; chunk = .int
-    do while at < extent
-      width = extent - at
-      if width > 8 then width = 8
-      if width = 8 then do
-        chunk = <at..i64>(at) active
-        if chunk = 0 then do
-          at = at + 8; iterate
-        end
-      end
-      last = at + width
-      do while at < last
-        bit = <at..u8>(at) active
-        if bit <> 0 & bit <> 1 then do
-          assembler signal "ERROR","LL_LEX_SUBSET: invalid membership bit"
-          return ''x as .binary
-        end
-        if bit = 1 then do
-          if count >= expected then do
-            assembler signal "ERROR","LL_LEX_SUBSET: membership count exceeds queue"
-            return ''x as .binary
-          end
-          <at..i32>(count * 4) result = at + 1
-          count = count + 1
-        end
-        at = at + 1
-      end
-    end
-    if count <> expected then do
-      assembler signal "ERROR","LL_LEX_SUBSET: membership count differs from queue"
-      return ''x as .binary
-    end
-    return result
+    return densemembership(active,expected,_count)
+  /** Shared sparse/dense encoding preserves the exact ascending key and
+   * count checks while a public call owns its fresh block-mark scratch. */
+  sparsemembershipkey: method = .binary
+    arg active = .binary, pending = .int[]
+    encoder = .membershipkeys(_count)
+    return encoder.encode(active,pending)
   /** Canonical sparse membership: byte equality iff the state sets agree. */
   subsetkey: method = .binary
     arg keys = .int[]
-    width = 1; size = keys[0]; current = .binary; scratch = .binary
-    first = .int; middle = .int; last = .int; a = .int; b = .int; out = .int
-    leftkey = .int; rightkey = .int; value = .int
-    if size > 1152921504606846975 then do
-      assembler signal "ERROR","LL_REPRESENTATION_LIMIT: lexical subset byte extent"
-      return ''x as .binary
+    return canonicalpending(keys)
+  /** Locate an exact canonical subset in a bounded construction-local chain.
+   * The hash only selects a bucket; binary equality below decides identity.
+   * Accumulation stays within signed 64-bit range before each reduction. */
+  subsetbucket: method = .int
+    arg key = .binary, capacity = .int
+    hash = 0; value = .int
+    do offset = 0 to <blen>(key) - 1 by 4
+      value = <at..i32>(offset) key
+      hash = (hash * 131 + value) % 2147483647
     end
-    call binresize current,size * 8
-    call binresize scratch,size * 8
-    do out = 0 to size - 1
-      <at..i64>(out * 8) current = keys[out + 1]
-    end
-    /* Sort full integer values before the existing i32 key encoding. Packed
-     * work buffers avoid boxed-array copies after every merge pass; keys is
-     * read-only, preserving its ordinary public argument contract. */
-    do while width < size
-      first = 0
-      do while first < size
-        middle = first + min(width,size - first)
-        last = middle + min(width,size - middle)
-        a = first; b = middle
-        do out = first to last - 1
-          if a < middle then do
-            if b >= last then do
-              value = <at..i64>(a * 8) current; a = a + 1
-            end
-            else do
-              leftkey = <at..i64>(a * 8) current
-              rightkey = <at..i64>(b * 8) current
-              if leftkey <= rightkey then do
-                value = leftkey; a = a + 1
-              end
-              else do
-                value = rightkey; b = b + 1
-              end
-            end
-          end
-          else do
-            value = <at..i64>(b * 8) current; b = b + 1
-          end
-          <at..i64>(out * 8) scratch = value
+    return hash % capacity + 1
+  /** Decode only complete replies belonging to the exact assigned rows.
+   * Canonical key members are NFA IDs; only determinize assigns DFA IDs. */
+  decoderesult: method = .void
+    arg request = .binary, reply = .binary, firststate = .int, classes = .int, expose keys = .binary[]
+    constant RESULT_MAGIC = 827477068
+    extent = <blen>(reply); requestat = 16; at = 16
+    if extent < 16 | (_workers > 0 & extent > 16773120) then assembler signal "ERROR","LL_LEXER_WORKER: result extent"
+    if <at..u32>(0) reply <> RESULT_MAGIC | <at..u32>(4) reply <> 0 | <at..u32>(8) reply <> <at..u32>(8) request | <at..u32>(12) reply <> <at..u32>(12) request then assembler signal "ERROR","LL_LEXER_WORKER: result identity"
+    do row = 1 to <at..u32>(12) request
+      if at > extent - 16 then assembler signal "ERROR","LL_LEXER_WORKER: truncated result row"
+      state = <at..u32>(at) reply; first = <at..u32>(at + 4) reply; last = <at..u32>(at + 8) reply; pairs = <at..u32>(at + 12) reply
+      if state <> <at..u32>(requestat) request | first <> <at..u32>(requestat + 4) request | last <> <at..u32>(requestat + 8) request | pairs > last - first + 1 then assembler signal "ERROR","LL_LEXER_WORKER: result coverage"
+      requestat = requestat + 16 + 4 * <at..u32>(requestat + 12) request
+      at = at + 16; priorclass = first - 1
+      do pair = 1 to pairs
+        if at > extent - 8 then assembler signal "ERROR","LL_LEXER_WORKER: truncated result key"
+        cls = <at..u32>(at) reply; count = <at..u32>(at + 4) reply; at = at + 8
+        if cls <= priorclass | cls > last | count < 1 | count > _count | count > (extent - at) / 4 then assembler signal "ERROR","LL_LEXER_WORKER: result key dimensions"
+        priorclass = cls; previous = 0
+        do member = 0 to count - 1
+          id = <at..u32>(at + member * 4) reply
+          if id <= previous | id > _count then assembler signal "ERROR","LL_LEXER_WORKER: result NFA member order"
+          previous = id
         end
-        first = last
+        keys[(state - firststate) * classes + cls] = binsubstr(reply,at + 1,count * 4)
+        at = at + count * 4
       end
-      assembler swap current,scratch
-      if width >= size - width then width = size
-      else width = width * 2
     end
-    result = .binary; call binresize result,size * 4
-    do out = 0 to size - 1
-      value = <at..i64>(out * 8) current
-      <at..i32>(out * 4) result = value
-    end
+    if at <> extent | requestat <> <blen>(request) then assembler signal "ERROR","LL_LEXER_WORKER: trailing result bytes"
+    return
+  /** One bounded tile, retaining the shared WORK row format. */
+  tilerequest: method = .binary
+    arg state = .int, first = .int, last = .int, members = .binary, sequence = .int
+    result = .binary; call binresize result,32
+    <at..u32>(0) result = 827804748; <at..u32>(4) result = 2
+    <at..u32>(8) result = sequence; <at..u32>(12) result = 1
+    <at..u32>(16) result = state; <at..u32>(20) result = first
+    <at..u32>(24) result = last; <at..u32>(28) result = <blen>(members) <idiv> 4
+    call binappend result,members
     return result
   determinize: method = .void
-    byte = .int; state = .int; base = .int; cls = .int; i = .int; member = .int; ok = .int; seeds = .int[]; emptyseeds = .int[]
-    signatures = .binary[]; representatives = .int[]; mapping = .int[]; classes = 0
+    constant SNAPSHOT_MAGIC = 826691148
+    constant REQUEST_MAGIC = 827804748
+    constant RESULT_MAGIC = 827477068
+    byte = .int; state = .int; base = .int; cls = .int; i = .int; member = .int; ok = .int; owner = .int
+    shard = .int; size = .int; current = .int; firstclass = .int; lastclass = .int
+    firststate = .int; laststate = .int; acceptedlast = .int; requestbytes = .int; consumers = .int; kind = .int; type = .int; accept_seen = .int
+    target = .int; bucket = .int
+    tiles = .int; tile = .int; width = .int; safepairs = .int; perstate = .int; statecount = .int
+    queued = .int; completed = .int; visit = .int; pollstart = .int; waitshard = .int; waitus = .int; progress = .int
+    active = .binary; consuming = .binary; following = .binary; request = .binary
+    consumingrows = .binary[]; keys = .binary[]; emptybinaries = .binary[]
+    tilestates = .int[]; tilefirst = .int[]; tilelast = .int[]; inflight = .int[]; emptyints = .int[]
+    signature = .binary; signatures = .binary[]; representatives = .int[]; mapping = .int[]; classes = 0
     do byte = 0 to 255
-      signature = .binary; call binresize signature,_count
+      signature = ''x as .binary; call binresize signature,_count
       do state = 1 to _count
         base = (state - 1) * 272
         if <at..i32>(base) _nfa = 1 then <at..u8>(state - 1) signature = <at..u8>(base + 16 + byte) _nfa
@@ -264,76 +638,214 @@ builder: class
       end
       mapping[byte + 1] = cls - 1
     end
-    sets = .binary[]; kinds = .int[]; edges = .int[]; owner = 0
+    sets = .binary[]; kinds = .int[]; edges = .int[]; heads = .int[]; chain = .int[]
+    bucketcount = 16381
+    if _limits.limit('dfa.states') < 8190 then bucketcount = max(31,_limits.limit('dfa.states') * 2 + 1)
+    heads[bucketcount] = 0
     initial = .binary; call binresize initial,_count
     <at..u8>(_root - 1) initial = 1
-    seeds[1] = _root
-    /* Both initial membership and its queue are construction-owned scratch;
-     * neither original value is read after this call. */
-    call closurewalk(initial,seeds)
+    seeds = .int[]; seeds[1] = _root; call closurewalk(initial,seeds)
     sets[1] = membershipkey(initial,seeds[0]); total = 1; next = 1
-    do while next <= total
-      active = sets[next]; kind = 0; accept_seen = 0; consumers = 0
-      consuming = .binary; call binresize consuming,<blen>(active)
-      do member = 0 to <blen>(active) - 1 by 4
-        state = <at..i32>(member) active; base = (state - 1) * 272
-        type = <at..i32>(base) _nfa
-        if type = 1 then do
-          <at..i32>(consumers * 4) consuming = state; consumers = consumers + 1
+    heads[subsetbucket(sets[1],bucketcount)] = 1; chain[1] = 0
+    channels = .int[]; tickets = .int[]; requests = .binary[]
+    kernel = .frontier; reply = .binary; nfasnapshot = .binary; initrequest = .binary
+    sequence = 0; shards = max(1,_workers); phase = 'snapshot'
+    do
+      if _workers = 0 then kernel = .frontier(_nfa,_count,representatives,0)
+      else do
+        size = 16 + classes * 4 + _count * 272
+        if size > 16773104 then assembler signal "ERROR","LL_RESOURCE_LIMIT: lexer worker snapshot"
+        call binresize nfasnapshot,16 + classes * 4
+        <at..u32>(0) nfasnapshot = SNAPSHOT_MAGIC; <at..u32>(4) nfasnapshot = 1
+        <at..u32>(8) nfasnapshot = _count; <at..u32>(12) nfasnapshot = classes
+        do cls = 1 to classes; <at..u32>(16 + (cls - 1) * 4) nfasnapshot = representatives[cls]; end
+        call binappend nfasnapshot,_nfa
+        call binresize initrequest,16
+        <at..u32>(0) initrequest = REQUEST_MAGIC; <at..u32>(4) initrequest = 1; <at..u32>(12) initrequest = <blen>(nfasnapshot)
+        call binappend initrequest,nfasnapshot
+        do shard = 1 to _workers
+          phase = 'open shard ' || shard
+          channels[shard] = lllextransport..open()
+          phase = 'INIT start shard ' || shard
+          tickets[shard] = lllextransport..start(channels[shard],initrequest)
         end
-        else if type = 2 & accept_seen = 0 then do
-          kind = <at..i32>(base + 12) _nfa; owner = <at..i32>(base + 8) _nfa; accept_seen = 1
+        do shard = 1 to _workers
+          phase = 'INIT wait shard ' || shard
+          reply = lllextransport..wait(channels[shard],tickets[shard])
+          call lllextransport..release(channels[shard],tickets[shard]); tickets[shard] = 0
+          if <blen>(reply) <> 16 then assembler signal "ERROR","LL_LEXER_WORKER: INIT reply extent"
+          if <at..u32>(0) reply <> RESULT_MAGIC | <at..u32>(4) reply <> 0 | <at..u32>(8) reply <> 0 | <at..u32>(12) reply <> 0 then assembler signal "ERROR","LL_LEXER_WORKER: INIT reply"
+          _workersused = _workersused + 1
         end
+        call binclear nfasnapshot; call binclear initrequest
       end
-      call binresize consuming,consumers * 4
-      kinds[next] = kind
-      if next = 1 & kind <> 0 then do
-        _error = 'LL_NULLABLE_TOKEN: ' || _graph.label(owner) || ' (line ' || _graph.line(owner) || ') accepts empty input. Every lexical rule must consume at least one byte; replace optional/repeated-only content with a consuming pattern.'; return
-      end
-      do cls = 1 to classes
-        byte = representatives[cls]; following = .binary; call binresize following,_count; live = 0
-        seeds = emptyseeds
-        do member = 0 to <blen>(consuming) - 1 by 4
-          state = <at..i32>(member) consuming; base = (state - 1) * 272
-          if <at..u8>(base + 16 + byte) _nfa = 1 then do
-            target = <at..i32>(base + 4) _nfa
-            if <at..u8>(target - 1) following = 0 then do
-              <at..u8>(target - 1) following = 1; live = 1
-              seeds[seeds[0] + 1] = target
+      do while next <= total & _error = ''
+        firststate = next; laststate = min(total,next + max(1,4096 <idiv> classes) - 1)
+        consumingrows = emptybinaries; requestbytes = 16; acceptedlast = next - 1
+        do current = firststate to laststate
+          active = sets[current]; consuming = ''x as .binary; call binresize consuming,<blen>(active)
+          consumers = 0; kind = 0; accept_seen = 0
+          do member = 0 to <blen>(active) - 1 by 4
+            state = <at..i32>(member) active; base = (state - 1) * 272; type = <at..i32>(base) _nfa
+            if type = 1 then do
+              <at..u32>(consumers * 4) consuming = state; consumers = consumers + 1
+            end
+            else if type = 2 & accept_seen = 0 then do
+              kind = <at..i32>(base + 12) _nfa; owner = <at..i32>(base + 8) _nfa; accept_seen = 1
+            end
+          end
+          call binresize consuming,consumers * 4
+          if _workers > 0 then do
+            if <blen>(consuming) + 16 > 16773120 - requestbytes then leave
+          end
+          requestbytes = requestbytes + 16 + <blen>(consuming)
+          consumingrows[current - firststate + 1] = consuming; kinds[current] = kind; acceptedlast = current
+          if current = 1 & kind <> 0 then do
+            _error = 'LL_NULLABLE_TOKEN: ' || _graph.label(owner) || ' (line ' || _graph.line(owner) || ') accepts empty input. Every lexical rule must consume at least one byte; replace optional/repeated-only content with a consuming pattern.'
+            leave
+          end
+        end
+        if _error <> '' then leave
+        laststate = acceptedlast
+        if laststate < firststate then assembler signal "ERROR","LL_RESOURCE_LIMIT: lexer frontier request"
+        sequence = sequence + 1; phase = 'frontier request ' || sequence
+        /* One row's full result is bounded by 32 + span * (8 + 4*N).
+         * Serial has no transport cap; even one larger key remains admitted. */
+        safepairs = 16773088 <idiv> (8 + 4 * _count)
+        width = classes; statecount = laststate - firststate + 1
+        if _workers > 0 then do
+          if safepairs < 1 then assembler signal "ERROR","LL_RESOURCE_LIMIT: lexer worker key"
+          perstate = max(1,(4 * _workers + statecount - 1) <idiv> statecount)
+          width = min(classes,safepairs,max(1,(classes + perstate - 1) <idiv> perstate))
+        end
+        tilestates = emptyints; tilefirst = emptyints; tilelast = emptyints; tiles = 0
+        do current = firststate to laststate
+          firstclass = 1
+          do while firstclass <= classes
+            lastclass = min(classes,firstclass + width - 1); tiles = tiles + 1
+            tilestates[tiles] = current; tilefirst[tiles] = firstclass; tilelast[tiles] = lastclass
+            firstclass = lastclass + 1
+          end
+        end
+        keys = emptybinaries
+        keys[(laststate - firststate + 1) * classes] = ''x as .binary
+        if _workers = 0 then do tile = 1 to tiles
+          current = tilestates[tile]
+          _tilesused = _tilesused + 1
+          call kernel.collect(consumingrows[current - firststate + 1],tilefirst[tile],tilelast[tile],keys,(current - firststate) * classes)
+        end
+        else do
+          inflight = emptyints; inflight[shards] = 0
+          queued = 1; completed = 0; pollstart = 1; waitshard = 0; waitus = 0
+          do while completed < tiles
+            progress = 0
+            /* Fill each idle slot before polling; one outstanding task per
+             * initialized worker owns its request and exact tile descriptor. */
+            do visit = 0 to shards - 1
+              shard = (pollstart - 1 + visit) % shards + 1
+              if inflight[shard] > 0 | queued > tiles then iterate
+              tile = queued; current = tilestates[tile]
+              requests[shard] = tilerequest(current,tilefirst[tile],tilelast[tile],consumingrows[current - firststate + 1],sequence)
+              phase = 'WORK start batch ' || sequence || ' tile ' || tile
+              tickets[shard] = lllextransport..start(channels[shard],requests[shard])
+              inflight[shard] = tile; queued = queued + 1; _tilesused = _tilesused + 1; progress = 1
+            end
+            do visit = 0 to shards - 1
+              shard = (pollstart - 1 + visit) % shards + 1
+              if inflight[shard] = 0 then iterate
+              if waitshard > 0 & shard <> waitshard then iterate
+              phase = 'WORK observe batch ' || sequence || ' tile ' || inflight[shard]
+              reply = lllextransport..observe(channels[shard],tickets[shard],waitus)
+              if <blen>(reply) = 0 then iterate
+              call lllextransport..release(channels[shard],tickets[shard]); tickets[shard] = 0
+              phase = 'decode batch ' || sequence || ' tile ' || inflight[shard]
+              call decoderesult(requests[shard],reply,firststate,classes,keys)
+              inflight[shard] = 0; completed = completed + 1; progress = 1
+              /* Refill a ready worker immediately; completion order never
+               * chooses DFA IDs or changes the later reduction order. */
+              if queued <= tiles then do
+                tile = queued; current = tilestates[tile]
+                requests[shard] = tilerequest(current,tilefirst[tile],tilelast[tile],consumingrows[current - firststate + 1],sequence)
+                phase = 'WORK start batch ' || sequence || ' tile ' || tile
+                tickets[shard] = lllextransport..start(channels[shard],requests[shard])
+                inflight[shard] = tile; queued = queued + 1; _tilesused = _tilesused + 1
+              end
+            end
+            pollstart = pollstart % shards + 1
+            if progress = 0 & waitus = 0 then do
+              /* Poll every busy worker before a bounded wait. The rotating
+               * one-millisecond wait prevents spinning or a slow-worker gate. */
+              waitshard = 0
+              do visit = 0 to shards - 1
+                shard = (pollstart - 1 + visit) % shards + 1
+                if inflight[shard] = 0 then iterate
+                waitshard = shard; leave
+              end
+              if waitshard = 0 then assembler signal "ERROR","LL_LEXER_WORKER: incomplete frontier"
+              waitus = 1000
+            end
+            else do
+              waitshard = 0; waitus = 0
             end
           end
         end
-        target = 0
-        if live then do
-          /* The seed membership and queue are replaced before the next class. */
-          call closurewalk(following,seeds)
-          following = membershipkey(following,seeds[0])
-          do i = 1 to total
-            if sets[i] = following then target = i
-          end
-          if target = 0 then do
-            if total >= _limits.limit('dfa.states') then do
-              _error = _limits.exhausted('dfa.states',total + 1); return
+        phase = 'reduce batch ' || sequence
+        do current = firststate to laststate while _error = ''
+          do cls = 1 to classes
+            following = keys[(current - firststate) * classes + cls]; target = 0
+            if <blen>(following) > 0 then do
+              bucket = subsetbucket(following,bucketcount); target = heads[bucket]
+              do while target > 0
+                if sets[target] = following then leave
+                target = chain[target]
+              end
+              if target = 0 then do
+                if total >= _limits.limit('dfa.states') then do
+                  _failedstate = current; _failedclass = cls
+                  _error = _limits.exhausted('dfa.states',total + 1); leave
+                end
+                total = total + 1; target = total; sets[target] = following
+                chain[target] = heads[bucket]; heads[bucket] = target
+              end
             end
-            total = total + 1; target = total; sets[target] = following
+            edges[(current - 1) * classes + cls] = target
           end
         end
-        edges[(next - 1) * classes + cls] = target
+        next = laststate + 1
       end
-      next = next + 1
+      phase = 'close'
+      do shard = 1 to channels[0]
+        call lllextransport..close(channels[shard],0); channels[shard] = 0
+      end
+    on signal as problem
+      _error = 'LL_LEXER_WORKER: ' || phase || ': ' || problem.name() || ': ' || problem.message()
+      do shard = 1 to channels[0]
+        if channels[shard] = 0 then iterate
+        do
+          call lllextransport..close(channels[shard],1)
+        on signal
+          nop
+        end
+        channels[shard] = 0
+      end
     end
+    if _error <> '' then return
     _dfa = .llmunch..automaton(total,classes)
-    do byte = 0 to 255
-      ok = _dfa.mapping(byte,mapping[byte + 1])
-    end
+    do byte = 0 to 255; ok = _dfa.mapping(byte,mapping[byte + 1]); end
     do state = 1 to total
       ok = _dfa.accepting(state,kinds[state])
-      do cls = 1 to classes
-        ok = _dfa.transition(state,cls - 1,edges[(state - 1) * classes + cls])
-      end
+      do cls = 1 to classes; ok = _dfa.transition(state,cls - 1,edges[(state - 1) * classes + cls]); end
     end
     if _dfa.verify() = 0 then _error = _dfa.error()
     return
+  workersused: method = .int
+    return _workersused
+  tilesused: method = .int
+    return _tilesused
+  failedstate: method = .int
+    return _failedstate
+  failedclass: method = .int
+    return _failedclass
   nfastates: method = .int
     return _count
   automaton: method = .llmunch..automaton

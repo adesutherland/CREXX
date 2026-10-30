@@ -1,0 +1,271 @@
+/* cREXX License (MIT). Internal bootstrap-safe Level L lexer transport.
+ * Only the existing public RXAS sealed task/channel boundary is used here.
+ * DFA/NFA semantics and all private packet validation belong to llregular.
+ * Every pool has exactly one worker and one outstanding request. Handles are
+ * execution-local capabilities. The controller owns release and close.
+ */
+.globals=0
+worker() .expose=llregular.worker
+.meta "lllextransport.open"="b" ".int" lexopen() ""
+.meta "lllextransport.start"="b" ".int" lexstart() "channel=.int,request=.binary"
+.meta "lllextransport.wait"="b" ".binary" lexwait() "channel=.int,ticket=.int"
+.meta "lllextransport.observe"="b" ".binary" lexobserve() "channel=.int,ticket=.int,waitus=.int"
+.meta "lllextransport.release"="b" ".void" lexrelease() "channel=.int,ticket=.int"
+.meta "lllextransport.close"="b" ".void" lexclose() "channel=.int,cancel=.int"
+.meta "llregular.worker"="b" ".binary" worker() "request=.binary"
+.meta "lllextransport.worker"="b" ".binary" lexworker() "request=.binary"
+/* The symbol-derived 80-byte relocation placeholder is never an RXTB value.
+ * RXAS seals this constant; RXBIN reseals its matching use after linking. */
+.meta "lllextransport.worker"=".task1" 0x85afb003ae3cdfad9d1b5c028b34cfb16483b573b2c0136042a384c42ceb9ced25cf10e3ce9c3f0dfdbbfc622bd46fd1c423d5d352607380e2c324248c8b7c4d456ff0436e7c9f6d5d5b9cc2cb740f71
+
+lexworker() .locals=1 .expose=lllextransport.worker
+    call1 r0,worker(),a1
+    ret r0
+
+lexopen() .locals=6 .expose=lllextransport.open
+    load r2,1
+    load r3,11
+    load r4,0x5258435601000000a1000000000000000900000085000000000000001d0000000000000063726578782e6368616e6e656c2e6c6f63616c2d7461736b2d706f6f6c010000000200000000000000110000000000000061646d697373696f6e436170616369747903000000080000000000000001000000000000000b00000000000000776f726b6572436f756e740300000008000000000000000100000000000000
+    chanopen r0,r1,r2,r3,r4
+    beq lexopen_ok,r0,0
+    load r2,"open"
+    call2 r5,lexerror(),r2,r0
+lexopen_ok:
+    ret r1
+
+lexstart() .locals=16 .expose=lllextransport.start
+    blen r0,a2
+    load r1,16773120
+    ilte r2,r0,r1
+    brt lexstart_size,r2
+    load r3,"start.packet-size"
+    load r4,8
+    call2 r15,lexerror(),r3,r4
+lexstart_size:
+    /* Only final-link-owned callable ID and digests enter the RXCV target. */
+    load r1,0x85afb003ae3cdfad9d1b5c028b34cfb16483b573b2c0136042a384c42ceb9ced25cf10e3ce9c3f0dfdbbfc622bd46fd1c423d5d352607380e2c324248c8b7c4d456ff0436e7c9f6d5d5b9cc2cb740f71
+    load r2,0
+    bcmpb r2,r1,0x5258544201010000
+    beq lexstart_sealed,r2,0
+    load r3,"start.unsealed-binding"
+    load r4,6
+    call2 r15,lexerror(),r3,r4
+lexstart_sealed:
+    load r3,0x52584356010000000000000000000000090000000000000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d696e766f6b650100000002000000000000000900000000000000617267756d656e74730800000000000000000000000100000000000000070000000000000000000000
+    load r4,114
+    bseti64 r3,r4,r0
+    iadd r5,r0,20
+    load r4,94
+    bseti64 r3,r4,r5
+    bappend r3,a2
+    load r4,0x0600000000000000746172676574090000002101000000000000190000000000000063726578782e6368616e6e656c2e7461736b2d7461726765740100000005000000000000000a0000000000000063616c6c61626c654964030000000800000000000000
+    bappend r3,r4
+    load r4,8
+    bgetu32 r5,r1,r4
+    load r6,0x0000000000000000
+    load r4,0
+    bseti64 r6,r4,r5
+    bappend r3,r6
+    load r4,0x1000000000000000666163746f7279417267756d656e747308000000080000000000000000000000000000000b00000000000000696d616765446967657374070000002000000000000000
+    bappend r3,r4
+    load r4,12
+    load r5,32
+    bslice r6,r1,r4,r5
+    bappend r3,r6
+    load r4,0x04000000000000006b696e6403000000080000000000000001000000000000000f000000000000007369676e6174757265446967657374070000002000000000000000
+    bappend r3,r4
+    load r4,44
+    bslice r6,r1,r4,r5
+    bappend r3,r6
+    blen r5,r3
+    load r4,8
+    bseti64 r3,r4,r5
+    isub r5,r5,28
+    load r4,20
+    bseti64 r3,r4,r5
+    load r4,0
+    chanstart r0,r1,a1,r3,r4
+    beq lexstart_ok,r0,0
+    load r2,"start"
+    call2 r15,lexerror(),r2,r0
+lexstart_ok:
+    ret r1
+
+lexwait() .locals=2 .expose=lllextransport.wait
+    load r0,-1
+    call3 r1,lexreceive(),a1,a2,r0
+    ret r1
+
+/* Empty means pending only; every successful lexer packet has >=16 bytes.
+ * A pending observation neither consumes completion nor releases authority. */
+lexobserve() .locals=1 .expose=lllextransport.observe
+    call3 r0,lexreceive(),a1,a2,a3
+    ret r0
+
+lexreceive() .locals=12
+    chanwait r0,r1,a1,a3
+    beq lexwait_observed,r0,0
+    bne lexreceive_timeout,r0,10
+    bne lexreceive_error,a3,0
+    ret r1
+lexreceive_timeout:
+    bne lexreceive_error,r0,11
+    igt r2,a3,0
+    brf lexreceive_error,r2
+    ret r1
+lexreceive_error:
+    load r2,"wait"
+    call2 r11,lexerror(),r2,r0
+lexwait_observed:
+    load r2,0x7469636b6574
+    call2 r3,lexfield(),r1,r2
+    call1 r4,lexinteger(),r3
+    beq lexwait_ticket,r4,a2
+    load r2,"wait.ticket"
+    load r0,6
+    call2 r11,lexerror(),r2,r0
+lexwait_ticket:
+    load r2,0x7374617465
+    call2 r3,lexfield(),r1,r2
+    call1 r4,lexinteger(),r3
+    beq lexwait_success,r4,1
+    load r2,"wait.worker-state"
+    call2 r11,lexerror(),r2,r4
+lexwait_success:
+    load r2,0x6572726f72436f6465
+    call2 r3,lexfield(),r1,r2
+    call1 r4,lexinteger(),r3
+    beq lexwait_result,r4,0
+    load r2,"wait.worker-error"
+    call2 r11,lexerror(),r2,r4
+lexwait_result:
+    load r2,0x726573756c74
+    call2 r3,lexfield(),r1,r2
+    load r2,0
+    bgetu32 r4,r3,r2
+    beq lexwait_binary,r4,7
+    load r2,"wait.result-type"
+    load r0,6
+    call2 r11,lexerror(),r2,r0
+lexwait_binary:
+    load r2,4
+    bgeti64 r4,r3,r2
+    ilt r6,r4,16
+    brt lexwait_bad_size,r6
+    igt r6,r4,16773120
+    brt lexwait_bad_size,r6
+    load r2,12
+    bslice r5,r3,r2,r4
+    ret r5
+lexwait_bad_size:
+    load r2,"wait.result-size"
+    load r0,6
+    call2 r11,lexerror(),r2,r0
+    ret
+
+lexrelease() .locals=3 .expose=lllextransport.release
+    chanrelease r0,a1,a2
+    beq lexrelease_ok,r0,0
+    load r1,"release"
+    call2 r2,lexerror(),r1,r0
+lexrelease_ok:
+    ret
+
+lexclose() .locals=4 .expose=lllextransport.close
+    load r1,1
+    beq lexclose_mode,a2,0
+    load r1,2
+lexclose_mode:
+    chanclose r0,a1,r1
+    beq lexclose_ok,r0,0
+    load r1,"close"
+    call2 r3,lexerror(),r1,r0
+lexclose_ok:
+    ret
+
+/* The provider owns canonical completion production. Still check its exact
+ * schema, extents and primitive types before returning any private bytes. */
+lexfield() .locals=16
+    blen r0,a1
+    load r1,72
+    ilt r2,r0,r1
+    brt lexmalformed,r2
+    load r2,0
+    bcmpb r2,a1,0x5258435601000000
+    bne lexmalformed,r2,0
+    load r2,8
+    bgeti64 r3,a1,r2
+    bne lexmalformed,r3,r0
+    load r2,16
+    bgetu32 r3,a1,r2
+    bne lexmalformed,r3,9
+    load r2,20
+    bgeti64 r3,a1,r2
+    isub r4,r0,28
+    bne lexmalformed,r3,r4
+    load r2,28
+    bcmpb r2,a1,0x180000000000000063726578782e6368616e6e656c2e636f6d706c6574696f6e010000000800000000000000
+    bne lexmalformed,r2,0
+    load r5,8
+lexfield_loop:
+    beq lexmalformed,r5,0
+    iadd r2,r1,8
+    igt r3,r2,r0
+    brt lexmalformed,r3
+    bgeti64 r4,a1,r1
+    ilt r3,r4,0
+    brt lexmalformed,r3
+    iadd r6,r2,r4
+    iadd r7,r6,12
+    igt r3,r7,r0
+    brt lexmalformed,r3
+    bslice r8,a1,r2,r4
+    blen r10,a2
+    ine r9,r4,r10
+    bne lexfield_name_done,r9,0
+    load r9,0
+    bcmpb r9,r8,a2
+lexfield_name_done:
+    iadd r2,r6,4
+    bgeti64 r4,a1,r2
+    ilt r3,r4,0
+    brt lexmalformed,r3
+    iadd r1,r7,r4
+    igt r3,r1,r0
+    brt lexmalformed,r3
+    beq lexfield_found,r9,0
+    isub r5,r5,1
+    br lexfield_loop
+lexfield_found:
+    iadd r4,r4,12
+    bslice r8,a1,r6,r4
+    ret r8
+lexmalformed:
+    load r0,"wait.completion-schema"
+    load r1,6
+    call2 r15,lexerror(),r0,r1
+    ret
+
+lexinteger() .locals=4
+    blen r0,a1
+    bne lexinteger_bad,r0,20
+    load r1,0
+    bcmpb r1,a1,0x030000000800000000000000
+    bne lexinteger_bad,r1,0
+    load r1,12
+    bgeti64 r2,a1,r1
+    ret r2
+lexinteger_bad:
+    load r0,"wait.integer-field"
+    load r1,6
+    call2 r3,lexerror(),r0,r1
+    ret 0
+
+lexerror() .locals=2
+    copy r0,a2
+    itos r0
+    concat r1,"LL_LEXER_WORKER: ",a1
+    concat r1,r1," status="
+    concat r1,r1,r0
+    signal "ERROR",r1
+    ret

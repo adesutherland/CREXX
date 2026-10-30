@@ -23,6 +23,7 @@ add_custom_command(
                 -DSPEC=${_crexx_rxbuild_spec}
                 -DOUTPUT=${_crexx_rxbuild_grammar_rxas}
                 -DFORMAT=rxas
+                -DLEXER_WORKERS=${CREXX_LEVEL_L_LEXER_WORKERS}
                 -P "${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake"
         COMMAND $<TARGET_FILE:rxas> -o "${_crexx_rxbuild_root}/rxbuildgrammar"
                 "${_crexx_rxbuild_grammar_rxas}"
@@ -146,6 +147,7 @@ add_custom_command(
                 -DSPEC=${_crexx_rxgraph_spec}
                 -DOUTPUT=${_crexx_rxgraph_grammar_rxas}
                 -DFORMAT=rxas
+                -DLEXER_WORKERS=${CREXX_LEVEL_L_LEXER_WORKERS}
                 -P "${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake"
         COMMAND $<TARGET_FILE:rxas> -o "${_crexx_rxgraph_root}/graphgrammar"
                 "${_crexx_rxgraph_grammar_rxas}"

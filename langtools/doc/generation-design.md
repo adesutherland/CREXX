@@ -296,6 +296,16 @@ shared cache state or a persistent cache lock.
 
 The private manifest records SHA256 of the actual `rxlang` executable, or the
 ordered VM plus linked-image pair, the wrapper identity and capsule checksum.
+The prepared RXAS grammar build may instead pass its checked
+`generator.identity` as the wrapper's generator fingerprint. That identity
+hashes the maintained Level L source closure, library/SDK images, seed compiler,
+assembler, VM and C packer, the native C compiler and flags, RXPA shim, the
+compiled `rxlinkmain` object and `rxdaslib`. It deliberately omits the separate
+inline-service object: generation invokes ordinary `rxlink -s` without an
+inline-service selection, and that path returns before entering the service.
+An inline-service-only relink therefore may reuse a capsule; changing the
+linker main object or any listed dependency invalidates it. Callers without a
+prepared identity retain the exact executable fingerprint contract.
 The `.rxl` source is not the persistence key: parser-only edits must be able to
 reuse matching lexical construction after fresh full admission.
 Reuse assumes unchanged generator/stamp artifacts. A normal post-commit version
@@ -307,7 +317,14 @@ Run generation and validation entirely before publication. Failed generation
 changes neither prior output nor cache. Replace staged cache data and manifest
 atomically per file, with the manifest last as commit marker; an interrupted or
 inconsistent pair is a miss on the next invocation. Do not rewrite an equal
-capsule. Publish the generated output atomically as the real product. A cache
+capsule or equal generated output. Publish changed output atomically as the real
+product. The prepared RXAS grammar owns a successful-generation stamp and the
+generated RXAS as its byproduct, then assembles that RXAS in a separate rule.
+An equal RXAS therefore does not force reassembly, while the success stamp
+prevents repeated no-op generation after a relink. Non-Ninja generators run a
+cheap missing-byproduct guard because Make does not rebuild an absent RXAS from
+an intact success stamp; that guard uses the same generation owner only when
+the file is absent. A cache
 may remain independently valid if final output publication is interrupted;
 there is no claim of a multi-file filesystem transaction across all products.
 
@@ -331,6 +348,107 @@ backend or other build changes not represented by a source stamp alone.
 No dependency points back to research, and no new native provider or bootstrap
 cycle is introduced. Check the source manifest/dependency coverage and narrow
 L0/L1/L2 fixed point; do not silently rely on stale prepared source.
+
+## DFA frontier MapReduce trial
+
+The Level L regex builder owns the NFA, byte classes, closure and canonical
+subset keys. Its serial construction now emits only accepted `(class, target)`
+pairs before reducing each class in the established state order. A parallel
+worker may calculate the complete closure and canonical key for an assigned
+state/class range from an immutable, worker-owned NFA snapshot. It must return
+data only: no DFA ID, shared register/value pointer or publication authority.
+The reducer consumes results in original state then class order, checks exact
+subset equality after bucket selection, applies the existing state limit at the
+same first failing transition and publishes only a complete result. A worker
+failure cancels its frontier and leaves the ordinary serial path available.
+
+The bootstrap generator is Level B and precedes the convenient Level G task
+syntax. The existing VM task workers provide isolation and copied messages,
+but they do not by themselves supply a prepared NFA to every worker or a
+bootstrap-safe callable binding. A linked scratch Level B/RXAS task probe ran
+equal CPU tasks at one, two, four and eight local workers and verified ordered
+results. A second probe initialized a worker's global binary in one task and
+read it in a later task on a one-worker pool. These prove the worker mechanism
+and worker-local persistence, not lexer speedup or a public B task-target API.
+The B `.tasktarget.binding()` is compiler-reserved, and the Level L bootstrap
+deliberately has no classlib dependency. One single-worker pool per shard
+provides stable worker ownership without relying on the provider's private
+round-robin scheduling. The internal `lllextransport` RXAS module supplies the
+bootstrap-safe boundary: authored `.task1` metadata names its
+binary worker wrapper, and RXAS/RXBIN own the callable ID, image digest and
+signature digest in the sealed 80-byte binding. The wrapper calls the ordinary
+B `llregular.worker(request=.binary)->.binary` procedure. The shim encodes RXCV
+binary arguments and checks completion schema, ticket, successful state and
+binary result; it does not interpret lexer packets or implement closure.
+
+Each shard has a one-worker/admission-one channel and one outstanding request.
+The controller releases every successfully observed request. Partial setup,
+submission, worker, packet or reducer failure cancels and closes every opened
+channel before generation returns, and publishes no partial output or capsule.
+The internal transport procedures are `open()`, `start(channel,request)`,
+`wait(channel,ticket)`, `release(channel,ticket)` and `close(channel,cancel)`;
+nonzero `cancel` selects cancelling close. Status failures raise `ERROR` with
+an `LL_LEXER_WORKER` diagnostic containing operation and status. The raw private
+packet cap is 16 MiB minus 4096 bytes, leaving room for RXCV envelopes and completions.
+
+`LNF1` encodes a version, NFA count, class count, ordered class representative
+bytes as u32 values and exactly 272 bytes per NFA state. `LLW1` carries an INIT
+snapshot once per shard or bounded WORK rows containing source-state ID, class
+range and consuming NFA IDs. `LLR1` returns complete ordered rows of nonempty
+class/canonical-subset pairs. All header/ID fields are little-endian u32. The
+Level L owner validates extents, IDs, ordering, sequence and coverage, with at
+most 4096 state/class pairs per request. Workers retain only their own immutable
+snapshot; the reducer alone assigns DFA IDs and checks deterministic limits.
+Within each frozen frontier, one-state/class-interval tiles use the same checked
+packet format. Their worst reply is `32 + class-span * (8 + 4 * NFA-count)`
+bytes. Serial construction uses the full class interval and writes the same
+kernel's keys directly, skipping local packet encode/decode and any transport
+ceiling, so worker framing cannot reduce the serial input domain. Parallel
+intervals also adapt toward two to four tiles per
+worker per frontier. Sorted class-list lower bounds restrict candidate work to
+the requested interval; narrow intervals can scan their masks directly.
+Only compact descriptors are queued. Each worker owns at most one outstanding
+request; rotating completion polls release and refill ready slots immediately.
+When no worker is ready, a finite wait prevents spinning. The internal
+`observe(channel,ticket,waitus)` returns empty only for WOULD_BLOCK (10) at zero
+wait or TIMEOUT (11) at positive microseconds. These outcomes retain the pending
+ticket. Every successful tile is validated once before the original ordered
+reducer, preserving canonical IDs and the first failing DFA-limit transition.
+The builder's `tilesused()` reports actual WORK submissions/executions; a single
+expensive pair can still limit parallelism.
+The kernel's shared sparse/dense membership encoder writes exact ascending
+signed-i32 NFA IDs without sorting each transition queue. Sparse block marks
+are worker-local reusable scratch, cleared only for touched blocks; dense sets
+use linear scanning. Sparse work is `O(K + N/32 + 32*T)` for K queued states
+and T touched blocks, while dense work is `O(N)`. Keys are encoded and their
+unique member counts checked before every queued active cell is cleared.
+The public arbitrary-queue `subsetkey` keeps its existing sorting semantics.
+
+`--lexer-workers 0|1|2|4|8` selects serial or actual worker shards; zero remains
+the CLI and callable default. An explicit nonzero cold build uses pools or
+fails, with no silent serial fallback. The callable request appends `workers=0` and exposes actual
+`workersused()`; graph inspection and complete capsule reuse use zero workers.
+The CMake cache option `CREXX_LEVEL_L_LEXER_WORKERS` defaults to zero and forwards
+the general selection to maintained generators without a target-specific
+profile; direct generation wrappers accept `-DLEXER_WORKERS`.
+Scheduling is excluded from lexical semantic identity, so serial/worker RXAS
+and capsule bytes must agree. Compare one, two, four and eight workers on the
+same grammar; retain serial execution when worker setup, copying or memory
+cost dominates. The adapter source is part of the generator stamp and linked
+Level L library used by each bootstrap stage.
+
+The approved narrow build policy defaults only the single maintained RXAS
+grammar owner to four workers, through
+`CREXX_RXAS_GRAMMAR_LEXER_WORKERS=4`; set this option to zero for serial
+construction. The same-source cold comparison gives exact RXAS/capsule parity
+and lower elapsed generation cost with higher resident memory. This does not
+qualify a parallel default for other grammars. The snapshot cap admits at most
+61,662–61,665 NFA states, depending on class count,
+while the ordinary NFA allowance is 65,536; a general worker default would
+reduce the admitted domain. Concurrent four-worker generators each own their
+worker contexts, NFA copies and scratch. Evaluate aggregate build scheduling
+separately from one generator's elapsed time and resident memory; neither the
+packet cap nor the generation byte allowance bounds process memory.
 
 ## Qualification boundary
 

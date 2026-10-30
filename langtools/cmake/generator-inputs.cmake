@@ -34,6 +34,7 @@ set(LL_GENERATOR_STAMP_SOURCES
   lib/rxfnsl/rexx/llirservices.crexx
   lib/rxfnsl/rexx/lllanguage.crexx
   lib/rxfnsl/rexx/lllimits.crexx
+  lib/rxfnsl/rexx/lllextransport.rxas
   lib/rxfnsl/rexx/lllr.crexx
   lib/rxfnsl/rexx/llmunch.crexx
   lib/rxfnsl/rexx/llpeg.crexx

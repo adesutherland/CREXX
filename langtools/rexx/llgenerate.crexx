@@ -28,7 +28,8 @@ import lllanguage
  * returned Level L output owns its bytes; failed requests expose no artifact.
  * format is crexx, rxas or graph. Limits are supplied explicitly by the host.
  * @param lexical Optional advisory owned capsule; omission avoids key/capsule work.
- * An empty supplied binary requests a cold capsule. Cache misses remain cold. */
+ * An empty supplied binary requests a cold capsule. Cache misses remain cold.
+ * @param workers 0 serial, or 1/2/4/8 actual lexer worker shards. */
 request: class
   _writer = .llir..writer
   _output = .llir..output
@@ -45,11 +46,14 @@ request: class
   _candidate = .binary
   _lexical = .binary
   _reused = .int
+  _workers = .int
+  _workersused = .int
   _lexcache = .lexicalcapsule
   *: factory
-    arg source = .binary, format = 'rxas', filename = '<source>', limits = .lllimits..policy(), rxl = 0, bytes = 67108864, ?lexical = .binary
+    arg source = .binary, format = 'rxas', filename = '<source>', limits = .lllimits..policy(), rxl = 0, bytes = 67108864, ?lexical = .binary, workers = 0
     _source = source; _format = format; _filename = filename; _limits = limits; _rxl = rxl; _bytes = bytes; _ready = 0
     _lexicalenabled = ?lexical; _reused = 0
+    _workers = workers; _workersused = 0
     if ?lexical then _candidate = lexical
     return
   run: method = .void
@@ -59,6 +63,9 @@ request: class
     _writer = .llir..writer(bytes); _error = ''; _status = 0
     if format <> 'rxas' & format <> 'crexx' & format <> 'graph' then do
       call fail('LL_USAGE: unknown output format ' || format); _status = 2
+    end
+    else if wordpos(_workers as .string,'0 1 2 4 8') = 0 then do
+      call fail('LL_USAGE: lexer workers must be 0, 1, 2, 4 or 8'); _status = 2
     end
     else _status = generate(source,format,filename,limits,rxl)
     if _error = '' then _error = _writer.error()
@@ -88,6 +95,9 @@ request: class
   /** A tentative hit is not observable if current admission/output fails. */
   reused: method = .int
     call run(); return _reused
+  /** Actual cold-build shard count. Capsule hits and graph inspection use zero. */
+  workersused: method = .int
+    call run(); return _workersused
   fail: method = .void
     arg message = .string
     if _error = '' then _error = message
@@ -149,10 +159,11 @@ request: class
       dfa = _lexcache.machine(1); nfastates = _lexcache.nfa(1)
     end
     else do
-      lex = .llregular..builder(doc.lexgrammar(),doc.lexroots(),doc.lexkinds(),limits)
+      lex = .llregular..builder(doc.lexgrammar(),doc.lexroots(),doc.lexkinds(),limits,_workers)
       if lex.error() <> '' then do
         call fail(lex.error()); return 1
       end
+      _workersused = lex.workersused()
       dfa = lex.automaton(); nfastates = lex.nfastates()
       if <blen>(key) > 0 then do
         dfa = .llmunch..automaton.loaded(dfa.image())
@@ -210,10 +221,11 @@ request: class
       if hit then shieldmachine = _lexcache.machine(machineindex)
       else do
         roots = .int[]; kinds = .int[]; roots[1] = doc.commentroot(entry); kinds[1] = 1
-        shield = .llregular..builder(doc.lexgrammar(),roots,kinds,limits)
+        shield = .llregular..builder(doc.lexgrammar(),roots,kinds,limits,_workers)
         if shield.error() <> '' then do
           call fail(filename || ': ' || doc.commentlocation(entry) || ': outside pattern: ' || shield.error()); return 1
         end
+        if shield.workersused() > _workersused then _workersused = shield.workersused()
         shieldmachine = shield.automaton()
         if <blen>(key) > 0 then do
           shieldmachine = .llmunch..automaton.loaded(shieldmachine.image())

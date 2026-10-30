@@ -16,6 +16,7 @@ add_custom_command(OUTPUT "${_rs1_grammar}"
     -DLEVEL_L_VM=${_rs1_generation_vm}
     -DLEVEL_L_BYTECODE=${_rs1_level_l}
     -DSPEC=${CMAKE_CURRENT_SOURCE_DIR}/grammar/rexxscript.levell
+    -DLEXER_WORKERS=${CREXX_LEVEL_L_LEXER_WORKERS}
     -DOUTPUT=${_rs1_grammar} -DFORMAT=rxas -P ${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake
   DEPENDS rxlang ${_rs1_generation_target} "${_rs1_level_l}"
     grammar/rexxscript.levell ${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake

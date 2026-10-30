@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.24)
+set(CREXX_LEVEL_L_LEXER_WORKERS "0" CACHE STRING
+  "Level L lexer shards: 0 serial, or 1/2/4/8 real local task workers")
+set_property(CACHE CREXX_LEVEL_L_LEXER_WORKERS PROPERTY STRINGS 0 1 2 4 8)
+if(NOT CREXX_LEVEL_L_LEXER_WORKERS MATCHES "^(0|1|2|4|8)$")
+  message(FATAL_ERROR "CREXX_LEVEL_L_LEXER_WORKERS must be 0, 1, 2, 4 or 8")
+endif()
 if(CREXX_BUILD_RESEARCH_COMPILERS)
   # Selected compiler-host service only: no SDK/bootstrap/runtime dependency.
   include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
@@ -83,6 +89,7 @@ foreach(stage RANGE 0 2)
       COMMAND ${CMAKE_COMMAND} -DLEVEL_L_VM=$<TARGET_FILE:${_ll_vm}>
         -DLEVEL_L_BYTECODE=${_ll_root}/L${previous}/rxlang-linked.rxbin
         -DSPEC=${_ll_spec} -DOUTPUT=${dir}/llsyntax.rxas -DFORMAT=rxas
+        -DLEXER_WORKERS=${CREXX_LEVEL_L_LEXER_WORKERS}
         -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate.cmake"
       DEPENDS ${_ll_vm} "${_ll_root}/L${previous}/rxlang-linked.rxbin"
         "${_ll_spec}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/generate.cmake" VERBATIM)

@@ -1,0 +1,17 @@
+options levell
+namespace probe_language
+identifier: token = 1
+keyword: token = 2
+arrow: token = 3
+minus: token = 4
+other: token = 5
+scan: lexer input utf8
+  first: charset = 'a' to 'z' | '_'
+  rest: charset = first | '0' to '9'
+  all.characters: charset = scalar
+  keyword.lex: rule = 'if' then emit keyword
+  identifier.lex: rule = first rest* then emit identifier
+  arrow.lex: rule = '->' then emit arrow
+  minus.lex: rule = '-' then emit minus
+  spaces.lex: rule = (' ' | U+0009 | U+000A | U+000D)+ then skip
+  other.lex: rule = all.characters then emit other
