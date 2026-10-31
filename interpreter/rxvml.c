@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "rxvml.h"
+#include "rxvml_inline_private.h"
 #include "rxvmintp.h"
 #include "rxvm.h"
 #include "rxvmvars.h"
@@ -116,6 +117,9 @@ struct rxvml_context {
     size_t registry_size;
     rxvml_address_callback_entry* address_callbacks;
     size_t address_callback_size;
+    rxvml_inline_callback inline_callback;
+    void *inline_userdata;
+    int inline_callback_active;
     char last_error_text[512];
 };
 
@@ -170,6 +174,15 @@ static void rxvml_set_captured_signal_error(rxvml_context* ctx,
 static rxvml_context* rxvml_current_context(void) {
     rxvm_context* vm = rxvm_active_context_current();
     return vm ? (rxvml_context*)vm->active.rxvml_context : NULL;
+}
+
+int rxvml_inline_set_callback(rxvml_context *ctx,
+        rxvml_inline_callback callback, void *userdata) {
+    if (!ctx || ctx->inline_callback_active ||
+        (callback && ctx->inline_callback)) return -1;
+    ctx->inline_callback = callback;
+    ctx->inline_userdata = callback ? userdata : NULL;
+    return 0;
 }
 
 /* rxvml_value is defined as an alias to value in the public header */
@@ -1967,6 +1980,54 @@ static void rxvml_native_address_handle(
     if (ret) set_int((value*)ret, handle);
 }
 
+/* A process registration is only a route to the active context. It grants no
+ * authority: the owning linker request supplies the private live callback.
+ * Recursion cannot cause an accessor or forged object to enroll another owner. */
+static void rxvml_native_inline_dispatch(enum rxvml_inline_operation operation,
+        rxinteger argc, rxpa_attribute_value *args, rxpa_attribute_value ret,
+        rxpa_attribute_value signal) {
+    rxvml_context *ctx = rxvml_current_context();
+    size_t expected = operation == RXVML_INLINE_TOKEN ? 5u : 6u;
+    rxvml_value *staged;
+    int entered = 0;
+    rxvml_reset_native_signal(signal);
+    if (!ret) return;
+    staged = rxvml_value_new(ctx);
+    if (!staged) {
+        rxvml_set_native_failure(signal, SIGNAL_FAILURE,
+                "inline authority result allocation failed");
+        return;
+    }
+    if (operation == RXVML_INLINE_CHECK) rxvml_set_int(staged, 0);
+    if (ctx && args && argc >= 0 && (size_t)argc == expected &&
+        ctx->inline_callback && !ctx->inline_callback_active) {
+        ctx->inline_callback_active = 1;
+        entered = 1;
+        if (ctx->inline_callback(ctx, ctx->inline_userdata, operation, expected,
+                    (rxvml_value *const *)args, staged) != 1) {
+            value_zero((value *)staged);
+            if (operation == RXVML_INLINE_CHECK) rxvml_set_int(staged, 0);
+        }
+    }
+    /* Native result and argument pointers may alias. Publish only after every
+     * borrowed input has been inspected; payload copies own their references. */
+    copy_value((value *)ret, (value *)staged);
+    rxvml_value_free(staged);
+    if (entered) ctx->inline_callback_active = 0;
+}
+
+static void rxvml_native_inline_token(rxinteger argc,
+        rxpa_attribute_value *args, rxpa_attribute_value ret,
+        rxpa_attribute_value signal) {
+    rxvml_native_inline_dispatch(RXVML_INLINE_TOKEN, argc, args, ret, signal);
+}
+
+static void rxvml_native_inline_check(rxinteger argc,
+        rxpa_attribute_value *args, rxpa_attribute_value ret,
+        rxpa_attribute_value signal) {
+    rxvml_native_inline_dispatch(RXVML_INLINE_CHECK, argc, args, ret, signal);
+}
+
 rxvml_context* rxvml_create(const char* location, unsigned flags) {
     rxvml_context* ctx;
     static const char rxvml_address_plugin_id[] = "rxvml-address-bridge";
@@ -1992,6 +2053,9 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     ctx->registry_size = 0;
     ctx->address_callbacks = NULL;
     ctx->address_callback_size = 0;
+    ctx->inline_callback = NULL;
+    ctx->inline_userdata = NULL;
+    ctx->inline_callback_active = 0;
 
     /* These bridges resolve all mutable state through the active RXVML
      * context. Distinct context-owner threads may therefore enter them at the
@@ -2014,6 +2078,12 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
                             rxvml_native_address_id,
                             "_rxsysb._native_address_id", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_inline_token,
+                            "_rxlinkinline.selectiontoken", 0, 0, 0);
+    rxvm_addfunc_for_plugin(rxvml_address_plugin_id,
+                            rxvml_native_inline_check,
+                            "_rxlinkinline.selectioncheck", 0, 0, 0);
     if (rxldmodp(&ctx->vm) == -1) {
         rxfremod(&ctx->vm);
         free(ctx);

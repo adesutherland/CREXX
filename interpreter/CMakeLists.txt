@@ -2174,6 +2174,18 @@ add_custom_command(
 add_custom_target(run_tests_interfaces ALL DEPENDS tests_interfaces.rxbin)
 
 # Public embedding contract: one switch VM, exact spans, cleanup and owner ingress.
+crexx_add_rxas_vm_binary(tests_inline_authority_hook "private inline authority hook aliasing")
+add_executable(test_inline_authority_hook tests/test_inline_authority_hook.c)
+target_link_libraries(test_inline_authority_hook PRIVATE rxbvml rxpashim)
+target_include_directories(test_inline_authority_hook PRIVATE
+        . ./rxvmplugin ../assembler ../binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa ../platform ../third_party/avl_tree ../third_party/utf8 ../interpreter/rxvml)
+add_dependencies(test_inline_authority_hook run_tests_inline_authority_hook)
+add_test(NAME inline_authority_hook_alias COMMAND test_inline_authority_hook
+        ${CMAKE_CURRENT_BINARY_DIR}/tests_inline_authority_hook.rxbin)
+set_tests_properties(inline_authority_hook_alias PROPERTIES TIMEOUT 30
+        LABELS "interpreter;embedding;regression;smoke" CREXX_PREP_TARGETS test_inline_authority_hook)
+
 add_custom_command(
         OUTPUT test_rxvml_spans.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin

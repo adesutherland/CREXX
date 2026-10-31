@@ -1,0 +1,40 @@
+/* Internal RXVML authority dispatch: result/borrowed-input alias controls. */
+check() .expose=_rxlinkinline.selectioncheck
+  .meta "_rxlinkinline.selectioncheck"="b" ".int" check() "capability=.object,caller=.object,sourceop=.int,provider=.object,procedureid=.int,typeoperation=.int"
+token() .expose=_rxlinkinline.selectiontoken
+  .meta "_rxlinkinline.selectiontoken"="b" ".object" token() "caller=.object,sourceop=.int,provider=.object,procedureid=.int,typeoperation=.int"
+
+checkcap() .locals=7 .expose=inline_hook.checkcap
+  .meta "inline_hook.checkcap"="b" ".int" checkcap() "capability=.object"
+  load r0,6
+  copy r1,a1
+  copy r2,a1
+  load r3,17
+  copy r4,a1
+  load r5,23
+  load r6,0
+  call r1,check(),r0
+  ret r1
+
+checkowner() .locals=7 .expose=inline_hook.checkowner
+  .meta "inline_hook.checkowner"="b" ".int" checkowner() "capability=.object"
+  load r0,6
+  copy r1,a1
+  copy r2,a1
+  load r3,17
+  copy r4,a1
+  load r5,23
+  load r6,0
+  call r2,check(),r0
+  ret r2
+
+tokenowner() .locals=6 .expose=inline_hook.tokenowner
+  .meta "inline_hook.tokenowner"="b" ".object" tokenowner() "capability=.object"
+  load r0,5
+  copy r1,a1
+  load r2,17
+  copy r3,a1
+  load r4,23
+  load r5,0
+  call r1,token(),r0
+  ret r1
