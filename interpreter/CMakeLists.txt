@@ -2343,6 +2343,20 @@ add_executable(module_initializers-rxvml tests/test_module_initializers.c)
 target_link_libraries(module_initializers-rxvml PRIVATE rxvml)
 crexx_configure_module_initializer_test(module_initializers-rxvml)
 
+if(BUILD_TESTING)
+    add_test(NAME inline_initializer_contract
+            COMMAND ${CMAKE_COMMAND}
+                -DVM=$<TARGET_FILE:rxbvm> -DASSEMBLER=$<TARGET_FILE:rxas>
+                -DMUTATOR=$<TARGET_FILE:mutate_inline_rxbin>
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-initializer-work
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/inline_initializers.cmake)
+    set_tests_properties(inline_initializer_contract PROPERTIES
+            PASS_REGULAR_EXPRESSION "INLINE_INITIALIZER_CONTRACT[|]failures=0"
+            TIMEOUT 120 LABELS "interpreter;inline;initializers;regression")
+    crexx_register_test_prep_targets(TESTS inline_initializer_contract
+            TARGETS rxbvm rxas mutate_inline_rxbin)
+endif()
+
 add_executable(module_initializers-rxbvml tests/test_module_initializers.c)
 target_link_libraries(module_initializers-rxbvml PRIVATE rxbvml)
 target_compile_definitions(module_initializers-rxbvml PRIVATE NTHREADED=1)
