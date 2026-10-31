@@ -43,6 +43,10 @@ typedef struct string_list {
 
 typedef struct link_module_info {
     module_file *module;
+    /* Keep the input image/member authority alive when a service replaces
+     * this member. Old sealed references never belong to the new graph. */
+    module_file *original_module;
+    uint32_t output_ordinal;
     char *input_path;
     size_t input_index;
     size_t member_index;
@@ -133,6 +137,7 @@ typedef struct leaf_dedupe_entry {
 } leaf_dedupe_entry;
 
 typedef struct rxlink_build_context {
+    module_list *modules;
     rxbin_byte_buffer shared_pool;
     leaf_dedupe_entry *leaf_entries;
     size_t leaf_count;
@@ -796,6 +801,8 @@ static void module_list_free(module_list *list) {
 
     if (!list) return;
     for (i = 0; i < list->count; i++) {
+        if (list->items[i].original_module != list->items[i].module)
+            free_module(list->items[i].original_module);
         free_module(list->items[i].module);
         free(list->items[i].input_path);
         free(list->items[i].selector_name);
@@ -850,6 +857,7 @@ static void output_list_free(rxlink_output_list *list) {
 }
 
 static void build_context_init(rxlink_build_context *context) {
+    context->modules = NULL;
     rxbin_byte_buffer_init(&context->shared_pool);
     context->leaf_entries = 0;
     context->leaf_count = 0;
@@ -1266,6 +1274,8 @@ static int load_input_modules(module_list *modules, const link_config *config) {
                 string_list_init(&info.referenced_methods);
                 string_list_init(&info.unresolved_imports);
                 info.module = module;
+                info.original_module = module;
+                info.output_ordinal = UINT32_MAX;
                 info.input_path = strdup(input_path);
                 if (!info.input_path) {
                     RX_REPORT_OOM("strdup rxlink input path", strlen(input_path) + 1, input_path);
@@ -1330,6 +1340,174 @@ static int select_module_by_index(module_list *modules, size_t **queue_ref, size
     modules->items[index].queued = 1;
     modules->items[index].selected = 1;
     return add_to_queue(queue_ref, queue_count, queue_capacity, index);
+}
+
+static const chameleon_constant *sealed_constant(const module_file *module,
+                                                 size_t offset) {
+    const chameleon_constant *entry;
+    if (!module || offset > module->header.constant_size ||
+        module->header.constant_size - offset < sizeof(*entry)) return NULL;
+    entry = (const chameleon_constant *)((const unsigned char *)module->constant + offset);
+    return entry->size_in_pool >= sizeof(*entry) &&
+           entry->size_in_pool <= module->header.constant_size - offset ? entry : NULL;
+}
+
+static const string_constant *sealed_binary(const module_file *module, size_t offset) {
+    const chameleon_constant *entry = sealed_constant(module, offset);
+    const string_constant *binary = (const string_constant *)entry;
+    if (!entry || entry->type != BINARY_CONST ||
+        entry->size_in_pool < offsetof(string_constant, string) ||
+        binary->string_len > entry->size_in_pool - offsetof(string_constant, string)) return NULL;
+    return binary;
+}
+
+/* Ordinals belong to one original image, not to the current selection order.
+ * Separate input images can both legitimately contain member zero. */
+static int sealed_member(const module_list *modules, const module_file *source,
+                          uint32_t member, size_t *index) {
+    size_t i;
+    int found = 0;
+    if (!source || !source->semantic_graph) return 0;
+    for (i = 0u; i < modules->count; ++i) {
+        const module_file *original = modules->items[i].original_module;
+        if (original->semantic_graph != source->semantic_graph ||
+            original->semantic_module_index != member) continue;
+        if (found || modules->items[i].omitted) return 0;
+        *index = i;
+        found = 1;
+    }
+    return found;
+}
+
+static const proc_constant *sealed_procedure(const module_file *module,
+                                             uint32_t ordinal, size_t *offset) {
+    int current = module->header.proc_head;
+    size_t n = 0u, remaining = module->header.constant_size / sizeof(chameleon_constant);
+    while (current >= 0 && remaining--) {
+        const chameleon_constant *entry = sealed_constant(module, (size_t)current);
+        const proc_constant *proc = (const proc_constant *)entry;
+        if (!entry || entry->type != PROC_CONST || entry->size_in_pool < sizeof(*proc)) return NULL;
+        if (n++ == ordinal) {
+            if (offset) *offset = (size_t)current;
+            return proc;
+        }
+        current = proc->next;
+    }
+    return NULL;
+}
+
+static const expose_proc_constant *sealed_exposure(const module_file *module,
+                                                   const proc_constant *proc) {
+    const chameleon_constant *entry;
+    if (!proc->exposed) return NULL;
+    entry = sealed_constant(module, proc->exposed);
+    return entry && entry->type == EXPOSE_PROC_CONST &&
+           entry->size_in_pool >= sizeof(expose_proc_constant)
+        ? (const expose_proc_constant *)entry : NULL;
+}
+
+static int sealed_qprocedure(const module_list *modules, const module_file *source,
+                              const string_constant *binary, size_t *provider,
+                              uint32_t *ordinal) {
+    rxinl_qualified_proc_view view;
+    const proc_constant *proc;
+    if (!binary || !rxinl_qualified_proc_decode(binary->string, binary->string_len, &view) ||
+        !view.sealed || !sealed_member(modules, source, view.image_module, provider)) return 0;
+    proc = sealed_procedure(modules->items[*provider].original_module,
+                            view.provider_procedure, NULL);
+    if (!proc || proc->start >= modules->items[*provider].original_module->header.instruction_size) return 0;
+    *ordinal = view.provider_procedure;
+    return 1;
+}
+
+/* Validate the old recipe against its P operand before any resealing. An
+ * imported P must name this exact provider's callable contract, not a shadow
+ * with a matching private procedure name. */
+static int sealed_recipe(const module_list *modules, const module_file *source,
+                           size_t recipe_offset, size_t target_offset,
+                           size_t *provider, uint32_t *ordinal) {
+    const string_constant *binary = sealed_binary(source, recipe_offset);
+    const chameleon_constant *target = sealed_constant(source, target_offset);
+    const module_file *owner;
+    const proc_constant *proc, *selected;
+    size_t selected_offset;
+    rxinl_recipe_view view;
+    if (!binary || !target ||
+        !rxinl_recipe_decode(binary->string, binary->string_len, &view) ||
+        !(view.flags & RXINL_RECIPE_SEALED) ||
+        !sealed_member(modules, source, view.image_module, provider)) return 0;
+    owner = modules->items[*provider].original_module;
+    selected = sealed_procedure(owner, view.provider_procedure, &selected_offset);
+    if (!selected || selected->start >= owner->header.instruction_size) return 0;
+    *ordinal = view.provider_procedure;
+    if (target->type == BINARY_CONST) {
+        size_t p;
+        uint32_t o;
+        return sealed_qprocedure(modules, source, sealed_binary(source, target_offset), &p, &o) &&
+               p == *provider && o == *ordinal;
+    }
+    if (target->type != PROC_CONST || target->size_in_pool < sizeof(proc_constant)) return 0;
+    proc = (const proc_constant *)target;
+    if (proc->start != SIZE_MAX) return owner == source && target_offset == selected_offset;
+    {
+        const expose_proc_constant *imported = sealed_exposure(source, proc);
+        const expose_proc_constant *defined = sealed_exposure(owner, selected);
+        return imported && imported->imported && defined && !defined->imported &&
+               !strcmp(imported->index, defined->index);
+    }
+}
+
+static int sealed_module(const module_list *modules, const module_file *source,
+                          const string_constant *binary, size_t *provider) {
+    rxinl_module_ref_view view;
+    if (!binary || !rxinl_module_ref_decode(binary->string, binary->string_len, &view)) return 0;
+    if (view.self_relative) {
+        if (view.sealed && view.image_module != source->semantic_module_index) return 0;
+        return sealed_member(modules, source, source->semantic_module_index, provider);
+    }
+    return view.sealed && sealed_member(modules, source, view.image_module, provider);
+}
+
+static int select_sealed_dependencies(module_list *modules, link_module_info *info,
+        size_t **queue, size_t *count, size_t *capacity) {
+    const module_file *source = info->original_module;
+    const bin_code *code = (const bin_code *)source->instructions;
+    size_t at = 0u;
+    while (at < source->header.instruction_size) {
+        int opcode = code[at].instruction.opcode;
+        OpFormat format = rxbin_opcode_format(opcode);
+        size_t width = rxop_format_operand_count(format), j;
+        size_t provider;
+        uint32_t ordinal;
+        if (width >= source->header.instruction_size - at) goto invalid;
+        if (opcode == OP_INLENTER_REG_FUNC_STRING_ID &&
+            (!sealed_recipe(modules, source, code[at + 3u].index, code[at + 2u].index,
+                             &provider, &ordinal) ||
+             !select_module_by_index(modules, queue, count, capacity, provider))) goto invalid;
+        if (opcode == OP_QGLOBBIND_REG_STRING_INT) {
+            if (!sealed_module(modules, source, sealed_binary(source, code[at + 2u].index), &provider) ||
+                code[at + 3u].iconst < 0 ||
+                (uint64_t)code[at + 3u].iconst >=
+                    (uint64_t)modules->items[provider].original_module->header.globals ||
+                !select_module_by_index(modules, queue, count, capacity, provider)) goto invalid;
+        }
+        for (j = 0u; j < width; ++j) {
+            const chameleon_constant *entry;
+            if (rxop_format_operand_type(format, j) != OP_FUNC) continue;
+            entry = sealed_constant(source, code[at + j + 1u].index);
+            if (!entry) goto invalid;
+            if (entry->type == BINARY_CONST &&
+                (!sealed_qprocedure(modules, source, sealed_binary(source, code[at + j + 1u].index),
+                                     &provider, &ordinal) ||
+                 !select_module_by_index(modules, queue, count, capacity, provider))) goto invalid;
+        }
+        at += width + 1u;
+    }
+    return 1;
+invalid:
+    fprintf(stderr, "ERROR: unsealed or mismatched inline operand in module %s\n",
+            source->name ? source->name : "(unnamed)");
+    return 0;
 }
 
 static int selected_export_conflicts(const module_list *modules, const char *export_name, size_t *first_index,
@@ -1461,6 +1639,11 @@ static int select_modules(module_list *modules, const link_config *config) {
         size_t import_index;
         size_t iface_index;
         size_t method_index;
+
+        if (!select_sealed_dependencies(modules, module, &queue, &queue_count, &queue_capacity)) {
+            free(queue);
+            return 0;
+        }
 
         for (import_index = 0; import_index < module->imports.count; import_index++) {
             size_t provider_index = 0;
@@ -1841,8 +2024,8 @@ static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleo
     return offset;
 }
 
-/* Inline recipes and qualified global references are executable constants.
- * Rebase an assembler-sealed local reference before leaf deduplication; raw
+/* Inline recipes and qualified references are executable constants.
+ * Rebase their checked original image identities before leaf deduplication; raw
  * binary constants with the same bytes must retain their original payload.
  * Service-produced candidates carry final image ordinals and are separately
  * validated before this ordinary relocation pass. */
@@ -1851,6 +2034,63 @@ enum inline_operand_kind {
     INLINE_OPERAND_MODULE,
     INLINE_OPERAND_PROCEDURE
 };
+
+static int relocated_procedure(const link_module_info *provider, uint32_t old,
+                                uint32_t *ordinal) {
+    const proc_constant *original = sealed_procedure(provider->original_module, old, NULL);
+    size_t remaining;
+    uint32_t n = 0u;
+    int found = 0, current;
+    if (!original || original->start == SIZE_MAX) return 0;
+    if (provider->module == provider->original_module) { *ordinal = old; return 1; }
+    /* Service replacement has already passed complete procedure/exposure and
+     * semantic metadata equality. Resolve only inside this exact old member;
+     * an ambiguous same-name declaration still cannot replace an ordinal. */
+    remaining = provider->original_module->header.constant_size / sizeof(chameleon_constant);
+    current = provider->original_module->header.proc_head;
+    while (current >= 0 && remaining--) {
+        const chameleon_constant *entry = sealed_constant(provider->original_module, (size_t)current);
+        const proc_constant *candidate = (const proc_constant *)entry;
+        if (!entry || entry->type != PROC_CONST || entry->size_in_pool < sizeof(*candidate)) return 0;
+        if (keyword_equals(original->name, candidate->name) && ++found != 1) return 0;
+        current = candidate->next;
+    }
+    if (current >= 0 || found != 1) return 0;
+    found = 0;
+    remaining = provider->module->header.constant_size / sizeof(chameleon_constant);
+    current = provider->module->header.proc_head;
+    while (current >= 0 && remaining-- && n < UINT32_MAX) {
+        const chameleon_constant *entry = sealed_constant(provider->module, (size_t)current);
+        const proc_constant *candidate = (const proc_constant *)entry;
+        if (!entry || entry->type != PROC_CONST || entry->size_in_pool < sizeof(*candidate)) return 0;
+        if (keyword_equals(original->name, candidate->name)) {
+            const expose_proc_constant *before = sealed_exposure(provider->original_module, original);
+            const expose_proc_constant *after = sealed_exposure(provider->module, candidate);
+            if (found || candidate->start >= provider->module->header.instruction_size ||
+                (!!before != !!after) || (before &&
+                (before->imported != after->imported || strcmp(before->index, after->index)))) return 0;
+            *ordinal = n;
+            found = 1;
+        }
+        current = candidate->next;
+        ++n;
+    }
+    return current < 0 && found;
+}
+
+static string_constant *relocated_binary(const void *bytes, size_t length) {
+    string_constant *result;
+    size_t size;
+    if (length > SIZE_MAX - offsetof(string_constant, string) - 7u) return NULL;
+    size = (offsetof(string_constant, string) + length + 7u) & ~(size_t)7u;
+    result = (string_constant *)calloc(size, 1u);
+    if (!result) return NULL;
+    result->base.type = BINARY_CONST;
+    result->base.size_in_pool = size;
+    result->string_len = length;
+    if (length) memcpy(result->string, bytes, length);
+    return result;
+}
 
 static size_t link_inline_operand(rxlink_build_context *context,
                                   rxlink_output_module *output_module,
@@ -1861,6 +2101,8 @@ static size_t link_inline_operand(rxlink_build_context *context,
     const string_constant *source;
     string_constant *copy;
     size_t output_offset;
+    size_t provider;
+    uint32_t procedure, image_module;
     if (old_offset > input_module->header.constant_size ||
         input_module->header.constant_size - old_offset < sizeof(chameleon_constant))
         goto invalid;
@@ -1887,11 +2129,12 @@ static size_t link_inline_operand(rxlink_build_context *context,
             if (view.image_module >= output_module->image_module_count)
                 goto invalid_copy;
         } else {
-            if (!input_module->semantic_graph ||
-                view.image_module != input_module->semantic_module_index ||
+            if (!sealed_member(context->modules, input_module, view.image_module, &provider) ||
+                !context->modules->items[provider].selected ||
+                !relocated_procedure(&context->modules->items[provider], view.provider_procedure, &procedure) ||
                 !rxinl_recipe_seal(copy->string, copy->string_len,
-                                   output_module->image_module,
-                                   view.provider_procedure)) goto invalid_copy;
+                                   context->modules->items[provider].output_ordinal,
+                                   procedure)) goto invalid_copy;
         }
     } else if (kind == INLINE_OPERAND_MODULE) {
         rxinl_module_ref_view view;
@@ -1902,20 +2145,50 @@ static size_t link_inline_operand(rxlink_build_context *context,
                 view.image_module >= output_module->image_module_count)
                 goto invalid_copy;
         } else {
-            if (!view.self_relative ||
-                (view.sealed &&
-                 view.image_module != input_module->semantic_module_index) ||
-                !rxinl_module_ref_seal(copy->string, copy->string_len,
-                                       output_module->image_module))
-                goto invalid_copy;
+            unsigned char *bytes = NULL;
+            size_t length = 0u;
+            string_constant *replacement;
+            char spelling[32];
+            if (!sealed_module(context->modules, input_module, source, &provider) ||
+                !context->modules->items[provider].selected) goto invalid_copy;
+            image_module = context->modules->items[provider].output_ordinal;
+            /* A foreign @ordinal spelling and its sealed field must agree.
+             * Rebuild through the codec because decimal width can change. */
+            if (view.self_relative) {
+                if (!rxinl_module_ref_seal(copy->string, copy->string_len, image_module)) goto invalid_copy;
+            } else {
+                snprintf(spelling, sizeof(spelling), "@%u", (unsigned)image_module);
+                if (!rxinl_module_ref_from_text(spelling, &bytes, &length) ||
+                    !rxinl_module_ref_seal(bytes, length, image_module)) {
+                    free(bytes); goto invalid_copy;
+                }
+                replacement = relocated_binary(bytes, length);
+                free(bytes);
+                if (!replacement) goto invalid_copy;
+                free(copy); copy = replacement;
+            }
         }
     } else if (kind == INLINE_OPERAND_PROCEDURE) {
         rxinl_qualified_proc_view view;
-        if (!rxinl_qualified_proc_decode(copy->string, copy->string_len,
-                                         &view) ||
-            !output_module->final_inline_seals || !view.sealed ||
-            view.image_module >= output_module->image_module_count)
+        if (!rxinl_qualified_proc_decode(copy->string, copy->string_len, &view) || !view.sealed)
             goto invalid_copy;
+        if (output_module->final_inline_seals) {
+            if (view.image_module >= output_module->image_module_count) goto invalid_copy;
+        } else {
+            unsigned char *bytes = NULL;
+            size_t length = 0u;
+            char spelling[64];
+            if (!sealed_qprocedure(context->modules, input_module, source, &provider, &procedure) ||
+                !context->modules->items[provider].selected ||
+                !relocated_procedure(&context->modules->items[provider], procedure, &procedure)) goto invalid_copy;
+            snprintf(spelling, sizeof(spelling), "@%u::%u",
+                     (unsigned)context->modules->items[provider].output_ordinal, (unsigned)procedure);
+            if (!rxinl_qualified_proc_from_text(spelling, &bytes, &length) ||
+                length != copy->string_len || !rxinl_qualified_proc_seal(bytes, length)) {
+                free(bytes); goto invalid_copy;
+            }
+            memcpy(copy->string, bytes, length); free(bytes);
+        }
     } else {
         goto invalid_copy;
     }
@@ -2507,16 +2780,19 @@ static int build_linked_modules(rxlink_build_context *context, module_list *modu
     size_t i;
     size_t selected_count = 0u;
 
-    for (i = 0u; i < modules->count; ++i)
-        if (modules->items[i].selected && !modules->items[i].omitted)
-            selected_count++;
+    context->modules = modules;
+    for (i = 0u; i < modules->count; ++i) {
+        if (!modules->items[i].selected || modules->items[i].omitted) continue;
+        if (selected_count >= UINT32_MAX) return 0;
+        modules->items[i].output_ordinal = (uint32_t)selected_count++;
+    }
     if (selected_count > UINT32_MAX) return 0;
 
     for (i = 0; i < modules->count; i++) {
         rxlink_output_module output_module;
         memset(&output_module, 0, sizeof(output_module));
         if (!modules->items[i].selected || modules->items[i].omitted) continue;
-        output_module.image_module = (uint32_t)outputs->count;
+        output_module.image_module = modules->items[i].output_ordinal;
         output_module.image_module_count = (uint32_t)selected_count;
         output_module.final_inline_seals = modules->items[i].final_inline_seals;
         if (!rewrite_module_code(context, &output_module, &modules->items[i]) ||
@@ -2806,7 +3082,8 @@ static int apply_inline_service(module_list *modules, const link_config *config)
     if (!rxlink_validate_contracts(&trial)) goto done;
     for (n = 0u; n < count; ++n) if (candidates[n]) {
         link_module_info *info = &modules->items[indices[n]];
-        inline_metadata_free(info); free_module(info->module);
+        inline_metadata_free(info);
+        if (info->module != info->original_module) free_module(info->module);
         *info = trial.items[indices[n]]; candidates[n] = NULL;
     }
     ok = 1;

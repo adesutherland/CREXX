@@ -366,6 +366,20 @@ set_tests_properties(rxlink_inline_foreign_seal_rejected PROPERTIES
         LABELS "linker;inline;negative;regression" TIMEOUT 30
         CREXX_PREP_TARGETS "rxas;rxlink")
 
+if(BUILD_TESTING)
+  add_test(NAME rxlink_inline_relink
+        COMMAND ${CMAKE_COMMAND}
+            -DVM=$<TARGET_FILE:rxbvm> -DASSEMBLER=$<TARGET_FILE:rxas>
+            -DLINKER=$<TARGET_FILE:rxlink> -DDISASSEMBLER=$<TARGET_FILE:rxdas>
+            -DMUTATOR=$<TARGET_FILE:mutate_inline_rxbin>
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-relink-work
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/inline_relink.cmake)
+  set_tests_properties(rxlink_inline_relink PROPERTIES
+        PASS_REGULAR_EXPRESSION "RXLINK_INLINE_RELINK[|]failures=0"
+        LABELS "linker;inline;regression" TIMEOUT 120
+        CREXX_PREP_TARGETS "rxas;rxlink;rxdas;rxbvm;mutate_inline_rxbin")
+endif()
+
 crexx_finalize_directory_qa_tiers()
 
 # Published products owned by this component.

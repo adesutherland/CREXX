@@ -129,7 +129,8 @@ selection then happens in this order:
 3. apply explicit `ROOT`
 4. if no roots were chosen, select modules containing `main`
 5. if there is still no root, select modules from the first input file
-6. walk imports, `srcfprocsel` interface references, and interface relationships to pull in required providers
+6. walk imports, exact sealed inline/procedure/global references, `srcfprocsel`
+   interface references, and interface relationships to pull in required providers
 7. reject duplicate selected exports
 
 Selectors match by:
@@ -138,6 +139,17 @@ Selectors match by:
 - basename
 - filename stem with trailing `.rxas` removed
 - `input_path::member`
+
+Existing feature-gated `INL1`, `QGR1` and `QPR1` operands retain the identity of
+their original RXBIN image graph and member. Those typed dependencies retain
+private providers without an export, and an omitted/missing original provider
+is an error. Relinking precomputes the complete selected-module map, validates
+each old recipe against its procedure operand, then rewrites module/procedure
+ordinals through that exact original owner. A new root or a same-name private
+procedure cannot rebind them; separate input images with old member zero stay
+distinct. Self-relative globals remain self-relative. Unsealed foreign operands,
+invalid ordinals and recipe/procedure disagreement are rejected before output
+publication rather than repaired by resealing.
 
 ## What The Linker Reads From Metadata
 
