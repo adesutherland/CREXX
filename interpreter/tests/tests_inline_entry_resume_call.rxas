@@ -1,0 +1,52 @@
+/* Ordinary counted CALL: ignored entry failure skips the callee. */
+.globals=1
+main() .locals=6
+    load g0,0
+    load r0,77
+    load r1,-1
+    load r4,44
+    load r5,55
+    sigignore "FAILURE"
+    sigignore "OUT_OF_RANGE"
+    call r0,helper(),r1
+    ieq r2,r0,77
+    brf fail,r2
+    ieq r2,r4,44
+    brf fail,r2
+    ieq r2,r5,55
+    brf fail,r2
+    load r1,0
+    call r0,helper(),r1
+    ieq r2,r0,9
+    brf fail,r2
+    load r0,77
+    load r1,-1
+    load r2,100
+    load r3,200
+    settp r2,0
+    settp r3,0
+    sigcall failure_return(),"FAILURE"
+    sigcall failure_return(),"OUT_OF_RANGE"
+    settpswapcall r0,helper(),r1,r2,256,r3
+    ieq r5,r0,77
+    brf fail,r5
+    ieq r5,r2,200
+    brf fail,r5
+    ieq r5,r3,100
+    brf fail,r5
+    getandtp r5,r3,256
+    ieq r5,r5,256
+    brf fail,r5
+    ieq r5,g0,1
+    brf fail,r5
+    sayx "PASS: ordinary rejected entry resume"
+    ret 0
+fail:
+    sayx "FAIL: ordinary rejected entry resume"
+    ret 1
+helper() .locals=0
+    say "entered"
+    ret 9
+failure_return() .locals=0
+    iadd g0,g0,1
+    ret 0

@@ -1553,6 +1553,16 @@ crexx_add_vm_test(NAME rxasinlinefailurecleanup
         PREP_TARGETS run_tests_inline_scope_failures
         RXVM_ARGS tests_inline_scope_failures
         PASS_REGULAR_EXPRESSION "PASS: inline activation failure cleanup")
+crexx_add_rxas_vm_binary(tests_inline_entry_resume_call "ordinary failed call resumption")
+crexx_add_vm_test(NAME rxasinlineentryresumecall
+        PREP_TARGETS run_tests_inline_entry_resume_call
+        RXVM_ARGS tests_inline_entry_resume_call
+        PASS_REGULAR_EXPRESSION "PASS: ordinary rejected entry resume")
+crexx_add_rxas_vm_binary(tests_inline_entry_resume "inline failed entry resumption")
+crexx_add_vm_test(NAME rxasinlineentryresume
+        PREP_TARGETS run_tests_inline_entry_resume
+        RXVM_ARGS tests_inline_entry_resume
+        PASS_REGULAR_EXPRESSION "PASS: inline rejected entry resume")
 crexx_add_rxas_vm_binary(tests_inline_scope_sigret "inline scoped SIGRET cleanup")
 crexx_add_vm_test(NAME rxasinlinesigretcleanup
         PREP_TARGETS run_tests_inline_scope_sigret

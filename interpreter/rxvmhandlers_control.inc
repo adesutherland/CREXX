@@ -2441,7 +2441,23 @@ RXVM_HANDLER(INLENTER_REG_FUNC_STRING_ID, VM_ADVANCE(4);
                 rxinl_qualified_proc_view expected;
                 proc_runtime *provider;
                 rxvm_inline_scope *scope;
+                bin_code *clone_body = next_pc;
+                size_t continuation = REG_IDX(4);
                 int fault = RXSIGNAL_RXBIN_CORRUPTION;
+                /* A failed call resumes at the caller continuation, including
+                 * IGNORE and returning CALL/action handlers. Select that cold
+                 * successor before preparation; only a committed scope may
+                 * enter the physical-next clone body. The signal source pc
+                 * and all preparation/capture ordering remain unchanged. */
+                if (continuation >= current_frame->procedure->binarySpace->inst_size) {
+                    rc = RXSIGNAL_RXBIN_CORRUPTION;
+                    RXVM_HANDLER_FINISH();
+                }
+                /* VM_ADVANCE already recorded this instruction's one
+                 * sequential transition. This internal default is neither a
+                 * dispatch nor another semantic progress/safepoint. */
+                next_pc = VM_EXECUTION_POINTER(continuation);
+                VM_RESOLVE_SELECTED();
                 if (constant->base.type != BINARY_CONST ||
                     !rxinl_recipe_decode(constant->string, constant->string_len,
                                          &recipe) ||
@@ -2513,6 +2529,8 @@ RXVM_HANDLER(INLENTER_REG_FUNC_STRING_ID, VM_ADVANCE(4);
                     DISPATCH;
                 }
                 rxvm_inline_scope_commit(current_frame, scope);
+                next_pc = clone_body;
+                VM_RESOLVE_SELECTED();
             }
             DISPATCH;
 )
