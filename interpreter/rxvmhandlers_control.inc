@@ -2575,6 +2575,7 @@ RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
                     size_t caller_arg_base = REG_IDX(3) + 1;
+                    rxinteger captured_count;
                     if (context->initialized_module_count != context->num_modules &&
                         rxvm_ensure_callee_initialized(context, current_module,
                                                         called_function) != 0) {
@@ -2582,11 +2583,16 @@ RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
                                        "Module initialization failed")
                         DISPATCH;
                     }
-                    temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    /* frame_f may finalize a recycled a0 and reenter. Never
+                     * reload the mutable caller count after that checkpoint. */
+                    captured_count = op3R->int_value;
+                    temp_frame = rxvm_call_count_fits(current_frame, captured_count, caller_arg_base)
+                        ? frame_f(called_function, (int)captured_count, current_frame, next_pc, op1R)
+                        : NULL;
                     if (!temp_frame) {
                         RXVM_INSTRUMENTATION_CALL(
                                 RXVM_PROFILE_CALL_DIRECT_BYTECODE,
-                                called_function, op3R->int_value,
+                                called_function, captured_count,
                                 RXVM_PROFILE_FRAME_NONE_FAILED,
                                 RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,
                                 current_module->module_number,
@@ -2615,7 +2621,7 @@ RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
                     size_t k = (pc + 3)->index + 1; /* Caller register index */
                     size_t i;
                     for (i = 0;
-                         i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
+                         i < (size_t)captured_count;
                          i++, j++, k++) {
                         /* Arguments have no frame-owned value storage.  Keep
                          * their entry mapping in baselocals so UNLINK and a
@@ -2669,6 +2675,7 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
                 } else {
                     /* This is a CREXX Procedure */
                     size_t caller_arg_base = REG_IDX(3) + 1;
+                    rxinteger captured_count;
                     if (context->initialized_module_count != context->num_modules &&
                         rxvm_ensure_callee_initialized(context, current_module,
                                                         called_function) != 0) {
@@ -2676,11 +2683,16 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
                                        "Module initialization failed")
                         DISPATCH;
                     }
-                    temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    /* frame_f may finalize a recycled a0 and reenter. Never
+                     * reload the mutable caller count after that checkpoint. */
+                    captured_count = op3R->int_value;
+                    temp_frame = rxvm_call_count_fits(current_frame, captured_count, caller_arg_base)
+                        ? frame_f(called_function, (int)captured_count, current_frame, next_pc, op1R)
+                        : NULL;
                     if (!temp_frame) {
                         RXVM_INSTRUMENTATION_CALL(
                                 RXVM_PROFILE_CALL_DYNAMIC_BYTECODE,
-                                called_function, op3R->int_value,
+                                called_function, captured_count,
                                 RXVM_PROFILE_FRAME_NONE_FAILED,
                                 RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,
                                 current_module->module_number,
@@ -2709,7 +2721,7 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
                     size_t k = (pc + 3)->index + 1; /* Caller register index */
                     size_t i;
                     for (i = 0;
-                         i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
+                         i < (size_t)captured_count;
                          i++, j++, k++) {
                         current_frame->baselocals[j] = current_frame->parent->locals[k];
                         current_locals[j] = current_frame->baselocals[j];

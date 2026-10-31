@@ -2174,6 +2174,29 @@ add_custom_command(
 add_custom_target(run_tests_interfaces ALL DEPENDS tests_interfaces.rxbin)
 
 # Public embedding contract: one switch VM, exact spans, cleanup and owner ingress.
+add_custom_command(OUTPUT tests_counted_call_snapshot.rxbin
+        COMMAND $<TARGET_FILE:rxas> -n -o tests_counted_call_snapshot
+                ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_counted_call_snapshot.rxas
+        DEPENDS rxas tests/tests_counted_call_snapshot.rxas
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        VERBATIM)
+add_custom_target(counted_call_snapshot_bin DEPENDS tests_counted_call_snapshot.rxbin)
+add_executable(test_counted_call_snapshot EXCLUDE_FROM_ALL tests/test_counted_call_snapshot.c)
+target_link_libraries(test_counted_call_snapshot PRIVATE rxbvml rxpashim)
+target_include_directories(test_counted_call_snapshot PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
+        ${CMAKE_CURRENT_SOURCE_DIR}/rxvml ${CMAKE_SOURCE_DIR}/assembler
+        ${CMAKE_SOURCE_DIR}/binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+        ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/third_party/avl_tree
+        ${CMAKE_SOURCE_DIR}/third_party/utf8)
+add_dependencies(test_counted_call_snapshot counted_call_snapshot_bin)
+add_test(NAME counted_call_snapshot COMMAND test_counted_call_snapshot
+        ${CMAKE_CURRENT_BINARY_DIR}/tests_counted_call_snapshot.rxbin)
+set_tests_properties(counted_call_snapshot PROPERTIES TIMEOUT 30
+        LABELS "interpreter;calls;regression;ownership"
+        PASS_REGULAR_EXPRESSION "COUNTED_CALL_SNAPSHOT[|]failures=0"
+        CREXX_PREP_TARGETS test_counted_call_snapshot)
+
 crexx_add_rxas_vm_binary(tests_inline_authority_hook "private inline authority hook aliasing")
 add_executable(test_inline_authority_hook tests/test_inline_authority_hook.c)
 target_link_libraries(test_inline_authority_hook PRIVATE rxbvml rxpashim)

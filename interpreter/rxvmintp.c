@@ -4814,6 +4814,16 @@ static int rxvm_inline_scope_unwind_to(stack_frame *frame,
 }
 
 /* Stack Frame Factory */
+/* Counted bytecode calls capture this value after initializer reentry. Check
+ * the original caller window before frame allocation can run recycled-a0
+ * cleanup; argument binding must use the same snapshot afterward. */
+RX_INLINE int rxvm_call_count_fits(const stack_frame *caller,
+                                  rxinteger count, size_t argument_base) {
+    return caller && count >= 0 && count <= INT_MAX &&
+            argument_base <= (size_t)caller->number_locals &&
+            (size_t)count <= (size_t)caller->number_locals - argument_base;
+}
+
 RX_INLINE stack_frame *frame_f(
                     proc_runtime *procedure,
                     int no_args,

@@ -1,0 +1,44 @@
+/* Original counted CALL/DCALL must bind the count captured before frame reset. */
+.globals=8
+
+warm() .locals=1
+  call r0,target(),g0
+  ret 0
+
+direct() .locals=1 .expose=callcapture.direct
+  call r0,warm()
+  sayx "arm"
+  load r0,77
+  swap g1,g4
+  call r0,target(),g0
+  icopy g7,r0
+  sayx "verify"
+  ret 0
+
+dynamic() .locals=1 .expose=callcapture.dynamic
+  call r0,warm()
+  sayx "arm"
+  load r0,77
+  swap g1,g4
+  dcall r0,g6,g0
+  icopy g7,r0
+  sayx "verify"
+  ret 0
+
+fixed() .locals=1 .expose=callcapture.fixed
+  call r0,warm()
+  sayx "arm"
+  load r0,77
+  swap g1,g4
+  call1 r0,target(),g1
+  icopy g7,r0
+  sayx "verify"
+  ret 0
+
+target() .locals=0
+  icopy g2,a0
+  icopy g3,a1
+  brt unused,g5
+  ret a1
+unused:
+  ret
