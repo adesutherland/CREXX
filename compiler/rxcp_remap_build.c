@@ -1485,6 +1485,19 @@ ASTNode *rxcp_remap_materialise_selected_value(Context *context,
 
     replacement->node_type = node_type;
     replacement->scope = scope;
+    if (locator->source_node->symbolNode &&
+        locator->source_node->symbolNode->symbol &&
+        locator->source_node->symbolNode->symbol->scope &&
+        locator->source_node->symbolNode->symbol->scope->type == SCOPE_CLASS &&
+        locator->source_node->scope) {
+        /* An unqualified attribute locator is relative to its authored
+         * receiver. Its selected indices are explicit captured symbols, but
+         * its base must not acquire the receiver of the destination scope.
+         * Keep the source scope so emission finds that exact instance and a
+         * later inline clone can remap its contextual owner scope normally. */
+        replacement->scope = locator->source_node->scope;
+        replacement->inherit_parent_scope = 1;
+    }
 
     if (locator->source_node->symbolNode && locator->source_node->symbolNode->symbol) {
         sym_adnd(locator->source_node->symbolNode->symbol,

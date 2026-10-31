@@ -1,0 +1,38 @@
+/* Checked activation and scoped binding failure leave caller slots intact. */
+.globals=1
+
+main() .locals=8
+    load r1,-1
+    load r3,77
+    load r4,88
+    sigbr bad_count,"OUT_OF_RANGE"
+    inlenter r0,helper(),"count=r1;args=window(r5);a0=r3;proxies=(r4:1);owned=(r3,r4);prep=none",after_clone
+    ret
+after_clone:
+    br fail
+bad_count:
+    ieq r2,r3,77
+    brf fail,r2
+    ieq r2,r4,88
+    brf fail,r2
+
+    sigbr bad_global,"RXBIN_CORRUPTION"
+    qglobbind r4,"self",0
+    br fail
+bad_global:
+    ieq r2,r4,88
+    brf fail,r2
+
+    sigbr bad_argument,"OUT_OF_RANGE"
+    linkargv r4,1
+    br fail
+bad_argument:
+    ieq r2,r4,88
+    brf fail,r2
+    sayx "PASS: inline activation failure cleanup"
+    ret 0
+fail:
+    ret 1
+
+helper() .locals=0
+    ret

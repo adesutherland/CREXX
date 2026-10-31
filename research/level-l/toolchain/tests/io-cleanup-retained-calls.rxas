@@ -1,0 +1,77 @@
+/* Shared retained-call layout oracle; run cleanup directly, without expansion.
+ * stdout is "777\n1234\n56789\n1\n4\n5\n9\n".
+ * Counted zero-argument CALL followed by void RET preserves its seeded result;
+ * it cannot become the clearing two-operand CALL. Four/five-actual results
+ * alias their original count cells. Decimal fingerprints observe every actual
+ * position; the final values observe both reversed setup/restoration regions. */
+.globals=0
+main() .locals=24
+  load r0,0
+  load r1,777
+  call r1,zero(),r0
+  load r2,4
+  load r15,4
+  load r16,3
+  load r17,2
+  load r18,1
+  swap r3,r18
+  swap r4,r17
+  swap r5,r16
+  swap r6,r15
+  call r2,four(),r2
+  swap r15,r6
+  swap r16,r5
+  swap r17,r4
+  swap r18,r3
+  load r8,5
+  load r19,9
+  load r20,8
+  load r21,7
+  load r22,6
+  load r23,5
+  swap r9,r23
+  swap r10,r22
+  swap r11,r21
+  swap r12,r20
+  swap r13,r19
+  call r8,five(),r8
+  swap r19,r13
+  swap r20,r12
+  swap r21,r11
+  swap r22,r10
+  swap r23,r9
+  itos r1
+  say r1
+  itos r2
+  say r2
+  itos r8
+  say r8
+  itos r18
+  say r18
+  itos r15
+  say r15
+  itos r23
+  say r23
+  itos r19
+  say r19
+  ret 0
+zero() .locals=0
+  ret
+four() .locals=2
+  imult r0,a1,1000
+  imult r1,a2,100
+  iadd r0,r0,r1
+  imult r1,a3,10
+  iadd r0,r0,r1
+  iadd r0,r0,a4
+  ret r0
+five() .locals=2
+  imult r0,a1,10000
+  imult r1,a2,1000
+  iadd r0,r0,r1
+  imult r1,a3,100
+  iadd r0,r0,r1
+  imult r1,a4,10
+  iadd r0,r0,r1
+  iadd r0,r0,a5
+  ret r0

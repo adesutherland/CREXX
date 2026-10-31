@@ -1,0 +1,14 @@
+/* Equal entry values do not make an owned snapshot alias its mutable source. */
+.globals=0
+main() .locals=3
+  load r0,11
+  copy r1,r0
+  call2 r2,snapshot(),r1,r0
+  itos r2
+  say r2
+  itos r0
+  say r0
+  ret 0
+snapshot() .locals=0
+  load a2,99
+  ret a1

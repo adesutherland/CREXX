@@ -1,0 +1,138 @@
+/* cREXX License (MIT). Independent ordered semantic-recipe controls. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+
+check: procedure = .int
+  arg value = .int, label = .string
+  if value then return 0
+  say 'FAIL:' || label; return 1
+emit: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, values = .object[], at = .llir..origin
+  return body.emit(name,values,at)
+
+main: procedure = .int
+  failures = 0; i = .int; captureid = .int; resizeat = .int
+  statusat = .int; swapat = .int; callcaptureat = .int; callat = .int
+  source = .lltarget..module; row = .lltargettransfer..instruction; action = .lltargettransfer..action
+  ref = .lltargettransfer..refview
+  draft = .lltarget..draft('ordered.recipes','fixture:ordered.recipes',0)
+  at = draft.synthetic('independent recipe semantics')
+  root = draft.procedure('main',8,at)
+  fields = .object[]; fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object
+  copy = emit(root,'copy',fields,at)
+  captured = emit(root,'igetunlink',fields,at)
+  assigned = emit(root,'isetunlink',fields,at)
+  fields[3] = root.reg('r',0) as .object
+  arithmetic = emit(root,'iadd',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',4) as .object; fields[2] = root.reg('r',5) as .object; fields[3] = .lltarget..operand.integer(-1) as .object
+  indexed = emit(root,'linkarg',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',4) as .object; fields[2] = .lltarget..operand.integer(0) as .object
+  argument = emit(root,'linkarg',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object
+  fields[3] = root.reg('r',2) as .object; fields[4] = .lltarget..operand.integer(1) as .object
+  capturedindex = emit(root,'minlinkattr1',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  fields[3] = root.reg('r',1) as .object; fields[4] = root.reg('r',2) as .object
+  fields[5] = .lltarget..operand.integer(256) as .object; fields[6] = root.reg('r',3) as .object
+  fused = emit(root,'settpswapcall',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object
+  ignored = emit(root,'ret',fields,at)
+  leaf = draft.procedure('leaf',0,at); ignored = emit(leaf,'ret',fields,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'recipe fixture validates')
+  if source.valid() = 0 then do; say source.error(); return 1; end
+  original = dereference source.ir(); saved = original.binary()
+  profile = .lltargettransfer..profile(reference source)
+  failures = failures + check(profile.status() = 'ok','canonical decoder publishes checked profile')
+  if profile.status() <> 'ok' then do; say profile.message(); return 1; end
+  row = profile.instruction(captured)
+  failures = failures + check(row.actions() = 3,'capture/unlink/put has exactly three ordered effects')
+  action = row.action(1); captureid = action.id()
+  failures = failures + check(action.kind() = 'capture' & action.sourcekind() = 'reference' & action.offset() = 0,'integer capture records immutable source before restore')
+  action = row.action(2)
+  failures = failures + check(action.kind() = 'unlink','binding restore occurs after capture')
+  action = row.action(3)
+  failures = failures + check(action.kind() = 'transport' & action.sourcekind() = 'captured' & action.sourceid() = captureid,'put consumes exact earlier capture identity')
+  row = profile.instruction(assigned); action = row.action(1)
+  failures = failures + check(action.kind() = 'transport' & row.complete('bindings') & row.complete('order'),'direct integer field copy precedes unlink without an unknown fallback')
+  action = row.action(2); failures = failures + check(action.kind() = 'unlink','ISETUNLINK ordered restoration')
+  row = profile.instruction(arithmetic); written = 0; observations = 0
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if action.kind() = 'read' | action.kind() = 'observe' then do
+      failures = failures + check(written = 0,'ordinary aliased inputs precede every output write')
+      if action.kind() = 'observe' then observations = observations + 1
+    end
+    if action.kind() = 'write' | action.kind() = 'clear' | action.kind() = 'transport' then written = 1
+  end
+  failures = failures + check(written & observations >= 2,'ordinary arithmetic publishes input observations and output effects')
+  row = profile.instruction(indexed); found = 0
+  do i = 1 to row.references()
+    ref = row.ref(i)
+    if ref.kind() = 'address' then do
+      found = 1
+      failures = failures + check(ref.addresskind() = 'argument' & ref.selectorkind() = 'reference' & ref.selectoroffset() = -1 & ref.targetbank() = 'a','physical argument address retains selector reference and signed offset')
+    end
+  end
+  failures = failures + check(found,'addressed source remains enumerated')
+  row = profile.instruction(capturedindex); captureid = 0; resizeat = 0
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if action.kind() = 'capture' then do
+      captureid = action.id(); failures = failures + check(action.offset() = 1,'index adjustment belongs to immutable capture')
+    end
+    if action.kind() = 'resize' then do
+      resizeat = i; failures = failures + check(action.sourcekind() = 'captured' & action.sourceid() = captureid & action.detail() = 'min','resize consumes captured adjusted selector')
+    end
+  end
+  found = 0
+  do i = 1 to row.references()
+    ref = row.ref(i)
+    if ref.kind() = 'address' then do
+      found = 1; failures = failures + check(ref.addresskind() = 'attribute1' & ref.selectorkind() = 'captured' & ref.selectorid() = captureid,'attribute link uses same captured index after resize')
+    end
+  end
+  failures = failures + check(found & resizeat > 0,'captured attribute address and resize are explicit')
+  row = profile.instruction(fused); statusat = 0; swapat = 0; callcaptureat = 0; callat = 0
+  do i = 1 to row.actions()
+    action = row.action(i)
+    select action.kind()
+      when 'status' then statusat = i
+      when 'swap' then swapat = i
+      when 'callcapture' then callcaptureat = i
+      when 'call' then callat = i
+      otherwise nop
+    end
+  end
+  failures = failures + check(statusat > 0 & statusat < swapat & swapat < callcaptureat & callcaptureat < callat,'fused status/swap precede pointer capture and call')
+  independent = .lltargettransfer..profiledraft(reference source,'captured-bank-control')
+  ignored = independent.binding(argument,'capturedargument:1:2'); projected = independent.finish()
+  row = projected.instruction(argument); found = 0
+  do i = 1 to row.references()
+    ref = row.ref(i)
+    if ref.kind() = 'address' then do
+      found = 1; failures = failures + check(ref.addresskind() = 'capturedargument' & ref.selectorkind() = 'literal' & ref.selectorvalue().index() = 0,'captured bank including a0 stays distinct from physical argument bank')
+    end
+  end
+  failures = failures + check(found,'captured argument reference enumerated')
+  independent = .lltargettransfer..profiledraft(reference source,'unsupported-program')
+  ignored = independent.binding(copy,'link:1:2;future:1'); projected = independent.finish()
+  row = projected.instruction(copy); action = row.action(1)
+  failures = failures + check(projected.status() = 'ok' & row.actions() = 1 & action.kind() = 'unknown','unsupported suffix discards the whole supported prefix atomically')
+  failures = failures + check(row.complete('components') = 0 & row.complete('bindings') = 0 & row.complete('ownership') = 0,'unknown recipe invalidates dependent families together')
+  independent = .lltargettransfer..profiledraft(reference source,'malformed-program')
+  ignored = independent.binding(copy,'link:1:2;unlink:99'); projected = independent.finish()
+  failures = failures + check(projected.status() = 'invalid','malformed second step rejects before publication')
+  independent = .lltargettransfer..profiledraft(reference source,'missing-capture')
+  ignored = independent.binding(copy,'unlink:2;putint:1'); projected = independent.finish()
+  failures = failures + check(projected.status() = 'invalid','put without earlier capture is malformed')
+  independent = .lltargettransfer..profiledraft(reference source,'tiny-recipe',1,1)
+  ignored = independent.binding(copy,'captureint:2;unlink:2;putint:1'); projected = independent.finish()
+  failures = failures + check(projected.status() = 'limit','tiny recipe allowance refuses deterministically')
+  original = dereference source.ir()
+  failures = failures + check(original.binary() = saved,'all failed and independent profiles preserve input owner')
+  say 'TARGET_BINDING_RECIPE|failures=' || failures
+  return failures

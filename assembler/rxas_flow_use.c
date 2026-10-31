@@ -452,6 +452,13 @@ static int flow_use_add_implicit(RxasFlowUseAnalysis *analysis,
             return flow_use_add_call_window(
                     analysis, record_id, instruction->id, number);
         case RXOP_IMPLICIT_LOCAL_TARGET:
+        case RXOP_IMPLICIT_CAPTURED_ARGUMENT_INDEX:
+        case RXOP_IMPLICIT_INLINE_RECIPE:
+        case RXOP_IMPLICIT_QUALIFIED_GLOBAL:
+            /* Captured argument pointers, operational recipe selectors and
+             * qualified provider storage are not a caller-local interval.
+             * Keep an opaque use until this native optimizer consumes their
+             * checked typed descriptors; never invent absent observations. */
             return flow_use_add_opaque(analysis, record_id,
                                        instruction->id);
         case RXOP_IMPLICIT_NONE:

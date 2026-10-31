@@ -1,0 +1,254 @@
+/* cREXX License (MIT). Native descriptors drive independent point proofs. */
+options levelb
+import rxfnsb
+import llir
+import llrxascatalog
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetnormalize
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(name,fields,at)
+
+counted: procedure = .int
+  arg uncertain = .int
+  failures = 0; fields = .object[]; i = .int
+  draft = .lltarget..draft('counted.flow','fixture:counted.flow',0)
+  at = draft.synthetic('counted active argument ordering')
+  body = draft.procedure('main',4,at)
+  ignored = one(body,'null',body.reg('r',0),at)
+  if uncertain <> 1 then do
+    fields[1] = body.reg('r',1) as .object; fields[2] = .lltarget..operand.integer(2) as .object
+    ignored = body.emit('load',fields,at)
+  end
+  call objectarraydrop fields; fields[1] = body.reg('r',3) as .object
+  fields[2] = .lltarget..operand.string('defined actual' as .binary) as .object
+  ignored = body.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',2) as .object; fields[2] = body.reg('r',3) as .object
+  ignored = body.emit('swap',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.procedure('observer') as .object; fields[3] = body.reg('r',1) as .object
+  callid = body.emit('call',fields,at)
+  if uncertain = 2 then ignored = one(body,'say',body.reg('r',0),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('observer',0,at)
+  ignored = one(body,'say',body.reg('a',2),at)
+  ignored = one(body,'ret',body.reg('a',1),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'counted source validates')
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  profile = .lltargettransfer..profile(reference target)
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','counted canonical flow converges')
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  failures = failures + check(profile.complete(callid,'references'),'counted selector is described independently of extent proof')
+  instruction = profile.instruction(callid); windows = 0; dirtyactual = 0
+  do i = 1 to instruction.references()
+    ref = instruction.ref(i)
+    if ref.kind() = 'window' & ref.extentknown() = 0 then windows = windows + 1
+  end
+  failures = failures + check(windows = 1,'counted call retains one symbolic nonempty-or-unknown window')
+  normalized = .lltargetnormalize..change(reference target,reference flow,10000000)
+  if uncertain = 1 then do
+    failures = failures + check(flow.complete(target.procedureid('main'),'entry-normalization') = 0,'unknown count retains incomplete local entry proof')
+    failures = failures + check(normalized.status() = 'keep' & normalized.warnings() = 0,'unknown counted extent cannot publish a partial normalization')
+    return failures
+  end
+  catalog = .llrxascatalog..catalog(); stringdomain = 0; normaledge = 0
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('S') then stringdomain = i
+  end
+  do i = 1 to cfg.outedges(callid)
+    edge = cfg.outedge(callid,i)
+    if edge.role() = 'normal' then normaledge = edge.id()
+  end
+  value = flow.componenton(normaledge,'r',0,stringdomain)
+  failures = failures + check(value.availability() = 'unknown' & value.known() = 0,'unknown counted presence does not invent defined return availability or a literal')
+  if uncertain = 2 then do
+    failures = failures + check(flow.complete(target.procedureid('main'),'entry-normalization') = 0,'observing a return with unproved argument presence keeps entry proof incomplete')
+    failures = failures + check(normalized.status() = 'keep' & normalized.warnings() = 0,'unproved return availability cannot publish positional clears or warnings')
+    return failures
+  end
+  do i = 1 to flow.entryobservations()
+    witness = flow.entryobservation(i)
+    if witness.operation() = callid & witness.ownedindex() = 2 & witness.activebank() = 'r' & witness.activeindex() = 3 then dirtyactual = 1
+  end
+  failures = failures + check(dirtyactual,'counted observation maps active r3 back to dirty owned r2')
+  failures = failures + check(flow.complete(target.procedureid('main'),'entry-normalization'),'finite counted call has a complete local entry proof')
+  failures = failures + check(normalized.status() = 'changed' & normalized.warnings() > 0,'finite counted observation permits owned entry normalization')
+  do i = 1 to normalized.warnings()
+    warning = normalized.warning(i)
+    failures = failures + check(warning.local() = 2,'counted clear preserves the independently defined actual')
+  end
+  return failures
+
+borrowed: procedure = .int
+  arg mode = .int
+  failures = 0; fields = .object[]; ignored = .int; observed = .int; integer = .int; i = .int
+  draft = .lltarget..draft('borrowed.flow','fixture:borrowed.flow',1)
+  at = draft.synthetic('borrowed uncertainty versus owned active storage')
+  body = draft.procedure('helper',2,at)
+  if mode = 1 then do
+    fields[1] = body.reg('a',1) as .object; fields[2] = body.reg('r',1) as .object
+    ignored = body.emit('link',fields,at)
+  end
+  call objectarraydrop fields; fields[1] = body.reg('g',0) as .object
+  fields[2] = .lltarget..operand.integer(7) as .object
+  ignored = body.emit('load',fields,at)
+  if mode = 2 | mode = 3 then do
+    call objectarraydrop fields; fields[1] = body.reg('r',1) as .object; fields[2] = body.reg('a',1) as .object
+    if mode = 2 then ignored = body.emit('copy',fields,at)
+    else ignored = body.emit('linkref',fields,at)
+  end
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  if mode = 2 | mode = 3 then fields[2] = body.reg('r',1) as .object
+  else fields[2] = body.reg('a',1) as .object
+  fields[3] = body.reg('g',0) as .object
+  observed = body.emit('iadd',fields,at)
+  ignored = one(body,'ret',body.reg('r',0),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'borrowed uncertainty source validates')
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  profile = .lltargettransfer..profile(reference target)
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','borrowed uncertainty canonical flow converges')
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  normalized = .lltargetnormalize..change(reference target,reference flow,10000000)
+  select mode
+    when 0 then failures = failures + check(flow.complete(target.procedureid('helper'),'entry-normalization') & normalized.status() = 'keep' & normalized.warnings() = 0,'unknown borrowed argument does not demand an owned local clear')
+    when 1 then failures = failures + check(normalized.status() = 'changed' & normalized.warnings() > 0,'borrowed bank linked to an owned local still diagnoses that owned entry')
+    when 2 then do
+      catalog = .llrxascatalog..catalog()
+      do i = 1 to profile.domains()
+        domain = profile.domain(i)
+        if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I') then integer = i
+      end
+      value = flow.componentat(observed,'r',1,integer)
+      failures = failures + check(value.entrydependent() & value.dirty() = 0 & value.known() = 0,'borrowed COPY preserves entry provenance without inventing a value or owned entry')
+      failures = failures + check(flow.complete(target.procedureid('helper'),'entry-normalization') & normalized.complete(target.procedureid('helper')) & normalized.status() = 'keep' & normalized.warnings() = 0,'borrowed COPY needs caller instantiation rather than a private local clear')
+    end
+    otherwise failures = failures + check(flow.complete(target.procedureid('helper'),'entry-normalization') = 0 & normalized.status() = 'keep' & normalized.warnings() = 0,'unknown active binding cannot certify an owned observation')
+  end
+  return failures
+
+main: procedure = .int
+  fields = .object[]
+  failures = 0; i = .int; handlerread = .int; warning = .lltargetnormalize..warning
+  draft = .lltarget..draft('canonical.flow','fixture:canonical.flow',0)
+  at = draft.synthetic('native descriptor observations')
+  body = draft.procedure('main',2,at)
+  ignored = one(body,'null',body.reg('r',0),at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.string('already defined' as .binary) as .object
+  loaded = body.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',1) as .object
+  fields[2] = .lltarget..operand.procedure('relay') as .object; fields[3] = body.reg('r',0) as .object
+  definedcall = body.emit('call1',fields,at)
+  definedread = one(body,'say',body.reg('r',1),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('early',2,at)
+  ignored = one(body,'null',body.reg('r',1),at)
+  call objectarraydrop fields; fields[1] = body.reg('r',1) as .object
+  fields[2] = .lltarget..operand.procedure('relay') as .object; fields[3] = body.reg('r',0) as .object
+  ignored = body.emit('call1',fields,at)
+  earlyread = one(body,'say',body.reg('r',1),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('relay',1,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object; fields[2] = body.reg('a',1) as .object
+  ignored = body.emit('copy',fields,at)
+  ignored = one(body,'ret',body.reg('r',0),at)
+  body = draft.procedure('transitive',2,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.procedure('observer') as .object; fields[3] = body.reg('r',1) as .object
+  transitivecall = body.emit('call1',fields,at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('observer',0,at)
+  borrowedread = one(body,'say',body.reg('a',1),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('dirtyreturn',1,at)
+  dirtyreturn = one(body,'ret',body.reg('r',0),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'independent canonical flow source validates')
+  if target.valid() = 0 then do; say target.error(); say 'TARGET_CANONICAL_FLOW|failures=' || failures; return failures; end
+  profile = .lltargettransfer..profile(reference target)
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','canonical profile and inherited resume flow converge')
+  if flow.status() = 'ok' then do
+    catalog = .llrxascatalog..catalog(); stringdomain = 0
+    do i = 1 to profile.domains()
+      domain = profile.domain(i)
+      if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('S') then stringdomain = i
+    end
+    normaledge = 0
+    do i = 1 to cfg.outedges(definedcall)
+      edge = cfg.outedge(definedcall,i)
+      if edge.role() = 'normal' then normaledge = edge.id()
+    end
+    value = flow.componenton(normaledge,'r',1,stringdomain)
+    failures = failures + check(value.availability() = 'defined' & value.dirty() = 0 & value.entrydependent() = 0 & value.known() = 0,'normal CALL return is defined unknown, not dirty')
+    value = flow.componentat(definedread,'r',1,stringdomain)
+    failures = failures + check(value.availability() = 'mixed' & value.dirty() & value.entrydependent(),'failure/skip can preserve the initially dirty owned result')
+    failures = failures + check(flow.complete(target.procedureid('main'),'entry-normalization') & cfg.asynchronouscomplete(target.procedureid('main')) = 0,'local entry proof does not assert complete inherited asynchronous policy')
+    returneddirty = 0; borroweddirty = 0; directdirty = 0
+    do i = 1 to flow.entryobservations()
+      witness = flow.entryobservation(i)
+      if witness.function() = target.procedureid('early') & witness.ownedindex() = 0 then returneddirty = 1
+      if witness.operation() = transitivecall & witness.domain() = stringdomain & witness.ownedindex() = 1 then borroweddirty = 1
+      if witness.operation() = dirtyreturn & witness.ownedindex() = 0 then directdirty = 1
+    end
+    failures = failures + check(returneddirty & borroweddirty & directdirty = 0,'dirty actual survives caller observation; a whole return alone only transports it')
+    value = flow.componentat(transitivecall,'r',1,stringdomain,1)
+    failures = failures + check(value.availability() <> 'defined' & value.dirty(),'binding a dirty actual never manufactures a definition')
+    normalized = .lltargetnormalize..change(reference target,reference flow,10000000)
+    failures = failures + check(normalized.status() = 'changed' & normalized.warnings() > 0,'canonical normalization publishes proved dirty clears and warnings')
+    do i = 1 to normalized.warnings()
+      warning = normalized.warning(i)
+      if warning.procedure() = 'main' then failures = failures + check(warning.local() = 1,'only the dirty result is cleared in main; the defined actual is preserved')
+    end
+  end
+  else say flow.message()
+  policy_draft = .lltarget..draft('ambiguous.policy','fixture:ambiguous.policy',0)
+  policy_at = policy_draft.synthetic('unreachable policy must not authorize a clear')
+  policy_body = policy_draft.procedure('main',2,policy_at)
+  call objectarraydrop fields; fields[1] = policy_body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.string('defined' as .binary) as .object
+  ignored = policy_body.emit('load',fields,policy_at)
+  ignored = one(policy_body,'br',.lltarget..operand.symbol('done'),policy_at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('handler') as .object
+  fields[2] = .lltarget..operand.string('OUT_OF_RANGE' as .binary) as .object
+  ignored = policy_body.emit('sigbr',fields,policy_at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('handler') as .object
+  ignored = policy_body.record('label',fields,policy_at)
+  handlerread = one(policy_body,'say',policy_body.reg('r',1),policy_at)
+  ignored = one(policy_body,'ret',.lltarget..operand.integer(0),policy_at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('done') as .object
+  ignored = policy_body.record('label',fields,policy_at)
+  ignored = one(policy_body,'say',policy_body.reg('r',0),policy_at)
+  ignored = one(policy_body,'ret',.lltarget..operand.integer(0),policy_at)
+  policy_target = policy_draft.finish()
+  policy_profile = .lltargettransfer..profile(reference policy_target)
+  policy_cfg = .lltargetcfg..graph(reference policy_target,reference policy_profile)
+  policy_flow = .lltargetflow..analysis(reference policy_target,reference policy_profile,reference policy_cfg,10000000)
+  policy_normalized = .lltargetnormalize..change(reference policy_target,reference policy_flow,10000000)
+  failures = failures + check(policy_cfg.policycorrelationcomplete(policy_target.procedureid('main')) = 0 & policy_cfg.normalizationcomplete(policy_target.procedureid('main')),'possible local coverage preserves independent unknown policy correlation')
+  failures = failures + check(policy_normalized.status() = 'changed' & policy_normalized.warnings() > 0 & policy_normalized.complete(policy_target.procedureid('main')),'possible handler union preserves a finite dirty-entry may-read proof')
+  do i = 1 to policy_normalized.warnings()
+    warning = policy_normalized.warning(i)
+    failures = failures + check(warning.local() = 1 & warning.operation() = policy_normalized.operation(handlerread),'handler-union normalization clears only its exact dirty entry witness')
+  end
+  failures = failures + counted(0) + counted(1) + counted(2) + borrowed(0) + borrowed(1) + borrowed(2) + borrowed(3)
+  say 'TARGET_CANONICAL_FLOW|failures=' || failures
+  return failures

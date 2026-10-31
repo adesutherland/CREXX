@@ -73,6 +73,7 @@ typedef struct instruction_queue {
 
 typedef struct Assembler_Context {
     char *file_name;
+    char *input_file_name; /* Optional physical RXAS read path; file_name is the logical identity. */
     char *output_file_name;
     char *location;
     char *buff;

@@ -1,0 +1,84 @@
+/* cREXX License (MIT). Explicit invocation membership and owner controls. */
+options levelb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import llinline
+
+check: procedure = .int
+  arg value = .int, label = .string
+  if value then return 0
+  say 'FAIL:' || label; return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(name,fields,at)
+sample: procedure = .lltarget..module
+  arg mode = .int
+  draft = .lltarget..draft('execution.' || mode,'fixture:execution.' || mode,0)
+  at = draft.synthetic('explicit invocation closure')
+  if mode = 2 then do
+    imported = .object[]; imported[1] = .lltarget..operand.procedure('foreign') as .object; imported[2] = .lltarget..operand.symbol('foreign.external') as .object
+    ignoredimport = draft.record('.import',imported,at)
+  end
+  root = draft.procedure('main',1,at)
+  if mode = 1 then ignoredpolicy = one(root,'sigignore',.lltarget..operand.string('ERROR' as .binary),at)
+  target = 'leaf'
+  if mode = 2 then target = 'foreign'
+  if mode = 3 then target = 'main'
+  fields = .object[]; fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure(target) as .object
+  ignored = root.emit('call',fields,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('leaf',0,at); ignored = one(leaf,'ret',.lltarget..operand.integer(0),at)
+  return draft.finish()
+
+main: procedure = .int
+  failures = 0; mode = .int; i = .int; inherited = 0; expected = .string
+  source = .lltarget..module; profile = .lltargettransfer..profile; edge = .lltargetcfg..edge
+  do mode = 0 to 3
+    source = sample(mode)
+    failures = failures + check(source.valid(),'execution source validates ' || mode)
+    if source.valid() = 0 then do; say source.error(); return 1; end
+    profile = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(profile.status() = 'ok','execution witness profile remains canonical and checked ' || mode)
+    if profile.status() <> 'ok' then do; say profile.message(); return 1; end
+    if mode = 0 then do
+      failures = failures + check(profile.defaulthalt(source.procedureid('main')) & profile.defaulthalt(source.procedureid('leaf')) & profile.executionreason() = '','all direct invocation members inherit the explicitly declared policy')
+      cfg = .lltargetcfg..graph(reference source,reference profile)
+      failures = failures + check(cfg.status() = 'ok','membership uses the existing canonical CFG')
+      if cfg.status() <> 'ok' then do; say cfg.message(); return 1; end
+      do i = 1 to cfg.edges()
+        edge = cfg.edge(i)
+        if edge.exposure() <> 'inherited' & edge.exposure() <> 'inherited-async' then iterate
+        inherited = inherited + 1
+        failures = failures + check(edge.role() = 'terminal' & edge.complete(),'inherited signal edges retain their exact terminal contract')
+      end
+      failures = failures + check(inherited > 0,'asynchronous/signal departures remain explicit')
+    end
+    else do
+      expected = 'target.context.call.policy.unproved'
+      if mode = 2 then expected = 'target.context.call.foreign.unproved'
+      if mode = 3 then expected = 'target.context.call.recursion.unproved'
+      failures = failures + check(profile.defaulthalt(source.procedureid('main')) = 0 & profile.defaulthalt(source.procedureid('leaf')) = 0 & profile.executionreason() = expected,'incomplete closure supplies no stronger membership: ' || expected)
+    end
+  end
+  source = sample(0); copy = source
+  profile = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  context = .llinline..context('assembler','all-legal')
+  failures = failures + check(context.useexecution(reference source,reference profile),'exact source can explicitly bind its checked witness')
+  failures = failures + check(context.executioncontext(reference copy) = '' & context.useexecution(reference copy,reference profile) = 0,'even a same-identity copy cannot borrow another owner reference')
+  mismatch = llinline..normalizewith(reference copy,reference profile)
+  failures = failures + check(mismatch.status() = 'invalid' & mismatch.reason() = 'normalization.execution.owner.mismatch','normalization also checks the exact execution owner')
+  wrongroot = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('leaf'),'closed-main-default-halt.v1')
+  failures = failures + check(wrongroot.status() = 'invalid','another procedure cannot assert the main invocation contract')
+  undeclared = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'canonical')
+  failures = failures + check(undeclared.status() = 'invalid','ordinary canonical context cannot create execution membership')
+  limited = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1',1,1)
+  failures = failures + check(limited.status() = 'limit','tiny witness allowance cannot publish partial membership')
+  ordinary = .llinline..context('assembler','all-legal'); linker = .llinline..context('linker','all-legal')
+  failures = failures + check(ordinary.executioncontext(reference source) = '' & linker.useexecution(reference source,reference profile) = 0,'ordinary assembler/linker modes supply no inferred standalone witness')
+  source = sample(1)
+  failures = failures + check(profile.valid() = 0 & context.executioncontext(reference source) = '','replacing the exact owner invalidates its bound execution witness')
+  say 'TARGET_EXECUTION_CONTEXT|failures=' || failures
+  return failures

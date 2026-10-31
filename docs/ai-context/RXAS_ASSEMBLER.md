@@ -83,6 +83,79 @@ signature instead of switching over a closed `FMT_*` enum. The in-memory
 cell; the practical operand-count bound is therefore the bytecode stream's
 existing `INT_MAX`, not a small instruction-format ceiling.
 
+The native `rxopmeta` view owns target-tool call and return descriptors,
+ordered binding recipes, typed operand relocations and separate numeric-context
+read/write masks. Recipe operand selectors are one-based, with zero denoting
+absence. Fused call prefixes execute before result/count/argument-pointer
+capture, within one instruction observation boundary. The `CALL R,P` form
+clears its result before target resolution; counted and fixed forms do not.
+Fixed `CALL1` through `CALL4` require a bytecode target. The generated Level L
+catalogue projects these native contracts rather than maintaining another
+instruction admission table.
+
+The explicit `rxas --inline-service <llrxinline.rxbin> --inline-module <name>`
+option runs the shared Level B/Level L inliner on a private UTF8 source
+snapshot before the normal assembler pass. `--inline-vm <rxvm>` selects the VM
+(default: the sibling executable), `--inline-runtime <image>` may be repeated
+for its runtime dependencies, and `--inline-policy default|all-legal|never`
+selects the service policy. The assembler passes `--no-cleanup` to the service;
+`-n` still controls only native RXAS optimization. A separate input path keeps
+the original source name and default `.rxbin` output stem in the emitted
+module. Service failure ends before assembly and does not alter the source.
+
+Handwritten RXAS may spell the feature-gated inline operands directly:
+
+```rxas
+inlenter r0,callee(),"count=r7;args=window(r8);a0=r20;proxies=(r21:1);owned=(r20,r21,r22,r23);prep=none",after
+linkargv r21,1
+linkargv r21,r9,0
+qglobbind r22,"self",0
+qglobbind r23,"@2",1
+call @2::3()
+after:
+```
+
+`inlenter` is `R,P,S,L`: the readable recipe becomes a typed `INL1` binary
+constant, sealed to the selected provider before execution. `count` is an
+immediate or register; `args=list(rN,...)` captures explicit ordered cells and
+`args=window(rN)` starts at the first actual after a counted-call count slot.
+`a0` and every `owned` cell must be fresh; `owned` is a comma-separated list
+of individual registers covering all cells whose binding the clone can change.
+`proxies=(rN:ordinal,...)` includes absent optional formals: ordinals above the
+actual count retain fresh empty backing cells. `prep` accepts `none`,
+`clear(rN)`, `swap(rN,rM)`, `settp(rN,flags)`, or the latter plus `+swap(...)`;
+only the original call's in-instruction preparation belongs there. Optional
+`;result=ignored` preserves void calls. `linkargv` has immediate and
+register-plus-adjust forms and requires an active matching inline scope.
+
+`qglobbind` is `R,S,I`: its selector becomes a typed `QGR1` binary constant.
+`"self"` is relative to the executing module; `"@N"` names an exact image-local
+ordinal sealed by the linker. A provider name can be written for linker
+resolution. An existing `P` call operand accepts typed `QPR1`
+`@moduleOrdinal::procedureOrdinal()` for a retained private provider procedure.
+The VM rejects unsealed qualified targets. RXBIN 007 feature bit 8
+(`RXBIN007_FEATURE_INLINE_SCOPES`) gates these executable forms and validates
+typed lengths, flags, ordinals, counts and duplicate proxy/owned bindings.
+
+Conservative component/flag may-effects describe possible access and never
+prove a definition or kill. Successful-normal definitions, transport source
+availability, literal sources and conversion dependencies are separate optional
+facts. Unknown signal names and unresolved context dependencies remain unknown.
+String character lookup caches in `rxvalue` are VM-private implementation state;
+they are not published RXAS cursor components. `STRPOS` reads and writes its
+first operand's integer component for the start position and result.
+
+Owned locals begin semantically dirty on every normal procedure entry, even
+when recycled storage contains physical bytes. A defined component with
+unknown contents is distinct from dirty entry-dependent state. Argument
+binding borrows the caller's availability and never initializes a dirty actual.
+Whole register return observes the transported components; a dirty returned
+component needs the standard diagnostic/clear or an explicit unproved result.
+Shared normalization clears only proved dirty reads at the owning entry.
+Canonical policy target unions establish destination coverage, not feasible
+policy paths; until the correlated policy-state worklist proves those paths,
+normalization retains such input with `signal.policy.path.state.unproved`.
+
 ```c
 // Example buffer size handling in gen_instr()
 context->binary.binary[context->binary.inst_size].instruction.opcode = opcode;
@@ -676,6 +749,27 @@ focused semantic tests. The tests mechanically validate table alignment,
 operand-mask legality, flow/branch/call/implicit consistency, source coverage,
 reserved/internal treatment and fail-closed unknown queries; they do not claim
 to parse arbitrary C handler bodies formally.
+
+### Level L target-analysis consumer map
+
+The research Level L target owner is in `lib/rxfnsl/target/`. Its checked
+`lltarget` module is the common input for `lltargettransfer..profile`
+(canonical ordered references/effects), `lltargetcfg..graph` (normal, signal,
+unwind and terminal edges), `lltargetflow..analyse` (storage/component/flag
+point facts and liveness), and `lltargetsummary..analyse` (direct and
+transitive procedure facts). `lltargetnormalize..normalize` performs the
+entry-dependent owned-local clear/warning transaction; `lltargetremap` owns
+typed register/reference relocation and foreign module/global identities.
+`llinline` is a consumer of these services, not their definition. Constructed
+rich profiles exercise the generic algorithms independently of the current
+native catalogue. A canonical unknown is an explicit missing fact, never a
+proof of no effect. Keep the exact module, catalogue revision, profile and
+flow owners alive together; each service rejects stale or foreign evidence.
+The [inlining architecture](../../research/level-l/toolchain/doc/inlining.md)
+sets the intended shared semantics, and
+`research/level-l/toolchain/tests/target-{transfer-cfg,flow,module-remap,summary}.crexx`
+contains small independent consumers. Their focused qualification is recorded
+under INL-STEP03F in the [toolchain plan](../../research/level-l/toolchain/PLAN.md).
 
 RXAS optimisation routing is explicit in `assembler/rxas_flow_pass.c`. Every
 current rule family has one stable owner—local mechanical scan, immutable CFG,

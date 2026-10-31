@@ -60,6 +60,15 @@ add_test(NAME rxas_constant_aliases
                  -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/constant_aliases.cmake)
 
+add_test(NAME rxas_inline_typed_operands
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/inline_typed_operands.cmake)
+set_tests_properties(rxas_inline_typed_operands PROPERTIES
+        LABELS "assembler;inline;negative;native" TIMEOUT 30)
+crexx_register_test_prep_targets(TESTS rxas_inline_typed_operands TARGETS rxas)
+
 crexx_label_smoke_tests(
         test_rxas_01_init
         test_rxas_03_token_types

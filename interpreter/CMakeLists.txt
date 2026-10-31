@@ -1548,6 +1548,48 @@ if(BUILD_TESTING)
 endif()
 
 # NR-09 large-instruction batch
+crexx_add_rxas_vm_binary(tests_inline_scope_failures "inline scope failure cleanup")
+crexx_add_vm_test(NAME rxasinlinefailurecleanup
+        PREP_TARGETS run_tests_inline_scope_failures
+        RXVM_ARGS tests_inline_scope_failures
+        PASS_REGULAR_EXPRESSION "PASS: inline activation failure cleanup")
+crexx_add_rxas_vm_binary(tests_inline_scope_sigret "inline scoped SIGRET cleanup")
+crexx_add_vm_test(NAME rxasinlinesigretcleanup
+        PREP_TARGETS run_tests_inline_scope_sigret
+        RXVM_ARGS tests_inline_scope_sigret
+        PASS_REGULAR_EXPRESSION "PASS: inline scoped SIGRET cleanup")
+
+crexx_add_rxas_vm_binary(tests_inline_recipe_per_use "inline recipe per-use seal")
+crexx_add_vm_test(NAME rxasinlineperuseseal
+        PREP_TARGETS run_tests_inline_recipe_per_use
+        RXVM_ARGS tests_inline_recipe_per_use
+        PASS_REGULAR_EXPRESSION "PASS: inline recipe per use")
+crexx_add_rxas_vm_binary(tests_inline_scope_optional "inline optional argument backing")
+crexx_add_vm_test(NAME rxasinlineoptionalargument
+        PREP_TARGETS run_tests_inline_scope_optional
+        RXVM_ARGS tests_inline_scope_optional
+        PASS_REGULAR_EXPRESSION "PASS: inline optional argument backing")
+crexx_add_rxas_vm_binary(tests_inline_argument_active "inline active argument bindings")
+crexx_add_vm_test(NAME rxasinlineactiveargument
+        PREP_TARGETS run_tests_inline_argument_active
+        RXVM_ARGS tests_inline_argument_active
+        PASS_REGULAR_EXPRESSION "PASS: inline active argument bindings")
+crexx_add_rxas_vm_binary(tests_inline_nested_unwind "nested inline cancellation reference cleanup")
+crexx_add_vm_test(NAME rxasinlineunwindreference
+        PREP_TARGETS run_tests_inline_nested_unwind
+        RXVM_ARGS tests_inline_nested_unwind
+        PASS_REGULAR_EXPRESSION "PASS: nested inline cancellation reference cleanup")
+crexx_add_rxas_vm_binary(tests_inline_qproc_unsealed "unsealed qualified procedure rejection")
+add_test(NAME rxasinlineunsealedqproc
+        COMMAND ${CMAKE_COMMAND}
+            -DRUNNER=${CREXX_RXVM_EXECUTABLE}
+            -DRXBIN=${CMAKE_CURRENT_BINARY_DIR}/tests_inline_qproc_unsealed.rxbin
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_inline_qproc_unsealed.cmake)
+set_tests_properties(rxasinlineunsealedqproc PROPERTIES
+        LABELS "interpreter;inline;rxbin;negative" TIMEOUT 30)
+crexx_register_test_prep_targets(TESTS rxasinlineunsealedqproc
+        TARGETS run_tests_inline_qproc_unsealed rxvm)
+
 crexx_add_rxas_vm_binary(tests_nr09_superinstructions "NR-09 large instructions")
 crexx_add_vm_test(NAME rxasnr09superinstructiontests PREP_TARGETS run_tests_nr09_superinstructions RXVM_ARGS tests_nr09_superinstructions PASS_REGULAR_EXPRESSION "PASS: NR-09 Superinstructions")
 

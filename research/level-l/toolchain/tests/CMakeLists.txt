@@ -68,6 +68,76 @@ add_custom_target(levell_rxas_fused_test_prep DEPENDS
 add_dependencies(levell_rxas_fused_test_prep llrxinline)
 if(TARGET rxbvm)
   get_target_property(_cli llrxinline LLRXINLINE_BYTECODE)
+  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/inline-invalid-response.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+      -o "${CMAKE_CURRENT_BINARY_DIR}/inline-invalid-response"
+      "${CMAKE_SOURCE_DIR}/linker/tests/inline_invalid_response.crexx"
+    COMMAND $<TARGET_FILE:rxas> "${CMAKE_CURRENT_BINARY_DIR}/inline-invalid-response"
+    DEPENDS rxc rxas "${CMAKE_SOURCE_DIR}/linker/tests/inline_invalid_response.crexx" VERBATIM)
+  add_custom_target(levell_link_inline_service_prep
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/inline-invalid-response.rxbin")
+  add_test(NAME levell_rxlink_inline_service
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DLINKER=$<TARGET_FILE:rxlink>" "-DDISASSEMBLER=$<TARGET_FILE:rxdas>"
+      "-DSERVICE=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DMUTATOR=$<TARGET_FILE:mutate_inline_rxbin>"
+      "-DBAD_SERVICE=${CMAKE_CURRENT_BINARY_DIR}/inline-invalid-response.rxbin"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/link-inline-service-work"
+      -P "${CMAKE_SOURCE_DIR}/linker/tests/inline_service.cmake")
+  set_tests_properties(levell_rxlink_inline_service PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXLINK_INLINE_SERVICE[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 240 LABELS "level-l;research;inlining;rxlink")
+  crexx_register_test_prep_targets(TESTS levell_rxlink_inline_service
+    TARGETS levell_link_inline_service_prep llrxinline rxbvm rxas rxlink rxdas mutate_inline_rxbin)
+  add_test(NAME levell_rxas_inline_service
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DDISASSEMBLER=$<TARGET_FILE:rxdas>" "-DSERVICE=${_cli}"
+      "-DRUNTIME=${_runtime}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-service-work"
+      -P "${CMAKE_SOURCE_DIR}/assembler/parsingtests/inline_service.cmake")
+  set_tests_properties(levell_rxas_inline_service PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_INLINE_SERVICE[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_inline_service
+    TARGETS llrxinline rxbvm rxas rxdas)
+  add_test(NAME levell_rxas_integrated_inline
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/integrated-inline-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-integrated-inline.cmake")
+  set_tests_properties(levell_rxas_integrated_inline PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_INTEGRATED_INLINE[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_integrated_inline
+    TARGETS llrxinline rxbvm rxas)
+  add_test(NAME levell_rxas_policy_shapes
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/policy-shapes-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-policy-shapes.cmake")
+  set_tests_properties(levell_rxas_policy_shapes PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_POLICY_SHAPES[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_policy_shapes
+    TARGETS llrxinline rxbvm rxas)
+  add_test(NAME levell_rxas_scoped_cleanup
+    COMMAND ${CMAKE_COMMAND}
+      "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"
+      "-DCLI=${_cli}" "-DRUNTIME=${_runtime}"
+      "-DFIXTURES=${CMAKE_CURRENT_SOURCE_DIR}"
+      "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/scoped-cleanup-work"
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/run-scoped-cleanup.cmake")
+  set_tests_properties(levell_rxas_scoped_cleanup PROPERTIES
+    PASS_REGULAR_EXPRESSION "RXAS_SCOPED_CLEANUP[|]failures=0"
+    RUN_SERIAL TRUE TIMEOUT 240 LABELS "level-l;research;inlining;rxas")
+  crexx_register_test_prep_targets(TESTS levell_rxas_scoped_cleanup
+    TARGETS llrxinline rxbvm rxas)
   add_test(NAME levell_rxas_integer_predicates
     COMMAND ${CMAKE_COMMAND}
       "-DVM=$<TARGET_FILE:rxbvm>" "-DASSEMBLER=$<TARGET_FILE:rxas>"

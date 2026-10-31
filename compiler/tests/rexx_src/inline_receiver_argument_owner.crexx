@@ -1,0 +1,55 @@
+/* Caller attribute locators keep their receiver through readonly borrowing. */
+options levelb
+namespace inline_receiver_argument_owner
+
+main: procedure = .int
+  source = .Bag(7)
+  direct = source.copyfirst()
+  indexed = source.copyindexed()
+  reads = source.reads()
+  if direct <> 7 | indexed <> 7 | reads <> 1 then do
+    say 'FAIL receiver argument:' direct indexed reads
+    return 1
+  end
+  say '7 7 1'
+  return 0
+
+Item: class
+  _value = .int
+  *: factory
+    arg value = .int
+    _value = value
+    return
+  value: method = .int
+    return _value
+
+Bag: class
+  _items = .Item[]
+  _count = .int
+  _reads = .int
+  *: factory
+    arg seed = .int
+    _items[1] = .Item(seed)
+    _count = 1; _reads = 0
+    return
+  push: method = .void
+    arg item = .Item
+    _count = _count + 1
+    _items[_count] = item
+    return
+  last: method = .int
+    item = _items[_count]
+    return item.value()
+  copyfirst: method = .int
+    result = .Bag(99)
+    call result.push(_items[1])
+    return result.last()
+  nextindex: method = .int
+    _reads = _reads + 1
+    return 1
+  reads: method = .int
+    return _reads
+  copyindexed: method = .int
+    result = .Bag(99)
+    call result.push(_items[nextindex()])
+    return result.last()

@@ -23,6 +23,7 @@
  */
 
 #include <ctype.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +31,8 @@
 #include "platform.h"
 #include "rxbin.h"
 #include "rxsignature.h"
+#include "rxinline_recipe.h"
+#include "rxlink_inline_service.h"
 #include "../binutils/rxcore_bindings.h"
 
 typedef struct string_list {
@@ -54,6 +57,7 @@ typedef struct link_module_info {
     string_list unresolved_imports;
     int has_main;
     int selected;
+    int final_inline_seals; /* Native-validated service candidate, already in final image ordinals. */
     int queued;
     int omitted;
 } link_module_info;
@@ -73,6 +77,9 @@ typedef struct link_config {
     char *map_path;
     char *provider_requirements_path;
     char *location;
+    const char *inline_service;
+    const char *inline_policy;
+    string_list inline_runtime;
     int strip_source_metadata;
     int strip_inline_metadata;
     int debug_mode;
@@ -102,6 +109,9 @@ typedef struct const_map_entry {
 typedef struct rxlink_output_module {
     module_file *module;
     module_file *source_module;
+    uint32_t image_module;
+    uint32_t image_module_count;
+    int final_inline_seals;
     const_map_entry *maps;
     size_t map_count;
     size_t map_capacity;
@@ -905,6 +915,9 @@ static void init_link_config(link_config *config) {
     config->map_path = 0;
     config->provider_requirements_path = 0;
     config->location = 0;
+    config->inline_service = 0;
+    config->inline_policy = "default";
+    string_list_init(&config->inline_runtime);
     config->strip_source_metadata = 0;
     config->strip_inline_metadata = 1;
     config->debug_mode = 0;
@@ -915,6 +928,7 @@ static void free_link_config(link_config *config) {
     string_list_free(&config->roots);
     string_list_free(&config->includes);
     string_list_free(&config->omits);
+    string_list_free(&config->inline_runtime);
     free(config->output_path);
     free(config->map_path);
     free(config->provider_requirements_path);
@@ -1827,6 +1841,96 @@ static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleo
     return offset;
 }
 
+/* Inline recipes and qualified global references are executable constants.
+ * Rebase an assembler-sealed local reference before leaf deduplication; raw
+ * binary constants with the same bytes must retain their original payload.
+ * Service-produced candidates carry final image ordinals and are separately
+ * validated before this ordinary relocation pass. */
+enum inline_operand_kind {
+    INLINE_OPERAND_RECIPE = 1,
+    INLINE_OPERAND_MODULE,
+    INLINE_OPERAND_PROCEDURE
+};
+
+static size_t link_inline_operand(rxlink_build_context *context,
+                                  rxlink_output_module *output_module,
+                                  module_file *input_module,
+                                  size_t old_offset, enum inline_operand_kind kind,
+                                  int *ok) {
+    const chameleon_constant *entry;
+    const string_constant *source;
+    string_constant *copy;
+    size_t output_offset;
+    if (old_offset > input_module->header.constant_size ||
+        input_module->header.constant_size - old_offset < sizeof(chameleon_constant))
+        goto invalid;
+    entry = (const chameleon_constant *)((const unsigned char *)input_module->constant + old_offset);
+    if (entry->type != BINARY_CONST ||
+        entry->size_in_pool > input_module->header.constant_size - old_offset ||
+        entry->size_in_pool < offsetof(string_constant, string)) goto invalid;
+    source = (const string_constant *)entry;
+    if (source->string_len >
+        entry->size_in_pool - offsetof(string_constant, string)) goto invalid;
+    copy = (string_constant *)malloc(entry->size_in_pool);
+    if (!copy) {
+        RX_REPORT_OOM("copy rxlink inline operand", entry->size_in_pool,
+                      input_module->name);
+        *ok = 0;
+        return 0;
+    }
+    memcpy(copy, entry, entry->size_in_pool);
+    if (kind == INLINE_OPERAND_RECIPE) {
+        rxinl_recipe_view view;
+        if (!rxinl_recipe_decode(copy->string, copy->string_len, &view) ||
+            !(view.flags & RXINL_RECIPE_SEALED)) goto invalid_copy;
+        if (output_module->final_inline_seals) {
+            if (view.image_module >= output_module->image_module_count)
+                goto invalid_copy;
+        } else {
+            if (!input_module->semantic_graph ||
+                view.image_module != input_module->semantic_module_index ||
+                !rxinl_recipe_seal(copy->string, copy->string_len,
+                                   output_module->image_module,
+                                   view.provider_procedure)) goto invalid_copy;
+        }
+    } else if (kind == INLINE_OPERAND_MODULE) {
+        rxinl_module_ref_view view;
+        if (!rxinl_module_ref_decode(copy->string, copy->string_len, &view))
+            goto invalid_copy;
+        if (output_module->final_inline_seals) {
+            if (!view.sealed ||
+                view.image_module >= output_module->image_module_count)
+                goto invalid_copy;
+        } else {
+            if (!view.self_relative ||
+                (view.sealed &&
+                 view.image_module != input_module->semantic_module_index) ||
+                !rxinl_module_ref_seal(copy->string, copy->string_len,
+                                       output_module->image_module))
+                goto invalid_copy;
+        }
+    } else if (kind == INLINE_OPERAND_PROCEDURE) {
+        rxinl_qualified_proc_view view;
+        if (!rxinl_qualified_proc_decode(copy->string, copy->string_len,
+                                         &view) ||
+            !output_module->final_inline_seals || !view.sealed ||
+            view.image_module >= output_module->image_module_count)
+            goto invalid_copy;
+    } else {
+        goto invalid_copy;
+    }
+    output_offset = dedupe_leaf_constant(context, &copy->base, ok);
+    free(copy);
+    return output_offset;
+invalid_copy:
+    free(copy);
+invalid:
+    fprintf(stderr, "ERROR: unsealed or mismatched inline operand in module %s\n",
+            input_module->name ? input_module->name : "(unnamed)");
+    *ok = 0;
+    return 0;
+}
+
 static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_module *output_module,
                                    module_file *input_module, size_t old_offset, int *ok);
 
@@ -2343,26 +2447,50 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
     index = 0;
     while (index < input->header.instruction_size) {
         OpFormat format;
+        int opcode;
         size_t operand_count;
         size_t operand_index;
         int ok = 1;
 
-        format = rxbin_opcode_format(input_code[index].instruction.opcode);
+        opcode = input_code[index].instruction.opcode;
+        format = rxbin_opcode_format(opcode);
         operand_count = rxop_format_operand_count(format);
+        if (operand_count >= input->header.instruction_size - index) return 0;
         for (operand_index = 0; operand_index < operand_count; operand_index++) {
-            bin_code *operand = &output_code[index + (size_t)operand_index + 1];
-            if (rx_graph_operand_kind(input_code[index].instruction.opcode,
+            bin_code *operand = &output_code[index + operand_index + 1u];
+            size_t old_offset = input_code[index + operand_index + 1u].index;
+            if (rx_graph_operand_kind(opcode,
                                       (unsigned int)operand_index) != RX_GRAPH_OPERAND_NONE) {
+                continue;
+            }
+            if (opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u) {
+                operand->index = link_inline_operand(context, output_module, input,
+                                                     old_offset, INLINE_OPERAND_RECIPE, &ok);
+                if (!ok) return 0;
+                continue;
+            }
+            if (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u) {
+                operand->index = link_inline_operand(context, output_module, input,
+                                                     old_offset, INLINE_OPERAND_MODULE, &ok);
+                if (!ok) return 0;
                 continue;
             }
             switch (rxop_format_operand_type(format, operand_index)) {
                 case OP_FUNC:
+                    if (old_offset < input->header.constant_size &&
+                        input->header.constant_size - old_offset >= sizeof(chameleon_constant) &&
+                        ((chameleon_constant *)((unsigned char *)input->constant + old_offset))->type == BINARY_CONST) {
+                        operand->index = link_inline_operand(context, output_module, input,
+                                                             old_offset, INLINE_OPERAND_PROCEDURE, &ok);
+                        break;
+                    }
+                    /* Fall through to the ordinary module-owned procedure. */
                 case OP_FLOAT:
                 case OP_STRING:
                 case OP_DECIMAL:
                 case OP_BINARY:
                     operand->index = link_constant_offset(context, output_module, input,
-                                                          input_code[index + (size_t)operand_index + 1].index, &ok);
+                                                          old_offset, &ok);
                     break;
                 default:
                     break;
@@ -2377,11 +2505,20 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
 
 static int build_linked_modules(rxlink_build_context *context, module_list *modules, rxlink_output_list *outputs) {
     size_t i;
+    size_t selected_count = 0u;
+
+    for (i = 0u; i < modules->count; ++i)
+        if (modules->items[i].selected && !modules->items[i].omitted)
+            selected_count++;
+    if (selected_count > UINT32_MAX) return 0;
 
     for (i = 0; i < modules->count; i++) {
         rxlink_output_module output_module;
         memset(&output_module, 0, sizeof(output_module));
         if (!modules->items[i].selected || modules->items[i].omitted) continue;
+        output_module.image_module = (uint32_t)outputs->count;
+        output_module.image_module_count = (uint32_t)selected_count;
+        output_module.final_inline_seals = modules->items[i].final_inline_seals;
         if (!rewrite_module_code(context, &output_module, &modules->items[i]) ||
             !output_list_append(outputs, &output_module)) {
             if (output_module.module) free_module(output_module.module);
@@ -2614,6 +2751,73 @@ static int write_linked_image(const link_config *config, rxlink_build_context *c
     return ok;
 }
 
+static void inline_metadata_init(link_module_info *info) {
+    string_list_init(&info->exports); string_list_init(&info->imports);
+    string_list_init(&info->defined_interfaces); string_list_init(&info->implemented_interfaces);
+    string_list_init(&info->referenced_interfaces); string_list_init(&info->provided_methods);
+    string_list_init(&info->referenced_methods); string_list_init(&info->unresolved_imports);
+    info->has_main = 0;
+}
+
+static void inline_metadata_free(link_module_info *info) {
+    string_list_free(&info->exports); string_list_free(&info->imports);
+    string_list_free(&info->defined_interfaces); string_list_free(&info->implemented_interfaces);
+    string_list_free(&info->referenced_interfaces); string_list_free(&info->provided_methods);
+    string_list_free(&info->referenced_methods); string_list_free(&info->unresolved_imports);
+}
+
+/* Validate all candidate contracts against a trial view. No live selected
+ * module, metadata ownership or publication path changes until it is green. */
+static int apply_inline_service(module_list *modules, const link_config *config) {
+    module_file **selected = NULL, **candidates = NULL;
+    const char **selectors = NULL;
+    size_t *indices = NULL, count = 0u, i, n;
+    unsigned char *staged = NULL;
+    module_list trial;
+    rxlink_inline_options options;
+    int ok = 0;
+    if (!config->inline_service || !strcmp(config->inline_policy, "never")) return 1;
+    memset(&trial, 0, sizeof(trial)); memset(&options, 0, sizeof(options));
+    for (i = 0u; i < modules->count; ++i)
+        if (rxlink_module_is_active(&modules->items[i])) ++count;
+    if (!count || count > SIZE_MAX / sizeof(*selected)) return 0;
+    selected = calloc(count, sizeof(*selected)); selectors = calloc(count, sizeof(*selectors));
+    indices = calloc(count, sizeof(*indices));
+    staged = calloc(count, 1u);
+    if (!selected || !selectors || !indices || !staged) goto done;
+    for (i = 0u, n = 0u; i < modules->count; ++i) if (rxlink_module_is_active(&modules->items[i])) {
+        selected[n] = modules->items[i].module; selectors[n] = modules->items[i].selector_name; indices[n++] = i;
+    }
+    options.service = config->inline_service; options.policy = config->inline_policy;
+    options.location = config->location; options.runtime = config->inline_runtime.items;
+    options.runtime_count = config->inline_runtime.count; options.selectors = selectors;
+    if (rxlink_inline_service(selected, count, &options, &candidates) != 0) goto done;
+    trial.items = calloc(modules->count, sizeof(*trial.items));
+    if (!trial.items) goto done;
+    trial.count = modules->count;
+    memcpy(trial.items, modules->items, modules->count * sizeof(*trial.items));
+    for (n = 0u; n < count; ++n) if (candidates[n]) {
+        link_module_info *info = &trial.items[indices[n]];
+        inline_metadata_init(info); staged[n] = 1u; info->module = candidates[n]; info->final_inline_seals = 1;
+        if (!load_module_metadata(info)) goto done;
+        for (i = 0u; i < modules->items[indices[n]].unresolved_imports.count; ++i)
+            if (!string_list_append(&info->unresolved_imports, modules->items[indices[n]].unresolved_imports.items[i])) goto done;
+    }
+    if (!rxlink_validate_contracts(&trial)) goto done;
+    for (n = 0u; n < count; ++n) if (candidates[n]) {
+        link_module_info *info = &modules->items[indices[n]];
+        inline_metadata_free(info); free_module(info->module);
+        *info = trial.items[indices[n]]; candidates[n] = NULL;
+    }
+    ok = 1;
+done:
+    if (!ok && trial.items && candidates)
+        for (n = 0u; n < count; ++n) if (staged[n]) inline_metadata_free(&trial.items[indices[n]]);
+    if (candidates) for (n = 0u; n < count; ++n) free_module(candidates[n]);
+    free(trial.items); free(candidates); free(selected); free(selectors); free(indices); free(staged);
+    return ok;
+}
+
 static void print_help(void) {
     printf("cREXX Linker\n");
     printf("Usage: rxlink [options] input_file [input_file ...]\n");
@@ -2627,6 +2831,9 @@ static void print_help(void) {
     printf("  -E encoding     Control/map/report text file encoding (RXBIN stays binary)\n");
     printf("  -s              Strip source/TRACE debug metadata from linked output\n");
     printf("  -i              Preserve inline-body metadata in linked output\n");
+    printf("  --inline-service PATH  Run the shared B/L service after exact selection\n");
+    printf("  --inline-runtime PATH  Load an explicit service dependency (repeatable)\n");
+    printf("  --inline-policy POLICY Select default, all-legal or never\n");
     printf("  -d              Debug mode\n");
     printf("  -h              Help\n");
 }
@@ -2647,6 +2854,18 @@ int main(int argc, char *argv[]) {
     memset(&provider_requirements, 0, sizeof(provider_requirements));
 
     for (argi = 1; argi < argc && argv[argi][0] == '-'; argi++) {
+        if (!strcmp(argv[argi], "--inline-service")) {
+            if (++argi >= argc) goto fail;
+            config.inline_service = argv[argi]; continue;
+        }
+        if (!strcmp(argv[argi], "--inline-runtime")) {
+            if (++argi >= argc || !string_list_append(&config.inline_runtime, argv[argi])) goto fail;
+            continue;
+        }
+        if (!strcmp(argv[argi], "--inline-policy")) {
+            if (++argi >= argc || (strcmp(argv[argi], "default") && strcmp(argv[argi], "all-legal") && strcmp(argv[argi], "never"))) goto fail;
+            config.inline_policy = argv[argi]; continue;
+        }
         if (strlen(argv[argi]) != 2) {
             fprintf(stderr, "ERROR: invalid argument %s\n", argv[argi]);
             goto fail;
@@ -2722,6 +2941,7 @@ int main(int argc, char *argv[]) {
     if (!load_input_modules(&modules, &config)) goto fail;
     if (!select_modules(&modules, &config)) goto fail;
     if (!rxlink_validate_contracts(&modules)) goto fail;
+    if (!apply_inline_service(&modules, &config)) goto fail;
     if (!collect_provider_requirements(&modules, &provider_requirements)) goto fail;
     if (!build_linked_modules(&build_context, &modules, &outputs)) goto fail;
     if (!outputs.count) {

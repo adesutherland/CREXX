@@ -1,7 +1,7 @@
 # RXAS inlining architecture
 
-**Status: short design summary for review; implementation and ISA details remain
-open.** The [toolchain plan](../PLAN.md) owns INL-AC01–09 and
+**Status: governing architecture approved for one coherent implementation;
+exact ISA encoding and implementation qualification remain open.** The [toolchain plan](../PLAN.md) owns INL-AC01–09 and
 INL-STEP01–06, including STEP03F. This document records the governing architecture before a
 detailed instruction or implementation design. The earlier per-opcode admission
 history and mirrored `INLINE_ENTER`/`INLINE_LEAVE` proposal are superseded;
@@ -60,6 +60,16 @@ signal-shape recognizer. Policy changes and joins are edge-sensitive.
 Inaccuracies in the shared graph/effect layer are repaired there with
 independent controls. Existing Level L normal CFG and bounded signal proofs
 are a foundation, not yet this complete service.
+
+The current canonical procedure-wide policy union covers possible handler
+destinations but does not correlate installed policy with the data path.
+Normalization keeps those regions with `signal.policy.path.state.unproved`.
+G `ON SIGNAL` blocks, generated C condition capture layers and handwritten
+nested policies therefore remain open implementation cases. Their bounded
+extension must retain product points for source operation and policy
+environment, with data facts on those separate paths, rather than merge
+destinations onto one source point. Resource or policy-stack overflow stays
+unknown; the interim safety gate does not close signal coverage.
 
 The same Level L target owner supplies checked register/reference remapping
 across instructions, implicit windows, labels, procedures, constants and
@@ -215,10 +225,9 @@ One VM departure owner covers normal RET, `SIGRET`, signal responses that
 leave the activation, branch unwind, cancellation and exit. Ignored, resumed
 and CALL-handler signals retain the activation; a returning real handler
 closes only itself. The VM's existing copy-on-write signal policy should remain
-available. This is a semantic contract, **not** approval of
-`INLINE_ENTER`/`INLINE_LEAVE`, a heavy virtual frame, a per-call-form
-entry family or any proposed opcode spelling. The exact minimal ISA, binary
-feature gate, validation and cost need a separate concrete review.
+available. The subsequent concrete ISA review below fixes the scoped
+operation and RXBIN 007 gate. Simple proved local leaves still clone with no
+entry or departure opcode.
 
 ## Modules, globals and lifetime normalization
 
@@ -234,15 +243,31 @@ private global by public name, is wrong. Untaken calls must not trigger an
 initializer early, and retained nested calls need the right logical origin.
 The shared Level L `modulemap` now records the exact selected provider owner,
 image-local module ID and global slot beside remapped fields. It reports a
-foreign private global as unrenderable in ordinary RXAS. The linker/runtime
-binding representation that will make that qualified reference executable is
-still a separate decision; the Level L result adds no `.meta` proof payload.
-Code relocation also needs a checked operational profile that explicitly
-accounts for frame, module, code and debug observations at each moved
-instruction. The committed opcode catalogue cannot certify their absence, so
-its Level L profile remains unknown for this purpose. Constructed profiles
-can provide that proof inside Level L; it is not serialized as RXAS metadata.
+foreign private global as unrenderable in ordinary RXAS. The approved
+executable binding is scoped `QGLOBBIND`: it binds only a used proxy to an
+exact selected image module and provider global slot. `self` is relative to
+the executing module; `@N` names a linker-sealed zero-based image ordinal.
+The scope restores active and base bindings on every departure. No compiler
+proof or private-global exposure is serialized as `.meta`.
+A retained nested foreign CALL/SIGCALL uses its ordinary opcode with a typed
+qualified procedure operand `@M::P()` naming exact image and provider
+procedure ordinals. The loader validates and resolves it before execution.
+It is not a public export, and a standalone unsealed body cannot create the
+binding.
+Code relocation uses a checked operational profile that explicitly accounts
+for frame, module, code and debug observations at each moved instruction.
+The opcode catalogue supplies this profile to Level L; an incomplete field
+remains unknown and cannot prove an effect absent. Constructed profiles test
+the same Level L algorithms independently of native catalogue coverage.
+No such proof is serialized as RXAS metadata.
 
+Every owned `rN` local starts **dirty** on entry to a normal call or inline
+activation. Dirty means that this activation has not defined the component;
+recycled physical bytes may exist, but reading them is a source error. It is
+distinct from a defined value whose contents are unknown to the analysis.
+An `aN` binding borrows the caller's storage and carries that storage's actual
+availability; binding does not initialize a dirty actual. `gN` follows its
+module-owned storage lifetime rather than a procedure-local entry rule.
 Private inline locals have an analysis-only availability marker at activation
 and an end marker on every departure; these are not emitted instructions. Code
 must not depend on values left by a recycled callee frame. A **standard early
@@ -256,11 +281,24 @@ component and source location. If a whole-cell clear would erase a component
 already defined on a valid path, the pass must place it earlier on the affected
 path or use a component-specific clear; it must never clear borrowed arguments
 or globals indiscriminately. The inliner runs on normalized input and reports
-any remaining such read as a shared target-analysis defect. This deliberately
-defines new RXAS normalization behavior; its exact warning/clear semantics and
-compatibility need an owner decision before implementation. A mere unknown
-analysis fact or whole-value copy is not itself proof of an entry-dependent
-observation.
+any remaining such read as a shared target-analysis defect. The Level L
+normalization service implements this warning/clear transaction on an exact
+dirty-read proof; uncertainty about a defined value never licenses a clear. Its
+assembler-stage integration remains part of this inliner increment. A mere
+unknown analysis fact or whole-value copy is not itself proof of an
+entry-dependent observation.
+
+Dirty returns can create normalization dependencies between procedures.
+Privately normalize complete procedures first, then rebuild the shared flow
+after a partial canonical stage for callers on that candidate. A complete
+per-procedure proof and validated clears establish the normalized postcondition
+directly; independent constructed premises are never replaced by canonical
+semantics. Incomplete constructed premises retain explicitly. Each changed
+iteration must clear a new owned
+local; one cumulative budget bounds analysis, remapping and retained state.
+Publish only a complete fixed point without remaining dirty observations,
+composing original-to-final instruction IDs and warning locations. A failed or
+unproved stage leaves the original module and publishes no staged warnings.
 
 ## Post-inline cleanup and qualification
 
@@ -298,7 +336,103 @@ how frequently difficult signal shapes occur, but preserve G/C correctness
 where used. The existing plan's INL-STEP06 remains the integration milestone;
 this summary does not close it or claim product performance or publication.
 
-## Decisions before a detailed ISA or implementation design
+## Approved implementation decisions and remaining engineering contracts
+
+Adrian approved the five implementation decisions on 30 October 2026. The
+inliner will use one logical call/return/signal activation model, with scoped
+runtime operations emitted only for context that the site needs. Ordered actual
+register pointers form a checked argument-bank view. Exact linker-selected
+bodies may use a checked module-and-slot reference to private worker-local
+globals, without exposing them or transporting inliner proofs through metadata.
+The canonical opcode database drives ordinary instruction flow and cloning;
+database or opcode defects found by integrated testing are repaired at their
+owner. Availability, semantic legality and profitability remain separate, with
+disabled and force-legal controls. Assembler-local expansion precedes normal
+optimization; link-time expansion uses a bounded changed-caller cleanup panel.
+Expansion must execute correctly with optional cleanup disabled.
+
+Before changing wire or VM semantics, the implementation review records the
+smallest executable operation/operand encoding, RXBIN 007 feature and validation
+rule, precise departure/exception behavior, and one ordinary RXAS rendering.
+This is an implementation contract review under the approved decisions, not a
+new decision about whether these capabilities are required. A material change
+to the approved semantics remains a user decision.
+
+### Reviewed RXBIN 007 inline-scope encoding
+
+`RXBIN007_FEATURE_INLINE_SCOPES` (bit 8) gates three semantic operations in
+four opcode forms. The assembler parses readable operands into typed `INL1`
+and `QGR1` binary constants; the VM decodes bounded fields, never source text
+or an opaque inliner proof. The selected linker image seals provider module
+and procedure ordinals. These ordinals belong to that immutable image, not
+the context's dynamic load order.
+
+```rxas
+inlenter r0,helper(),"count=1;args=list(r10);a0=r20;proxies=(r21:1);owned=(r20,r21,r22,r23);prep=none",after_helper
+linkargv r21,1
+linkargv r21,r7,0
+qglobbind r22,"self",0
+qglobbind r23,"@2",1
+call @2::3()
+after_helper:
+```
+
+`INLENTER` takes a result cell, exact provider procedure, recipe and normal
+continuation label. `count=` is a decimal literal or `rN`; `args=list(rN,...)`
+captures ordered actual pointers, while `args=window(rN)` begins at the first
+actual slot after a counted call's count/base slot. `a0=rN` is the fresh count
+cell. `proxies=(rCell:ordinal,...)` maps original callee argument cells, with
+ordinal zero naming `a0`. An ordinal above the captured actual count names an
+absent optional formal: its proxy retains a fresh empty owned backing cell;
+it never borrows unrelated caller storage. `owned=(rN,...)` lists every fresh
+cell whose active/base/identity binding the clone can change, including private
+locals, argument/global proxies and LINK/SWAP/UNLINK destinations. Only
+comma-separated single register names are accepted; ranges and duplicate
+destinations are rejected. The VM snapshots and restores only this sparse set.
+
+`prep=none`, `clear(rN)`, `swap(rN,rM)`, `settp(rN,decimalFlags)` and
+`settp(rN,decimalFlags)+swap(rA,rB)` encode only preparation that the original
+call performs inside its atomic instruction. `clear` belongs to zero-argument
+`CALL R,P`; a prior standalone `NULL` is never folded into it. Optional
+`;result=ignored` preserves void `CALL P` without copying a return payload.
+Preparation precedes result/count/window capture, target/initializer checks
+and scope commit. Any failed checked entry leaves no partial scope/proxy state.
+`LINKARGV` requires an active matching scope, accepts an immediate selector or
+a register selector plus signed adjustment, and binds only after bounds checks.
+
+`QGLOBBIND` binds a used fresh proxy to the selected provider's worker-local
+global. `"self"` is self-relative even if the caller is not image module zero;
+`"@N"` is an exact zero-based image-local ordinal sealed against the frozen
+selection. Human-readable module names are accepted for linker resolution.
+When linking an ordinary assembled module, `rxlink` rebases only its sealed
+local `INL1` and self-relative `QGR1` references to the final image ordinal.
+Foreign `QGR1` and `QPR1` operands require a validated selected-module
+candidate from the linker service; unvalidated foreign seals are rejected.
+The existing `P` operand accepts typed `QPR1` source
+`@moduleOrdinal::procedureOrdinal()` for retained private CALL/SIGCALL; a
+standalone unsealed qualified target is rejected at VM preparation. All
+`INL1`, `QGR1` and `QPR1` lengths, versions, flags, counts, ordinals and
+duplicate register roles are validated before execution. Scope departure
+owns RET, inherited `SIGRET`, handler branch unwind, cancellation, numeric
+context and reference cleanup. Caller-owned pointee mutations remain visible.
+
+The explicit assembler driver invokes this same B/L service on a private UTF8
+snapshot before ordinary RXAS optimization:
+
+```text
+rxas --inline-service llrxinline.rxbin --inline-module logical-name \
+     --inline-vm rxvm --inline-runtime library.rxbin \
+     --inline-runtime rxfnsl.rxbin [other required runtime images] \
+     [--inline-policy default|all-legal|never] [-n] source.rxas
+```
+
+The driver passes `--no-cleanup` to the service; normal RXAS optimization owns
+post-expansion cleanup, and `-n` disables only that native optimization. It
+keeps the original source name as RXBIN module identity and default output
+stem, reads service output through a separate private path, and removes
+private files on normal success/failure. Cross-module expansion belongs to
+the linker's frozen selected-image driver; arbitrary standalone `--body`
+paths do not certify its provider identity.
 
 - Specify the smallest runtime activation/context operations and their expected
   per-site cost, including inherited `SIGRET` and all departure paths; check

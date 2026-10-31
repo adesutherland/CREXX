@@ -1,0 +1,6 @@
+/* Handwritten foreign global selection has no validated linker provenance. */
+.globals=1
+
+main() .locals=1
+    qglobbind r0,"@1",0
+    ret 0

@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "rxdefs.h"
+#include "rxflags.h"
 
 static int failures;
 
@@ -59,6 +60,85 @@ static int valid_effect_signature(const char *signature, size_t operand_count) {
     return 1;
 }
 
+/* One database-wide structural audit. Component projections and signal
+ * precision are reported separately: neither is a value evaluator or a
+ * reason to equate an ordinary external effect with a physical-frame read. */
+static void check_clone_contract(const OpInfo *op, int *categories,
+                                int *unknown_signals, int *unknown_writes) {
+    RxOpEffects effects = rxop_effects(op->opcode);
+    RxOpSignalContract signal = rxop_signal_contract(op->opcode);
+    RxOpCloneCategory category = rxop_clone_category(op->opcode);
+    RxOpBindingAction binding = rxop_binding_action(op->opcode);
+    unsigned int activation = rxop_activation_effects(op->opcode);
+    size_t i, count = rxop_format_operand_count(op->format);
+    int targets = 0, successors = rxop_normal_successors(op->opcode);
+    int fallthrough = rxop_normal_fallthrough(op->opcode);
+    check(category >= RXOP_CLONE_MISSING && category <= RXOP_CLONE_RETAINED,
+          "source opcode has no structural clone treatment", op);
+    if (category >= RXOP_CLONE_MISSING && category <= RXOP_CLONE_RETAINED)
+        ++categories[category];
+    check(binding >= RXOP_BINDING_NONE && binding <= RXOP_BINDING_LIFETIME,
+          "source opcode has an unknown binding action", op);
+    check(effects.implicit >= RXOP_IMPLICIT_NONE &&
+              effects.implicit <= RXOP_IMPLICIT_QUALIFIED_GLOBAL,
+          "source opcode has an unknown implicit selector", op);
+    if (signal.state == RXOP_SIGNAL_STATE_UNKNOWN) ++*unknown_signals;
+    for (i = 0; i < count; ++i) {
+        if (rxop_effect_branch_target_operand(&effects, i)) {
+            ++targets;
+            check(rxop_format_operand_type(op->format, i) == OP_ID,
+                  "normal/exceptional relocation target is not a label", op);
+        }
+        if (rxop_effect_writes_operand(&effects, i) &&
+            !rxop_component_write_is_known(op->opcode, i)) ++*unknown_writes;
+        if (!rxop_effect_writes_operand(&effects, i))
+            check(rxop_component_write_is_known(op->opcode, i) ==
+                      (effects.state == RXOP_EFFECT_CLASSIFIED),
+                  "known no-write is confused with missing write projection", op);
+    }
+    if (effects.state != RXOP_EFFECT_CLASSIFIED) {
+        check(category == RXOP_CLONE_MISSING &&
+                  (activation & RXOP_ACTIVATION_UNKNOWN),
+              "unclassified opcode silently claims ordinary cloning", op);
+        return;
+    }
+    if (effects.semantics & RXOP_SEM_INDIRECT_BRANCH) {
+        check(successors == -2 && !fallthrough &&
+                  category == RXOP_CLONE_RETAINED,
+              "indirect jump invents a complete direct-label CFG", op);
+    } else if (op->flow == FLOW_NEXT) {
+        check(successors == -1 && !fallthrough,
+              "normal fallthrough invents exceptional label successors", op);
+    } else if (op->flow == FLOW_TERM) {
+        check(successors == 0 && !fallthrough,
+              "terminal opcode has normal successors", op);
+    } else if (op->flow == FLOW_JUMP) {
+        check(targets == 1 && successors == 1 && !fallthrough,
+              "direct jump lacks its declared target edge", op);
+    } else if (op->flow == FLOW_COND) {
+        check((targets == 1 || targets == 2) && successors == 2 &&
+                  fallthrough == (targets == 1),
+              "direct conditional lacks ordered targets/fallthrough", op);
+    }
+    if (category == RXOP_CLONE_ORDINARY)
+        check(activation == RXOP_ACTIVATION_NONE &&
+                  effects.implicit == RXOP_IMPLICIT_NONE &&
+                  binding == RXOP_BINDING_NONE && successors != -2,
+              "ordinary clone hides an activation adapter/observation", op);
+    if (binding != RXOP_BINDING_NONE)
+        check((activation & RXOP_ACTIVATION_BINDING) &&
+                  category != RXOP_CLONE_ORDINARY,
+              "binding action silently claims ordinary cloning", op);
+    if (effects.semantics & RXOP_SEM_CALL)
+        check(category == RXOP_CLONE_CALL &&
+                  (activation & RXOP_ACTIVATION_CALL),
+              "call lacks its activation adapter", op);
+    if (effects.semantics & RXOP_SEM_RETURN)
+        check(category == RXOP_CLONE_RETURN &&
+                  (activation & RXOP_ACTIVATION_RETURN),
+              "return lacks its activation adapter", op);
+}
+
 static void check_unknown_effects(int opcode) {
     RxOpEffects effects;
     RxOpSignalContract signal;
@@ -86,6 +166,45 @@ static void check_unknown_effects(int opcode) {
               signal.policy_source == RXOP_SIGNAL_SOURCE_UNKNOWN &&
               signal.continuations == RXOP_SIGNAL_CONT_ALL,
           "unknown signal contract must fail closed", NULL);
+}
+
+static void check_target_contract(const OpInfo *op) {
+    RxOpEffects effects = rxop_effects(op->opcode);
+    RxOpCallContract call = rxop_call_contract(op->opcode);
+    size_t i, count = rxop_format_operand_count(op->format);
+    if (effects.state != RXOP_EFFECT_CLASSIFIED) return;
+    check(rxop_binding_recipe(op->opcode) != NULL,
+          "classified binding lacks an ordered canonical recipe", op);
+    check(rxop_implicit_recipe(op->opcode) != NULL,
+          "classified implicit selector lacks a canonical recipe", op);
+    check((call.kind != RXOP_CALL_NONE) == !!(effects.semantics & RXOP_SEM_CALL),
+          "canonical call recipe disagrees with call semantics", op);
+    if (call.kind != RXOP_CALL_NONE) {
+        check(call.target_operand > 0 && call.target_operand <= count &&
+                  call.result_operand <= count && call.count_operand <= count &&
+                  call.window_operand == call.count_operand &&
+                  call.capture_after_prefix && call.atomic_prefix &&
+                  call.actual_operands && call.prefix,
+              "call recipe has invalid selectors or capture boundary", op);
+        if (call.kind == RXOP_CALL_DIRECT)
+            check(rxop_format_operand_type(op->format, call.target_operand - 1) == OP_FUNC,
+                  "direct call target is not a procedure reference", op);
+    }
+    for (i = 0; i < count; ++i) {
+        RxOpRelocationKind relocation = rxop_operand_relocation(op->opcode, i);
+        unsigned int definition = rxop_definition_components(op->opcode, i);
+        check(relocation != RXOP_RELOC_UNKNOWN,
+              "classified operand lacks a typed relocation contract", op);
+        check(!(definition & ~rxop_component_may_writes(op->opcode, i)),
+              "normal definition is outside conservative may-write coverage", op);
+        if (rxop_effect_writes_operand(&effects, i))
+            check(rxop_component_may_writes(op->opcode, i) == RXOP_COMPONENT_ALL &&
+                      rxop_flag_may_writes(op->opcode, i) == RXFLAG_READABLE_MASK,
+                  "explicit write lacks conservative component/flag coverage", op);
+        if (rxop_format_operand_type(op->format, i) == OP_REG)
+            check(relocation == RXOP_RELOC_REGISTER,
+                  "explicit register relocation loses its typed selector", op);
+    }
 }
 
 static void check_conversion_metadata(int opcode, unsigned int source,
@@ -147,6 +266,51 @@ static void check_native_stem_signal_contract(int opcode) {
           &op_table[opcode]);
 }
 
+static void check_checked_integer_opcode(int opcode) {
+    const OpInfo *op = &op_table[opcode];
+    RxOpSignalContract signal = rxop_signal_contract(opcode);
+    RxOpEffects effects = rxop_effects(opcode);
+    int partial = opcode >= OP_IPOW_REG_REG_REG && opcode <= OP_IPOW_REG_INT_REG;
+    int setter = opcode >= OP_IADD_REG_REG_REG && opcode <= OP_IMOD_REG_INT_REG;
+    const char *names = opcode >= OP_IDIV_REG_REG_REG && opcode <= OP_IMOD_REG_INT_REG
+            ? "DIVISION_BY_ZERO|OVERFLOW_UNDERFLOW" : "OVERFLOW_UNDERFLOW";
+    size_t operand;
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == (partial ? RXOP_SIGNAL_PHASE_PARTIAL_WRITES
+                                       : RXOP_SIGNAL_PHASE_BEFORE_WRITES) &&
+              signal.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES &&
+              signal.static_names && !strcmp(signal.static_names, names) &&
+              signal.failure_writes == (partial ? RXOP_OP_1 : RXOP_OP_NONE) &&
+              signal.failure_component_writes == (partial ? RXOP_COMPONENT_INTEGER
+                                                          : RXOP_COMPONENT_NONE) &&
+              signal.failure_context_writes == RXOP_CONTEXT_NONE &&
+              signal.dependencies == RXOP_SIGNAL_DEP_NONE &&
+              signal.continuations == RXOP_SIGNAL_CONT_ALL,
+          "checked integer arithmetic has exact failure phase, names and writes", op);
+    check(rxop_component_clears(opcode, 0) ==
+              (setter ? RXOP_COMPONENT_REFERENCE | RXOP_COMPONENT_NATIVE_PAYLOAD
+                      : RXOP_COMPONENT_NONE),
+          "integer setter versus direct-field payload lifetime contract", op);
+    for (operand = 0; operand < rxop_format_operand_count(op->format); ++operand) {
+        if (rxop_effect_reads_operand(&effects, operand))
+            check(rxop_component_may_reads(opcode, operand) == RXOP_COMPONENT_INTEGER &&
+                      rxop_observed_components(opcode, operand) == RXOP_COMPONENT_INTEGER &&
+                      rxop_observation_is_known(opcode, operand),
+                  "checked integer source is a known integer observation", op);
+        if (rxop_effect_writes_operand(&effects, operand))
+            check(rxop_component_writes(opcode, operand) == RXOP_COMPONENT_INTEGER,
+                  "checked integer destination defines only its integer component", op);
+    }
+}
+
+static void check_checked_integer_family(void) {
+    int opcode;
+    for (opcode = OP_IADD_REG_REG_REG; opcode <= OP_DEC2; ++opcode)
+        check_checked_integer_opcode(opcode);
+    for (opcode = OP_IPOW_REG_REG_REG; opcode <= OP_ISEX_REG; ++opcode)
+        check_checked_integer_opcode(opcode);
+}
+
 int main(void) {
     int i;
     int source_count;
@@ -154,6 +318,8 @@ int main(void) {
     int conservative_count;
     int reserved_count;
     int internal_count;
+    int clone_categories[RXOP_CLONE_RETAINED + 1] = {0};
+    int unknown_clone_signals = 0, unknown_clone_writes = 0;
     unsigned int legal_registers;
     unsigned int legal_labels;
     unsigned int legal_semantics;
@@ -163,6 +329,7 @@ int main(void) {
     const OpInfo *op;
 
     failures = 0;
+    check_checked_integer_family();
     check(rxop_compare_branch_fusion(
                   OP_IEQ_REG_REG_REG, OP_BRT_ID_REG, &fusion) &&
               fusion.fused_opcode == OP_BEQ_ID_REG_REG &&
@@ -545,9 +712,13 @@ int main(void) {
         if (signal.source == RXOP_SIGNAL_SOURCE_STATIC_NAMES)
             check(signal.static_names && signal.static_names[0],
                   "static signal contract lacks names", op);
+        else if (signal.source == RXOP_SIGNAL_SOURCE_LITERAL_OPERAND ||
+                 signal.source == RXOP_SIGNAL_SOURCE_REGISTER_OPERAND)
+            check(signal.static_names == NULL || signal.static_names[0],
+                  "operand-selected signal validation alternatives are empty", op);
         else
             check(signal.static_names == NULL,
-                  "non-static signal contract carries static names", op);
+                  "non-operand signal contract carries unexpected static alternatives", op);
         if (signal.source == RXOP_SIGNAL_SOURCE_LITERAL_OPERAND ||
             signal.source == RXOP_SIGNAL_SOURCE_REGISTER_OPERAND) {
             check(signal.source_operand < rxop_format_operand_count(op->format),
@@ -635,6 +806,9 @@ int main(void) {
 
         if (rxop_is_source_mnemonic(op->mnemonic)) {
             source_count++;
+            check_clone_contract(op, clone_categories, &unknown_clone_signals,
+                                 &unknown_clone_writes);
+            check_target_contract(op);
             check(effects.state == RXOP_EFFECT_CLASSIFIED ||
                       effects.state == RXOP_EFFECT_CONSERVATIVE,
                   "source opcode lacks classified/conservative effects", op);
@@ -1236,6 +1410,126 @@ int main(void) {
     check_unknown_effects(-1);
     check_unknown_effects(OP_MAX_INSTRUCTIONS);
     check_unknown_effects(OP_MAX_INSTRUCTIONS + 100);
+    check(rxop_normal_successors(OP_UNLINKBR_REG_ID) == 1 &&
+              rxop_binding_action(OP_UNLINKBR_REG_ID) == RXOP_BINDING_COMPOUND &&
+              rxop_normal_successors(OP_BCT_ID_REG) == 2 &&
+              rxop_normal_fallthrough(OP_BCT_ID_REG),
+          "non-first and fused direct targets use generic normal flow", NULL);
+    check(rxop_binding_action(OP_LOAD_REG_REG) == RXOP_BINDING_LINK &&
+              rxop_clone_category(OP_LOAD_REG_REG) == RXOP_CLONE_BINDING,
+          "register LOAD is rebinding rather than an ordinary value write", NULL);
+    check(rxop_clone_category(OP_SAY_REG) == RXOP_CLONE_ORDINARY &&
+              rxop_clone_category(OP_TIME_REG) == RXOP_CLONE_ORDINARY &&
+              rxop_clone_category(OP_METALOADCALLERADDR_REG) == RXOP_CLONE_RETAINED,
+          "external opacity is distinct from physical-frame observation", NULL);
+    check(rxop_component_write_is_known(OP_LOAD_REG_INT, 0) &&
+              !rxop_component_write_is_known(OP_FADD_REG_REG_REG, 0) &&
+              rxop_clone_category(OP_FADD_REG_REG_REG) == RXOP_CLONE_ORDINARY,
+          "missing optional component projection does not gate ordinary cloning", NULL);
+    check(!strcmp(rxop_call_contract(OP_CALL_REG_FUNC).prefix, "clear:1") &&
+              !strcmp(rxop_call_contract(OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG).prefix,
+                      "flags:4:5;swap:4:6") &&
+              rxop_call_contract(OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG).capture_after_prefix &&
+              !strcmp(rxop_call_contract(OP_CALL4_REG_FUNC_REG_REG_REG_REG).actual_operands,
+                      "3,4,5,6"),
+          "call recipes preserve preclear, fused order and explicit pointer order", NULL);
+    check(rxop_call_contract(OP_INLENTER_REG_FUNC_STRING_ID).kind == RXOP_CALL_NONE &&
+              rxop_call_contract(OP_INLENTER_REG_FUNC_STRING_ID).result_operand == 1 &&
+              rxop_call_contract(OP_INLENTER_REG_FUNC_STRING_ID).target_operand == 2 &&
+              rxop_recipe_operand(OP_INLENTER_REG_FUNC_STRING_ID) == 3 &&
+              rxop_scope_continuation_operand(OP_INLENTER_REG_FUNC_STRING_ID) == 4,
+          "logical scope capture selectors preserve distinct CALL admission", NULL);
+    check(rxop_return_result_component_invalidations(OP_RET_STRING) == RXOP_COMPONENT_ALL &&
+              rxop_return_result_flag_invalidations(OP_RET_STRING) == RXFLAG_READABLE_MASK &&
+              rxop_return_result_component_invalidations(OP_RET_INT) == RXOP_COMPONENT_NONE &&
+              rxop_return_result_flag_invalidations(OP_RET_INT) == 0 &&
+              rxop_return_result_component_invalidations(OP_RET_FLOAT) == RXOP_COMPONENT_NONE &&
+              rxop_return_result_flag_invalidations(OP_RET_FLOAT) == 0 &&
+              rxop_return_result_component_invalidations(OP_RET_REG) == RXOP_COMPONENT_NONE &&
+              rxop_return_result_flag_invalidations(OP_RET_REG) == 0,
+          "return result setters invalidate string-owned state while direct scalar and transported returns retain their contracts", NULL);
+    check(rxop_return_result_component_invalidations(-1) == RXOP_COMPONENT_ALL &&
+              rxop_return_result_flag_invalidations(OP_MAX_INSTRUCTIONS) == RXFLAG_READABLE_MASK,
+          "unknown return result effects cannot preserve earlier facts", NULL);
+    check(!strcmp(rxop_binding_recipe(OP_IGETUNLINK_REG_REG),
+                      "captureint:2;unlink:2;putint:1") &&
+              !strcmp(rxop_binding_recipe(OP_ILOADSETUNLINKN_REG_REG_INT_REG),
+                      "setint:1:3;icopy:2:1;unlink:2;unlink:4"),
+          "compound recipes preserve value capture across binding restoration", NULL);
+    check(rxop_operand_relocation(OP_LOAD_INT_INT, 1) == RXOP_RELOC_LOCAL_INDEX &&
+              rxop_operand_relocation(OP_SIGCALLBR_ID_FUNC_STRING, 0) == RXOP_RELOC_LABEL &&
+              rxop_operand_relocation(OP_SIGCALLBR_ID_FUNC_STRING, 1) == RXOP_RELOC_PROCEDURE &&
+              rxop_operand_relocation(OP_JUMPI_REG_BINARY, 1) == RXOP_RELOC_JUMP_TABLE,
+          "implicit, exceptional and table relocations retain their owner", NULL);
+    check(rxop_context_read_mask(OP_GETNUMCAS_REG) == RXOP_CONTEXT_CASE &&
+              rxop_context_write_mask(OP_GETNUMCAS_REG) == 0 &&
+              rxop_context_write_mask(OP_SETNUMCAS_INT) == RXOP_CONTEXT_CASE &&
+              rxop_context_write_mask(OP_NUMSCI_INT_INT_INT) == RXOP_CONTEXT_ALL_NUMERIC &&
+              (rxop_context_read_mask(OP_DADD_REG_REG_REG) & RXOP_CONTEXT_ALL_NUMERIC),
+          "context dependencies distinguish getters, setters and decimal reads", NULL);
+    check(rxop_definition_components(OP_LOAD_REG_INT, 0) == RXOP_COMPONENT_INTEGER &&
+              rxop_literal_operand(OP_LOAD_REG_INT) == 2 &&
+              rxop_definition_components(OP_COPY_REG_REG, 0) == 0 &&
+              rxop_transport_source_operand(OP_COPY_REG_REG) == 2 &&
+              rxop_transport_components(OP_COPY_REG_REG) == RXOP_COMPONENT_ALL &&
+              rxop_definition_components(OP_NULLN_REG_REG_REG, 2) == RXOP_COMPONENT_ALL,
+          "definitions and transports have independent availability obligations", NULL);
+    check(rxop_component_reads(OP_STRPOS_REG_REG_REG, 0) == RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_STRPOS_REG_REG_REG, 0) == RXOP_COMPONENT_INTEGER,
+          "STRPOS exposes its integer start/result, not a VM-private string cache", NULL);
+    check(rxop_component_reads(OP_RET_REG, 0) == RXOP_COMPONENT_ALL &&
+              rxop_observed_components(OP_RET_REG, 0) == RXOP_COMPONENT_NONE &&
+              rxop_observation_is_known(OP_RET_REG, 0),
+          "RET transports a complete register without reading unused components", NULL);
+    check(rxop_component_may_reads(OP_SIGBRV_ID_REG_STRING, 1) == RXOP_COMPONENT_ALL &&
+              rxop_observed_components(OP_SIGBRV_ID_REG_STRING, 1) == RXOP_COMPONENT_NONE &&
+              rxop_observed_flags(OP_SIGBRV_ID_REG_STRING, 1) == 0 &&
+              rxop_observation_is_known(OP_SIGBRV_ID_REG_STRING, 1),
+          "SIGBRV retains a destination slot without observing its payload", NULL);
+    check(rxop_observed_components(OP_SAY_REG, 0) == RXOP_COMPONENT_STRING &&
+              rxop_observation_is_known(OP_SAY_REG, 0) &&
+              rxop_observed_components(OP_SIGNALORIGIN_STRING_REG_REG, 2) == RXOP_COMPONENT_ALL &&
+              rxop_observation_is_known(OP_SIGNALORIGIN_STRING_REG_REG, 2),
+          "slot-only policy installation preserves scalar and complete origin-structure observations", NULL);
+    check(rxop_component_may_reads(OP_SIGNALORIGIN_STRING_REG_REG, 1) == RXOP_COMPONENT_ALL &&
+              rxop_observed_components(OP_SIGNALORIGIN_STRING_REG_REG, 1) == RXOP_COMPONENT_NONE &&
+              rxop_observation_is_known(OP_SIGNALORIGIN_STRING_REG_REG, 1),
+          "SIGNALORIGIN transports a complete payload without inspecting unused scalar components", NULL);
+    signal = rxop_signal_contract(OP_SIGNALORIGIN_STRING_REG_REG);
+    effects = rxop_effects(OP_SIGNALORIGIN_STRING_REG_REG);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.source == RXOP_SIGNAL_SOURCE_LITERAL_OPERAND &&
+              signal.source_operand == 0 && signal.static_names &&
+              strcmp(signal.static_names, "INVALID_SIGNAL_CODE|INVALID_ARGUMENTS") == 0 &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              signal.failure_writes == RXOP_OP_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+              signal.failure_context_writes == RXOP_CONTEXT_NONE &&
+              effects.writes == RXOP_OP_NONE && effects.kills == RXOP_OP_NONE &&
+              (signal.properties & RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE) &&
+              (signal.properties & RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE) &&
+              signal.continuations == RXOP_SIGNAL_CONT_ALL,
+          "SIGNALORIGIN preserves requested tag plus validation alternatives and pending context without input writes", NULL);
+    /* Bitwise and logical operations are a single typed integer family even
+     * when a source is immediate. Every register read must be observable as
+     * integer-only; the result must define the integer component. */
+    for (i = OP_IAND_REG_REG_REG; i <= OP_NOT_REG_REG; ++i) {
+        size_t operand;
+        const OpInfo *bitwise = &op_table[i];
+        RxOpEffects bit_effects = rxop_effects(i);
+        for (operand = 0; operand < rxop_format_operand_count(bitwise->format);
+             ++operand) {
+            if (rxop_effect_reads_operand(&bit_effects, operand) &&
+                rxop_format_operand_type(bitwise->format, operand) == OP_REG)
+                check(rxop_component_reads(i, operand) == RXOP_COMPONENT_INTEGER &&
+                          rxop_observed_components(i, operand) == RXOP_COMPONENT_INTEGER &&
+                          rxop_observation_is_known(i, operand),
+                      "integer bitwise input has an unknown typed observation", bitwise);
+            if (rxop_effect_writes_operand(&bit_effects, operand))
+                check(rxop_component_writes(i, operand) == RXOP_COMPONENT_INTEGER,
+                      "integer bitwise result has an unknown typed write", bitwise);
+        }
+    }
 
     if (failures) {
         fprintf(stderr, "%d opcode metadata consistency failure(s)\n", failures);
@@ -1246,5 +1540,12 @@ int main(void) {
            "reserved=%d internal=%d\n",
            i, source_count, classified_count, conservative_count,
            reserved_count, internal_count);
+    printf("clone contract: missing=%d ordinary=%d binding=%d call=%d return=%d "
+           "context=%d retained=%d unknown-signals=%d unknown-component-writes=%d\n",
+           clone_categories[RXOP_CLONE_MISSING], clone_categories[RXOP_CLONE_ORDINARY],
+           clone_categories[RXOP_CLONE_BINDING], clone_categories[RXOP_CLONE_CALL],
+           clone_categories[RXOP_CLONE_RETURN], clone_categories[RXOP_CLONE_CONTEXT],
+           clone_categories[RXOP_CLONE_RETAINED], unknown_clone_signals,
+           unknown_clone_writes);
     return 0;
 }

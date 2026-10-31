@@ -54,7 +54,8 @@ int rxasmble(Assembler_Context *scanner) {
 
     /* Opening and Assemble file */
     if (scanner->debug_mode) printf("Assembling %s\n", scanner->file_name);
-    if (rxasinfl(scanner, has_any_extension(scanner->file_name))) return -1;
+    if (rxasinfl(scanner, has_any_extension(scanner->input_file_name
+            ? scanner->input_file_name : scanner->file_name))) return -1;
 
     /* Parse & Process */
     rxaspars(scanner);
@@ -194,10 +195,12 @@ int rxasinbf(Assembler_Context *scanner) {
 int rxasinfl(Assembler_Context *scanner, int file_name_includes_type_extension) {
     FILE *fp;
     size_t bytes;
+    char *input_name = scanner->input_file_name
+        ? scanner->input_file_name : scanner->file_name;
 
     /* Open input file */
-    if (file_name_includes_type_extension) fp = openfile(scanner->file_name, "", scanner->location, "r");
-    else fp = openfile(scanner->file_name, "rxas", scanner->location, "r");
+    if (file_name_includes_type_extension) fp = openfile(input_name, "", scanner->location, "r");
+    else fp = openfile(input_name, "rxas", scanner->location, "r");
     if (fp == NULL) {
         if (!scanner->quiet) fprintf(stderr, "Can't open input file %s\n", scanner->file_name);
         return -1;

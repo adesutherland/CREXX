@@ -5,6 +5,7 @@
  */
 
 #include "rxbin.h"
+#include "rxinline_recipe.h"
 #include "rxsha256.h"
 
 #include <limits.h>
@@ -946,6 +947,23 @@ static int rxbin007_pool_operand_type(OperandType type) {
            type == OP_DECIMAL || type == OP_BINARY;
 }
 
+static int rxbin007_inline_binary_operand(int opcode, size_t operand_index) {
+    return (opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u) ||
+           (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u);
+}
+
+static int rxbin007_inline_payload_valid(int opcode, size_t operand_index,
+                                          const string_constant *entry) {
+    rxinl_recipe_view recipe;
+    rxinl_module_ref_view module_ref;
+    if (!entry || entry->base.type != BINARY_CONST) return 0;
+    if (opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u)
+        return rxinl_recipe_decode(entry->string, entry->string_len, &recipe);
+    if (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u)
+        return rxinl_module_ref_decode(entry->string, entry->string_len, &module_ref);
+    return 0;
+}
+
 static uint32_t rxbin007_opcode_features(int opcode) {
     switch (opcode) {
         case OP_CALL1_REG_FUNC_REG:
@@ -976,6 +994,11 @@ static uint32_t rxbin007_opcode_features(int opcode) {
             return RXBIN007_FEATURE_CHANNELS;
         case OP_CHANRELEASE_REG_REG_REG:
             return RXBIN007_FEATURE_CHANNELS | RXBIN007_FEATURE_CHANNEL_RELEASE;
+        case OP_INLENTER_REG_FUNC_STRING_ID:
+        case OP_LINKARGV_REG_REG_INT:
+        case OP_LINKARGV_REG_INT:
+        case OP_QGLOBBIND_REG_STRING_INT:
+            return RXBIN007_FEATURE_INLINE_SCOPES;
         default:
             return 0u;
     }
@@ -1075,9 +1098,29 @@ static int rxbin007_encode_instructions(const module_file *module,
                 token = graph_id;
             } else if (rxbin007_pool_operand_type(rxop_format_operand_type(format, operand_index))) {
                 uint32_t constant_id;
+                const chameleon_constant *entry;
                 if (!rxbin007_pool_find_id(pool, operand->index, &constant_id)) {
                     rxbin007_set_error("RXBIN 007 instruction has an invalid constant offset");
                     return 0;
+                }
+                entry = pool->entries[constant_id].entry;
+                if (rxbin007_inline_binary_operand(opcode, operand_index) &&
+                    !rxbin007_inline_payload_valid(
+                        opcode, operand_index,
+                        (const string_constant *)entry)) {
+                    rxbin007_set_error("RXBIN 007 instruction has an invalid typed inline operand");
+                    return 0;
+                }
+                if (rxop_format_operand_type(format, operand_index) == OP_FUNC &&
+                    entry->type == BINARY_CONST) {
+                    rxinl_qualified_proc_view qualified;
+                    const string_constant *binary = (const string_constant *)entry;
+                    if (!rxinl_qualified_proc_decode(binary->string,
+                                                    binary->string_len, &qualified)) {
+                        rxbin007_set_error("RXBIN 007 instruction has an invalid qualified procedure");
+                        return 0;
+                    }
+                    *feature_flags |= RXBIN007_FEATURE_INLINE_SCOPES;
                 }
                 token = constant_id;
             } else if (rxop_format_operand_type(format, operand_index) == OP_INT) {
@@ -2179,11 +2222,16 @@ static int rxbin007_pool_id_has_type(const rxbin007_pool_read *pool,
 }
 
 static int rxbin007_pool_operand_id_valid(const rxbin007_pool_read *pool,
+                                          int opcode,
+                                          size_t operand_index,
                                           OperandType operand_type,
                                           uint32_t id) {
     enum const_pool_type expected;
 
-    switch (operand_type) {
+    if ((opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u) ||
+        (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u))
+        expected = BINARY_CONST;
+    else switch (operand_type) {
         case OP_FUNC: expected = PROC_CONST; break;
         case OP_FLOAT: expected = FLOAT_CONST; break;
         case OP_STRING: expected = STRING_CONST; break;
@@ -2191,7 +2239,20 @@ static int rxbin007_pool_operand_id_valid(const rxbin007_pool_read *pool,
         case OP_BINARY: expected = BINARY_CONST; break;
         default: return 0;
     }
-    return rxbin007_pool_id_has_type(pool, id, expected);
+    if (expected == PROC_CONST && rxbin007_pool_id_has_type(pool, id, BINARY_CONST)) {
+        const string_constant *entry = (const string_constant *)(
+            pool->shared->data + pool->offsets[id]);
+        rxinl_qualified_proc_view qualified;
+        return rxinl_qualified_proc_decode(entry->string, entry->string_len,
+                                           &qualified);
+    }
+    if (!rxbin007_pool_id_has_type(pool, id, expected)) return 0;
+    if (rxbin007_inline_binary_operand(opcode, operand_index)) {
+        const string_constant *entry = (const string_constant *)(
+            pool->shared->data + pool->offsets[id]);
+        return rxbin007_inline_payload_valid(opcode, operand_index, entry);
+    }
+    return 1;
 }
 
 static int rxbin007_graph_id_valid(const RxGraph *graph,
@@ -2265,8 +2326,13 @@ static int rxbin007_decode_instructions(const unsigned char *data,
             } else if (rxbin007_pool_operand_type(rxop_format_operand_type(format, operand_index))) {
                 if (token > UINT32_MAX ||
                     !rxbin007_pool_operand_id_valid(pool,
+                                                    (int)opcode_token,
+                                                    operand_index,
                                                     rxop_format_operand_type(format, operand_index),
                                                     (uint32_t)token)) goto error;
+                if (rxop_format_operand_type(format, operand_index) == OP_FUNC &&
+                    rxbin007_pool_id_has_type(pool, (uint32_t)token, BINARY_CONST) &&
+                    !(feature_flags & RXBIN007_FEATURE_INLINE_SCOPES)) goto error;
                 operand->index = pool->offsets[(uint32_t)token];
             } else if (rxop_format_operand_type(format, operand_index) == OP_INT) {
                 uint64_t magnitude;

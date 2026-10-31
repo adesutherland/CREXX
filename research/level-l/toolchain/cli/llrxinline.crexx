@@ -1,26 +1,32 @@
 /* cREXX License (MIT). Thin one-module client of the shared B/L services. */
 options levelb
+namespace llrxinline expose main selectionresult
 import rxfnsb
 import lllimits
 import llir
 import lltarget
 import llinline
+import lltargetnormalize
+import lltargettransfer
 import llcleanup
 import llrxasinput
 import llrxasoutput
 import llfileoutput
+import llrxascatalog
+import rxjson
 
 main: procedure = .int
   arg argv = .string[]
   limits = .lllimits..policy; frontend = .llrxasinput..reader; parsed = .llrxasinput..parsed
   target = .lltarget..module; emitted = .llrxasoutput..emission; output = .llir..output
-  bodies = .lltarget..module[]; cleanup = 1; workbudget = 1000000
+  bodies = .lltarget..module[]; cleanup = 1; workbudget = 4000000
   sourcepath = ''; destination = ''; logical = ''; artifact = ''; profile = 'unknown'; policy = 'default'
+  selection = ''; selectionresult = ''
   bodypaths = .string[]; bodynames = .string[]; i = 1
   do while i <= argv[0]
     option = argv[i]
     select
-      when option = '-o' | option = '--module' | option = '--artifact' | option = '--profile' | option = '--policy' then do
+      when option = '-o' | option = '--module' | option = '--artifact' | option = '--profile' | option = '--policy' | option = '--selection' | option = '--selection-result' then do
         if i = argv[0] then return usage('missing operand for ' || option)
         i = i + 1; value = argv[i]
         select option
@@ -29,6 +35,8 @@ main: procedure = .int
           when '--artifact' then artifact = value
           when '--profile' then profile = value
           when '--policy' then policy = value
+          when '--selection' then selection = value
+          when '--selection-result' then selectionresult = value
         end
       end
       when option = '--body' then do
@@ -51,8 +59,13 @@ main: procedure = .int
     end
     i = i + 1
   end
-  if sourcepath = '' | destination = '' | logical = '' then return usage('source, --module and -o are required')
   if wordpos(policy,'default all-legal never') = 0 then return usage('unknown selection policy ' || policy)
+  if selection <> '' then do
+    if selectionresult = '' | sourcepath <> '' | destination <> '' | logical <> '' | artifact <> '' | bodypaths[0] > 0 | profile <> 'unknown' then return usage('--selection requires only --selection-result, --policy and --work')
+    return selectionmode(selection,selectionresult,policy,workbudget)
+  end
+  if selectionresult <> '' then return usage('--selection-result requires --selection')
+  if sourcepath = '' | destination = '' | logical = '' then return usage('source, --module and -o are required')
   if profile <> 'unknown' & profile <> 'closed-main-default-halt.v1' & profile <> 'closed-main-static-exact-default-halt.v1' then return usage('unknown preservation profile ' || profile)
   if artifact = '' then artifact = sourcepath
   do
@@ -68,7 +81,7 @@ main: procedure = .int
       if parsed.status() <> 0 then do; call lineout 'stderr',parsed.diagnostic(); return 1; end
       bodies[i] = parsed.result()
     end
-    if policy <> 'never' then if applybatch(target,reference bodies,profile,cleanup,workbudget) <> 0 then return 1
+    if applybatch(target,reference bodies,profile,policy,cleanup,workbudget) <> 0 then return 1
     emitted = llrxasoutput..render(reference target)
     if emitted.error() <> '' then do; call lineout 'stderr',emitted.error(); return 1; end
     output = emitted.output(); message = llfileoutput..publish(output,destination)
@@ -127,44 +140,95 @@ selectprovider: procedure = .int
   end
   return selected
 
-/** Bind once against the frozen caller and fully populated provider array.
- * Neither owner is replaced until the atomic expansion has finished. */
-collectbindings: procedure = .object[]
-  arg owner = reference .lltarget..module, supplied = reference .lltarget..module[], expose failed = .int
-  target = .lltarget..module; item = .lltarget..record; field = .lltarget..operand
-  binding = .llinline..binding; procedureid = .int; providerindex = .int
-  target = dereference owner; bodies = dereference supplied; calls = callsites(owner); bindings = .object[]; failed = 0
+/** Expand original bindings atomically, then run the separately callable
+ * cleanup once per changed caller, resolving stable names after each change.
+ * The checked expansion is independently executable. Optional cleanup failure
+ * preserves the latest valid owner and cannot veto its publication. */
+applybatch: procedure = .int
+  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, policy = .string, cleanup = .int, workbudget = .int
+  change = .llinline..change; body = .lltarget..body; request = .llinline..binding
+  item = .lltarget..record; field = .lltarget..operand; bodies = .lltarget..module[]
+  normalized = .lltargetnormalize..change; context = .llinline..context
+  execution = .lltargettransfer..profile
+  prepared = .object[]; names = .string[]; sitenames = .string[]
+  siteids = .int[]; providerindices = .int[]; procedureids = .int[]; providerused = .int[]
+  procedureid = .int; providerindex = .int; i = .int; j = .int
+  bodies = dereference supplied; calls = callsites(reference target)
   do i = 1 to calls[0]
     item = target.at(calls[i]); called = ''
     do j = 1 to item.operands()
       field = item.operand(j)
       if field.kind() = 'P' then called = field.text()
     end
-    selected = selectprovider(owner,called,supplied,providerindex,procedureid)
-    if selected < 0 then do; failed = 1; return bindings; end
+    selected = selectprovider(reference target,called,supplied,providerindex,procedureid)
+    if selected < 0 then return 1
     if selected = 0 then do
       call lineout 'stderr','LL_INLINE_KEEP: unavailable exact body ' || called
       iterate
     end
-    if selected = 2 then binding = llinline..bind(owner,calls[i],owner,procedureid)
-    else binding = llinline..bind(owner,calls[i],reference bodies[providerindex],procedureid)
-    bindings[bindings[0] + 1] = binding as .object
+    index = siteids[0] + 1
+    siteids[index] = calls[i]
+    procedureids[index] = procedureid
+    if selected = 1 then do
+      providerindices[index] = providerindex; providerused[providerindex] = 1
+    end
+    else do
+      providerindices[index] = 0
+      body = target.body(procedureid); sitenames[index] = body.name()
+    end
   end
-  return bindings
-
-/** Expand original bindings atomically, then run the separately callable
- * cleanup once per changed caller, resolving stable names after each change. */
-applybatch: procedure = .int
-  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, cleanup = .int, workbudget = .int
-  change = .llinline..change; cleaned = .llinline..change; body = .lltarget..body
-  bindings = .object[]; names = .string[]; failed = 0; procedureid = .int; i = .int
-  bindings = collectbindings(reference target,supplied,failed)
-  if failed then return 1
   if profile = 'closed-main-static-exact-default-halt.v1' then do
-    if checkstaticproviders(reference target,supplied,bindings,workbudget) <> 0 then return 1
+    do j = 1 to bodies[0]
+      if workbudget < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: import.providers.work'; return 1; end
+      workbudget = workbudget - 1
+      if providerused[j] = 0 then do
+        call lineout 'stderr','LL_INLINE_BINDING: unused supplied provider ' || bodies[j].name()
+        return 1
+      end
+    end
   end
-  if bindings[0] = 0 then return 0
-  change = llinline..expandmany(bindings,profile,workbudget)
+  if profile <> 'unknown' then do
+    execution = .lltargettransfer..profile.closedcalls(reference target,target.procedureid('main'),profile,workbudget)
+    normalized = llinline..normalizewith(reference target,reference execution,workbudget)
+  end
+  else normalized = llinline..normalize(reference target,workbudget)
+  if normalized.status() = 'invalid' | normalized.status() = 'limit' then do
+    call lineout 'stderr','LL_INLINE_' || upper(normalized.status()) || ': ' || normalized.reason()
+    return 1
+  end
+  if normalized.status() = 'changed' then target = normalized.result()
+  do i = 1 to normalized.warnings()
+    warning = normalized.warning(i)
+    call lineout 'stderr',warning.diagnostic()
+  end
+  if policy = 'never' | siteids[0] = 0 then return 0
+  context = .llinline..context('assembler',policy)
+  if profile <> 'unknown' then do
+    /* Normalization has published another exact owner. Recheck the caller's
+     * explicit invocation premise there; the old witness is never reused. */
+    execution = .lltargettransfer..profile.closedcalls(reference target,target.procedureid('main'),profile,workbudget)
+    if execution.status() <> 'ok' then do
+      call lineout 'stderr','LL_INLINE_' || upper(execution.status()) || ': ' || execution.message()
+      return 1
+    end
+    executionbound = context.useexecution(reference target,reference execution)
+  end
+  if context.certify(reference target,normalized) = 0 then do
+    call lineout 'stderr','LL_INLINE_KEEP: ' || normalized.reason()
+    return 0
+  end
+  do i = 1 to siteids[0]
+    callid = normalized.operation(siteids[i])
+    if providerindices[i] = 0 then do
+      procedureid = target.procedureid(sitenames[i])
+      request = llinline..bind(reference target,callid,reference target,procedureid)
+    end
+    else do
+      request = llinline..bind(reference target,callid,reference bodies[providerindices[i]],procedureids[i])
+    end
+    prepared[i] = request as .object
+  end
+  change = llinline..expandcontext(prepared,context,workbudget)
   do i = 1 to change.sites()
     site = change.site(i)
     if change.statusat(site) = 'keep' then call lineout 'stderr','LL_INLINE_KEEP: ' || change.reasonat(site)
@@ -178,43 +242,33 @@ applybatch: procedure = .int
   end
   do i = 1 to names[0]
     procedureid = target.procedureid(names[i])
-    cleaned = llcleanup..transport(reference target,procedureid,profile,workbudget)
-    if cleaned.status() = 'keep' then do
-      call lineout 'stderr','LL_CLEANUP_KEEP: ' || cleaned.reason()
-    end
-    else if cleaned.status() <> 'changed' then do; call lineout 'stderr','LL_CLEANUP_' || upper(cleaned.status()) || ': ' || cleaned.reason(); return 1; end
-    else target = cleaned.result()
+    call optionalcleanup(target,procedureid,profile,workbudget,'transport')
     procedureid = target.procedureid(names[i])
-    cleaned = llcleanup..storage(reference target,procedureid,profile,workbudget)
-    if cleaned.status() = 'keep' then call lineout 'stderr','LL_STORAGE_KEEP: ' || cleaned.reason()
-    else if cleaned.status() <> 'changed' then do; call lineout 'stderr','LL_STORAGE_' || upper(cleaned.status()) || ': ' || cleaned.reason(); return 1; end
-    else target = cleaned.result()
+    call optionalcleanup(target,procedureid,profile,workbudget,'storage')
   end
   return 0
 
-/** The service sees only owners present in its binding batch. Reject unused
- * CLI inputs so an unexamined provider cannot join the declared static bundle.
- * No metadata or source-text assertion is manufactured for this contract. */
-checkstaticproviders: procedure = .int
-  arg owner = reference .lltarget..module, supplied = reference .lltarget..module[], bindings = .object[], work = .int
-  bodies = dereference supplied; candidate = .lltarget..module
-  request = .llinline..binding; used = .int; i = .int; j = .int
-  do i = 1 to bodies[0]
-    if work < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: import.providers.work'; return 1; end
-    work = work - 1
-    candidate = bodies[i]; used = 0; candidate_ref = reference bodies[i]
-    do j = 1 to bindings[0]
-      if work < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: import.providers.work'; return 1; end
-      work = work - 1
-      request = bindings[j] as .llinline..binding; provider_ref = request.provider()
-      if (provider_ref <refsame> owner) = 0 & (provider_ref <refsame> candidate_ref) then used = 1
+/** A cleanup refusal is ordinary; an internal failure stays visible. Neither
+ * can replace the last validated owner. Successful conservative publication
+ * returns success even when this optional optimization could not complete. */
+optionalcleanup: procedure = .void
+  arg expose target = .lltarget..module, procedureid = .int, profile = .string, workbudget = .int, stage = .string
+  cleaned = .llinline..change; candidate = .lltarget..module
+  prefix = 'LL_CLEANUP'; if stage = 'storage' then prefix = 'LL_STORAGE'
+  do
+    if stage = 'storage' then cleaned = llcleanup..storage(reference target,procedureid,profile,workbudget)
+    else cleaned = llcleanup..transport(reference target,procedureid,profile,workbudget)
+    if cleaned.status() = 'keep' then call lineout 'stderr',prefix || '_KEEP: ' || cleaned.reason()
+    else if cleaned.status() <> 'changed' then call lineout 'stderr',prefix || '_FAILED: ' || cleaned.status() || ': ' || cleaned.reason()
+    else do
+      candidate = cleaned.result()
+      if candidate.valid() then target = candidate
+      else call lineout 'stderr',prefix || '_FAILED: invalid: ' || candidate.error()
     end
-    if used = 0 then do
-      call lineout 'stderr','LL_INLINE_BINDING: unused supplied provider ' || candidate.name()
-      return 1
-    end
+  on signal as problem
+    call lineout 'stderr',prefix || '_FAILED: ' || problem.name() || ': ' || problem.message()
   end
-  return 0
+  return
 
 usage: procedure = .int
   arg reason = ''
@@ -253,3 +307,220 @@ readsource: procedure = .binary
     message = problem.message(); assembler signal "ERROR",message
   end
   return result
+
+/** The native linker owns this transient manifest and independently validates
+ * the returned files before replacing its selected modules. All provider and
+ * caller owners below remain frozen while every binding is expanded. */
+selectionmode: procedure = .int
+  arg manifestpath = .string, resultpath = .string, policy = .string, workbudget = .int
+  raw = .lltarget..module[]; frozen = .lltarget..module[]; outputs = .lltarget..module[]
+  normalizations = .lltargetnormalize..change[]; moduleowners = .string[]; modulenames = .string[]
+  moduleinputs = .string[]; moduleoutputs = .string[]; changed = .int[]
+  procowners = .string[]; procsymbols = .string[]; procconstants = .int[]; procmodules = .int[]; procnormal = .int[]
+  bindings = .object[]; bindingowners = .int[]; localbindings = .object[]
+  target = .lltarget..module; body = .lltarget..body; record = .lltarget..record
+  parsed = .llrxasinput..parsed; frontend = .llrxasinput..reader; normalized = .lltargetnormalize..change
+  request = .llinline..binding; context = .llinline..context; expanded = .llinline..change
+  emitted = .llrxasoutput..emission; writer = .llir..writer
+  doc = .rxjson..jsondocument; catalog = .llrxascatalog..catalog()
+  fault = .string; prefix = .string; i = .int; j = .int
+  do
+    source = readsource(manifestpath,67108864)
+    remainingbytes = 67108864 - <blen>(source)
+    doc = .jsondocument(source as .string)
+    if doc.valid() = 0 then do; fault = 'LL_INLINE_SELECTION: invalid JSON: ' || doc.error(); assembler signal "ERROR",fault; end
+    if doc.type('') <> 'object' then assembler signal "ERROR","LL_INLINE_SELECTION: root object required"
+    if selectiontext(reference doc,'version') <> 'llinline.selection.v1' then assembler signal "ERROR","LL_INLINE_SELECTION: unsupported version"
+    transaction = selectiontext(reference doc,'transaction')
+    if selectiontext(reference doc,'catalog') <> catalog.fingerprint() then assembler signal "ERROR","LL_INLINE_SELECTION: catalogue mismatch"
+    if doc.type('modules') <> 'array' | doc.type('procedures') <> 'array' | doc.type('bindings') <> 'array' then assembler signal "ERROR","LL_INLINE_SELECTION: module/procedure/binding arrays required"
+    modulecount = doc.count('modules'); procedurecount = doc.count('procedures'); bindingcount = doc.count('bindings')
+    if modulecount < 1 | modulecount > workbudget | procedurecount > workbudget | bindingcount > workbudget then assembler signal "ERROR","LL_RESOURCE_LIMIT: selection rows"
+    frontend = .llrxasinput..reader(); context = .llinline..context('linker',policy)
+    if context.status() <> 'ok' then do; fault = 'LL_INLINE_SELECTION: ' || context.reason(); assembler signal "ERROR",fault; end
+    do i = 1 to modulecount
+      prefix = 'modules.' || i || '.'
+      if selectionnumber(reference doc,prefix || 'ordinal') <> i - 1 then assembler signal "ERROR","LL_INLINE_SELECTION: nonconsecutive module ordinal"
+      moduleowners[i] = selectiontext(reference doc,prefix || 'owner')
+      modulenames[i] = selectiontext(reference doc,prefix || 'name')
+      moduleinputs[i] = selectiontext(reference doc,prefix || 'input')
+      moduleoutputs[i] = selectiontext(reference doc,prefix || 'output')
+      do j = 1 to i - 1
+        if moduleowners[j] = moduleowners[i] | moduleoutputs[j] = moduleoutputs[i] then assembler signal "ERROR","LL_INLINE_SELECTION: duplicate owner/output"
+      end
+      source = readsource(moduleinputs[i],remainingbytes)
+      remainingbytes = remainingbytes - <blen>(source)
+      parsed = frontend.parse(source,modulenames[i],modulenames[i])
+      if parsed.status() <> 0 then do; fault = parsed.diagnostic(); assembler signal "ERROR",fault; end
+      raw[i] = parsed.result()
+      normalized = llinline..normalize(reference raw[i],workbudget)
+      if normalized.status() = 'invalid' | normalized.status() = 'limit' then do
+        fault = 'LL_INLINE_SELECTION: normalization ' || normalized.status() || ': ' || normalized.reason()
+        assembler signal "ERROR",fault
+      end
+      normalizations[i] = normalized
+      frozen[i] = normalized.result(); outputs[i] = frozen[i]
+      if normalized.status() = 'changed' then changed[i] = 1
+      if normalized.status() = 'changed' | (normalized.status() = 'keep' & normalized.reason() = 'normalization.no.entry.read') then do
+        if context.certify(reference frozen[i],normalized) = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: normalization certificate"
+      end
+      else call lineout 'stderr','LL_INLINE_KEEP: ' || normalized.reason()
+      do j = 1 to normalized.warnings()
+        warning = normalized.warning(j)
+        call lineout 'stderr','LL_RXAS_WARNING: ' || warning.message()
+      end
+    end
+    do i = 1 to procedurecount
+      prefix = 'procedures.' || i || '.'
+      procowners[i] = selectiontext(reference doc,prefix || 'owner')
+      procconstants[i] = selectionnumber(reference doc,prefix || 'constant')
+      ordinal = selectionnumber(reference doc,prefix || 'ordinal')
+      symbol = selectiontext(reference doc,prefix || 'symbol')
+      procsymbols[i] = symbol
+      locals = selectionnumber(reference doc,prefix || 'locals')
+      moduleindex = selectionmodule(moduleowners,procowners[i])
+      if moduleindex = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: procedure owner absent"
+      do j = 1 to i - 1
+        if procowners[j] = procowners[i] & procconstants[j] = procconstants[i] then assembler signal "ERROR","LL_INLINE_SELECTION: duplicate procedure constant"
+      end
+      target = raw[moduleindex]
+      rawfunction = target.procedureid(symbol)
+      if rawfunction = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: procedure symbol absent"
+      body = target.body(rawfunction)
+      if upper(body.name()) <> upper(symbol) | body.locals() <> locals then assembler signal "ERROR","LL_INLINE_SELECTION: procedure identity mismatch"
+      /* Body views borrow target's graph; retain its name before replacing
+       * that owner with the normalized module. */
+      name = body.name()
+      target = frozen[moduleindex]; functionid = target.procedureid(name)
+      if functionid = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: normalized procedure absent"
+      procmodules[i] = moduleindex; procnormal[i] = functionid
+      if context.certifyprocedure(reference frozen[moduleindex],transaction,target.identity(),moduleindex - 1,functionid,ordinal) = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: procedure certificate"
+    end
+    do i = 1 to bindingcount
+      prefix = 'bindings.' || i || '.'
+      caller = selectiontext(reference doc,prefix || 'caller')
+      provider = selectiontext(reference doc,prefix || 'provider')
+      callerconstant = selectionnumber(reference doc,prefix || 'procedure')
+      targetconstant = selectionnumber(reference doc,prefix || 'target')
+      instructionordinal = selectionnumber(reference doc,prefix || 'instruction_ordinal')
+      callerindex = selectionmodule(moduleowners,caller); providerindex = selectionmodule(moduleowners,provider)
+      callerrow = selectionprocedure(procowners,procconstants,caller,callerconstant)
+      providerrow = selectionprocedure(procowners,procconstants,provider,targetconstant)
+      if callerindex = 0 | providerindex = 0 | callerrow = 0 | providerrow = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: binding owner/procedure absent"
+      target = raw[callerindex]; body = target.body(target.procedureid(procsymbols[callerrow]))
+      n = 0; callid = 0
+      do j = 1 to body.records()
+        record = body.record(j)
+        if record.kind() <> 'instruction' then iterate
+        if n = instructionordinal then do; callid = record.id(); leave; end
+        n = n + 1
+      end
+      if callid = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: instruction ordinal outside procedure"
+      callid = normalizations[callerindex].operation(callid)
+      request = llinline..bind(reference frozen[callerindex],callid,reference frozen[providerindex],procnormal[providerrow])
+      if request.valid() = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: stale binding"
+      if callerindex <> providerindex then do
+        target = frozen[callerindex]; provider_target = frozen[providerindex]
+        if context.certifyselected(request,transaction,target.identity(),provider_target.identity(),providerindex - 1) = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: foreign selection certificate"
+      end
+      bindings[i] = request as .object; bindingowners[i] = callerindex
+    end
+    do i = 1 to modulecount
+      call objectarraydrop localbindings
+      do j = 1 to bindingcount
+        if bindingowners[j] = i then localbindings[localbindings[0] + 1] = bindings[j]
+      end
+      if localbindings[0] = 0 | policy = 'never' then iterate
+      expanded = llinline..expandcontext(localbindings,context,workbudget)
+      if expanded.status() = 'changed' then do; outputs[i] = expanded.result(); changed[i] = 1; end
+      else if expanded.status() <> 'keep' then do; fault = 'LL_INLINE_SELECTION: expansion ' || expanded.status() || ': ' || expanded.reason(); assembler signal "ERROR",fault; end
+      do j = 1 to expanded.sites()
+        if expanded.statusat(expanded.site(j)) = 'keep' then call lineout 'stderr','LL_INLINE_KEEP: ' || expanded.reasonat(expanded.site(j))
+      end
+    end
+    response = '{"version":"llinline.selection.result.v1","transaction":' || rxjson..jsonquote(transaction) || ',"catalog":' || rxjson..jsonquote(catalog.fingerprint()) || ',"modules":['
+    do i = 1 to modulecount
+      emitted = llrxasoutput..render(reference outputs[i])
+      if emitted.error() <> '' then do; fault = 'LL_INLINE_SELECTION: render ' || emitted.error(); assembler signal "ERROR",fault; end
+      message = llfileoutput..publish(emitted.output(),moduleoutputs[i])
+      if message <> '' then assembler signal "ERROR",message
+      if i > 1 then response = response || ','
+      flag = 'false'; if changed[i] then flag = 'true'
+      response = response || '{"owner":' || rxjson..jsonquote(moduleowners[i]) || ',"ordinal":' || (i - 1) || ',"changed":' || flag || ',"output":' || rxjson..jsonquote(moduleoutputs[i]) || '}'
+    end
+    response = response || ']}'
+    writer = .llir..writer(); call writer.write(response)
+    message = llfileoutput..publish(writer.finish(),resultpath)
+    if message <> '' then assembler signal "ERROR",message
+    return 0
+  on signal as problem
+    call lineout 'stderr','LL_INLINE_SELECTION: ' || problem.name() || ': ' || problem.message()
+    return 1
+  end
+  return 1
+
+selectiontext: procedure = .string
+  arg document = reference .rxjson..jsondocument, path = .string
+  doc = dereference document; fault = .string
+  if doc.type(path) <> 'string' then do; fault = 'LL_INLINE_SELECTION: string required at ' || path; assembler signal "ERROR",fault; end
+  value = doc.get(path)
+  if value = '' then do; fault = 'LL_INLINE_SELECTION: empty string at ' || path; assembler signal "ERROR",fault; end
+  return value
+
+selectionnumber: procedure = .int
+  arg document = reference .rxjson..jsondocument, path = .string
+  doc = dereference document; value = 0; fault = .string
+  if doc.type(path) <> 'number' | doc.node_int(doc.find(path),value) <> 0 | value < 0 then do
+    fault = 'LL_INLINE_SELECTION: nonnegative integer required at ' || path; assembler signal "ERROR",fault
+  end
+  return value
+
+selectionmodule: procedure = .int
+  arg owners = .string[], name = .string
+  do i = 1 to owners[0]
+    if owners[i] = name then return i
+  end
+  return 0
+
+selectionprocedure: procedure = .int
+  arg owners = .string[], constants = .int[], owner = .string, codeconstant = .int
+  do i = 1 to owners[0]
+    if owners[i] = owner & constants[i] = codeconstant then return i
+  end
+  return 0
+
+/** The native linker invokes this exported reader in the already loaded B
+ * service after main has published its private result. It receives only a
+ * typed flat snapshot and compares every field to the frozen native set. */
+selectionresult: procedure = .string[]
+  arg path = .string
+  values = .string[]; empty = .string[]
+  do
+    source = readsource(path,67108864)
+    doc = .jsondocument(source as .string)
+    if doc.valid() = 0 | doc.type('') <> 'object' | doc.node_count(doc.root()) <> 4 then return values
+    if doc.type('modules') <> 'array' then return values
+    count = doc.count('modules')
+    if count < 1 | count > 100000 then return values
+    version = selectiontext(reference doc,'version')
+    transaction = selectiontext(reference doc,'transaction')
+    catalog = selectiontext(reference doc,'catalog')
+    if version <> 'llinline.selection.result.v1' then return values
+    values[1] = version; values[2] = transaction; values[3] = catalog
+    do i = 1 to count
+      prefix = 'modules.' || i || '.'
+      node = doc.find('modules.' || i)
+      if doc.node_type(node) <> 'object' | doc.node_count(node) <> 4 then return empty
+      owner = selectiontext(reference doc,prefix || 'owner')
+      ordinal = selectionnumber(reference doc,prefix || 'ordinal')
+      if ordinal <> i - 1 | doc.type(prefix || 'changed') <> 'boolean' then return empty
+      changed = doc.get(prefix || 'changed')
+      output = selectiontext(reference doc,prefix || 'output')
+      base = 4 * i
+      values[base] = owner; values[base + 1] = ordinal as .string; values[base + 2] = changed; values[base + 3] = output
+    end
+    return values
+  on signal
+    return empty
+  end
+  return empty

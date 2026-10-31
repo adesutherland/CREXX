@@ -1,0 +1,21 @@
+/* Handwritten typed inline recipe and module selector roundtrip. */
+.globals=1
+
+main() .locals=7
+    load r1,42
+    inlenter r0,helper(),"count=1;args=list(r1);a0=r3;proxies=();owned=(r3,r4,r5,r6);prep=none",done
+    qglobbind r6,"self",0
+    linkargv r4,1
+    linkargv r4,r3,0
+    copy r5,r4
+    ret r5
+done:
+    ieq r2,r0,42
+    brf fail,r2
+    sayx "PASS: typed inline roundtrip"
+    ret 0
+fail:
+    ret 1
+
+helper() .locals=1
+    ret

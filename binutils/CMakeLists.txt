@@ -9,6 +9,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 add_library(rxbin STATIC
         rxbin.c
         rxbin007.c
+        rxinline_recipe.c
         rxsignature.c
         rxcore_bindings.c
         rxcore_parse_decl.c
@@ -21,6 +22,7 @@ add_library(rxbin STATIC
         include/rxsha256.h
         include/rxgraph.h
         include/rxbin.h)
+target_sources(rxbin PRIVATE include/rxinline_recipe.h)
 target_include_directories(rxbin
         PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -28,6 +30,13 @@ target_include_directories(rxbin
 set_target_properties(rxbin PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(BUILD_TESTING)
+    add_executable(test_rxinline_recipe tests/test_rxinline_recipe.c)
+    target_link_libraries(test_rxinline_recipe PRIVATE rxbin)
+    add_test(NAME inline_typed_recipe COMMAND test_rxinline_recipe)
+    set_tests_properties(inline_typed_recipe PROPERTIES
+        LABELS "unit;binutils;inline;native;regression" TIMEOUT 30
+        CREXX_PREP_TARGETS test_rxinline_recipe)
+
     add_executable(test_rxcore_bindings tests/test_rxcore_bindings.c)
     target_link_libraries(test_rxcore_bindings PRIVATE rxbin)
     add_test(NAME core_native_binding_catalogue COMMAND test_rxcore_bindings)

@@ -4368,6 +4368,19 @@ add_crexx_run_test(inline_test_array_return_temp rexx_src/inline_test_array_retu
 add_crexx_run_test(inline_test_block_expr_live_sibling rexx_src/inline_test_block_expr_live_sibling.crexx)
 add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_test_imported_bif_block_expr_lifetime.crexx)
 add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
+add_crexx_run_test(inline_receiver_argument_owner rexx_src/inline_receiver_argument_owner.crexx)
+set_tests_properties(inline_receiver_argument_owner_run_noopt
+        inline_receiver_argument_owner_run_opt PROPERTIES
+        LABELS "compiler;inlining;receiver;regression")
+add_test(NAME inline_receiver_argument_owner_shape
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_receiver_argument_owner.crexx
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline_receiver_argument_owner_shape_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_inline_receiver_argument_owner_shape.cmake)
+set_tests_properties(inline_receiver_argument_owner_shape PROPERTIES
+        LABELS "compiler;inlining;receiver;regression"
+        TIMEOUT 60 CREXX_PREP_TARGETS "rxc")
 add_crexx_run_test(array_index_live_receiver rexx_src/array_index_live_receiver.crexx)
 set_tests_properties(array_index_live_receiver_run_noopt
         array_index_live_receiver_run_opt PROPERTIES

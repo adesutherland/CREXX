@@ -73,6 +73,7 @@ enum rxbin007_feature_flags {
     RXBIN007_FEATURE_INITIALIZERS = 1u << 5,
     RXBIN007_FEATURE_AUTOLOAD_HINTS = 1u << 6,
     RXBIN007_FEATURE_CHANNEL_RELEASE = 1u << 7,
+    RXBIN007_FEATURE_INLINE_SCOPES = 1u << 8,
     RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS |
                                    RXBIN007_FEATURE_FROZEN_PARSE |
                                    RXBIN007_FEATURE_NATIVE_STEM |
@@ -80,7 +81,8 @@ enum rxbin007_feature_flags {
                                    RXBIN007_FEATURE_CHANNEL_RELEASE |
                                    RXBIN007_FEATURE_NATIVE_PROVIDERS |
                                    RXBIN007_FEATURE_INITIALIZERS |
-                                   RXBIN007_FEATURE_AUTOLOAD_HINTS
+                                   RXBIN007_FEATURE_AUTOLOAD_HINTS |
+                                   RXBIN007_FEATURE_INLINE_SCOPES
 };
 
 typedef struct bin_space bin_space;

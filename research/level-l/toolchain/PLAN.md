@@ -1,6 +1,6 @@
 # Level L target-toolchain research
 
-**Status: inliner POC authorized; shared Level L foundation first.**
+**Status: shared Level L foundation committed; approved one-sweep inliner POC in progress.**
 Adrian has requested a standalone, effective RXAS inliner proof of concept and,
 approved this plan for implementation. The [inliner contract](doc/inlining.md)
 and INL criteria/steps below own that selected outcome within this single plan.
@@ -107,6 +107,101 @@ may explicitly invoke the same inliner/cleanup services around them.
 
 ## Selected standalone inliner outcome
 
+Adrian approved the one-sweep implementation direction on 30 October 2026.
+One shared target service handles all feasible call, return and signal shapes
+through the canonical Level L graph/effect model. The approved runtime design
+uses a logical activation owner and emits only the context operations needed
+at a site; a checked ordered pointer view handles dynamic argument banks.
+The linker selects and seals the exact body and may bind a provider-private
+global by module identity and slot in executable form, without public exposure
+or inliner proof metadata. Native opcode effects are completed as one canonical
+contract; uncovered effects and opcode defects are repaired at their owner,
+not worked around by a mnemonic admission list. Expansion must be correct
+with optional cleanup disabled. Selection separates availability, legality and
+profitability, with disabled and force-legal controls. The assembler runs its
+normal optimization after local expansion; the linker runs bounded cleanup on
+changed callers, including proved call setup and inverse-swap removal.
+
+Implementation order within this single increment: freeze exact minimal
+operation/operand and RXBIN 007 validation contracts; complete the canonical
+effect, signal and relocation description; implement one call recipe and
+generic target remap/activation/departure path; integrate assembler and linker
+contexts; then run the focused normal-configuration/one-VM panel and independent
+source/RXAS review. Preserve exact refusal reasons for unavailable or dynamic
+bodies, unrepresentable physical-frame observation and deterministic resource
+limits. Treat any other representable refusal as incomplete implementation,
+not an accepted exclusion. The existing INL-STEP06 remains the broader
+standalone integration milestone; this approval does not close INL-AC01–09 or
+authorize a default switch, publication or release claim.
+
+The reviewed minimum runtime extension uses RXBIN 007 feature bit 8 and three
+semantic operations in four opcode forms, with assembler-validated typed operands. `INLENTER`
+receives a typed version-1 call recipe and normal continuation; the readable
+RXAS source spells result, exact procedure, count, continuation, and an ordered
+actual/owned-local/preparation recipe. The assembler parses the recipe once;
+the VM never interprets source text. Only `none`, one checked `SETTP`, one
+checked `SWAP`, or their ordered combination may be captured as fused
+preparation. Entry performs that preparation and exact argument capture at the
+original call boundary, checks the sealed selected body and image generation,
+performs normal initializer ingress, and pushes a lightweight logical scope
+only for proved context, dynamic argument-bank, or qualified-global obligations.
+`LINKARGV` resolves either a register or immediate selector against the
+captured ordered pointer bank; the immediate form avoids an added scratch-load
+signal point. `QGLOBBIND` binds one private proxy register to the exact selected
+module/global slot; the scope restores both active and base pointers on every
+departure. Foreign ordinals are image-local and resolved against the frozen
+linked image, never the mutable context-wide module order. A plain local leaf
+that proves all scope obligations absent emits none of these operations.
+
+A retained nested call from an inlined foreign body may target a provider-private
+procedure. Its ordinary CALL/SIGCALL opcode keeps a typed qualified `P` operand
+(`QPR1`) naming the sealed image-local module and provider procedure ordinal;
+this is an executable operand, not a public export or proof record. The linker
+validates it against the frozen selection, and the loader resolves it to the
+provider's runtime procedure at image materialization. An unsealed/mismatched
+qualified operand fails before execution. Handwritten RXAS has an explicit
+qualified procedure spelling; the exact surface spelling is finalized with
+the assembler/disassembler contract. Ordinary CALL handlers are unchanged.
+
+The existing RET value/ownership forms close the current physical frame's
+innermost logical inline scope and continue at the recipe target; there is no
+extra leave instruction or intervening signal point. The VM's common departure
+owner drains scopes for inherited `SIGRET`, signal branch unwind, cancellation,
+terminal exit and real frame unwind. Same-scope handlers, ignored/resumed
+signals and CALL handlers retain the appropriate scope. The checked RXBIN
+feature gates the typed recipe, selected module/procedure/global references,
+and loader validation; unknown or mismatched forms fail before execution.
+The native and Level L writers/readers, linker, VM, disassembler and handwritten
+RXAS syntax must agree before the extension is claimed. Focused cost evidence
+must confirm the plain-leaf zero-op fast path and account for scoped entry,
+argument capture, global binding and departure overhead.
+
+**Retained variable-argument child calls.** Adrian prefers existing call
+instructions here. Use `CALL1`–`CALL4` for up to four known explicit argument
+registers, and ordinary counted CALL with the required setup/swaps when an
+exact contiguous physical window is proved, including a directly forwarded
+one. The existing counted CALL already has a count operand; a new count-only
+`CALLN` would not represent an unknown-length scattered pointer tail.
+`CALLVIEW` (an ordered pointer-view call using the existing frame owner) was
+considered but is not in this increment's ISA. If the current call site has
+no proved finite or contiguous representation, retain its *outer* call with
+the exact `child.argument.count.unproved`, `child.argument.outer-count.unproved`
+or `child.argument.window.outside.captured.frame` reason. Measure this gap in
+G/C and handwritten RXAS before reconsidering an ISA extension; any
+new operation retains the explicit user ISA gate.
+
+The optional link-time driver uses a transient checked selection manifest,
+`llinline.selection.v1`, produced only after native module selection and
+signature validation. It names the frozen transaction/catalog identity,
+ordered selected module owners and their disassembled RXAS snapshots, exact
+procedure identities, and only call-to-body bindings that the linker can seal.
+The B/L service returns one complete ordered candidate mapping; the native
+driver validates every candidate's format, owner, selected binding and feature
+rules before replacing any selected module. Failed or unsealed candidates keep
+the previous output intact. The manifest is orchestration data, not RXBIN
+metadata or a compiler-supplied proof. Standalone `--body` input without such
+a selection retains a foreign call with `binding.unsealed`.
+
 The proposed [architecture and mapping rules](doc/inlining.md) implement one
 producer-independent B/L target pass, callable separately from compiler,
 assembler and linker orchestration. The first standalone adapter reads ordinary
@@ -145,7 +240,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 | **INL-AC01 — shared service and real adapter** | One B/L checked target-model inliner serves an ordinary RXAS CLI, a callable B client and an independent handwritten/DSL-style producer. No AST inline payload, copied parser/framework or native backend is required. Input/output, unknown/unsupported forms and atomic publication have explicit contracts. |
 | **INL-AC02 — exact call/storage mapping** | All admitted direct, counted, fixed and fused forms preserve actual evaluation, counts/presence/defaults, active and entry argument bindings, slot identity/permutations, status components, explicit reference/value behavior, nested calls and return copy/move ownership. Independent executable and structural controls include repeated actuals, mutable aliases and abrupt exits. |
 | **INL-AC03 — full representable profile** | The canonical effect inventory, reusable procedure/point facts and checked target profile support rebinding, varargs, multiple returns, aggregate/reference lifetimes, context/cleanup and exact-bound imported helpers. Procedure summaries distinguish direct/transitive and proved/conditional/unknown effects; their use does not turn optional value precision into a structural-cloning admission gate. Every retained case has a specific semantic, missing-proof, body-availability or policy reason. Unimplemented representable categories keep this criterion open. |
-| **INL-AC04 — module and observation integrity** | Globals keep their module/storage owner, including linker-selected private globals without public exposure or inliner proof metadata; initialization, poison/cycle ingress, dependencies, numeric/signal state, reference expiry, source/TRACE/diagnostic and declared physical-frame observations remain equivalent. Record the checked cross-module binding and minimal runtime compatibility contract before implementation. Cases lacking an approved equivalent stay calls. |
+| **INL-AC04 — module and observation integrity** | Globals keep their module/storage owner, including linker-selected private globals without public exposure or inliner proof metadata; initialization, poison/cycle ingress, dependencies, numeric/signal state, reference expiry, source/TRACE/diagnostic and declared physical-frame observations remain equivalent. Record the checked cross-module binding and minimal runtime compatibility contract before implementation. Cases lacking an approved equivalent stay calls. Open focused check: enter a scoped inline body as an `rxinvoke.prepare`/`invoke` checked target, raise inherited `SIGRET`, and verify the checked request completes once, the caller resumes at its continuation, and scope/policy/argument storage is cleaned. The native RXAS scoped-SIGRET fixture alone does not cover a checked invocation frame. |
 | **INL-AC05 — effective bounded cleanup** | Expansion is correct with cleanup and assembler optimization disabled. Separately prove status/transport/copy elision, constants/presence, branch/reachability cleanup and alias-aware storage reuse on changed callers. Eliminate caller setup and reverse call-window swaps made redundant by direct actual-register mapping, using storage/permutation proof across the entire call region. A simple reordered-actual leaf has no original call or outer setup/restoration swaps; an alias/snapshot case retains required copies, and a retained nested call keeps a valid window. Preserve once-only actual order, result/entry/base/slot identities, abrupt-exit restoration and swaps required by body semantics. Previously optimized modules are covered without assuming their old analysis facts remain valid. |
 | **INL-AC06 — deterministic policy and resources** | Separate legality, availability and profitability decisions. Explicit recursion, depth, code/register/metadata growth and work limits terminate predictably, support diagnostics and forced-legal/disabled controls, and preserve ordinary calls on policy refusal. Malformed input or failed transformation publishes no partial output. |
 | **INL-AC07 — metadata and lifecycle** | Relocate executable and observation references together; keep runtime graph/provider/task/source contracts, source/module identity and initializer dependencies. Prune only under explicit reachability/consumer rules. Invalid/repeated/interleaved/resource/cancellation/I/O cases retain owned results and last-good publication. |
@@ -154,7 +249,7 @@ exists; such hypothetical opportunities alone do not retain a call.
 
 | Stable step | Status, dependency and decision gate |
 |---|---|
-| **INL-STEP01 — architecture and contract** | Original POC approved; revised short architecture recorded for review; AC01–09. Assembly-local and link-selected cross-module placement, one shared target service, private-global mapping intent and database-driven flow are governing requirements. Exact scoped runtime/context, dynamic argument-bank and private-global binding remain later decision gates; the Level L early clear/warning contract is selected in STEP03F before its source edit. Unverified implementation criteria remain open. |
+| **INL-STEP01 — architecture and contract** | done for the one-sweep POC design; AC01–09. Adrian approved assembler-local and link-selected placement, one shared service, minimal scoped activation, checked dynamic argument views, executable exact-module private-global binding, database-driven ordinary instruction handling and bounded cleanup. The concrete three-operation/RXBIN 007 feature contract is recorded above for implementation review; exact encoding and qualification remain open. This does not close any implementation acceptance criterion. |
 | **INL-STEP02 — shared model and conservative expansion** | first constructed-model slice done; after 01; AC01/02/04/06/07. Optional `rxfnsl-target`, L-owned frozen records/descriptors, exact binding and conservative direct scalar-return expansion under the checked closed-root signal profile are implemented and focused-qualified, using fresh identities and no copy elimination. Broader model/call coverage and cleanup remain open; this does not complete the full INL outcome. |
 | **INL-STEP03 — standalone RXAS client** | initial adapter done; after the first 02 slice; AC01/02/04/06/07. Generated-L RXAS reader/writer, callable client and single-output CLI are focused-qualified with a real generated caller, independent handwritten expansion, optimized input and atomic-failure controls. Broader exact-bound imported helpers and profile/qualification remain open. Full assembler/codec/linker delivery is unnecessary. |
 | **INL-STEP03F — shared Level L foundation** | done; after 03 and before further 04/05 integration; AC02–05/07/09. The checked target transfer/edge, remap, fact, lifetime/normalization and procedure-summary stack and its independent one-VM owner panel are complete. Current native catalogue incompleteness remains represented as unknown; inliner admission and cleanup adoption remain separate steps. |
@@ -164,6 +259,297 @@ exists; such hypothetical opportunities alone do not retain a call.
 
 Per-feature checks and execution allocation follow the repository instructions;
 INL-STEP06 is the named standalone integration milestone.
+
+### INL-STEP05 scoped cleanup implementation contract
+
+**Status: todo; contract recorded for coordinator review before product edits.**
+This is one bounded development increment under INL-STEP05, serving
+INL-AC02/04/05/06/07/09. Adapt the shared target storage proof and cleanup to
+the approved logical activation, rather than make `INLENTER` an ordinary
+conditional branch or admit its body through scalar mnemonic tests. The
+existing runtime operations and RXBIN recipe are sufficient; no new ISA,
+wire form, runtime algorithm or external API decision is selected. Necessary
+additive target-analysis queries remain within the approved shared services.
+INL-STEP06 and the complete INL acceptance criteria remain open.
+
+1. **Typed recipe roles.** Extend the checked recipe view at its owner so
+   consumers can distinguish count/ordered-actual capture, result mode,
+   `a0`, proxy destination/argument ordinal, owned destination and ordered
+   preparation. Use the generated catalogue's recipe, scope-continuation and
+   binding descriptors to select these semantics; publish the existing
+   `INLENTER` result and target operand roles in that catalogue without
+   classifying it as an ordinary CALL. Do not add a second opcode
+   table. Preserve the assembler's validation and exact capture/preparation
+   order. Register enumeration alone is insufficient: an active pointee, an
+   owned cell's base and its slot identity are different remapping roles.
+   The Level L model retains typed `r`/`g`/`a` recipe selectors. The RXAS
+   writer converts them to the existing physical `r<index>` INL1 spelling
+   only with final caller-local and module-global extents; the reader inverts
+   those physical capture/preparation selectors before register enrollment.
+   Scope-owned destinations remain local identities. Roundtrip and cross-bank
+   argument-window controls must prove that packing never grows the local
+   frame or shifts global/argument bases. The native wire is unchanged, with
+   no preparation copy, added runtime instruction or interrupt boundary.
+2. **One scope CFG.** Consume the checked `lltargetcfg` projection, including
+   its source-operation mapping and scope owner/continuation evidence.
+   `INLENTER` enters the cloned body; its encoded continuation is not a
+   normal bypass. A logical `RET` reaches that scope's continuation, while
+   the outer `RET` departs the physical procedure. Preserve normal, resumed,
+   handler, asynchronous, unwind and terminal alternatives and their signal
+   phases. A response that exits a scope applies its departure transfer;
+   an ignored/resumed signal retains the scope. Unknown policy correlation
+   or destinations remain explicit and cannot become absent observations.
+   Do not duplicate the graph or synthesize an emitted leave operation.
+   The sealed `profile.closedmain(owner,rootfunction,executioncontext,work,bytes)`
+   adapter binds the exact immutable owner and `main` to the explicitly
+   declared `closed-main-default-halt.v1` standalone execution context.
+   Its premise remains canonical; `executionroot()`/`executioncontext()`
+   identify the checked premise. Only inherited foreign alternatives at that
+   root become the known terminal default-HALT response; authored policy
+   alternatives, unknown paths and pre/partial-entry uncertainty remain.
+   Reject initializer/startup uncertainty and malformed contexts. This is a
+   caller-declared standalone contract, never an inference from RXAS text or
+   a context certificate for arbitrary assembler/linker inputs.
+   The standalone POC may explicitly bind its caller-declared execution
+   contract through a sealed `profile.closedcalls(owner,rootfunction,
+   executioncontext,work,bytes)` witness. This distinct factory preserves the
+   existing root-only `closedmain` contract. It checks the exact immutable
+   module/catalogue and `main` root, rejects startup/runtime-observer
+   uncertainty, and checks a bounded same-module direct-call closure. Only a
+   closure with fully described call/control effects and no authored policy
+   mutation can inherit default HALT in its reached procedures. Dynamic,
+   unresolved or foreign callees, recursive closure, unknown control/effects
+   and policy changes do not produce that stronger witness. Every incoming
+   path in the declared root invocation must belong to the checked closure.
+   The declaration supplies the HALT policy; the VM's mixed fresh default
+   responses are not inferred to be all HALT. CFG consumes its checked
+   `defaulthalt(functionid)` query; ordinary canonical alternatives remain for
+   functions without a witness, and local/failure/asynchronous departures
+   retain their canonical transfer semantics.
+   The POC passes this witness through additive normalization/context APIs;
+   `--profile` supplies the execution declaration, not proof from RXAS text.
+   Canonical rewriting must recreate and recheck the witness for the exact
+   published result before binding it to the inliner context. Stale owners,
+   another module/root and ordinary assembler/linker contexts cannot borrow
+   it. Normalization and finite child-window proofs consume the same checked
+   operational context, with no scalar evaluator or inferred default handler.
+   Independent controls cover a finite positive under an explicit witness,
+   unbound canonical refusal, incorrect/stale ownership, policy/call-closure
+   refusal and genuinely unknown or out-of-frame argument windows.
+   An authored policy contributes only while its logical installation owner is
+   in the committed scope ancestry. A synchronous failed entry has no newly
+   entered owner; an asynchronous after-entry edge includes the committed
+   owner. Departure restores the inherited table, so an inner installation
+   cannot affect earlier entry or observations after that scope has left.
+   Within-owner path/timing correlation remains conservative and explicit.
+3. **Activation/departure storage facts.** At entry, apply the original fused
+   preparation, capture the result and ordered actual pointers, and snapshot
+   the sparse owned active/base/slot-identity bindings before establishing
+   count/proxy bindings. Private locals start dirty; an argument borrow does
+   not define its pointee, and an absent optional proxy retains its own
+   backing cell. On a normal logical return, account for the existing
+   component setter/COPY/MOVE result semantics, then restore only the owned
+   bindings and end only inline-owned lifetimes. Preserve caller-owned
+   pointee mutations. Abrupt departures restore the exited scopes; partial
+   or failed entry has no committed scope state. Meets retain exact storage
+   only when incoming bindings and scope stacks agree; disagreement is
+   unknown, never value equality or an invented canonical binding.
+   The canonical return-result effect must include setter side effects on
+   published components, flags and payload ownership: string literal return
+   invalidates facts its VM setter releases or resets. Shared flow consumes
+   that descriptor rather than adding an inliner-only opcode exception.
+   Availability and may-dirty entry provenance are distinct from literal
+   identity. Shared flow preserves bounded ordered alias-conditional write
+   summaries and resolves them against captured actual StorageIds. Unknown
+   aliases/effects never prove definedness; a definite repeated-actual write
+   can define the returned borrow, while a distinct dirty actual retains its
+   entry witness. This reuses canonical actions and the existing flow owner,
+   without a second instruction evaluator or call solver.
+   Ordinary same-module return summaries preserve bounded callee-owned entry
+   origins separately from mapped `aN` actuals. When a caller's typed result
+   observation demands such a component, resolve its exact frozen callee RET
+   point and owned entry cell, publish the entry-read witness there, and record
+   a bounded dependency on that callee's normalization certificate. A caller
+   certificate cannot bypass an incomplete required callee. Failure/skip
+   alternatives remain in the meet; unknown effects, missing/stale source
+   points, unknown origin/location and recursive or depth-32/limit boundaries
+   remain explicit unknowns. This introduces no arithmetic evaluator or
+   inferred actual argument.
+   Transitive observation projection resolves actuals only for borrowed entry
+   origins that an observation needs. A defined origin-free local/count
+   observation is neutral even with an unknown actual vector; unknown aliases
+   or borrowed origins still refuse proof. Ordinary canonical operations emit
+   all input/context reads and typed observations before output writes; ordered
+   binding recipes retain their own preparation/capture/write phases.
+   Shared work accounting charges a first incoming candidate for its actual
+   state copy and reserves the full meet cost for true joins. An unchanged
+   incoming state skips transfer only when the checked action list has no
+   call dependency; call blocks revisit across callee-summary rounds. Strict
+   budgets remain unchanged. Indexed-write and caller-before-callee controls
+   must cover both bounded cost and later return-summary improvement.
+   The frozen witness pass replays only instructions whose checked typed
+   action list contains an `observe` or `call` action. The fixed-point transfer
+   still processes the complete instruction stream. This selects demand work
+   from the existing operational owner, without a mnemonic admission table or
+   a second transfer algorithm.
+   The canonical checked-integer inventory covers every add/subtract/multiply,
+   divide/modulo, increment/decrement, sign change and power form together.
+   Checked add/subtract/multiply and divide/modulo fail before register writes;
+   successful `set_int` forms release reference/native payloads while preserving
+   ordinary side components. Direct-field increment/decrement/sign-change and
+   power writes preserve those payloads. Power has an explicit partial integer
+   failure write because invalid negative exponents write zero, while a positive
+   overflow can retain the old destination. No inliner opcode admission rule or
+   arithmetic evaluator is added. Unchecked C shift domains retain unknown
+   contracts; this metadata repair does not define their missing semantics.
+   Normalization publishes exact per-procedure certificates through
+   `change.complete(functionid)` and `change.unknownreason(functionid)` bound
+   to its immutable result owner. Unproved procedures remain exact; unrelated
+   incomplete bodies cannot veto a selected proven site. Inliner admission
+   requires certificates for both the selected caller procedure and callee,
+   preserves the exact incomplete-family reason, and never treats a partial
+   module certificate as proof for an unproved body. This certifies only owned
+   entry-local clearing, including its vacuous zero-local case. Canonical
+   effect, CFG/signal and ABI legality remain separate admission obligations.
+   **Signal-policy normalization proof (STEP04/05).** Entry normalization
+   needs a sound may-read witness over every possible local CFG path, not an
+   exact correlation of installed policies with paths. Its CFG certificate
+   therefore requires complete possible local destinations; the independent
+   `policycorrelationcomplete(functionid)` query retains policy-path unknowns.
+   Preserve the same local, resumed, failed/partial, inherited, asynchronous
+   and outward edges with their existing uncertainty and exposure. Flow must
+   still prove observation, origin, component and binding completeness before
+   certifying a procedure or inserting an owned-entry clear. Unknown event
+   payloads, aliases or local destinations cannot license a clear. G-shaped
+   push/branch/pop, C-shaped bound protection/relay, genuine dirty reads and
+   unknown/stale/resource controls independently qualify this separation;
+   no new policy solver, ISA or inliner-specific bypass is introduced.
+   The canonical opcode observation descriptor treats `SIGBRV`'s bound
+   register as a stored destination-slot selector, matching the VM handler;
+   installation does not inspect its payload. Preserve conservative may-read
+   storage/liveness effects and the later event-binding uncertainty.
+   `SIGNALORIGIN` transports its complete payload without a scalar observation;
+   its origin operand has an explicit known whole-structure observation.
+   The signal descriptor's static names are unconditional possible alternatives
+   unioned with any operand-selected name. Its `INVALID_SIGNAL_CODE` and
+   `INVALID_ARGUMENTS` validation alternatives retain before-write phase and
+   no explicit register writes. Requested payload/address/diagnostic context
+   remains observable. Unknown event-binding values remain a separate proof.
+   The focused `io-policy-shapes` integration control requires G-style inner
+   policy cloning/restoration and a compact C bound relay in uncleaned/cleaned
+   output. Both selected calls disappear; execution must preserve the terminal
+   tag, payload and captured logical source. Unknown values remain distinct
+   from complete may-entry-read provenance. The full emitted C attribute/helper
+   closure and full INL-AC04 signal/call-exit coverage remain open.
+4. **Whole-region transport and remapping.** Expose these source-point/edge
+   facts through the target proof owner and let `llcleanup` remove proved
+   caller setup and inverse swaps across the complete region. Rewrite
+   executable operands, TRACE/META references and embedded recipe operands
+   together, using capture versus destination/base roles. Preserve result,
+   entry/base and slot identities, ordered actuals, fused preparation and
+   abrupt restoration. A retained counted child keeps its exact physical
+   window or the already supported proved explicit/fresh-window lowering.
+   A counted outer invocation may retain a counted child when the shared
+   canonical flow proves its finite count at the post-preparation capture
+   checkpoint. Preserve the complete original local/global prefix and every
+   argument position that window reaches, including authored swaps and fused
+   preparation. A window reaching `a1` or above also requires the outer
+   captured argument count to cover its last position; an unknown or shorter
+   outer frame cannot be replaced by fresh proxy backing. Unknown child
+   counts, unknown required outer counts and out-of-frame windows retain
+   distinct keep reasons. A known count beyond this adapter's 4096-position
+   bound reports `inline.child.window.argument.limit` as a resource limit,
+   not a failed proof or a new semantic limit on ordinary CALL. This is
+   layout proof from the existing solver,
+   not a second instruction evaluator or a restriction on ordinary CALL use.
+   Body swaps, aliases and snapshot copies remain whenever their semantic
+   effect is required. Ordinary instructions use canonical effects and
+   typed remapping; missing optional value precision does not become body
+   admission, and an unknown implicit reference is never an empty use.
+   Complete the shared Level L adapter for the opcode database's ordered
+   binding recipes (including fused value/flag/binding order) before claiming
+   general binding cleanup. A recipe that is not yet interpreted stays an
+   explicit shared-proof gap; it is not repaired by adding an opcode-specific
+   inliner admission or cleanup shortcut. Until an ordered recipe has a
+   complete shared transfer, its unknown binding and value/component effects
+   must invalidate dependent facts together so a later UNLINK cannot expose
+   stale value knowledge.
+   The ordered adapter validates the complete canonical recipe in a bounded
+   first pass before materializing any typed references or actions. A second
+   pass emits one sequence for binding changes, scalar/flag transport and
+   writes, lifetime effects and addressed selectors. Immutable operation-local
+   captures preserve `captureint -> unlink -> putint` and captured index order;
+   a later source register resolution cannot replace the captured value.
+   Fused calls prepare first, capture result/count/ordered actual pointers
+   next, and apply the callee transfer last. Normal, failed and resumed paths
+   consume the same phase-qualified sequence. Unsupported recipe semantics
+   publish one atomic generic unknown transfer; malformed selectors and stale
+   owners remain distinct errors. Addressed references whose values, aliases
+   or extents are unresolved remain symbolic uses with explicit uncertainty,
+   never absent effects or an opcode-specific inliner admission.
+   Shared cleanup queries must derive discardability, typed placement
+   footprints and captured call layout from these exact owner facts. Dead
+   output removal requires complete written domains and preserved signal,
+   control, context, external, ownership and lifetime effects; failure-capable
+   binary LOAD or arithmetic remains executable without that site proof.
+   Footprints cover explicit/implicit/recipe roles and fixed, distinct and
+   window constraints; call layouts retain preparation/capture order and
+   normal/abrupt restoration, selecting equivalent variants or preserved/fresh
+   windows only with a proof. Missing facts, limits or stale owners cannot
+   imply an empty footprint, zero actuals or a removable operation. Reuse the
+   shared CFG/access/liveness/summary/remap owners; these query obligations
+   remain open until independently verified, without a second flow algorithm.
+5. **Access, liveness and placement.** Use the shared Level L access/liveness
+   owners on the same projected CFG, accounting for captured borrows,
+   result transfer, owned binding restoration, references, lifetime and
+   metadata observations on every applicable edge. Possible writes do not
+   kill components on failed/resumed paths. Separate an exact storage
+   permutation proof from optional value/dead-definition simplification.
+   Scope transfer and access share one post-preparation count query: a proved
+   finite register count enumerates the same physical window as a literal
+   count, while unresolved counts keep access and transport explicitly unknown.
+   Initially pin scope-owned destinations and any unresolved identity or
+   lifetime participant during placement; this increment need not invent a
+   new cross-scope reuse algorithm to remove the redundant outer swaps.
+   Re-encoding must retain every implicit recipe reference in the frame
+   extent and reject role collisions introduced by placement.
+6. **Bounded refusal and publication.** Distinguish malformed/stale owners
+   from missing recipe-role, scope-edge, storage/alias, implicit-window,
+   observation or policy-path proof and from work/entry/byte/frame/code
+   limits. Keep the precise owner reason rather than relabel a scope as
+   `profile.callee.cfg.pending`. Unknown facts retain the affected operation
+   or region; no refusal can publish a partial cleanup. Revalidate the
+   complete candidate and preserve the last valid expanded owner on failure.
+   Scope omission is a separate caller-point proof and is not used to avoid
+   this scoped cleanup obligation.
+
+**Native B argument receiver identity repair.** Unqualified attributes in a
+method-call argument retain the caller's receiver identity through native B
+inline cloning and emission, including readonly object actuals whose value
+capture is elided. Matching the receiver's class is insufficient when caller
+and callee use different instances of that class. Repair this at the native
+compiler receiver/capture owner and preserve indexed, scalar and typed-view
+access semantics; do not require source-local snapshot workarounds. A maintained
+Bag/Item control must produce the independently expected source value in normal
+and no-opt modes, and a representative RXAS assertion must show the argument
+access using the source receiver rather than the destination receiver. Reuse
+the affected receiver/copyback controls; this does not commission broad native
+qualification or close INL-STEP06.
+
+Focused QA uses one prepared normal configuration and one VM, owned centrally
+by the coordinator. Construct independent typed-recipe/scope-flow controls for
+capture versus owned/base roles, logical return versus physical departure,
+resume versus abrupt restoration, incompatible joins, stale inputs and tiny
+budgets. Maintain a handwritten reordered-actual leaf with meaningful TRACE:
+cleanup-disabled expansion executes correctly; cleanup-enabled output has no
+original CALL or outer setup/restoration SWAPs and preserves the independently
+expected result and caller values. Add an alias/snapshot control that retains
+its required copy, a retained nested counted-call window control, and one
+logical-return/abrupt-signal restoration control. Inspect the representative
+RXAS early, then run only the affected target owner, cleanup and CLI checks
+after source review and freeze. No per-increment sanitizer matrix, broad
+functional rerun, performance verdict, publication or INL-STEP06 closure is
+implied by this source-only proof increment.
 
 ### INL-STEP03F implementation contract
 
@@ -205,6 +591,23 @@ bounded inliner behavior unchanged:
    source reviewer freeze the exact warning trigger, placement, provenance,
    idempotence and async-entry contract. Native assembler adoption remains
    a later integration action.
+   A callee's repairable dirty return can make its caller's availability
+   unknown. Resolve this dependency by staged private normalization, using
+   only witnesses from procedures whose entry-normalization proof is complete
+   in that iteration. Rebuild the same shared transfer/CFG/flow after each
+   partial canonical stage; never infer that an unknown return is defined.
+   Once every procedure has a complete proof, validated entry clears establish
+   the normalized postcondition directly, preserving constructed operational
+   premises without substituting canonical semantics. Incomplete constructed
+   premises retain with an exact reason. Every changed
+   iteration must clear at least one previously uncleared owned local, so the
+   original owned-local count bounds progress. Charge all requested analyses,
+   remapping, retained candidates and ID/warning composition to one cumulative
+   request budget. Reach a complete fixed point with no dirty observations
+   before publishing; unresolved facts, no progress, limits or failed validation
+   retain the exact original module with no staged warnings. Compose original
+   operation IDs through every stage, and relocate each warning to its final
+   observation while preserving its original source contributors.
 5. An immutable procedure-fact service derives direct and transitive may/must/
    unknown summaries from the same graph/facts, including numeric, signal,
    return, symbolic argument/global, alias/ownership, call and external
@@ -224,6 +627,17 @@ normal VM. Existing affected target-CFG/constructed controls run only
 where the shared inputs change. Correct Level L inference from checked
 premises is the result of this step; complete native opcode coverage is not
 claimed until the approved database extension and its own cross-check.
+
+**Open shared policy-path precision:** the canonical procedure-wide union of
+installed signal policies proves possible local destination coverage, not the
+feasible correlation between policy state and data state. Entry normalization
+may use that supergraph only with the independent flow observation/origin/
+binding proof described in the STEP04/05 contract above. Clients requiring
+exact policy correlation still receive an explicit incomplete certificate.
+A future bounded correlated worklist may improve that precision through
+policy install/push/pop and handler-stack markers; it is not required merely
+to prove a may-read over complete possible paths. Unknown values, local
+destinations, budget or stack-depth overflow remain explicit unknowns.
 
 The reviewed increment entries below describe what the *current bounded
 implementation* proved or rejected at the time. Their per-opcode admission
@@ -4073,6 +4487,38 @@ standalone increment; it does not
 commission native C frontend changes or a native optimizer replacement. Refresh
 the changed producer and affected L preparation once after this repair freezes;
 keep wider INL acceptance and normal milestone QA open.
+
+### Current canonical-call flow repair
+
+The shared transfer profile must represent a direct counted CALL's published
+`windowafter` operand as a symbolic window reference rather than an unexplained
+implicit selector. Point flow maps each callee-observed/returned `aN` to the
+position `window+N` in the VM's r/g/a ordering through incoming active bindings.
+An exact finite nonnegative count may refine presence and return facts. A
+defined but unknown count makes each available position a conditional borrow;
+it must not produce a known count, argument presence or return literal. The
+ordinary VM maps only the supplied borrowed pointers: it does not manufacture
+a defined omitted-argument cell. A callee read of a missing `aN` therefore
+needs its authored guard/prologue proof or remains unknown. Positional mapping
+can still overapproximate possible dirty reads and permit a specific
+owned-local warning/clear without an arbitrary closed-root signal premise.
+Genuinely dirty/unproved counts, missing physical slots, fused preparation and
+unregistered windows remain conservative; calls still pin liveness where
+effects are incomplete.
+Generated B/library RXAS in the current Debug build contains many ordinary
+counted and fused `SETTPCALL`/`SWAPCALL` forms alongside `CALL1`–`CALL4`.
+Treat these shapes as practical coverage priorities, not rare exceptions; the
+sample is a source-shape inventory, not a runtime hotness measurement.
+Entry-normalization witnesses concern owned storage: an observed borrowed
+argument or global with unknown contents does not by itself make the callee's
+owned-local entry proof incomplete. An active binding to owned storage still
+requires the ordinary dirty-read proof. Focused canonical-flow controls must
+cover both the selected finite call and unsupported cases before inliner QA.
+Level L normal-target projection must consume the generated catalog's normal
+successor and fallthrough fields for conservative FLOW_NEXT instructions as
+well as classified ones. A stale L-only classification gate can split an
+inlined body at `QGLOBBIND` and leave an unterminated IR block; the constructed
+CFG fixture must cover the newly admitted scoped-entry form.
 
 ## Complete initial target profile
 

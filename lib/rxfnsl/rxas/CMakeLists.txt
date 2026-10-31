@@ -7,19 +7,9 @@ add_executable(llrxascataloggen EXCLUDE_FROM_ALL
   "${CMAKE_SOURCE_DIR}/binutils/include/opdata.c"
   "${CMAKE_SOURCE_DIR}/binutils/rxopmeta.c")
 target_include_directories(llrxascataloggen PRIVATE "${CMAKE_SOURCE_DIR}/binutils/include")
-set(_catalog_inputs
-  "${CMAKE_SOURCE_DIR}/binutils/include/rxops.h"
-  "${CMAKE_SOURCE_DIR}/binutils/include/rxopeffects.h"
-  "${CMAKE_SOURCE_DIR}/binutils/include/rxopsignals.h"
-  "${CMAKE_SOURCE_DIR}/binutils/include/rxdefs.h"
-  "${CMAKE_SOURCE_DIR}/binutils/rxopmeta.c"
-  "${CMAKE_SOURCE_DIR}/binutils/include/opdata.c")
-set(_fingerprints "")
-foreach(_input IN LISTS _catalog_inputs)
-  file(SHA256 "${_input}" _sha)
-  string(APPEND _fingerprints "${_sha}")
-endforeach()
-string(SHA256 _fingerprint "${_fingerprints}")
+include("${CMAKE_SOURCE_DIR}/cmake/CrexxRxasCatalog.cmake")
+get_property(_catalog_inputs GLOBAL PROPERTY CREXX_RXAS_CATALOG_INPUTS)
+get_property(_fingerprint GLOBAL PROPERTY CREXX_RXAS_CATALOG_FINGERPRINT)
 target_compile_definitions(llrxascataloggen PRIVATE LL_RXAS_CATALOG_FINGERPRINT="${_fingerprint}")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_catalog_inputs})
 if(BUILD_TESTING)

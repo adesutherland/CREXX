@@ -197,7 +197,10 @@ typedef enum {
     RXOP_IMPLICIT_LOCAL_R1_READ_WRITE,
     RXOP_IMPLICIT_LOCAL_R2_READ_WRITE,
     RXOP_IMPLICIT_ARGUMENT_INDEX,
-    RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3
+    RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3,
+    RXOP_IMPLICIT_CAPTURED_ARGUMENT_INDEX,
+    RXOP_IMPLICIT_INLINE_RECIPE,
+    RXOP_IMPLICIT_QUALIFIED_GLOBAL
 } RxOpImplicitEffect;
 
 typedef enum {
@@ -217,6 +220,50 @@ typedef enum {
     RXOP_SEM_INDIRECT_BRANCH = 4096,
     RXOP_SEM_OPAQUE = 8192
 } RxOpSemanticFlags;
+
+/* Activation effects are distinct from optimizer opacity and external side
+ * effects.  An unchanged SAY/TIME instruction need not observe the activation
+ * that contains it; an unchanged parent-frame or handler-stack operation does.
+ * These flags describe adapters/observations, not a second value evaluator. */
+typedef enum {
+    RXOP_ACTIVATION_NONE = 0,
+    RXOP_ACTIVATION_BINDING = 1,
+    RXOP_ACTIVATION_ARGUMENTS = 2,
+    RXOP_ACTIVATION_CALL = 4,
+    RXOP_ACTIVATION_RETURN = 8,
+    RXOP_ACTIVATION_NUMERIC = 16,
+    RXOP_ACTIVATION_SIGNAL = 32,
+    RXOP_ACTIVATION_REFERENCE = 64,
+    RXOP_ACTIVATION_LIFETIME = 128,
+    RXOP_ACTIVATION_FRAME = 256,
+    RXOP_ACTIVATION_MODULE = 512,
+    RXOP_ACTIVATION_CODE = 1024,
+    RXOP_ACTIVATION_DEBUG = 2048,
+    RXOP_ACTIVATION_UNKNOWN = 4096
+} RxOpActivationEffect;
+
+typedef enum {
+    RXOP_BINDING_NONE = 0,
+    RXOP_BINDING_LINK,
+    RXOP_BINDING_UNLINK,
+    RXOP_BINDING_SWAP,
+    RXOP_BINDING_ARGUMENT,
+    RXOP_BINDING_COMPOUND,
+    RXOP_BINDING_LIFETIME
+} RxOpBindingAction;
+
+/* Every source-visible opcode has one structural treatment.  An adapter
+ * category does not claim that every selector or state is already supported.
+ * Optional component/value facts are not ordinary-clone admission gates. */
+typedef enum {
+    RXOP_CLONE_MISSING = 0,
+    RXOP_CLONE_ORDINARY,
+    RXOP_CLONE_BINDING,
+    RXOP_CLONE_CALL,
+    RXOP_CLONE_RETURN,
+    RXOP_CLONE_CONTEXT,
+    RXOP_CLONE_RETAINED
+} RxOpCloneCategory;
 
 /* Canonical value components used by flow consumers.  These describe which
  * representation inside a value is observed or changed; they are deliberately
@@ -285,9 +332,10 @@ typedef enum {
     RXOP_SIGNAL_STATE_UNKNOWN
 } RxOpSignalState;
 
-/* Where the signal name is obtained.  STATIC_NAMES uses the contract's
- * canonical '|' separated name set.  Literal and register operands are
- * zero-based RXAS operand positions resolved for each instruction instance. */
+/* Where the primary signal name is obtained. STATIC_NAMES uses the contract's
+ * canonical '|' separated name set. Literal and register operands are
+ * zero-based RXAS operand positions resolved for each instruction instance;
+ * any static_names are additional possible validation signals in their union. */
 typedef enum {
     RXOP_SIGNAL_SOURCE_NONE = 0,
     RXOP_SIGNAL_SOURCE_STATIC_NAMES,
@@ -357,6 +405,8 @@ typedef struct {
     RxOpSignalSource source;
     /* SIZE_MAX when the name does not come from an RXAS operand. */
     size_t source_operand;
+    /* Complete static set for STATIC_NAMES; optional additional alternatives
+     * for operand-selected names, never a replacement for the primary name. */
     const char *static_names;
     /* Register operands whose state may be visible on failure. */
     unsigned int failure_writes;
@@ -409,6 +459,63 @@ typedef struct {
     int optimizer_barrier;
 } RxOpEffects;
 
+/* Canonical target-tool contracts. Operand selectors are one-based, with 0
+ * denoting absence. Recipes use these selectors, never register numbers.
+ * A recipe is an ordered list of primitive operations separated by ';'.
+ * Its preparation and pointer capture are one instruction boundary: consumers
+ * must not introduce an asynchronous observation between these operations. */
+typedef enum {
+    RXOP_CALL_NONE = 0,
+    RXOP_CALL_DIRECT,
+    RXOP_CALL_DYNAMIC,
+    RXOP_CALL_FACTORY
+} RxOpCallKind;
+
+typedef struct {
+    RxOpCallKind kind;
+    unsigned int target_operand;
+    unsigned int result_operand;
+    unsigned int count_operand;
+    unsigned int window_operand;
+    const char *actual_operands;
+    const char *prefix;
+    int capture_after_prefix;
+    int atomic_prefix;
+} RxOpCallContract;
+
+typedef enum {
+    RXOP_RELOC_NONE = 0,
+    RXOP_RELOC_REGISTER,
+    RXOP_RELOC_LABEL,
+    RXOP_RELOC_PROCEDURE,
+    RXOP_RELOC_STRING,
+    RXOP_RELOC_BINARY,
+    RXOP_RELOC_DECIMAL,
+    RXOP_RELOC_LOCAL_INDEX,
+    RXOP_RELOC_JUMP_TABLE,
+    RXOP_RELOC_UNKNOWN,
+    RXOP_RELOC_INLINE_RECIPE,
+    RXOP_RELOC_MODULE
+} RxOpRelocationKind;
+
+/* Numeric settings are independent domains. Plugin/locale/external facts
+ * are dependencies, not a claim that a successful operation changes numeric
+ * settings. The existing RXOP_CONTEXT_NUMERIC API remains a coarse view. */
+typedef enum {
+    RXOP_CONTEXT_READ_NONE = 0,
+    RXOP_CONTEXT_DIGITS = 1,
+    RXOP_CONTEXT_FUZZ = 2,
+    RXOP_CONTEXT_FORM = 4,
+    RXOP_CONTEXT_CASE = 8,
+    RXOP_CONTEXT_STANDARD = 16,
+    RXOP_CONTEXT_ALL_NUMERIC = 31,
+    RXOP_CONTEXT_PLUGIN = 32,
+    RXOP_CONTEXT_LOCALE = 64,
+    RXOP_CONTEXT_EXTERNAL = 128,
+    RXOP_CONTEXT_HANDLER = 256,
+    RXOP_CONTEXT_UNKNOWN = 512
+} RxOpContextAccessMask;
+
 typedef struct {
     const char* mnemonic;
     int         opcode; /* Using int to avoid dependency loop or forward decl issues, or strictly Opcode */
@@ -455,8 +562,20 @@ int rxop_effect_reads_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_kills_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand_index);
+/* Normal edges use declared target-operand order, followed by lexical
+ * fallthrough when present. -1 means ordinary FLOW_NEXT; -2 means unknown or
+ * indirect control. Exceptional label references are not normal successors. */
+int rxop_normal_successors(int opcode);
+int rxop_normal_fallthrough(int opcode);
+RxOpBindingAction rxop_binding_action(int opcode);
+unsigned int rxop_activation_effects(int opcode);
+RxOpCloneCategory rxop_clone_category(int opcode);
 unsigned int rxop_component_reads(int opcode, size_t operand_index);
 unsigned int rxop_component_writes(int opcode, size_t operand_index);
+/* Whether optional cleanup has a known component-write projection. False
+ * means unknown projection, not no write; true does not mean an unconditional
+ * definition on exceptional/resumed paths or authorize deleting the opcode. */
+int rxop_component_write_is_known(int opcode, size_t operand_index);
 int rxop_compare_branch_fusion(int compare_opcode, int branch_opcode,
                                RxOpCompareBranchFusion *fusion);
 /* True when a two-register copy is guaranteed to perform no work, signal, or
@@ -472,6 +591,47 @@ size_t rxop_derivation_source_operand(int opcode);
 unsigned int rxop_derivation_source_component(int opcode);
 unsigned int rxop_derivation_context_reads(int opcode);
 unsigned int rxop_context_writes(int opcode);
+RxOpCallContract rxop_call_contract(int opcode);
+/* Ordered non-call binding/compound preparation; an empty string is a proved
+ * absence only for a classified instruction without binding effects. */
+const char *rxop_binding_recipe(int opcode);
+const char *rxop_implicit_recipe(int opcode);
+/* Return kind: 0 nonreturn, 1 void, 2 owned-or-borrowed register value,
+ * 3 integer component, 4 float component, 5 string component. */
+int rxop_return_kind(int opcode);
+unsigned int rxop_return_source_operand(int opcode);
+/* Prior result facts invalidated by the return setter, before installing its
+ * transferred/literal component. Masks are analysis metadata, not wire ABI.
+ * Register COPY/MOVE supplies all result domains from its source separately. */
+unsigned int rxop_return_result_component_invalidations(int opcode);
+uint32_t rxop_return_result_flag_invalidations(int opcode);
+unsigned int rxop_scope_continuation_operand(int opcode);
+unsigned int rxop_recipe_operand(int opcode);
+/* Exact unfused counterpart for fixed implicit selector forms, or -1. */
+int rxop_explicit_variant(int opcode);
+RxOpRelocationKind rxop_operand_relocation(int opcode, size_t operand_index);
+unsigned int rxop_context_read_mask(int opcode);
+unsigned int rxop_context_write_mask(int opcode);
+unsigned int rxop_observation_mask(int opcode);
+/* Complete conservative may-access masks. These include all published value
+ * components/flags that an operation can touch; they never assert a must-write
+ * or value-independent kill. Precise optional projections remain separate. */
+unsigned int rxop_component_may_reads(int opcode, size_t operand_index);
+unsigned int rxop_observed_components(int opcode, size_t operand_index);
+uint32_t rxop_observed_flags(int opcode, size_t operand_index);
+int rxop_observation_is_known(int opcode, size_t operand_index);
+unsigned int rxop_observed_flags_mask_operand(int opcode);
+unsigned int rxop_component_may_writes(int opcode, size_t operand_index);
+uint32_t rxop_flag_may_reads(int opcode, size_t operand_index);
+uint32_t rxop_flag_may_writes(int opcode, size_t operand_index);
+/* Optional value facts on a successful normal edge. A definition requires
+ * availability of its declared source reads. A transport propagates source
+ * availability and never invents a definition for an unavailable component. */
+unsigned int rxop_definition_components(int opcode, size_t operand_index);
+unsigned int rxop_transport_source_operand(int opcode);
+unsigned int rxop_transport_components(int opcode);
+unsigned int rxop_literal_operand(int opcode);
+unsigned int rxop_literal_components(int opcode);
 RxOpSignalContract rxop_signal_contract(int opcode);
 size_t rxop_signal_contract_count(void);
 int rxop_can_signal(int opcode);

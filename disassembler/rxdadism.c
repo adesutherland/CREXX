@@ -38,11 +38,11 @@
 #include "../binutils/include/rxdefs.h"
 #include "../binutils/include/rxjtable.h"
 #include "../binutils/include/rxnumparse.h"
+#include "../binutils/include/rxinline_recipe.h"
 #include "rxfloatformat.h"
 
 /* Max buffer size - todo change to a dynamic solution */
 #define MAX_LINE_SIZE 5000
-#include "../binutils/include/opdata.c"
 
 static void get_mnemonic(char *dest, const char *name) {
     int i = 0;
@@ -55,7 +55,7 @@ static void get_mnemonic(char *dest, const char *name) {
 
 /* Encodes a string to a buffer. Like snprintf() it returns the number of characters
  * that would have been written */
-static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t length) {
+static size_t encode_print(char* buffer, size_t buffer_len, const char* string, size_t length) {
 
 #define ADD_CHAR_TO_BUFFER(ch) {out_len++; if (buffer_len) { *(buffer++) = (ch); buffer_len--; }}
 
@@ -134,6 +134,25 @@ static size_t encode_print(char* buffer, size_t buffer_len, char* string, size_t
     if (buffer_len) *buffer = 0;
     return out_len;
 #undef ADD_CHAR_TO_BUFFER
+}
+
+/* Preserve snprintf-style length reporting while reserving a terminator at
+ * every capacity, including the exact closing-quote boundary. */
+size_t rxda_quote_text(char *buffer, size_t capacity,
+                       const char *source, size_t length) {
+    size_t encoded;
+    size_t copied;
+    if (capacity < 2u) {
+        encoded = encode_print(NULL, 0u, source, length);
+        if (capacity) buffer[0] = 0;
+    } else {
+        buffer[0] = '"';
+        encoded = encode_print(buffer + 1u, capacity - 2u, source, length);
+        copied = encoded < capacity - 2u ? encoded : capacity - 2u;
+        if (copied < capacity - 2u) buffer[1u + copied++] = '"';
+        buffer[1u + copied] = 0;
+    }
+    return encoded > SIZE_MAX - 2u ? SIZE_MAX : encoded + 2u;
 }
 
 /* Encodes a binary array to a hex string buffer. Like snprintf() it returns the number of characters
@@ -561,36 +580,64 @@ static size_t disassemble_operand(bin_space *pgm,
     size_t sz;
     int r;
 
+    if (type == OP_FUNC && pgm->binary[index].index < pgm->const_size) {
+        const chameleon_constant *base = (const chameleon_constant *)(
+            pgm->const_pool + pgm->binary[index].index);
+        if (base->type == BINARY_CONST) {
+            const string_constant *entry = (const string_constant *)base;
+            rxinl_qualified_proc_view qualified;
+            if (!rxinl_qualified_proc_decode(entry->string, entry->string_len,
+                                            &qualified))
+                return (size_t)snprintf(buffer, buffer_len,
+                                        "*INVALID_QUALIFIED_PROCEDURE*");
+            return (size_t)snprintf(buffer, buffer_len, "@%u::%u()",
+                                    qualified.image_module,
+                                    qualified.provider_procedure);
+        }
+    }
+    if ((opcode == OP_INLENTER_REG_FUNC_STRING_ID && operand_index == 2u) ||
+        (opcode == OP_QGLOBBIND_REG_STRING_INT && operand_index == 1u)) {
+        string_constant *constant;
+        char *recipe_text = NULL;
+        const char *source_text;
+        size_t source_length;
+        size_t pool_offset = pgm->binary[index].index;
+        if (pool_offset >= pgm->const_size)
+            return (size_t)snprintf(buffer, buffer_len, "*INVALID_INLINE_CONSTANT*");
+        constant = (string_constant *)(pgm->const_pool + pool_offset);
+        if (constant->base.type != BINARY_CONST)
+            return (size_t)snprintf(buffer, buffer_len, "*INVALID_INLINE_CONSTANT*");
+        if (opcode == OP_INLENTER_REG_FUNC_STRING_ID) {
+            rxinl_recipe_view view;
+            if (!rxinl_recipe_decode(constant->string, constant->string_len, &view))
+                return (size_t)snprintf(buffer, buffer_len, "*INVALID_INLINE_RECIPE*");
+            recipe_text = rxinl_recipe_to_text(&view);
+            if (!recipe_text)
+                return (size_t)snprintf(buffer, buffer_len, "*INVALID_INLINE_RECIPE*");
+            source_text = recipe_text;
+            source_length = strlen(recipe_text);
+        } else {
+            rxinl_module_ref_view view;
+            if (!rxinl_module_ref_decode(constant->string, constant->string_len, &view))
+                return (size_t)snprintf(buffer, buffer_len, "*INVALID_MODULE_REFERENCE*");
+            source_text = view.selector;
+            source_length = view.selector_length;
+        }
+        out_len = rxda_quote_text(buffer, buffer_len, source_text, source_length);
+        free(recipe_text);
+        return out_len;
+    }
+
     if (module && module->graph_operands &&
         rx_graph_operand_kind(opcode, operand_index) != RX_GRAPH_OPERAND_NONE) {
         char *text;
-        size_t encoded;
 
         text = rx_graph_operand_text(module->semantic_graph,
                                      opcode,
                                      operand_index,
                                      (uint32_t)pgm->binary[index].index);
         if (!text) return (size_t)snprintf(buffer, buffer_len, "*INVALID_GRAPH_ID*");
-        out_len = 1u;
-        if (buffer_len) {
-            *buffer++ = '"';
-            buffer_len--;
-        }
-        encoded = encode_print(buffer, buffer_len, text, strlen(text));
-        out_len += encoded;
-        if (encoded < buffer_len) {
-            buffer += encoded;
-            buffer_len -= encoded;
-        } else {
-            buffer += buffer_len;
-            buffer_len = 0u;
-        }
-        out_len++;
-        if (buffer_len) {
-            *buffer++ = '"';
-            buffer_len--;
-            *buffer = 0;
-        }
+        out_len = rxda_quote_text(buffer, buffer_len, text, strlen(text));
         free(text);
         return out_len;
     }

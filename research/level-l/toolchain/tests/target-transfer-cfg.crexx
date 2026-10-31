@@ -57,10 +57,10 @@ main: procedure = .int
   ir_ref = original.ir(); ir = dereference ir_ref; sourceimage = ir.binary()
   canonical = .lltargettransfer..profile(reference original)
   failures = failures + check(canonical.status() = 'ok','canonical transfer profile is callable')
-  failures = failures + check(canonical.complete(before,'numeric') = 0,'missing numeric read coverage stays unknown')
+  failures = failures + check(canonical.complete(before,'numeric'),'canonical scalar LOAD proves no numeric-context read')
   failures = failures + check(canonical.complete(before,'invented-family') = 0,'unknown query family is not known empty')
-  failures = failures + check(canonical.complete(numericgetter,'numeric') = 0 & canonical.complete(extract,'signals') = 0,'getter and FEXTR catalogue gaps cannot imply absent effects')
-  failures = failures + check(canonical.complete(copiedload,'bindings') = 0,'register copy cannot certify absent binding effects')
+  failures = failures + check(canonical.complete(numericgetter,'numeric') & canonical.complete(extract,'signals') = 0,'getter read is described while unknown FEXTR signals stay unknown')
+  failures = failures + check(canonical.complete(copiedload,'bindings'),'register LOAD has an ordered canonical link action')
   copied = original
   failures = failures + check(canonical.matches(reference copied) = 0,'equal copied module is a foreign owner')
   tiny = .lltargettransfer..profile(reference original,1,1)

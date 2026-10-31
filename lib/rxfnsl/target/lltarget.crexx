@@ -5,6 +5,7 @@ import rxfnsb
 import llir
 import llrxascatalog
 import llsource
+import lltargetrecipe
 
 bad: procedure = .void
   arg message = .string
@@ -253,47 +254,23 @@ isrecord: procedure = .int
   arg name = .string
   return name = 'rxas.target.record' | name = 'rxas.target.control'
 
-/** Count explicit direct-label targets from the existing canonical operand
- * inventory. Unknown effects, indirect transfer and nonlabel targets do not
- * acquire invented successors. No extended catalogue fields are required. */
-normaltargets: procedure = .int
-  arg opcode = .int
-  catalog = .llrxascatalog..catalog()
-  if opcode < 0 | opcode >= catalog.count() then return -1
-  if catalog.classification(opcode) <> 0 then return -1
-  /* RXOP_SEM_INDIRECT_BRANCH is part of the existing semantic-mask ABI. */
-  if (catalog.semantics(opcode) <idiv> 4096) % 2 then return -1
-  signature = catalog.signature(opcode); targets = 0
-  do i = 1 to length(signature)
-    if catalog.branch(opcode,i) = 0 then iterate
-    if substr(signature,i,1) <> 'L' then return -1
-    targets = targets + 1
-  end
-  return targets
-
 /** -1 is ordinary fallthrough, -2 is an unrepresented normal transfer.
- * Existing flow values are NEXT/JUMP/COND/TERM, in that order. A NEXT label
- * reference can install a handler; it does not execute a normal branch.
+ * The canonical normal-flow contract is independent of effect precision:
+ * conservative effects can still have exact fallthrough or direct targets.
  * Direct targets retain operand order, with lexical fallthrough last. */
 normalsuccessors: procedure = .int
   arg opcode = .int
-  targets = normaltargets(opcode)
-  if targets < 0 then return -2
-  catalog = .llrxascatalog..catalog(); flow = catalog.flow(opcode)
-  if flow = 0 then return -1
-  if flow = 1 & targets = 1 then return 1
-  if flow = 2 & (targets = 1 | targets = 2) then return 2
-  if flow = 3 & targets = 0 then return 0
-  return -2
+  catalog = .llrxascatalog..catalog()
+  if opcode < 0 | opcode >= catalog.count() then return -2
+  return catalog.normalsuccessors(opcode)
 
 /** A one-target conditional has lexical fallthrough; a two-target
  * conditional supplies both successors explicitly. */
 normalfallthrough: procedure = .int
   arg opcode = .int
-  targets = normaltargets(opcode)
-  if targets < 0 then return 0
   catalog = .llrxascatalog..catalog()
-  return catalog.flow(opcode) = 2 & targets = 1
+  if opcode < 0 | opcode >= catalog.count() then return 0
+  return catalog.normalfallthrough(opcode)
 
 integerbits: procedure = .binary
   arg value = .int
@@ -323,6 +300,20 @@ namesafe: procedure = .int
   do i = 2 to length(text)
     if pos(substr(text,i,1),'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_§.-#') = 0 then return 0
   end
+  return 1
+
+/** An executable qualified procedure reference is syntactically typed here;
+ * only the frozen image/linker owner can validate and seal its identities. */
+qualifiedprocedure: procedure = .int
+  arg text = .string
+  if left(text,1) <> '@' then return 0
+  separator = pos('::',text)
+  if separator < 3 | separator + 2 > length(text) then return 0
+  module = substr(text,2,separator - 2); member = substr(text,separator + 2)
+  if length(module) > 10 | length(member) > 10 then return 0
+  if verify(module,'0123456789') <> 0 | verify(member,'0123456789') <> 0 then return 0
+  moduleindex = module as .int; memberindex = member as .int
+  if moduleindex > 4294967295 | memberindex > 4294967295 then return 0
   return 1
 
 recordshape: procedure = .string
@@ -419,8 +410,7 @@ appendrecord: procedure = .int
   end
   contract = dereference store.contract(); opname = 'rxas.target.record'
   if kind = 'instruction' then do
-    catalog = .llrxascatalog..catalog()
-    if catalog.flow(opcode) <> 0 then opname = 'rxas.target.control'
+    if normalsuccessors(opcode) <> -1 then opname = 'rxas.target.control'
   end
   operation = contract.operation(opname)
   draft = block.operation(operation,at)
@@ -601,9 +591,14 @@ draft: class
     return file.contributingorigin(first,last,kind,parents)
   procedure: method = .lltarget..bodydraft
     arg name = .string, locals = .int, at = .llir..origin, exposed = ''
+    if _store.error() <> '' then return .lltarget..bodydraft()
+    if name = '' | locals < 0 then do
+      call _store.fail('LL_TARGET_PROCEDURE: invalid name or local count'); return .lltarget..bodydraft()
+    end
     contract = dereference _store.contract()
-    if name = '' | locals < 0 then call _store.fail('LL_TARGET_PROCEDURE: invalid name or local count')
-    fn = .llir..function(reference _store,_store.function(name,contract.voidtype()))
+    functionid = _store.function(name,contract.voidtype())
+    if functionid < 1 | _store.error() <> '' then return .lltarget..bodydraft()
+    fn = .llir..function(reference _store,functionid)
     block = fn.block('$target.addr.1'); n = _functions[0] + 1
     if _store.reserve(0,160) = 0 then return .lltarget..bodydraft()
     _functions[n] = fn.id(); _cursors[n] = .bodycursor(reference _store,reference _fuel,fn,block)
@@ -618,7 +613,9 @@ draft: class
     if _sealed then do
       call bad('LL_TARGET_STATE: draft already finished'); return .lltarget..module(.llir..module(_store),0)
     end
-    _sealed = 1; origin = syntheticorigin(reference _store,'target structural sentinel')
+    _sealed = 1
+    if _store.error() <> '' then return .lltarget..module(.llir..module(_store),_globals)
+    origin = syntheticorigin(reference _store,'target structural sentinel')
     do i = 1 to _cursors[0]
       cursor_ref = reference _cursors[i]; cursor = dereference cursor_ref
       call cursor.finish(origin)
@@ -656,7 +653,9 @@ bodydraft: class
     return _owner
   reg: method = .lltarget..operand
     arg bank = .string, index = .int
+    if <refvalid>(_owner) = 0 then return .operand()
     store = dereference _owner; work = dereference _fuel
+    if store.error() <> '' then return .operand()
     if work.take(_owner,1) = 0 then return .operand()
     if wordpos(bank,'r g a') = 0 | index < 0 | (bank = 'r' & index >= _locals) | (bank = 'g' & index >= _globals) then do
       call store.fail('LL_TARGET_REGISTER: bank/index outside declaration'); return .operand()
@@ -678,7 +677,18 @@ bodydraft: class
     return .operand.bound(store.identity(),_function,slotid,bank,index)
   emit: method = .int
     arg mnemonic = .string, fields = .object[], at = .llir..origin
+    return emitchecked(mnemonic,fields,at,0)
+  /** Native RXAS admission alone supplies packed recipe selectors. Keep the
+   * established logical emit callable unchanged for all target consumers. */
+  emitphysical: method = .int
+    arg mnemonic = .string, fields = .object[], at = .llir..origin
+    return emitchecked(mnemonic,fields,at,1)
+  emitchecked: method = .int
+    arg mnemonic = .string, fields = .object[], at = .llir..origin, physicalrecipe = .int
+    i = .int; j = .int
+    if <refvalid>(_owner) = 0 then return 0
     signature = ''; item = .operand; store = dereference _owner; work = dereference _fuel
+    if store.error() <> '' then return 0
     do i = 1 to fields[0]
       if fields[i] is .operand then item = fields[i] as .operand
       else do; call store.fail('LL_TARGET_OPERAND: expected typed operand'); return 0; end
@@ -705,6 +715,25 @@ bodydraft: class
     if opcode < 0 then do
       call store.fail('LL_TARGET_OPCODE: unknown source-visible instruction/signature ' || mnemonic || '/' || signature); return 0
     end
+    recipeordinal = catalog.recipeoperand(opcode)
+    if recipeordinal > 0 then do
+      encoded = fields[recipeordinal] as .operand
+      if encoded.kind() <> 'S' then do; call store.fail('LL_TARGET_RECIPE: source text expected'); return 0; end
+      if work.take(_owner,encoded.length() + 1) = 0 then return 0
+      recipeview = .lltargetrecipe..view(encoded.text(),catalog.scopecontinuation(opcode) > 0,encoded.length() + 1)
+      if recipeview.error() <> '' then do; call store.fail(recipeview.error()); return 0; end
+      /* Only native RXAS admission supplies packed physical recipe indices.
+       * Resolve them before registering typed slots; the L model itself keeps
+       * banks stable while later caller-local growth changes packed offsets. */
+      if physicalrecipe then do
+        if work.take(_owner,encoded.length() * 3 + recipeview.registers() * 8 + 1) = 0 then return 0
+        text = recipeview.logical(_locals,_globals)
+        fields[recipeordinal] = .operand.string(text as .binary) as .object
+        recipeview = .lltargetrecipe..view(text,catalog.scopecontinuation(opcode) > 0,length(text) + 1)
+        if recipeview.error() <> '' then do; call store.fail(recipeview.error()); return 0; end
+      end
+      do i = 1 to recipeview.registers(); registered = reg(recipeview.bank(i),recipeview.index(i)); end
+    end
     cursor = dereference _cursor; block = cursor.before(at)
     edges = cursor.targets(opcode,fields)
     id = appendrecord(_owner,_fuel,block,_function,'instruction',opcode,fields,at,edges)
@@ -713,6 +742,9 @@ bodydraft: class
   record: method = .int
     arg kind = .string, fields = .object[], at = .llir..origin
     source = .operand; bank = .operand; number = .operand; registered = .operand
+    if <refvalid>(_owner) = 0 then return 0
+    store = dereference _owner
+    if store.error() <> '' then return 0
     /* TRACE encodes a register as a typed bank/index pair. Register it with
      * the same target storage owner as an explicitly spelled R operand. */
     if kind = '.traceevent' & fields[0] = 11 & fields[3] is .operand & fields[5] is .operand & fields[6] is .operand then do
@@ -732,6 +764,8 @@ record: class
   _owner = reference .llir..module
   _identity = .int
   _id = .int
+  _recipeprepared = .int
+  _recipeview = .lltargetrecipe..view
   *: factory
     arg owner = reference .llir..module, id = .int
     _owner = owner; graph = dereference owner; _identity = graph.identity(); _id = id
@@ -788,6 +822,49 @@ record: class
   /** Enumerate spelled register operands and typed TRACE bank/index pairs.
    * Implicit call windows/addressed registers still require the canonical
    * operation contract plus call-site facts; this is not a completeness proof. */
+  /** Checked roles for the catalogue-selected operational recipe. An ordinary
+   * instruction has no recipe and must not acquire one by mnemonic guessing. */
+  recipe: method = .lltargetrecipe..view
+    call require()
+    if _recipeprepared then return _recipeview
+    if kind() <> 'instruction' then call bad('LL_TARGET_RECIPE: record has no recipe')
+    catalog = .llrxascatalog..catalog(); ordinal = catalog.recipeoperand(opcode())
+    if ordinal < 1 | ordinal > operands() then call bad('LL_TARGET_RECIPE: instruction has no recipe')
+    encoded = operand(ordinal)
+    if encoded.kind() <> 'S' then call bad('LL_TARGET_RECIPE: recipe is not string')
+    result = .lltargetrecipe..view(encoded.text(),catalog.scopecontinuation(opcode()) > 0,encoded.length() + 1)
+    if result.error() <> '' then call bad(result.error())
+    _recipeview = result; _recipeprepared = 1
+    return _recipeview
+  reciperef: method = .lltarget..operand
+    arg ordinal = .int
+    view = recipe()
+    if ordinal < 1 | ordinal > view.registers() then call bad('LL_TARGET_RECIPE: register ordinal')
+    total = 0
+    do i = 1 to operands()
+      value = operand(i)
+      if value.kind() = 'R' then total = total + 1
+    end
+    return registerref(total + ordinal)
+  /** The role vector has exactly the registerref order. Recipe tokens retain
+   * capture/destination/preparation identities; other references stay explicit
+   * or metadata and require their own canonical instruction contract. */
+  registerrole: method = .string
+    arg ordinal = .int
+    if ordinal < 1 | ordinal > registerrefs() then call bad('LL_TARGET_RECIPE: register role ordinal')
+    total = 0
+    do i = 1 to operands()
+      value = operand(i)
+      if value.kind() = 'R' then total = total + 1
+    end
+    if ordinal <= total then return 'explicit'
+    if kind() = '.traceevent' then return 'metadata'
+    view = recipe(); return view.role(ordinal - total)
+  registerroleordinal: method = .int
+    arg ordinal = .int
+    role = registerrole(ordinal)
+    if role = 'explicit' | role = 'metadata' then return 0
+    view = recipe(); return view.roleordinal(ordinal - registerrefs() + view.registers())
   registerrefs: method = .int
     total = 0; field = .operand; i = .int
     do i = 1 to operands()
@@ -798,9 +875,19 @@ record: class
       source = operand(3); bank = operand(5); number = operand(6)
       if source.text() = 'R' & number.index() >= 0 & wordpos(lower(bank.text()),'r g a') > 0 then total = total + 1
     end
+    if kind() = 'instruction' then do
+      catalog = .llrxascatalog..catalog(); recipeordinal = catalog.recipeoperand(opcode())
+      if recipeordinal > 0 then do
+        recipeview = recipe()
+        if recipeview.error() <> '' then call bad(recipeview.error())
+        total = total + recipeview.registers()
+      end
+    end
     return total
   registerref: method = .lltarget..operand
     arg ordinal = .int
+    graph = .llir..module; store = .llir..arena
+    graph = dereference _owner; store_ref = graph.storage(); store = dereference store_ref
     total = 0; field = .operand; slotid = .int; i = .int
     do i = 1 to operands()
       field = operand(i)
@@ -811,12 +898,28 @@ record: class
     if kind() = '.traceevent' then do
       source = operand(3); bank = operand(5); number = operand(6)
       if source.text() = 'R' & number.index() >= 0 & wordpos(lower(bank.text()),'r g a') > 0 & ordinal = total + 1 then do
-        graph = dereference _owner; store = dereference graph.storage(); slotid = 0
+        slotid = 0
         do i = 1 to store.count(5)
           if store.get(5,i,1) = procedureid() & store.text(store.get(5,i,3)) = (lower(bank.text()) || number.index()) then slotid = i
         end
         if slotid = 0 then call bad('LL_TARGET_METADATA: TRACE register has no storage descriptor')
         return .operand.bound(_identity,procedureid(),slotid,lower(bank.text()),number.index())
+      end
+    end
+    if kind() = 'instruction' then do
+      catalog = .llrxascatalog..catalog(); recipeordinal = catalog.recipeoperand(opcode())
+      if recipeordinal > 0 then do
+        recipeview = recipe()
+        selected = ordinal - total
+        if selected >= 1 & selected <= recipeview.registers() then do
+          slotid = 0
+          bankname = recipeview.bank(selected); index = recipeview.index(selected)
+          do i = 1 to store.count(5)
+            if store.get(5,i,1) = procedureid() & store.text(store.get(5,i,3)) = (bankname || index) then slotid = i
+          end
+          if slotid = 0 then call bad('LL_TARGET_RECIPE: register has no storage descriptor')
+          return .operand.bound(_identity,procedureid(),slotid,bankname,index)
+        end
       end
     end
     call bad('LL_TARGET_METADATA: register reference ordinal outside record')
@@ -849,6 +952,19 @@ remapregisters: procedure = .object[]
     if replacement.kind() <> 'R' then call bad('LL_TARGET_METADATA: replacement is not a register')
     fields[5] = .operand.string(replacement.bank() as .binary) as .object
     fields[6] = .operand.integer(replacement.index()) as .object
+  end
+  if item.kind() = 'instruction' then do
+    catalog = .llrxascatalog..catalog(); recipeordinal = catalog.recipeoperand(item.opcode())
+    if recipeordinal > 0 then do
+      recipeview = item.recipe()
+      names = .string[]
+      do i = 1 to recipeview.registers()
+        next = next + 1; replacement = replacements[next] as .operand
+        if replacement.kind() <> 'R' then call bad('LL_TARGET_RECIPE: replacement is not a register')
+        names[i] = replacement.bank() || replacement.index()
+      end
+      fields[recipeordinal] = .operand.string(recipeview.rewrite(names) as .binary) as .object
+    end
   end
   return fields
 
@@ -1346,7 +1462,8 @@ module: class
           if _error <> '' then return
         end
         if wordpos(field.kind(),'L P') > 0 then do
-          if namesafe(field.text(),item.kind() = 'procedure' & j = 3) = 0 then _error = 'LL_TARGET_NAME: unsupported identifier spelling'
+          if field.kind() = 'P' & item.kind() = 'instruction' & qualifiedprocedure(field.text()) then nop
+          else if namesafe(field.text(),item.kind() = 'procedure' & j = 3) = 0 then _error = 'LL_TARGET_NAME: unsupported identifier spelling'
           if _error <> '' then return
         end
         if wordpos(field.kind(),'F D C B') > 0 then do
@@ -1358,7 +1475,7 @@ module: class
         if item.kind() = 'instruction' & field.kind() = 'P' then do
           work = work - _records[0]
           if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.binding work'; return; end
-          found = findprocedure(reference _graph,reference _headers,field.text()) > 0
+          found = qualifiedprocedure(field.text()) | findprocedure(reference _graph,reference _headers,field.text()) > 0
           do k = 1 to _records[0] while found = 0
             work = work - 1
             if work < 0 then do; _error = 'LL_RESOURCE_LIMIT: target.binding work'; return; end

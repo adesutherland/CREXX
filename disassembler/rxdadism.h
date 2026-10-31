@@ -33,4 +33,9 @@
 /* Disassembler */
 void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_all_constant_pool);
 
+/* Internal operand renderer. Returns full quoted length excluding NUL; writes
+ * a terminated prefix whenever capacity is nonzero. NULL is valid at size0. */
+size_t rxda_quote_text(char *buffer, size_t capacity,
+                       const char *source, size_t length);
+
 #endif //CREXX_RXDADISM_H

@@ -341,11 +341,99 @@ RXVM_HANDLER(LINKARG_REG_INT, VM_ADVANCE(2);
                                          current_frame->procedure->locals];
             DISPATCH;
 
+)
+
+RXVM_HANDLER(LINKARGV_REG_REG_INT, VM_ADVANCE(3);
+            {
+                rxvm_inline_scope *scope = current_frame->inline_scope;
+                rxinteger selector = op2RI;
+                rxinteger adjust = op3I;
+                rxinteger index;
+                if (!scope || !rxvm_inline_scope_owns(scope, REG_IDX(1))) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                if ((adjust > 0 && selector > RXINTEGER_MAX - adjust) ||
+                    (adjust < 0 && selector < RXINTEGER_MIN - adjust)) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                index = selector + adjust;
+                if (index < 0 || (uint64_t)index > scope->argument_count) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(1) = rxvm_inline_scope_argument(current_frame, scope,
+                                                       (size_t)index);
+            }
+            DISPATCH;
+)
+
+RXVM_HANDLER(LINKARGV_REG_INT, VM_ADVANCE(2);
+            {
+                rxvm_inline_scope *scope = current_frame->inline_scope;
+                rxinteger index = op2I;
+                if (!scope || !rxvm_inline_scope_owns(scope, REG_IDX(1)) ||
+                    index < 0 || (uint64_t)index > scope->argument_count) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(1) = rxvm_inline_scope_argument(current_frame, scope,
+                                                       (size_t)index);
+            }
+            DISPATCH;
+)
+
+RXVM_HANDLER(QGLOBBIND_REG_STRING_INT, VM_ADVANCE(3);
+            {
+                rxvm_inline_scope *scope = current_frame->inline_scope;
+                const string_constant *constant = CONSTSTRING_OP(2);
+                rxinl_module_ref_view reference;
+                module *provider = NULL;
+                size_t i;
+                if (!scope || !rxvm_inline_scope_owns(scope, REG_IDX(1)) ||
+                    constant->base.type != BINARY_CONST ||
+                    !rxinl_module_ref_decode(constant->string,
+                                             constant->string_len, &reference)) {
+                    SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
+                    DISPATCH;
+                }
+                if (reference.self_relative) {
+                    if (reference.sealed && current_module->file &&
+                        reference.image_module !=
+                            current_module->file->semantic_module_index) {
+                        SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
+                        DISPATCH;
+                    }
+                    provider = current_module;
+                }
+                else if (reference.sealed) {
+                    for (i = 0u; i < context->num_modules; ++i) {
+                        module *candidate = context->modules[i];
+                        if (candidate && candidate->file && current_module->file &&
+                            candidate->file->semantic_graph ==
+                                current_module->file->semantic_graph &&
+                            candidate->file->semantic_module_index ==
+                                reference.image_module) {
+                            provider = candidate;
+                            break;
+                        }
+                    }
+                }
+                if (!provider || op3I < 0 || op3I >= provider->segment.globals ||
+                    !provider->globals[op3I]) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                current_frame->baselocals[REG_IDX(1)] = provider->globals[op3I];
+                REG_OP(1) = provider->globals[op3I];
+            }
+            DISPATCH;
+)
+
 /* ------------------------------------------------------------------------------------
  *  ITOS_REG  Set register string value from its int value
  *  -----------------------------------------------------------------------------------*/
-
-)
 
 RXVM_HANDLER(ITOS_REG, VM_ADVANCE(1);
             DEBUG("TRACE - ITOS R%lu\n", REG_IDX(1));

@@ -239,22 +239,27 @@ malformed: procedure = .int
 branchcatalog: procedure = .int
   failures = 0; opcode = .int; operand = .int; ignored = .int; ordinal = .int
   atindex = .int; signature = .string; kind = .string
-  opcodes = .int[]; branches = .int[]; falls = .int[]; procedures = .int[]
+  opcodes = .int[]; branches = .int[]; falls = .int[]; procedures = .int[]; bindings = .int[]
   branchfields = .object[]; original = .lltarget..module; item = .lltarget..record
   root = .lltarget..bodydraft; body = .lltarget..body; op = .llir..opview
   catalog = .llrxascatalog..catalog()
   failures = failures + check(lltarget..normalsuccessors(-1) = -2 & lltarget..normalsuccessors(catalog.count()) = -2,'invalid opcode bounds remain unknown control')
   failures = failures + check(lltarget..normalfallthrough(-1) = 0,'invalid opcode cannot claim lexical fallthrough')
+  stringreturn = catalog.find('ret','S'); integerreturn = catalog.find('ret','I'); floatreturn = catalog.find('ret','F')
+  failures = failures + check(catalog.returninvalidcomponents(stringreturn) = catalog.componentmask('whole') & catalog.returninvalidflags(stringreturn) > 0,'generated string-return descriptor invalidates prior result component and flag facts')
+  failures = failures + check(catalog.returninvalidcomponents(integerreturn) = 0 & catalog.returninvalidflags(integerreturn) = 0 & catalog.returninvalidcomponents(floatreturn) = 0 & catalog.returninvalidflags(floatreturn) = 0,'generated direct integer and float return descriptors preserve unrelated result domains')
   registration = catalog.find('sigbr','LS'); indirect = catalog.find('jumps','RB')
   failures = failures + check(registration >= 0 & lltarget..normalsuccessors(registration) = -1 & lltarget..normalfallthrough(registration) = 0,'handler registration label does not execute a normal branch')
   failures = failures + check(indirect >= 0 & lltarget..normalsuccessors(indirect) = -2 & lltarget..normalfallthrough(indirect) = 0,'unrepresented indirect target remains incomplete')
-  draft = .lltarget..draft('cfg.catalog','fixture:cfg.catalog',0)
+  draft = .lltarget..draft('cfg.catalog','fixture:cfg.catalog',1)
   at = draft.synthetic('canonical direct-label CFG inventory')
   do opcode = 0 to catalog.count() - 1
     if catalog.sourcevisible(opcode) = 0 then iterate
     if catalog.flow(opcode) <> 1 & catalog.flow(opcode) <> 2 then iterate
     if lltarget..normalsuccessors(opcode) < 0 then iterate
-    root = draft.procedure('cfg_' || opcode,1,at)
+    locals = 1
+    if catalog.recipeoperand(opcode) > 0 then locals = 3
+    root = draft.procedure('cfg_' || opcode,locals,at)
     ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(1),at)
     call objectarraydrop branchfields
     signature = catalog.signature(opcode)
@@ -264,6 +269,8 @@ branchcatalog: procedure = .int
         when kind = 'R' then branchfields[operand] = root.reg('r',0) as .object
         when kind = 'I' then branchfields[operand] = .lltarget..operand.integer(1) as .object
         when kind = 'L' & catalog.branch(opcode,operand) then branchfields[operand] = .lltarget..operand.symbol('cfg_target_' || opcode || '_' || operand) as .object
+        when kind = 'P' & catalog.recipeoperand(opcode) > 0 then branchfields[operand] = .lltarget..operand.procedure('cfg_provider') as .object
+        when kind = 'S' & catalog.recipeoperand(opcode) = operand then branchfields[operand] = .lltarget..operand.string('count=0;args=list();a0=r1;proxies=();owned=(r1,r2);prep=none' as .binary) as .object
         otherwise do
           failures = failures + check(0,'direct branch has an unconstructed operand ' || opcode || ':' || operand)
           return failures
@@ -273,14 +280,23 @@ branchcatalog: procedure = .int
     atindex = opcodes[0] + 1; opcodes[atindex] = opcode
     branches[atindex] = root.emit(catalog.mnemonic(opcode),branchfields,at)
     procedures[atindex] = root.functionid()
-    falls[atindex] = 0
-    if lltarget..normalfallthrough(opcode) then falls[atindex] = one(root,'ret',.lltarget..operand.integer(0),at)
+    falls[atindex] = 0; bindings[atindex] = 0
+    if lltarget..normalfallthrough(opcode) then do
+      if catalog.recipeoperand(opcode) > 0 then do
+        /* Conservative global-binding effects do not end the entry's
+         * lexical inline-body path or leave an unterminated address group. */
+        bindings[atindex] = three(root,'qglobbind',root.reg('r',2),.lltarget..operand.string('self' as .binary),.lltarget..operand.integer(0),at)
+      end
+      falls[atindex] = one(root,'ret',.lltarget..operand.integer(0),at)
+    end
     do operand = 1 to length(signature)
       if catalog.branch(opcode,operand) = 0 then iterate
       ignored = namedlabel(root,'cfg_target_' || opcode || '_' || operand,at)
       ignored = one(root,'ret',.lltarget..operand.integer(1),at)
     end
   end
+  root = draft.procedure('cfg_provider',0,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
   original = draft.finish()
   failures = failures + check(original.valid(),'all canonical direct-label branch forms verify together')
   if original.valid() = 0 then do; say original.error(); return failures; end
@@ -297,14 +313,19 @@ branchcatalog: procedure = .int
     if lltarget..normalfallthrough(opcode) then do
       item = original.at(falls[atindex])
       failures = failures + check(op.successor(ordinal + 1) = item.blockid(),'canonical lexical fallthrough ' || opcode)
+      if bindings[atindex] > 0 then do
+        binding = original.at(bindings[atindex]); bindingop = graph.operation(binding.id())
+        failures = failures + check(binding.blockid() = item.blockid() & bindingop.name() = 'rxas.target.record' & bindingop.successors() = 0,'private-global binding preserves scoped-entry fallthrough')
+      end
     end
   end
   return failures
 
-/** Expansion still requires a linear root. Graph cleanup can prove the
- * known-branch retained child; typed tail observations retain their guard. */
+/** Scoped expansion preserves caller/callee branches. Graph cleanup can
+ * independently fold known control; typed tail observations retain their guard. */
 keeps: procedure = .int
   failures = 0; variant = .int; ignored = .int; callid = .int; expected = .string
+  i = .int; branches = .int; calls = .int
   original = .lltarget..module; kept = .lltarget..module; changed = .llinline..change
   request = .llinline..binding; decision = .llinline..decision
   do variant = 1 to 3
@@ -329,24 +350,31 @@ keeps: procedure = .int
     original = draft.finish(); graph = dereference original.ir(); image = graph.binary()
     failures = failures + check(original.valid(),'pending proof control is valid RXAS ' || variant)
     if original.valid() = 0 then do; say original.error(); iterate; end
-    if variant = 1 then do
-      expected = 'profile.caller.cfg.pending'
+    if variant < 3 then do
       request = llinline..bind(reference original,callid,reference original,original.procedureid('helper'))
       decision = llinline..inspect(request,'closed-main-default-halt.v1')
-      failures = failures + check(decision.status() = 'keep' & decision.reason() = expected,'current branch inlining has a specific pending reason ' || variant)
-      changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result(); proofgraph = dereference kept.ir()
-      failures = failures + check(changed.status() = 'keep' & changed.reason() = expected & bin2x(proofgraph.binary()) = bin2x(image),'pending branch expansion preserves exact original ' || variant)
-    end
-    if variant = 2 then do
-      request = llinline..bind(reference original,callid,reference original,original.procedureid('helper'))
-      decision = llinline..inspect(request,'closed-main-default-halt.v1')
-      failures = failures + check(decision.status() = 'legal','defined nonzero BRF input admits its one feasible callee exit')
+      failures = failures + check(decision.status() = 'legal','generic expansion admits caller/callee direct branches ' || variant)
       changed = llinline..expand(request,'closed-main-default-halt.v1'); kept = changed.result()
-      failures = failures + check(changed.status() = 'changed' & kept.valid() & changed.operation(callid) = 0,'known callee branch expands without an authored caller CFG')
+      failures = failures + check(changed.status() = 'changed' & kept.valid() & changed.operation(callid) > 0,'caller/callee branch expansion publishes a scoped entry ' || variant)
       if changed.status() <> 'changed' then say changed.reason()
+      if changed.status() = 'changed' & kept.valid() & changed.operation(callid) > 0 then do
+        entry = kept.at(changed.operation(callid)); caller = kept.body(kept.procedureid('main')); branches = 0; calls = 0
+        proofgraph = dereference kept.ir(); entryop = proofgraph.operation(entry.id())
+        failures = failures + check(entry.mnemonic() = 'inlenter' & entry.procedureid() = caller.functionid() & entryop.successors() = 2 & caller.normalcfgcomplete(),'scoped entry retains a complete caller CFG ' || variant)
+        expected = 'brt'; if variant = 2 then expected = 'brf'
+        do i = 1 to caller.records()
+          branch = caller.record(i)
+          if branch.kind() <> 'instruction' then iterate
+          if branch.mnemonic() = 'call1' then calls = calls + 1
+          if branch.mnemonic() <> expected then iterate
+          branches = branches + 1; branchop = proofgraph.operation(branch.id()); label = branch.operand(1)
+          failures = failures + check(branchop.successors() = 2 & branchop.successor(1) = caller.labelblock(label.text()),'caller/cloned branch retains its direct label edge ' || variant)
+        end
+        failures = failures + check(branches = 1 & calls = 0,'expansion keeps the branch and replaces the selected call ' || variant)
+      end
       originalgraph = dereference original.ir()
-      failures = failures + check(bin2x(originalgraph.binary()) = bin2x(image),'known branch expansion preserves the exact original owner')
-      iterate
+      failures = failures + check(bin2x(originalgraph.binary()) = bin2x(image),'branch expansion preserves the exact original owner ' || variant)
+      if variant = 2 then iterate
     end
     if variant = 1 then do
       changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1'); kept = changed.result()

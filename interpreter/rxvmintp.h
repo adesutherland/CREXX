@@ -227,6 +227,7 @@ typedef struct interrupt_entry {
     stack_frame *frame;             /* Frame that owns branch/jump handlers */
     size_t value_register;          /* Destination register for branch handlers with a signal object */
     struct interrupt_saved_entry *stack_marker; /* Saved-handler stack at branch scope entry */
+    struct rxvm_inline_scope *inline_scope; /* Logical branch target scope. */
 } interrupt_entry;
 
 typedef struct interrupt_saved_entry {
@@ -282,6 +283,7 @@ struct stack_frame {
     value **baselocals; /* Initial / base / fixed local pointers */
     value **locals;     /* Locals pointer mapping (after swaps / links) */
     uint32_t *local_identity; /* Unique slot permutation, independent of linked value pointers */
+    struct rxvm_inline_scope *inline_scope; /* Active logical inline activation, if any. */
 };
 
 #ifdef NDEBUG  // RELEASE

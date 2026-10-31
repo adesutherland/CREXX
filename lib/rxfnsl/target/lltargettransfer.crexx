@@ -18,6 +18,34 @@ bad: procedure = .void
   assembler signal "ERROR",message
   return
 
+/** Pure signature lookup also used during construction, before a receiver
+ * exists. Letters describe typed operand fields, not opcode names. */
+bindingform: procedure = .string
+  arg kind = .string, arity = .int
+  select
+    when wordpos(kind,'link swap icopy reference parent') > 0 then return 'RR'
+    when wordpos(kind,'unlink endlife clear captureint putint minattrscaptured') > 0 then return 'R'
+    when kind = 'branch' then return 'L'
+    when kind = 'linkindex' then return 'II'
+    when kind = 'linkindexreg' then return 'IR'
+    when kind = 'argument' then return 'RQ'
+    when kind = 'argumentadd' then return 'RQI'
+    when kind = 'capturedargument' then do
+      if arity = 3 then return 'RQI'
+      return 'RQ'
+    end
+    when wordpos(kind,'attribute attribute1') > 0 then return 'RRQ'
+    when wordpos(kind,'linktoattribute linktoattribute1') > 0 then return 'QRR'
+    when wordpos(kind,'unlinkattribute unlinkattribute1') > 0 then return 'QR'
+    when wordpos(kind,'flags setint setattrs minattrs') > 0 then return 'RI'
+    when kind = 'captureindex' then return 'QI'
+    when kind = 'attribute1add' then return 'RRQI'
+    when kind = 'attribute1captured' then return 'RR'
+    when kind = 'qualifiedglobal' then return 'RSI'
+    otherwise return '?'
+  end
+  return '?'
+
 /** A domain names one published component/flag/context bit. Native bit values
  * are opaque selectors extracted from the catalogue, not a copied flag ABI.
  * Whole domains cover components and flags, never ambient context. */
@@ -52,10 +80,23 @@ refview: class
   _extentknown = .int
   _extent = .int
   _value = .lltarget..operand
+  _role = .string
+  _roleordinal = .int
+  _addresskind = .string
+  _baseid = .int
+  _selectorkind = .string
+  _selectorid = .int
+  _selectorvalue = .lltarget..operand
+  _selectoroffset = .int
+  _targetbank = .string
+  _targetanchor = .string
   *: factory
-    arg id = .int, opid = .int, ordinal = .int, kind = .string, anchor = .string, value = .lltarget..operand, extentknown = 1, extent = 1
+    arg id = .int, opid = .int, ordinal = .int, kind = .string, anchor = .string, value = .lltarget..operand, extentknown = 1, extent = 1, role = '', roleordinal = 0, addresskind = '', baseid = 0, selectorkind = 'none', selectorid = 0, ?selectorvalue = .lltarget..operand, selectoroffset = 0, targetbank = '', targetanchor = 'active'
     _id = id; _op = opid; _ordinal = ordinal; _kind = kind; _anchor = anchor
-    _value = value; _extentknown = extentknown; _extent = extent
+    _value = value; _extentknown = extentknown; _extent = extent; _role = role; _roleordinal = roleordinal
+    _addresskind = addresskind; _baseid = baseid; _selectorkind = selectorkind; _selectorid = selectorid
+    if ?selectorvalue then _selectorvalue = selectorvalue
+    _selectoroffset = selectoroffset; _targetbank = targetbank; _targetanchor = targetanchor
     return
   id: method = .int
     return _id
@@ -81,7 +122,31 @@ refview: class
     return _extentknown
   extent: method = .int
     return _extent
+  /** Recipe role preserves active capture versus destination slot identity.
+   * Snapshotting the destination's active and base bindings is not a read of
+   * those backing values and remains the scoped storage transfer's duty. */
+  role: method = .string
+    return _role
+  roleordinal: method = .int
+    return _roleordinal
+  addresskind: method = .string
+    return _addresskind
+  baseid: method = .int
+    return _baseid
+  selectorkind: method = .string
+    return _selectorkind
+  selectorid: method = .int
+    return _selectorid
+  selectorvalue: method = .lltarget..operand
+    return _selectorvalue
+  selectoroffset: method = .int
+    return _selectoroffset
+  targetbank: method = .string
+    return _targetbank
+  targetanchor: method = .string
+    return _targetanchor
   unknownreason: method = .string
+    if _kind = 'address' then return 'reference.address.requires.point.resolution'
     if _extentknown = 0 then return 'reference.window.extent.unknown'
     return ''
 
@@ -102,11 +167,12 @@ action: class
   _when = .string
   _phase = .string
   _detail = .string
+  _offset = .int
   *: factory
-    arg id = .int, opid = .int, ordinal = .int, kind = .string, subject = .int, domainid = .int, sourcekind = .string, sourceid = .int, literal = .lltarget..operand, certainty = .string, path = .string, phase = .string, detail = .string
+    arg id = .int, opid = .int, ordinal = .int, kind = .string, subject = .int, domainid = .int, sourcekind = .string, sourceid = .int, literal = .lltarget..operand, certainty = .string, path = .string, phase = .string, detail = .string, offset = 0
     _id = id; _op = opid; _ordinal = ordinal; _kind = kind; _subject = subject; _domain = domainid
     _sourcekind = sourcekind; _source = sourceid; _literal = literal; _certainty = certainty
-    _when = path; _phase = phase; _detail = detail
+    _when = path; _phase = phase; _detail = detail; _offset = offset
     return
   id: method = .int
     return _id
@@ -138,6 +204,8 @@ action: class
     return _when
   detail: method = .string
     return _detail
+  offset: method = .int
+    return _offset
   unknownreason: method = .string
     if _certainty = 'unknown' | _kind = 'unknown' then return _detail
     return ''
@@ -187,6 +255,87 @@ instruction: class
     call require()
     view = dereference _profile; return view.unknownreason(_op,family)
 
+/** First pass over the canonical semantic recipe vocabulary. No reference or
+ * action is published until every step, operand and capture dependency checks.
+ * Unsupported vocabulary is distinct from malformed operational data. */
+bindingprogram: class
+  _status = .string
+  _reason = .string
+  _kind = .string[]
+  _one = .int[]
+  _two = .int[]
+  _three = .int[]
+  _four = .int[]
+  _arity = .int[]
+  *: factory
+    arg item = .lltarget..record, text = .string, work = .int, allowempty = 0
+    last = .int; step = .string; tokens = .string; kind = .string; arity = .int; signature = .string
+    token = .string; ordinal = .int; value = .lltarget..operand; expected = .string; row = .int; j = .int
+    stepone = .int; steptwo = .int; stepthree = .int; stepfour = .int
+    _status = 'ok'; first = 1; valuecapture = 0; indexcapture = 0
+    if work < 1 | length(text) > work then do; _status = 'limit'; _reason = 'LL_RESOURCE_LIMIT: binding recipe validation'; return; end
+    if text = '' then do
+      if allowempty = 0 then do; _status = 'unsupported'; _reason = 'catalog.binding.recipe.missing'; end
+      return
+    end
+    do while first <= length(text)
+      last = pos(';',text,first); if last = 0 then last = length(text) + 1
+      step = substr(text,first,last - first)
+      if step = '' | left(step,1) = ':' | pos('::',step) > 0 | right(step,1) = ':' | verify(step,'abcdefghijklmnopqrstuvwxyz0123456789:') <> 0 then do
+        _status = 'invalid'; _reason = 'LL_TARGET_RECIPE: malformed step'; return
+      end
+      tokens = translate(step,' ',':'); kind = word(tokens,1); arity = words(tokens) - 1
+      signature = bindingform(kind,arity)
+      if signature = '?' then do; _status = 'unsupported'; _reason = 'catalog.binding.recipe.unsupported.' || kind; return; end
+      if length(signature) <> arity then do; _status = 'invalid'; _reason = 'LL_TARGET_RECIPE: step arity'; return; end
+      stepone = 0; steptwo = 0; stepthree = 0; stepfour = 0
+      do j = 1 to arity
+        token = word(tokens,j + 1)
+        if token = '' | length(token) > 10 | verify(token,'0123456789') <> 0 then do; _status = 'invalid'; _reason = 'LL_TARGET_RECIPE: operand ordinal'; return; end
+        ordinal = token as .int
+        if ordinal < 1 | ordinal > item.operands() then do; _status = 'invalid'; _reason = 'LL_TARGET_RECIPE: operand ordinal'; return; end
+        value = item.operand(ordinal); expected = substr(signature,j,1)
+        if (expected = 'Q' & value.kind() <> 'R' & value.kind() <> 'I') | (expected <> 'Q' & value.kind() <> expected) then do
+          _status = 'invalid'; _reason = 'LL_TARGET_RECIPE: operand kind'; return
+        end
+        if j = 1 then stepone = ordinal
+        if j = 2 then steptwo = ordinal
+        if j = 3 then stepthree = ordinal
+        if j = 4 then stepfour = ordinal
+      end
+      if kind = 'putint' & valuecapture = 0 then do; _status = 'invalid'; _reason = 'LL_TARGET_RECIPE: missing scalar capture'; return; end
+      if wordpos(kind,'minattrscaptured attribute1captured') > 0 & indexcapture = 0 then do; _status = 'invalid'; _reason = 'LL_TARGET_RECIPE: missing index capture'; return; end
+      if kind = 'captureint' then valuecapture = 1
+      if kind = 'captureindex' then indexcapture = 1
+      row = _kind[0] + 1; _kind[row] = kind; _arity[row] = arity
+      _one[row] = stepone; _two[row] = steptwo; _three[row] = stepthree; _four[row] = stepfour
+      if last = length(text) then do; _status = 'invalid'; _reason = 'LL_TARGET_RECIPE: trailing step separator'; return; end
+      first = last + 1
+    end
+    return
+  status: method = .string
+    return _status
+  reason: method = .string
+    return _reason
+  steps: method = .int
+    return _kind[0]
+  kind: method = .string
+    arg row = .int
+    return _kind[row]
+  arity: method = .int
+    arg row = .int
+    return _arity[row]
+  operand: method = .int
+    arg row = .int, ordinal = .int
+    select ordinal
+      when 1 then return _one[row]
+      when 2 then return _two[row]
+      when 3 then return _three[row]
+      when 4 then return _four[row]
+      otherwise return 0
+    end
+    return 0
+
 /** Immutable operational profile bound to one exact published target owner.
  * Canonical profiles never infer missing mnemonic semantics. Rich profiles
  * supply independent operational premises, not asserted analysis results. */
@@ -197,6 +346,11 @@ profile: class
   _revision = .int
   _catalog = .string
   _premise = .string
+  _executionroot = .int
+  _executioncontext = .string
+  _executioncalls = .int
+  _executionmembers = .int[]
+  _executionreason = .string
   _status = .string
   _message = .string
   _sealed = .int
@@ -228,6 +382,29 @@ profile: class
     _identity = nextidentity(); _owner = owner; _premise = 'canonical'
     _status = 'building'; _worklimit = work; _bytelimit = bytes
     return
+  /** Caller-declared standalone execution context, bound to this exact main
+   * owner. It is not inferred from RXAS and does not describe arbitrary linker
+   * or foreign entries. Canonical instruction semantics remain unchanged. */
+  closedmain: factory
+    arg owner = reference .lltarget..module, rootfunction = .int, executioncontext = .string, work = 1000000, bytes = 67108864
+    _identity = nextidentity(); _owner = owner; _premise = 'canonical'
+    _executionroot = rootfunction; _executioncontext = executioncontext
+    _status = 'building'; _worklimit = work; _bytelimit = bytes
+    if wordpos(executioncontext,'closed-main-default-halt.v1 closed-main-static-exact-default-halt.v1') = 0 | rootfunction < 2 then do
+      _status = 'invalid'; _message = 'LL_TARGET_CONTEXT: explicit closed-main default-HALT execution contract required'
+    end
+    return
+  /** Stronger membership is checked from the exact declared invocation.
+   * The VM's mixed fresh defaults are not an all-HALT premise. */
+  closedcalls: factory
+    arg owner = reference .lltarget..module, rootfunction = .int, executioncontext = .string, work = 1000000, bytes = 67108864
+    _identity = nextidentity(); _owner = owner; _premise = 'canonical'
+    _executionroot = rootfunction; _executioncontext = executioncontext; _executioncalls = 1
+    _status = 'building'; _worklimit = work; _bytelimit = bytes
+    if wordpos(executioncontext,'closed-main-default-halt.v1 closed-main-static-exact-default-halt.v1') = 0 | rootfunction < 2 then do
+      _status = 'invalid'; _message = 'LL_TARGET_CONTEXT: explicit closed-main default-HALT execution contract required'
+    end
+    return
   premises: factory
     arg owner = reference .lltarget..module, premiseid = .string, work = 1000000, bytes = 67108864
     _identity = nextidentity(); _owner = owner; _premise = premiseid
@@ -240,6 +417,8 @@ profile: class
     if _prepared | _status <> 'building' then return
     _prepared = 1
     call prepare(_owner,_premise,_worklimit,_bytelimit)
+    if _status = 'building' & _executioncontext <> '' then call checkcontext()
+    if _status = 'building' & _executioncalls then call checkcalls()
     return
   run: method = .void
     if _status <> 'building' then return
@@ -263,6 +442,84 @@ profile: class
       _relocationknown[i] = 0
       _afirst[i] = 0; _alast[i] = 0; _acount[i] = 0
       _unknownfirst[i] = 0
+    end
+    return
+  checkcontext: method = .void
+    target = dereference _owner
+    if target.procedureid('main') <> _executionroot then do
+      call reject('invalid','LL_TARGET_CONTEXT: closed root is not exact main owner'); return
+    end
+    catalog = .llrxascatalog..catalog()
+    do i = 1 to target.records()
+      item = target.record(i)
+      if reserve(item.operands() * 16 + 16,1) = 0 then return
+      if item.kind() = '.meta' & item.operands() > 1 then do
+        option = item.operand(2)
+        /* Startup initializers execute outside the selected main body and may
+         * change inherited policy. The standalone context cannot seal them. */
+        if option.text() = '.initializer' then do
+          call reject('unsupported','target.context.startup.initializer.unproved'); return
+        end
+        if left(option.text(),1) = '.' & option.text() <> '.inline' then do
+          call reject('unsupported','target.context.runtime.observer.unproved'); return
+        end
+      end
+    end
+    return
+  /** Membership is a call-closure check over canonical descriptors, not a
+   * second instruction/CFG interpreter. A gap leaves every member canonical.
+   * Incoming entries outside this closure are excluded only by the explicit
+   * caller-declared closed invocation contract checked above. */
+  checkcalls: method = .void
+    target = dereference _owner; catalog = .llrxascatalog..catalog()
+    item = .lltarget..record; called = .lltarget..operand; body = .lltarget..body
+    pending = .int[]; seen = .int[]; indegree = .int[]; heads = .int[]; nextedge = .int[]; destinations = .int[]; ready = .int[]
+    i = .int; fn = .int; destination = .int; edge = .int; code = .int
+    if reserve(target.procedures() * 64 + 64,target.procedures() + 1) = 0 then return
+    do i = 1 to target.procedures()
+      body = target.procedure(i); fn = body.functionid()
+      seen[fn] = 0; indegree[fn] = 0; heads[fn] = 0; _executionmembers[fn] = 0
+    end
+    pending[1] = _executionroot; seen[_executionroot] = 1; position = 1
+    do while position <= pending[0]
+      fn = pending[position]; position = position + 1; body = target.body(fn)
+      do i = 1 to body.records()
+        if reserve(0,1) = 0 then return
+        item = body.record(i)
+        if item.kind() <> 'instruction' then iterate
+        code = item.opcode()
+        if catalog.policyeffect(code) <> 0 then do; _executionreason = 'target.context.call.policy.unproved'; return; end
+        if catalog.classification(code) <> 0 | lltarget..normalsuccessors(code) = -2 then do; _executionreason = 'target.context.call.effects.unproved'; return; end
+        if catalog.callkind(code) = 0 then do
+          if (catalog.semantics(code) <idiv> 2) % 2 then do; _executionreason = 'target.context.call.descriptor.unproved'; return; end
+          iterate
+        end
+        if catalog.callkind(code) <> 1 then do; _executionreason = 'target.context.call.dynamic.unproved'; return; end
+        called = item.operand(catalog.calltarget(code)); destination = target.procedureid(called.text())
+        if destination = 0 then do; _executionreason = 'target.context.call.foreign.unproved'; return; end
+        if reserve(32,1) = 0 then return
+        edge = destinations[0] + 1; destinations[edge] = destination; nextedge[edge] = heads[fn]; heads[fn] = edge
+        indegree[destination] = indegree[destination] + 1
+        if seen[destination] = 0 then do; pending[pending[0] + 1] = destination; seen[destination] = 1; end
+      end
+    end
+    do i = 1 to pending[0]
+      fn = pending[i]
+      if indegree[fn] = 0 then ready[ready[0] + 1] = fn
+    end
+    position = 1
+    do while position <= ready[0]
+      fn = ready[position]; position = position + 1; edge = heads[fn]
+      do while edge > 0
+        if reserve(0,1) = 0 then return
+        destination = destinations[edge]; indegree[destination] = indegree[destination] - 1
+        if indegree[destination] = 0 then ready[ready[0] + 1] = destination
+        edge = nextedge[edge]
+      end
+    end
+    if ready[0] <> pending[0] then do; _executionreason = 'target.context.call.recursion.unproved'; return; end
+    do i = 1 to pending[0]
+      fn = pending[i]; _executionmembers[fn] = 1
     end
     return
   reserve: method = .int
@@ -310,42 +567,86 @@ profile: class
     arg opid = .int, ordinal = .int, kind = 'explicit', anchor = 'active', extentknown = 1, extent = 1
     if operation(opid) = 0 then return 0
     item = .lltarget..record(_graph,opid); value = .lltarget..operand
-    if wordpos(kind,'explicit window metadata label procedure source clause module') = 0 | wordpos(anchor,'active base entry symbolic') = 0 then do
+    if wordpos(kind,'explicit window metadata recipe label procedure source clause module') = 0 | wordpos(anchor,'active base entry slot symbolic') = 0 then do
       call reject('invalid','LL_TARGET_TRANSFER: reference kind/anchor'); return 0
     end
-    if ordinal < 0 | ordinal > item.operands() | wordpos(extentknown,'0 1') = 0 | extent < 0 then do
+    if ordinal < 0 | (kind <> 'recipe' & ordinal > item.operands()) | wordpos(extentknown,'0 1') = 0 | extent < 0 then do
       call reject('invalid','LL_TARGET_TRANSFER: reference selector'); return 0
     end
-    if ordinal = 0 then do
+    role = ''; roleordinal = 0
+    if kind = 'recipe' then do
+      recipeview = item.recipe()
+      if ordinal < 1 | ordinal > recipeview.registers() then do; call reject('invalid','LL_TARGET_TRANSFER: recipe reference ordinal'); return 0; end
+      value = item.reciperef(ordinal); role = recipeview.role(ordinal); roleordinal = recipeview.roleordinal(ordinal)
+    end
+    else if ordinal = 0 then do
       if kind <> 'metadata' | item.registerrefs() = 0 then do; call reject('invalid','LL_TARGET_TRANSFER: metadata selector'); return 0; end
       value = item.registerref(item.registerrefs())
     end
     else value = item.operand(ordinal)
-    if wordpos(kind,'explicit window metadata') > 0 & value.kind() <> 'R' then do
+    if wordpos(kind,'explicit window metadata recipe') > 0 & value.kind() <> 'R' then do
       call reject('invalid','LL_TARGET_TRANSFER: register selector expected'); return 0
     end
     if kind = 'label' & value.kind() <> 'L' then do; call reject('invalid','LL_TARGET_TRANSFER: label selector expected'); return 0; end
     if kind = 'procedure' & value.kind() <> 'P' then do; call reject('invalid','LL_TARGET_TRANSFER: procedure selector expected'); return 0; end
     if wordpos(kind,'source clause') > 0 & value.kind() <> 'I' then do; call reject('invalid','LL_TARGET_TRANSFER: source/clause identity expected'); return 0; end
     if reserve(112 + value.length(),1) = 0 then return 0
-    id = _refs[0] + 1; _refs[id] = .lltargettransfer..refview(id,opid,ordinal,kind,anchor,value,extentknown,extent)
+    id = _refs[0] + 1; _refs[id] = .lltargettransfer..refview(id,opid,ordinal,kind,anchor,value,extentknown,extent,role,roleordinal)
+    _rnext[id] = 0
+    if _rlast[opid] > 0 then _rnext[_rlast[opid]] = id
+    else _rfirst[opid] = id
+    _rlast[opid] = id; _rcount[opid] = _rcount[opid] + 1
+    return id
+  /** Addressing is operational data. Unknown selectors/aliases are resolved
+   * by point flow, never by inventing a register or dropping the reference. */
+  address: method = .int
+    arg opid = .int, addresskind = .string, baseid = .int, selectorkind = .string, selectorid = .int, selectorvalue = .lltarget..operand, offset = 0, targetbank = '', targetanchor = 'active', ?qualifier = .lltarget..operand
+    if operation(opid) = 0 then return 0
+    if wordpos(addresskind,'localindex argument capturedargument reference attribute attribute1 qualifiedglobal parent') = 0 | wordpos(selectorkind,'none literal reference captured') = 0 | wordpos(targetanchor,'active base entry slot') = 0 then do
+      call reject('invalid','LL_TARGET_TRANSFER: address selector tags'); return 0
+    end
+    if baseid < 0 | baseid > _refs[0] | selectorid < 0 then do; call reject('invalid','LL_TARGET_TRANSFER: address reference'); return 0; end
+    if baseid > 0 then do
+      base = _refs[baseid]
+      if base.opid() <> opid then do; call reject('invalid','LL_TARGET_TRANSFER: foreign address base'); return 0; end
+    end
+    if selectorkind = 'reference' then do
+      if selectorid < 1 | selectorid > _refs[0] then do; call reject('invalid','LL_TARGET_TRANSFER: address selector reference'); return 0; end
+      selected = _refs[selectorid]
+      if selected.opid() <> opid then do; call reject('invalid','LL_TARGET_TRANSFER: foreign address selector'); return 0; end
+    end
+    else if selectorkind = 'captured' then do
+      if selectorid < 1 | selectorid > _acts[0] then do; call reject('invalid','LL_TARGET_TRANSFER: address capture'); return 0; end
+      captured = _acts[selectorid]
+      if captured.opid() <> opid | captured.kind() <> 'capture' then do; call reject('invalid','LL_TARGET_TRANSFER: foreign address capture'); return 0; end
+    end
+    else if selectorid <> 0 then do; call reject('invalid','LL_TARGET_TRANSFER: unexpected address selector identity'); return 0; end
+    if (selectorkind = 'literal' & selectorvalue.kind() <> 'I') | (selectorkind <> 'literal' & selectorvalue.kind() <> '') then do
+      call reject('invalid','LL_TARGET_TRANSFER: typed address literal'); return 0
+    end
+    if ?qualifier = 0 then qualifier = .lltarget..operand()
+    if reserve(192 + qualifier.length(),1) = 0 then return 0
+    id = _refs[0] + 1
+    _refs[id] = .lltargettransfer..refview(id,opid,0,'address','symbolic',qualifier,1,1,'',0,addresskind,baseid,selectorkind,selectorid,selectorvalue,offset,targetbank,targetanchor)
     _rnext[id] = 0
     if _rlast[opid] > 0 then _rnext[_rlast[opid]] = id
     else _rfirst[opid] = id
     _rlast[opid] = id; _rcount[opid] = _rcount[opid] + 1
     return id
   event: method = .int
-    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = ''
-    ref = .lltargettransfer..refview; referenced = .lltarget..record
+    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = '', offset = 0
+    ref = .lltargettransfer..refview; referenced = .lltarget..record; described = .lltargettransfer..domain
     if operation(opid) = 0 then return 0
-    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap context policy call return lifetime edge raise unknown') = 0 | wordpos(sourcekind,'none reference literal unknown') = 0 | wordpos(certainty,'must may unknown') = 0 | wordpos(path,'normal failure all') = 0 | wordpos(phase,'none before partial after unknown') = 0 then do
+    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap context policy call callcapture capture resize status return lifetime scope-enter edge raise unknown') = 0 | wordpos(sourcekind,'none reference captured literal unknown') = 0 | wordpos(certainty,'must may unknown') = 0 | wordpos(path,'normal failure all') = 0 | wordpos(phase,'none before partial after unknown') = 0 then do
       call reject('invalid','LL_TARGET_TRANSFER: event tags'); return 0
     end
-    if subject < 0 | subject > _refs[0] | domainid < 0 | domainid > _domains[0] | sourceid < 0 | sourceid > _refs[0] then do
+    if subject < 0 | subject > _refs[0] | domainid < 0 | domainid > _domains[0] | sourceid < 0 then do
       call reject('invalid','LL_TARGET_TRANSFER: event reference/domain'); return 0
     end
-    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap lifetime') > 0 & subject = 0 then do
-      call reject('invalid','LL_TARGET_TRANSFER: storage event requires a subject'); return 0
+    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap lifetime resize status') > 0 & subject = 0 then do
+      ambient = 0
+      if kind = 'read' & domainid > 0 then do; described = _domains[domainid]; ambient = described.kind() = 'context'; end
+      if ambient = 0 then do; call reject('invalid','LL_TARGET_TRANSFER: storage event requires a subject'); return 0; end
     end
     if domainid > 0 then do
       described = _domains[domainid]
@@ -358,9 +659,15 @@ profile: class
       if referenced.procedureid() <> item.procedureid() then do; call reject('invalid','LL_TARGET_TRANSFER: foreign subject'); return 0; end
     end
     if sourcekind = 'reference' then do
-      if sourceid = 0 then do; call reject('invalid','LL_TARGET_TRANSFER: missing source reference'); return 0; end
+      if sourceid = 0 | sourceid > _refs[0] then do; call reject('invalid','LL_TARGET_TRANSFER: missing source reference'); return 0; end
       ref = _refs[sourceid]; referenced = .lltarget..record(_graph,ref.opid())
       if referenced.procedureid() <> item.procedureid() then do; call reject('invalid','LL_TARGET_TRANSFER: foreign source'); return 0; end
+      if kind = 'capture' & ref.opid() <> opid then do; call reject('invalid','LL_TARGET_TRANSFER: capture source must belong to same operation'); return 0; end
+    end
+    else if sourcekind = 'captured' then do
+      if sourceid < 1 | sourceid > _acts[0] then do; call reject('invalid','LL_TARGET_TRANSFER: missing captured source'); return 0; end
+      capture = _acts[sourceid]
+      if capture.opid() <> opid | capture.kind() <> 'capture' then do; call reject('invalid','LL_TARGET_TRANSFER: capture must precede consumer in same operation'); return 0; end
     end
     else if sourceid <> 0 then do; call reject('invalid','LL_TARGET_TRANSFER: unexpected source reference'); return 0; end
     if ?literal = 0 then literal = .lltarget..operand()
@@ -370,7 +677,7 @@ profile: class
     else if literal.kind() <> '' then do; call reject('invalid','LL_TARGET_TRANSFER: unexpected literal'); return 0; end
     if reserve(160 + literal.length() + length(detail),1) = 0 then return 0
     id = _acts[0] + 1; ordinal = _acount[opid] + 1
-    _acts[id] = .lltargettransfer..action(id,opid,ordinal,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail)
+    _acts[id] = .lltargettransfer..action(id,opid,ordinal,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail,offset)
     _anext[id] = 0
     if _alast[opid] > 0 then _anext[_alast[opid]] = id
     else _afirst[opid] = id
@@ -420,7 +727,8 @@ profile: class
     end
     return
   canonical: method = .void
-    j = .int; mask = .int
+    j = .int; mask = .int; bit = .int; ordinal = .int; id = .int; refid = .int
+    program = .bindingprogram; integerdomain = .int
     target = dereference _owner; catalog = .llrxascatalog..catalog(); value = .lltarget..operand
     do n = 1 to target.records()
       item = target.record(n); opid = item.id()
@@ -430,68 +738,317 @@ profile: class
           value = item.operand(j)
           if value.kind() = 'R' then ignored = addref(opid,j,'metadata')
         end
-        if item.kind() = '.traceevent' & item.registerrefs() > 0 then ignored = addref(opid,0,'metadata')
-        if item.registerrefs() > 0 then call unknown(opid,'observations','catalog.metadata.observation.unclassified')
+        if item.kind() = '.traceevent' & item.registerrefs() > 0 then do
+          refid = addref(opid,0,'metadata'); type = item.operand(4); flags = item.operand(9)
+          mask = catalog.componentmask(type.text())
+          if flags.index() % 2 then mask = catalog.componentmask('whole')
+          call domainevents(opid,'observe',refid,mask)
+        end
+        else if item.registerrefs() > 0 then do
+          do j = 1 to _rcount[opid]
+            refid = _rfirst[opid]
+            do ordinal = 2 to j; refid = _rnext[refid]; end
+            call domainevents(opid,'observe',refid,catalog.componentmask('whole'))
+          end
+        end
+        _relocationknown[opid] = 1
         iterate
       end
       code = item.opcode(); phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
-      call unknown(opid,'relocation','catalog.relocation.observation.unknown')
-      if catalog.classification(code) <> 0 then call unknown(opid,'effects','catalog.effects.unknown')
-      if (catalog.semantics(code) <idiv> 2) % 2 then do
-        ignored = event(opid,'call',0,0,'none',0,.lltarget..operand(),'unknown','all','unknown','catalog.call.callee.unknown')
-        call unknown(opid,'calls','catalog.call.callee.unknown')
+      _relocationknown[opid] = 1
+      scopedrecipe = catalog.recipeoperand(code) > 0 & catalog.scopecontinuation(code) > 0
+      callsite = catalog.callkind(code) <> 0
+      recipe = catalog.bindingrecipe(code)
+      if callsite then recipe = catalog.callprefix(code)
+      binding = recipe <> '' | catalog.binding(code) <> 0 | scopedrecipe | callsite
+      /* Validate the entire sequence before even materializing its refs. */
+      if binding & scopedrecipe = 0 then do
+        program = checkedprogram(opid,recipe,callsite)
+        if _status <> 'building' then return
+        if program.status() <> 'ok' then do
+          call unknownbinding(opid,program.reason()); iterate
+        end
       end
+      if catalog.classification(code) <> 0 & scopedrecipe = 0 then call unknown(opid,'effects','catalog.effects.unknown')
       if (catalog.semantics(code) <idiv> 8) % 2 then ignored = event(opid,'return',0,0)
+      refs = .int[]
       do j = 1 to item.operands()
         value = item.operand(j); refid = 0
         if value.kind() = 'R' then refid = addref(opid,j)
         else if value.kind() = 'L' then ignored = addref(opid,j,'label','symbolic')
         else if value.kind() = 'P' then ignored = addref(opid,j,'procedure','symbolic')
+        refs[j] = refid
+        relocation = catalog.relocation(code,j)
+        if relocation = 9 then call unknown(opid,'relocation','catalog.relocation.unknown')
+        if (relocation = 7 | relocation = 8 | relocation = 10 | relocation = 11) & binding = 0 then call unknown(opid,'references','catalog.relocation.embedded.reference.pending')
+      end
+      if scopedrecipe then do
+        encoded = item.operand(catalog.recipeoperand(code))
+        if reserve(encoded.length() * 2,encoded.length() + 1) = 0 then return
+        recipeview = item.recipe()
+        /* Count is an integer observation; actual/result capture transports
+         * pointers and does not observe or define borrowed payloads. */
+        integerdomain = adddomain('component','component.bit.0',catalog.componentmask('I'))
+        do j = 1 to recipeview.registers()
+          anchor = 'active'; role = recipeview.role(j)
+          if wordpos(role,'a0-destination proxy-destination owned-destination') > 0 then anchor = 'slot'
+          known = 1; extent = 1
+          if role = 'window-capture' then do
+            known = recipeview.countkind() = 'literal'; extent = 0
+            if known then extent = recipeview.countvalue()
+          end
+          refid = addref(opid,j,'recipe',anchor,known,extent)
+          if role = 'count-capture' then ignored = event(opid,'observe',refid,integerdomain)
+        end
+        ignored = event(opid,'scope-enter',0,0,'none',0,.lltarget..operand(),'must','normal','after','recipe.capture.owned.commit')
+        call unknown(opid,'values','scope.entry.value.projection.unknown')
+        call unknown(opid,'failure','scope.entry.failure.phase.unknown')
+      end
+      /* Ordinary inputs are observed in the incoming state. Destination
+       * writes must not precede another operand's observation, including
+       * destructive source/destination aliases. Recipes keep their own order. */
+      if binding = 0 then call domainevents(opid,'read',0,catalog.contextreadmask(code),'context')
+      do j = 1 to item.operands()
+        if binding then iterate
+        refid = refs[j]
         if refid = 0 then iterate
         if catalog.reads(code,j) then do
-          mask = catalog.readcomponents(code,j)
-          if mask > 0 then call maskevents(opid,'read',refid,mask,'must','normal','none')
+          mask = catalog.mayreadcomponents(code,j)
+          if mask > 0 then call domainevents(opid,'read',refid,mask)
           else call unknown(opid,'components','catalog.read.components.unknown')
-          call unknown(opid,'observations','catalog.read.observation.unclassified')
+          if catalog.observationcomplete(code,j) then call domainevents(opid,'observe',refid,catalog.observedcomponents(code,j))
+          else call unknown(opid,'observations','catalog.typed.observation.projection.unknown')
+          flagmask = catalog.observedflags(code,j); maskoperand = catalog.observedflagmaskoperand(code)
+          if maskoperand > 0 then do
+            field = item.operand(maskoperand); selectedmask = field.index()
+            assembler iand flagmask,flagmask,selectedmask
+          end
+          call domainevents(opid,'observe',refid,flagmask,'flag')
+          if flagmask > 0 then call unknown(opid,'values','catalog.flag.definition.projection.unknown')
         end
-        if catalog.writes(code,j) then do
-          /* Component coverage does not prove a definite definition or a
-           * value-independent kill (COPY can transport unavailable state). */
-          certainty = 'may'
-          mask = catalog.writecomponents(code,j)
-          if mask > 0 then call maskevents(opid,'write',refid,mask,certainty,'normal','none')
-          /* The committed catalogue supplies possible component writes, but
-           * no proof that its component list is exhaustive. */
-          call unknown(opid,'components','catalog.write.components.unknown')
-          mask = catalog.clearcomponents(code,j)
-          if mask > 0 then call maskevents(opid,'clear',refid,mask,certainty,'normal','none')
-          call unknown(opid,'flags','catalog.write.flags.unknown')
-          call unknown(opid,'values','catalog.value.transfer.unknown')
+      end
+      do j = 1 to item.operands()
+        if binding then iterate
+        refid = refs[j]
+        if refid = 0 then iterate
+        if catalog.writes(code,j) & binding = 0 then do
+          /* One conservative whole-value write covers every component/flag
+           * domain requested by this profile. Do not materialize 31 unused
+           * status domains merely because a setter might change them. */
+          ignored = event(opid,'write',refid,0,'none',0,.lltarget..operand(),'may')
+          call domainevents(opid,'clear',refid,catalog.clearcomponents(code,j))
+          source = catalog.transportsource(code)
+          if source > 0 then call domainevents(opid,'transport',refid,catalog.transportcomponents(code),'component','must','normal','none','reference',refs[source])
+          else if catalog.literaloperand(code) > 0 then do
+            literal = item.operand(catalog.literaloperand(code))
+            call domainevents(opid,'write',refid,catalog.literalcomponents(code),'component','must','normal','none','literal',0,literal)
+          end
+          else do
+            mask = catalog.definitioncomponents(code,j)
+            if mask > 0 then call domainevents(opid,'write',refid,mask)
+            else call unknown(opid,'values','catalog.normal.definition.projection.unknown')
+          end
         end
         if catalog.failurewrites(code,j) then call maskevents(opid,'write',refid,catalog.failurecomponents(code),'may','failure',phase)
       end
-      if catalog.implicit(code) <> 0 then call unknown(opid,'references','catalog.implicit.reference.selector.unknown')
-      /* HEAD has no complete binding-action classifier. In particular an
-       * ordinary register copy may establish an alias without an alias flag. */
-      call unknown(opid,'bindings','catalog.binding.order.unknown')
-      call unknown(opid,'order','catalog.binding.order.unknown')
-      if catalog.contextreads(code) <> 0 | catalog.contextwrites(code) <> 0 | catalog.failurecontext(code) <> 0 | catalog.signaldependencies(code) % 2 then do
-        contextid = adddomain('context','context.numeric',0)
-        ignored = event(opid,'context',0,contextid,'none',0,.lltarget..operand(),'may','all',phase,'catalog.numeric.dependency')
+      if catalog.implicit(code) <> 0 & scopedrecipe = 0 then do
+        /* The call contract owns the count and physical window selector.
+         * Describing that selector is independent of proving its run-time
+         * extent; consumers must not mistake a symbolic window for empty. */
+        window = catalog.callwindow(code)
+        if catalog.callkind(code) <> 0 & window > 0 & window <= item.operands() & catalog.callcount(code) > 0 & catalog.implicitrecipe(code) = ('windowafter:' || window) then ignored = addref(opid,window,'window','symbolic',0,0)
+        else if binding = 0 then call unknown(opid,'references','catalog.implicit.reference.selector.unknown')
       end
-      call unknown(opid,'numeric','catalog.numeric.read.coverage.unknown')
+      if binding & scopedrecipe = 0 then do
+        if bindingevents(opid,program,refs) = 0 then return
+      end
+      if (callsite | (catalog.semantics(code) <idiv> 2) % 2) & scopedrecipe = 0 then do
+        if callsite then do
+          /* Pointer/count capture is after every fused preparation action. */
+          countordinal = catalog.callcount(code)
+          if countordinal > 0 then do
+            integerdomain = adddomain('component','component.bit.0',catalog.componentmask('I'))
+            ignored = event(opid,'observe',refs[countordinal],integerdomain,'none',0,.lltarget..operand(),'must','all','after')
+          end
+          targetordinal = catalog.calltarget(code)
+          if catalog.callkind(code) <> 1 & targetordinal > 0 & refs[targetordinal] > 0 then do
+            call domainevents(opid,'observe',refs[targetordinal],catalog.componentmask('S'),'component','must','all','after')
+          end
+          ignored = event(opid,'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','catalog.call')
+        end
+        ignored = event(opid,'call',0,0,'none',0,.lltarget..operand(),'unknown','all','after','catalog.call.callee.unknown')
+        call unknown(opid,'calls','catalog.call.callee.unknown')
+      end
+      if binding then call domainevents(opid,'read',0,catalog.contextreadmask(code),'context')
+      call domainevents(opid,'context',0,catalog.contextwritemask(code),'context','may')
+      if catalog.contextreadmask(code) <idiv> 512 % 2 | catalog.contextwritemask(code) <idiv> 512 % 2 then call unknown(opid,'numeric','catalog.numeric.dependency.unknown')
       if catalog.signalstate(code) = 2 then call unknown(opid,'signals','catalog.signal.contract.unknown')
       else if catalog.signalstate(code) <> 0 then do
         if catalog.signalsource(code) <> 1 then call unknown(opid,'signals','catalog.signal.names.unknown')
       end
       if catalog.policyeffect(code) <> 0 then do
         ignored = event(opid,'policy',0,0,'none',0,.lltarget..operand(),'may','all',phase,'catalog.policy.' || catalog.policyeffect(code))
-        call unknown(opid,'order','catalog.policy.transfer.unknown')
       end
       if lltarget..normalsuccessors(code) = -2 then call unknown(opid,'control','catalog.normal.successors.unknown')
       if catalog.unbounded(code) then call unknown(opid,'ownership','catalog.indirect.ownership.unknown')
+      if catalog.observations(code) <> 0 then do
+        call unknown(opid,'observations','catalog.physical.observation.unknown')
+        call unknown(opid,'relocation','catalog.physical.observation.unknown')
+      end
     end
     return
+  domainevents: method = .void
+    arg opid = .int, kind = .string, refid = .int, mask = .int, domainkind = 'component', certainty = 'must', path = 'normal', phase = 'none', sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand
+    bit = 1; ordinal = 0; value = .lltarget..operand()
+    if ?literal then value = literal
+    do while mask > 0
+      if reserve(0,1) = 0 then return
+      if mask % 2 then do
+        domainid = adddomain(domainkind,domainkind || '.bit.' || ordinal,bit)
+        ignored = event(opid,kind,refid,domainid,sourcekind,sourceid,value,certainty,path,phase)
+      end
+      mask = mask <idiv> 2; ordinal = ordinal + 1
+      if mask > 0 then bit = bit * 2
+    end
+    return
+  checkedprogram: method = .bindingprogram
+    arg opid = .int, recipe = .string, allowempty = 0
+    item = .lltarget..record(_graph,opid)
+    if reserve(length(recipe) * 128 + 64,length(recipe) * 4 + 1) = 0 then return .bindingprogram(item,'',0)
+    program = .bindingprogram(item,recipe,length(recipe) + 1,allowempty)
+    if program.status() = 'invalid' | program.status() = 'limit' then call reject(program.status(),program.reason())
+    return program
+  unknownbinding: method = .void
+    arg opid = .int, reason = .string
+    do family = 1 to 8
+      call unknown(opid,word('bindings order components flags values ownership references observations',family),reason)
+    end
+    ignored = event(opid,'unknown',0,0,'none',0,.lltarget..operand(),'unknown','all','unknown',reason)
+    return
+  /** The independent draft uses this same two-pass decoder. */
+  binding: method = .int
+    arg opid = .int, recipe = .string
+    if operation(opid) = 0 then return 0
+    program = checkedprogram(opid,recipe)
+    if _status <> 'building' then return 0
+    if program.status() <> 'ok' then do; call unknownbinding(opid,program.reason()); return 0; end
+    item = .lltarget..record(_graph,opid); refs = .int[]
+    do i = 1 to item.operands()
+      value = item.operand(i); refs[i] = 0
+      if value.kind() = 'R' then refs[i] = addref(opid,i)
+    end
+    return bindingevents(opid,program,refs)
+  selectedaddress: method = .int
+    arg opid = .int, kind = .string, base = .int, ordinal = .int, refs = .int[], capture = 0, offset = 0, bank = '', anchor = 'active', ?qualifier = .lltarget..operand
+    item = .lltarget..record(_graph,opid); literal = .lltarget..operand(); selected = 0; selection = 'none'
+    if capture > 0 then do; selection = 'captured'; selected = capture; end
+    else if ordinal > 0 then do
+      value = item.operand(ordinal)
+      if value.kind() = 'R' then do; selection = 'reference'; selected = refs[ordinal]; end
+      else do; selection = 'literal'; literal = value; end
+    end
+    if ?qualifier = 0 then qualifier = .lltarget..operand()
+    return address(opid,kind,base,selection,selected,literal,offset,bank,anchor,qualifier)
+  sourceevent: method = .int
+    arg opid = .int, kind = .string, subject = .int, domainid = .int, ordinal = .int, refs = .int[], offset = 0, detail = ''
+    item = .lltarget..record(_graph,opid); value = item.operand(ordinal)
+    if value.kind() = 'R' then return event(opid,kind,subject,domainid,'reference',refs[ordinal],.lltarget..operand(),'must','all','after',detail,offset)
+    return event(opid,kind,subject,domainid,'literal',0,value,'must','all','after',detail,offset)
+  /** Second pass: semantic verbs, never a mnemonic admission list. Every
+   * selector is materialized at its ordered point; captured values name an
+   * immutable earlier action, rather than resolving a restored register. */
+  bindingevents: method = .int
+    arg opid = .int, program = .bindingprogram, refs = .int[]
+    value = .lltarget..operand; qualifier = .lltarget..operand; addresskind = .string; anchor = .string
+    capture = .int; captured = .int; ignored = .int
+    item = .lltarget..record(_graph,opid); catalog = .llrxascatalog..catalog()
+    integer = adddomain('component','component.bit.0',catalog.componentmask('I'))
+    valuecapture = 0; indexcapture = 0; literal = .lltarget..operand
+    do step = 1 to program.steps()
+      if _status <> 'building' then return 0
+      kind = program.kind(step); a = program.operand(step,1); b = program.operand(step,2)
+      c = program.operand(step,3); d = program.operand(step,4)
+      subject = refs[a]; source = 0; detail = ''; offset = 0
+      select
+        when kind = 'branch' then iterate
+        when kind = 'link' | kind = 'swap' then ignored = event(opid,kind,subject,0,'reference',refs[b],.lltarget..operand(),'must','all','after')
+        when kind = 'unlink' then ignored = event(opid,'unlink',subject,0,'none',0,.lltarget..operand(),'must','all','after')
+        when kind = 'endlife' then ignored = event(opid,'lifetime',subject,0,'none',0,.lltarget..operand(),'must','all','after','end')
+        when kind = 'icopy' then ignored = event(opid,'transport',subject,integer,'reference',refs[b],.lltarget..operand(),'must','all','after')
+        when kind = 'setint' then do
+          call domainevents(opid,'clear',subject,catalog.recipeintegerclears(),'component','must','all','after')
+          ignored = event(opid,'status',subject,0,'unknown',0,.lltarget..operand(),'unknown','all','after','setter.integer.flags')
+          ignored = sourceevent(opid,'write',subject,integer,b,refs,0,'setter.integer')
+        end
+        when kind = 'clear' then ignored = event(opid,'clear',subject,0,'none',0,.lltarget..operand(),'must','all','after','value.reset')
+        when kind = 'flags' then ignored = sourceevent(opid,'status',subject,0,b,refs,0,'public-write')
+        when kind = 'captureint' | kind = 'captureindex' then do
+          if kind = 'captureindex' then do
+            value = item.operand(b); offset = value.index()
+            value = item.operand(a)
+            if value.kind() = 'R' then ignored = event(opid,'observe',refs[a],integer,'none',0,.lltarget..operand(),'must','all','after')
+          end
+          captured = sourceevent(opid,'capture',0,integer,a,refs,offset,kind)
+          if kind = 'captureint' then valuecapture = captured
+          else indexcapture = captured
+        end
+        when kind = 'putint' then ignored = event(opid,'transport',subject,integer,'captured',valuecapture,.lltarget..operand(),'must','all','after')
+        when kind = 'setattrs' | kind = 'minattrs' then do
+          detail = 'set'; if kind = 'minattrs' then detail = 'min'
+          ignored = sourceevent(opid,'resize',subject,0,b,refs,0,detail)
+        end
+        when kind = 'minattrscaptured' then ignored = event(opid,'resize',subject,0,'captured',indexcapture,.lltarget..operand(),'must','all','after','min')
+        when kind = 'linkindex' | kind = 'linkindexreg' then do
+          subject = selectedaddress(opid,'localindex',0,a,refs,0,0,'packed')
+          source = refs[b]
+          if kind = 'linkindex' then source = selectedaddress(opid,'localindex',0,b,refs,0,0,'packed')
+          ignored = event(opid,'link',subject,0,'reference',source,.lltarget..operand(),'must','all','after')
+        end
+        when kind = 'argument' | kind = 'argumentadd' | kind = 'capturedargument' then do
+          if c > 0 then do; value = item.operand(c); offset = value.index(); end
+          addresskind = 'argument'; anchor = 'active'
+          if kind = 'capturedargument' then do; addresskind = 'capturedargument'; anchor = 'entry'; end
+          value = item.operand(b)
+          if value.kind() = 'R' then ignored = event(opid,'observe',refs[b],integer,'none',0,.lltarget..operand(),'must','all','after')
+          source = selectedaddress(opid,addresskind,0,b,refs,0,offset,'a',anchor)
+          ignored = event(opid,'link',subject,0,'reference',source,.lltarget..operand(),'must','all','after')
+        end
+        when kind = 'reference' then do
+          source = selectedaddress(opid,'reference',refs[b],0,refs)
+          ignored = event(opid,'link',subject,0,'reference',source,.lltarget..operand(),'must','all','after')
+        end
+        when kind = 'attribute' | kind = 'attribute1' | kind = 'attribute1add' | kind = 'attribute1captured' then do
+          capture = 0; addresskind = kind
+          if kind = 'attribute1add' then do; addresskind = 'attribute1'; value = item.operand(d); offset = value.index(); end
+          if kind = 'attribute1captured' then do; addresskind = 'attribute1'; capture = indexcapture; end
+          if c > 0 then do
+            value = item.operand(c)
+            if value.kind() = 'R' then ignored = event(opid,'observe',refs[c],integer,'none',0,.lltarget..operand(),'must','all','after')
+          end
+          source = selectedaddress(opid,addresskind,refs[b],c,refs,capture,offset)
+          ignored = event(opid,'link',subject,0,'reference',source,.lltarget..operand(),'must','all','after')
+        end
+        when kind = 'linktoattribute' | kind = 'linktoattribute1' | kind = 'unlinkattribute' | kind = 'unlinkattribute1' then do
+          addresskind = 'attribute'; if right(kind,1) = '1' then addresskind = 'attribute1'
+          value = item.operand(a)
+          if value.kind() = 'R' then ignored = event(opid,'observe',refs[a],integer,'none',0,.lltarget..operand(),'must','all','after')
+          subject = selectedaddress(opid,addresskind,refs[b],a,refs)
+          if c > 0 then ignored = event(opid,'link',subject,0,'reference',refs[c],.lltarget..operand(),'must','all','after')
+          else ignored = event(opid,'unlink',subject,0,'none',0,.lltarget..operand(),'must','all','after')
+        end
+        when kind = 'parent' then do
+          ignored = event(opid,'observe',refs[b],integer,'none',0,.lltarget..operand(),'must','all','after')
+          source = selectedaddress(opid,'parent',0,b,refs,0,0,'packed')
+          ignored = event(opid,'link',subject,0,'reference',source,.lltarget..operand(),'must','all','after')
+        end
+        when kind = 'qualifiedglobal' then do
+          qualifier = item.operand(b)
+          source = selectedaddress(opid,'qualifiedglobal',0,c,refs,0,0,'g','base',qualifier)
+          ignored = event(opid,'link',subject,0,'reference',source,.lltarget..operand(),'must','all','after','active-base')
+        end
+      end
+    end
+    return _status = 'building'
   seal: method = .int
     call ensureprepared()
     if _sealed then return _status = 'ok'
@@ -527,6 +1084,19 @@ profile: class
     return _catalog
   premise: method = .string
     return _premise
+  executionroot: method = .int
+    call require(); return _executionroot
+  executioncontext: method = .string
+    call require(); return _executioncontext
+  defaulthalt: method = .int
+    arg functionid = .int
+    call require()
+    if _executioncontext = '' then return 0
+    if _executioncalls = 0 then return functionid = _executionroot
+    if functionid < 2 | functionid > _executionmembers[0] then return 0
+    return _executionmembers[functionid]
+  executionreason: method = .string
+    call require(); return _executionreason
   owner: method = reference .lltarget..module
     call require(); return _owner
   usedwork: method = .int
@@ -623,9 +1193,14 @@ profiledraft: class
     arg opid = .int, ordinal = .int, kind = 'explicit', anchor = 'active', extentknown = 1, extent = 1
     return _profile.addref(opid,ordinal,kind,anchor,extentknown,extent)
   event: method = .int
-    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = ''
+    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = '', offset = 0
     if ?literal = 0 then literal = .lltarget..operand()
-    return _profile.event(opid,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail)
+    return _profile.event(opid,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail,offset)
+  /** Interpret independently supplied operational recipe text with the same
+   * checked decoder used by the canonical catalogue adapter. */
+  binding: method = .int
+    arg opid = .int, recipe = .string
+    return _profile.binding(opid,recipe)
   unknown: method = .void
     arg opid = .int, family = .string, reason = .string
     call _profile.unknown(opid,family,reason)

@@ -6,12 +6,48 @@ set(CMAKE_C_STANDARD 99)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxConcurrencyTests.cmake)
 
-add_executable(rxlink rxlinkmain.c ../binutils/include/rxbin.h ../binutils/include/rxsignature.h)
-target_link_libraries(rxlink rxbin platform)
+add_library(rxlink_main_object OBJECT rxlinkmain.c)
+add_executable(rxlink $<TARGET_OBJECTS:rxlink_main_object>
+        rxlink_inline_service.c rxlink_inline_service.h
+        ../binutils/include/rxbin.h ../binutils/include/rxsignature.h)
+target_link_libraries(rxlink rxdaslib rxvml)
+include("${CMAKE_SOURCE_DIR}/cmake/CrexxRxasCatalog.cmake")
+get_property(_rxlink_catalog_fingerprint GLOBAL PROPERTY CREXX_RXAS_CATALOG_FINGERPRINT)
+target_compile_definitions(rxlink PRIVATE LL_RXAS_CATALOG_FINGERPRINT="${_rxlink_catalog_fingerprint}")
+get_property(_rxlink_catalog_inputs GLOBAL PROPERTY CREXX_RXAS_CATALOG_INPUTS)
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_rxlink_catalog_inputs})
 target_include_directories(rxlink PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ../assembler ../disassembler ../interpreter
         ../platform
         ../binutils/include)
+target_include_directories(rxlink_main_object PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ../assembler ../disassembler ../interpreter
+        ../platform
+        ../binutils/include)
+
+if(BUILD_TESTING)
+    add_executable(mutate_inline_rxbin EXCLUDE_FROM_ALL tests/mutate_inline_rxbin.c)
+    target_link_libraries(mutate_inline_rxbin PRIVATE rxbin platform)
+    target_include_directories(mutate_inline_rxbin PRIVATE ../binutils/include ../platform)
+    set_target_properties(mutate_inline_rxbin PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    add_executable(test_rxlink_inline_metadata EXCLUDE_FROM_ALL
+        tests/test_inline_metadata.c rxlink_inline_service.c)
+    target_include_directories(test_rxlink_inline_metadata PRIVATE
+        . ../assembler ../disassembler ../interpreter ../binutils/include ../platform)
+    target_link_libraries(test_rxlink_inline_metadata PRIVATE rxdaslib rxvml)
+    target_compile_definitions(test_rxlink_inline_metadata PRIVATE
+        LL_RXAS_CATALOG_FINGERPRINT="${_rxlink_catalog_fingerprint}")
+    set_target_properties(test_rxlink_inline_metadata PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+    add_test(NAME rxlink_inline_metadata COMMAND test_rxlink_inline_metadata)
+    set_tests_properties(rxlink_inline_metadata PROPERTIES
+        PASS_REGULAR_EXPRESSION "RXLINK_INLINE_METADATA[|]failures=0"
+        TIMEOUT 30 LABELS "unit;rxlink;inline;regression"
+        CREXX_PREP_TARGETS test_rxlink_inline_metadata)
+endif()
 
 add_custom_target(rxlink_test_prereqs ALL
         DEPENDS rxlink rxas rxvm rxdas mc_decimal_dynamic)
@@ -319,6 +355,16 @@ add_test(NAME rxlink_core_provider_requirements
 set_tests_properties(rxlink_core_provider_requirements PROPERTIES
         LABELS "linker;metadata;native;regression" TIMEOUT 60
         CREXX_PREP_TARGETS "rxc;rxas;rxlink;rxdas")
+
+add_test(NAME rxlink_inline_foreign_seal_rejected
+        COMMAND ${CMAKE_COMMAND}
+            -DRXAS=$<TARGET_FILE:rxas> -DRXLINK=$<TARGET_FILE:rxlink>
+            -DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_inline_foreign_seal.rxas
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/tests_link_inline_foreign_seal
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_inline_foreign_seal.cmake)
+set_tests_properties(rxlink_inline_foreign_seal_rejected PROPERTIES
+        LABELS "linker;inline;negative;regression" TIMEOUT 30
+        CREXX_PREP_TARGETS "rxas;rxlink")
 
 crexx_finalize_directory_qa_tiers()
 

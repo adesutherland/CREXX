@@ -46,6 +46,7 @@ scan: lexer input utf8
   string.literal: rule = quoted.string then emit string
   char.literal: rule = quoted.char then emit character
   register.literal: rule = ('r' | 'R' | 'g' | 'G' | 'a' | 'A') digit+ then emit register
+  qualified.function.literal: rule = '@' digit+ '::' digit+ '()' then emit function
   function.literal: rule = name '()' then emit function
   label.literal: rule = name ':' then emit label
   directive.literal: rule = '.' name then emit directive

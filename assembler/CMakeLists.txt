@@ -44,7 +44,7 @@ if (ENABLE_PARSER_MODE)
 endif()
 
 # RXAS Exec
-add_executable(rxas rxasmain.c)
+add_executable(rxas rxasmain.c rxas_inline_service.c rxas_inline_service.h)
 target_link_libraries(rxas rxaslib avl_tree platform)
 add_dependencies(rxas rxaslib avl_tree platform)
 target_include_directories(rxas PRIVATE . ${CMAKE_CURRENT_BINARY_DIR} ../platform ../binutils/include)

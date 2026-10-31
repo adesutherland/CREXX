@@ -1,11 +1,14 @@
 /* cREXX License (MIT). Atomic checked RXAS expansion; cleanup is independent. */
 options levelb
-namespace llinline expose binding bind decision inspect change expand expandmany copyorigin clonefields
+namespace llinline expose binding bind context callrecipe recipe normalize normalizewith decision inspect change expand expandmany expandcontext copyorigin clonefields
 import rxfnsb
 import llir
 import lltarget
 import lltargetremap
-import lltargetfacts
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetnormalize
 import llrxascatalog
 
 binding: class
@@ -46,6 +49,372 @@ bind: procedure = .llinline..binding
   arg caller = reference .lltarget..module, callId = .int, provider = reference .lltarget..module, procedureId = .int
   return .binding(caller,callId,provider,procedureId)
 
+/** Driver placement and selection are independent of preservation proofs.
+ * The ordinary assembler context has no closed-main or default-handler
+ * premise. A linker context needs an executable exact-image binding; merely
+ * supplying another RXAS body does not establish that binding. */
+normalizationstamp: class
+  _owner = reference .lltarget..module
+  _identity = .int
+  _catalog = .string
+  _complete = .int[]
+  _reasons = .string[]
+  *: factory
+    arg owner = reference .lltarget..module, normalized = .lltargetnormalize..change
+    _owner = owner; source = dereference owner; _identity = source.identity()
+    catalog = .llrxascatalog..catalog(); _catalog = catalog.fingerprint()
+    do i = 1 to source.procedures()
+      body = source.procedure(i); fn = body.functionid()
+      _complete[fn] = normalized.complete(fn); _reasons[fn] = normalized.unknownreason(fn)
+    end
+    return
+  matches: method = .int
+    arg owner = reference .lltarget..module
+    if <refvalid>(_owner) = 0 | <refvalid>(owner) = 0 then return 0
+    if (_owner <refsame> owner) = 0 then return 0
+    source = dereference owner; catalog = .llrxascatalog..catalog()
+    return source.valid() & source.identity() = _identity & catalog.fingerprint() = _catalog
+  complete: method = .int
+    arg functionid = 0
+    if functionid = 0 then do
+      do i = 2 to _complete[0]; if _complete[i] = 0 then return 0; end
+      return _complete[0] > 1
+    end
+    if functionid < 1 | functionid > _complete[0] then return 0
+    return _complete[functionid]
+  unknownreason: method = .string
+    arg functionid = .int
+    if functionid < 1 | functionid > _reasons[0] then return 'normalization.procedure.unproved'
+    return _reasons[functionid]
+
+selectedstamp: class
+  _request = .llinline..binding
+  _transaction = .string
+  _ordinal = .int
+  *: factory
+    arg request = .llinline..binding, transaction = .string, ordinal = .int
+    _request = request; _transaction = transaction; _ordinal = ordinal
+    return
+  matches: method = .int
+    arg request = .llinline..binding, transaction = .string
+    if _request.valid() = 0 | request.valid() = 0 | transaction <> _transaction then return 0
+    leftcaller = _request.caller(); rightcaller = request.caller()
+    leftprovider = _request.provider(); rightprovider = request.provider()
+    return (leftcaller <refsame> rightcaller) & (leftprovider <refsame> rightprovider) & _request.callid() = request.callid() & _request.bodyid() = request.bodyid()
+  ordinal: method = .int
+    return _ordinal
+  binding: method = .llinline..binding
+    return _request
+
+procedurestamp: class
+  _owner = reference .lltarget..module
+  _identity = .int
+  _function = .int
+  _module = .int
+  _ordinal = .int
+  *: factory
+    arg owner = reference .lltarget..module, functionid = .int, moduleordinal = .int, procedureordinal = .int
+    _owner = owner; source = dereference owner; _identity = source.identity()
+    _function = functionid; _module = moduleordinal; _ordinal = procedureordinal
+    return
+  name: method = .string
+    arg owner = reference .lltarget..module, functionid = .int
+    if <refvalid>(_owner) = 0 | <refvalid>(owner) = 0 then return ''
+    if (_owner <refsame> owner) = 0 | functionid <> _function then return ''
+    source = dereference owner
+    if source.valid() = 0 | source.identity() <> _identity then return ''
+    return '@' || _module || '::' || _ordinal
+
+context: class
+  _mode = .string
+  _policy = .string
+  _status = .string
+  _reason = .string
+  _normalizations = .object[]
+  _selections = .object[]
+  _procedures = .object[]
+  _transaction = .string
+  _execution = .lltargettransfer..profile
+  _executionbound = .int
+  *: factory
+    arg mode = 'assembler', policy = 'default'
+    _mode = mode; _policy = policy; _status = 'ok'
+    if wordpos(mode,'assembler linker') = 0 then do; _status = 'invalid'; _reason = 'context.placement'; end
+    if wordpos(policy,'default all-legal never') = 0 then do; _status = 'invalid'; _reason = 'context.selection.policy'; end
+    return
+  status: method = .string
+    return _status
+  reason: method = .string
+    return _reason
+  mode: method = .string
+    return _mode
+  policy: method = .string
+    return _policy
+  /** An operational witness is supplied explicitly by a standalone caller.
+   * Mode names and RXAS text never create it. Copy the sealed profile while
+   * retaining its exact external target owner; another result must rebind. */
+  useexecution: method = .int
+    arg owner = reference .lltarget..module, operational = reference .lltargettransfer..profile
+    if _status <> 'ok' | _mode <> 'assembler' | <refvalid>(operational) = 0 then return 0
+    profile = dereference operational
+    if profile.valid() = 0 | profile.matches(owner) = 0 then return 0
+    if profile.executioncontext() = '' | profile.defaulthalt(profile.executionroot()) = 0 then return 0
+    _execution = profile; _executionbound = 1
+    return 1
+  executioncontext: method = .string
+    arg owner = reference .lltarget..module
+    if _executionbound = 0 then return ''
+    if _execution.matches(owner) = 0 then return ''
+    return _execution.executioncontext()
+  executionroot: method = .int
+    arg owner = reference .lltarget..module
+    if executioncontext(owner) = '' then return 0
+    return _execution.executionroot()
+  /** Certify the published result, rather than the pre-normalization owner.
+   * A stale result, unknown proof or replaced owner cannot authorize cloning. */
+  certify: method = .int
+    arg owner = reference .lltarget..module, normalized = .lltargetnormalize..change
+    if _status <> 'ok' | <refvalid>(owner) = 0 then return 0
+    source = dereference owner
+    if source.valid() = 0 then return 0
+    if normalized.status() <> 'changed' & normalized.status() <> 'keep' then return 0
+    candidate = normalized.result()
+    if candidate.valid() = 0 | candidate.identity() <> source.identity() then return 0
+    stamp = .normalizationstamp(owner,normalized)
+    _normalizations[_normalizations[0] + 1] = stamp as .object
+    return 1
+  normalized: method = .int
+    arg owner = reference .lltarget..module, functionid = 0
+    do i = 1 to _normalizations[0]
+      stamp = _normalizations[i] as .normalizationstamp
+      if stamp.matches(owner) then return stamp.complete(functionid)
+    end
+    return 0
+  normalizationreason: method = .string
+    arg owner = reference .lltarget..module, functionid = .int
+    do i = 1 to _normalizations[0]
+      stamp = _normalizations[i] as .normalizationstamp
+      if stamp.matches(owner) then return stamp.unknownreason(functionid)
+    end
+    return 'normalization.input.unproved'
+  /** Only the frozen native linker manifest adapter calls this entry. The
+   * native transaction revalidates every returned owner/body/mapping before
+   * publication; standalone provider files never obtain this premise. */
+  certifyselected: method = .int
+    arg request = .llinline..binding, transaction = .string, calleridentity = .int, provideridentity = .int, providerordinal = .int
+    if _status <> 'ok' | _mode <> 'linker' | transaction = '' | providerordinal < 0 | request.valid() = 0 then return 0
+    if _transaction <> '' & _transaction <> transaction then return 0
+    caller = dereference request.caller(); provider = dereference request.provider()
+    if caller.identity() <> calleridentity | provider.identity() <> provideridentity then return 0
+    _transaction = transaction; stamp = .selectedstamp(request,transaction,providerordinal)
+    _selections[_selections[0] + 1] = stamp as .object
+    return 1
+  selected: method = .int
+    arg request = .llinline..binding
+    if _mode <> 'linker' | _transaction = '' then return -1
+    do i = 1 to _selections[0]
+      stamp = _selections[i] as .selectedstamp
+      if stamp.matches(request,_transaction) then return stamp.ordinal()
+    end
+    return -1
+  certifyprocedure: method = .int
+    arg owner = reference .lltarget..module, transaction = .string, owneridentity = .int, moduleordinal = .int, functionid = .int, procedureordinal = .int
+    if _status <> 'ok' | _mode <> 'linker' | transaction = '' | moduleordinal < 0 | procedureordinal < 0 | <refvalid>(owner) = 0 then return 0
+    if _transaction <> '' & _transaction <> transaction then return 0
+    source = dereference owner
+    if source.valid() = 0 | source.identity() <> owneridentity then return 0
+    found = 0
+    do i = 1 to source.procedures()
+      body = source.procedure(i)
+      if body.functionid() = functionid then found = 1
+    end
+    if found = 0 then return 0
+    _transaction = transaction; stamp = .procedurestamp(owner,functionid,moduleordinal,procedureordinal)
+    _procedures[_procedures[0] + 1] = stamp as .object
+    return 1
+  procedurename: method = .string
+    arg owner = reference .lltarget..module, functionid = .int
+    if _mode <> 'linker' | _transaction = '' then return ''
+    do i = 1 to _procedures[0]
+      stamp = _procedures[i] as .procedurestamp; name = stamp.name(owner,functionid)
+      if name <> '' then return name
+    end
+    return ''
+  calltarget: method = .string
+    arg owner = reference .lltarget..module, operation = .int
+    if _mode <> 'linker' | _transaction = '' then return ''
+    do i = 1 to _selections[0]
+      stamp = _selections[i] as .selectedstamp; request = stamp.binding()
+      if request.valid() = 0 then iterate
+      caller_ref = request.caller()
+      if (caller_ref <refsame> owner) & request.callid() = operation then return procedurename(request.provider(),request.bodyid())
+    end
+    return ''
+  /** Body precision alone never discharges inherited signal/asynchronous or
+   * entry-context obligations. A future caller-point certificate must prove
+   * all of them before the shared departure owner can be omitted. */
+  scopefree: method = .int
+    arg request = .llinline..binding
+    return 0
+  foreignbinding: method = .string
+    return 'binding.unsealed'
+
+/** One typed call recipe, projected solely from the canonical opcode owner.
+ * Unknown counts and dynamic selectors remain operational inputs. They are
+ * never changed into a scalar legality test. Prefix and capture phases stay
+ * ordered so fused preparation cannot acquire an extra interrupt boundary. */
+callrecipe: class
+  _request = .llinline..binding
+  _status = .string
+  _reason = .string
+  _kind = .int
+  _target = .lltarget..operand
+  _result = .lltarget..operand
+  _count = .lltarget..operand
+  _window = .lltarget..operand
+  _actuals = .lltarget..operand[]
+  _hasresult = .int
+  _hascount = .int
+  _haswindow = .int
+  _prefix = .string
+  _capture = .int
+  _atomic = .int
+  *: factory
+    arg request = .llinline..binding
+    _request = request; _status = 'invalid'; _reason = 'binding.expired'
+    if request.valid() = 0 then return
+    source = dereference request.caller(); item = source.at(request.callid())
+    if item.valid() = 0 then do; _reason = 'call.identity'; return; end
+    if item.kind() <> 'instruction' then do; _reason = 'call.not.instruction'; return; end
+    catalog = .llrxascatalog..catalog(); opcode = item.opcode()
+    _kind = catalog.callkind(opcode)
+    if _kind = 0 then do; _status = 'keep'; _reason = 'call.contract.unavailable'; return; end
+    targetordinal = catalog.calltarget(opcode); resultordinal = catalog.callresult(opcode)
+    countordinal = catalog.callcount(opcode); windowordinal = catalog.callwindow(opcode)
+    if targetordinal < 1 | targetordinal > item.operands() then do; _reason = 'call.contract.target'; return; end
+    if resultordinal < 0 | resultordinal > item.operands() | countordinal < 0 | countordinal > item.operands() | windowordinal < 0 | windowordinal > item.operands() then do
+      _reason = 'call.contract.operand'; return
+    end
+    _target = item.operand(targetordinal)
+    if (_kind = 1 & _target.kind() <> 'P') | (_kind <> 1 & _target.kind() <> 'R') then do; _reason = 'call.contract.target.kind'; return; end
+    if resultordinal > 0 then do
+      _result = item.operand(resultordinal); _hasresult = 1
+      if _result.kind() <> 'R' then do; _reason = 'call.contract.result.kind'; return; end
+    end
+    if countordinal > 0 then do
+      _count = item.operand(countordinal); _hascount = 1
+      if _count.kind() <> 'R' then do; _reason = 'call.contract.count.kind'; return; end
+    end
+    if windowordinal > 0 then do
+      _window = item.operand(windowordinal); _haswindow = 1
+      if _window.kind() <> 'R' then do; _reason = 'call.contract.window.kind'; return; end
+    end
+    ordinals = translate(catalog.callactuals(opcode),' ', ',')
+    do i = 1 to words(ordinals)
+      text = word(ordinals,i)
+      if text = '' | verify(text,'0123456789') <> 0 | length(text) > 8 then do; _reason = 'call.contract.actual.ordinal'; return; end
+      ordinal = text as .int
+      if ordinal < 1 | ordinal > item.operands() then do; _reason = 'call.contract.actual.ordinal'; return; end
+      value = item.operand(ordinal)
+      if value.kind() <> 'R' then do; _reason = 'call.contract.actual.kind'; return; end
+      _actuals[i] = value
+    end
+    if _hascount = 0 then _count = .lltarget..operand.integer(_actuals[0])
+    if _haswindow & _actuals[0] > 0 then do; _reason = 'call.contract.actual.window.conflict'; return; end
+    _prefix = catalog.callprefix(opcode); _capture = catalog.callcapture(opcode); _atomic = catalog.callatomic(opcode)
+    _status = 'ok'; _reason = ''
+    return
+  valid: method = .int
+    return _status = 'ok' & _request.valid()
+  status: method = .string
+    if _status = 'ok' & _request.valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    if _status = 'ok' & _request.valid() = 0 then return 'binding.expired'
+    return _reason
+  kind: method = .int
+    return _kind
+  target: method = .lltarget..operand
+    return _target
+  hasresult: method = .int
+    return _hasresult
+  result: method = .lltarget..operand
+    return _result
+  counted: method = .int
+    return _hascount
+  count: method = .lltarget..operand
+    return _count
+  haswindow: method = .int
+    return _haswindow
+  window: method = .lltarget..operand
+    return _window
+  actuals: method = .int
+    return _actuals[0]
+  actual: method = .lltarget..operand
+    arg ordinal = .int
+    return _actuals[ordinal]
+  prefix: method = .string
+    return _prefix
+  capturephase: method = .int
+    return _capture
+  atomic: method = .int
+    return _atomic
+
+recipe: procedure = .llinline..callrecipe
+  arg request = .llinline..binding
+  return .callrecipe(request)
+
+/** Standard early RXAS normalization, also used by checked standalone/linker
+ * inputs. Complete the lazy analysis before returning its owned result: no
+ * reference to a helper-local transfer, CFG or flow object escapes. The caller
+ * publishes the result and reports each warning before collecting bindings. */
+normalize: procedure = .lltargetnormalize..change
+  arg owner = reference .lltarget..module, work = 1000000, bytes = 67108864
+  return normalizerequest(owner,work,bytes)
+
+/** Normalize under an exact caller-declared execution witness. The source
+ * rewrite publishes another immutable owner, so its profile is recreated and
+ * checked there; an unrelated or expired owner cannot inherit this premise. */
+normalizewith: procedure = .lltargetnormalize..change
+  arg owner = reference .lltarget..module, operational = reference .lltargettransfer..profile, work = 1000000, bytes = 67108864
+  return normalizerequest(owner,work,bytes,operational)
+
+normalizerequest: procedure = .lltargetnormalize..change
+  arg owner = reference .lltarget..module, work = .int, bytes = .int, ?operational = reference .lltargettransfer..profile
+  transfers = .lltargettransfer..profile; executioncontext = ''; rootfunction = 0
+  if ?operational then do
+    if <refvalid>(operational) = 0 then return .lltargetnormalize..change.resolved('invalid','normalization.execution.expired')
+    witness = dereference operational
+    if witness.valid() = 0 | witness.matches(owner) = 0 then return .lltargetnormalize..change.resolved('invalid','normalization.execution.owner.mismatch')
+    executioncontext = witness.executioncontext(); rootfunction = witness.executionroot()
+    if executioncontext = '' | rootfunction < 2 then return .lltargetnormalize..change.resolved('invalid','normalization.execution.contract.required')
+    if witness.defaulthalt(rootfunction) = 0 then executioncontext = ''
+  end
+  canonical = lltargetnormalize..explicit(owner,work,bytes); canonicalstatus = canonical.status()
+  if canonicalstatus <> 'changed' & canonicalstatus <> 'keep' then return canonical
+  target_ref = owner; target = .lltarget..module
+  if canonicalstatus = 'changed' then do; target = canonical.result(); target_ref = reference target; end
+  if executioncontext <> '' then do
+    current = dereference target_ref
+    transfers = .lltargettransfer..profile.closedcalls(target_ref,current.procedureid('main'),executioncontext,work,bytes)
+  end
+  else transfers = .lltargettransfer..profile(target_ref,work,bytes)
+  cfg = .lltargetcfg..graph(target_ref,reference transfers,work,bytes)
+  facts = .lltargetflow..analysis(target_ref,reference transfers,reference cfg,work,bytes)
+  normalized = lltargetnormalize..normalize(target_ref,reference facts,work,bytes)
+  status = normalized.status()
+  if canonicalstatus = 'changed' then do
+    source = dereference owner
+    if status <> 'changed' & status <> 'keep' then return .lltargetnormalize..change.resolved(status,normalized.reason(),source)
+    mapping = .int[]; warnings = .lltargetnormalize..warning[]; i = .int
+    do i = 1 to source.records()
+      item = source.record(i); mapping[item.id()] = normalized.operation(canonical.operation(item.id()))
+    end
+    do i = 1 to normalized.warnings(); warnings[i] = normalized.warning(i); end
+    return .lltargetnormalize..change.resolved('changed','normalization.explicit.operands',normalized.result(),mapping,warnings,normalized)
+  end
+  return normalized
+
 decision: class
   _status = .string
   _reason = .string
@@ -75,35 +444,15 @@ decision: class
  * root and callees; the profile does not pretend all signals halt. */
 inspect: procedure = .llinline..decision
   arg request = .llinline..binding, profile = 'unknown', work = 1000000
-  if request.valid() = 0 then return .decision('invalid','binding.expired')
-  source = dereference request.caller(); selected = source.at(request.callid())
-  if fusedform(selected) > 0 then return inspectfused(request,profile,work)
-  if profile = 'closed-main-static-exact-default-halt.v1' then return inspectimports(request,work)
-  return inspectlocal(request,profile,work)
-
-/** Private projection has already checked foreign binding and public storage.
- * Keep its selected profile for the single shared facts/expansion algorithm. */
-inspectlocal: procedure = .llinline..decision
-  arg request = .llinline..binding, profile = .string, work = .int
-  source = dereference request.caller(); caller_ref = request.caller(); provider_ref = request.provider()
-  if (caller_ref <refsame> provider_ref) = 0 then return .decision('keep','profile.imported.body.pending')
-  selected = source.at(request.callid())
-  if selected.valid() = 0 then return .decision('invalid','call.identity')
-  if selected.kind() <> 'instruction' then return .decision('invalid','call.not.instruction')
-  if wordpos(selected.mnemonic(),'call call1 call2 call3 call4') = 0 then return .decision('keep','call.form.pending')
-  facts = lltargetfacts..analyse(caller_ref,selected.procedureid(),profile,work)
-  if facts.status() <> 'ok' then return .decision(facts.status(),facts.reason())
-  if facts.bodyid(request.callid()) = 0 then return .decision('keep','call.form.pending')
-  if facts.bodyid(request.callid()) <> request.bodyid() then return .decision('invalid','binding.target.mismatch')
-  returnindex = -1
-  if facts.returns(request.callid()) = 1 then do
-    returned = source.at(facts.returnsite(request.callid(),1))
-    if returned.operands() = 1 then do
-      value = returned.operand(1)
-      if value.kind() = 'R' & value.bank() = 'a' then returnindex = value.index()
-    end
-  end
-  return .decision('legal','closed.root.scalar',facts.arguments(request.callid()),facts.first(request.callid()),returnindex,facts.remaining())
+  shape = .callrecipe(request)
+  if shape.status() <> 'ok' then return .decision(shape.status(),shape.reason())
+  changed = expand(request,profile,work)
+  if changed.sites() = 0 then return .decision(changed.status(),changed.reason())
+  status = changed.statusat(request.callid()); reason = changed.reasonat(request.callid())
+  if status = 'changed' then status = 'legal'
+  count = shape.actuals()
+  if shape.counted() then count = -1
+  return .decision(status,reason,count,0,-1)
 
 /** One owned publication plus complete original-record and site decisions.
  * A failed batch publishes the unchanged caller; expired input has no result. */
@@ -115,15 +464,23 @@ change: class
   _callers = .int[]
   _sites = .int[]
   _decisions = .object[]
+  _warnings = .object[]
   _hasresult = .int
   *: factory
-    arg status = .string, reason = .string, ?result = .lltarget..module, ?mapping = .int[], ?callers = .int[], ?sites = .int[], ?decisions = .object[]
+    arg status = .string, reason = .string, ?result = .lltarget..module, ?mapping = .int[], ?callers = .int[], ?sites = .int[], ?decisions = .object[], ?warnings = .object[]
     _status = status; _reason = reason; _hasresult = ?result
     if ?result then _result = result
     if ?mapping then _mapping = mapping
     if ?callers then _callers = callers
     if ?sites then _sites = sites
-    if ?decisions then _decisions = decisions
+    if ?decisions then do
+      _decisions = decisions
+      if status <> 'changed' then do i = 1 to _decisions[0]
+        checked = _decisions[i] as .decision
+        if checked.status() = 'changed' then _decisions[i] = .decision(status,reason) as .object
+      end
+    end
+    if ?warnings then _warnings = warnings
     return
   status: method = .string
     return _status
@@ -158,6 +515,11 @@ change: class
       if _sites[i] = callid then do; checked = _decisions[i] as .decision; return checked.reason(); end
     end
     return 'binding.site.unavailable'
+  warnings: method = .int
+    return _warnings[0]
+  warning: method = .lltargetnormalize..warning
+    arg ordinal = .int
+    return _warnings[ordinal] as .lltargetnormalize..warning
 
 /** Compatibility surface; target provenance copying has one shared owner. */
 copyorigin: procedure = .llir..origin
@@ -210,365 +572,619 @@ freshidentity: procedure = .void
   highest = highest + 1; n = pairs[0]; pairs[n + 1] = old; pairs[n + 2] = highest
   return
 
-/** Request-local metadata names use the target draft's work/byte preflight.
- * Owned rows are charged before growth; no factory-local handle escapes. */
-metascopes: class
-  _owner = reference .lltarget..draft
-  _names = .binary[]
-  _sourcefn = .int[]
-  _sourcerecord = .int[]
-  _sourcearity = .int[]
-  _sourcekind = .int[]
-  _sourcecount = .int
-  _suffixes = .string[]
-  _branched = .int[]
-  _dag = .int[]
-  _continuations = .string[]
-  _labelsites = .int[]
-  _labelarms = .int[]
-  _oldlabels = .binary[]
-  _newlabels = .string[]
-  _serial = .int
-  _catalog = .llrxascatalog..catalog
-  _bindings = .binary[]
-  _active = .int[]
-  _opening = .lltarget..operand[]
-  _openorigin = .llir..origin[]
-  _entryactive = .int[]
-  _entryfields = .lltarget..operand[]
-  _entryorigin = .llir..origin[]
-  _entrycount = .int
-  _start = .int
-  _held = .int
-  *: factory
-    arg owner = reference .lltarget..draft
-    _owner = owner; _catalog = .llrxascatalog..catalog()
-    return
-  claim: method = .int
-    arg work = .int, bytes = 0
-    draft = dereference _owner
-    if bytes < 0 | bytes > 2147483647 - _held then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata name bytes"
-    if draft.preflight(work,_held + bytes) = 0 then return 0
-    _held = _held + bytes
-    return 1
-  remember: method = .void
-    arg name = .binary
-    if claim(<blen>(name) + 1,<blen>(name) + 24) = 0 then return
-    _names[_names[0] + 1] = name
-    return
-  seed: method = .void
-    arg item = .lltarget..record
-    if item.kind() = 'instruction' then do
-      flow = _catalog.flow(item.opcode())
-      if flow = 1 | flow = 2 then call markbranch(item.procedureid())
-      return
-    end
-    if item.kind() = 'label' then call markbranch(item.procedureid())
-    if item.kind() <> '.meta' & item.kind() <> 'label' & item.kind() <> '.const' then return
-    name = item.operand(1)
-    if claim(1,32) = 0 then return
-    call remember(name.bytes())
-    _sourcecount = _names[0]
-    _sourcefn[_sourcecount] = item.procedureid(); _sourcerecord[_sourcecount] = item.id()
-    _sourcearity[_sourcecount] = 0
-    _sourcekind[_sourcecount] = item.kind() = 'label'
-    if item.kind() = '.meta' then _sourcearity[_sourcecount] = item.operands()
-    return
-  markbranch: method = .void
-    arg functionid = .int
-    growth = max(0,functionid - _branched[0])
-    if growth > 2147483647 / 8 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline branch index"
-    if claim(1,growth * 8) = 0 then return
-    _branched[functionid] = 1
-    return
-  guard: method = .int
-    arg work = .int, bytes = 0
-    draft = dereference _owner
-    if bytes < 0 | bytes > 2147483647 - _held then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata temporary bytes"
-    return draft.preflight(work,_held + bytes)
-  /** Account transient remap/constructor rows before borrowing the original
-   * payload into them. Record storage itself stays with the frozen source. */
-  recordcopies: method = .int
-    arg item = .lltarget..record, copies = .int
-    i = .int; count = .int; width = .int; value = .lltarget..operand
-    count = item.operands()
-    if copies < 1 | count > (2147483647 - 64) / 80 / copies then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline group operand copies"
-    if claim(count * copies + 1,count * copies * 80 + 64) = 0 then return 0
-    do i = 1 to count
-      value = item.operand(i); width = value.length()
-      if width > 2147483647 / 2 / copies then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline group payload copies"
-      if claim(width * copies + 1,width * copies * 2) = 0 then return 0
-    end
-    return 1
-  fieldcopies: method = .int
-    arg expose fields = .object[], copies = .int
-    i = .int; count = .int; width = .int; value = .lltarget..operand
-    count = fields[0]
-    if copies < 1 | count > (2147483647 - 64) / 80 / copies then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline source checkpoint copies"
-    if claim(count * copies + 1,count * copies * 80 + 64) = 0 then return 0
-    do i = 1 to count
-      value = fields[i] as .lltarget..operand; width = value.length()
-      if width > 2147483647 / 2 / copies then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline source checkpoint bytes"
-      if claim(width * copies + 1,width * copies * 2) = 0 then return 0
-    end
-    return 1
-  contains: method = .int
-    arg name = .binary
-    width = <blen>(name) + 1
-    if _names[0] > 2147483647 / width then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata name work"
-    if claim(_names[0] * width,0) = 0 then return 1
-    do i = 1 to _names[0]
-      if bincompare(_names[i],name) = 0 then return 1
-    end
-    return 0
-  prepare: method = .void
-    arg functionid = .int, site = .int, slot = .int, facts_ref = reference .lltargetfacts..analysis
-    i = .int; attempt = .int; collision = .int; width = .int; arm = .int; selectedgroup = .int; grouped = .int
-    suffix = .string
-    draft = dereference _owner; facts = dereference facts_ref; attempt = 0
-    selectedgroup = facts.argumentruntime(site)
-    _dag[slot] = (_branched[functionid] <> 0) | (facts.returns(site) > 1) | (facts.argumentcases(site) > 0)
-    do forever
-      if claim(1,0) = 0 then return
-      suffix = '.$inline.' || site
-      if attempt > 0 then suffix = suffix || '.' || attempt
-      collision = 0
-      do i = 1 to _sourcecount
-        if claim(1,0) = 0 then return
-        if _sourcefn[i] <> functionid then iterate
-        if _sourcearity[i] <> 1 & _sourcearity[i] <> 4 then iterate
-        grouped = 0
-        if selectedgroup > 0 then grouped = facts.scopeaddress(site,_sourcerecord[i]) = selectedgroup
-        if facts.recordlive(site,_sourcerecord[i]) = 0 & facts.scopereentry(site) = 0 & grouped = 0 then iterate
-        width = <blen>(_names[i]) + length(suffix)
-        if guard(width + 1,width * 3) = 0 then return
-        if contains(_names[i] || (suffix as .binary)) then collision = 1
-      end
-      if draft.error() <> '' then return
-      if collision = 0 then leave
-      attempt = attempt + 1
-    end
-    if claim(1,32 + length(suffix)) = 0 then return
-    _suffixes[slot] = suffix
-    do i = 1 to _sourcecount
-      if claim(1,0) = 0 then return
-      if _sourcefn[i] <> functionid then iterate
-      if _sourcearity[i] <> 1 & _sourcearity[i] <> 4 then iterate
-      grouped = 0
-      if selectedgroup > 0 then grouped = facts.scopeaddress(site,_sourcerecord[i]) = selectedgroup
-      if facts.recordlive(site,_sourcerecord[i]) = 0 & facts.scopereentry(site) = 0 & grouped = 0 then iterate
-      width = <blen>(_names[i]) + length(suffix)
-      if guard(width + 1,width * 3) = 0 then return
-      call remember(_names[i] || (suffix as .binary))
-    end
-    if _dag[slot] then do
-      _continuations[slot] = newlabel(site,''x as .binary)
-      do i = 1 to _sourcecount
-        if claim(1,0) = 0 then return
-        if _sourcefn[i] <> functionid | _sourcekind[i] = 0 then iterate
-        grouped = 0
-        if selectedgroup > 0 then grouped = facts.scopeaddress(site,_sourcerecord[i]) = selectedgroup
-        if facts.recordlive(site,_sourcerecord[i]) = 0 & grouped = 0 then iterate
-        ignored = newlabel(site,_names[i])
-        do arm = 1 to facts.argumentcases(site)
-          if claim(1,0) = 0 then return
-          if grouped | facts.argumentcaselive(site,arm,_sourcerecord[i]) then ignored = newlabel(site,_names[i],arm)
-        end
-      end
-    end
-    return
-  newlabel: method = .string
-    arg site = .int, old = .binary, arm = 0
-    candidate = .string
-    do forever
-      if guard(1,192) = 0 then return ''
-      if _serial >= 2147483647 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline label identity extent"
-      _serial = _serial + 1; candidate = '_inline.' || site || '.' || _serial
-      if contains(candidate as .binary) = 0 then leave
-      draft = dereference _owner
-      if draft.error() <> '' then return ''
-    end
-    if claim(<blen>(old) + length(candidate) + 1,<blen>(old) + length(candidate) + 56) = 0 then return ''
-    at = _labelsites[0] + 1; _labelsites[at] = site; _labelarms[at] = arm; _oldlabels[at] = old; _newlabels[at] = candidate
-    call remember(candidate as .binary)
-    return candidate
-  label: method = .string
-    arg site = .int, old = .binary, arm = 0
-    width = <blen>(old) + 1
-    if _labelsites[0] > 2147483647 / width then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline label lookup"
-    if claim(_labelsites[0] * width,0) = 0 then return ''
-    do i = 1 to _labelsites[0]
-      if _labelsites[i] <> site then iterate
-      if _labelarms[i] <> arm then iterate
-      if bincompare(_oldlabels[i],old) = 0 then return _newlabels[i]
-    end
-    assembler signal "ERROR","LL_INLINE_LABEL: missing live label mapping"
-    return ''
-  dag: method = .int
-    arg slot = .int
-    return _dag[slot]
-  continuation: method = .string
-    arg slot = .int
-    return _continuations[slot]
-  begin: method = .string
-    arg site = .int
-    _start = _bindings[0] + 1
-    return _suffixes[site]
-  observe: method = .void
-    arg fields = .object[], at = .llir..origin
-    i = .int; k = .int; found = .int; opened = .int; held = .int; width = .int; name = .lltarget..operand; value = .lltarget..operand
-    if fields[0] <> 1 & fields[0] <> 4 then return
-    name = fields[1] as .lltarget..operand; opened = fields[0] = 4; found = 0
-    width = name.length() + 1; count = _bindings[0] - _start + 1
-    if count > 2147483647 / width then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata binding work"
-    if claim(count * width,0) = 0 then return
-    do i = _start to _bindings[0]
-      if bincompare(_bindings[i],name.bytes()) = 0 then found = i
-    end
-    if found = 0 & opened then do
-      if claim(name.length() + 1,name.length() + 32) = 0 then return
-      found = _bindings[0] + 1; _bindings[found] = name.bytes()
-    end
-    if found > 0 then do
-      _active[found] = opened
-      if opened then do
-        held = 320
-        do k = 1 to 4
-          value = fields[k] as .lltarget..operand
-          if value.length() > (2147483647 - held) / 2 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata opening bytes"
-          held = held + value.length() * 2
-        end
-        if claim(held + 4,held) = 0 then return
-        do k = 1 to 4; _opening[(found - 1) * 4 + k] = fields[k] as .lltarget..operand; end
-        _openorigin[found] = at
-      end
-    end
-    return
-  checkpoint: method = .void
-    i = .int; k = .int; held = .int; width = .int
-    _entrycount = _bindings[0] - _start + 1
-    if _entrycount > 2147483647 / 400 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata checkpoint"
-    if claim(_entrycount * 8,_entrycount * 400) = 0 then return
-    do i = 1 to _entrycount
-      _entryactive[i] = _active[_start + i - 1]
-      if _entryactive[i] = 0 then iterate
-      held = 0
-      do k = 1 to 4
-        width = _opening[(_start + i - 2) * 4 + k].length()
-        if width > (2147483647 - held) / 2 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata checkpoint bytes"
-        held = held + width * 2
-      end
-      if claim(held + 4,held) = 0 then return
-      do k = 1 to 4; _entryfields[(i - 1) * 4 + k] = _opening[(_start + i - 2) * 4 + k]; end
-      _entryorigin[i] = _openorigin[_start + i - 1]
-    end
-    return
-  /** Legacy linear admission has an exact emitted incoming checkpoint too.
-   * Restore it through the same delta owner, before any authored group row. */
-  resume: method = .void
-    arg body = .lltarget..bodydraft, expose code = .emitter, at = .llir..origin
-    i = .int; k = .int; count = .int; held = .int; width = .int
-    fields = .object[]; origins = .llir..origin[]
-    do i = 1 to _entrycount
-      if claim(1,0) = 0 then return
-      if _entryactive[i] = 0 then iterate
-      if claim(8,384) = 0 then return
-      held = 0
-      do k = 1 to 4
-        width = _entryfields[(i - 1) * 4 + k].length()
-        if width > (2147483647 - held) / 2 then assembler signal "ERROR","LL_RESOURCE_LIMIT: inline metadata resume bytes"
-        held = held + width * 2
-      end
-      if claim(held + 4,held) = 0 then return
-      count = count + 1
-      do k = 1 to 4; fields[(count - 1) * 4 + k] = _entryfields[(i - 1) * 4 + k] as .object; end
-      origins[count] = _entryorigin[i]
-    end
-    call reconcile(body,code,fields,origins,at)
-    return
-  /** Reconcile already-proved mapped descriptors, without interpreting source
-   * scopes again. One distinct carrier precedes the untouched authored group. */
-  reconcile: method = .void
-    arg body = .lltarget..bodydraft, expose code = .emitter, desired = .object[], origins = .llir..origin[], at = .llir..origin
-    i = .int; j = .int; k = .int; found = .int; changed = .int; equal = .int; ignored = .int
-    name = .lltarget..operand; value = .lltarget..operand; old = .lltarget..operand; fields = .object[]
-    do i = _start to _bindings[0]
-      if claim(1,0) = 0 then return
-      if _active[i] = 0 then iterate
-      found = 0
-      do j = 1 to origins[0]
-        name = desired[(j - 1) * 4 + 1] as .lltarget..operand
-        if claim(name.length() + <blen>(_bindings[i]) + 1,0) = 0 then return
-        if bincompare(name.bytes(),_bindings[i]) = 0 then found = 1
-      end
-      if found then iterate
-      if claim(<blen>(_bindings[i]) + 1,<blen>(_bindings[i]) + 64) = 0 then return
-      call objectarraydrop fields
-      fields[1] = .lltarget..operand.string(_bindings[i]) as .object
-      ignored = body.record('.meta',fields,at); call observe(fields,at); changed = 1
-    end
-    do j = 1 to origins[0]
-      name = desired[(j - 1) * 4 + 1] as .lltarget..operand; found = 0; equal = 0
-      do i = _start to _bindings[0]
-        if claim(name.length() + <blen>(_bindings[i]) + 1,0) = 0 then return
-        if _active[i] & bincompare(name.bytes(),_bindings[i]) = 0 then found = i
-      end
-      if found > 0 then do
-        equal = 1
-        do k = 1 to 4
-          value = desired[(j - 1) * 4 + k] as .lltarget..operand; old = _opening[(found - 1) * 4 + k]
-          if claim(value.length() + old.length() + 1,0) = 0 then return
-          if value.kind() <> old.kind() | value.bank() <> old.bank() | value.index() <> old.index() then equal = 0
-          if bincompare(value.bytes(),old.bytes()) <> 0 then equal = 0
-        end
-      end
-      if equal then iterate
-      if claim(8,320) = 0 then return
-      call objectarraydrop fields
-      do k = 1 to 4
-        value = desired[(j - 1) * 4 + k] as .lltarget..operand
-        if claim(value.length() + 1,value.length() * 2) = 0 then return
-        fields[k] = value as .object
-      end
-      ignored = body.record('.meta',fields,origins[j]); call observe(fields,origins[j]); changed = 1
-    end
-    if changed then do
-      if claim(1,64) = 0 then return
-      call objectarraydrop fields
-      ignored = code.emit(body,'cnop',fields,at)
-    end
-    return
-  hasbindings: method = .int
-    if claim(_bindings[0] - _start + 1,0) = 0 then return 0
-    do i = _start to _bindings[0]
-      if _active[i] then return 1
-    end
-    return 0
-  closings: method = .int
-    return _bindings[0] - _start + 1
-  active: method = .int
-    arg ordinal = .int
-    return _active[_start + ordinal - 1]
-  name: method = .binary
-    arg ordinal = .int
-    return _bindings[_start + ordinal - 1]
-/** Original encoded-slot ordinal, independent of active storage/permutation. */
-slotordinal: procedure = .int
-  arg value = .lltarget..operand, locals = .int, arguments = .int
-  if value.bank() = 'r' & value.index() < locals then return value.index()
-  if value.bank() = 'a' & value.index() <= arguments then return locals + value.index()
-  assembler signal "ERROR","LL_INLINE: register outside proved callee slots"
-  return -1
+registertext: procedure = .string
+  arg value = .lltarget..operand
+  if value.kind() <> 'R' then assembler signal "ERROR","LL_INLINE_RECIPE: register expected"
+  return value.bank() || value.index()
 
-mappedslot: procedure = .lltarget..operand
-  arg body = .lltarget..bodydraft, value = .lltarget..operand, base = .int, locals = .int, arguments = .int, ordered = .int
-  /* The admitted same-module profile proves canonical global bindings. These
-   * cells retain their module owner; they are outside both private r regions. */
-  if value.bank() = 'g' then return body.reg('g',value.index())
-  if ordered then return body.reg('r',base + locals + arguments + 3 + slotordinal(value,locals,arguments))
-  if value.bank() = 'r' then return body.reg('r',base + arguments + 3 + value.index())
-  if value.index() = 0 then return body.reg('r',base + arguments + 1)
-  return body.reg('r',base + value.index())
+/** Layout evidence consumes the canonical solver's capture checkpoint. The
+ * solver and its borrowed profiles live together; no view escapes this owner.
+ * One instance serves every counted child in a selected body. */
+windowcounts: class
+  _owner = reference .lltarget..module
+  _executionroot = .int
+  _executioncontext = .string
+  _transfers = .lltargettransfer..profile
+  _cfg = .lltargetcfg..graph
+  _facts = .lltargetflow..analysis
+  _status = .string
+  _message = .string
+  _work = .int
+  _limit = .int
+  _bytes = .int
+  _domain = .int
+  _prepared = .int
+  *: factory
+    arg owner = reference .lltarget..module, work = .int, bytes = .int, rootfunction = .int, executioncontext = .string
+    _owner = owner; _work = work; _limit = work; _bytes = bytes; _status = 'building'
+    _executionroot = rootfunction; _executioncontext = executioncontext
+    return
+  run: method = .void
+    if _prepared then return
+    _prepared = 1
+    if _executioncontext <> '' then _transfers = .lltargettransfer..profile.closedcalls(_owner,_executionroot,_executioncontext,_work,_bytes)
+    else _transfers = .lltargettransfer..profile(_owner,_work,_bytes)
+    _status = _transfers.status(); _message = _transfers.message(); _work = _work - _transfers.usedwork()
+    if _status <> 'ok' then return
+    _cfg = .lltargetcfg..graph(_owner,reference _transfers,_work,_bytes)
+    _status = _cfg.status(); _message = _cfg.message(); _work = _work - _cfg.usedwork()
+    if _status <> 'ok' then return
+    _facts = .lltargetflow..analysis(_owner,reference _transfers,reference _cfg,_work,_bytes)
+    _status = _facts.status(); _message = _facts.message(); _work = _work - _facts.usedwork()
+    if _status <> 'ok' then return
+    catalog = .llrxascatalog..catalog()
+    do i = 1 to _transfers.domains()
+      _work = _work - 1; domain = _transfers.domain(i)
+      if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I') then _domain = i
+    end
+    if _work < 0 then do; _status = 'limit'; _message = 'inline.child.window.work'; end
+    return
+  countat: method = .int
+    arg operation = .int, selector = .lltarget..operand
+    call run()
+    if _status <> 'ok' | _domain = 0 then return -1
+    cost = _facts.lookupcost() + 1
+    if cost > _work then do; _status = 'limit'; _message = 'inline.child.window.work'; return -1; end
+    _work = _work - cost
+    value = _facts.capturecomponentat(operation,selector.bank(),selector.index(),_domain)
+    if value.known() = 0 | value.availability() <> 'defined' then return -1
+    literal = value.literal()
+    if literal.kind() <> 'I' then return -1
+    if literal.index() < 0 then return -1
+    if literal.index() > 4096 then do
+      _status = 'limit'; _message = 'inline.child.window.argument.limit'; return -1
+    end
+    return literal.index()
+  status: method = .string
+    return _status
+  message: method = .string
+    return _message
+  usedwork: method = .int
+    return _limit - _work
+
+/** An immutable site's availability, legality and cost decisions. Executable
+ * bodies are cloned generically; optional scalar facts only omit a scope. */
+siteplan: class
+  _request = .llinline..binding
+  _shape = .llinline..callrecipe
+  _provider = .lltarget..module
+  _context = .llinline..context
+  _status = .string
+  _reason = .string
+  _scope = .int
+  _extent = .int
+  _base = .int
+  _cells = .int
+  _selected = .int
+  _work = .int
+  _bytes = .int
+  _usescount = .int
+  _globalpositions = .int[]
+  _globalslots = .int
+  _contiguous = .int
+  _prepared = .int
+  *: factory
+    arg request = .llinline..binding, selected = .llinline..context, work = .int, bytes = .int
+    _request = request; _context = selected; _status = 'keep'; _scope = 1; _selected = -1; _work = work; _bytes = bytes
+    return
+  prepare: method = .void
+    if _prepared then return
+    _prepared = 1; request = _request; selected = _context
+    j = .int; n = .int; g = .int; targetid = .int; packed = .int
+    childcounts = .windowcounts; outercounts = .windowcounts; counter = .lltarget..operand
+    childready = 0; childcharged = 0; outercharged = 0; outerchecked = 0; outercount = -1
+    childcount = .int; lastargument = .int
+    _shape = .callrecipe(request)
+    if _shape.status() <> 'ok' then do; _status = _shape.status(); _reason = _shape.reason(); return; end
+    if selected.policy() = 'never' then do; _reason = 'policy.disabled'; return; end
+    caller_ref = request.caller(); provider_ref = request.provider(); source = dereference caller_ref
+    if (caller_ref <refsame> provider_ref) = 0 then do
+      _selected = selected.selected(request)
+      if _selected < 0 then do; _reason = 'binding.unsealed'; return; end
+    end
+    original = source.at(request.callid())
+    if selected.normalized(caller_ref,original.procedureid()) = 0 then do; _reason = selected.normalizationreason(caller_ref,original.procedureid()); return; end
+    if selected.normalized(provider_ref,request.bodyid()) = 0 then do; _reason = selected.normalizationreason(provider_ref,request.bodyid()); return; end
+    if _shape.kind() <> 1 then do; _reason = 'call.dynamic.selection.proof.unfinished'; return; end
+    provider = dereference provider_ref; _provider = provider
+    /* A body borrows its module's graph. Do not retain that borrowed view in
+     * a plan that is subsequently stored/copied by the batch owner. */
+    body = _provider.body(request.bodyid()); called = _shape.target()
+    if _selected < 0 then do
+      targetid = source.procedureid(called.text())
+      if targetid = 0 then do; _reason = 'body.unavailable'; return; end
+      if targetid <> request.bodyid() then do; _status = 'invalid'; _reason = 'binding.target.mismatch'; return; end
+    end
+    else if selected.procedurename(provider_ref,request.bodyid()) = '' then do; _reason = 'binding.procedure.unsealed'; return; end
+    original = source.at(request.callid())
+    if _selected < 0 & original.procedureid() = request.bodyid() then do; _reason = 'policy.recursion'; return; end
+    catalog = .llrxascatalog..catalog(); value = .lltarget..operand
+    _extent = _shape.actuals(); plain = _selected < 0 & _shape.counted() = 0 & _shape.prefix() = ''
+    lastfallthrough = 0
+    do n = 1 to body.records()
+      _work = _work - 1
+      if _work < 0 then do; _status = 'limit'; _reason = 'inline.work'; return; end
+      item = body.record(n)
+      do j = 1 to item.registerrefs()
+        _work = _work - 1; value = item.registerref(j)
+        if value.bank() = 'a' then do
+          _extent = max(_extent,value.index())
+          if value.index() = 0 then _usescount = 1
+        end
+        if value.bank() = 'g' then do
+          plain = 0
+          if _globalpositions[value.index() + 1] = 0 then do
+            _globalslots = _globalslots + 1; _globalpositions[value.index() + 1] = _globalslots
+          end
+        end
+      end
+      if item.kind() <> 'instruction' then do
+        if item.kind() = '.meta' | item.kind() = '.traceevent' then plain = 0
+        iterate
+      end
+      opcode = item.opcode(); _cells = _cells + 1 + item.operands()
+      if catalog.clonecategory(opcode) = 0 then do; _reason = 'profile.effect.contract.missing'; return; end
+      if catalog.observations(opcode) <> 0 & catalog.observations(opcode) <> 512 then do; _reason = 'observation.physical.equivalent.unproved'; return; end
+      if catalog.callcount(opcode) > 0 then do
+        counter = item.operand(catalog.callwindow(opcode)); packed = counter.index() + 1
+        if counter.bank() = 'g' then packed = packed + body.locals()
+        else if counter.bank() = 'a' then packed = packed + body.locals() + _provider.globals()
+        if _shape.counted() then do
+          if childready = 0 then do; childcounts = .windowcounts(provider_ref,_work,_bytes,selected.executionroot(provider_ref),selected.executioncontext(provider_ref)); childready = 1; end
+          counter = item.operand(catalog.callcount(opcode)); childcount = childcounts.countat(item.id(),counter)
+          _work = _work - childcounts.usedwork() + childcharged; childcharged = childcounts.usedwork()
+          if childcounts.status() <> 'ok' then do; _status = childcounts.status(); _reason = childcounts.message(); return; end
+          if _work < 0 then do; _status = 'limit'; _reason = 'inline.child.window.work'; return; end
+          if childcount < 0 then do; _reason = 'child.argument.count.unproved'; return; end
+          lastargument = packed + childcount - 1 - body.locals() - _provider.globals()
+          if childcount > 0 & lastargument > 0 then do
+            if outerchecked = 0 then do
+              outerchecked = 1
+              if caller_ref <refsame> provider_ref then do
+                outercount = childcounts.countat(request.callid(),_shape.count())
+                _work = _work - childcounts.usedwork() + childcharged; childcharged = childcounts.usedwork()
+                if childcounts.status() <> 'ok' then do; _status = childcounts.status(); _reason = childcounts.message(); return; end
+              end
+              else do
+                outercounts = .windowcounts(caller_ref,_work,_bytes,selected.executionroot(caller_ref),selected.executioncontext(caller_ref))
+                outercount = outercounts.countat(request.callid(),_shape.count())
+                _work = _work - outercounts.usedwork() + outercharged; outercharged = outercounts.usedwork()
+                if outercounts.status() <> 'ok' then do; _status = outercounts.status(); _reason = outercounts.message(); return; end
+              end
+            end
+            if _work < 0 then do; _status = 'limit'; _reason = 'inline.child.window.work'; return; end
+            if outercount < 0 then do; _reason = 'child.argument.outer-count.unproved'; return; end
+            if lastargument > outercount then do; _reason = 'child.argument.window.outside.captured.frame'; return; end
+            _extent = max(_extent,lastargument)
+          end
+        end
+        /* Keep the original physical prefix, rather than compressing globals
+         * that an implicit child window can cross without spelling them. */
+        _contiguous = 1
+        do g = max(0,packed - body.locals()) to _provider.globals() - 1
+          if _globalpositions[g + 1] = 0 then do; _globalslots = _globalslots + 1; _globalpositions[g + 1] = _globalslots; end
+        end
+      end
+      if catalog.implicit(opcode) <> 0 & catalog.binding(opcode) <> 4 & catalog.callkind(opcode) = 0 & catalog.recipeoperand(opcode) = 0 then do; _reason = 'normalization.explicit.operands.required'; return; end
+      if catalog.signalstate(opcode) <> 0 | catalog.binding(opcode) <> 0 | catalog.callkind(opcode) <> 0 | catalog.contextwritemask(opcode) <> 0 | catalog.implicit(opcode) <> 0 | catalog.observations(opcode) <> 0 then plain = 0
+      do j = 1 to item.operands()
+        _work = _work - 1; value = item.operand(j)
+        if value.kind() = 'P' & _selected >= 0 then do
+          if left(value.text(),1) <> '@' then do
+            targetid = _provider.procedureid(value.text())
+            if targetid = 0 then do
+              if selected.calltarget(provider_ref,item.id()) = '' then do; _reason = 'binding.child.procedure.unsealed'; return; end
+            end
+            else if selected.procedurename(provider_ref,targetid) = '' then do; _reason = 'binding.child.procedure.unsealed'; return; end
+          end
+        end
+        if value.kind() = 'R' & catalog.writes(opcode,j) then do
+          if value.bank() <> 'r' | catalog.definitioncomponents(opcode,j) < 1 | catalog.definitioncomponents(opcode,j) > 3 then plain = 0
+        end
+      end
+      lastfallthrough = catalog.flow(opcode) = 0 | lltarget..normalfallthrough(opcode)
+    end
+    if _work < 0 then do; _status = 'limit'; _reason = 'inline.work'; return; end
+    if lastfallthrough then do; _reason = 'body.fallthrough.unproved'; return; end
+    if _contiguous then do
+      do g = 0 to _provider.globals() - 1
+        if _globalpositions[g + 1] > 0 then _globalpositions[g + 1] = g + 1
+      end
+      _globalslots = _provider.globals()
+    end
+    if plain & selected.scopefree(request) then _scope = 0
+    if _scope & catalog.find('inlenter','RPSL') < 0 then do; _reason = 'runtime.activation.contract.unavailable'; return; end
+    growth = _cells + _scope * 5 + _globalslots * 4 - original.operands() - 1
+    if selected.policy() = 'default' & growth > 128 then do; _reason = 'policy.code.growth'; return; end
+    _status = 'legal'; _reason = 'generic.target.recipe'
+    return
+  status: method = .string
+    call prepare()
+    return _status
+  reason: method = .string
+    return _reason
+  remaining: method = .int
+    call prepare()
+    return _work
+  slots: method = .int
+    body = _provider.body(_request.bodyid())
+    if _scope = 0 then return max(1,body.locals() + _usescount)
+    return body.locals() + _globalslots + _extent + 2
+  globalposition: method = .int
+    arg index = .int
+    return _globalpositions[index + 1] - 1
+  usescount: method = .int
+    return _usescount
+  place: method = .void
+    arg base = .int
+    _base = base
+    return
+  scoped: method = .int
+    return _scope
+  body: method = .lltarget..body
+    return _provider.body(_request.bodyid())
+  provider: method = .lltarget..module
+    return _provider
+  shape: method = .llinline..callrecipe
+    return _shape
+  base: method = .int
+    return _base
+  extent: method = .int
+    return _extent
+  selected: method = .int
+    return _selected
+  suffix: method = .string
+    arg source = .lltarget..module, site = .int, draft = reference .lltarget..draft
+    serial = 0; collision = .int; item = .lltarget..record; value = .lltarget..operand
+    owner = dereference draft
+    do forever
+      serial = serial + 1; suffix = '.llinl.' || site || '.' || serial; collision = 0
+      do which = 1 to 2
+        module = source
+        if which = 2 then module = _provider
+        do n = 1 to module.records()
+          if owner.preflight(1,0) = 0 then return ''
+          item = module.record(n)
+          if item.kind() <> 'label' & item.kind() <> '.meta' then iterate
+          if item.operands() = 0 then iterate
+          value = item.operand(1)
+          if pos(suffix,value.text()) > 0 then do; collision = 1; leave; end
+        end
+        if collision then leave
+      end
+      if collision = 0 then return suffix
+    end
+    return ''
+  mapped: method = .lltarget..operand
+    arg value = .lltarget..operand, target = .lltarget..bodydraft
+    if value.kind() <> 'R' then return value
+    body = _provider.body(_request.bodyid())
+    index = value.index()
+    if _scope = 0 & value.bank() = 'a' & index > 0 then do
+      if index > _shape.actuals() then assembler signal "ERROR","LL_INLINE_RECIPE: unavailable plain argument"
+      actual = _shape.actual(index); return target.reg(actual.bank(),actual.index())
+    end
+    if value.bank() = 'g' then index = body.locals() + globalposition(index)
+    else if value.bank() = 'a' then index = index + body.locals() + _globalslots
+    return target.reg('r',_base + index)
+  fields: method = .object[]
+    arg item = .lltarget..record, target = .lltarget..bodydraft, suffix = .string, steps = .int[], clauses = .int[]
+    j = .int
+    replacements = .object[]; value = .lltarget..operand; catalog = .llrxascatalog..catalog()
+    do j = 1 to item.registerrefs(); replacements[j] = mapped(item.registerref(j),target) as .object; end
+    fields = lltarget..remapregisters(item,replacements)
+    do j = 1 to fields[0]
+      value = fields[j] as .lltarget..operand
+      if value.kind() = 'L' & (item.kind() = 'label' | item.kind() = 'instruction') then fields[j] = .lltarget..operand.symbol(value.text() || suffix) as .object
+      else if value.kind() = 'P' & _selected >= 0 & left(value.text(),1) <> '@' then do
+        provider_ref = _request.provider(); functionid = _provider.procedureid(value.text())
+        if functionid > 0 then name = _context.procedurename(provider_ref,functionid)
+        else name = _context.calltarget(provider_ref,item.id())
+        fields[j] = .lltarget..operand.procedure(name) as .object
+      end
+      else if item.kind() = 'instruction' & catalog.relocation(item.opcode(),j) = 7 then fields[j] = .lltarget..operand.integer(_base + value.index()) as .object
+      else if item.kind() = 'instruction' & catalog.relocation(item.opcode(),j) = 11 & _selected >= 0 & value.text() = 'self' then fields[j] = .lltarget..operand.string(('@' || _selected) as .binary) as .object
+    end
+    return lltarget..remapmetadata(item,fields,suffix,steps,clauses)
+  descriptor: method = .string
+    arg item = .lltarget..record, target = .lltarget..bodydraft
+    body = _provider.body(_request.bodyid())
+    j = .int; first = .lltarget..operand; second = .lltarget..operand
+    count = _shape.count(); text = 'count='
+    if _shape.counted() then text = text || registertext(count)
+    else text = text || count.index()
+    if _shape.haswindow() then do
+      source = dereference _request.caller(); callerbody = source.body(item.procedureid()); first = _shape.window()
+      bank = first.bank(); index = first.index() + 1
+      if bank = 'r' & index >= callerbody.locals() then do
+        if source.globals() > 0 then do; bank = 'g'; index = 0; end
+        else do; bank = 'a'; index = 0; end
+      end
+      else if bank = 'g' & index >= source.globals() then do; bank = 'a'; index = 0; end
+      text = text || ';args=window(' || registertext(target.reg(bank,index)) || ')'
+    end
+    else do
+      text = text || ';args=list('
+      do j = 1 to _shape.actuals()
+        if j > 1 then text = text || ','
+        text = text || registertext(_shape.actual(j))
+      end
+      text = text || ')'
+    end
+    a0 = _base + body.locals() + _globalslots; text = text || ';a0=r' || a0 || ';proxies=('
+    do j = 1 to _extent
+      if j > 1 then text = text || ','
+      text = text || 'r' || (a0 + j) || ':' || j
+    end
+    text = text || ');owned=('
+    do j = 0 to slots() - 1
+      if j > 0 then text = text || ','
+      text = text || 'r' || (_base + j)
+    end
+    text = text || ');prep='; prefix = ''; steps = translate(_shape.prefix(),' ', ';')
+    do j = 1 to words(steps)
+      step = translate(word(steps,j),' ', ':'); action = word(step,1)
+      first = item.operand(word(step,2) as .int)
+      if action = 'clear' then operation = 'clear(' || registertext(first) || ')'
+      else do
+        second = item.operand(word(step,3) as .int)
+        if action = 'flags' then operation = 'settp(' || registertext(first) || ',' || second.index() || ')'
+        else if action = 'swap' then operation = 'swap(' || registertext(first) || ',' || registertext(second) || ')'
+        else assembler signal "ERROR","LL_INLINE_RECIPE: unknown canonical preparation"
+      end
+      if prefix <> '' then prefix = prefix || '+'
+      prefix = prefix || operation
+    end
+    if prefix = '' then prefix = 'none'
+    text = text || prefix
+    if _shape.hasresult() = 0 then text = text || ';result=ignored'
+    return text
+
+/** One bounded atomic target transformation. Normalization certificates refer
+ * to frozen input owners, so prior output cannot silently replace a provider. */
+expandcontext: procedure = .llinline..change
+  arg bindings = .object[], selected = .llinline..context, work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
+  request = .binding; previous = .binding; plan = .siteplan; shape = .callrecipe
+  source = .lltarget..module; provider = .lltarget..module; body = .lltarget..body; target = .lltarget..bodydraft
+  item = .lltarget..record; child = .lltarget..record; field = .lltarget..operand; destination = .lltarget..operand
+  at = .llir..origin; childat = .llir..origin; plans = .object[]; decisions = .object[]; sites = .int[]; empty = .int[]
+  localcounts = .int[]; accepted = .int[]; mappings = .int[]; callers = .int[]; seen = .int[]
+  sources = .object[]; origins = .object[]; childsources = .object[]; childorigins = .object[]; bodies = .object[]
+  fields = .object[]; steps = .int[]; clauses = .int[]; metanames = .binary[]; metaactive = .int[]
+  contributors = .object[]; file = .llir..sourcefile; emptybinary = .binary[]
+  checkpoint = .int[]; filecheckpoint = .int[]; linecheckpoint = .int[]
+  i = .int; j = .int; n = .int; ordinal = .int; count = .int; higheststep = .int; highestclause = .int
+  code = .emitter; draft = .lltarget..draft; catalog = .llrxascatalog..catalog()
+  if bindings[0] = 0 then return .change('keep','binding.empty')
+  if bindings[1] is .binding then request = bindings[1] as .binding
+  else return .change('invalid','binding.type')
+  if request.valid() = 0 then return .change('invalid','binding.expired')
+  owner = request.caller(); source = dereference owner
+  if selected.status() <> 'ok' then return .change(selected.status(),selected.reason(),source,empty)
+  if work < 1 | entries < 1 | bytes < 1 | frame < 0 | cells < 1 then return .change('limit','inline.allowances',source,empty)
+  graph = dereference source.ir(); tablebytes = graph.operations() * 48 + graph.functions() * 32 + bindings[0] * 512
+  if tablebytes < 0 | tablebytes >= bytes then return .change('limit','inline.tables',source,empty)
+  bytes = bytes - tablebytes
+  do
+    do i = 1 to source.procedures()
+      body = source.procedure(i); localcounts[body.functionid()] = body.locals()
+    end
+    do i = 1 to bindings[0]
+      if bindings[i] is .binding then request = bindings[i] as .binding
+      else return .change('invalid','binding.type',source,empty)
+      if request.valid() = 0 then return .change('invalid','binding.expired',source,empty)
+      caller_ref = request.caller()
+      if (caller_ref <refsame> owner) = 0 then return .change('invalid','binding.foreign.caller',source,empty)
+      do j = 1 to i - 1
+        previous = bindings[j] as .binding
+        if request.callid() = previous.callid() then return .change('invalid','binding.duplicate.site',source,empty)
+      end
+      sites[i] = request.callid(); plan = .siteplan(request,selected,work,bytes); work = plan.remaining()
+      decisions[i] = .decision(plan.status(),plan.reason()) as .object
+      if plan.status() = 'invalid' | plan.status() = 'limit' then return .change(plan.status(),plan.reason(),source,empty,callers,sites,decisions)
+      if plan.status() <> 'legal' then iterate
+      item = source.at(request.callid()); fn = item.procedureid()
+      if plan.slots() > frame - localcounts[fn] then do; decisions[i] = .decision('keep','policy.register.growth') as .object; iterate; end
+      call plan.place(localcounts[fn]); plans[i] = plan as .object
+      localcounts[fn] = localcounts[fn] + plan.slots()
+      accepted[item.id()] = i; count = count + 1; decisions[i] = .decision('changed',plan.reason()) as .object
+    end
+    if count = 0 then return .change('keep','inline.no.selected.site',source,empty,callers,sites,decisions)
+    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work); code = .emitter(cells); graph_ref = source.ir()
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() = '.srcstep' then do
+        field = item.operand(1); higheststep = max(higheststep,field.index())
+        field = item.operand(2); highestclause = max(highestclause,field.index())
+      end
+      else if item.kind() = '.traceevent' then do
+        field = item.operand(7); higheststep = max(higheststep,field.index())
+        field = item.operand(8); highestclause = max(highestclause,field.index())
+      end
+    end
+    do i = 1 to source.records()
+      if draft.preflight(1,0) = 0 then return .change('limit',draft.error(),source,empty,callers,sites,decisions)
+      item = source.record(i); at = copyorigin(graph_ref,item.origin(),reference draft,reference sources,reference origins)
+      if item.kind() = 'procedure' then do
+        body = source.body(item.procedureid()); target = draft.procedure(body.name(),localcounts[item.procedureid()],at,body.expose())
+        bodies[item.procedureid()] = target as .object; mappings[item.id()] = target.headerid(); iterate
+      end
+      if item.procedureid() = 0 then do
+        call objectarraydrop fields
+        do j = 1 to item.operands(); fields[j] = item.operand(j) as .object; end
+        mappings[item.id()] = draft.record(item.kind(),fields,at); iterate
+      end
+      target = bodies[item.procedureid()] as .lltarget..bodydraft
+      if item.kind() = '.srcstep' then checkpoint[item.procedureid()] = item.id()
+      if item.kind() = '.file' then filecheckpoint[item.procedureid()] = item.id()
+      if item.kind() = '.line' then linecheckpoint[item.procedureid()] = item.id()
+      ordinal = accepted[item.id()]
+      if ordinal = 0 then do
+        fields = clonefields(item,target)
+        if item.kind() = 'instruction' then mappings[item.id()] = code.emit(target,item.mnemonic(),fields,at)
+        else mappings[item.id()] = target.record(item.kind(),fields,at)
+        iterate
+      end
+      request = bindings[ordinal] as .binding; plan = plans[ordinal] as .siteplan; shape = plan.shape(); provider = plan.provider(); body = plan.body()
+      provider_ref = request.provider(); providergraph = provider.ir(); suffix = plan.suffix(source,item.id(),reference draft); after = 'llinl.after' || suffix
+      if suffix = '' then return .change('limit',draft.error(),source,empty,callers,sites,decisions)
+      if shape.hasresult() then do; field = shape.result(); destination = target.reg(field.bank(),field.index()); end
+      else destination = target.reg('r',plan.base() + plan.slots() - 1)
+      if plan.scoped() then do
+        call objectarraydrop fields; fields[1] = destination as .object; field = shape.target()
+        if plan.selected() >= 0 then field = .lltarget..operand.procedure(selected.procedurename(provider_ref,request.bodyid()))
+        fields[2] = field as .object; text = plan.descriptor(item,target)
+        if draft.preflight(length(text),length(text) * 2) = 0 then return .change('limit',draft.error(),source,empty,callers,sites,decisions)
+        fields[3] = .lltarget..operand.string(text as .binary) as .object; fields[4] = .lltarget..operand.symbol(after) as .object
+        mappings[item.id()] = code.emit(target,'inlenter',fields,at)
+        do j = 0 to provider.globals() - 1
+          if plan.globalposition(j) < 0 then iterate
+          call objectarraydrop fields; fields[1] = target.reg('r',plan.base() + body.locals() + plan.globalposition(j)) as .object
+          selector = 'self'; if plan.selected() >= 0 then selector = '@' || plan.selected()
+          fields[2] = .lltarget..operand.string(selector as .binary) as .object; fields[3] = .lltarget..operand.integer(j) as .object
+          ignored = code.emit(target,'qglobbind',fields,at)
+        end
+      end
+      else do
+        mappings[item.id()] = 0
+        if plan.usescount() then ignored = code.two(target,'load',target.reg('r',plan.base() + body.locals()),.lltarget..operand.integer(shape.actuals()),at)
+      end
+      steps = empty; clauses = empty; metanames = emptybinary; metaactive = empty
+      call objectarraydrop childsources
+      call objectarraydrop childorigins
+      do n = 1 to body.records()
+        child = body.record(n)
+        if child.kind() = '.srcstep' then do
+          field = child.operand(1); call freshidentity(steps,field.index(),higheststep)
+          field = child.operand(2); call freshidentity(clauses,field.index(),highestclause)
+        end
+        else if child.kind() = '.traceevent' then do
+          field = child.operand(7); call freshidentity(steps,field.index(),higheststep)
+          field = child.operand(8); call freshidentity(clauses,field.index(),highestclause)
+        end
+      end
+      do n = 1 to body.records()
+        if draft.preflight(1,0) = 0 then return .change('limit',draft.error(),source,empty,callers,sites,decisions)
+        child = body.record(n)
+        if child.kind() = 'procedure' then iterate
+        if child.kind() = '.meta' & (child.operands() = 3 | child.operands() = 5) then iterate
+        childat = copyorigin(providergraph,child.origin(),reference draft,reference childsources,reference childorigins)
+        providerir = dereference providergraph; providerstore = dereference providerir.storage(); oldat = child.origin()
+        fileid = providerstore.get(9,oldat.id(),1); file = childsources[fileid] as .llir..sourcefile
+        call objectarraydrop contributors; contributors[1] = childat as .object; contributors[2] = at as .object
+        childat = draft.contributingorigin(file,oldat.first(),oldat.last(),'composite',contributors)
+        fields = plan.fields(child,target,suffix,steps,clauses)
+        if child.kind() = '.meta' & (child.operands() = 1 | child.operands() = 4) then do
+          field = fields[1] as .lltarget..operand; found = 0
+          do j = 1 to metanames[0]
+            if bin2x(metanames[j]) == bin2x(field.bytes()) then do; found = j; leave; end
+          end
+          if found = 0 then do; found = metanames[0] + 1; metanames[found] = field.bytes(); end
+          metaactive[found] = child.operands() = 4
+        end
+        if child.kind() <> 'instruction' then do; ignored = target.record(child.kind(),fields,childat); iterate; end
+        returnkind = catalog.returnkind(child.opcode())
+        if returnkind > 0 & plan.scoped() = 0 then do
+          if returnkind > 1 & shape.hasresult() then do
+            field = fields[catalog.returnsource(child.opcode())] as .lltarget..operand; operation = 'load'
+            if returnkind = 2 then do
+              original = child.operand(catalog.returnsource(child.opcode())); operation = 'copy'
+              if original.bank() = 'r' then operation = 'move'
+            end
+            ignored = code.two(target,operation,destination,field,childat)
+          end
+          ignored = code.one(target,'br',.lltarget..operand.symbol(after),childat)
+        end
+        else if catalog.binding(child.opcode()) = 4 then ignored = code.emit(target,'linkargv',fields,childat)
+        else ignored = code.emit(target,child.mnemonic(),fields,childat)
+      end
+      call objectarraydrop fields; fields[1] = .lltarget..operand.symbol(after) as .object; ignored = target.record('label',fields,at)
+      do j = 1 to metanames[0]
+        if metaactive[j] = 0 then iterate
+        call objectarraydrop fields; fields[1] = .lltarget..operand.string(metanames[j]) as .object; ignored = target.record('.meta',fields,at)
+      end
+      do j = 1 to 3
+        restored = checkpoint[item.procedureid()]
+        if j = 1 then restored = filecheckpoint[item.procedureid()]
+        else if j = 2 then restored = linecheckpoint[item.procedureid()]
+        if restored > 0 then do
+          originalrecord = source.at(restored); fields = clonefields(originalrecord,target)
+          ignored = target.record(originalrecord.kind(),fields,at)
+        end
+      end
+      if seen[item.procedureid()] = 0 then do; seen[item.procedureid()] = 1; callers[callers[0] + 1] = target.functionid(); end
+    end
+    if draft.error() <> '' then return .change('invalid',draft.error(),source,empty,callers,sites,decisions)
+    if code.error() <> '' then return .change('limit',code.error(),source,empty,callers,sites,decisions)
+    result = draft.finish()
+    if result.valid() = 0 then return .change('invalid',result.error(),source,empty,callers,sites,decisions)
+    do i = 1 to bindings[0]
+      request = bindings[i] as .binding
+      if request.valid() = 0 then return .change('invalid','binding.expired.before.publication',source,empty,callers,sites,decisions)
+    end
+    return .change('changed','generic.target.recipe',result,mappings,callers,sites,decisions)
+  on signal as problem
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
+    return .change(status,'LL_INLINE: ' || problem.name() || ': ' || problem.message(),source,empty,callers,sites,decisions)
+  end
+  return .change('invalid','inline.no.result',source,empty,callers,sites,decisions)
+
+/** Legacy entry points are normalization/identity adapters to the same core.
+ * Their old profile names do not assert root signal or scalar-body facts. */
+compatibility: class
+  _source = .lltarget..module
+  _original = .lltarget..module
+  _input = .object[]
+  _normalized = .lltargetnormalize..change
+  *: factory
+    arg bindings = .object[]
+    _input = bindings
+    return
+  run: method = .llinline..change
+    arg work = .int, entries = .int, bytes = .int, frame = .int, cells = .int
+    i = .int
+    request = .binding; first = .binding; current = .binding; checked = .decision
+    bindings = .object[]; decisions = .object[]; sites = .int[]; mapping = .int[]; callers = .int[]; empty = .int[]; warnings = .object[]
+    if _input[0] = 0 then return .change('keep','binding.empty')
+    if _input[1] is .binding then first = _input[1] as .binding
+    else return .change('invalid','binding.type')
+    if first.valid() = 0 then return .change('invalid','binding.expired')
+    originalowner = first.caller(); original = dereference originalowner; _original = original; _source = _original
+    _normalized = normalize(reference _source,work,bytes); status = _normalized.status()
+    do i = 1 to _input[0]
+      if _input[i] is .binding then request = _input[i] as .binding
+      else return .change('invalid','binding.type',_original,empty)
+      if request.valid() = 0 then return .change('invalid','binding.expired',_original,empty)
+      owner = request.caller()
+      if (owner <refsame> originalowner) = 0 then return .change('invalid','binding.foreign.caller',_original,empty)
+      sites[i] = request.callid(); decisions[i] = .decision('keep',_normalized.reason()) as .object
+    end
+    if status <> 'changed' & status <> 'keep' then return .change(status,_normalized.reason(),_original,empty,callers,sites,decisions)
+    if status = 'changed' then _source = _normalized.result()
+    selected = .context('assembler','default')
+    if selected.certify(reference _source,_normalized) = 0 then return .change('invalid','normalization.certificate.invalid',_original,empty)
+    do i = 1 to _input[0]
+      request = _input[i] as .binding; provider_ref = request.provider(); provider = dereference provider_ref
+      if (provider_ref <refsame> originalowner) then do
+        oldbody = _original.body(request.bodyid()); functionid = _source.procedureid(oldbody.name())
+        bindings[i] = .binding(reference _source,_normalized.operation(request.callid()),reference _source,functionid) as .object
+      end
+      else bindings[i] = .binding(reference _source,_normalized.operation(request.callid()),provider_ref,request.bodyid()) as .object
+    end
+    changed = expandcontext(bindings,selected,work,entries,bytes,frame,cells)
+    do i = 1 to _input[0]
+      request = _input[i] as .binding
+      decisions[i] = .decision(changed.statusat(_normalized.operation(request.callid())),changed.reasonat(_normalized.operation(request.callid()))) as .object
+    end
+    if changed.status() = 'invalid' | changed.status() = 'limit' then return .change(changed.status(),changed.reason(),_original,empty,callers,sites,decisions)
+    if changed.status() = 'keep' & status <> 'changed' then return .change('keep',changed.reason(),_original,empty,callers,sites,decisions)
+    do i = 1 to _original.records()
+      item = _original.record(i); mapping[item.id()] = changed.operation(_normalized.operation(item.id()))
+    end
+    do i = 1 to changed.callers(); callers[i] = changed.caller(i); end
+    do i = 1 to _normalized.warnings(); warnings[i] = _normalized.warning(i) as .object; end
+    return .change('changed',changed.reason(),changed.result(),mapping,callers,sites,decisions,warnings)
 
 expand: procedure = .llinline..change
   arg request = .llinline..binding, profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
@@ -577,1774 +1193,5 @@ expand: procedure = .llinline..change
 
 expandmany: procedure = .llinline..change
   arg bindings = .object[], profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
-  request = .binding; selected = .lltarget..record
-  do i = 1 to bindings[0]
-    if bindings[i] is .binding then do
-      request = bindings[i] as .binding
-      if request.valid() then do
-        source = dereference request.caller(); selected = source.at(request.callid())
-        if fusedform(selected) > 0 then return expandfusedmany(bindings,profile,work,entries,bytes,frame,cells)
-      end
-    end
-  end
-  if profile = 'closed-main-static-exact-default-halt.v1' then return expandimports(bindings,work,entries,bytes,frame,cells)
-  return expandlocalmany(bindings,profile,work,entries,bytes,frame,cells)
-
-/** Canonical signatures, not a mnemonic-only interpretation of opaque calls. */
-fusedform: procedure = .int
-  arg item = .lltarget..record
-  if item.valid() = 0 then return 0
-  if item.kind() <> 'instruction' then return 0
-  catalog = .llrxascatalog..catalog(); opcode = item.opcode()
-  if opcode = catalog.find('swapcall','RPRRR') then return 1
-  if opcode = catalog.find('settpswapcall','RPRRIR') then return 2
-  if opcode = catalog.find('settpcall','RPRRI') then return 3
-  return 0
-
-/** One request owns all stages. Work quarters cover discovery/tables/maps,
- * projection construction/validation, ordinary proof/expansion and translation.
- * Entries/bytes are partitioned among tables, projection and expanded owner;
- * encoded cells between the two code owners. Unused quotas are not borrowed. */
-fusedprojection: class
-  _input = .object[]
-  _owner = reference .lltarget..module
-  _module = .lltarget..module
-  _operations = .int[]
-  _functions = .int[]
-  _kinds = .int[]
-  _sites = .int[]
-  _fused = .int[]
-  _same = .int[]
-  _decisions = .object[]
-  _work = .int
-  _tableentries = .int
-  _tablebytes = .int
-  _entries = .int
-  _bytes = .int
-  _cells = .int
-  _stage = .int
-  _status = .string
-  _reason = .string
-  _hasowner = .int
-  _trigger = .int
-  *: factory
-    arg bindings = .object[], work = .int, entries = .int, bytes = .int, cells = .int
-    _input = bindings; _stage = work / 4; _work = _stage
-    _entries = entries / 3; _bytes = bytes / 3; _cells = cells / 2
-    _tableentries = _entries; _tablebytes = _bytes; _status = 'building'
-    return
-  fail: method = .int
-    arg status = .string, reason = .string
-    _status = status; _reason = reason; return 0
-  spend: method = .int
-    arg count = .int
-    if count < 0 | count > _work then return fail('limit','fused.work')
-    _work = _work - count; return 1
-  reserve: method = .int
-    arg count = .int, width = .int
-    if count < 0 | width < 1 | count > _tableentries then return fail('limit','fused.entries')
-    if count > _tablebytes / width then return fail('limit','fused.bytes')
-    _tableentries = _tableentries - count; _tablebytes = _tablebytes - count * width
-    return 1
-  modelerror: method = .int
-    arg reason = .string
-    status = 'invalid'
-    if pos('LL_RESOURCE_LIMIT',reason) > 0 then status = 'limit'
-    return fail(status,reason)
-  prepare: method = .void
-    bindings = _input; request = .binding; previous = .binding
-    item = .lltarget..record; value = .lltarget..operand; body = .lltarget..body
-    draft = .lltarget..draft; targetbody = .lltarget..bodydraft; at = .llir..origin
-    fields = .object[]; prefix = .object[]; bodies = .object[]; sources = .object[]; origins = .object[]
-    i = .int; j = .int; ignored = .int; kind = .int; firstkeep = .int; root = .int
-    do
-    if bindings[0] = 0 then do; ignored = fail('keep','binding.empty'); return; end
-    if bindings[1] is .binding then request = bindings[1] as .binding
-    else do; ignored = fail('invalid','binding.type'); return; end
-    if request.valid() = 0 then do; ignored = fail('invalid','binding.expired'); return; end
-    _owner = request.caller(); _hasowner = 1; source = dereference _owner; graph = dereference source.ir(); store = dereference graph.storage()
-    if _stage < 1 | _entries < 1 | _bytes < 1 | _cells < 1 then do; ignored = fail('limit','fused.allowances'); return; end
-    /* Sparse target record IDs belong to the arena's full operation domain. */
-    if reserve(graph.operations() * 3,16) = 0 | reserve(graph.functions() * 2,64) = 0 then return
-    if reserve(store.count(8) + store.count(9),128) = 0 | reserve(bindings[0] * 12,128) = 0 then return
-    root = source.procedureid('main')
-    do i = 1 to bindings[0]
-      if spend(1 + i) = 0 then return
-      if bindings[i] is .binding then request = bindings[i] as .binding
-      else do; ignored = fail('invalid','binding.type'); return; end
-      if request.valid() = 0 then do; ignored = fail('invalid','binding.expired'); return; end
-      caller_ref = request.caller(); provider_ref = request.provider()
-      if (caller_ref <refsame> _owner) = 0 then do; ignored = fail('invalid','binding.foreign.caller'); return; end
-      do j = 1 to i - 1
-        previous = bindings[j] as .binding
-        if previous.callid() = request.callid() then do; ignored = fail('invalid','binding.duplicate.site'); return; end
-      end
-      item = source.at(request.callid())
-      if item.valid() = 0 then do; ignored = fail('invalid','call.identity'); return; end
-      if item.kind() <> 'instruction' then do; ignored = fail('invalid','call.not.instruction'); return; end
-      _sites[i] = item.id(); kind = fusedform(item); _fused[i] = kind; _same[i] = caller_ref <refsame> provider_ref
-      reason = ''
-      if root = 0 | item.procedureid() <> root then reason = 'signal.root.context.unproved'
-      else if kind = 0 & wordpos(item.mnemonic(),'call call1 call2 call3 call4') = 0 then reason = 'call.form.pending'
-      else if _same[i] = 0 then reason = 'profile.imported.body.pending'
-      else if kind > 0 then do
-        value = item.operand(2); actualbody = source.procedureid(value.text())
-        if actualbody = 0 then reason = 'body.unavailable'
-        else if actualbody <> request.bodyid() then do; ignored = fail('invalid','binding.target.mismatch'); return; end
-        else if source.globals() > 0 then reason = 'global.counted.call.pending'
-      end
-      if reason <> '' then do
-        _decisions[i] = .decision('keep',reason) as .object
-        if kind > 0 & firstkeep = 0 then firstkeep = i
-      end
-      else _decisions[i] = .decision('candidate','') as .object
-      if kind > 0 then _kinds[item.id()] = kind
-    end
-    if firstkeep > 0 then do
-      _trigger = firstkeep; checked = _decisions[firstkeep] as .decision; ignored = fail('keep',checked.reason()); return
-    end
-    /* Existing named/event handler lanes use this profile too. Do not acquire
-     * them accidentally through the ordinary-call proof after defusion. */
-    do i = 1 to source.records()
-      if spend(1) = 0 then return
-      item = source.record(i)
-      if item.procedureid() = root & item.kind() = 'instruction' then do
-        if left(item.mnemonic(),3) = 'sig' then do; ignored = fail('keep','signal.fused.scope.pending'); return; end
-      end
-    end
-    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),_entries,_bytes,_stage)
-    code = .emitter(_cells); graph_ref = source.ir()
-    do i = 1 to source.records()
-      item = source.record(i)
-      if draft.preflight(1 + item.operands() + item.registerrefs(),0) = 0 then do; ignored = modelerror(draft.error()); return; end
-      at = copyorigin(graph_ref,item.origin(),reference draft,reference sources,reference origins)
-      if draft.error() <> '' then do; ignored = modelerror(draft.error()); return; end
-      if item.kind() = 'procedure' then do
-        if draft.preflight(source.procedures(),0) = 0 then do; ignored = modelerror(draft.error()); return; end
-        body = source.body(item.procedureid()); targetbody = draft.procedure(body.name(),body.locals(),at,body.expose())
-        bodies[item.procedureid()] = targetbody as .object; _functions[item.procedureid()] = targetbody.functionid()
-        _operations[item.id()] = targetbody.headerid(); iterate
-      end
-      if item.procedureid() = 0 then do
-        call objectarraydrop fields
-        do j = 1 to item.operands(); fields[j] = item.operand(j) as .object; end
-        _operations[item.id()] = draft.record(item.kind(),fields,at); iterate
-      end
-      targetbody = bodies[item.procedureid()] as .lltarget..bodydraft; fields = clonefields(item,targetbody); kind = _kinds[item.id()]
-      if kind > 0 then do
-        if kind > 1 then do
-          call objectarraydrop prefix; prefix[1] = fields[4]; prefix[2] = fields[5]
-          ignored = code.emit(targetbody,'settp',prefix,at)
-        end
-        if kind < 3 then do
-          call objectarraydrop prefix; prefix[1] = fields[4]
-          if kind = 1 then prefix[2] = fields[5]
-          else prefix[2] = fields[6]
-          ignored = code.emit(targetbody,'swap',prefix,at)
-        end
-        call objectarraydrop prefix
-        do j = 1 to 3; prefix[j] = fields[j]; end
-        _operations[item.id()] = code.emit(targetbody,'call',prefix,at)
-      end
-      else if item.kind() = 'instruction' then _operations[item.id()] = code.emit(targetbody,item.mnemonic(),fields,at)
-      else _operations[item.id()] = targetbody.record(item.kind(),fields,at)
-      if code.error() <> '' then do; ignored = fail('limit',code.error()); return; end
-    end
-    if draft.error() <> '' then do; ignored = modelerror(draft.error()); return; end
-    _module = draft.finish()
-    if _module.valid() = 0 then do; ignored = modelerror(_module.error()); return; end
-    _status = 'ok'
-    return
-    on signal as problem
-      status = 'invalid'
-      if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
-      ignored = fail(status,'LL_FUSED: ' || problem.name() || ': ' || problem.message())
-    end
-    return
-  status: method = .string
-    return _status
-  reason: method = .string
-    return _reason
-  bindings: method = .object[]
-    result = .object[]; request = .binding; provider = reference .lltarget..module
-    do i = 1 to _input[0]
-      request = _input[i] as .binding
-      if _same[i] then result[i] = .binding(reference _module,_operations[request.callid()],reference _module,_functions[request.bodyid()]) as .object
-      else do
-        provider = request.provider()
-        result[i] = .binding(reference _module,_operations[request.callid()],provider,request.bodyid()) as .object
-      end
-    end
-    return result
-  refusal: method = .llinline..change
-    arg status = .string, reason = .string
-    request = .binding; checked = .decision
-    sites = .int[]; decisions = .object[]; empty = .int[]; callers = .int[]
-    do i = 1 to _input[0]
-      if _input[i] is .binding then do
-        request = _input[i] as .binding; sites[sites[0] + 1] = request.callid()
-        if i <= _decisions[0] then checked = _decisions[i] as .decision
-        else checked = .decision('candidate','')
-        if checked.status() <> 'keep' then do
-          if status = 'keep' & _trigger > 0 then checked = .decision('keep','batch.fused.site.retained')
-          else checked = .decision(status,reason)
-        end
-        decisions[decisions[0] + 1] = checked as .object
-      end
-    end
-    if _hasowner = 0 then return .change(status,reason)
-    source = dereference _owner
-    return .change(status,reason,source,empty,callers,sites,decisions)
-  translate: method = .llinline..change
-    arg changed = .llinline..change, work = .int
-    decisions = .object[]; mapping = .int[]; callers = .int[]; checked = .decision; request = .binding
-    source = dereference _owner; i = .int; old = .int; refused = 0
-    do i = 1 to _sites[0]
-      if work < 1 then return refusal('limit','fused.translation.work')
-      work = work - 1
-      if changed.sites() = 0 then checked = .decision(changed.status(),changed.reason())
-      else checked = .decision(changed.statusat(_operations[_sites[i]]),changed.reasonat(_operations[_sites[i]]))
-      if changed.status() <> 'changed' & checked.status() = 'changed' then checked = .decision(changed.status(),changed.reason())
-      if _fused[i] > 0 & checked.status() <> 'changed' & refused = 0 then refused = i
-      _decisions[i] = checked as .object
-    end
-    if changed.status() <> 'changed' then do
-      if changed.status() = 'keep' & refused > 0 then do
-        checked = _decisions[refused] as .decision
-        return refusal('keep',checked.reason())
-      end
-      return refusal(changed.status(),changed.reason())
-    end
-    if refused > 0 then do
-      checked = _decisions[refused] as .decision
-      do i = 1 to _decisions[0]
-        previous = _decisions[i] as .decision
-        if previous.status() = 'changed' then _decisions[i] = .decision('keep','batch.fused.site.retained') as .object
-      end
-      return refusal('keep',checked.reason())
-    end
-    do i = 1 to source.records()
-      if work < 1 then return refusal('limit','fused.translation.work')
-      work = work - 1; input = source.record(i); old = _operations[input.id()]
-      if _kinds[input.id()] > 0 then mapping[input.id()] = 0
-      else mapping[input.id()] = changed.operation(old)
-    end
-    do i = 1 to changed.callers(); callers[i] = changed.caller(i); end
-    return .change('changed','closed.root.scalar',changed.result(),mapping,callers,_sites,_decisions)
-
-expandfusedmany: procedure = .llinline..change
-  arg bindings = .object[], profile = .string, work = .int, entries = .int, bytes = .int, frame = .int, cells = .int
-  request = .binding
-  if bindings[1] is .binding then request = bindings[1] as .binding
-  else return .change('invalid','binding.type')
-  if request.valid() = 0 then return .change('invalid','binding.expired')
-  source = dereference request.caller()
-  if work < 4 | entries < 3 | bytes < 3 | cells < 2 | frame < 0 then return importrefusal(bindings,'limit','fused.allowances',source)
-  prepared = .fusedprojection(bindings,work,entries,bytes,cells)
-  call prepared.prepare()
-  if prepared.status() <> 'ok' then return prepared.refusal(prepared.status(),prepared.reason())
-  if profile <> 'closed-main-default-halt.v1' then return prepared.refusal('keep','profile.signal.policy.unproved')
-  projected = prepared.bindings()
-  changed = expandlocalmany(projected,profile,work / 4,entries / 3,bytes / 3,frame,cells / 2)
-  return prepared.translate(changed,work / 4)
-
-inspectfused: procedure = .llinline..decision
-  arg request = .binding, profile = .string, work = .int
-  bindings = .object[]; bindings[1] = request as .object
-  if work < 4 then return .decision('limit','fused.allowances')
-  prepared = .fusedprojection(bindings,work,1000000,67108864,2000000)
-  call prepared.prepare()
-  if prepared.status() <> 'ok' then return .decision(prepared.status(),prepared.reason())
-  if profile <> 'closed-main-default-halt.v1' then return .decision('keep','profile.signal.policy.unproved')
-  projected = prepared.bindings(); selected = projected[1] as .binding
-  return inspectlocal(selected,profile,work / 4)
-
-/** The sole expansion algorithm. Imported bodies enter it only after checked
- * private projection; no projected definition can reach public output. */
-expandlocalmany: procedure = .llinline..change
-  arg bindings = .object[], profile = 'unknown', work = 1000000, entries = 1000000, bytes = 67108864, frame = 65536, cells = 1000000
-  i = .int; j = .int; k = .int; a = .int; ignored = .int; count = .int; required = .int
-  locals = .int; base = .int; higheststep = .int; highestclause = .int
-  extent = .int; fileid = .int; hasresult = .int; ordered = .int; slots = .int; activebase = .int; position = .int
-  dag = .int; choice = .int; flow = .int; pairleft = .int; pairright = .int; abrupt = .int; samepair = .int
-  direct = .int; callerstep = .int
-  runtime = .int; runtimearm = .int; runtimestart = .int; runtimeextent = .int; restores = .int
-  runtimeid = .int; runtimefirst = .int; runtimegroup = .int; runtimegroupstep = .int
-  lexical = .int; scopeaddress = .int; lastscopeaddress = .int; scopeid = .int; groupalive = .int
-  desiredscopes = .object[]; desiredorigins = .llir..origin[]; emptyorigins = .llir..origin[]
-  runtimeentryscopes = .object[]; runtimeentryorigins = .llir..origin[]
-  scoperecord = .lltarget..record; scopeorigin = .llir..origin; carrierorigin = .llir..origin
-  caseLabels = .string[]; compare = .lltarget..operand; selectorcopy = .lltarget..operand
-  catalog = .llrxascatalog..catalog
-  scope = .string; status = .string; action = .string; scopes = .metascopes
-  request = .binding; selected = .lltarget..record; input = .lltarget..record; childrecord = .lltarget..record; swaprecord = .lltarget..record
-  field = .lltarget..operand; oldresult = .lltarget..operand; value = .lltarget..operand
-  resultcell = .lltarget..operand; countcell = .lltarget..operand; tempcell = .lltarget..operand
-  destination = .lltarget..operand; anchor = .lltarget..operand; actual = .lltarget..operand; mapped = .lltarget..operand
-  nextleft = .lltarget..operand; nextright = .lltarget..operand
-  callee = .lltarget..body; oldbody = .lltarget..body; caller = .lltarget..body
-  at = .llir..origin; childat = .llir..origin; runtimeorigin = .llir..origin; file = .llir..sourcefile
-  ignoredorigin = .llir..origin
-  targetbody = .lltarget..bodydraft; fields = .object[]; replacements = .object[]
-  empty = .int[]; callers = .int[]; sites = .int[]; decisions = .object[]; maps = .int[]
-  steps = .int[]; clauses = .int[]
-  lastchildstep = .object[]; runtimestep = .object[]
-  contributors = .object[]
-  if bindings[0] = 0 then return .change('keep','binding.empty')
-  if bindings[1] is .binding then request = bindings[1] as .binding
-  else return .change('invalid','binding.type')
-  if request.valid() = 0 then return .change('invalid','binding.expired')
-  owner = request.caller(); source = dereference owner; selected = source.at(request.callid())
-  if selected.valid() = 0 then return .change('invalid','call.identity',source,empty)
-  functionid = source.procedureid('main')
-  if functionid > 0 then caller = source.body(functionid)
-  if work < 1 | entries < 1 | bytes < 1 | frame < 0 | cells < 1 then return .change('limit','inline.allowances',source,empty)
-  accepted = .int[]; offsets = .int[]; compares = .int[]; selectedcount = 0
-  do i = 1 to bindings[0]
-    if bindings[i] is .binding then request = bindings[i] as .binding
-    else return .change('invalid','binding.type',source,empty)
-    if request.valid() = 0 then return .change('invalid','binding.expired',source,empty)
-    caller_ref = request.caller(); provider_ref = request.provider()
-    if (caller_ref <refsame> owner) = 0 then return .change('invalid','binding.foreign.caller',source,empty)
-    do j = 1 to sites[0]
-      if sites[j] = request.callid() then return .change('invalid','binding.duplicate.site',source,empty)
-    end
-    sites[i] = request.callid()
-    selected = source.at(request.callid())
-    if selected.valid() = 0 then return .change('invalid','call.identity',source,empty)
-    if selected.kind() <> 'instruction' then return .change('invalid','call.not.instruction',source,empty)
-    if functionid = 0 | selected.procedureid() <> functionid then decisions[i] = .decision('keep','signal.root.context.unproved') as .object
-    else if wordpos(selected.mnemonic(),'call call1 call2 call3 call4') = 0 then decisions[i] = .decision('keep','call.form.pending') as .object
-    else if (provider_ref <refsame> owner) = 0 then decisions[i] = .decision('keep','profile.imported.body.pending') as .object
-    else do; accepted[request.callid()] = i; selectedcount = selectedcount + 1; end
-  end
-  if selectedcount = 0 then do
-    checked = decisions[1] as .decision
-    return .change('keep',checked.reason(),source,empty,callers,sites,decisions)
-  end
-  facts = lltargetfacts..analyse(owner,functionid,profile,work,bytes)
-  if facts.status() <> 'ok' then do
-    do i = 1 to sites[0]
-      if accepted[sites[i]] > 0 then decisions[i] = .decision(facts.status(),facts.reason()) as .object
-    end
-    return .change(facts.status(),facts.reason(),source,empty,callers,sites,decisions)
-  end
-  work = facts.remaining(); locals = caller.locals()
-  do i = 1 to bindings[0]
-    request = bindings[i] as .binding
-    if accepted[request.callid()] = 0 then iterate
-    selected = source.at(request.callid())
-    if selected.procedureid() <> functionid then return .change('invalid','binding.foreign.procedure',source,empty)
-    if facts.bodyid(request.callid()) <> request.bodyid() then return .change('invalid','binding.target.mismatch',source,empty)
-    callee = source.body(request.bodyid()); count = facts.arguments(request.callid())
-    /* The checked caller-owned event/guarded-owner lanes also use this exact
-     * read-only mapping. Their authored COPY/guard/NULL rows stay in place;
-     * no fresh lifetime or handler machinery is introduced here. */
-    if facts.handlerdirect(request.callid()) then required = 0
-    else if facts.rebinding(request.callid()) | facts.orderedslots(request.callid()) then do
-      if frame < 2 | count >= frame then return .change('limit','inline.frame',source,empty)
-      if callee.locals() > frame - count - 1 then return .change('limit','inline.frame',source,empty)
-      slots = callee.locals() + count + 1
-      if slots > (frame - 2) / 2 then return .change('limit','inline.frame',source,empty)
-      required = slots * 2 + 2
-    end
-    else do
-      required = count + 3
-      if required > frame then return .change('limit','inline.frame',source,empty)
-      if callee.locals() > frame - required then return .change('limit','inline.frame',source,empty)
-      required = required + callee.locals()
-    end
-    if facts.argumentcases(request.callid()) > 0 then do
-      if required >= frame - locals then return .change('limit','inline.frame',source,empty)
-      compares[request.callid()] = locals + required; required = required + 1
-    end
-    if required > frame - locals then return .change('limit','inline.frame',source,empty)
-    offsets[request.callid()] = locals; locals = locals + required
-    decisions[i] = .decision('changed','closed.root.scalar',count,facts.first(request.callid())) as .object
-  end
-  do i = 1 to source.records()
-    input = source.record(i)
-    if input.kind() = '.srcstep' then do
-      value = input.operand(1); higheststep = max(higheststep,value.index())
-      value = input.operand(2); highestclause = max(highestclause,value.index())
-    end
-    else if input.kind() = '.traceevent' then do
-      value = input.operand(7); higheststep = max(higheststep,value.index())
-      value = input.operand(8); highestclause = max(highestclause,value.index())
-    end
-  end
-  do
-    result = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes,work)
-    if result.error() <> '' then do
-      status = 'invalid'
-      if pos('LL_RESOURCE_LIMIT',result.error()) > 0 then status = 'limit'
-      return .change(status,result.error(),source,empty)
-    end
-    code = .emitter(cells); catalog = .llrxascatalog..catalog()
-    bodies = .object[]; sources = .object[]; origins = .object[]
-    graph_ref = source.ir(); generated = result.synthetic('inline scalar transport')
-    scopes = .metascopes(reference result)
-    if sites[0] > 2147483647 / 32 then return .change('limit','inline.metadata.names',source,empty)
-    if scopes.claim(1,sites[0] * 32) = 0 then return .change('limit',result.error(),source,empty)
-    /* Reserve every authored metadata name. The label/constant names remain
-     * reserved too; no authored or generated name is mistaken for a clear. */
-    do i = 1 to source.records()
-      if scopes.claim(1,0) = 0 then return .change('limit',result.error(),source,empty)
-      input = source.record(i)
-      call scopes.seed(input)
-    end
-    do i = 1 to sites[0]
-      if accepted[sites[i]] = 0 then iterate
-      call scopes.prepare(facts.bodyid(sites[i]),sites[i],accepted[sites[i]],reference facts)
-      if result.error() <> '' then return .change('limit',result.error(),source,empty)
-    end
-    do i = 1 to source.records()
-      if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
-      input = source.record(i); at = copyorigin(graph_ref,input.origin(),reference result,reference sources,reference origins)
-      if input.kind() = '.srcstep' & input.procedureid() = functionid then callerstep = input.id()
-      if input.kind() = 'procedure' then do
-        callerstep = 0
-        oldbody = source.body(input.procedureid()); extent = oldbody.locals()
-        if input.procedureid() = functionid then extent = locals
-        targetbody = result.procedure(oldbody.name(),extent,at,oldbody.expose())
-        bodies[input.procedureid()] = targetbody as .object; maps[input.id()] = targetbody.headerid()
-        if input.procedureid() = functionid then callers[1] = targetbody.functionid()
-        iterate
-      end
-      if input.procedureid() = 0 then do
-        call objectarraydrop fields
-        do j = 1 to input.operands(); fields[j] = input.operand(j) as .object; end
-        maps[input.id()] = result.record(input.kind(),fields,at); iterate
-      end
-      targetbody = bodies[input.procedureid()] as .lltarget..bodydraft
-      if accepted[input.id()] = 0 then do
-        fields = clonefields(input,targetbody)
-        if input.kind() = 'instruction' then maps[input.id()] = code.emit(targetbody,input.mnemonic(),fields,at)
-        else maps[input.id()] = targetbody.record(input.kind(),fields,at)
-        if input.kind() = 'label' then do
-          abrupt = facts.handlercall(input.id())
-          if abrupt > 0 & facts.handlerdirect(abrupt) = 0 then do
-            if accepted[abrupt] = 0 then return .change('invalid','inline.signal.site.unselected',source,empty)
-            /* This sole zero-local CALL1 owns four disjoint fresh cells.
-             * UNLINK is safe before, during and after its setup; it never
-             * clears or expires the borrowed result/actual. The caller's
-             * original SIGPOP remains the next original instruction. */
-            base = offsets[abrupt]
-            anchor = targetbody.reg('r',base + 1); ignored = code.one(targetbody,'unlink',anchor,at)
-            anchor = targetbody.reg('r',base); ignored = code.one(targetbody,'unlink',anchor,at)
-            anchor = targetbody.reg('r',base + 2); ignored = code.one(targetbody,'endlife',anchor,at)
-            anchor = targetbody.reg('r',base + 3); ignored = code.one(targetbody,'endlife',anchor,at)
-            if scopes.hasbindings() then do k = 1 to scopes.closings()
-              if scopes.active(k) = 0 then iterate
-              call objectarraydrop fields
-              fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
-              ignored = targetbody.record('.meta',fields,at)
-            end
-          end
-        end
-        iterate
-      end
-      callee = source.body(facts.bodyid(input.id())); count = facts.arguments(input.id()); base = offsets[input.id()]
-      direct = facts.handlerdirect(input.id())
-      runtime = facts.argumentcases(input.id()); runtimearm = 0
-      runtimeid = facts.argumentruntime(input.id()); runtimefirst = 0; runtimestart = 0; runtimegroupstep = 0
-      if runtime > 0 then do
-        if scopes.claim(8,64) = 0 then return .change('limit',result.error(),source,empty)
-      end
-      lexical = facts.scopereentry(input.id()); lastscopeaddress = 0
-      call objectarraydrop runtimeentryscopes
-      runtimeentryorigins = emptyorigins
-      call objectarraydrop runtimestep
-      scope = scopes.begin(accepted[input.id()])
-      dag = scopes.dag(accepted[input.id()])
-      /* Retained counted children observe adjacency across r/a bank borders,
-       * even when the outer body never explicitly rebinds a slot. */
-      ordered = facts.rebinding(input.id()) | facts.orderedslots(input.id())
-      hasresult = input.operands() > 1
-      slots = callee.locals() + count + 1; activebase = base + slots + 2
-      if direct = 0 then do
-        resultcell = targetbody.reg('r',base)
-        if ordered then do
-          countcell = targetbody.reg('r',activebase + callee.locals()); tempcell = targetbody.reg('r',base + 1)
-        end
-        else do
-          countcell = targetbody.reg('r',base + count + 1); tempcell = targetbody.reg('r',base + count + 2)
-        end
-      end
-      if hasresult then do
-        oldresult = input.operand(1); destination = targetbody.reg(oldresult.bank(),oldresult.index())
-        if input.mnemonic() = 'call' & input.operands() = 2 then ignored = code.one(targetbody,'null',destination,at)
-        if direct then resultcell = destination
-        else ignored = code.two(targetbody,'link',resultcell,destination,at)
-      end
-      if direct then do
-        /* Keep the pre-entry source boundary of CALL as one ordinary, inert
-         * instruction. The checked leaf needs no a0, private cell or binding.
-         * Bound-event scopes use this same transport: their original SIGBRV
-         * destinations and post-pop projections need no emitted prologue. */
-        actual = targetbody.reg(facts.argumentbank(input.id(),1),facts.argument(input.id(),1))
-        call objectarraydrop fields
-        ignored = code.emit(targetbody,'cnop',fields,at)
-      end
-      else do
-      ignored = code.one(targetbody,'null',countcell,at)
-      ignored = code.two(targetbody,'load',countcell,.lltarget..operand.integer(count),at)
-      if ordered then do a = 0 to slots - 1
-        anchor = targetbody.reg('r',base + 2 + a); mapped = targetbody.reg('r',activebase + a)
-        if a <= callee.locals() then ignored = code.two(targetbody,'link',anchor,mapped,at)
-        else do
-          actual = targetbody.reg(facts.argumentbank(input.id(),a - callee.locals()),facts.argument(input.id(),a - callee.locals()))
-          ignored = code.two(targetbody,'link',anchor,actual,at)
-          ignored = code.two(targetbody,'link',mapped,anchor,at)
-        end
-      end
-      else do a = 1 to count
-        anchor = targetbody.reg('r',base + a)
-        actual = targetbody.reg(facts.argumentbank(input.id(),a),facts.argument(input.id(),a))
-        ignored = code.two(targetbody,'link',anchor,actual,at)
-      end
-      end
-      steps = empty; clauses = empty
-      call objectarraydrop lastchildstep
-      do j = 1 to source.records()
-        if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
-        childrecord = source.record(j)
-        if childrecord.procedureid() <> callee.functionid() | childrecord.kind() = 'procedure' then iterate
-        runtimegroup = 0
-        if runtimeid > 0 then runtimegroup = facts.scopeaddress(input.id(),childrecord.id()) = runtimeid
-        if runtimegroup then do
-          if runtimefirst = 0 then runtimefirst = j
-          if childrecord.id() = runtimeid then runtimestart = j
-          if childrecord.kind() = '.srcstep' then runtimegroupstep = 1
-        end
-        if facts.recordlive(input.id(),childrecord.id()) = 0 then do
-          if runtimegroup = 0 then do
-            if (runtime = 0 & lexical = 0) | childrecord.kind() <> '.srcstep' then iterate
-          end
-        end
-        if childrecord.kind() = '.srcstep' then do
-          value = childrecord.operand(1); call freshidentity(steps,value.index(),higheststep)
-          value = childrecord.operand(2); call freshidentity(clauses,value.index(),highestclause)
-        end
-        else if childrecord.kind() = '.traceevent' then do
-          value = childrecord.operand(7); call freshidentity(steps,value.index(),higheststep)
-          value = childrecord.operand(8); call freshidentity(clauses,value.index(),highestclause)
-        end
-      end
-      if runtime > 0 & (runtimefirst = 0 | runtimestart < runtimefirst) then assembler signal "ERROR","LL_INLINE: missing original runtime selector group"
-      /* A whole case is emitted before selecting the next one. Its sole RET
-       * can precede another reached block in source order. */
-      do forever
-      do j = 1 to source.records()
-        if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
-        childrecord = source.record(j)
-        if childrecord.procedureid() <> callee.functionid() | childrecord.kind() = 'procedure' then iterate
-        runtimegroup = runtime > 0 & j >= runtimefirst & j <= runtimestart
-        groupalive = 0; scopeaddress = 0
-        if lexical then do
-          scopeaddress = facts.scopeaddress(input.id(),childrecord.id())
-          if scopeaddress > 0 then do
-            if runtimearm > 0 then groupalive = facts.argumentcaselive(input.id(),runtimearm,scopeaddress)
-            else groupalive = facts.recordlive(input.id(),scopeaddress)
-          end
-        end
-        if runtimegroup then groupalive = 1
-        if runtimearm > 1 & j < runtimefirst then iterate
-        if runtimearm > 0 & runtimegroup = 0 then do
-          if facts.argumentcaselive(input.id(),runtimearm,childrecord.id()) = 0 then do
-            /* Source rows describe lexical addresses, including a live row
-             * following an omitted dead neighbor. They are not executed. */
-            if childrecord.kind() <> '.srcstep' then do
-              if lexical = 0 | childrecord.kind() <> '.meta' | groupalive = 0 then iterate
-              if childrecord.operands() <> 1 & childrecord.operands() <> 4 then iterate
-            end
-          end
-        end
-        else if runtimegroup = 0 & facts.recordlive(input.id(),childrecord.id()) = 0 then do
-          if lexical = 0 then iterate
-          if childrecord.kind() <> '.srcstep' then do
-            if childrecord.kind() <> '.meta' | groupalive = 0 then iterate
-            if childrecord.operands() <> 1 & childrecord.operands() <> 4 then iterate
-          end
-        end
-        if childrecord.kind() = '.meta' & (childrecord.operands() = 3 | childrecord.operands() = 5) then do
-          if runtime = 0 | j <> runtimefirst then iterate
-        end
-        if childrecord.kind() = 'instruction' & childrecord.mnemonic() = 'numsci' & lexical = 0 then iterate
-        oldat = childrecord.origin()
-        ignoredorigin = copyorigin(graph_ref,oldat,reference result,reference sources,reference origins)
-        graph = dereference graph_ref; store = dereference graph.storage(); fileid = store.get(9,oldat.id(),1)
-        file = sources[fileid] as .llir..sourcefile
-        call objectarraydrop contributors
-        contributors[1] = ignoredorigin as .object; contributors[2] = at as .object
-        childat = result.contributingorigin(file,oldat.first(),oldat.last(),'composite',contributors)
-        if lexical & groupalive & scopeaddress <> lastscopeaddress then do
-          carrierorigin = result.origin(file,oldat.first(),oldat.last(),'derived',childat)
-          if runtimearm > 1 & j = runtimefirst then call scopes.reconcile(targetbody,code,runtimeentryscopes,runtimeentryorigins,carrierorigin)
-          else do
-          call objectarraydrop desiredscopes
-          desiredorigins = emptyorigins
-          do a = 1 to facts.scopebindings(input.id(),childrecord.id())
-            if scopes.claim(8,384) = 0 then return .change('limit',result.error(),source,empty)
-            scopeid = facts.scopebinding(input.id(),childrecord.id(),a)
-            scoperecord = source.at(scopeid)
-            call objectarraydrop replacements
-            do k = 1 to scoperecord.registerrefs()
-              field = scoperecord.registerref(k)
-              replacements[k] = mappedslot(targetbody,field,base,callee.locals(),count,ordered) as .object
-            end
-            fields = lltarget..remapregisters(scoperecord,replacements)
-            fields = lltarget..remapmetadata(scoperecord,fields,scope,steps,clauses)
-            do k = 1 to 4
-              value = fields[k] as .lltarget..operand
-              if scopes.claim(value.length() + 1,value.length() * 2) = 0 then return .change('limit',result.error(),source,empty)
-              desiredscopes[(a - 1) * 4 + k] = value as .object
-            end
-            scopeorigin = scoperecord.origin()
-            ignoredorigin = copyorigin(graph_ref,scopeorigin,reference result,reference sources,reference origins)
-            fileid = store.get(9,scopeorigin.id(),1)
-            file = sources[fileid] as .llir..sourcefile
-            call objectarraydrop contributors
-            contributors[1] = ignoredorigin as .object; contributors[2] = at as .object
-            desiredorigins[a] = result.contributingorigin(file,scopeorigin.first(),scopeorigin.last(),'composite',contributors)
-          end
-          call scopes.reconcile(targetbody,code,desiredscopes,desiredorigins,carrierorigin)
-          end
-          if result.error() <> '' then return .change('limit',result.error(),source,empty)
-          lastscopeaddress = scopeaddress
-        end
-        if runtime > 0 & j = runtimefirst then do
-          if runtimearm = 0 then do
-            /* Borrow the complete original group by its indexed bounds. No
-             * authored row or alias label has reached the draft yet. */
-            runtimearm = 1; runtimeextent = runtime
-            swaprecord = source.record(runtimestart); scopeorigin = swaprecord.origin()
-            ignoredorigin = copyorigin(graph_ref,scopeorigin,reference result,reference sources,reference origins)
-            fileid = store.get(9,scopeorigin.id(),1)
-            file = sources[fileid] as .llir..sourcefile
-            call objectarraydrop contributors
-            contributors[1] = ignoredorigin as .object; contributors[2] = at as .object
-            runtimeorigin = result.contributingorigin(file,scopeorigin.first(),scopeorigin.last(),'composite',contributors)
-            if lexical = 0 then call scopes.checkpoint()
-            else do a = 1 to desiredorigins[0]
-              /* Save the original incoming projection before this group's
-               * opens/clears, never its later active emitter state. */
-              if scopes.claim(8,384) = 0 then return .change('limit',result.error(),source,empty)
-              runtimeentryorigins[a] = desiredorigins[a]
-              do k = 1 to 4
-                value = desiredscopes[(a - 1) * 4 + k] as .lltarget..operand
-                if scopes.claim(value.length() + 1,value.length() * 2) = 0 then return .change('limit',result.error(),source,empty)
-                runtimeentryscopes[(a - 1) * 4 + k] = value as .object
-              end
-            end
-            if runtimegroupstep = 0 then do
-              if scopes.fieldcopies(lastchildstep,2) = 0 then return .change('limit',result.error(),source,empty)
-              runtimestep = lastchildstep
-              if runtimestep[0] = 0 then do
-                if callerstep > 0 then do
-                  if scopes.recordcopies(source.at(callerstep),3) = 0 then return .change('limit',result.error(),source,empty)
-                  runtimestep = clonefields(source.at(callerstep),targetbody)
-                end
-                else do
-                  if scopes.claim(16,1344) = 0 then return .change('limit',result.error(),source,empty)
-                  runtimestep[1] = .lltarget..operand.integer(0) as .object; runtimestep[2] = runtimestep[1]
-                  runtimestep[3] = .lltarget..operand.integer(6) as .object
-                  runtimestep[4] = .lltarget..operand.string('') as .object
-                  do k = 5 to 7; runtimestep[k] = .lltarget..operand.integer(0) as .object; end
-                  runtimestep[8] = .lltarget..operand.string('') as .object
-                end
-              end
-            end
-            field = swaprecord.operand(2)
-            selectorcopy = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
-            ignored = code.one(targetbody,'null',tempcell,runtimeorigin)
-            ignored = code.two(targetbody,'icopy',tempcell,selectorcopy,runtimeorigin)
-            compare = targetbody.reg('r',compares[input.id()])
-            ignored = code.one(targetbody,'null',compare,runtimeorigin)
-            do a = 1 to runtimeextent
-              caseLabels[a] = scopes.newlabel(input.id(),('runtime.' || a) as .binary)
-            end
-            do a = 1 to runtimeextent - 1
-              call objectarraydrop replacements
-              replacements[1] = compare as .object; replacements[2] = tempcell as .object
-              replacements[3] = .lltarget..operand.integer(facts.argumentraw(input.id(),a)) as .object
-              ignored = code.emit(targetbody,'isub',replacements,runtimeorigin)
-              ignored = code.two(targetbody,'brf',.lltarget..operand.symbol(caseLabels[a]),compare,runtimeorigin)
-            end
-            ignored = code.one(targetbody,'br',.lltarget..operand.symbol(caseLabels[runtimeextent]),runtimeorigin)
-          end
-          else if lexical = 0 then call scopes.resume(targetbody,code,runtimeorigin)
-          if result.error() <> '' then return .change('limit',result.error(),source,empty)
-          call objectarraydrop replacements
-          replacements[1] = .lltarget..operand.symbol(caseLabels[runtimearm]) as .object
-          ignored = targetbody.record('label',replacements,runtimeorigin)
-          if runtimegroupstep = 0 then do
-            if scopes.fieldcopies(runtimestep,2) = 0 then return .change('limit',result.error(),source,empty)
-            ignored = targetbody.record('.srcstep',runtimestep,runtimeorigin)
-            lastchildstep = runtimestep
-          end
-        end
-        /* Callable and opaque inline declarations stay on the retained
-         * definition. They still participate in the staged group bounds. */
-        if childrecord.kind() = '.meta' & (childrecord.operands() = 3 | childrecord.operands() = 5) then iterate
-        if runtimegroup then do
-          if scopes.recordcopies(childrecord,4) = 0 then return .change('limit',result.error(),source,empty)
-        end
-        call objectarraydrop replacements
-        do k = 1 to childrecord.registerrefs()
-          field = childrecord.registerref(k)
-          if direct then value = actual
-          else value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
-          replacements[k] = value as .object
-        end
-        fields = lltarget..remapregisters(childrecord,replacements)
-        fields = lltarget..remapmetadata(childrecord,fields,scope,steps,clauses)
-        if childrecord.kind() = 'label' then do
-          value = childrecord.operand(1)
-          fields[1] = .lltarget..operand.symbol(scopes.label(input.id(),value.bytes(),runtimearm)) as .object
-        end
-        if childrecord.kind() <> 'instruction' then do
-          ignored = targetbody.record(childrecord.kind(),fields,childat)
-          if childrecord.kind() = '.srcstep' then lastchildstep = fields
-          if childrecord.kind() = '.meta' then call scopes.observe(fields,childat)
-        end
-        else if childrecord.mnemonic() = 'numsci' then do
-          /* The proved callee numeric setup is redundant, but its original
-           * lexical address group must survive instead of drifting forward. */
-          call objectarraydrop fields
-          ignored = code.emit(targetbody,'cnop',fields,childat)
-        end
-        else if catalog.flow(childrecord.opcode()) = 1 | catalog.flow(childrecord.opcode()) = 2 then do
-          flow = catalog.flow(childrecord.opcode())
-          if runtimearm > 0 then choice = facts.argumentcasechoice(input.id(),runtimearm,childrecord.id())
-          else choice = facts.branchchoice(input.id(),childrecord.id())
-          if flow = 2 & choice > 0 then do
-            if childrecord.mnemonic() = 'brtf' | choice = 1 then do
-              value = childrecord.operand(choice)
-              ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.label(input.id(),value.bytes(),runtimearm)),childat)
-            end
-            else do
-              /* A selected fallthrough keeps an executable source address for
-               * attached source/TRACE records without retaining a dead edge. */
-              call objectarraydrop fields
-              ignored = code.emit(targetbody,'cnop',fields,childat)
-            end
-          end
-          else do
-            do k = 1 to childrecord.operands()
-              if catalog.branch(childrecord.opcode(),k) = 0 then iterate
-              value = childrecord.operand(k)
-              fields[k] = .lltarget..operand.symbol(scopes.label(input.id(),value.bytes(),runtimearm)) as .object
-            end
-            ignored = code.emit(targetbody,childrecord.mnemonic(),fields,childat)
-          end
-        end
-        else if childrecord.mnemonic() = 'linkarg' then do
-          /* The source slot is the current active argument, including prior
-           * LINK/SWAP effects. Its immutable entry anchor has other semantics.
-           * The site-specific proof captured the index before rebinding the
-           * destination, including when that slot held the selector itself. */
-          if runtime > 0 & childrecord.id() = runtimeid then position = facts.argumentcase(input.id(),runtimearm)
-          else position = facts.argumentselector(input.id(),childrecord.id())
-          field = .lltarget..operand.bound(0,0,0,'a',position)
-          value = mappedslot(targetbody,field,base,callee.locals(),count,ordered)
-          destination = fields[1] as .lltarget..operand
-          ignored = code.two(targetbody,'link',destination,value,childat)
-        end
-        else if ordered & childrecord.mnemonic() = 'unlink' then do
-          field = childrecord.operand(1); position = slotordinal(field,callee.locals(),count)
-          mapped = fields[1] as .lltarget..operand; anchor = targetbody.reg('r',base + 2 + position)
-          ignored = code.two(targetbody,'link',mapped,anchor,childat)
-        end
-        else if childrecord.mnemonic() <> 'ret' then ignored = code.emit(targetbody,childrecord.mnemonic(),fields,childat)
-        else do
-          if runtimearm > 0 then do
-            action = facts.argumentcaseactionat(input.id(),runtimearm,childrecord.id())
-            if hasresult = 0 | childrecord.operands() = 0 then do
-              if action <> 'none' then assembler signal "ERROR","LL_INLINE: invalid case RET no-result action"
-            end
-            else do
-              value = childrecord.operand(1)
-              if value.kind() = 'I' & action <> 'integer' then assembler signal "ERROR","LL_INLINE: invalid case RET integer action"
-              if value.kind() = 'S' & action <> 'string' then assembler signal "ERROR","LL_INLINE: invalid case RET string action"
-              if value.kind() = 'R' & action <> 'move' & action <> 'copy' then assembler signal "ERROR","LL_INLINE: invalid case RET register action"
-            end
-          end
-          if hasresult & childrecord.operands() = 1 then do
-            value = childrecord.operand(1)
-            if value.kind() = 'I' then do
-              ignored = code.two(targetbody,'load',tempcell,value,childat)
-              ignored = code.two(targetbody,'icopy',resultcell,tempcell,childat)
-            end
-            else if value.kind() = 'S' then ignored = code.two(targetbody,'load',resultcell,value,childat)
-            else do
-              mapped = fields[1] as .lltarget..operand
-              if runtimearm > 0 then action = facts.argumentcaseactionat(input.id(),runtimearm,childrecord.id())
-              else action = facts.returnactionat(input.id(),childrecord.id())
-              if action = 'move' then ignored = code.two(targetbody,'move',resultcell,mapped,childat)
-              else ignored = code.two(targetbody,'copy',resultcell,mapped,childat)
-            end
-          end
-          if direct then do
-            /* COPY is the sole caller-visible return commit, just like the
-             * borrowed RET. No cleanup instruction may expose a partial
-             * return or expire borrowed storage. Scope/source records close
-             * at the original continuation address, before its TRACE event. */
-            if scopes.hasbindings() then do k = 1 to scopes.closings()
-              if scopes.active(k) = 0 then iterate
-              call objectarraydrop fields
-              fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
-              ignored = targetbody.record('.meta',fields,childat)
-            end
-            if callerstep > 0 then fields = clonefields(source.at(callerstep),targetbody)
-            else do
-              call objectarraydrop fields
-              fields[1] = .lltarget..operand.integer(0) as .object
-              fields[2] = .lltarget..operand.integer(0) as .object
-              fields[3] = .lltarget..operand.integer(6) as .object
-              fields[4] = .lltarget..operand.string('') as .object
-              fields[5] = .lltarget..operand.integer(0) as .object
-              fields[6] = .lltarget..operand.integer(0) as .object
-              fields[7] = .lltarget..operand.integer(0) as .object
-              fields[8] = .lltarget..operand.string('') as .object
-            end
-            ignored = targetbody.record('.srcstep',fields,at)
-            leave
-          end
-          if ordered then do
-            if dag then do
-              if runtimearm > 0 then restores = facts.argumentcaserestoresat(input.id(),runtimearm,childrecord.id())
-              else restores = facts.restores(input.id(),childrecord.id())
-              do k = 1 to restores
-              if runtimearm > 0 then do
-                pairleft = facts.argumentcaseleftat(input.id(),runtimearm,childrecord.id(),k)
-                pairright = facts.argumentcaserightat(input.id(),runtimearm,childrecord.id(),k)
-              end
-              else do
-                pairleft = facts.restoreleft(input.id(),childrecord.id(),k)
-                pairright = facts.restoreright(input.id(),childrecord.id(),k)
-              end
-              if pairleft < 0 | pairleft >= slots | pairright < 0 | pairright >= slots then assembler signal "ERROR","LL_INLINE: invalid per-RET slot restoration"
-              destination = targetbody.reg('r',activebase + pairleft); mapped = targetbody.reg('r',activebase + pairright)
-              ignored = code.two(targetbody,'swap',destination,mapped,childat)
-              end
-            end
-            else do
-              /* Only this contiguous generated replay may cancel pairs.
-               * Authored swaps and observations were already replayed above. */
-              k = facts.swaps(input.id())
-              do while k > 0
-                if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
-                swaprecord = source.at(facts.swap(input.id(),k))
-                field = swaprecord.operand(1); destination = mappedslot(targetbody,field,base,callee.locals(),count,1)
-                field = swaprecord.operand(2); mapped = mappedslot(targetbody,field,base,callee.locals(),count,1)
-                if k > 1 then do
-                  if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
-                  swaprecord = source.at(facts.swap(input.id(),k - 1))
-                  field = swaprecord.operand(1); nextleft = mappedslot(targetbody,field,base,callee.locals(),count,1)
-                  field = swaprecord.operand(2); nextright = mappedslot(targetbody,field,base,callee.locals(),count,1)
-                  samepair = destination.bank() = nextleft.bank() & destination.index() = nextleft.index() & mapped.bank() = nextright.bank() & mapped.index() = nextright.index()
-                  if destination.bank() = nextright.bank() & destination.index() = nextright.index() & mapped.bank() = nextleft.bank() & mapped.index() = nextleft.index() then samepair = 1
-                  if samepair then do; k = k - 2; iterate; end
-                end
-                ignored = code.two(targetbody,'swap',destination,mapped,childat)
-                k = k - 1
-              end
-            end
-            /* Restore every active binding before expiring owned bases.
-             * Argument entry anchors never become owned argument storage. */
-            do a = 0 to slots - 1
-              mapped = targetbody.reg('r',activebase + a); ignored = code.one(targetbody,'unlink',mapped,childat)
-            end
-            do a = 0 to slots - 1
-              anchor = targetbody.reg('r',base + 2 + a); ignored = code.one(targetbody,'unlink',anchor,childat)
-            end
-          end
-          else do a = 1 to count
-            anchor = targetbody.reg('r',base + a); ignored = code.one(targetbody,'unlink',anchor,childat)
-          end
-          if hasresult then ignored = code.one(targetbody,'unlink',resultcell,childat)
-          ignored = code.one(targetbody,'endlife',countcell,childat)
-          ignored = code.one(targetbody,'endlife',tempcell,childat)
-          if runtimearm > 0 then ignored = code.one(targetbody,'endlife',compare,childat)
-          do a = 0 to callee.locals() - 1
-            if ordered then anchor = targetbody.reg('r',activebase + a)
-            else anchor = targetbody.reg('r',base + count + 3 + a)
-            ignored = code.one(targetbody,'endlife',anchor,childat)
-          end
-          if dag then do
-            if runtimearm > 0 & scopes.hasbindings() then do k = 1 to scopes.closings()
-              if scopes.active(k) = 0 then iterate
-              call objectarraydrop fields
-              fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
-              ignored = targetbody.record('.meta',fields,childat)
-              call scopes.observe(fields,childat)
-            end
-            ignored = code.one(targetbody,'br',.lltarget..operand.symbol(scopes.continuation(accepted[input.id()])),childat)
-            iterate
-          end
-          if scopes.hasbindings() then do
-            do k = 1 to scopes.closings()
-              if scopes.active(k) = 0 then iterate
-              call objectarraydrop fields
-              fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
-              ignored = targetbody.record('.meta',fields,childat)
-            end
-            /* The sole-RET linear profile needs one executable address after
-             * the clears, not a control edge. Current L cleanup preserves
-             * CNOP; assembly with optimization disabled retains its cell. */
-            call objectarraydrop fields
-            ignored = code.emit(targetbody,'cnop',fields,childat)
-          end
-          /* Do not turn unreachable callee end metadata into observations
-           * at the reachable caller continuation. The original body is kept. */
-          leave
-        end
-      end
-      if runtimearm = 0 | runtimearm >= runtimeextent then leave
-      runtimearm = runtimearm + 1
-      /* The next pass starts at the whole original binding group. Its
-       * incoming delta precedes its label; authored rows are replayed once. */
-      lastscopeaddress = 0
-      end
-      if dag then do
-        call objectarraydrop fields
-        fields[1] = .lltarget..operand.symbol(scopes.continuation(accepted[input.id()])) as .object
-        ignored = targetbody.record('label',fields,at)
-        if runtime > 0 | lexical then do
-          if callerstep > 0 then fields = clonefields(source.at(callerstep),targetbody)
-          else do
-            call objectarraydrop fields
-            fields[1] = .lltarget..operand.integer(0) as .object; fields[2] = fields[1]
-            fields[3] = .lltarget..operand.integer(6) as .object
-            fields[4] = .lltarget..operand.string('') as .object
-            do k = 5 to 7; fields[k] = .lltarget..operand.integer(0) as .object; end
-            fields[8] = .lltarget..operand.string('') as .object
-          end
-          ignored = targetbody.record('.srcstep',fields,at)
-        end
-        if scopes.hasbindings() then do
-          do k = 1 to scopes.closings()
-            if scopes.active(k) = 0 then iterate
-            call objectarraydrop fields
-            fields[1] = .lltarget..operand.string(scopes.name(k)) as .object
-            ignored = targetbody.record('.meta',fields,at)
-          end
-          call objectarraydrop fields
-          ignored = code.emit(targetbody,'cnop',fields,at)
-        end
-      end
-      maps[input.id()] = 0
-    end
-    if scopes.guard(1) = 0 then return .change('limit',result.error(),source,empty)
-    if code.error() <> '' then return .change('limit',code.error(),source,empty)
-    target = result.finish()
-    if target.valid() = 0 then do
-      status = 'invalid'
-      if pos('LL_RESOURCE_LIMIT',target.error()) > 0 then status = 'limit'
-      return .change(status,target.error(),source,empty)
-    end
-    return .change('changed','closed.root.scalar',target,maps,callers,sites,decisions)
-  on signal as problem
-    status = 'invalid'
-    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
-    return .change(status,'LL_INLINE: ' || problem.name() || ': ' || problem.message(),source,empty)
-  end
-  return .change('invalid','inline.no.result',source,empty)
-
-/** One cache per exact input owner. Numeric source/origin and observation IDs
- * from two modules never share a lookup table. */
-importorigins: class
-  _sources = .object[]
-  _origins = .object[]
-  _steps = .int[]
-  _clauses = .int[]
-  *: factory
-    return
-  copy: method = .llir..origin
-    arg owner = reference .llir..module, at = .llir..origin, target = reference .lltarget..draft
-    return copyorigin(owner,at,target,reference _sources,reference _origins)
-  prepare: method = .void
-    arg item = .lltarget..record, expose higheststep = .int, expose highestclause = .int
-    value = .lltarget..operand
-    if item.kind() = '.srcstep' then do
-      value = item.operand(1); call freshidentity(_steps,value.index(),higheststep)
-      value = item.operand(2); call freshidentity(_clauses,value.index(),highestclause)
-    end
-    else if item.kind() = '.traceevent' then do
-      value = item.operand(7); call freshidentity(_steps,value.index(),higheststep)
-      value = item.operand(8); call freshidentity(_clauses,value.index(),highestclause)
-    end
-    return
-  steps: method = .int
-    return _steps[0] / 2
-  clauses: method = .int
-    return _clauses[0] / 2
-  metadata: method = .object[]
-    arg item = .lltarget..record, fields = .object[]
-    return lltarget..remapmetadata(item,fields,'',_steps,_clauses)
-
-/** Request-local checked projection, not an executable merged module. The
- * public static-exact profile declares the exact sources used for delivery;
- * this class checks all facts expressible by the current target schema. */
-importprojection: class
-  _owner = reference .lltarget..module
-  _input = .object[]
-  _providers = .object[]
-  _caches = .object[]
-  _pairprovider = .int[]
-  _pairbody = .int[]
-  _pairheader = .int[]
-  _pairname = .string[]
-  _pairfunction = .int[]
-  _pairalias = .string[]
-  _nestedparent = .int[]
-  _nestedoperation = .int[]
-  _nestedpair = .int[]
-  _labelpair = .int[]
-  _labelold = .binary[]
-  _labelnew = .string[]
-  _callpair = .int[]
-  _operations = .int[]
-  _functions = .int[]
-  _reserved = .string[]
-  _importnames = .string[]
-  _importexports = .string[]
-  _exportnames = .string[]
-  _exportproviders = .int[]
-  _globalowners = .int[]
-  _globalslots = .int[]
-  _globalnames = .string[]
-  _globalcallers = .int[]
-  _module = .lltarget..module
-  _status = .string
-  _reason = .string
-  _work = .int
-  _bytes = .int
-  _entries = .int
-  _held = .int
-  _serial = .int
-  _namebytes = .int
-  *: factory
-    arg bindings = .object[], work = .int, entries = .int, bytes = .int
-    _input = bindings; _work = work; _entries = entries; _bytes = bytes; _status = 'building'
-    return
-  prepare: method = .void
-    bindings = _input; work = _work; entries = _entries; bytes = _bytes
-    request = .binding; previous = .binding; candidate = .binding
-    selected = .lltarget..record; item = .lltarget..record
-    value = .lltarget..operand
-    body = .lltarget..body; cache = .importorigins; targetbody = .lltarget..bodydraft
-    provider = .lltarget..module; at = .llir..origin
-    draft = .lltarget..draft; message = .string; status = .string
-    fields = .object[]; sourcecache = .importorigins()
-    providerindex = .int; pair = .int; found = .int; called = .string
-    i = .int; j = .int; k = .int; roots = .int; higheststep = .int; highestclause = .int; ignored = .int
-    renamed = .string; catalog = .llrxascatalog..catalog()
-    do
-    if bindings[0] = 0 then do; ignored = fail('keep','binding.empty'); return; end
-    if bindings[1] is .binding then request = bindings[1] as .binding
-    else do; ignored = fail('invalid','binding.type'); return; end
-    if request.valid() = 0 then do; ignored = fail('invalid','binding.expired'); return; end
-    _owner = request.caller(); source = dereference _owner
-    if work < 1 | entries < 1 | bytes < 1 then do; ignored = fail('limit','import.allowances'); return; end
-    /* Sparse original IDs can be large before the first selected site. Charge
-     * their complete containing tables before any indexed write grows them. */
-    graph = dereference source.ir()
-    if reserve(graph.operations(),24) = 0 | reserve(graph.functions(),512) = 0 | origincapacity(_owner) = 0 then return
-    if scanmodule(_owner,0) = 0 then return
-    do i = 1 to bindings[0]
-      if spend(1) = 0 | reserve(1,512) = 0 then return
-      if bindings[i] is .binding then request = bindings[i] as .binding
-      else do; ignored = fail('invalid','binding.type'); return; end
-      if request.valid() = 0 then do; ignored = fail('invalid','binding.expired'); return; end
-      caller_ref = request.caller(); provider_ref = request.provider()
-      if (caller_ref <refsame> _owner) = 0 then do; ignored = fail('invalid','binding.foreign.caller'); return; end
-      do j = 1 to i - 1
-        if spend(1) = 0 then return
-        previous = bindings[j] as .binding
-        if previous.callid() = request.callid() then do; ignored = fail('invalid','binding.duplicate.site'); return; end
-      end
-      selected = source.at(request.callid())
-      if selected.valid() = 0 then do; ignored = fail('invalid','call.identity'); return; end
-      if selected.kind() <> 'instruction' then do; ignored = fail('invalid','call.not.instruction'); return; end
-      if (provider_ref <refsame> _owner) then iterate
-      if selected.procedureid() <> source.procedureid('main') then do; ignored = fail('keep','signal.root.context.unproved'); return; end
-      if wordpos(selected.mnemonic(),'call call1 call2 call3 call4') = 0 then do; ignored = fail('keep','call.form.pending'); return; end
-      if selected.operands() = 1 then value = selected.operand(1)
-      else value = selected.operand(2)
-      if value.kind() <> 'P' then do; ignored = fail('invalid','binding.target.mismatch'); return; end
-      called = value.text(); found = 0
-      do j = 1 to _importnames[0]
-        if spend(length(called) + 1) = 0 then return
-        if _importnames[j] == called then found = j
-      end
-      if found = 0 then do; ignored = fail('invalid','binding.import.missing'); return; end
-      provider_entry = dereference provider_ref; provider = provider_entry; providerindex = 0
-      do j = 1 to _providers[0]
-        if spend(1) = 0 then return
-        candidate = _providers[j] as .binding
-        if sameimportowner(candidate.provider(),provider_ref) then providerindex = j
-      end
-      if providerindex = 0 then do
-        if scanmodule(provider_ref,1) = 0 | reserve(1,128) = 0 then return
-        providerindex = _providers[0] + 1; _providers[providerindex] = request as .object
-        _caches[providerindex] = .importorigins() as .object
-      end
-      pair = 0
-      do j = 1 to provider.procedures()
-        if spend(1) = 0 then return
-        body = provider.procedure(j)
-        if body.functionid() = request.bodyid() then pair = j
-      end
-      if pair = 0 then do; ignored = fail('invalid','binding.body.identity'); return; end
-      body = provider.procedure(pair)
-      if body.expose() = '' | body.expose() <> _importexports[found] then do; ignored = fail('invalid','binding.target.mismatch'); return; end
-      pair = intern(providerindex,body)
-      if pair = 0 then return
-      _callpair[request.callid()] = pair
-    end
-    /* Imports remain dependencies even when all their executable uses vanish. */
-    do i = 1 to _importexports[0]
-      found = 0
-      do j = 1 to _exportnames[0]
-        if spend(length(_importexports[i]) + 1) = 0 then return
-        if _exportproviders[j] > 0 & _exportnames[j] == _importexports[i] then found = found + 1
-      end
-      if found <> 1 then do; ignored = fail('keep','binding.import.unresolved'); return; end
-    end
-    /* Selected roots are interned before this bounded closure. A child uses
-     * the same pair if also selected directly; it never gains a fresh frame
-     * history merely because it is reached through a different outer site. */
-    roots = _pairbody[0]
-    do i = 1 to roots
-      if checkedbody(i,1) = 0 then return
-    end
-    do i = 1 to _providers[0]
-      request = _providers[i] as .binding
-      if origincapacity(request.provider()) = 0 then return
-    end
-    do i = 1 to source.records()
-      if spend(1) = 0 then return
-      item = source.record(i)
-      if item.kind() = '.srcstep' then do
-        value = item.operand(1); higheststep = max(higheststep,value.index())
-        value = item.operand(2); highestclause = max(highestclause,value.index())
-      end
-      else if item.kind() = '.traceevent' then do
-        value = item.operand(7); higheststep = max(higheststep,value.index())
-        value = item.operand(8); highestclause = max(highestclause,value.index())
-      end
-    end
-    do i = 1 to _pairbody[0]
-      request = _providers[_pairprovider[i]] as .binding
-      provider_metadata = dereference request.provider(); provider = provider_metadata
-      cache = _caches[_pairprovider[i]] as .importorigins; body = provider.body(_pairbody[i])
-      do j = 1 to provider.records()
-        if spend(1) = 0 then return
-        item = provider.record(j)
-        if item.procedureid() <> body.functionid() | item.kind() = 'procedure' then iterate
-        /* The private projection shares one module-wide label/constant
-         * namespace. Reserve every declaration before replay, including
-         * forward, alias and unreachable labels, for this exact body pair. */
-        if item.kind() = 'label' then do
-          value = item.operand(1)
-          if preparelabel(i,value.bytes()) = 0 then return
-        end
-        if item.kind() = '.srcstep' | item.kind() = '.traceevent' then do
-          /* freshidentity scans each existing pair before insertion. Charge
-           * both lookup lengths before either request-local map can grow. */
-          if spend(cache.steps() + 1) = 0 then return
-          if spend(cache.clauses() + 1) = 0 then return
-        end
-        if reserve(1,32) = 0 then return
-        call cache.prepare(item,higheststep,highestclause)
-      end
-      _caches[_pairprovider[i]] = cache as .object
-    end
-    if _work < 1 | _held >= bytes then do; ignored = fail('limit','import.allowances'); return; end
-    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes - _held,_work)
-    graph_ref = source.ir(); bodies = .object[]
-    do i = 1 to source.records()
-      item = source.record(i)
-      if draft.preflight(1 + item.operands() + item.registerrefs(),0) = 0 then do; ignored = failedmodel(draft.error()); return; end
-      at = sourcecache.copy(graph_ref,item.origin(),reference draft)
-      if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-      if item.kind() = 'procedure' then do
-        if draft.preflight(source.procedures(),0) = 0 then do; ignored = failedmodel(draft.error()); return; end
-        body = source.body(item.procedureid()); targetbody = draft.procedure(body.name(),body.locals(),at,body.expose())
-        if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-        bodies[item.procedureid()] = targetbody as .object; _functions[item.procedureid()] = targetbody.functionid()
-        _operations[item.id()] = targetbody.headerid(); iterate
-      end
-      if item.procedureid() = 0 then do
-        call objectarraydrop fields
-        do j = 1 to item.operands(); fields[j] = item.operand(j) as .object; end
-        _operations[item.id()] = draft.record(item.kind(),fields,at); iterate
-      end
-      targetbody = bodies[item.procedureid()] as .lltarget..bodydraft
-      fields = clonefields(item,targetbody); pair = _callpair[item.id()]
-      if pair > 0 then do
-        j = 2; if item.operands() = 1 then j = 1
-        fields[j] = .lltarget..operand.procedure(_pairname[pair]) as .object
-      end
-      if item.kind() = 'instruction' then _operations[item.id()] = targetbody.emit(item.mnemonic(),fields,at)
-      else _operations[item.id()] = targetbody.record(item.kind(),fields,at)
-    end
-    do i = 1 to _pairbody[0]
-      request = _providers[_pairprovider[i]] as .binding
-      provider_body = dereference request.provider(); provider = provider_body
-      cache = _caches[_pairprovider[i]] as .importorigins; body = provider.body(_pairbody[i]); graph_ref = provider.ir()
-      item = provider.at(_pairheader[i]); at = cache.copy(graph_ref,item.origin(),reference draft)
-      if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-      /* Every alias/site of this exact body keeps one original private-frame
-       * width and recycler identity for the existing scalar facts owner. */
-      targetbody = draft.procedure(_pairname[i],body.locals(),at)
-      if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-      _pairfunction[i] = targetbody.functionid()
-      do j = 1 to provider.records()
-        if draft.preflight(1,0) = 0 then do; ignored = failedmodel(draft.error()); return; end
-        item = provider.record(j)
-        if item.procedureid() <> body.functionid() | item.kind() = 'procedure' then iterate
-        if draft.preflight(1 + item.operands() + item.registerrefs(),0) = 0 then do; ignored = failedmodel(draft.error()); return; end
-        at = cache.copy(graph_ref,item.origin(),reference draft)
-        fields = providerfields(item,targetbody,_pairprovider[i])
-        if _status <> 'building' then return
-        fields = cache.metadata(item,fields)
-        if item.kind() = '.meta' & item.operands() = 5 then fields[4] = .lltarget..operand.procedure(_pairname[i]) as .object
-        if item.kind() = 'label' then do
-          value = item.operand(1); renamed = projectlabel(i,value.bytes(),reference draft)
-          if _status <> 'building' then return
-          if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-          fields[1] = .lltarget..operand.symbol(renamed) as .object
-        end
-        else if item.kind() = 'instruction' then do
-          do k = 1 to item.operands()
-            if catalog.branch(item.opcode(),k) = 0 then iterate
-            value = item.operand(k); renamed = projectlabel(i,value.bytes(),reference draft)
-            if _status <> 'building' then return
-            if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-            fields[k] = .lltarget..operand.symbol(renamed) as .object
-          end
-          if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
-            pair = projectedchild(i,item.id(),reference draft)
-            if _status <> 'building' then return
-            if draft.error() <> '' then do; ignored = failedmodel(draft.error()); return; end
-            if pair = 0 then do; ignored = fail('invalid','import.child.mapping'); return; end
-            k = 2; if item.operands() = 1 then k = 1
-            fields[k] = .lltarget..operand.procedure(_pairname[pair]) as .object
-          end
-        end
-        if item.kind() = 'instruction' then ignored = targetbody.emit(item.mnemonic(),fields,at)
-        else ignored = targetbody.record(item.kind(),fields,at)
-      end
-      _caches[_pairprovider[i]] = cache as .object
-    end
-    _module = draft.finish()
-    if _module.valid() = 0 then do; ignored = failedmodel(_module.error()); return; end
-    _status = 'ok'
-    return
-    on signal as problem
-      if initialized(draft) then do
-        message = draft.error()
-        if message <> '' then do; ignored = failedmodel(message); return; end
-      end
-      status = 'invalid'
-      if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
-      ignored = fail(status,'LL_IMPORT: ' || problem.name() || ': ' || problem.message())
-    end
-    return
-  fail: method = .int
-    arg status = .string, reason = .string
-    _status = status; _reason = reason
-    return 0
-  spend: method = .int
-    arg amount = .int
-    if amount < 0 | amount > _work then return fail('limit','import.work')
-    _work = _work - amount
-    return 1
-  reserve: method = .int
-    arg count = .int, width = .int
-    if count < 0 | width < 1 | count > (_bytes - _held) / width then return fail('limit','import.bytes')
-    _held = _held + count * width
-    return 1
-  failedmodel: method = .int
-    arg reason = .string
-    status = 'invalid'
-    if pos('LL_RESOURCE_LIMIT',reason) > 0 then status = 'limit'
-    return fail(status,reason)
-  origincapacity: method = .int
-    arg owner = reference .lltarget..module
-    source = dereference owner; graph = dereference source.ir(); store = dereference graph.storage()
-    return reserve(store.count(8) + store.count(9),128)
-  remember: method = .int
-    arg name = .string
-    if spend(length(name) + 1) = 0 | reserve(length(name) + 32,1) = 0 then return 0
-    _reserved[_reserved[0] + 1] = name
-    return 1
-  newname: method = .string
-    arg prefix = '_import.body.'
-    i = .int; collision = .int; ignored = .int; name = .string
-    do forever
-      if _serial >= 2147483647 then do; ignored = fail('limit','import.names'); return ''; end
-      _serial = _serial + 1; name = prefix || _serial; collision = 0
-      do i = 1 to _reserved[0]
-        if spend(length(name) + length(_reserved[i]) + 1) = 0 then return ''
-        if _reserved[i] == name then collision = 1
-      end
-      if collision = 0 then leave
-    end
-    if remember(name) = 0 then return ''
-    return name
-  preparelabel: method = .int
-    arg pair = .int, old = .binary
-    name = .string; at = .int
-    if reserve(1,96) = 0 | reserve(<blen>(old),1) = 0 then return 0
-    name = newname('_import.label.')
-    if _status <> 'building' then return 0
-    if reserve(length(name),1) = 0 then return 0
-    at = _labelpair[0] + 1; _labelpair[at] = pair; _labelold[at] = old; _labelnew[at] = name
-    return 1
-  projectlabel: method = .string
-    arg pair = .int, old = .binary, target = reference .lltarget..draft
-    draft = dereference target; i = .int; ignored = .int
-    do i = 1 to _labelpair[0]
-      if draft.preflight(1,0) = 0 then return ''
-      if _labelpair[i] <> pair then iterate
-      if draft.preflight(<blen>(old) + <blen>(_labelold[i]) + 1,0) = 0 then return ''
-      if bincompare(_labelold[i],old) = 0 then return _labelnew[i]
-    end
-    ignored = fail('invalid','import.label.mapping')
-    return ''
-  scanmodule: method = .int
-    arg owner = reference .lltarget..module, provider = .int
-    source = dereference owner; item = .lltarget..record; name = .lltarget..operand; option = .lltarget..operand
-    declaration = .lltarget..record; external = .lltarget..operand
-    i = .int; j = .int; k = .int; providerindex = .int
-    providerindex = 0; if provider then providerindex = _providers[0] + 1
-    if provider & source.procedureid('main') > 0 then return fail('keep','import.provider.main.pending')
-    do i = 1 to source.records()
-      if spend(1) = 0 then return 0
-      item = source.record(i)
-      if item.kind() = '.globalexpose' then do
-        name = item.operand(1); option = item.operand(2)
-        if name.index() < 0 | name.index() >= source.globals() | option.text() = '' then return fail('invalid','import.global.declaration.invalid')
-        do j = 1 to _globalnames[0]
-          if spend(option.length() + 1) = 0 then return 0
-          if _globalowners[j] <> providerindex then iterate
-          if _globalslots[j] = name.index() | _globalnames[j] == option.text() then return fail('invalid','import.global.declaration.ambiguous')
-        end
-        /* RXAS uses one external-name namespace for global exposures,
-         * exported procedures and imports. Scan this immutable module in both
-         * declaration orders; charge every record and compared name. */
-        do k = 1 to source.records()
-          if spend(1) = 0 then return 0
-          declaration = source.record(k)
-          if declaration.kind() = '.import' then external = declaration.operand(2)
-          else if declaration.kind() = 'procedure' then external = declaration.operand(3)
-          else iterate
-          if spend(option.length() + 1) = 0 then return 0
-          if external.text() == option.text() then return fail('invalid','import.global.callable.collision')
-        end
-        if reserve(option.length() + 64,1) = 0 then return 0
-        j = _globalnames[0] + 1; _globalowners[j] = providerindex
-        _globalslots[j] = name.index(); _globalnames[j] = option.text(); _globalcallers[j] = 0
-      end
-      if item.kind() = '.meta' & item.operands() > 1 then do
-        option = item.operand(2)
-        if spend(option.length() + 1) = 0 then return 0
-        /* Current typed compiler signatures/register/constant observations
-         * use b. The only other inert supported shape is opaque .inline;
-         * selected leaves reject that transport below. Unknown options do
-         * not establish absence of a startup/linker/VM contract. */
-        if option.text() = 'b' & (item.operands() = 4 | item.operands() = 5) then nop
-        else if option.text() = '.inline' & item.operands() = 3 then nop
-        else return fail('keep','import.startup.metadata.pending')
-      end
-      if item.kind() = '.import' then do
-        if provider then return fail('keep','import.provider.imports.pending')
-        name = item.operand(1); option = item.operand(2)
-        if spend(source.procedures()) = 0 then return 0
-        if source.procedureid(name.text()) > 0 then return fail('invalid','binding.import.local.collision')
-        do j = 1 to _importnames[0]
-          if spend(name.length() + 1) = 0 then return 0
-          if _importnames[j] == name.text() then return fail('invalid','binding.import.ambiguous')
-        end
-        if reserve(name.length() + option.length() + 64,1) = 0 then return 0
-        j = _importnames[0] + 1; _importnames[j] = name.text(); _importexports[j] = option.text()
-      end
-      if item.kind() = 'procedure' then do
-        name = item.operand(3)
-        if name.text() <> '' then do
-          do j = 1 to _exportnames[0]
-            if spend(name.length() + 1) = 0 then return 0
-            if _exportnames[j] == name.text() then return fail('invalid','binding.export.ambiguous')
-          end
-          if reserve(name.length() + 64,1) = 0 then return 0
-          j = _exportnames[0] + 1; _exportnames[j] = name.text(); _exportproviders[j] = providerindex
-        end
-      end
-      do k = 1 to item.operands()
-        if spend(1) = 0 then return 0
-        name = item.operand(k)
-        if name.kind() = 'P' | name.kind() = 'L' then do
-          if remember(name.text()) = 0 then return 0
-        end
-      end
-    end
-    return 1
-  /** Existing public sharing is a name contract, never a provider gN ABI.
-   * Compact rows avoid allocating a table for an unreferenced global bank. */
-  globalindex: method = .int
-    arg provider = .int, slot = .int
-    row = 0; i = .int; ignored = .int
-    do i = 1 to _globalnames[0]
-      if spend(1) = 0 then return -1
-      if _globalowners[i] = provider & _globalslots[i] = slot then row = i
-    end
-    if row = 0 then do; ignored = fail('keep','import.global.private.pending'); return -1; end
-    if _globalcallers[row] > 0 then return _globalcallers[row] - 1
-    do i = 1 to _globalnames[0]
-      if spend(length(_globalnames[row]) + 1) = 0 then return -1
-      if _globalowners[i] = 0 & _globalnames[i] == _globalnames[row] then do
-        _globalcallers[row] = _globalslots[i] + 1
-        return _globalslots[i]
-      end
-    end
-    ignored = fail('keep','import.global.caller.alias.missing')
-    return -1
-  providerfields: method = .object[]
-    arg item = .lltarget..record, target = .lltarget..bodydraft, provider = .int
-    replacements = .object[]; value = .lltarget..operand; index = .int; i = .int
-    do i = 1 to item.registerrefs()
-      if spend(1) = 0 then return replacements
-      value = item.registerref(i); index = value.index()
-      if value.bank() = 'g' then do
-        index = globalindex(provider,index)
-        if _status <> 'building' then return replacements
-      end
-      replacements[i] = target.reg(value.bank(),index) as .object
-    end
-    return lltarget..remapregisters(item,replacements)
-  intern: method = .int
-    arg providerindex = .int, body = .lltarget..body
-    i = .int; pair = .int; header = .int
-    request = _providers[providerindex] as .binding
-    source = dereference request.provider(); item = .lltarget..record
-    do i = 1 to _pairbody[0]
-      if spend(1) = 0 then return 0
-      if _pairprovider[i] = providerindex & _pairbody[i] = body.functionid() then return i
-    end
-    do i = 1 to source.records()
-      if spend(1) = 0 then return 0
-      item = source.record(i)
-      if item.kind() = 'procedure' & item.procedureid() = body.functionid() then header = item.id()
-    end
-    if header = 0 then return fail('invalid','binding.body.identity')
-    if reserve(1,128) = 0 then return 0
-    pair = _pairbody[0] + 1; _pairprovider[pair] = providerindex; _pairbody[pair] = body.functionid()
-    _pairheader[pair] = header; _pairname[pair] = newname()
-    if _status <> 'building' then return 0
-    _namebytes = _namebytes + length(_pairname[pair])
-    return pair
-  childalias: method = .string
-    arg providerindex = .int, body = .lltarget..body
-    i = .int; found = .int; alias = .string; ignored = .int
-    if body.expose() = '' then do; ignored = fail('keep','import.child.private.pending'); return ''; end
-    do i = 1 to _exportnames[0]
-      if spend(length(body.expose()) + 1) = 0 then return ''
-      if _exportnames[i] == body.expose() & _exportproviders[i] = providerindex then found = found + 1
-    end
-    if found <> 1 then do; ignored = fail('keep','import.child.import.unresolved'); return ''; end
-    /* scanmodule has rejected duplicate aliases/exports, and prepare checked
-     * every import's unique provider resolution. Multiple existing aliases
-     * for this one export therefore name the exact same immutable child. */
-    do i = 1 to _importexports[0]
-      if spend(length(body.expose()) + 1) = 0 then return ''
-      if _importexports[i] == body.expose() & alias = '' then alias = _importnames[i]
-    end
-    if alias = '' then ignored = fail('keep','import.child.import.missing')
-    return alias
-  rememberchild: method = .int
-    arg parent = .int, operation = .int, child = .int
-    i = .int
-    do i = 1 to _nestedparent[0]
-      if spend(1) = 0 then return 0
-      if _nestedparent[i] = parent & _nestedoperation[i] = operation then do
-        if _nestedpair[i] <> child then return fail('invalid','import.child.mapping')
-        return 1
-      end
-    end
-    if reserve(1,64) = 0 then return 0
-    i = _nestedparent[0] + 1; _nestedparent[i] = parent; _nestedoperation[i] = operation; _nestedpair[i] = child
-    return 1
-  projectedchild: method = .int
-    arg parent = .int, operation = .int, target = reference .lltarget..draft
-    draft = dereference target; i = .int
-    do i = 1 to _nestedparent[0]
-      if draft.preflight(1,0) = 0 then return 0
-      if _nestedparent[i] = parent & _nestedoperation[i] = operation then return _nestedpair[i]
-    end
-    return 0
-  checkedbody: method = .int
-    arg pair = .int, children = .int, parent = 0
-    request = _providers[_pairprovider[pair]] as .binding
-    source = dereference request.provider(); body = source.body(_pairbody[pair])
-    item = .lltarget..record; value = .lltarget..operand; child = .lltarget..body
-    i = .int; j = .int; returns = .int; field = .int; bodyid = .int; childpair = .int; alias = .string
-    do i = 1 to source.records()
-      if spend(1) = 0 then return 0
-      item = source.record(i)
-      if item.procedureid() <> body.functionid() then iterate
-      if item.kind() = 'procedure' then iterate
-      do j = 1 to item.registerrefs()
-        if spend(1) = 0 then return 0
-        value = item.registerref(j)
-        if value.bank() = 'g' then do
-          ignored = globalindex(_pairprovider[pair],value.index())
-          if _status <> 'building' then return 0
-        end
-      end
-      if item.kind() = 'instruction' then do
-        /* The checked target CFG and shared scalar facts own control
-         * admission, feasible paths, return actions and cycle refusal. */
-        field = 0
-        if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
-          /* A counted child's implicit physical window can cross the original
-           * provider's global bank even without a spelled g operand. The
-           * caller-bank projection has not proved that layout transport. */
-          if source.globals() > 0 then return fail('keep','import.global.nested.call.pending')
-          field = 2; if item.operands() = 1 then field = 1
-        end
-        if wordpos(item.mnemonic(),'dcall swapcall settpcall settpswapcall') > 0 then return fail('keep','import.child.call.form.pending')
-        do j = 1 to item.operands()
-          if spend(1) = 0 then return 0
-          value = item.operand(j)
-          if value.kind() <> 'P' then iterate
-          if j <> field then return fail('keep','import.child.reference.pending')
-          if spend(source.procedures()) = 0 then return 0
-          bodyid = source.procedureid(value.text())
-          if bodyid = 0 then return fail('keep','import.child.body.pending')
-          if bodyid = body.functionid() then return fail('keep','call.recursion.active')
-          if parent > 0 then do
-            if bodyid = _pairbody[parent] then return fail('keep','call.recursion.active')
-          end
-          if children = 0 then return fail('keep','nested.call.depth.pending')
-          child = source.body(bodyid); alias = childalias(_pairprovider[pair],child)
-          if _status <> 'building' then return 0
-          childpair = intern(_pairprovider[pair],child)
-          if childpair = 0 then return 0
-          if reserve(length(alias),1) = 0 then return 0
-          _pairalias[childpair] = alias
-          if checkedbody(childpair,0,pair) = 0 then return 0
-          if rememberchild(pair,item.id(),childpair) = 0 then return 0
-        end
-        if item.mnemonic() = 'ret' then returns = returns + 1
-      end
-      else if item.kind() = '.meta' & item.operands() = 5 then do
-        value = item.operand(4)
-        if value.kind() <> 'P' | value.text() <> body.name() then return fail('keep','import.leaf.metadata.reference.pending')
-      end
-      else if item.kind() = '.meta' & item.operands() > 1 then do
-        value = item.operand(2)
-        if value.text() = '.inline' then return fail('keep','import.leaf.inline.transport.pending')
-      end
-    end
-    if returns = 0 then return fail('keep','import.leaf.control.pending')
-    return 1
-  status: method = .string
-    return _status
-  reason: method = .string
-    return _reason
-  operation: method = .int
-    arg original = .int
-    return _operations[original]
-  bindings: method = .object[]
-    request = .binding; result = .object[]; i = .int; body = .int
-    do i = 1 to _input[0]
-      request = _input[i] as .binding
-      if _callpair[request.callid()] > 0 then body = _pairfunction[_callpair[request.callid()]]
-      else body = _functions[request.bodyid()]
-      result[i] = .binding(reference _module,_operations[request.callid()],reference _module,body) as .object
-    end
-    return result
-  surrogate: method = .int
-    arg name = .string, target = reference .lltarget..draft
-    draft = dereference target
-    if draft.preflight(_namebytes + _pairname[0] * (length(name) + 1),0) = 0 then return 0
-    do i = 1 to _pairname[0]
-      if _pairname[i] == name then return 1
-    end
-    return 0
-  publicfields: method = .object[]
-    arg item = .lltarget..record, fields = .object[], target = reference .lltarget..draft
-    draft = dereference target; value = .lltarget..operand
-    i = .int; j = .int; field = .int; ignored = .int
-    if item.kind() = 'instruction' then do
-      if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then do
-        field = 2; if item.operands() = 1 then field = 1
-      end
-    end
-    do i = 1 to item.operands()
-      value = item.operand(i)
-      if value.kind() <> 'P' then iterate
-      if draft.preflight(_namebytes + _pairname[0] * (value.length() + 1),0) = 0 then return fields
-      do j = 1 to _pairname[0]
-        if _pairname[j] <> value.text() then iterate
-        /* Collision-free private names can originate only in selected root
-         * targets or the checked nested-call rows. Roots were expanded; only
-         * a validated child in a canonical retained CALL target can escape. */
-        if i <> field | _pairalias[j] = '' then do
-          ignored = fail('keep','import.surrogate.reference.pending'); return fields
-        end
-        fields[i] = .lltarget..operand.procedure(_pairalias[j]) as .object
-      end
-    end
-    return fields
-
-/** Work is one request allowance, explicitly partitioned between preparation,
- * the existing proof/expander, and final publication. Unused stage quota is
- * not borrowed. Each owned stage has its entries/bytes/cells cap; at most three
- * new owners coexist, so their aggregate is bounded by three such caps. */
-expandimports: procedure = .llinline..change
-  arg bindings = .object[], work = .int, entries = .int, bytes = .int, frame = .int, cells = .int
-  request = .binding; checked = .decision; prepared = .importprojection
-  input = .lltarget..record; value = .lltarget..operand; body = .lltarget..body
-  targetbody = .lltarget..bodydraft; cache = .importorigins()
-  empty = .int[]; sites = .int[]; decisions = .object[]; callers = .int[]; mapping = .int[]; published = .int[]; functions = .int[]
-  fields = .object[]; bodies = .object[]; i = .int; j = .int; old = .int; projectedid = .int; stage = .int
-  draft = .lltarget..draft
-  if bindings[0] = 0 then return .change('keep','binding.empty')
-  if bindings[1] is .binding then request = bindings[1] as .binding
-  else return .change('invalid','binding.type')
-  if request.valid() = 0 then return .change('invalid','binding.expired')
-  source = dereference request.caller()
-  if work < 3 | entries < 1 | bytes < 1 | frame < 0 | cells < 1 then return .change('limit','import.allowances',source,empty)
-  stage = work / 3
-  do
-    prepared = .importprojection(bindings,stage,entries,bytes)
-    call prepared.prepare()
-    if prepared.status() <> 'ok' then return importrefusal(bindings,prepared.status(),prepared.reason(),source)
-    projected = prepared.bindings()
-    localprofile = 'closed-main-default-halt.v1'
-    if source.globals() > 0 then localprofile = 'closed-main-static-exact-default-halt.v1'
-    changed = expandlocalmany(projected,localprofile,stage,entries,bytes,frame,cells)
-    do i = 1 to bindings[0]
-      request = bindings[i] as .binding; old = request.callid(); projectedid = prepared.operation(old)
-      sites[i] = old
-      if changed.sites() = 0 then decisions[i] = .decision(changed.status(),changed.reason()) as .object
-      else decisions[i] = .decision(changed.statusat(projectedid),changed.reasonat(projectedid)) as .object
-    end
-    if changed.status() <> 'changed' then return .change(changed.status(),changed.reason(),source,empty,callers,sites,decisions)
-    expanded = changed.result(); graph_ref = expanded.ir(); graph = dereference graph_ref
-    held = .int
-    if graph.operations() > bytes / 64 then return .change('limit','import.publication.bytes',source,empty)
-    held = graph.operations() * 64; store = dereference graph.storage()
-    if graph.functions() > (bytes - held) / 512 then return .change('limit','import.publication.bytes',source,empty)
-    held = held + graph.functions() * 512
-    if store.count(8) + store.count(9) > (bytes - held) / 128 then return .change('limit','import.publication.bytes',source,empty)
-    held = held + (store.count(8) + store.count(9)) * 128
-    if held >= bytes then return .change('limit','import.publication.bytes',source,empty)
-    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),entries,bytes - held,work - stage * 2)
-    code = .emitter(cells); skip = 0
-    do i = 1 to expanded.records()
-      input = expanded.record(i)
-      if draft.preflight(1 + input.operands() + input.registerrefs(),0) = 0 then return importfailure(draft.error(),source)
-      if input.kind() = 'procedure' then do
-        if draft.preflight(expanded.procedures(),0) = 0 then return importfailure(draft.error(),source)
-        body = expanded.body(input.procedureid()); skip = prepared.surrogate(body.name(),reference draft)
-        if skip then iterate
-      end
-      else if input.procedureid() > 0 & skip then iterate
-      at = cache.copy(graph_ref,input.origin(),reference draft)
-      if draft.error() <> '' then return importfailure(draft.error(),source)
-      if input.kind() = 'procedure' then do
-        targetbody = draft.procedure(body.name(),body.locals(),at,body.expose())
-        if draft.error() <> '' then return importfailure(draft.error(),source)
-        bodies[input.procedureid()] = targetbody as .object; functions[input.procedureid()] = targetbody.functionid()
-        published[input.id()] = targetbody.headerid(); iterate
-      end
-      if input.procedureid() = 0 then do
-        call objectarraydrop fields
-        do j = 1 to input.operands(); fields[j] = input.operand(j) as .object; end
-        fields = prepared.publicfields(input,fields,reference draft)
-        if prepared.status() <> 'ok' then return .change(prepared.status(),prepared.reason(),source,empty)
-        published[input.id()] = draft.record(input.kind(),fields,at); iterate
-      end
-      targetbody = bodies[input.procedureid()] as .lltarget..bodydraft; fields = clonefields(input,targetbody)
-      fields = prepared.publicfields(input,fields,reference draft)
-      if prepared.status() <> 'ok' then return .change(prepared.status(),prepared.reason(),source,empty)
-      if input.kind() = 'instruction' then published[input.id()] = code.emit(targetbody,input.mnemonic(),fields,at)
-      else published[input.id()] = targetbody.record(input.kind(),fields,at)
-    end
-    if draft.error() <> '' then return importfailure(draft.error(),source)
-    if code.error() <> '' then return .change('limit',code.error(),source,empty)
-    if draft.preflight(source.records() + changed.callers(),0) = 0 then return importfailure(draft.error(),source)
-    target = draft.finish()
-    if target.valid() = 0 then return importfailure(target.error(),source)
-    do i = 1 to source.records()
-      input = source.record(i); old = changed.operation(prepared.operation(input.id()))
-      if old > 0 then mapping[input.id()] = published[old]
-      else mapping[input.id()] = 0
-    end
-    do i = 1 to changed.callers(); callers[i] = functions[changed.caller(i)]; end
-    return .change('changed','closed.root.imported.scalar',target,mapping,callers,sites,decisions)
-  on signal as problem
-    if initialized(draft) then do
-      if draft.error() <> '' then return importfailure(draft.error(),source)
-    end
-    status = 'invalid'
-    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
-    return .change(status,'LL_IMPORT: ' || problem.name() || ': ' || problem.message(),source,empty)
-  end
-  return .change('invalid','import.no.result',source,empty)
-
-importfailure: procedure = .llinline..change
-  arg reason = .string, source = .lltarget..module
-  status = 'invalid'; empty = .int[]
-  if pos('LL_RESOURCE_LIMIT',reason) > 0 then status = 'limit'
-  return .change(status,reason,source,empty)
-
-/** Direct references recognize the common immutable provider-array case.
- * Frozen wrapper copies retain llir.nextidentity's globally unique arena ID;
- * their borrowed storage-wrapper addresses need not compare equal. Binding
- * validity has already checked each captured owner and arena for freshness. */
-sameimportowner: procedure = .int
-  arg first = reference .lltarget..module, second = reference .lltarget..module
-  if first <refsame> second then return 1
-  left = dereference first; right = dereference second
-  return left.identity() = right.identity()
-
-/** A preparation refusal still identifies original sites for CLI diagnostics.
- * Reading a binding's integer call ID does not dereference an expired owner. */
-importrefusal: procedure = .llinline..change
-  arg bindings = .object[], status = .string, reason = .string, source = .lltarget..module
-  sites = .int[]; callers = .int[]; empty = .int[]; decisions = .object[]; request = .binding
-  do i = 1 to bindings[0]
-    if bindings[i] is .binding then do
-      request = bindings[i] as .binding; sites[sites[0] + 1] = request.callid()
-      decisions[decisions[0] + 1] = .decision(status,reason) as .object
-    end
-  end
-  return .change(status,reason,source,empty,callers,sites,decisions)
-
-inspectimports: procedure = .llinline..decision
-  arg request = .binding, work = .int
-  bindings = .object[]; bindings[1] = request as .object
-  stage = .int; selected = .binding
-  if work < 3 then return .decision('limit','import.work')
-  stage = work / 3
-  do
-    prepared = .importprojection(bindings,stage,1000000,67108864)
-    call prepared.prepare()
-    if prepared.status() <> 'ok' then return .decision(prepared.status(),prepared.reason())
-    projected = prepared.bindings(); selected = projected[1] as .binding
-    source = dereference selected.caller(); localprofile = 'closed-main-default-halt.v1'
-    if source.globals() > 0 then localprofile = 'closed-main-static-exact-default-halt.v1'
-    return inspectlocal(selected,localprofile,stage)
-  on signal as problem
-    status = 'invalid'
-    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
-    return .decision(status,'LL_IMPORT: ' || problem.name() || ': ' || problem.message())
-  end
-  return .decision('invalid','import.no.inspection')
+  adapter = .compatibility(bindings)
+  return adapter.run(work,entries,bytes,frame,cells)

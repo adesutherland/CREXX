@@ -1,0 +1,185 @@
+/* cREXX License (MIT). Canonical signal destinations and logical returns. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(name,fields,at)
+label: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+
+nested: procedure = .int
+  failures = 0; fields = .object[]; row = .lltargetcfg..edge
+  draft = .lltarget..draft('nested.scope.cfg','fixture:nested.scope.cfg',0)
+  at = draft.synthetic('independent nested scope stack')
+  body = draft.procedure('main',4,at)
+  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  fields[3] = .lltarget..operand.string('count=0;args=list();a0=r1;proxies=();owned=(r1);prep=none' as .binary) as .object
+  fields[4] = .lltarget..operand.symbol('outer.after') as .object
+  outer = body.emit('inlenter',fields,at)
+  fields[1] = body.reg('r',2) as .object
+  fields[3] = .lltarget..operand.string('count=0;args=list();a0=r3;proxies=();owned=(r3);prep=none' as .binary) as .object
+  fields[4] = .lltarget..operand.symbol('inner.after') as .object
+  inner = body.emit('inlenter',fields,at)
+  inside = one(body,'ret',body.reg('r',3),at)
+  innerafter = label(body,'inner.after',at)
+  middle = one(body,'ret',body.reg('r',1),at)
+  outerafter = label(body,'outer.after',at)
+  outside = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('leaf',0,at)
+  ignored = one(body,'ret',.lltarget..operand.integer(1),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'nested scoped source validates')
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  profile = .lltargettransfer..profile.closedmain(reference target,target.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  failures = failures + check(cfg.status() = 'ok','nested scope CFG builds under sealed standalone context')
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  failures = failures + check(cfg.scopedepth(inside) = 2 & cfg.scopeat(inside,1) = outer & cfg.scopeat(inside,2) = inner & cfg.scopeparent(inner) = outer,'nested stack preserves outer/inner source ownership')
+  innerexit = 0; outerexit = 0; asynchronous = 0
+  do i = 1 to cfg.edges()
+    row = cfg.edge(i)
+    if row.sourceop() = inside & row.role() = 'normal' then do
+      if row.scopecomplete() & row.scopeexits() = 1 then innerexit = row.scopeexit(1) = inner & row.targetop() = innerafter
+    end
+    if row.sourceop() = middle & row.role() = 'normal' then do
+      if row.scopecomplete() & row.scopeexits() = 1 then outerexit = row.scopeexit(1) = outer & row.targetop() = outerafter
+    end
+    if row.sourceop() = inner & row.exposure() = 'inherited-async' & row.role() = 'terminal' & row.phase() = 'after' then do
+      if row.scopecomplete() & row.scopeexits() = 2 then asynchronous = row.scopeexit(1) = inner & row.scopeexit(2) = outer
+    end
+  end
+  failures = failures + check(innerexit & outerexit & asynchronous,'logical return restores one scope; committed async HALT restores every active scope in order')
+  foreign = target
+  failures = failures + check(profile.matches(reference foreign) = 0,'copied target is not the sealed execution owner')
+  return failures
+
+main: procedure = .int
+  i = .int
+  fields = .object[]
+  failures = 0; row = .lltargetcfg..edge
+  draft = .lltarget..draft('canonical.signal.cfg','fixture:canonical.signal.cfg',0)
+  at = draft.synthetic('independent canonical signal CFG')
+  body = draft.procedure('main',2,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('handler') as .object
+  fields[2] = .lltarget..operand.string('OUT_OF_RANGE' as .binary) as .object
+  ignored = body.emit('sigbr',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.integer(1) as .object; fields[3] = .lltarget..operand.integer(2) as .object
+  fault = body.emit('ichkrng',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',1) as .object; fields[2] = .lltarget..operand.integer(7) as .object
+  following = body.emit('load',fields,at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  handler = label(body,'handler',at)
+  ignored = one(body,'ret',.lltarget..operand.integer(1),at)
+  body = draft.procedure('scoped',2,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.procedure('leaf') as .object
+  fields[3] = .lltarget..operand.string('count=0;args=list();a0=r1;proxies=();owned=(r1);prep=none' as .binary) as .object
+  fields[4] = .lltarget..operand.symbol('continued') as .object
+  scopeentry = body.emit('inlenter',fields,at)
+  scopedreturn = one(body,'ret',body.reg('r',1),at)
+  continued = label(body,'continued',at)
+  outerreturn = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('leaf',0,at)
+  ignored = one(body,'ret',.lltarget..operand.integer(9),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'canonical signal source validates')
+  if target.valid() = 0 then do; say target.error(); say 'TARGET_SIGNAL_CFG|failures=' || failures; return failures; end
+  profile = .lltargettransfer..profile(reference target)
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  failures = failures + check(cfg.status() = 'ok','canonical signal CFG builds')
+  if cfg.status() = 'ok' then do
+    localhandler = 0; inheritedresume = 0; outward = 0; scoped = 0; outer = 0; entered = 0; unknownscope = 0
+    do i = 1 to cfg.edges()
+      row = cfg.edge(i)
+      if row.sourceop() = fault then do
+        if row.role() = 'handler' & row.targetblock() = cfg.projectedblock(handler) & row.phase() = 'before' then localhandler = 1
+        if row.role() = 'resumed' & row.exposure() = 'inherited' & row.targetblock() = cfg.projectedblock(following) then inheritedresume = 1
+        if row.boundarykind() = 'inherited-signal-policy' & row.complete() = 0 then outward = 1
+      end
+      if row.sourceop() = scopeentry & row.role() = 'normal' then do
+        if row.scopecomplete() & row.scopeenters() = 1 then entered = row.scopeentry(1) = scopeentry
+      end
+      if row.sourceop() = scopedreturn & row.role() = 'normal' & row.targetblock() = cfg.projectedblock(continued) then do
+        scoped = row.targetop() = continued & row.scopecomplete() & row.scopeexits() = 1
+        if scoped then scoped = row.scopeexit(1) = scopeentry
+      end
+      if row.sourceop() = scopedreturn & row.complete() = 0 & row.scopecomplete() = 0 & row.scopeunknownreason() <> '' then unknownscope = 1
+      if row.sourceop() = outerreturn & row.role() = 'terminal' & row.targetblock() = 0 then outer = 1
+    end
+    failures = failures + check(localhandler & inheritedresume & outward,'local handler, foreign resumption and unknown outward departure remain distinct')
+    failures = failures + check(cfg.localcomplete(target.procedureid('main')) & cfg.exceptionalcomplete(target.procedureid('main')) = 0,'local destination completeness does not invent complete inherited policy')
+    failures = failures + check(scoped & outer & entered,'logical RET leaves exactly its scope while outer RET departs physically')
+    failures = failures + check(cfg.scopeowner(scopeentry) = 0 & cfg.scopeowner(scopedreturn) = scopeentry & cfg.scopedepth(scopedreturn) = 1 & cfg.scopeat(scopedreturn,1) = scopeentry & cfg.scopeparent(scopeentry) = 0 & cfg.scopecontinuation(scopeentry) = continued,'source scope stack and continuation use checked source identities')
+    failures = failures + check(cfg.logicalreturn(scopedreturn) & cfg.physicaldeparture(scopedreturn) = 0 & cfg.physicaldeparture(outerreturn) & unknownscope,'return queries separate logical/physical departure and retain unknown inherited exits')
+  end
+  else say cfg.message()
+  closedprofile = .lltargettransfer..profile.closedmain(reference target,target.procedureid('main'),'closed-main-default-halt.v1')
+  closedcfg = .lltargetcfg..graph(reference target,reference closedprofile)
+  failures = failures + check(closedcfg.status() = 'ok' & closedprofile.premise() = 'canonical' & closedprofile.executionroot() = target.procedureid('main'),'explicit closed-main context binds one canonical transfer owner')
+  if closedcfg.status() = 'ok' then do
+    halted = 0; retainedhandler = 0; foreignroot = 0; othersunknown = 0
+    do i = 1 to closedcfg.edges()
+      row = closedcfg.edge(i)
+      if row.sourceop() = fault then do
+        if row.boundarykind() = 'closed-main-default-halt' & row.role() = 'terminal' & row.scopecomplete() then halted = 1
+        if row.role() = 'handler' & row.targetop() = handler then retainedhandler = 1
+        if row.boundarykind() = 'inherited-signal-policy' then foreignroot = 1
+      end
+      if row.sourceop() = scopedreturn & row.complete() = 0 then othersunknown = 1
+    end
+    failures = failures + check(halted & retainedhandler & foreignroot = 0 & othersunknown,'closed main keeps authored handlers and leaves other procedure inheritance unknown')
+  end
+  else say closedcfg.message()
+  wrongroot = .lltargettransfer..profile.closedmain(reference target,target.procedureid('scoped'),'closed-main-default-halt.v1')
+  failures = failures + check(wrongroot.status() = 'invalid','closed execution context rejects a foreign procedure owner')
+  tinycfg = .lltargetcfg..graph(reference target,reference profile,1,1)
+  failures = failures + check(tinycfg.status() = 'limit','CFG scope queries retain deterministic tiny-budget refusal')
+  do variant = 1 to 2
+    broken = .lltarget..draft('bad.scope.' || variant,'fixture:bad.scope',0)
+    source = broken.synthetic('handwritten scope crossing')
+    body = broken.procedure('main',2,source)
+    if variant = 1 then ignored = one(body,'br',.lltarget..operand.symbol('inside'),source)
+    call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+    fields[2] = .lltarget..operand.procedure('leaf') as .object
+    fields[3] = .lltarget..operand.string('count=0;args=list();a0=r1;proxies=();owned=(r1);prep=none' as .binary) as .object
+    fields[4] = .lltarget..operand.symbol('after') as .object
+    ignored = body.emit('inlenter',fields,source)
+    ignored = label(body,'inside',source)
+    if variant = 2 then ignored = one(body,'br',.lltarget..operand.symbol('after'),source)
+    ignored = one(body,'ret',.lltarget..operand.integer(0),source)
+    ignored = label(body,'after',source)
+    ignored = one(body,'ret',.lltarget..operand.integer(0),source)
+    body = broken.procedure('leaf',0,source)
+    ignored = one(body,'ret',.lltarget..operand.integer(0),source)
+    badtarget = broken.finish()
+    badprofile = .lltargettransfer..profile(reference badtarget)
+    badcfg = .lltargetcfg..graph(reference badtarget,reference badprofile)
+    failures = failures + check(badcfg.status() = 'invalid' & pos('control crosses logical activation boundary',badcfg.message()) > 0,'authored branch into/out of a logical scope is rejected ' || variant)
+  end
+  failed_draft = .lltarget..draft('failed.draft','fixture:failed.draft',0)
+  failed_at = failed_draft.synthetic('preserve first malformed-draft diagnostic')
+  failed_body = failed_draft.procedure('main',0,failed_at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object
+  ignored = failed_body.emit('not_registered',fields,failed_at)
+  first_error = failed_draft.error()
+  refused_body = failed_draft.procedure('later',0,failed_at)
+  ignored = refused_body.emit('ret',fields,failed_at)
+  failed_target = failed_draft.finish()
+  failures = failures + check(first_error <> '' & refused_body.functionid() = 0 & failed_target.valid() = 0 & failed_target.error() == first_error,'malformed draft preserves its first diagnostic without constructing expired function handles')
+  failures = failures + nested()
+  say 'TARGET_SIGNAL_CFG|failures=' || failures
+  return failures

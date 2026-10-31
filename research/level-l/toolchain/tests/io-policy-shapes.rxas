@@ -1,0 +1,51 @@
+/* Compact instruction patterns owned by compiler/rxcp_emit_flow.c SIGNAL_BLOCK
+ * and levelc/llcrxas.crexx core.protect/conditionrelay. G returns normally or
+ * through its own handler; C captures and relays the original event owner. */
+.globals=1
+main() .locals=0
+  load g0,3
+  sigpush "OUT_OF_RANGE"
+  sigbr caller_caught,"OUT_OF_RANGE"
+  call1 g0,gprotect(),g0
+  itos g0
+  say g0
+  signal "OUT_OF_RANGE"
+  say "FAIL: caller policy was not restored"
+  ret 1
+caller_caught:
+  sigpop "OUT_OF_RANGE"
+  say "G-restored"
+  call1 g0,cprotect(),g0
+  say "FAIL: C relay resumed"
+  ret 1
+
+gprotect() .locals=0
+  sigpush "OUT_OF_RANGE"
+  sigbr g_caught,"OUT_OF_RANGE"
+  .srcstep 1 1 17 "signal_policy.g" 3 3 30 "assembler ichkrng value,-5,5"
+  ichkrng a1,-5,5
+  sigpop "OUT_OF_RANGE"
+  ret a1
+g_caught:
+  sigpop "OUT_OF_RANGE"
+  ret -1
+
+cprotect() .locals=2
+  null r0
+  null r1
+  sigpush "OTHER"
+  sigbrv c_caught,r0,"OTHER"
+  .srcstep 2 2 17 "signal_policy.c" 7 3 30 "signal other 'C-relay-payload'"
+  signal "OTHER","C-relay-payload"
+  sigpop "OTHER"
+  ret 0
+c_caught:
+  sigpop "OTHER"
+  sighalt "OTHER"
+  /* conditionrelay receives an already captured payload and event owner.
+   * A fixed independent payload keeps this control about policy/origin rather
+   * than adding the runtime_signal attribute-access helper closure. */
+  load r1,"C-relay-payload"
+  say "C-captured"
+  signalorigin "OTHER",r1,r0
+  ret 0

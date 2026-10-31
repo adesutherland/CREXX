@@ -1,11 +1,15 @@
 /* cREXX License (MIT). RXAS scalar/storage transfers over shared L analyses. */
 options levelb
-namespace lltargetfacts expose analysis analyse analysegraph arithmetic
+namespace lltargetfacts expose analysis analyse analysegraph proveexpansion arithmetic
 import rxfnsb
 import llir
 import llirgraph
 import lltarget
 import llrxascatalog
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetrecipe
 
 /** Typed numeric row retained as an object; primitive arrays are not boxed. */
 numbers: class
@@ -214,6 +218,27 @@ cells: class
     _stringdefined[id] = 0; _stringindependent[id] = 0
     _binarydefined[id] = 0; _binaryindependent[id] = 0
     _runtimeevent[id] = 0
+    return
+  /** Drop optional facts affected by a retained instruction. Components are
+   * canonical masks, not an instruction/value interpreter. Unknown writes
+   * forget the whole cell; missing facts never make a clone illegal. */
+  forget: method = .void
+    arg id = .int, components = 511
+    affected = .int
+    if components = 0 then components = 511
+    assembler iand affected,components,1
+    if affected then do
+      _defined[id] = 0; _known[id] = 0; _values[id] = 0
+      _bounded[id] = 0; _low[id] = 0; _high[id] = 0
+    end
+    assembler iand affected,components,4
+    if affected then do; _stringdefined[id] = 0; _stringindependent[id] = 0; end
+    assembler iand affected,components,16
+    if affected then do; _binarydefined[id] = 0; _binaryindependent[id] = 0; end
+    assembler iand affected,components,32
+    if affected then do; _abiknown[id] = 0; _abibits[id] = 0; _abiindependent[id] = 0; end
+    _wholeknown[id] = 0; _zeroed[id] = 0; _runtimeevent[id] = 0
+    if components <> 1 then _plain[id] = 0
     return
   /** Whole VM overwrite at an executable SIGBRV predecessor. The wrapper
    * carries owned arbitrary payloads, never scalar or reusable-cell proof. */
@@ -820,8 +845,25 @@ analysis: class
   _cycles = .llirgraph..cycles
   _cyclesready = .int
   _graphmode = .int
+  _structural = .int
   _rootchoice = .int[]
   _rootrestored = .int
+  /* A scoped request adapts the shared operational flow. It has no second
+   * target transfer, scope stack, graph or value interpretation. */
+  _scoped = .int
+  _scopeprofile = .lltargettransfer..profile
+  _scopegraph = .lltargetcfg..graph
+  _scopeflow = .lltargetflow..analysis
+  _flowtofact = .int[]
+  _facttoflow = .int[]
+  _scopepins = .int[]
+  _scopeidentity = .int[]
+  _capturestorage = .object[]
+  _basestorage = .object[]
+  _preparationstorage = .object[]
+  _preparationswappable = .int[]
+  _transportcomplete = .int
+  _transportreason = .string
   _scopes = .numbers[]
   _scopeslot = .int[]
   _scopestorage = .int[]
@@ -882,9 +924,10 @@ analysis: class
   _ownerclose = .int
   _ownerfinalevent = .int
   *: factory
-    arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864, graphmode = 0
+    arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864, graphmode = 0, structural = 0
     _owner = owner; _function = functionId; _profile = profile; _work = work; _status = 'building'; _reason = ''; _bytelimit = bytes
     _graphmode = graphmode
+    _structural = structural
     return
   spend: method = .int
     arg amount = .int
@@ -1807,7 +1850,7 @@ analysis: class
         end
         else if _inlinescopestorage[found] <> id then return reject('metadata.binding.change.pending')
       end
-      if state.wholeknown(id) = 0 then return reject('metadata.runtime.observer.unproved')
+      if _structural = 0 & state.wholeknown(id) = 0 then return reject('metadata.runtime.observer.unproved')
       if spend(observations[0] + 1) = 0 then return 0
       call insert(observations_ref,domain(id,1))
     end
@@ -1916,7 +1959,7 @@ analysis: class
       value = item.operand(1)
       if value.kind() = 'I' then do; action = 'integer'; call state.integer(destination,1,value.index()); end
       else if value.kind() = 'S' then do
-        if state.ordinary(destination) = 0 then return reject('lifetime.hidden.payload.unproved')
+        if _structural = 0 & state.ordinary(destination) = 0 then return reject('lifetime.hidden.payload.unproved')
         action = 'string'; call state.string(destination)
       end
       else do
@@ -1956,6 +1999,9 @@ analysis: class
     if childid = 0 then return reject('argument.selector.tail.call.pending')
     if _active[childid] then return reject('call.recursion.active')
     if linear(childid,'argument.selector.tail.call.pending') = 0 then return 0
+    /* The reached invoke owns structural catalog/adaptor validation. This
+     * selector seam must not add another ordinary-instruction whitelist. */
+    if _structural then return 1
     if reserve(_linearcount[childid],16) = 0 | spend(_linearcount[childid]) = 0 then return 0
     row = _linear[childid] as .numbers
     do i = 1 to row.size()
@@ -2342,7 +2388,12 @@ analysis: class
             opid = _index.nextop(opid); iterate
           end
           if flow = 1 | flow = 2 then do
-            if name = 'br' then choice = 1
+            if _structural then do
+              /* Every declared normal edge survives conservative expansion.
+               * Optional facts cannot turn an ordinary clone into folded IR. */
+              if step(item,view,reference path,root = 0,root,root | hasresult,0) = 0 then return 0
+            end
+            else if name = 'br' then choice = 1
             else if name = 'brtpandt' then do
               value = item.operand(3); mask = value.index()
               if mask <> 256 & mask <> 512 & mask <> 768 then return reject('status.mask.unproved')
@@ -2373,7 +2424,7 @@ analysis: class
             end
             else return reject('profile.callee.cfg.pending')
             call proof.visit(_recordordinal[opid],choice)
-            if root then do
+            if root & _structural = 0 then do
               _rootchoice[opid] = choice
               if step(item,view,reference path,0,1,1,0) = 0 then return 0
             end
@@ -2388,7 +2439,7 @@ analysis: class
             end
             if step(item,view,reference path,root = 0,root,root | hasresult,0) = 0 then return 0
             if publish & name = 'linkarg' then selectors[_selectorordinal[opid]] = _lastselector
-            if publish & wordpos(name,'link unlink swap linkarg') > 0 then _rebinding[callid] = 1
+            if publish & bindingoperation(item) then _rebinding[callid] = 1
             if name = 'ret' then do
               if root then do
                 if exits = 0 then _rootrestored = 1
@@ -2552,10 +2603,118 @@ analysis: class
     end
     values[values[0] + 1] = id
     return
+  /** Canonical binding aliases (including LOAD R,R) share one frame adapter.
+   * Compound families are not mistaken for their first operand pair. */
+  bindingoperation: method = .int
+    arg item = .lltarget..record
+    if item.kind() <> 'instruction' then return 0
+    if _structural then do
+      catalog = .llrxascatalog..catalog(); action = catalog.binding(item.opcode())
+      return action >= 1 & action <= 4
+    end
+    return wordpos(item.mnemonic(),'link unlink swap linkarg') > 0
+  /** Optional transport facts for ABI selectors/counts. This is deliberately
+   * not clone admission: every unhandled operation simply loses affected
+   * facts through the canonical component description below. */
+  optionaltransport: method = .int
+    arg item = .lltarget..record, expose view = .frame, expose state = .cells
+    destination = .int; sourceid = .int
+    known = .int; i = .int; checked = .int[]; inputs = .int[]
+    value = .lltarget..operand; source = .lltarget..operand
+    name = item.mnemonic()
+    if item.operands() = 0 then return 0
+    value = item.operand(1)
+    if value.kind() <> 'R' then return 0
+    destination = view.storage(value)
+    if name = 'null' then do; call state.reset(destination); return 1; end
+    if name = 'load' & item.operands() = 2 then do
+      source = item.operand(2)
+      if source.kind() = 'I' then do; call state.integer(destination,1,source.index()); return 1; end
+      if source.kind() = 'S' then do; call state.string(destination); return 1; end
+    end
+    if wordpos(name,'copy icopy move scopy bcopy acopy') > 0 & item.operands() = 2 then do
+      source = item.operand(2)
+      if source.kind() <> 'R' then return 0
+      sourceid = view.storage(source)
+      if name = 'move' then call state.move(destination,sourceid)
+      else if name = 'scopy' then call state.copystring(destination,sourceid)
+      else if name = 'bcopy' then call state.copybinary(destination,sourceid)
+      else if name = 'acopy' then call state.statuscopy(destination,sourceid)
+      else call state.copy(destination,sourceid,name <> 'icopy')
+      return 1
+    end
+    if name = 'settp' & item.operands() = 2 then do
+      source = item.operand(2)
+      if source.kind() <> 'I' then return 0
+      call state.status(destination,source.index())
+      return 1
+    end
+    /* A checked constant result is useful to a later counted-call adapter.
+     * A failed or unknown calculation is retained and merely loses the fact. */
+    if wordpos(name,'iadd isub imult') > 0 & item.operands() = 3 then do
+      known = 1
+      do i = 2 to 3
+        source = item.operand(i)
+        if source.kind() = 'I' then inputs[i] = source.index()
+        else if source.kind() = 'R' then do
+          sourceid = view.storage(source)
+          if state.known(sourceid) then inputs[i] = state.value(sourceid)
+          else known = 0
+        end
+        else known = 0
+      end
+      if known then do
+        checked = arithmetic(name,inputs[2],inputs[3])
+        if checked[1] then do; call state.integer(destination,1,checked[2]); return 1; end
+      end
+    end
+    return 0
+  /** The ordinary instruction remains the VM's operation. The canonical
+   * category certifies relocation/effect coverage; neither scalar transfer
+   * availability nor component initialization is an expansion premise. Valid
+   * RXAS producers define components before observing them. Access/fact rows
+   * are conservative aids for ABI adapters and separately enabled cleanup. */
+  cloneordinary: method = .int
+    arg item = .lltarget..record, expose view = .frame, expose state = .cells, observations = .int[], record = 1, history = 1
+    i = .int; id = .int; components = .int; cleared = .int; integer = .int
+    value = .lltarget..operand; reads = .int[]; writes = .int[]; kills = .int[]
+    catalog = .llrxascatalog..catalog(); opcode = item.opcode()
+    if reserve(item.operands(),96) = 0 | spend(item.operands() * 8 + 1) = 0 then return 0
+    do i = 1 to item.operands()
+      value = item.operand(i)
+      if value.kind() <> 'R' then iterate
+      id = view.storage(value)
+      if catalog.reads(opcode,i) then do
+        call insert(reference reads,domain(id,catalog.readcomponents(opcode,i) <> 1))
+      end
+      if catalog.writes(opcode,i) then do
+        components = catalog.writecomponents(opcode,i); cleared = catalog.clearcomponents(opcode,i)
+        assembler iand integer,components,1
+        if integer | components = 0 then call insert(reference writes,domain(id))
+        call insert(reference writes,domain(id,1))
+      end
+    end
+    /* Preserve facts only for exact optional transports. No result here can
+     * refuse a clone, simplify its control, or invent a successful write. */
+    if optionaltransport(item,view,state) = 0 then do i = 1 to item.operands()
+      value = item.operand(i)
+      if value.kind() <> 'R' | catalog.writes(opcode,i) = 0 then iterate
+      id = view.storage(value)
+      components = catalog.writecomponents(opcode,i); cleared = catalog.clearcomponents(opcode,i)
+      assembler ior components,components,cleared
+      if catalog.writecomplete(opcode,i) = 0 then components = 511
+      call state.forget(id,components)
+    end
+    if history then do i = 1 to item.registerrefs()
+      value = item.registerref(i); id = view.storage(value); _plain[id] = state.plain(id)
+    end
+    /* Without a success/edge proof, a possible write is never a liveness kill. */
+    if record then call _access.put(item.id(),reads,observations,writes,kills)
+    return 1
   step: method = .int
     arg item = .lltarget..record, expose view = .frame, state_ref = reference .cells, private = 0, record = 1, returnwhole = 1, history = 1
     i = .int; j = .int; sourceid = .int; destination = .int; rightid = .int; id = .int
-    opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int
+    opcode = .int; component = .int; cleared = .int; lhs = .int; rhs = .int; category = .int; binding = .int
     integerwrite = .int; binaryload = .int; binaryequal = .int
     leftknown = .int; rightknown = .int
     stringtrace = .int
@@ -2590,8 +2749,10 @@ analysis: class
           if left(option.text(),1) = '.' & option.text() <> '.inline' then return reject('metadata.runtime.observer.unproved')
         end
         do i = 1 to references[0]
-          if globalcell(references[i]) & state.wholeknown(references[i]) = 0 then return reject('global.definition.unproved')
-          if state.wholeknown(references[i]) = 0 then return reject('local.recycler.observation.unproved')
+          if _structural = 0 then do
+            if globalcell(references[i]) & state.wholeknown(references[i]) = 0 then return reject('global.definition.unproved')
+            if state.wholeknown(references[i]) = 0 then return reject('local.recycler.observation.unproved')
+          end
           call insert(reference observations,domain(references[i],1))
         end
       end
@@ -2607,8 +2768,9 @@ analysis: class
           if value.text() = 'S' & wordpos(lower(bank.text()),'r a g') > 0 & option.index() % 2 = 0 then stringtrace = 1
         end
         do i = 1 to references[0]
-          if globalcell(references[i]) & state.wholeknown(references[i]) = 0 then return reject('global.definition.unproved')
-          if stringtrace then do
+          if _structural then nop
+          else if globalcell(references[i]) & state.wholeknown(references[i]) = 0 then return reject('global.definition.unproved')
+          else if stringtrace then do
             if state.ordinary(references[i]) = 0 | state.stringdefined(references[i]) = 0 | state.stringindependent(references[i]) = 0 then return reject('local.recycler.observation.unproved')
           end
           else if state.defined(references[i]) = 0 | state.wholeknown(references[i]) = 0 then return reject('local.recycler.observation.unproved')
@@ -2620,6 +2782,36 @@ analysis: class
       return 1
     end
     catalog = .llrxascatalog..catalog(); opcode = item.opcode(); name = item.mnemonic()
+    if _structural then do
+      category = catalog.clonecategory(opcode)
+      if category = 0 then return reject('profile.effect.contract.missing')
+      if category = 6 then return reject('profile.activation.action.unproved')
+      if category = 1 then do
+        /* The checked named-signal adapter has an explicit failure successor.
+         * Its single guarded instruction uses that existing two-path owner. */
+        if _namedactive = 0 | item.id() <> _namedcheck then return cloneordinary(item,view,state,observations,record,history)
+      end
+      else if category = 2 then do
+        binding = catalog.binding(opcode)
+        signature = catalog.signature(opcode)
+        if binding = 1 | binding = 3 then do
+          if signature <> 'RR' then return reject('binding.signature.adapter.pending')
+        end
+        else if binding = 2 | binding = 6 then do
+          if signature <> 'R' then return reject('binding.signature.adapter.pending')
+        end
+        else if binding = 4 then do
+          if signature <> 'RI' & signature <> 'RRI' then return reject('binding.signature.adapter.pending')
+        end
+        if binding = 1 then name = 'link'
+        else if binding = 2 then name = 'unlink'
+        else if binding = 3 then name = 'swap'
+        else if binding = 4 then name = 'linkarg'
+        else if binding <> 6 then return reject('binding.compound.adapter.pending')
+      end
+      else if category = 3 then return reject('call.adapter.pending')
+      else if category = 5 & name <> 'numsci' then return reject('context.adapter.pending')
+    end
     if _globals[0] > 0 then do
       if item.operands() > 0 then left = item.operand(1)
       if name = 'endlife' then do
@@ -2673,9 +2865,11 @@ analysis: class
         if value.kind() = 'R' then do
           id = view.storage(value)
           if id = 0 then return reject('local.recycler.history.unproved')
-          if state.defined(id) = 0 & state.stringdefined(id) = 0 & state.binarydefined(id) = 0 then return reject('local.recycler.history.unproved')
-          if state.ordinary(id) = 0 then return reject('argument.scalar.state.unproved')
-          if returnwhole & state.wholeknown(id) = 0 then return reject('local.recycler.history.unproved')
+          if _structural = 0 then do
+            if state.defined(id) = 0 & state.stringdefined(id) = 0 & state.binarydefined(id) = 0 then return reject('local.recycler.history.unproved')
+            if state.ordinary(id) = 0 then return reject('argument.scalar.state.unproved')
+            if returnwhole & state.wholeknown(id) = 0 then return reject('local.recycler.history.unproved')
+          end
           call insert(reference reads,domain(id,1))
         end
         else if value.kind() <> 'I' & value.kind() <> 'S' then return reject('profile.return.component.pending')
@@ -2927,9 +3121,9 @@ analysis: class
         else if wordpos(name,'concat sconcat') > 0 then do
           if spend(8) = 0 then return 0
           if state.ordinary(destination) = 0 then return reject('argument.scalar.state.unproved')
-          /* Non-ASCII VM paths can retain incoming destination normalization
-           * bits. Source independence alone cannot prove that metadata. */
-          if state.stringindependent(destination) = 0 then return reject('string.component.unproved')
+          /* The VM string-length setter clears normalization certificates on
+           * both direct and alias-buffer paths; no destination certificate is
+           * a prerequisite for this retained string write. */
           do i = 2 to 3
             value = item.operand(i)
             if value.kind() <> 'R' then iterate
@@ -3044,12 +3238,15 @@ analysis: class
       else value = item.operand(i + 2)
       if private = 0 & value.bank() <> 'r' & value.bank() <> 'g' then do; ignored = reject('argument.storage.unproved'); return .callshape(); end
       id = view.storage(value)
-      if globalcell(id) & state.wholeknown(id) = 0 then do; ignored = reject('global.definition.unproved'); return .callshape(); end
-      if id = 0 | state.ordinary(id) = 0 then do; ignored = reject('argument.scalar.state.unproved'); return .callshape(); end
-      /* A string/binary actual need not invent an integer component. The exact
-       * child transfer still checks every component that its body reads. */
-      if (state.defined(id) = 0 | state.wholeknown(id) = 0) & (state.stringdefined(id) = 0 | state.stringindependent(id) = 0) & (state.binarydefined(id) = 0 | state.binaryindependent(id) = 0) then do
-        ignored = reject('argument.scalar.state.unproved'); return .callshape()
+      if id = 0 then do; ignored = reject('argument.storage.unproved'); return .callshape(); end
+      if _structural = 0 then do
+        if globalcell(id) & state.wholeknown(id) = 0 then do; ignored = reject('global.definition.unproved'); return .callshape(); end
+        if state.ordinary(id) = 0 then do; ignored = reject('argument.scalar.state.unproved'); return .callshape(); end
+        /* A string/binary actual need not invent an integer component. The
+         * optional transfer checks only components that its body reads. */
+        if (state.defined(id) = 0 | state.wholeknown(id) = 0) & (state.stringdefined(id) = 0 | state.stringindependent(id) = 0) & (state.binarydefined(id) = 0 | state.binaryindependent(id) = 0) then do
+          ignored = reject('argument.scalar.state.unproved'); return .callshape()
+        end
       end
       actuals[i] = id; positions[i] = view.position(value) - 1
     end
@@ -3131,7 +3328,7 @@ analysis: class
     if _ownedready[bodyid] then do
       ownedrow = _owned[bodyid] as .numbers
       if ownedrow.at(callee.locals() + 1) > state.size() then return reject('join.storage.unproved')
-      repeated = callhistory.seen(ownedrow.at(callee.locals() + 1))
+      if _structural = 0 then repeated = callhistory.seen(ownedrow.at(callee.locals() + 1))
     end
     _active[bodyid] = 1
     if count >= _work then do; _status = 'limit'; _reason = 'target.facts.work'; return 0; end
@@ -3150,7 +3347,8 @@ analysis: class
     if _ownedready[bodyid] then do
       do i = 1 to callee.locals() + 1
         owned[i] = ownedrow.at(i)
-        if repeated & i <= callee.locals() then do
+        if _structural & i <= callee.locals() then call state.uncertain(owned[i])
+        else if repeated & i <= callee.locals() then do
           if callhistory.reset(owned[i]) = 0 then call state.uncertain(owned[i])
         end
       end
@@ -3208,7 +3406,7 @@ analysis: class
         if _lastselector < 0 then return reject('argument.selector.unproved')
         selectors[_selectorordinal[record.id()]] = _lastselector
       end
-      if publish & record.kind() = 'instruction' & wordpos(record.mnemonic(),'link unlink swap linkarg') > 0 then do
+      if publish & bindingoperation(record) then do
         _rebinding[item.id()] = 1
         if record.mnemonic() = 'swap' then do
           if reserve(1,8) = 0 then return 0
@@ -3260,6 +3458,219 @@ analysis: class
     p = _proofs[0] + 1; _proofs[p] = proof; _proofindex[item.id()] = p
     call _access.put(item.id(),reads,observations,writes,kills)
     return 1
+  mapflow: method = .int
+    arg storage = .int
+    if storage < 1 then return 0
+    if storage <= _flowtofact[0] then do; if _flowtofact[storage] > 0 then return _flowtofact[storage]; end
+    id = 0
+    if _scopeflow.storagefunction(storage) = _function & _scopeflow.storagebank(storage) = 'r' then id = _scopeflow.storageindex(storage) + 1
+    if id = 0 then id = _facttoflow[0] + 1
+    if storage > _flowtofact[0] then do; if reserve(storage - _flowtofact[0],8) = 0 then return 0; end
+    if id > _facttoflow[0] then do; if reserve(id - _facttoflow[0],8) = 0 then return 0; end
+    if spend(1) = 0 then return 0
+    _flowtofact[storage] = id; _facttoflow[id] = storage
+    return id
+  scopedfailure: method = .void
+    arg status = .string, reason = .string
+    _status = status; _reason = reason
+    return
+  runscoped: method = .void
+    i = .int; j = .int
+    sharedaccess = .llirgraph..access; sharedindex = .llirgraph..index
+    module = dereference _owner; body = module.body(_function); catalog = .llrxascatalog..catalog()
+    item = .lltarget..record; value = .lltarget..operand; binding = .lltargetflow..storagefact
+    edge = .lltargetcfg..edge; action = .lltargettransfer..action
+    recipe = .lltargetrecipe..view; instruction = .lltargettransfer..instruction; domain = .lltargettransfer..domain
+    key = .string; prefix = .string; domainordinal = .int; complete = .int; candidate = .int; departures = .int; scopeoperation = .int; exactedge = .int; reached = .int; step = .int; operand = .int; operands = .int
+    refview = .lltargettransfer..refview
+    references = .int[]; plain = .int[]; captures = .int[]; bases = .int[]; preparation = .int[]; actuals = .int[]; id = .int; storage = .int; ignored = .int; domainid = .int
+    if reserve(body.locals(),48) = 0 | spend(body.locals()) = 0 then return
+    do i = 1 to body.locals()
+      _facttoflow[i] = 0; _plain[i] = 0; _reuse[i] = 0; _scopepins[i] = 0; _scopeidentity[i] = 0; _domains[i] = 0; _whole[i] = 0
+    end
+    _scopeprofile = .lltargettransfer..profile.closedmain(_owner,_function,_profile,_work,max(1,_bytelimit - _retained))
+    if _scopeprofile.status() <> 'ok' then do; call scopedfailure(_scopeprofile.status(),_scopeprofile.message()); return; end
+    if spend(_scopeprofile.usedwork()) = 0 | reserve(_scopeprofile.usedbytes(),1) = 0 then return
+    _scopegraph = .lltargetcfg..graph(_owner,reference _scopeprofile,_work,max(1,_bytelimit - _retained))
+    if _scopegraph.status() <> 'ok' then do; call scopedfailure(_scopegraph.status(),_scopegraph.message()); return; end
+    if spend(_scopegraph.usedwork()) = 0 | reserve(_scopegraph.usedbytes(),1) = 0 then return
+    _scopeflow = .lltargetflow..analysis(_owner,reference _scopeprofile,reference _scopegraph,_work,max(1,_bytelimit - _retained))
+    if _scopeflow.status() <> 'ok' then do; call scopedfailure(_scopeflow.status(),_scopeflow.reason()); return; end
+    access_ref = _scopeflow.projection(); sharedaccess = dereference access_ref; _access = sharedaccess
+    if _access.status() <> 'ok' then do; call scopedfailure(_access.status(),_access.message()); return; end
+    if spend(_scopeflow.usedwork()) = 0 | reserve(_scopeflow.usedbytes(),1) = 0 then return
+    index_ref = _scopegraph.index(); sharedindex = dereference index_ref; _index = sharedindex
+    _transportcomplete = 1; _transportreason = ''; _rootrestored = 1; departures = 0
+    do i = 1 to module.records()
+      if spend(1) = 0 then return
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      _recordordinal[item.id()] = i; _rootchoice[item.id()] = 0
+      reached = _scopeflow.reached(item.id()); _runtime[item.id()] = reached
+      if spend(_scopeflow.lookupcost()) = 0 then return
+      _mapping[item.id()] = 0; _regions[item.id()] = 0; _windowblocked[item.id()] = 0
+      _counts[item.id()] = 0; _first[item.id()] = 0; _body[item.id()] = 0; _return[item.id()] = 0
+      _context[item.id()] = ''; _argumentstorage[item.id()] = .numbers(actuals) as .object
+      if reserve(item.registerrefs(),40) = 0 then return
+      if item.registerrefs() > _work / max(1,_scopeflow.lookupcost() * 3 + 8) then do; _status = 'limit'; _reason = 'target.facts.work'; return; end
+      if spend(item.registerrefs() * (_scopeflow.lookupcost() * 3 + 8)) = 0 then return
+      assembler setattrs references,0; assembler setattrs plain,0; assembler setattrs captures,0; assembler setattrs bases,0
+      do j = 1 to item.registerrefs()
+        value = item.registerref(j); binding = _scopeflow.storageat(item.id(),value.bank(),value.index())
+        storage = binding.active(); references[j] = mapflow(storage); plain[j] = 0
+        bases[j] = mapflow(binding.base()); ignored = mapflow(binding.entry())
+        captures[j] = references[j]
+        if item.kind() = 'instruction' then do
+          if catalog.scopecontinuation(item.opcode()) > 0 then do
+            binding = _scopeflow.captureat(item.id(),value.bank(),value.index())
+            captures[j] = mapflow(binding.active())
+            ignored = mapflow(binding.base()); ignored = mapflow(binding.entry())
+          end
+        end
+        if reached & storage = 0 then do
+          _transportcomplete = 0
+          if _transportreason = '' then _transportreason = 'transport.scope.storage.unknown'
+        end
+      end
+      _references[item.id()] = .numbers(references) as .object; _beforeplain[item.id()] = .numbers(plain) as .object
+      _capturestorage[item.id()] = .numbers(captures) as .object
+      _basestorage[item.id()] = .numbers(bases) as .object
+      if item.kind() = 'instruction' then do
+        if catalog.scopecontinuation(item.opcode()) > 0 then do
+          recipe = item.recipe(); _preparationswappable[item.id()] = 1
+          _counts[item.id()] = _scopeflow.scopecount(item.id())
+          assembler setattrs actuals,0
+          if _counts[item.id()] >= 0 then do j = 1 to _counts[item.id()]
+            if spend(1) = 0 | reserve(1,8) = 0 then return
+            actuals[j] = mapflow(_scopeflow.scopeactual(item.id(),j))
+          end
+          _argumentstorage[item.id()] = .numbers(actuals) as .object
+          assembler setattrs preparation,0
+          do step = 1 to recipe.preparations()
+            operands = 1
+            if recipe.preparationkind(step) = 'swap' then operands = 2
+            do operand = 1 to operands
+              value = item.reciperef(recipe.preparationref(step,operand))
+              binding = _scopeflow.preparationat(item.id(),step,value.bank(),value.index())
+              id = mapflow(binding.active()); preparation[(step - 1) * 2 + operand] = id
+              if id = 0 then _preparationswappable[item.id()] = 0
+            end
+            if operands = 1 then preparation[(step - 1) * 2 + 2] = 0
+          end
+          _preparationstorage[item.id()] = .numbers(preparation) as .object
+          do j = 1 to recipe.registers()
+            if wordpos(recipe.role(j),'a0-destination proxy-destination owned-destination prep-clear prep-status prep-swap') = 0 then iterate
+            value = item.reciperef(j)
+            if value.bank() = 'r' then do
+              _scopepins[value.index() + 1] = 1
+              if wordpos(recipe.role(j),'a0-destination proxy-destination owned-destination') > 0 then _scopeidentity[value.index() + 1] = 1
+            end
+          end
+        end
+      end
+      if reached & _scopeflow.exactat(item.id()) = 0 then do
+        _transportcomplete = 0
+        if _transportreason = '' then _transportreason = 'transport.scope.bindings.unknown'
+      end
+    end
+    do i = 1 to module.records()
+      if spend(1) = 0 then return
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
+      if _runtime[item.id()] = 0 then iterate
+      instruction = _scopeprofile.instruction(item.id())
+      scopeoperation = 0
+      if item.kind() = 'instruction' then scopeoperation = catalog.scopecontinuation(item.opcode()) > 0 | _scopegraph.logicalreturn(item.id())
+      if scopeoperation = 0 then do
+        if instruction.complete('references') = 0 | (instruction.complete('observations') = 0 | instruction.complete('bindings') = 0) & _scopeflow.explicitcall(instruction) = 0 then do
+          _transportcomplete = 0
+          if _transportreason = '' then _transportreason = 'transport.scope.reference.or.observation.unproved'
+        end
+        do j = 1 to instruction.references()
+          refview = instruction.ref(j)
+          if refview.bank() = '' then iterate
+          if refview.extentknown() = 0 | refview.extent() <> 1 then do
+            _transportcomplete = 0
+            if _transportreason = '' then _transportreason = 'transport.scope.implicit.window.unproved'
+          end
+          if wordpos(refview.anchor(),'active base entry') = 0 then do
+            _transportcomplete = 0
+            if _transportreason = '' then _transportreason = 'transport.scope.reference.identity.unproved'
+          end
+        end
+      end
+      candidate = 0
+      do j = 1 to instruction.actions()
+        action = instruction.action(j)
+        if wordpos(action.kind(),'link unlink swap') > 0 then candidate = 1
+      end
+      if candidate then do j = 1 to item.registerrefs()
+        value = item.registerref(j)
+        if value.bank() = 'r' then do
+          if _scopeidentity[value.index() + 1] then do
+            _transportcomplete = 0
+            if _transportreason = '' then _transportreason = 'transport.scope.owned.binding.required'
+          end
+        end
+      end
+    end
+    do i = 1 to _scopegraph.edges()
+      if spend(1) = 0 then return
+      edge = _scopegraph.edge(i)
+      if edge.function() <> _function then iterate
+      if _scopeflow.reached(edge.sourceop()) = 0 then iterate
+      if spend(_scopeflow.lookupcost() * 3) = 0 then return
+      if edge.scopecomplete() = 0 then do
+        _transportcomplete = 0
+        if _transportreason = '' then _transportreason = edge.scopeunknownreason()
+        if _transportreason = '' then _transportreason = edge.unknownreason()
+        if _transportreason = '' then _transportreason = 'transport.scope.edge.unknown'
+      end
+      exactedge = _scopeflow.exacton(i)
+      if edge.targetblock() = 0 & edge.complete() & edge.role() = 'terminal' then exactedge = _scopeflow.departuresafe(i)
+      if exactedge = 0 then do
+        _transportcomplete = 0
+        if _transportreason = '' then _transportreason = 'transport.scope.edge.bindings.unknown'
+      end
+      if edge.targetblock() = 0 & edge.complete() & edge.phase() = 'none' & _scopegraph.physicaldeparture(edge.sourceop()) then do
+        departures = departures + 1; _rootrestored = _rootrestored & _scopeflow.exacton(i,1)
+      end
+    end
+    if departures = 0 then _rootrestored = 0
+    if _transportcomplete then do i = 1 to module.records()
+      if spend(1) = 0 then return
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
+      if _runtime[item.id()] = 0 then iterate
+      /* Supported permutation events come from the canonical binding recipe,
+       * independently of optional value/component precision. */
+      instruction = _scopeprofile.instruction(item.id()); complete = instruction.complete('bindings')
+      candidate = 0
+      do j = 1 to instruction.actions()
+        action = instruction.action(j)
+        if wordpos(action.kind(),'link unlink swap') > 0 then candidate = 1
+        else if wordpos(action.kind(),'read observe') = 0 then complete = 0
+      end
+      if candidate & complete then _mapping[item.id()] = 1
+    end
+    /* Domains are owned by the sealed shared projection. Missing optional
+     * scalar precision disables only simplification, never a storage fact. */
+    do i = 1 to _facttoflow[0]
+      _domains[i] = 0; _whole[i] = 0; _plain[i] = 0
+      storage = _facttoflow[i]
+      do j = 1 to _access.functiondomains(_function)
+        if spend(1) = 0 then return
+        domainid = _access.functiondomain(_function,j)
+        key = _access.domainname(domainid)
+        prefix = 'target.storage.' || storage || '.domain.'
+        if left(key,length(prefix)) <> prefix then iterate
+        domainordinal = substr(key,length(prefix) + 1) as .int
+        domain = _scopeprofile.domain(domainordinal)
+        if domain.kind() = 'component' & domain.nativebit() = 1 then _domains[i] = domainid
+      end
+    end
+    _status = 'ok'
+    return
   run: method = .void
     if _status <> 'building' then return
     i = .int; j = .int; region = .int; nextregion = .int
@@ -3282,6 +3693,13 @@ analysis: class
     store = dereference _store
     if store.bytes() > _bytelimit then do; _status = 'limit'; _reason = 'target.facts.bytes'; return; end
     if spend(store.bytes()) = 0 then return
+    if _graphmode then do i = 1 to module.records()
+      if spend(1) = 0 then return
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
+      if catalog.scopecontinuation(item.opcode()) > 0 then _scoped = 1
+    end
+    if _scoped then do; call runscoped(); return; end
     _index = .llirgraph..index(graph_ref,_work,_bytelimit)
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
@@ -3555,9 +3973,16 @@ analysis: class
     call require()
     return _namedcatchall & callid = _namedcall
   index: method = reference .llirgraph..index
-    call require(); return reference _index
+    call require()
+    /* A scoped projection belongs to the graph's actual index object.
+     * Returning the analysis's value copy would give clients a foreign
+     * reference even though both copies describe the same frozen graph. */
+    if _scoped then return _scopegraph.index()
+    return reference _index
   access: method = reference .llirgraph..access
-    call require(); return reference _access
+    call require()
+    if _scoped then return _scopeflow.projection()
+    return reference _access
   rootkey: method = .int
     arg recordid = .int
     call require()
@@ -3571,7 +3996,10 @@ analysis: class
     if _recordordinal[recordid] = 0 then do
       assembler signal "ERROR","LL_TARGET_FACTS_ID: original root record identity"; return 0
     end
-    if _index.blockfunction(_index.opblock(recordid)) <> _function then do
+    operationid = recordid
+    if _scoped then operationid = _scopegraph.projectedop(recordid)
+    if operationid = 0 then return 0
+    if _index.blockfunction(_index.opblock(operationid)) <> _function then do
       assembler signal "ERROR","LL_TARGET_FACTS_ID: foreign root record"; return 0
     end
     return recordid
@@ -3986,6 +4414,84 @@ analysis: class
   storage: method = .int
     arg recordid = .int, ordinal = .int
     call require(); refs = _references[recordid] as .numbers; return refs.at(ordinal)
+  /** O(1) sealed source register-reference ordinal queries. Captures use the
+   * checkpoint after ordered prep and before proxy/base establishment. */
+  basestorage: method = .int
+    arg sourceid = .int, refordinal = .int
+    call require(); row = _basestorage[sourceid] as .numbers; return row.at(refordinal)
+  capturestorage: method = .int
+    arg sourceid = .int, refordinal = .int
+    call require(); row = _capturestorage[sourceid] as .numbers; return row.at(refordinal)
+  preparationstorage: method = .int
+    arg sourceid = .int, step = .int, operand = .int
+    call require(); row = _preparationstorage[sourceid] as .numbers
+    if operand < 1 | operand > 2 then return 0
+    return row.at((step - 1) * 2 + operand)
+  preparationswappable: method = .int
+    arg sourceid = .int
+    call require()
+    return _scoped & _transportcomplete & _preparationswappable[sourceid]
+  scoped: method = .int
+    call require(); return _scoped
+  sourceop: method = .int
+    arg projected = .int
+    call require()
+    if _scoped then return _scopegraph.sourceop(projected)
+    return projected
+  projectedop: method = .int
+    arg sourceid = .int
+    call require()
+    if _scoped then return _scopegraph.projectedop(sourceid)
+    return sourceid
+  storageat: method = .int
+    arg sourceid = .int, bank = .string, index = .int, role = 'active', after = 0
+    call require()
+    if _scoped = 0 then return 0
+    binding = _scopeflow.storageat(sourceid,bank,index,after)
+    storage = binding.active()
+    if role = 'base' then storage = binding.base()
+    else if role = 'entry' then storage = binding.entry()
+    else if role = 'slot' then return binding.slotidentity()
+    if storage < 1 | storage > _flowtofact[0] then return 0
+    return _flowtofact[storage]
+  storageon: method = .int
+    arg edgeid = .int, bank = .string, index = .int, role = 'active'
+    call require()
+    if _scoped = 0 then return 0
+    binding = _scopeflow.storageon(edgeid,bank,index)
+    storage = binding.active()
+    if role = 'base' then storage = binding.base()
+    else if role = 'entry' then storage = binding.entry()
+    else if role = 'slot' then return binding.slotidentity()
+    if storage < 1 | storage > _flowtofact[0] then return 0
+    return _flowtofact[storage]
+  scopeowned: method = .int
+    arg virtual = .int
+    call require()
+    if _scoped = 0 | virtual < 0 | virtual >= _scopepins[0] then return 0
+    return _scopepins[virtual + 1]
+  transportcomplete: method = .int
+    call require()
+    return _scoped & _transportcomplete
+  transportreason: method = .string
+    call require()
+    return _transportreason
+  flow: method = reference .lltargetflow..analysis
+    call require(); return reference _scopeflow
+  scopegraph: method = reference .lltargetcfg..graph
+    call require(); return reference _scopegraph
+  storagebank: method = .string
+    arg storageid = .int
+    call require()
+    if _scoped = 0 then return 'r'
+    if storageid < 1 | storageid > _facttoflow[0] then return ''
+    return _scopeflow.storagebank(_facttoflow[storageid])
+  storageindex: method = .int
+    arg storageid = .int
+    call require()
+    if _scoped = 0 then return storageid - 1
+    if storageid < 1 | storageid > _facttoflow[0] then return -1
+    return _scopeflow.storageindex(_facttoflow[storageid])
   integerdomain: method = .int
     arg storageid = .int
     call require(); return _domains[storageid]
@@ -4029,3 +4535,10 @@ analyse: procedure = .lltargetfacts..analysis
 analysegraph: procedure = .lltargetfacts..analysis
   arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864
   return .analysis(owner,functionId,profile,work,bytes,1)
+
+/** Structural expansion proof over valid producer RXAS. Ordinary executable
+ * instructions are catalog-driven clones; optional value facts serve only
+ * activation adapters and never become an ordinary-op admission whitelist. */
+proveexpansion: procedure = .lltargetfacts..analysis
+  arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864, graphmode = 0
+  return .analysis(owner,functionId,profile,work,bytes,graphmode,1)

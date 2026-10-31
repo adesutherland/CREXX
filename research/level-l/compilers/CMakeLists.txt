@@ -126,6 +126,7 @@ foreach(_language IN LISTS _languages)
   add_custom_command(OUTPUT "${_front}/ll${_language}grammar.rxbin"
     COMMAND ${CMAKE_COMMAND} -DLEVEL_L=$<TARGET_FILE:rxlang> -DSPEC=${_spec}
       -DOUTPUT=${_front}/ll${_language}grammar.rxas -DFORMAT=rxas
+      -DLEXER_WORKERS=${CREXX_LEVEL_L_LEXER_WORKERS}
       ${_grammar_limits}
       -P "${CMAKE_SOURCE_DIR}/langtools/cmake/generate.cmake"
     COMMAND $<TARGET_FILE:rxas> "${_front}/ll${_language}grammar"

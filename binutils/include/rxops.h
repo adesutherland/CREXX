@@ -683,3 +683,7 @@ X(PGETF_REG_REG_REG, 657, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxfloat read op1
 X(PSETF_REG_REG_REG, 658, FMT_R_R_R, FLOW_NEXT, 0, "Host-native rxfloat write op1[item op2]=op3")
 X(CHANRELEASE_REG_REG_REG, 659, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Release observed channel request op1=status op2=channel op3=ticket")
 X(SIGNALORIGIN_STRING_REG_REG, 660, FMT_S_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Raise op1 with payload op2 at bound runtime signal origin op3")
+X(INLENTER_REG_FUNC_STRING_ID, 661, "RPSL", FLOW_COND, FLG_OPT_BARRIER | FLG_IMPLICIT_REG_USE, "Enter a checked logical inline activation using a typed recipe")
+X(LINKARGV_REG_REG_INT, 662, FMT_R_R_I, FLOW_NEXT, FLG_OPT_BARRIER | FLG_IMPLICIT_REG_USE, "Bind op1 to a checked argument pointer in the active inline view")
+X(QGLOBBIND_REG_STRING_INT, 663, FMT_R_S_I, FLOW_NEXT, FLG_OPT_BARRIER | FLG_IMPLICIT_REG_USE, "Bind private proxy op1 to an exact image-local module global")
+X(LINKARGV_REG_INT, 664, FMT_R_I, FLOW_NEXT, FLG_OPT_BARRIER | FLG_IMPLICIT_REG_USE, "Bind op1 to a checked immediate argument pointer in the active inline view")

@@ -1,0 +1,36 @@
+/* Checked bytecode target: scoped SIGRET returns only the logical clone. */
+.globals=1
+.meta "scopechecked.target"="b" ".int" target() "value=.int"
+
+target() .locals=8 .expose=scopechecked.target
+    sigbr caller_handler,"OTHER"
+    /* r10 is a1: locals 0..7, g0=8, a0=9, a1=10. */
+    inlenter r0,helper(),"count=1;args=list(r10);a0=r5;proxies=(r6:1);owned=(r5,r6,r7);prep=none;result=ignored",after_clone
+    sigret "OTHER"
+    iadd r6,r6,1
+    qglobbind r7,"self",0
+    load r7,99
+    signal "OTHER"
+    ret 101
+after_clone:
+    ieq r2,a1,36
+    brf fail,r2
+    ieq r2,g0,99
+    brf fail,r2
+    signal "OTHER"
+    br fail
+caller_handler:
+    sigbr no_scope,"OUT_OF_RANGE"
+    linkargv r6,1
+    br fail
+no_scope:
+    ieq r2,a1,36
+    brf fail,r2
+    ieq r2,r6,0
+    brf fail,r2
+    ret 36
+fail:
+    ret 102
+
+helper() .locals=0
+    ret

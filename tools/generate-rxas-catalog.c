@@ -48,6 +48,27 @@ static void components(FILE *out, int opcode, size_t count, int which) {
     }
 }
 
+static void target_operands(FILE *out, int opcode, size_t count, int which) {
+    size_t i;
+    if (!count) { fputc('-', out); return; }
+    for (i = 0; i < count; ++i) {
+        unsigned long value;
+        if (i) fputc(',', out);
+        switch (which) {
+            case 0: value = (unsigned long)rxop_operand_relocation(opcode, i); break;
+            case 1: value = rxop_component_may_reads(opcode, i); break;
+            case 2: value = rxop_component_may_writes(opcode, i); break;
+            case 3: value = rxop_flag_may_reads(opcode, i); break;
+            case 4: value = rxop_flag_may_writes(opcode, i); break;
+            case 5: value = rxop_definition_components(opcode, i); break;
+            case 6: value = rxop_observed_components(opcode, i); break;
+            case 7: value = rxop_observed_flags(opcode, i); break;
+            default: value = (unsigned long)rxop_observation_is_known(opcode, i); break;
+        }
+        fprintf(out, "%lu", value);
+    }
+}
+
 static const char *nonempty(const char *value) {
     return value && *value ? value : "-";
 }
@@ -68,7 +89,22 @@ static const Query queries[] = {
     {"policysourceoperand", 28, 1}, {"policyname", 29, 0},
     {"samecopyisnoop", 32, 1}, {"derivation", 33, 1},
     {"derivationsource", 34, 1}, {"derivationcomponent", 35, 1},
-    {"contextreads", 36, 1}, {"contextwrites", 37, 1}
+    {"contextreads", 36, 1}, {"contextwrites", 37, 1},
+    {"normalsuccessors", 38, 1}, {"normalfallthrough", 39, 1},
+    {"clonecategory", 40, 1}, {"binding", 41, 1},
+    {"activation", 43, 1},
+    {"callkind", 44, 1}, {"calltarget", 45, 1}, {"callresult", 46, 1},
+    {"callcount", 47, 1}, {"callwindow", 48, 1}, {"callactuals", 49, 0},
+    {"callprefix", 50, 0}, {"callcapture", 51, 1}, {"callatomic", 52, 1},
+    {"bindingrecipe", 53, 0}, {"returnkind", 54, 1}, {"returnsource", 55, 1},
+    {"contextreadmask", 56, 1}, {"contextwritemask", 57, 1},
+    {"observations", 58, 1}, {"implicitrecipe", 64, 0},
+    {"bindingcomplete", 65, 1}, {"callbytecode", 66, 1},
+    {"transportsource", 68, 1}, {"transportcomponents", 69, 1},
+    {"literaloperand", 70, 1}, {"literalcomponents", 71, 1},
+    {"scopecontinuation", 72, 1}, {"observedflagmaskoperand", 75, 1},
+    {"recipeoperand", 77, 1}, {"explicitvariant", 78, 1},
+    {"returninvalidcomponents", 79, 1}, {"returninvalidflags", 80, 1}
 };
 
 static int compare_lookup(const void *a, const void *b) {
@@ -145,6 +181,8 @@ int main(int argc, char **argv) {
         const OpInfo *op = &op_table[opcode];
         RxOpEffects effect = rxop_effects(opcode);
         RxOpSignalContract signal = rxop_signal_contract(opcode);
+        RxOpCallContract call = rxop_call_contract(opcode);
+        const char *binding_recipe = rxop_binding_recipe(opcode);
         size_t derivation_source = rxop_derivation_source_operand(opcode);
         size_t count = rxop_format_operand_count(op->format), i;
         char name[128];
@@ -181,12 +219,42 @@ int main(int argc, char **argv) {
                 (effect.semantics & (RXOP_SEM_INDIRECT_WRITE | RXOP_SEM_INDIRECT_BRANCH)) != 0 ||
                 (signal.properties & RXOP_SIGNAL_PROP_ASYNC_ENTRY) != 0);
         components(rows, opcode, count, 2);
-        fprintf(rows, " %d %d %lld %u %u %u\n",
+        fprintf(rows, " %d %d %lld %u %u %u %d %d %d %d ",
                 rxop_same_storage_copy_is_noop(opcode),
                 (int)rxop_value_derivation(opcode),
                 derivation_source == SIZE_MAX ? -1LL : (long long)derivation_source,
                 rxop_derivation_source_component(opcode),
-                rxop_derivation_context_reads(opcode), rxop_context_writes(opcode));
+                rxop_derivation_context_reads(opcode), rxop_context_writes(opcode),
+                rxop_normal_successors(opcode), rxop_normal_fallthrough(opcode),
+                (int)rxop_clone_category(opcode), (int)rxop_binding_action(opcode));
+        if (!count) fputc('-', rows);
+        for (i = 0; i < count; ++i)
+            fputc(rxop_component_write_is_known(opcode, i) ? '1' : '0', rows);
+        fprintf(rows, " %u %d %u %u %u %u %s %s %d %d %s %d %u %u %u %u ",
+                rxop_activation_effects(opcode), (int)call.kind,
+                call.target_operand, call.result_operand, call.count_operand,
+                call.window_operand, nonempty(call.actual_operands),
+                nonempty(call.prefix), call.capture_after_prefix, call.atomic_prefix,
+                nonempty(binding_recipe), rxop_return_kind(opcode),
+                rxop_return_source_operand(opcode), rxop_context_read_mask(opcode),
+                rxop_context_write_mask(opcode), rxop_observation_mask(opcode));
+        for (i = 0; i < 5; ++i) {
+            target_operands(rows, opcode, count, (int)i); fputc(' ', rows);
+        }
+        fprintf(rows, "%s %d %d ", nonempty(rxop_implicit_recipe(opcode)),
+                binding_recipe != NULL, *call.actual_operands != 0);
+        target_operands(rows, opcode, count, 5);
+        fprintf(rows, " %u %u %u %u %u ", rxop_transport_source_operand(opcode),
+                rxop_transport_components(opcode), rxop_literal_operand(opcode),
+                rxop_literal_components(opcode), rxop_scope_continuation_operand(opcode));
+        target_operands(rows, opcode, count, 6); fputc(' ', rows);
+        target_operands(rows, opcode, count, 7);
+        fprintf(rows, " %u ", rxop_observed_flags_mask_operand(opcode));
+        target_operands(rows, opcode, count, 8);
+        fprintf(rows, " %u %d %u %u\n", rxop_recipe_operand(opcode),
+                rxop_explicit_variant(opcode),
+                rxop_return_result_component_invalidations(opcode),
+                rxop_return_result_flag_invalidations(opcode));
         row_size[opcode] = (uint32_t)ftell(rows) - row_start[opcode];
     }
     qsort(lookup, lookup_count, sizeof(*lookup), compare_lookup);
@@ -233,6 +301,9 @@ int main(int argc, char **argv) {
           "  kills: method = .int\n    arg opcode = .int, operand = .int\n    return bit(opcode,11,operand)\n"
           "  branch: method = .int\n    arg opcode = .int, operand = .int\n    return bit(opcode,12,operand)\n"
           "  failurewrites: method = .int\n    arg opcode = .int, operand = .int\n    return bit(opcode,20,operand)\n"
+          "  /* Component-write coverage is optional cleanup information; an\n"
+          "   * unknown projection does not prohibit unchanged cloning. */\n"
+          "  writecomplete: method = .int\n    arg opcode = .int, operand = .int\n    return bit(opcode,42,operand)\n"
           "  unbounded: method = .int\n    arg opcode = .int\n    return field(opcode,30) = '1'\n"
           "  readcomponents: method = .int\n    arg opcode = .int, operand = .int\n"
           "    return word(translate(field(opcode,13),' ',','),operand) as .int\n"
@@ -242,6 +313,39 @@ int main(int argc, char **argv) {
           "   * zero-based operand index, with -1 for no derivation source. */\n"
           "  clearcomponents: method = .int\n    arg opcode = .int, operand = .int\n"
           "    return word(translate(field(opcode,31),' ',','),operand) as .int\n", out);
+    fputs("  /* Complete conservative may-effects are separate from optional\n"
+          "   * precise success/value projections. No may-write proves a kill. */\n"
+          "  relocation: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,59),' ',','),operand) as .int\n"
+          "  mayreadcomponents: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,60),' ',','),operand) as .int\n"
+          "  maywritecomponents: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,61),' ',','),operand) as .int\n"
+          "  mayreadflags: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,62),' ',','),operand) as .int\n"
+          "  maywriteflags: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,63),' ',','),operand) as .int\n"
+          "  definitioncomponents: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,67),' ',','),operand) as .int\n"
+          "  observedcomponents: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,73),' ',','),operand) as .int\n"
+          "  observedflags: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,74),' ',','),operand) as .int\n"
+          "  observationcomplete: method = .int\n    arg opcode = .int, operand = .int\n"
+          "    return word(translate(field(opcode,76),' ',','),operand) as .int\n", out);
+    fprintf(out, "  componentmask: method = .int\n    arg type = .string\n"
+                 "    if type = 'I' then return %u\n"
+                 "    if type = 'F' then return %u\n"
+                 "    if type = 'S' then return %u\n"
+                 "    if type = 'D' then return %u\n"
+                 "    if type = 'B' then return %u\n"
+                 "    return %u\n", RXOP_COMPONENT_INTEGER, RXOP_COMPONENT_FLOAT,
+                 RXOP_COMPONENT_STRING, RXOP_COMPONENT_DECIMAL, RXOP_COMPONENT_BINARY,
+                 RXOP_COMPONENT_ALL);
+    /* Recipe verbs describe existing VM operations; the Level L decoder must
+     * obtain setter payload effects from this owner rather than copy masks. */
+    fprintf(out, "  recipeintegerclears: method = .int\n    return %u\n",
+            rxop_component_clears(OP_LOAD_REG_INT, 0));
     for (entry = 0; entry < sizeof(queries) / sizeof(*queries); ++entry) {
         const Query *query = &queries[entry];
         fprintf(out, "  %s: method = .%s\n    arg opcode = .int\n", query->name,

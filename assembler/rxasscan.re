@@ -98,6 +98,7 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     rreg {return(RREG);}
     greg {return(GREG);}
     areg {return(AREG);}
+    "@" digit+ "::" digit+ "()" {return(FUNC);}
     id "()" {return(FUNC);}
     id ":" {return(LABEL);}
     id {return(ID);}

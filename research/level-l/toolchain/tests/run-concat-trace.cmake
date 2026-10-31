@@ -27,7 +27,11 @@ function(concat_native _stem _source)
     OUTPUT_FILE "${_product}.out" ERROR_VARIABLE _stderr TIMEOUT 60)
   file(READ "${_product}.out" _observed HEX)
   file(REMOVE "${_product}.out")
-  if(NOT _status EQUAL 0 OR NOT _observed STREQUAL _expected_hex)
+  set(_wanted "${_expected_hex}")
+  if(ARGC GREATER 2)
+    set(_wanted "${ARGV2}")
+  endif()
+  if(NOT _status EQUAL 0 OR NOT _observed STREQUAL _wanted)
     message(FATAL_ERROR "${_stem}: exact string/side-component output differs (${_status}): ${_observed}\n${_stderr}")
   endif()
 endfunction()
@@ -75,54 +79,50 @@ foreach(_mode conservative cleaned)
   concat_native("concat-${_mode}-executed" "${_expanded}")
 endforeach()
 
-foreach(_case certificate source trace)
-  set(_reason string.component.unproved)
-  if(_case STREQUAL certificate)
-    set(_first_call "call1 r1,unproved(),r0")
-    set(_second_call "call1 r2,unproved(),r0")
-    set(_negative [=[.globals=0
+set(_ordinary_destination [=[.globals=0
 main() .locals=3
 load r0,"lambda"
-call1 r1,unproved(),r0
-call1 r2,unproved(),r0
+call1 r1,ordinary_destination(),r0
+call1 r2,ordinary_destination(),r0
+say r1
+say r2
 ret 0
-unproved() .locals=1
+ordinary_destination() .locals=1
 concat r0,a1,":x"
-ret a1
+ret r0
 ]=])
-  else()
-    set(_first_call "call2 r2,unproved(),r0,r1")
-    set(_second_call "call2 r3,unproved(),r0,r1")
-    set(_negative [=[.globals=0
-main() .locals=4
-load r0,1
-load r1,"lambda"
-call2 r2,unproved(),r0,r1
-load r0,0
-call2 r3,unproved(),r0,r1
-ret 0
-unproved() .locals=1
-brf unreset,a1
-load r0,"prior"
-unreset:
-]=])
-    if(_case STREQUAL source)
-      string(APPEND _negative "concat a2,r0,\":x\"\nret a2\n")
-    else()
-      string(APPEND _negative ".traceevent \"O\" 4 \"R\" \"S\" \"r\" 0 0 0 0 \"unproved-string\" \"\"\nret a2\n")
-      set(_reason local.recycler.observation.unproved)
+# CONCAT defines its destination string and invalidates old normalization
+# certificates itself. A fresh private destination needs no certificate proof.
+# Read-before-write programs are outside this input contract; they do not
+# justify an inliner gate that simulates callee recycler contents.
+set(_ordinary_hex "6c616d6264613a78${_line_end_hex}6c616d6264613a78${_line_end_hex}")
+concat_native(ordinary-destination-original "${_ordinary_destination}" "${_ordinary_hex}")
+file(WRITE "${WORK}/ordinary-destination.rxas" "${_ordinary_destination}")
+foreach(_mode conservative cleaned)
+  set(_option "")
+  if(_mode STREQUAL conservative)
+    set(_option --no-cleanup)
+  endif()
+  run_checked("expand ordinary destination ${_mode}" "${VM}" "${CLI}" ${RUNTIME} -a
+    --module concat-destination.rxas --profile closed-main-default-halt.v1
+    ${_option} -o "${WORK}/ordinary-destination-${_mode}.rxas" "${WORK}/ordinary-destination.rxas")
+  file(READ "${WORK}/ordinary-destination-${_mode}.rxas" _expanded)
+  string(FIND "${_expanded}" "ordinary_destination() .locals=" _end)
+  if(_end LESS 0)
+    message(FATAL_ERROR "Ordinary destination output lost its retained definition")
+  endif()
+  string(SUBSTRING "${_expanded}" 0 ${_end} _caller)
+  if(_caller MATCHES "(^|\n)[ \t]*call[1234]?[ \t]")
+    message(FATAL_ERROR "Ordinary CONCAT destination retained a selected call")
+  endif()
+  if(_mode STREQUAL conservative)
+    string(REGEX MATCHALL "(^|\n)[ \t]*concat " _concats "${_caller}")
+    list(LENGTH _concats _count)
+    if(NOT _count EQUAL 2)
+      message(FATAL_ERROR "Ordinary destination lost an authored CONCAT")
     endif()
   endif()
-  file(WRITE "${WORK}/${_case}.rxas" "${_negative}")
-  run_checked("retain ${_case} component premise" "${VM}" "${CLI}" ${RUNTIME} -a
-    --module concat-negative.rxas --profile closed-main-default-halt.v1 --no-cleanup
-    -o "${WORK}/${_case}-kept.rxas" "${WORK}/${_case}.rxas")
-  file(READ "${WORK}/${_case}-kept.rxas" _kept)
-  string(FIND "${_kept}" "${_first_call}" _first_at)
-  string(FIND "${_kept}" "${_second_call}" _second_at)
-  if(NOT _last_stderr MATCHES "LL_INLINE_KEEP: ${_reason}" OR _first_at LESS 0 OR _second_at LESS 0)
-    message(FATAL_ERROR "${_case} lost its precise component refusal: ${_last_stderr}")
-  endif()
+  concat_native("ordinary-destination-${_mode}-executed" "${_expanded}" "${_ordinary_hex}")
 endforeach()
 file(WRITE "${WORK}/last-good.rxas" "concat-last-good\n")
 execute_process(COMMAND "${VM}" "${CLI}" ${RUNTIME} -a --module concat-limit.rxas

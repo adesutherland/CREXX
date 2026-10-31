@@ -1,12 +1,13 @@
-/* cREXX License (MIT). Diagnosed owned-local entry-state normalization. */
+/* cREXX License (MIT). Diagnosed dirty owned-local entry-state normalization. */
 options levelb
-namespace lltargetnormalize expose warning change normalize
+namespace lltargetnormalize expose warning change normalize explicit
 import rxfnsb
 import llir
 import lltarget
 import lltargettransfer
 import lltargetflow
 import lltargetremap
+import llrxascatalog
 
 /** An owned warning snapshot, located at the first original observation.
  * The byte column follows the target's byte-offset source convention. */
@@ -54,15 +55,20 @@ warning: class
   column: method = .int
     return _column
   message: method = .string
-    return 'owned local r' || _local || ' component ' || _component || ' may be observed before definition in ' || _procedure
+    return 'dirty owned local r' || _local || ' component ' || _component || ' may be observed before definition in ' || _procedure
   diagnostic: method = .string
     return _filename || ':' || _line || ':' || _column || ': ' || code() || ': ' || message()
 
-/** Normalize only flow-proved entry-dependent observations. A whole-cell NULL
+/** Locals begin dirty; stale physical payloads are not semantic definitions.
+ * Defined-but-unknown values and borrowed dirty arguments remain distinct.
+ * Normalize only flow-proved dirty entry-dependent observations. A whole-cell NULL
  * deliberately defines the existing VM reset state and can release/finalize
  * recycled payloads. It is never inserted for an otherwise valid local.
- * Input uncertainty, unsafe alternate/async entry or any failed stage retains
- * the exact input; warnings and output publish together after validation.
+ * Missing observation/origin/binding facts, unsafe alternate/async entry or a
+ * failed stage retain the exact input. Policy correlation may remain unknown
+ * when complete possible local paths support the independent may-read proof;
+ * no signal, value or binding uncertainty is promoted to a known fact.
+ * Warnings and output publish together after validation.
  * @param owner Exact checked source module.
  * @param flow Exact live point/edge proof owner for that module.
  * @param work Whole-request elementary work allowance.
@@ -81,9 +87,31 @@ change: class
   _result = .lltarget..module
   _mapping = .int[]
   _warnings = .warning[]
+  _complete = .int[]
+  _unknownreason = .string[]
+  _certificate = .int
   *: factory
     arg owner = reference .lltarget..module, flow = reference .lltargetflow..analysis, work = 1000000, bytes = 67108864
     _owner = owner; _flow = flow; _worklimit = work; _bytelimit = bytes; _status = 'building'
+    return
+  resolved: factory
+    arg status = .string, message = .string, ?result = .lltarget..module, ?mapping = .int[], ?warnings = .lltargetnormalize..warning[], ?proof = .lltargetnormalize..change
+    _status = status; _message = message; _hasresult = ?result
+    if ?result then _result = result
+    if ?mapping then _mapping = mapping
+    if ?warnings then _warnings = warnings
+    if ?proof & ?result then do
+      if result.valid() then do
+        original = proof.result(); body = .lltarget..body
+        if original.identity() = result.identity() then do
+          _certificate = result.identity()
+          do i = 1 to result.procedures()
+            body = result.procedure(i); fn = body.functionid()
+            _complete[fn] = proof.complete(fn); _unknownreason[fn] = proof.unknownreason(fn)
+          end
+        end
+      end
+    end
     return
   fail: method = .void
     arg status = .string, message = .string
@@ -118,19 +146,26 @@ change: class
       if proof.status() <> 'ok' then do; call fail(proof.status(),proof.message()); return; end
       if proof.matches(owner) = 0 then do; call fail('invalid','normalization.flow.foreign'); return; end
       flowid = proof.identity()
-      /* Absence of witnesses from an incomplete analysis is not a proof. */
+      /* Certify owned-local normalization per procedure. An unrelated
+       * incomplete body cannot veto normalization of a proved caller/site.
+       * Flow still owns every observed domain and entry origin over the CFG's
+       * conservative local paths; exact policy correlation is not this proof.
+       * No owned locals means there is no owned entry cell to clear; borrowed
+       * argument observations remain the caller-point proof's obligation. */
       do i = 1 to source.procedures()
         if spend(1) = 0 then return
         body = source.procedure(i); fn = body.functionid()
-        if proof.complete(fn,'entry-normalization') = 0 then do
-          call fail('keep','normalization.entry.unproved: ' || proof.unknownreason(fn,'entry-normalization')); return
-        end
+        _complete[fn] = body.locals() = 0 | proof.complete(fn,'entry-normalization')
+        if _complete[fn] = 0 then _unknownreason[fn] = proof.unknownreason(fn,'entry-normalization')
+        else _unknownreason[fn] = ''
       end
+      _certificate = source.identity()
       do i = 1 to proof.entryobservations()
         if spend(1) = 0 then return
         witness = proof.entryobservation(i)
         if witness.valid() = 0 then do; call fail('invalid','normalization.witness.expired'); return; end
         fn = witness.function(); ownedIndex = witness.ownedindex(); body = source.body(fn); item = source.at(witness.operation())
+        if _complete[fn] = 0 then iterate
         if witness.bank() <> 'r' | ownedIndex < 0 | ownedIndex >= body.locals() | item.procedureid() <> fn then do
           call fail('invalid','normalization.witness.not.owned.base'); return
         end
@@ -213,6 +248,15 @@ change: class
       end
       do i = 1 to source.records(); item = source.record(i); stagedmap[item.id()] = remap.operation(item.id()); end
       _result = candidate; _mapping = stagedmap; _warnings = staged; _status = 'changed'; _message = 'normalization.entry.reads.cleared'
+      /* Function identities are allocated independently of inserted records.
+       * Resolve by source name when publishing rather than assuming that. */
+      certified = .int[]; reasons = .string[]
+      do i = 1 to source.procedures()
+        body = source.procedure(i); fn = candidate.procedureid(body.name())
+        if fn = 0 then do; call fail('invalid','normalization.procedure.mapping'); return; end
+        certified[fn] = _complete[body.functionid()]; reasons[fn] = _unknownreason[body.functionid()]
+      end
+      _complete = certified; _unknownreason = reasons; _certificate = candidate.identity()
     on signal as problem
       call fail('invalid','normalization.failed: ' || problem.name() || ': ' || problem.message())
     end
@@ -227,6 +271,20 @@ change: class
     call run()
     if _hasresult = 0 then assembler signal "ERROR","LL_TARGET_NORMALIZE: input owner expired"
     return _result
+  complete: method = .int
+    arg functionid = .int
+    call run()
+    if _hasresult = 0 | wordpos(_status,'changed keep') = 0 then return 0
+    if _result.valid() = 0 | _certificate <> _result.identity() then return 0
+    if functionid < 2 | functionid > _complete[0] then return 0
+    return _complete[functionid]
+  unknownreason: method = .string
+    arg functionid = .int
+    if complete(functionid) then return ''
+    if _hasresult = 0 | _result.valid() = 0 | _certificate <> _result.identity() then return 'normalization.certificate.unavailable'
+    if functionid < 2 | functionid > _unknownreason[0] then return 'normalization.procedure.unproved'
+    if _unknownreason[functionid] = '' then return 'normalization.procedure.unproved'
+    return _unknownreason[functionid]
   operation: method = .int
     arg old = .int
     call run()
@@ -243,3 +301,80 @@ change: class
 normalize: procedure = .lltargetnormalize..change
   arg owner = reference .lltarget..module, flow = reference .lltargetflow..analysis, work = 1000000, bytes = 67108864
   return .change(owner,flow,work,bytes)
+
+/** Canonical explicit counterparts are part of the native opcode contract.
+ * Decode packed indices against the original layout before any caller grows;
+ * no inliner or cleanup client needs its own implicit-opcode cases. */
+explicit: procedure = .lltargetnormalize..change
+  arg owner = reference .lltarget..module, work = 1000000, bytes = 67108864
+  item = .lltarget..record; body = .lltarget..body; target = .lltarget..bodydraft
+  value = .lltarget..operand; fields = .object[]; replacements = .object[]
+  bodies = .object[]; origins = .object[]; sources = .object[]; mapping = .int[]; empty = .int[]
+  i = .int; j = .int; found = .int; packed = .int; variant = .int
+  if <refvalid>(owner) = 0 then return .change.resolved('invalid','normalization.owner.expired')
+  source = dereference owner
+  if source.valid() = 0 then return .change.resolved('invalid',source.error(),source)
+  if work < 1 | bytes < 1 then return .change.resolved('limit','normalization.budgets.must.be.positive',source)
+  catalog = .llrxascatalog..catalog()
+  do i = 1 to source.records()
+    work = work - 1
+    if work < 1 then return .change.resolved('limit','normalization.explicit.work',source)
+    item = source.record(i)
+    if item.kind() = 'instruction' & catalog.explicitvariant(item.opcode()) >= 0 then found = 1
+  end
+  if found = 0 then return .change.resolved('keep','normalization.no.implicit.operand',source)
+  do
+    draft = .lltarget..draft(source.name(),source.artifact(),source.globals(),1000000,bytes,work); graph_ref = source.ir()
+    do i = 1 to source.records()
+      item = source.record(i)
+      if draft.preflight(1 + item.operands(),0) = 0 then return .change.resolved('limit',draft.error(),source)
+      at = lltargetremap..copyorigin(graph_ref,item.origin(),reference draft,reference sources,reference origins)
+      if item.kind() = 'procedure' then do
+        body = source.body(item.procedureid()); target = draft.procedure(body.name(),body.locals(),at,body.expose())
+        bodies[item.procedureid()] = target as .object; mapping[item.id()] = target.headerid(); iterate
+      end
+      if item.procedureid() = 0 then do
+        call objectarraydrop fields
+        do j = 1 to item.operands(); fields[j] = item.operand(j) as .object; end
+        mapping[item.id()] = draft.record(item.kind(),fields,at); iterate
+      end
+      target = bodies[item.procedureid()] as .lltarget..bodydraft; body = source.body(item.procedureid()); variant = -1
+      if item.kind() = 'instruction' then variant = catalog.explicitvariant(item.opcode())
+      call objectarraydrop fields
+      if variant >= 0 then do
+        selectors = translate(catalog.implicitrecipe(item.opcode()),' ', ';')
+        do j = 1 to words(selectors)
+          selector = translate(word(selectors,j),' ', ':'); packed = word(selector,2) as .int
+          if word(selector,1) = 'localindex' then do; value = item.operand(packed); packed = value.index(); end
+          if packed < 0 then return .change.resolved('invalid','normalization.packed.index.negative',source)
+          bank = 'r'; index = packed
+          if packed >= body.locals() + source.globals() then do; bank = 'a'; index = packed - body.locals() - source.globals(); end
+          else if packed >= body.locals() then do; bank = 'g'; index = packed - body.locals(); end
+          fields[fields[0] + 1] = target.reg(bank,index) as .object
+        end
+        do j = 1 to item.operands()
+          value = item.operand(j)
+          if value.kind() = 'R' then fields[fields[0] + 1] = target.reg(value.bank(),value.index()) as .object
+        end
+        mapping[item.id()] = target.emit(catalog.mnemonic(variant),fields,at)
+      end
+      else do
+        call objectarraydrop replacements
+        do j = 1 to item.registerrefs()
+          value = item.registerref(j); replacements[j] = target.reg(value.bank(),value.index()) as .object
+        end
+        fields = lltarget..remapregisters(item,replacements)
+        if item.kind() = 'instruction' then mapping[item.id()] = target.emit(item.mnemonic(),fields,at)
+        else mapping[item.id()] = target.record(item.kind(),fields,at)
+      end
+    end
+    if draft.error() <> '' then return .change.resolved('invalid',draft.error(),source)
+    result = draft.finish()
+    if result.valid() = 0 then return .change.resolved('invalid',result.error(),source)
+    return .change.resolved('changed','normalization.explicit.operands',result,mapping)
+  on signal as problem
+    status = 'invalid'
+    if pos('LL_RESOURCE_LIMIT',problem.message()) > 0 then status = 'limit'
+    return .change.resolved(status,'normalization.explicit.failed: ' || problem.name() || ': ' || problem.message(),source)
+  end
+  return .change.resolved('invalid','normalization.explicit.no.result',source)

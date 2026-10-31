@@ -32,6 +32,7 @@
 #include "../binutils/include/rxjtable.h"
 #include "../binutils/include/rxnumparse.h"
 #include "../binutils/include/rxgraph.h"
+#include "../binutils/include/rxinline_recipe.h"
 #include "rxfloatformat.h"
 #include "../binutils/include/opdata.c"
 #include <ctype.h>
@@ -453,12 +454,64 @@ static void backpatch_labels(Assembler_Context *context) {
 
 static void backpatch_jump_tables(Assembler_Context *context);
 
+static void seal_local_inline_recipes(Assembler_Context *context) {
+    size_t index = 0u;
+    while (index < context->binary.inst_size) {
+        bin_code *instruction = &context->binary.binary[index];
+        size_t width = (size_t)instruction->instruction.no_ops + 1u;
+        if (width > context->binary.inst_size - index) {
+            rxaserrf(context, 0, 0, 1, "malformed inline instruction during sealing");
+            return;
+        }
+        if (instruction->instruction.opcode == OP_INLENTER_REG_FUNC_STRING_ID) {
+            size_t proc_offset = context->binary.binary[index + 2u].index;
+            size_t recipe_offset = context->binary.binary[index + 3u].index;
+            if (proc_offset < context->binary.const_size &&
+                recipe_offset < context->binary.const_size) {
+                proc_constant *proc = (proc_constant *)(context->binary.const_pool + proc_offset);
+                string_constant *recipe = (string_constant *)(context->binary.const_pool + recipe_offset);
+                if (proc->base.type == PROC_CONST && proc->start != SIZE_MAX &&
+                    recipe->base.type == BINARY_CONST) {
+                    int offset = context->proc_head;
+                    uint32_t ordinal = 0u;
+                    while (offset != -1 && (size_t)offset != proc_offset) {
+                        proc_constant *next = (proc_constant *)(context->binary.const_pool +
+                                                                (size_t)offset);
+                        offset = next->next;
+                        ordinal++;
+                    }
+                    if (offset == -1 ||
+                        !rxinl_recipe_seal(recipe->string, recipe->string_len,
+                                           0u, ordinal))
+                        rxaserrf(context, 0, 0, 1, "cannot seal local inline provider");
+                } else if (proc->base.type == BINARY_CONST &&
+                           recipe->base.type == BINARY_CONST) {
+                    rxinl_qualified_proc_view qualified;
+                    string_constant *qualified_entry = (string_constant *)proc;
+                    if (!rxinl_qualified_proc_decode(qualified_entry->string,
+                                                    qualified_entry->string_len,
+                                                    &qualified))
+                        rxaserrf(context, 0, 0, 1,
+                                 "invalid qualified inline provider");
+                } else if (recipe->base.type != BINARY_CONST ||
+                           proc->base.type != PROC_CONST) {
+                    rxaserrf(context, 0, 0, 1, "invalid inline provider or recipe constant");
+                }
+            } else {
+                rxaserrf(context, 0, 0, 1, "inline provider or recipe constant out of range");
+            }
+        }
+        index += width;
+    }
+}
+
 /* Backpatch, check references and free backpatch information */
 void backptch(Assembler_Context *context) {
     if (context->optimise) optimise_labels(context);
     backpatch_procedures(context);
     backpatch_jump_tables(context);
     backpatch_labels(context);
+    seal_local_inline_recipes(context);
 }
 
 /* Convert one hex digit to an int (-1 = error)*/
@@ -892,6 +945,26 @@ static size_t add_raw_binary_to_pool(Assembler_Context *context, const unsigned 
     sentry->string_chars = length;
 #endif
     return entry_index;
+}
+
+static void append_inline_binary_operand(Assembler_Context *context,
+                                         const unsigned char *data,
+                                         size_t length) {
+    size_t new_size;
+    void *new_binary;
+    if (context->inst_buffer_size <= context->binary.inst_size + 1u) {
+        new_size = context->inst_buffer_size * 2u;
+        new_binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        if (!new_binary)
+            RXAS_PANIC_OOM(context, "realloc rxas inline operand buffer",
+                           new_size * sizeof(bin_code), 0);
+        context->binary.binary = new_binary;
+        memset(context->binary.binary + context->inst_buffer_size, 0,
+               context->inst_buffer_size * sizeof(bin_code));
+        context->inst_buffer_size = new_size;
+    }
+    context->binary.binary[context->binary.inst_size++].index =
+        add_raw_binary_to_pool(context, data, length);
 }
 
 static void rxas_write_u16le(unsigned char *target, uint16_t value) {
@@ -2432,8 +2505,111 @@ void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,
             free(operandTypes);
             return;
         }
-        gen_instr(context, inst->opcode, (int)operandCount);
-        for (i = 0; i < operandCount; i++) gen_operand(context, operandTokens[i]);
+        if (inst->opcode == OP_INLENTER_REG_FUNC_STRING_ID ||
+            inst->opcode == OP_QGLOBBIND_REG_STRING_INT) {
+            unsigned char *typed = NULL;
+            unsigned char *qualified = NULL;
+            char *source_text = NULL;
+            size_t typed_length = 0u;
+            size_t qualified_length = 0u;
+            int valid;
+            size_t special_operand = inst->opcode == OP_INLENTER_REG_FUNC_STRING_ID
+                ? 2u : 1u;
+            Assembler_Token *special_token = operandTokens[special_operand];
+            /* STRING token length includes delimiters; unescape the exact token
+             * bytes so an embedded NUL cannot hide trailing recipe fields. */
+            source_text = malloc(special_token->length + 1u);
+            if (!source_text) RXAS_PANIC_OOM(context, "malloc inline source text",
+                                            special_token->length + 1u, 0);
+            {
+                size_t source_length = unescape_string(
+                    source_text, (char *)special_token->token_value.string);
+                source_text[source_length] = 0;
+                if (memchr(source_text, 0, source_length)) {
+                    rxaserat(context, special_token,
+                             "inline recipe or module selector contains NUL");
+                    free(source_text);
+                    free(operandTypes);
+                    return;
+                }
+            }
+            if (inst->opcode == OP_INLENTER_REG_FUNC_STRING_ID) {
+                char recipe_error[160];
+                valid = rxinl_recipe_from_text(
+                    source_text,
+                    &typed, &typed_length, recipe_error, sizeof(recipe_error));
+                if (!valid) rxaserat(context, operandTokens[special_operand], recipe_error);
+            } else {
+                valid = rxinl_module_ref_from_text(
+                    source_text,
+                    &typed, &typed_length);
+                if (!valid) rxaserat(context, operandTokens[special_operand],
+                                     "invalid qualified module selector");
+            }
+            if (!valid) {
+                free(typed);
+                free(source_text);
+                free(operandTypes);
+                return;
+            }
+            if (inst->opcode == OP_INLENTER_REG_FUNC_STRING_ID &&
+                operandTokens[1]->token_type == FUNC &&
+                operandTokens[1]->token_value.string[0] == '@' &&
+                !rxinl_qualified_proc_from_text(
+                    (const char *)operandTokens[1]->token_value.string,
+                    &qualified, &qualified_length)) {
+                rxaserat(context, operandTokens[1],
+                         "invalid qualified procedure ordinal");
+                free(typed);
+                free(qualified);
+                free(source_text);
+                free(operandTypes);
+                return;
+            }
+            gen_instr(context, inst->opcode, (int)operandCount);
+            for (i = 0; i < operandCount; i++) {
+                if (i == special_operand)
+                    append_inline_binary_operand(context, typed, typed_length);
+                else if (i == 1u && qualified)
+                    append_inline_binary_operand(context, qualified, qualified_length);
+                else
+                    gen_operand(context, operandTokens[i]);
+            }
+            free(typed);
+            free(qualified);
+            free(source_text);
+            free(operandTypes);
+            return;
+        }
+        {
+            unsigned char *qualified = NULL;
+            size_t qualified_length = 0u;
+            size_t qualified_index = SIZE_MAX;
+            for (i = 0; i < operandCount; i++) {
+                if (operandTypes[i] == OP_FUNC && operandTokens[i]->token_type == FUNC &&
+                    operandTokens[i]->token_value.string[0] == '@') {
+                    if (qualified_index != SIZE_MAX ||
+                        !rxinl_qualified_proc_from_text(
+                            (const char *)operandTokens[i]->token_value.string,
+                            &qualified, &qualified_length)) {
+                        rxaserat(context, operandTokens[i],
+                                 "invalid qualified procedure ordinal");
+                        free(qualified);
+                        free(operandTypes);
+                        return;
+                    }
+                    qualified_index = i;
+                }
+            }
+            gen_instr(context, inst->opcode, (int)operandCount);
+            for (i = 0; i < operandCount; i++) {
+                if (i == qualified_index)
+                    append_inline_binary_operand(context, qualified,
+                                                 qualified_length);
+                else gen_operand(context, operandTokens[i]);
+            }
+            free(qualified);
+        }
     }
     free(operandTypes);
 }
@@ -2498,6 +2674,11 @@ void rxasproc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
     proc_constant *centry;
     size_t entry_index;
 
+    if (funcToken->token_value.string[0] == '@') {
+        rxaserat(context, funcToken,
+                 "qualified procedure syntax is operand-only");
+        return;
+    }
     /* Flush Keyhole Optimiser Queue */
     flushopt(context);
 
@@ -2570,6 +2751,11 @@ void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
     size_t entry_size, entry_index, pentry_index;
     expose_proc_constant *centry;
 
+    if (funcToken->token_value.string[0] == '@') {
+        rxaserat(context, funcToken,
+                 "qualified procedure syntax is operand-only");
+        return;
+    }
     /* Flush Keyhole Optimiser Queue */
     flushopt(context);
 
@@ -2631,6 +2817,11 @@ void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken,
     size_t entry_size, entry_index, pentry_index;
     expose_proc_constant *centry;
 
+    if (funcToken->token_value.string[0] == '@') {
+        rxaserat(context, funcToken,
+                 "qualified procedure syntax is operand-only");
+        return;
+    }
     /* Flush Keyhole Optimiser Queue */
     flushopt(context);
     context->current_proc_name = 0;

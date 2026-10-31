@@ -1,0 +1,65 @@
+/* Delivered CANCEL branches leave the inner scope; an outer branch leaves
+ * the remaining scope. Private references expire, borrowed caller cells live. */
+.globals=0
+main() .locals=16
+    load r1,42
+    mkref r2,r1
+    load r7,0
+    sigbr escaped,"OTHER"
+    inlenter r0,helper(),"count=1;args=list(r1);a0=r8;proxies=(r9:1);owned=(r8,r9,r10,r11);prep=none;result=ignored",wrong_normal
+    load r10,70
+    mkref r3,r10
+    sigbr outer_caught,"CANCEL"
+    inlenter r0,helper(),"count=1;args=list(r9);a0=r12;proxies=(r13:1);owned=(r12,r13,r14,r15);prep=none;result=ignored",inner_returned
+    load r14,80
+    mkref r4,r14
+    load r13,43
+    signal "CANCEL"
+    ret 101
+inner_returned:
+    br scoped_bad
+outer_caught:
+    refvalid r5,r4
+    brt scoped_bad,r5
+    refvalid r5,r3
+    brf scoped_bad,r5
+    refvalid r5,r2
+    brf scoped_bad,r5
+    deref r6,r3
+    ieq r5,r6,70
+    brf scoped_bad,r5
+    load r7,1
+    signal "OTHER"
+    ret 102
+scoped_bad:
+    load r7,-1
+    signal "OTHER"
+    ret 103
+wrong_normal:
+    ret 2
+escaped:
+    ieq r5,r7,1
+    brf fail,r5
+    refvalid r5,r3
+    brt fail,r5
+    refvalid r5,r4
+    brt fail,r5
+    refvalid r5,r2
+    brf fail,r5
+    deref r6,r2
+    ieq r5,r6,43
+    brf fail,r5
+    ieq r5,r9,0
+    brf fail,r5
+    ieq r5,r13,0
+    brf fail,r5
+    sigbr no_scope,"OUT_OF_RANGE"
+    linkargv r6,1
+    br fail
+no_scope:
+    sayx "PASS: nested inline cancellation reference cleanup"
+    ret 0
+fail:
+    ret 1
+helper() .locals=0
+    ret

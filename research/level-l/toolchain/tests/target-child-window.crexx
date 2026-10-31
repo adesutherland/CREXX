@@ -1,0 +1,148 @@
+/* cREXX License (MIT). Independent counted outer/child layout controls. */
+options levelb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetnormalize
+import llinline
+
+check: procedure = .int
+  arg value = .int, label = .string
+  if value then return 0
+  say 'FAIL:' || label; return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, first = .lltarget..operand, second = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = first as .object; fields[2] = second as .object
+  return body.emit(name,fields,at)
+callchild: procedure = .int
+  arg body = .lltarget..bodydraft, destination = .lltarget..operand, target = .string, count = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = destination as .object; fields[2] = .lltarget..operand.procedure(target) as .object; fields[3] = count as .object
+  return body.emit('call',fields,at)
+
+sample: procedure = .int
+  arg mode = .int
+  failures = 0; i = .int; rootcall = .int; childcall = .int; calls = 0; entries = 0; swaps = 0; expected = .string; ignored = .int
+  sourceir = reference .llir..module; keptir = reference .llir..module
+  execution = .lltargettransfer..profile
+  normalized = .lltargetnormalize..change
+  item = .lltarget..record; counter = .lltarget..operand; left = .lltarget..operand; right = .lltarget..operand
+  globals = 0; if mode = 3 | mode = 4 then globals = 3
+  draft = .lltarget..draft('child.window.' || mode,'fixture:child.window.' || mode,globals)
+  at = draft.synthetic('finite child capture preserves exact physical frame')
+  rootlocals = 4; if mode = 3 | mode = 4 | mode = 5 then rootlocals = 0
+  root = draft.procedure('main',rootlocals,at)
+  if mode = 5 then rootcall = callchild(root,root.reg('a',0),'outer',root.reg('a',1),at)
+  else do
+    rootbank = 'r'; resultbank = 'r'; resultindex = 3
+    if globals then do; rootbank = 'g'; resultbank = 'a'; resultindex = 0; end
+    if mode <> 6 & globals = 0 then ignored = two(root,'load',root.reg(rootbank,0),.lltarget..operand.integer(2),at)
+    firstactual = 7; if mode = 3 then firstactual = 1
+    if mode = 6 then firstactual = 0
+    ignored = two(root,'load',root.reg(rootbank,1),.lltarget..operand.integer(firstactual),at)
+    secondactual = 11; if mode = 6 then secondactual = 2
+    ignored = two(root,'load',root.reg(rootbank,2),.lltarget..operand.integer(secondactual),at)
+    if globals then ignored = two(root,'load',root.reg('g',0),.lltarget..operand.integer(2),at)
+    if mode = 6 then do
+      arithmetic = .object[]; arithmetic[1] = root.reg('r',0) as .object; arithmetic[2] = root.reg('r',1) as .object; arithmetic[3] = root.reg('r',2) as .object
+      ignored = root.emit('iadd',arithmetic,at)
+    end
+    rootcall = callchild(root,root.reg(resultbank,resultindex),'outer',root.reg(rootbank,0),at)
+  end
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  outerlocals = 1
+  if mode = 0 then outerlocals = 4
+  if mode = 2 | mode = 3 | mode = 4 then outerlocals = 0
+  outer = draft.procedure('outer',outerlocals,at)
+  if mode = 0 then do
+    ignored = two(outer,'load',outer.reg('r',0),.lltarget..operand.integer(2),at)
+    ignored = two(outer,'load',outer.reg('r',1),.lltarget..operand.integer(17),at)
+    ignored = two(outer,'load',outer.reg('r',2),.lltarget..operand.integer(19),at)
+    childcall = callchild(outer,outer.reg('r',3),'child',outer.reg('r',0),at)
+    ignored = one(outer,'ret',outer.reg('r',3),at)
+  end
+  else if mode = 2 then do
+    ignored = two(outer,'load',outer.reg('a',0),.lltarget..operand.integer(2),at)
+    ignored = two(outer,'swap',outer.reg('a',1),outer.reg('a',2),at)
+    childcall = callchild(outer,outer.reg('a',1),'child',outer.reg('a',0),at)
+    ignored = two(outer,'swap',outer.reg('a',1),outer.reg('a',2),at)
+    ignored = one(outer,'ret',outer.reg('a',1),at)
+  end
+  else if mode = 3 then do
+    childcall = callchild(outer,outer.reg('a',2),'child',outer.reg('a',1),at)
+    ignored = one(outer,'ret',outer.reg('a',2),at)
+  end
+  else if mode = 4 then do
+    ignored = two(outer,'load',outer.reg('a',0),.lltarget..operand.integer(3),at)
+    childcall = callchild(outer,outer.reg('a',1),'child',outer.reg('a',0),at)
+    ignored = one(outer,'ret',outer.reg('a',1),at)
+  end
+  else do
+    ignored = two(outer,'load',outer.reg('r',0),.lltarget..operand.integer(2),at)
+    childcall = callchild(outer,outer.reg('a',1),'child',outer.reg('r',0),at)
+    ignored = one(outer,'ret',outer.reg('a',1),at)
+  end
+  leaf = draft.procedure('child',0,at)
+  ignored = one(leaf,'ret',.lltarget..operand.integer(23),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'counted source validates ' || mode)
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  if mode = 5 then normalized = llinline..normalize(reference original)
+  else do
+    execution = .lltargettransfer..profile.closedcalls(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+    normalized = llinline..normalizewith(reference original,reference execution)
+  end
+  failures = failures + check(normalized.status() = 'keep' | normalized.status() = 'changed','normalization publishes result ' || mode)
+  if normalized.status() <> 'keep' & normalized.status() <> 'changed' then do; say normalized.reason(); return failures; end
+  source = normalized.result(); callid = normalized.operation(rootcall)
+  sourceir = source.ir(); graph = dereference sourceir; before = graph.binary()
+  selected = .llinline..context('assembler','all-legal')
+  if mode <> 5 then do
+    execution = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+    failures = failures + check(selected.useexecution(reference source,reference execution),'explicit execution witness binds exact normalized owner ' || mode)
+  end
+  failures = failures + check(selected.certify(reference source,normalized),'exact entry-local certificate accepted ' || mode)
+  request = llinline..bind(reference source,callid,reference source,source.procedureid('outer'))
+  requests = .object[]; requests[1] = request as .object
+  changed = llinline..expandcontext(requests,selected)
+  if mode >= 3 then do
+    expected = 'child.argument.count.unproved'
+    if mode = 4 then expected = 'child.argument.window.outside.captured.frame'
+    if mode = 5 then expected = 'child.argument.count.unproved'
+    if mode = 6 then expected = 'child.argument.outer-count.unproved'
+    failures = failures + check(changed.status() = 'keep' & changed.reasonat(callid) = expected,'exact finite-window refusal ' || mode || ': ' || changed.reasonat(callid))
+    kept = changed.result(); keptir = kept.ir(); keptgraph = dereference keptir
+    failures = failures + check(keptgraph.binary() = before,'window refusal preserves exact normalized owner ' || mode)
+    return failures
+  end
+  failures = failures + check(changed.status() = 'changed','counted outer retains proved counted child ' || mode || ': ' || changed.reasonat(callid))
+  if changed.status() <> 'changed' then return failures
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  originalchild = source.at(normalized.operation(childcall))
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'inlenter' then entries = entries + 1
+    if item.mnemonic() = 'swap' then swaps = swaps + 1
+    if item.mnemonic() <> 'call' then iterate
+    calls = calls + 1; target = item.operand(2)
+    failures = failures + check(target.text() = 'child' & item.opcode() = originalchild.opcode(),'retained child keeps its original counted opcode ' || mode)
+    counter = item.operand(3)
+    failures = failures + check(counter.bank() = 'r' & counter.index() + 2 < body.locals(),'two physical actuals remain contiguous in the mapped frame ' || mode)
+    if mode = 1 then do
+      left = item.operand(1)
+      failures = failures + check(left.bank() = 'r' & left.index() = counter.index() + 2,'local/a0/a1 crossing retains result alias ' || mode)
+    end
+  end
+  failures = failures + check(entries = 1 & calls = 1,'only selected outer call disappears ' || mode)
+  if mode = 2 then failures = failures + check(swaps = 2,'authored setup and inverse swaps remain around ordinary CALL')
+  graph = dereference sourceir; failures = failures + check(graph.binary() = before,'successful clone preserves source owner ' || mode)
+  return failures
+
+main: procedure = .int
+  failures = sample(0) + sample(1) + sample(2) + sample(3) + sample(4) + sample(5) + sample(6)
+  say 'TARGET_CHILD_WINDOW|failures=' || failures
+  return failures

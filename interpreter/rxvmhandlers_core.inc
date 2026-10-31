@@ -113,6 +113,16 @@ RXVM_HANDLER(CALL_FUNC,
 RXVM_HANDLER(RET_INT,
     DEBUG("TRACE - RET %d\n", (int) op1I);
     {
+        if (current_frame->inline_scope) {
+            rxvm_inline_scope *scope = current_frame->inline_scope;
+            size_t continuation = scope->continuation;
+            if (scope->result) scope->result->int_value = op1I;
+            rxvm_inline_scope_leave(current_frame);
+            VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
+            if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
+                VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
+            DISPATCH;
+        }
         RXVM_INSTRUMENTATION_RETURN(
                 !current_frame->parent
                     ? RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL

@@ -1,0 +1,26 @@
+/* One ordinary body crosses value-operation families and direct control flow.
+ * Private registers are defined by the authored operations before use. No
+ * compile-time value/range evaluator is needed to clone any of these rows. */
+.globals=0
+main() .locals=3
+  load r0,"text"
+  call1 r1,ordinary(),r0
+  load r0,""
+  call1 r2,ordinary(),r0
+  itos r1
+  say r1
+  itos r2
+  say r2
+  ret 0
+ordinary() .locals=6
+  strlen r0,a1
+  beq empty,r0,0
+  iand r1,r0,7
+  load r2,0
+  load r3,1
+  substring r4,a1,r2,r3
+  strlen r5,r4
+  iadd r1,r1,r5
+  ret r1
+empty:
+  ret -1

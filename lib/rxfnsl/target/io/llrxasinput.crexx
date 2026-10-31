@@ -128,7 +128,7 @@ reader: class
             field = values.node(); j = j + 1; fields[j] = operand(field,body,reference draft) as .object
             if draft.error() <> '' then return bindingfailure(source,logicalModule,draft.error(),failureOffset)
           end
-          ignored = body.emit(fold(item.text('mnemonic')),fields,at)
+          ignored = body.emitphysical(fold(item.text('mnemonic')),fields,at)
         end
         when kind = 'Label' then do
           if active = 0 then return .parsed(source,logicalModule,1,'LL_RXAS_BINDING: label outside a procedure',item.start())

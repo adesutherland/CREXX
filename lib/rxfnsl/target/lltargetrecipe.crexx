@@ -1,0 +1,417 @@
+/* cREXX License (MIT). Checked source recipe references; no VM algorithm. */
+options levelb
+namespace lltargetrecipe expose view
+import rxfnsb
+
+/** The source spelling of one typed call recipe. Register references retain
+ * exact token ranges and semantic roles, in spelling order. Capture uses the
+ * active pointee after ordered preparation; destinations name owned slots,
+ * whose active and base bindings must be snapshotted separately by analysis.
+ * The assembler owns wire encoding, selected-image sealing and VM execution. */
+view: class
+  _text = .string
+  _error = .string
+  _starts = .int[]
+  _lengths = .int[]
+  _banks = .string[]
+  _indexes = .int[]
+  _roles = .string[]
+  _ordinals = .int[]
+  _keys = .string[]
+  _countkind = .string
+  _countvalue = .int
+  _countref = .int
+  _argumentkind = .string
+  _argsstart = .int
+  _argslength = .int
+  _prepstart = .int
+  _preplength = .int
+  _preptext = .string[]
+  _arguments = .int[]
+  _windowref = .int
+  _a0ref = .int
+  _proxyrefs = .int[]
+  _proxyarguments = .int[]
+  _ownedrefs = .int[]
+  _prepkinds = .string[]
+  _prepfirst = .int[]
+  _prepsecond = .int[]
+  _prepmasks = .int[]
+  _resultmode = .string
+  _activation = .int
+  _work = .int
+  _prepared = .int
+  *: factory
+    arg text = .string, activation = 1, work = 1000000
+    _text = text; _activation = activation; _work = work; _resultmode = 'value'
+    return
+  run: method = .void
+    if _prepared then return
+    _prepared = 1; text = _text; activation = _activation; work = _work
+    i = .int; j = .int; first = .int; last = .int; rowstart = .int; rowend = .int; found = .int
+    if length(text) > work | work < 1 then do; _error = 'LL_RESOURCE_LIMIT: recipe source work'; return; end
+    if text = '' then do; _error = 'LL_TARGET_RECIPE: empty recipe'; return; end
+    first = 1
+    do while first <= length(text)
+      last = pos(';',text,first)
+      if last = 0 then last = length(text) + 1
+      part = substr(text,first,last - first); equals = pos('=',part)
+      if equals < 2 | equals = length(part) then do; _error = 'LL_TARGET_RECIPE: field shape'; return; end
+      key = left(part,equals - 1); value = substr(part,equals + 1); at = first + equals
+      if wordpos(key,'count args a0 proxies owned prep result') = 0 then do; _error = 'LL_TARGET_RECIPE: unknown field'; return; end
+      do i = 1 to _keys[0]
+        if _keys[i] = key then do; _error = 'LL_TARGET_RECIPE: duplicate field'; return; end
+      end
+      _keys[_keys[0] + 1] = key
+      select key
+        when 'count' then do
+          _countkind = 'literal'
+          if natural(value) then _countvalue = value as .int
+          else do
+            _countkind = 'register'; call addreg(value,at,'count-capture',0); _countref = _starts[0]
+          end
+        end
+        when 'args' then do
+          _argsstart = at; _argslength = length(value)
+          if left(value,5) = 'list(' & right(value,1) = ')' then do
+            _argumentkind = 'list'; call reglist(substr(value,6,length(value) - 6),at + 5,'actual-capture')
+          end
+          else if left(value,7) = 'window(' & right(value,1) = ')' then do
+            _argumentkind = 'window'; call addreg(substr(value,8,length(value) - 8),at + 7,'window-capture',0); _windowref = _starts[0]
+          end
+          else _error = 'LL_TARGET_RECIPE: argument view'
+        end
+        when 'a0' then do
+          call addreg(value,at,'a0-destination',0); _a0ref = _starts[0]
+        end
+        when 'owned' then do
+          if left(value,1) <> '(' | right(value,1) <> ')' then _error = 'LL_TARGET_RECIPE: owned list'
+          else call reglist(substr(value,2,length(value) - 2),at + 1,'owned-destination')
+        end
+        when 'proxies' then do
+          if left(value,1) <> '(' | right(value,1) <> ')' then _error = 'LL_TARGET_RECIPE: proxy list'
+          else do
+            rows = substr(value,2,length(value) - 2); rowstart = 1
+            do while rowstart <= length(rows)
+              rowend = pos(',',rows,rowstart)
+              if rowend = 0 then rowend = length(rows) + 1
+              row = substr(rows,rowstart,rowend - rowstart); colon = pos(':',row)
+              if colon < 2 | natural(substr(row,colon + 1)) = 0 then _error = 'LL_TARGET_RECIPE: proxy entry'
+              else do
+                proxy = _proxyrefs[0] + 1; argument = substr(row,colon + 1) as .int
+                call addreg(left(row,colon - 1),at + rowstart,'proxy-destination',argument)
+                _proxyrefs[proxy] = _starts[0]; _proxyarguments[proxy] = argument
+              end
+              if _error <> '' then return
+              if rowend = length(rows) then do; _error = 'LL_TARGET_RECIPE: trailing proxy separator'; return; end
+              rowstart = rowend + 1
+            end
+          end
+        end
+        when 'prep' then do
+          _prepstart = at; _preplength = length(value); call preparation(value,at)
+        end
+        when 'result' then do
+          if value <> 'ignored' then _error = 'LL_TARGET_RECIPE: result mode'
+          else _resultmode = value
+        end
+      end
+      if _error <> '' then return
+      if last = length(text) then do; _error = 'LL_TARGET_RECIPE: trailing field separator'; return; end
+      first = last + 1
+    end
+    required = 'count args prep'
+    if activation then required = 'count args a0 proxies owned prep'
+    do i = 1 to words(required)
+      found = 0
+      do j = 1 to _keys[0]
+        if _keys[j] = word(required,i) then found = 1
+      end
+      if found = 0 then do; _error = 'LL_TARGET_RECIPE: missing ' || word(required,i); return; end
+    end
+    if _countkind = 'literal' then do
+      if _countvalue > 4096 then do; _error = 'LL_TARGET_RECIPE: count limit'; return; end
+      if _argumentkind = 'list' & _countvalue <> _arguments[0] then do; _error = 'LL_TARGET_RECIPE: count/list mismatch'; return; end
+    end
+    if _arguments[0] > 4096 | _proxyrefs[0] > 4096 | _ownedrefs[0] > 4096 then do; _error = 'LL_TARGET_RECIPE: item limit'; return; end
+    /* Duplicated actual pointers are legal aliases. Duplicated owned or proxy
+     * destinations and an a0/proxy collision are not a representable recipe. */
+    proxies = .string[]; owned = .string[]
+    do i = 1 to _proxyrefs[0]
+      if samereg(_proxyrefs[i],_a0ref) then do; _error = 'LL_TARGET_RECIPE: a0/proxy role collision'; return; end
+      proxies[i] = _banks[_proxyrefs[i]] || _indexes[_proxyrefs[i]]
+    end
+    do i = 1 to _ownedrefs[0]
+      owned[i] = _banks[_ownedrefs[i]] || _indexes[_ownedrefs[i]]
+    end
+    /* Reuse the shared bounded heapsort rather than a quadratic role-pair
+     * scan. Actual captures deliberately retain their original alias order. */
+    ignored = arraysort(proxies); ignored = arraysort(owned)
+    do i = 2 to proxies[0]
+      if proxies[i] = proxies[i - 1] then do; _error = 'LL_TARGET_RECIPE: duplicate proxy destination'; return; end
+    end
+    do i = 2 to owned[0]
+      if owned[i] = owned[i - 1] then do; _error = 'LL_TARGET_RECIPE: duplicate owned destination'; return; end
+    end
+    return
+  natural: method = .int
+    arg text = .string
+    if text = '' | length(text) > 10 | verify(text,'0123456789') <> 0 then return 0
+    number = text as .int
+    return number <= 4294967295
+  samereg: method = .int
+    arg first = .int, second = .int
+    if first = 0 | second = 0 then return 0
+    return _banks[first] = _banks[second] & _indexes[first] = _indexes[second]
+  addreg: method = .void
+    arg text = .string, at = .int, role = .string, ordinal = .int
+    if _error <> '' then return
+    if length(text) < 2 | wordpos(left(text,1),'r g a') = 0 then do; _error = 'LL_TARGET_RECIPE: register'; return; end
+    if wordpos(role,'a0-destination proxy-destination owned-destination') > 0 & left(text,1) <> 'r' then do; _error = 'LL_TARGET_RECIPE: owned destination must be local'; return; end
+    if natural(substr(text,2)) = 0 then do; _error = 'LL_TARGET_RECIPE: register index'; return; end
+    if substr(text,2) as .int = 4294967295 then do; _error = 'LL_TARGET_RECIPE: reserved register index'; return; end
+    n = _starts[0] + 1; _starts[n] = at; _lengths[n] = length(text); _banks[n] = left(text,1); _indexes[n] = substr(text,2) as .int
+    _roles[n] = role; _ordinals[n] = ordinal
+    return
+  reglist: method = .void
+    arg text = .string, at = .int, role = .string
+    first = 1; ordinal = 0
+    do while first <= length(text)
+      last = pos(',',text,first)
+      if last = 0 then last = length(text) + 1
+      ordinal = ordinal + 1; call addreg(substr(text,first,last - first),at + first - 1,role,ordinal)
+      if _error <> '' then return
+      if role = 'actual-capture' then _arguments[ordinal] = _starts[0]
+      else if role = 'owned-destination' then _ownedrefs[ordinal] = _starts[0]
+      if last = length(text) then do; _error = 'LL_TARGET_RECIPE: trailing register separator'; return; end
+      first = last + 1
+    end
+    return
+  preparation: method = .void
+    arg text = .string, at = .int
+    comma = .int
+    if text = 'none' then return
+    first = 1
+    do while first <= length(text)
+      last = pos('+',text,first)
+      if last = 0 then last = length(text) + 1
+      item = substr(text,first,last - first); opening = pos('(',item)
+      if opening < 2 | right(item,1) <> ')' then do; _error = 'LL_TARGET_RECIPE: preparation'; return; end
+      name = left(item,opening - 1); content = substr(item,opening + 1,length(item) - opening - 1); where = at + first + opening - 1
+      step = _prepkinds[0] + 1
+      if step > 2 then do; _error = 'LL_TARGET_RECIPE: preparation order'; return; end
+      if step = 2 then do
+        if _prepkinds[1] <> 'settp' | name <> 'swap' then do; _error = 'LL_TARGET_RECIPE: preparation order'; return; end
+      end
+      _preptext[step] = item; _prepkinds[step] = name; _prepfirst[step] = _starts[0] + 1; _prepsecond[step] = 0; _prepmasks[step] = 0
+      if name = 'clear' then call addreg(content,where,'prep-clear',step)
+      else if name = 'swap' then do
+        comma = pos(',',content)
+        if comma < 2 | pos(',',content,comma + 1) > 0 then do; _error = 'LL_TARGET_RECIPE: swap preparation'; return; end
+        call addreg(left(content,comma - 1),where,'prep-swap',step)
+        call addreg(substr(content,comma + 1),where + comma,'prep-swap',step)
+        _prepsecond[step] = _starts[0]
+      end
+      else if name = 'settp' then do
+        comma = pos(',',content)
+        if comma < 2 then do; _error = 'LL_TARGET_RECIPE: status preparation'; return; end
+        call addreg(left(content,comma - 1),where,'prep-status',step)
+        mask = substr(content,comma + 1)
+        if natural(mask) = 0 then do; _error = 'LL_TARGET_RECIPE: status mask'; return; end
+        _prepmasks[step] = mask as .int
+      end
+      else _error = 'LL_TARGET_RECIPE: preparation kind'
+      if _error <> '' then return
+      if last = length(text) then do; _error = 'LL_TARGET_RECIPE: trailing preparation separator'; return; end
+      first = last + 1
+    end
+    return
+  require: method = .void
+    call run()
+    if _error <> '' then assembler signal "ERROR",_error
+    return
+  checkref: method = .void
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _starts[0] then assembler signal "ERROR","LL_TARGET_RECIPE: register ordinal"
+    return
+  error: method = .string
+    call run(); return _error
+  registers: method = .int
+    call require(); return _starts[0]
+  bank: method = .string
+    arg ordinal = .int
+    call checkref(ordinal); return _banks[ordinal]
+  index: method = .int
+    arg ordinal = .int
+    call checkref(ordinal); return _indexes[ordinal]
+  role: method = .string
+    arg ordinal = .int
+    call checkref(ordinal); return _roles[ordinal]
+  roleordinal: method = .int
+    arg ordinal = .int
+    call checkref(ordinal); return _ordinals[ordinal]
+  countkind: method = .string
+    call require(); return _countkind
+  countvalue: method = .int
+    call require()
+    if _countkind <> 'literal' then assembler signal "ERROR","LL_TARGET_RECIPE: count is not literal"
+    return _countvalue
+  countref: method = .int
+    call require(); return _countref
+  argumentkind: method = .string
+    call require(); return _argumentkind
+  arguments: method = .int
+    call require(); return _arguments[0]
+  argumentref: method = .int
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _arguments[0] then assembler signal "ERROR","LL_TARGET_RECIPE: actual ordinal"
+    return _arguments[ordinal]
+  windowref: method = .int
+    call require(); return _windowref
+  a0ref: method = .int
+    call require(); return _a0ref
+  proxies: method = .int
+    call require(); return _proxyrefs[0]
+  proxyref: method = .int
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _proxyrefs[0] then assembler signal "ERROR","LL_TARGET_RECIPE: proxy ordinal"
+    return _proxyrefs[ordinal]
+  proxyargument: method = .int
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _proxyarguments[0] then assembler signal "ERROR","LL_TARGET_RECIPE: proxy ordinal"
+    return _proxyarguments[ordinal]
+  owned: method = .int
+    call require(); return _ownedrefs[0]
+  ownedref: method = .int
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _ownedrefs[0] then assembler signal "ERROR","LL_TARGET_RECIPE: owned ordinal"
+    return _ownedrefs[ordinal]
+  preparations: method = .int
+    call require(); return _prepkinds[0]
+  preparationkind: method = .string
+    arg ordinal = .int
+    call checkprep(ordinal); return _prepkinds[ordinal]
+  checkprep: method = .void
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _prepkinds[0] then assembler signal "ERROR","LL_TARGET_RECIPE: preparation ordinal"
+    return
+  preparationref: method = .int
+    arg ordinal = .int, operand = .int
+    call checkprep(ordinal)
+    if operand = 1 then return _prepfirst[ordinal]
+    if operand = 2 & _prepsecond[ordinal] > 0 then return _prepsecond[ordinal]
+    assembler signal "ERROR","LL_TARGET_RECIPE: preparation operand ordinal"
+    return 0
+  preparationmask: method = .int
+    arg ordinal = .int
+    call checkprep(ordinal); return _prepmasks[ordinal]
+  resultmode: method = .string
+    call require(); return _resultmode
+  /** Final-frame packing is an RXAS boundary operation, not a local-register
+   * remap. The INL1 wire continues to contain physical register indices. */
+  packedindex: method = .int
+    arg ordinal = .int, locals = .int, globals = .int
+    call checkref(ordinal)
+    if locals < 0 | globals < 0 | locals > 4294967294 | globals > 4294967294 - locals then assembler signal "ERROR","LL_TARGET_RECIPE: frame extent"
+    bank = _banks[ordinal]; index = _indexes[ordinal]
+    if bank = 'r' then do
+      if index >= locals then assembler signal "ERROR","LL_TARGET_RECIPE: local selector outside final frame"
+      return index
+    end
+    if bank = 'g' then do
+      if index >= globals then assembler signal "ERROR","LL_TARGET_RECIPE: global selector outside final frame"
+      return locals + index
+    end
+    if index > 4294967294 - locals - globals then assembler signal "ERROR","LL_TARGET_RECIPE: packed argument extent"
+    return locals + globals + index
+  physicalsize: method = .int
+    arg locals = .int, globals = .int
+    call require(); size = length(_text)
+    do i = 1 to _starts[0]
+      index = packedindex(i,locals,globals)
+      size = size + 1 + length(index as .string) - _lengths[i]
+    end
+    return size
+  physical: method = .string
+    arg locals = .int, globals = .int
+    call require(); names = .string[]
+    do i = 1 to _starts[0]
+      index = packedindex(i,locals,globals); names[i] = 'r' || index
+    end
+    return rewrite(names)
+  /** Native RXAS recipes spell physical rN indices. Recover typed banks
+   * before target register enrollment can mistake a global for a local. */
+  logical: method = .string
+    arg locals = .int, globals = .int
+    call require(); names = .string[]
+    if locals < 0 | globals < 0 | locals > 4294967294 | globals > 4294967294 - locals then assembler signal "ERROR","LL_TARGET_RECIPE: frame extent"
+    do i = 1 to _starts[0]
+      if _banks[i] <> 'r' then assembler signal "ERROR","LL_TARGET_RECIPE: physical RXAS selector expected"
+      index = _indexes[i]; bank = 'r'
+      if wordpos(_roles[i],'a0-destination proxy-destination owned-destination') > 0 then do
+        if index >= locals then assembler signal "ERROR","LL_TARGET_RECIPE: owned selector outside final frame"
+      end
+      else if index >= locals + globals then do; bank = 'a'; index = index - locals - globals; end
+      else if index >= locals then do; bank = 'g'; index = index - locals; end
+      names[i] = bank || index
+    end
+    return rewrite(names)
+  /** Materialize a proved finite ordered pointer capture. Only the args field
+   * changes; source spelling, count, result and preparation stay together. */
+  explicitactuals: method = .string
+    arg registers = .string[]
+    call require()
+    replacement = 'list('
+    do i = 1 to registers[0]
+      if i > 1 then replacement = replacement || ','
+      replacement = replacement || registers[i]
+    end
+    replacement = replacement || ')'
+    result = left(_text,_argsstart - 1) || replacement || substr(_text,_argsstart + _argslength)
+    checked = .lltargetrecipe..view(result,_activation,length(result) + 1)
+    message = checked.error()
+    if message <> '' then assembler signal "ERROR",message
+    return result
+  /** Remove a proved redundant preparation permutation. This method supplies
+   * no proof: callers must certify the complete region before selecting it. */
+  withoutswap: method = .string
+    call require()
+    replacement = ''
+    do i = 1 to _prepkinds[0]
+      if _prepkinds[i] = 'swap' then iterate
+      if replacement <> '' then replacement = replacement || '+'
+      replacement = replacement || _preptext[i]
+    end
+    if replacement = '' then replacement = 'none'
+    result = left(_text,_prepstart - 1) || replacement || substr(_text,_prepstart + _preplength)
+    checked = .lltargetrecipe..view(result,_activation,length(result) + 1)
+    message = checked.error()
+    if message <> '' then assembler signal "ERROR",message
+    return result
+  rewrite: method = .string
+    arg replacements = .string[]
+    call require()
+    if replacements[0] <> _starts[0] then assembler signal "ERROR","LL_TARGET_RECIPE: invalid register remap"
+    result = .binary; part = .binary; first = 1
+    do i = 1 to _starts[0]
+      part = substr(_text,first,_starts[i] - first) as .binary
+      assembler bappend result,part
+      part = replacements[i] as .binary
+      assembler bappend result,part
+      first = _starts[i] + _lengths[i]
+    end
+    part = substr(_text,first) as .binary
+    assembler bappend result,part
+    /* Placement can introduce a role collision even if every token remains a
+     * legal register. Validate the complete rewritten operational recipe. */
+    text = result as .string
+    checked = .lltargetrecipe..view(text,_activation,length(text) + 1)
+    message = checked.error()
+    if message <> '' then assembler signal "ERROR",message
+    return text

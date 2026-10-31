@@ -1,0 +1,15 @@
+/* A valid B service with a deliberately incomplete selection response. */
+options levelb
+namespace llrxinline expose main selectionresult
+
+main: procedure = .int
+  arg argv = .string[]
+  return 0
+
+selectionresult: procedure = .string[]
+  arg path = .string
+  rows = .string[]
+  rows[1] = 'llinline.selection.result.v1'
+  rows[2] = 'wrong-transaction'
+  rows[3] = 'wrong-catalogue'
+  return rows

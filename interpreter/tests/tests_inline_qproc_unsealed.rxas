@@ -1,0 +1,6 @@
+/* Standalone QPR1 is unsealed; only the selected linker image may seal it. */
+.globals=0
+
+main() .locals=0
+    call @0::0()
+    ret 0

@@ -37,8 +37,9 @@ copyorigin: procedure = .llir..origin
   end
   return origins[old.id()] as .llir..origin
 
-/** Borrow one sealed operational profile from the exact source owner. Missing
- * catalogue coverage never becomes an empty activation-observation set. */
+/** Borrow one sealed operational profile from the exact source owner. Native
+ * canonical and constructed premises provide the same checked per-record
+ * relocation family; missing coverage never means an empty observation set. */
 relocationpremise: class
   _owner = reference .lltarget..module
   _profile = reference .lltargettransfer..profile
@@ -84,7 +85,6 @@ relocationpremise: class
     if valid() = 0 then return 'remap.relocation.profile.invalid'
     if _provided = 0 then return 'remap.relocation.unknown'
     profile_ref = _profile; view = dereference profile_ref
-    if view.premise() = 'canonical' then return 'remap.relocation.unknown'
     if view.complete(opid,'relocation') = 0 then return 'remap.relocation.unknown'
     return ''
 

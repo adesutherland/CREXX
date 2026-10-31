@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 # Explicit optional target tools; core/bootstrap packages have no reverse edge.
-set(_modules lltarget lltargettransfer lltargetcfg lltargetremap
+set(_modules lltargetrecipe lltarget lltargettransfer lltargetcfg lltargetremap
   lltargetflow lltargetsummary lltargetnormalize lltargetfacts llinline llcleanup)
 set_property(GLOBAL PROPERTY RXFNSL_TARGET_SELECTORS "${_modules}")
 set(_imports "${CMAKE_CURRENT_BINARY_DIR}/imports")
@@ -25,8 +25,11 @@ foreach(_module IN LISTS _modules)
   if(_previous_module)
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/${_previous_module}.rxbin")
   endif()
-  if(NOT _module STREQUAL "lltarget")
+  if(NOT _module STREQUAL "lltarget" AND NOT _module STREQUAL "lltargetrecipe")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltarget.rxbin")
+  endif()
+  if(_module STREQUAL "lltarget")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetrecipe.rxbin")
   endif()
   if(_module STREQUAL "lltargetcfg" OR _module STREQUAL "lltargetremap"
       OR _module STREQUAL "lltargetflow")
@@ -42,7 +45,12 @@ foreach(_module IN LISTS _modules)
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetremap.rxbin")
   endif()
   if(_module STREQUAL "llinline")
-    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetremap.rxbin")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetremap.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/lltargettransfer.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/lltargetcfg.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/lltargetflow.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/lltargetsummary.rxbin"
+      "${CMAKE_CURRENT_BINARY_DIR}/lltargetnormalize.rxbin")
   endif()
   if(_module STREQUAL "llinline" OR _module STREQUAL "llcleanup")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetfacts.rxbin")
@@ -210,6 +218,14 @@ if(BUILD_TESTING)
       TIMEOUT 120 LABELS "level-l;research;inlining")
     crexx_register_test_prep_targets(TESTS levell_storage_inline_rxbvm
       TARGETS levell_storage_inline rxbvm)
+    add_test(NAME levell_storage_inline_scoped_rxbvm
+      COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/storage-inline-linked.rxbin" -a scoped-cleanup)
+    set_tests_properties(levell_storage_inline_scoped_rxbvm PROPERTIES
+      PASS_REGULAR_EXPRESSION "SCOPED_CLEANUP[|]failures=0"
+      FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+      TIMEOUT 120 LABELS "level-l;research;inlining")
+    crexx_register_test_prep_targets(TESTS levell_storage_inline_scoped_rxbvm
+      TARGETS levell_storage_inline rxbvm)
   endif()
 
   set(_nested_fixture "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/nested-inline.crexx")
@@ -256,8 +272,8 @@ if(BUILD_TESTING)
 
   # One bounded owner panel for the shared Level L target foundation.
   foreach(_foundation_case IN ITEMS
-      target-transfer-cfg target-module-remap target-flow target-summary foundation-normalize)
-    if(_foundation_case STREQUAL "foundation-normalize" AND NOT CREXX_BUILD_TARGET_IO)
+      target-transfer-cfg target-binding-recipe target-child-window target-execution-context target-signal-cfg target-signal-normalize target-canonical-flow target-scope-flow target-recipe target-recipe-banks target-module-remap target-flow target-summary foundation-normalize)
+    if((_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks") AND NOT CREXX_BUILD_TARGET_IO)
       continue()
     endif()
     string(REPLACE "-" "_" _foundation_name "${_foundation_case}")
@@ -265,15 +281,15 @@ if(BUILD_TESTING)
     set(_foundation_images ${_images})
     set(_foundation_imports "${_test_imports}")
     set(_foundation_deps levell_target_test_imports ${_test_files})
-    if(_foundation_case STREQUAL "foundation-normalize")
+    if(_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks")
       list(APPEND _foundation_images "${CMAKE_BINARY_DIR}/bin/rxfnsl-target-io.rxbin")
       list(APPEND _foundation_images "${CMAKE_BINARY_DIR}/langtools/common/llrxastext.rxbin")
-      set(_foundation_imports "${CMAKE_CURRENT_BINARY_DIR}/foundation-normalize-imports")
-      crexx_add_import_root(levell_foundation_normalize_imports
+      set(_foundation_imports "${CMAKE_CURRENT_BINARY_DIR}/${_foundation_case}-imports")
+      crexx_add_import_root(levell_${_foundation_name}_imports
         DIRECTORY "${_foundation_imports}" OUTPUT_VARIABLE _foundation_import_files
         FILES ${_foundation_images}
         DEPENDS library rxfnsl rxfnsl_analysis rxfnsl_rxas rxfnsl_target rxfnsl_target_io llrxastext)
-      set(_foundation_deps levell_foundation_normalize_imports ${_foundation_import_files})
+      set(_foundation_deps levell_${_foundation_name}_imports ${_foundation_import_files})
     endif()
     set(_foundation_source
       "${CMAKE_SOURCE_DIR}/research/level-l/toolchain/tests/${_foundation_case}.crexx")

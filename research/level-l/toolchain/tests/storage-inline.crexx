@@ -5,6 +5,7 @@ import llir
 import llirgraph
 import lltarget
 import lltargetfacts
+import lltargetrecipe
 import llcleanup
 import llinline
 
@@ -821,7 +822,134 @@ stringtraceproof: procedure = .int
   end
   return failures
 
+/** An independently authored scope tests cleanup without asking expansion to
+ * supply its oracle. The sparse owned recipe is part of the executable input. */
+scopedtransport: procedure = .int
+  arg variant = 0
+  failures = 0; i = .int; j = .int; mode = .int; ignored = .int
+  original = .lltarget..module; result = .lltarget..module; kept = .lltarget..module
+  changed = .llinline..change; limited = .llinline..change; placed = .llinline..change
+  item = .lltarget..record; value = .lltarget..operand; recipe = .lltargetrecipe..view
+  sourcegraph = .llir..module; keptgraph = .llir..module; graph_ref = reference .llir..module
+  globals = .int
+  if variant = 3 then globals = 1
+  draft = .lltarget..draft('storage.logical.scope.' || variant,'fixture:storage.logical.scope',globals)
+  at = draft.synthetic('independent logical scope permutation')
+  root = draft.procedure('main',16,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(11),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.integer(23),at)
+  if variant = 4 then ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(2),at)
+  setupone = two(root,'swap',root.reg('r',3),root.reg('r',1),at)
+  setuptwo = two(root,'swap',root.reg('r',4),root.reg('r',0),at)
+  traceid = tracepoint(root,3,at)
+  if variant = 3 then do
+    ignored = two(root,'load',root.reg('r',15),.lltarget..operand.integer(23),at)
+    ignored = two(root,'load',root.reg('g',0),.lltarget..operand.integer(11),at)
+  end
+  spelling = 'count=1;args=list(r3);a0=r12;proxies=(r13:1);owned=(r12,r13,r14);prep=none'
+  if variant = 1 then spelling = 'count=1;args=list(r3);a0=r12;proxies=(r13:1);owned=(r12,r13,r14);prep=settp(r3,256)+swap(r3,r4)'
+  if variant = 2 then spelling = 'count=2;args=window(r3);a0=r12;proxies=(r13:1,r14:2);owned=(r12,r13,r14);prep=none'
+  if variant = 3 then spelling = 'count=2;args=window(r15);a0=r12;proxies=(r13:1,r14:2);owned=(r12,r13,r14);prep=none'
+  if variant = 4 | variant = 5 then spelling = 'count=r2;args=window(r3);a0=r12;proxies=(r13:1,r14:2);owned=(r12,r13,r14);prep=none'
+  fields = .object[]
+  fields[1] = root.reg('r',5) as .object
+  fields[2] = .lltarget..operand.procedure('first') as .object
+  fields[3] = .lltarget..operand.string(spelling as .binary) as .object
+  fields[4] = .lltarget..operand.symbol('after_first') as .object
+  entryid = root.emit('inlenter',fields,at)
+  returnid = one(root,'ret',root.reg('r',13),at)
+  ignored = namedlabel(root,'after_first',at)
+  restoreone = two(root,'swap',root.reg('r',0),root.reg('r',4),at)
+  restoretwo = two(root,'swap',root.reg('r',1),root.reg('r',3),at)
+  if variant = 1 then finalrestore = two(root,'swap',root.reg('r',0),root.reg('r',1),at)
+  ignored = one(root,'itos',root.reg('r',5),at); ignored = one(root,'say',root.reg('r',5),at)
+  ignored = one(root,'itos',root.reg('r',0),at); ignored = one(root,'say',root.reg('r',0),at)
+  ignored = one(root,'itos',root.reg('r',1),at); ignored = one(root,'say',root.reg('r',1),at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('first',0,at); ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  original = draft.finish()
+  failures = failures + check(original.valid(),'independently authored scoped cleanup input validates')
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  graph_ref = original.ir(); sourcegraph = dereference graph_ref; before = sourcegraph.binary()
+  changed = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1')
+  if variant = 5 then do
+    kept = changed.result(); graph_ref = kept.ir(); unknowncountgraph = dereference graph_ref
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = 'transport.scope.storage.unknown' & bin2x(unknowncountgraph.binary()) = bin2x(before),'unknown captured count retains its unresolved borrowed storage and exact input')
+    return failures
+  end
+  if variant = 3 then do
+    kept = changed.result(); graph_ref = kept.ir(); crossinggraph = dereference graph_ref
+    failures = failures + check(changed.status() = 'keep' & changed.reason() = 'transport.global.storage.pending' & bin2x(crossinggraph.binary()) = bin2x(before),'r-to-g captured window retains exact owner at the external storage boundary')
+    return failures
+  end
+  failures = failures + check(changed.status() = 'changed','sealed standalone scope receives whole-region transport')
+  if changed.status() <> 'changed' then do; say changed.reason(); return failures; end
+  result = changed.result(); body = result.body(result.procedureid('main'))
+  failures = failures + check(changed.operation(setupone) = 0 & changed.operation(setuptwo) = 0 & changed.operation(restoreone) = 0 & changed.operation(restoretwo) = 0,'both setup and both inverse swaps disappear together')
+  if variant = 1 then failures = failures + check(changed.operation(finalrestore) = 0,'fused prep permutation and its caller restoration are both eliminated')
+  item = result.at(changed.operation(traceid)); value = item.operand(6)
+  failures = failures + check(value.index() = 1,'TRACE follows the captured y storage')
+  item = result.at(changed.operation(entryid)); recipe = item.recipe()
+  expectedcount = 1; expectedactual = 1
+  if variant = 1 then expectedactual = 0
+  if variant = 2 | variant = 4 then expectedcount = 2
+  failures = failures + check(recipe.error() = '' & recipe.argumentkind() = 'list' & recipe.arguments() = expectedcount,'rewritten scope has a checked ordered actual list')
+  value = item.reciperef(recipe.argumentref(1))
+  failures = failures + check(value.index() = expectedactual,'captured actual uses the exact post-preparation storage')
+  if variant = 1 then do
+    failures = failures + check(recipe.preparations() = 1 & recipe.preparationkind(1) = 'settp' & recipe.preparationmask(1) = 256,'fused status preparation remains atomic after proved swap removal')
+    value = item.reciperef(recipe.preparationref(1,1))
+    failures = failures + check(value.index() = 1,'status preparation still addresses its original pre-swap pointee')
+  end
+  if variant = 2 | variant = 4 then do
+    value = item.reciperef(recipe.argumentref(2))
+    failures = failures + check(value.index() = 0,'finite window lowers to the original ordered scattered pointers')
+  end
+  if variant = 4 then do
+    value = item.reciperef(recipe.countref())
+    failures = failures + check(recipe.countkind() = 'register' & value.index() = 2,'finite captured register count remains an observed count source')
+  end
+  value = item.reciperef(recipe.a0ref())
+  failures = failures + check(value.index() = 12,'count destination retains its base identity during transport')
+  value = item.reciperef(recipe.proxyref(1))
+  failures = failures + check(value.index() = 13,'proxy destination retains its base identity during transport')
+  value = item.reciperef(recipe.ownedref(3))
+  failures = failures + check(value.index() = 14 & body.locals() > value.index(),'implicit owned-only reference remains inside the emitted frame')
+  item = result.at(changed.operation(returnid)); value = item.operand(1)
+  failures = failures + check(value.index() = expectedactual,'logical return retains the borrowed actual identity')
+  placed = llcleanup..storage(reference result,result.procedureid('main'),'closed-main-default-halt.v1')
+  failures = failures + check(placed.status() = 'changed' | placed.status() = 'keep','scope-owned identities permit a checked placement or exact-owner keep')
+  if placed.status() = 'changed' then do
+    kept = placed.result(); body = kept.body(kept.procedureid('main'))
+    do i = 1 to body.records()
+      item = body.record(i)
+      do j = 1 to item.registerrefs()
+        value = item.registerref(j)
+        failures = failures + check(value.index() < body.locals(),'placed explicit and recipe reference fits its declared frame')
+      end
+    end
+  end
+  limited = llcleanup..transport(reference original,original.procedureid('main'),'unknown')
+  kept = limited.result(); graph_ref = kept.ir(); keptgraph = dereference graph_ref
+  failures = failures + check(limited.status() = 'keep' & limited.reason() = 'signal.policy.unproved' & bin2x(keptgraph.binary()) = bin2x(before),'absence of standalone execution context retains exact input with policy reason')
+  do mode = 1 to 2
+    if mode = 1 then limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1)
+    else limited = llcleanup..transport(reference original,original.procedureid('main'),'closed-main-default-halt.v1',1000000,1000000,1)
+    kept = limited.result(); graph_ref = kept.ir(); budgetgraph = dereference graph_ref
+    failures = failures + check(limited.status() = 'limit' & bin2x(budgetgraph.binary()) = bin2x(before),'scoped work/byte refusal preserves the complete original ' || mode)
+  end
+  return failures
+
 main: procedure = .int
-  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1) + predicates() + predicateunknown() + predicateundefined() + loosepredicates() + concatenations() + stringtraceproof()
+  arg argv = .string[]
+  failures = .int
+  if argv[0] = 1 then do
+    if argv[1] = 'scoped-cleanup' then do
+      failures = scopedtransport() + scopedtransport(1) + scopedtransport(2) + scopedtransport(3) + scopedtransport(4) + scopedtransport(5)
+      say 'SCOPED_CLEANUP|failures=' || failures
+      return failures
+    end
+  end
+  failures = sparse() + sparsedag() + backwarddag() + graphkeeps() + boundedpositive(1) + boundedpositive(2) + boundedpositive(3) + boundedpositive(4) + boundedkeeps() + scoped() + reuse() + reuse(1) + retainedwindow() + stringlifetime() + binarylifetime() + binarylifetime(1) + predicates() + predicateunknown() + predicateundefined() + loosepredicates() + concatenations() + stringtraceproof() + scopedtransport() + scopedtransport(1) + scopedtransport(2) + scopedtransport(3) + scopedtransport(4) + scopedtransport(5)
   say 'STORAGE_INLINE|failures=' || failures
   return failures

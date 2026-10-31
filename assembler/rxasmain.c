@@ -34,6 +34,7 @@
 #endif
 #include "rxas.h"
 #include "rxasassm.h"
+#include "rxas_inline_service.h"
 #include "../binutils/include/rxdefs.h"
 
 extern const OpInfo op_table[];
@@ -110,6 +111,11 @@ static void help() {
         "  -o output_stem  RXBIN output stem or .rxbin file\n"
         "  -E encoding     Source text encoding (UTF8; native profiles add six pages)\n"
         "  -n              No Optimising\n"
+        "  --inline-service file  Run the Level L bytecode inliner before assembly\n"
+        "  --inline-module name   Logical RXAS module name for the inliner\n"
+        "  --inline-vm file       VM executable (default: sibling rxvm)\n"
+        "  --inline-runtime file  Additional runtime image (repeatable)\n"
+        "  --inline-policy name   default, all-legal or never (default: default)\n"
         "Notes   :\n"
         "- source_file : The source file to be assembled; filetype (rxas) is added to the name.\n";
 
@@ -128,6 +134,11 @@ static void error_and_exit(int rc, char* message) {
     exit(rc);
 }
 
+static int rxas_inline_utf8_name(const char *name) {
+    return !strcmp(name, "UTF8") || !strcmp(name, "utf8") ||
+           !strcmp(name, "UTF-8") || !strcmp(name, "utf-8");
+}
+
 #ifdef ENABLE_PARSER_MODE
 int rxas_parser_mode_main(int stdio_mode, int port, const char *file_name, int debug_mode);
 #endif
@@ -139,6 +150,17 @@ int main(int argc, char *argv[]) {
     Assembler_Context scanner;
     char *combined_location = 0;
     char *exe_path = 0;
+    char *inline_inferred_vm = 0;
+    char *inline_private_dir = 0;
+    char *inline_read_path = 0;
+    const char *inline_service = 0;
+    const char *inline_module = 0;
+    const char *inline_vm = 0;
+    const char *inline_policy = "default";
+    char **inline_runtime = 0;
+    size_t inline_runtime_count = 0u;
+    int inline_option_seen = 0;
+    int inline_utf8 = 1;
     FILE *trace_file = 0;
     int assemble_rc;
     int i;
@@ -160,6 +182,7 @@ int main(int argc, char *argv[]) {
     scanner.traceFile = 0;
     scanner.optimise = 1;
     scanner.file_name = 0;
+    scanner.input_file_name = 0;
     scanner.output_file_name = 0;
     scanner.location = 0;
     scanner.quiet = 0;
@@ -170,6 +193,31 @@ int main(int argc, char *argv[]) {
             i++;
             if (i >= argc || platform_text_encoding(argv[i]) != 0)
                 error_and_exit(2, "Missing or unsupported text encoding after -E");
+            inline_utf8 = rxas_inline_utf8_name(argv[i]);
+            continue;
+        }
+        if (!strcmp(argv[i], "--inline-service") ||
+            !strcmp(argv[i], "--inline-module") ||
+            !strcmp(argv[i], "--inline-vm") ||
+            !strcmp(argv[i], "--inline-runtime") ||
+            !strcmp(argv[i], "--inline-policy")) {
+            const char *option = argv[i];
+            inline_option_seen = 1;
+            i++;
+            if (i >= argc) error_and_exit(2, "Missing inline option value");
+            if (!strcmp(option, "--inline-service")) inline_service = argv[i];
+            else if (!strcmp(option, "--inline-module")) inline_module = argv[i];
+            else if (!strcmp(option, "--inline-vm")) inline_vm = argv[i];
+            else if (!strcmp(option, "--inline-policy")) inline_policy = argv[i];
+            else {
+                if (!inline_runtime) {
+                    inline_runtime = (char **)calloc((size_t)argc,
+                                                     sizeof(*inline_runtime));
+                    if (!inline_runtime)
+                        error_and_exit(2, "Cannot allocate inline runtime list");
+                }
+                inline_runtime[inline_runtime_count++] = argv[i];
+            }
             continue;
         }
 #ifdef ENABLE_PARSER_MODE
@@ -262,6 +310,14 @@ int main(int argc, char *argv[]) {
     if (i == argc) {
         error_and_exit(2, "Missing input source file");
     }
+    if (inline_option_seen && (!inline_service || !inline_module ||
+        !*inline_service || !*inline_module ||
+        (strcmp(inline_policy, "default") &&
+         strcmp(inline_policy, "all-legal") &&
+         strcmp(inline_policy, "never"))))
+        error_and_exit(2, "Inline service requires file, module and valid policy");
+    if (inline_service && !inline_utf8)
+        error_and_exit(2, "Inline service requires UTF8 source encoding");
 
     /* Add current and executable path to location */
     exe_path = exepath();
@@ -283,19 +339,48 @@ int main(int argc, char *argv[]) {
         snprintf(combined_location, combined_location_size, ".;%s", exe_path);
         scanner.location = combined_location;
     }
-    free(exe_path);
-
     scanner.file_name = argv[i++];
 
     if (i < argc) {
         error_and_exit(2, "Unexpected Arguments");
     }
 
+    if (inline_service) {
+        if (!inline_vm) {
+#ifdef _WIN32
+            const char *vm_name = "rxvm.exe";
+#else
+            const char *vm_name = "rxvm";
+#endif
+            size_t size = strlen(exe_path) + strlen(vm_name) + 2u;
+            inline_inferred_vm = (char *)malloc(size);
+            if (!inline_inferred_vm)
+                error_and_exit(2, "Cannot allocate VM path");
+            snprintf(inline_inferred_vm, size, "%s/%s", exe_path, vm_name);
+            inline_vm = inline_inferred_vm;
+        }
+        if (rxas_inline_service_run(&scanner, inline_service, inline_vm,
+                inline_module, inline_policy, inline_runtime,
+                inline_runtime_count, &inline_private_dir,
+                &inline_read_path) != 0) {
+            free(inline_inferred_vm);
+            free(inline_runtime);
+            free(exe_path);
+            free(combined_location);
+            return -1;
+        }
+        scanner.input_file_name = inline_read_path;
+    }
+    free(exe_path);
+
     /* Open trace file */
     if (scanner.debug_mode) {
         scanner.traceFile = openfile("trace", "out", scanner.location, "w");
         if (scanner.traceFile == NULL) {
             fprintf(stderr, "Can't open trace file\n");
+            rxas_inline_service_cleanup(inline_private_dir, inline_read_path);
+            free(inline_inferred_vm);
+            free(inline_runtime);
             free(combined_location);
             return -1;
         }
@@ -309,6 +394,9 @@ int main(int argc, char *argv[]) {
     /* init_ops() / free_ops() - NO LONGER NEEDED */
 
     if (trace_file) fclose(trace_file);
+    rxas_inline_service_cleanup(inline_private_dir, inline_read_path);
+    free(inline_inferred_vm);
+    free(inline_runtime);
     free(combined_location);
 
     if (assemble_rc) return -1;

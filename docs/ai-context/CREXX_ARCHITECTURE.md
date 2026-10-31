@@ -203,6 +203,11 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      on a loop back edge, so a captured control value must survive the call
      for the next iteration. Other calls retain the ordinary register-affinity
      selection and argument marshalling.
+   - Captured class-attribute locators retain their authored caller receiver
+     scope when materialized in an inline callee. Captured index symbols do
+     not change that base owner, including readonly object actuals whose value
+     copy is elided. `inline_receiver_argument_owner` checks distinct same-class
+     receivers, once-only indexing and the emitted source-owner link.
    - Indexed class attributes reserve their receiver/property helpers before
      allocating index expressions, because emission links the receiver first.
      Multidimensional accesses also reserve the linked intermediate before later

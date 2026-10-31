@@ -1,0 +1,380 @@
+/* cREXX License (MIT). Independent logical activation storage controls. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetfacts
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(name,fields,at)
+label: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+load: procedure = .int
+  arg body = .lltarget..bodydraft, destination = .int, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = body.reg('r',destination) as .object; fields[2] = value as .object
+  return body.emit('load',fields,at)
+
+sample: procedure = .int
+  arg variant = .int
+  i = .int; ignored = .int; restored = .lltargetflow..storagefact
+  failures = 0; fields = .object[]; edge = .lltargetcfg..edge
+  draft = .lltarget..draft('scope.flow.' || variant,'fixture:scope.flow',0)
+  at = draft.synthetic('independent scope pointer capture and departure')
+  body = draft.procedure('main',5,at)
+  if variant = 3 then ignored = one(body,'sigignore',.lltarget..operand.string('OUT_OF_RANGE' as .binary),at)
+  else if variant = 2 then do
+    fields[1] = .lltarget..operand.symbol('handler') as .object
+    fields[2] = .lltarget..operand.string('OUT_OF_RANGE' as .binary) as .object
+    ignored = body.emit('sigbr',fields,at)
+  end
+  ignored = load(body,0,.lltarget..operand.integer(7),at)
+  ignored = load(body,1,.lltarget..operand.string('caller-result' as .binary),at)
+  call objectarraydrop fields; fields[1] = body.reg('r',1) as .object
+  fields[2] = .lltarget..operand.procedure('leaf') as .object
+  fields[3] = .lltarget..operand.string('count=1;args=list(r0);a0=r2;proxies=(r3:1,r4:2);owned=(r2,r3,r4);prep=none' as .binary) as .object
+  fields[4] = .lltarget..operand.symbol('continued') as .object
+  entry = body.emit('inlenter',fields,at)
+  if variant = 1 then ignored = one(body,'sigignore',.lltarget..operand.string('OUT_OF_RANGE' as .binary),at)
+  mutation = load(body,3,.lltarget..operand.integer(42),at)
+  fault = 0
+  if variant > 0 then do
+    call objectarraydrop fields; fields[1] = body.reg('r',3) as .object
+    fields[2] = .lltarget..operand.integer(1) as .object; fields[3] = .lltarget..operand.integer(2) as .object
+    fault = body.emit('ichkrng',fields,at)
+  end
+  logical = one(body,'ret',.lltarget..operand.integer(99),at)
+  continued = label(body,'continued',at)
+  physical = one(body,'ret',.lltarget..operand.integer(0),at)
+  if variant = 2 then do
+    ignored = label(body,'handler',at)
+    ignored = one(body,'ret',.lltarget..operand.integer(1),at)
+  end
+  body = draft.procedure('leaf',0,at)
+  ignored = one(body,'ret',body.reg('a',1),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'scope source validates ' || variant)
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  root = target.procedureid('main')
+  profile = .lltargettransfer..profile.closedmain(reference target,root,'closed-main-default-halt.v1',10000000)
+  failures = failures + check(profile.status() = 'ok','exact scope transfer owner builds')
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  failures = failures + check(profile.matches(reference target),'scope transfer profile retains its exact source owner')
+  cfg = .lltargetcfg..graph(reference target,reference profile,10000000)
+  failures = failures + check(cfg.status() = 'ok','exact scope CFG builds')
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  failures = failures + check(cfg.matches(reference target,reference profile),'scope CFG retains its exact source/profile owners')
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','shared scope flow builds ' || variant)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  integer = 0; string = 0
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = 1 then integer = i
+    if domain.kind() = 'component' & domain.nativebit() = 4 then string = i
+  end
+  if variant = 3 then do
+    /* A pre-entry ignore can skip a failed activation into the clone. The
+     * canonical graph cannot correlate all dynamic entry failures, so that
+     * incoming stack is unknown rather than a fabricated empty activation. */
+    entryskip = 0
+    do i = 1 to cfg.edges()
+      edge = cfg.edge(i)
+      if edge.sourceop() = entry & edge.role() = 'skip' & edge.scopecomplete() = 0 then entryskip = 1
+    end
+    uncertain = flow.scopeat(mutation); unknownbinding = flow.storageat(mutation,'r',3)
+    failures = failures + check(entryskip & uncertain.valid() & uncertain.known() = 0 & unknownbinding.active() = 0,'pre-entry ignored failure retains an explicitly unknown scope and binding')
+    return failures
+  end
+  original = flow.storageat(entry,'r',0)
+  proxy = flow.storageat(mutation,'r',3)
+  absent = flow.storageat(mutation,'r',4)
+  failures = failures + check(proxy.active() = original.active() & proxy.base() = original.active() & proxy.entry() <> original.active(),'proxy active and base borrow the captured pointee, preserving its own entry backing')
+  failures = failures + check(absent.active() = absent.entry() & absent.base() = absent.entry(),'absent optional proxy keeps its own backing cell')
+  dirty = flow.componentat(mutation,'r',4,integer)
+  failures = failures + check(dirty.dirty() & dirty.entrydependent(),'unused private local remains dirty, not an argument definition')
+  returned = 0; resumed = 0; abrupt = 0; outer = 0
+  do i = 1 to cfg.edges()
+    edge = cfg.edge(i)
+    if edge.sourceop() = logical & edge.role() = 'normal' then do
+      restored = flow.storageon(i,'r',3); caller = flow.storageon(i,'r',0)
+      life = flow.lifetimeon(i,'r',3); payload = flow.componenton(i,'r',0,integer)
+      failures = failures + check(restored.active() = proxy.entry() & restored.base() = proxy.entry() & life.state() = 'ended','logical return restores owned binding and ends only its own backing lifetime')
+      failures = failures + check(caller.active() = original.active() & payload.known(),'caller pointee mutation survives scope departure')
+      if payload.known() then do; value = payload.literal(); failures = failures + check(value.index() = 42,'caller mutation retains independent value 42'); end
+      returned = 1
+    end
+    if edge.sourceop() = physical & edge.role() = 'terminal' & edge.phase() = 'none' then outer = edge.scopeexits() = 0
+    if variant > 0 & edge.sourceop() = fault then do
+      if edge.role() = 'skip' & edge.exposure() = 'local' then do
+        retained = flow.storageon(i,'r',3)
+        failures = failures + check(edge.scopeexits() = 0 & retained.active() = original.active() & retained.base() = original.active(),'ignored signal retains the active scope and borrowed base')
+        resumed = 1
+      end
+      if edge.role() = 'handler' & edge.exposure() = 'local' then do
+        restored = flow.storageon(i,'r',3)
+        failures = failures + check(edge.scopeexits() = 1 & restored.active() = proxy.entry() & restored.base() = proxy.entry(),'abrupt handler transfer restores the exited scope')
+        abrupt = 1
+      end
+    end
+  end
+  failures = failures + check(returned & outer,'logical return and physical departure are distinct')
+  if variant = 1 then failures = failures + check(resumed,'local ignored signal edge is present')
+  if variant = 2 then failures = failures + check(abrupt,'local abrupt handler edge is present')
+  if variant = 0 then do
+    resultvalue = flow.componentat(continued,'r',1,integer); text = flow.componentat(continued,'r',1,string)
+    failures = failures + check(resultvalue.known() & text.known(),'integer result setter preserves unrelated caller string component')
+    facts = .lltargetfacts..analysegraph(reference target,root,'closed-main-default-halt.v1',10000000)
+    failures = failures + check(facts.status() = 'ok','scoped facts borrow the shared flow')
+    if facts.status() = 'ok' then failures = failures + check(facts.scoped(),'scoped fact adapter is selected')
+    else say facts.reason()
+    tiny = .lltargetflow..analysis(reference target,reference profile,reference cfg,1)
+    failures = failures + check(tiny.status() = 'limit','tiny scope work budget refuses boundedly')
+    replacement = .lltarget..draft('replacement','fixture:replacement',0)
+    replacement_at = replacement.synthetic('replace exact source owner')
+    body = replacement.procedure('main',0,replacement_at)
+    ignored = one(body,'ret',.lltarget..operand.integer(0),replacement_at)
+    target = replacement.finish()
+    failures = failures + check(proxy.valid() = 0 & flow.valid() = 0,'replaced source owner invalidates borrowed scope facts')
+  end
+  return failures
+
+joins: procedure = .int
+  fields = .object[]; failures = 0
+  draft = .lltarget..draft('scope.join','fixture:scope.join',0)
+  at = draft.synthetic('equal payloads do not canonicalize incompatible bindings')
+  body = draft.procedure('main',4,at)
+  ignored = load(body,0,.lltarget..operand.integer(7),at)
+  ignored = load(body,1,.lltarget..operand.integer(7),at)
+  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  fields[3] = .lltarget..operand.string('count=0;args=list();a0=r2;proxies=();owned=(r2,r3);prep=none;result=ignored' as .binary) as .object
+  fields[4] = .lltarget..operand.symbol('continued') as .object
+  ignored = body.emit('inlenter',fields,at)
+  ignored = load(body,3,.lltarget..operand.integer(1),at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('join') as .object; fields[2] = body.reg('r',3) as .object
+  ignored = body.emit('brf',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object; fields[2] = body.reg('r',1) as .object
+  ignored = body.emit('swap',fields,at)
+  joined = label(body,'join',at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  ignored = label(body,'continued',at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('leaf',0,at); ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  target = draft.finish(); root = target.procedureid('main')
+  profile = .lltargettransfer..profile.closedmain(reference target,root,'closed-main-default-halt.v1',10000000)
+  failures = failures + check(profile.status() = 'ok','exact scope transfer owner builds')
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  failures = failures + check(profile.matches(reference target),'scope transfer profile retains its exact source owner')
+  cfg = .lltargetcfg..graph(reference target,reference profile,10000000)
+  failures = failures + check(cfg.status() = 'ok','exact scope CFG builds')
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  failures = failures + check(cfg.matches(reference target,reference profile),'scope CFG retains its exact source/profile owners')
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','incompatible join remains a valid analysis')
+  if flow.status() = 'ok' then do
+    binding = flow.storageat(joined,'r',0)
+    failures = failures + check(binding.active() = 0 & binding.slotidentity() = 0,'join of different storage/slot permutations stays unknown despite equal payloads')
+  end
+  else say flow.reason()
+  return failures
+
+/** The ordered ISETUNLINK recipe writes the integer before restoring its
+ * binding. A later UNLINK cannot resurrect the earlier integer. */
+orderedbinding: procedure = .int
+  i = .int; failures = 0; fields = .object[]
+  draft = .lltarget..draft('binding.unknown','fixture:binding.unknown',0)
+  at = draft.synthetic('ordered binding recipe keeps the written component')
+  body = draft.procedure('main',2,at)
+  ignored = load(body,0,.lltarget..operand.integer(17),at)
+  ignored = load(body,1,.lltarget..operand.integer(99),at)
+  fields[1] = body.reg('r',0) as .object; fields[2] = body.reg('r',1) as .object
+  compound = body.emit('isetunlink',fields,at)
+  restored = one(body,'unlink',body.reg('r',0),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  target = draft.finish(); root = target.procedureid('main')
+  profile = .lltargettransfer..profile.closedmain(reference target,root,'closed-main-default-halt.v1',10000000)
+  failures = failures + check(profile.status() = 'ok','exact scope transfer owner builds')
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  failures = failures + check(profile.matches(reference target),'scope transfer profile retains its exact source owner')
+  cfg = .lltargetcfg..graph(reference target,reference profile,10000000)
+  failures = failures + check(cfg.status() = 'ok','exact scope CFG builds')
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  failures = failures + check(cfg.matches(reference target,reference profile),'scope CFG retains its exact source/profile owners')
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','ordered compound binding retains usable flow')
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  instruction = profile.instruction(compound); unknown = 0
+  do i = 1 to instruction.actions()
+    action = instruction.action(i)
+    if action.kind() = 'unknown' then unknown = 1
+  end
+  failures = failures + check(unknown = 0,'ordered binding recipe has no generic unknown transfer')
+  failures = failures + check(instruction.complete('components') & instruction.complete('values') & instruction.complete('ownership') & instruction.complete('bindings') & instruction.complete('order'),'ordered compound recipe has complete affected fact families')
+  integer = 0
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = 1 then integer = i
+  end
+  value = flow.componentat(restored,'r',0,integer,1)
+  failures = failures + check(value.known(),'later UNLINK keeps the written integer known')
+  if value.known() then do
+    literal = value.literal()
+    failures = failures + check(literal.index() = 99,'later UNLINK retains the written integer rather than the old constant')
+  end
+  return failures
+
+/** String setters can release reference/native payload and private status.
+ * Their result descriptor must invalidate old optional facts before defining S. */
+stringresult: procedure = .int
+  arg scoped = 1, referencevalue = 0
+  entry = .int; continued = .int; ignored = .int
+  i = .int; failures = 0; fields = .object[]
+  draft = .lltarget..draft('return.invalidation.' || scoped || '.' || referencevalue,'fixture:return.invalidation',0)
+  at = draft.synthetic('return setter invalidation is independent of storage binding')
+  body = draft.procedure('main',4,at)
+  ignored = load(body,0,.lltarget..operand.integer(17),at)
+  binarydefinition = load(body,1,.lltarget..operand.literal('B','0x00FF' as .binary),at)
+  if referencevalue then do
+    fields[1] = body.reg('r',1) as .object; fields[2] = body.reg('r',0) as .object
+    ignored = body.emit('mkref',fields,at)
+  end
+  call objectarraydrop fields; fields[1] = body.reg('r',1) as .object; fields[2] = .lltarget..operand.integer(256) as .object
+  ignored = body.emit('settp',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object; fields[2] = body.reg('r',1) as .object
+  fields[3] = .lltarget..operand.integer(256) as .object
+  ignored = body.emit('getandtp',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',1) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  if scoped then do
+    fields[3] = .lltarget..operand.string('count=0;args=list();a0=r2;proxies=();owned=(r2,r3);prep=none' as .binary) as .object
+    fields[4] = .lltarget..operand.symbol('continued') as .object
+    entry = body.emit('inlenter',fields,at)
+    ignored = one(body,'ret',.lltarget..operand.string('fresh' as .binary),at)
+    continued = label(body,'continued',at)
+  end
+  else do
+    fields[3] = body.reg('r',0) as .object
+    entry = body.emit('call1',fields,at)
+    continued = label(body,'continued',at)
+  end
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('leaf',0,at)
+  ignored = one(body,'ret',.lltarget..operand.string('fresh' as .binary),at)
+  target = draft.finish(); root = target.procedureid('main')
+  profile = .lltargettransfer..profile.closedmain(reference target,root,'closed-main-default-halt.v1',10000000)
+  failures = failures + check(profile.status() = 'ok','return invalidation profile builds')
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  cfg = .lltargetcfg..graph(reference target,reference profile,10000000)
+  failures = failures + check(cfg.status() = 'ok','return invalidation CFG builds')
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','string setter result flow builds')
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  binary = 0; string = 0; flag = 0
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = 16 then binary = i
+    if domain.kind() = 'component' & domain.nativebit() = 4 then string = i
+    if domain.kind() = 'flag' & domain.nativebit() = 256 then flag = i
+  end
+  failures = failures + check(binary > 0 & string > 0 & flag > 0,'independent binary, string and flag domains are represented')
+  if binary > 0 & string > 0 & flag > 0 then do
+    prior = flow.componentat(binarydefinition,'r',1,binary,1)
+    failures = failures + check(prior.known(),'prior binary constant is independently known before status/reference preparation')
+    payload = flow.componentat(continued,'r',1,string)
+    oldbinary = flow.componentat(continued,'r',1,binary)
+    oldflag = flow.flagat(continued,'r',1,flag)
+    failures = failures + check(payload.known() & oldbinary.kind() = 'unknown' & oldflag.kind() = 'unknown','string result defines S while invalidating old payload/status facts')
+  end
+  return failures
+
+scopeentry: procedure = .int
+  arg body = .lltarget..bodydraft, result = .int, a0 = .int, owned = .string, continued = .string, at = .llir..origin
+  fields = .object[]; fields[1] = body.reg('r',result) as .object
+  fields[2] = .lltarget..operand.procedure('leaf') as .object
+  spelling = 'count=0;args=list();a0=r' || a0 || ';proxies=();owned=(' || owned || ');prep=none'
+  fields[3] = .lltarget..operand.string(spelling as .binary) as .object
+  fields[4] = .lltarget..operand.symbol(continued) as .object
+  return body.emit('inlenter',fields,at)
+
+/** A signal response RETURN leaves one committed logical activation. It is a
+ * physical departure only without a scope; uncertain entry never commits one. */
+signalreturn: procedure = .int
+  arg mode = 0
+  i = .int; ignored = .int; fault = .int; innercontinued = .int; outercontinued = .int
+  outerentry = 0; innerentry = 0; failures = 0; fields = .object[]
+  draft = .lltarget..draft('scope.signal.return.' || mode,'fixture:scope.signal.return',0)
+  at = draft.synthetic('independent signal response logical return')
+  body = draft.procedure('main',6,at)
+  ignored = load(body,0,.lltarget..operand.integer(0),at)
+  if mode > 0 then ignored = one(body,'sigret',.lltarget..operand.string('OUT_OF_RANGE' as .binary),at)
+  if mode <> 1 then outerentry = scopeentry(body,0,2,'r2,r3','outer_continued',at)
+  if mode = 0 then do
+    innerentry = scopeentry(body,1,4,'r4,r5','inner_continued',at)
+    ignored = one(body,'sigret',.lltarget..operand.string('OUT_OF_RANGE' as .binary),at)
+  end
+  fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.integer(1) as .object; fields[3] = .lltarget..operand.integer(2) as .object
+  fault = body.emit('ichkrng',fields,at)
+  if mode = 0 then do
+    ignored = one(body,'ret',.lltarget..operand.integer(7),at)
+    innercontinued = label(body,'inner_continued',at)
+  end
+  if mode <> 1 then do
+    ignored = one(body,'ret',.lltarget..operand.integer(8),at)
+    outercontinued = label(body,'outer_continued',at)
+  end
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('leaf',0,at); ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'signal-return source validates')
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  root = target.procedureid('main')
+  profile = .lltargettransfer..profile.closedmain(reference target,root,'closed-main-default-halt.v1',10000000)
+  failures = failures + check(profile.status() = 'ok','signal-return operational owner builds')
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  cfg = .lltargetcfg..graph(reference target,reference profile,10000000)
+  failures = failures + check(cfg.status() = 'ok','signal-return CFG builds')
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','signal-return shared flow builds')
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  found = 0; uncertainentry = 0
+  do i = 1 to cfg.edges()
+    edge = cfg.edge(i)
+    if mode = 2 & edge.sourceop() = outerentry & edge.scopecomplete() = 0 then uncertainentry = 1
+    if edge.sourceop() <> fault | edge.role() <> 'unwind' then iterate
+    if mode = 1 then do
+      failures = failures + check(edge.targetblock() = 0 & edge.scopeexits() = 0,'signal RETURN without inline scope physically departs')
+      found = 1
+    end
+    else if mode = 0 then do
+      failures = failures + check(edge.targetop() = innercontinued & edge.scopeexits() = 1 & edge.scopeexit(1) = innerentry,'signal RETURN reaches only the innermost continuation')
+      remaining = flow.scopeon(i); innerlife = flow.lifetimeon(i,'r',4); outerlife = flow.lifetimeon(i,'r',2)
+      failures = failures + check(remaining.valid() & remaining.known() & remaining.depth() = 1 & innerlife.state() = 'ended' & outerlife.state() = 'live','signal RETURN ends inner owned lifetime while retaining outer activation')
+      if remaining.known() & remaining.depth() = 1 then failures = failures + check(remaining.entry(1) = outerentry,'remaining activation is the original outer scope')
+      found = 1
+    end
+    else do
+      failures = failures + check(edge.targetop() = outercontinued & edge.scopeexits() = 1,'committed outer response uses its logical continuation')
+      found = 1
+    end
+  end
+  failures = failures + check(found,'signal RETURN response edge is present')
+  if mode = 2 then failures = failures + check(uncertainentry,'before-entry RETURN response retains explicit commit uncertainty')
+  return failures
+
+main: procedure = .int
+  failures = sample(0) + sample(1) + sample(2) + sample(3) + joins() + orderedbinding() + stringresult() + stringresult(1,1) + stringresult(0) + signalreturn() + signalreturn(1) + signalreturn(2)
+  say 'TARGET_SCOPE_FLOW|failures=' || failures
+  return failures

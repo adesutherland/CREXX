@@ -1,0 +1,183 @@
+/* Entry-read coverage and policy correlation are independent proof families. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetnormalize
+
+check: procedure = .int
+  arg passed = .int, label = .string
+  if passed then return 0
+  say 'FAIL:' label
+  return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(name,fields,at)
+label: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
+  fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
+  return body.record('label',fields,at)
+policyfixturestring: procedure = .int
+  arg body = .lltarget..bodydraft, destination = .int, value = .string, at = .llir..origin
+  fields = .object[]; fields[1] = body.reg('r',destination) as .object
+  fields[2] = .lltarget..operand.string(value as .binary) as .object
+  return body.emit('load',fields,at)
+
+sample: procedure = .int
+  arg variant = .int
+  failures = 0; fields = .object[]; i = .int; ignored = .int; item = .lltarget..record
+  edge = .lltargetcfg..edge; warning = .lltargetnormalize..warning
+  binding = 0; relay = 0; described = .lltargettransfer..instruction; action = .lltargettransfer..action
+  draft = .lltarget..draft('policy.normalize.' || variant,'fixture:policy.normalize',0)
+  at = draft.synthetic('independent G/C policy normalization')
+  body = draft.procedure('main',2,at)
+  if variant <> 1 then ignored = policyfixturestring(body,0,'defined',at)
+  ignored = one(body,'null',body.reg('r',1),at)
+  ignored = one(body,'sigpush',.lltarget..operand.string('OTHER' as .binary),at)
+  if variant = 1 then ignored = one(body,'sigignore',.lltarget..operand.string('OTHER' as .binary),at)
+  else do
+    fields[1] = .lltarget..operand.symbol('handler') as .object
+    if variant = 0 then do
+      fields[2] = .lltarget..operand.string('OTHER' as .binary) as .object
+      ignored = body.emit('sigbr',fields,at)
+    end
+    else do
+      fields[2] = body.reg('r',1) as .object
+      fields[3] = .lltarget..operand.string('OTHER' as .binary) as .object
+      binding = body.emit('sigbrv',fields,at)
+    end
+  end
+  observed = one(body,'say',body.reg('r',0),at)
+  ignored = one(body,'sigpop',.lltarget..operand.string('OTHER' as .binary),at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  if variant <> 1 then do
+    ignored = label(body,'handler',at)
+    ignored = one(body,'sigpop',.lltarget..operand.string('OTHER' as .binary),at)
+    if variant = 3 then do
+      /* A bound event carries foreign value uncertainty until its typed flow
+       * owner proves the fields. Structural control coverage cannot invent it. */
+      ignored = one(body,'sighalt',.lltarget..operand.string('OTHER' as .binary),at)
+      ignored = policyfixturestring(body,0,'payload',at)
+      call objectarraydrop fields
+      fields[1] = .lltarget..operand.string('OTHER' as .binary) as .object
+      fields[2] = body.reg('r',0) as .object; fields[3] = body.reg('r',1) as .object
+      relay = body.emit('signalorigin',fields,at)
+    end
+    ignored = one(body,'ret',.lltarget..operand.integer(1),at)
+  end
+  target = draft.finish()
+  failures = failures + check(target.valid(),'policy fixture validates ' || variant)
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  root = target.procedureid('main')
+  profile = .lltargettransfer..profile.closedmain(reference target,root,'closed-main-default-halt.v1',10000000)
+  if binding > 0 then do
+    described = profile.instruction(binding); observations = 0
+    do i = 1 to described.actions()
+      action = described.action(i)
+      if action.kind() = 'observe' then observations = observations + 1
+    end
+    failures = failures + check(described.complete('observations') & observations = 0,'bound handler installation stores a slot without observing its payload')
+  end
+  if relay > 0 then failures = failures + check(profile.complete(relay,'observations'),'origin validation has complete structural observation coverage without assuming a valid event')
+  cfg = .lltargetcfg..graph(reference target,reference profile,10000000)
+  failures = failures + check(cfg.status() = 'ok','policy CFG builds ' || variant)
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  failures = failures + check(cfg.normalizationcomplete(root) & cfg.policycorrelationcomplete(root) = 0,'local path coverage does not claim exact policy correlation ' || variant)
+  before = 0; inheritedhalt = 0; validationtags = 0
+  do i = 1 to cfg.edges()
+    edge = cfg.edge(i)
+    if edge.phase() = 'before' then before = 1
+    if edge.boundarykind() = 'closed-main-default-halt' then inheritedhalt = 1
+    if edge.sourceop() = relay & relay > 0 & edge.phase() = 'before' then do
+      names = translate(edge.signalname(),' ','|')
+      if wordpos('OTHER',names) > 0 & wordpos('INVALID_SIGNAL_CODE',names) > 0 & wordpos('INVALID_ARGUMENTS',names) > 0 then validationtags = 1
+    end
+  end
+  failures = failures + check(before & inheritedhalt,'failure phases and terminal inherited alternatives are preserved ' || variant)
+  if relay > 0 then failures = failures + check(validationtags,'origin CFG preserves requested tag and both validation alternatives before input writes')
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg,10000000)
+  failures = failures + check(flow.status() = 'ok','policy flow converges ' || variant)
+  if flow.status() <> 'ok' then do; say flow.message(); return failures; end
+  normalized = .lltargetnormalize..change(reference target,reference flow,10000000)
+  select variant
+    when 1 then do
+      failures = failures + check(normalized.status() = 'changed' & normalized.complete(root) & normalized.warnings() > 0,'genuine owned entry read is cleared under an ignored policy')
+      do i = 1 to normalized.warnings()
+        warning = normalized.warning(i)
+        failures = failures + check(warning.local() = 0 & warning.component() <> '' & warning.operation() = normalized.operation(observed),'warning retains the original owned read and mapped source point')
+      end
+    end
+    when 3 then do
+      /* Unknown event contents are still defined writes. The conservative
+       * future-policy paths can retain the old dirty r1 origin before its
+       * NULL; complete structural observation must preserve that may-read. */
+      passed = normalized.status() = 'changed' & normalized.complete(root) & normalized.warnings() > 0
+      failures = failures + check(passed,'complete origin observation retains conservative owned entry provenance')
+      if passed = 0 then say 'ORIGIN_NORMALIZE|status=' || normalized.status() || '|complete=' || normalized.complete(root) || '|warnings=' || normalized.warnings() || '|reason=' || normalized.unknownreason(root) || '|message=' || normalized.message()
+      do i = 1 to normalized.warnings()
+        warning = normalized.warning(i)
+        failures = failures + check(warning.local() = 1 & warning.component() <> '' & warning.operation() = normalized.operation(relay),'origin normalization clears only the proved owner entry read at the relay')
+      end
+    end
+    otherwise failures = failures + check(normalized.status() = 'keep' & normalized.complete(root) & normalized.warnings() = 0,'G/C-shaped policy with no dirty observation needs no clear ' || variant)
+  end
+  canonical = .lltargettransfer..profile(reference target)
+  foreigncfg = .lltargetcfg..graph(reference target,reference canonical)
+  failures = failures + check(foreigncfg.status() = 'ok','canonical inherited graph builds ' || variant)
+  if foreigncfg.status() = 'ok' then do
+    outward = 0; resumed = 0
+    do i = 1 to foreigncfg.edges()
+      edge = foreigncfg.edge(i)
+      if edge.boundarykind() = 'inherited-signal-policy' & edge.complete() = 0 then outward = 1
+      if edge.role() = 'resumed' & edge.exposure() = 'inherited' then resumed = 1
+    end
+    failures = failures + check(outward & resumed & foreigncfg.exceptionalcomplete(root) = 0 & foreigncfg.policycorrelationcomplete(root) = 0,'unknown foreign departure and resumption remain explicit ' || variant)
+  end
+  foreign = target
+  failures = failures + check(cfg.matches(reference foreign,reference profile) = 0,'copied owner is not a normalization CFG owner')
+  /* A no-change certificate for one procedure can fit in one work unit and
+   * need no retained allocation. Zero is the unconditional rejection case;
+   * positive exhaustion is checked only when dirty-read work is required. */
+  tiny = .lltargetnormalize..change(reference target,reference flow,0,1)
+  failures = failures + check(tiny.status() = 'limit' & tiny.complete(root) = 0 & tiny.warnings() = 0,'zero normalization budget publishes no certificate or warning')
+  if variant = 1 then do
+    exhausted = .lltargetnormalize..change(reference target,reference flow,1,1)
+    failures = failures + check(exhausted.status() = 'limit' & exhausted.complete(root) = 0 & exhausted.warnings() = 0,'positive normalization exhaustion publishes no partial dirty clear or warning')
+  end
+  if variant = 0 then do
+    premises = .lltargettransfer..profiledraft(reference target,'unknown-local-destination')
+    do i = 1 to target.records()
+      item = target.record(i); ignored = premises.operation(item.id())
+      if item.kind() = 'instruction' then ignored = premises.relocation(item.id(),'none')
+    end
+    call premises.unknown(observed,'signals','fixture.local.destination.unknown')
+    uncertain = premises.finish()
+    unknowncfg = .lltargetcfg..graph(reference target,reference uncertain)
+    failures = failures + check(unknowncfg.status() = 'ok','independent unknown local graph builds')
+    if unknowncfg.status() = 'ok' then failures = failures + check(unknowncfg.normalizationcomplete(root) = 0 & unknowncfg.normalizationreason(root) = 'signal.local.destinations.unproved','unknown local destination never becomes complete path coverage')
+  end
+  if variant = 3 then do
+    originpremises = .lltargettransfer..profiledraft(reference target,'unknown-origin-components')
+    do i = 1 to target.records()
+      item = target.record(i); ignored = originpremises.operation(item.id())
+      if item.kind() = 'instruction' then ignored = originpremises.relocation(item.id(),'none')
+    end
+    call originpremises.unknown(relay,'components','fixture.origin.components.unproved')
+    originprofile = originpremises.finish()
+    origincfg = .lltargetcfg..graph(reference target,reference originprofile)
+    originflow = .lltargetflow..analysis(reference target,reference originprofile,reference origincfg,10000000)
+    unproved = .lltargetnormalize..change(reference target,reference originflow,10000000)
+    failures = failures + check(origincfg.status() = 'ok' & originflow.status() = 'ok','independent unknown origin-component proof builds')
+    failures = failures + check(unproved.status() = 'keep' & unproved.complete(root) = 0 & unproved.warnings() = 0 & unproved.unknownreason(root) <> '','missing origin-component effects cannot publish a clear or certificate')
+  end
+  return failures
+
+main: procedure = .int
+  failures = 0
+  do variant = 0 to 3; failures = failures + sample(variant); end
+  say 'TARGET_SIGNAL_NORMALIZE|failures=' || failures
+  return failures

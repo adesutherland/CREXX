@@ -25,6 +25,8 @@ main() .locals=8
     br failed
 add_overflow:
     sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,9223372036854775807
+    brf failed,r0
 
     sigbr sub_overflow,"OVERFLOW_UNDERFLOW"
     load r1,-9223372036854775808
@@ -32,6 +34,8 @@ add_overflow:
     br failed
 sub_overflow:
     sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,-9223372036854775808
+    brf failed,r0
 
     sigbr mul_overflow,"OVERFLOW_UNDERFLOW"
     load r1,9223372036854775807
@@ -39,6 +43,8 @@ sub_overflow:
     br failed
 mul_overflow:
     sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,9223372036854775807
+    brf failed,r0
 
     sigbr inc_overflow,"OVERFLOW_UNDERFLOW"
     load r1,9223372036854775807
@@ -46,6 +52,8 @@ mul_overflow:
     br failed
 inc_overflow:
     sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,9223372036854775807
+    brf failed,r0
 
     sigbr dec_overflow,"OVERFLOW_UNDERFLOW"
     load r1,-9223372036854775808
@@ -53,6 +61,8 @@ inc_overflow:
     br failed
 dec_overflow:
     sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,-9223372036854775808
+    brf failed,r0
 
     sigbr neg_overflow,"OVERFLOW_UNDERFLOW"
     load r1,-9223372036854775808
@@ -60,6 +70,8 @@ dec_overflow:
     br failed
 neg_overflow:
     sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,-9223372036854775808
+    brf failed,r0
 
     sigbr div_overflow,"OVERFLOW_UNDERFLOW"
     load r1,-9223372036854775808
@@ -67,6 +79,8 @@ neg_overflow:
     br failed
 div_overflow:
     sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,-9223372036854775808
+    brf failed,r0
 
     sigbr mod_overflow,"OVERFLOW_UNDERFLOW"
     load r1,-9223372036854775808
@@ -74,6 +88,8 @@ div_overflow:
     br failed
 mod_overflow:
     sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,-9223372036854775808
+    brf failed,r0
 
     sigbr divide_zero,"DIVISION_BY_ZERO"
     load r1,1
@@ -81,6 +97,8 @@ mod_overflow:
     br failed
 divide_zero:
     sighalt "DIVISION_BY_ZERO"
+    ieq r0,r1,1
+    brf failed,r0
 
     sigbr modulo_zero,"DIVISION_BY_ZERO"
     load r1,1
@@ -88,10 +106,95 @@ divide_zero:
     br failed
 modulo_zero:
     sighalt "DIVISION_BY_ZERO"
+    ieq r0,r1,1
+    brf failed,r0
+
+    call r7,check_integer_setters()
+    brt failed,r7
 
     say "PASS: Signed 64-bit Integer Contract"
     ret 0
 
 failed:
     say "FAIL: Signed 64-bit Integer Contract"
+    ret 1
+
+/* Failure retains the destination's old integer and reference payload.
+ * Successful setter arithmetic releases the reference, but direct integer
+ * field operations (including power) deliberately retain it. */
+check_integer_setters() .locals=8
+    load r4,55
+    mkref r1,r4
+    load r5,73
+    icopy r1,r5
+    load r2,9223372036854775807
+    load r3,1
+    sigbr checked_add_failed,"OVERFLOW_UNDERFLOW"
+    iadd r1,r2,r3
+    br setter_failed
+checked_add_failed:
+    sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,73
+    brf setter_failed,r0
+    refvalid r0,r1
+    brf setter_failed,r0
+
+    /* Negative nonintegral powers write zero before raising. */
+    load r2,-1
+    sigbr checked_power_negative,"OVERFLOW_UNDERFLOW"
+    ipow r1,2,r2
+    br setter_failed
+checked_power_negative:
+    sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,0
+    brf setter_failed,r0
+    refvalid r0,r1
+    brf setter_failed,r0
+
+    /* A positive-exponent overflow leaves the old destination instead. */
+    icopy r1,r5
+    load r2,9223372036854775807
+    sigbr checked_power_overflow,"OVERFLOW_UNDERFLOW"
+    ipow r1,r2,2
+    br setter_failed
+checked_power_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+    ieq r0,r1,73
+    brf setter_failed,r0
+    refvalid r0,r1
+    brf setter_failed,r0
+
+    load r2,2
+    load r3,3
+    ipow r1,r2,r3
+    ieq r0,r1,8
+    brf setter_failed,r0
+    isex r1
+    inc r1
+    dec r1
+    ieq r0,r1,-8
+    brf setter_failed,r0
+    refvalid r0,r1
+    brf setter_failed,r0
+
+    iadd r1,r2,5
+    ieq r0,r1,7
+    brf setter_failed,r0
+    refvalid r0,r1
+    brt setter_failed,r0
+    ieq r0,r4,55
+    brf setter_failed,r0
+
+    load r1,"retained-side-component"
+    settp r1,256
+    iadd r1,r1,1
+    ieq r0,r1,8
+    brf setter_failed,r0
+    seq r0,r1,"retained-side-component"
+    brf setter_failed,r0
+    getandtp r6,r1,256
+    ieq r0,r6,256
+    brf setter_failed,r0
+    ret 0
+setter_failed:
     ret 1

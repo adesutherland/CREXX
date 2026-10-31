@@ -155,6 +155,7 @@ RXVM_HANDLER(SIGBR_ID_STRING, VM_ADVANCE(2);
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
+                    current_frame->interrupt_table[sig-1].inline_scope = current_frame->inline_scope;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -180,6 +181,7 @@ RXVM_HANDLER(SIGBRV_ID_REG_STRING, VM_ADVANCE(3);
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = REG_IDX(2);
                     current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
+                    current_frame->interrupt_table[sig-1].inline_scope = current_frame->inline_scope;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -260,6 +262,7 @@ RXVM_HANDLER(SIGCALLBR_ID_FUNC_STRING, VM_ADVANCE(3);
                     current_frame->interrupt_table[sig-1].frame = current_frame;
                     current_frame->interrupt_table[sig-1].value_register = 0;
                     current_frame->interrupt_table[sig-1].stack_marker = current_frame->interrupt_stack;
+                    current_frame->interrupt_table[sig-1].inline_scope = current_frame->inline_scope;
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
@@ -2431,6 +2434,89 @@ RXVM_HANDLER(CALL_REG_FUNC, VM_ADVANCE(2);
             }                                                                   \
         } while (0)
 
+RXVM_HANDLER(INLENTER_REG_FUNC_STRING_ID, VM_ADVANCE(4);
+            {
+                const string_constant *constant = CONSTSTRING_OP(3);
+                rxinl_recipe_view recipe;
+                rxinl_qualified_proc_view expected;
+                proc_runtime *provider;
+                rxvm_inline_scope *scope;
+                int fault = RXSIGNAL_RXBIN_CORRUPTION;
+                if (constant->base.type != BINARY_CONST ||
+                    !rxinl_recipe_decode(constant->string, constant->string_len,
+                                         &recipe) ||
+                    !(recipe.flags & RXINL_RECIPE_SEALED)) {
+                    SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
+                    DISPATCH;
+                }
+                expected.image_module = recipe.image_module;
+                expected.provider_procedure = recipe.provider_procedure;
+                expected.sealed = 1;
+                provider = PROC_OP(2);
+                if (!provider || provider != rxvm_qualified_procedure(
+                        context, current_module, &expected)) {
+                    SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
+                    DISPATCH;
+                }
+                if (recipe.flags & RXINL_PREP_CLEAR) {
+                    if (recipe.clear_register >= current_frame->number_locals) {
+                        SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
+                        DISPATCH;
+                    }
+                    value_zero(current_locals[recipe.clear_register]);
+                }
+                if (recipe.flags & RXINL_PREP_SETTP) {
+                    if (recipe.status_register >= current_frame->number_locals) {
+                        SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
+                        DISPATCH;
+                    }
+                    current_locals[recipe.status_register]->status.all_type_flags =
+                        RXFLAGS_PUBLIC_WRITE(
+                            current_locals[recipe.status_register]->status.all_type_flags,
+                            recipe.status_flags);
+                }
+                if (recipe.flags & RXINL_PREP_SWAP) {
+                    if (recipe.swap_first >= current_frame->number_locals ||
+                        recipe.swap_second >= current_frame->number_locals) {
+                        SET_SIGNAL(RXSIGNAL_RXBIN_CORRUPTION);
+                        DISPATCH;
+                    }
+                    {
+                        value *old = current_locals[recipe.swap_first];
+                        uint32_t identity = current_frame->local_identity[recipe.swap_first];
+                        current_locals[recipe.swap_first] = current_locals[recipe.swap_second];
+                        current_locals[recipe.swap_second] = old;
+                        current_frame->local_identity[recipe.swap_first] =
+                            current_frame->local_identity[recipe.swap_second];
+                        current_frame->local_identity[recipe.swap_second] = identity;
+                        RXVM_INSTRUMENTATION_SWAP(current_frame,
+                                                  recipe.swap_first,
+                                                  recipe.swap_second);
+                    }
+                }
+                if (provider->start == SIZE_MAX) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, provider->name);
+                    DISPATCH;
+                }
+                scope = rxvm_inline_scope_stage(current_frame, provider, &recipe,
+                                                REG_IDX(1), REG_IDX(4), &fault);
+                if (!scope) {
+                    SET_SIGNAL((unsigned char)fault);
+                    DISPATCH;
+                }
+                if (context->initialized_module_count != context->num_modules &&
+                    rxvm_ensure_callee_initialized(context, current_module,
+                                                    provider) != 0) {
+                    rxvm_inline_scope_discard(scope);
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE,
+                                   "Module initialization failed");
+                    DISPATCH;
+                }
+                rxvm_inline_scope_commit(current_frame, scope);
+            }
+            DISPATCH;
+)
+
 
 RXVM_HANDLER(CALL_REG_FUNC_REG, VM_ADVANCE(3);
             {
@@ -2619,6 +2705,14 @@ RXVM_HANDLER(DCALL_REG_REG_REG, VM_ADVANCE(3);
 RXVM_HANDLER(RET,
             DEBUG("TRACE - RET\n");
             {
+                if (current_frame->inline_scope) {
+                    size_t continuation = current_frame->inline_scope->continuation;
+                    rxvm_inline_scope_leave(current_frame);
+                    VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
+                    if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
+                        VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
+                    DISPATCH;
+                }
                 RXVM_INSTRUMENTATION_RETURN(
                         current_frame->parent
                             ? RXVM_PROFILE_RETURN_VOID
@@ -2673,6 +2767,22 @@ RXVM_HANDLER(RET,
 RXVM_HANDLER(RET_REG,
             DEBUG("TRACE - RET R%lu\n", REG_IDX(1));
             {
+                if (current_frame->inline_scope) {
+                    rxvm_inline_scope *scope = current_frame->inline_scope;
+                    size_t continuation = scope->continuation;
+                    if (scope->result) {
+                        if (rxvm_inline_scope_owns(scope, REG_IDX(1)) &&
+                            current_locals[REG_IDX(1)] ==
+                                rxvm_inline_scope_backing(scope, REG_IDX(1)))
+                            move_value(scope->result, op1R);
+                        else copy_value(scope->result, op1R);
+                    }
+                    rxvm_inline_scope_leave(current_frame);
+                    VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
+                    if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
+                        VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
+                    DISPATCH;
+                }
                 if (!current_frame->parent) {
                     RXVM_INSTRUMENTATION_RETURN(
                             RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL);
@@ -2760,6 +2870,16 @@ RXVM_HANDLER(RET_REG,
 RXVM_HANDLER(RET_FLOAT,
             DEBUG("TRACE - RET %.15g\n", op1F);
             {
+                if (current_frame->inline_scope) {
+                    rxvm_inline_scope *scope = current_frame->inline_scope;
+                    size_t continuation = scope->continuation;
+                    if (scope->result) scope->result->float_value = op1F;
+                    rxvm_inline_scope_leave(current_frame);
+                    VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
+                    if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
+                        VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
+                    DISPATCH;
+                }
                 RXVM_INSTRUMENTATION_RETURN(
                         !current_frame->parent
                             ? RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL
@@ -2829,6 +2949,17 @@ RXVM_HANDLER(RET_FLOAT,
 RXVM_HANDLER(RET_STRING,
             DEBUG("TRACE - RET \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
+                if (current_frame->inline_scope) {
+                    rxvm_inline_scope *scope = current_frame->inline_scope;
+                    size_t continuation = scope->continuation;
+                    if (scope->result)
+                        set_const_string(scope->result, CONSTSTRING_OP(1));
+                    rxvm_inline_scope_leave(current_frame);
+                    VM_SELECT_INDEX(continuation, RXVM_TRANSITION_RETURN);
+                    if (current_frame->is_interrupt == RXSIGNAL_BREAKPOINT)
+                        VM_RESUME_INTERRUPTED(RXSIGNAL_BREAKPOINT);
+                    DISPATCH;
+                }
                 RXVM_INSTRUMENTATION_RETURN(
                         !current_frame->parent
                             ? RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL

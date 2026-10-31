@@ -1,0 +1,41 @@
+foreach(required IN ITEMS RXC SOURCE WORK)
+    if(NOT DEFINED ${required})
+        message(FATAL_ERROR "Missing ${required}")
+    endif()
+endforeach()
+file(REMOVE_RECURSE "${WORK}")
+file(MAKE_DIRECTORY "${WORK}")
+execute_process(
+    COMMAND "${RXC}" -x --no-exe-import -o "${WORK}/receiver_argument_owner" "${SOURCE}"
+    RESULT_VARIABLE result OUTPUT_VARIABLE out ERROR_VARIABLE err)
+if(NOT result EQUAL 0)
+    message(FATAL_ERROR "Receiver argument compile failed (${result}):\n${out}${err}")
+endif()
+file(READ "${WORK}/receiver_argument_owner.rxas" assembly)
+# Inline block-expression labels also begin at column zero. Only another
+# procedure header ends this body; a lexical-label boundary would truncate
+# the constructor before the actual argument's source-receiver link.
+set(array_field "")
+foreach(method IN ITEMS copyfirst copyindexed)
+    string(REGEX MATCH "inline_receiver_argument_owner[.]bag[.]${method}[(][)] [.]locals=[^\n]*\n([^\n]*\n)*" body "${assembly}")
+    string(REGEX REPLACE "\n[^ \t\n][^\n]*[.]locals=[^\n]*\n([^\n]*\n)*" "" body "${body}")
+    if(NOT body OR body MATCHES "call[0-9]* [^\n]*bag[.]push[(][)]")
+        message(FATAL_ERROR "${method} did not exercise an inlined push")
+    endif()
+    if(array_field STREQUAL "")
+        string(REGEX MATCH "linkattr1 (r[0-9]+),a1,([0-9]+)" source_link "${body}")
+        set(array_field "${CMAKE_MATCH_2}")
+    else()
+        string(REGEX MATCH "linkattr1 (r[0-9]+),a1,${array_field}" source_link "${body}")
+    endif()
+    if(NOT source_link)
+        message(FATAL_ERROR "${method} borrowed caller attribute lost its source receiver")
+    endif()
+    # Both methods retain their own receiver a1. Derive the helper and field
+    # from that link rather than pinning a temporary or class layout number.
+    set(source_array "${CMAKE_MATCH_1}")
+    if(NOT body MATCHES "minlinkattr1 r[0-9]+,${source_array},[^\n]+")
+        message(FATAL_ERROR "${method} argument selection does not use the source receiver array")
+    endif()
+endforeach()
+message(STATUS "Caller receiver identity survives readonly locator borrowing")

@@ -7,13 +7,15 @@ set(CMAKE_C_STANDARD 90)
 include(CMakeParseArguments)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
-add_executable(rxdas rxdamain.c rxdadism.h rxdadism.c ../binutils/include/rxbin.h)
+add_library(rxdaslib STATIC rxdadism.h rxdadism.c ../binutils/include/rxbin.h)
+add_dependencies(rxdaslib avl_tree platform)
+target_link_libraries(rxdaslib PUBLIC rxaslib avl_tree rxbin platform)
+target_include_directories(rxdaslib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ../assembler ../platform ../binutils/include)
 
+add_executable(rxdas rxdamain.c)
 add_dependencies(rxdas avl_tree platform)
 
-target_link_libraries(rxdas avl_tree rxbin platform)
-
-target_include_directories(rxdas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../assembler ../platform ../binutils/include)
+target_link_libraries(rxdas PRIVATE rxdaslib)
 
 add_custom_target(rxdas_test_prereqs ALL
         DEPENDS rxdas rxas rxvm rxbvm mc_decimal_dynamic)
@@ -98,6 +100,35 @@ crexx_add_rxdas_roundtrip(
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_wide_operands.rxas
         EXPECT_DISASSEMBLY_TEXT_1 "cnop r0,r1,r2,r3,r4,r5,r6,r7,r8"
 )
+
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_inline_scope
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_inline_scope_roundtrip.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 "inlenter"
+        EXPECT_DISASSEMBLY_TEXT_2 "qglobbind"
+        EXPECT_DISASSEMBLY_TEXT_3 "linkargv"
+)
+
+add_executable(test_inline_quote tests/test_inline_quote.c)
+target_link_libraries(test_inline_quote PRIVATE rxdaslib)
+set_target_properties(test_inline_quote PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+add_test(NAME rxdas_inline_quote_boundary COMMAND test_inline_quote)
+set_tests_properties(rxdas_inline_quote_boundary PROPERTIES
+        LABELS "disassembler;inline;boundary" TIMEOUT 30)
+crexx_register_test_prep_targets(TESTS rxdas_inline_quote_boundary
+        TARGETS test_inline_quote)
+add_test(NAME rxdas_inline_quote_roundtrip
+        COMMAND ${CMAKE_COMMAND}
+            -DRXAS=$<TARGET_FILE:rxas>
+            -DRXDAS=$<TARGET_FILE:rxdas>
+            -DRUNNER=$<TARGET_FILE:rxbvm>
+            -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-quote-work
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_inline_quote_roundtrip.cmake)
+set_tests_properties(rxdas_inline_quote_roundtrip PROPERTIES
+        LABELS "disassembler;inline;roundtrip" TIMEOUT 90)
+crexx_register_test_prep_targets(TESTS rxdas_inline_quote_roundtrip
+        TARGETS rxas rxdas rxbvm)
 
 add_executable(mutate_graph_rxbin tests/mutate_graph_rxbin.c)
 set_target_properties(mutate_graph_rxbin PROPERTIES
