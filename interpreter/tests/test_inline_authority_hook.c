@@ -85,6 +85,8 @@ int main(int argc, char **argv) {
     if (argument) {
         invoke(ctx, argument, "rxsig1|inline_hook.checkcap|.int|capability=.object", 0, 0);
         CHECK(state.calls == 0);
+        CHECK(rxvml_inline_set_callback(ctx, hook, &state) != 0);
+        CHECK(rxvml_inline_seal_context(ctx) == 0);
         CHECK(!rxvml_inline_set_callback(ctx, hook, &state));
         CHECK(rxvml_inline_set_callback(ctx, hook, &state) != 0);
         invoke(ctx, argument, "rxsig1|inline_hook.checkcap|.int|capability=.object", 0, 37);

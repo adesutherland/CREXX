@@ -2186,6 +2186,18 @@ add_test(NAME inline_authority_hook_alias COMMAND test_inline_authority_hook
 set_tests_properties(inline_authority_hook_alias PROPERTIES TIMEOUT 30
         LABELS "interpreter;embedding;regression;smoke" CREXX_PREP_TARGETS test_inline_authority_hook)
 
+add_executable(test_inline_owned_entry tests/test_inline_owned_entry.c)
+target_link_libraries(test_inline_owned_entry PRIVATE rxbvml rxpashim)
+target_include_directories(test_inline_owned_entry PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+add_test(NAME inline_owned_entry COMMAND ${CMAKE_COMMAND}
+        -DPROBE=$<TARGET_FILE:test_inline_owned_entry>
+        -DASSEMBLER=$<TARGET_FILE:rxas> -DLINKER=$<TARGET_FILE:rxlink>
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-owned-entry
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/inline_owned_entry.cmake)
+set_tests_properties(inline_owned_entry PROPERTIES TIMEOUT 120
+        LABELS "interpreter;embedding;regression;smoke"
+        CREXX_PREP_TARGETS "test_inline_owned_entry;rxas;rxlink")
+
 add_custom_command(
         OUTPUT test_rxvml_spans.rxbin
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin

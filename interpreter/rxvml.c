@@ -61,6 +61,17 @@ typedef struct rxvml_external_call_state {
     value* ext_ret;
 } rxvml_external_call_state;
 
+struct rxvml_inline_procedure {
+    rxvml_context *owner;
+    struct rxvml_inline_procedure *previous, *next;
+    module *module;
+    module_file *file;
+    proc_runtime *procedure;
+    size_t module_number, constant, start, arguments;
+    char *name;
+    int method;
+};
+
 enum {
     RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS = 0,
     RXVML_ADDRESS_BINDING_FLAGS = 1,
@@ -120,6 +131,10 @@ struct rxvml_context {
     rxvml_inline_callback inline_callback;
     void *inline_userdata;
     int inline_callback_active;
+    rxvml_inline_procedure *inline_procedures;
+    size_t inline_module_count;
+    uint64_t inline_generation;
+    int inline_sealed;
     char last_error_text[512];
 };
 
@@ -176,9 +191,19 @@ static rxvml_context* rxvml_current_context(void) {
     return vm ? (rxvml_context*)vm->active.rxvml_context : NULL;
 }
 
+static int rxvml_inline_context_matches(rxvml_context *ctx) {
+    return ctx && ctx->inline_sealed &&
+            ctx->vm.num_modules == ctx->inline_module_count &&
+            ctx->vm.semantic_generation == ctx->inline_generation &&
+            !ctx->vm.link_dirty && !ctx->vm.interface_method_registry_dirty &&
+            !ctx->vm.interface_factory_registry_dirty;
+}
+
 int rxvml_inline_set_callback(rxvml_context *ctx,
         rxvml_inline_callback callback, void *userdata) {
-    if (!ctx || ctx->inline_callback_active ||
+    if (!ctx || !rxvm_worker_is_current_thread_owner(&ctx->vm.worker) ||
+        ctx->inline_callback_active ||
+        (callback && !rxvml_inline_context_matches(ctx)) ||
         (callback && ctx->inline_callback)) return -1;
     ctx->inline_callback = callback;
     ctx->inline_userdata = callback ? userdata : NULL;
@@ -709,6 +734,280 @@ void rxvm_addfunc_for_plugin(const char *plugin_id, rxpa_libfunc func,
                              char *name, char *option, char *type, char *args);
 void rxvm_register_static_plugin_capability(const char *plugin_id,
                                             uint32_t capabilities);
+
+#define RXVML_INLINE_RESOLVE_WORK 1000000u
+#define RXVML_INLINE_TEXT_LIMIT 65536u
+
+static int rxvml_inline_text_length(const char *text, size_t *length) {
+    size_t n;
+    if (!text) return 0;
+    for (n = 0u; n < RXVML_INLINE_TEXT_LIMIT; ++n) {
+        if (!text[n]) { *length = n; return 1; }
+    }
+    return 0;
+}
+
+static const chameleon_constant *rxvml_inline_constant(module *mod,
+        size_t offset, size_t minimum) {
+    const chameleon_constant *entry;
+    if (offset > mod->segment.const_size ||
+        minimum > mod->segment.const_size - offset) return NULL;
+    entry = (const chameleon_constant *)(mod->segment.const_pool + offset);
+    if (entry->size_in_pool < minimum ||
+        entry->size_in_pool > mod->segment.const_size - offset) return NULL;
+    return entry;
+}
+
+static const char *rxvml_inline_string(module *mod, size_t offset,
+        size_t *work) {
+    const string_constant *text = (const string_constant *)
+            rxvml_inline_constant(mod, offset, offsetof(string_constant, string) + 1u);
+    size_t capacity;
+    if (!text || text->base.type != STRING_CONST) return NULL;
+    capacity = text->base.size_in_pool - offsetof(string_constant, string);
+    if (text->string_len >= capacity || text->string_len >= *work ||
+        text->string[text->string_len] != 0 ||
+        memchr(text->string, 0, text->string_len) != NULL) return NULL;
+    *work -= text->string_len + 1u;
+    return text->string;
+}
+
+static int rxvml_inline_member_matches(const char *name, const char *member,
+        size_t *work) {
+    const char *base = name, *at;
+    size_t length, wanted;
+    if (!rxvml_inline_text_length(name, &length) ||
+        !rxvml_inline_text_length(member, &wanted) || length >= *work ||
+        wanted >= *work - length) return -1;
+    *work -= length + wanted + 1u;
+    for (at = name; *at; ++at) if (*at == '/' || *at == '\\') base = at + 1;
+    length -= (size_t)(base - name);
+    if (length > 5u && strcmp(base + length - 5u, ".rxas") == 0) length -= 5u;
+    if (wanted > 5u && strcmp(member + wanted - 5u, ".rxas") == 0) wanted -= 5u;
+    return length == wanted && !memcmp(base, member, length);
+}
+
+static int rxvml_inline_symbol_matches(const char *symbol, const char *name) {
+    if (symbol[0] && (unsigned char)symbol[0] == 0xc2 && symbol[1] &&
+        (unsigned char)symbol[1] == 0xa7) symbol += 2;
+    return rxvml_ascii_case_equal(symbol, name);
+}
+
+size_t rxvml_inline_module_count(rxvml_context *ctx) {
+    if (!ctx || !rxvm_worker_is_current_thread_owner(&ctx->vm.worker)) return 0u;
+    return ctx->vm.num_modules;
+}
+
+static int rxvml_inline_same_target(const proc_runtime *left,
+        const proc_runtime *right) {
+    if (!left || !right || left->start == SIZE_MAX || right->start == SIZE_MAX)
+        return 0;
+    return left->start == right->start && left->binarySpace == right->binarySpace &&
+            left->native_invoker == right->native_invoker &&
+            left->native_capabilities == right->native_capabilities;
+}
+
+int rxvml_inline_seal_context(rxvml_context *ctx) {
+    size_t m, work = RXVML_INLINE_RESOLVE_WORK;
+    if (!ctx || !rxvm_worker_is_current_thread_owner(&ctx->vm.worker)) return -1;
+    if (ctx->inline_sealed) return rxvml_inline_context_matches(ctx) ? 0 : -1;
+    if (rxvm_link(&ctx->vm) != 0) return -1;
+    for (m = 0u; m < ctx->vm.num_modules; ++m) {
+        module *mod = ctx->vm.modules[m];
+        int offset;
+        if (!mod || !work--) goto invalid;
+        offset = mod->expose_head;
+        while (offset >= 0) {
+            const chameleon_constant *entry;
+            if (!work--) goto invalid;
+            entry = rxvml_inline_constant(mod, (size_t)offset, sizeof(*entry));
+            if (!entry) goto invalid;
+            if (entry->type == EXPOSE_PROC_CONST) {
+                const expose_proc_constant *exposure =
+                        (const expose_proc_constant *)rxvml_inline_constant(mod,
+                        (size_t)offset, offsetof(expose_proc_constant, index) + 1u);
+                size_t capacity, length;
+                proc_runtime *actual, *winner = NULL;
+                if (!exposure) goto invalid;
+                capacity = exposure->base.size_in_pool - offsetof(expose_proc_constant, index);
+                if (!memchr(exposure->index, 0, capacity)) goto invalid;
+                length = strlen(exposure->index);
+                if (length >= work || work - length <= 32u) goto invalid;
+                work -= length + 32u;
+                if (!exposure->imported) {
+                    const proc_constant *definition = (const proc_constant *)
+                            rxvml_inline_constant(mod, exposure->procedure,
+                            offsetof(proc_constant, name) + 1u);
+                    if (!definition || definition->base.type != PROC_CONST) goto invalid;
+                    actual = rxvm_get_module_runtime_procedure(mod, exposure->procedure);
+                    if (!src_node(ctx->vm.exposed_proc_tree, (char *)exposure->index,
+                            (size_t *)&winner) || !rxvml_inline_same_target(actual, winner))
+                        goto invalid;
+                }
+                offset = exposure->next;
+            } else if (entry->type == EXPOSE_REG_CONST) {
+                const expose_reg_constant *exposure =
+                        (const expose_reg_constant *)rxvml_inline_constant(mod,
+                        (size_t)offset, sizeof(expose_reg_constant));
+                if (!exposure) goto invalid;
+                offset = exposure->next;
+            } else goto invalid;
+        }
+        if (offset != -1) goto invalid;
+    }
+    ctx->inline_module_count = ctx->vm.num_modules;
+    ctx->inline_generation = ctx->vm.semantic_generation;
+    ctx->inline_sealed = 1;
+    return 0;
+invalid:
+    ctx->last_error = "Ambiguous or unbounded private inline helper closure";
+    return -1;
+}
+
+int rxvml_inline_resolve_owned(rxvml_context *ctx,
+        size_t first_module, size_t last_module, const char *member_name,
+        const char *descriptor, int method, rxvml_inline_procedure **out) {
+    rx_callable_signature expected, actual;
+    rx_callable_compare_options options;
+    module *selected = NULL;
+    proc_runtime *procedure = NULL;
+    size_t m, work = RXVML_INLINE_RESOLVE_WORK, descriptor_length, member_length;
+    size_t selected_number = 0u, constant = 0u, matches = 0u;
+    int meta_offset, rc = -1;
+    rxvml_inline_procedure *pin = NULL;
+    rx_sig_init_empty(&expected); rx_sig_init_empty(&actual);
+    if (out) *out = NULL;
+    if (!ctx || !out || !rxvm_worker_is_current_thread_owner(&ctx->vm.worker) ||
+        !rxvml_inline_context_matches(ctx) ||
+        first_module < 1u || last_module < first_module ||
+        last_module > ctx->vm.num_modules || (method != 0 && method != 1) ||
+        !rxvml_inline_text_length(member_name, &member_length) || !member_length ||
+        !rxvml_inline_text_length(descriptor, &descriptor_length) ||
+        !rx_sig_parse_descriptor(descriptor, &expected)) goto done;
+    if (rxvm_link(&ctx->vm) != 0) goto done;
+    for (m = first_module; m <= last_module; ++m) {
+        module *candidate = ctx->vm.modules[m - 1u];
+        int matching;
+        if (!work--) goto done;
+        if (!candidate || !candidate->file || candidate->native) continue;
+        matching = rxvml_inline_member_matches(candidate->name, member_name, &work);
+        if (matching < 0) goto done;
+        if (!matching) continue;
+        if (selected) goto done;
+        selected = candidate; selected_number = m;
+    }
+    if (!selected) { rc = 1; goto done; }
+    meta_offset = selected->meta_head;
+    while (meta_offset >= 0) {
+        const meta_entry *meta;
+        if (!work--) goto done;
+        meta = (const meta_entry *)rxvml_inline_constant(selected,
+                (size_t)meta_offset, sizeof(meta_entry));
+        if (!meta) goto done;
+        if (meta->base.type == META_FUNC) {
+            const meta_func_constant *function;
+            const proc_constant *definition;
+            const char *symbol, *type, *arguments;
+            size_t name_capacity;
+            function = (const meta_func_constant *)rxvml_inline_constant(selected,
+                    (size_t)meta_offset, sizeof(meta_func_constant));
+            if (!function) goto done;
+            symbol = rxvml_inline_string(selected, function->symbol, &work);
+            if (!symbol) goto done;
+            if (rxvml_inline_symbol_matches(symbol, expected.name)) {
+                if (++matches != 1u) goto done;
+                type = rxvml_inline_string(selected, function->type, &work);
+                arguments = rxvml_inline_string(selected, function->args, &work);
+                definition = (const proc_constant *)rxvml_inline_constant(selected,
+                        function->func, offsetof(proc_constant, name) + 1u);
+                if (!type || !arguments || !definition ||
+                    definition->base.type != PROC_CONST || definition->start == SIZE_MAX) goto done;
+                name_capacity = definition->base.size_in_pool - offsetof(proc_constant, name);
+                if (name_capacity > work || !memchr(definition->name, 0, name_capacity) ||
+                    !rxvml_inline_symbol_matches(definition->name, expected.name)) goto done;
+                work -= name_capacity;
+                if (!rx_sig_init_from_parts(&actual, expected.name, type, arguments)) goto done;
+                memset(&options, 0, sizeof(options));
+                if (!rx_sig_matches_contract(&expected, &actual, &options)) goto done;
+                procedure = rxvm_get_module_runtime_procedure(selected, function->func);
+                if (!procedure || procedure->definition != definition ||
+                    !procedure->binarySpace || procedure->binarySpace->module != selected ||
+                    procedure->start != definition->start) goto done;
+                constant = function->func;
+            }
+        }
+        meta_offset = meta->next;
+    }
+    if (meta_offset != -1) goto done;
+    if (!matches) { rc = 1; goto done; }
+    pin = calloc(1u, sizeof(*pin));
+    if (!pin) goto done;
+    pin->name = malloc(strlen(expected.name) + 1u);
+    if (!pin->name) { free(pin); pin = NULL; goto done; }
+    strcpy(pin->name, expected.name);
+    pin->owner = ctx; pin->module = selected; pin->file = selected->file;
+    pin->procedure = procedure; pin->module_number = selected_number;
+    pin->constant = constant; pin->start = procedure->start;
+    pin->arguments = expected.arg_count; pin->method = method;
+    pin->next = ctx->inline_procedures;
+    if (pin->next) pin->next->previous = pin;
+    ctx->inline_procedures = pin;
+    *out = pin; rc = 0;
+done:
+    rx_sig_free(&actual); rx_sig_free(&expected);
+    if (rc < 0 && ctx) ctx->last_error = "Invalid or ambiguous private inline procedure owner";
+    return rc;
+}
+
+int rxvml_inline_call_owned(rxvml_context *ctx,
+        const rxvml_inline_procedure *pin, rxvml_value *receiver,
+        size_t argc, rxvml_value **arguments, rxvml_value **result) {
+    rxvml_value **actuals = NULL;
+    size_t i, total;
+    int rc = -1;
+    /* A dead pin has owner=NULL. Test that before touching a potentially dead
+     * context pointer supplied by an old caller. */
+    if (!pin || !ctx || pin->owner != ctx) goto done;
+    if (!rxvm_worker_is_current_thread_owner(&ctx->vm.worker) ||
+        !rxvml_inline_context_matches(ctx) ||
+        pin->module_number < 1u || pin->module_number > ctx->vm.num_modules ||
+        ctx->vm.modules[pin->module_number - 1u] != pin->module ||
+        pin->module->file != pin->file ||
+        !pin->procedure->binarySpace || pin->procedure->binarySpace->module != pin->module ||
+        pin->procedure->start != pin->start ||
+        pin->procedure != rxvm_get_module_runtime_procedure(pin->module, pin->constant) ||
+        argc != pin->arguments || (pin->method ? !receiver : receiver != NULL) ||
+        argc > (size_t)INT_MAX - (size_t)pin->method || (argc && !arguments)) goto done;
+    total = argc + (size_t)pin->method;
+    if (total > SIZE_MAX / sizeof(*actuals)) goto done;
+    if (total) {
+        actuals = malloc(total * sizeof(*actuals));
+        if (!actuals) goto done;
+        if (pin->method) actuals[0] = receiver;
+        for (i = 0u; i < argc; ++i) {
+            if (!arguments[i]) goto done;
+            actuals[i + (size_t)pin->method] = arguments[i];
+        }
+    }
+    if (result) *result = NULL;
+    rc = rxvml_invoke_external_proc(ctx, pin->procedure, pin->name,
+            total, actuals, "rxlink_inline_owned", result, NULL);
+done:
+    free(actuals);
+    if (rc && result) *result = NULL;
+    return rc;
+}
+
+void rxvml_inline_procedure_free(rxvml_inline_procedure *pin) {
+    if (!pin) return;
+    if (pin->owner) {
+        if (!rxvm_worker_is_current_thread_owner(&pin->owner->vm.worker)) return;
+        if (pin->previous) pin->previous->next = pin->next;
+        else pin->owner->inline_procedures = pin->next;
+        if (pin->next) pin->next->previous = pin->previous;
+    }
+    free(pin->name); free(pin);
+}
 
 static const char* rxvml_value_cstr(value* v) {
     if (!v) return "";
@@ -1999,7 +2298,7 @@ static void rxvml_native_inline_dispatch(enum rxvml_inline_operation operation,
         return;
     }
     if (operation == RXVML_INLINE_CHECK) rxvml_set_int(staged, 0);
-    if (ctx && args && argc >= 0 && (size_t)argc == expected &&
+    if (rxvml_inline_context_matches(ctx) && args && argc >= 0 && (size_t)argc == expected &&
         ctx->inline_callback && !ctx->inline_callback_active) {
         ctx->inline_callback_active = 1;
         entered = 1;
@@ -2056,6 +2355,10 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
     ctx->inline_callback = NULL;
     ctx->inline_userdata = NULL;
     ctx->inline_callback_active = 0;
+    ctx->inline_procedures = NULL;
+    ctx->inline_module_count = 0u;
+    ctx->inline_generation = 0u;
+    ctx->inline_sealed = 0;
 
     /* These bridges resolve all mutable state through the active RXVML
      * context. Distinct context-owner threads may therefore enter them at the
@@ -2096,6 +2399,15 @@ rxvml_context* rxvml_create(const char* location, unsigned flags) {
 void rxvml_destroy(rxvml_context* ctx) {
     size_t i;
     if (!ctx) return;
+    ctx->inline_callback = NULL; ctx->inline_userdata = NULL;
+    ctx->inline_sealed = 0;
+    /* Pins can outlive their context, but never its native module pointers. */
+    while (ctx->inline_procedures) {
+        rxvml_inline_procedure *pin = ctx->inline_procedures;
+        ctx->inline_procedures = pin->next;
+        pin->owner = NULL; pin->module = NULL; pin->file = NULL;
+        pin->procedure = NULL; pin->previous = NULL; pin->next = NULL;
+    }
     if (ctx->registry) {
         for (i = 0; i < ctx->registry_size; i++) {
             if (ctx->registry[i].obj) {
