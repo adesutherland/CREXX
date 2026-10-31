@@ -1,7 +1,7 @@
 # RXAS inlining architecture
 
-**Status: governing architecture approved for one coherent implementation;
-exact ISA encoding and implementation qualification remain open.** The [toolchain plan](../PLAN.md) owns INL-AC01–09 and
+**Status: governing architecture with an implemented research checkpoint;
+full representable coverage and integration qualification remain open.** The [toolchain plan](../PLAN.md) owns INL-AC01–09 and
 INL-STEP01–06, including STEP03F. This document records the governing architecture before a
 detailed instruction or implementation design. The earlier per-opcode admission
 history and mirrored `INLINE_ENTER`/`INLINE_LEAVE` proposal are superseded;
@@ -61,15 +61,15 @@ Inaccuracies in the shared graph/effect layer are repaired there with
 independent controls. Existing Level L normal CFG and bounded signal proofs
 are a foundation, not yet this complete service.
 
-The current canonical procedure-wide policy union covers possible handler
-destinations but does not correlate installed policy with the data path.
-Normalization keeps those regions with `signal.policy.path.state.unproved`.
-G `ON SIGNAL` blocks, generated C condition capture layers and handwritten
-nested policies therefore remain open implementation cases. Their bounded
-extension must retain product points for source operation and policy
-environment, with data facts on those separate paths, rather than merge
-destinations onto one source point. Resource or policy-stack overflow stays
-unknown; the interim safety gate does not close signal coverage.
+The canonical policy union covers possible handler destinations; its separate
+policy-correlation query records when installation and data paths are not
+resolved. Bounded G-style blocks and a compact C bound relay are implemented
+under the checked execution profile. Full generated C condition/helper closure
+and more general handwritten nested policies remain open. Further path
+precision must retain product points for source operation and policy
+environment, with data facts on those separate paths. Resource or policy-stack
+overflow stays unknown; the current bounded controls do not close signal
+coverage.
 
 The same Level L target owner supplies checked register/reference remapping
 across instructions, implicit windows, labels, procedures, constants and
