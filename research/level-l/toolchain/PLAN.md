@@ -552,6 +552,200 @@ after source review and freeze. No per-increment sanitizer matrix, broad
 functional rerun, performance verdict, publication or INL-STEP06 closure is
 implied by this source-only proof increment.
 
+**Next shared call-site/action proof sweep (INL-STEP04/05).** This is one
+cohesive implementation increment serving INL-AC01–09, with final acceptance
+still owned by INL-STEP06. Complete the shared source-owner interfaces below
+before changing their consumers. Internal additive analysis descriptors and
+queries do not change the public language/service/native callable ABI, RXAS
+syntax, INL1/QGR1/QPR1 wire, RXBIN feature bits or runtime algorithms. Preserve
+existing callable signatures and metadata; do not add a parallel inliner plan,
+scalar evaluator, call solver or mnemonic admission table.
+
+- **Canonical selection versus invocation (opcode database/catalogue owner).**
+  `rxop_call_invokes(int opcode) -> int` and
+  `rxop_call_target_components(int opcode) -> unsigned int` own activation and
+  target observations. DIRECT/DYNAMIC invoke; a direct typed `P` observes no
+  scalar target, while DCALL observes its integer procedure pointer, never its
+  string component. Retain the existing FACTORY enum/`RxOpCallContract` ABI as
+  a compatibility view, derived from one `RxOpSelectionContract` returned by
+  `rxop_selection_contract(int opcode)`. That descriptor owns method and
+  factory selection kind and the result/descriptor/receiver/count/window
+  operand roles. The generated internal catalogue exposes
+  `callinvokes(opcode=.int)->.int`, `calltargetcomponents(opcode=.int)->.int`,
+  and `selectionkind/result/descriptor/receiver/count/window(opcode=.int)->.int`;
+  kind comes from the owning enum, operand ordinals are one-based and zero
+  means absent. Existing success-write/clear/definition and signal-phase
+  descriptors describe selection's result clear plus integer pointer write;
+  selection failure preserves the old result. Method receiver structure and
+  factory count/argument-type/status dependencies remain observations even
+  though no callee is invoked. Resolution/autoload/context uncertainty is a
+  separate effect. Selectors emit typed target provenance, never call capture,
+  activation or an unknown callee clobber. Audit every call-contract consumer,
+  including metadata cross-checks, CFG/flow/summaries and native discovery.
+- **Exact target and ordered action points (transfer/flow owners).** Transfer
+  remains the static checked action/reference authority. Shared flow adds
+  `actionstorage(sourceop=.int,actionOrdinal=.int,refId=.int,edgeId=0)
+  ->.lltargetflow..storagefact`,
+  `actioncomponent(sourceop=.int,actionOrdinal=.int,refId=.int,domainId=.int,
+  edgeId=0)->.lltargetflow..valuefact`, and the distinct
+  `actioncapture(sourceop=.int,captureActionId=.int,domainId=.int,edgeId=0)
+  ->.lltargetflow..valuefact`. Storage/component queries are before-action:
+  prior ordered preparation/binding actions have occurred, while the queried
+  action has not. `actioncapture` returns the immutable value produced by its
+  named capture action; a path on which that capture did not complete is
+  unknown. Edge zero selects the normal path; a nonzero ID must name a CFG edge
+  whose source is `sourceop`, preserving before/partial/after applicability and
+  weak writes. A capture ID is never interpreted as a reference ID. Build
+  bounded sparse point rows in the same action executor, not full-state copies
+  or replays per query. The existing `projection()`/`liveness()` remain the sole
+  access authority; addressed/capture/resize/status accesses consume those
+  phase bindings. Resolve finite locations through the shared storage owner,
+  retaining active/base/entry/slot distinctions, symbolic reference/attribute
+  paths and exact module-owned globals. Unknown aliases/paths/extents remain
+  explicit uses, not empty footprints or proof of disjointness.
+  `flow.analysis.targetat(sourceop=.int)->.lltargetflow..targetfact` returns
+  the exact invocation target from canonical typed selection provenance at
+  its capture point. Its checked `provider()->reference .lltarget..module`,
+  `procedure()->.int`, `selection()->.int` and `bindingidentity()->.string`
+  identify the immutable source selection and exact provider/image binding;
+  they are usable only with `status()='proved'`. Arbitrary integer constants,
+  equal pointer-shaped values, exported names or asserted inline body IDs
+  cannot manufacture this fact. Unknown/ambiguous/native/unavailable or
+  rebindable targets remain explicit. Existing sealed native selection evidence
+  supplies foreign binding authority; ordinary clients cannot assert it.
+- **Independent reusable site facets (summary owner).** Add
+  `analysis.discardability(sourceop=.int)->.lltargetsummary..discardfact`,
+  `analysis.footprint(sourceop=.int)->.lltargetsummary..footprintfact`,
+  `analysis.calllayout(sourceop=.int)->.lltargetsummary..layoutfact`, and
+  `analysis.scopefree(sourceop=.int)->.lltargetsummary..scopefreefact` to the
+  existing summary analysis over shared flow. Every facet supplies
+  `valid()->.int`, `status()->.string` (`proved`, `unknown`, `invalid`, `limit`)
+  and `reason()->.string`, bound to exact owner/catalogue/profile/CFG/binding
+  identities. Facets are independent: an unknown return literal cannot poison
+  otherwise complete placement, layout or activation evidence. Queries on
+  all instructions support discardability/footprint. Layout covers canonical
+  invocations and approved scope-entry recipes, consuming their existing
+  post-preparation invocation or scope-capture checkpoint; it never invents
+  another count/capture algorithm. Target and scopefree remain invocation
+  facets, reporting `unknown` with `target.site.not.call` otherwise. Procedure
+  direct/transitive and outward summaries instantiate the same action-point
+  bindings, rather than
+  widen after a prefix LINK or interpret opcodes again.
+  `discardfact.outputs()->.int` and `outputdomain(ordinal=.int)->.int`
+  enumerate every written storage/component/flag domain using the exact shared
+  access projection's domain IDs. `safeifdead()->.int` is the semantic predicate
+  proving every residual signal/control/context/external/ownership/lifetime/
+  observation effect harmless if those outputs are
+  dead. The consumer separately requires existing shared liveness to prove
+  ALL enumerated output domains dead on every applicable edge; semantic safety
+  contains no implicit liveness assumption. It does not evaluate arithmetic or
+  drop allocating/failure-capable operations because their value is dead.
+  `footprintfact` enumerates typed roles and fixed,
+  distinct and window constraints, including implicit/recipe refs, captured
+  borrows and active/base/entry/slot identities; repeated pointee aliases do
+  not collapse distinct argument ordinals or slots. Its `roles()->.int` and
+  `role(ordinal=.int)->.lltargetsummary..rolefact`, plus `constraints()->.int`
+  and `constraint(ordinal=.int)->.lltargetsummary..constraintfact`, enumerate
+  that checked footprint; an incomplete fact never masquerades as empty.
+  `layoutfact.countknown()->.int` distinguishes a known zero from unknown;
+  `countkind()->.string` (`fixed`, `captured`, `unknown`) and
+  `resultkind()->.string` (`absent`, `ignored`, `captured`, `unknown`) distinguish
+  typed absence from an unknown binding. A fixed count has no count StorageId;
+  an ignored/absent result need not supply a result StorageId, and neither
+  absence poisons a proved layout. `count()->.int`,
+  `result()/countstorage()->.lltargetflow..storagefact` and ordered
+  `actual(ordinal=.int)->.lltargetflow..storagefact` expose the existing captured
+  count/pointers, physical window and preparation/capture/ingress phases, plus
+  per-CFG-edge normal/abrupt restoration obligations. No separate count
+  algorithm is added. `scopefreefact.allowed()->.int` is a separate caller-point
+  permission: every applicable normal/failure/asynchronous response must be
+  equivalent without logical activation, with no inherited SIGRET/unwind,
+  frame/parent/runtime observer, policy/numeric restoration, argument-view,
+  initializer ingress or reference-expiry obligation requiring it. A pure body
+  or absence of authored policies alone is insufficient. Retain INLENTER with
+  the precise residual reason whenever that permission is unproved; scope
+  omission never becomes a prerequisite for already representable cloning.
+- **One consumer path (inliner/cleanup and native boundary owners).** CLI,
+  callable and assembler/linker selection discover invocations through the
+  canonical invocation/target fact, including proved exact-bound dynamic calls.
+  Preserve executable selection and its failures; remove only the invocation
+  whose exact target was proved. Existing `llinline.context.scopefree(binding)`
+  delegates to the shared facet and validates the selected provider/image and
+  normalization stamps. `llcleanup` and any legacy fact adapters consume the
+  same access/summary/site facets for transport, discardability and placement;
+  replace global/exceptional or opcode-family blanket guards only when their
+  corresponding owner proof is complete. Layout chooses descriptor-equivalent
+  CALL1–4, preserves an exact counted window, or creates a proved fresh linked
+  window. Known zero retains an equivalent existing form unless the catalogue
+  supplies a valid variant. Preserve body-owned swaps, snapshot copies,
+  result/prep overlap, side components/flags, module storage and every departure;
+  an incomplete unrelated function or optional value fact cannot veto a proven
+  site. Unknown-length scattered tails retain the accepted existing-ABI
+  boundary and the exact child/outer-count/window reason recorded above;
+  finite representable refusals remain open implementation work, not exclusions.
+- **Initializer and sealed-image ownership (existing VM/linker contracts).**
+  Preserve each original call kind's capture timing around initializer ingress:
+  counted CALL captures after ingress, fixed CALL1–4 before it, while INLENTER
+  stages pointers/count before ingress. Prove equivalence for the admitted site
+  before converting list/window representation or removing preparation; an
+  initializer-time/callback ingress gap retains an exact capture-phase reason.
+  Do not infer equivalence merely because normal startup initializes modules
+  before main. Failed/poisoned/cyclic entry cannot commit a scope or execute
+  the clone body. Preserve the original call's canonical response, including
+  its caller continuation on ignore/skip/resume, branch/unwind/terminal
+  alternatives and preparation phase. A resumed rejected INLENTER must not
+  fall into its physical next instruction inside the unentered clone. Ordinary
+  relinking of existing sealed output uses RXBIN007 unchanged:
+  typed INL1/QGR1/QPR1 references contribute exact
+  provider dependencies, resolved by `(original image graph, old member)` rather
+  than export name or a new ordinal. Precompute the complete old-member-to-final
+  selected-module mapping before rewriting, remap provider procedures through
+  their original owner, preserve self-relative QGR, and distinguish overlapping
+  ordinals in separate input images. Validate recipe/P agreement before
+  resealing; malformed mismatches are rejected, never repaired by relocation.
+  Selection, graph rebasing and publication retain one atomic native owner.
+
+Implementation order is canonical descriptors and independently checked action
+points; shared target/site/summary facets; inliner/cleanup/native adapter adoption;
+then one focused normal-configuration/one-VM interaction panel. Coordinator review
+of these interfaces precedes product edits. Source ownership is opcode metadata/
+catalogue and native linker selection/rebasing at their existing native owners;
+`lltargettransfer` for static actions; `lltargetflow` for point/edge/capture storage
+and target provenance; `lltargetsummary` for site/procedure proof facets; and
+`llinline`/`llcleanup` for consumers. No lower owner imports the inliner to resolve
+its own binding; do not introduce dependency cycles or a second algorithm.
+
+Independent controls cover integer-target versus string-target observation and
+selector success/failure without invocation; exact dynamic selection plus
+ambiguous/rebound/native negatives; capture→UNLINK→consumer and captured address
+indices; finite/unresolved LINKARGV; flag/side-component preservation and dead
+arithmetic with observable overflow; repeated actuals and counted children of
+0/4/5 arguments with prep/result overlap; and all-edge outer-swap removal while
+body swaps/snapshots remain. A sealed pure-leaf positive must show no original
+CALL, INLENTER, LINKARGV, QGLOBBIND or redundant outer swaps when the complete
+scopefree certificate permits it; the same body without that context and under
+inherited SIGRET retains activation. Private/global/exceptional interactions
+cover normal and abrupt exits, scoped ignore/SIGCALL, numeric restoration,
+complex return ownership, once-only initializer state and failure poison/cycle.
+Ignored initializer FAILURE and rejected-count OUT_OF_RANGE controls must resume
+at the original caller continuation, never run an unentered clone, and preserve
+preparation/caller state; branch-only failure controls do not qualify resumption.
+Cover ordinary relink with private typed dependencies and colliding image ordinals.
+A relink prepends an unrelated rooted module so provider ordinals change and a
+root shadow procedure cannot capture a private target; independently inspect the
+new QPR/QGR operands. Two images with old ordinal zero must remain distinct.
+Missing providers, wrong procedure ordinals, unsealed foreign references,
+recipe/P disagreement and feature loss reject atomically without resealing an
+invalid old identity into a valid one.
+Reuse the maintained checked-invocation scoped-SIGRET fixture and its request
+completion/cleanup oracle; native ordinary scoped SIGRET alone is insufficient.
+Stale/wrong-owner/wrong-edge, malformed binding/recipe, tiny budgets, cancellation
+and failed native service/publication must retain exact owners and last-good
+output. Review representative RXAS with cleanup disabled and enabled; reuse
+unchanged green controls and qualify only affected owner/boundary inputs before
+the existing INL-STEP06 milestone. This contract does not claim opcode completeness,
+production speed, wider platform/sanitizer qualification or acceptance closure.
+
 ### INL-STEP03F implementation contract
 
 This is one coherent Level L owner increment, not a series of opcode admissions.
