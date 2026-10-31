@@ -40,6 +40,137 @@ implementation case with a named reason, not an infeasible category. Depth,
 recursion, size and work limits are deterministic policy refusals. Expansion
 without optional cleanup must execute correctly.
 
+The generic expander has no separate opcode whitelist. Normalization must
+publish complete typed operands, references and scope ownership for an
+instruction it accepts; an unrepresented form is a normalization error. The
+expander's site checks cover exact selected body and owner identity, the shared
+target/activation proof, executable ABI representation, runtime entry support
+and explicit policy/resource limits. The former local clone-category,
+physical-observation mask, textual last-instruction fallthrough and implicit
+opcode gates have been removed. Optional direct register mapping and cleanup
+proofs can fail while the generic scoped expansion remains available.
+A requested site with no canonical call descriptor is an invalid binding;
+an explicitly described selector that does not invoke a procedure remains
+ordinary selection.
+
+Level L owns any remaining proof imprecision. A possible callback is a real
+observation obligation, but a callback elsewhere in a procedure does not by
+itself prove that a selected call changes an observation. The shared flow
+service must identify the affected source point, binding and resource phase.
+The inliner must not recreate a broad callback or opcode refusal. Unknown
+resource state at a raw root remains unknown until a checked entry or ownership
+fact establishes it.
+Matching a callback before and after expansion also needs an observation
+projection: the same callback may see a changed physical frame, source/code
+location or activation even at the same source point. A shared relational
+proof must preserve those observations or leave that site unproved. It must
+keep callback havoc for values and bindings the callback can change.
+The next shared proof uses a point/edge/preparation callback fact, a checked
+source-to-candidate instruction and activation correspondence in target remap,
+and bounded preservation queries for activation and normalization. Matching
+events must preserve order, operands, reachable storage, phase and permitted
+physical observations; the correspondence is mapping data, never an asserted
+proof. Identity normalization does not need an absence-of-callback premise.
+Inserted clears and new inline-owned storage need their own resource proof.
+The initial point-local query proves only a component delta at an identical
+callback checkpoint with a complete explicit observation projection and
+distinct private storage. Its result does not certify an earlier clear or a
+different source/candidate owner without checked correspondence. The additive
+correspondence argument relates actual checkpoints from both flow owners only
+for the existing unchanged-activation profile. The query checks all six frozen
+model/profile/CFG dependencies, the mapped event and full scope stack, equal
+callback possibility and private storage disjointness in each flow. Its delta
+is still a point-local premise: normalization must prove that earlier entry
+clears compose to precisely that difference. A call-to-scope clone needs its
+own checked activation mapping. Callback havoc remains in the flow solver.
+`flow.entrycoverage(fn)` separately certifies extraction of owned-entry
+demands. Defined reads need no clear; dirty reads retain their original owned
+base/component grouped by source operation. Unknown binding, availability,
+origin, child projection or exceptional observation phase makes the coverage
+incomplete and publishes an unresolved aggregate row. Zero dirty rows has
+meaning only with complete coverage. A source/candidate entry-clear certificate
+must license each clear from a source demand, prove candidate coverage complete
+with no dirty or unresolved demands, and retain the separate callback proof.
+The original unconditional normalization certificate keeps its callback veto.
+`lltargetnormalize.entrycandidate(owner, flow, fn, work, bytes)` uses complete
+source demand coverage to prepare one procedure's clears through that same
+placement, warning and remap algorithm. Its `tentative` status grants no
+publication: ordinary `result()`, `operation()` and `warnings()` still return
+the exact input, identity mapping and no warnings. Only `candidate()` and
+`candidateoperation()` expose the private draft and map for rebuilding proof
+owners under the original operational premise. The caller separately budgets
+and retains both profile/CFG/flow stacks, source summaries, correspondence and
+the conditional/entry certificates. Construction's `reservedwork()` and
+`reservedbytes()` include the lower remapper's whole reserved envelope, not
+those external proof phases.
+`entrycertificate.matchesresult(owner, fn)` revalidates the live theorem,
+requires a nonzero transaction result stamp, and checks the immutable candidate
+identity and source-name-mapped candidate function. `matchessource(flow, fn)`
+binds the original analysis and function. `commit(entrycertificate)` checks
+both predicates for the single modified procedure before publishing the
+candidate, map and warnings together. A failed or limited stage leaves the
+exact original and exposes no usable tentative draft. Neither tentative
+construction nor commit changes the old `complete(fn)` theorem or supplies
+CALL-to-logical-scope activation equivalence.
+The additive `entrycandidates(owner, flow, functions, work, bytes)` stages one
+final candidate for distinct requested functions. `commitall(certificates)`
+requires exactly one certificate per actually modified function, all bound to
+that same final result. A single-function `commit` cannot publish a larger
+batch. The entrymode completeness mask also discharges the bounded dependency
+closure of dirty returned origins; an unrequested dirty provider cannot make
+its apparently clean caller normalized. Candidate certificates check the same
+dependency closure for complete, zero-dirty coverage.
+
+`change.identityproof(sourceflow, candidateflow, correspondence, fn)` names a
+different entry theorem for an unchanged procedure. Exhaustive source and
+candidate coverage must have zero dirty demands and no unresolved row; the
+candidate's returned-origin dependency closure must also be discharged. Exact
+owner/profile/CFG/operation correspondence rejects an own-procedure insertion
+or rewrite. This proof needs no callback-preservation summary because no
+operation in that procedure changes. It retains and revalidates all owners,
+result identity and the by-name result function. It does not change
+`change.complete(fn)`, prove callback absence, or grant activation/call
+equivalence. Unknown external footprints remain unresolved coverage.
+
+The POC adapters use `llinline.normalizationreceipt`. Assign its lazy `owned`
+or `borrowed` factory result into a permanent request slot before querying it,
+and never copy the prepared receipt. It retains both exact proof stacks and
+the final correspondence, callback and per-function entry certificates.
+For complete zero-dirty unchanged procedures it retains the separately named
+identity certificate without forcing source summaries. An unproved dependency
+leaves that function's entry obligation open; invalid or limited proof owners
+still refuse the receipt. Modified procedures require their full certificates.
+`context.certifyreceipt` borrows that exact slot and revalidates it when a
+conditional normalization proof is needed. Canonical fact admission and the
+separate activation/ABI guards remain unchanged. The existing unconditional
+convenience functions retain their original contract.
+Native enrollment keeps the two phases: canonical S, then one final candidate
+C. With no conditional batch, the ordinary path remains. Otherwise the adapter
+builds every eligible clear directly from S, enrolls C in fixed module slots,
+and finishes all receipts before exposing output, composed maps or warnings.
+A required proof failure is a precise normalization error with no partial
+publication. One session reserves construction and retained proof envelopes
+once; source and candidate analysis owners consume their existing disjoint
+allowances. Standalone receipts likewise reserve their complete owned pipeline
+before expansion uses the remainder.
+Reachable unknown actions and external effects without a complete owned-read
+footprint also leave unresolved coverage, even if no later explicit read occurs.
+Borrowed observations include typed TRACE/metadata records. Canonical scope
+entry classifies a register count directly at the executor's post-preparation,
+pre-capture checkpoint, before count/list validation or owned-slot checks can
+return. Raw dirty integer provenance contributes the original owned backing;
+a preparation swap changes that backing even when the count spelling remains
+the same. A defined count contributes no dirty demand. Ambiguous exceptional
+phases, unknown scope state and potentially reentrant preparation leave that
+count checkpoint unresolved; simulated clear state alone is no resource proof.
+The native selection session prepares every candidate owner before phase 1
+enrollment. Receipt finalization waits for the phase 1 capabilities and exact
+candidate facts, then publishes composed raw-to-candidate maps and warnings
+without replacing enrolled owner cells. Source and candidate proof arrays stay
+fixed for the request lifetime, and every receipt/proof phase draws from one
+disjoint request allowance. Unproved receipts abort before publication; the
+separate site activation permission still governs expansion.
+
 ## Shared target analysis
 
 The canonical binutils opcode and signal databases own executable effects.
@@ -51,6 +182,63 @@ observations, and every relocatable reference. Missing facts are explicit
 unknowns. Ordinary instructions are cloned by this description and typed
 remapping; the inliner does not reimplement their value algorithms or acquire
 a mnemonic-by-mnemonic admission list.
+
+An opaque external action separately records whether its intrinsic Rexx-value
+footprint is completely described by typed reads and writes. The catalogue's
+`intrinsicfootprint` fact and the matching transfer-action accessor are zero for
+unknown and one for complete; only external actions may carry one. The whole
+SAY/SAYX output family has this complete intrinsic inventory: register forms
+read the string component of their operand, literal forms read no Rexx storage,
+and neither writes a Rexx value. Their opaque optimizer barriers, observable
+output, possible host callback and signal uncertainty remain. Legacy SAY exits
+can reenter, so the hook still havocs values and bindings and retains an unknown
+observer. Complete intrinsic demand extraction neither proves callback absence
+nor authorizes activation changes or publication by itself. Unknown external
+footprints retain an unresolved demand even without a later explicit read.
+
+The canonical opcode-effect row also owns a per-operand value-writer kind,
+exported by `catalog.valuewriter`: `setter`, `field`, `none` or `unknown`.
+Shared scalar/string/binary setters release old reference/native payloads;
+their kind derives normal-path resource clears and a captured prewrite native
+payload condition with a possible finalizer. This does not clear active
+attributes or establish callback absence. Reviewed direct field assignments
+and typed copies preserve unrelated payloads; a scalar result type alone does
+not distinguish those implementations. Unknown writers keep conservative
+callbacks and prove no resource clear. Hidden or indexed destinations and
+alias-conditional helpers remain under their opaque/ABI contracts, rather than
+being assigned an invented explicit operand. Ordered integer recipes use the
+actual operand's writer kind; raw captured integer transport does not acquire
+a shared setter's release. Signal uncertainty remains independently unchanged.
+Native stem GET/GET2/KEYAT/VALUEAT results are explicitly unknown writers:
+their shared string helper can return successfully when the destination is
+already the selected child, before any payload release. They retain possible
+finalizer callbacks and prove no unconditional resource clear; their existing
+own validation/failure phases remain separate.
+
+The component catalogue separates the object-type stamp from status flags.
+`ACOPY` copies status only and preserves the destination object type; whole
+COPY/reset effects include the separate `OBJECT_TYPE` domain. Native type
+readers and failure diagnostics consume that domain. These are internal effect
+masks, with no change to AST inline enums, RXAS operands or RXBIN encoding.
+
+A callback residual is stronger than opaque output. Conditional source-copy
+and destination-finalizer resources are captured before the action, while the
+unknown callback barrier is final on normal and exceptional prefixes: a native
+hook can run between an implementation's scalar and child writes. Logical
+attribute count does not certify unused physical capacity empty. Missing ABI
+resource checkpoints remain unknown; no inliner body list substitutes for the
+shared executor's proof.
+The generic semantic `clear` recipe retains a pre-clear resource checkpoint:
+three consecutive reference/native-payload/attribute-count captures of the same
+active destination, followed by a possible callback with detail
+`catalog.callback.clear.active-tree`. Its subject names that destination and
+its captured source names the first condition capture. The whole clear follows
+the checkpoint, so earlier swaps affect the captured backing and later pointer
+capture cannot run past an unproved hook. This active-tree extent does not
+require unused attribute capacity empty. Discharge still needs the exact live
+generation, absent reference/native payload and empty active tree. The callback
+keeps unknown physical observations and exceptional phase; any separate
+unrepresented call/result/host obligation retains its residual barrier.
 
 Level L owns a reusable target IR/CFG and flow service for assembler,
 inliner, linker cleanup and later RXAS tools. It builds normal, table, signal,
@@ -289,6 +477,14 @@ unknown analysis fact or whole-value copy is not itself proof of an
 entry-dependent observation.
 
 Dirty returns can create normalization dependencies between procedures.
+The entry-read coverage proof is separate from callback observation
+preservation. It must classify every reachable owned-component observation,
+including exceptional phases and projected child reads, or publish an explicit
+unknown. A candidate clear is licensed by a proved source dirty demand for
+that owned base; the candidate flow must then prove complete coverage with no
+remaining dirty or unresolved owned demand. A preserved callback alone never
+establishes this postcondition, and an empty witness list without complete
+coverage is not evidence that no clear is needed.
 Privately normalize complete procedures first, then rebuild the shared flow
 after a partial canonical stage for callers on that candidate. A complete
 per-procedure proof and validated clears establish the normalized postcondition
@@ -449,3 +645,112 @@ paths do not certify its provider identity.
 - Define the assembler/linker driver interfaces, frozen selected-body identity,
   cleanup budget and focused acceptance panel before modifying VM or wire
   semantics.
+
+### Pending decision: guarded provider-equivalent entry (INL2)
+
+**Unapproved proposal; no opcode, feature bit or wire change is authorized.**
+The existing [INL-STEP04/05 contract](../PLAN.md#inl-step05-scoped-cleanup-implementation-contract)
+owns the implementation and acceptance work. Correct logical diagnostic
+walking does not virtualize physical-parent/code observations: an inherited
+CALL handler can inspect the parent through METALINKPREG or
+METALOADCALLERADDR. Canonical unknown inherited responses therefore remain
+unproved. Default HALT alone does not remove execution-observer hooks.
+
+One bounded alternative is a new opt-in entry/recipe version, provisionally
+called **INL2**, with a required compatibility feature. INL1 cannot silently
+gain a provider-call fallback: handwritten clone bodies can intentionally
+differ from that provider. Old runtimes must reject new output explicitly.
+The proposed entry keeps the exact sealed provider and one continuation past
+the clone. After original preparation and initializer reentry, an O(1) native
+effective-policy/observer guard selects the clone or the real provider call.
+A miss runs no synthetic prologue and returns past the clone;
+preparation, initialization, capture and failure handling execute once.
+The first semantic proof variant should instead reserve the real provider
+frame/backing once before the guard, then borrow it for the clone on a hit or
+activate it for the ordinary provider call on a miss. Retirement stays with
+the ordinary call owner. This preserves recycled payload and allocation
+checkpoints but retains frame cost; it is a correctness POC, not a speed claim.
+A later synthetic fast scope requires exact entry and retirement resource
+certificates. Eager frame cleanup changes observable finalizer timing and is
+a separate VM lifecycle decision. This whole INL2 variant remains unapproved.
+
+The shared native call owner must preserve each original checkpoint. Fixed
+CALL1–4 capture result/actual pointers before initialization; counted calls
+capture count/result/window after it. Zero-actual CALL additionally clears
+its result before ingress and resolves its result binding afterward. Fused
+SWAP/status/clear preparation stays in its original order. Argument list versus
+window representation alone cannot encode these distinctions. Allocation and
+validation failures retain their original ordering and caller recovery
+continuation. There is exactly one original CALL semantic mailbox claim,
+after the chosen activation commits; the guard adds no early pre-preparation
+poll or duplicate asynchronous delivery.
+
+The runtime guard must exclude returning physical-frame observers, not merely
+SIGCALL: reentrant host output/SAY/ADDRESS/native hooks, interrupt reentry and
+debug callbacks also need a checked harmless premise or a guard miss. The
+initial policy proposal admits only effective IGNORE/HALT/SILENT_HALT with
+breakpoint IGNORE and no interrupt invocation. A shared static facet must also
+prove clone layout/source/relocation and direct/transitive policy invariance
+through canonical actions and exact provider bundles. Physical/code observers,
+unknown callbacks or policy-changing descendants refuse the fast path;
+ordinary scalar observations are not a body admission veto. Unknown CFG paths
+remain represented, including the ordinary slow call; the guard is not CFG
+pruning or a new opcode evaluator.
+
+The first correctness POC pays one bounded entry guard/branch, maintained
+native policy/observer classification and a real provider frame/backing on
+both paths; the guard hit borrows that backing, and the miss activates it
+without duplicate setup. A later certified synthetic scope may remove some
+frame work. Neither variant has a performance result. A minimal decision
+panel compares fast, guarded
+fallback and original fixed/count/zero-result calls, initializer failure and
+ignored recovery, preparation/result aliases, sparse mailbox delivery,
+SIGCALL physical-parent inspection, reentrant host hooks, private globals,
+normal/abrupt cleanup and old-runtime refusal. Keep one representative simple
+output assertion and targeted native lifetime/fault checks.
+
+The alternatives remain explicit: a checked caller-declared closed-root
+execution contract can prove a smaller observer-free invocation without
+changing INL1; it cannot be inferred from a manifest or module text. Full
+logical-frame virtualization could support physical-parent/code observers
+more generally, but must define borrowed register/global/argument identity,
+source addresses and lifetime throughout nested handlers. That is a larger
+VM owner contract. Adrian must select the public ISA/compatibility direction
+before any INL2 product edit.
+
+The canonical callback inventory is independent of intrinsic signal precision.
+The generated `callbackobligations` mask combines reviewed inventory completeness
+with input, output, retained-capacity, host, selection, invocation and ABI routes.
+Zero is a complete no-hook fact; unknown inventory remains an explicit residual.
+A callback can request an active-context interrupt, so canonical CFGs retain an
+operation-caused unknown callback path even when the intrinsic instruction has
+no signals. Native analysis keeps the raw intrinsic contract separate from that
+effective execution control and does not infer clean backing from local ENTRY.
+The callback boundary has a distinct identity from an intrinsic unknown-signal
+boundary. A complete resource-only callback (input, output or retained capacity)
+cannot rewrite the suspended frame's handler table before interrupt dispatch;
+the graph retains that structural policy on normal callback return while still
+representing the queued interrupt and any delivered handler path. Unknown,
+host, selection, invocation, ABI and departure routes retain unknown policy
+and incomplete local coverage. A later signal producer reached after such a
+nonresource callback still needs path-reachable policy propagation; a
+whole-function unknown flag is not the intended proof. The canonical graph
+now computes that reachability over staged successors to a bounded fixed
+point, including loop backedges and new handler/resumption edges. Unreachable
+nonresource callback code does not by itself invalidate callback-policy
+completeness. Other older aggregate completeness cases, including disconnected
+scope-entry `SIGRET` and authored policy rows, still require a separate
+reachable-row projection and remain explicit limits.
+Native incoming-resource facts may establish no hook only from exact incoming
+absent payload/zero-active-count leaves, and ordered normal postwrites target
+the physical receiver captured before a callback. Those postwrites do not
+retroactively remove the earlier callback or prove a resumed path.
+The native exact-entry policy view is a separate, caller-declared proof over an
+ordinary activation. It keeps the raw graph unchanged, separates intrinsic
+failure from callback-after-body control, and admits HALT/IGNORE edges only
+when the sealed entry policy and later structural writes justify them. A
+handled response still havocs state; an unknown or handler-entry activation
+retains the raw conservative graph. `BPOFF` changes a pending BREAKPOINT bit,
+not the installed handler table: catalog signal-property bit 32 describes that
+pending effect, while bit 8 marks structural policy writes.
+No intrinsic UNKNOWN signal row is made precise by this foundation increment.

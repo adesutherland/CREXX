@@ -32,6 +32,9 @@ struct RxasFlowAnalysisManager {
 
 struct RxasFlowProcedure {
     unsigned long epoch;
+    RxasFlowEntryPolicy entry_policy; /* Zero is the unprofiled raw graph. */
+    unsigned long profile_source_epoch;
+    size_t policy_view_work;
     char *name;
     const instruction_queue *items;
     size_t item_count;

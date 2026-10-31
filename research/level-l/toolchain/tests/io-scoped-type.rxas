@@ -1,0 +1,18 @@
+/* ACOPY changes flags/attributes; it preserves the independently live type. */
+.meta "scoped_type.box"="b" ".unknown" .class
+.globals=0
+main() .locals=6
+  call r5,leaf()
+  setobjtype r2,"scoped_type.box"
+  srcmethodsel r0,r2,"rxsig1|describe|.int|"
+  srcmethodsel r1,r2,"rxsig1|describe|.int|"
+  setobjtype r0,"scoped_type.box"
+  acopy r0,r1
+  asserttype r0,"scoped_type.box"
+  say "type-ok"
+  ret 0
+leaf() .locals=0
+  ret 0
+§scoped_type.box.describe() .locals=0
+  .meta "scoped_type.box.describe"="b" ".int" §scoped_type.box.describe() ""
+  ret 0

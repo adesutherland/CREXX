@@ -6,6 +6,7 @@ import lltarget
 import lltargettransfer
 import lltargetcfg
 import lltargetremap
+import llrxascatalog
 
 check: procedure = .int
   arg condition = .int, message = .string
@@ -24,6 +25,86 @@ label: procedure = .int
   arg body = .lltarget..bodydraft, name = .string, at = .llir..origin
   fields = .object[]; fields[1] = .lltarget..operand.symbol(name) as .object
   return body.record('label',fields,at)
+
+/** Intrinsic value reads are separate from retained output and host reentry.
+ * The complete output family shares one metadata contract, with typed reads
+ * only for its two register forms. No callback is proved absent here. */
+outputfootprints: procedure = .int
+  failures = 0; i = .int; j = .int; external = .int; callbacks = .int; reads = .int; observations = .int; writes = .int
+  exceptionalwrites = .int; failuremask = .int; expectedfailure = .int; bit = .int
+  operations = .int[]; value = .lltarget..operand; action = .lltargettransfer..action; row = .lltargettransfer..instruction
+  domain = .lltargettransfer..domain; selected = .lltargettransfer..refview
+  catalog = .llrxascatalog..catalog(); draft = .lltarget..draft('output.footprints','fixture:output.footprints',0)
+  at = draft.synthetic('typed intrinsic output does not waive opaque host reentry'); root = draft.procedure('main',1,at)
+  do i = 1 to 7
+    select
+      when i = 1 | i = 2 then value = root.reg('r',0)
+      when i = 3 | i = 6 then value = .lltarget..operand.string('output' as .binary)
+      when i = 4 then value = .lltarget..operand.integer(17)
+      when i = 5 then value = .lltarget..operand.literal('F','1.25' as .binary)
+      otherwise value = .lltarget..operand.literal('C',"'x'" as .binary)
+    end
+    operations[i] = emitone(root,word('say sayx sayx say say say say',i),value,at)
+  end
+  ignored = emitone(root,'ret',.lltarget..operand.integer(0),at); source = draft.finish()
+  failures = failures + check(source.valid(),'whole output family has independently constructed valid operands')
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  profile = .lltargettransfer..profile(reference source)
+  failures = failures + check(profile.status() = 'ok','canonical output footprint profile seals')
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  do i = 1 to operations[0]
+    row = profile.instruction(operations[i]); item = row.record(); external = 0; callbacks = 0; reads = 0; observations = 0; writes = 0
+    exceptionalwrites = 0; failuremask = 0
+    failures = failures + check(catalog.intrinsicfootprint(item.opcode()) & catalog.opaqueeffects(item.opcode()) & catalog.hostcallbacks(item.opcode()) & catalog.residualobservable(item.opcode()) & catalog.signalstate(item.opcode()) <> 0,'output metadata separates complete intrinsic footprint from retained residual ' || i)
+    failures = failures + check(row.complete('effects') & row.complete('components') & row.complete('observations') & row.complete('references') & row.complete('bindings'),'output typed value inventory is complete without removing host uncertainty ' || i)
+    do j = 1 to row.actions()
+      action = row.action(j)
+      if action.kind() = 'external' then do
+        external = external + 1
+        failures = failures + check(action.intrinsicfootprint() = 1 & action.detail() = 'catalog.opaque' & action.certainty() = 'may' & action.path() = 'all','opaque output keeps a distinct complete intrinsic footprint ' || i)
+      end
+      if action.kind() = 'callback' then do
+        callbacks = callbacks + 1
+        failures = failures + check(action.detail() = 'catalog.callback.host' & action.certainty() = 'may' & action.path() = 'all' & action.phase() = 'unknown' & action.observation() = 'unknown' & action.intrinsicfootprint() = 0,'known intrinsic output cannot suppress or narrow a host observer ' || i)
+      end
+      if action.kind() = 'read' | action.kind() = 'observe' then do
+        domain = profile.domain(action.domain())
+        if domain.kind() <> 'context' then do
+          selected = profile.ref(action.subject())
+          failures = failures + check(domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('S') & selected.operandordinal() = 1,'register output observes only the string component of its exact operand ' || i)
+          if action.kind() = 'read' then reads = reads + 1
+          else observations = observations + 1
+        end
+      end
+      if wordpos(action.kind(),'write clear transport derive flagwrite link unlink swap lifetime resize status') > 0 then do
+        /* RXSC_UNKNOWN retains conservative writes on exceptional paths.
+         * Those signal/host residuals are not intrinsic normal value writes. */
+        if action.kind() = 'write' & action.path() = 'failure' then do
+          exceptionalwrites = exceptionalwrites + 1; domain = profile.domain(action.domain()); selected = profile.ref(action.subject())
+          failures = failures + check(action.certainty() = 'may' & action.phase() = 'unknown' & domain.kind() = 'component' & selected.operandordinal() = 1,'known intrinsic output retains conservative signal-path value writes ' || i)
+          bit = domain.nativebit(); assembler ior failuremask,failuremask,bit
+        end
+        else writes = writes + 1
+      end
+    end
+    expected = 0; if i <= 2 then expected = 1
+    failures = failures + check(external = 1 & callbacks = 1 & writes = 0 & reads = expected & observations = expected & row.references() = expected,'whole output family has exact intrinsic value footprint and retained effects ' || i)
+    expectedfailure = 0; if expected then expectedfailure = catalog.componentmask('whole')
+    failures = failures + check(failuremask = expectedfailure & (exceptionalwrites > 0) = expected,'unknown signal residual retains all possible component writes only on register forms ' || i)
+  end
+  independent = .lltargettransfer..profiledraft(reference source,'unknown.external.footprint')
+  ignored = independent.event(operations[3],'external',0,0); unknown = independent.finish()
+  row = unknown.instruction(operations[3]); action = row.action(1)
+  failures = failures + check(unknown.status() = 'ok' & action.intrinsicfootprint() = 0,'independent external footprint defaults to unknown')
+  independent = .lltargettransfer..profiledraft(reference source,'invalid.external.footprint')
+  ignored = independent.event(operations[3],'external',0,0,'none',0,.lltarget..operand(),'may','all','none','fixture',0,'unknown',2)
+  rejected = independent.finish()
+  failures = failures + check(rejected.status() = 'invalid','external footprint rejects unsupported completeness tags')
+  independent = .lltargettransfer..profiledraft(reference source,'misplaced.external.footprint')
+  ignored = independent.event(operations[3],'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','fixture',0,'unknown',1)
+  rejected = independent.finish()
+  failures = failures + check(rejected.status() = 'invalid','intrinsic external completeness cannot become a callback observation claim')
+  return failures
 
 main: procedure = .int
   failures = 0; i = .int; normal = .int; exceptional = .int; synthetic = .int
@@ -129,5 +210,6 @@ main: procedure = .int
   end
   else say transaction.message()
   failures = failures + check(bin2x(ir.binary()) = bin2x(sourceimage),'analysis and remapping preserve frozen source bytes')
+  failures = failures + outputfootprints()
   say 'TARGET_TRANSFER_CFG|failures=' || failures
   return failures

@@ -6,6 +6,9 @@ import llir
 import llirgraph
 import lltarget
 import lltargetfacts
+import lltargetflow
+import lltargetsummary
+import lltargettransfer
 import lltargetrecipe
 import llinline
 import llrxascatalog
@@ -15,11 +18,11 @@ import llrxas
 plan: class
   _fields = .object[]
   _mnemonic = .string
-  _window = .int[]
+  _window = .object[]
   _windowbase = .int
   _highest = .int
   *: factory
-    arg fields = .object[], mnemonic = '', ?window = .int[], windowbase = -1, highest = -1
+    arg fields = .object[], mnemonic = '', ?window = .object[], windowbase = -1, highest = -1
     _fields = fields; _mnemonic = mnemonic
     if ?window then _window = window
     _windowbase = windowbase
@@ -36,9 +39,9 @@ plan: class
     return _window[0]
   windowbase: method = .int
     return _windowbase
-  windowstorage: method = .int
+  windowstorage: method = .lltarget..operand
     arg ordinal = .int
-    return _window[ordinal]
+    return _window[ordinal] as .lltarget..operand
   highest: method = .int
     return _highest
   fields: method = .object[]
@@ -73,45 +76,50 @@ analysisoperation: procedure = .int
   if facts.scoped() then return facts.projectedop(sourceid)
   return sourceid
 
-/** Binary LOAD can raise FAILURE even when its result is dead. Keep that
- * operation executable; other admitted NULL/LOAD forms retain their policy. */
-deaddefinitioncandidate: procedure = .int
-  arg item = .lltarget..record
-  value = .lltarget..operand
-  if item.mnemonic() = 'null' then return 1
-  if item.mnemonic() <> 'load' then return 0
-  value = item.operand(2)
-  return value.kind() <> 'B'
+proofstatus: procedure = .string
+  arg status = .string
+  if status = 'unknown' then return 'keep'
+  return status
 
-/** Inclusive local scan costs for domainafter's remaining block suffix.
- * Return -2 for scratch bytes, -1 for work, or 1 after a complete setup.
- * Operation IDs are module-wide, so preflight their full array extent. */
-querycosts: procedure = .int
-  arg index_ref = reference .llirgraph..index, access_ref = reference .llirgraph..access, functionId = .int, expose work = .int, expose plannedbytes = .int, bytes = .int, expose prefixes = .int[], expose blocktotals = .int[]
-  i = .int; op = .int; b = .int; amount = .int; operations = .int; blocks = .int
-  graph = dereference index_ref; access = dereference access_ref
-  operations = graph.operations(); blocks = graph.blocks()
-  if plannedbytes > bytes | bytes - plannedbytes < 64 then return -2
-  plannedbytes = plannedbytes + 64
-  if operations > (bytes - plannedbytes) / 8 then return -2
-  plannedbytes = plannedbytes + operations * 8
-  if blocks > (bytes - plannedbytes) / 8 then return -2
-  plannedbytes = plannedbytes + blocks * 8
-  if operations > work then return -1
-  work = work - operations
-  if blocks > work then return -1
-  work = work - blocks
-  assembler setattrs prefixes,0
-  assembler setattrs blocktotals,0
-  if operations > 0 then prefixes[operations] = 0
-  if blocks > 0 then blocktotals[blocks] = 0
-  do i = 1 to graph.functionoperations(functionId)
-    op = graph.functionoperation(functionId,i); amount = access.accesses(op)
-    if amount >= work then return -1
-    amount = amount + 1; work = work - amount; b = graph.opblock(op)
-    blocktotals[b] = blocktotals[b] + amount; prefixes[op] = blocktotals[b]
+/** All site domains belong to the canonical point owner. Account lazy proof
+ * work before the caller can consume a view, including optional refusals. */
+sitecosts: procedure = .void
+  arg facts_ref = reference .lltargetfacts..analysis, previouswork = .int, previousbytes = .int, expose work = .int, expose retained = .int, bytes = .int
+  facts = dereference facts_ref
+  cost = previouswork - facts.remaining(); growth = facts.retainedbytes() - previousbytes
+  if cost < 0 | cost > work then assembler signal "ERROR","LL_RESOURCE_LIMIT: cleanup.site.work"
+  if growth < 0 | growth > bytes - retained then assembler signal "ERROR","LL_RESOURCE_LIMIT: cleanup.site.bytes"
+  work = work - cost; retained = retained + growth
+  return
+deaddefinition: procedure = .int
+  arg facts_ref = reference .lltargetfacts..analysis, sourceop = .int, expose work = .int, expose retained = .int, bytes = .int
+  facts = dereference facts_ref
+  previouswork = facts.remaining(); previousbytes = facts.retainedbytes()
+  result = facts.deaddefinition(sourceop)
+  call sitecosts(facts_ref,previouswork,previousbytes,work,retained,bytes)
+  return result
+
+/** Retained physical binding components keep their authored slot spelling.
+ * Other components have every pure binding event erased, so a storage's
+ * immutable bank/index is its emitted location. */
+capturedoperand: procedure = .lltarget..operand
+  arg facts_ref = reference .lltargetfacts..analysis, binding = .lltargetflow..storagefact, original = .lltarget..operand
+  facts = dereference facts_ref
+  if original.kind() = 'R' then do
+    if facts.slotrelative(original.bank(),original.index()) then return original
   end
-  return 1
+  flow_ref = facts.siteflow(); flow = dereference flow_ref
+  bank = flow.storagebank(binding.active()); number = flow.storageindex(binding.active())
+  if bank = '' | number < 0 then return .lltarget..operand()
+  return .lltarget..operand.bound(0,0,0,bank,number)
+
+/** Native B requires the DEREFERENCE destination in its current local frame.
+ * Cleanup uses only immutable storage/layout getters on this borrowed value;
+ * it never publishes a fact owned by this temporary view. */
+borrowflow: procedure = .lltargetflow..analysis
+  arg points_ref = reference .lltargetflow..analysis
+  points = dereference points_ref
+  return points
 
 /** The current cleanup plans walk source order, not mutually exclusive paths.
  * Return -1 for exhaustion, 2 for incomplete/observed tails, 1 for branches,
@@ -124,19 +132,9 @@ cfgpending: procedure = .int
   if work < 2 then return -1
   work = work - 2
   catalog = .llrxascatalog..catalog()
-  /* The named-scope expander owns a private exact two-path proof. Its extra
-   * edge is absent from this normal index; neither cleanup nor assignment may
-   * consume normal-only liveness as though it included handler observations. */
-  if source.normalcfgcomplete(procedureId) = 0 then do
-    do i = 1 to source.records()
-      if work < 1 then return -1
-      work = work - 1; item = source.record(i)
-      if item.procedureid() = procedureId & item.kind() = 'instruction' then do
-        if wordpos(item.mnemonic(),'sigbr sigbrv') > 0 then return 3
-      end
-    end
-    return 2
-  end
+  /* Exceptional control belongs to the canonical operational CFG. A normal
+   * index cannot stand in for its handler/async observation alternatives. */
+  if source.normalcfgcomplete(procedureId) = 0 then return 2
   if source.endobservations(procedureId) then return 2
   do i = 1 to source.records()
     if work < 4 then return -1
@@ -164,34 +162,26 @@ transport: procedure = .llinline..change
   if <refvalid>(owner) = 0 then return .llinline..change('invalid','owner.expired')
   source = dereference owner
   if source.valid() = 0 then return .llinline..change('invalid',source.error(),source,empty)
-  if source.globals() > 0 then return .llinline..change('keep','transport.global.storage.pending',source,empty)
   do
     pending = cfgpending(owner,procedureId,work)
     if pending < 0 then return .llinline..change('limit','transport.cfg.work',source,empty)
-    if pending = 3 then return .llinline..change('keep','transport.exceptional.cfg.pending',source,empty)
-    if pending = 2 then return .llinline..change('keep','transport.cfg.pending',source,empty)
+    if pending >= 2 | source.globals() > 0 then return graphtransport(owner,procedureId,profile,work,entries,bytes,frame,cells,1)
     if pending = 1 then return graphtransport(owner,procedureId,profile,work,entries,bytes,frame,cells)
+    catalog = .llrxascatalog..catalog(); caller = source.body(procedureId)
+    do i = 1 to caller.records()
+      if work < 1 then return .llinline..change('limit','transport.call.discovery.work',source,empty)
+      work = work - 1; input = caller.record(i)
+      if input.kind() <> 'instruction' then iterate
+      if catalog.callinvokes(input.opcode()) & catalog.callcount(input.opcode()) > 0 then return graphtransport(owner,procedureId,profile,work,entries,bytes,frame,cells,1)
+    end
     facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
     work = facts.remaining()
-    /* A linear caller can also need the graph owner's fresh counted window.
-     * Dispatch only a reached exact >4 ordinary CALL, charging this scan and
-     * both analyses; the graph path establishes its own restoration proof. */
-    do i = 1 to facts.calls()
-      if work < 8 then return .llinline..change('limit','transport.work',source,empty)
-      work = work - 8; id = facts.callid(i); input = source.at(id)
-      if facts.bodyid(id) > 0 & input.mnemonic() = 'call' & input.operands() = 3 & facts.arguments(id) > 4 then return graphtransport(owner,procedureId,profile,work,entries,bytes,frame,cells)
-    end
-    graph_ref = facts.index(); index = dereference graph_ref; access_ref = facts.access()
-    live = index.accessliveness(access_ref,work,bytes)
-    if live.status() <> 'ok' then return .llinline..change(live.status(),live.message(),source,empty)
-    if live.complete(procedureId) = 0 then return .llinline..change('keep','transport.observation.unproved',source,empty)
-    work = work - live.usedwork()
+    graph_ref = facts.index(); index = dereference graph_ref; access_ref = facts.access(); access = dereference access_ref
+    if access.complete(procedureId) = 0 then return .llinline..change('keep','transport.observation.unproved',source,empty)
     source_graph = source.ir(); source_ir = dereference source_graph; source_store = dereference source_ir.storage()
-    plannedbytes = source_store.bytes()
-    pending = querycosts(graph_ref,access_ref,procedureId,work,plannedbytes,bytes,prefixes,blocktotals)
-    if pending = -2 then return .llinline..change('limit','transport.plan.bytes',source,empty)
-    if pending < 0 then return .llinline..change('limit','transport.work',source,empty)
+    plannedbytes = source_store.bytes() + facts.retainedbytes()
+    if plannedbytes > bytes then return .llinline..change('limit','transport.plan.bytes',source,empty)
     caller = source.body(procedureId); mapping = .int[]
     if caller.locals() > work then return .llinline..change('limit','transport.work',source,empty)
     work = work - caller.locals()
@@ -214,21 +204,11 @@ transport: procedure = .llinline..change
           id = facts.storage(input.id(),1)
           if facts.plainbefore(input.id(),1) then discard = 1
         end
-        else if deaddefinitioncandidate(input) then do
-          id = facts.storage(input.id(),1); integer = facts.integerdomain(id); whole = facts.wholedomain(id)
-          observed = 0; querybound = blocktotals[index.opblock(input.id())] - prefixes[input.id()]
-          if integer > 0 then do
-            if querybound > work then return .llinline..change('limit','transport.work',source,empty)
-            work = work - querybound; observed = live.domainafter(input.id(),integer)
+        else do
+          discard = deaddefinition(reference facts,input.id(),work,plannedbytes,bytes)
+          if discard = 0 & input.operands() = 2 & catalog.samecopyisnoop(input.opcode()) then do
+            if facts.storage(input.id(),1) = facts.storage(input.id(),2) then discard = 1
           end
-          if whole > 0 then do
-            if querybound > work then return .llinline..change('limit','transport.work',source,empty)
-            work = work - querybound; observed = observed | live.domainafter(input.id(),whole)
-          end
-          if observed = 0 & facts.plainbefore(input.id(),1) then discard = 1
-        end
-        else if input.operands() = 2 & catalog.samecopyisnoop(input.opcode()) then do
-          if facts.storage(input.id(),1) = facts.storage(input.id(),2) then discard = 1
         end
       end
       if discard then do; removed[input.id()] = 1; changed = 1; iterate; end
@@ -237,7 +217,6 @@ transport: procedure = .llinline..change
         value = input.registerref(j)
         if value.bank() <> 'r' then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
         if keptmapping then physical = value.index()
-        else if input.kind() = 'instruction' & input.mnemonic() = 'call' & input.operands() = 3 then physical = value.index()
         else physical = location(reference mapping,facts.storage(input.id(),j),value.index())
         replacements[j] = .lltarget..operand.bound(0,0,0,'r',physical) as .object
         highest = max(highest,physical)
@@ -253,16 +232,6 @@ transport: procedure = .llinline..change
           right = input.operand(2); b = right.index() + 1
           if input.mnemonic() = 'link' then mapping[a] = mapping[b]
           else do; temporary = mapping[a]; mapping[a] = mapping[b]; mapping[b] = temporary; end
-        end
-      end
-      /* A retained counted call observes every physical slot of its implicit
-       * window, not only the counter/result operands. The adapter pins the
-       * surrounding permutation and we verify that exact storage projection. */
-      if input.kind() = 'instruction' & input.mnemonic() = 'call' & input.operands() = 3 then do
-        do j = 1 to facts.arguments(input.id())
-          physical = facts.argument(input.id(),j)
-          if mapping[physical + 1] <> facts.argumentstorage(input.id(),j) then return .llinline..change('keep','transport.retained.window.binding.unproved',source,empty)
-          highest = max(highest,physical)
         end
       end
     end
@@ -332,14 +301,19 @@ transport: procedure = .llinline..change
 /** The acyclic path uses incoming StorageIds, never a lexical simulation of
  * runtime bindings. Plans and address groups borrow one frozen source epoch. */
 graphtransport: procedure = .llinline..change
-  arg owner = reference .lltarget..module, procedureId = .int, profile = .string, work = .int, entries = .int, bytes = .int, frame = .int, cells = .int
+  arg owner = reference .lltarget..module, procedureId = .int, profile = .string, work = .int, entries = .int, bytes = .int, frame = .int, cells = .int, operational = 0
   i = .int; j = .int; id = .int; group = .int; nextmachine = .int; nextkept = .int
   highest = .int; physical = .int; integer = .int; whole = .int; observed = .int; discard = .int
   analysisid = .int; rowhighest = .int; recipeproof = .int; prepswap = .int; recipeordinal = .int
   scopewindow = .int; scopearguments = .int; scopehighest = .int; scopeactuals = .string[]
   querybound = .int; plannedbytes = .int; width = .int; targetgroup = .int; choice = .int; changed = .int; oldlocals = .int
-  fixedcount = .int; windowcount = .int; resultstorage = .int; actuals = .int[]; window = .int[]
+  fixedcount = .int; windowcount = .int; resultstorage = .int; actuals = .int[]; window = .object[]
   pending = .int; prefixes = .int[]; blocktotals = .int[]
+  previouswork = .int; previousbytes = .int; callvariant = .int; countrewrite = .int; ordinal = .int
+  layout = .lltargetsummary..layoutfact; footprint = .lltargetsummary..footprintfact
+  actualfields = .object[]; resultfield = .lltarget..operand; countfield = .lltarget..operand
+  binding = .lltargetflow..storagefact
+  bank = .string; flow = .lltargetflow..analysis
   input = .lltarget..record; value = .lltarget..operand; field = .lltarget..operand
   row = .plan; fields = .object[]; replacements = .object[]; plans = .object[]
   groups = .int[]; protected = .int[]; removed = .int[]; arrivals = .int[]
@@ -348,25 +322,23 @@ graphtransport: procedure = .llinline..change
   recipe = .lltargetrecipe..view
   source = dereference owner
   do
-    facts = lltargetfacts..analysegraph(owner,procedureId,profile,work,bytes)
+    if operational then facts = lltargetfacts..analyseoperational(owner,procedureId,profile,work,bytes)
+    else facts = lltargetfacts..analysegraph(owner,procedureId,profile,work,bytes)
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
+    flow = borrowflow(facts.siteflow())
     if facts.scoped() then do
       if facts.transportcomplete() = 0 then return .llinline..change('keep',facts.transportreason(),source,empty)
     end
     if facts.rootrestored() = 0 then return .llinline..change('keep','transport.cfg.restoration.unproved',source,empty)
     caller = source.body(procedureId); oldlocals = caller.locals(); catalog = .llrxascatalog..catalog()
-    index_ref = facts.index(); index = dereference index_ref; access_ref = facts.access()
-    live = index.accessliveness(access_ref,facts.remaining(),bytes)
-    if live.status() <> 'ok' then return .llinline..change(live.status(),live.message(),source,empty)
-    if live.complete(procedureId) = 0 then return .llinline..change('keep','transport.observation.unproved',source,empty)
-    work = facts.remaining() - live.usedwork()
+    index_ref = facts.index(); index = dereference index_ref; access_ref = facts.access(); access = dereference access_ref
+    if access.complete(procedureId) = 0 then return .llinline..change('keep','transport.observation.unproved',source,empty)
+    work = facts.remaining()
     graph_ref = source.ir(); graph = dereference graph_ref; store = dereference graph.storage()
-    plannedbytes = store.bytes()
+    plannedbytes = store.bytes() + facts.retainedbytes()
+    if plannedbytes > bytes then return .llinline..change('limit','transport.plan.bytes',source,empty)
     if index.operations() > (bytes - plannedbytes) / 64 then return .llinline..change('limit','transport.plan.bytes',source,empty)
     plannedbytes = plannedbytes + index.operations() * 64
-    pending = querycosts(index_ref,access_ref,procedureId,work,plannedbytes,bytes,prefixes,blocktotals)
-    if pending = -2 then return .llinline..change('limit','transport.plan.bytes',source,empty)
-    if pending < 0 then return .llinline..change('limit','transport.work',source,empty)
     /* One reverse indexed pass binds zero-width point records and labels to
      * their source machine group. No repeated addressid() suffix scans. */
     nextmachine = 0
@@ -408,10 +380,11 @@ graphtransport: procedure = .llinline..change
       else if wordpos(input.kind(),'.srcstep .traceevent') > 0 & group > 0 then do
         if facts.rootlive(group) = 0 then do; removed[input.id()] = 1; changed = 1; iterate; end
       end
-      discard = 0; name = ''; fixedcount = 0; windowcount = 0; recipeproof = 0; prepswap = 0; scopewindow = 0; scopehighest = -1
+      discard = 0; name = ''; fixedcount = 0; windowcount = 0; recipeproof = 0; prepswap = 0; scopewindow = 0; scopehighest = -1; countrewrite = 0; callvariant = 0
       assembler setattrs actuals,0
-      assembler setattrs window,0
+      call objectarraydrop window
       assembler setattrs scopeactuals,0
+      call objectarraydrop actualfields
       if input.kind() = 'instruction' then do
         name = input.mnemonic()
         if facts.scoped() & catalog.recipeoperand(input.opcode()) > 0 then do
@@ -423,79 +396,73 @@ graphtransport: procedure = .llinline..change
           do j = 1 to recipe.preparations()
             if recipe.preparationkind(j) = 'swap' then prepswap = 1
           end
-          if prepswap & facts.preparationswappable(input.id()) = 0 then return .llinline..change('keep','transport.scope.preparation.unproved',source,empty)
+          if prepswap & facts.preparationswappable(input.id()) = 0 then prepswap = 0
           if recipe.argumentkind() = 'window' then do
-            scopearguments = facts.arguments(input.id())
+            previouswork = facts.remaining(); previousbytes = facts.retainedbytes()
+            layout = facts.calllayout(input.id())
+            call sitecosts(reference facts,previouswork,previousbytes,work,plannedbytes,bytes)
+            if layout.status() <> 'proved' then return .llinline..change(proofstatus(layout.status()),layout.reason(),source,empty)
+            scopearguments = layout.count()
             if scopearguments < 0 then return .llinline..change('keep','transport.scope.window.unproved',source,empty)
             if scopearguments > work then return .llinline..change('limit','transport.recipe.work',source,empty)
             if scopearguments > (bytes - plannedbytes) / 32 then return .llinline..change('limit','transport.plan.bytes',source,empty)
             work = work - scopearguments; plannedbytes = plannedbytes + scopearguments * 32
             do j = 1 to scopearguments
-              id = facts.argumentstorage(input.id(),j)
-              if id < 1 | id > oldlocals then return .llinline..change('keep','transport.scope.window.storage.unproved',source,empty)
-              scopeactuals[j] = 'r' || (id - 1); scopehighest = max(scopehighest,id - 1)
+              value = flow.windowvalue(procedureId,input.reciperef(recipe.windowref()),j - 1)
+              field = capturedoperand(reference facts,layout.actual(j),value)
+              if field.kind() <> 'R' then return .llinline..change('keep','transport.scope.window.storage.unproved',source,empty)
+              scopeactuals[j] = field.bank() || field.index()
+              if field.bank() = 'r' then scopehighest = max(scopehighest,field.index())
             end
             scopewindow = 1
           end
           recipeproof = 1
         end
-        /* The exact root facts captured the count, result pointer and ordered
-         * actual pointers before the call. Explicit fixed operands preserve
-         * aliases without needing an adjacent physical argument window. */
-        if name = 'call' & input.operands() = 3 then do
-          if facts.bodyid(input.id()) > 0 then do
-            fixedcount = facts.arguments(input.id())
-            if fixedcount < 1 then fixedcount = 0
-            if fixedcount > 0 then do
-              value = input.operand(2)
-              if value.kind() <> 'P' then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
-              resultstorage = facts.storage(input.id(),1)
-              if resultstorage < 1 | resultstorage > oldlocals then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
-              if fixedcount > work then return .llinline..change('limit','transport.work',source,empty)
-              if fixedcount > (bytes - plannedbytes) / 8 then return .llinline..change('limit','transport.plan.bytes',source,empty)
-              work = work - fixedcount; plannedbytes = plannedbytes + fixedcount * 8
-              do j = 1 to fixedcount
-                id = facts.argumentstorage(input.id(),j)
-                if id < 1 | id > oldlocals then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
-                actuals[j] = id
-              end
-              if fixedcount > 4 then do
-                windowcount = fixedcount; fixedcount = 0
-                /* The fresh physical window cannot overwrite a source of a
-                 * later LINK, even when result/count/actual storage aliases. */
-                if oldlocals > frame | windowcount >= frame - oldlocals then return .llinline..change('limit','transport.frame',source,empty)
-                if windowcount + 1 > work then return .llinline..change('limit','transport.work',source,empty)
-                if windowcount + 1 > (bytes - plannedbytes) / 16 then return .llinline..change('limit','transport.plan.bytes',source,empty)
-                work = work - windowcount - 1; plannedbytes = plannedbytes + (windowcount + 1) * 16
-                id = facts.storage(input.id(),2)
-                if id < 1 | id > oldlocals then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
-                window[1] = id
-                do j = 1 to windowcount; window[j + 1] = actuals[j]; end
-              end
-            end
+        /* The shared post-preparation layout owns count and pointer capture.
+         * A descriptor-equivalent fixed form avoids a physical window; larger
+         * finite banks get a fresh linked window without overwriting sources. */
+        if catalog.callinvokes(input.opcode()) & catalog.callcount(input.opcode()) > 0 & catalog.callprefix(input.opcode()) = '' then do
+          previouswork = facts.remaining(); previousbytes = facts.retainedbytes()
+          layout = facts.calllayout(input.id())
+          call sitecosts(reference facts,previouswork,previousbytes,work,plannedbytes,bytes)
+          if layout.status() <> 'proved' then return .llinline..change(proofstatus(layout.status()),layout.reason(),source,empty)
+          countrewrite = 1; fixedcount = layout.count()
+          if fixedcount < 0 then return .llinline..change('keep','transport.call.count.unproved',source,empty)
+          if fixedcount > work | fixedcount > (bytes - plannedbytes) / 96 then return .llinline..change('limit','transport.call.layout',source,empty)
+          work = work - fixedcount; plannedbytes = plannedbytes + fixedcount * 96
+          value = input.operand(catalog.callcount(input.opcode()))
+          countfield = capturedoperand(reference facts,layout.countstorage(),value)
+          if countfield.kind() <> 'R' then return .llinline..change('keep','transport.call.count.storage.unproved',source,empty)
+          if layout.resultkind() = 'captured' then do
+            value = input.operand(catalog.callresult(input.opcode()))
+            resultfield = capturedoperand(reference facts,layout.result(),value)
+            if resultfield.kind() <> 'R' then return .llinline..change('keep','transport.call.result.storage.unproved',source,empty)
+          end
+          do j = 1 to fixedcount
+            value = flow.windowvalue(procedureId,input.operand(catalog.callwindow(input.opcode())),j)
+            field = capturedoperand(reference facts,layout.actual(j),value)
+            if field.kind() <> 'R' then return .llinline..change('keep','transport.call.actual.storage.unproved',source,empty)
+            actualfields[j] = field as .object
+          end
+          callvariant = catalog.callvariant(input.opcode(),fixedcount)
+          if fixedcount > 0 & callvariant = 0 then do
+            windowcount = fixedcount; fixedcount = 0
+            if oldlocals > frame | windowcount >= frame - oldlocals then return .llinline..change('limit','transport.frame',source,empty)
+            window[1] = countfield as .object
+            do j = 1 to windowcount; window[j + 1] = actualfields[j]; end
           end
         end
-        /* Implicit encoded/indexed locations need their own remapping proof;
-         * checked finite CALLs become explicit or get a fresh linked window. */
-        if (catalog.field(input.opcode(),5) as .int) <> 0 & fixedcount = 0 & windowcount = 0 & recipeproof = 0 then return .llinline..change('keep','transport.implicit.storage.pending',source,empty)
+        previouswork = facts.remaining(); previousbytes = facts.retainedbytes()
+        footprint = facts.footprint(input.id())
+        call sitecosts(reference facts,previouswork,previousbytes,work,plannedbytes,bytes)
+        if footprint.status() <> 'proved' then return .llinline..change(proofstatus(footprint.status()),footprint.reason(),source,empty)
         if facts.mapping(input.id()) then discard = 1
         else if name = 'endlife' then discard = facts.plainbefore(input.id(),1)
-        else if deaddefinitioncandidate(input) then do
-          id = facts.storage(input.id(),1); integer = facts.integerdomain(id); whole = facts.wholedomain(id); observed = 0
-          analysisid = analysisoperation(reference facts,input.id())
-          querybound = blocktotals[index.opblock(analysisid)] - prefixes[analysisid]
-          if integer > 0 then do
-            if querybound > work then return .llinline..change('limit','transport.work',source,empty)
-            work = work - querybound; observed = live.domainafter(analysisid,integer)
+        else do
+          discard = deaddefinition(reference facts,input.id(),work,plannedbytes,bytes)
+          if discard = 0 & input.operands() = 2 then do
+            if catalog.samecopyisnoop(input.opcode()) then discard = facts.storage(input.id(),1) = facts.storage(input.id(),2)
           end
-          if whole > 0 then do
-            if querybound > work then return .llinline..change('limit','transport.work',source,empty)
-            work = work - querybound; observed = observed | live.domainafter(analysisid,whole)
-          end
-          if observed = 0 & facts.plainbefore(input.id(),1) then discard = 1
-        end
-        else if input.operands() = 2 then do
-          if catalog.samecopyisnoop(input.opcode()) then discard = facts.storage(input.id(),1) = facts.storage(input.id(),2)
         end
       end
       call objectarraydrop fields
@@ -513,16 +480,19 @@ graphtransport: procedure = .llinline..change
       work = work - input.registerrefs()
       do j = 1 to input.registerrefs()
         value = input.registerref(j)
-        if value.bank() <> 'r' then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
-        id = graphstorage(reference facts,input,j)
-        if id < 1 | id > oldlocals then return .llinline..change('keep','transport.external.storage.unproved',source,empty)
-        physical = id - 1
-        rowhighest = max(rowhighest,physical)
-        replacements[j] = .lltarget..operand.bound(0,0,0,'r',physical) as .object
-        if physical <> value.index() then changed = 1
+        field = value
+        if value.bank() = 'r' & facts.slotrelative(value.bank(),value.index()) = 0 then do
+          id = graphstorage(reference facts,input,j)
+          bank = facts.storagebank(id); physical = facts.storageindex(id)
+          if bank = '' | physical < 0 then return .llinline..change('keep','transport.storage.placement.unproved',source,empty)
+          field = .lltarget..operand.bound(0,0,0,bank,physical)
+        end
+        if field.bank() = 'r' then rowhighest = max(rowhighest,field.index())
+        replacements[j] = field as .object
+        if field.bank() <> value.bank() | field.index() <> value.index() then changed = 1
       end
       width = input.operands()
-      if fixedcount > 0 then width = fixedcount + 2
+      if callvariant > 0 then width = length(catalog.signature(callvariant))
       if width > (bytes - plannedbytes) / 64 then return .llinline..change('limit','transport.plan.bytes',source,empty)
       plannedbytes = plannedbytes + width * 64
       if width > work then return .llinline..change('limit','transport.work',source,empty)
@@ -535,22 +505,29 @@ graphtransport: procedure = .llinline..change
         if field.length() > (bytes - plannedbytes) / 3 then return .llinline..change('limit','transport.plan.bytes',source,empty)
         work = work - field.length() * 3; plannedbytes = plannedbytes + field.length() * 3
       end
-      if fixedcount > 0 then do
+      if callvariant > 0 then do
         call objectarraydrop fields
-        fields[1] = .lltarget..operand.bound(0,0,0,'r',resultstorage - 1) as .object
-        fields[2] = input.operand(2) as .object
+        if catalog.callresult(callvariant) > 0 then fields[catalog.callresult(callvariant)] = resultfield as .object
+        fields[catalog.calltarget(callvariant)] = input.operand(catalog.calltarget(input.opcode())) as .object
+        ordinals = translate(catalog.callactuals(callvariant),' ', ',')
         do j = 1 to fixedcount
-          fields[j + 2] = .lltarget..operand.bound(0,0,0,'r',actuals[j] - 1) as .object
+          ordinal = word(ordinals,j) as .int; fields[ordinal] = actualfields[j]
         end
-        name = 'call' || fixedcount; changed = 1
+        name = catalog.mnemonic(callvariant); changed = 1
       end
       else if windowcount > 0 then do
-        fields[1] = .lltarget..operand.bound(0,0,0,'r',resultstorage - 1) as .object
-        fields[2] = input.operand(2) as .object
-        fields[3] = .lltarget..operand.bound(0,0,0,'r',oldlocals) as .object
+        fields = lltarget..remapregisters(input,replacements)
+        if catalog.callresult(input.opcode()) > 0 then fields[catalog.callresult(input.opcode())] = resultfield as .object
+        fields[catalog.callcount(input.opcode())] = .lltarget..operand.bound(0,0,0,'r',oldlocals) as .object
         changed = 1
       end
-      else fields = lltarget..remapregisters(input,replacements)
+      else do
+        fields = lltarget..remapregisters(input,replacements)
+        if countrewrite then do
+          fields[catalog.callcount(input.opcode())] = countfield as .object
+          if catalog.callresult(input.opcode()) > 0 then fields[catalog.callresult(input.opcode())] = resultfield as .object
+        end
+      end
       if recipeproof & (prepswap | scopewindow) then do
         recipeordinal = catalog.recipeoperand(input.opcode()); field = fields[recipeordinal] as .lltarget..operand
         if field.length() >= work then return .llinline..change('limit','transport.recipe.work',source,empty)
@@ -618,10 +595,11 @@ graphtransport: procedure = .llinline..change
       if input.kind() = 'instruction' then do; nextkept = input.id(); arrivals[input.id()] = nextkept; end
       do j = 1 to row.operands()
         value = row.operand(j)
-        if value.kind() = 'R' then highest = max(highest,value.index())
+        if value.kind() = 'R' & value.bank() = 'r' then highest = max(highest,value.index())
       end
       if input.kind() = '.traceevent' & input.registerrefs() > 0 then do
-        value = row.operand(6); highest = max(highest,value.index())
+        value = row.operand(6)
+        if value.bank() = 'r' then highest = max(highest,value.index())
       end
     end
     if highest + 1 <> oldlocals then changed = 1
@@ -643,6 +621,7 @@ graphstorage: procedure = .int
   step = .int; recipeordinal = .int; recipe = .lltargetrecipe..view
   if facts.scoped() & facts.rootlive(item.id()) then do
     value = item.registerref(ordinal); role = item.registerrole(ordinal)
+    if value.bank() = 'r' & facts.slotrelative(value.bank(),value.index()) then return value.index() + 1
     /* These tokens name storage destinations or identity anchors. Their
      * current pointee is not the cell whose binding the scope must restore. */
     if wordpos(role,'a0-destination proxy-destination owned-destination') > 0 then return facts.basestorage(item.id(),ordinal)
@@ -751,7 +730,8 @@ graphemit: procedure = .llinline..change
         if 3 > cells - usedcells then return .llinline..change('limit','transport.code.cells',source,empty)
         usedcells = usedcells + 3
         windowfields[1] = targetbody.reg('r',row.windowbase() + j - 1) as .object
-        windowfields[2] = targetbody.reg('r',row.windowstorage(j) - 1) as .object
+        value = row.windowstorage(j)
+        windowfields[2] = targetbody.reg(value.bank(),value.index()) as .object
         ignored = targetbody.emit('link',windowfields,at)
         if result.error() <> '' then return graphfailure(result.error(),source)
       end
@@ -831,26 +811,29 @@ storage: procedure = .llinline..change
   source = .lltarget..module; body = .lltarget..body; item = .lltarget..record
   value = .lltarget..operand; name = .lltarget..operand; reference_value = .lltarget..operand
   facts = .lltargetfacts..analysis
+  footprint = .lltargetsummary..footprintfact; role = .lltargetsummary..rolefact; constraint = .lltargetsummary..constraintfact
+  binding = .lltargetflow..storagefact; instruction = .lltargettransfer..instruction; action = .lltargettransfer..action
+  flow = .lltargetflow..analysis
   assignment = .llrxas..assignment; allocated = .llrxas..assignmentresult
   ids = .int[]; empty = .int[]; refs = .int[]; reads = .int[]; writes = .int[]; kills = .int[]; observations = .int[]
   mapping = .int[]; active = .int[]; aliases = .int[]; names = .string[]; namesizes = .int[]; resets = .object[]
   i = .int; j = .int; v = .int; id = .int; integer = .int; whole = .int
   read = .int; write = .int; kill = .int; observed = .int; implicit = .int; identity = .int; changed = .int
   scoped = .int; boundcall = .int; plainend = .int; idbytes = .int; querycost = .int; pending = .int; graphmode = .int; analysisid = .int
+  previouswork = .int; previousbytes = .int; c = .int; k = .int; first = .int; width = .int; lifetime = .int; heldbytes = .int
   if <refvalid>(owner) = 0 then return .llinline..change('invalid','owner.expired')
   source = dereference owner
   if source.valid() = 0 then return .llinline..change('invalid',source.error(),source,empty)
   if entries < 1 | bytes < 1 | work < 1 | frame < 0 | cells < 0 then return .llinline..change('limit','storage.allowances',source,empty)
-  if source.globals() > 0 then return .llinline..change('keep','storage.global.storage.pending',source,empty)
   do
     pending = cfgpending(owner,procedureId,work)
     if pending < 0 then return .llinline..change('limit','storage.cfg.work',source,empty)
-    if pending = 3 then return .llinline..change('keep','storage.exceptional.cfg.pending',source,empty)
-    if pending = 2 then return .llinline..change('keep','storage.cfg.pending',source,empty)
-    graphmode = pending = 1
-    if graphmode then facts = lltargetfacts..analysegraph(owner,procedureId,profile,work,bytes)
+    graphmode = pending > 0 | source.globals() > 0
+    if pending >= 2 | source.globals() > 0 then facts = lltargetfacts..analyseoperational(owner,procedureId,profile,work,bytes)
+    else if graphmode then facts = lltargetfacts..analysegraph(owner,procedureId,profile,work,bytes)
     else facts = lltargetfacts..analyse(owner,procedureId,profile,work,bytes)
     if facts.status() <> 'ok' then return .llinline..change(facts.status(),facts.reason(),source,empty)
+    flow = borrowflow(facts.siteflow())
     access = .llirgraph..access
     access_ref = facts.access()
     access = dereference access_ref
@@ -869,8 +852,10 @@ storage: procedure = .llinline..change
     /* IDs are already owned adapter scratch. Their exact checked extent is
      * removed before the kernel can copy IDs or allocate its own cell rows. */
     idbytes = ids[0] * 8
-    if idbytes >= bytes then return .llinline..change('limit','storage.projection.bytes',source,empty)
-    assignment = .llrxas..assignment(body.locals(),reference ids,frame,work,bytes - idbytes)
+    source_graph = source.ir(); source_ir = dereference source_graph; source_store = dereference source_ir.storage()
+    heldbytes = idbytes + facts.retainedbytes() + source_store.bytes()
+    if heldbytes >= bytes then return .llinline..change('limit','storage.projection.bytes',source,empty)
+    assignment = .llrxas..assignment(body.locals(),reference ids,frame,work,bytes - heldbytes)
     if assignment.reserve(body.locals(),48) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
     do v = 0 to body.locals() - 1
       if assignment.charge(1) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
@@ -903,7 +888,7 @@ storage: procedure = .llinline..change
       end
       do j = 1 to item.registerrefs()
         value = item.registerref(j)
-        if value.bank() <> 'r' then return .llinline..change('keep','storage.external.reference.unproved',source,empty)
+        if value.bank() <> 'r' then iterate
         call storageput(reference refs,value.index(),assignment)
         if graphmode then id = graphstorage(reference facts,item,j)
         else id = facts.storage(item.id(),j)
@@ -918,30 +903,48 @@ storage: procedure = .llinline..change
         end
       end
       if item.kind() = 'instruction' then do
-        implicit = catalog.field(item.opcode(),5) as .int
-        boundcall = 0
-        if wordpos(item.mnemonic(),'call call1 call2 call3 call4') > 0 then boundcall = facts.bodyid(item.id()) > 0
-        if implicit = 1 | implicit = 2 | implicit = 6 then identity = 1
-        if catalog.unbounded(item.opcode()) & boundcall = 0 then identity = 1
-        if implicit >= 3 & implicit <= 5 then do
-          v = implicit - 3; call assignment.fixed(v); call storageput(reference refs,v,assignment)
-        end
-        if item.mnemonic() = 'call' & item.operands() = 3 then do
-          value = item.operand(3); call assignment.window(value.index(),facts.arguments(item.id()) + 1)
-          do j = 0 to facts.arguments(item.id())
-            call storageput(reference refs,value.index() + j,assignment)
-            if j > 0 then do
-              id = facts.argumentstorage(item.id(),j)
-              if id > 0 & id <= body.locals() then call storageput(reference refs,id - 1,assignment)
+        previouswork = facts.remaining(); previousbytes = facts.retainedbytes()
+        footprint = facts.footprint(item.id())
+        if assignment.charge(previouswork - facts.remaining()) = 0 | assignment.reserve(facts.retainedbytes() - previousbytes,1) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+        if footprint.status() = 'limit' then return .llinline..change('limit',footprint.reason(),source,empty)
+        if footprint.status() <> 'proved' then identity = 1
+        else do
+          do j = 1 to footprint.roles()
+            if assignment.charge(2) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+            role = footprint.role(j)
+            if role.bank() = 'r' then do
+              call storageput(reference refs,role.index(),assignment)
+              if role.fixed() then call assignment.pin(role.index())
+            end
+            binding = role.binding()
+            if flow.storagefunction(binding.active()) = procedureId & flow.storagebank(binding.active()) = 'r' then do
+              v = flow.storageindex(binding.active())
+              if v >= 0 & v < body.locals() then call storageput(reference refs,v,assignment)
             end
           end
+          do c = 1 to footprint.constraints()
+            constraint = footprint.constraint(c)
+            if constraint.bank() <> 'r' then iterate
+            first = constraint.first(); width = constraint.width()
+            if first < 0 | width < 0 | first > body.locals() - width then return .llinline..change('keep','storage.footprint.outside.frame',source,empty)
+            if constraint.kind() = 'identity' then identity = 1
+            else if constraint.kind() = 'window' & width > 0 then call assignment.window(first,width)
+            else if constraint.kind() = 'fixed' then do v = first to first + width - 1; call assignment.fixed(v); end
+            if assignment.charge(width + 1) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
+            do v = first to first + width - 1; call storageput(reference refs,v,assignment); end
+          end
         end
-        if facts.mapping(item.id()) | wordpos(item.mnemonic(),'call call1 call2 call3 call4 endlife') > 0 then do j = 1 to item.registerrefs()
+        lifetime = 0
+        profile_ref = flow.transfers(); pointprofile = dereference profile_ref
+        instruction = pointprofile.instruction(item.id())
+        do k = 1 to instruction.actions(); action = instruction.action(k); if action.kind() = 'lifetime' then lifetime = 1; end
+        if facts.mapping(item.id()) | catalog.callinvokes(item.opcode()) | lifetime then do j = 1 to item.registerrefs()
           if assignment.charge(1) = 0 then return .llinline..change('limit',assignment.error(),source,empty)
           value = item.registerref(j); plainend = 0
+          if value.bank() <> 'r' then iterate
           if graphmode then id = graphstorage(reference facts,item,j)
           else id = facts.storage(item.id(),j)
-          if graphmode = 0 & item.mnemonic() = 'endlife' & id > 0 & id <= body.locals() then do
+          if graphmode = 0 & lifetime & id > 0 & id <= body.locals() then do
             plainend = facts.reusecandidate(value.index()) & facts.reusecandidate(id - 1)
           end
           if plainend = 0 then do
@@ -1087,10 +1090,12 @@ storageemit: procedure = .llinline..change
       call objectarraydrop replacements
       do j = 1 to input.registerrefs()
         value = input.registerref(j)
-        if value.bank() <> 'r' then return .llinline..change('invalid','storage.reference.bank',source,empty)
-        extent = mapping[value.index() + 1]
-        if extent < 0 then return .llinline..change('invalid','storage.required.cell.absent',source,empty)
-        replacements[j] = targetbody.reg('r',extent) as .object
+        if value.bank() = 'r' then do
+          extent = mapping[value.index() + 1]
+          if extent < 0 then return .llinline..change('invalid','storage.required.cell.absent',source,empty)
+          replacements[j] = targetbody.reg('r',extent) as .object
+        end
+        else replacements[j] = targetbody.reg(value.bank(),value.index()) as .object
       end
       fields = lltarget..remapregisters(input,replacements)
     end

@@ -1,0 +1,381 @@
+/* cREXX License (MIT). Independent correspondence/conditional-entry oracle. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetsummary
+import lltargetremap
+import lltargetnormalize
+import llrxascatalog
+
+check: procedure = .int
+  arg condition = .int, label = .string
+  if condition then return 0
+  say 'FAIL:' || label; return 1
+
+sample: procedure = .lltarget..module
+  arg candidate = .int, mode = .int, expose callbackid = .int
+  ignored = .int
+  draft = .lltarget..draft('normalization.preservation','fixture:normalization.preservation',0)
+  at = draft.synthetic('entry delta is disjoint from the exact callback projection')
+  root = draft.procedure('main',3,at); fields = .object[]
+  if candidate then do
+    index = 1; if mode = 1 then index = 0
+    fields[1] = root.reg('r',index) as .object; ignored = root.emit('null',fields,at)
+  end
+  fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(7) as .object
+  ignored = root.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; callbackid = root.emit('say',fields,at)
+  fields[1] = root.reg('r',2) as .object; fields[2] = root.reg('r',1) as .object; fields[3] = .lltarget..operand.integer(0) as .object
+  ignored = root.emit('iadd',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object; ignored = root.emit('ret',fields,at)
+  return draft.finish()
+
+/** These describe independently checked fixture events. No production native
+ * callback is relabelled harmless, and raw-root backing is never assumed empty. */
+premises: procedure = .lltargettransfer..profile
+  arg owner = reference .lltarget..module, candidate = .int, mode = .int, missing = 0, otherpremise = 0
+  source = dereference owner; premise = 'independent.normalization.preservation'
+  if otherpremise then premise = 'independent.different.normalization.premise'
+  builder = .lltargettransfer..profiledraft(owner,premise)
+  catalog = .llrxascatalog..catalog(); integer = builder.domain('component','fixture.integer',catalog.componentmask('I'))
+  ignored = .int; subject = .int; input = .int
+  do i = 1 to source.records()
+    item = source.record(i); ignored = builder.operation(item.id()); ignored = builder.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    select item.mnemonic()
+      when 'load' then do
+        subject = builder.ref(item.id(),1); ignored = builder.event(item.id(),'write',subject,integer,'literal',0,item.operand(2))
+      end
+      when 'null' then do
+        subject = builder.ref(item.id(),1); ignored = builder.event(item.id(),'clear',subject,0)
+        if mode = 3 then ignored = builder.event(item.id(),'callback',0,0,'none',0,.lltarget..operand(),'may','all','before','catalog.callback.unconditional')
+      end
+      when 'say' then do
+        subject = builder.ref(item.id(),1); phase = 'before'; observation = 'component'
+        if candidate & mode = 2 then phase = 'after'
+        if mode = 4 then observation = 'physical'
+        if mode = 5 then observation = 'unknown'
+        ignored = builder.event(item.id(),'callback',subject,integer,'none',0,.lltarget..operand(),'may','all',phase,'fixture.component.observer',0,observation)
+      end
+      when 'iadd' then do
+        subject = builder.ref(item.id(),1); input = builder.ref(item.id(),2)
+        if candidate & mode = 6 then call builder.unknown(item.id(),'components','fixture.candidate.components.unknown')
+        if missing then call builder.unknown(item.id(),'components','fixture.read.components.unknown')
+        else ignored = builder.event(item.id(),'observe',input,integer)
+        ignored = builder.event(item.id(),'write',subject,integer)
+      end
+      when 'br' then ignored = builder.ref(item.id(),1,'label','symbolic')
+      when 'brf' then do
+        ignored = builder.ref(item.id(),1,'label','symbolic'); input = builder.ref(item.id(),2)
+        ignored = builder.event(item.id(),'observe',input,integer)
+      end
+      when 'ret' then ignored = builder.event(item.id(),'return',0,0)
+      otherwise call builder.unknown(item.id(),'effects','fixture.unrepresented')
+    end
+  end
+  return builder.finish()
+
+run: procedure = .int
+  arg mode = .int
+  failures = 0; sourcecallback = .int; candidatecallback = .int; i = .int; next = 1
+  original = sample(0,mode,sourcecallback); candidate = sample(1,mode,candidatecallback)
+  failures = failures + check(original.valid() & candidate.valid(),'models validate ' || mode)
+  if original.valid() = 0 | candidate.valid() = 0 then return failures
+  before = premises(reference original,0,mode); after = premises(reference candidate,1,mode)
+  sourcecfg = .lltargetcfg..graph(reference original,reference before)
+  candidatecfg = .lltargetcfg..graph(reference candidate,reference after)
+  sourceflow = .lltargetflow..analysis(reference original,reference before,reference sourcecfg)
+  candidateflow = .lltargetflow..analysis(reference candidate,reference after,reference candidatecfg)
+  summaries = .lltargetsummary..analysis(reference sourceflow)
+  failures = failures + check(sourceflow.status() = 'ok' & candidateflow.status() = 'ok' & summaries.status() = 'ok','independent flow owners finish ' || mode)
+  if sourceflow.status() <> 'ok' | candidateflow.status() <> 'ok' | summaries.status() <> 'ok' then do; say sourceflow.reason() || candidateflow.reason() || summaries.reason(); return failures; end
+  operations = .int[]
+  do i = 1 to original.records()
+    item = original.record(i); target = candidate.record(next)
+    if target.kind() = 'instruction' & target.mnemonic() = 'null' then do; next = next + 1; target = candidate.record(next); end
+    operations[item.id()] = target.id(); next = next + 1
+  end
+  mapping = .lltargetremap..correspondence(reference original,reference candidate,reference before,reference after,reference sourcecfg,reference candidatecfg,operations)
+  if mode = 2 | mode = 6 then do
+    failures = failures + check(mapping.status() = 'unknown' & mapping.reason() = 'correspondence.transfer.changed','changed callback phase or dependency completeness has no exact correspondence ' || mode)
+    return failures
+  end
+  failures = failures + check(mapping.status() = 'proved','identity-copy and explicit entry-clear correspondence validates ' || mode || ': ' || mapping.reason())
+  if mapping.status() <> 'proved' then return failures
+  event = mapping.event(sourcecallback,1)
+  failures = failures + check(event.valid() & event.candidateoperation() = candidatecallback & event.sourcescope() = event.candidatescope(),'exact original callback event maps once ' || mode)
+  repeated = mapping.event(sourcecallback,1,0,1)
+  failures = failures + check(repeated.status() = 'unknown' & repeated.reason() = 'correspondence.activation.mapping.required','an arbitrary clone instance cannot assert an activation mapping')
+  transaction = .lltargetnormalize..change.resolved('changed','fixture.entry.clear',candidate,operations)
+  proof = transaction.conditional(reference sourceflow,reference candidateflow,reference summaries,reference mapping,original.procedureid('main'))
+  if mode = 0 then do
+    failures = failures + check(proof.preserved() & proof.obligations() > 0,'disjoint entry delta preserves explicit callback observation: ' || proof.reason())
+    failures = failures + check(transaction.complete(candidate.procedureid('main')) = 0,'conditional preservation cannot mint unconditional procedure completeness')
+    point = sourceflow.callbackat(sourcecallback,1); observed = point.observed()
+    failures = failures + check(point.possible() & observed.active() > 0,'preservation does not prove callback absence')
+    complete = lltargetnormalize..normalize(reference original,reference sourceflow)
+    failures = failures + check(complete.complete(original.procedureid('main')) = 0,'callback havoc and original incomplete normalization remain unchanged')
+    tiny = transaction.conditional(reference sourceflow,reference candidateflow,reference summaries,reference mapping,original.procedureid('main'),1)
+    failures = failures + check(tiny.status() = 'limit' & tiny.preserved() = 0,'tiny composition allowance cannot publish a certificate')
+    limited = .lltargetremap..correspondence(reference original,reference candidate,reference before,reference after,reference sourcecfg,reference candidatecfg,operations,1)
+    failures = failures + check(limited.status() = 'limit','correspondence has a bounded work allowance')
+    original = candidate
+    failures = failures + check(mapping.valid() = 0 & proof.valid() = 0,'replacing a source in the same reference cell invalidates correspondence and certificate')
+  end
+  else do
+    failures = failures + check(proof.status() = 'unknown' & proof.preserved() = 0,'overlap, extra callback or physical/unknown observer retains a specific obligation ' || mode || ': ' || proof.reason())
+  end
+  return failures
+
+entrysample: procedure = .lltarget..module
+  arg candidate = .int, mode = .int, expose callbackid = .int
+  ignored = .int; delta = 1
+  draft = .lltarget..draft('entry.coverage','fixture:entry.coverage',0)
+  at = draft.synthetic('known dirty obligation before a separately preserved callback')
+  root = draft.procedure('main',3,at); fields = .object[]
+  if candidate & mode <> 2 & mode <> 5 then do
+    if mode = 3 then delta = 2
+    fields[1] = root.reg('r',delta) as .object; ignored = root.emit('null',fields,at)
+    if mode = 4 then do; fields[1] = root.reg('r',2) as .object; ignored = root.emit('null',fields,at); end
+  end
+  fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(7) as .object
+  ignored = root.emit('load',fields,at)
+  if mode = 5 then do
+    call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('after.clear') as .object; ignored = root.emit('br',fields,at)
+    fields[1] = .lltarget..operand.symbol('clear.here') as .object; ignored = root.record('label',fields,at)
+    if candidate then do; fields[1] = root.reg('r',1) as .object; ignored = root.emit('null',fields,at); end
+    fields[1] = .lltarget..operand.symbol('after.clear') as .object; ignored = root.record('label',fields,at)
+  end
+  if mode = 1 then do
+    call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; callbackid = root.emit('say',fields,at)
+  end
+  fields[1] = root.reg('r',2) as .object; fields[2] = root.reg('r',1) as .object; fields[3] = .lltarget..operand.integer(0) as .object
+  ignored = root.emit('iadd',fields,at)
+  if mode = 7 then do
+    call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('after.callback') as .object; fields[2] = root.reg('r',2) as .object
+    ignored = root.emit('brf',fields,at)
+  end
+  if mode <> 1 then do
+    call objectarraydrop fields; delta = 0; if mode = 6 | mode = 8 then delta = 2
+    fields[1] = root.reg('r',delta) as .object; callbackid = root.emit('say',fields,at)
+  end
+  if mode = 7 then do
+    call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('after.callback') as .object; ignored = root.record('label',fields,at)
+  end
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object; ignored = root.emit('ret',fields,at)
+  return draft.finish()
+
+coverage: procedure = .int
+  arg mode = .int
+  failures = 0; sourcecallback = .int; candidatecallback = .int; i = .int; next = 1
+  original = entrysample(0,mode,sourcecallback); candidate = entrysample(1,mode,candidatecallback)
+  failures = failures + check(original.valid() & candidate.valid(),'entry coverage models validate ' || mode)
+  if original.valid() = 0 | candidate.valid() = 0 then return failures
+  missing = mode = 8
+  before = premises(reference original,0,0,missing); after = premises(reference candidate,1,0,missing)
+  sourcecfg = .lltargetcfg..graph(reference original,reference before); candidatecfg = .lltargetcfg..graph(reference candidate,reference after)
+  sourceflow = .lltargetflow..analysis(reference original,reference before,reference sourcecfg)
+  candidateflow = .lltargetflow..analysis(reference candidate,reference after,reference candidatecfg)
+  summaries = .lltargetsummary..analysis(reference sourceflow)
+  failures = failures + check(sourceflow.status() = 'ok' & candidateflow.status() = 'ok' & summaries.status() = 'ok','entry coverage analyses finish ' || mode)
+  if sourceflow.status() <> 'ok' | candidateflow.status() <> 'ok' | summaries.status() <> 'ok' then return failures
+  fn = original.procedureid('main'); resultfn = candidate.procedureid('main')
+  sourcecoverage = sourceflow.entrycoverage(fn); candidatecoverage = candidateflow.entrycoverage(resultfn)
+  operations = .int[]
+  do i = 1 to original.records()
+    item = original.record(i); target = candidate.record(next)
+    do while target.kind() = 'instruction' & target.mnemonic() = 'null'
+      next = next + 1; target = candidate.record(next)
+    end
+    operations[item.id()] = target.id(); next = next + 1
+  end
+  mapping = .lltargetremap..correspondence(reference original,reference candidate,reference before,reference after,reference sourcecfg,reference candidatecfg,operations)
+  if mode = 5 then do
+    failures = failures + check(mapping.status() = 'unknown','a clear bypassed by an original branch is not an entry-clear correspondence')
+    failures = failures + check(candidatecoverage.complete() & candidatecoverage.demands() > 0,'the bypassed candidate retains its dirty owned demand')
+    return failures
+  end
+  failures = failures + check(mapping.status() = 'proved','entry transaction correspondence validates ' || mode || ': ' || mapping.reason())
+  if mapping.status() <> 'proved' then return failures
+  transaction = .lltargetnormalize..change.resolved('changed','fixture.coverage',candidate,operations)
+  callbacks = transaction.conditional(reference sourceflow,reference candidateflow,reference summaries,reference mapping,fn)
+  proof = transaction.entryproof(reference sourceflow,reference candidateflow,reference mapping,reference callbacks,fn)
+  if mode = 0 then do
+    failures = failures + check(sourcecoverage.complete() & sourcecoverage.demands() = 1,'source coverage contains one exhaustive dirty owned obligation')
+    failures = failures + check(candidatecoverage.complete() & candidatecoverage.demands() = 0 & candidatecoverage.unresolved() = 0,'candidate entry clear covers every dirty owned obligation')
+    failures = failures + check(callbacks.preserved() & callbacks.obligations() >= 2,'delta closure includes derived private output before disjoint callback: ' || callbacks.reason())
+    failures = failures + check(proof.covered(),'entry coverage and callback preservation jointly certify exact candidate: ' || proof.reason())
+    failures = failures + check(transaction.complete(resultfn) = 0 & sourceflow.complete(fn,'entry-normalization') = 0,'coverage adoption does not alter unconditional completeness or havoc')
+    tiny = transaction.entryproof(reference sourceflow,reference candidateflow,reference mapping,reference callbacks,fn,1)
+    failures = failures + check(tiny.status() = 'limit' & tiny.covered() = 0,'entry coverage has a bounded proof allowance')
+    original = candidate
+    failures = failures + check(proof.valid() = 0,'replaced source invalidates the combined coverage certificate')
+  end
+  else do
+    failures = failures + check(proof.status() = 'unknown' & proof.covered() = 0,'unresolved, unlicensed or tainted-observer/control candidate is never covered ' || mode || ': ' || proof.reason())
+    if mode = 1 then failures = failures + check(callbacks.preserved() & sourcecoverage.complete() = 0 & sourcecoverage.unresolved() > 0,'preserved callbacks do not turn post-callback unknown reads into coverage')
+    if mode = 2 then failures = failures + check(candidatecoverage.complete() & candidatecoverage.demands() > 0,'identity dirty candidate cannot use an empty insertion vector as proof')
+    if mode = 3 | mode = 4 then failures = failures + check(callbacks.preserved() & proof.reason() = 'normalization.entry.clear.unlicensed','wrong-base and extra entry clears require their own source obligation ' || mode)
+    if mode = 6 then failures = failures + check(callbacks.preserved() = 0,'derived r2 taint cannot hide behind original r1/observer disjointness')
+    if mode = 7 then failures = failures + check(callbacks.preserved() = 0 & callbacks.reason() = 'normalization.preservation.tainted.control.unproved','tainted branch cannot change callback reachability')
+    if mode = 8 then failures = failures + check(callbacks.preserved() = 0 & callbacks.reason() = 'normalization.preservation.prefix.components.unproved','missing component reads cannot hide derived output dependencies')
+  end
+  return failures
+
+/** No entry demands or insertions are needed to exercise this allowance:
+ * initializing per-local coverage vectors itself consumes bounded work. */
+localbudget: procedure = .int
+  draft = .lltarget..draft('entry.local.budget','fixture:entry.local.budget',0)
+  at = draft.synthetic('empty obligations do not make a local-index scan free')
+  root = draft.procedure('main',128,at); fields = .object[]
+  fields[1] = .lltarget..operand.integer(0) as .object; ignored = root.emit('ret',fields,at)
+  original = draft.finish(); candidate = original; operations = .int[]
+  before = premises(reference original,0,0); after = premises(reference candidate,1,0)
+  sourcecfg = .lltargetcfg..graph(reference original,reference before); candidatecfg = .lltargetcfg..graph(reference candidate,reference after)
+  sourceflow = .lltargetflow..analysis(reference original,reference before,reference sourcecfg)
+  candidateflow = .lltargetflow..analysis(reference candidate,reference after,reference candidatecfg)
+  summaries = .lltargetsummary..analysis(reference sourceflow)
+  failures = check(sourceflow.status() = 'ok' & candidateflow.status() = 'ok' & summaries.status() = 'ok','local-budget analyses finish')
+  if failures then return failures
+  do i = 1 to original.records(); item = original.record(i); operations[item.id()] = item.id(); end
+  mapping = .lltargetremap..correspondence(reference original,reference candidate,reference before,reference after,reference sourcecfg,reference candidatecfg,operations)
+  transaction = .lltargetnormalize..change.resolved('keep','fixture.empty.obligations',candidate,operations)
+  callbacks = transaction.conditional(reference sourceflow,reference candidateflow,reference summaries,reference mapping,original.procedureid('main'))
+  failures = failures + check(mapping.status() = 'proved' & callbacks.preserved(),'empty entry transaction has exact correspondence')
+  proof = transaction.entryproof(reference sourceflow,reference candidateflow,reference mapping,reference callbacks,original.procedureid('main'),16)
+  failures = failures + check(proof.status() = 'limit' & proof.covered() = 0 & proof.usedwork() <= 16,'large local extent is charged before coverage-vector initialization')
+  return failures
+
+/** Reachable opaque effects are unresolved demands even when no explicit
+ * observation follows. Unconditional normalization must respect that fact. */
+opaquenormalization: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int
+  draft = .lltarget..draft('normalization.opaque.' || mode,'fixture:normalization.opaque',0)
+  at = draft.synthetic('unknown owned-entry demand cannot use unconditional normalization')
+  root = draft.procedure('main',1,at); fields = .object[]; empty = .object[]
+  fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(17) as .object
+  opaque = root.emit('load',fields,at); ignored = root.emit('ret',empty,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'opaque normalization source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  builder = .lltargettransfer..profiledraft(reference source,'independent.opaque.normalization.' || mode)
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = builder.operation(item.id()); ignored = builder.relocation(item.id(),'none')
+  end
+  kind = 'unknown'; if mode = 1 then kind = 'external'
+  ignored = builder.event(opaque,kind,0,0)
+  profile = builder.finish(); cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','opaque normalization flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  coverage = flow.entrycoverage(source.procedureid('main'))
+  normalized = lltargetnormalize..normalize(reference source,reference flow); result = normalized.result()
+  failures = failures + check(coverage.complete() = 0 & coverage.unresolved() & normalized.complete(source.procedureid('main')) = 0,'opaque demand coverage cannot mint an unconditional normalization certificate ' || mode)
+  failures = failures + check(normalized.status() = 'keep' & result.identity() = source.identity(),'unproved opaque demands retain the exact input ' || mode)
+  return failures
+
+/** The candidate is readable only through its explicit private accessors.
+ * No warning or rewritten operation becomes ordinary output before commit. */
+draftblocked: procedure = .int
+  arg transaction = reference .lltargetnormalize..change, operation = .int, mapping = .int
+  current = dereference transaction
+  do
+    if mapping then ignored = current.candidateoperation(operation)
+    else draft = current.candidate()
+    return 0
+  on signal as problem
+    return problem.name() = 'ERROR'
+  end
+  return 0
+
+candidateapi: procedure = .int
+  arg mode = .int
+  failures = 0; callbackid = .int; i = .int; sourceMode = 0; work = 1000000; functionid = .int
+  if mode = 1 then sourceMode = 1
+  if mode = 6 then sourceMode = 6
+  if mode = 5 then work = 1
+  original = entrysample(0,sourceMode,callbackid); originalid = original.identity()
+  before = premises(reference original,0,0); sourcecfg = .lltargetcfg..graph(reference original,reference before)
+  sourceflow = .lltargetflow..analysis(reference original,reference before,reference sourcecfg)
+  summaries = .lltargetsummary..analysis(reference sourceflow)
+  failures = failures + check(sourceflow.status() = 'ok' & summaries.status() = 'ok','candidate source analyses finish ' || mode)
+  if failures then return failures
+  functionid = original.procedureid('main'); requested = functionid
+  if mode = 8 then requested = 0
+  transaction = lltargetnormalize..entrycandidate(reference original,reference sourceflow,requested,work)
+  result = transaction.result()
+  failures = failures + check(result.identity() = originalid & transaction.operation(callbackid) = callbackid & transaction.warnings() = 0,'tentative and failed construction never publish clears/map/warnings ' || mode)
+  failures = failures + check(transaction.reservedwork() <= work & transaction.reservedbytes() <= 67108864,'candidate envelope is bounded independently of later analyses ' || mode)
+  if mode = 1 | mode = 5 | mode = 8 then do
+    expected = 'unknown'; if mode = 5 then expected = 'limit'; if mode = 8 then expected = 'invalid'
+    failures = failures + check(transaction.status() = expected,'incomplete coverage, budget or function refuses candidate construction ' || mode || ': ' || transaction.reason())
+    emptyproof = .lltargetnormalize..entrycertificate
+    failures = failures + check(transaction.commit(emptyproof) = 0,'a failed construction cannot be committed ' || mode)
+    failures = failures + check(draftblocked(reference transaction,callbackid,0) & draftblocked(reference transaction,callbackid,1),'failed construction exposes no usable private draft/map ' || mode)
+    return failures
+  end
+  failures = failures + check(transaction.status() = 'tentative' & transaction.complete(functionid) = 0,'coverage proposal preserves old callback veto ' || mode || ': ' || transaction.reason())
+  if transaction.status() <> 'tentative' then return failures
+  candidate = transaction.candidate(); operations = .int[]
+  do i = 1 to original.records(); item = original.record(i); operations[item.id()] = transaction.candidateoperation(item.id()); end
+  if mode = 11 then operations[callbackid] = operations[original.record(1).id()]
+  after = premises(reference candidate,1,0,0,mode = 10)
+  candidatecfg = .lltargetcfg..graph(reference candidate,reference after)
+  candidateflow = .lltargetflow..analysis(reference candidate,reference after,reference candidatecfg)
+  failures = failures + check(candidateflow.status() = 'ok','candidate result analysis finishes ' || mode)
+  if candidateflow.status() <> 'ok' then return failures
+  mapping = .lltargetremap..correspondence(reference original,reference candidate,reference before,reference after,reference sourcecfg,reference candidatecfg,operations)
+  callbacks = transaction.conditional(reference sourceflow,reference candidateflow,reference summaries,reference mapping,functionid)
+  allowance = 1000000; if mode = 9 then allowance = 1
+  proof = transaction.entryproof(reference sourceflow,reference candidateflow,reference mapping,reference callbacks,functionid,allowance)
+  resultfn = candidate.procedureid('main')
+  if mode = 0 then do
+    failures = failures + check(proof.covered() & proof.matchessource(reference sourceflow,functionid) & proof.matchesresult(reference candidate,resultfn),'exact live source/result/function theorem matches tentative candidate')
+    failures = failures + check(transaction.commit(proof),'proved single-procedure candidate commits atomically')
+    result = transaction.result()
+    failures = failures + check(transaction.status() = 'changed' & result.identity() = candidate.identity() & transaction.operation(callbackid) = operations[callbackid] & transaction.warnings() = 1,'commit publishes candidate/map/warning together')
+    warning = transaction.warning(1)
+    failures = failures + check(warning.local() = 1 & transaction.complete(resultfn) = 0,'licensed dirty base warning does not change unconditional completeness')
+    failures = failures + check(transaction.commit(proof) = 0,'committed transaction cannot be committed twice')
+    return failures
+  end
+  if mode = 2 then do
+    failures = failures + check(proof.matchesresult(reference original,resultfn) = 0,'original immutable identity is not the candidate result')
+    wrong = .lltargetnormalize..change.resolved('keep','fixture.wrong.result',original)
+    proof = wrong.entryproof(reference sourceflow,reference candidateflow,reference mapping,reference callbacks,functionid)
+  end
+  if mode = 3 then do
+    failures = failures + check(proof.matchesresult(reference candidate,resultfn + 1) = 0,'wrong candidate function does not match')
+    proof = transaction.entryproof(reference sourceflow,reference candidateflow,reference mapping,reference callbacks,functionid + 1)
+  end
+  if mode = 4 then do
+    original = candidate
+    failures = failures + check(proof.matchesresult(reference candidate,resultfn) = 0,'replaced source invalidates exact result query')
+  end
+  if mode = 7 then do
+    proof = .lltargetnormalize..entrycertificate(reference sourceflow,reference candidateflow,reference mapping,reference callbacks,functionid)
+    failures = failures + check(proof.covered() & proof.matchesresult(reference candidate,resultfn) = 0,'unstamped constructor cannot match a result for publication')
+  end
+  if mode = 10 then failures = failures + check(mapping.status() = 'unknown' & mapping.reason() = 'correspondence.operational.premise.changed','candidate cannot acquire a different independent operational premise')
+  failures = failures + check(transaction.commit(proof) = 0,'unmatched, stale, limited or observer-unsafe theorem never commits ' || mode)
+  result = transaction.result()
+  failures = failures + check(result.identity() = originalid & transaction.operation(callbackid) = callbackid & transaction.warnings() = 0,'failed commit retains exact original/map/warnings ' || mode)
+  failures = failures + check(draftblocked(reference transaction,callbackid,0) & draftblocked(reference transaction,callbackid,1),'failed commit discards usable private draft/map ' || mode)
+  return failures
+
+main: procedure = .int
+  failures = 0; mode = .int
+  do mode = 0 to 6; failures = failures + run(mode); end
+  do mode = 0 to 8; failures = failures + coverage(mode); end
+  failures = failures + localbudget()
+  failures = failures + opaquenormalization(0) + opaquenormalization(1)
+  do mode = 0 to 11; failures = failures + candidateapi(mode); end
+  say 'TARGET_NORMALIZATION_PRESERVATION|failures=' || failures
+  return failures

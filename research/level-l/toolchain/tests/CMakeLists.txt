@@ -68,6 +68,33 @@ add_custom_target(levell_rxas_fused_test_prep DEPENDS
 add_dependencies(levell_rxas_fused_test_prep llrxinline)
 if(TARGET rxbvm)
   get_target_property(_cli llrxinline LLRXINLINE_BYTECODE)
+  set(_stage "${CMAKE_BINARY_DIR}/research/level-l/toolchain/cli/llrxinlinestage.rxbin")
+  crexx_add_import_root(levell_native_stage_imports
+    DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/native-stage-imports" OUTPUT_VARIABLE _stage_imports
+    FILES ${_runtime} "${_stage}"
+    DEPENDS llrxinline levell_rxas_io_test_imports)
+  set(_stage_link_images ${_runtime})
+  list(FILTER _stage_link_images INCLUDE REGEX "\\.rxbin$")
+  crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/target-native-stage-linked.rxbin"
+    COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
+      -i "${CMAKE_CURRENT_BINARY_DIR}/native-stage-imports"
+      -o target-native-stage "${CMAKE_CURRENT_SOURCE_DIR}/target-native-stage.crexx"
+    COMMAND $<TARGET_FILE:rxas> target-native-stage
+    COMMAND $<TARGET_FILE:rxlink> -s -o target-native-stage-linked
+      target-native-stage "${_stage}" ${_stage_link_images}
+    DEPENDS rxc rxas rxlink levell_native_stage_imports ${_stage_imports}
+      "${CMAKE_CURRENT_SOURCE_DIR}/target-native-stage.crexx"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+  add_custom_target(levell_target_native_stage
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/target-native-stage-linked.rxbin")
+  add_test(NAME levell_target_native_stage_rxbvm
+    COMMAND $<TARGET_FILE:rxbvm> "${CMAKE_CURRENT_BINARY_DIR}/target-native-stage-linked.rxbin")
+  set_tests_properties(levell_target_native_stage_rxbvm PROPERTIES
+    PASS_REGULAR_EXPRESSION "TARGET_NATIVE_STAGE[|]failures=0"
+    FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    TIMEOUT 120 LABELS "level-l;research;inlining")
+  crexx_register_test_prep_targets(TESTS levell_target_native_stage_rxbvm
+    TARGETS levell_target_native_stage rxbvm)
   crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/inline-invalid-response.rxbin"
     COMMAND $<TARGET_FILE:rxc> -x --no-exe-import
       -o "${CMAKE_CURRENT_BINARY_DIR}/inline-invalid-response"

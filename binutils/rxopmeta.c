@@ -11,6 +11,7 @@
 
 typedef struct {
     int opcode;
+    int callback_inventory_complete;
     RxOpEffectState state;
     unsigned int reads;
     unsigned int writes;
@@ -23,33 +24,48 @@ typedef struct {
     RxOpImplicitEffect implicit;
     unsigned int semantics;
     RxOpConstEvaluator const_evaluator;
+    const char *value_writers_signature;
 } RxOpEffectSpec;
 
+#define RXEW(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, WRITERS) \
+    STATE, READS, WRITES, KILLS, BRANCH_TARGETS, NULL, NULL, NULL, NULL, IMPLICIT, SEMANTICS, \
+    RXOP_CONST_EVAL_NONE, WRITERS
 #define RXE(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
-    STATE, READS, WRITES, KILLS, BRANCH_TARGETS, NULL, NULL, NULL, NULL, IMPLICIT, SEMANTICS, \
-    RXOP_CONST_EVAL_NONE
+    RXEW(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, NULL)
+#define RXEVW(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, WRITERS) \
+    STATE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, \
+    READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
+    RXOP_CONST_EVAL_NONE, WRITERS
 #define RXEV(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS) \
+    RXEVW(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, NULL)
+#define RXEVCW(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
+              CONST_EVALUATOR, WRITERS) \
     STATE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, \
     READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
-    RXOP_CONST_EVAL_NONE
-#define RXEVC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
-              CONST_EVALUATOR) \
-    STATE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, RXOP_OP_NONE, \
-    READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
-    CONST_EVALUATOR
-#define RXEC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
-             CONST_EVALUATOR) \
+    CONST_EVALUATOR, WRITERS
+#define RXEVC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, CONST_EVALUATOR) \
+    RXEVCW(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, CONST_EVALUATOR, NULL)
+#define RXECW(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, \
+             CONST_EVALUATOR, WRITERS) \
     STATE, READS, WRITES, KILLS, BRANCH_TARGETS, NULL, NULL, NULL, NULL, IMPLICIT, SEMANTICS, \
-    CONST_EVALUATOR
-#define RXOP_EFFECT(NAME, EFFECTS) { OP_##NAME, EFFECTS },
+             CONST_EVALUATOR, WRITERS
+#define RXEC(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, CONST_EVALUATOR) \
+    RXECW(STATE, READS, WRITES, KILLS, BRANCH_TARGETS, IMPLICIT, SEMANTICS, CONST_EVALUATOR, NULL)
+#define RXOP_EFFECT(NAME, EFFECTS) { OP_##NAME, 0, EFFECTS },
+#define RXOP_EFFECT_KNOWN(NAME, EFFECTS) { OP_##NAME, 1, EFFECTS },
 static const RxOpEffectSpec rxop_effect_specs[] = {
 #include "rxopeffects.h"
 };
 #undef RXOP_EFFECT
+#undef RXOP_EFFECT_KNOWN
 #undef RXEC
 #undef RXEVC
 #undef RXEV
 #undef RXE
+#undef RXEW
+#undef RXEVW
+#undef RXECW
+#undef RXEVCW
 
 #define RXSC_NONE \
     RXOP_SIGNAL_STATE_NONE, RXOP_SIGNAL_PHASE_NONE, RXOP_SIGNAL_SOURCE_NONE, \
@@ -68,6 +84,12 @@ static const RxOpEffectSpec rxop_effect_specs[] = {
     SIZE_MAX, NULL, RXOP_OP_NONE, NULL, RXOP_COMPONENT_NONE, \
     RXOP_CONTEXT_NONE, RXOP_SIGNAL_DEP_HANDLER_POLICY, \
     RXOP_SIGNAL_CONT_NORMAL, RXOP_SIGNAL_PROP_POLICY_WRITE, \
+    EFFECT, POLICY_SOURCE, POLICY_OPERAND, POLICY_NAME
+#define RXSC_NONE_PENDING(EFFECT, POLICY_SOURCE, POLICY_OPERAND, POLICY_NAME) \
+    RXOP_SIGNAL_STATE_NONE, RXOP_SIGNAL_PHASE_NONE, RXOP_SIGNAL_SOURCE_NONE, \
+    SIZE_MAX, NULL, RXOP_OP_NONE, NULL, RXOP_COMPONENT_NONE, \
+    RXOP_CONTEXT_NONE, RXOP_SIGNAL_DEP_NONE, \
+    RXOP_SIGNAL_CONT_NORMAL, RXOP_SIGNAL_PROP_PENDING_WRITE, \
     EFFECT, POLICY_SOURCE, POLICY_OPERAND, POLICY_NAME
 #define RXSC_UNKNOWN \
     RXOP_SIGNAL_STATE_UNKNOWN, RXOP_SIGNAL_PHASE_UNKNOWN, \
@@ -135,6 +157,7 @@ static const RxOpSignalContract rxop_signal_contracts[] = {
 #undef RXSC_STATIC
 #undef RXSC_UNKNOWN
 #undef RXSC_NONE_POLICY
+#undef RXSC_NONE_PENDING
 #undef RXSC_NONE_STABLE
 #undef RXSC_NONE
 
@@ -155,6 +178,8 @@ RxOpEffects rxop_effects(int opcode) {
     effects.implicit = RXOP_IMPLICIT_NONE;
     effects.semantics = RXOP_SEM_OPAQUE;
     effects.const_evaluator = RXOP_CONST_EVAL_NONE;
+    effects.value_writers_signature = NULL;
+    effects.callback_inventory_complete = 0;
     effects.flow = FLOW_TERM;
     effects.optimizer_barrier = 1;
 
@@ -176,12 +201,28 @@ RxOpEffects rxop_effects(int opcode) {
     effects.implicit = spec->implicit;
     effects.semantics = spec->semantics;
     effects.const_evaluator = spec->const_evaluator;
+    effects.value_writers_signature = spec->value_writers_signature;
+    effects.callback_inventory_complete = spec->callback_inventory_complete;
     effects.flow = op_table[opcode].flow;
     effects.optimizer_barrier =
         spec->state != RXOP_EFFECT_CLASSIFIED ||
         (op_table[opcode].flags & FLG_OPT_BARRIER) != 0;
 
     return effects;
+}
+
+RxOpValueWriter rxop_value_writer(int opcode, size_t operand_index) {
+    RxOpEffects effects = rxop_effects(opcode);
+    const char *signature = effects.value_writers_signature;
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS ||
+        effects.state != RXOP_EFFECT_CLASSIFIED ||
+        operand_index >= rxop_format_operand_count(op_table[opcode].format))
+        return RXOP_VALUE_WRITER_UNKNOWN;
+    if (!rxop_effect_writes_operand(&effects, operand_index)) return RXOP_VALUE_WRITER_NONE;
+    if (!signature || operand_index >= strlen(signature)) return RXOP_VALUE_WRITER_UNKNOWN;
+    if (signature[operand_index] == 's') return RXOP_VALUE_WRITER_SETTER;
+    if (signature[operand_index] == 'f') return RXOP_VALUE_WRITER_FIELD;
+    return RXOP_VALUE_WRITER_UNKNOWN;
 }
 
 size_t rxop_effect_count(void) {
@@ -374,17 +415,35 @@ int rxop_component_write_is_known(int opcode, size_t operand_index) {
         operand_index >= rxop_format_operand_count(op_table[opcode].format))
         return 0;
     if (!rxop_effect_writes_operand(&effects, operand_index)) return 1;
+    /* The conservative write mask includes the source slot restored by
+     * IGETUNLINK. That binding write never changes the source pointee. */
+    if (opcode == OP_IGETUNLINK_REG_REG && operand_index == 1) return 1;
     /* The component helpers intentionally have an unknown-write default of
      * NONE. Do not confuse that absent projection with a proved no-op. */
     return rxop_component_writes(opcode, operand_index) != RXOP_COMPONENT_NONE;
 }
 
 unsigned int rxop_component_reads(int opcode, size_t operand_index) {
+    RxOpSelectionContract selection = rxop_selection_contract(opcode);
+    if (selection.kind != RXOP_SELECTION_NONE) {
+        if (operand_index + 1 == selection.count_operand)
+            return RXOP_COMPONENT_INTEGER;
+        if (operand_index + 1 == selection.receiver_operand)
+            return RXOP_COMPONENT_OBJECT_TYPE;
+    }
+    if (rxop_call_invokes(opcode) &&
+        operand_index + 1 == rxop_call_contract(opcode).target_operand)
+        return rxop_call_target_components(opcode);
     if ((opcode == OP_SAY_REG || opcode == OP_SAYX_REG) && operand_index == 0)
         return RXOP_COMPONENT_STRING;
-    if ((opcode == OP_SETOBJTYPE_REG_STRING ||
-         opcode == OP_ASSERTTYPE_REG_STRING ||
+    if (opcode == OP_SETOBJTYPE_REG_STRING && operand_index == 0)
+        return RXOP_COMPONENT_ATTRIBUTES;
+    if ((opcode == OP_ASSERTTYPE_REG_STRING ||
          opcode == OP_ASSERTINITIALIZED_REG) && operand_index == 0)
+        return RXOP_COMPONENT_OBJECT_TYPE;
+    if ((opcode == OP_ISTYPE_REG_REG_STRING || opcode == OP_TYPEOF_REG_REG) &&
+        operand_index == 1) return RXOP_COMPONENT_OBJECT_TYPE;
+    if (opcode == OP_ISINITIALIZED_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_ATTRIBUTES;
     if (opcode >= OP_ICHKRNG_REG_INT_INT &&
         opcode <= OP_ICHKRNG_INT_REG_REG)
@@ -435,7 +494,8 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (opcode == OP_ACOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_ATTRIBUTES;
     if (opcode == OP_BCOPY_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
-    if (opcode == OP_IGETUNLINK_REG_REG && operand_index == 1)
+    if ((opcode == OP_IGETUNLINK_REG_REG ||
+         opcode == OP_ISETUNLINK_REG_REG) && operand_index == 1)
         return RXOP_COMPONENT_INTEGER;
 
     if (opcode == OP_GETATTRS_REG_REG ||
@@ -686,9 +746,13 @@ int rxop_same_storage_copy_is_noop(int opcode) {
     }
 }
 
-/* NONE means the opcode-effects inventory proves a register write but the
- * component changed by that write is not yet exact. */
+/* NONE alone cannot distinguish a known no-pointee-write (including a slot
+ * restore) from a missing projection; consult component_write_is_known. */
 unsigned int rxop_component_writes(int opcode, size_t operand_index) {
+    RxOpSelectionContract selection = rxop_selection_contract(opcode);
+    if (selection.kind != RXOP_SELECTION_NONE)
+        return operand_index + 1 == selection.result_operand
+                ? RXOP_COMPONENT_INTEGER : RXOP_COMPONENT_NONE;
     if (opcode == OP_CHANOPEN_REG_REG_REG_REG_REG ||
         opcode == OP_CHANSTART_REG_REG_REG_REG_REG)
         return operand_index < 2 ? RXOP_COMPONENT_INTEGER
@@ -718,16 +782,19 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (operand_index != 0) return RXOP_COMPONENT_NONE;
     if (opcode == OP_COPY_REG_REG || opcode == OP_NULL_REG)
         return RXOP_COMPONENT_ALL;
+    if (opcode == OP_SETOBJUNINIT_REG_STRING) return RXOP_COMPONENT_ALL;
     if (opcode == OP_ICOPY_REG_REG || opcode == OP_LOAD_REG_INT ||
         opcode == OP_STRLEN_REG_REG || opcode == OP_STRPOS_REG_REG_REG ||
         opcode == OP_GETTP_REG_REG || opcode == OP_GETANDTP_REG_REG_INT ||
         opcode == OP_GETNUMDGTS_REG || opcode == OP_GETNUMFUZ_REG ||
         opcode == OP_GETNUMFRM_REG || opcode == OP_GETNUMCAS_REG ||
-        opcode == OP_GETNUMSTD_REG)
+        opcode == OP_GETNUMSTD_REG || opcode == OP_ISTYPE_REG_REG_STRING ||
+        opcode == OP_ISINITIALIZED_REG_REG)
         return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_FCOPY_REG_REG || opcode == OP_LOAD_REG_FLOAT)
         return RXOP_COMPONENT_FLOAT;
-    if (opcode == OP_SCOPY_REG_REG || opcode == OP_LOAD_REG_STRING)
+    if (opcode == OP_SCOPY_REG_REG || opcode == OP_LOAD_REG_STRING ||
+        opcode == OP_TYPEOF_REG_REG)
         return RXOP_COMPONENT_STRING;
     if (opcode >= OP_CONCAT_REG_REG_REG &&
         opcode <= OP_SCONCAT_REG_STRING_REG)
@@ -743,10 +810,10 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_DECIMAL;
     if (opcode == OP_ACOPY_REG_REG) return RXOP_COMPONENT_ATTRIBUTES;
     if (opcode == OP_SETOBJTYPE_REG_STRING)
-        return RXOP_COMPONENT_ATTRIBUTES;
+        return RXOP_COMPONENT_OBJECT_TYPE | RXOP_COMPONENT_ATTRIBUTES;
     if (opcode == OP_ISETATTR1_REG_INT_REG)
         return RXOP_COMPONENT_INTEGER;
-    if (opcode == OP_IGETUNLINK_REG_REG)
+    if (opcode == OP_IGETUNLINK_REG_REG || opcode == OP_ISETUNLINK_REG_REG)
         return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_BCOPY_REG_REG)
         return RXOP_COMPONENT_BINARY | RXOP_COMPONENT_NATIVE_PAYLOAD;
@@ -806,6 +873,19 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
 }
 
 unsigned int rxop_component_clears(int opcode, size_t operand_index) {
+    RxOpSelectionContract selection = rxop_selection_contract(opcode);
+    if (selection.kind != RXOP_SELECTION_NONE &&
+        operand_index + 1 == selection.result_operand)
+        return RXOP_COMPONENT_ALL;
+    if (opcode == OP_NULLN_REG_REG || opcode == OP_NULLN_REG_REG_REG ||
+        opcode == OP_NULLN_REG_REG_REG_REG) return RXOP_COMPONENT_ALL;
+    if (operand_index == 0) {
+        if (opcode == OP_NULL_REG || opcode == OP_TYPEOF_REG_REG ||
+            opcode == OP_ISTYPE_REG_REG_STRING || opcode == OP_ISINITIALIZED_REG_REG)
+            return RXOP_COMPONENT_ALL;
+        if (opcode == OP_SETOBJUNINIT_REG_STRING)
+            return RXOP_COMPONENT_ALL & ~RXOP_COMPONENT_OBJECT_TYPE;
+    }
     if (opcode == OP_CHANOPEN_REG_REG_REG_REG_REG ||
         opcode == OP_CHANSTART_REG_REG_REG_REG_REG ||
         opcode == OP_CHANWAIT_REG_REG_REG_REG ||
@@ -817,33 +897,9 @@ unsigned int rxop_component_clears(int opcode, size_t operand_index) {
                    RXOP_COMPONENT_NATIVE_PAYLOAD;
         return RXOP_COMPONENT_NONE;
     }
-    if (operand_index != 0) return RXOP_COMPONENT_NONE;
-    /* set_int(), set_float(), and native-stem string extraction release a
-     * reference payload and finalize any host-owned native payload before
-     * assigning the result component.  Typed copies deliberately do not.
-     * Ordinary binary data is a separate component and is not cleared. */
-    if (opcode == OP_LOAD_REG_INT || opcode == OP_LOAD_REG_FLOAT ||
-        opcode == OP_LOAD_REG_STRING ||
-        (opcode >= OP_IADD_REG_REG_REG && opcode <= OP_IMOD_REG_INT_REG) ||
-        (opcode >= OP_IEQ_REG_REG_REG &&
-         opcode <= OP_SLTE_REG_STRING_REG) ||
-        (opcode >= OP_FEQ_REG_REG_REG &&
-         opcode <= OP_FLTE_REG_FLOAT_REG) ||
-        (opcode >= OP_DEQ_REG_REG_REG &&
-         opcode <= OP_DLTE_REG_DECIMAL_REG) ||
-        opcode == OP_BINEQ_REG_REG_REG ||
-        opcode == OP_BINEQ_REG_REG_BINARY ||
-        opcode == OP_BINNE_REG_REG_REG ||
-        opcode == OP_BINNE_REG_REG_BINARY ||
-        opcode == OP_STEMGET_REG_REG_REG ||
-        opcode == OP_STEMGET2_REG_REG_REG_REG ||
-        opcode == OP_STEMKEYAT_REG_REG_REG ||
-        opcode == OP_STEMVALUEAT_REG_REG_REG ||
-        opcode == OP_STEMSIZE_REG_REG ||
-        opcode == OP_PGETI_REG_REG_REG ||
-        opcode == OP_PGETF_REG_REG_REG ||
-        (opcode >= OP_REQ_REG_REG_REG &&
-         opcode <= OP_RLTE_REG_STRING_REG))
+    /* The owning row names the implementation, not a result-type range.
+     * This also covers setters at non-first explicit operands. */
+    if (rxop_value_writer(opcode, operand_index) == RXOP_VALUE_WRITER_SETTER)
         return RXOP_COMPONENT_REFERENCE |
                RXOP_COMPONENT_NATIVE_PAYLOAD;
     return RXOP_COMPONENT_NONE;
@@ -933,6 +989,47 @@ unsigned int rxop_context_writes(int opcode) {
     return RXOP_CONTEXT_NONE;
 }
 
+int rxop_scoped_diagnostics(void) {
+    /* Matching current VM semantics interleave committed logical scopes in
+     * the existing detached diagnostic walker. See INLINE_SCOPES contract. */
+    return 1;
+}
+
+int rxop_residual_observable(int opcode) {
+    RxOpEffects effects = rxop_effects(opcode);
+    RxOpSignalContract signal = rxop_signal_contract(opcode);
+    size_t i, count;
+    if (effects.state != RXOP_EFFECT_CLASSIFIED) return 1;
+    if (effects.semantics != RXOP_SEM_NONE ||
+        effects.flow != FLOW_NEXT || signal.state != RXOP_SIGNAL_STATE_NONE ||
+        signal.policy_effect != RXOP_POLICY_EFFECT_NONE ||
+        rxop_binding_action(opcode) != RXOP_BINDING_NONE ||
+        rxop_context_write_mask(opcode) != RXOP_CONTEXT_READ_NONE ||
+        rxop_observation_mask(opcode) != RXOP_ACTIVATION_NONE)
+        return 1;
+    count = rxop_format_operand_count(op_table[opcode].format);
+    for (i = 0; i < count; ++i)
+        if (rxop_component_clears(opcode, i) &
+            (RXOP_COMPONENT_REFERENCE | RXOP_COMPONENT_NATIVE_PAYLOAD)) return 1;
+    return 0;
+}
+
+RxOpSelectionContract rxop_selection_contract(int opcode) {
+    RxOpSelectionContract selection = { RXOP_SELECTION_NONE, 0, 0, 0, 0, 0 };
+    switch (opcode) {
+        case OP_SRCMETHODSEL_REG_REG_STRING:
+            selection.kind = RXOP_SELECTION_METHOD;
+            selection.result_operand = 1; selection.descriptor_operand = 3;
+            selection.receiver_operand = 2; break;
+        case OP_SRCFPROCSEL_REG_STRING_REG:
+            selection.kind = RXOP_SELECTION_FACTORY;
+            selection.result_operand = 1; selection.descriptor_operand = 2;
+            selection.count_operand = 3; selection.window_operand = 3; break;
+        default: break;
+    }
+    return selection;
+}
+
 RxOpCallContract rxop_call_contract(int opcode) {
     RxOpCallContract call = { RXOP_CALL_NONE, 0, 0, 0, 0, "", "", 1, 1 };
     switch (opcode) {
@@ -963,10 +1060,14 @@ RxOpCallContract rxop_call_contract(int opcode) {
             call.kind = RXOP_CALL_DYNAMIC; call.target_operand = 2;
             call.result_operand = 1; call.count_operand = 3;
             call.window_operand = 3; break;
-        case OP_SRCFPROCSEL_REG_STRING_REG:
-            call.kind = RXOP_CALL_FACTORY; call.target_operand = 2;
-            call.result_operand = 1; call.count_operand = 3;
-            call.window_operand = 3; break;
+        case OP_SRCFPROCSEL_REG_STRING_REG: {
+            RxOpSelectionContract selection = rxop_selection_contract(opcode);
+            call.kind = RXOP_CALL_FACTORY;
+            call.target_operand = selection.descriptor_operand;
+            call.result_operand = selection.result_operand;
+            call.count_operand = selection.count_operand;
+            call.window_operand = selection.window_operand; break;
+        }
         case OP_CALL1_REG_FUNC_REG:
         case OP_CALL2_REG_FUNC_REG_REG:
         case OP_CALL3_REG_FUNC_REG_REG_REG:
@@ -981,6 +1082,400 @@ RxOpCallContract rxop_call_contract(int opcode) {
         default: break;
     }
     return call;
+}
+
+int rxop_call_invokes(int opcode) {
+    RxOpCallKind kind = rxop_call_contract(opcode).kind;
+    return kind == RXOP_CALL_DIRECT || kind == RXOP_CALL_DYNAMIC;
+}
+
+int rxop_call_variant(int opcode, size_t count) {
+    static const int fixed[] = {0, OP_CALL1_REG_FUNC_REG,
+        OP_CALL2_REG_FUNC_REG_REG, OP_CALL3_REG_FUNC_REG_REG_REG,
+        OP_CALL4_REG_FUNC_REG_REG_REG_REG};
+    RxOpCallContract call = rxop_call_contract(opcode);
+    if (count > 4u || call.kind != RXOP_CALL_DIRECT ||
+        call.result_operand != 1u || call.prefix[0]) return 0;
+    if (call.actual_operands[0]) return fixed[count];
+    /* Fixed CALL1--4 capture pointers before initialization. Counted forms
+     * capture afterwards. Zero-actual CALL additionally clears its result
+     * before ingress, unlike counted zero. Neither conversion is equivalent
+     * without a separate site proof, so preserve the counted form. */
+    return 0;
+}
+
+unsigned int rxop_selection_window_components(int opcode) {
+    /* A context-wide factory match procedure receives the actual values and
+     * can inspect more than their static type/status. No provider-universe
+     * theorem is implied by this complete conservative input observation. */
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return RXOP_COMPONENT_ALL;
+    return rxop_selection_contract(opcode).kind == RXOP_SELECTION_FACTORY
+            ? RXOP_COMPONENT_ALL : RXOP_COMPONENT_NONE;
+}
+
+int rxop_selection_callbacks(int opcode) {
+    return rxop_selection_contract(opcode).kind == RXOP_SELECTION_FACTORY;
+}
+
+int rxop_host_callbacks(int opcode) {
+    switch (opcode) {
+        case OP_SAY_REG: case OP_SAYX_REG: case OP_SAYX_STRING:
+        case OP_SAY_INT: case OP_SAY_FLOAT: case OP_SAY_STRING:
+        case OP_SAY_CHAR: return 1;
+        default: return 0;
+    }
+}
+
+int rxop_intrinsic_value_footprint_is_known(int opcode) {
+    /* SAY/SAYX read only their typed scalar operand (or constant pool) before
+     * entering rxvm_say_write/rxvm_mprintf. They perform no intrinsic value
+     * write. Legacy byte exits may reenter: retain host callbacks, signals,
+     * opaque optimizer barriers and the observable external output. */
+    switch (opcode) {
+        case OP_SAY_REG: case OP_SAYX_REG: case OP_SAYX_STRING:
+        case OP_SAY_INT: case OP_SAY_FLOAT: case OP_SAY_STRING:
+        case OP_SAY_CHAR: return 1;
+        default: return 0;
+    }
+}
+
+int rxop_abi_callbacks(int opcode) {
+    /* Hidden caller-result and owned-frame cleanup can copy/finalize payloads.
+     * Their absence needs an activation-specific storage proof; no explicit
+     * output operand is not a no-hook theorem. */
+    return opcode == OP_INLENTER_REG_FUNC_STRING_ID ||
+           rxop_return_kind(opcode) == 2 || rxop_return_kind(opcode) == 5;
+}
+
+int rxop_departure_callbacks(int opcode) {
+    /* Immediate/void returns do not copy a result payload, but frame cleanup
+     * can finalize owned backing. A physical root can also copy/free external
+     * arguments. A site proof may discharge these separate obligations for an
+     * ordinary zero-local callee with a parent; the opcode alone cannot. */
+    return !!(rxop_effects(opcode).semantics & RXOP_SEM_RETURN);
+}
+
+/* Hidden ABI ordering mirrors rxvm_inline_scope_stage/commit/leave and the
+ * ordinary RET handlers. These rows are effect descriptions, never authority
+ * that a particular activation, storage identity or callback is safe. */
+#define ABI_STEP(OP, POINT, SRC, DEST, SE, DE, RULE, REPEAT) \
+    { RXOP_ABI_##OP, RXOP_ABI_##POINT, RXOP_ABI_##SRC, RXOP_ABI_##DEST, \
+      RXOP_ABI_##SE, RXOP_ABI_##DE, RXOP_ABI_##RULE, RXOP_ABI_##REPEAT }
+/* OWNED_BEGIN..OWNED_END repeats the two-row body per slot, in native
+ * order: release+clear slot0, restore slot0, then release+clear slot1, etc. */
+#define ABI_LEAVE_ROWS \
+    ABI_STEP(RESTORE_POLICY, LEAVE_POLICY, SAVED_POLICY, ACTIVE_POLICY, EXTENT_NONE, EXTENT_NONE, COMMITTED_SCOPE, ONCE), \
+    ABI_STEP(CLEAR_STORAGE, LEAVE_CLEAR, ROLE_NONE, SCOPE_ORIGINAL_BACKING, EXTENT_NONE, FULL_CAPACITY, COMMITTED_SCOPE, OWNED_BEGIN), \
+    ABI_STEP(RESTORE_SLOT, LEAVE_RESTORE, SAVED_SLOT, OWNED_SLOT, EXTENT_NONE, EXTENT_NONE, COMMITTED_SCOPE, OWNED_END), \
+    ABI_STEP(RESTORE_NUMERIC, LEAVE_NUMERIC, SAVED_NUMERIC, ACTIVE_NUMERIC, EXTENT_NONE, EXTENT_NONE, COMMITTED_SCOPE, ONCE), \
+    ABI_STEP(POP_SCOPE, LEAVE_POP, SCOPE_CONTEXT, PREVIOUS_SCOPE, EXTENT_NONE, EXTENT_NONE, COMMITTED_SCOPE, ONCE)
+#define ABI_PHYSICAL_ROWS \
+    ABI_STEP(RESTORE_NUMERIC, PHYSICAL_NUMERIC, PARENT_NUMERIC, ACTIVE_NUMERIC, EXTENT_NONE, EXTENT_NONE, INTERNAL_PARENT, ONCE), \
+    ABI_STEP(RETIRE_FRAME, PHYSICAL_RETIRE, PHYSICAL_FRAME, ROLE_NONE, EXTENT_NONE, EXTENT_NONE, INTERNAL_PARENT, ONCE)
+#define ABI_RESULT_REGISTER \
+    ABI_STEP(RETURN_REGISTER, RETURN_RESULT, RETURN_ACTIVE, CAPTURED_RESULT, ACTIVE_TREE, FULL_CAPACITY, OWNED_BASE_MOVE_ELSE_COPY, ONCE)
+#define ABI_RESULT_INTEGER \
+    ABI_STEP(RETURN_INTEGER, RETURN_RESULT, RETURN_LITERAL, CAPTURED_RESULT, EXTENT_NONE, EXTENT_NONE, RESULT_PRESENT, ONCE)
+#define ABI_RESULT_FLOAT \
+    ABI_STEP(RETURN_FLOAT, RETURN_RESULT, RETURN_LITERAL, CAPTURED_RESULT, EXTENT_NONE, EXTENT_NONE, RESULT_PRESENT, ONCE)
+#define ABI_RESULT_STRING \
+    ABI_STEP(RETURN_STRING, RETURN_RESULT, RETURN_LITERAL, CAPTURED_RESULT, EXTENT_NONE, TOP, RESULT_PRESENT, ONCE)
+static const RxOpAbiStep abi_entry[] = {
+    ABI_STEP(CAPTURE_POINTERS, ENTRY_CAPTURE, RECIPE_CAPTURES, SCOPE_CAPTURES, EXTENT_NONE, EXTENT_NONE, VALIDATED_STAGE, ONCE),
+    ABI_STEP(CLEAR_STORAGE, ENTRY_PRECLEAR, ROLE_NONE, RECIPE_ORIGINAL_BACKING, EXTENT_NONE, FULL_CAPACITY, SUCCESSFUL_ENTRY, EACH_OWNED),
+    ABI_STEP(PUBLISH_SCOPE, ENTRY_PUBLISH, SCOPE_CAPTURES, SCOPE_CONTEXT, EXTENT_NONE, EXTENT_NONE, SUCCESSFUL_ENTRY, ONCE),
+    ABI_STEP(SET_INTEGER, ENTRY_A0, CAPTURED_COUNT, A0_ORIGINAL_BACKING, EXTENT_NONE, TOP, COMMITTED_SCOPE, ONCE),
+    ABI_STEP(BIND_PROXY, ENTRY_PROXIES, CAPTURED_ARGUMENT, RECIPE_PROXY_SLOT, EXTENT_NONE, EXTENT_NONE, ARGUMENT_PRESENT, EACH_PROXY)
+};
+static const RxOpAbiStep abi_leave[] = { ABI_LEAVE_ROWS };
+static const RxOpAbiStep abi_scoped_register[] = { ABI_RESULT_REGISTER, ABI_LEAVE_ROWS };
+static const RxOpAbiStep abi_scoped_integer[] = { ABI_RESULT_INTEGER, ABI_LEAVE_ROWS };
+static const RxOpAbiStep abi_scoped_float[] = { ABI_RESULT_FLOAT, ABI_LEAVE_ROWS };
+static const RxOpAbiStep abi_scoped_string[] = { ABI_RESULT_STRING, ABI_LEAVE_ROWS };
+/* RET_VOID does not execute the explicit parent decimal synchronization that
+ * the value-return handlers execute. Frame retirement retains owned capacity. */
+static const RxOpAbiStep abi_physical_void[] = {
+    ABI_STEP(RETIRE_FRAME, PHYSICAL_RETIRE, PHYSICAL_FRAME, ROLE_NONE, EXTENT_NONE, EXTENT_NONE, INTERNAL_PARENT, ONCE)
+};
+static const RxOpAbiStep abi_physical_register[] = { ABI_RESULT_REGISTER, ABI_PHYSICAL_ROWS };
+static const RxOpAbiStep abi_physical_integer[] = { ABI_RESULT_INTEGER, ABI_PHYSICAL_ROWS };
+static const RxOpAbiStep abi_physical_float[] = { ABI_RESULT_FLOAT, ABI_PHYSICAL_ROWS };
+static const RxOpAbiStep abi_physical_string[] = { ABI_RESULT_STRING, ABI_PHYSICAL_ROWS };
+/* A nested signal return/unwind retires through free_frame(), without the
+ * ordinary value-return setter or parent decimal synchronization. INTERNAL_PARENT
+ * is an executable premise: raw-root copyback/external-argument destruction
+ * remains unrepresented, and must not borrow this nested retirement row. */
+static const RxOpAbiStep abi_nested_unwind[] = {
+    ABI_STEP(RETIRE_FRAME, PHYSICAL_RETIRE, PHYSICAL_FRAME, ROLE_NONE, EXTENT_NONE, EXTENT_NONE, INTERNAL_PARENT, ONCE)
+};
+#undef ABI_RESULT_STRING
+#undef ABI_RESULT_FLOAT
+#undef ABI_RESULT_INTEGER
+#undef ABI_RESULT_REGISTER
+#undef ABI_PHYSICAL_ROWS
+#undef ABI_LEAVE_ROWS
+#undef ABI_STEP
+
+RxOpAbiContract rxop_abi_contract(int opcode, RxOpAbiMode mode) {
+    RxOpAbiContract result = { RXOP_ABI_UNKNOWN, NULL, 0u };
+    int kind;
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS ||
+        (unsigned int)mode >= RXOP_ABI_MODE_COUNT) return result;
+    /* The explicit INLENTER recipe/ABI contract is independent of its still
+     * conservative ordinary operand-effects inventory. Knowing these hidden
+     * phases does not classify its normal scalar writes or failure paths. */
+    if (rxop_effects(opcode).state != RXOP_EFFECT_CLASSIFIED &&
+        opcode != OP_INLENTER_REG_FUNC_STRING_ID) return result;
+    result.state = RXOP_ABI_NONE;
+#define ABI_CONTRACT(TABLE) do { result.state = RXOP_ABI_KNOWN; result.steps = TABLE; result.count = sizeof(TABLE) / sizeof((TABLE)[0]); return result; } while (0)
+    if (mode == RXOP_ABI_FRAME_UNWIND) ABI_CONTRACT(abi_nested_unwind);
+    if (mode == RXOP_ABI_SCOPE_LEAVE) ABI_CONTRACT(abi_leave);
+    if (mode == RXOP_ABI_ENTRY) {
+        if (opcode == OP_INLENTER_REG_FUNC_STRING_ID) ABI_CONTRACT(abi_entry);
+        return result;
+    }
+    kind = rxop_return_kind(opcode);
+    if (!kind) return result;
+    if (mode == RXOP_ABI_SCOPED_RETURN) {
+        switch (kind) {
+            case 1: ABI_CONTRACT(abi_leave);
+            case 2: ABI_CONTRACT(abi_scoped_register);
+            case 3: ABI_CONTRACT(abi_scoped_integer);
+            case 4: ABI_CONTRACT(abi_scoped_float);
+            case 5: ABI_CONTRACT(abi_scoped_string);
+            default: result.state = RXOP_ABI_UNKNOWN; return result;
+        }
+    }
+    switch (kind) {
+        case 1: ABI_CONTRACT(abi_physical_void);
+        case 2: ABI_CONTRACT(abi_physical_register);
+        case 3: ABI_CONTRACT(abi_physical_integer);
+        case 4: ABI_CONTRACT(abi_physical_float);
+        case 5: ABI_CONTRACT(abi_physical_string);
+        default: result.state = RXOP_ABI_UNKNOWN; return result;
+    }
+#undef ABI_CONTRACT
+}
+
+const char *rxop_abi_state_name(RxOpAbiState value) {
+    static const char *const names[] = { "none", "known", "unknown" };
+    return (unsigned int)value < sizeof(names) / sizeof(names[0]) ? names[value] : "unknown";
+}
+const char *rxop_abi_mode_name(RxOpAbiMode value) {
+    static const char *const names[] = { "entry", "physical-return", "scoped-return", "scope-leave", "frame-unwind" };
+    return (unsigned int)value < sizeof(names) / sizeof(names[0]) ? names[value] : "unknown";
+}
+const char *rxop_abi_operation_name(RxOpAbiOperation value) {
+    static const char *const names[] = { "capture-pointers", "clear-storage", "publish-scope", "set-integer", "bind-proxy", "return-register", "return-integer", "return-float", "return-string", "restore-policy", "restore-slot", "restore-numeric", "pop-scope", "retire-frame" };
+    return (unsigned int)value < sizeof(names) / sizeof(names[0]) ? names[value] : "unknown";
+}
+const char *rxop_abi_checkpoint_name(RxOpAbiCheckpoint value) {
+    static const char *const names[] = { "entry-after-prep-before-init", "entry-before-commit", "entry-publish", "entry-a0", "entry-proxies", "return-before-result", "leave-policy", "leave-owned-clear", "leave-owned-restore", "leave-numeric", "leave-pop", "physical-retire", "physical-numeric" };
+    return (unsigned int)value < sizeof(names) / sizeof(names[0]) ? names[value] : "unknown";
+}
+const char *rxop_abi_role_name(RxOpAbiRole value) {
+    static const char *const names[] = { "none", "recipe-captures", "scope-captures", "recipe-original-backing", "scope-context", "previous-scope", "captured-count", "a0-original-backing", "captured-argument", "recipe-proxy-slot", "return-active", "return-literal", "captured-result", "saved-policy", "active-policy", "scope-original-backing", "saved-slot", "owned-slot", "saved-numeric", "active-numeric", "physical-frame", "parent-numeric" };
+    return (unsigned int)value < sizeof(names) / sizeof(names[0]) ? names[value] : "unknown";
+}
+const char *rxop_abi_extent_name(RxOpAbiExtent value) {
+    static const char *const names[] = { "none", "top", "active-tree", "full-capacity" };
+    return (unsigned int)value < sizeof(names) / sizeof(names[0]) ? names[value] : "unknown";
+}
+const char *rxop_abi_rule_name(RxOpAbiRule value) {
+    static const char *const names[] = { "successful-entry", "committed-scope", "result-present", "owned-base-move-else-copy", "internal-parent", "argument-present", "validated-stage" };
+    return (unsigned int)value < sizeof(names) / sizeof(names[0]) ? names[value] : "unknown";
+}
+const char *rxop_abi_repeat_name(RxOpAbiRepeat value) {
+    static const char *const names[] = { "once", "each-owned", "owned-begin", "owned-end", "each-proxy" };
+    return (unsigned int)value < sizeof(names) / sizeof(names[0]) ? names[value] : "unknown";
+}
+
+static int callback_binding_only(int opcode) {
+    const char *recipe = rxop_binding_recipe(opcode);
+    if (!recipe || !*recipe) return 0;
+    /* These reviewed recipe primitives change pointers or raw scalar/status
+     * fields without value copy/release hooks. Resize, setters, references and
+     * lifetime verbs deliberately remain unproved. Whole-op routes are unioned
+     * separately: a pointer-only call prefix never certifies its invocation. */
+    while (*recipe) {
+        const char *end = strchr(recipe, ';');
+        const char *colon = strchr(recipe, ':');
+        size_t n;
+        if (!end) end = recipe + strlen(recipe);
+        if (!colon || colon >= end) return 0;
+        n = (size_t)(colon - recipe);
+        if (!((n == 4u && !memcmp(recipe, "link", n)) ||
+              (n == 6u && !memcmp(recipe, "unlink", n)) ||
+              (n == 4u && !memcmp(recipe, "swap", n)) ||
+              (n == 9u && !memcmp(recipe, "linkindex", n)) ||
+              (n == 12u && !memcmp(recipe, "linkindexreg", n)) ||
+              (n == 8u && !memcmp(recipe, "argument", n)) ||
+              (n == 11u && !memcmp(recipe, "argumentadd", n)) ||
+              (n == 16u && !memcmp(recipe, "capturedargument", n)) ||
+              (n == 15u && !memcmp(recipe, "qualifiedglobal", n)) ||
+              (n == 6u && !memcmp(recipe, "branch", n)) ||
+              (n == 5u && !memcmp(recipe, "flags", n)) ||
+              (n == 5u && !memcmp(recipe, "icopy", n)) ||
+              (n == 10u && !memcmp(recipe, "captureint", n)) ||
+              (n == 6u && !memcmp(recipe, "putint", n)) ||
+              (n == 9u && !memcmp(recipe, "attribute", n)) ||
+              (n == 10u && !memcmp(recipe, "attribute1", n)) ||
+              (n == 15u && !memcmp(recipe, "linktoattribute", n)) ||
+              (n == 16u && !memcmp(recipe, "linktoattribute1", n)) ||
+              (n == 15u && !memcmp(recipe, "unlinkattribute", n)) ||
+              (n == 16u && !memcmp(recipe, "unlinkattribute1", n)))) return 0;
+        recipe = *end ? end + 1 : end;
+    }
+    return 1;
+}
+
+unsigned int rxop_callback_inputs(int opcode, size_t operand_index) {
+    unsigned int source = rxop_transport_source_operand(opcode);
+    if (callback_binding_only(opcode)) return RXOP_COMPONENT_NONE;
+    if (source && operand_index + 1u == source) {
+        unsigned int components = rxop_transport_components(opcode);
+        /* BCOPY carries native binary ownership through copy_binary_value,
+         * even though its ordinary component transport is named BINARY. */
+        if (components & RXOP_COMPONENT_BINARY) components |= RXOP_COMPONENT_NATIVE_PAYLOAD;
+        return components & (RXOP_COMPONENT_NATIVE_PAYLOAD | RXOP_COMPONENT_ATTRIBUTE_COUNT);
+    }
+    return RXOP_COMPONENT_NONE;
+}
+
+unsigned int rxop_callback_outputs(int opcode, size_t operand_index) {
+    RxOpEffects effects = rxop_effects(opcode);
+    unsigned int changed;
+    if (callback_binding_only(opcode) ||
+        !rxop_effect_writes_operand(&effects, operand_index)) return RXOP_COMPONENT_NONE;
+    changed = rxop_component_writes(opcode, operand_index) |
+              rxop_component_clears(opcode, operand_index);
+    /* Binding-only operations change pointers, not their pointees. Unknown
+     * value writers and lifetime/compound operations cannot claim no hooks. */
+    if ((rxop_value_writer(opcode, operand_index) == RXOP_VALUE_WRITER_UNKNOWN ||
+         !rxop_component_write_is_known(opcode, operand_index)) &&
+        (rxop_binding_action(opcode) == RXOP_BINDING_NONE ||
+         rxop_binding_action(opcode) == RXOP_BINDING_COMPOUND ||
+         rxop_binding_action(opcode) == RXOP_BINDING_LIFETIME))
+        changed = RXOP_COMPONENT_ALL;
+    /* Binary-buffer replacement can release a native payload even where its
+     * optional precise clear projection only describes ordinary binary data. */
+    if (changed & RXOP_COMPONENT_BINARY) changed |= RXOP_COMPONENT_NATIVE_PAYLOAD;
+    return changed & (RXOP_COMPONENT_NATIVE_PAYLOAD | RXOP_COMPONENT_ATTRIBUTE_COUNT);
+}
+
+int rxop_callback_capacity(int opcode, size_t operand_index) {
+    unsigned int resources = rxop_callback_outputs(opcode, operand_index);
+    if (!(resources & RXOP_COMPONENT_ATTRIBUTE_COUNT)) return 0;
+    /* This is an implementation theorem, not a component-clear theorem.
+     * value_zero visits active children only. COPY/MOVE/resize can touch
+     * retained inactive capacity even when their semantic clear mask is ALL. */
+    if (opcode == OP_NULL_REG || opcode == OP_NULLN_REG_REG ||
+        opcode == OP_NULLN_REG_REG_REG || opcode == OP_NULLN_REG_REG_REG_REG)
+        return 0;
+    if (operand_index == 0 &&
+        (rxop_selection_contract(opcode).kind != RXOP_SELECTION_NONE ||
+         opcode == OP_SETOBJUNINIT_REG_STRING || opcode == OP_TYPEOF_REG_REG ||
+         opcode == OP_ISTYPE_REG_REG_STRING || opcode == OP_ISINITIALIZED_REG_REG))
+        return 0;
+    return 1;
+}
+
+unsigned int rxop_callback_obligations(int opcode) {
+    RxOpEffects effects = rxop_effects(opcode);
+    unsigned int result = RXOP_CALLBACK_NONE;
+    size_t operand, count;
+    int pure_binding;
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS)
+        return RXOP_CALLBACK_UNKNOWN;
+    /* A call prefix may itself contain only pointer verbs. That does not
+     * describe the invocation or its hidden result/cleanup work. Exempt only
+     * a complete pointer-only operation, never the whole-op callback routes. */
+    pure_binding = callback_binding_only(opcode) && !rxop_call_invokes(opcode) &&
+            !rxop_selection_callbacks(opcode) && !rxop_host_callbacks(opcode) &&
+            !rxop_abi_callbacks(opcode) && !rxop_departure_callbacks(opcode);
+    if ((!effects.callback_inventory_complete && !pure_binding) ||
+        effects.state != RXOP_EFFECT_CLASSIFIED)
+        result |= RXOP_CALLBACK_UNKNOWN;
+    count = rxop_format_operand_count(op_table[opcode].format);
+    for (operand = 0; operand < count; operand++) {
+        if (rxop_callback_inputs(opcode, operand)) result |= RXOP_CALLBACK_INPUT;
+        if (rxop_callback_outputs(opcode, operand)) result |= RXOP_CALLBACK_OUTPUT;
+        if (rxop_callback_capacity(opcode, operand)) result |= RXOP_CALLBACK_CAPACITY;
+    }
+    if (rxop_selection_callbacks(opcode)) result |= RXOP_CALLBACK_SELECTION;
+    if (rxop_host_callbacks(opcode)) result |= RXOP_CALLBACK_HOST;
+    if (rxop_abi_callbacks(opcode)) result |= RXOP_CALLBACK_ABI;
+    if (rxop_departure_callbacks(opcode)) result |= RXOP_CALLBACK_DEPARTURE;
+    if (rxop_call_invokes(opcode)) result |= RXOP_CALLBACK_INVOCATION;
+    return result;
+}
+
+int rxop_callback_normal_preserves_frame(int opcode) {
+    unsigned int obligations = rxop_callback_obligations(opcode);
+    unsigned int resources = RXOP_CALLBACK_INPUT | RXOP_CALLBACK_OUTPUT | RXOP_CALLBACK_CAPACITY;
+    return obligations != RXOP_CALLBACK_NONE && !(obligations & ~resources);
+}
+
+unsigned int rxop_callback_postwrite_operand(int opcode) {
+    RxOpEffects effects = rxop_effects(opcode);
+    const char *recipe;
+    size_t operand, count;
+    unsigned int receiver = 0;
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS ||
+        effects.state != RXOP_EFFECT_CLASSIFIED ||
+        !effects.callback_inventory_complete ||
+        effects.implicit != RXOP_IMPLICIT_NONE ||
+        effects.semantics != RXOP_SEM_NONE ||
+        rxop_callback_obligations(opcode) != RXOP_CALLBACK_OUTPUT)
+        return 0;
+    recipe = rxop_binding_recipe(opcode);
+    if (!recipe || *recipe) return 0;
+    count = rxop_format_operand_count(op_table[opcode].format);
+    for (operand = 0; operand < count; operand++) {
+        unsigned int components;
+        if (!rxop_effect_writes_operand(&effects, operand)) continue;
+        components = rxop_component_writes(opcode, operand);
+        if (receiver || rxop_value_writer(opcode, operand) != RXOP_VALUE_WRITER_SETTER ||
+            !rxop_component_write_is_known(opcode, operand) ||
+            !components || (components & ~(RXOP_COMPONENT_INTEGER | RXOP_COMPONENT_FLOAT | RXOP_COMPONENT_STRING)))
+            return 0;
+        receiver = (unsigned int)operand + 1u;
+    }
+    return receiver;
+}
+
+RxOpSignalContract rxop_execution_signal_contract(int opcode) {
+    RxOpSignalContract result = rxop_signal_contract(opcode);
+    if (!rxop_callback_obligations(opcode)) return result;
+    /* Hooks may queue an interrupt through the public active-context API.
+     * Intrinsic BEFORE_WRITES does not locate that hook. Keep names and the
+     * checkpoint unknown; consumers must not resurrect pre-hook state. */
+    result.state = RXOP_SIGNAL_STATE_UNKNOWN;
+    result.phase = RXOP_SIGNAL_PHASE_UNKNOWN;
+    result.source = RXOP_SIGNAL_SOURCE_UNKNOWN;
+    result.source_operand = SIZE_MAX;
+    result.static_names = NULL;
+    result.failure_writes = RXOP_OP_ALL;
+    result.failure_writes_signature = NULL;
+    result.failure_component_writes = RXOP_COMPONENT_ALL;
+    result.failure_context_writes = RXOP_CONTEXT_NUMERIC;
+    result.dependencies |= RXOP_SIGNAL_DEP_UNKNOWN;
+    result.continuations = RXOP_SIGNAL_CONT_ALL;
+    result.properties &= ~RXOP_SIGNAL_PROP_SUCCESS_STABLE;
+    result.properties |= RXOP_SIGNAL_PROP_ADDRESS_OBSERVABLE |
+                         RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE |
+                         RXOP_SIGNAL_PROP_POLICY_WRITE;
+    result.policy_effect = RXOP_POLICY_EFFECT_UNKNOWN;
+    result.policy_source = RXOP_SIGNAL_SOURCE_UNKNOWN;
+    result.policy_source_operand = SIZE_MAX;
+    result.policy_static_name = NULL;
+    return result;
+}
+
+unsigned int rxop_call_target_components(int opcode) {
+    if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return RXOP_COMPONENT_ALL;
+    return rxop_call_contract(opcode).kind == RXOP_CALL_DYNAMIC
+            ? RXOP_COMPONENT_INTEGER : RXOP_COMPONENT_NONE;
 }
 
 const char *rxop_binding_recipe(int opcode) {
@@ -1228,14 +1723,20 @@ unsigned int rxop_observed_components(int opcode, size_t operand_index) {
      * typed use observes a component; copying a dirty but unused component
      * here is not itself a read-before-write. */
     if (opcode == OP_RET_REG) return RXOP_COMPONENT_NONE;
+    if (opcode == OP_SETOBJTYPE_REG_STRING || opcode == OP_SETOBJUNINIT_REG_STRING)
+        return RXOP_COMPONENT_NONE;
+    if (opcode == OP_ISINITIALIZED_REG_REG && operand_index == 1)
+        return RXOP_COMPONENT_NONE;
     /* The payload is copied whole into pending signal storage. Validation
      * observes the separate origin structure, not unused payload components. */
     if (opcode == OP_SIGNALORIGIN_STRING_REG_REG && operand_index == 1)
         return RXOP_COMPONENT_NONE;
-    if (call.kind != RXOP_CALL_NONE) {
+    if (rxop_selection_contract(opcode).kind != RXOP_SELECTION_NONE)
+        return rxop_component_reads(opcode, operand_index);
+    if (rxop_call_invokes(opcode)) {
         if (operand_index + 1 == call.count_operand) return RXOP_COMPONENT_INTEGER;
-        if (call.kind == RXOP_CALL_DYNAMIC && operand_index + 1 == call.target_operand)
-            return RXOP_COMPONENT_STRING;
+        if (operand_index + 1 == call.target_operand)
+            return rxop_call_target_components(opcode);
         /* Passing a value pointer transports it. The selected callee owns
          * its typed observations; arguments are not unconditional whole-value
          * observations in the caller. */
@@ -1261,6 +1762,9 @@ unsigned int rxop_observed_components(int opcode, size_t operand_index) {
 }
 
 uint32_t rxop_observed_flags(int opcode, size_t operand_index) {
+    RxOpSelectionContract selection = rxop_selection_contract(opcode);
+    if (selection.receiver_operand && operand_index + 1 == selection.receiver_operand)
+        return RXFLAG_VM_OBJECT_UNINITIALIZED;
     if (operand_index == 1 &&
         (opcode == OP_GETTP_REG_REG || opcode == OP_GETANDTP_REG_REG_INT ||
          opcode == OP_BRTPANDT_ID_REG_INT)) return RXFLAG_READABLE_MASK;
@@ -1355,6 +1859,8 @@ unsigned int rxop_literal_components(int opcode) {
 
 unsigned int rxop_definition_components(int opcode, size_t operand_index) {
     RxOpEffects effects = rxop_effects(opcode);
+    if (operand_index == 0 && (opcode == OP_SETOBJTYPE_REG_STRING ||
+        opcode == OP_SETOBJUNINIT_REG_STRING)) return RXOP_COMPONENT_OBJECT_TYPE;
     if (effects.state != RXOP_EFFECT_CLASSIFIED ||
         operand_index >= rxop_format_operand_count(op_table[opcode].format) ||
         rxop_transport_source_operand(opcode) ||

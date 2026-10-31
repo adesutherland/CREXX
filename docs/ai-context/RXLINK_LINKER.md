@@ -151,6 +151,18 @@ distinct. Self-relative globals remain self-relative. Unsealed foreign operands,
 invalid ordinals and recipe/procedure disagreement are rejected before output
 publication rather than repaired by resealing.
 
+The optional inline service applies that same original-image identity rule
+before disassembling a previously sealed input or discovering its direct call
+bindings. It validates old recipe/procedure agreement and exact selected
+providers, then uses bounded private module views with rebased typed leaves;
+the input modules and ordinary binary constants remain unchanged. Existing
+procedure/metadata offsets and semantic graph operands stay owned by the input
+snapshot. Only the checked inline operand references in the private instruction
+view change. Missing or ambiguous old providers reject before invoking the
+service, and failed reprocessing preserves the prior output. A successful
+candidate is sealed against the final selected image, while an unchanged
+member still follows ordinary relocation from its original owner.
+
 ## What The Linker Reads From Metadata
 
 `rxlink` does not need all metadata equally:

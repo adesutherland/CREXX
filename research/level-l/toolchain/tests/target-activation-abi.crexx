@@ -1,0 +1,963 @@
+/* cREXX License (MIT). Independent contextual activation consumer controls.
+ * The independent premise is an algorithm control, not native RXAS admission. */
+options levelb
+import rxfnsb
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetsummary
+import lltargetremap
+import llrxascatalog
+
+check: procedure = .int
+  arg condition = .int, message = .string
+  if condition then return 0
+  say 'FAIL:' message
+  return 1
+
+run: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int; host = .int
+  draft = .lltarget..draft('activation.abi.' || mode,'fixture:activation.abi',0)
+  at = draft.synthetic('generic versus invocation-qualified ABI proof')
+  caller = draft.procedure('main',0,at)
+  fields = .object[]; fields[1] = .lltarget..operand.procedure('leaf') as .object
+  called = caller.emit('call',fields,at)
+  empty = .object[]; callerret = caller.emit('ret',empty,at)
+  leaf = draft.procedure('leaf',0,at)
+  if mode = 1 then do
+    fields[1] = .lltarget..operand.string('host' as .binary) as .object
+    host = leaf.emit('sayx',fields,at)
+  end
+  returned = leaf.emit('ret',empty,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'consumer source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  profile = .lltargettransfer..profile
+  if mode = 2 then profile = .lltargettransfer..profile(reference source)
+  else do
+    premise = .lltargettransfer..profiledraft(reference source,'independent.activation.abi.' || mode)
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() = 'procedure' then iterate
+      ignored = premise.operation(item.id())
+      ignored = premise.relocation(item.id(),'none')
+    end
+    targetref = premise.ref(called,1,'procedure','symbolic')
+    ignored = premise.event(called,'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.call')
+    ignored = premise.event(called,'call',0,0,'reference',targetref)
+    ignored = premise.event(callerret,'return',0,0)
+    ignored = premise.event(returned,'return',0,0)
+    ignored = premise.event(returned,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.departure')
+    if mode = 1 then ignored = premise.event(host,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.host')
+    profile = premise.finish()
+  end
+  failures = failures + check(profile.status() = 'ok','consumer profile builds ' || mode)
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','consumer flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  summaries = .lltargetsummary..analysis(reference flow)
+  failures = failures + check(summaries.status() = 'ok','consumer summary builds ' || mode)
+  if summaries.status() <> 'ok' then do; say summaries.reason(); return failures; end
+  generic = summaries.procedureactivation(source.procedureid('leaf'))
+  decision = summaries.activationequivalence(called)
+  if mode = 0 then do
+    failures = failures + check(generic.genericallowed() & generic.pending() > 0 & generic.allowed() = 0,'generic body proof explicitly defers ABI rather than granting activation')
+    invocation = flow.invocationat(called)
+    failures = failures + check(invocation.status() = 'proved','exact caller point supplies the invocation owner')
+    abi = flow.abicallbackat(returned,0,invocation)
+    failures = failures + check(abi.status() = 'proved' & abi.possible() = 0,'ordinary empty void callee has no result or backing hook in this checked premise')
+    failures = failures + check(decision.allowed() & decision.contexts() > 0 & decision.abiproofs() > 0,'final call permission retains invocation and ABI dependencies')
+    repeated = summaries.activationequivalence(called)
+    failures = failures + check(repeated.allowed() & repeated.context(1).identity() = decision.context(1).identity(),'same callid reuses the exact invocation cache')
+    raw = flow.abicallbackat(returned)
+    failures = failures + check(raw.possible(),'uncontextualized raw external ingress remains conservative')
+    outward = summaries.procedure(source.procedureid('leaf'),'direct')
+    effects = outward.effect('ownership','release')
+    failures = failures + check(effects.unknown(),'contextual permission does not erase generic outward uncertainty')
+    limited = .lltargetsummary..analysis(reference flow,1,1)
+    failures = failures + check(limited.status() = 'limit','tiny consumer budget refuses without partial permission')
+    saved = decision
+    summaries = .lltargetsummary..analysis(reference flow)
+    failures = failures + check(summaries.status() = 'ok','replacement summary materializes before stale-owner check')
+    failures = failures + check(saved.valid() = 0,'final activation expires with its exact summary owner')
+  end
+  else if mode = 1 then failures = failures + check(decision.allowed() = 0 & decision.reason() = 'target.activation.callback.context.unproved','invocation context cannot discharge a generic host observer')
+  else failures = failures + check(decision.allowed() = 0 & decision.reason() <> '','canonical inherited policy/physical cleanup uncertainty remains explicit')
+  return failures
+
+/** Direct substitution changes the identity of a pointer slot, not its
+ * pointee. Independent operational events keep that distinction observable
+ * even while the canonical diagnostic proof still selects scoped execution. */
+directmapping: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int; callerbinding = .int; globals = 0
+  operation = .string; fields = .object[]
+  if mode >= 8 then globals = 1
+  draft = .lltarget..draft('activation.mapping.' || mode,'fixture:activation.mapping',globals)
+  at = draft.synthetic('argument pointer slot versus borrowed pointee')
+  caller = draft.procedure('main',2,at)
+  if mode = 9 | mode = 11 then do
+    call objectarraydrop fields
+    fields[1] = caller.reg('g',0) as .object; fields[2] = caller.reg('r',0) as .object
+    operation = 'link'; if mode = 11 then operation = 'swap'
+    callerbinding = caller.emit(operation,fields,at)
+  end
+  call objectarraydrop fields
+  fields[1] = caller.reg('r',1) as .object
+  fields[2] = .lltarget..operand.procedure('leaf') as .object; fields[3] = caller.reg('r',0) as .object
+  if mode >= 8 then fields[3] = caller.reg('g',0) as .object
+  called = caller.emit('call1',fields,at)
+  empty = .object[]; callerret = caller.emit('ret',empty,at)
+  leaf = draft.procedure('leaf',1,at)
+  call objectarraydrop fields
+  fields[1] = leaf.reg('a',1) as .object; fields[2] = leaf.reg('r',0) as .object
+  if mode >= 8 then fields[1] = leaf.reg('g',0) as .object
+  if mode = 14 | mode = 15 then fields[1] = leaf.reg('r',0) as .object
+  operation = 'icopy'; recipe = ''
+  if mode = 1 then do; operation = 'link'; recipe = 'link:1:2'; end
+  if mode = 2 then do; operation = 'swap'; recipe = 'swap:1:2'; end
+  if mode = 3 then do
+    operation = 'link'; recipe = 'link:1:2'
+    fields[1] = leaf.reg('r',0) as .object; fields[2] = leaf.reg('a',1) as .object
+  end
+  if mode = 4 | mode = 5 then do
+    operation = 'link'; recipe = 'link:1:2'
+    if mode = 5 then do; operation = 'swap'; recipe = 'swap:1:2'; end
+    fields[2] = leaf.reg('a',1) as .object
+  end
+  if mode = 10 then do; operation = 'link'; recipe = 'link:1:2'; end
+  if mode = 12 then do; operation = 'swap'; recipe = 'swap:1:2'; end
+  if mode = 13 then do
+    operation = 'link'; recipe = 'link:1:2'; fields[2] = leaf.reg('g',0) as .object
+  end
+  changedslot = leaf.emit(operation,fields,at)
+  returned = leaf.emit('ret',empty,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'mapping source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  premise = .lltargettransfer..profiledraft(reference source,'independent.activation.mapping.' || mode)
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+  end
+  targetref = premise.ref(called,2,'procedure','symbolic')
+  resultref = premise.ref(called,1); actualref = premise.ref(called,3)
+  ignored = premise.event(called,'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.call')
+  ignored = premise.event(called,'call',0,0,'reference',targetref)
+  ignored = premise.event(callerret,'return',0,0); ignored = premise.event(returned,'return',0,0)
+  if callerbinding > 0 then do
+    recipebefore = 'link:1:2'; if mode = 11 then recipebefore = 'swap:1:2'
+    ignored = premise.binding(callerbinding,recipebefore)
+  end
+  if recipe <> '' then ignored = premise.binding(changedslot,recipe)
+  else do
+    anchor = 'active'; if mode = 6 then anchor = 'entry'
+    destination = premise.ref(changedslot,1,'explicit',anchor)
+    if mode = 14 then value = premise.ref(changedslot,2,'window','symbolic',1,3)
+    else if mode = 15 then value = premise.ref(changedslot,2,'window','symbolic',0,0)
+    else value = premise.ref(changedslot,2)
+    catalog = .llrxascatalog..catalog()
+    integer = premise.domain('component','fixture.mapping.integer',catalog.componentmask('I'))
+    ignored = premise.event(changedslot,'transport',destination,integer,'reference',value)
+    if mode = 7 then call premise.unknown(changedslot,'bindings','fixture.mapping.bindings.unknown')
+  end
+  profile = premise.finish(); cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','mapping flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  summaries = .lltargetsummary..analysis(reference flow)
+  permission = summaries.directactualmapping(called)
+  if mode = 1 | mode = 2 then failures = failures + check(permission.allowed() = 0 & permission.reason() = 'target.argument.mapping.binding.unproved','private argument pointer mutation needs a scoped mapping ' || mode)
+  else if mode = 9 | mode = 11 then failures = failures + check(permission.allowed() = 0 & permission.reason() = 'target.global.mapping.entry.unproved','caller global mapping differs from fresh callee module binding ' || mode)
+  else if mode = 10 | mode = 12 then failures = failures + check(permission.allowed() = 0 & permission.reason() = 'target.global.mapping.binding.unproved','callee private global pointer mutation needs a scoped mapping ' || mode)
+  else if mode = 14 then failures = failures + check(permission.allowed() = 0 & permission.reason() = 'target.global.mapping.window.unproved','interior module globals in a typed window require their binding proof')
+  else if mode = 15 then failures = failures + check(permission.allowed() = 0 & permission.reason() = 'target.argument.mapping.window.extent.unproved','unknown window extent never proves globals absent')
+  else if mode = 6 then failures = failures + check(permission.allowed() = 0 & permission.reason() = 'target.argument.mapping.anchor.unproved','entry identity cannot be replaced by an active caller reference')
+  else if mode = 7 then failures = failures + check(permission.allowed() = 0 & permission.reason() = 'fixture.mapping.bindings.unknown','unknown binding effects never certify direct substitution')
+  else failures = failures + check(permission.allowed(),'pointee mutation, local binding and identical-slot operations preserve direct arguments ' || mode)
+  if mode = 0 then do
+    limited = .lltargetsummary..analysis(reference flow,1,1)
+    refused = limited.directactualmapping(called)
+    failures = failures + check(refused.status() = 'limit' & refused.allowed() = 0,'mapping resource exhaustion cannot publish permission')
+    saved = permission; summaries = .lltargetsummary..analysis(reference flow)
+    failures = failures + check(summaries.status() = 'ok' & saved.valid() = 0,'mapping permission expires with its exact summary owner')
+  end
+  return failures
+
+/** Typed scope entry uses its actual recipe/ABI checkpoints. It does not
+ * acquire an additional callback from the ordinary result operand mask. */
+qualifiedbinding: procedure = .int
+  arg mode = 0
+  failures = 0; ignored = .int; i = .int; callbacks = .int; entrycallbacks = .int; entryabi = .int; entryresidual = .int
+  action = .lltargettransfer..action
+  draft = .lltarget..draft('activation.qualified','fixture:activation.qualified',1)
+  at = draft.synthetic('qualified global pointer binding in an existing scope')
+  root = draft.procedure('main',3,at)
+  fields = .object[]; fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  preparation = 'none'; if mode = 1 then preparation = 'clear(r2)'
+  fields[3] = .lltarget..operand.string(('count=0;args=list();a0=r0;proxies=();owned=(r0,r1);prep=' || preparation || ';result=ignored') as .binary) as .object
+  fields[4] = .lltarget..operand.symbol('after') as .object; entered = root.emit('inlenter',fields,at)
+  call objectarraydrop fields
+  fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.string('self' as .binary) as .object
+  fields[3] = .lltarget..operand.integer(0) as .object; bound = root.emit('qglobbind',fields,at)
+  empty = .object[]; ignored = root.emit('ret',empty,at)
+  call objectarraydrop fields
+  fields[1] = .lltarget..operand.symbol('after') as .object; ignored = root.record('label',fields,at)
+  ignored = root.emit('ret',empty,at)
+  leaf = draft.procedure('leaf',0,at); ignored = leaf.emit('ret',empty,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'qualified binding source validates')
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  profile = .lltargettransfer..profile.closedmain(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  row = profile.instruction(bound)
+  failures = failures + check(row.complete('effects') & row.complete('references') & row.complete('bindings') & row.complete('order') & row.complete('relocation') & row.complete('signals'),'qualified pointer binding has a complete canonical operational/remap contract')
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if action.kind() = 'callback' | action.kind() = 'external' then callbacks = callbacks + 1
+  end
+  failures = failures + check(callbacks = 0,'qualified pointer binding does not invent a value callback or opaque external write')
+  row = profile.instruction(entered)
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if action.kind() <> 'callback' then iterate
+    if action.detail() = 'catalog.callback.abi' then entryabi = entryabi + 1
+    else do
+      entrycallbacks = entrycallbacks + 1
+      if left(action.detail(),26) = 'catalog.callback.residual.' then entryresidual = entryresidual + 1
+    end
+  end
+  failures = failures + check(entrycallbacks = 1 & entryresidual = 1 & entryabi = 1,'typed scope entry keeps its checked ABI obligation and separate undischarged whole-operation inventory')
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  failures = failures + check(cfg.status() = 'ok' & cfg.scopeowner(bound) = entered,'qualified binding retains its exact existing logical scope owner')
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  summaries = .lltargetsummary..analysis(reference flow)
+  permission = summaries.procedureactivation(source.procedureid('main'))
+  failures = failures + check(permission.allowed() = 0 & permission.reason() <> '', 'undischarged callback policy and ABI obligations cannot authorize a canonical scope activation: ' || permission.reason())
+  entryproof = flow.abicallbackat(entered)
+  failures = failures + check(entryproof.possible() & entryproof.intrinsicreason() = 'target.abi.callback.residual.unproved','scope adapter cannot replace undischarged callback inventory with a freshness or preparation assumption ' || mode || ': ' || entryproof.intrinsicreason())
+  return failures
+
+/** Independent callback observations describe runtime inputs, not purity or
+ * a preservation conclusion. A possible hook retains its ordinary havoc. */
+pointprofile: procedure = .lltargettransfer..profile
+  arg owner = reference .lltarget..module, loads = .int[], callbacks = .int[], linked = .int, phase = .string, projection = .string
+  source = dereference owner; premise = .lltargettransfer..profiledraft(owner,'independent.callback.point.' || phase || '.' || projection)
+  ignored = .int; i = .int; subject = .int; observed = .int
+  catalog = .llrxascatalog..catalog()
+  string = premise.domain('component','fixture.callback.string',catalog.componentmask('S'))
+  integer = premise.domain('component','fixture.callback.integer',catalog.componentmask('I'))
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+  end
+  subject = premise.ref(loads[1],1)
+  ignored = premise.event(loads[1],'write',subject,string,'literal',0,.lltarget..operand.string('kept' as .binary))
+  subject = premise.ref(loads[2],1)
+  ignored = premise.event(loads[2],'write',subject,integer,'literal',0,.lltarget..operand.integer(17))
+  if linked > 0 then ignored = premise.binding(linked,'link:1:2')
+  do i = 1 to callbacks[0]
+    subject = premise.ref(callbacks[i],1); ignored = premise.ref(callbacks[i],2)
+    observed = string
+    if projection <> 'component' then do; subject = 0; observed = 0; end
+    ignored = premise.event(callbacks[i],'callback',subject,observed,'none',0,.lltarget..operand(),'may','all',phase,'fixture.callback',0,projection)
+  end
+  return premise.finish()
+
+callbackpoints: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int; linked = .int; integer = .int
+  loads = .int[]; callbacks = .int[]; fields = .object[]
+  draft = .lltarget..draft('callback.points.' || mode,'fixture:callback.points',0)
+  at = draft.synthetic('point-local component delta preserves explicit observations')
+  root = draft.procedure('main',2,at)
+  fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.string('kept' as .binary) as .object
+  loads[1] = root.emit('load',fields,at)
+  fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.integer(17) as .object
+  loads[2] = root.emit('load',fields,at)
+  if mode = 1 then do
+    fields[1] = root.reg('r',1) as .object; fields[2] = root.reg('r',0) as .object
+    linked = root.emit('link',fields,at)
+  end
+  fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object
+  callbacks[1] = root.emit('copy',fields,at)
+  empty = .object[]; ignored = root.emit('ret',empty,at)
+  other = draft.procedure('other',2,at)
+  fields[1] = other.reg('r',0) as .object; fields[2] = other.reg('r',1) as .object
+  callbacks[2] = other.emit('copy',fields,at); ignored = other.emit('ret',empty,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'callback point source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  projection = 'component'
+  if mode = 2 then projection = 'physical'
+  if mode = 3 then projection = 'unknown'
+  profile = pointprofile(reference source,loads,callbacks,linked,'before',projection)
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','callback point flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  point = flow.callbackat(callbacks[1],1); candidate = point
+  failures = failures + check(point.status() = 'proved' & point.possible(),'known callback point does not assert hook absence ' || mode)
+  if point.status() <> 'proved' then do; say point.reason(); return failures; end
+  catalog = .llrxascatalog..catalog()
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I') then integer = i
+  end
+  otherprofile = .lltargettransfer..profile; othercfg = .lltargetcfg..graph; otherflow = .lltargetflow..analysis
+  if mode = 4 then do
+    otherprofile = pointprofile(reference source,loads,callbacks,linked,'after',projection)
+    othercfg = .lltargetcfg..graph(reference source,reference otherprofile)
+    otherflow = .lltargetflow..analysis(reference source,reference otherprofile,reference othercfg)
+    candidate = otherflow.callbackat(callbacks[1],1)
+  end
+  if mode = 5 then candidate = flow.callbackat(callbacks[2],1)
+  summaries = .lltargetsummary..analysis(reference flow)
+  proof = summaries.callbackpreservation(point,candidate,'r',1,integer)
+  if mode = 0 then do
+    failures = failures + check(proof.preserved(),'r1 integer delta preserves the explicit r0 string observation at this checkpoint')
+    after = flow.storageat(callbacks[1],'r',0,1)
+    failures = failures + check(after.active() = 0 & flow.complete(source.procedureid('main'),'entry-normalization') = 0,'a preservation fact does not restore callback-clobbered bindings or normalization completeness')
+    limited = .lltargetsummary..analysis(reference flow,1,1)
+    refused = limited.callbackpreservation(point,point,'r',1,integer)
+    failures = failures + check(refused.status() = 'limit' & refused.preserved() = 0,'callback preservation respects its owning allowance')
+    otherflow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+    candidate = otherflow.callbackat(callbacks[1],1)
+    refused = summaries.callbackpreservation(point,candidate,'r',1,integer)
+    failures = failures + check(refused.reason() = 'target.callback.correspondence.required' & refused.preserved() = 0,'two flow owners require checked event correspondence')
+    operations = .int[]
+    do i = 1 to source.records()
+      item = source.record(i); operations[item.id()] = item.id()
+    end
+    mapping = .lltargetremap..correspondence(reference source,reference source,reference profile,reference profile,reference cfg,reference cfg,operations)
+    matched = summaries.callbackpreservation(point,candidate,'r',1,integer,reference mapping)
+    failures = failures + check(mapping.status() = 'proved' & matched.preserved(),'checked identity-copy correspondence relates actual points from both flow owners: ' || matched.reason())
+    candidateprofile = pointprofile(reference source,loads,callbacks,linked,'before',projection)
+    candidatecfg = .lltargetcfg..graph(reference source,reference candidateprofile)
+    wrong = .lltargetremap..correspondence(reference source,reference source,reference profile,reference candidateprofile,reference cfg,reference candidatecfg,operations)
+    refused = summaries.callbackpreservation(point,candidate,'r',1,integer,reference wrong)
+    failures = failures + check(wrong.status() = 'proved' & refused.status() = 'invalid' & refused.reason() = 'target.callback.correspondence.owner.mismatch' & refused.preserved() = 0,'equal event descriptions cannot substitute different profile or CFG owners: ' || wrong.status() || ':' || wrong.reason() || ' / ' || refused.status() || ':' || refused.reason())
+    saved = proof; flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+    ignoredstatus = flow.status()
+    failures = failures + check(point.valid() = 0 & saved.valid() = 0 & matched.valid() = 0,'callback point and both preservation proofs expire with their exact flow owner')
+    failures = failures + check(refused.status() = 'invalid' & refused.reason() = 'target.callback.preservation.owner.expired.or.replaced','an explicit owner-mismatch refusal becomes stale when its summary dependency expires')
+  end
+  else do
+    reason = 'target.callback.delta.alias.unproved'
+    if mode = 2 then reason = 'target.callback.physical.observation.unproved'
+    if mode = 3 then reason = 'target.callback.observation.projection.unproved'
+    if mode = 4 then reason = 'target.callback.phase.unproved'
+    if mode = 5 then reason = 'target.callback.activation.unproved'
+    failures = failures + check(proof.preserved() = 0 & proof.reason() = reason,'callback point mismatch retains its exact obligation ' || mode || ': ' || proof.reason())
+  end
+  return failures
+
+/** Coverage is independent of preserving one explicit callback projection.
+ * The unknown callback may rebind r1; its later read cannot disappear. */
+entrydemands: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int; callback = .int; later = .int; subject = .int
+  draft = .lltarget..draft('entry.demands.' || mode,'fixture:entry.demands',0)
+  at = draft.synthetic('complete dirty demands and explicit callback havoc holes')
+  root = draft.procedure('main',2,at); fields = .object[]; empty = .object[]
+  fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.string('kept' as .binary) as .object
+  loaded = root.emit('load',fields,at)
+  fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object
+  read = root.emit('copy',fields,at)
+  if mode <> 2 then do
+    call objectarraydrop fields; fields[1] = root.reg('r',0) as .object
+    callback = root.emit('say',fields,at)
+  end
+  if mode = 1 then do
+    fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object
+    later = root.emit('copy',fields,at)
+  end
+  ignored = root.emit('ret',empty,at); source = draft.finish()
+  failures = failures + check(source.valid(),'entry demand source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  premise = .lltargettransfer..profiledraft(reference source,'independent.entry.demands.' || mode)
+  catalog = .llrxascatalog..catalog()
+  integer = premise.domain('component','fixture.entry.integer',catalog.componentmask('I'))
+  string = premise.domain('component','fixture.entry.string',catalog.componentmask('S'))
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+  end
+  subject = premise.ref(loaded,1)
+  ignored = premise.event(loaded,'write',subject,string,'literal',0,.lltarget..operand.string('kept' as .binary))
+  subject = premise.ref(read,2)
+  if mode = 2 then do
+    ignored = premise.event(read,'observe',subject,integer,'none',0,.lltarget..operand(),'must','failure','partial')
+    ignored = premise.event(read,'edge',0,0,'none',0,.lltarget..operand(),'must','failure','before','terminal')
+  end
+  else do
+    ignored = premise.event(read,'observe',subject,integer)
+    subject = premise.ref(callback,1)
+    ignored = premise.event(callback,'callback',subject,string,'none',0,.lltarget..operand(),'may','all','before','fixture.callback',0,'component')
+  end
+  if mode = 1 then do
+    subject = premise.ref(later,2); ignored = premise.event(later,'observe',subject,integer)
+  end
+  profile = premise.finish(); cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  coverage = flow.entrycoverage(source.procedureid('main'))
+  failures = failures + check(flow.status() = 'ok','entry demand flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  if mode = 0 then do
+    failures = failures + check(coverage.complete() & coverage.demands() = 1 & coverage.unresolved() = 0,'known pre-callback dirty demand survives a separate callback-preservation veto: ' || coverage.reason())
+    demand = coverage.demand(1)
+    failures = failures + check(demand.operation() = read & demand.ownedindex() = 1 & demand.domain() = integer,'entry coverage retains the original dirty base and component')
+    failures = failures + check(flow.complete(source.procedureid('main'),'entry-normalization') = 0,'demand completeness does not grant unconditional callback normalization')
+    limitedflow = .lltargetflow..analysis(reference source,reference profile,reference cfg,1,1)
+    limitedcoverage = limitedflow.entrycoverage(source.procedureid('main'))
+    failures = failures + check(limitedcoverage.status() = 'limit' & limitedcoverage.complete() = 0,'exhaustive entry coverage respects its owning allowance')
+    flow = .lltargetflow..analysis(reference source,reference profile,reference cfg); ignoredstatus = flow.status()
+    failures = failures + check(coverage.complete() = 0 & coverage.status() = 'invalid','entry coverage expires with its exact flow owner')
+  end
+  else do
+    failures = failures + check(coverage.complete() = 0 & coverage.unresolved() & coverage.rows() > coverage.demands(),'unknown post-callback or possible exceptional read publishes an unresolved coverage row ' || mode || ': ' || coverage.reason())
+    row = coverage.row(coverage.rows())
+    failures = failures + check(row.kind() = 'unresolved' & row.status() = 'unknown','unresolved demand extraction cannot masquerade as an empty list ' || mode)
+    if mode = 1 then do
+      point = flow.callbackat(callback,1); summaries = .lltargetsummary..analysis(reference flow)
+      preservation = summaries.callbackpreservation(point,point,'r',1,integer)
+      failures = failures + check(preservation.preserved() & coverage.complete() = 0,'preserving r0 observation cannot normalize unknown rebound r1 reads')
+    end
+  end
+  return failures
+
+voidactualdemand: procedure = .int
+  arg mode = 0
+  failures = 0; ignored = .int; i = .int; found = .int; borrowedread = .int; opaqueeffect = .int; intrinsic = .int; hostpossible = .int
+  action = .lltargettransfer..action
+  draft = .lltarget..draft('entry.void.actual.' || mode,'fixture:entry.void.actual',0)
+  at = draft.synthetic('discarded results retain borrowed actual observations')
+  root = draft.procedure('main',2,at); fields = .object[]; empty = .object[]
+  fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  fields[3] = root.reg('r',0) as .object
+  called = root.emit('call1',fields,at); ignored = root.emit('ret',empty,at)
+  leaf = draft.procedure('leaf',1,at)
+  call objectarraydrop fields
+  if mode = 0 then do
+    fields[1] = leaf.reg('r',0) as .object; fields[2] = leaf.reg('a',1) as .object
+    fields[3] = .lltarget..operand.integer(0) as .object
+    borrowedread = leaf.emit('iadd',fields,at)
+  end
+  else if mode = 1 then do
+    fields[1] = .lltarget..operand.string('V' as .binary) as .object
+    fields[2] = .lltarget..operand.integer(4) as .object
+    fields[3] = .lltarget..operand.string('R' as .binary) as .object
+    fields[4] = .lltarget..operand.string('I' as .binary) as .object
+    fields[5] = .lltarget..operand.string('a' as .binary) as .object
+    fields[6] = .lltarget..operand.integer(1) as .object
+    do i = 7 to 9; fields[i] = .lltarget..operand.integer(0) as .object; end
+    fields[10] = .lltarget..operand.string('actual' as .binary) as .object
+    fields[11] = .lltarget..operand.string(''x as .binary) as .object
+    borrowedread = leaf.record('.traceevent',fields,at)
+  end
+  else do; fields[1] = leaf.reg('a',1) as .object; borrowedread = leaf.emit('say',fields,at); end
+  ignored = leaf.emit('ret',empty,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'void borrowed-actual demand source validates')
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  profile = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  coverage = flow.entrycoverage(source.procedureid('main'))
+  failures = failures + check(flow.status() = 'ok','void borrowed-actual demand flow builds')
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  captured = flow.captureargument(called,1); incoming = flow.captureat(called,'r',0)
+  failures = failures + check(captured.status() = 'ok' & incoming.status() = 'ok' & captured.active() = incoming.active() & captured.slotidentity() = incoming.slotidentity(),'instruction/metadata/opaque controls share the exact captured caller actual ' || mode)
+  do i = 1 to coverage.demands()
+    demand = coverage.demand(i)
+    if demand.operation() = called & demand.ownedindex() = 0 then found = 1
+  end
+  if mode = 2 then do
+    instruction = profile.instruction(borrowedread)
+    do i = 1 to instruction.actions()
+      action = instruction.action(i)
+      if action.kind() = 'external' then do; opaqueeffect = 1; intrinsic = action.intrinsicfootprint(); end
+      if action.kind() = 'callback' then do; if flow.callbackpossibleat(borrowedread,i) then hostpossible = 1; end
+    end
+    failures = failures + check(opaqueeffect & intrinsic & hostpossible,'canonical SAY keeps its complete typed intrinsic footprint and possible host callback')
+    failures = failures + check(coverage.unresolved() & cfg.localcomplete(source.procedureid('leaf')) = 0,'unknown callback policy prevents complete CALL observation projection despite the typed SAY footprint: ' || coverage.reason())
+    failures = failures + check(flow.complete(source.procedureid('main'),'entry-normalization') = 0,'complete intrinsic SAY footprint does not grant unconditional callback preservation')
+  end
+  else failures = failures + check(coverage.unresolved() & cfg.localcomplete(source.procedureid('leaf')) = 0,'callee callback-policy unknown cannot fabricate complete borrowed-actual extraction ' || mode || ': ' || coverage.reason())
+  return failures
+
+/** Fixed actual pointers are sampled by RXVM_FIXED_CALL_BODY before any
+ * initializer/frame allocation. Intrinsic extraction is not callback or ABI
+ * equivalence, and an unrelated external row never gains that delegation. */
+callintrinsiccoverage: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int; integer = .int; observed = .int; childread = .int; found = .int; callback = .int
+  resultref = .int; targetref = .int; sourceref = .int
+  replacement = .lltarget..module
+  draft = .lltarget..draft('entry.call.intrinsic.' || mode,'fixture:entry.call.intrinsic',0)
+  at = draft.synthetic('contextual call footprint preserves callbacks and every unresolved path')
+  if mode = 2 then do
+    imported = .object[]; imported[1] = .lltarget..operand.procedure('missing') as .object
+    imported[2] = .lltarget..operand.symbol('fixture.unavailable.provider') as .object
+    ignored = draft.record('.import',imported,at)
+  end
+  root = draft.procedure('main',3,at); fields = .object[]; empty = .object[]
+  fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  if mode = 2 then fields[2] = .lltarget..operand.procedure('missing') as .object
+  mnemonic = 'call1'
+  if mode = 4 | mode >= 7 then mnemonic = 'call'
+  else fields[3] = root.reg('r',0) as .object
+  if mode = 3 then mnemonic = 'call'
+  called = root.emit(mnemonic,fields,at)
+  if mode = 5 then do
+    fields[1] = root.reg('r',2) as .object; fields[2] = root.reg('r',1) as .object
+    fields[3] = .lltarget..operand.integer(0) as .object
+    observed = root.emit('iadd',fields,at)
+  end
+  ignored = root.emit('ret',empty,at); leaf = draft.procedure('leaf',1,at)
+  call objectarraydrop fields
+  if mode = 0 | mode >= 8 then do
+    fields[1] = leaf.reg('r',0) as .object; fields[2] = leaf.reg('a',1) as .object
+    if mode >= 8 then fields[2] = leaf.reg('r',0) as .object
+    fields[3] = .lltarget..operand.integer(0) as .object
+    childread = leaf.emit('iadd',fields,at)
+  end
+  if mode = 6 then do
+    fields[1] = leaf.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+    fields[3] = leaf.reg('a',1) as .object
+    ignored = leaf.emit('call1',fields,at)
+  end
+  call objectarraydrop fields
+  if mode = 5 then fields[1] = .lltarget..operand.integer(17) as .object
+  returned = leaf.emit('ret',fields,at); source = draft.finish()
+  failures = failures + check(source.valid(),'call intrinsic source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  profile = .lltargettransfer..profile
+  if mode < 7 then profile = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  else do
+    premise = .lltargettransfer..profiledraft(reference source,'independent.call.intrinsic.' || mode)
+    catalog = .llrxascatalog..catalog(); integer = premise.domain('component','fixture.call.intrinsic.integer',catalog.componentmask('I'))
+    do i = 1 to source.records()
+      item = source.record(i)
+      if item.kind() = 'procedure' then iterate
+      ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+      if item.kind() <> 'instruction' then iterate
+      if item.id() = called then do
+        resultref = premise.ref(called,1); targetref = premise.ref(called,2,'procedure','symbolic')
+        if mode = 9 then ignored = premise.event(called,'callback',0,0,'none',0,.lltarget..operand(),'may','all','before','fixture.pre.capture')
+        ignored = premise.event(called,'clear',resultref,0)
+        ignored = premise.event(called,'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.exact.call')
+        ignored = premise.event(called,'call',0,0,'reference',targetref,.lltarget..operand(),'must','normal','after','fixture.exact.call')
+        if mode = 7 then ignored = premise.event(called,'external',0,0,'none',0,.lltarget..operand(),'may','all','none','catalog.opaque')
+      end
+      else if item.id() = childread then do
+        resultref = premise.ref(childread,1); sourceref = premise.ref(childread,2)
+        phase = 'none'; if mode = 10 then phase = 'unknown'
+        ignored = premise.event(childread,'observe',sourceref,integer,'none',0,.lltarget..operand(),'must','normal',phase)
+        ignored = premise.event(childread,'write',resultref,integer)
+        if mode = 8 then call premise.unknown(childread,'observations','fixture.missing.intrinsic.observations')
+      end
+      else ignored = premise.event(item.id(),'return',0,0)
+    end
+    profile = premise.finish()
+  end
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','call intrinsic flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  coverage = flow.entrycoverage(source.procedureid('main'))
+  if mode = 0 then do
+    do i = 1 to coverage.demands()
+      demand = coverage.demand(i)
+      if demand.operation() = called & demand.ownedindex() = 0 then found = 1
+    end
+    failures = failures + check(coverage.unresolved() & cfg.localcomplete(source.procedureid('leaf')) = 0,'fixed pointer capture alone cannot close unknown callee callback policy: ' || coverage.reason())
+    incoming = flow.captureargument(called,1); named = flow.captureat(called,'r',0)
+    failures = failures + check(incoming.status() = 'ok' & named.status() = 'ok' & incoming.active() = named.active() & incoming.slotidentity() = named.slotidentity(),'fixed invocation transports its early captured actual pointer')
+  end
+  else if mode = 1 then failures = failures + check(coverage.demands() = 0 & coverage.unresolved() & cfg.localcomplete(source.procedureid('leaf')) = 0,'zero local demands cannot disguise unknown callee callback control: ' || coverage.reason())
+  else failures = failures + check(coverage.complete() = 0 & coverage.unresolved(),'unproved target/count/preparation/return/recursion/footprint/phase remains unresolved ' || mode || ': ' || coverage.reason())
+  if mode = 0 | mode = 1 | mode = 5 then do
+    instruction = profile.instruction(called)
+    do i = 1 to instruction.actions()
+      action = instruction.action(i)
+      if action.kind() = 'callback' then do; if flow.callbackpossibleat(called,i) then callback = 1; end
+    end
+    failures = failures + check(callback & flow.complete(source.procedureid('main'),'entry-normalization') = 0,'intrinsic extraction leaves possible CALL callbacks and unconditional veto intact ' || mode)
+  end
+  if mode = 5 then do
+    do i = 1 to profile.domains()
+      domain = profile.domain(i)
+      if domain.kind() = 'component' & domain.nativebit() = .llrxascatalog..catalog().componentmask('I') then integer = i
+    end
+    aftercall = flow.componentat(observed,'r',1,integer)
+    failures = failures + check(aftercall.availability() = 'unknown' & aftercall.known() = 0,'possible CALL callback cannot publish the scalar return as a known post-call fact')
+  end
+  if mode = 2 then do
+    unavailable = flow.targetat(called)
+    failures = failures + check(unavailable.status() = 'unknown' & unavailable.reason() = 'target.body.unavailable','valid imported target without an enrolled provider stays explicitly unavailable')
+  end
+  if mode = 1 then do
+    limited = .lltargetflow..analysis(reference source,reference profile,reference cfg,1,1)
+    failures = failures + check(limited.status() = 'limit','call intrinsic extraction keeps the shared work and byte limit')
+    replacementdraft = .lltarget..draft('entry.call.intrinsic.replacement','fixture:entry.call.intrinsic.replacement',0)
+    replacementat = replacementdraft.synthetic('valid distinct owner for stale coverage')
+    replacementroot = replacementdraft.procedure('main',0,replacementat)
+    replacementfields = .object[]; replacementfields[1] = .lltarget..operand.integer(0) as .object
+    ignored = replacementroot.emit('ret',replacementfields,replacementat)
+    replacement = replacementdraft.finish()
+    failures = failures + check(replacement.valid(),'stale coverage control constructs a valid replacement owner')
+    if replacement.valid() = 0 then return failures
+    failures = failures + check(replacement.identity() <> source.identity(),'stale coverage control replaces the original owner identity')
+    saved = coverage; source = replacement
+    failures = failures + check(saved.valid() = 0 & saved.status() = 'invalid','call intrinsic coverage expires with its exact source owner')
+  end
+  return failures
+
+opaqueentrydemand: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int
+  draft = .lltarget..draft('entry.opaque.' || mode,'fixture:entry.opaque',0)
+  at = draft.synthetic('opaque effects cannot certify an empty demand list')
+  root = draft.procedure('main',1,at); fields = .object[]; empty = .object[]
+  fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(17) as .object
+  opaque = root.emit('load',fields,at); ignored = root.emit('ret',empty,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'opaque demand source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  premise = .lltargettransfer..profiledraft(reference source,'independent.opaque.entry.' || mode)
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+  end
+  kind = 'unknown'; reason = 'target.flow.entry.demand.effect.unproved'
+  if mode = 1 then do; kind = 'external'; reason = 'target.flow.entry.external.footprint.unproved'; end
+  ignored = premise.event(opaque,kind,0,0)
+  profile = premise.finish(); cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  coverage = flow.entrycoverage(source.procedureid('main'))
+  failures = failures + check(flow.status() = 'ok','opaque demand flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  failures = failures + check(coverage.complete() = 0 & coverage.demands() = 0 & coverage.unresolved() & coverage.rows() = 1 & coverage.reason() = reason,'reachable opaque action remains unresolved without any later explicit observation ' || mode || ': ' || coverage.reason())
+  failures = failures + check(flow.complete(source.procedureid('main'),'entry-observation') = 0 & flow.complete(source.procedureid('main'),'entry-normalization') = 0,'unknown demand coverage also vetoes unconditional flow certificates ' || mode)
+  return failures
+
+/** An external action's typed intrinsic footprint is separate from its host
+ * callback. Constructed events deliberately use an ordinary LOAD record so
+ * this consumer proof cannot depend on an output mnemonic. */
+externalfootprint: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int; initialize = .int; observed = .int; callbackordinal = .int
+  referenceid = .int; sourceref = .int; found = .int
+  draft = .lltarget..draft('entry.external.footprint.' || mode,'fixture:entry.external.footprint',0)
+  at = draft.synthetic('complete intrinsic footprint never removes host callback havoc')
+  root = draft.procedure('main',2,at); fields = .object[]; empty = .object[]
+  if mode = 3 then do
+    fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(17) as .object
+    initialize = root.emit('load',fields,at)
+  end
+  fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.integer(29) as .object
+  opaque = root.emit('load',fields,at)
+  if mode = 3 then do
+    fields[1] = root.reg('r',1) as .object; fields[2] = root.reg('r',0) as .object
+    fields[3] = .lltarget..operand.integer(0) as .object
+    observed = root.emit('iadd',fields,at)
+  end
+  ignored = root.emit('ret',empty,at); source = draft.finish()
+  failures = failures + check(source.valid(),'external footprint source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  premise = .lltargettransfer..profiledraft(reference source,'independent.external.footprint.' || mode)
+  catalog = .llrxascatalog..catalog(); integer = premise.domain('component','fixture.external.integer',catalog.componentmask('I'))
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+  end
+  if mode = 3 then do
+    referenceid = premise.ref(initialize,1)
+    ignored = premise.event(initialize,'write',referenceid,integer,'literal',0,.lltarget..operand.integer(17))
+  end
+  if mode = 4 then do
+    /* The external operation observes r1 through a separate typed action. */
+    referenceid = premise.ref(opaque,1)
+    ignored = premise.event(opaque,'observe',referenceid,integer)
+  end
+  complete = mode <> 0
+  ignored = premise.event(opaque,'external',0,0,'none',0,.lltarget..operand(),'must','all','none','fixture.intrinsic',0,'unknown',complete)
+  if mode >= 2 then do
+    callbackordinal = 2; if mode = 4 then callbackordinal = 3
+    ignored = premise.event(opaque,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','fixture.external.host')
+  end
+  if mode = 3 then do
+    referenceid = premise.ref(observed,1); sourceref = premise.ref(observed,2)
+    ignored = premise.event(observed,'observe',sourceref,integer)
+    ignored = premise.event(observed,'write',referenceid,integer)
+  end
+  profile = premise.finish(); cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','external footprint flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  coverage = flow.entrycoverage(source.procedureid('main'))
+  if mode = 0 then failures = failures + check(coverage.complete() = 0 & coverage.unresolved() & coverage.reason() = 'target.flow.entry.external.footprint.unproved','unqualified external footprint remains explicitly unresolved')
+  else if mode = 1 | mode = 2 then failures = failures + check(coverage.complete() & coverage.demands() = 0 & coverage.unresolved() = 0,'complete empty intrinsic footprint removes only its duplicate unknown-read sentinel ' || mode || ': ' || coverage.reason())
+  else if mode = 3 then do
+    incoming = flow.componentat(opaque,'r',0,integer); literal = incoming.literal()
+    failures = failures + check(incoming.known() & literal.kind() = 'I' & literal.index() = 17,'host-havoc negative starts with a defined live scalar')
+    afterhost = flow.componentat(observed,'r',0,integer)
+    failures = failures + check(afterhost.availability() = 'unknown' & afterhost.known() = 0 & coverage.complete() = 0 & coverage.unresolved(),'complete intrinsic footprint cannot restore facts after host callback havoc')
+  end
+  else do
+    do i = 1 to coverage.demands()
+      demand = coverage.demand(i)
+      if demand.operation() = opaque & demand.ownedindex() = 1 then found = 1
+    end
+    failures = failures + check(coverage.complete() & found,'complete external footprint retains every explicit dirty typed observation')
+  end
+  if mode >= 2 then do
+    failures = failures + check(flow.callbackpossibleat(opaque,callbackordinal),'intrinsic completeness never proves host callback absent ' || mode)
+    failures = failures + check(flow.complete(source.procedureid('main'),'entry-normalization') = 0,'intrinsic completeness keeps unconditional callback veto ' || mode)
+  end
+  return failures
+
+scopecountdemand: procedure = .int
+  arg mode = 0
+  failures = 0; ignored = .int; i = .int; integer = .int; found = .int; ambiguous = .int; expected = .int
+  demand = .lltargetflow..entryread; domain = .lltargettransfer..domain; edge = .lltargetcfg..edge
+  prepared = .lltargetflow..valuefact
+  draft = .lltarget..draft('entry.scope.count.' || mode,'fixture:entry.scope.count',0)
+  at = draft.synthetic('scope count observes exact prepared binding and raw entry provenance')
+  root = draft.procedure('main',4,at); fields = .object[]; empty = .object[]
+  if mode = 1 | mode = 2 | mode = 3 then do
+    index = 0; if mode = 3 then index = 1
+    fields[1] = root.reg('r',index) as .object
+    ignored = root.emit('getnumdgts',fields,at)
+  end
+  preparation = 'none'
+  if mode = 2 | mode = 3 then preparation = 'swap(r0,r1)'
+  if mode = 4 then preparation = 'clear(r0)'
+  call objectarraydrop fields
+  fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  spelling = 'count=r0;args=list(r1);a0=r2;proxies=(r3:1);owned=(r2,r3);prep=' || preparation
+  fields[3] = .lltarget..operand.string(spelling as .binary) as .object
+  fields[4] = .lltarget..operand.symbol('continued') as .object
+  entry = root.emit('inlenter',fields,at); ignored = root.emit('ret',empty,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('continued') as .object
+  ignored = root.record('label',fields,at); ignored = root.emit('ret',empty,at)
+  leaf = draft.procedure('leaf',0,at); ignored = leaf.emit('ret',empty,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'register scope-count demand source validates ' || mode)
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  profile = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  coverage = flow.entrycoverage(source.procedureid('main'))
+  failures = failures + check(flow.status() = 'ok','register scope-count demand flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  catalog = .llrxascatalog..catalog()
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I') then integer = i
+  end
+  do i = 1 to coverage.demands()
+    demand = coverage.demand(i)
+    if demand.operation() <> entry | demand.domain() <> integer then iterate
+    found = found + 1; expected = 0; if mode = 2 then expected = 1
+    failures = failures + check(demand.ownedindex() = expected & demand.activebank() = 'r' & demand.activeindex() = 0,'prepared count demand names original owned backing and lexical count slot ' || mode)
+  end
+  prepared = flow.capturecomponentat(entry,'r',0,integer); abi = flow.abicallbackat(entry)
+  failures = failures + check(found = 0 & prepared.availability() = 'unknown' & prepared.storage() = 0 & coverage.unresolved() & abi.intrinsicreason() = 'target.abi.callback.residual.unproved','undischarged entry callback cannot publish a count capture or dirty clear license ' || mode || ': ' || abi.intrinsicreason())
+  do i = 1 to cfg.outedges(entry)
+    edge = cfg.outedge(entry,i)
+    if wordpos(edge.phase(),'partial unknown') > 0 then ambiguous = 1
+  end
+  failures = failures + check(ambiguous & coverage.unresolved() & flow.complete(source.procedureid('main'),'entry-normalization') = 0,'ambiguous exceptional count phase remains unresolved despite normal-point extraction ' || mode)
+  return failures
+
+dependencyblocked: procedure = .int
+  arg coverage = .lltargetflow..entrycoveragefact, ordinal = .int
+  ignored = .int
+  do
+    if ordinal = 0 then ignored = coverage.dependencies()
+    else ignored = coverage.dependency(ordinal)
+  on signal as problem
+    return pos('entry-dependency',problem.message()) > 0
+  end
+  return 0
+
+/** A returned private entry origin is demanded by the caller but normalized
+ * by the leaf owning that origin. Extraction readiness is not discharge. */
+entrydependencies: procedure = .int
+  failures = 0; ignored = .int; i = .int; found = .int; checkpoint = .int; integer = .int
+  draft = .lltarget..draft('entry.dependencies','fixture:entry.dependencies',0)
+  at = draft.synthetic('dirty return origin requires its direct procedure owner')
+  root = draft.procedure('main',2,at); fields = .object[]; empty = .object[]
+  fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  called = root.emit('call',fields,at)
+  fields[1] = root.reg('r',1) as .object; fields[2] = root.reg('r',0) as .object
+  fields[3] = .lltarget..operand.integer(0) as .object
+  ignored = root.emit('iadd',fields,at); ignored = root.emit('iadd',fields,at)
+  ignored = root.emit('ret',empty,at)
+  leaf = draft.procedure('leaf',1,at)
+  call objectarraydrop fields; fields[1] = leaf.reg('r',0) as .object
+  returned = leaf.emit('ret',fields,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'dirty return dependency source validates')
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  callerid = source.procedureid('main'); leafid = source.procedureid('leaf')
+  /* This complete independent no-hook call program exercises the shared
+   * dependency algorithm. It does not waive canonical recycled-backing hooks. */
+  premise = .lltargettransfer..profiledraft(reference source,'independent.entry.return.dependencies')
+  catalog = .llrxascatalog..catalog(); integer = premise.domain('component','fixture.return.integer',catalog.componentmask('I'))
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    select item.mnemonic()
+      when 'call' then do
+        resultref = premise.ref(item.id(),1); targetref = premise.ref(item.id(),2,'procedure','symbolic')
+        ignored = premise.event(item.id(),'clear',resultref,0)
+        ignored = premise.event(item.id(),'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.exact.call')
+        ignored = premise.event(item.id(),'call',0,0,'reference',targetref,.lltarget..operand(),'must','normal','after','fixture.exact.call')
+      end
+      when 'iadd' then do
+        resultref = premise.ref(item.id(),1); sourceid = premise.ref(item.id(),2)
+        ignored = premise.event(item.id(),'observe',sourceid,integer)
+        ignored = premise.event(item.id(),'write',resultref,integer)
+      end
+      when 'ret' then do
+        if item.operands() > 0 then ignored = premise.ref(item.id(),1)
+        ignored = premise.event(item.id(),'return',0,0)
+      end
+      otherwise call premise.unknown(item.id(),'effects','fixture.unrepresented')
+    end
+  end
+  profile = premise.finish()
+  cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','dirty return dependency flow builds')
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  preparedwork = flow.usedwork()
+  callercoverage = flow.entrycoverage(callerid); leafcoverage = flow.entrycoverage(leafid)
+  failures = failures + check(callercoverage.demands() = 0 & callercoverage.dependencies() = 1,'zero caller-local demands retain one deduplicated direct return-owner dependency')
+  if callercoverage.dependencies() = 1 then do
+    failures = failures + check(callercoverage.dependency(1) = leafid,'dependency ID names the source leaf owning the dirty return')
+  end
+  do i = 1 to leafcoverage.demands()
+    demand = leafcoverage.demand(i)
+    if demand.operation() = returned & demand.ownedindex() = 0 then found = 1
+  end
+  failures = failures + check(found & leafcoverage.dependencies() = 0,'the required owner keeps its dirty RET demand without an invented transitive dependency')
+  failures = failures + check(dependencyblocked(callercoverage,2),'dependency ordinals are checked')
+  limitedflow = .lltargetflow..analysis(reference source,reference profile,reference cfg,preparedwork + 1)
+  failures = failures + check(limitedflow.status() = 'ok','query-budget control prepares the same frozen flow')
+  limitedcoverage = limitedflow.entrycoverage(callerid)
+  failures = failures + check(limitedcoverage.status() = 'limit' & limitedcoverage.complete() = 0 & dependencyblocked(limitedcoverage,0) & dependencyblocked(limitedcoverage,1),'bounded extraction cannot expose a limited dependency set as empty or usable')
+  canonical = .lltargettransfer..profile.closedcalls(reference source,callerid,'closed-main-default-halt.v1')
+  canonicalcfg = .lltargetcfg..graph(reference source,reference canonical)
+  canonicalflow = .lltargetflow..analysis(reference source,reference canonical,reference canonicalcfg)
+  failures = failures + check(canonicalflow.status() = 'ok','canonical dirty-return control builds independently')
+  if canonicalflow.status() <> 'ok' then do; say canonicalflow.reason(); return failures; end
+  instruction = canonical.instruction(called)
+  do i = 1 to instruction.actions()
+    action = instruction.action(i)
+    if action.kind() = 'callback' & action.detail() = 'catalog.callback.capacity-or-checkpoint' then do
+      if canonicalflow.callbackpossibleat(called,i) then checkpoint = 1
+    end
+  end
+  canonicalcoverage = canonicalflow.entrycoverage(callerid)
+  failures = failures + check(checkpoint & canonicalcoverage.complete() = 0 & canonicalcoverage.unresolved(),'canonical result clear retains possible backing callbacks rather than borrowing the independent no-hook premise')
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg); ignoredstatus = flow.status()
+  failures = failures + check(callercoverage.status() = 'invalid' & dependencyblocked(callercoverage,0) & dependencyblocked(callercoverage,1),'dependency count and IDs expire with the exact flow owner')
+  return failures
+
+/** The incoming RET source is seven, but a possible before-return callback
+ * can replace it. Exact call-site evidence cannot certify that stale value. */
+returncheckpoint: procedure = .int
+  failures = 0; ignored = .int; i = .int
+  resultref = .int; targetref = .int; sourceid = .int
+  draft = .lltarget..draft('entry.return.checkpoint','fixture:entry.return.checkpoint',0)
+  at = draft.synthetic('independent return projection respects its ordered callback prefix')
+  root = draft.procedure('main',2,at); fields = .object[]; empty = .object[]
+  fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  ignored = root.emit('call',fields,at)
+  fields[1] = root.reg('r',1) as .object; fields[2] = root.reg('r',0) as .object
+  fields[3] = .lltarget..operand.integer(0) as .object
+  observed = root.emit('iadd',fields,at); ignored = root.emit('ret',empty,at)
+  leaf = draft.procedure('leaf',1,at)
+  call objectarraydrop fields; fields[1] = leaf.reg('r',0) as .object
+  fields[2] = .lltarget..operand.integer(7) as .object; ignored = leaf.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = leaf.reg('r',0) as .object
+  returned = leaf.emit('ret',fields,at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'return checkpoint source validates')
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  premise = .lltargettransfer..profiledraft(reference source,'independent.return.checkpoint')
+  catalog = .llrxascatalog..catalog(); integer = premise.domain('component','fixture.return.integer',catalog.componentmask('I'))
+  do i = 1 to source.records()
+    item = source.record(i)
+    if item.kind() = 'procedure' then iterate
+    ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    select item.mnemonic()
+      when 'call' then do
+        resultref = premise.ref(item.id(),1); targetref = premise.ref(item.id(),2,'procedure','symbolic')
+        ignored = premise.event(item.id(),'clear',resultref,0)
+        ignored = premise.event(item.id(),'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.exact.call')
+        ignored = premise.event(item.id(),'call',0,0,'reference',targetref,.lltarget..operand(),'must','normal','after','fixture.exact.call')
+      end
+      when 'load' then do
+        resultref = premise.ref(item.id(),1)
+        ignored = premise.event(item.id(),'write',resultref,integer,'literal',0,item.operand(2))
+      end
+      when 'iadd' then do
+        resultref = premise.ref(item.id(),1); sourceid = premise.ref(item.id(),2)
+        ignored = premise.event(item.id(),'observe',sourceid,integer)
+        ignored = premise.event(item.id(),'write',resultref,integer)
+      end
+      when 'ret' then do
+        if item.id() = returned then do
+          resultref = premise.ref(item.id(),1)
+          ignored = premise.event(item.id(),'callback',0,0,'none',0,.lltarget..operand(),'may','all','before','fixture.return.mutator')
+          ignored = premise.event(item.id(),'observe',resultref,integer)
+        end
+        ignored = premise.event(item.id(),'return',0,0)
+      end
+      otherwise call premise.unknown(item.id(),'effects','fixture.unrepresented')
+    end
+  end
+  profile = premise.finish(); cfg = .lltargetcfg..graph(reference source,reference profile)
+  flow = .lltargetflow..analysis(reference source,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','return checkpoint flow builds')
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  incoming = flow.componentat(returned,'r',0,integer); literal = incoming.literal()
+  failures = failures + check(incoming.known() & literal.kind() = 'I' & literal.index() = 7 & flow.callbackpossibleat(returned,1),'negative control has a known incoming source and a possible callback before the return')
+  result = flow.componentat(observed,'r',0,integer)
+  failures = failures + check(result.availability() = 'unknown' & result.known() = 0,'unsafe return prefix cannot publish seven or the old cleared caller result')
+  coverage = flow.entrycoverage(source.procedureid('main'))
+  failures = failures + check(coverage.complete() = 0 & coverage.unresolved(),'unknown return checkpoint keeps caller normalization unproved')
+  return failures
+
+main: procedure = .int
+  mode = .int
+  failures = run(0) + run(1) + run(2)
+  do mode = 0 to 15; failures = failures + directmapping(mode); end
+  failures = failures + qualifiedbinding() + qualifiedbinding(1)
+  do mode = 0 to 5; failures = failures + callbackpoints(mode); end
+  do mode = 0 to 2; failures = failures + entrydemands(mode); end
+  failures = failures + voidactualdemand() + voidactualdemand(1) + voidactualdemand(2)
+  do mode = 0 to 10; failures = failures + callintrinsiccoverage(mode); end
+  failures = failures + opaqueentrydemand(0) + opaqueentrydemand(1)
+  do mode = 0 to 4; failures = failures + externalfootprint(mode); end
+  do mode = 0 to 4; failures = failures + scopecountdemand(mode); end
+  failures = failures + entrydependencies()
+  failures = failures + returncheckpoint()
+  say 'TARGET_ACTIVATION_ABI|failures=' || failures
+  return failures

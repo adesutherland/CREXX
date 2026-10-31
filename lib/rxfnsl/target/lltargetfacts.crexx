@@ -1,6 +1,6 @@
 /* cREXX License (MIT). RXAS scalar/storage transfers over shared L analyses. */
 options levelb
-namespace lltargetfacts expose analysis analyse analysegraph proveexpansion arithmetic
+namespace lltargetfacts expose analysis analyse analysegraph analyseoperational proveexpansion arithmetic
 import rxfnsb
 import llir
 import llirgraph
@@ -9,6 +9,7 @@ import llrxascatalog
 import lltargettransfer
 import lltargetcfg
 import lltargetflow
+import lltargetsummary
 import lltargetrecipe
 
 /** Typed numeric row retained as an object; primitive arrays are not boxed. */
@@ -223,9 +224,11 @@ cells: class
    * canonical masks, not an instruction/value interpreter. Unknown writes
    * forget the whole cell; missing facts never make a clone illegal. */
   forget: method = .void
-    arg id = .int, components = 511
+    arg id = .int, components = 0
     affected = .int
-    if components = 0 then components = 511
+    if components = 0 then do
+      catalog = .llrxascatalog..catalog(); components = catalog.componentmask('ALL')
+    end
     assembler iand affected,components,1
     if affected then do
       _defined[id] = 0; _known[id] = 0; _values[id] = 0
@@ -854,10 +857,24 @@ analysis: class
   _scopeprofile = .lltargettransfer..profile
   _scopegraph = .lltargetcfg..graph
   _scopeflow = .lltargetflow..analysis
+  /* Site facets share this exact operational owner. Legacy optional scalar
+   * facts retain their index; their domain IDs never enter site liveness. */
+  _sitesready = .int
+  _sitesummary = .lltargetsummary..analysis
+  _siteflowwork = .int
+  _siteflowbytes = .int
+  _sitesummarywork = .int
+  _sitesummarybytes = .int
+  _sitelive = .llirgraph..live
+  _siteliveready = .int
+  _siteprefix = .int[]
+  _sitetotal = .int[]
   _flowtofact = .int[]
   _facttoflow = .int[]
   _scopepins = .int[]
   _scopeidentity = .int[]
+  _bindingparent = .int[]
+  _bindingseed = .int[]
   _capturestorage = .object[]
   _basestorage = .object[]
   _preparationstorage = .object[]
@@ -944,6 +961,12 @@ analysis: class
     arg reason = .string
     _status = 'keep'; _reason = reason
     return 0
+  siteerror: method = .void
+    arg reason = .string, resource = 0
+    message = reason
+    if resource then message = 'LL_RESOURCE_LIMIT: ' || message
+    assembler signal "ERROR",message
+    return
   namedtag: method = .int
     arg name = .string
     /* Recognize the emitted explicit list, never an ANY proof annotation.
@@ -2702,7 +2725,7 @@ analysis: class
       id = view.storage(value)
       components = catalog.writecomponents(opcode,i); cleared = catalog.clearcomponents(opcode,i)
       assembler ior components,components,cleared
-      if catalog.writecomplete(opcode,i) = 0 then components = 511
+      if catalog.writecomplete(opcode,i) = 0 then components = catalog.componentmask('ALL')
       call state.forget(id,components)
     end
     if history then do i = 1 to item.registerrefs()
@@ -2836,7 +2859,8 @@ analysis: class
      * A retained binary LOAD can raise FAILURE; the checked root profile's
      * HALT response has no resumed successor. BINEQ R,R,B cannot raise after
      * ordinary source/destination proof below excludes native/ref release. */
-    if catalog.policyeffect(opcode) <> 0 & (name <> 'ichkrng' | item.operands() <> 3) & binaryload = 0 & binaryequal = 0 then return reject('signal.policy.unproved')
+    if (catalog.signalproperties(opcode) <idiv> 32) % 2 then return reject('signal.pending.unproved')
+    if (catalog.signalproperties(opcode) <idiv> 8) % 2 & (name <> 'ichkrng' | item.operands() <> 3) & binaryload = 0 & binaryequal = 0 then return reject('signal.policy.unproved')
     /* Native canonical component/cleanup metadata supplies the use adapter;
      * transfer code below still proves write availability and plain ownership. */
     if wordpos(name,'link unlink swap linkarg endlife acopy bcopy') = 0 then do i = 1 to item.operands()
@@ -3474,6 +3498,18 @@ analysis: class
     arg status = .string, reason = .string
     _status = status; _reason = reason
     return
+  bindingroot: method = .int
+    arg slot = .int
+    root = slot
+    do while _bindingparent[root] <> root
+      if spend(1) = 0 then call siteerror(_reason,1)
+      root = _bindingparent[root]
+    end
+    do while _bindingparent[slot] <> slot
+      if spend(1) = 0 then call siteerror(_reason,1)
+      nextslot = _bindingparent[slot]; _bindingparent[slot] = root; slot = nextslot
+    end
+    return root
   runscoped: method = .void
     i = .int; j = .int
     sharedaccess = .llirgraph..access; sharedindex = .llirgraph..index
@@ -3482,6 +3518,9 @@ analysis: class
     edge = .lltargetcfg..edge; action = .lltargettransfer..action
     recipe = .lltargetrecipe..view; instruction = .lltargettransfer..instruction; domain = .lltargettransfer..domain
     key = .string; prefix = .string; domainordinal = .int; complete = .int; candidate = .int; departures = .int; scopeoperation = .int; exactedge = .int; reached = .int; step = .int; operand = .int; operands = .int
+    firstslot = .int; rootslot = .int; slot = .int; permanent = .int
+    c = .int; width = .int; first = .int
+    footprint = .lltargetsummary..footprintfact; constraint = .lltargetsummary..constraintfact
     refview = .lltargettransfer..refview
     references = .int[]; plain = .int[]; captures = .int[]; bases = .int[]; preparation = .int[]; actuals = .int[]; id = .int; storage = .int; ignored = .int; domainid = .int
     if reserve(body.locals(),48) = 0 | spend(body.locals()) = 0 then return
@@ -3499,8 +3538,16 @@ analysis: class
     access_ref = _scopeflow.projection(); sharedaccess = dereference access_ref; _access = sharedaccess
     if _access.status() <> 'ok' then do; call scopedfailure(_access.status(),_access.message()); return; end
     if spend(_scopeflow.usedwork()) = 0 | reserve(_scopeflow.usedbytes(),1) = 0 then return
+    _siteflowwork = _scopeflow.usedwork(); _siteflowbytes = _scopeflow.usedbytes()
+    _sitesummary = .lltargetsummary..analysis(reference _scopeflow,_work,max(1,_bytelimit - _retained))
+    if _sitesummary.status() <> 'ok' then do; call scopedfailure(_sitesummary.status(),_sitesummary.reason()); return; end
+    call syncsites()
     index_ref = _scopegraph.index(); sharedindex = dereference index_ref; _index = sharedindex
     _transportcomplete = 1; _transportreason = ''; _rootrestored = 1; departures = 0
+    if reserve(body.locals() + module.globals(),16) = 0 | spend(body.locals() + module.globals()) = 0 then return
+    do i = 1 to body.locals() + module.globals()
+      _bindingparent[i] = i; _bindingseed[i] = i > body.locals()
+    end
     do i = 1 to module.records()
       if spend(1) = 0 then return
       item = module.record(i)
@@ -3579,6 +3626,35 @@ analysis: class
       if item.procedureid() <> _function | item.kind() = 'procedure' then iterate
       if _runtime[item.id()] = 0 then iterate
       instruction = _scopeprofile.instruction(item.id())
+      if item.kind() = 'instruction' then do
+        if catalog.returnkind(item.opcode()) = 2 then do
+          value = item.operand(catalog.returnsource(item.opcode()))
+          if value.bank() = 'r' then _bindingseed[value.index() + 1] = 1
+        end
+        if catalog.scopecontinuation(item.opcode()) > 0 then do
+          recipe = item.recipe()
+          do step = 1 to recipe.preparations()
+            if recipe.preparationkind(step) <> 'swap' then iterate
+            firstslot = 0
+            do operand = 1 to 2
+              value = item.reciperef(recipe.preparationref(step,operand)); slot = 0
+              if value.bank() = 'r' then slot = value.index() + 1
+              else if value.bank() = 'g' then slot = body.locals() + value.index() + 1
+              if slot = 0 | slot > _bindingparent[0] then do
+                _transportcomplete = 0
+                if _transportreason = '' then _transportreason = 'transport.preparation.slot.unproved'
+                iterate
+              end
+              rootslot = bindingroot(slot)
+              if firstslot = 0 then firstslot = rootslot
+              else do
+                firstslot = bindingroot(firstslot)
+                _bindingparent[max(firstslot,rootslot)] = min(firstslot,rootslot)
+              end
+            end
+          end
+        end
+      end
       scopeoperation = 0
       if item.kind() = 'instruction' then scopeoperation = catalog.scopecontinuation(item.opcode()) > 0 | _scopegraph.logicalreturn(item.id())
       if scopeoperation = 0 then do
@@ -3589,6 +3665,9 @@ analysis: class
         do j = 1 to instruction.references()
           refview = instruction.ref(j)
           if refview.bank() = '' then iterate
+          if refview.kind() = 'window' & item.kind() = 'instruction' then do
+            if catalog.callinvokes(item.opcode()) & _scopeflow.captureargumentcount(item.id()) >= 0 then iterate
+          end
           if refview.extentknown() = 0 | refview.extent() <> 1 then do
             _transportcomplete = 0
             if _transportreason = '' then _transportreason = 'transport.scope.implicit.window.unproved'
@@ -3600,17 +3679,92 @@ analysis: class
         end
       end
       candidate = 0
+      permanent = instruction.complete('bindings') = 0
       do j = 1 to instruction.actions()
         action = instruction.action(j)
         if wordpos(action.kind(),'link unlink swap') > 0 then candidate = 1
+        else if wordpos(action.kind(),'read observe') = 0 then permanent = 1
       end
-      if candidate then do j = 1 to item.registerrefs()
-        value = item.registerref(j)
-        if value.bank() = 'r' then do
-          if _scopeidentity[value.index() + 1] then do
+      /* Connected binding components that contain an activation slot, an
+       * external slot, or a compound event remain physical. This preserves
+       * required body permutations while unrelated outer swaps disappear. */
+      if candidate then do
+        firstslot = 0
+        do j = 1 to item.registerrefs()
+          if spend(2) = 0 then return
+          value = item.registerref(j); slot = 0
+          if value.bank() = 'r' then slot = value.index() + 1
+          else if value.bank() = 'g' then slot = body.locals() + value.index() + 1
+          if slot = 0 | slot > _bindingparent[0] then do
             _transportcomplete = 0
-            if _transportreason = '' then _transportreason = 'transport.scope.owned.binding.required'
+            if _transportreason = '' then _transportreason = 'transport.binding.slot.unproved'
+            iterate
           end
+          if permanent then _bindingseed[slot] = 1
+          rootslot = bindingroot(slot)
+          if firstslot = 0 then firstslot = rootslot
+          else do
+            firstslot = bindingroot(firstslot)
+            _bindingparent[max(firstslot,rootslot)] = min(firstslot,rootslot)
+            firstslot = min(firstslot,rootslot)
+          end
+        end
+      end
+      footprint = _sitesummary.footprint(item.id())
+      call syncsites()
+      if footprint.status() <> 'proved' then do
+        _transportcomplete = 0
+        if _transportreason = '' then _transportreason = footprint.reason()
+      end
+      else do c = 1 to footprint.constraints()
+        constraint = footprint.constraint(c)
+        /* Explicit binding operands are handled by the connected component
+         * proof. A finite call/scope window is materialized by the layout
+         * consumer; other implicit physical locations must remain fixed. */
+        if constraint.kind() = 'fixed' & constraint.roles() > 0 then iterate
+        if constraint.kind() = 'window' & item.kind() = 'instruction' then do
+          if catalog.scopecontinuation(item.opcode()) > 0 then iterate
+          if catalog.callinvokes(item.opcode()) & catalog.callprefix(item.opcode()) = '' then iterate
+        end
+        first = constraint.first(); width = constraint.width()
+        if constraint.bank() = 'g' then first = first + body.locals()
+        else if constraint.bank() <> 'r' then do
+          _transportcomplete = 0
+          if _transportreason = '' then _transportreason = 'transport.implicit.slot.unproved'
+          iterate
+        end
+        if first < 0 | width < 0 | first > _bindingseed[0] - width then do
+          _transportcomplete = 0
+          if _transportreason = '' then _transportreason = 'transport.implicit.slot.outside.frame'
+          iterate
+        end
+        if spend(width) = 0 then return
+        do slot = first + 1 to first + width; _bindingseed[slot] = 1; end
+      end
+    end
+    do i = 1 to body.locals()
+      if _scopeidentity[i] then _bindingseed[i] = 1
+    end
+    do i = 1 to _bindingparent[0]
+      if spend(1) = 0 then return
+      if _bindingseed[i] then _bindingseed[bindingroot(i)] = 1
+    end
+    do i = 1 to body.locals()
+      if spend(1) = 0 then return
+      if _bindingseed[bindingroot(i)] then do; _scopeidentity[i] = 1; _scopepins[i] = 1; end
+    end
+    do i = 1 to module.records()
+      if spend(1) = 0 then return
+      item = module.record(i)
+      if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
+      if catalog.scopecontinuation(item.opcode()) = 0 then iterate
+      recipe = item.recipe()
+      do step = 1 to recipe.preparations()
+        if recipe.preparationkind(step) <> 'swap' then iterate
+        do operand = 1 to 2
+          value = item.reciperef(recipe.preparationref(step,operand))
+          if value.bank() <> 'r' then _preparationswappable[item.id()] = 0
+          else if _scopeidentity[value.index() + 1] then _preparationswappable[item.id()] = 0
         end
       end
     end
@@ -3652,6 +3806,11 @@ analysis: class
         else if wordpos(action.kind(),'read observe') = 0 then complete = 0
       end
       if candidate & complete then _mapping[item.id()] = 1
+      if _mapping[item.id()] then do j = 1 to item.registerrefs()
+        value = item.registerref(j)
+        if value.bank() <> 'r' then _mapping[item.id()] = 0
+        else if _scopeidentity[value.index() + 1] then _mapping[item.id()] = 0
+      end
     end
     /* Domains are owned by the sealed shared projection. Missing optional
      * scalar precision disables only simplification, never a storage fact. */
@@ -3669,7 +3828,7 @@ analysis: class
         if domain.kind() = 'component' & domain.nativebit() = 1 then _domains[i] = domainid
       end
     end
-    _status = 'ok'
+    _sitesready = 1; _status = 'ok'
     return
   run: method = .void
     if _status <> 'building' then return
@@ -3685,7 +3844,6 @@ analysis: class
     if <refvalid>(_owner) = 0 then do; _status = 'invalid'; _reason = 'owner.expired'; return; end
     module = dereference _owner; catalog = .llrxascatalog..catalog()
     if module.valid() = 0 then do; _status = 'invalid'; _reason = module.error(); return; end
-    if _graphmode & module.globals() > 0 then do; ignored = reject('graph.global.storage.pending'); return; end
     if _profile <> 'closed-main-default-halt.v1' & _profile <> 'closed-main-static-exact-default-halt.v1' then do; ignored = reject('signal.policy.unproved'); return; end
     body = module.body(_function)
     if body.name() <> 'main' then do; ignored = reject('signal.root.context.unproved'); return; end
@@ -3699,7 +3857,9 @@ analysis: class
       if item.procedureid() <> _function | item.kind() <> 'instruction' then iterate
       if catalog.scopecontinuation(item.opcode()) > 0 then _scoped = 1
     end
+    if _graphmode = 2 then _scoped = 1
     if _scoped then do; call runscoped(); return; end
+    if _graphmode & module.globals() > 0 then do; ignored = reject('graph.global.storage.pending'); return; end
     _index = .llirgraph..index(graph_ref,_work,_bytelimit)
     if _index.status() <> 'ok' then do; _status = _index.status(); _reason = _index.message(); return; end
     if spend(_index.usedwork()) = 0 then return
@@ -3953,6 +4113,108 @@ analysis: class
     return _reason
   remaining: method = .int
     call run(); return _work
+  retainedbytes: method = .int
+    call run(); return _retained
+  /** Debit lazy shared point/summary construction before publishing a facet.
+   * A query that exhausts the enclosing allowance cannot leak a proved view. */
+  syncsites: method = .void
+    flowwork = _scopeflow.usedwork(); flowbytes = _scopeflow.usedbytes()
+    summarywork = _sitesummary.usedwork(); summarybytes = _sitesummary.usedbytes()
+    if spend(flowwork - _siteflowwork + summarywork - _sitesummarywork) = 0 | reserve(flowbytes - _siteflowbytes + summarybytes - _sitesummarybytes,1) = 0 then call siteerror(_reason,1)
+    _siteflowwork = flowwork; _siteflowbytes = flowbytes
+    _sitesummarywork = summarywork; _sitesummarybytes = summarybytes
+    return
+  ensuresites: method = .void
+    call require()
+    if _sitesready then return
+    if _scoped = 0 then do
+      _scopeprofile = .lltargettransfer..profile.closedmain(_owner,_function,_profile,_work,max(1,_bytelimit - _retained))
+      if _scopeprofile.status() <> 'ok' then call siteerror(_scopeprofile.message())
+      if spend(_scopeprofile.usedwork()) = 0 | reserve(_scopeprofile.usedbytes(),1) = 0 then call siteerror(_reason,1)
+      _scopegraph = .lltargetcfg..graph(_owner,reference _scopeprofile,_work,max(1,_bytelimit - _retained))
+      if _scopegraph.status() <> 'ok' then call siteerror(_scopegraph.message())
+      if spend(_scopegraph.usedwork()) = 0 | reserve(_scopegraph.usedbytes(),1) = 0 then call siteerror(_reason,1)
+      _scopeflow = .lltargetflow..analysis(_owner,reference _scopeprofile,reference _scopegraph,_work,max(1,_bytelimit - _retained))
+      if _scopeflow.status() <> 'ok' then call siteerror(_scopeflow.reason())
+    end
+    _sitesummary = .lltargetsummary..analysis(reference _scopeflow,_work,max(1,_bytelimit - _retained))
+    if _sitesummary.status() <> 'ok' then call siteerror(_sitesummary.reason())
+    call syncsites()
+    _sitesready = 1
+    return
+  discardability: method = .lltargetsummary..discardfact
+    arg sourceop = .int
+    call ensuresites()
+    proof = _sitesummary.discardability(sourceop)
+    call syncsites()
+    return proof
+  footprint: method = .lltargetsummary..footprintfact
+    arg sourceop = .int
+    call ensuresites()
+    proof = _sitesummary.footprint(sourceop)
+    call syncsites()
+    return proof
+  calllayout: method = .lltargetsummary..layoutfact
+    arg sourceop = .int
+    call ensuresites()
+    proof = _sitesummary.calllayout(sourceop)
+    call syncsites()
+    return proof
+  siteflow: method = reference .lltargetflow..analysis
+    call ensuresites(); return reference _scopeflow
+  /** The semantic facet and every output's liveness are independent proofs.
+   * Indexed suffix costs belong to the exact canonical projection, including
+   * exceptional edge accesses; legacy scalar domain IDs are never reused. */
+  deaddefinition: method = .int
+    arg sourceop = .int
+    i = .int; j = .int; op = .int; block = .int; amount = .int; projected = .int; cost = .int; domain = .int; ordinal = .int
+    edge = .lltargetcfg..edge
+    index_ref = reference .llirgraph..index; siteindex = .llirgraph..index
+    access_ref = reference .llirgraph..access; siteaccess = .llirgraph..access
+    proof = discardability(sourceop)
+    if proof.status() = 'limit' then call siteerror(proof.reason(),1)
+    if proof.safeifdead() = 0 then return 0
+    index_ref = _scopegraph.index(); siteindex = dereference index_ref
+    access_ref = _scopeflow.projection(); siteaccess = dereference access_ref
+    if _siteliveready = 0 then do
+      _sitelive = siteindex.accessliveness(access_ref,_work,max(1,_bytelimit - _retained))
+      if _sitelive.status() <> 'ok' then call siteerror(_sitelive.message())
+      if spend(_sitelive.usedwork()) = 0 | reserve(_sitelive.usedbytes(),1) = 0 | reserve(siteindex.operations() + siteindex.blocks(),8) = 0 then call siteerror(_reason,1)
+      if siteindex.operations() > 0 then _siteprefix[siteindex.operations()] = 0
+      if siteindex.blocks() > 0 then _sitetotal[siteindex.blocks()] = 0
+      do i = 1 to siteindex.functionoperations(_function)
+        op = siteindex.functionoperation(_function,i); amount = siteaccess.accesses(op) + 1
+        if spend(amount) = 0 then call siteerror(_reason,1)
+        block = siteindex.opblock(op); _sitetotal[block] = _sitetotal[block] + amount; _siteprefix[op] = _sitetotal[block]
+      end
+      _siteliveready = 1
+      call syncsites()
+    end
+    if _sitelive.complete(_function) = 0 then return 0
+    projected = _scopegraph.projectedop(sourceop)
+    if projected = 0 then return 0
+    cost = _sitetotal[siteindex.opblock(projected)] - _siteprefix[projected]
+    do i = 1 to proof.outputs()
+      if spend(cost + 1) = 0 then call siteerror(_reason,1)
+      domain = proof.outputdomain(i)
+      if siteindex.nextop(projected) <> 0 then do
+        if _sitelive.domainafter(projected,domain) then return 0
+      end
+      else do
+        /* Terminal writes are in edge programs. domainafter is demand before
+         * those programs and has already applied their kills; it cannot prove
+         * an edge-produced value dead. Query successor demand instead. */
+        if spend(siteaccess.boundaryaccesses(projected) + 1) = 0 then call siteerror(_reason,1)
+        if siteaccess.boundaryobserves(projected,domain) then return 0
+        do j = 1 to _scopegraph.outedges(sourceop)
+          edge = _scopegraph.outedge(sourceop,j); ordinal = edge.successorordinal()
+          if ordinal = 0 then iterate
+          if spend(siteaccess.edgeaccesses(projected,ordinal) * 2 + 2) = 0 then call siteerror(_reason,1)
+          if _sitelive.domainin(edge.targetblock(),domain) | siteaccess.edgehas(projected,ordinal,domain,1) | siteaccess.edgehas(projected,ordinal,domain,2) then return 0
+        end
+      end
+    end
+    return 1
   /** Internal expander query over this exact source owner. The source model's
    * normal graph and public service signatures are unchanged. */
   handlercall: method = .int
@@ -4470,6 +4732,13 @@ analysis: class
     call require()
     if _scoped = 0 | virtual < 0 | virtual >= _scopepins[0] then return 0
     return _scopepins[virtual + 1]
+  slotrelative: method = .int
+    arg bank = .string, index = .int
+    call require()
+    if _scoped = 0 then return 0
+    if bank <> 'r' then return 1
+    if index < 0 | index >= _scopeidentity[0] then return 0
+    return _scopeidentity[index + 1]
   transportcomplete: method = .int
     call require()
     return _scoped & _transportcomplete
@@ -4535,6 +4804,12 @@ analyse: procedure = .lltargetfacts..analysis
 analysegraph: procedure = .lltargetfacts..analysis
   arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864
   return .analysis(owner,functionId,profile,work,bytes,1)
+
+/** Canonical operational adapter for complete exceptional or external-bank
+ * roots. Optional legacy scalar facts remain available through analysegraph. */
+analyseoperational: procedure = .lltargetfacts..analysis
+  arg owner = reference .lltarget..module, functionId = .int, profile = 'unknown', work = 1000000, bytes = 67108864
+  return .analysis(owner,functionId,profile,work,bytes,2)
 
 /** Structural expansion proof over valid producer RXAS. Ordinary executable
  * instructions are catalog-driven clones; optional value facts serve only

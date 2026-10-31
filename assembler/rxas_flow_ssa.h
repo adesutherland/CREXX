@@ -174,6 +174,40 @@ int rxas_flow_component_at_instruction(
         size_t instruction_id, int after_instruction,
         RxasFlowRegister register_id, unsigned int component,
         RxasFlowComponentFact *fact);
+/* StorageIds are local to this exact owner/epoch. This reads the captured
+ * physical receiver without asserting a current register mapping. */
+int rxas_flow_component_for_storage_at_instruction(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t instruction_id, int after_instruction, size_t storage_id,
+        unsigned int component, RxasFlowComponentFact *fact);
+
+typedef enum RxasFlowCallbackResourceReason {
+    RXAS_FLOW_CALLBACK_RESOURCE_STALE = 0,
+    RXAS_FLOW_CALLBACK_RESOURCE_PROVED,
+    RXAS_FLOW_CALLBACK_RESOURCE_ROUTE_UNPROVED,
+    RXAS_FLOW_CALLBACK_RESOURCE_VALUE_UNPROVED,
+    RXAS_FLOW_CALLBACK_RESOURCE_LIMIT
+} RxasFlowCallbackResourceReason;
+typedef struct RxasFlowCallbackResourceFact {
+    const RxasFlowSsaAnalysis *owner;
+    unsigned long epoch;
+    size_t instruction_id;
+    int after_instruction;
+    unsigned int obligations;
+    unsigned int unresolved_obligations;
+    size_t checked_resources;
+    int proved;
+    RxasFlowCallbackResourceReason reason;
+} RxasFlowCallbackResourceFact;
+/* Proves resource conditions absent at an exact normal checkpoint. Before=0
+ * is an incoming no-hook fact for this instruction. After=1 describes only
+ * conditions at normal completion; it never says the completed hook did not
+ * run. Capacity and all subjectless/unknown routes remain unresolved. */
+int rxas_flow_callback_resources_at_instruction(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t instruction_id, int after_instruction,
+        RxasFlowCallbackResourceFact *fact);
+
 int rxas_flow_component_at_record(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t record_id, RxasFlowRegister register_id,

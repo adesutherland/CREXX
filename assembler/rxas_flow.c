@@ -3076,7 +3076,7 @@ static int flow_plan_local_single_use_copy(
         graph->nodes[copy_record].effects.branch_targets != RXOP_OP_NONE ||
         graph->nodes[copy_record].effects.implicit != RXOP_IMPLICIT_NONE ||
         graph->nodes[copy_record].effects.semantics != RXOP_SEM_NONE ||
-        rxop_signal_contract(graph->nodes[copy_record].op->opcode).state !=
+        rxop_execution_signal_contract(graph->nodes[copy_record].op->opcode).state !=
                 RXOP_SIGNAL_STATE_NONE ||
         rxop_context_writes(graph->nodes[copy_record].op->opcode) !=
                 RXOP_CONTEXT_NONE ||
@@ -3096,7 +3096,7 @@ static int flow_plan_local_single_use_copy(
         graph->nodes[copy_record + 1].effects.state !=
                 RXOP_EFFECT_CLASSIFIED ||
         graph->nodes[copy_record + 1].effects.optimizer_barrier ||
-        rxop_signal_contract(
+        rxop_execution_signal_contract(
                 graph->nodes[copy_record + 1].op->opcode).state !=
                 RXOP_SIGNAL_STATE_NONE ||
         rxop_context_writes(

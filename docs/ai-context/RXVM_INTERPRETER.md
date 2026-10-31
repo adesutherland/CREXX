@@ -430,7 +430,13 @@ The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
 locals on reuse.
 
 Counted argument-bearing bytecode calls record the first register in the
-caller's contiguous call window. Normal return still executes the
+caller's contiguous call window. `CALL R,P,R` and `DCALL R,R,R` capture the
+integer count once after initializer return and before frame allocation/reset.
+That checked snapshot drives allocation, frame-failure telemetry and argument
+binding even if a recycled `a0` finalizer mutates the caller's count. Invalid
+integer/window bounds use the existing call-frame failure path. Result-pointer
+capture stays before allocation; actual pointers are still bound afterward.
+Normal return still executes the
 compiler-emitted reverse swaps and pays no restoration scan. If a branch-style
 signal handler discards the callee before those instructions run, the unwind
 path uses that one index plus `number_args` to restore the caller's active
@@ -1557,6 +1563,17 @@ When `native_payload_ops` is set:
 - Scalar/string setters clear an attached native payload before replacing the
   visible value, so stale native resources are not accidentally copied after a
   register is reused as an integer, float, or string.
+
+The supported public callback ABI exposes value handles, not writable suspended
+caller `value **` slots. A resource callback may reenter Rexx through a separate
+root activation and may mutate pointees, resources, lifetime state, context
+and pending signals. On normal return it preserves the suspended frame's
+`locals`, `baselocals` and `local_identity` pointer coordinates and structural
+signal-handler policy. Nested handler-table changes belong to the child/COW
+activation. This statement does not cover ordinary invocation/return/scope ABI
+mapping or a delivered handler/resumed exceptional path. It is not a nonreentry or no-signal promise:
+`rxvml_request_interrupt()` can queue an interrupt from the active native
+callback. Native analysis must retain those separate control obligations.
 
 That fallback is intentional but dangerous for unique native ownership. A
 provider that supplies a finalizer but no copy hook must ensure bit-copied

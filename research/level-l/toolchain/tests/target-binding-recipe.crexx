@@ -4,6 +4,7 @@ import rxfnsb
 import llir
 import lltarget
 import lltargettransfer
+import llrxascatalog
 
 check: procedure = .int
   arg value = .int, label = .string
@@ -13,11 +14,140 @@ emit: procedure = .int
   arg body = .lltarget..bodydraft, name = .string, values = .object[], at = .llir..origin
   return body.emit(name,values,at)
 
+/** Independent structural oracle for the semantic clear checkpoint. These
+ * conditions describe a possible callback, never claim resource absence. */
+clearcheckpoint: procedure = .int
+  arg owner = reference .lltargettransfer..profile, operation = .int, residual = 0, preceding = 0
+  profile = dereference owner; row = profile.instruction(operation); catalog = .llrxascatalog..catalog()
+  failures = 0; i = .int; first = .int; firstordinal = .int; captures = .int; callback = .int; cleared = .int; sentinel = .int; subject = .int
+  action = .lltargettransfer..action; ref = .lltargettransfer..refview; domain = .lltargettransfer..domain
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if action.kind() = 'capture' & pos('catalog.callback.clear.',action.detail()) = 1 then do
+      captures = captures + 1
+      if captures = 1 then do; first = action.id(); firstordinal = i; subject = action.sourceid(); end
+      name = word('reference native-payload attribute-count',captures)
+      failures = failures + check(captures <= 3 & i = firstordinal + captures - 1 & action.detail() = 'catalog.callback.clear.' || name,'clear checkpoint captures exactly three ordered resource components')
+      failures = failures + check(action.sourcekind() = 'reference' & action.sourceid() = subject & action.subject() = 0,'clear resource conditions use one immutable pre-clear active subject')
+      if action.domain() > 0 then do
+        domain = profile.domain(action.domain())
+        failures = failures + check(domain.kind() = 'component' & domain.nativebit() = catalog.componentmask(name),'clear checkpoint uses canonical resource domain identity')
+      end
+      else failures = failures + check(0,'clear checkpoint resource domain is explicit')
+      ref = profile.ref(action.sourceid())
+      failures = failures + check(ref.operandordinal() = 1 & ref.anchor() = 'active' & ref.extentknown() & ref.extent() = 1,'ordered clear captures the exact destination operand')
+    end
+    if action.kind() = 'callback' & action.detail() = 'catalog.callback.clear.active-tree' then do
+      callback = i
+      failures = failures + check(captures = 3 & i = firstordinal + 3 & action.subject() = subject & action.domain() = 0 & action.sourcekind() = 'captured' & action.sourceid() = first,'typed active-tree callback points to the first resource capture in the exact checkpoint')
+      failures = failures + check(action.certainty() = 'may' & action.path() = 'all' & action.phase() = 'unknown' & action.observation() = 'unknown','resource checkpoint preserves possible hooks and unknown physical observation/exceptional phase')
+    end
+    if action.kind() = 'clear' & action.detail() = 'value.reset' then do
+      cleared = i
+      failures = failures + check(i = callback + 1 & action.subject() = subject & action.domain() = 0,'whole clear follows its callback checkpoint before subsequent binding/call work')
+    end
+    if action.kind() = 'callback' & action.detail() = 'catalog.callback.capacity-or-checkpoint' then sentinel = 1
+    if action.kind() = 'callcapture' then failures = failures + check(cleared > 0 & cleared < i,'argument/result pointer capture remains after the preparation clear checkpoint')
+  end
+  failures = failures + check(captures = 3 & firstordinal > preceding & callback > firstordinal & cleared > callback,'one semantic clear has one ordered active-tree checkpoint after earlier binding actions')
+  if residual then failures = failures + check(sentinel,'unrepresented call/result obligations retain their original residual barrier')
+  return failures
+
+/** Writer implementation, rather than scalar result type, owns prewrite
+ * release. All callbacks below remain possible; this is structural metadata. */
+writercontracts: procedure = .int
+  failures = 0; i = .int; j = .int; ignored = .int; bit = .int
+  captured = .int; callback = .int; firstwrite = .int; cleared = .int; callbacks = .int
+  operations = .int[]; fields = .object[]; action = .lltargettransfer..action; domain = .lltargettransfer..domain
+  row = .lltargettransfer..instruction; view = .lltargettransfer..refview; catalog = .llrxascatalog..catalog()
+  draft = .lltarget..draft('writer.contracts','fixture:writer.contracts',0)
+  at = draft.synthetic('shared setters retain old-resource hooks; field copies preserve resources'); root = draft.procedure('main',3,at)
+  fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object; fields[3] = .lltarget..operand.integer(7) as .object
+  operations[1] = emit(root,'iand',fields,at)
+  fields[3] = root.reg('r',2) as .object; operations[2] = emit(root,'iand',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(17) as .object
+  operations[3] = emit(root,'load',fields,at)
+  fields[2] = .lltarget..operand.literal('F','1.25' as .binary) as .object; operations[4] = emit(root,'load',fields,at)
+  fields[2] = .lltarget..operand.string('value' as .binary) as .object; operations[5] = emit(root,'load',fields,at)
+  fields[2] = root.reg('r',1) as .object; operations[6] = emit(root,'strlen',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',0) as .object; operations[7] = emit(root,'getnumdgts',fields,at)
+  fields[2] = root.reg('r',1) as .object; operations[8] = emit(root,'icopy',fields,at)
+  operations[9] = emit(root,'strupper',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object; ignored = emit(root,'ret',fields,at)
+  source = draft.finish(); failures = failures + check(source.valid(),'writer contract source validates independently')
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  profile = .lltargettransfer..profile(reference source)
+  failures = failures + check(profile.status() = 'ok','writer contract canonical profile seals')
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  do i = 1 to operations[0]
+    row = profile.instruction(operations[i]); item = row.record(); captured = 0; callback = 0; firstwrite = 0; cleared = 0; callbacks = 0
+    do j = 1 to row.actions()
+      action = row.action(j)
+      if action.kind() = 'capture' & action.detail() = 'catalog.callback.condition' then do
+        domain = profile.domain(action.domain()); view = profile.ref(action.sourceid())
+        if domain.nativebit() = catalog.componentmask('native-payload') & view.operandordinal() = 1 then captured = j
+      end
+      if wordpos(action.kind(),'write clear transport') > 0 & firstwrite = 0 then firstwrite = j
+      if action.kind() = 'clear' then do
+        domain = profile.domain(action.domain()); bit = domain.nativebit(); assembler ior cleared,cleared,bit
+      end
+      if action.kind() = 'callback' then do
+        callbacks = callbacks + 1
+        if action.detail() = 'catalog.callback.payload' then do
+          domain = profile.domain(action.domain())
+          if domain.nativebit() = catalog.componentmask('native-payload') then callback = j
+        end
+        failures = failures + check(action.certainty() = 'may' & action.path() = 'all' & action.phase() = 'unknown' & action.observation() = 'unknown','writer metadata retains possible finalizers and unknown observations ' || i)
+      end
+    end
+    if i <= 5 then do
+      mask = catalog.componentmask('reference'); bit = catalog.componentmask('native-payload'); assembler ior mask,mask,bit
+      failures = failures + check(catalog.valuewriter(item.opcode(),1) = 'setter' & cleared = mask & captured > 0 & captured < firstwrite & callback > firstwrite,'shared setter captures old native payload before release/write and retains later callback ' || i)
+      if i <= 2 then failures = failures + check(row.complete('signals') = 0,'writer precision does not silently remove bitwise signal uncertainty ' || i)
+    end
+    else if i <= 8 then failures = failures + check(catalog.valuewriter(item.opcode(),1) = 'field' & cleared = 0 & callbacks = 0,'raw field/copy has no invented resource clear or finalizer ' || i)
+    else failures = failures + check(catalog.valuewriter(item.opcode(),1) = 'unknown' & cleared = 0 & callbacks > 0,'alias-conditional string helper retains an unknown release rather than a must clear')
+  end
+  return failures
+
+/** A stem GET can select its default child as the output itself. The helper
+ * then returns successfully before release, so no must-clear may be emitted. */
+stemaliaswriter: procedure = .int
+  failures = 0; i = .int; cleared = 0; callback = 0; ignored = .int
+  action = .lltargettransfer..action; domain = .lltargettransfer..domain
+  catalog = .llrxascatalog..catalog(); draft = .lltarget..draft('writer.stem.alias','fixture:writer.stem.alias',0)
+  at = draft.synthetic('successful selected-child alias is not an unconditional stem setter'); root = draft.procedure('main',3,at)
+  fields = .object[]; fields[1] = root.reg('r',1) as .object; ignored = emit(root,'steminit',fields,at)
+  fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object
+  fields[3] = .lltarget..operand.integer(2) as .object; linked = emit(root,'linkattr',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',2) as .object; fields[2] = .lltarget..operand.string('missing' as .binary) as .object
+  ignored = emit(root,'load',fields,at)
+  fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object; fields[3] = root.reg('r',2) as .object
+  readop = emit(root,'stemget',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object; ignored = emit(root,'ret',fields,at)
+  source = draft.finish(); failures = failures + check(source.valid(),'selected default-child alias is representable in target source')
+  if source.valid() = 0 then do; say source.error(); return failures; end
+  profile = .lltargettransfer..profile(reference source)
+  failures = failures + check(profile.status() = 'ok','stem alias transfer profile seals')
+  if profile.status() <> 'ok' then do; say profile.message(); return failures; end
+  row = profile.instruction(readop); item = row.record()
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if action.kind() = 'clear' then cleared = cleared + 1
+    if action.kind() = 'callback' & action.detail() = 'catalog.callback.payload' then do
+      domain = profile.domain(action.domain())
+      if domain.nativebit() = catalog.componentmask('native-payload') then callback = 1
+    end
+  end
+  failures = failures + check(linked > 0 & catalog.valuewriter(item.opcode(),1) = 'unknown' & cleared = 0 & callback,'successful stem output alias retains a possible finalizer without inventing a must resource clear')
+  return failures
+
 main: procedure = .int
   failures = 0; i = .int; captureid = .int; resizeat = .int
   statusat = .int; swapat = .int; callcaptureat = .int; callat = .int
   source = .lltarget..module; row = .lltargettransfer..instruction; action = .lltargettransfer..action
   ref = .lltargettransfer..refview
+  catalog = .llrxascatalog..catalog(); opcode = .int
   draft = .lltarget..draft('ordered.recipes','fixture:ordered.recipes',0)
   at = draft.synthetic('independent recipe semantics')
   root = draft.procedure('main',8,at)
@@ -38,6 +168,8 @@ main: procedure = .int
   fields[3] = root.reg('r',1) as .object; fields[4] = root.reg('r',2) as .object
   fields[5] = .lltarget..operand.integer(256) as .object; fields[6] = root.reg('r',3) as .object
   fused = emit(root,'settpswapcall',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',6) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  resetcall = emit(root,'call',fields,at)
   call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object
   ignored = emit(root,'ret',fields,at)
   leaf = draft.procedure('leaf',0,at); ignored = emit(leaf,'ret',fields,at)
@@ -49,6 +181,10 @@ main: procedure = .int
   failures = failures + check(profile.status() = 'ok','canonical decoder publishes checked profile')
   if profile.status() <> 'ok' then do; say profile.message(); return 1; end
   row = profile.instruction(captured)
+  opcode = row.record().opcode()
+  failures = failures + check(catalog.writes(opcode,2) & catalog.writecomplete(opcode,2) & catalog.writecomponents(opcode,2) = 0,'source slot restore has a known empty pointee-write projection')
+  failures = failures + check(catalog.callbackoutputs(opcode,1) = 0 & catalog.callbackoutputs(opcode,2) = 0 & catalog.callbackcapacity(opcode,2) = 0,'captured integer assignment and pointer restore have no generated payload hooks')
+  failures = failures + check(catalog.valuewriter(opcode,1) = 'field' & catalog.valuewriter(opcode,2) = 'field','captured integer put and source restoration are raw field/copy operations')
   failures = failures + check(row.actions() = 3,'capture/unlink/put has exactly three ordered effects')
   action = row.action(1); captureid = action.id()
   failures = failures + check(action.kind() = 'capture' & action.sourcekind() = 'reference' & action.offset() = 0,'integer capture records immutable source before restore')
@@ -57,6 +193,9 @@ main: procedure = .int
   action = row.action(3)
   failures = failures + check(action.kind() = 'transport' & action.sourcekind() = 'captured' & action.sourceid() = captureid,'put consumes exact earlier capture identity')
   row = profile.instruction(assigned); action = row.action(1)
+  opcode = row.record().opcode()
+  failures = failures + check(catalog.writecomplete(opcode,1) & catalog.writecomponents(opcode,1) = catalog.componentmask('I') & catalog.opaqueeffects(opcode) = 0 & catalog.callbackoutputs(opcode,1) = 0,'direct integer field copy has a precise nonopaque generated contract')
+  failures = failures + check(row.actions() = 2,'integer field copy and unlink have exactly two ordered effects')
   failures = failures + check(action.kind() = 'transport' & row.complete('bindings') & row.complete('order'),'direct integer field copy precedes unlink without an unknown fallback')
   action = row.action(2); failures = failures + check(action.kind() = 'unlink','ISETUNLINK ordered restoration')
   row = profile.instruction(arithmetic); written = 0; observations = 0
@@ -108,6 +247,11 @@ main: procedure = .int
     end
   end
   failures = failures + check(statusat > 0 & statusat < swapat & swapat < callcaptureat & callcaptureat < callat,'fused status/swap precede pointer capture and call')
+  failures = failures + clearcheckpoint(reference profile,resetcall,1)
+  independent = .lltargettransfer..profiledraft(reference source,'ordered-swap-clear-control')
+  ignored = independent.binding(copy,'swap:1:2;clear:1'); projected = independent.finish()
+  failures = failures + check(projected.status() = 'ok','generic ordered clear recipe seals independently of native opcode admission')
+  failures = failures + clearcheckpoint(reference projected,copy,0,1)
   independent = .lltargettransfer..profiledraft(reference source,'captured-bank-control')
   ignored = independent.binding(argument,'capturedargument:1:2'); projected = independent.finish()
   row = projected.instruction(argument); found = 0
@@ -123,6 +267,10 @@ main: procedure = .int
   row = projected.instruction(copy); action = row.action(1)
   failures = failures + check(projected.status() = 'ok' & row.actions() = 1 & action.kind() = 'unknown','unsupported suffix discards the whole supported prefix atomically')
   failures = failures + check(row.complete('components') = 0 & row.complete('bindings') = 0 & row.complete('ownership') = 0,'unknown recipe invalidates dependent families together')
+  independent = .lltargettransfer..profiledraft(reference source,'unsupported-clear-program')
+  ignored = independent.binding(copy,'clear:1;future:1'); projected = independent.finish()
+  row = projected.instruction(copy); action = row.action(1)
+  failures = failures + check(projected.status() = 'ok' & row.actions() = 1 & action.kind() = 'unknown','unknown clear suffix cannot publish a partial resource checkpoint or waive a possible hook')
   independent = .lltargettransfer..profiledraft(reference source,'malformed-program')
   ignored = independent.binding(copy,'link:1:2;unlink:99'); projected = independent.finish()
   failures = failures + check(projected.status() = 'invalid','malformed second step rejects before publication')
@@ -134,5 +282,6 @@ main: procedure = .int
   failures = failures + check(projected.status() = 'limit','tiny recipe allowance refuses deterministically')
   original = dereference source.ir()
   failures = failures + check(original.binary() = saved,'all failed and independent profiles preserve input owner')
+  failures = failures + writercontracts() + stemaliaswriter()
   say 'TARGET_BINDING_RECIPE|failures=' || failures
   return failures

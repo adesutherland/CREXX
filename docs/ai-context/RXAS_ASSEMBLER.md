@@ -721,6 +721,56 @@ existing handlers and do not change VM or RXBIN semantics.
   `rxop_effect_reads_operand()` and `rxop_effect_writes_operand()` rather than
   interpreting either representation directly. A consumer must account for
   two positions naming the same physical register.
+- Each explicit write has a value-writer kind: `SETTER` for a reviewed
+  resource-releasing setter, `FIELD` for a direct field/copy write, and
+  `UNKNOWN` for hidden, indexed, conditional or unreviewed implementations.
+  `NONE` means no explicit write. The canonical effect row owns this kind;
+  `rxop_value_writer()` and the generated Level L catalogue expose it per
+  operand. A setter can release an old reference/native payload and run its
+  finalizer. An unknown writer cannot prove the absence of that callback.
+  Stem string reads remain unknown because a successful output/source alias
+  skips the release, so no unconditional clear may be inferred.
+- Callback inventory is independent of intrinsic signals and opaque-effect
+  barriers. `RXOP_EFFECT_KNOWN` rows certify a complete route inventory;
+  ordinary rows retain an unknown route. `rxop_callback_obligations()` combines
+  that completeness with source-copy, destination, retained-capacity, selector,
+  host, invocation and hidden ABI/departure hooks. Zero proves no hook; a
+  nonzero mask is an obligation, not permission to discard or reorder work.
+  Reviewed raw numeric-context getters can have an empty inventory while
+  remaining opaque for other optimizer purposes. SAY/SAYX retain host routes.
+  Handler-table COW installation/push/pop and pending-breakpoint updates do not
+  invoke their registered procedures during the update. Checked pointer/attribute
+  binding and raw scalar/status recipes likewise have no value hook; their
+  intrinsic range/overflow signals remain. Explicit substring writes only its
+  string buffer/cache, unlike alias-sensitive CONCAT's buffer-replacement path.
+  CONCAT therefore retains a conditional callback obligation.
+- `rxop_signal_contract()` describes intrinsic instruction signals.
+  `rxop_execution_signal_contract()` additionally accounts for hooks that may
+  request an interrupt in the active context. Native CFG snapshots retain both
+  contracts; operation-caused callback edges use unknown names/checkpoints.
+  Callback normal and failure continuations invalidate current storage/value,
+  policy and effect versions. No post-setter constant or clear is attached to
+  a potentially rebound register. Local ENTRY provenance does not establish
+  absent resources on recycled backing. A future point no-hook proof must use
+  callback-aware incoming facts for every source and destination extent;
+  logical count0 cannot prove retained capacity empty.
+  The bounded normal-return resource-only public-ABI profile preserves the
+  suspended frame's pointer coordinates and structural handler policy while
+  invalidating pointees and retaining pending interrupt/control uncertainty. A complete
+  single explicit shared setter can commit its computed value and final native
+  reset to its captured physical receiver. It cannot establish reference absence
+  after an intervening finalizer. This normal checkpoint does not describe a
+  delivered handler or resumed exceptional edge. The additive
+  `rxas_flow_callback_resources_at_instruction()` checks only exact incoming
+  owner/epoch resource facts (or explicitly requested normal-after conditions);
+  its after-condition never claims the completed callback did not execute.
+  Static callback CFG edges and effect versions remain conservative.
+- Component-write knownness is separate from those access masks: a pointer-slot
+  restore can have a known empty pointee-write set. IGETUNLINK reads its second
+  operand's integer, restores that slot, then writes only the first operand's
+  integer; it does not acquire value-copy/finalizer hooks from the slot write.
+  ISETUNLINK directly copies the integer before restoring its destination slot;
+  unlike ILOADSETUNLINK's setter it has no payload-release or opaque effect.
 - `kills` is a proof set: every named operand is definitely overwritten
   without reading its previous value. It is always a subset of `writes` and is
   deliberately narrower than possible writes.
@@ -890,6 +940,34 @@ analysis. The current H01 joined-key and H02 string-literal reuse consumers
 request it when their candidate census admits those routes; tests may also
 request it explicitly. Structural analysis itself does not rewrite queued
 records or RXBIN output.
+
+An additive internal analysis can build a declared-entry policy view with
+`rxas_flow_entry_profile_create()` and `rxas_flow_procedure_entry_view()`.
+The opaque profile binds an exact live raw owner/epoch to a caller-declared
+uniform HALT or IGNORE policy and an ordinary activation without handler-entry
+ingress. It never infers VM defaults or fresh resources from `.main`. Profiles
+borrow their source owner; frozen views own copied graph descriptors and the
+entry premise but, like raw graphs, borrow the stable input queue and tokens.
+The raw optimizer graph and its default callers remain unchanged.
+
+`assembler/rxas_flow_policy_view.c` solves structural policy reachability from
+that seed before SSA. A bounded monotone worklist joins per-name policy classes
+and revisits backedges; authored handlers, unknown policy writes and nonresource
+callbacks retain conservative alternatives. Failure, stale/foreign ownership
+or exhausted work returns no view, leaving the raw graph usable. Edge causes
+separate intrinsic failure from callback delivery and retain the producer,
+checkpoint and policy response. Complete public resource-only callbacks can
+queue an interrupt for dispatch after opcode completion in an ordinary frame.
+Their HALT alternative is terminal; IGNORE resumes with the normal posthook
+state. The checkpoint precedes delivered-handler effects: CALL/action handler
+resumption always havocs state, and raw intrinsic before/partial failures keep
+their independent phases. No resource or SSA absence query controls this
+worklist, and a view supplies neither resource freshness nor a no-hook theorem.
+Repeated record walks and policy-name byte scans consume the same work budget.
+Signal property `POLICY_WRITE` (8) denotes a structural handler-table transfer;
+`PENDING_WRITE` (32) denotes pending-bit control. `BPOFF` retains its typed
+BREAKPOINT-disable effect but only clears the pending bit, preserving an
+installed handler. Its opaque effect and optimizer barrier remain observable.
 
 Stage 4 adds `assembler/rxas_flow_signal.c`, a second demand-driven epoch
 cache layered on the structural result. Handler policy is modeled as a sparse

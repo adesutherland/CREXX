@@ -1,10 +1,11 @@
 /* cREXX License (MIT). Typed target remapping and atomic insertion. */
 options levelb
-namespace lltargetremap expose mapping recordchange change copyorigin modulemap modulebinding globalref mappedrecord
+namespace lltargetremap expose mapping recordchange change copyorigin modulemap modulebinding globalref mappedrecord correspondence eventmap
 import rxfnsb
 import llir
 import lltarget
 import lltargettransfer
+import lltargetcfg
 import llrxascatalog
 
 bad: procedure = .void
@@ -572,6 +573,349 @@ change: class
     if _status <> 'changed' then return old
     if old < 1 | old > _operations[0] then call bad('LL_TARGET_REMAP: source operation ordinal')
     return _operations[old]
+
+/** One checked same-activation source/candidate event. Instance zero denotes
+ * the identity-copy/entry-clear transaction. A repeated clone needs a distinct
+ * activation witness; a caller-supplied integer never supplies that witness. */
+eventmap: class
+  _owner = reference .lltargetremap..correspondence
+  _operation = .int
+  _ordinal = .int
+  _edge = .int
+  _instance = .int
+  *: factory
+    arg owner = reference .lltargetremap..correspondence, operation = .int, ordinal = .int, edgeid = .int, instance = 0
+    _owner = owner; _operation = operation; _ordinal = ordinal; _edge = edgeid; _instance = instance
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    owner = dereference _owner
+    return owner.eventvalid(_operation,_ordinal,_edge,_instance)
+  status: method = .string
+    if <refvalid>(_owner) = 0 then return 'invalid'
+    owner = dereference _owner
+    if owner.status() <> 'proved' then return owner.status()
+    if _instance <> 0 then return 'unknown'
+    if valid() = 0 then return 'invalid'
+    return 'proved'
+  reason: method = .string
+    if <refvalid>(_owner) = 0 then return 'correspondence.owner.expired'
+    owner = dereference _owner
+    if owner.status() <> 'proved' then return owner.reason()
+    if _instance <> 0 then return 'correspondence.activation.mapping.required'
+    if valid() = 0 then return 'correspondence.event.invalid'
+    return ''
+  sourceoperation: method = .int
+    return _operation
+  candidateoperation: method = .int
+    owner = dereference _owner; return owner.operation(_operation,_instance)
+  sourceordinal: method = .int
+    return _ordinal
+  candidateordinal: method = .int
+    return _ordinal
+  sourceedge: method = .int
+    return _edge
+  candidateedge: method = .int
+    owner = dereference _owner; return owner.edge(_edge,_instance)
+  sourcefunction: method = .int
+    owner = dereference _owner; source_ref = owner.sourceowner(); source = dereference source_ref
+    item = source.at(_operation); return item.procedureid()
+  candidatefunction: method = .int
+    owner = dereference _owner; candidate_ref = owner.candidateowner(); candidate = dereference candidate_ref
+    item = candidate.at(candidateoperation()); return item.procedureid()
+  sourcescope: method = .int
+    owner = dereference _owner; cfg_ref = owner.sourcecfg(); cfg = dereference cfg_ref
+    return cfg.scopeowner(_operation)
+  candidatescope: method = .int
+    owner = dereference _owner; cfg_ref = owner.candidatecfg(); cfg = dereference cfg_ref
+    return cfg.scopeowner(candidateoperation())
+
+/** Checked correspondence for the existing identity-copy and owned entry-NULL
+ * transaction. Maps are locators checked against both frozen models, transfer
+ * programs and CFGs. This proves event correspondence, not callback absence,
+ * normalized entry state or call-to-inline activation equivalence. */
+correspondence: class
+  _source = reference .lltarget..module
+  _candidate = reference .lltarget..module
+  _before = reference .lltargettransfer..profile
+  _after = reference .lltargettransfer..profile
+  _sourcecfg = reference .lltargetcfg..graph
+  _candidatecfg = reference .lltargetcfg..graph
+  _sourceid = .int
+  _candidateid = .int
+  _beforeid = .int
+  _afterid = .int
+  _sourcecfgid = .int
+  _candidatecfgid = .int
+  _catalog = .string
+  _operations = .int[]
+  _edges = .int[]
+  _insertions = .int[]
+  _originleft = .int[]
+  _originright = .int[]
+  _status = .string
+  _reason = .string
+  _limit = .int
+  _bytes = .int
+  _bytelimit = .int
+  _work = .int
+  *: factory
+    arg source = reference .lltarget..module, candidate = reference .lltarget..module, before = reference .lltargettransfer..profile, after = reference .lltargettransfer..profile, sourcecfg = reference .lltargetcfg..graph, candidatecfg = reference .lltargetcfg..graph, operations = .int[], work = 1000000, bytes = 67108864
+    _source = source; _candidate = candidate; _before = before; _after = after; _sourcecfg = sourcecfg; _candidatecfg = candidatecfg
+    _operations = operations; _limit = work; _bytes = bytes; _bytelimit = bytes; _status = 'building'
+    return
+  fail: method = .int
+    arg status = .string, reason = .string
+    _status = status; _reason = reason; return 0
+  spend: method = .int
+    arg amount = 1
+    if amount < 0 | amount > _limit - _work then return fail('limit','correspondence.work')
+    _work = _work + amount; return 1
+  reserve: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _bytes then return fail('limit','correspondence.bytes')
+    _bytes = _bytes - amount; return 1
+  ownersvalid: method = .int
+    if <refvalid>(_source) = 0 | <refvalid>(_candidate) = 0 | <refvalid>(_before) = 0 | <refvalid>(_after) = 0 | <refvalid>(_sourcecfg) = 0 | <refvalid>(_candidatecfg) = 0 then return 0
+    source = dereference _source; candidate = dereference _candidate; before = dereference _before; after = dereference _after
+    sourcecfg = dereference _sourcecfg; candidatecfg = dereference _candidatecfg; catalog = .llrxascatalog..catalog()
+    return source.valid() & candidate.valid() & source.identity() = _sourceid & candidate.identity() = _candidateid & before.valid() & after.valid() & before.identity() = _beforeid & after.identity() = _afterid & before.matches(_source) & after.matches(_candidate) & sourcecfg.valid() & candidatecfg.valid() & sourcecfg.identity() = _sourcecfgid & candidatecfg.identity() = _candidatecfgid & sourcecfg.matches(_source,_before) & candidatecfg.matches(_candidate,_after) & catalog.fingerprint() = _catalog
+  sameoperand: method = .int
+    arg left = .lltarget..operand, right = .lltarget..operand
+    if left.kind() <> right.kind() then return 0
+    if left.kind() = 'R' then return left.bank() = right.bank() & left.index() = right.index()
+    if spend(left.length() + right.length() + 1) = 0 then return 0
+    return left.index() = right.index() & bin2x(left.bytes()) == bin2x(right.bytes()) & left.text() == right.text()
+  sameorigin: method = .int
+    arg left = .llir..origin, right = .llir..origin
+    lefts = .llir..origin[]; rights = .llir..origin[]; head = 1; i = .int
+    lefts[1] = left; rights[1] = right
+    do while head <= lefts[0]
+      a = lefts[head]; b = rights[head]; head = head + 1; found = 0
+      do i = 1 to _originleft[0]
+        if spend() = 0 then return 0
+        if _originleft[i] = a.id() & _originright[i] = b.id() then do; found = 1; leave; end
+      end
+      if found then iterate
+      leftsource = a.sourcebytes(); rightsource = b.sourcebytes()
+      if spend(length(a.filename()) + length(b.filename()) + <blen>(leftsource) + <blen>(rightsource) + a.parents() + 1) = 0 | reserve(80 + a.parents() * 64) = 0 then return 0
+      if a.kind() <> b.kind() | (a.filename() == b.filename()) = 0 | a.first() <> b.first() | a.last() <> b.last() | (bin2x(leftsource) == bin2x(rightsource)) = 0 | a.parents() <> b.parents() then return 0
+      n = _originleft[0] + 1; _originleft[n] = a.id(); _originright[n] = b.id()
+      do i = 1 to a.parents()
+        n = lefts[0] + 1; lefts[n] = a.parent(i); rights[n] = b.parent(i)
+      end
+    end
+    return 1
+  refordinal: method = .int
+    arg instruction = .lltargettransfer..instruction, id = .int
+    if id = 0 then return 0
+    do i = 1 to instruction.references()
+      if spend() = 0 then return -1
+      view = instruction.ref(i); if view.id() = id then return i
+    end
+    return -1
+  actionordinal: method = .int
+    arg instruction = .lltargettransfer..instruction, id = .int
+    if id = 0 then return 0
+    do i = 1 to instruction.actions()
+      if spend() = 0 then return -1
+      action = instruction.action(i); if action.id() = id then return i
+    end
+    return -1
+  sametransfer: method = .int
+    arg left = .lltargettransfer..instruction, right = .lltargettransfer..instruction
+    i = .int
+    before = dereference _before; after = dereference _after
+    if left.references() <> right.references() | left.actions() <> right.actions() then return 0
+    do i = 1 to 15
+      if spend() = 0 then return 0
+      family = word('references order effects components flags bindings observations ownership numeric signals control failure calls relocation values',i)
+      if left.complete(family) <> right.complete(family) then return 0
+    end
+    do i = 1 to left.references()
+      if spend(2) = 0 then return 0
+      a = left.ref(i); b = right.ref(i)
+      if a.kind() <> b.kind() | a.anchor() <> b.anchor() | a.operandordinal() <> b.operandordinal() | a.extentknown() <> b.extentknown() | a.extent() <> b.extent() | a.role() <> b.role() | a.roleordinal() <> b.roleordinal() | sameoperand(a.operand(),b.operand()) = 0 then return 0
+      if a.kind() = 'address' then do
+        if a.addresskind() <> b.addresskind() | a.selectorkind() <> b.selectorkind() | a.selectoroffset() <> b.selectoroffset() | a.targetbank() <> b.targetbank() | a.targetanchor() <> b.targetanchor() | sameoperand(a.selectorvalue(),b.selectorvalue()) = 0 then return 0
+        if refordinal(left,a.baseid()) <> refordinal(right,b.baseid()) then return 0
+        if a.selectorkind() = 'reference' then do; if refordinal(left,a.selectorid()) <> refordinal(right,b.selectorid()) then return 0; end
+        else if a.selectorkind() = 'captured' then do; if actionordinal(left,a.selectorid()) <> actionordinal(right,b.selectorid()) then return 0; end
+      end
+    end
+    do i = 1 to left.actions()
+      if spend(3) = 0 then return 0
+      la = left.action(i); ra = right.action(i)
+      if la.kind() <> ra.kind() | la.sourcekind() <> ra.sourcekind() | la.certainty() <> ra.certainty() | la.path() <> ra.path() | la.phase() <> ra.phase() | la.detail() <> ra.detail() | la.offset() <> ra.offset() | la.observation() <> ra.observation() | la.intrinsicfootprint() <> ra.intrinsicfootprint() | sameoperand(la.literal(),ra.literal()) = 0 then return 0
+      if refordinal(left,la.subject()) <> refordinal(right,ra.subject()) then return 0
+      if la.sourcekind() = 'reference' then do; if refordinal(left,la.sourceid()) <> refordinal(right,ra.sourceid()) then return 0; end
+      else if la.sourcekind() = 'captured' then do; if actionordinal(left,la.sourceid()) <> actionordinal(right,ra.sourceid()) then return 0; end
+      if (la.domain() = 0) <> (ra.domain() = 0) then return 0
+      if la.domain() > 0 then do
+        ad = before.domain(la.domain()); bd = after.domain(ra.domain())
+        if ad.kind() <> bd.kind() | ad.key() <> bd.key() | ad.nativebit() <> bd.nativebit() then return 0
+      end
+    end
+    return 1
+  run: method = .void
+    if _status <> 'building' then return
+    i = .int; j = .int; k = .int; next = .int; mapped = .int; entry = .int; targetentry = .int; ignored = .int; targetop = .int
+    a = .lltarget..record; b = .lltarget..record; ae = .lltargetcfg..edge; be = .lltargetcfg..edge
+    do
+      if _limit < 1 | _bytes < 1 then do; ignored = fail('limit','correspondence.allowances'); return; end
+      if <refvalid>(_source) = 0 | <refvalid>(_candidate) = 0 | <refvalid>(_before) = 0 | <refvalid>(_after) = 0 | <refvalid>(_sourcecfg) = 0 | <refvalid>(_candidatecfg) = 0 then do; ignored = fail('invalid','correspondence.owner.expired'); return; end
+      source = dereference _source; candidate = dereference _candidate; before = dereference _before; after = dereference _after
+      sourcecfg = dereference _sourcecfg; candidatecfg = dereference _candidatecfg; catalog = .llrxascatalog..catalog()
+      if before.status() = 'limit' | after.status() = 'limit' | sourcecfg.status() = 'limit' | candidatecfg.status() = 'limit' then do; ignored = fail('limit','correspondence.analysis.allowance'); return; end
+      if before.status() <> 'ok' | after.status() <> 'ok' | sourcecfg.status() <> 'ok' | candidatecfg.status() <> 'ok' then do; ignored = fail('invalid','correspondence.analysis.unavailable'); return; end
+      _sourceid = source.identity(); _candidateid = candidate.identity(); _beforeid = before.identity(); _afterid = after.identity()
+      _sourcecfgid = sourcecfg.identity(); _candidatecfgid = candidatecfg.identity(); _catalog = catalog.fingerprint()
+      if ownersvalid() = 0 then do; ignored = fail('invalid','correspondence.owner.mismatch'); return; end
+      if (before.premise() == after.premise()) = 0 | (before.executioncontext() == after.executioncontext()) = 0 then do; ignored = fail('unknown','correspondence.operational.premise.changed'); return; end
+      sourceRoot = before.executionroot(); candidateRoot = after.executionroot()
+      if (sourceRoot = 0) <> (candidateRoot = 0) then do; ignored = fail('unknown','correspondence.execution.root.changed'); return; end
+      if sourceRoot > 0 then do
+        if spend(source.procedures() + candidate.procedures() + 1) = 0 then return
+        sourceBody = source.body(sourceRoot); candidateBody = candidate.body(candidateRoot)
+        if (sourceBody.name() == candidateBody.name()) = 0 | before.defaulthalt(sourceRoot) <> after.defaulthalt(candidateRoot) then do; ignored = fail('unknown','correspondence.execution.root.changed'); return; end
+      end
+      if source.globals() <> candidate.globals() | source.procedures() <> candidate.procedures() | source.name() <> candidate.name() then do; ignored = fail('unknown','correspondence.activation.mapping.required'); return; end
+      if reserve((source.records() + candidate.records() + sourcecfg.edges()) * 24 + 256) = 0 then return
+      next = 1
+      do i = 1 to source.records()
+        if spend() = 0 then return
+        a = source.record(i)
+        if a.id() > _operations[0] then do; ignored = fail('invalid','correspondence.operation.missing'); return; end
+        mapped = _operations[a.id()]
+        do while next <= candidate.records()
+          b = candidate.record(next)
+          if b.id() = mapped then leave
+          if b.kind() <> 'instruction' | b.mnemonic() <> 'null' | b.operands() <> 1 | a.kind() = 'procedure' | a.procedureid() = 0 then do; ignored = fail('unknown','correspondence.insertion.unrepresented'); return; end
+          body = source.body(a.procedureid()); first = body.record(1)
+          if first.id() <> a.id() then do; ignored = fail('unknown','correspondence.insertion.not.entry'); return; end
+          value = b.operand(1)
+          if value.kind() <> 'R' | value.bank() <> 'r' | value.index() >= body.locals() | sourcecfg.scopeowner(a.id()) <> 0 | candidatecfg.scopeowner(b.id()) <> 0 then do; ignored = fail('unknown','correspondence.insertion.owner.unproved'); return; end
+          _insertions[_insertions[0] + 1] = b.id(); next = next + 1
+          if spend() = 0 then return
+        end
+        if next > candidate.records() then do; ignored = fail('invalid','correspondence.operation.missing'); return; end
+        b = candidate.record(next); next = next + 1
+        if a.kind() <> b.kind() | a.opcode() <> b.opcode() | a.operands() <> b.operands() then do; ignored = fail('unknown','correspondence.record.changed'); return; end
+        leftorigin = a.origin(); rightorigin = b.origin()
+        if sameorigin(leftorigin,rightorigin) = 0 then do
+          if _status = 'building' then ignored = fail('unknown','correspondence.origin.changed')
+          return
+        end
+        if a.procedureid() > 0 then do
+          leftbody = source.body(a.procedureid()); rightbody = candidate.body(b.procedureid())
+          if leftbody.name() <> rightbody.name() | leftbody.locals() <> rightbody.locals() | leftbody.expose() <> rightbody.expose() then do; ignored = fail('unknown','correspondence.activation.mapping.required'); return; end
+        end
+        else if b.procedureid() <> 0 then do; ignored = fail('unknown','correspondence.activation.mapping.required'); return; end
+        do j = 1 to a.operands()
+          if spend() = 0 then return
+          if sameoperand(a.operand(j),b.operand(j)) = 0 then do
+            if _status = 'building' then ignored = fail('unknown','correspondence.operand.changed')
+            return
+          end
+        end
+        if a.procedureid() < 2 | a.kind() = 'procedure' then iterate
+        entry = sourcecfg.scopeowner(a.id()); targetentry = 0
+        if entry > 0 then do
+          if entry > _operations[0] then do; ignored = fail('invalid','correspondence.scope.entry.missing'); return; end
+          targetentry = _operations[entry]
+        end
+        if candidatecfg.scopeowner(b.id()) <> targetentry then do; ignored = fail('unknown','correspondence.activation.mapping.required'); return; end
+        left = before.instruction(a.id()); right = after.instruction(b.id())
+        if sametransfer(left,right) = 0 then do
+          if _status = 'building' then ignored = fail('unknown','correspondence.transfer.changed')
+          return
+        end
+        if sourcecfg.outedges(a.id()) <> candidatecfg.outedges(b.id()) then do; ignored = fail('unknown','correspondence.edges.changed'); return; end
+        do j = 1 to sourcecfg.outedges(a.id())
+          if spend() = 0 then return
+          ae = sourcecfg.outedge(a.id(),j); be = candidatecfg.outedge(b.id(),j)
+          if ae.role() <> be.role() | ae.phase() <> be.phase() | ae.signalname() <> be.signalname() | ae.complete() <> be.complete() | ae.exposure() <> be.exposure() | ae.asynchronous() <> be.asynchronous() | ae.boundarykind() <> be.boundarykind() | ae.scopecomplete() <> be.scopecomplete() | ae.scopeexits() <> be.scopeexits() | ae.scopeenters() <> be.scopeenters() then do; ignored = fail('unknown','correspondence.edge.changed'); return; end
+          do k = 1 to ae.scopeexits()
+            entry = ae.scopeexit(k)
+            if entry > _operations[0] then do; ignored = fail('invalid','correspondence.scope.entry.missing'); return; end
+            if _operations[entry] <> be.scopeexit(k) then do; ignored = fail('unknown','correspondence.activation.mapping.required'); return; end
+          end
+          do k = 1 to ae.scopeenters()
+            entry = ae.scopeentry(k)
+            if entry > _operations[0] then do; ignored = fail('invalid','correspondence.scope.entry.missing'); return; end
+            if _operations[entry] <> be.scopeentry(k) then do; ignored = fail('unknown','correspondence.activation.mapping.required'); return; end
+          end
+          targetop = 0
+          if ae.targetop() > 0 then do
+            if ae.targetop() > _operations[0] then do; ignored = fail('invalid','correspondence.edge.target.missing'); return; end
+            targetop = _operations[ae.targetop()]
+          end
+          if be.targetop() <> targetop then do; ignored = fail('unknown','correspondence.edge.target.changed'); return; end
+          _edges[ae.id()] = be.id()
+        end
+      end
+      if next <= candidate.records() then do; ignored = fail('unknown','correspondence.unmapped.candidate'); return; end
+      _status = 'proved'
+    on signal as problem
+      ignored = fail('invalid','correspondence.failed: ' || problem.name() || ': ' || problem.message())
+    end
+    return
+  valid: method = .int
+    call run(); return _status = 'proved' & ownersvalid()
+  status: method = .string
+    call run()
+    if _status = 'proved' & ownersvalid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    if status() = 'invalid' & _reason = '' then return 'correspondence.owner.expired.or.replaced'
+    return _reason
+  sourceowner: method = reference .lltarget..module
+    return _source
+  candidateowner: method = reference .lltarget..module
+    return _candidate
+  sourceprofile: method = reference .lltargettransfer..profile
+    return _before
+  candidateprofile: method = reference .lltargettransfer..profile
+    return _after
+  sourcecfg: method = reference .lltargetcfg..graph
+    return _sourcecfg
+  candidatecfg: method = reference .lltargetcfg..graph
+    return _candidatecfg
+  operation: method = .int
+    arg sourceop = .int, instance = 0
+    if valid() = 0 | instance <> 0 | sourceop < 1 | sourceop > _operations[0] then return 0
+    return _operations[sourceop]
+  edge: method = .int
+    arg sourceedge = .int, instance = 0
+    if sourceedge = 0 then return 0
+    if valid() = 0 | instance <> 0 | sourceedge < 1 | sourceedge > _edges[0] then return 0
+    return _edges[sourceedge]
+  mapsregister: method = .int
+    arg sourcebank = .string, sourceindex = .int, candidatebank = .string, candidateindex = .int, instance = 0
+    return valid() & instance = 0 & sourcebank = candidatebank & sourceindex = candidateindex
+  eventvalid: method = .int
+    arg sourceop = .int, ordinal = .int, edgeid = 0, instance = 0
+    if valid() = 0 | instance <> 0 | operation(sourceop) = 0 then return 0
+    before = dereference _before; instruction = before.instruction(sourceop)
+    if ordinal < 1 | ordinal > instruction.actions() then return 0
+    if edgeid = 0 then return 1
+    if edge(edgeid) = 0 then return 0
+    cfg = dereference _sourcecfg; original = cfg.edge(edgeid)
+    return original.sourceop() = sourceop
+  event: method = .lltargetremap..eventmap
+    arg sourceop = .int, ordinal = .int, edgeid = 0, instance = 0
+    return .eventmap(reference self,sourceop,ordinal,edgeid,instance)
+  insertions: method = .int
+    if valid() = 0 then return 0
+    return _insertions[0]
+  insertion: method = .int
+    arg ordinal = .int
+    if valid() = 0 | ordinal < 1 | ordinal > _insertions[0] then call bad('LL_TARGET_REMAP: insertion correspondence ordinal')
+    return _insertions[ordinal]
+  usedwork: method = .int
+    return _work
+  usedbytes: method = .int
+    return _bytelimit - _bytes
 
 /** A selected module is identified by its exact frozen owner and image-local
  * module ID. Names and basenames are diagnostics, never binding keys. */

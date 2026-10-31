@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Thin one-module client of the shared B/L services. */
 options levelb
-namespace llrxinline expose main selectionresult
+namespace llrxinline expose main selectionresult selectionexecute
 import rxfnsb
 import lllimits
 import llir
@@ -8,12 +8,15 @@ import lltarget
 import llinline
 import lltargetnormalize
 import lltargettransfer
+import lltargetflow
+import lltargetsummary
 import llcleanup
 import llrxasinput
 import llrxasoutput
 import llfileoutput
 import llrxascatalog
 import rxjson
+import llrxinlinestage
 
 main: procedure = .int
   arg argv = .string[]
@@ -97,11 +100,11 @@ main: procedure = .int
 callsites: procedure = .int[]
   arg owner = reference .lltarget..module
   target = .lltarget..module; item = .lltarget..record
-  target = dereference owner; calls = .int[]
+  target = dereference owner; calls = .int[]; catalog = .llrxascatalog..catalog()
   do i = 1 to target.records()
     item = target.record(i)
     if item.kind() <> 'instruction' then iterate
-    if wordpos(item.mnemonic(),'call call1 call2 call3 call4 swapcall settpswapcall settpcall') > 0 then calls[calls[0] + 1] = item.id()
+    if catalog.callinvokes(item.opcode()) then calls[calls[0] + 1] = item.id()
   end
   return calls
 
@@ -149,13 +152,19 @@ applybatch: procedure = .int
   change = .llinline..change; body = .lltarget..body; request = .llinline..binding
   item = .lltarget..record; field = .lltarget..operand; bodies = .lltarget..module[]
   normalized = .lltargetnormalize..change; context = .llinline..context
+  receipt = .llinline..normalizationreceipt
   execution = .lltargettransfer..profile
   prepared = .object[]; names = .string[]; sitenames = .string[]
   siteids = .int[]; providerindices = .int[]; procedureids = .int[]; providerused = .int[]
   procedureid = .int; providerindex = .int; i = .int; j = .int
-  bodies = dereference supplied; calls = callsites(reference target)
+  bytebudget = 67108864
+  bodies = dereference supplied; calls = callsites(reference target); catalog = .llrxascatalog..catalog()
   do i = 1 to calls[0]
     item = target.at(calls[i]); called = ''
+    if catalog.callkind(item.opcode()) <> 1 then do
+      call lineout 'stderr','LL_INLINE_KEEP: target.selection.authority.unavailable'
+      iterate
+    end
     do j = 1 to item.operands()
       field = item.operand(j)
       if field.kind() = 'P' then called = field.text()
@@ -188,14 +197,18 @@ applybatch: procedure = .int
     end
   end
   if profile <> 'unknown' then do
-    execution = .lltargettransfer..profile.closedcalls(reference target,target.procedureid('main'),profile,workbudget)
-    normalized = llinline..normalizewith(reference target,reference execution,workbudget)
+    execution = .lltargettransfer..profile.closedcalls(reference target,target.procedureid('main'),profile,workbudget,bytebudget)
+    if execution.status() <> 'ok' then do; call lineout 'stderr','LL_INLINE_' || upper(execution.status()) || ': ' || execution.message(); return 1; end
+    workbudget = workbudget - execution.usedwork(); bytebudget = bytebudget - execution.usedbytes()
+    receipt = .llinline..normalizationreceipt.owned(reference target,workbudget,bytebudget,reference execution)
   end
-  else normalized = llinline..normalize(reference target,workbudget)
-  if normalized.status() = 'invalid' | normalized.status() = 'limit' then do
-    call lineout 'stderr','LL_INLINE_' || upper(normalized.status()) || ': ' || normalized.reason()
+  else receipt = .llinline..normalizationreceipt.owned(reference target,workbudget,bytebudget)
+  if receipt.status() <> 'ok' then do
+    call lineout 'stderr','LL_INLINE_NORMALIZATION_' || upper(receipt.status()) || ': ' || receipt.reason()
     return 1
   end
+  normalized = receipt.result(); workbudget = workbudget - receipt.reservedwork(); bytebudget = bytebudget - receipt.reservedbytes()
+  if workbudget < 1 | bytebudget < 1 then do; call lineout 'stderr','LL_INLINE_LIMIT: normalization remaining work/bytes'; return 1; end
   if normalized.status() = 'changed' then target = normalized.result()
   do i = 1 to normalized.warnings()
     warning = normalized.warning(i)
@@ -206,14 +219,15 @@ applybatch: procedure = .int
   if profile <> 'unknown' then do
     /* Normalization has published another exact owner. Recheck the caller's
      * explicit invocation premise there; the old witness is never reused. */
-    execution = .lltargettransfer..profile.closedcalls(reference target,target.procedureid('main'),profile,workbudget)
+    execution = .lltargettransfer..profile.closedcalls(reference target,target.procedureid('main'),profile,workbudget,bytebudget)
     if execution.status() <> 'ok' then do
       call lineout 'stderr','LL_INLINE_' || upper(execution.status()) || ': ' || execution.message()
       return 1
     end
+    workbudget = workbudget - execution.usedwork(); bytebudget = bytebudget - execution.usedbytes()
     executionbound = context.useexecution(reference target,reference execution)
   end
-  if context.certify(reference target,normalized) = 0 then do
+  if context.certifyreceipt(reference target,normalized,reference receipt) = 0 then do
     call lineout 'stderr','LL_INLINE_KEEP: ' || normalized.reason()
     return 0
   end
@@ -228,7 +242,7 @@ applybatch: procedure = .int
     end
     prepared[i] = request as .object
   end
-  change = llinline..expandcontext(prepared,context,workbudget)
+  change = llinline..expandcontext(prepared,context,workbudget,1000000,bytebudget)
   do i = 1 to change.sites()
     site = change.site(i)
     if change.statusat(site) = 'keep' then call lineout 'stderr','LL_INLINE_KEEP: ' || change.reasonat(site)
@@ -311,10 +325,16 @@ readsource: procedure = .binary
 /** The native linker owns this transient manifest and independently validates
  * the returned files before replacing its selected modules. All provider and
  * caller owners below remain frozen while every binding is expanded. */
+/** Native host passes the actual session it constructed and enrolled. The
+ * manifest remains a request/diagnostic locator, never a proof constructor. */
+selectionexecute: procedure = .int
+  arg state = .llrxinlinestage..session, manifestpath = .string, resultpath = .string, policy = .string, workbudget = .int
+  return selectionmode(manifestpath,resultpath,policy,workbudget,reference state)
+
 selectionmode: procedure = .int
-  arg manifestpath = .string, resultpath = .string, policy = .string, workbudget = .int
-  raw = .lltarget..module[]; frozen = .lltarget..module[]; outputs = .lltarget..module[]
-  normalizations = .lltargetnormalize..change[]; moduleowners = .string[]; modulenames = .string[]
+  arg manifestpath = .string, resultpath = .string, policy = .string, workbudget = .int, ?staged = reference .llrxinlinestage..session
+  outputs = .lltarget..module[]
+  moduleowners = .string[]; modulenames = .string[]
   moduleinputs = .string[]; moduleoutputs = .string[]; changed = .int[]
   procowners = .string[]; procsymbols = .string[]; procconstants = .int[]; procmodules = .int[]; procnormal = .int[]
   bindings = .object[]; bindingowners = .int[]; localbindings = .object[]
@@ -324,7 +344,17 @@ selectionmode: procedure = .int
   emitted = .llrxasoutput..emission; writer = .llir..writer
   doc = .rxjson..jsondocument; catalog = .llrxascatalog..catalog()
   fault = .string; prefix = .string; i = .int; j = .int
+  allowance = .int; byteallowance = .int
+  points = reference .lltargetflow..analysis; summaries = reference .lltargetsummary..analysis
+  receipt_ref = reference .llinline..normalizationreceipt
   do
+    /* Live links must be declared and bound in this same block scope. They
+     * retain the native session's exact array cells for every later site. */
+    raw = .lltarget..module[]; frozen = .lltarget..module[]; normalizations = .lltargetnormalize..change[]
+    receipts = .llinline..normalizationreceipt[]
+    stage = .llrxinlinestage..session
+    raw_ref = reference .lltarget..module[]; result_ref = reference .lltarget..module[]
+    normalizations_ref = reference .lltargetnormalize..change[]
     source = readsource(manifestpath,67108864)
     remainingbytes = 67108864 - <blen>(source)
     doc = .jsondocument(source as .string)
@@ -337,7 +367,16 @@ selectionmode: procedure = .int
     modulecount = doc.count('modules'); procedurecount = doc.count('procedures'); bindingcount = doc.count('bindings')
     if modulecount < 1 | modulecount > workbudget | procedurecount > workbudget | bindingcount > workbudget then assembler signal "ERROR","LL_RESOURCE_LIMIT: selection rows"
     frontend = .llrxasinput..reader(); context = .llinline..context('linker',policy)
+    if ?staged then stage = dereference staged
+    if ?staged then do
+      if modulecount <> stage.count() then assembler signal "ERROR","LL_INLINE_SELECTION: native session module count mismatch"
+      raw_ref = stage.rawarray(); result_ref = stage.resultarray(); normalizations_ref = stage.normalizationarray()
+    end
+    if ?staged then raw = dereference raw_ref
+    if ?staged then frozen = dereference result_ref
+    if ?staged then normalizations = dereference normalizations_ref
     if context.status() <> 'ok' then do; fault = 'LL_INLINE_SELECTION: ' || context.reason(); assembler signal "ERROR",fault; end
+    /* Complete raw allocation before lending any element to a receipt. */
     do i = 1 to modulecount
       prefix = 'modules.' || i || '.'
       if selectionnumber(reference doc,prefix || 'ordinal') <> i - 1 then assembler signal "ERROR","LL_INLINE_SELECTION: nonconsecutive module ordinal"
@@ -348,21 +387,50 @@ selectionmode: procedure = .int
       do j = 1 to i - 1
         if moduleowners[j] = moduleowners[i] | moduleoutputs[j] = moduleoutputs[i] then assembler signal "ERROR","LL_INLINE_SELECTION: duplicate owner/output"
       end
-      source = readsource(moduleinputs[i],remainingbytes)
-      remainingbytes = remainingbytes - <blen>(source)
-      parsed = frontend.parse(source,modulenames[i],modulenames[i])
-      if parsed.status() <> 0 then do; fault = parsed.diagnostic(); assembler signal "ERROR",fault; end
-      raw[i] = parsed.result()
-      normalized = llinline..normalize(reference raw[i],workbudget)
+      if ?staged then do
+        target = raw[i]
+        if target.name() <> modulenames[i] then assembler signal "ERROR","LL_INLINE_SELECTION: native session module name mismatch"
+      end
+      else do
+        source = readsource(moduleinputs[i],remainingbytes)
+        remainingbytes = remainingbytes - <blen>(source)
+        parsed = frontend.parse(source,modulenames[i],modulenames[i])
+        if parsed.status() <> 0 then do; fault = parsed.diagnostic(); assembler signal "ERROR",fault; end
+        raw[i] = parsed.result()
+      end
+    end
+    if ?staged = 0 then do
+      /* Factories are lazy. Finish the receipt array before the first status
+       * constructs field-owned references in one of its elements. */
+      allowance = workbudget <idiv> modulecount; byteallowance = remainingbytes <idiv> modulecount
+      do i = 1 to modulecount
+        receipts[i] = .llinline..normalizationreceipt.owned(reference raw[i],allowance,byteallowance)
+      end
+      do i = 1 to modulecount
+        if receipts[i].status() <> 'ok' then do; fault = 'LL_INLINE_SELECTION: normalization ' || receipts[i].status() || ': ' || receipts[i].reason(); assembler signal "ERROR",fault; end
+        normalized = receipts[i].result()
+        workbudget = workbudget - receipts[i].reservedwork(); remainingbytes = remainingbytes - receipts[i].reservedbytes()
+        if normalized.status() = 'invalid' | normalized.status() = 'limit' then do
+          fault = 'LL_INLINE_SELECTION: normalization ' || normalized.status() || ': ' || normalized.reason()
+          assembler signal "ERROR",fault
+        end
+        normalizations[i] = normalized; frozen[i] = normalized.result()
+      end
+    end
+    /* All result slots are fixed before a stamp borrows one. Staged owners
+     * remain live links to the host's already fixed result array. */
+    do i = 1 to modulecount
+      normalized = normalizations[i]
       if normalized.status() = 'invalid' | normalized.status() = 'limit' then do
         fault = 'LL_INLINE_SELECTION: normalization ' || normalized.status() || ': ' || normalized.reason()
         assembler signal "ERROR",fault
       end
-      normalizations[i] = normalized
-      frozen[i] = normalized.result(); outputs[i] = frozen[i]
+      outputs[i] = frozen[i]
       if normalized.status() = 'changed' then changed[i] = 1
-      if normalized.status() = 'changed' | (normalized.status() = 'keep' & normalized.reason() = 'normalization.no.entry.read') then do
-        if context.certify(reference frozen[i],normalized) = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: normalization certificate"
+      if normalized.status() = 'changed' | normalized.status() = 'keep' then do
+        if ?staged then receipt_ref = stage.receipt(i)
+        else receipt_ref = reference receipts[i]
+        if context.certifyreceipt(reference frozen[i],normalized,receipt_ref) = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: normalization certificate"
       end
       else call lineout 'stderr','LL_INLINE_KEEP: ' || normalized.reason()
       do j = 1 to normalized.warnings()
@@ -431,7 +499,14 @@ selectionmode: procedure = .int
         if bindingowners[j] = i then localbindings[localbindings[0] + 1] = bindings[j]
       end
       if localbindings[0] = 0 | policy = 'never' then iterate
-      expanded = llinline..expandcontext(localbindings,context,workbudget)
+      allowance = workbudget <idiv> (modulecount - i + 1)
+      if ?staged then do
+        points = stage.points(i); summaries = stage.summaries(i)
+        if context.usefacts(reference frozen[i],points,summaries) = 0 then assembler signal "ERROR","LL_INLINE_SELECTION: shared native owner facts rejected"
+        allowance = stage.claimwork(modulecount - i + 1)
+      end
+      else workbudget = workbudget - allowance
+      expanded = llinline..expandcontext(localbindings,context,allowance)
       if expanded.status() = 'changed' then do; outputs[i] = expanded.result(); changed[i] = 1; end
       else if expanded.status() <> 'keep' then do; fault = 'LL_INLINE_SELECTION: expansion ' || expanded.status() || ': ' || expanded.reason(); assembler signal "ERROR",fault; end
       do j = 1 to expanded.sites()

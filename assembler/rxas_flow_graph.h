@@ -57,7 +57,10 @@ typedef struct RxasFlowInstruction {
     size_t emitted_address;
     const OpInfo *op;
     RxOpEffects effects;
+    /* Intrinsic contract is retained; signal is effective execution control. */
+    RxOpSignalContract intrinsic_signal;
     RxOpSignalContract signal;
+    unsigned int callback_obligations;
 } RxasFlowInstruction;
 
 typedef struct RxasFlowBlock {
@@ -69,10 +72,28 @@ typedef struct RxasFlowBlock {
     size_t last_instruction;
 } RxasFlowBlock;
 
+/* Cause/checkpoint identity is distinct from the eventual policy response.
+ * AFTER_WRITES is before delivered-handler effects, never a no-hook fact. */
+typedef enum RxasFlowEdgeCause {
+    RXAS_FLOW_CAUSE_NONE = 0,
+    RXAS_FLOW_CAUSE_COMBINED,
+    RXAS_FLOW_CAUSE_INTRINSIC,
+    RXAS_FLOW_CAUSE_CALLBACK
+} RxasFlowEdgeCause;
+typedef enum RxasFlowEdgeResponse {
+    RXAS_FLOW_RESPONSE_UNRESOLVED = 0,
+    RXAS_FLOW_RESPONSE_IGNORE,
+    RXAS_FLOW_RESPONSE_HANDLED,
+    RXAS_FLOW_RESPONSE_TERMINAL
+} RxasFlowEdgeResponse;
 typedef struct RxasFlowEdge {
     size_t source;
     size_t target;
     RxasFlowEdgeKind kind;
+    RxasFlowEdgeCause cause;
+    RxOpSignalPhase checkpoint;
+    RxasFlowEdgeResponse response;
+    size_t producer_instruction;
 } RxasFlowEdge;
 
 typedef struct RxasFlowMetrics {
@@ -95,6 +116,35 @@ typedef struct RxasFlowMetrics {
 } RxasFlowMetrics;
 
 typedef struct RxasFlowProcedure RxasFlowProcedure;
+
+typedef struct RxasFlowEntryProfile RxasFlowEntryProfile;
+typedef enum RxasFlowEntryPolicy {
+    RXAS_FLOW_ENTRY_POLICY_HALT = 1,
+    RXAS_FLOW_ENTRY_POLICY_IGNORE = 2
+} RxasFlowEntryPolicy;
+typedef enum RxasFlowPolicyViewStatus {
+    RXAS_FLOW_POLICY_VIEW_OK = 0,
+    RXAS_FLOW_POLICY_VIEW_INVALID,
+    RXAS_FLOW_POLICY_VIEW_STALE,
+    RXAS_FLOW_POLICY_VIEW_FOREIGN,
+    RXAS_FLOW_POLICY_VIEW_LIMIT,
+    RXAS_FLOW_POLICY_VIEW_MEMORY,
+    RXAS_FLOW_POLICY_VIEW_INCOMPLETE
+} RxasFlowPolicyViewStatus;
+/* Explicit caller-declared ordinary-entry policy, never inferred from main,
+ * local contents or VM defaults. A profile borrows its exact live source owner
+ * until it is destroyed. The resulting view owns its copied premise and graph
+ * descriptors; like a raw graph, it borrows the stable input queue and tokens
+ * for its entire analysis lifetime. No profile may be used after its source
+ * owner is disposed or its input epoch is mutated. */
+RxasFlowEntryProfile *rxas_flow_entry_profile_create(
+        const RxasFlowProcedure *owner, unsigned long expected_epoch,
+        RxasFlowEntryPolicy policy, int ordinary_activation);
+void rxas_flow_entry_profile_destroy(RxasFlowEntryProfile *profile);
+RxasFlowProcedure *rxas_flow_procedure_entry_view(
+        const RxasFlowProcedure *owner, unsigned long expected_epoch,
+        const RxasFlowEntryProfile *profile, unsigned long view_epoch,
+        size_t work_budget, RxasFlowPolicyViewStatus *status);
 
 /* Shared source-opcode resolver used by the legacy rewrite graph and the new
  * immutable graph.  A null result is conservative unknown control/effects. */

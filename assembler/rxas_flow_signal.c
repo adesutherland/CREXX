@@ -258,7 +258,8 @@ static unsigned int flow_signal_instruction_effect_mask(
     unsigned int mask;
     unsigned int alias_semantics;
     unsigned int mutation_semantics;
-    if (!instruction || !instruction->op) return flow_signal_all_effects();
+    if (!instruction || !instruction->op || instruction->callback_obligations)
+        return flow_signal_all_effects();
     /* Signal-set/dependency uncertainty belongs to exceptional-edge state.
      * It does not turn a classified normal instruction transfer into a write
      * of every independent effect class. */
@@ -515,14 +516,19 @@ static size_t flow_signal_policy_transfer(
     const instruction_queue *item;
     Assembler_Token *operand;
     const char *name;
+    int callback_preserves_policy;
     if (!instruction) return current;
-    contract = &instruction->signal;
+    callback_preserves_policy = instruction->op &&
+            rxop_callback_normal_preserves_frame(instruction->op->opcode);
+    contract = callback_preserves_policy ? &instruction->intrinsic_signal : &instruction->signal;
     /* An unknown signal set is not an unknown handler-policy transfer.  In
      * particular, a CALL may signal and mutate pointer-bound argument values,
      * but its callee-local COW handler table is discarded on return/unwind.
-     * Only an unresolved opcode, or an explicit but unknown policy writer,
-     * clobbers the caller frame's policy proof. */
+     * A resource-only public callback also preserves this suspended frame's
+     * structural policy on normal return. Pending signal delivery and its
+     * resumed/handler paths remain separate unknown transfers. */
     if (!instruction->op ||
+        (instruction->callback_obligations && !callback_preserves_policy) ||
         ((contract->properties & RXOP_SIGNAL_PROP_POLICY_WRITE) &&
          contract->policy_effect == RXOP_POLICY_EFFECT_UNKNOWN))
         return flow_signal_add_policy_version(
@@ -570,11 +576,13 @@ static int flow_signal_set_edge_state(
     const RxasFlowEdge *edge;
     const RxasFlowBlock *source_block;
     const RxasFlowInstruction *instruction;
+    const RxOpSignalContract *contract;
     size_t policy;
     size_t instruction_id;
     size_t effect_class;
     unsigned int write_mask;
     int failure_edge;
+    int intrinsic_callback_prefix;
     edge = rxas_flow_procedure_edge(
             analysis->procedure, analysis->metrics.epoch, edge_id);
     if (!edge) {
@@ -589,6 +597,12 @@ static int flow_signal_set_edge_state(
             : rxas_flow_procedure_instruction(
                     analysis->procedure, analysis->metrics.epoch,
                     instruction_id);
+    contract = instruction ? (edge->cause == RXAS_FLOW_CAUSE_INTRINSIC
+            ? &instruction->intrinsic_signal : &instruction->signal) : 0;
+    intrinsic_callback_prefix = instruction && edge->cause == RXAS_FLOW_CAUSE_INTRINSIC &&
+            instruction->callback_obligations &&
+            !(instruction->op && rxop_callback_postwrite_operand(instruction->op->opcode) &&
+              contract->phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES);
     policy = block_policy;
     failure_edge = edge->kind == RXAS_FLOW_EDGE_SIGNAL_SKIP ||
                    edge->kind == RXAS_FLOW_EDGE_HANDLER ||
@@ -602,13 +616,14 @@ static int flow_signal_set_edge_state(
                 instruction_id, edge->source, 0, 0,
                 RXOP_POLICY_EFFECT_UNKNOWN, 0);
     }
-    else if (failure_edge && instruction &&
-             instruction->signal.state != RXOP_SIGNAL_STATE_NONE) {
-        if (instruction->signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES)
+    else if (failure_edge && contract && contract->state != RXOP_SIGNAL_STATE_NONE) {
+        RxOpSignalPhase phase = edge->cause == RXAS_FLOW_CAUSE_CALLBACK
+                ? edge->checkpoint : contract->phase;
+        if (phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES)
             policy = analysis->instruction_policy_before[instruction_id];
-        else if (instruction->signal.phase == RXOP_SIGNAL_PHASE_AFTER_WRITES)
+        else if (phase == RXOP_SIGNAL_PHASE_AFTER_WRITES)
             policy = analysis->instruction_policy_after[instruction_id];
-        else if ((instruction->signal.properties &
+        else if ((contract->properties &
                   RXOP_SIGNAL_PROP_POLICY_WRITE) || !instruction->op)
             policy = flow_signal_add_policy_version(
                     analysis, FLOW_POLICY_CLOBBER,
@@ -616,6 +631,12 @@ static int flow_signal_set_edge_state(
                     instruction_id, edge->source, 0, 0,
                     RXOP_POLICY_EFFECT_UNKNOWN, 0);
     }
+    if (edge->response == RXAS_FLOW_RESPONSE_HANDLED ||
+        (intrinsic_callback_prefix && (!instruction->op ||
+         !rxop_callback_normal_preserves_frame(instruction->op->opcode))))
+        policy = flow_signal_add_policy_version(
+                analysis, FLOW_POLICY_CLOBBER, policy, instruction_id,
+                edge->source, 0, 0, RXOP_POLICY_EFFECT_UNKNOWN, 0);
     if (edge->target == rxas_flow_procedure_normal_exit(
                                 analysis->procedure,
                                 analysis->metrics.epoch) ||
@@ -629,12 +650,13 @@ static int flow_signal_set_edge_state(
          effect_class < RXAS_FLOW_EFFECT_CLASS_COUNT; effect_class++) {
         size_t value;
         value = block_effect[effect_class];
-        if (failure_edge && instruction &&
-            instruction->signal.state != RXOP_SIGNAL_STATE_NONE) {
-            if (instruction->signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES)
+        if (failure_edge && contract && contract->state != RXOP_SIGNAL_STATE_NONE) {
+            RxOpSignalPhase phase = edge->cause == RXAS_FLOW_CAUSE_CALLBACK
+                    ? edge->checkpoint : contract->phase;
+            if (phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES)
                 value = analysis->instruction_effect_before[
                         FLOW_EFFECT_INDEX(instruction_id, effect_class)];
-            else if (instruction->signal.phase ==
+            else if (phase ==
                      RXOP_SIGNAL_PHASE_AFTER_WRITES)
                 value = analysis->instruction_effect_after[
                         FLOW_EFFECT_INDEX(instruction_id, effect_class)];
@@ -643,10 +665,10 @@ static int flow_signal_set_edge_state(
              * writes come from rxop_context_writes(); an exact known failure
              * contract may additionally name failure-only context state. */
             else if ((write_mask & (1u << effect_class)) ||
-                     (instruction->signal.state ==
+                     (contract->state ==
                               RXOP_SIGNAL_STATE_KNOWN &&
                       effect_class == RXAS_FLOW_EFFECT_NUMERIC_CONTEXT &&
-                      instruction->signal.failure_context_writes &
+                      contract->failure_context_writes &
                               RXOP_CONTEXT_NUMERIC))
                 value = flow_signal_unknown_effect(
                         analysis, (RxasFlowEffectClass)effect_class,
@@ -655,7 +677,8 @@ static int flow_signal_set_edge_state(
                                                   effect_class)],
                         instruction_id, edge->source);
         }
-        if (edge->kind == RXAS_FLOW_EDGE_UNKNOWN)
+        if (edge->kind == RXAS_FLOW_EDGE_UNKNOWN ||
+            edge->response == RXAS_FLOW_RESPONSE_HANDLED || intrinsic_callback_prefix)
             value = flow_signal_unknown_effect(
                     analysis, (RxasFlowEffectClass)effect_class,
                     block_effect[effect_class], instruction_id, edge->source);
@@ -1039,8 +1062,7 @@ const RxasFlowSignalMetrics *rxas_flow_signal_metrics(
 
 static int flow_policy_effect_is_constant(
         RxOpSignalPolicyEffect effect) {
-    return effect == RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE ||
-           effect == RXOP_POLICY_EFFECT_IGNORE ||
+    return effect == RXOP_POLICY_EFFECT_IGNORE ||
            effect == RXOP_POLICY_EFFECT_HALT ||
            effect == RXOP_POLICY_EFFECT_SILENT_HALT ||
            effect == RXOP_POLICY_EFFECT_RETURN;
@@ -1079,7 +1101,12 @@ static int flow_signal_evaluate_policy(
     fact->version_id = version_id;
     fact->defining_instruction = RXAS_FLOW_ID_NONE;
     if (version->kind == FLOW_POLICY_ENTRY) {
-        fact->state = RXAS_FLOW_POLICY_INHERITED_UNKNOWN;
+        if (analysis->procedure->entry_policy) {
+            fact->state = RXAS_FLOW_POLICY_EXACT;
+            fact->effect = analysis->procedure->entry_policy == RXAS_FLOW_ENTRY_POLICY_HALT
+                    ? RXOP_POLICY_EFFECT_HALT : RXOP_POLICY_EFFECT_IGNORE;
+        }
+        else fact->state = RXAS_FLOW_POLICY_INHERITED_UNKNOWN;
         return 1;
     }
     if (version->kind == FLOW_POLICY_CLOBBER) {

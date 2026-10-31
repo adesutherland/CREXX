@@ -24,6 +24,14 @@ set(_options)
 foreach(_runtime IN LISTS RUNTIME)
   list(APPEND _options --inline-runtime "${_runtime}")
 endforeach()
+# A same-module-only selection has no foreign provider-bundle attachment to
+# incidentally execute lazy analyses. Its checked stage must finish the exact
+# point/summary pair before lending either owner to the inliner context.
+file(WRITE "${WORK}/same-owner.rxas" ".globals=0\nmain() .locals=0\n  call local_leaf()\n  ret 0\nlocal_leaf() .locals=0\n  ret 0\n")
+run_checked("assemble same-owner proof bundle" "${ASSEMBLER}" -n "${WORK}/same-owner.rxas")
+run_checked("same-owner service proof readiness" "${LINKER}" --inline-service "${SERVICE}"
+  --inline-policy all-legal ${_options} -o "${WORK}/same-owner-inlined" "${WORK}/same-owner.rxbin")
+run_checked("same-owner service execution" "${VM}" "${WORK}/same-owner-inlined.rxbin")
 run_checked("baseline link" "${LINKER}" -o "${WORK}/baseline" ${_inputs})
 run_checked("baseline execution" "${VM}" "${WORK}/baseline.rxbin")
 if(NOT _stdout MATCHES "PASS: selected private global")
@@ -41,6 +49,31 @@ if(_stdout MATCHES "[\n ]+call1 [^\n]*helper\\(\\)" OR
    NOT _stdout MATCHES "call1 [^\n]*@1::[0-9]+\\(\\)")
   message(FATAL_ERROR "selected call was retained or exact private-global binding missing\n${_stdout}")
 endif()
+
+# Reprocess existing sealed output after changing the selected module order.
+# The old provider ordinal one now names the caller; its private_child shadow
+# must never capture the retained QPR1 call during service discovery/snapshot.
+file(WRITE "${WORK}/anchor.rxas" ".globals=0\nanchor() .locals=0\n  ret 0\nprivate_child() .locals=0\n  ret 888\n")
+run_checked("assemble reprocessing root" "${ASSEMBLER}" -n "${WORK}/anchor.rxas")
+file(SHA256 "${WORK}/inlined.rxbin" _sealed_input_before)
+run_checked("service reprocess sealed image" "${LINKER}" --inline-service "${SERVICE}"
+  --inline-policy all-legal ${_options} -r anchor -r root -o "${WORK}/reprocessed"
+  "${WORK}/anchor.rxbin" "${WORK}/inlined.rxbin")
+run_checked("reprocessed private provider execution" "${VM}" "${WORK}/reprocessed.rxbin")
+if(NOT _stdout STREQUAL "PASS: selected private global")
+  message(FATAL_ERROR "service reprocessing changed private target/global identity: ${_stdout}")
+endif()
+run_checked("reprocessed selected identities" "${DISASSEMBLER}" "${WORK}/reprocessed.rxbin")
+if(NOT _stdout MATCHES "qglobbind[^\n]*@2" OR
+   _stdout MATCHES "@1::[0-9]+\\(\\)" OR
+   _stdout MATCHES "call1 [^\n]*@2::[0-9]+\\(\\)")
+  message(FATAL_ERROR "sealed private child was not selected/rebased before reprocessing\n${_stdout}")
+endif()
+file(SHA256 "${WORK}/inlined.rxbin" _sealed_input_after)
+if(NOT _sealed_input_before STREQUAL _sealed_input_after)
+  message(FATAL_ERROR "service reprocessing modified the sealed input")
+endif()
+file(SHA256 "${WORK}/reprocessed.rxbin" _reprocessed_before)
 
 # Mutate only one executable contract at a time. A valid wrong recipe ordinal
 # disagrees with its P operand; QPR1's module/procedure bounds fail at prepare.
@@ -62,7 +95,28 @@ foreach(_mutation feature qproc-module qproc-procedure recipe-mismatch)
      NOT _rejected_stderr MATCHES "RXBIN_CORRUPTION")
     message(FATAL_ERROR "${_mutation} lacked provider identity rejection: ${_rejected_stderr}")
   endif()
+  execute_process(COMMAND "${LINKER}" --inline-service "${SERVICE}"
+    --inline-policy all-legal ${_options} -r anchor -r root -o "${WORK}/reprocessed"
+    "${WORK}/anchor.rxbin" "${WORK}/${_mutation}.rxbin"
+    RESULT_VARIABLE _rejected OUTPUT_VARIABLE _rejected_stdout
+    ERROR_VARIABLE _rejected_stderr TIMEOUT 30)
+  file(SHA256 "${WORK}/reprocessed.rxbin" _reprocessed_after)
+  if(_rejected EQUAL 0 OR NOT _reprocessed_before STREQUAL _reprocessed_after)
+    message(FATAL_ERROR "${_mutation} reprocessing repaired an invalid seal or changed last-good output\n${_rejected_stdout}${_rejected_stderr}")
+  endif()
 endforeach()
+
+file(WRITE "${WORK}/omit-reprocess.ctl"
+  "INPUT ${WORK}/anchor.rxbin\nINPUT ${WORK}/inlined.rxbin\nROOT anchor\nROOT root\nOMIT provider\nOUTPUT ${WORK}/reprocessed\n")
+execute_process(COMMAND "${LINKER}" --inline-service "${SERVICE}"
+  --inline-policy all-legal ${_options} -c "${WORK}/omit-reprocess.ctl"
+  RESULT_VARIABLE _rejected OUTPUT_VARIABLE _rejected_stdout
+  ERROR_VARIABLE _rejected_stderr TIMEOUT 30)
+file(SHA256 "${WORK}/reprocessed.rxbin" _reprocessed_after)
+if(_rejected EQUAL 0 OR NOT _reprocessed_before STREQUAL _reprocessed_after OR
+   NOT "${_rejected_stdout}${_rejected_stderr}" MATCHES "unsealed or mismatched inline operand")
+  message(FATAL_ERROR "missing exact provider was not refused atomically before service\n${_rejected_stdout}${_rejected_stderr}")
+endif()
 
 # The valid mock service returns an incomplete typed flat response. An existing
 # output must remain byte-identical; no selected module may be swapped early.

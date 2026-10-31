@@ -16,6 +16,13 @@ set(_flags)
 if(CREXX_LEVEL_L_NOOPT)
   list(APPEND _flags -n)
 endif()
+crexx_add_fixture_command(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/_rxlinkinline.rxbin"
+  COMMAND $<TARGET_FILE:rxas> -o _rxlinkinline "${CMAKE_CURRENT_SOURCE_DIR}/_rxlinkinline.rxas"
+  DEPENDS rxas "${CMAKE_CURRENT_SOURCE_DIR}/_rxlinkinline.rxas"
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}" VERBATIM)
+# Native declarations are compiler import metadata only. Packaging their empty
+# concrete PROC records would create an executable empty-body target rather
+# than the host's native procedure (the ADDRESS bridge uses the same boundary).
 set(_bins)
 set(_previous_module "")
 foreach(_module IN LISTS _modules)
@@ -27,6 +34,9 @@ foreach(_module IN LISTS _modules)
   endif()
   if(NOT _module STREQUAL "lltarget" AND NOT _module STREQUAL "lltargetrecipe")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltarget.rxbin")
+  endif()
+  if(_module STREQUAL "lltargettransfer")
+    list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/_rxlinkinline.rxbin")
   endif()
   if(_module STREQUAL "lltarget")
     list(APPEND _deps "${CMAKE_CURRENT_BINARY_DIR}/lltargetrecipe.rxbin")
@@ -272,7 +282,7 @@ if(BUILD_TESTING)
 
   # One bounded owner panel for the shared Level L target foundation.
   foreach(_foundation_case IN ITEMS
-      target-transfer-cfg target-binding-recipe target-child-window target-execution-context target-signal-cfg target-signal-normalize target-canonical-flow target-scope-flow target-recipe target-recipe-banks target-module-remap target-flow target-summary foundation-normalize)
+      target-transfer-cfg target-binding-recipe target-selection target-activation-abi target-scopefree-inline target-site-facets target-normalization-preservation target-normalization-receipt target-child-window target-execution-context target-signal-cfg target-signal-normalize target-canonical-flow target-scope-flow target-recipe target-recipe-banks target-module-remap target-flow target-summary foundation-normalize)
     if((_foundation_case STREQUAL "foundation-normalize" OR _foundation_case STREQUAL "target-recipe-banks") AND NOT CREXX_BUILD_TARGET_IO)
       continue()
     endif()

@@ -275,7 +275,7 @@ typedef enum {
     RXOP_COMPONENT_STRING = 4,
     RXOP_COMPONENT_DECIMAL = 8,
     RXOP_COMPONENT_BINARY = 16,
-    /* VM value status/type flags copied by ACOPY. */
+    /* VM status flags copied by ACOPY; not the object's type descriptor. */
     RXOP_COMPONENT_ATTRIBUTES = 32,
     RXOP_COMPONENT_REFERENCE = 64,
     /* Host-owned binary payloads have lifetime/finalizer semantics distinct
@@ -284,8 +284,70 @@ typedef enum {
     /* Logical child-count state used by SETATTRS/GETATTRS and checked by
      * attribute-addressing instructions. It is distinct from ACOPY status. */
     RXOP_COMPONENT_ATTRIBUTE_COUNT = 256,
-    RXOP_COMPONENT_ALL = 511
+    /* Immutable graph/type descriptor pointer. Whole COPY/MOVE transport it;
+     * ACOPY and scalar setters preserve the destination descriptor. */
+    RXOP_COMPONENT_OBJECT_TYPE = 512,
+    RXOP_COMPONENT_ALL = 1023
 } RxOpValueComponentMask;
+
+/* Hidden ABI operations describe existing helpers, not serialized opcodes or
+ * a client-authored recipe language. NONE is proved absence; UNKNOWN is not. */
+typedef enum { RXOP_ABI_NONE, RXOP_ABI_KNOWN, RXOP_ABI_UNKNOWN } RxOpAbiState;
+typedef enum {
+    RXOP_ABI_ENTRY, RXOP_ABI_PHYSICAL_RETURN, RXOP_ABI_SCOPED_RETURN,
+    RXOP_ABI_SCOPE_LEAVE, RXOP_ABI_FRAME_UNWIND, RXOP_ABI_MODE_COUNT
+} RxOpAbiMode;
+typedef enum {
+    RXOP_ABI_CAPTURE_POINTERS, RXOP_ABI_CLEAR_STORAGE, RXOP_ABI_PUBLISH_SCOPE,
+    RXOP_ABI_SET_INTEGER, RXOP_ABI_BIND_PROXY, RXOP_ABI_RETURN_REGISTER,
+    RXOP_ABI_RETURN_INTEGER, RXOP_ABI_RETURN_FLOAT, RXOP_ABI_RETURN_STRING,
+    RXOP_ABI_RESTORE_POLICY, RXOP_ABI_RESTORE_SLOT, RXOP_ABI_RESTORE_NUMERIC,
+    RXOP_ABI_POP_SCOPE, RXOP_ABI_RETIRE_FRAME
+} RxOpAbiOperation;
+typedef enum {
+    RXOP_ABI_ENTRY_CAPTURE, RXOP_ABI_ENTRY_PRECLEAR, RXOP_ABI_ENTRY_PUBLISH,
+    RXOP_ABI_ENTRY_A0, RXOP_ABI_ENTRY_PROXIES, RXOP_ABI_RETURN_RESULT,
+    RXOP_ABI_LEAVE_POLICY, RXOP_ABI_LEAVE_CLEAR, RXOP_ABI_LEAVE_RESTORE,
+    RXOP_ABI_LEAVE_NUMERIC, RXOP_ABI_LEAVE_POP, RXOP_ABI_PHYSICAL_RETIRE,
+    RXOP_ABI_PHYSICAL_NUMERIC
+} RxOpAbiCheckpoint;
+typedef enum {
+    RXOP_ABI_ROLE_NONE, RXOP_ABI_RECIPE_CAPTURES, RXOP_ABI_SCOPE_CAPTURES,
+    RXOP_ABI_RECIPE_ORIGINAL_BACKING, RXOP_ABI_SCOPE_CONTEXT, RXOP_ABI_PREVIOUS_SCOPE,
+    RXOP_ABI_CAPTURED_COUNT, RXOP_ABI_A0_ORIGINAL_BACKING, RXOP_ABI_CAPTURED_ARGUMENT,
+    RXOP_ABI_RECIPE_PROXY_SLOT, RXOP_ABI_RETURN_ACTIVE, RXOP_ABI_RETURN_LITERAL,
+    RXOP_ABI_CAPTURED_RESULT, RXOP_ABI_SAVED_POLICY, RXOP_ABI_ACTIVE_POLICY,
+    RXOP_ABI_SCOPE_ORIGINAL_BACKING, RXOP_ABI_SAVED_SLOT, RXOP_ABI_OWNED_SLOT,
+    RXOP_ABI_SAVED_NUMERIC, RXOP_ABI_ACTIVE_NUMERIC, RXOP_ABI_PHYSICAL_FRAME,
+    RXOP_ABI_PARENT_NUMERIC
+} RxOpAbiRole;
+typedef enum {
+    RXOP_ABI_EXTENT_NONE, RXOP_ABI_TOP, RXOP_ABI_ACTIVE_TREE, RXOP_ABI_FULL_CAPACITY
+} RxOpAbiExtent;
+typedef enum {
+    RXOP_ABI_SUCCESSFUL_ENTRY, RXOP_ABI_COMMITTED_SCOPE, RXOP_ABI_RESULT_PRESENT,
+    RXOP_ABI_OWNED_BASE_MOVE_ELSE_COPY, RXOP_ABI_INTERNAL_PARENT, RXOP_ABI_ARGUMENT_PRESENT,
+    RXOP_ABI_VALIDATED_STAGE
+} RxOpAbiRule;
+typedef enum {
+    RXOP_ABI_ONCE, RXOP_ABI_EACH_OWNED, RXOP_ABI_OWNED_BEGIN, RXOP_ABI_OWNED_END,
+    RXOP_ABI_EACH_PROXY
+} RxOpAbiRepeat;
+typedef struct {
+    RxOpAbiOperation operation;
+    RxOpAbiCheckpoint checkpoint;
+    RxOpAbiRole source;
+    RxOpAbiRole destination;
+    RxOpAbiExtent source_extent;
+    RxOpAbiExtent destination_extent;
+    RxOpAbiRule rule;
+    RxOpAbiRepeat repeat;
+} RxOpAbiStep;
+typedef struct {
+    RxOpAbiState state;
+    const RxOpAbiStep *steps;
+    size_t count;
+} RxOpAbiContract;
 
 typedef enum {
     RXOP_DERIVATION_NONE = 0,
@@ -374,11 +436,14 @@ typedef enum {
     RXOP_SIGNAL_PROP_PAYLOAD_OBSERVABLE = 2,
     RXOP_SIGNAL_PROP_SUCCESS_STABLE = 4,
     RXOP_SIGNAL_PROP_POLICY_WRITE = 8,
-    RXOP_SIGNAL_PROP_ASYNC_ENTRY = 16
+    RXOP_SIGNAL_PROP_ASYNC_ENTRY = 16,
+    /* Pending-bit mutation is independent of the structural handler table. */
+    RXOP_SIGNAL_PROP_PENDING_WRITE = 32
 } RxOpSignalProperties;
 
-/* Normal-path handler-policy transfer. Failure phase determines whether this
- * transfer is visible on skip/handler/failure edges. */
+/* Normal-path signal control effect. POLICY_WRITE selects a structural table
+ * transfer; PENDING_WRITE selects pending-bit control without changing that
+ * table. Failure phase locates an effect on exceptional edges. */
 typedef enum {
     RXOP_POLICY_EFFECT_NONE = 0,
     RXOP_POLICY_EFFECT_BREAKPOINT_ENABLE_HANDLER,
@@ -440,6 +505,18 @@ typedef enum {
     RXOP_CONST_EVAL_STRUPPER
 } RxOpConstEvaluator;
 
+/* Per explicit operand: successful shared setters release old reference and
+ * native payloads before assigning the scalar/string/binary component. FIELD
+ * writes preserve those unrelated resources. UNKNOWN includes hidden/indexed
+ * writes, alias-conditional helpers and unreviewed writers; it proves no clear
+ * or absent callback. Whole resets, copies and hidden ABI rows stay separate. */
+typedef enum {
+    RXOP_VALUE_WRITER_NONE = 0,
+    RXOP_VALUE_WRITER_FIELD,
+    RXOP_VALUE_WRITER_SETTER,
+    RXOP_VALUE_WRITER_UNKNOWN
+} RxOpValueWriter;
+
 typedef struct {
     int opcode;
     RxOpEffectState state;
@@ -455,6 +532,10 @@ typedef struct {
     RxOpImplicitEffect implicit;
     unsigned int semantics;
     RxOpConstEvaluator const_evaluator;
+    /* 0 no write, f reviewed field/copy, s shared setter, ? unknown/special. */
+    const char *value_writers_signature;
+    /* Complete inventory of non-resource callback routes for this row. */
+    int callback_inventory_complete;
     FlowType flow;
     int optimizer_barrier;
 } RxOpEffects;
@@ -482,6 +563,23 @@ typedef struct {
     int capture_after_prefix;
     int atomic_prefix;
 } RxOpCallContract;
+
+/* Selection resolves a procedure pointer without invoking its body. The legacy
+ * FACTORY call view is derived from this descriptor for source compatibility. */
+typedef enum {
+    RXOP_SELECTION_NONE = 0,
+    RXOP_SELECTION_METHOD,
+    RXOP_SELECTION_FACTORY
+} RxOpSelectionKind;
+
+typedef struct {
+    RxOpSelectionKind kind;
+    unsigned int result_operand;
+    unsigned int descriptor_operand;
+    unsigned int receiver_operand;
+    unsigned int count_operand;
+    unsigned int window_operand;
+} RxOpSelectionContract;
 
 typedef enum {
     RXOP_RELOC_NONE = 0,
@@ -557,6 +655,7 @@ typedef struct RxOpCompareBranchFusion {
 } RxOpCompareBranchFusion;
 
 RxOpEffects rxop_effects(int opcode);
+RxOpValueWriter rxop_value_writer(int opcode, size_t operand_index);
 size_t rxop_effect_count(void);
 int rxop_effect_reads_operand(const RxOpEffects *effects, size_t operand_index);
 int rxop_effect_writes_operand(const RxOpEffects *effects, size_t operand_index);
@@ -573,8 +672,10 @@ RxOpCloneCategory rxop_clone_category(int opcode);
 unsigned int rxop_component_reads(int opcode, size_t operand_index);
 unsigned int rxop_component_writes(int opcode, size_t operand_index);
 /* Whether optional cleanup has a known component-write projection. False
- * means unknown projection, not no write; true does not mean an unconditional
- * definition on exceptional/resumed paths or authorize deleting the opcode. */
+ * means unknown projection, not no write. A true result with NONE components
+ * can describe a pointer-slot write that preserves its pointee. True does not
+ * mean an unconditional definition on exceptional/resumed paths or authorize
+ * deleting the opcode. */
 int rxop_component_write_is_known(int opcode, size_t operand_index);
 int rxop_compare_branch_fusion(int compare_opcode, int branch_opcode,
                                RxOpCompareBranchFusion *fusion);
@@ -592,6 +693,83 @@ unsigned int rxop_derivation_source_component(int opcode);
 unsigned int rxop_derivation_context_reads(int opcode);
 unsigned int rxop_context_writes(int opcode);
 RxOpCallContract rxop_call_contract(int opcode);
+int rxop_call_invokes(int opcode);
+/* Descriptor-equivalent fixed layout; zero means unavailable. Counted calls
+ * do not become fixed-actual calls across an initializer capture checkpoint. */
+int rxop_call_variant(int opcode, size_t count);
+unsigned int rxop_selection_window_components(int opcode);
+/* Positive callback routes and their conditional resource witnesses. A zero
+ * selector/host predicate is not a global theorem about native payload hooks.
+ * Capacity callbacks require physical ownership proof, not logical count0. */
+/* A zero obligation is a reviewed complete no-hook inventory. Unknown is a
+ * missing inventory, not evidence that an opaque opcode necessarily calls out.
+ * Resource inputs include copy-source hooks. Capacity requires physical extent
+ * evidence and is not discharged by an active attribute count of zero. */
+typedef enum {
+    RXOP_CALLBACK_NONE = 0,
+    RXOP_CALLBACK_INPUT = 1u,
+    RXOP_CALLBACK_OUTPUT = 2u,
+    RXOP_CALLBACK_CAPACITY = 4u,
+    RXOP_CALLBACK_SELECTION = 8u,
+    RXOP_CALLBACK_HOST = 16u,
+    RXOP_CALLBACK_ABI = 32u,
+    RXOP_CALLBACK_DEPARTURE = 64u,
+    RXOP_CALLBACK_INVOCATION = 128u,
+    RXOP_CALLBACK_UNKNOWN = 256u
+} RxOpCallbackObligation;
+unsigned int rxop_callback_obligations(int opcode);
+/* Native execution control includes possible callback-raised interrupts;
+ * rxop_signal_contract remains the intrinsic instruction contract. */
+RxOpSignalContract rxop_execution_signal_contract(int opcode);
+/* One-based explicit receiver for a complete single shared setter normal
+ * postwrite profile; zero means unknown. The receiver and computed argument
+ * are captured before its resource hook. Only native-payload absence is
+ * guaranteed after the final reset; a hook may reinstall a reference. */
+unsigned int rxop_callback_postwrite_operand(int opcode);
+/* A normally returning resource-only public callback preserves the suspended
+ * frame's pointer tables and structural signal-policy table. This describes
+ * only the callback: explicit instruction effects remain, and pointees,
+ * pending interrupts, numeric/plugin context and delivered handlers do not get
+ * this premise. */
+int rxop_callback_normal_preserves_frame(int opcode);
+
+
+int rxop_selection_callbacks(int opcode);
+int rxop_host_callbacks(int opcode);
+int rxop_abi_callbacks(int opcode);
+int rxop_departure_callbacks(int opcode);
+/* Complete intrinsic Rexx-value reads/writes are described by the typed
+ * operand inventory. This excludes separately retained host callbacks,
+ * external output, signals and their reentry effects. False is unknown,
+ * never an empty footprint; true does not remove SEM_OPAQUE barriers. */
+int rxop_intrinsic_value_footprint_is_known(int opcode);
+/* Physical-return rows require an ordinary internal parent. External roots,
+ * interrupt-action/invocation completion and unmapped unwind remain unknown.
+ * OWNED_BEGIN..OWNED_END is one repeated body: clear/restore slot0, then
+ * clear/restore slot1, etc. Never execute two whole-array phases. A result
+ * transfer's equal-pointer no-op does not suppress any later leave row.
+ * Resource extents are conservative maximum obligations; callers may refine
+ * them only with the matching native operation's checked point facts. */
+RxOpAbiContract rxop_abi_contract(int opcode, RxOpAbiMode mode);
+const char *rxop_abi_state_name(RxOpAbiState value);
+const char *rxop_abi_mode_name(RxOpAbiMode value);
+const char *rxop_abi_operation_name(RxOpAbiOperation value);
+const char *rxop_abi_checkpoint_name(RxOpAbiCheckpoint value);
+const char *rxop_abi_role_name(RxOpAbiRole value);
+const char *rxop_abi_extent_name(RxOpAbiExtent value);
+const char *rxop_abi_rule_name(RxOpAbiRule value);
+const char *rxop_abi_repeat_name(RxOpAbiRepeat value);
+unsigned int rxop_callback_inputs(int opcode, size_t operand_index);
+unsigned int rxop_callback_outputs(int opcode, size_t operand_index);
+int rxop_callback_capacity(int opcode, size_t operand_index);
+unsigned int rxop_call_target_components(int opcode);
+/* Conservative possible non-output observability, for discard proof only.
+ * It is not a structural cloning/admission classification. */
+int rxop_residual_observable(int opcode);
+/* Current INLINE_SCOPES feature contract, with logical detached diagnostics.
+ * This is not a no-scope diagnostic or older-runtime compatibility promise. */
+int rxop_scoped_diagnostics(void);
+RxOpSelectionContract rxop_selection_contract(int opcode);
 /* Ordered non-call binding/compound preparation; an empty string is a proved
  * absence only for a classified instruction without binding effects. */
 const char *rxop_binding_recipe(int opcode);

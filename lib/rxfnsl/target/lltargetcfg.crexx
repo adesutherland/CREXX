@@ -50,13 +50,14 @@ edge: class
   _scopeexits = .string
   _scopeenters = .string
   _scopereason = .string
+  _asynchronous = .int
   *: factory
-    arg id = .int, source = .int, projected = .int, block = .int, functionid = .int, role = .string, ordinal = .int, target = .int, boundary = .string, boundaryid = .string, signalname = .string, phase = .string, complete = .int, reason = .string, exposure = 'local', targetop = 0, scopecomplete = 0, scopeexits = '', scopeenters = '', scopereason = 'scope.transition.unavailable'
+    arg id = .int, source = .int, projected = .int, block = .int, functionid = .int, role = .string, ordinal = .int, target = .int, boundary = .string, boundaryid = .string, signalname = .string, phase = .string, complete = .int, reason = .string, exposure = 'local', targetop = 0, scopecomplete = 0, scopeexits = '', scopeenters = '', scopereason = 'scope.transition.unavailable', asynchronous = 0
     _id = id; _source = source; _projected = projected; _block = block; _function = functionid
     _role = role; _ordinal = ordinal; _target = target; _boundary = boundary; _boundaryid = boundaryid
     _signal = signalname; _phase = phase; _complete = complete; _reason = reason
     _exposure = exposure; _targetop = targetop; _scopecomplete = scopecomplete
-    _scopeexits = scopeexits; _scopeenters = scopeenters; _scopereason = scopereason
+    _scopeexits = scopeexits; _scopeenters = scopeenters; _scopereason = scopereason; _asynchronous = asynchronous
     return
   id: method = .int
     return _id
@@ -70,6 +71,9 @@ edge: class
     return _function
   role: method = .string
     return _role
+  /** Certified canonical asynchronous signal producer, never phase inference. */
+  asynchronous: method = .int
+    return _asynchronous
   successorordinal: method = .int
     return _ordinal
   targetblock: method = .int
@@ -159,6 +163,7 @@ graph: class
   _known = .int[]
   _reasons = .string[]
   _exposures = .string[]
+  _asynchronous = .int[]
   _rows = .lltargetcfg..edge[]
   *: factory
     arg owner = reference .lltarget..module, profile = reference .lltargettransfer..profile, work = 1000000, bytes = 67108864
@@ -177,14 +182,14 @@ graph: class
     if _status = 'building' then do; _status = state; _message = message; end
     return
   stage: method = .void
-    arg source = .int, target = .int, role = .string, phase = 'none', boundary = '', boundaryid = '', signalname = '', complete = 1, reason = '', exposure = 'local'
+    arg source = .int, target = .int, role = .string, phase = 'none', boundary = '', boundaryid = '', signalname = '', complete = 1, reason = '', exposure = 'local', asynchronous = 0
     if wordpos(role,'normal table skip handler resumed async unwind terminal unknown') = 0 | wordpos(phase,'none before partial after unknown') = 0 | (target = 0 & boundary = '') | (target > 0 & boundary <> '') | (complete = 0 & reason = '') then do
       call reject('invalid','LL_TARGET_CFG: edge shape'); return
     end
-    if reserve(160 + length(boundaryid) + length(signalname) + length(reason),1) = 0 then return
+    if reserve(168 + length(boundaryid) + length(signalname) + length(reason),1) = 0 then return
     id = _from[0] + 1; _from[id] = source; _to[id] = target; _roles[id] = role; _phases[id] = phase
     _bounds[id] = boundary; _boundids[id] = boundaryid; _signals[id] = signalname; _known[id] = complete; _reasons[id] = reason
-    _exposures[id] = exposure
+    _exposures[id] = exposure; _asynchronous[id] = asynchronous
     _stagenext[id] = 0
     if _stagelast[source] > 0 then _stagenext[_stagelast[source]] = id
     else _stagefirst[source] = id
@@ -273,27 +278,35 @@ graph: class
     end
     return 0
   signalpaths: method = .void
-    arg item = .lltarget..record, phase = .string, names = .string, asynchronous = 0
+    arg item = .lltarget..record, phase = .string, names = .string, asynchronous = 0, callback = 0, policyunknown = 0
     exposure = .string; localexposure = .string
     target = dereference _owner; catalog = .llrxascatalog..catalog()
-    id = item.id(); f = item.procedureid()
+    id = item.id(); f = item.procedureid(); cause = ''
+    if callback then cause = '.callback'
     /* Inherited CALL/action handlers can resume after the signal point. An
      * unknown outward destination does not remove that local successor. */
     profile = dereference _profile
-    if profile.defaulthalt(f) then do
+    if profile.defaulthalt(f) & policyunknown = 0 then do
       /* An exact root or checked call-closure member has an explicit inherited
        * HALT contract. Authored policy alternatives below remain possible. */
-      exposure = 'inherited'; boundaryid = id || '.sync.' || phase
-      if asynchronous then do; exposure = 'inherited-async'; boundaryid = id || '.async.' || phase; end
+      exposure = 'inherited'; boundaryid = id || cause || '.sync.' || phase
+      if asynchronous then do; exposure = 'inherited-async'; boundaryid = id || cause || '.async.' || phase; end
       /* Boundary annotations have no successor ordinal. Keep synchronous and
        * asynchronous alternatives distinct even when role/name/phase match. */
-      call stage(id,0,'terminal',phase,'closed-main-default-halt',boundaryid,names,1,'',exposure)
+      call stage(id,0,'terminal',phase,'closed-main-default-halt',boundaryid,names,1,'',exposure,asynchronous)
     end
     else do
       call resumepaths(id,'resumed',phase,names,'inherited',asynchronous)
       role = 'unwind'; boundary = 'inherited-signal-policy'; reason = 'signal.inherited.destination.unknown'
       if asynchronous then do; role = 'async'; boundary = 'asynchronous-policy'; reason = 'asynchronous.policy.unknown'; end
-      call stage(id,0,role,phase,boundary,id as .string,names,0,reason,'inherited')
+      call stage(id,0,role,phase,boundary,(id as .string) || cause,names,0,reason,'inherited',asynchronous)
+    end
+    if policyunknown then do
+      /* An unknown/host/ABI/invocation hook may replace the receiver policy.
+       * A complete public resource-only callback instead preserves the
+       * suspended frame's structural handler table before interrupt dispatch.
+       * Both retain their separate signal producers and handler effects. */
+      call policygap(item,phase,names,asynchronous,'.callback',0)
     end
     localexposure = 'local'
     if asynchronous then localexposure = 'local-async'
@@ -304,24 +317,24 @@ graph: class
       tag = _policynames[p]
       if tag <> '*' & names <> '*' & wordpos(tag,translate(names,' ','|')) = 0 then iterate
       installed = target.at(_policyops[p]); effect = catalog.policyeffect(installed.opcode())
-      policyid = installed.id() || '.sync.' || phase
-      if asynchronous then policyid = installed.id() || '.async.' || phase
+      policyid = installed.id() || cause || '.sync.' || phase
+      if asynchronous then policyid = installed.id() || cause || '.async.' || phase
       if effect = 4 then do
         call resumepaths(id,'skip',phase,tag,'local',asynchronous)
       end
-      else if effect = 5 | effect = 6 then call stage(id,0,'terminal',phase,'policy-halt',policyid,tag,1,'',localexposure)
+      else if effect = 5 | effect = 6 then call stage(id,0,'terminal',phase,'policy-halt',policyid,tag,1,'',localexposure,asynchronous)
       else if effect = 10 then do
         if _scopecontinuation[id] > 0 & asynchronous = 0 then do
           /* A failed/partial entry carries no newly committed logical scope.
            * Keep the response explicit until incoming stack state proves the
            * surviving owner, instead of treating it as a successful entry. */
-          call stage(id,0,'unknown',phase,'policy-return-entry',policyid,tag,0,'scope.entry.return.owner.unproved',localexposure)
+          call stage(id,0,'unknown',phase,'policy-return-entry',policyid,tag,0,'scope.entry.return.owner.unproved',localexposure,asynchronous)
           _exceptional[f] = 0; _local[f] = 0
         end
         else do
           owner = activeowner(id,asynchronous)
-          if owner > 0 then call stage(id,_scopecontinuation[owner],'unwind',phase,'','',tag,1,'',localexposure)
-          else call stage(id,0,'unwind',phase,'policy-return',policyid,tag,1,'',localexposure)
+          if owner > 0 then call stage(id,_scopecontinuation[owner],'unwind',phase,'','',tag,1,'',localexposure,asynchronous)
+          else call stage(id,0,'unwind',phase,'policy-return',policyid,tag,1,'',localexposure,asynchronous)
         end
       end
       else if effect = 7 | effect = 9 | effect = 14 then do
@@ -337,16 +350,101 @@ graph: class
           if effect = 9 then exposure = 'handler-call'
           if effect = 14 then exposure = 'event-binding'
           if asynchronous then exposure = exposure || '-async'
-          call stage(id,dest,'handler',phase,'','',tag,1,'',exposure)
+          call stage(id,dest,'handler',phase,'','',tag,1,'',exposure,asynchronous)
         end
         else do
-          call stage(id,0,'unknown',phase,'local-policy',policyid,tag,0,'signal.local.target.unknown',localexposure)
+          call stage(id,0,'unknown',phase,'local-policy',policyid,tag,0,'signal.local.target.unknown',localexposure,asynchronous)
           _local[f] = 0
         end
       end
       else if effect = 1 | effect = 2 | effect = 8 | effect = 11 then do
         call resumepaths(id,'resumed',phase,tag,'handler-call',asynchronous)
-        if effect = 11 then call stage(id,0,'terminal',phase,'policy-action-fail',policyid,tag,1,'',localexposure)
+        if effect = 11 then call stage(id,0,'terminal',phase,'policy-action-fail',policyid,tag,1,'',localexposure,asynchronous)
+      end
+    end
+    return
+  /** Additional alternatives after a reachable non-resource callback may
+   * have replaced the suspended policy. Existing HALT/authored alternatives
+   * remain possible; their destinations do not close this new policy gap. */
+  policygap: method = .void
+    arg item = .lltarget..record, phase = .string, names = .string, asynchronous = .int, cause = .string, inherited = 1
+    id = item.id(); identity = id || cause || '.sync.' || phase
+    exposure = 'inherited'; localexposure = 'local'
+    if asynchronous then do
+      identity = id || cause || '.async.' || phase
+      exposure = 'inherited-async'; localexposure = 'local-async'
+    end
+    if inherited then do
+      call resumepaths(id,'resumed',phase,names,'inherited',asynchronous)
+      role = 'unwind'; boundary = 'inherited-signal-policy'
+      if asynchronous then do; role = 'async'; boundary = 'asynchronous-policy'; end
+      call stage(id,0,role,phase,boundary,identity,names,0,'signal.callback.policy.destination.unknown',exposure,asynchronous)
+    end
+    call resumepaths(id,'skip',phase,names,'inherited',asynchronous)
+    call stage(id,0,'terminal',phase,'callback-policy-halt',identity || '.halt',names,1,'',exposure,asynchronous)
+    call stage(id,0,'unknown',phase,'callback-policy',identity || '.policy',names,0,'signal.callback.policy.destination.unknown',localexposure,asynchronous)
+    return
+  /** Expand only this reachable producer. Intrinsic, operation callback and
+   * ambient events retain their own names, phases and boundary identities. */
+  policyproducers: method = .void
+    arg item = .lltarget..record, owncallback = .int
+    catalog = .llrxascatalog..catalog(); code = item.opcode(); id = item.id(); f = item.procedureid()
+    /* Initial staging also describes unreachable source operations. Only a
+     * reachable producer may contribute these callback completeness gaps. */
+    _exceptional[f] = 0; _local[f] = 0; _policyexact[f] = 0
+    if catalog.signalstate(code) <> 0 then do
+      phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
+      call policygap(item,phase,raisednames(item),0,'.reachable-callback.intrinsic')
+    end
+    /* A direct non-resource callback already has its own unknown-policy
+     * alternatives. A resource-only callback needs the incoming policy gap. */
+    if catalog.callbackobligations(code) <> 0 & owncallback = 0 then call policygap(item,'unknown','*',0,'.reachable-callback.callback')
+    if catalog.flow(code) <> 3 | _scopeexit[id] > 0 then do
+      call policygap(item,'after','*',1,'.reachable-callback.ambient'); _async[f] = 0
+    end
+    return
+  /** Joint reachability/policy fixed point over staged local successors.
+   * State grows only unreachable -> reachable -> policy-unknown, so every
+   * source point enters the worklist at most twice. New resumed/skip edges
+   * are visited before publishing the checked graph, including backedges.
+   * Unknown local destinations remain explicit incomplete boundaries. */
+  propagatepolicy: method = .void
+    arg seeds = .int[], roots = .int[]
+    states = .int[]; expanded = .int[]; workpoints = .int[]
+    i = .int; id = .int; row = .int; destination = .int; incoming = .int; cursor = .int
+    item = .lltarget..record; target = dereference _owner
+    nodes = _projected[0]
+    if _bytelimit - _bytes < 192 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg policy worklist'); return; end
+    if nodes > (_bytelimit - _bytes - 192) <idiv> 32 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg policy worklist'); return; end
+    if reserve(nodes * 32 + 192,nodes) = 0 then return
+    do i = 1 to nodes; states[i] = 0; expanded[i] = 0; end
+    do i = 2 to roots[0]
+      if reserve(0,1) = 0 then return
+      id = roots[i]
+      if id > 0 then do; states[id] = 1; workpoints[workpoints[0] + 1] = id; end
+    end
+    cursor = 1
+    do while cursor <= workpoints[0]
+      if reserve(0,1) = 0 then return
+      id = workpoints[cursor]; cursor = cursor + 1
+      incoming = states[id] = 2 | seeds[id]
+      if incoming & expanded[id] = 0 then do
+        expanded[id] = 1; item = target.at(id)
+        if item.kind() = 'instruction' then call policyproducers(item,seeds[id])
+        if _status <> 'building' then return
+      end
+      row = _stagefirst[id]
+      do while row > 0
+        if reserve(0,1) = 0 then return
+        destination = _to[row]
+        if destination > 0 then do
+          if states[destination] < incoming + 1 then do
+            states[destination] = incoming + 1
+            if workpoints[0] >= nodes * 2 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg policy worklist'); return; end
+            workpoints[workpoints[0] + 1] = destination
+          end
+        end
+        row = _stagenext[row]
       end
     end
     return
@@ -360,7 +458,7 @@ graph: class
       do while row > 0
         if reserve(0,1) = 0 then return
         following = _stagenext[row]
-        if _roles[row] = 'normal' & _to[row] > 0 then call stage(id,_to[row],role,phase,'','',name,1,'',exposure)
+        if _roles[row] = 'normal' & _to[row] > 0 then call stage(id,_to[row],role,phase,'','',name,1,'',exposure,asynchronous)
         if row = stop then leave
         row = following
       end
@@ -368,7 +466,7 @@ graph: class
     else do
       successor = _next[id]
       if _scopeexit[id] > 0 then successor = _scopeexit[id]
-      if successor > 0 then call stage(id,successor,role,phase,'','',name,1,'',exposure)
+      if successor > 0 then call stage(id,successor,role,phase,'','',name,1,'',exposure,asynchronous)
     end
     return
   /** Compute the committed logical stack transition, separately from signal
@@ -395,6 +493,11 @@ graph: class
       tostack = cursor || ' ' || tostack; cursor = _scopeparent[cursor]
     end
     if complete = 0 then reason = _reasons[row]
+    else if _scopecontinuation[id] > 0 & _phases[row] = 'unknown' & _asynchronous[row] = 0 then do
+      /* A callback during entry can precede or follow publication. The
+       * pre-entry lexical stack is not a committed departure witness. */
+      complete = 0; reason = 'scope.entry.commit.unproved'
+    end
     else if destination = 0 & wordpos(_roles[row],'terminal unwind') = 0 then do
       complete = 0; reason = 'scope.departure.destination.unproved'
     end
@@ -424,15 +527,17 @@ graph: class
       end
     end
     if complete = 0 then do; exits = ''; enters = ''; end
-    return .lltargetcfg..edge(row,id,projected,_block[id],item.procedureid(),_roles[row],ordinal,destblock,_bounds[row],_boundids[row],_signals[row],_phases[row],_known[row],_reasons[row],_exposures[row],destination,complete,strip(exits),strip(enters),reason)
+    return .lltargetcfg..edge(row,id,projected,_block[id],item.procedureid(),_roles[row],ordinal,destblock,_bounds[row],_boundids[row],_signals[row],_phases[row],_known[row],_reasons[row],_exposures[row],destination,complete,strip(exits),strip(enters),reason,_asynchronous[row])
   run: method = .void
     if _status <> 'building' then return
     i = .int; j = .int; n = .int; id = .int; f = .int; row = .int; ordinal = .int; dest = .int; code = .int
+    resources = .int; bit = .int; obligations = .int; overlap = .int
     phase = .string; signalname = .string; role = .string; reason = .string; known = .int
     body = .lltarget..body; item = .lltarget..record; field = .lltarget..operand
     action = .lltargettransfer..action; ref = .lltargettransfer..refview
     fn = .llir..function; point = .llir..opdraft; result = .llir..opview
     blocks = .llir..block[]; functions = .llir..function[]; first = .int[]; last = .int[]
+    policyseeds = .int[]
     if _worklimit < 1 | _bytelimit < 1 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg budgets'); return; end
     if <refvalid>(_owner) = 0 | <refvalid>(_profile) = 0 then do; call reject('invalid','LL_TARGET_OWNER: expired CFG input'); return; end
     target = dereference _owner; profile = dereference _profile
@@ -440,8 +545,10 @@ graph: class
     _revision = target.identity(); _profileid = profile.identity(); source_ref = target.ir(); source = dereference source_ref; store_ref = source.storage(); store = dereference store_ref
     if source.operations() > (_bytelimit - _bytes) <idiv> 512 then do; call reject('limit','LL_RESOURCE_LIMIT: target.cfg projection'); return; end
     if reserve(source.operations() * 512 + source.blocks() * 16 + source.functions() * 32,source.operations() + source.blocks() + source.functions()) = 0 then return
+    if reserve(source.operations() * 8 + 64,source.operations()) = 0 then return
     do i = 1 to source.operations()
       _projected[i] = 0; _block[i] = 0; _next[i] = 0; _scopeexit[i] = 0; _scopeowner[i] = 0; _scopeparent[i] = 0; _scopecontinuation[i] = 0; _stagefirst[i] = 0; _stagelast[i] = 0
+      policyseeds[i] = 0
     end
     do i = 1 to source.operations() + 1; _outfirst[i] = 0; _outlast[i] = 0; _outcount[i] = 0; end
     do i = 1 to source.blocks(); _group[i] = 0; end
@@ -493,7 +600,9 @@ graph: class
           if _scopecontinuation[id] = 0 then do; call reject('invalid','LL_TARGET_CFG: unresolved inline continuation'); return; end
           depth = depth + 1; scope[depth] = field.text(); scopeowner[depth] = id
         end
-        if catalog.policyeffect(code) <> 0 then do
+        /* A typed effect can describe pending-bit control without changing
+         * the structural handler table. Only POLICY_WRITE installs policy. */
+        if (catalog.signalproperties(code) <idiv> 8) % 2 then do
           if profile.premise() = 'canonical' then _policyexact[f] = 0
           name = policyname(item)
           if reserve(32 + length(name),1) = 0 then return
@@ -545,6 +654,22 @@ graph: class
           call signalpaths(item,phase,raisednames(item))
           if profile.defaulthalt(f) = 0 then _exceptional[f] = 0
         end
+        /* A finalizer/native hook can queue a signal during this operation
+         * even when its intrinsic contract is NONE. Its names and checkpoint
+         * are unknown; an ambient after-operation interrupt is a distinct
+         * producer and cannot stand in for these synchronous alternatives. */
+        if catalog.callbackobligations(code) <> 0 then do
+          /* This exact whole-operation inventory, including UNKNOWN, is the
+           * same public resource-route premise used by native flow. It says
+           * nothing about pointee values or absence of queued interrupts. */
+          resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output')
+          assembler ior resources,resources,bit
+          bit = catalog.callbackmask('capacity'); assembler ior resources,resources,bit
+          obligations = catalog.callbackobligations(code)
+          assembler iand overlap,obligations,resources
+          policyseeds[id] = obligations <> overlap
+          call signalpaths(item,'unknown','*',0,1,policyseeds[id])
+        end
         if catalog.flow(code) <> 3 | _scopeexit[id] > 0 then call signalpaths(item,'after','*',1)
         if profile.defaulthalt(f) = 0 then _async[f] = 0
       end
@@ -577,6 +702,10 @@ graph: class
           end
         end
       end
+    end
+    if profile.premise() = 'canonical' then do
+      call propagatepolicy(policyseeds,first)
+      if _status <> 'building' then return
     end
     /* Lexical scopes have a checked single entry and RET-only departure.
      * Follow metadata to its next instruction before comparing owners, so a

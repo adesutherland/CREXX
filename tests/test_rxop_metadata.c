@@ -171,13 +171,14 @@ static void check_unknown_effects(int opcode) {
 static void check_target_contract(const OpInfo *op) {
     RxOpEffects effects = rxop_effects(op->opcode);
     RxOpCallContract call = rxop_call_contract(op->opcode);
+    RxOpSelectionContract selection = rxop_selection_contract(op->opcode);
     size_t i, count = rxop_format_operand_count(op->format);
     if (effects.state != RXOP_EFFECT_CLASSIFIED) return;
     check(rxop_binding_recipe(op->opcode) != NULL,
           "classified binding lacks an ordered canonical recipe", op);
     check(rxop_implicit_recipe(op->opcode) != NULL,
           "classified implicit selector lacks a canonical recipe", op);
-    check((call.kind != RXOP_CALL_NONE) == !!(effects.semantics & RXOP_SEM_CALL),
+    check(rxop_call_invokes(op->opcode) == !!(effects.semantics & RXOP_SEM_CALL),
           "canonical call recipe disagrees with call semantics", op);
     if (call.kind != RXOP_CALL_NONE) {
         check(call.target_operand > 0 && call.target_operand <= count &&
@@ -189,6 +190,31 @@ static void check_target_contract(const OpInfo *op) {
         if (call.kind == RXOP_CALL_DIRECT)
             check(rxop_format_operand_type(op->format, call.target_operand - 1) == OP_FUNC,
                   "direct call target is not a procedure reference", op);
+    }
+    if (selection.kind != RXOP_SELECTION_NONE) {
+        RxOpSignalContract signal = rxop_signal_contract(op->opcode);
+        check(!rxop_call_invokes(op->opcode) &&
+                  !(effects.semantics & (RXOP_SEM_CALL | RXOP_SEM_DYNAMIC_CALL)),
+              "procedure selection must not invoke an activation", op);
+        check(selection.result_operand > 0 && selection.result_operand <= count &&
+                  selection.descriptor_operand > 0 && selection.descriptor_operand <= count &&
+                  selection.receiver_operand <= count && selection.count_operand <= count &&
+                  selection.window_operand == selection.count_operand &&
+                  rxop_format_operand_type(op->format, selection.result_operand - 1) == OP_REG &&
+                  rxop_format_operand_type(op->format, selection.descriptor_operand - 1) == OP_STRING,
+              "procedure selection roles must be typed valid operands", op);
+        check(rxop_component_clears(op->opcode, selection.result_operand - 1) == RXOP_COMPONENT_ALL &&
+                  rxop_definition_components(op->opcode, selection.result_operand - 1) == RXOP_COMPONENT_INTEGER,
+              "selection success resets then defines pointer integer", op);
+        if (selection.kind == RXOP_SELECTION_METHOD)
+            check(!rxop_selection_callbacks(op->opcode) &&
+                      signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+                      !rxop_signal_failure_writes_operand(&signal, selection.result_operand - 1),
+                  "method resolver failure preserves result before result finalization", op);
+        else
+            check(rxop_selection_callbacks(op->opcode) &&
+                      signal.state == RXOP_SIGNAL_STATE_UNKNOWN,
+                  "factory match callback has unknown mutation/failure phase", op);
     }
     for (i = 0; i < count; ++i) {
         RxOpRelocationKind relocation = rxop_operand_relocation(op->opcode, i);
@@ -311,6 +337,332 @@ static void check_checked_integer_family(void) {
         check_checked_integer_opcode(opcode);
 }
 
+static void check_abi_contracts(void) {
+    RxOpAbiContract entry = rxop_abi_contract(OP_INLENTER_REG_FUNC_STRING_ID, RXOP_ABI_ENTRY);
+    RxOpAbiContract leave = rxop_abi_contract(OP_IADD_REG_REG_REG, RXOP_ABI_SCOPE_LEAVE);
+    RxOpAbiContract reg = rxop_abi_contract(OP_RET_REG, RXOP_ABI_SCOPED_RETURN);
+    RxOpAbiContract scalar = rxop_abi_contract(OP_RET_INT, RXOP_ABI_SCOPED_RETURN);
+    RxOpAbiContract floating = rxop_abi_contract(OP_RET_FLOAT, RXOP_ABI_SCOPED_RETURN);
+    RxOpAbiContract string = rxop_abi_contract(OP_RET_STRING, RXOP_ABI_PHYSICAL_RETURN);
+    RxOpAbiContract physical = rxop_abi_contract(OP_RET, RXOP_ABI_PHYSICAL_RETURN);
+    RxOpAbiContract absent = rxop_abi_contract(OP_ICOPY_REG_REG, RXOP_ABI_ENTRY);
+    RxOpAbiContract unwind = rxop_abi_contract(OP_IADD_REG_REG_REG, RXOP_ABI_FRAME_UNWIND);
+    RxOpAbiContract return_unwind = rxop_abi_contract(OP_RET_REG, RXOP_ABI_FRAME_UNWIND);
+    size_t i;
+    check(entry.state == RXOP_ABI_KNOWN && entry.count == 5u &&
+              entry.steps[0].operation == RXOP_ABI_CAPTURE_POINTERS &&
+              entry.steps[0].checkpoint == RXOP_ABI_ENTRY_CAPTURE &&
+              entry.steps[0].rule == RXOP_ABI_VALIDATED_STAGE &&
+              entry.steps[1].operation == RXOP_ABI_CLEAR_STORAGE &&
+              entry.steps[1].destination == RXOP_ABI_RECIPE_ORIGINAL_BACKING &&
+              entry.steps[1].destination_extent == RXOP_ABI_FULL_CAPACITY &&
+              entry.steps[1].repeat == RXOP_ABI_EACH_OWNED &&
+              entry.steps[2].operation == RXOP_ABI_PUBLISH_SCOPE &&
+              entry.steps[3].destination == RXOP_ABI_A0_ORIGINAL_BACKING &&
+              entry.steps[4].operation == RXOP_ABI_BIND_PROXY,
+          "hidden entry captures before initialization and clears exact backing before publication", NULL);
+    check(leave.state == RXOP_ABI_KNOWN && leave.count == 5u &&
+              leave.steps[0].operation == RXOP_ABI_RESTORE_POLICY &&
+              leave.steps[1].operation == RXOP_ABI_CLEAR_STORAGE &&
+              leave.steps[1].destination == RXOP_ABI_SCOPE_ORIGINAL_BACKING &&
+              leave.steps[1].destination_extent == RXOP_ABI_FULL_CAPACITY &&
+              leave.steps[1].repeat == RXOP_ABI_OWNED_BEGIN &&
+              leave.steps[2].operation == RXOP_ABI_RESTORE_SLOT &&
+              leave.steps[2].repeat == RXOP_ABI_OWNED_END &&
+              leave.steps[3].operation == RXOP_ABI_RESTORE_NUMERIC &&
+              leave.steps[4].operation == RXOP_ABI_POP_SCOPE,
+          "leave restores policy, interleaves each full-capacity cleanup/slot restore, then numeric and pop", NULL);
+    if (leave.state == RXOP_ABI_KNOWN && leave.count == 5u) {
+        unsigned int trace[4] = { 0u, 0u, 0u, 0u };
+        size_t slot, row, used = 0u;
+        /* Independent expansion expectation for the descriptor's paired
+         * repetition: two slots must yield clear0,restore0,clear1,restore1. */
+        for (slot = 0u; slot < 2u; ++slot)
+            for (row = 1u; row <= 2u; ++row)
+                trace[used++] = (unsigned int)(slot * 10u) +
+                    (leave.steps[row].operation == RXOP_ABI_CLEAR_STORAGE ? 1u : 2u);
+        check(trace[0] == 1u && trace[1] == 2u && trace[2] == 11u && trace[3] == 12u,
+              "ABI owned repetition is a paired body, never clear-all then restore-all", NULL);
+    }
+    check(reg.state == RXOP_ABI_KNOWN && reg.count == leave.count + 1u &&
+              reg.steps[0].operation == RXOP_ABI_RETURN_REGISTER &&
+              reg.steps[0].source == RXOP_ABI_RETURN_ACTIVE &&
+              reg.steps[0].destination == RXOP_ABI_CAPTURED_RESULT &&
+              reg.steps[0].rule == RXOP_ABI_OWNED_BASE_MOVE_ELSE_COPY &&
+              reg.steps[0].source_extent == RXOP_ABI_ACTIVE_TREE &&
+              reg.steps[0].destination_extent == RXOP_ABI_FULL_CAPACITY,
+          "register return uses current source and exact owned-original-base MOVE/COPY rule", NULL);
+    if (reg.state == RXOP_ABI_KNOWN && reg.count == leave.count + 1u)
+        for (i = 0u; i < leave.count; ++i)
+            check(reg.steps[i + 1u].operation == leave.steps[i].operation &&
+                      reg.steps[i + 1u].checkpoint == leave.steps[i].checkpoint,
+                  "same-storage or ignored result omits only transfer, never later scope cleanup", NULL);
+    check(scalar.state == RXOP_ABI_KNOWN && floating.state == RXOP_ABI_KNOWN &&
+              scalar.steps[0].operation == RXOP_ABI_RETURN_INTEGER &&
+              floating.steps[0].operation == RXOP_ABI_RETURN_FLOAT &&
+              scalar.steps[0].destination_extent == RXOP_ABI_EXTENT_NONE &&
+              floating.steps[0].destination_extent == RXOP_ABI_EXTENT_NONE &&
+              string.state == RXOP_ABI_KNOWN && string.steps[0].operation == RXOP_ABI_RETURN_STRING &&
+              string.steps[0].destination_extent == RXOP_ABI_TOP,
+          "direct numeric return setters differ from native-payload-releasing string setter", NULL);
+    check(physical.state == RXOP_ABI_KNOWN && physical.count == 1u &&
+              physical.steps[0].operation == RXOP_ABI_RETIRE_FRAME &&
+              physical.steps[0].rule == RXOP_ABI_INTERNAL_PARENT &&
+              physical.steps[0].destination_extent == RXOP_ABI_EXTENT_NONE,
+          "ordinary physical retirement retains reusable backing, unlike scoped clear", NULL);
+    check(unwind.state == RXOP_ABI_KNOWN && unwind.count == 1u &&
+              unwind.steps[0].operation == RXOP_ABI_RETIRE_FRAME &&
+              unwind.steps[0].checkpoint == RXOP_ABI_PHYSICAL_RETIRE &&
+              unwind.steps[0].source == RXOP_ABI_PHYSICAL_FRAME &&
+              unwind.steps[0].destination == RXOP_ABI_ROLE_NONE &&
+              unwind.steps[0].source_extent == RXOP_ABI_EXTENT_NONE &&
+              unwind.steps[0].destination_extent == RXOP_ABI_EXTENT_NONE &&
+              unwind.steps[0].rule == RXOP_ABI_INTERNAL_PARENT &&
+              unwind.steps[0].repeat == RXOP_ABI_ONCE &&
+              return_unwind.state == RXOP_ABI_KNOWN && return_unwind.count == 1u &&
+              return_unwind.steps[0].operation == RXOP_ABI_RETIRE_FRAME,
+          "nested unwind retires conditionally without result transfer, numeric restore or backing clear", NULL);
+    check(absent.state == RXOP_ABI_NONE && absent.count == 0u &&
+              rxop_abi_contract(-1, RXOP_ABI_FRAME_UNWIND).state == RXOP_ABI_UNKNOWN &&
+              rxop_abi_contract(OP_RESERVED_088, RXOP_ABI_FRAME_UNWIND).state == RXOP_ABI_UNKNOWN &&
+              rxop_abi_contract(-1, RXOP_ABI_ENTRY).state == RXOP_ABI_UNKNOWN &&
+              rxop_abi_contract(OP_RET, RXOP_ABI_MODE_COUNT).state == RXOP_ABI_UNKNOWN &&
+              rxop_abi_contract(OP_RESERVED_088, RXOP_ABI_ENTRY).state == RXOP_ABI_UNKNOWN &&
+              !strcmp(rxop_abi_mode_name(RXOP_ABI_SCOPE_LEAVE), "scope-leave") &&
+              !strcmp(rxop_abi_checkpoint_name(RXOP_ABI_LEAVE_POLICY), "leave-policy") &&
+              !strcmp(rxop_abi_repeat_name(RXOP_ABI_OWNED_BEGIN), "owned-begin") &&
+              !strcmp(rxop_abi_role_name((RxOpAbiRole)-1), "unknown"),
+          "ABI absence is distinct from invalid instructions; nested rows retain their parent premise", NULL);
+}
+
+static void check_value_writer_inventory(void) {
+    static const int stem_outputs[] = {
+        OP_STEMGET_REG_REG_REG, OP_STEMGET2_REG_REG_REG_REG,
+        OP_STEMKEYAT_REG_REG_REG, OP_STEMVALUEAT_REG_REG_REG
+    };
+    int opcode;
+    size_t setter_count = 0, field_count = 0, stem;
+    for (opcode = 0; opcode < OP_MAX_INSTRUCTIONS; ++opcode) {
+        RxOpEffects effects = rxop_effects(opcode);
+        size_t operand, count = rxop_format_operand_count(op_table[opcode].format);
+        const char *signature = effects.value_writers_signature;
+        if (signature) {
+            check(strlen(signature) == count, "writer signature covers the complete explicit operand vector", &op_table[opcode]);
+            for (operand = 0; operand < strlen(signature); ++operand)
+                check(strchr("0fs?", signature[operand]) != NULL,
+                      "writer signature contains only canonical kinds", &op_table[opcode]);
+        }
+        for (operand = 0; operand < count; ++operand) {
+            RxOpValueWriter writer = rxop_value_writer(opcode, operand);
+            if (!rxop_effect_writes_operand(&effects, operand)) {
+                if (effects.state == RXOP_EFFECT_CLASSIFIED)
+                    check(writer == RXOP_VALUE_WRITER_NONE,
+                          "unwritten explicit operand has no value writer", &op_table[opcode]);
+                if (signature && operand < strlen(signature))
+                    check(signature[operand] == '0', "writer annotation cannot create an explicit output", &op_table[opcode]);
+            }
+            if (writer == RXOP_VALUE_WRITER_SETTER) {
+                ++setter_count;
+                check(rxop_effect_writes_operand(&effects, operand) &&
+                          (rxop_component_clears(opcode, operand) &
+                           (RXOP_COMPONENT_REFERENCE | RXOP_COMPONENT_NATIVE_PAYLOAD)) ==
+                              (RXOP_COMPONENT_REFERENCE | RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+                          (rxop_callback_outputs(opcode, operand) & RXOP_COMPONENT_NATIVE_PAYLOAD),
+                      "shared setter derives reference/native prewrite release and possible finalizer", &op_table[opcode]);
+            } else if (writer == RXOP_VALUE_WRITER_FIELD) {
+                ++field_count;
+                check(!(rxop_component_clears(opcode, operand) &
+                        (RXOP_COMPONENT_REFERENCE | RXOP_COMPONENT_NATIVE_PAYLOAD)),
+                      "field/copy writer does not invent an unrelated payload release", &op_table[opcode]);
+            }
+        }
+    }
+    check(setter_count >= 200u && field_count >= 25u,
+          "VM setter inventory covers scalar/string setters and independent field controls", NULL);
+    for (stem = 0; stem < sizeof(stem_outputs) / sizeof(stem_outputs[0]); ++stem) {
+        opcode = stem_outputs[stem];
+        check(rxop_value_writer(opcode, 0) == RXOP_VALUE_WRITER_UNKNOWN &&
+                  rxop_component_clears(opcode, 0) == RXOP_COMPONENT_NONE &&
+                  (rxop_callback_outputs(opcode, 0) & RXOP_COMPONENT_NATIVE_PAYLOAD),
+              "selected stem child can alias its output: possible release is not a must clear",
+              &op_table[opcode]);
+    }
+    check(rxop_value_writer(OP_IAND_REG_REG_INT, 0) == RXOP_VALUE_WRITER_SETTER &&
+              rxop_value_writer(OP_IAND_REG_REG_REG, 0) == RXOP_VALUE_WRITER_SETTER &&
+              rxop_value_writer(OP_LOAD_REG_INT, 0) == RXOP_VALUE_WRITER_SETTER &&
+              rxop_value_writer(OP_LOAD_REG_FLOAT, 0) == RXOP_VALUE_WRITER_SETTER &&
+              rxop_value_writer(OP_LOAD_REG_STRING, 0) == RXOP_VALUE_WRITER_SETTER &&
+              rxop_value_writer(OP_SETLINKILOAD_REG_REG_INT_REG_REG_INT, 4) == RXOP_VALUE_WRITER_SETTER,
+          "representative scalar/string and non-first shared setters have authoritative writer kinds", NULL);
+    check(rxop_value_writer(OP_STRLEN_REG_REG, 0) == RXOP_VALUE_WRITER_FIELD &&
+              rxop_value_writer(OP_GETNUMDGTS_REG, 0) == RXOP_VALUE_WRITER_FIELD &&
+              rxop_value_writer(OP_ICOPY_REG_REG, 0) == RXOP_VALUE_WRITER_FIELD &&
+              !rxop_callback_outputs(OP_STRLEN_REG_REG, 0) &&
+              !rxop_callback_outputs(OP_GETNUMDGTS_REG, 0) &&
+              !rxop_callback_outputs(OP_ICOPY_REG_REG, 0),
+          "reviewed raw field writes remain distinct from shared setters", NULL);
+    check(rxop_value_writer(OP_METALOADDATA_REG_REG_REG, 0) == RXOP_VALUE_WRITER_UNKNOWN &&
+              rxop_value_writer(OP_STRUPPER_REG_REG, 0) == RXOP_VALUE_WRITER_UNKNOWN &&
+              rxop_callback_outputs(OP_STRUPPER_REG_REG, 0) &&
+              rxop_value_writer(-1, 0) == RXOP_VALUE_WRITER_UNKNOWN &&
+              rxop_value_writer(OP_LOAD_REG_INT, 9) == RXOP_VALUE_WRITER_UNKNOWN &&
+              rxop_signal_contract(OP_IAND_REG_REG_INT).state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "hidden, alias-conditional and unreviewed writers retain uncertainty without changing signal contracts", NULL);
+}
+
+static void check_output_intrinsic_footprints(void) {
+    static const int outputs[] = {
+        OP_SAY_REG, OP_SAYX_REG, OP_SAYX_STRING, OP_SAY_INT,
+        OP_SAY_FLOAT, OP_SAY_STRING, OP_SAY_CHAR
+    };
+    size_t i;
+    for (i = 0; i < sizeof(outputs) / sizeof(outputs[0]); ++i) {
+        int opcode = outputs[i];
+        int register_input = opcode == OP_SAY_REG || opcode == OP_SAYX_REG;
+        RxOpEffects effects = rxop_effects(opcode);
+        check(rxop_intrinsic_value_footprint_is_known(opcode) &&
+                  effects.state == RXOP_EFFECT_CLASSIFIED &&
+                  effects.implicit == RXOP_IMPLICIT_NONE &&
+                  rxop_effect_reads_operand(&effects, 0) == register_input &&
+                  !rxop_effect_writes_operand(&effects, 0) &&
+                  !rxop_effect_kills_operand(&effects, 0) &&
+                  rxop_component_may_reads(opcode, 0) ==
+                      (register_input ? RXOP_COMPONENT_STRING : RXOP_COMPONENT_NONE) &&
+                  rxop_observed_components(opcode, 0) ==
+                      (register_input ? RXOP_COMPONENT_STRING : RXOP_COMPONENT_NONE) &&
+                  rxop_observation_is_known(opcode, 0) &&
+                  rxop_observed_flags(opcode, 0) == 0 &&
+                  rxop_component_may_writes(opcode, 0) == RXOP_COMPONENT_NONE,
+              "output intrinsic value footprint is complete and observes only its typed input",
+              &op_table[opcode]);
+        check((effects.semantics & RXOP_SEM_OPAQUE) &&
+                  rxop_host_callbacks(opcode) && rxop_residual_observable(opcode) &&
+                  rxop_signal_contract(opcode).state == RXOP_SIGNAL_STATE_UNKNOWN,
+              "known intrinsic output footprint retains opaque host, signal and observable residuals",
+              &op_table[opcode]);
+    }
+    check(!rxop_intrinsic_value_footprint_is_known(-1) &&
+              !rxop_intrinsic_value_footprint_is_known(OP_MAX_INSTRUCTIONS) &&
+              !rxop_intrinsic_value_footprint_is_known(OP_RESERVED_088) &&
+              !rxop_intrinsic_value_footprint_is_known(OP_READLINE_REG) &&
+              !rxop_intrinsic_value_footprint_is_known(OP_CALL_FUNC),
+          "unclassified external footprints remain unknown rather than empty", NULL);
+}
+
+static void check_callback_execution_contracts(void) {
+    int opcode;
+    RxOpSignalContract intrinsic, execution;
+    unsigned int obligations;
+    for (opcode = 0; opcode < OP_MAX_INSTRUCTIONS; opcode++) {
+        size_t operand;
+        size_t count = rxop_format_operand_count(op_table[opcode].format);
+        RxOpEffects effects = rxop_effects(opcode);
+        const char *recipe = rxop_binding_recipe(opcode);
+        obligations = rxop_callback_obligations(opcode);
+        intrinsic = rxop_signal_contract(opcode);
+        execution = rxop_execution_signal_contract(opcode);
+        if (!effects.callback_inventory_complete && (!recipe || !recipe[0]))
+            check(obligations & RXOP_CALLBACK_UNKNOWN,
+                  "missing callback inventory is not empty", &op_table[opcode]);
+        for (operand = 0; operand < count; operand++) {
+            if (rxop_callback_inputs(opcode, operand))
+                check(obligations & RXOP_CALLBACK_INPUT,
+                      "copy-source resource hooks remain obligations", &op_table[opcode]);
+            if (rxop_callback_outputs(opcode, operand))
+                check(obligations & RXOP_CALLBACK_OUTPUT,
+                      "destination resource hooks remain obligations", &op_table[opcode]);
+            if (rxop_callback_capacity(opcode, operand))
+                check(obligations & RXOP_CALLBACK_CAPACITY,
+                      "retained capacity is not an active-count-only condition", &op_table[opcode]);
+        }
+        if (obligations)
+            check(execution.state == RXOP_SIGNAL_STATE_UNKNOWN &&
+                      execution.phase == RXOP_SIGNAL_PHASE_UNKNOWN &&
+                      execution.source == RXOP_SIGNAL_SOURCE_UNKNOWN &&
+                      execution.continuations == RXOP_SIGNAL_CONT_ALL &&
+                      execution.policy_effect == RXOP_POLICY_EFFECT_UNKNOWN,
+                  "possible hook carries independent unknown execution control", &op_table[opcode]);
+        else
+            check(execution.state == intrinsic.state && execution.phase == intrinsic.phase &&
+                      execution.source == intrinsic.source &&
+                      execution.continuations == intrinsic.continuations,
+                  "complete no-hook inventory preserves intrinsic execution control", &op_table[opcode]);
+    }
+    {
+        static const int pure[] = {
+            OP_BPON_FUNC, OP_BPON, OP_BPOFF, OP_SIGIGNORE_STRING,
+            OP_SIGHALT_STRING, OP_SIGSHALT_STRING, OP_SIGBR_ID_STRING,
+            OP_SIGBRV_ID_REG_STRING, OP_SIGCALL_FUNC_STRING,
+            OP_SIGCALLA_FUNC_STRING, OP_SIGCALLBR_ID_FUNC_STRING,
+            OP_SIGRET_STRING, OP_SIGPUSH_STRING, OP_SIGPOP_STRING,
+            OP_INC0, OP_DEC0, OP_INC1, OP_DEC1, OP_INC2, OP_DEC2,
+            OP_ITOF_REG_REG, OP_SUBSTRING_REG_REG_REG_REG,
+            OP_SETTPSWAP_REG_INT_REG, OP_IGETUNLINK_REG_REG,
+            OP_ISETUNLINK_REG_REG, OP_ISETUNLINKN_REG_REG_REG,
+            OP_LINKATTR_REG_REG_INT, OP_LINKATTR1_REG_REG_INT,
+            OP_LINKTOATTR_REG_REG_REG, OP_UNLINKATTR_REG_REG
+        };
+        size_t index;
+        for (index = 0; index < sizeof(pure) / sizeof(pure[0]); index++) {
+            int code = pure[index];
+            intrinsic = rxop_signal_contract(code);
+            execution = rxop_execution_signal_contract(code);
+            check(!rxop_callback_obligations(code) &&
+                      execution.state == intrinsic.state &&
+                      execution.phase == intrinsic.phase &&
+                      execution.policy_effect == intrinsic.policy_effect,
+                  "reviewed COW policy/raw-field/pointer recipe has no hidden value hook", &op_table[code]);
+        }
+        check(rxop_callback_obligations(OP_CONCAT_REG_STRING_REG) &&
+                  rxop_callback_obligations(OP_ILOADSETUNLINK_REG_INT) &&
+                  rxop_callback_obligations(OP_SETATTRS_REG_INT) &&
+                  rxop_callback_obligations(OP_NULL_REG),
+              "alias-sensitive buffer replacement, setter and resize cleanup remain conditional", NULL);
+    }
+    intrinsic = rxop_signal_contract(OP_LOAD_REG_INT);
+    execution = rxop_execution_signal_contract(OP_LOAD_REG_INT);
+    check(intrinsic.state == RXOP_SIGNAL_STATE_NONE &&
+              rxop_callback_obligations(OP_LOAD_REG_INT) == RXOP_CALLBACK_OUTPUT &&
+              execution.state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "intrinsic-NONE scalar setter still permits operation-caused callback control", NULL);
+    check(!rxop_callback_obligations(OP_ITOS_REG) &&
+              !rxop_callback_obligations(OP_FTOS_REG) &&
+              !rxop_callback_obligations(OP_GETNUMDGTS_REG) &&
+              !rxop_callback_obligations(OP_ICOPY_REG_REG) &&
+              !rxop_callback_obligations(OP_SWAP_REG_REG),
+          "reviewed field/formatting/context/pointer operations preserve no-hook positives", NULL);
+    check((rxop_callback_obligations(OP_COPY_REG_REG) & RXOP_CALLBACK_INPUT) &&
+              (rxop_callback_obligations(OP_COPY_REG_REG) & RXOP_CALLBACK_CAPACITY) &&
+              (rxop_callback_obligations(OP_SAYX_STRING) & RXOP_CALLBACK_HOST) &&
+              (rxop_callback_obligations(OP_CALL_FUNC) & RXOP_CALLBACK_INVOCATION) &&
+              (rxop_callback_obligations(OP_INLENTER_REG_FUNC_STRING_ID) & RXOP_CALLBACK_ABI),
+          "input, capacity and subjectless routes cannot be silently discharged", NULL);
+    check((rxop_callback_obligations(OP_SWAPCALL_REG_FUNC_REG_REG_REG) & RXOP_CALLBACK_INVOCATION) &&
+              rxop_execution_signal_contract(OP_SWAPCALL_REG_FUNC_REG_REG_REG).state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "pointer-only call prefix cannot suppress the fused invocation hook", NULL);
+    check(rxop_callback_postwrite_operand(OP_LOAD_REG_INT) == 1u &&
+              rxop_callback_postwrite_operand(OP_LOAD_REG_FLOAT) == 1u &&
+              rxop_callback_postwrite_operand(OP_LOAD_REG_STRING) == 1u &&
+              rxop_callback_postwrite_operand(OP_IAND_REG_REG_INT) == 1u &&
+              !rxop_callback_postwrite_operand(OP_COPY_REG_REG) &&
+              !rxop_callback_postwrite_operand(OP_NULL_REG) &&
+              !rxop_callback_postwrite_operand(OP_CONCAT_REG_STRING_REG) &&
+              !rxop_callback_postwrite_operand(OP_SWAPCALL_REG_FUNC_REG_REG_REG) &&
+              !rxop_callback_postwrite_operand(OP_INLENTER_REG_FUNC_STRING_ID),
+          "ordered captured postwrite profile requires one complete explicit setter", NULL);
+    check(rxop_callback_normal_preserves_frame(OP_LOAD_REG_INT) &&
+              rxop_callback_normal_preserves_frame(OP_COPY_REG_REG) &&
+              !rxop_callback_normal_preserves_frame(OP_SAYX_STRING) &&
+              !rxop_callback_normal_preserves_frame(OP_SWAPCALL_REG_FUNC_REG_REG_REG) &&
+              !rxop_callback_normal_preserves_frame(OP_INLENTER_REG_FUNC_STRING_ID) &&
+              !rxop_callback_normal_preserves_frame(-1),
+          "normal callback frame-table premise is limited to complete public resource routes", NULL);
+    check(rxop_callback_obligations(-1) == RXOP_CALLBACK_UNKNOWN &&
+              rxop_callback_obligations(OP_MAX_INSTRUCTIONS) == RXOP_CALLBACK_UNKNOWN &&
+              (rxop_callback_obligations(OP_RESERVED_088) & RXOP_CALLBACK_UNKNOWN),
+          "invalid and reserved callback inventories fail closed", NULL);
+}
+
 int main(void) {
     int i;
     int source_count;
@@ -329,6 +681,10 @@ int main(void) {
     const OpInfo *op;
 
     failures = 0;
+    check_value_writer_inventory();
+    check_output_intrinsic_footprints();
+    check_callback_execution_contracts();
+    check_abi_contracts();
     check_checked_integer_family();
     check(rxop_compare_branch_fusion(
                   OP_IEQ_REG_REG_REG, OP_BRT_ID_REG, &fusion) &&
@@ -474,6 +830,7 @@ int main(void) {
                               RXOP_DERIVATION_DECIMAL_TO_FLOAT);
     check((RXOP_COMPONENT_ALL & RXOP_COMPONENT_NATIVE_PAYLOAD) != 0 &&
               (RXOP_COMPONENT_ALL & RXOP_COMPONENT_ATTRIBUTE_COUNT) != 0 &&
+              (RXOP_COMPONENT_ALL & RXOP_COMPONENT_OBJECT_TYPE) != 0 &&
               rxop_component_clears(OP_LOAD_REG_INT, 0) ==
                   (RXOP_COMPONENT_REFERENCE |
                    RXOP_COMPONENT_NATIVE_PAYLOAD) &&
@@ -588,10 +945,10 @@ int main(void) {
                   RXOP_COMPONENT_STRING &&
               rxop_component_writes(OP_STEMGET_REG_REG_REG, 0) ==
                   RXOP_COMPONENT_STRING &&
-              rxop_component_clears(OP_STEMGET_REG_REG_REG, 0) ==
-                    (RXOP_COMPONENT_REFERENCE |
-                     RXOP_COMPONENT_NATIVE_PAYLOAD),
-          "native stem string component metadata regression",
+              rxop_value_writer(OP_STEMGET_REG_REG_REG, 0) == RXOP_VALUE_WRITER_UNKNOWN &&
+              rxop_component_clears(OP_STEMGET_REG_REG_REG, 0) == RXOP_COMPONENT_NONE &&
+              (rxop_callback_outputs(OP_STEMGET_REG_REG_REG, 0) & RXOP_COMPONENT_NATIVE_PAYLOAD),
+          "native stem string write retains alias-conditional payload release",
           &op_table[OP_STEMGET_REG_REG_REG]);
     check(rxop_component_writes(OP_SETATTRS_REG_INT, 0) ==
                   RXOP_COMPONENT_ATTRIBUTE_COUNT &&
@@ -767,6 +1124,13 @@ int main(void) {
                                    ? OP_STRING : OP_REG),
                           "policy source operand has the wrong type", op);
             }
+        } else if (signal.properties & RXOP_SIGNAL_PROP_PENDING_WRITE) {
+            check(signal.policy_effect == RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE &&
+                      signal.policy_source == RXOP_SIGNAL_SOURCE_STATIC_NAMES &&
+                      signal.policy_source_operand == SIZE_MAX && signal.policy_static_name &&
+                      strcmp(signal.policy_static_name, "BREAKPOINT") == 0 &&
+                      signal.dependencies == RXOP_SIGNAL_DEP_NONE,
+                  "pending-only control carries an invalid effect or structural dependency", op);
         } else {
             check(signal.policy_effect == RXOP_POLICY_EFFECT_NONE &&
                       signal.policy_source == RXOP_SIGNAL_SOURCE_NONE &&
@@ -914,7 +1278,7 @@ int main(void) {
               effects.semantics == RXOP_SEM_NONE &&
               effects.optimizer_barrier &&
               rxop_component_reads(OP_ASSERTINITIALIZED_REG, 0) ==
-                    RXOP_COMPONENT_ATTRIBUTES &&
+                    RXOP_COMPONENT_OBJECT_TYPE &&
               signal.state == RXOP_SIGNAL_STATE_KNOWN &&
               signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
               signal.static_names &&
@@ -924,7 +1288,7 @@ int main(void) {
           &op_table[OP_ASSERTINITIALIZED_REG]);
     signal = rxop_signal_contract(OP_ASSERTTYPE_REG_STRING);
     check(rxop_component_reads(OP_ASSERTTYPE_REG_STRING, 0) ==
-                    RXOP_COMPONENT_ATTRIBUTES &&
+                    RXOP_COMPONENT_OBJECT_TYPE &&
               signal.state == RXOP_SIGNAL_STATE_KNOWN &&
               signal.static_names &&
               strcmp(signal.static_names, "CONVERSION_ERROR") == 0 &&
@@ -962,9 +1326,66 @@ int main(void) {
               rxop_component_reads(OP_SETOBJTYPE_REG_STRING, 0) ==
                     RXOP_COMPONENT_ATTRIBUTES &&
               rxop_component_writes(OP_SETOBJTYPE_REG_STRING, 0) ==
-                    RXOP_COMPONENT_ATTRIBUTES,
+                    (RXOP_COMPONENT_OBJECT_TYPE | RXOP_COMPONENT_ATTRIBUTES) &&
+              rxop_definition_components(OP_SETOBJTYPE_REG_STRING, 0) ==
+                    RXOP_COMPONENT_OBJECT_TYPE &&
+              rxop_observed_components(OP_SETOBJTYPE_REG_STRING, 0) == RXOP_COMPONENT_NONE,
           "object type producer contract regression",
           &op_table[OP_SETOBJTYPE_REG_STRING]);
+    check(rxop_component_reads(OP_TYPEOF_REG_REG, 1) == RXOP_COMPONENT_OBJECT_TYPE &&
+              rxop_component_reads(OP_ISTYPE_REG_REG_STRING, 1) == RXOP_COMPONENT_OBJECT_TYPE &&
+              rxop_component_reads(OP_SRCMETHODSEL_REG_REG_STRING, 1) == RXOP_COMPONENT_OBJECT_TYPE &&
+              !(rxop_component_writes(OP_ACOPY_REG_REG, 0) & RXOP_COMPONENT_OBJECT_TYPE) &&
+              !(rxop_transport_components(OP_ACOPY_REG_REG) & RXOP_COMPONENT_OBJECT_TYPE) &&
+              (rxop_transport_components(OP_COPY_REG_REG) & RXOP_COMPONENT_OBJECT_TYPE),
+          "type stamp remains live through status-only ACOPY and is transported by whole COPY", NULL);
+    check(rxop_component_clears(OP_NULL_REG, 0) == RXOP_COMPONENT_ALL &&
+              rxop_component_clears(OP_SETOBJUNINIT_REG_STRING, 0) ==
+                  (RXOP_COMPONENT_ALL & ~RXOP_COMPONENT_OBJECT_TYPE) &&
+              rxop_definition_components(OP_SETOBJUNINIT_REG_STRING, 0) == RXOP_COMPONENT_OBJECT_TYPE &&
+              rxop_component_clears(OP_TYPEOF_REG_REG, 0) == RXOP_COMPONENT_ALL &&
+              rxop_component_clears(OP_ISTYPE_REG_REG_STRING, 0) == RXOP_COMPONENT_ALL &&
+              rxop_component_clears(OP_ISINITIALIZED_REG_REG, 0) == RXOP_COMPONENT_ALL &&
+              !(rxop_component_writes(OP_LOAD_REG_INT, 0) & RXOP_COMPONENT_OBJECT_TYPE) &&
+              !(rxop_component_clears(OP_LOAD_REG_INT, 0) & RXOP_COMPONENT_OBJECT_TYPE),
+          "whole resets clear type; uninitialized stamp restores it; scalar setters preserve it", NULL);
+    check(rxop_selection_window_components(OP_SRCFPROCSEL_REG_STRING_REG) == RXOP_COMPONENT_ALL &&
+              rxop_selection_window_components(OP_SRCMETHODSEL_REG_REG_STRING) == RXOP_COMPONENT_NONE &&
+              rxop_selection_window_components(-1) == RXOP_COMPONENT_ALL,
+          "factory match callbacks observe actual type and payload through the canonical window descriptor", NULL);
+    check(rxop_selection_callbacks(OP_SRCFPROCSEL_REG_STRING_REG) &&
+              !rxop_selection_callbacks(OP_SRCMETHODSEL_REG_REG_STRING) &&
+              rxop_host_callbacks(OP_SAYX_STRING) && rxop_host_callbacks(OP_SAY_REG) &&
+              !rxop_host_callbacks(OP_MKREF_REG_REG) &&
+              rxop_signal_contract(OP_SAYX_STRING).state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "resolver and legacy host callback routes remain separate from inert opaque residuals", NULL);
+    check((rxop_callback_inputs(OP_COPY_REG_REG, 1) & RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              (rxop_callback_inputs(OP_BCOPY_REG_REG, 1) & RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              !rxop_callback_inputs(OP_MOVE_REG_REG, 1) &&
+              (rxop_callback_outputs(OP_MOVE_REG_REG, 0) & RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              (rxop_callback_outputs(OP_LOAD_REG_INT, 0) & RXOP_COMPONENT_NATIVE_PAYLOAD) &&
+              !rxop_callback_outputs(OP_ICOPY_REG_REG, 0),
+          "copy-source and overwritten-destination payload hooks are independent conditional resources", NULL);
+    check(!rxop_callback_inputs(OP_LOAD_REG_REG, 1) &&
+              !rxop_callback_outputs(OP_LOAD_REG_REG, 0) &&
+              !rxop_callback_inputs(OP_LINK_REG_REG, 1) &&
+              !rxop_callback_outputs(OP_LINK_REG_REG, 0) &&
+              !rxop_callback_outputs(OP_SWAPN_REG_REG_REG_REG, 0) &&
+              !rxop_callback_outputs(OP_LOAD_INT_INT, 0),
+          "pure ordered pointer bindings do not invoke value copy/finalizer hooks", NULL);
+    check(rxop_callback_capacity(OP_COPY_REG_REG, 0) &&
+              rxop_callback_capacity(OP_MOVE_REG_REG, 0) &&
+              !rxop_callback_capacity(OP_NULL_REG, 0) &&
+              !rxop_callback_capacity(OP_SRCMETHODSEL_REG_REG_STRING, 0) &&
+              (rxop_callback_outputs(OP_NULL_REG, 0) & RXOP_COMPONENT_ATTRIBUTE_COUNT) &&
+              (rxop_callback_outputs(OP_SRCMETHODSEL_REG_REG_STRING, 0) & RXOP_COMPONENT_NATIVE_PAYLOAD),
+          "whole overwrites touch retained child capacity; exact value_zero routes only active children", NULL);
+    check(!rxop_abi_callbacks(OP_RET) && !rxop_abi_callbacks(OP_RET_INT) &&
+              !rxop_abi_callbacks(OP_RET_FLOAT) && rxop_abi_callbacks(OP_RET_REG) &&
+              rxop_abi_callbacks(OP_RET_STRING) && rxop_abi_callbacks(OP_INLENTER_REG_FUNC_STRING_ID) &&
+              rxop_departure_callbacks(OP_RET) && rxop_departure_callbacks(OP_RET_INT) &&
+              !rxop_departure_callbacks(OP_ICOPY_REG_REG),
+          "result copyback hooks remain distinct from frame/external-argument departure obligations", NULL);
     signal = rxop_signal_contract(OP_ISETATTR1_REG_INT_REG);
     check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
               signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
@@ -988,9 +1409,37 @@ int main(void) {
               rxop_component_reads(OP_IGETUNLINK_REG_REG, 1) ==
                     RXOP_COMPONENT_INTEGER &&
               rxop_component_writes(OP_IGETUNLINK_REG_REG, 0) ==
-                    RXOP_COMPONENT_INTEGER,
+                    RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_IGETUNLINK_REG_REG, 1) ==
+                    RXOP_COMPONENT_NONE &&
+              rxop_component_write_is_known(OP_IGETUNLINK_REG_REG, 0) &&
+              rxop_component_write_is_known(OP_IGETUNLINK_REG_REG, 1),
           "integer read-unlink transfer contract regression",
           &op_table[OP_IGETUNLINK_REG_REG]);
+    check(!rxop_callback_inputs(OP_IGETUNLINK_REG_REG, 1) &&
+              !rxop_callback_outputs(OP_IGETUNLINK_REG_REG, 0) &&
+              !rxop_callback_outputs(OP_IGETUNLINK_REG_REG, 1) &&
+              !rxop_callback_capacity(OP_IGETUNLINK_REG_REG, 0) &&
+              !rxop_callback_capacity(OP_IGETUNLINK_REG_REG, 1),
+          "integer capture and pointer-only unlink have no value hooks",
+          &op_table[OP_IGETUNLINK_REG_REG]);
+    effects = rxop_effects(OP_ISETUNLINK_REG_REG);
+    check(effects.reads == RXOP_OP_12 && effects.writes == RXOP_OP_1 &&
+              (effects.semantics & RXOP_SEM_ALIAS_RELEASE) &&
+              !(effects.semantics & RXOP_SEM_OPAQUE) &&
+              rxop_component_reads(OP_ISETUNLINK_REG_REG, 1) == RXOP_COMPONENT_INTEGER &&
+              rxop_component_writes(OP_ISETUNLINK_REG_REG, 0) == RXOP_COMPONENT_INTEGER &&
+              rxop_component_write_is_known(OP_ISETUNLINK_REG_REG, 0) &&
+              !rxop_component_clears(OP_ISETUNLINK_REG_REG, 0) &&
+              !rxop_callback_inputs(OP_ISETUNLINK_REG_REG, 1) &&
+              !rxop_callback_outputs(OP_ISETUNLINK_REG_REG, 0) &&
+              !rxop_callback_capacity(OP_ISETUNLINK_REG_REG, 0),
+          "integer field copy and slot restoration have no opaque or payload-hook effects",
+          &op_table[OP_ISETUNLINK_REG_REG]);
+    check(rxop_callback_outputs(OP_ILOADSETUNLINK_REG_INT, 0) &
+              RXOP_COMPONENT_NATIVE_PAYLOAD,
+          "compound unlink with an integer setter retains its payload hook",
+          &op_table[OP_ILOADSETUNLINK_REG_INT]);
     signal = rxop_signal_contract(OP_LOAD_REG_DECIMAL);
     check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
               signal.source == RXOP_SIGNAL_SOURCE_PLUGIN &&
@@ -1015,10 +1464,13 @@ int main(void) {
           &op_table[OP_SIGPUSH_STRING]);
     signal = rxop_signal_contract(OP_BPOFF);
     check(signal.state == RXOP_SIGNAL_STATE_NONE &&
+              (signal.properties & RXOP_SIGNAL_PROP_PENDING_WRITE) &&
+              !(signal.properties & RXOP_SIGNAL_PROP_POLICY_WRITE) &&
               signal.policy_effect == RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE &&
+              signal.dependencies == RXOP_SIGNAL_DEP_NONE &&
               signal.policy_static_name &&
               strcmp(signal.policy_static_name, "BREAKPOINT") == 0,
-          "breakpoint policy metadata regression", &op_table[OP_BPOFF]);
+          "pending breakpoint control falsely replaces structural policy", &op_table[OP_BPOFF]);
     check_propagated_call_metadata(OP_CALL_FUNC, 0);
     check_propagated_call_metadata(OP_CALL_REG_FUNC, 1);
     check_propagated_call_metadata(OP_CALL_REG_FUNC_REG, 1);
@@ -1433,12 +1885,63 @@ int main(void) {
               !strcmp(rxop_call_contract(OP_CALL4_REG_FUNC_REG_REG_REG_REG).actual_operands,
                       "3,4,5,6"),
           "call recipes preserve preclear, fused order and explicit pointer order", NULL);
+    check(rxop_scoped_diagnostics(),
+          "current scoped activation contract includes detached logical diagnostic chain", NULL);
+    check(rxop_residual_observable(OP_SAYX_STRING) &&
+              rxop_residual_observable(OP_CALL_FUNC) &&
+              rxop_residual_observable(OP_EXIT_INT) &&
+              rxop_residual_observable(OP_LOAD_REG_INT) &&
+              rxop_residual_observable(-1) &&
+              !rxop_residual_observable(OP_ICOPY_REG_REG),
+          "discard residuals retain literal output, control, calls and released payloads without blocking ordinary cloning", NULL);
+    check(rxop_call_variant(OP_CALL1_REG_FUNC_REG, 4u) == OP_CALL4_REG_FUNC_REG_REG_REG_REG &&
+              rxop_call_variant(OP_CALL_REG_FUNC_REG, 0u) == 0 &&
+              rxop_call_variant(OP_CALL_REG_FUNC, 0u) == 0 &&
+              rxop_call_variant(OP_CALL_REG_FUNC_REG, 1u) == 0 &&
+              rxop_call_variant(OP_DCALL_REG_REG_REG, 1u) == 0 &&
+              rxop_call_variant(OP_CALL1_REG_FUNC_REG, 5u) == 0,
+          "fixed call variants preserve invocation family and initializer capture checkpoint", NULL);
+    check(rxop_call_invokes(OP_DCALL_REG_REG_REG) &&
+              rxop_call_target_components(OP_DCALL_REG_REG_REG) == RXOP_COMPONENT_INTEGER &&
+              rxop_observed_components(OP_DCALL_REG_REG_REG, 1) == RXOP_COMPONENT_INTEGER &&
+              rxop_call_target_components(OP_CALL1_REG_FUNC_REG) == RXOP_COMPONENT_NONE,
+          "dynamic target is an integer procedure pointer; typed direct target is not a scalar", NULL);
+    check(rxop_call_contract(OP_SRCFPROCSEL_REG_STRING_REG).kind == RXOP_CALL_FACTORY &&
+              !rxop_call_invokes(OP_SRCFPROCSEL_REG_STRING_REG) &&
+              !rxop_call_invokes(OP_SRCMETHODSEL_REG_REG_STRING) &&
+              rxop_selection_contract(OP_SRCFPROCSEL_REG_STRING_REG).kind == RXOP_SELECTION_FACTORY &&
+              rxop_selection_contract(OP_SRCMETHODSEL_REG_REG_STRING).kind == RXOP_SELECTION_METHOD &&
+              rxop_selection_contract(OP_SRCMETHODSEL_REG_REG_STRING).descriptor_operand == 3 &&
+              rxop_selection_contract(OP_SRCFPROCSEL_REG_STRING_REG).count_operand == 3,
+          "legacy factory layout and canonical method/factory selection remain distinct from invocation", NULL);
     check(rxop_call_contract(OP_INLENTER_REG_FUNC_STRING_ID).kind == RXOP_CALL_NONE &&
               rxop_call_contract(OP_INLENTER_REG_FUNC_STRING_ID).result_operand == 1 &&
               rxop_call_contract(OP_INLENTER_REG_FUNC_STRING_ID).target_operand == 2 &&
               rxop_recipe_operand(OP_INLENTER_REG_FUNC_STRING_ID) == 3 &&
               rxop_scope_continuation_operand(OP_INLENTER_REG_FUNC_STRING_ID) == 4,
           "logical scope capture selectors preserve distinct CALL admission", NULL);
+    effects = rxop_effects(OP_QGLOBBIND_REG_STRING_INT);
+    signal = rxop_signal_contract(OP_QGLOBBIND_REG_STRING_INT);
+    check(effects.state == RXOP_EFFECT_CLASSIFIED &&
+              effects.reads == RXOP_OP_NONE && effects.writes == RXOP_OP_1 &&
+              effects.kills == RXOP_OP_NONE && effects.optimizer_barrier &&
+              effects.implicit == RXOP_IMPLICIT_QUALIFIED_GLOBAL &&
+              effects.semantics == RXOP_SEM_ALIAS_CREATE &&
+              !strcmp(rxop_binding_recipe(OP_QGLOBBIND_REG_STRING_INT),
+                      "qualifiedglobal:1:2:3") &&
+              rxop_operand_relocation(OP_QGLOBBIND_REG_STRING_INT, 1) == RXOP_RELOC_MODULE &&
+              !rxop_abi_callbacks(OP_QGLOBBIND_REG_STRING_INT) &&
+              !rxop_host_callbacks(OP_QGLOBBIND_REG_STRING_INT) &&
+              rxop_callback_outputs(OP_QGLOBBIND_REG_STRING_INT, 0) == RXOP_COMPONENT_NONE &&
+              !rxop_callback_capacity(OP_QGLOBBIND_REG_STRING_INT, 0),
+          "qualified global binding changes only its active/base pointer slot and keeps its optimizer barrier", NULL);
+    check(signal.state == RXOP_SIGNAL_STATE_KNOWN &&
+              signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+              !strcmp(signal.static_names, "RXBIN_CORRUPTION|OUT_OF_RANGE") &&
+              signal.failure_writes == RXOP_OP_NONE &&
+              signal.failure_component_writes == RXOP_COMPONENT_NONE &&
+              signal.failure_context_writes == RXOP_CONTEXT_NONE,
+          "qualified global binding validates before changing either pointer", NULL);
     check(rxop_return_result_component_invalidations(OP_RET_STRING) == RXOP_COMPONENT_ALL &&
               rxop_return_result_flag_invalidations(OP_RET_STRING) == RXFLAG_READABLE_MASK &&
               rxop_return_result_component_invalidations(OP_RET_INT) == RXOP_COMPONENT_NONE &&

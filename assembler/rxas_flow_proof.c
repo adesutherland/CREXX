@@ -3593,10 +3593,9 @@ static int flow_proof_local_component_absent(
     FlowProofValueWalkResult walk;
     if (!fact || !local_storage_id || fact->storage_id != local_storage_id)
         return 0;
-    if (fact->kind == RXAS_FLOW_VALUE_ENTRY &&
-        rxas_flow_storage_is_local_base(
-                service->ssa, expected_epoch, local_storage_id))
-        return 1;
+    /* ENTRY identifies provenance, not resource absence: recycled local
+     * backing may still own a native payload. Require exact ABSENT leaves. */
+    (void)expected_epoch;
     walk = flow_proof_value_leaves_match(
             service, fact->value_id, 0, 1, rejected_leaf);
     return walk == FLOW_PROOF_VALUE_UNIQUE;
@@ -5026,7 +5025,7 @@ int rxas_flow_prove_compare_branch_fusion(
         goto complete;
     }
     fused_effects = rxop_effects(fusion.fused_opcode);
-    fused_signal = rxop_signal_contract(fusion.fused_opcode);
+    fused_signal = rxop_execution_signal_contract(fusion.fused_opcode);
     if (compare_item->operandCount != 3 ||
         branch_item->operandCount != 2 ||
         compare->effects.state != RXOP_EFFECT_CLASSIFIED ||
@@ -7692,12 +7691,14 @@ int rxas_flow_prove_instruction_speculatable(
                 RXOP_SEM_INDIRECT_BRANCH | RXOP_SEM_OPAQUE;
     if (!instruction || !instruction->op ||
         instruction->effects.state != RXOP_EFFECT_CLASSIFIED ||
+        instruction->callback_obligations ||
         instruction->signal.state != RXOP_SIGNAL_STATE_NONE ||
         instruction->effects.flow != FLOW_NEXT ||
         instruction->effects.optimizer_barrier ||
         (instruction->effects.semantics & forbidden) ||
         rxop_context_writes(instruction->op->opcode) != RXOP_CONTEXT_NONE ||
-        (instruction->signal.properties & RXOP_SIGNAL_PROP_POLICY_WRITE)) {
+        (instruction->signal.properties &
+                (RXOP_SIGNAL_PROP_POLICY_WRITE | RXOP_SIGNAL_PROP_PENDING_WRITE))) {
         result->reason = RXAS_FLOW_PROOF_NOT_SPECULATABLE;
         return 1;
     }

@@ -187,8 +187,8 @@ The named query surface is:
 | `readcomponents(op,i)`, `writecomponents(op,i)` | Native component masks; a scalar payload write is not a complete register-cell reset. |
 | `signalstate(op)`, `signalphase(op)`, `signalsource(op)`, `signalsourceoperand(op)`, `signalnames(op)` | Completeness, failure timing and signal identity source. Native source-operand indices are zero-based, with `-1` when absent. |
 | `failurewrites(op,i)`, `failurecomponents(op)`, `failurecontext(op)` | Writes potentially visible on a failure continuation. |
-| `signaldependencies(op)`, `continuations(op)`, `signalproperties(op)` | Numeric/plugin/policy dependencies and admitted failure outcomes/observations. |
-| `policyeffect(op)`, `policysource(op)`, `policysourceoperand(op)`, `policyname(op)` | Signal-policy transfer, distinct from an operation's own signal behavior. |
+| `signaldependencies(op)`, `continuations(op)`, `signalproperties(op)` | Numeric/plugin/policy dependencies and admitted failure outcomes/observations. Properties distinguish structural `POLICY_WRITE` (8) from `PENDING_WRITE` (32). |
+| `policyeffect(op)`, `policysource(op)`, `policysourceoperand(op)`, `policyname(op)` | Typed structural-policy or pending-delivery transfer, selected by `signalproperties`. `BPOFF` clears a pending BREAKPOINT bit and retains its typed name/effect; it does not remove an installed handler or establish IGNORE. |
 | `unbounded(op)` | Native indirect-write/branch or asynchronous-entry flags require conservative frame handling. |
 
 Numeric enums and masks are those in `binutils/include/rxdefs.h`; this package

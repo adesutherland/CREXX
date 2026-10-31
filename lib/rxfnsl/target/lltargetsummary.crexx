@@ -1,12 +1,15 @@
 /* cREXX License (MIT). Inferred procedure facts over shared target evidence. */
 options levelb
-namespace lltargetsummary expose analysis analyse summary effectfact returnfact
+namespace lltargetsummary expose analysis analyse summary effectfact returnfact discardfact footprintfact rolefact constraintfact layoutfact scopefreefact activationfact directmappingfact preservationfact
 import rxfnsb
 import llirgraph
 import lltarget
 import lltargettransfer
 import lltargetcfg
 import lltargetflow
+import lltargetremap
+import llrxascatalog
+import lltargetrecipe
 
 boot: initialiser expose serial
   serial = 0
@@ -154,6 +157,478 @@ returnfact: class
     if known() then return _literal
     return .lltarget..operand()
 
+/** Shared immutable site-facet stamp. Enumeration is unavailable when the
+ * facet is incomplete, rather than presenting an unknown set as empty. */
+siteproof: class
+  _owner = reference .lltargetsummary..analysis
+  _identity = .int
+  _status = .string
+  _reason = .string
+  *: factory
+    arg owner = reference .analysis, status = .string, reason = ''
+    _owner = owner; parent = dereference owner; _identity = parent.identity()
+    _status = status; _reason = reason
+    return
+  valid: method = .int
+    if <refvalid>(_owner) = 0 then return 0
+    parent = dereference _owner
+    return parent.valid() & parent.identity() = _identity
+  status: method = .string
+    if <refvalid>(_owner) = 0 then return 'invalid'
+    parent = dereference _owner
+    if parent.identity() <> _identity then return 'invalid'
+    if parent.status() = 'limit' then return 'limit'
+    if valid() = 0 then return 'invalid'
+    return _status
+  reason: method = .string
+    if status() = 'invalid' & valid() = 0 then return 'target.summary.owner.expired.or.replaced'
+    if status() = 'limit' & _reason = '' then do; parent = dereference _owner; return parent.message(); end
+    return _reason
+  require: method = .void
+    if status() <> 'proved' then assembler signal "ERROR","LL_TARGET_SITE: unavailable proof enumeration"
+    return
+
+discardfact: class
+  _proof = .siteproof
+  _safe = .int
+  _outputs = .int[]
+  *: factory
+    arg proof = .siteproof, safe = .int, outputs = .int[]
+    _proof = proof; _safe = safe; _outputs = outputs
+    return
+  valid: method = .int
+    return _proof.valid()
+  status: method = .string
+    return _proof.status()
+  reason: method = .string
+    return _proof.reason()
+  safeifdead: method = .int
+    return valid() & status() = 'proved' & _safe
+  outputs: method = .int
+    call _proof.require(); return _outputs[0]
+  outputdomain: method = .int
+    arg ordinal = .int
+    call _proof.require()
+    if ordinal < 1 | ordinal > _outputs[0] then assembler signal "ERROR","LL_TARGET_SITE: output domain ordinal"
+    return _outputs[ordinal]
+
+rolefact: class
+  _proof = .siteproof
+  _ordinal = .int
+  _kind = .string
+  _bank = .string
+  _index = .int
+  _anchor = .string
+  _binding = .lltargetflow..storagefact
+  _resource = .lltargetflow..abiresource
+  _hasresource = .int
+  _fixed = .int
+  *: factory
+    arg proof = .siteproof, ordinal = .int, kind = .string, bank = .string, index = .int, anchor = .string, binding = .lltargetflow..storagefact, fixed = 0
+    _proof = proof; _ordinal = ordinal; _kind = kind; _bank = bank; _index = index; _anchor = anchor; _binding = binding; _fixed = fixed
+    return
+  checkpoint: factory
+    arg proof = .siteproof, kind = .string, bank = .string, index = .int, anchor = .string, resource = .lltargetflow..abiresource
+    _proof = proof; _kind = kind; _bank = bank; _index = index; _anchor = anchor
+    _resource = resource; _hasresource = 1; _fixed = 1
+    points_ref = reference .lltargetflow..analysis; points_ref = resource.points()
+    points = dereference points_ref
+    _binding = points.unprovedstorage('target.footprint.abi.resource.checkpoint')
+    return
+  valid: method = .int
+    if _proof.valid() = 0 | _binding.valid() = 0 then return 0
+    if _hasresource then return _resource.valid()
+    return 1
+  status: method = .string
+    if _proof.status() = 'limit' then return 'limit'
+    if valid() = 0 then return 'invalid'
+    return _proof.status()
+  reason: method = .string
+    if _proof.status() = 'limit' then return _proof.reason()
+    if valid() = 0 then return 'target.footprint.resource.expired.or.replaced'
+    return _proof.reason()
+  require: method = .void
+    if status() <> 'proved' then assembler signal "ERROR","LL_TARGET_SITE: unavailable footprint role"
+    return
+  ordinal: method = .int
+    call require(); return _ordinal
+  kind: method = .string
+    call require(); return _kind
+  bank: method = .string
+    call require(); return _bank
+  index: method = .int
+    call require(); return _index
+  anchor: method = .string
+    call require(); return _anchor
+  binding: method = .lltargetflow..storagefact
+    call require(); return _binding
+  fixed: method = .int
+    call require(); return _fixed
+
+  hasresource: method = .int
+    return valid() & _hasresource
+  resource: method = .lltargetflow..abiresource
+    call require()
+    if _hasresource = 0 then assembler signal "ERROR","LL_TARGET_SITE: role has no ABI resource checkpoint"
+    return _resource
+
+constraintfact: class
+  _proof = .siteproof
+  _kind = .string
+  _bank = .string
+  _first = .int
+  _width = .int
+  _members = .int[]
+  *: factory
+    arg proof = .siteproof, kind = .string, bank = .string, first = .int, width = .int, members = .int[]
+    _proof = proof; _kind = kind; _bank = bank; _first = first; _width = width; _members = members
+    return
+  valid: method = .int
+    return _proof.valid()
+  kind: method = .string
+    call _proof.require(); return _kind
+  bank: method = .string
+    call _proof.require(); return _bank
+  first: method = .int
+    call _proof.require(); return _first
+  width: method = .int
+    call _proof.require(); return _width
+  roles: method = .int
+    call _proof.require(); return _members[0]
+  role: method = .int
+    arg ordinal = .int
+    call _proof.require()
+    if ordinal < 1 | ordinal > _members[0] then assembler signal "ERROR","LL_TARGET_SITE: constraint member ordinal"
+    return _members[ordinal]
+
+footprintfact: class
+  _proof = .siteproof
+  _roles = .rolefact[]
+  _constraints = .constraintfact[]
+  _abi = .lltargetflow..abicallbackfact[]
+  *: factory
+    arg proof = .siteproof, roles = .rolefact[], constraints = .constraintfact[]
+    _proof = proof; _roles = roles; _constraints = constraints
+    return
+  checkpointed: factory
+    arg proof = .siteproof, roles = .rolefact[], constraints = .constraintfact[], abi = .lltargetflow..abicallbackfact[]
+    _proof = proof; _roles = roles; _constraints = constraints; _abi = abi
+    return
+  valid: method = .int
+    if _proof.valid() = 0 then return 0
+    do i = 1 to _abi[0]; if _abi[i].valid() = 0 then return 0; end
+    return 1
+  status: method = .string
+    if _proof.status() = 'limit' then return 'limit'
+    if valid() = 0 then return 'invalid'
+    return _proof.status()
+  reason: method = .string
+    if _proof.status() = 'limit' then return _proof.reason()
+    if valid() = 0 then return 'target.footprint.abi.owner.expired.or.replaced'
+    return _proof.reason()
+  require: method = .void
+    if status() <> 'proved' then assembler signal "ERROR","LL_TARGET_SITE: unavailable footprint enumeration"
+    return
+  roles: method = .int
+    call require(); return _roles[0]
+  role: method = .rolefact
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _roles[0] then assembler signal "ERROR","LL_TARGET_SITE: footprint role ordinal"
+    return _roles[ordinal]
+  constraints: method = .int
+    call require(); return _constraints[0]
+  constraint: method = .constraintfact
+    arg ordinal = .int
+    call require()
+    if ordinal < 1 | ordinal > _constraints[0] then assembler signal "ERROR","LL_TARGET_SITE: footprint constraint ordinal"
+    return _constraints[ordinal]
+
+layoutfact: class
+  _proof = .siteproof
+  _countkind = .string
+  _count = .int
+  _resultkind = .string
+  _result = .lltargetflow..storagefact
+  _counter = .lltargetflow..storagefact
+  _actuals = .lltargetflow..storagefact[]
+  _bank = .string
+  _first = .int
+  _span = .int
+  _phase = .string
+  *: factory
+    arg proof = .siteproof, countkind = 'unknown', count = -1, resultkind = 'unknown', ?result = .lltargetflow..storagefact, ?counter = .lltargetflow..storagefact, ?actuals = .lltargetflow..storagefact[], bank = '', first = -1, span = 0, phase = ''
+    _proof = proof; _countkind = countkind; _count = count; _resultkind = resultkind
+    if ?result then _result = result
+    if ?counter then _counter = counter
+    if ?actuals then _actuals = actuals
+    _bank = bank; _first = first; _span = span; _phase = phase
+    return
+  valid: method = .int
+    return _proof.valid()
+  status: method = .string
+    return _proof.status()
+  reason: method = .string
+    return _proof.reason()
+  countknown: method = .int
+    return valid() & _countkind <> 'unknown' & _count >= 0
+  countkind: method = .string
+    if valid() = 0 then return 'unknown'
+    return _countkind
+  resultkind: method = .string
+    if valid() = 0 then return 'unknown'
+    return _resultkind
+  count: method = .int
+    if countknown() = 0 then return -1
+    return _count
+  result: method = .lltargetflow..storagefact
+    call _proof.require()
+    if _resultkind <> 'captured' then assembler signal "ERROR","LL_TARGET_SITE: layout result has no storage"
+    return _result
+  countstorage: method = .lltargetflow..storagefact
+    call _proof.require()
+    if _countkind <> 'captured' then assembler signal "ERROR","LL_TARGET_SITE: layout count has no storage"
+    return _counter
+  actual: method = .lltargetflow..storagefact
+    arg ordinal = .int
+    call _proof.require()
+    if ordinal < 1 | ordinal > _actuals[0] then assembler signal "ERROR","LL_TARGET_SITE: layout actual ordinal"
+    return _actuals[ordinal]
+  windowbank: method = .string
+    call _proof.require(); return _bank
+  windowfirst: method = .int
+    call _proof.require(); return _first
+  windowspan: method = .int
+    call _proof.require(); return _span
+  capturephase: method = .string
+    call _proof.require(); return _phase
+
+activationfact: class
+  _proof = .siteproof
+  _allowed = .int
+  _pending = .int
+  _dependencies = .siteproof[]
+  _targets = .lltargetflow..targetfact[]
+  _invocations = .lltargetflow..invocationfact[]
+  _abi = .lltargetflow..abicallbackfact[]
+  *: factory
+    arg proof = .siteproof, allowed = .int
+    _proof = proof; _allowed = allowed
+    return
+  dependent: factory
+    arg proof = .siteproof, allowed = .int, dependencies = .activationfact[], targets = .lltargetflow..targetfact[]
+    i = .int; j = .int
+    _proof = proof; _allowed = allowed; _targets = targets
+    do i = 1 to dependencies[0]
+      do j = 1 to dependencies[i].proofs(); _dependencies[_dependencies[0] + 1] = dependencies[i].proof(j); end
+      do j = 1 to dependencies[i].targets(); _targets[_targets[0] + 1] = dependencies[i].target(j); end
+      do j = 1 to dependencies[i].contexts(); _invocations[_invocations[0] + 1] = dependencies[i].context(j); end
+      do j = 1 to dependencies[i].abiproofs(); _abi[_abi[0] + 1] = dependencies[i].abiproof(j); end
+      _pending = max(_pending,dependencies[i].pending())
+    end
+    return
+  deferred: factory
+    arg proof = .siteproof, allowed = .int, dependencies = .activationfact[], targets = .lltargetflow..targetfact[], pending = .int
+    i = .int; j = .int
+    _proof = proof; _allowed = allowed; _targets = targets; _pending = pending
+    do i = 1 to dependencies[0]
+      do j = 1 to dependencies[i].proofs(); _dependencies[_dependencies[0] + 1] = dependencies[i].proof(j); end
+      do j = 1 to dependencies[i].targets(); _targets[_targets[0] + 1] = dependencies[i].target(j); end
+      do j = 1 to dependencies[i].contexts(); _invocations[_invocations[0] + 1] = dependencies[i].context(j); end
+      do j = 1 to dependencies[i].abiproofs(); _abi[_abi[0] + 1] = dependencies[i].abiproof(j); end
+      _pending = max(_pending,dependencies[i].pending())
+    end
+    return
+  contextual: factory
+    arg proof = .siteproof, allowed = .int, dependencies = .activationfact[], targets = .lltargetflow..targetfact[], invocations = .lltargetflow..invocationfact[], abi = .lltargetflow..abicallbackfact[]
+    i = .int; j = .int
+    _proof = proof; _allowed = allowed; _targets = targets; _invocations = invocations; _abi = abi
+    do i = 1 to dependencies[0]
+      do j = 1 to dependencies[i].proofs(); _dependencies[_dependencies[0] + 1] = dependencies[i].proof(j); end
+      do j = 1 to dependencies[i].targets(); _targets[_targets[0] + 1] = dependencies[i].target(j); end
+      do j = 1 to dependencies[i].contexts(); _invocations[_invocations[0] + 1] = dependencies[i].context(j); end
+      do j = 1 to dependencies[i].abiproofs(); _abi[_abi[0] + 1] = dependencies[i].abiproof(j); end
+    end
+    return
+  valid: method = .int
+    i = .int
+    if _proof.valid() = 0 then return 0
+    do i = 1 to _targets[0]; if _targets[i].valid() = 0 then return 0; end
+    do i = 1 to _dependencies[0]; if _dependencies[i].valid() = 0 then return 0; end
+    do i = 1 to _invocations[0]; if _invocations[i].valid() = 0 then return 0; end
+    do i = 1 to _abi[0]; if _abi[i].valid() = 0 then return 0; end
+    return 1
+  status: method = .string
+    if _proof.status() = 'limit' then return 'limit'
+    if valid() = 0 then return 'invalid'
+    if _pending > 0 & _proof.status() = 'proved' then return 'unknown'
+    return _proof.status()
+  reason: method = .string
+    if _proof.status() = 'limit' then return _proof.reason()
+    if valid() = 0 then return 'target.activation.dependency.expired.or.replaced'
+    if _pending > 0 & _proof.status() = 'proved' then return 'target.activation.invocation.required'
+    return _proof.reason()
+  allowed: method = .int
+    return genericallowed() & _pending = 0
+  /** Generic remap/control proof is not permission to ignore pending ABI. */
+  genericallowed: method = .int
+    return valid() & _proof.status() = 'proved' & _allowed
+  pending: method = .int
+    return _pending
+  proofs: method = .int
+    return _dependencies[0] + 1
+  proof: method = .siteproof
+    arg ordinal = .int
+    if ordinal = 1 then return _proof
+    return _dependencies[ordinal - 1]
+  targets: method = .int
+    return _targets[0]
+  target: method = .lltargetflow..targetfact
+    arg ordinal = .int
+    return _targets[ordinal]
+  contexts: method = .int
+    return _invocations[0]
+  context: method = .lltargetflow..invocationfact
+    arg ordinal = .int
+    return _invocations[ordinal]
+  abiproofs: method = .int
+    return _abi[0]
+  abiproof: method = .lltargetflow..abicallbackfact
+    arg ordinal = .int
+    return _abi[ordinal]
+
+/** Borrowed peer owners supply facts, never target-binding authority. */
+providerbundle: class
+  _flow = reference .lltargetflow..analysis
+  _summary = reference .lltargetsummary..analysis
+  _flowid = .int
+  _summaryid = .int
+  *: factory
+    arg flow = reference .lltargetflow..analysis, summaries = reference .lltargetsummary..analysis
+    _flow = flow; _summary = summaries
+    points = dereference flow; effects = dereference summaries
+    _flowid = points.identity(); _summaryid = effects.identity()
+    return
+  valid: method = .int
+    if <refvalid>(_flow) = 0 | <refvalid>(_summary) = 0 then return 0
+    points = dereference _flow; effects = dereference _summary
+    actual = effects.flow()
+    return points.valid() & effects.valid() & points.identity() = _flowid & effects.identity() = _summaryid & (actual <refsame> _flow)
+  points: method = reference .lltargetflow..analysis
+    return _flow
+  summaries: method = reference .lltargetsummary..analysis
+    return _summary
+
+/** Point-local observation preservation is not callback absence or permission
+ * to move a write across earlier operations. Both checkpoint owners survive. */
+preservationfact: class
+  _proof = .siteproof
+  _source = .lltargetflow..callbackfact
+  _candidate = .lltargetflow..callbackfact
+  _correspondence = reference .lltargetremap..correspondence
+  _hascorrespondence = .int
+  *: factory
+    arg proof = .siteproof, source = .lltargetflow..callbackfact, candidate = .lltargetflow..callbackfact, ?correspondence = reference .lltargetremap..correspondence
+    _proof = proof; _source = source; _candidate = candidate
+    if ?correspondence & proof.status() = 'proved' then do
+      if <refvalid>(correspondence) then do; _correspondence = correspondence; _hascorrespondence = 1; end
+    end
+    return
+  valid: method = .int
+    if _proof.valid() = 0 | _source.valid() = 0 | _candidate.valid() = 0 then return 0
+    if _hascorrespondence then do
+      if <refvalid>(_correspondence) = 0 then return 0
+      mapping = dereference _correspondence
+      if mapping.valid() = 0 then return 0
+      sourceflow = _source.points(); candidateflow = _candidate.points()
+      before = dereference sourceflow; after = dereference candidateflow
+      beforeowner = mapping.sourceowner(); afterowner = mapping.candidateowner()
+      beforeprofile = mapping.sourceprofile(); afterprofile = mapping.candidateprofile()
+      beforecfg = mapping.sourcecfg(); aftercfg = mapping.candidatecfg()
+      actualowner = before.owner(); resultowner = after.owner()
+      actualprofile = before.transfers(); resultprofile = after.transfers()
+      actualcfg = before.cfg(); resultcfg = after.cfg()
+      if (beforeowner <refsame> actualowner) = 0 | (afterowner <refsame> resultowner) = 0 | (beforeprofile <refsame> actualprofile) = 0 | (afterprofile <refsame> resultprofile) = 0 | (beforecfg <refsame> actualcfg) = 0 | (aftercfg <refsame> resultcfg) = 0 then return 0
+      event = mapping.event(_source.operation(),_source.ordinal(),_source.edge())
+      if event.valid() = 0 then return 0
+      if event.candidateoperation() <> _candidate.operation() | event.candidateordinal() <> _candidate.ordinal() | event.candidateedge() <> _candidate.edge() then return 0
+    end
+    return 1
+  status: method = .string
+    if _proof.status() = 'limit' | _source.status() = 'limit' | _candidate.status() = 'limit' then return 'limit'
+    if valid() = 0 then return 'invalid'
+    return _proof.status()
+  reason: method = .string
+    if _proof.status() = 'limit' then return _proof.reason()
+    if _source.status() = 'limit' then return _source.reason()
+    if _candidate.status() = 'limit' then return _candidate.reason()
+    if valid() = 0 then return 'target.callback.preservation.owner.expired.or.replaced'
+    return _proof.reason()
+  preserved: method = .int
+    return status() = 'proved'
+  source: method = .lltargetflow..callbackfact
+    return _source
+  candidate: method = .lltargetflow..callbackfact
+    return _candidate
+
+/** Explicit argument/global substitution keeps pointee effects, but may not replace
+ * a callee-private pointer slot by the caller's slot without this proof.
+ * Window geometry and addressed references retain their separate obligations. */
+directmappingfact: class
+  _proof = .siteproof
+  _target = .lltargetflow..targetfact
+  _hastarget = .int
+  *: factory
+    arg proof = .siteproof, ?target = .lltargetflow..targetfact
+    _proof = proof; _hastarget = ?target
+    if ?target then _target = target
+    return
+  valid: method = .int
+    if _proof.valid() = 0 then return 0
+    if _hastarget then return _target.valid()
+    return 1
+  status: method = .string
+    if _proof.status() = 'limit' then return 'limit'
+    if valid() = 0 then return 'invalid'
+    return _proof.status()
+  reason: method = .string
+    if _proof.status() = 'limit' then return _proof.reason()
+    if valid() = 0 then return 'target.argument.mapping.owner.expired.or.replaced'
+    return _proof.reason()
+  allowed: method = .int
+    return status() = 'proved'
+
+scopefreefact: class
+  _proof = .siteproof
+  _allowed = .int
+  _returnops = .int[]
+  _returnmodes = .string[]
+  *: factory
+    arg proof = .siteproof, allowed = .int, ?returnops = .int[], ?returnmodes = .string[]
+    _proof = proof; _allowed = allowed
+    if ?returnops then _returnops = returnops
+    if ?returnmodes then _returnmodes = returnmodes
+    return
+  valid: method = .int
+    return _proof.valid()
+  status: method = .string
+    return _proof.status()
+  reason: method = .string
+    return _proof.reason()
+  allowed: method = .int
+    return valid() & status() = 'proved' & _allowed
+  returnmode: method = .string
+    arg sourceReturnOp = .int
+    if allowed() = 0 then return 'unproved'
+    low = 1; high = _returnops[0]
+    do while low <= high
+      middle = (low + high) <idiv> 2
+      if _returnops[middle] = sourceReturnOp then return _returnmodes[middle]
+      if _returnops[middle] < sourceReturnOp then low = middle + 1
+      else high = middle - 1
+    end
+    return 'unproved'
+
 /** An immutable procedure/mode view. Direct effects do not include callee
  * bodies; transitive may effects include the exact locally bound closure. */
 summary: class
@@ -232,6 +707,37 @@ analysis: class
   _querywork = .int
   _querylimit = .int
   _queryreason = .string
+  _sitework = .int
+  _sitebytes = .int
+  _sitefailure = .string
+  _discardfacts = .discardfact[]
+  _discardpresent = .int[]
+  _footprintfacts = .footprintfact[]
+  _footprintpresent = .int[]
+  _layoutfacts = .layoutfact[]
+  _layoutpresent = .int[]
+  _scopefacts = .scopefreefact[]
+  _scopepresent = .int[]
+  _activationfacts = .activationfact[]
+  _activationpresent = .int[]
+  _providers = .providerbundle[]
+  _activationstarted = .int
+  _activationdirectready = .int[]
+  _activationdirectreason = .string[]
+  _activationprocedures = .activationfact[]
+  _activationprocedurepresent = .int[]
+  _activationpreparing = .int[]
+  _activationcallhead = .int[]
+  _activationcallnext = .int[]
+  _activationcallsready = .int
+  _activationabihead = .int[]
+  _activationabitail = .int[]
+  _activationabicount = .int[]
+  _activationabiop = .int[]
+  _activationabiedge = .int[]
+  _activationabinext = .int[]
+  _activationabiready = .int
+  _activationinprogress = .int[]
   *: factory
     arg flow = reference .lltargetflow..analysis, work = 1000000, bytes = 67108864
     _flow = flow; _identity = nextidentity(); _status = 'building'
@@ -253,13 +759,196 @@ analysis: class
     return 1
   queryspend: method = .int
     arg amount = .int
-    if amount < 0 | amount > _worklimit - _work - _querywork then do; _querylimit = 1; _queryreason = 'target.summary.must.work'; return 0; end
+    if amount < 0 | amount > _worklimit - _work - _sitework - _querywork then do; _querylimit = 1; _queryreason = 'target.summary.must.work'; return 0; end
     _querywork = _querywork + amount
     return 1
+  sitespend: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _worklimit - _work - _sitework then do; _sitefailure = 'target.site.work'; return 0; end
+    _sitework = _sitework + amount; return 1
+  sitereserve: method = .int
+    arg amount = .int
+    if amount < 0 | amount > _bytelimit - _bytes - _sitebytes then do; _sitefailure = 'target.site.bytes'; return 0; end
+    _sitebytes = _sitebytes + amount; return 1
+  sitebegin: method = .int
+    arg sourceop = .int
+    call run()
+    if valid() = 0 | _sitefailure <> '' then return 0
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner; item = source.at(sourceop)
+    return item.valid()
+  addoutput: method = .int
+    arg expose outputs = .int[], domainid = .int
+    if sitespend(outputs[0] + 1) = 0 then return 0
+    do i = 1 to outputs[0]; if outputs[i] = domainid then return 1; end
+    if sitereserve(8) = 0 then return 0
+    outputs[outputs[0] + 1] = domainid
+    return 1
+  /** Shared flow owns hook-condition proof, including captured BEFORE state
+   * on normal and exceptional prefixes. No absence is inferred from a facet's
+   * missing row, nor from the fact that a callback eventually returned. */
+  callbackmay: method = .int
+    arg sourceop = .int, ordinal = .int, site = 0
+    flow = dereference _flow; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    do i = 0 to cfg.outedges(sourceop)
+      if site then do; if sitespend(1) = 0 then return 1; end
+      else if spend(1) = 0 then return 1
+      edgeid = 0
+      if i > 0 then do; edge = cfg.outedge(sourceop,i); edgeid = edge.id(); end
+      possible = flow.callbackpossibleat(sourceop,ordinal,edgeid)
+      if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.reason()); return 1; end
+      if possible then return 1
+    end
+    return 0
+  abiaction: method = .int
+    arg action = .lltargettransfer..action
+    return action.kind() = 'callback' & wordpos(action.detail(),'catalog.callback.abi catalog.callback.departure') > 0
+  abiedge: method = .int
+    arg edge = .lltargetcfg..edge, cfg = .lltargetcfg..graph
+    if edge.scopeexits() > 0 | edge.scopeenters() > 0 then return 1
+    if edge.sourceop() > 0 then do
+      if edge.scopecomplete() = 0 & cfg.scopedepth(edge.sourceop()) > 0 then return 1
+    end
+    /* Independent operational premises acquire only their explicit effects.
+     * Actual RXAS admission separately requires the canonical native profile. */
+    profile_ref = cfg.profile(); profile = dereference profile_ref
+    if profile.premise() <> 'canonical' then return 0
+    /* Empty logical scope exits do not prove absent physical-frame cleanup. */
+    if wordpos(edge.role(),'terminal unwind') > 0 then return 1
+    if edge.targetblock() = 0 & edge.boundarykind() <> '' then return 1
+    return 0
+  /** Full departures remain obligations for outward and activation facts. */
+  abimay: method = .int
+    arg sourceop = .int, site = 0
+    return abipossible(sourceop,site,0)
+  /** Local output/placement edits use the same sealed fact's intrinsic view.
+   * Async origin and row attribution are owned by CFG/flow, never guessed here. */
+  abiintrinsicmay: method = .int
+    arg sourceop = .int, site = 1
+    return abipossible(sourceop,site,1)
+  abipossible: method = .int
+    arg sourceop = .int, site = .int, intrinsic = .int
+    i = .int; hiddenabi = .int; proof = .lltargetflow..abicallbackfact; ignored = .int
+    flow = dereference _flow; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    profile_ref = flow.transfers(); profile = dereference profile_ref; instruction = profile.instruction(sourceop)
+    hiddenabi = 0
+    do i = 1 to instruction.actions()
+      if site then do; if sitespend(1) = 0 then return 1; end
+      else if spend(1) = 0 then return 1
+      if abiaction(instruction.action(i)) then hiddenabi = 1
+    end
+    if hiddenabi then do
+      proof = flow.abicallbackat(sourceop)
+      if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.reason()); return 1; end
+      if intrinsic then do
+        if proof.intrinsicstatus() = 'limit' then do; ignored = fail('limit',proof.intrinsicreason()); return 1; end
+        if proof.intrinsicpossible() then return 1
+      end
+      else do
+        if proof.status() = 'limit' then do; ignored = fail('limit',proof.reason()); return 1; end
+        if proof.possible() then return 1
+      end
+    end
+    do i = 1 to cfg.outedges(sourceop)
+      if site then do; if sitespend(i + 1) = 0 then return 1; end
+      else if spend(i + 1) = 0 then return 1
+      edge = cfg.outedge(sourceop,i)
+      if hiddenabi = 0 & abiedge(edge,cfg) = 0 then iterate
+      proof = flow.abicallbackat(sourceop,edge.id())
+      if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.reason()); return 1; end
+      if intrinsic then do
+        if proof.intrinsicstatus() = 'limit' then do; ignored = fail('limit',proof.intrinsicreason()); return 1; end
+        if proof.intrinsicpossible() then return 1
+      end
+      else do
+        if proof.status() = 'limit' then do; ignored = fail('limit',proof.reason()); return 1; end
+        if proof.possible() then return 1
+      end
+    end
+    return 0
+  abiunknown: method = .void
+    arg expose result = .row
+    ignored = .int
+    do i = 1 to 13
+      family = word('effects calls bindings ownership numeric values observations arguments globals components flags signals control',i)
+      ignored = result.unknown(family)
+    end
+    return
+  addactivationabi: method = .int
+    arg functionid = .int, sourceop = .int, edgeid = .int
+    if sitespend(1) = 0 | sitereserve(32) = 0 then return 0
+    id = _activationabiop[0] + 1
+    _activationabiop[id] = sourceop; _activationabiedge[id] = edgeid; _activationabinext[id] = 0
+    if _activationabihead[functionid] = 0 then _activationabihead[functionid] = id
+    else _activationabinext[_activationabitail[functionid]] = id
+    _activationabitail[functionid] = id; _activationabicount[functionid] = _activationabicount[functionid] + 1
+    return 1
+  abirole: method = .int
+    arg expose roles = .rolefact[], proof = .siteproof, kind = .string, checkpoint = .string, extent = .string, resource = .lltargetflow..abiresource, functionid = .int
+    if resource.storage() = 0 then return extent = 'none'
+    if resource.valid() = 0 | resource.live() = 0 then return 0
+    points_ref = resource.points()
+    if (points_ref <refsame> _flow) = 0 then return 0
+    points = dereference points_ref; storage = resource.storage()
+    bank = points.storagebank(storage); number = points.storageindex(storage)
+    if bank = '' | number < 0 then return 0
+    if bank <> 'g' & points.storagefunction(storage) <> functionid then return 0
+    if sitespend(1) = 0 | sitereserve(320) = 0 then return 0
+    roles[roles[0] + 1] = .rolefact.checkpoint(proof,'abi.' || kind,bank,number,'abi.' || checkpoint,resource)
+    return 1
+  abifootprint: method = .string
+    arg sourceop = .int, expose roles = .rolefact[], expose constraints = .constraintfact[], expose proofs = .lltargetflow..abicallbackfact[], proof = .siteproof
+    i = .int; j = .int; hiddenabi = .int; edgeid = .int; ignored = .int
+    row = .lltargetflow..abirow; abi = .lltargetflow..abicallbackfact
+    flow = dereference _flow
+    cfg_ref = flow.cfg(); cfg = dereference cfg_ref; profile_ref = flow.transfers(); profile = dereference profile_ref
+    instruction = profile.instruction(sourceop); item = instruction.record(); hiddenabi = 0
+    do i = 1 to instruction.actions()
+      if sitespend(1) = 0 then return _sitefailure
+      if abiaction(instruction.action(i)) then hiddenabi = 1
+    end
+    do i = 0 to cfg.outedges(sourceop)
+      if sitespend(i + 1) = 0 then return _sitefailure
+      edgeid = 0
+      if i = 0 then do; if hiddenabi = 0 then iterate; end
+      else do
+        edge = cfg.outedge(sourceop,i); edgeid = edge.id()
+        if hiddenabi = 0 & abiedge(edge,cfg) = 0 then iterate
+      end
+      abi = flow.abicallbackat(sourceop,edgeid)
+      if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.reason()); return flow.reason(); end
+      if abi.intrinsicstatus() = 'limit' then do; ignored = fail('limit',abi.intrinsicreason()); return abi.intrinsicreason(); end
+      if abi.intrinsicstatus() <> 'proved' | abi.intrinsicpossible() then return 'target.footprint.abi.unproved'
+      if sitespend(abi.intrinsicrows() * 2 + 1) = 0 | sitereserve(abi.bytes()) = 0 then return _sitefailure
+      proofs[proofs[0] + 1] = abi
+      do j = 1 to abi.intrinsicrows()
+        row = abi.intrinsicrow(j)
+        if abirole(roles,proof,row.sourcerole(),row.checkpoint(),row.sourceextent(),row.source(),item.procedureid()) = 0 then return 'target.footprint.abi.resource.unproved'
+        if abirole(roles,proof,row.destinationrole(),row.checkpoint(),row.destinationextent(),row.destination(),item.procedureid()) = 0 then return 'target.footprint.abi.resource.unproved'
+        if row.operation() = 'restore-slot' | row.operation() = 'bind-proxy' then do
+          if row.slotknown() = 0 | row.slotfunction() <> item.procedureid() then return 'target.footprint.abi.slot.unproved'
+          bank = row.slotbank(); number = row.slotindex()
+          if bank = '' | number < 0 then return 'target.footprint.abi.slot.unproved'
+          if sitespend(1) = 0 | sitereserve(384) = 0 then return _sitefailure
+          binding = flow.unprovedstorage('target.footprint.abi.slot.only')
+          roles[roles[0] + 1] = .rolefact(proof,0,'abi.' || row.destinationrole(),bank,number,'slot',binding,1)
+          empty = .int[]
+          constraints[constraints[0] + 1] = .constraintfact(proof,'fixed',bank,number,1,empty)
+        end
+      end
+    end
+    return ''
   boundchild: method = .int
     arg instruction = .lltargettransfer..instruction, action = .lltargettransfer..action
     literal = .lltarget..operand(); refview = .lltargettransfer..refview; i = .int
     flow = dereference _flow; source_ref = flow.owner(); source = dereference source_ref
+    profile_ref = flow.transfers(); profile = dereference profile_ref
+    if profile.premise() = 'canonical' then do
+      target = flow.targetat(instruction.opid())
+      if target.status() <> 'proved' then return 0
+      provider = target.provider()
+      if (provider <refsame> source_ref) = 0 then return 0
+      return target.procedure()
+    end
     if action.sourcekind() = 'literal' then literal = action.literal()
     else if action.sourcekind() = 'reference' then do
       do i = 1 to instruction.references()
@@ -281,25 +970,26 @@ analysis: class
     ignored = .int; i = .int
     if refid = 0 then return
     refview = profile.ref(refid)
-    if refview.bank() = '' then return
-    /* Point facts are at instruction entry. A compound can change active
-     * bindings before this subevent. Until a prefix binding proof is queried,
-     * widen the affected symbolic families instead of attributing to entry. */
-    if refview.anchor() = 'active' then do i = 1 to ordinal - 1
-      preceding = instruction.action(i)
-      if wordpos(preceding.kind(),'link unlink swap unknown') > 0 then do
-        ignored = result.unknown('arguments'); ignored = result.unknown('globals'); ignored = result.unknown('ownership'); return
+    if refview.bank() = '' & refview.kind() <> 'address' then return
+    flow = dereference _flow; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    action = instruction.action(ordinal)
+    do i = 0 to cfg.outedges(instruction.opid())
+      edgeid = 0; exceptional = 0; phase = 'unknown'
+      if i > 0 then do
+        edge = cfg.outedge(instruction.opid(),i); edgeid = edge.id(); phase = edge.phase()
+        exceptional = phase <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table' & right(edge.exposure(),6) <> '-async'
+        if exceptional = 0 then iterate
       end
-    end
-    flow = dereference _flow
-    location = flow.storageat(instruction.opid(),refview.bank(),refview.index())
+      if flow.applies(action,exceptional,phase) = 0 then iterate
+      location = flow.actionstorage(instruction.opid(),ordinal,refid,edgeid)
+      if flow.status() <> 'ok' then do; ignored = result.unknown('effects'); return; end
     storage = location.active()
     if refview.anchor() = 'base' then storage = location.base()
     else if refview.anchor() = 'entry' then storage = location.entry()
     else if refview.anchor() <> 'active' then storage = 0
     bank = flow.storagebank(storage)
     if storage = 0 | bank = '' then do
-      ignored = result.unknown('arguments'); ignored = result.unknown('globals'); ignored = result.unknown('ownership'); return
+      ignored = result.unknown('arguments'); ignored = result.unknown('globals'); ignored = result.unknown('ownership'); iterate
     end
     if bank = 'a' then ignored = result.add('arguments',operation,'argument.' || flow.storageindex(storage) || '.' || key,instruction.opid(),0)
     else if bank = 'g' then ignored = result.add('globals',operation,'global.' || flow.revision() || '.' || flow.storageindex(storage) || '.' || key,instruction.opid(),0)
@@ -308,12 +998,19 @@ analysis: class
     if (operation = 'write' | operation = 'release') & (bank = 'a' | bank = 'g') then do
       ignored = result.unknown('arguments'); ignored = result.unknown('globals')
     end
+    end
     return
   eventrow: method = .void
     arg expose result = .row, instruction = .lltargettransfer..instruction, action = .lltargettransfer..action, profile = .lltargettransfer..profile
     domain = .lltargettransfer..domain; refview = .lltargettransfer..refview
-    ignored = .int
+    ignored = .int; i = .int
     kind = action.kind(); family = 'components'; key = '*'; whole = action.domain() = 0
+    if kind = 'callback' then do
+      /* One ABI aggregate below also includes non-action scope-exit edges. */
+      if abiaction(action) then return
+      if callbackmay(instruction.opid(),action.ordinal()) then call abiunknown(result)
+      return
+    end
     if action.domain() > 0 then do
       domain = profile.domain(action.domain()); key = domain.key()
       whole = domain.kind() = 'whole'
@@ -328,6 +1025,13 @@ analysis: class
       when 'write' then operation = 'write'
       when 'clear' then operation = 'write'
       when 'derive' then operation = 'write'
+      when 'capture' then operation = 'read'
+      when 'callcapture' then do; family = 'calls'; operation = 'capture'; end
+      when 'select' then do; family = 'values'; operation = 'selection'; end
+      when 'status' then do; family = 'flags'; operation = 'write'; end
+      when 'resize' then do; family = 'ownership'; operation = 'release'; end
+      when 'scope-enter' then do; family = 'bindings'; operation = 'activation'; end
+      when 'external' then do; family = 'effects'; operation = 'external'; key = action.detail(); end
       when 'flagwrite' then do; family = 'flags'; operation = 'write'; end
       when 'context' then do; family = 'numeric'; operation = 'write'; end
       when 'policy' then do; family = 'signals'; operation = 'policy'; key = action.detail(); end
@@ -362,7 +1066,7 @@ analysis: class
     end
     if action.certainty() = 'unknown' then ignored = result.unknown(family)
     call symboliceffect(result,instruction,action.subject(),operation,key,profile,action.ordinal())
-    if action.sourcekind() = 'reference' & wordpos(kind,'transport derive write flagwrite') > 0 then do
+    if action.sourcekind() = 'reference' & wordpos(kind,'transport derive write flagwrite capture status resize') > 0 then do
       ignored = result.add(family,'read',key,instruction.opid(),0)
       call symboliceffect(result,instruction,action.sourceid(),'read',key,profile,action.ordinal())
     end
@@ -400,6 +1104,7 @@ analysis: class
         do j = 1 to instruction.actions()
           if spend(direct.count() + instruction.references() + 1) = 0 | reserve(128) = 0 then return
           action = instruction.action(j); call eventrow(direct,instruction,action,profile)
+          if _status <> 'building' then return
           if action.kind() = 'call' then do
             n = _callfunction[0] + 1; _callfunction[n] = f; _calloperation[n] = record.id(); _calltarget[n] = boundchild(instruction,action)
             if _calltarget[n] = 0 then do; ignored = direct.unknown('calls'); _returnunknown[f] = 1; end
@@ -408,6 +1113,11 @@ analysis: class
             n = _retfunction[0] + 1; _retfunction[n] = f; _retoperation[n] = record.id(); _retaction[n] = action.id()
           end
         end
+        if abimay(record.id()) then do
+          if reserve(512) = 0 then return
+          call abiunknown(direct)
+        end
+        if _status <> 'building' then return
         if direct.isunknown('control') | direct.isunknown('signals') then _returnunknown[f] = 1
         _direct[f] = direct as .object
       end
@@ -510,9 +1220,816 @@ analysis: class
   flow: method = reference .lltargetflow..analysis
     return _flow
   usedwork: method = .int
-    return _work
+    return _work + _sitework
   usedbytes: method = .int
-    return _bytes
+    return _bytes + _sitebytes
+  calllayout: method = .lltargetsummary..layoutfact
+    arg sourceop = .int
+    if sitebegin(sourceop) = 0 then return .layoutfact(.siteproof(reference self,'limit',_sitefailure))
+    if sourceop <= _layoutpresent[0] then do; if _layoutpresent[sourceop] then return _layoutfacts[sourceop]; end
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner
+    profile_ref = flow.transfers(); profile = dereference profile_ref; catalog = .llrxascatalog..catalog()
+    item = source.at(sourceop); actuals = .lltargetflow..storagefact[]
+    result = flow.storageat(sourceop,'',0); counter = flow.storageat(sourceop,'',0)
+    state = 'proved'; reason = ''; countkind = 'unknown'; resultkind = 'absent'; count = -1
+    bank = ''; first = -1; span = 0; phase = ''; countordinal = 0; resultordinal = 0
+    recipe = .lltargetrecipe..view; value = .lltarget..operand; selected = .lltarget..operand; target = .lltargetflow..targetfact
+    if item.kind() <> 'instruction' then return .layoutfact(.siteproof(reference self,'unknown','target.layout.not.activation'))
+    scoped = catalog.scopecontinuation(item.opcode()) > 0 & catalog.recipeoperand(item.opcode()) > 0
+    if scoped then do
+      recipe = item.recipe(); count = flow.scopecount(sourceop); phase = 'before-initializer'
+      countkind = 'fixed'; if recipe.countkind() <> 'literal' then countkind = 'captured'
+      if countkind = 'captured' then do
+        value = item.reciperef(recipe.countref()); counter = flow.captureat(sourceop,value.bank(),value.index())
+      end
+      resultkind = recipe.resultmode()
+      if resultkind <> 'ignored' then resultkind = 'captured'
+      if recipe.argumentkind() = 'window' then do
+        value = item.reciperef(recipe.windowref()); bank = value.bank(); first = value.index(); span = max(0,count)
+      end
+    end
+    else do
+      if catalog.callinvokes(item.opcode()) = 0 then return .layoutfact(.siteproof(reference self,'unknown','target.site.not.call'))
+      count = flow.captureargumentcount(sourceop); countordinal = catalog.callcount(item.opcode())
+      countkind = 'fixed'; phase = 'before-initializer'
+      if countordinal > 0 then do
+        countkind = 'captured'; phase = 'after-initializer'
+        value = item.operand(countordinal); counter = flow.captureat(sourceop,value.bank(),value.index())
+        if counter.active() = 0 then counter = flow.storageat(sourceop,value.bank(),value.index())
+        value = item.operand(catalog.callwindow(item.opcode())); bank = value.bank(); first = value.index(); span = max(0,count + 1)
+        target = flow.targetat(sourceop)
+        if target.status() <> 'proved' then do; state = 'unknown'; if reason = '' then reason = 'target.layout.ingress.unproved'; end
+        else do
+          provider_ref = target.provider()
+          if (provider_ref <refsame> owner) = 0 then do; state = 'unknown'; if reason = '' then reason = 'target.layout.initializer.capture.unproved'; end
+        end
+      end
+      if catalog.callresult(item.opcode()) > 0 then resultkind = 'captured'
+    end
+    if count < 0 then do; state = 'unknown'; if reason = '' then reason = 'target.layout.count.unproved'; countkind = 'unknown'; end
+    if resultkind = 'captured' then do
+      resultordinal = catalog.callresult(item.opcode())
+      value = item.operand(resultordinal); result = flow.captureat(sourceop,value.bank(),value.index())
+      if result.active() = 0 & scoped = 0 then result = flow.storageat(sourceop,value.bank(),value.index())
+      if result.active() = 0 then do; state = 'unknown'; if reason = '' then reason = 'target.layout.result.binding.unproved'; end
+    end
+    if countkind = 'captured' then do
+      if counter.active() = 0 then do; state = 'unknown'; if reason = '' then reason = 'target.layout.count.binding.unproved'; end
+    end
+    if sitespend(max(0,count) + max(0,sourceop - _layoutpresent[0]) + 1) = 0 | sitereserve(max(0,count) * 64 + max(0,sourceop - _layoutpresent[0]) * 24 + 192) = 0 then return .layoutfact(.siteproof(reference self,'limit',_sitefailure))
+    do i = 1 to count
+      if scoped then do
+        if recipe.argumentkind() = 'list' then value = item.reciperef(recipe.argumentref(i))
+        else value = flow.windowvalue(item.procedureid(),item.reciperef(recipe.windowref()),i - 1)
+        actuals[i] = flow.captureat(sourceop,value.bank(),value.index())
+      end
+      else actuals[i] = flow.captureargument(sourceop,i)
+      selectedbinding = actuals[i]
+      if selectedbinding.active() = 0 then do; state = 'unknown'; if reason = '' then reason = 'target.layout.actual.binding.unproved'; end
+    end
+    proof = .siteproof(reference self,state,reason)
+    layout = .layoutfact(proof,countkind,count,resultkind,result,counter,actuals,bank,first,span,phase)
+    _layoutfacts[sourceop] = layout; _layoutpresent[sourceop] = 1
+    return layout
+  discardability: method = .lltargetsummary..discardfact
+    arg sourceop = .int
+    i = .int; j = .int; d = .int; ordinal = .int; p = .int; overlap = .int; nativebit = .int; writesmask = .int; clearedmask = .int
+    value = .lltargetflow..valuefact
+    outputs = .int[]
+    if sitebegin(sourceop) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+    if sourceop <= _discardpresent[0] then do; if _discardpresent[sourceop] then return _discardfacts[sourceop]; end
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner; item = source.at(sourceop)
+    profile_ref = flow.transfers(); profile = dereference profile_ref; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    catalog = .llrxascatalog..catalog(); instruction = profile.instruction(sourceop)
+    state = 'proved'; reason = ''; safe = 1; residual = 0; ownershiprequired = 0; ownershipproved = 1
+    if item.kind() <> 'instruction' then do; state = 'unknown'; reason = 'target.discard.not.instruction'; safe = 0; end
+    else do
+      do i = 1 to 7
+        family = word('effects references components observations ownership bindings order',i)
+        if instruction.complete(family) = 0 then do; state = 'unknown'; reason = instruction.unknownreason(family); safe = 0; end
+      end
+      if catalog.flow(item.opcode()) <> 0 | catalog.callinvokes(item.opcode()) | catalog.selectionkind(item.opcode()) <> 0 then do; state = 'unknown'; reason = 'target.discard.control.or.selection'; safe = 0; end
+      if catalog.signalstate(item.opcode()) <> 0 then do; state = 'unknown'; reason = 'target.discard.signal.unproved'; safe = 0; end
+      residual = catalog.residualobservable(item.opcode())
+      if catalog.opaqueeffects(item.opcode()) then do; state = 'unknown'; reason = 'target.discard.external.observable'; safe = 0; end
+    end
+    do i = 1 to instruction.actions()
+      if sitespend(instruction.references() + 1) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+      action = instruction.action(i); kind = action.kind()
+      if kind = 'callback' then do
+        /* Native ABI rows are aggregated once using their intrinsic slice. */
+        if abiaction(action) then iterate
+        if callbackmay(sourceop,action.ordinal(),1) = 0 then iterate
+        if _sitefailure <> '' then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+        state = 'unknown'; reason = 'target.discard.callback.unproved'; safe = 0; iterate
+      end
+      if wordpos(kind,'read observe write clear transport derive flagwrite capture status') = 0 then do; state = 'unknown'; reason = 'target.discard.residual.' || kind; safe = 0; end
+      if action.subject() > 0 & wordpos(kind,'write clear transport derive') > 0 then do
+        do d = 1 to profile.domains()
+          if sitespend(1) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+          domain = profile.domain(d)
+          if domain.kind() <> 'component' then iterate
+          if domain.nativebit() <> catalog.componentmask('reference') & domain.nativebit() <> catalog.componentmask('native-payload') & domain.nativebit() <> catalog.componentmask('attribute-count') then iterate
+          if action.domain() <> 0 & action.domain() <> d then iterate
+          ref = profile.ref(action.subject()); nativebit = domain.nativebit()
+          if ref.kind() = 'explicit' & ref.operandordinal() > 0 & catalog.bindingrecipe(item.opcode()) = '' then do
+            /* A may-write envelope includes unrelated components. Only the
+             * canonical precise write/clear resource masks impose old-payload
+             * obligations; public attribute status is not a child tree. */
+            writesmask = catalog.writecomponents(item.opcode(),ref.operandordinal())
+            clearedmask = catalog.clearcomponents(item.opcode(),ref.operandordinal())
+            assembler ior writesmask,writesmask,clearedmask
+            assembler iand overlap,writesmask,nativebit
+            if overlap = 0 then iterate
+            ownershiprequired = ownershiprequired + 1
+            if sitespend(flow.lookupcost() * 2) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+            value = flow.componentat(sourceop,ref.bank(),ref.index(),d)
+            destination = flow.storageat(sourceop,ref.bank(),ref.index())
+            do p = 1 to item.operands()
+              if sitespend(1) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+              if p = ref.operandordinal() | catalog.writes(item.opcode(),p) = 0 then iterate
+              other = item.operand(p)
+              if other.kind() <> 'R' then iterate
+              if sitespend(flow.lookupcost()) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+              otherbinding = flow.storageat(sourceop,other.bank(),other.index())
+              if otherbinding.active() = 0 | otherbinding.active() = destination.active() then ownershipproved = 0
+            end
+          end
+          else do
+            ownershiprequired = ownershiprequired + 1
+            value = flow.actioncomponent(sourceop,i,action.subject(),d)
+          end
+          if value.presence() <> 'absent' then ownershipproved = 0
+        end
+      end
+    end
+    if abiintrinsicmay(sourceop,1) then do; state = 'unknown'; reason = 'target.discard.abi.unproved'; safe = 0; end
+    if _sitefailure <> '' then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+    if ownershipproved = 0 then do; state = 'unknown'; reason = 'target.discard.ownership.unproved'; safe = 0; end
+    if residual & ownershiprequired = 0 & safe then do; state = 'unknown'; reason = 'target.discard.residual.unproved'; safe = 0; end
+    access_ref = flow.projection(); access = dereference access_ref; projected = cfg.projectedop(sourceop)
+    if access.status() <> 'ok' then return .discardfact(.siteproof(reference self,'limit',access.message()),0,outputs)
+    if projected = 0 then do; state = 'unknown'; reason = 'target.discard.access.unavailable'; safe = 0; end
+    else if access.known(projected) = 0 then do; state = 'unknown'; reason = 'target.discard.access.unproved'; safe = 0; end
+    else do
+      do i = 1 to access.accesses(projected)
+        if access.accesskind(projected,i) = 4 then do; if addoutput(outputs,access.accessdomain(projected,i)) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs); end
+      end
+      do i = 1 to cfg.outedges(sourceop)
+        edge = cfg.outedge(sourceop,i); ordinal = edge.successorordinal()
+        if ordinal = 0 then iterate
+        do j = 1 to access.edgeaccesses(projected,ordinal)
+          if access.edgeaccesskind(projected,ordinal,j) = 4 then do; if addoutput(outputs,access.edgeaccessdomain(projected,ordinal,j)) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs); end
+        end
+      end
+    end
+    if sitespend(max(0,sourceop - _discardpresent[0]) + 1) = 0 | sitereserve(max(0,sourceop - _discardpresent[0]) * 24 + 128) = 0 then return .discardfact(.siteproof(reference self,'limit',_sitefailure),0,outputs)
+    result = .discardfact(.siteproof(reference self,state,reason),safe,outputs)
+    _discardfacts[sourceop] = result; _discardpresent[sourceop] = 1
+    return result
+  footprint: method = .lltargetsummary..footprintfact
+    arg sourceop = .int
+    roles = .rolefact[]; constraints = .constraintfact[]; members = .int[]
+    result = .footprintfact; abiproofs = .lltargetflow..abicallbackfact[]
+    i = .int; j = .int; k = .int; fixed = .int; found = .int; step = .int; number = .int
+    if sitebegin(sourceop) = 0 then return .footprintfact(.siteproof(reference self,'limit',_sitefailure),roles,constraints)
+    if sourceop <= _footprintpresent[0] then do; if _footprintpresent[sourceop] then return _footprintfacts[sourceop]; end
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner; item = source.at(sourceop)
+    profile_ref = flow.transfers(); profile = dereference profile_ref; instruction = profile.instruction(sourceop)
+    cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    catalog = .llrxascatalog..catalog(); state = 'proved'; reason = ''; identity = 0
+    binding = .lltargetflow..storagefact; view = .lltargettransfer..refview; action = .lltargettransfer..action
+    value = .lltarget..operand; field = .lltarget..operand; recipe = .lltargetrecipe..view; layout = .layoutfact
+    scoped = 0
+    if item.kind() = 'instruction' then scoped = catalog.scopecontinuation(item.opcode()) > 0 & catalog.recipeoperand(item.opcode()) > 0
+    proof = .siteproof(reference self,'proved')
+    do i = 1 to 3
+      family = word('references bindings order',i)
+      if instruction.complete(family) = 0 then do; state = 'unknown'; reason = instruction.unknownreason(family); end
+    end
+    if scoped then recipe = item.recipe()
+    if sitespend(item.registerrefs() * (instruction.references() + instruction.actions() + 1) + max(0,sourceop - _footprintpresent[0]) + 1) = 0 | sitereserve(item.registerrefs() * 192 + max(0,sourceop - _footprintpresent[0]) * 24 + 128) = 0 then return .footprintfact(.siteproof(reference self,'limit',_sitefailure),roles,constraints)
+    do i = 1 to instruction.actions()
+      if sitespend(1) = 0 then return .footprintfact(.siteproof(reference self,'limit',_sitefailure),roles,constraints)
+      action = instruction.action(i)
+      if action.kind() <> 'callback' then iterate
+      if abiaction(action) then iterate
+      possible = callbackmay(sourceop,i,1)
+      if _sitefailure <> '' then return .footprintfact(.siteproof(reference self,'limit',_sitefailure),roles,constraints)
+      if possible then do
+        result = .footprintfact(.siteproof(reference self,'unknown','target.footprint.callback.unproved'),roles,constraints)
+        _footprintfacts[sourceop] = result; _footprintpresent[sourceop] = 1
+        return result
+      end
+    end
+    abireason = abifootprint(sourceop,roles,constraints,abiproofs,proof)
+    if abireason <> '' then do
+      if _sitefailure <> '' then return .footprintfact(.siteproof(reference self,'limit',_sitefailure),roles,constraints)
+      result = .footprintfact(.siteproof(reference self,'unknown',abireason),roles,constraints)
+      _footprintfacts[sourceop] = result; _footprintpresent[sourceop] = 1
+      return result
+    end
+    do i = 1 to item.registerrefs()
+      value = item.registerref(i); kind = item.registerrole(i); if kind = '' then kind = 'explicit'
+      anchor = 'active'; fixed = 0; binding = flow.storageat(sourceop,value.bank(),value.index())
+      if wordpos(kind,'a0-destination proxy-destination owned-destination') > 0 then do; anchor = 'slot'; fixed = 1; end
+      else if scoped & wordpos(kind,'explicit result-capture count-capture actual-capture window-capture') > 0 then binding = flow.captureat(sourceop,value.bank(),value.index())
+      else if scoped & wordpos(kind,'prep-clear prep-status prep-swap') > 0 then do
+        step = item.registerroleordinal(i); binding = flow.preparationat(sourceop,step,value.bank(),value.index()); fixed = 1
+      end
+      else if cfg.logicalreturn(sourceop) = 0 then do
+        found = 0
+        do j = 1 to instruction.references()
+          view = instruction.ref(j)
+          if view.bank() <> value.bank() | view.index() <> value.index() then iterate
+          do k = 1 to instruction.actions()
+            action = instruction.action(k)
+            if wordpos(action.kind(),'link unlink swap') > 0 then fixed = 1
+            if found then iterate
+            used = action.subject() = view.id()
+            if action.sourcekind() = 'reference' & action.sourceid() = view.id() then used = 1
+            if used then do; binding = flow.actionstorage(sourceop,k,view.id()); anchor = view.anchor(); found = 1; end
+          end
+          leave
+        end
+      end
+      if value.bank() <> 'r' then fixed = 1
+      if binding.active() = 0 & fixed = 0 then do; state = 'unknown'; reason = 'target.footprint.binding.unproved'; end
+      roles[roles[0] + 1] = .rolefact(proof,i,kind,value.bank(),value.index(),anchor,binding,fixed)
+      if fixed then do
+        members[1] = i; constraints[constraints[0] + 1] = .constraintfact(proof,'fixed',value.bank(),value.index(),1,members)
+      end
+    end
+    if item.kind() = 'instruction' then do
+      implicit = catalog.implicitrecipe(item.opcode())
+      if left(implicit,6) = 'local:' then do
+        number = substr(implicit,7) as .int
+        binding = flow.storageat(sourceop,'r',number); empty = .int[]
+        roles[roles[0] + 1] = .rolefact(proof,0,'implicit-fixed','r',number,'slot',binding,1)
+        constraints[constraints[0] + 1] = .constraintfact(proof,'fixed','r',number,1,empty)
+      end
+      else if implicit <> '' & scoped = 0 & catalog.callinvokes(item.opcode()) = 0 then do
+        /* A resolved addressed selector contributes its actual fixed slot. */
+        addressed = 0
+        do j = 1 to instruction.references()
+          view = instruction.ref(j)
+          if view.kind() <> 'address' then iterate
+          addressed = 1; found = 0
+          do k = 1 to instruction.actions()
+            action = instruction.action(k)
+            if action.subject() <> view.id() & (action.sourcekind() <> 'reference' | action.sourceid() <> view.id()) then iterate
+            binding = flow.actionstorage(sourceop,k,view.id()); found = 1; leave
+          end
+          if found = 0 | binding.active() = 0 then do; state = 'unknown'; reason = 'target.footprint.address.unproved'; iterate; end
+          bank = flow.storagebank(binding.active()); number = flow.storageindex(binding.active()); empty = .int[]
+          roles[roles[0] + 1] = .rolefact(proof,0,'addressed',bank,number,view.targetanchor(),binding,1)
+          constraints[constraints[0] + 1] = .constraintfact(proof,'fixed',bank,number,1,empty)
+        end
+        if addressed = 0 then do; state = 'unknown'; reason = 'target.footprint.implicit.unproved'; end
+      end
+      if scoped | catalog.callinvokes(item.opcode()) then do
+        layout = calllayout(sourceop)
+        if layout.status() <> 'proved' then do; state = layout.status(); reason = layout.reason(); end
+        else if layout.windowspan() > 0 then do
+          empty = .int[]
+          constraints[constraints[0] + 1] = .constraintfact(proof,'window',layout.windowbank(),layout.windowfirst(),layout.windowspan(),empty)
+        end
+      end
+      if catalog.unbounded(item.opcode()) then do
+        target = flow.targetat(sourceop)
+        if target.status() <> 'proved' then identity = 1
+      end
+      if identity then do
+        body = source.body(item.procedureid()); empty = .int[]
+        constraints[constraints[0] + 1] = .constraintfact(proof,'identity','r',0,body.locals(),empty)
+      end
+    end
+    result = .footprintfact.checkpointed(.siteproof(reference self,state,reason),roles,constraints,abiproofs)
+    _footprintfacts[sourceop] = result; _footprintpresent[sourceop] = 1
+    return result
+  useprovider: method = .int
+    arg flowref = reference .lltargetflow..analysis, summaryref = reference .lltargetsummary..analysis
+    call run()
+    if valid() = 0 | <refvalid>(flowref) = 0 | <refvalid>(summaryref) = 0 then return 0
+    points = dereference flowref; effects = dereference summaryref
+    if points.status() <> 'ok' | effects.status() <> 'ok' then return 0
+    if points.valid() = 0 | effects.valid() = 0 then return 0
+    actual = effects.flow(); profile_ref = points.transfers(); profile = dereference profile_ref
+    provider = points.owner()
+    if (actual <refsame> flowref) = 0 | profile.premise() <> 'canonical' | profile.matches(provider) = 0 then return 0
+    do i = 1 to _providers[0]
+      if sitespend(1) = 0 then return 0
+      priorflow = _providers[i].points(); priorsummary = _providers[i].summaries()
+      if (priorflow <refsame> flowref) & (priorsummary <refsame> summaryref) then return _providers[i].valid()
+      previous = dereference priorflow; priorowner = previous.owner()
+      if priorowner <refsame> provider then return 0
+    end
+    if _activationstarted then return 0
+    if sitespend(1) = 0 | sitereserve(160) = 0 then return 0
+    _providers[_providers[0] + 1] = .providerbundle(flowref,summaryref)
+    return 1
+  providerindex: method = .int
+    arg owner = reference .lltarget..module, transfers = reference .lltargettransfer..profile
+    do i = 1 to _providers[0]
+      if sitespend(1) = 0 then return 0
+      if _providers[i].valid() = 0 then iterate
+      points_ref = _providers[i].points(); points = dereference points_ref
+      provider = points.owner(); profile_ref = points.transfers()
+      if (provider <refsame> owner) & (profile_ref <refsame> transfers) then return i
+    end
+    return 0
+  activationedgeknown: method = .int
+    arg edge = .lltargetcfg..edge, transport = .int
+    if edge.complete() & edge.role() <> 'unknown' then return 1
+    /* Native diagnostics do not virtualize arbitrary inherited handlers'
+     * physical-parent observers. Their closure remains a separate proof. */
+    return 0
+  prepareactivation: method = .int
+    arg scoped = .int
+    i = .int; j = .int; e = .int; f = .int; c = .int; key = .int; hiddenabi = .int
+    edge = .lltargetcfg..edge; item = .lltarget..record
+    instruction = .lltargettransfer..instruction; action = .lltargettransfer..action
+    if scoped + 1 <= _activationdirectready[0] then do; if _activationdirectready[scoped + 1] then return 1; end
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner
+    profile_ref = flow.transfers(); profile = dereference profile_ref; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    catalog = .llrxascatalog..catalog(); maximum = _direct[0] * 2 + 1
+    if sitespend(maximum + 1) = 0 | sitereserve(max(0,maximum - _activationdirectreason[0]) * 48 + _direct[0] * 24 + 64) = 0 then return 0
+    do f = 2 to _direct[0]
+      key = f * 2 + scoped; _activationdirectreason[key] = ''; _activationpreparing[key] = 0; _activationprocedurepresent[key] = 0
+      if _activationabiready = 0 then do; _activationabihead[f] = 0; _activationabitail[f] = 0; _activationabicount[f] = 0; end
+    end
+    if _activationcallsready = 0 then do
+      if sitespend(_direct[0] + _callfunction[0]) = 0 | sitereserve((_direct[0] + _callfunction[0]) * 8) = 0 then return 0
+      do f = 1 to _direct[0]; _activationcallhead[f] = 0; end
+      do c = _callfunction[0] to 1 by -1
+        f = _callfunction[c]; _activationcallnext[c] = _activationcallhead[f]; _activationcallhead[f] = c
+      end
+      _activationcallsready = 1
+    end
+    do i = 1 to source.records()
+      if sitespend(4) = 0 then return 0
+      item = source.record(i); f = item.procedureid()
+      if f < 2 | item.kind() = 'procedure' then iterate
+      instruction = profile.instruction(item.id()); key = f * 2 + scoped; hiddenabi = 0
+      do j = 1 to 3
+        family = word('references order relocation',j)
+        if instruction.complete(family) = 0 then _activationdirectreason[key] = 'target.activation.metadata.remap.unproved'
+      end
+      do j = 1 to instruction.actions()
+        if sitespend(1) = 0 then return 0
+        action = instruction.action(j)
+        if action.kind() <> 'callback' then iterate
+        if abiaction(action) then do; hiddenabi = 1; iterate; end
+        if callbackmay(item.id(),j,1) then _activationdirectreason[key] = 'target.activation.callback.context.unproved'
+        if _sitefailure <> '' | _status <> 'ok' then return 0
+      end
+      if _activationabiready = 0 then do
+        if hiddenabi then do; if addactivationabi(f,item.id(),0) = 0 then return 0; end
+        do e = 1 to cfg.outedges(item.id())
+          if sitespend(e + 1) = 0 then return 0
+          edge = cfg.outedge(item.id(),e)
+          if hiddenabi | abiedge(edge,cfg) then do
+            if addactivationabi(f,item.id(),edge.id()) = 0 then return 0
+          end
+        end
+      end
+    end
+    transport = scoped & catalog.scopeddiagnostics() & profile.premise() = 'canonical'
+    do i = 1 to cfg.edges()
+      if sitespend(1) = 0 then return 0
+      edge = cfg.edge(i); f = edge.function()
+      if f < 2 | f > _direct[0] then iterate
+      key = f * 2 + scoped
+      if activationedgeknown(edge,transport) = 0 then _activationdirectreason[key] = 'target.activation.signal.context.unproved'
+      if transport = 0 & edge.role() = 'terminal' & (edge.phase() <> 'none' | edge.signalname() <> '') then _activationdirectreason[key] = 'target.activation.terminal.diagnostic.unproved'
+    end
+    _activationabiready = 1; _activationdirectready[scoped + 1] = 1
+    return 1
+  procedureactivation: method = .lltargetsummary..activationfact
+    arg functionid = .int, scoped = 1, depth = 0
+    return genericactivation(functionid,scoped,depth)
+  genericactivation: method = .lltargetsummary..activationfact
+    arg functionid = .int, scoped = .int, depth = .int
+    dependencies = .activationfact[]; targets = .lltargetflow..targetfact[]
+    childproof = .activationfact; target = .lltargetflow..targetfact
+    child = .int; c = .int; peer = .int
+    call run()
+    if valid() = 0 then return .activationfact(.siteproof(reference self,'invalid',message()),0)
+    if functionid < 2 | functionid > _direct[0] | (scoped <> 0 & scoped <> 1) then return .activationfact(.siteproof(reference self,'unknown','target.activation.procedure.unproved'),0)
+    _activationstarted = 1
+    if prepareactivation(scoped) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+    key = functionid * 2 + scoped
+    if _activationprocedurepresent[key] then return _activationprocedures[key]
+    if depth >= 32 | _activationpreparing[key] then return .activationfact(.siteproof(reference self,'unknown','target.activation.recursion.or.depth.unproved'),0)
+    _activationpreparing[key] = 1; state = 'proved'; reason = _activationdirectreason[key]; allowed = reason = ''
+    if allowed = 0 then state = 'unknown'
+    flow = dereference _flow; owner = flow.owner()
+    c = _activationcallhead[functionid]
+    do while c > 0
+      if sitespend(1) = 0 | sitereserve(128) = 0 then do; _activationpreparing[key] = 0; return .activationfact(.siteproof(reference self,'limit',_sitefailure),0); end
+      child = _calltarget[c]
+      if child > 0 then childproof = genericactivation(child,scoped,depth + 1)
+      else do
+        target = flow.targetat(_calloperation[c])
+        if target.status() <> 'proved' then childproof = .activationfact(.siteproof(reference self,'unknown',target.reason()),0)
+        else do
+          provider = target.provider(); transfers = target.transfers(); peer = 0
+          if <refvalid>(transfers) then peer = providerindex(provider,transfers)
+          if peer = 0 then childproof = .activationfact(.siteproof(reference self,'unknown','target.activation.provider.facts.unavailable'),0)
+          else do
+            summary_ref = _providers[peer].summaries(); effects = dereference summary_ref
+            childproof = effects.genericactivation(target.procedure(),scoped,depth + 1)
+            targets[targets[0] + 1] = target
+          end
+        end
+      end
+      dependencies[dependencies[0] + 1] = childproof
+      if sitespend(childproof.proofs() + childproof.targets()) = 0 | sitereserve((childproof.proofs() + childproof.targets()) * 64) = 0 then do; _activationpreparing[key] = 0; return .activationfact(.siteproof(reference self,'limit',_sitefailure),0); end
+      if childproof.genericallowed() = 0 then do; state = childproof.status(); reason = childproof.reason(); allowed = 0; end
+      c = _activationcallnext[c]
+    end
+    _activationpreparing[key] = 0
+    result = .activationfact.deferred(.siteproof(reference self,state,reason),allowed,dependencies,targets,_activationabicount[functionid])
+    _activationprocedures[key] = result; _activationprocedurepresent[key] = 1
+    return result
+  activationcharge: method = .int
+    arg proof = .activationfact
+    work = proof.proofs() + proof.targets() + proof.contexts() + proof.abiproofs() + 1
+    bytes = proof.proofs() * 192 + proof.targets() * 320 + proof.contexts() * 256 + 128
+    do i = 1 to proof.abiproofs()
+      abi = proof.abiproof(i); work = work + abi.rows() * 8 + 1; bytes = bytes + abi.bytes()
+    end
+    return sitespend(work) & sitereserve(bytes)
+  /** Resolve this procedure's own pending rows against the actual invocation.
+   * Descendant calls obtain their own caller-point context and final cache. */
+  contextactivation: method = .lltargetsummary..activationfact
+    arg functionid = .int, scoped = .int, invocation = .lltargetflow..invocationfact, depth = .int
+    dependencies = .activationfact[]; targets = .lltargetflow..targetfact[]
+    invocations = .lltargetflow..invocationfact[]; proofs = .lltargetflow..abicallbackfact[]
+    child = .activationfact; abi = .lltargetflow..abicallbackfact
+    if depth >= 32 then return .activationfact(.siteproof(reference self,'unknown','target.activation.recursion.or.depth.unproved'),0)
+    generic = genericactivation(functionid,scoped,depth)
+    if generic.genericallowed() = 0 then return generic
+    if invocation.status() <> 'proved' then return .activationfact(.siteproof(reference self,'unknown',invocation.reason()),0)
+    flow = dereference _flow; owner = flow.owner(); profile_ref = flow.transfers(); target = invocation.target()
+    provider = target.provider(); transfers = target.transfers()
+    if (provider <refsame> owner) = 0 | (transfers <refsame> profile_ref) = 0 | target.procedure() <> functionid then return .activationfact(.siteproof(reference self,'unknown','target.activation.invocation.provider.mismatch'),0)
+    if activationcharge(generic) = 0 | sitereserve(256) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+    dependencies[1] = generic; invocations[1] = invocation
+    state = 'proved'; reason = ''; allowed = 1; pending = _activationabihead[functionid]
+    do while pending > 0
+      if sitespend(1) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+      abi = flow.abicallbackat(_activationabiop[pending],_activationabiedge[pending],invocation)
+      if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.reason()); return .activationfact(.siteproof(reference self,flow.status(),flow.reason()),0); end
+      if sitespend(abi.rows() * 8 + 1) = 0 | sitereserve(abi.bytes()) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+      proofs[proofs[0] + 1] = abi
+      if abi.possible() then do
+        state = abi.status(); if state = 'proved' then state = 'unknown'
+        reason = abi.reason(); if reason = '' then reason = 'target.activation.abi.callback.possible'
+        allowed = 0
+      end
+      pending = _activationabinext[pending]
+    end
+    c = _activationcallhead[functionid]
+    do while c > 0
+      if sitespend(1) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+      child = callactivation(_calloperation[c],scoped,depth + 1)
+      if activationcharge(child) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+      dependencies[dependencies[0] + 1] = child
+      if child.allowed() = 0 then do; state = child.status(); reason = child.reason(); allowed = 0; end
+      c = _activationcallnext[c]
+    end
+    return .activationfact.contextual(.siteproof(reference self,state,reason),allowed,dependencies,targets,invocations,proofs)
+  activationequivalence: method = .lltargetsummary..activationfact
+    arg sourceop = .int, scoped = 1
+    return callactivation(sourceop,scoped,0)
+  callactivation: method = .lltargetsummary..activationfact
+    arg sourceop = .int, scoped = .int, depth = .int
+    if scoped <> 0 & scoped <> 1 then return .activationfact(.siteproof(reference self,'invalid','target.activation.mode.invalid'),0)
+    if sitebegin(sourceop) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+    key = sourceop * 2 + scoped
+    if key <= _activationpresent[0] then do; if _activationpresent[key] then return _activationfacts[key]; end
+    if depth >= 32 then return .activationfact(.siteproof(reference self,'unknown','target.activation.recursion.or.depth.unproved'),0)
+    if key <= _activationinprogress[0] then do; if _activationinprogress[key] then return .activationfact(.siteproof(reference self,'unknown','target.activation.recursion.or.depth.unproved'),0); end
+    if sitespend(max(0,key - _activationinprogress[0]) + 1) = 0 | sitereserve(max(0,key - _activationinprogress[0]) * 32 + 128) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+    _activationstarted = 1; _activationinprogress[key] = 1
+    result = resolvecallactivation(sourceop,scoped,depth)
+    _activationinprogress[key] = 0
+    _activationfacts[key] = result; _activationpresent[key] = 1
+    return result
+  resolvecallactivation: method = .lltargetsummary..activationfact
+    arg sourceop = .int, scoped = .int, depth = .int
+    dependencies = .activationfact[]; targets = .lltargetflow..targetfact[]
+    invocations = .lltargetflow..invocationfact[]; proofs = .lltargetflow..abicallbackfact[]
+    childproof = .activationfact; peer = .int; i = .int; abi = .lltargetflow..abicallbackfact
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner
+    profile_ref = flow.transfers(); profile = dereference profile_ref; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    catalog = .llrxascatalog..catalog(); item = source.at(sourceop)
+    if item.kind() <> 'instruction' then return .activationfact(.siteproof(reference self,'unknown','target.site.not.call'),0)
+    if catalog.callinvokes(item.opcode()) = 0 then return .activationfact(.siteproof(reference self,'unknown','target.site.not.call'),0)
+    state = 'proved'; reason = ''; allowed = 1
+    transport = scoped & catalog.scopeddiagnostics() & profile.premise() = 'canonical'
+    do i = 1 to cfg.outedges(sourceop)
+      if sitespend(i + 1) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+      edge = cfg.outedge(sourceop,i)
+      if activationedgeknown(edge,transport) = 0 then do; state = 'unknown'; reason = 'target.activation.signal.context.unproved'; allowed = 0; end
+      if transport = 0 & edge.role() = 'terminal' & (edge.phase() <> 'none' | edge.signalname() <> '') then do; state = 'unknown'; reason = 'target.activation.terminal.diagnostic.unproved'; allowed = 0; end
+      if abiedge(edge,cfg) then do
+        abi = flow.abicallbackat(sourceop,edge.id())
+        if flow.status() <> 'ok' then do; ignored = fail(flow.status(),flow.reason()); return .activationfact(.siteproof(reference self,flow.status(),flow.reason()),0); end
+        if sitespend(abi.rows() * 8 + 1) = 0 | sitereserve(abi.bytes()) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+        proofs[proofs[0] + 1] = abi
+        if abi.possible() then do; state = 'unknown'; reason = abi.reason(); if reason = '' then reason = 'target.activation.abi.callback.possible'; allowed = 0; end
+      end
+    end
+    if allowed then do
+      invocation = flow.invocationat(sourceop)
+      if invocation.status() <> 'proved' then do; state = invocation.status(); reason = invocation.reason(); allowed = 0; end
+      else do
+        target = invocation.target(); targets[1] = target; invocations[1] = invocation; provider = target.provider()
+        if sitereserve(576) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+        if provider <refsame> owner then childproof = contextactivation(target.procedure(),scoped,invocation,depth)
+        else do
+          transfers = target.transfers(); peer = 0
+          if <refvalid>(transfers) then peer = providerindex(provider,transfers)
+          if peer = 0 then childproof = .activationfact(.siteproof(reference self,'unknown','target.activation.provider.facts.unavailable'),0)
+          else do
+            summary_ref = _providers[peer].summaries(); effects = dereference summary_ref
+            childproof = effects.contextactivation(target.procedure(),scoped,invocation,depth)
+          end
+        end
+        if activationcharge(childproof) = 0 then return .activationfact(.siteproof(reference self,'limit',_sitefailure),0)
+        dependencies[1] = childproof
+        if childproof.allowed() = 0 then do; state = childproof.status(); reason = childproof.reason(); allowed = 0; end
+      end
+    end
+    return .activationfact.contextual(.siteproof(reference self,state,reason),allowed,dependencies,targets,invocations,proofs)
+  /** A component delta immediately before this exact callback may change only
+   * storage outside its complete observed projection. A checked correspondence
+   * can relate two unchanged activations, but is not a delta-history proof.
+   * Earlier entry insertion needs separately checked prefix/dependency facts. */
+  callbackpreservation: method = .lltargetsummary..preservationfact
+    arg source = .lltargetflow..callbackfact, candidate = .lltargetflow..callbackfact, deltaBank = .string, deltaIndex = .int, deltaDomain = 0, ?correspondence = reference .lltargetremap..correspondence
+    event = .lltargetremap..eventmap
+    mappedentry = .int; i = .int
+    mappingref = reference .lltargetremap..correspondence
+    if ?correspondence then mappingref = correspondence
+    if sitebegin(source.operation()) = 0 then return .preservationfact(.siteproof(reference self,'limit',_sitefailure),source,candidate,mappingref)
+    if sitespend(16) = 0 | sitereserve(256) = 0 then return .preservationfact(.siteproof(reference self,'limit',_sitefailure),source,candidate,mappingref)
+    if source.status() <> 'proved' then return .preservationfact(.siteproof(reference self,source.status(),source.reason()),source,candidate,mappingref)
+    if candidate.status() <> 'proved' then return .preservationfact(.siteproof(reference self,candidate.status(),candidate.reason()),source,candidate,mappingref)
+    if source.phase() <> candidate.phase() | wordpos(source.phase(),'none before after') = 0 | source.path() <> candidate.path() then return .preservationfact(.siteproof(reference self,'unknown','target.callback.phase.unproved'),source,candidate,mappingref)
+    if source.observation() = 'physical' | candidate.observation() = 'physical' then return .preservationfact(.siteproof(reference self,'unknown','target.callback.physical.observation.unproved'),source,candidate,mappingref)
+    if source.observation() <> 'component' | candidate.observation() <> 'component' then return .preservationfact(.siteproof(reference self,'unknown','target.callback.observation.projection.unproved'),source,candidate,mappingref)
+    sourceflow = source.points(); candidateflow = candidate.points()
+    if (sourceflow <refsame> _flow) = 0 then return .preservationfact(.siteproof(reference self,'invalid','target.callback.preservation.flow.mismatch'),source,candidate,mappingref)
+    flow = dereference sourceflow; resultflow = dereference candidateflow
+    mapped = <refvalid>(mappingref)
+    if ?correspondence & mapped = 0 then return .preservationfact(.siteproof(reference self,'invalid','target.callback.correspondence.owner.expired'),source,candidate,mappingref)
+    leftscope = source.scope(); rightscope = candidate.scope()
+    if leftscope.known() = 0 | rightscope.known() = 0 | leftscope.depth() <> rightscope.depth() then return .preservationfact(.siteproof(reference self,'unknown','target.callback.activation.unproved'),source,candidate,mappingref)
+    if sitespend(leftscope.depth() + 1) = 0 then return .preservationfact(.siteproof(reference self,'limit',_sitefailure),source,candidate,mappingref)
+    if mapped then do
+      checkedref = reference .lltargetremap..correspondence; checkedref = mappingref
+      mapping = dereference checkedref
+      if mapping.status() <> 'proved' then return .preservationfact(.siteproof(reference self,mapping.status(),mapping.reason()),source,candidate,mappingref)
+      beforeowner = mapping.sourceowner(); afterowner = mapping.candidateowner()
+      beforeprofile = mapping.sourceprofile(); afterprofile = mapping.candidateprofile()
+      beforecfg = mapping.sourcecfg(); aftercfg = mapping.candidatecfg()
+      actualowner = flow.owner(); resultowner = resultflow.owner()
+      actualprofile = flow.transfers(); resultprofile = resultflow.transfers()
+      actualcfg = flow.cfg(); resultcfg = resultflow.cfg()
+      if (beforeowner <refsame> actualowner) = 0 | (afterowner <refsame> resultowner) = 0 | (beforeprofile <refsame> actualprofile) = 0 | (afterprofile <refsame> resultprofile) = 0 | (beforecfg <refsame> actualcfg) = 0 | (aftercfg <refsame> resultcfg) = 0 then return .preservationfact(.siteproof(reference self,'invalid','target.callback.correspondence.owner.mismatch'),source,candidate,mappingref)
+      event = mapping.event(source.operation(),source.ordinal(),source.edge())
+      if event.status() <> 'proved' then return .preservationfact(.siteproof(reference self,event.status(),event.reason()),source,candidate,mappingref)
+      if event.candidateoperation() <> candidate.operation() | event.candidateordinal() <> candidate.ordinal() | event.candidateedge() <> candidate.edge() then return .preservationfact(.siteproof(reference self,'unknown','target.callback.event.correspondence.unproved'),source,candidate,mappingref)
+      if event.sourcefunction() <> source.function() | event.candidatefunction() <> candidate.function() then return .preservationfact(.siteproof(reference self,'unknown','target.callback.activation.unproved'),source,candidate,mappingref)
+      if mapping.mapsregister(deltaBank,deltaIndex,deltaBank,deltaIndex) = 0 then return .preservationfact(.siteproof(reference self,'unknown','target.callback.delta.mapping.unproved'),source,candidate,mappingref)
+      do i = 1 to leftscope.depth()
+        mappedentry = mapping.operation(leftscope.entry(i))
+        if mappedentry = 0 | mappedentry <> rightscope.entry(i) then return .preservationfact(.siteproof(reference self,'unknown','target.callback.activation.unproved'),source,candidate,mappingref)
+      end
+    end
+    else do
+      if (sourceflow <refsame> candidateflow) = 0 then return .preservationfact(.siteproof(reference self,'unknown','target.callback.correspondence.required'),source,candidate,mappingref)
+      if source.function() <> candidate.function() then return .preservationfact(.siteproof(reference self,'unknown','target.callback.activation.unproved'),source,candidate,mappingref)
+      if source.operation() <> candidate.operation() | source.ordinal() <> candidate.ordinal() | source.edge() <> candidate.edge() then return .preservationfact(.siteproof(reference self,'unknown','target.callback.event.correspondence.unproved'),source,candidate,mappingref)
+      do i = 1 to leftscope.depth()
+        if leftscope.entry(i) <> rightscope.entry(i) then return .preservationfact(.siteproof(reference self,'unknown','target.callback.activation.unproved'),source,candidate,mappingref)
+      end
+    end
+    if source.possible() <> candidate.possible() then return .preservationfact(.siteproof(reference self,'unknown','target.callback.presence.unproved'),source,candidate,mappingref)
+    profile_ref = flow.transfers(); profile = dereference profile_ref
+    if deltaIndex < 0 | wordpos(deltaBank,'r g a') = 0 | deltaDomain < 0 | deltaDomain > profile.domains() then return .preservationfact(.siteproof(reference self,'invalid','target.callback.delta.selector.invalid'),source,candidate,mappingref)
+    if deltaDomain > 0 then do
+      domain = profile.domain(deltaDomain)
+      if wordpos(domain.kind(),'component flag') = 0 then return .preservationfact(.siteproof(reference self,'unknown','target.callback.delta.domain.unproved'),source,candidate,mappingref)
+    end
+    if sitespend(flow.lookupcost() + resultflow.lookupcost() + 4) = 0 then return .preservationfact(.siteproof(reference self,'limit',_sitefailure),source,candidate,mappingref)
+    observed = source.observed(); changed = source.binding(deltaBank,deltaIndex); storage = observed.active()
+    if source.anchor() = 'base' then storage = observed.base()
+    else if source.anchor() = 'entry' then storage = observed.entry()
+    if flow.valid() = 0 then return .preservationfact(.siteproof(reference self,flow.status(),flow.message()),source,candidate,mappingref)
+    if storage = 0 | changed.active() = 0 | changed.slotidentity() = 0 then return .preservationfact(.siteproof(reference self,'unknown','target.callback.delta.binding.unproved'),source,candidate,mappingref)
+    if flow.privatedistinct(source.function(),storage,changed.active()) = 0 then return .preservationfact(.siteproof(reference self,'unknown','target.callback.delta.alias.unproved'),source,candidate,mappingref)
+    resultobserved = candidate.observed(); resultchanged = candidate.binding(deltaBank,deltaIndex); resultstorage = resultobserved.active()
+    if candidate.anchor() = 'base' then resultstorage = resultobserved.base()
+    else if candidate.anchor() = 'entry' then resultstorage = resultobserved.entry()
+    if resultflow.valid() = 0 then return .preservationfact(.siteproof(reference self,resultflow.status(),resultflow.message()),source,candidate,mappingref)
+    if resultstorage = 0 | resultchanged.active() = 0 | resultchanged.slotidentity() = 0 then return .preservationfact(.siteproof(reference self,'unknown','target.callback.delta.binding.unproved'),source,candidate,mappingref)
+    if resultflow.privatedistinct(candidate.function(),resultstorage,resultchanged.active()) = 0 then return .preservationfact(.siteproof(reference self,'unknown','target.callback.delta.alias.unproved'),source,candidate,mappingref)
+    return .preservationfact(.siteproof(reference self,'proved'),source,candidate,mappingref)
+  /** A per-reference proof, independent of activation/context omission. Reads
+   * and writes through aN preserve caller-owned pointees. Binding/permutation
+   * actions instead modify a callee-private pointer slot: only an identical
+   * slot action is already an identity in both executions. A different-slot
+   * action needs a proxy/restoration mapping, even if values happen to agree. */
+  directactualmapping: method = .lltargetsummary..directmappingfact
+    arg sourceop = .int
+    i = .int; j = .int; leftargument = .int; rightargument = .int; callerentry = .int
+    extent = .int; knownextent = .int; firstslot = .int
+    item = .lltarget..record; view = .lltargettransfer..refview
+    leftview = .lltargettransfer..refview; rightview = .lltargettransfer..refview
+    action = .lltargettransfer..action
+    if sitebegin(sourceop) = 0 then return .directmappingfact(.siteproof(reference self,'limit',_sitefailure))
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner
+    target = flow.targetat(sourceop)
+    if target.status() <> 'proved' then return .directmappingfact(.siteproof(reference self,'unknown',target.reason()),target)
+    provider = target.provider()
+    if (provider <refsame> owner) = 0 then return .directmappingfact(.siteproof(reference self,'unknown','target.argument.mapping.provider.unproved'),target)
+    profile_ref = flow.transfers(); profile = dereference profile_ref; body = source.body(target.procedure()); catalog = .llrxascatalog..catalog()
+    callrecord = source.at(sourceop); callerbody = source.body(callrecord.procedureid()); callerentry = 0
+    do i = 1 to callerbody.records()
+      if sitespend(1) = 0 then return .directmappingfact(.siteproof(reference self,'limit',_sitefailure),target)
+      item = callerbody.record(i)
+      if item.kind() <> 'procedure' then do; callerentry = item.id(); leave; end
+    end
+    layout = calllayout(sourceop)
+    if layout.status() <> 'proved' then return .directmappingfact(.siteproof(reference self,layout.status(),layout.reason()),target)
+    do i = 1 to body.records()
+      if sitespend(1) = 0 then return .directmappingfact(.siteproof(reference self,'limit',_sitefailure),target)
+      item = body.record(i)
+      if item.kind() = 'procedure' then iterate
+      instruction = profile.instruction(item.id())
+      do j = 1 to 3
+        family = word('references bindings order',j)
+        if instruction.complete(family) = 0 then return .directmappingfact(.siteproof(reference self,'unknown',instruction.unknownreason(family)),target)
+      end
+      do j = 1 to instruction.references()
+        if sitespend(1) = 0 then return .directmappingfact(.siteproof(reference self,'limit',_sitefailure),target)
+        view = instruction.ref(j)
+        if view.kind() = 'window' | view.role() = 'window-capture' then do
+          knownextent = view.extentknown(); extent = view.extent()
+          if knownextent = 0 & item.kind() = 'instruction' then do
+            if catalog.callinvokes(item.opcode()) then do
+              childlayout = calllayout(item.id())
+              if childlayout.countknown() then do; knownextent = 1; extent = childlayout.count() + 1; end
+            end
+          end
+          if knownextent = 0 then return .directmappingfact(.siteproof(reference self,'unknown','target.argument.mapping.window.extent.unproved'),target)
+          firstslot = view.index()
+          if view.bank() = 'g' then firstslot = firstslot + body.locals()
+          else if view.bank() = 'a' then firstslot = firstslot + body.locals() + source.globals()
+          if extent > 0 & firstslot < body.locals() + source.globals() then do
+            if firstslot >= body.locals() | extent > body.locals() - firstslot then return .directmappingfact(.siteproof(reference self,'unknown','target.global.mapping.window.unproved'),target)
+          end
+        end
+        if view.bank() = 'a' & view.index() > 0 then do
+          if view.anchor() <> 'active' then return .directmappingfact(.siteproof(reference self,'unknown','target.argument.mapping.anchor.unproved'),target)
+          if view.index() > layout.count() then return .directmappingfact(.siteproof(reference self,'unknown','target.argument.mapping.presence.unproved'),target)
+        end
+        if view.bank() = 'g' then do
+          if view.anchor() <> 'active' then return .directmappingfact(.siteproof(reference self,'unknown','target.global.mapping.anchor.unproved'),target)
+          if sitespend(flow.lookupcost() * 2 + 1) = 0 then return .directmappingfact(.siteproof(reference self,'limit',_sitefailure),target)
+          incoming = flow.captureat(sourceop,'g',view.index()); initial = flow.storageat(callerentry,'g',view.index())
+          if incoming.active() = 0 | initial.slotidentity() = 0 then return .directmappingfact(.siteproof(reference self,'unknown','target.global.mapping.entry.unproved'),target)
+          if incoming.active() <> incoming.entry() | incoming.base() <> incoming.entry() | incoming.slotidentity() <> initial.slotidentity() then return .directmappingfact(.siteproof(reference self,'unknown','target.global.mapping.entry.unproved'),target)
+        end
+      end
+      do j = 1 to instruction.actions()
+        if sitespend(1) = 0 then return .directmappingfact(.siteproof(reference self,'limit',_sitefailure),target)
+        action = instruction.action(j)
+        if wordpos(action.kind(),'link unlink swap') = 0 then iterate
+        leftargument = 0; rightargument = 0
+        if action.subject() > 0 then do
+          leftview = profile.ref(action.subject())
+          leftargument = (leftview.bank() = 'a' & leftview.index() > 0) | leftview.bank() = 'g'
+        end
+        if action.sourcekind() = 'reference' then do
+          rightview = profile.ref(action.sourceid())
+          rightargument = (rightview.bank() = 'a' & rightview.index() > 0) | rightview.bank() = 'g'
+        end
+        if leftargument = 0 & (action.kind() <> 'swap' | rightargument = 0) then iterate
+        identical = 0
+        if leftargument & rightargument & action.kind() <> 'unlink' & action.detail() <> 'active-base' then do
+          identical = leftview.bank() = rightview.bank() & leftview.index() = rightview.index() & leftview.anchor() = 'active' & rightview.anchor() = 'active'
+        end
+        if identical = 0 then do
+          reason = 'target.argument.mapping.binding.unproved'
+          if leftargument then do; if leftview.bank() = 'g' then reason = 'target.global.mapping.binding.unproved'; end
+          if rightargument & action.kind() = 'swap' then do; if rightview.bank() = 'g' then reason = 'target.global.mapping.binding.unproved'; end
+          return .directmappingfact(.siteproof(reference self,'unknown',reason),target)
+        end
+      end
+    end
+    return .directmappingfact(.siteproof(reference self,'proved'),target)
+  scopefree: method = .lltargetsummary..scopefreefact
+    arg sourceop = .int
+    returnops = .int[]; returnmodes = .string[]
+    i = .int; j = .int; k = .int; d = .int; kind = .int; providerfunction = .int; mode = .string
+    value = .lltarget..operand; point = .lltargetflow..valuefact; binding = .lltargetflow..storagefact
+    if sitebegin(sourceop) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+    if sourceop <= _scopepresent[0] then do; if _scopepresent[sourceop] then return _scopefacts[sourceop]; end
+    flow = dereference _flow; owner = flow.owner(); source = dereference owner
+    profile_ref = flow.transfers(); profile = dereference profile_ref; cfg_ref = flow.cfg(); cfg = dereference cfg_ref
+    catalog = .llrxascatalog..catalog(); callrecord = source.at(sourceop)
+    if callrecord.kind() <> 'instruction' then return .scopefreefact(.siteproof(reference self,'unknown','target.site.not.call'),0)
+    if catalog.callinvokes(callrecord.opcode()) = 0 then return .scopefreefact(.siteproof(reference self,'unknown','target.site.not.call'),0)
+    activation = activationequivalence(sourceop,0)
+    if activation.allowed() = 0 then return .scopefreefact(.siteproof(reference self,activation.status(),activation.reason()),0)
+    directmapping = directactualmapping(sourceop)
+    if directmapping.allowed() = 0 then return .scopefreefact(.siteproof(reference self,directmapping.status(),directmapping.reason()),0)
+    target = flow.targetat(sourceop)
+    if target.status() <> 'proved' then return .scopefreefact(.siteproof(reference self,'unknown',target.reason()),0)
+    provider_ref = target.provider()
+    if (provider_ref <refsame> owner) = 0 then return .scopefreefact(.siteproof(reference self,'unknown','scopefree.provider.context.unproved'),0)
+    providerfunction = target.procedure(); body = source.body(providerfunction)
+    state = 'proved'; reason = ''; allowed = 1
+    if profile.executioncontext() = '' | profile.defaulthalt(callrecord.procedureid()) = 0 | profile.defaulthalt(providerfunction) = 0 then do; state = 'unknown'; reason = 'scopefree.signal.context.unproved'; allowed = 0; end
+    if catalog.callprefix(callrecord.opcode()) <> '' then do; state = 'unknown'; reason = 'scopefree.preparation.unproved'; allowed = 0; end
+    layout = calllayout(sourceop)
+    if layout.status() <> 'proved' then do; state = layout.status(); reason = layout.reason(); allowed = 0; end
+    if cfg.normalizationcomplete(providerfunction) = 0 | flow.complete(providerfunction,'entry-normalization') = 0 then do; state = 'unknown'; reason = 'scopefree.entry.normalization.unproved'; allowed = 0; end
+    if sitespend(body.records() * 8 + max(0,sourceop - _scopepresent[0]) + 1) = 0 | sitereserve(body.records() * 32 + max(0,sourceop - _scopepresent[0]) * 24 + 160) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+    /* The exact sealed execution profile owns startup/initializer certainty.
+     * A same-owner target does not acquire a new foreign ingress here. */
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() = 'procedure' then iterate
+      instruction = profile.instruction(item.id())
+      do j = 1 to 8
+        family = word('references bindings order relocation observations ownership effects control',j)
+        if instruction.complete(family) = 0 then do; state = 'unknown'; reason = instruction.unknownreason(family); allowed = 0; end
+      end
+      if item.kind() <> 'instruction' then iterate
+      /* Pending delivery is observable even when no handler-table write is
+       * present. This scope proof retains both as independent barriers. */
+      if (catalog.signalproperties(item.opcode()) <idiv> 8) % 2 | (catalog.signalproperties(item.opcode()) <idiv> 32) % 2 | catalog.observations(item.opcode()) <> 0 then do; state = 'unknown'; reason = 'scopefree.activation.observer.unproved'; allowed = 0; end
+      do j = 1 to instruction.references()
+        if sitespend(1) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+        view = instruction.ref(j)
+        if view.kind() = 'address' then do; state = 'unknown'; reason = 'scopefree.argument.or.address.view.unproved'; allowed = 0; end
+        if view.bank() = 'a' & layout.countknown() then do
+          if view.index() > layout.count() then do; state = 'unknown'; reason = 'scopefree.argument.presence.unproved'; allowed = 0; end
+        end
+      end
+      do j = 1 to instruction.actions()
+        if sitespend(1) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+        action = instruction.action(j)
+        if action.kind() = 'callback' then do
+          if callbackmay(item.id(),action.ordinal(),1) then do; state = 'unknown'; reason = 'scopefree.callback.unproved'; allowed = 0; end
+          if _sitefailure <> '' then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+        end
+        if wordpos(action.kind(),'context policy lifetime resize scope-enter unknown') > 0 then do; state = 'unknown'; reason = 'scopefree.restoration.' || action.kind() || '.unproved'; allowed = 0; end
+        if action.kind() = 'call' then do
+          child = flow.targetat(item.id())
+          if child.status() <> 'proved' then do; state = 'unknown'; reason = 'scopefree.child.effects.unproved'; allowed = 0; end
+        end
+      end
+      kind = catalog.returnkind(item.opcode())
+      if kind = 0 then iterate
+      mode = 'unproved'; value = .lltarget..operand()
+      if kind = 5 then do; state = 'unknown'; reason = 'scopefree.return.setter.unproved'; allowed = 0; end
+      if kind = 2 then do
+        value = item.operand(catalog.returnsource(item.opcode())); binding = flow.storageat(item.id(),value.bank(),value.index())
+        mode = 'copy'
+        if binding.active() = 0 then do; mode = 'unproved'; state = 'unknown'; reason = 'scopefree.return.binding.unproved'; allowed = 0; end
+        else if value.bank() = 'r' & binding.active() = binding.entry() then mode = 'move'
+        n = returnops[0] + 1; returnops[n] = item.id(); returnmodes[n] = mode
+      end
+      /* Omitted frame cleanup may not delay a native/object finalizer in an
+       * unrelated private backing cell. Strings/binaries retain value proof;
+       * opaque payloads require a separate absence/lifetime certificate. */
+      do k = 0 to body.locals() - 1
+        if sitespend(1) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+        if kind = 2 & value.bank() = 'r' & value.index() = k & mode = 'move' then iterate
+        ownershipdomains = 0
+        do d = 1 to profile.domains()
+          if sitespend(1) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+          domain = profile.domain(d)
+          if domain.kind() <> 'component' then iterate
+          if domain.nativebit() <> catalog.componentmask('reference') & domain.nativebit() <> catalog.componentmask('native-payload') & domain.nativebit() <> catalog.componentmask('attributes') then iterate
+          ownershipdomains = ownershipdomains + 1
+          if sitespend(flow.lookupcost() + 1) = 0 then return .scopefreefact(.siteproof(reference self,'limit',_sitefailure),0)
+          point = flow.entrycomponentat(item.id(),'r',k,d)
+          if point.presence() <> 'absent' then do; state = 'unknown'; reason = 'scopefree.owned.cleanup.unproved'; allowed = 0; end
+        end
+        if ownershipdomains <> 3 then do; state = 'unknown'; reason = 'scopefree.owned.cleanup.domains.unproved'; allowed = 0; end
+      end
+    end
+    result = .scopefreefact(.siteproof(reference self,state,reason),allowed,returnops,returnmodes)
+    _scopefacts[sourceop] = result; _scopepresent[sourceop] = 1
+    return result
   procedure: method = .lltargetsummary..summary
     arg functionid = .int, mode = 'transitive'
     call run()

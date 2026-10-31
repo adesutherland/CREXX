@@ -1,0 +1,158 @@
+/* cREXX License (MIT). Scope omission requires an independent diagnostic proof. */
+options levelb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetsummary
+import llinline
+import llrxascatalog
+
+check: procedure = .int
+  arg value = .int, label = .string
+  if value then return 0
+  say 'FAIL:' || label; return 1
+one: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, value = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = value as .object
+  return body.emit(name,fields,at)
+two: procedure = .int
+  arg body = .lltarget..bodydraft, name = .string, left = .lltarget..operand, right = .lltarget..operand, at = .llir..origin
+  fields = .object[]; fields[1] = left as .object; fields[2] = right as .object
+  return body.emit(name,fields,at)
+
+sample: procedure = .lltarget..module
+  arg mode = .int, expose callid = .int
+  ignored = .int; result = .lltarget..operand; value = .lltarget..operand
+  globals = 0; if mode = 6 | mode = 7 then globals = 1
+  draft = .lltarget..draft('scopefree.returns','fixture:scopefree.returns',globals)
+  at = draft.synthetic('literal component return preserves caller side state')
+  root = draft.procedure('main',3,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.string('kept' as .binary),at)
+  ignored = two(root,'load',root.reg('r',1),.lltarget..operand.literal('F','3.5' as .binary),at)
+  ignored = two(root,'fcopy',root.reg('r',0),root.reg('r',1),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.literal('B','0x00FF' as .binary),at)
+  ignored = two(root,'bcopy',root.reg('r',0),root.reg('r',2),at)
+  ignored = two(root,'settp',root.reg('r',0),.lltarget..operand.integer(256),at)
+  if mode = 5 then ignored = one(root,'sigret',.lltarget..operand.string('OTHER' as .binary),at)
+  result = root.reg('r',0); if globals then result = root.reg('g',0)
+  fields = .object[]; fields[1] = result as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object; fields[3] = root.reg('r',0) as .object
+  callid = root.emit('call1',fields,at)
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('leaf',0,at)
+  value = .lltarget..operand.integer(11)
+  if mode = 1 | mode = 7 then value = .lltarget..operand.literal('F','2.5' as .binary)
+  if mode = 3 then value = .lltarget..operand.string('literal' as .binary)
+  if mode = 4 then value = leaf.reg('a',1)
+  if mode = 8 then ignored = one(leaf,'signal',.lltarget..operand.string('OTHER' as .binary),at)
+  ignored = one(leaf,'ret',value,at)
+  return draft.finish()
+
+run: procedure = .int
+  arg mode = .int
+  failures = 0; callid = .int
+  execution = .lltargettransfer..profile
+  i = .int; entries = 0; calls = 0; destinationload = 0
+  resultvalue = .lltarget..operand; field = .lltarget..operand
+  item = .lltarget..record
+  original = sample(mode,callid)
+  failures = failures + check(original.valid(),'scopefree source validates ' || mode)
+  if original.valid() = 0 then do; say original.error(); return failures; end
+  if mode = 2 | mode = 5 then normalized = llinline..normalize(reference original,4000000)
+  else do
+    execution = .lltargettransfer..profile.closedcalls(reference original,original.procedureid('main'),'closed-main-default-halt.v1',4000000)
+    normalized = llinline..normalizewith(reference original,reference execution,4000000)
+  end
+  failures = failures + check(normalized.status() = 'changed' | normalized.status() = 'keep','scopefree normalization returns a complete owner ' || mode || ': ' || normalized.reason())
+  if normalized.status() <> 'changed' & normalized.status() <> 'keep' then return failures
+  source = normalized.result(); callid = normalized.operation(callid)
+  selected = .llinline..context('assembler','all-legal')
+  if mode <> 2 & mode <> 5 then do
+    execution = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1',4000000)
+    failures = failures + check(selected.useexecution(reference source,reference execution),'explicit exact execution owner accepted ' || mode)
+  end
+  failures = failures + check(selected.certify(reference source,normalized),'entry certificate bound to exact result ' || mode)
+  request = llinline..bind(reference source,callid,reference source,source.procedureid('leaf'))
+  requests = .object[]; requests[1] = request as .object
+  changed = llinline..expandcontext(requests,selected,4000000)
+  if mode = 2 | mode = 5 then do
+    /* An ordinary canonical caller has no declared inherited-policy premise.
+     * Scoped transport cannot invent that missing signal correlation. */
+    failures = failures + check(changed.status() = 'keep','unproved inherited signal context retains the call ' || mode)
+    return failures
+  end
+  failures = failures + check(changed.status() = 'changed','scoped expansion remains legal ' || mode || ': ' || changed.reasonat(callid))
+  if changed.status() <> 'changed' then return failures
+  output = changed.result(); body = output.body(output.procedureid('main')); catalog = .llrxascatalog..catalog()
+  resultvalue = .lltarget..operand.bound(0,0,0,'r',0)
+  if mode = 6 | mode = 7 then resultvalue = .lltarget..operand.bound(0,0,0,'g',0)
+  do i = 1 to body.records()
+    item = body.record(i)
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'inlenter' then entries = entries + 1
+    if catalog.callinvokes(item.opcode()) then calls = calls + 1
+    if item.mnemonic() = 'load' then do
+      field = item.operand(1); literal = item.operand(2)
+      if field.bank() = resultvalue.bank() & field.index() = resultvalue.index() & (literal.kind() = 'I' | literal.kind() = 'F') then destinationload = destinationload + 1
+    end
+  end
+  failures = failures + check(calls = 0 & entries = 1,'possible async/semantic diagnostic retains logical activation ' || mode)
+  failures = failures + check(destinationload = 0,'return lowering never clears caller side/native payload by loading its result ' || mode)
+  /* ICOPY/FCOPY are the canonical field setters required by a future proved
+   * no-scope return map. Default-HALT alone grants no such permission. */
+  failures = failures + check(catalog.clearcomponents(catalog.find('icopy','RR'),1) = 0,'integer field setter preserves payload')
+  failures = failures + check(catalog.clearcomponents(catalog.find('fcopy','RR'),1) = 0,'float field setter preserves payload')
+  return failures
+
+/** Canonical entry-setter callbacks can invalidate captured pointer facts.
+ * Neither a counted window nor a fixed actual-list length may invent the
+ * missing layout. Independent exact-transfer count/order positives live in
+ * target-site-facets.crexx, separately from activation/observation proof. */
+mapping: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; callid = .int; i = .int; value = .lltarget..operand
+  draft = .lltarget..draft('scopefree.mapping','fixture:scopefree.mapping',2)
+  at = draft.synthetic('captured actual coordinates retain bank and slot identity')
+  root = draft.procedure('main',3,at)
+  ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(7),at)
+  /* Global payloads are irrelevant to pointer capture. Writing them here
+   * would add a pre-call finalizer/callback obligation to this mapping test. */
+  ignored = two(root,'icopy',root.reg('r',1),root.reg('a',0),at)
+  ignored = two(root,'load',root.reg('r',2),.lltarget..operand.integer(3),at)
+  if mode = 2 then ignored = one(root,'getnumdgts',root.reg('r',2),at)
+  fields = .object[]; fields[1] = root.reg('r',1) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  if mode = 1 then do
+    fields[3] = root.reg('g',1) as .object; fields[4] = root.reg('r',0) as .object; fields[5] = root.reg('g',1) as .object
+    callid = root.emit('call3',fields,at)
+  end
+  else do; fields[3] = root.reg('r',2) as .object; callid = root.emit('call',fields,at); end
+  ignored = one(root,'ret',.lltarget..operand.integer(0),at)
+  leaf = draft.procedure('leaf',0,at); ignored = one(leaf,'ret',leaf.reg('a',1),at)
+  source = draft.finish()
+  failures = failures + check(source.valid(),'mapping source validates ' || mode)
+  if source.valid() = 0 then return failures
+  transfers = .lltargettransfer..profile.closedcalls(reference source,source.procedureid('main'),'closed-main-default-halt.v1',4000000)
+  cfg = .lltargetcfg..graph(reference source,reference transfers,4000000)
+  facts = .lltargetflow..analysis(reference source,reference transfers,reference cfg,4000000)
+  summaries = .lltargetsummary..analysis(reference facts,4000000)
+  failures = failures + check(facts.status() = 'ok','mapping point facts finish ' || mode || ': ' || facts.reason())
+  failures = failures + check(summaries.status() = 'ok','mapping summaries finish ' || mode || ': ' || summaries.reason())
+  selected = .llinline..context('assembler','all-legal')
+  failures = failures + check(selected.usefacts(reference source,reference facts,reference summaries),'mapping shares exact caller facts ' || mode)
+  request = llinline..bind(reference source,callid,reference source,source.procedureid('leaf'))
+  layout = summaries.calllayout(callid)
+  if mode < 2 then failures = failures + check(layout.status() = 'unknown' & layout.reason() = 'target.layout.count.unproved','canonical callback retains the missing capture premise ' || mode)
+  failures = failures + check(selected.argumentcount(request) < 0,'unproved captured count remains unknown ' || mode)
+  do i = 1 to 3
+    value = selected.argument(request,i)
+    failures = failures + check(value.kind() <> 'R','unproved capture supplies no invented actual ' || mode || ':' || i)
+  end
+  return failures
+
+main: procedure = .int
+  failures = 0; mode = .int
+  do mode = 0 to 8; failures = failures + run(mode); end
+  do mode = 0 to 2; failures = failures + mapping(mode); end
+  say 'TARGET_SCOPEFREE_INLINE|failures=' || failures
+  return failures

@@ -1,10 +1,11 @@
 /* cREXX License (MIT). Checked operational target transfers, never proofs. */
 options levelb
-namespace lltargettransfer expose profile profiledraft instruction refview action domain
+namespace lltargettransfer expose profile profiledraft instruction refview action domain selectionbinding
 import rxfnsb
 import llir
 import lltarget
 import llrxascatalog
+import _rxlinkinline
 
 boot: initialiser expose serial
   serial = 0
@@ -168,11 +169,14 @@ action: class
   _phase = .string
   _detail = .string
   _offset = .int
+  _observation = .string
+  _intrinsicfootprint = .int
   *: factory
-    arg id = .int, opid = .int, ordinal = .int, kind = .string, subject = .int, domainid = .int, sourcekind = .string, sourceid = .int, literal = .lltarget..operand, certainty = .string, path = .string, phase = .string, detail = .string, offset = 0
+    arg id = .int, opid = .int, ordinal = .int, kind = .string, subject = .int, domainid = .int, sourcekind = .string, sourceid = .int, literal = .lltarget..operand, certainty = .string, path = .string, phase = .string, detail = .string, offset = 0, observation = 'unknown', intrinsicfootprint = 0
     _id = id; _op = opid; _ordinal = ordinal; _kind = kind; _subject = subject; _domain = domainid
     _sourcekind = sourcekind; _source = sourceid; _literal = literal; _certainty = certainty
     _when = path; _phase = phase; _detail = detail; _offset = offset
+    _observation = observation; _intrinsicfootprint = intrinsicfootprint
     return
   id: method = .int
     return _id
@@ -206,6 +210,14 @@ action: class
     return _detail
   offset: method = .int
     return _offset
+  /** Operational observation footprint, never an absence/preservation proof. */
+  observation: method = .string
+    return _observation
+  /** Complete typed intrinsic Rexx-value footprint of an external action.
+   * Host/reentry, signal and external observability obligations are separate.
+   * Zero is unknown, never a proved empty intrinsic footprint. */
+  intrinsicfootprint: method = .int
+    return _intrinsicfootprint
   unknownreason: method = .string
     if _certainty = 'unknown' | _kind = 'unknown' then return _detail
     return ''
@@ -336,6 +348,72 @@ bindingprogram: class
     end
     return 0
 
+/** A native-enrolled owner tuple. Public construction never mints a proof:
+ * every use rechecks the live context capability and actual owner revisions. */
+selectionbinding: class
+  _caller = reference .lltarget..module
+  _provider = reference .lltarget..module
+  _operation = .int
+  _procedure = .int
+  _typeoperation = .int
+  _capability = .object
+  _providerprofile = reference .lltargettransfer..profile
+  *: factory
+    arg caller = reference .lltarget..module, operation = .int, provider = reference .lltarget..module, procedureid = .int, ?capability = .object, typeoperation = 0, ?providerprofile = reference .lltargettransfer..profile
+    _caller = caller; _operation = operation; _provider = provider; _procedure = procedureid
+    if ?capability then _capability = capability
+    _typeoperation = typeoperation
+    if ?providerprofile then _providerprofile = providerprofile
+    return
+  valid: method = .int
+    if <refvalid>(_caller) = 0 | <refvalid>(_provider) = 0 | _operation < 1 | _procedure < 2 then return 0
+    do
+      return _rxlinkinline..selectioncheck(_capability,_caller,_operation,_provider,_procedure,_typeoperation) = 1
+    on signal
+      /* Ordinary standalone VMs need not install the private RXVML routes.
+       * An unavailable checker never upgrades caller-created object bytes. */
+      return 0
+    end
+    return 0
+  status: method = .string
+    if valid() then return 'proved'
+    return 'unknown'
+  reason: method = .string
+    if valid() then return ''
+    return 'target.selection.authority.unavailable'
+  provider: method = reference .lltarget..module
+    return _provider
+  procedure: method = .int
+    return _procedure
+  selection: method = .int
+    return _operation
+  typeoperation: method = .int
+    return _typeoperation
+  bindingidentity: method = .string
+    if valid() = 0 then return ''
+    caller = dereference _caller
+    return 'native.owner.' || caller.identity() || '.operation.' || _operation || '.type.' || _typeoperation
+  providerprofile: method = reference .lltargettransfer..profile
+    return _providerprofile
+
+/** Native enrollment is monotone in source/type identity. This yields bounded
+ * ordinal lookup without a full-image scan; duplicate/conflicting keys fail. */
+bindingbucket: class
+  _bindings = .lltargettransfer..selectionbinding[]
+  _lasttype = .int
+  *: factory
+    return
+  append: method = .int
+    arg proof = .lltargettransfer..selectionbinding
+    if _bindings[0] > 0 & proof.typeoperation() <= _lasttype then return 0
+    _lasttype = proof.typeoperation(); _bindings[_bindings[0] + 1] = proof
+    return 1
+  count: method = .int
+    return _bindings[0]
+  at: method = .lltargettransfer..selectionbinding
+    arg ordinal = .int
+    return _bindings[ordinal]
+
 /** Immutable operational profile bound to one exact published target owner.
  * Canonical profiles never infer missing mnemonic semantics. Rich profiles
  * supply independent operational premises, not asserted analysis results. */
@@ -351,6 +429,8 @@ profile: class
   _executioncalls = .int
   _executionmembers = .int[]
   _executionreason = .string
+  _nativebindings = .bindingbucket[]
+  _nativepresent = .int[]
   _status = .string
   _message = .string
   _sealed = .int
@@ -420,6 +500,53 @@ profile: class
     if _status = 'building' & _executioncontext <> '' then call checkcontext()
     if _status = 'building' & _executioncalls then call checkcalls()
     return
+  /** Only a live host-enrolled token can add a binding before materialization.
+   * Strings, procedure names and opaque-looking B objects are insufficient. */
+  certifybinding: method = .int
+    arg operation = .int, provider = reference .lltarget..module, procedureid = .int, capability = .object, ?providerprofile = reference .lltargettransfer..profile
+    if ?providerprofile then return certifyselection(operation,provider,procedureid,capability,0,providerprofile)
+    return certifyselection(operation,provider,procedureid,capability,0)
+  certifyselection: method = .int
+    arg operation = .int, provider = reference .lltarget..module, procedureid = .int, capability = .object, typeoperation = 0, ?providerprofile = reference .lltargettransfer..profile
+    proof = .lltargettransfer..selectionbinding
+    if _status <> 'building' | _prepared | _premise <> 'canonical' then return 0
+    if <refvalid>(_owner) = 0 | <refvalid>(provider) = 0 then return 0
+    target = dereference _owner; catalog = .llrxascatalog..catalog()
+    item = target.at(operation)
+    if item.kind() <> 'instruction' then return 0
+    if typeoperation = 0 then do; if catalog.callkind(item.opcode()) <> 1 | catalog.callinvokes(item.opcode()) = 0 then return 0; end
+    else if catalog.selectionkind(item.opcode()) <> 1 then return 0
+    if ?providerprofile then proof = .selectionbinding(_owner,operation,provider,procedureid,capability,typeoperation,providerprofile)
+    else proof = .selectionbinding(_owner,operation,provider,procedureid,capability,typeoperation)
+    if proof.valid() = 0 then return 0
+    growth = max(0,operation - _nativepresent[0])
+    if reserve(growth * 24 + 192,growth + 1) = 0 then return 0
+    do i = 1 to growth; _nativepresent[_nativepresent[0] + 1] = 0; end
+    if _nativepresent[operation] = 0 then do; _nativebindings[operation] = .bindingbucket(); _nativepresent[operation] = 1; end
+    return _nativebindings[operation].append(proof)
+  invocationtarget: method = .lltargettransfer..selectionbinding
+    arg operation = .int
+    call require()
+    if operation > 0 & operation <= _nativepresent[0] then do
+      if _nativepresent[operation] then do
+        proof = _nativebindings[operation].at(1)
+        if proof.typeoperation() = 0 then return proof
+      end
+    end
+    return .selectionbinding(_owner,operation,_owner,0)
+  selectiontargets: method = .int
+    arg operation = .int
+    call require()
+    if operation < 1 | operation > _nativepresent[0] then return 0
+    if _nativepresent[operation] = 0 then return 0
+    proof = _nativebindings[operation].at(1)
+    if proof.typeoperation() = 0 then return 0
+    return _nativebindings[operation].count()
+  selectiontarget: method = .lltargettransfer..selectionbinding
+    arg operation = .int, ordinal = 1
+    call require()
+    if ordinal > 0 & ordinal <= selectiontargets(operation) then return _nativebindings[operation].at(ordinal)
+    return .selectionbinding(_owner,operation,_owner,0)
   run: method = .void
     if _status <> 'building' then return
     call ensureprepared()
@@ -488,9 +615,11 @@ profile: class
         item = body.record(i)
         if item.kind() <> 'instruction' then iterate
         code = item.opcode()
-        if catalog.policyeffect(code) <> 0 then do; _executionreason = 'target.context.call.policy.unproved'; return; end
+        if (catalog.signalproperties(code) <idiv> 8) % 2 then do; _executionreason = 'target.context.call.policy.unproved'; return; end
+        if (catalog.signalproperties(code) <idiv> 32) % 2 then do; _executionreason = 'target.context.call.pending.unproved'; return; end
         if catalog.classification(code) <> 0 | lltarget..normalsuccessors(code) = -2 then do; _executionreason = 'target.context.call.effects.unproved'; return; end
-        if catalog.callkind(code) = 0 then do
+        if catalog.callinvokes(code) = 0 then do
+          if catalog.selectionkind(code) <> 0 then do; _executionreason = 'target.context.call.selection.unproved'; return; end
           if (catalog.semantics(code) <idiv> 2) % 2 then do; _executionreason = 'target.context.call.descriptor.unproved'; return; end
           iterate
         end
@@ -634,16 +763,29 @@ profile: class
     _rlast[opid] = id; _rcount[opid] = _rcount[opid] + 1
     return id
   event: method = .int
-    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = '', offset = 0
+    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = '', offset = 0, observation = 'unknown', intrinsicfootprint = 0
     ref = .lltargettransfer..refview; referenced = .lltarget..record; described = .lltargettransfer..domain
     if operation(opid) = 0 then return 0
-    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap context policy call callcapture capture resize status return lifetime scope-enter edge raise unknown') = 0 | wordpos(sourcekind,'none reference captured literal unknown') = 0 | wordpos(certainty,'must may unknown') = 0 | wordpos(path,'normal failure all') = 0 | wordpos(phase,'none before partial after unknown') = 0 then do
+    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap context policy call callcapture capture resize status select external callback return lifetime scope-enter edge raise unknown') = 0 | wordpos(sourcekind,'none reference captured literal unknown') = 0 | wordpos(certainty,'must may unknown') = 0 | wordpos(path,'normal failure all') = 0 | wordpos(phase,'none before partial after unknown') = 0 then do
       call reject('invalid','LL_TARGET_TRANSFER: event tags'); return 0
     end
     if subject < 0 | subject > _refs[0] | domainid < 0 | domainid > _domains[0] | sourceid < 0 then do
       call reject('invalid','LL_TARGET_TRANSFER: event reference/domain'); return 0
     end
-    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap lifetime resize status') > 0 & subject = 0 then do
+    if wordpos(observation,'component physical unknown') = 0 | (kind <> 'callback' & observation <> 'unknown') then do
+      call reject('invalid','LL_TARGET_TRANSFER: callback observation kind'); return 0
+    end
+    if (intrinsicfootprint <> 0 & intrinsicfootprint <> 1) | (kind <> 'external' & intrinsicfootprint <> 0) then do
+      call reject('invalid','LL_TARGET_TRANSFER: external intrinsic footprint'); return 0
+    end
+    if observation = 'component' then do
+      if subject = 0 | domainid = 0 then do; call reject('invalid','LL_TARGET_TRANSFER: callback component selector'); return 0; end
+      observed = _domains[domainid]; selector = _refs[subject]
+      if wordpos(observed.kind(),'component flag') = 0 | selector.kind() = 'address' | selector.extentknown() = 0 | selector.extent() <> 1 | wordpos(selector.anchor(),'active base entry') = 0 then do
+        call reject('invalid','LL_TARGET_TRANSFER: callback component footprint'); return 0
+      end
+    end
+    if wordpos(kind,'read observe transport write clear derive flagwrite link unlink swap lifetime resize status select') > 0 & subject = 0 then do
       ambient = 0
       if kind = 'read' & domainid > 0 then do; described = _domains[domainid]; ambient = described.kind() = 'context'; end
       if ambient = 0 then do; call reject('invalid','LL_TARGET_TRANSFER: storage event requires a subject'); return 0; end
@@ -675,9 +817,19 @@ profile: class
       if literal.kind() = '' | literal.kind() = 'R' then do; call reject('invalid','LL_TARGET_TRANSFER: typed literal expected'); return 0; end
     end
     else if literal.kind() <> '' then do; call reject('invalid','LL_TARGET_TRANSFER: unexpected literal'); return 0; end
-    if reserve(160 + literal.length() + length(detail),1) = 0 then return 0
+    if kind = 'select' then do
+      catalog = .llrxascatalog..catalog(); selection = catalog.selectionkind(item.opcode())
+      if selection = 0 | sourcekind <> 'literal' | literal.kind() <> 'S' | path <> 'normal' | certainty <> 'must' | phase <> 'none' | domainid = 0 then do
+        call reject('invalid','LL_TARGET_TRANSFER: typed selection event'); return 0
+      end
+      ref = _refs[subject]; described = _domains[domainid]; descriptor = item.operand(catalog.selectiondescriptor(item.opcode()))
+      if ref.opid() <> opid | ref.operandordinal() <> catalog.selectionresult(item.opcode()) | described.kind() <> 'component' | described.nativebit() <> catalog.componentmask('I') | bin2x(literal.bytes()) <> bin2x(descriptor.bytes()) then do
+        call reject('invalid','LL_TARGET_TRANSFER: selection role/domain/descriptor'); return 0
+      end
+    end
+    if reserve(168 + literal.length() + length(detail),1) = 0 then return 0
     id = _acts[0] + 1; ordinal = _acount[opid] + 1
-    _acts[id] = .lltargettransfer..action(id,opid,ordinal,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail,offset)
+    _acts[id] = .lltargettransfer..action(id,opid,ordinal,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail,offset,observation,intrinsicfootprint)
     _anext[id] = 0
     if _alast[opid] > 0 then _anext[_alast[opid]] = id
     else _afirst[opid] = id
@@ -727,8 +879,9 @@ profile: class
     end
     return
   canonical: method = .void
-    j = .int; mask = .int; bit = .int; ordinal = .int; id = .int; refid = .int
-    program = .bindingprogram; integerdomain = .int
+    j = .int; mask = .int; bit = .int; ordinal = .int; id = .int; refid = .int; flagmask = .int
+    program = .bindingprogram; integerdomain = .int; selectionkind = .int; windowref = .int
+    hookcaptures = .int[]
     target = dereference _owner; catalog = .llrxascatalog..catalog(); value = .lltarget..operand
     do n = 1 to target.records()
       item = target.record(n); opid = item.id()
@@ -757,7 +910,7 @@ profile: class
       code = item.opcode(); phase = word('none before after partial unknown',catalog.signalphase(code) + 1)
       _relocationknown[opid] = 1
       scopedrecipe = catalog.recipeoperand(code) > 0 & catalog.scopecontinuation(code) > 0
-      callsite = catalog.callkind(code) <> 0
+      callsite = catalog.callinvokes(code); selectionkind = catalog.selectionkind(code); windowref = 0
       recipe = catalog.bindingrecipe(code)
       if callsite then recipe = catalog.callprefix(code)
       binding = recipe <> '' | catalog.binding(code) <> 0 | scopedrecipe | callsite
@@ -770,6 +923,7 @@ profile: class
         end
       end
       if catalog.classification(code) <> 0 & scopedrecipe = 0 then call unknown(opid,'effects','catalog.effects.unknown')
+      if catalog.opaqueeffects(code) then ignored = event(opid,'external',0,0,'none',0,.lltarget..operand(),'may','all','none','catalog.opaque',0,'unknown',catalog.intrinsicfootprint(code))
       if (catalog.semantics(code) <idiv> 8) % 2 then ignored = event(opid,'return',0,0)
       refs = .int[]
       do j = 1 to item.operands()
@@ -782,6 +936,10 @@ profile: class
         if relocation = 9 then call unknown(opid,'relocation','catalog.relocation.unknown')
         if (relocation = 7 | relocation = 8 | relocation = 10 | relocation = 11) & binding = 0 then call unknown(opid,'references','catalog.relocation.embedded.reference.pending')
       end
+      /* Resource conditions are captured before every executable write or
+       * binding. The final barrier consumes these immutable cells, never a
+       * later pointee that an earlier action may have replaced. */
+      hookcaptures = callbackcaptures(opid,refs,binding)
       if scopedrecipe then do
         encoded = item.operand(catalog.recipeoperand(code))
         if reserve(encoded.length() * 2,encoded.length() + 1) = 0 then return
@@ -803,6 +961,14 @@ profile: class
         ignored = event(opid,'scope-enter',0,0,'none',0,.lltarget..operand(),'must','normal','after','recipe.capture.owned.commit')
         call unknown(opid,'values','scope.entry.value.projection.unknown')
         call unknown(opid,'failure','scope.entry.failure.phase.unknown')
+      end
+      if catalog.implicit(code) <> 0 & scopedrecipe = 0 then do
+        /* Invocation and selection both describe a physical argument window;
+         * only invocation creates a callee activation. Unknown is not empty. */
+        window = catalog.callwindow(code)
+        if selectionkind > 0 then window = catalog.selectionwindow(code)
+        if (callsite | selectionkind > 0) & window > 0 & window <= item.operands() & catalog.implicitrecipe(code) = ('windowafter:' || window) then windowref = addref(opid,window,'window','symbolic',0,0)
+        else if binding = 0 then call unknown(opid,'references','catalog.implicit.reference.selector.unknown')
       end
       /* Ordinary inputs are observed in the incoming state. Destination
        * writes must not precede another operand's observation, including
@@ -826,6 +992,16 @@ profile: class
           call domainevents(opid,'observe',refid,flagmask,'flag')
           if flagmask > 0 then call unknown(opid,'values','catalog.flag.definition.projection.unknown')
         end
+      end
+      if selectionkind > 0 & windowref > 0 then do
+        /* The native resolver owns its window dependencies. A factory match
+         * callback may inspect complete actual values; method selection has
+         * an explicit receiver instead. Flags remain individual domains. */
+        call domainevents(opid,'read',windowref,catalog.selectionwindowcomponents(code))
+        call domainevents(opid,'observe',windowref,catalog.selectionwindowcomponents(code))
+        flagmask = catalog.mayreadflags(code,catalog.selectioncount(code))
+        call domainevents(opid,'read',windowref,flagmask,'flag')
+        call domainevents(opid,'observe',windowref,flagmask,'flag')
       end
       do j = 1 to item.operands()
         if binding then iterate
@@ -851,13 +1027,10 @@ profile: class
         end
         if catalog.failurewrites(code,j) then call maskevents(opid,'write',refid,catalog.failurecomponents(code),'may','failure',phase)
       end
-      if catalog.implicit(code) <> 0 & scopedrecipe = 0 then do
-        /* The call contract owns the count and physical window selector.
-         * Describing that selector is independent of proving its run-time
-         * extent; consumers must not mistake a symbolic window for empty. */
-        window = catalog.callwindow(code)
-        if catalog.callkind(code) <> 0 & window > 0 & window <= item.operands() & catalog.callcount(code) > 0 & catalog.implicitrecipe(code) = ('windowafter:' || window) then ignored = addref(opid,window,'window','symbolic',0,0)
-        else if binding = 0 then call unknown(opid,'references','catalog.implicit.reference.selector.unknown')
+      if selectionkind > 0 then do
+        integerdomain = adddomain('component','component.bit.0',catalog.componentmask('I'))
+        descriptor = item.operand(catalog.selectiondescriptor(code))
+        ignored = event(opid,'select',refs[catalog.selectionresult(code)],integerdomain,'literal',0,descriptor,'must','normal','none','catalog.selection')
       end
       if binding & scopedrecipe = 0 then do
         if bindingevents(opid,program,refs) = 0 then return
@@ -871,8 +1044,8 @@ profile: class
             ignored = event(opid,'observe',refs[countordinal],integerdomain,'none',0,.lltarget..operand(),'must','all','after')
           end
           targetordinal = catalog.calltarget(code)
-          if catalog.callkind(code) <> 1 & targetordinal > 0 & refs[targetordinal] > 0 then do
-            call domainevents(opid,'observe',refs[targetordinal],catalog.componentmask('S'),'component','must','all','after')
+          if targetordinal > 0 & refs[targetordinal] > 0 then do
+            call domainevents(opid,'observe',refs[targetordinal],catalog.calltargetcomponents(code),'component','must','all','after')
           end
           ignored = event(opid,'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','catalog.call')
         end
@@ -886,8 +1059,16 @@ profile: class
       else if catalog.signalstate(code) <> 0 then do
         if catalog.signalsource(code) <> 1 then call unknown(opid,'signals','catalog.signal.names.unknown')
       end
-      if catalog.policyeffect(code) <> 0 then do
+      if (catalog.signalproperties(code) <idiv> 8) % 2 then do
         ignored = event(opid,'policy',0,0,'none',0,.lltarget..operand(),'may','all',phase,'catalog.policy.' || catalog.policyeffect(code))
+      end
+      if (catalog.signalproperties(code) <idiv> 32) % 2 then do
+        /* Pending delivery is an observable ambient effect, not a handler
+         * installation. Preserve its typed effect/name without creating a
+         * structural policy action or inventing a Rexx-value observation. */
+        pendingname = '*'
+        if catalog.policysource(code) = 1 then pendingname = catalog.policyname(code)
+        ignored = event(opid,'external',0,0,'literal',0,.lltarget..operand.string(pendingname as .binary),'may','all',phase,'catalog.signal.pending.' || catalog.policyeffect(code),0,'unknown',1)
       end
       if lltarget..normalsuccessors(code) = -2 then call unknown(opid,'control','catalog.normal.successors.unknown')
       if catalog.unbounded(code) then call unknown(opid,'ownership','catalog.indirect.ownership.unknown')
@@ -895,7 +1076,94 @@ profile: class
         call unknown(opid,'observations','catalog.physical.observation.unknown')
         call unknown(opid,'relocation','catalog.physical.observation.unknown')
       end
+      /* Native hooks can run in the middle of a value implementation. A
+       * final all-path barrier prevents subsequent ordinary setters from
+       * falsely restoring facts invalidated by reentry. */
+      call callbackevents(opid,hookcaptures)
     end
+    return
+  callbackcaptures: method = .int[]
+    arg opid = .int, refs = .int[], binding = .int
+    captures = .int[]; refid = .int; mask = .int; bit = .int; ordinal = .int; domainid = .int; captured = .int
+    item = .lltarget..record(_graph,opid); code = item.opcode(); catalog = .llrxascatalog..catalog()
+    /* A typed logical entry executes its recipe's preparation and hidden ABI
+     * checkpoints in the shared scope executor. Its conservative ordinary
+     * result mask is not another value write at this incoming active cell.
+     * callbackevents still publishes the ABI obligation; no hook is waived. */
+    if catalog.recipeoperand(code) > 0 & catalog.scopecontinuation(code) > 0 then return captures
+    unconditional = 0
+    do j = 1 to item.operands()
+      refid = refs[j]
+      if refid = 0 then iterate
+      mask = catalog.callbackinputs(code,j); outputs = catalog.callbackoutputs(code,j)
+      assembler ior mask,mask,outputs
+      if catalog.callbackcapacity(code,j) then unconditional = 1
+      if mask = 0 then iterate
+      /* Compound binding checkpoints and implicit owned storage are not the
+       * operation's incoming active cell. Unknown is not an absence proof. */
+      if binding then do; unconditional = 1; iterate; end
+      bit = 1; ordinal = 0
+      do while mask > 0
+        if reserve(0,1) = 0 then return captures
+        if mask % 2 then do
+          domainid = adddomain('component','component.bit.' || ordinal,bit)
+          captured = event(opid,'capture',0,domainid,'reference',refid,.lltarget..operand(),'must','all','before','catalog.callback.condition')
+          if reserve(8,1) = 0 then return captures
+          captures[captures[0] + 1] = captured
+        end
+        mask = mask <idiv> 2; ordinal = ordinal + 1
+        if mask > 0 then bit = bit * 2
+      end
+    end
+    if unconditional then do
+      if reserve(8,1) = 0 then return captures
+      captures[captures[0] + 1] = 0
+    end
+    return captures
+  callbackevents: method = .void
+    arg opid = .int, captures = .int[]
+    capture = .lltargettransfer..action; domain = .lltargettransfer..domain; ignored = .int
+    catalog = .llrxascatalog..catalog(); item = .lltarget..record(_graph,opid); code = item.opcode()
+    covered = 0; mask = .int; bit = .int; overlap = .int
+    resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output')
+    assembler ior resources,resources,bit
+    do i = 1 to captures[0]
+      mask = resources
+      if captures[i] = 0 then do
+        ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.capacity-or-checkpoint')
+        bit = catalog.callbackmask('capacity'); assembler ior mask,mask,bit
+      end
+      else do
+        capture = _acts[captures[i]]; domain = _domains[capture.domain()]
+        detail = 'catalog.callback.payload'
+        if domain.nativebit() = catalog.componentmask('attribute-count') then detail = 'catalog.callback.active-tree'
+        ignored = event(opid,'callback',capture.sourceid(),capture.domain(),'captured',capture.id(),.lltarget..operand(),'may','all','unknown',detail)
+      end
+      assembler ior covered,covered,mask
+    end
+    if catalog.selectioncallbacks(code) then do
+      ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.selection')
+      bit = catalog.callbackmask('selection'); assembler ior covered,covered,bit
+    end
+    if catalog.hostcallbacks(code) then do
+      ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.host')
+      bit = catalog.callbackmask('host'); assembler ior covered,covered,bit
+    end
+    if catalog.abicallbacks(code) then do
+      ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.abi')
+      bit = catalog.callbackmask('abi'); assembler ior covered,covered,bit
+    end
+    if catalog.departurecallbacks(code) then do
+      ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.departure')
+      bit = catalog.callbackmask('departure'); assembler ior covered,covered,bit
+    end
+    /* Every whole-op route must have an executor event. Invocation and
+     * unknown inventory can remain even when explicit operand resources are
+     * empty; neither may borrow a different route's conditional capture. */
+    obligations = catalog.callbackobligations(code)
+    assembler iand overlap,obligations,covered
+    remaining = obligations - overlap
+    if remaining <> 0 then ignored = event(opid,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','catalog.callback.residual.' || remaining)
     return
   domainevents: method = .void
     arg opid = .int, kind = .string, refid = .int, mask = .int, domainkind = 'component', certainty = 'must', path = 'normal', phase = 'none', sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand
@@ -954,6 +1222,31 @@ profile: class
     item = .lltarget..record(_graph,opid); value = item.operand(ordinal)
     if value.kind() = 'R' then return event(opid,kind,subject,domainid,'reference',refs[ordinal],.lltarget..operand(),'must','all','after',detail,offset)
     return event(opid,kind,subject,domainid,'literal',0,value,'must','all','after',detail,offset)
+  /** The semantic clear verb executes value_zero on this ordered active
+   * pointee. Its callback condition covers the top reference/native payload
+   * and active children, never retained inactive capacity. Three consecutive
+   * captures form one immutable pre-clear checkpoint; the callback names the
+   * first capture. This describes a possible hook, not its absence or what a
+   * hook may observe. Later call/result obligations retain their own barrier. */
+  clearcheckpoint: method = .int
+    arg opid = .int, subject = .int
+    catalog = .llrxascatalog..catalog(); first = 0; captured = .int; domainid = .int
+    ordinal = .int; shifted = .int
+    do i = 1 to 3
+      name = word('reference native-payload attribute-count',i)
+      bit = catalog.componentmask(name)
+      if bit < 1 then do; call reject('invalid','LL_TARGET_TRANSFER: clear resource domain'); return 0; end
+      ordinal = 0; shifted = bit
+      do while shifted > 1
+        if reserve(0,1) = 0 then return 0
+        shifted = shifted <idiv> 2; ordinal = ordinal + 1
+      end
+      domainid = adddomain('component','component.bit.' || ordinal,bit)
+      captured = event(opid,'capture',0,domainid,'reference',subject,.lltarget..operand(),'must','all','unknown','catalog.callback.clear.' || name)
+      if captured = 0 then return 0
+      if first = 0 then first = captured
+    end
+    return event(opid,'callback',subject,0,'captured',first,.lltarget..operand(),'may','all','unknown','catalog.callback.clear.active-tree')
   /** Second pass: semantic verbs, never a mnemonic admission list. Every
    * selector is materialized at its ordered point; captured values name an
    * immutable earlier action, rather than resolving a restored register. */
@@ -976,11 +1269,18 @@ profile: class
         when kind = 'endlife' then ignored = event(opid,'lifetime',subject,0,'none',0,.lltarget..operand(),'must','all','after','end')
         when kind = 'icopy' then ignored = event(opid,'transport',subject,integer,'reference',refs[b],.lltarget..operand(),'must','all','after')
         when kind = 'setint' then do
-          call domainevents(opid,'clear',subject,catalog.recipeintegerclears(),'component','must','all','after')
-          ignored = event(opid,'status',subject,0,'unknown',0,.lltarget..operand(),'unknown','all','after','setter.integer.flags')
+          writer = catalog.valuewriter(item.opcode(),a)
+          if writer = 'setter' then do
+            call domainevents(opid,'clear',subject,catalog.clearcomponents(item.opcode(),a),'component','must','all','after')
+            ignored = event(opid,'status',subject,0,'unknown',0,.lltarget..operand(),'unknown','all','after','setter.integer.flags')
+          end
+          else if writer <> 'field' then call unknown(opid,'effects','catalog.writer.kind.unknown')
           ignored = sourceevent(opid,'write',subject,integer,b,refs,0,'setter.integer')
         end
-        when kind = 'clear' then ignored = event(opid,'clear',subject,0,'none',0,.lltarget..operand(),'must','all','after','value.reset')
+        when kind = 'clear' then do
+          if clearcheckpoint(opid,subject) = 0 then return 0
+          ignored = event(opid,'clear',subject,0,'none',0,.lltarget..operand(),'must','all','after','value.reset')
+        end
         when kind = 'flags' then ignored = sourceevent(opid,'status',subject,0,b,refs,0,'public-write')
         when kind = 'captureint' | kind = 'captureindex' then do
           if kind = 'captureindex' then do
@@ -1193,9 +1493,9 @@ profiledraft: class
     arg opid = .int, ordinal = .int, kind = 'explicit', anchor = 'active', extentknown = 1, extent = 1
     return _profile.addref(opid,ordinal,kind,anchor,extentknown,extent)
   event: method = .int
-    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = '', offset = 0
+    arg opid = .int, kind = .string, subject = .int, domainid = .int, sourcekind = 'none', sourceid = 0, ?literal = .lltarget..operand, certainty = 'must', path = 'normal', phase = 'none', detail = '', offset = 0, observation = 'unknown', intrinsicfootprint = 0
     if ?literal = 0 then literal = .lltarget..operand()
-    return _profile.event(opid,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail,offset)
+    return _profile.event(opid,kind,subject,domainid,sourcekind,sourceid,literal,certainty,path,phase,detail,offset,observation,intrinsicfootprint)
   /** Interpret independently supplied operational recipe text with the same
    * checked decoder used by the canonical catalogue adapter. */
   binding: method = .int

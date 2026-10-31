@@ -4,9 +4,12 @@
 #include "rxinline_recipe.h"
 #include "rxsha256.h"
 #include "rxvml.h"
+#include "rxvml_inline_private.h"
+#include "rxvmref.h"
 #include "platform.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,8 +41,11 @@ static int inline_take(inline_work *work, size_t amount) {
 }
 
 typedef struct inline_module {
+    module_file *source;
     module_file *original;
     module_file *candidate;
+    module_file rebased;
+    int owns_rebased;
     char *input;
     char *output;
     char owner[96];
@@ -150,42 +156,78 @@ static const expose_proc_constant *inline_exposure(const module_file *module,
         ? (const expose_proc_constant *)entry : NULL;
 }
 
-static int inline_target(inline_module *modules, size_t count, size_t caller,
-        size_t offset, size_t *provider, size_t *ordinal, size_t *target_offset, inline_work *work) {
-    const chameleon_constant *entry = inline_constant(modules[caller].original, offset);
+static int inline_old_member(inline_module *modules, size_t count,
+        const module_file *source, uint32_t member, size_t *provider, inline_work *work) {
+    size_t i;
+    int found = 0;
+    if (!source->semantic_graph) return 0;
+    for (i = 0u; i < count; ++i) {
+        const module_file *candidate = modules[i].source;
+        if (!inline_take(work, 1u)) return 0;
+        if (candidate->semantic_graph != source->semantic_graph ||
+            candidate->semantic_module_index != member) continue;
+        if (found) return inline_error("existing inline provider identity is ambiguous");
+        *provider = i; found = 1;
+    }
+    if (!found) return inline_error("existing inline provider is not selected");
+    return 1;
+}
+
+static const string_constant *inline_binary(const module_file *module, size_t offset) {
+    const chameleon_constant *entry = inline_constant(module, offset);
+    const string_constant *binary = (const string_constant *)entry;
+    return entry && entry->type == BINARY_CONST &&
+           entry->size_in_pool >= offsetof(string_constant, string) &&
+           binary->string_len <= entry->size_in_pool - offsetof(string_constant, string)
+        ? binary : NULL;
+}
+
+static int inline_target_from(inline_module *modules, size_t count, size_t caller,
+        const module_file *source, int old_image, size_t offset, size_t *provider,
+        size_t *ordinal, size_t *target_offset, inline_work *work) {
+    const chameleon_constant *entry = inline_constant(source, offset);
     const proc_constant *proc;
     const expose_proc_constant *exposed;
     size_t n, p;
     int found = 0;
     if (!entry) return 0;
     if (entry->type == BINARY_CONST) {
-        const string_constant *binary = (const string_constant *)entry;
+        const string_constant *binary = inline_binary(source, offset);
         rxinl_qualified_proc_view qualified;
-        if (!rxinl_qualified_proc_decode(binary->string, binary->string_len, &qualified) ||
-            !qualified.sealed || qualified.image_module >= count) return 0;
-        proc = inline_proc(modules[qualified.image_module].original,
+        size_t member = 0u;
+        if (!binary || !rxinl_qualified_proc_decode(binary->string, binary->string_len, &qualified) ||
+            !qualified.sealed) return 0;
+        if (old_image) {
+            if (!inline_old_member(modules, count, source, qualified.image_module, &member, work)) return 0;
+        } else {
+            member = qualified.image_module;
+            if (member >= count) return 0;
+        }
+        source = old_image ? modules[member].source : modules[member].original;
+        proc = inline_proc(source,
                            qualified.provider_procedure, target_offset, work);
-        if (!proc || proc->start == SIZE_MAX) return 0;
-        *provider = qualified.image_module; *ordinal = qualified.provider_procedure;
+        if (!proc || proc->start >= source->header.instruction_size) return 0;
+        *provider = member; *ordinal = qualified.provider_procedure;
         return 1;
     }
-    if (entry->type != PROC_CONST) return 0;
+    if (entry->type != PROC_CONST || entry->size_in_pool < sizeof(proc_constant)) return 0;
     proc = (const proc_constant *)entry;
     if (proc->start != SIZE_MAX) {
-        if (!inline_find_proc(modules[caller].original, proc->name, ordinal, target_offset, work)) return 0;
+        if (!inline_find_proc(source, proc->name, ordinal, target_offset, work)) return 0;
         *provider = caller;
         return 1;
     }
-    exposed = inline_exposure(modules[caller].original, proc);
+    exposed = inline_exposure(source, proc);
     if (!exposed || !exposed->imported) return 0;
     for (n = 0u; n < count; ++n) {
         for (p = 0u; p <= INLINE_MAX_ROWS; ++p) {
             size_t candidate_offset;
-            const proc_constant *candidate = inline_proc(modules[n].original, p, &candidate_offset, work);
+            const module_file *owner = old_image ? modules[n].source : modules[n].original;
+            const proc_constant *candidate = inline_proc(owner, p, &candidate_offset, work);
             const expose_proc_constant *candidate_exposure;
             if (!candidate) break;
             if (candidate->start == SIZE_MAX) continue;
-            candidate_exposure = inline_exposure(modules[n].original, candidate);
+            candidate_exposure = inline_exposure(owner, candidate);
             if (!candidate_exposure || candidate_exposure->imported ||
                 !inline_equal(candidate_exposure->index, exposed->index, work)) continue;
             if (found) return 0;
@@ -193,6 +235,141 @@ static int inline_target(inline_module *modules, size_t count, size_t caller,
         }
     }
     return found;
+}
+
+static int inline_target(inline_module *modules, size_t count, size_t caller,
+        size_t offset, size_t *provider, size_t *ordinal, size_t *target_offset, inline_work *work) {
+    return inline_target_from(modules, count, caller, modules[caller].original, 0,
+                              offset, provider, ordinal, target_offset, work);
+}
+
+/* These views are never executed or published. Preserve old pool/metadata and
+ * graph-operand identities while appending only newly encoded inline leaves.
+ * The selected namespace is established before snapshotting or discovering
+ * any call binding. Ordinary binaries with equal bytes remain untouched. */
+static int inline_rebase_operand(inline_module *item, size_t operand,
+        const void *bytes, size_t length, size_t *used_bytes, inline_work *work) {
+    unsigned char *pool;
+    string_constant *entry;
+    size_t size, offset, code_bytes;
+    if (!item->owns_rebased) {
+        if (item->source->header.instruction_size > INLINE_MAX_SOURCE / sizeof(bin_code))
+            return inline_error("selection rebase byte limit");
+        code_bytes = item->source->header.instruction_size * sizeof(bin_code);
+        if (code_bytes > INLINE_MAX_SOURCE - *used_bytes ||
+            item->source->header.constant_size > INLINE_MAX_SOURCE - *used_bytes - code_bytes)
+            return inline_error("selection rebase byte limit");
+        if (!inline_take(work, item->source->header.instruction_size +
+                                item->source->header.constant_size / 8u + 1u)) return 0;
+        item->rebased = *item->source;
+        item->rebased.instructions = malloc(code_bytes);
+        item->rebased.constant = malloc(item->source->header.constant_size);
+        item->rebased.shared_constant_pool = NULL;
+        item->owns_rebased = 1;
+        if (!item->rebased.instructions || !item->rebased.constant) return 0;
+        memcpy(item->rebased.instructions, item->source->instructions, code_bytes);
+        memcpy(item->rebased.constant, item->source->constant, item->source->header.constant_size);
+        *used_bytes += code_bytes + item->source->header.constant_size;
+        item->original = &item->rebased;
+    }
+    if (length > INLINE_MAX_SOURCE - offsetof(string_constant, string) - 7u)
+        return inline_error("selection rebase byte limit");
+    size = (offsetof(string_constant, string) + length + 7u) & ~(size_t)7u;
+    if (size > INLINE_MAX_SOURCE - *used_bytes)
+        return inline_error("selection rebase byte limit");
+    if (!inline_take(work, size / 8u + 1u)) return 0;
+    offset = item->rebased.header.constant_size;
+    pool = (unsigned char *)realloc(item->rebased.constant, offset + size);
+    if (!pool) return 0;
+    item->rebased.constant = pool;
+    entry = (string_constant *)(pool + offset);
+    memset(entry, 0, size);
+    entry->base.type = BINARY_CONST; entry->base.size_in_pool = size;
+    entry->string_len = length; memcpy(entry->string, bytes, length);
+    item->rebased.header.constant_size += size;
+    item->rebased.header.constant_stored_size = item->rebased.header.constant_size;
+    ((bin_code *)item->rebased.instructions)[operand].index = offset;
+    *used_bytes += size;
+    return 1;
+}
+
+static int inline_rebase_inputs(inline_module *modules, size_t count, inline_work *work) {
+    size_t m, used_bytes = 0u;
+    for (m = 0u; m < count; ++m) {
+        const module_file *source = modules[m].source;
+        const bin_code *code = (const bin_code *)source->instructions;
+        size_t at = 0u;
+        while (at < source->header.instruction_size) {
+            int opcode = code[at].instruction.opcode;
+            OpFormat format = rxbin_opcode_format(opcode);
+            size_t width = rxop_format_operand_count(format), j;
+            unsigned int recipe_operand = rxop_recipe_operand(opcode);
+            if (!inline_take(work, width + 1u) || width >= source->header.instruction_size - at)
+                return 0;
+            if (recipe_operand) {
+                const string_constant *binary;
+                rxinl_recipe_view recipe;
+                RxOpCallContract call = rxop_call_contract(opcode);
+                size_t provider, actual_provider, ordinal, target_offset;
+                unsigned char *bytes;
+                int ok;
+                if (recipe_operand > width || !call.target_operand || call.target_operand > width)
+                    goto invalid;
+                binary = inline_binary(source, code[at + recipe_operand].index);
+                if (!binary || !rxinl_recipe_decode(binary->string, binary->string_len, &recipe) ||
+                    !(recipe.flags & RXINL_RECIPE_SEALED) ||
+                    !inline_old_member(modules, count, source, recipe.image_module, &provider, work) ||
+                    !inline_target_from(modules, count, m, source, 1,
+                        code[at + call.target_operand].index, &actual_provider, &ordinal, &target_offset, work) ||
+                    provider != actual_provider || ordinal != recipe.provider_procedure) goto invalid;
+                bytes = (unsigned char *)malloc(binary->string_len);
+                if (!bytes) return 0;
+                memcpy(bytes, binary->string, binary->string_len);
+                ok = rxinl_recipe_seal(bytes, binary->string_len, (uint32_t)provider, (uint32_t)ordinal) &&
+                     inline_rebase_operand(&modules[m], at + recipe_operand, bytes, binary->string_len, &used_bytes, work);
+                free(bytes);
+                if (!ok) return 0;
+            }
+            for (j = 0u; j < width; ++j) {
+                const string_constant *binary;
+                unsigned char *bytes = NULL;
+                size_t length = 0u, provider, ordinal, target_offset;
+                char spelling[64];
+                int ok;
+                if (rxop_operand_relocation(opcode, (unsigned int)j) == RXOP_RELOC_MODULE) {
+                    rxinl_module_ref_view ref;
+                    binary = inline_binary(source, code[at + j + 1u].index);
+                    if (!binary || !rxinl_module_ref_decode(binary->string, binary->string_len, &ref) ||
+                        j + 1u >= width || code[at + j + 2u].iconst < 0) goto invalid;
+                    if (ref.self_relative) {
+                        if (ref.sealed && ref.image_module != source->semantic_module_index) goto invalid;
+                        if (!inline_old_member(modules, count, source, source->semantic_module_index, &provider, work)) goto invalid;
+                    } else if (!ref.sealed ||
+                               !inline_old_member(modules, count, source, ref.image_module, &provider, work)) goto invalid;
+                    if ((uint64_t)code[at + j + 2u].iconst >= (uint64_t)modules[provider].source->header.globals) goto invalid;
+                    snprintf(spelling, sizeof(spelling), "@%lu", (unsigned long)provider);
+                    ok = rxinl_module_ref_from_text(ref.self_relative ? "self" : spelling, &bytes, &length) &&
+                         rxinl_module_ref_seal(bytes, length, (uint32_t)provider);
+                } else if (rxop_format_operand_type(format, j) == OP_FUNC) {
+                    const chameleon_constant *entry = inline_constant(source, code[at + j + 1u].index);
+                    if (!entry) goto invalid;
+                    if (entry->type != BINARY_CONST) continue;
+                    if (!inline_target_from(modules, count, m, source, 1,
+                            code[at + j + 1u].index, &provider, &ordinal, &target_offset, work)) goto invalid;
+                    snprintf(spelling, sizeof(spelling), "@%lu::%lu", (unsigned long)provider, (unsigned long)ordinal);
+                    ok = rxinl_qualified_proc_from_text(spelling, &bytes, &length) &&
+                         rxinl_qualified_proc_seal(bytes, length);
+                } else continue;
+                if (ok) ok = inline_rebase_operand(&modules[m], at + j + 1u, bytes, length, &used_bytes, work);
+                free(bytes);
+                if (!ok) return 0;
+            }
+            at += width + 1u;
+        }
+    }
+    return 1;
+invalid:
+    return inline_error("existing inline identity is unsealed or mismatched before rebase");
 }
 
 static int inline_json_string(FILE *file, const char *text) {
@@ -322,37 +499,547 @@ static int inline_attribute_equal(rxvml_context *ctx, rxvml_value *array,
     return ok;
 }
 
+/* Capabilities refer to this request node, not to a stack frame. Tokens can be
+ * copied, but teardown marks the node dead before any enrolled owner expires.
+ * A dead node retains no VM values and is freed by its last token finalizer. */
+typedef struct inline_owner {
+    rxvml_value *reference;
+    rxvml_value *ir;
+    rxinteger revision;
+} inline_owner;
+typedef struct inline_authority_row {
+    size_t phase, caller, provider;
+    rxinteger operation, procedure, typeoperation;
+} inline_authority_row;
+typedef struct inline_load_range { size_t first, last; } inline_load_range;
+typedef struct inline_owned_entry {
+    const char *member, *descriptor;
+    int method;
+    rxvml_inline_procedure *pin;
+} inline_owned_entry;
+typedef struct inline_authority {
+    size_t references;
+    int live;
+    rxvml_context *ctx;
+    rxvml_value *session;
+    inline_owner *owners;
+    size_t count;
+    inline_authority_row *rows;
+    size_t row_count;
+    size_t row_capacity;
+    const inline_load_range *ranges;
+    size_t range_count;
+    inline_owned_entry entries[32];
+    size_t entry_count;
+    struct inline_procedure_row **procedures;
+    size_t *procedure_counts;
+    inline_work *work;
+} inline_authority;
+typedef struct inline_capability {
+    inline_authority *request;
+    size_t row;
+} inline_capability;
+
+static void inline_token_copy(void *destination, void *source);
+static void inline_token_finalize(void *item);
+static const rxvm_native_payload_ops inline_token_ops = {
+    "rxlink.inline.owner.v1", inline_token_copy, inline_token_finalize
+};
+
+static int inline_token_read(rxvml_value *value, inline_capability *token) {
+    const rxvm_native_payload_ops *ops = NULL;
+    size_t length = 0u;
+    void *bytes = rxvml_get_native_payload(value, &length, &ops, NULL);
+    if (!bytes || ops != &inline_token_ops || length != sizeof(*token)) return 0;
+    memcpy(token, bytes, sizeof(*token));
+    return token->request != NULL;
+}
+static void inline_authority_release(inline_authority *request) {
+    if (request && !--request->references) free(request);
+}
+static int inline_token_write(rxvml_value *value, inline_authority *request,
+                              size_t row) {
+    inline_capability token;
+    token.request = request; token.row = row;
+    ++request->references;
+    if (rxvml_set_native_payload(value, &token, sizeof(token), &inline_token_ops, 0)) {
+        inline_authority_release(request); return 0;
+    }
+    return 1;
+}
+static void inline_token_copy(void *destination, void *source) {
+    inline_capability token;
+    if (inline_token_read(source, &token))
+        (void)inline_token_write(destination, token.request, token.row);
+}
+static void inline_token_finalize(void *item) {
+    inline_capability token;
+    if (inline_token_read(item, &token)) inline_authority_release(token.request);
+}
+
+static int inline_owned_call(inline_authority *request, const char *member,
+        const char *descriptor, int method, rxvml_value *receiver,
+        size_t count, rxvml_value **arguments, rxvml_value **result) {
+    size_t i;
+    inline_owned_entry *entry = NULL;
+    for (i = 0u; i < request->entry_count; ++i) {
+        if (request->entries[i].method == method &&
+            !strcmp(request->entries[i].member, member) &&
+            !strcmp(request->entries[i].descriptor, descriptor)) {
+            entry = &request->entries[i]; break;
+        }
+    }
+    if (!entry) {
+        rxvml_inline_procedure *selected = NULL;
+        if (request->entry_count >= sizeof(request->entries) / sizeof(request->entries[0])) return 0;
+        for (i = 0u; i < request->range_count; ++i) {
+            rxvml_inline_procedure *candidate = NULL;
+            int status = rxvml_inline_resolve_owned(request->ctx,
+                    request->ranges[i].first, request->ranges[i].last,
+                    member, descriptor, method, &candidate);
+            if (status < 0 || (status == 0 && selected)) {
+                rxvml_inline_procedure_free(candidate);
+                rxvml_inline_procedure_free(selected); return 0;
+            }
+            if (status == 0) selected = candidate;
+        }
+        if (!selected) return 0;
+        entry = &request->entries[request->entry_count++];
+        entry->member = member; entry->descriptor = descriptor;
+        entry->method = method; entry->pin = selected;
+    }
+    return rxvml_inline_call_owned(request->ctx, entry->pin, receiver,
+            count, arguments, result) == 0;
+}
+static int inline_session_call(inline_authority *request, const char *descriptor,
+        size_t count, rxvml_value **arguments, rxvml_value **result) {
+    return inline_owned_call(request, "llrxinlinestage", descriptor, 1,
+            request->session, count, arguments, result);
+}
+static rxvml_value *inline_number(rxvml_context *ctx, size_t number) {
+    rxvml_value *result;
+    if (number > (size_t)LLONG_MAX) return NULL;
+    result = rxvml_value_new(ctx);
+    if (result) rxvml_set_int(result, (rxinteger)number);
+    return result;
+}
+static int inline_session_number(inline_authority *request,
+        const char *descriptor, size_t module_index, const char *symbol,
+        size_t ordinal, size_t phase, int operation, rxinteger *number) {
+    rxvml_value *arguments[4] = {NULL, NULL, NULL, NULL}, *result = NULL;
+    size_t count = operation ? 4u : 3u, i;
+    int ok = 0;
+    arguments[0] = inline_number(request->ctx, module_index + 1u);
+    arguments[1] = rxvml_value_new(request->ctx);
+    if (!arguments[0] || !arguments[1] ||
+        rxvml_set_str(arguments[1], symbol, strlen(symbol))) goto done;
+    if (operation) arguments[2] = inline_number(request->ctx, ordinal);
+    arguments[count - 1u] = inline_number(request->ctx, phase);
+    if (!arguments[count - 1u] || (operation && !arguments[2]) ||
+        !inline_session_call(request, descriptor, count, arguments, &result) ||
+        !result || rxvml_to_int(request->ctx, result, number)) goto done;
+    ok = *number > 0;
+done:
+    for (i = 0u; i < count; ++i) rxvml_value_free(arguments[i]);
+    rxvml_value_free(result); return ok;
+}
+
+/* Read the actual module and IR through the fixed trusted owning accessors.
+ * Comparing only a live wrapper cell or caller-supplied identity is unsafe. */
+static int inline_owner_read(inline_authority *request, rxvml_value *reference,
+        rxinteger *revision, rxvml_value **ir) {
+    value *owner;
+    rxvml_value *result = NULL;
+    rxinteger valid = 0;
+    if (!reference || !(owner = rxvm_reference_cell_target(
+                ((value *)reference)->reference_payload))) return 0;
+    if (!inline_owned_call(request, "lltarget",
+            "rxsig1|lltarget.module.valid|.int|", 1, owner, 0u, NULL, &result) ||
+        !result || rxvml_to_int(request->ctx, result, &valid) || valid != 1) {
+        rxvml_value_free(result); return 0;
+    }
+    rxvml_value_free(result); result = NULL;
+    if (!inline_owned_call(request, "lltarget",
+            "rxsig1|lltarget.module.identity|.int|", 1, owner, 0u, NULL, &result) ||
+        !result || rxvml_to_int(request->ctx, result, revision)) {
+        rxvml_value_free(result); return 0;
+    }
+    rxvml_value_free(result);
+    if (*revision <= 0 || !inline_owned_call(request, "lltarget",
+            "rxsig1|lltarget.module.ir|reference .llir..module|", 1, owner, 0u, NULL, ir) ||
+        !*ir || !rxvm_reference_cell_target(((value *)*ir)->reference_payload)) {
+        rxvml_value_free(*ir); *ir = NULL; return 0;
+    }
+    return 1;
+}
+static int inline_owner_matches(inline_authority *request, size_t index,
+                                 rxvml_value *actual) {
+    inline_owner *owner = &request->owners[index];
+    rxvml_value *ir = NULL;
+    rxinteger revision = 0;
+    int ok;
+    if (!actual || !owner->reference || ((value *)actual)->reference_payload !=
+            ((value *)owner->reference)->reference_payload) return 0;
+    if (!inline_owner_read(request, actual, &revision, &ir)) return 0;
+    ok = revision == owner->revision && ((value *)ir)->reference_payload ==
+            ((value *)owner->ir)->reference_payload;
+    rxvml_value_free(ir); return ok;
+}
+static int inline_row_matches(inline_authority *request,
+        const inline_authority_row *row, rxvml_value *const *arguments) {
+    rxinteger operation, procedure, typeoperation;
+    if (rxvml_to_int(request->ctx, arguments[1], &operation) ||
+        rxvml_to_int(request->ctx, arguments[3], &procedure) ||
+        rxvml_to_int(request->ctx, arguments[4], &typeoperation) ||
+        operation != row->operation || procedure != row->procedure ||
+        typeoperation != row->typeoperation) return 0;
+    return inline_owner_matches(request, row->phase * request->count + row->caller,
+                arguments[0]) && inline_owner_matches(request,
+                row->phase * request->count + row->provider, arguments[2]);
+}
+static int inline_authority_dispatch(rxvml_context *ctx, void *userdata,
+        enum rxvml_inline_operation operation, size_t argc,
+        rxvml_value *const *arguments, rxvml_value *result) {
+    inline_authority *request = userdata;
+    size_t i;
+    inline_capability token;
+    if (!request || !request->live || request->ctx != ctx ||
+        !inline_take(request->work, 1u)) return 0;
+    if (operation == RXVML_INLINE_TOKEN && argc == 5u) {
+        for (i = 0u; i < request->row_count; ++i) {
+            if (!inline_take(request->work, 1u)) return 0;
+            if (inline_row_matches(request, &request->rows[i], arguments))
+                return inline_token_write(result, request, i);
+        }
+    } else if (operation == RXVML_INLINE_CHECK && argc == 6u &&
+        inline_token_read(arguments[0], &token) && token.request == request &&
+        token.row < request->row_count &&
+        inline_row_matches(request, &request->rows[token.row], arguments + 1u)) {
+        rxvml_set_int(result, 1); return 1;
+    }
+    return 0;
+}
+
+static int inline_session_owners(inline_authority *request, size_t phase) {
+    size_t i;
+    for (i = 0u; i < request->count; ++i) {
+        rxvml_value *arguments[2] = {inline_number(request->ctx, i + 1u),
+                                    inline_number(request->ctx, phase)};
+        inline_owner *owner = &request->owners[phase * request->count + i];
+        int ok = arguments[0] && arguments[1] && inline_session_call(request,
+                "rxsig1|llrxinlinestage.session.owner|reference .lltarget..module|index=.int,phase=.int",
+                2u, arguments, &owner->reference) && inline_owner_read(request,
+                    owner->reference, &owner->revision, &owner->ir);
+        rxvml_value_free(arguments[0]); rxvml_value_free(arguments[1]);
+        if (!ok) return 0;
+    }
+    return 1;
+}
+static int inline_session_addproof(inline_authority *request,
+                                   inline_authority_row row) {
+    rxvml_value *arguments[7] = {NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    rxvml_value *result = NULL;
+    inline_authority_row *grown;
+    rxinteger accepted = 0;
+    size_t i, index = request->row_count;
+    int ok = 0;
+    if (index >= INLINE_MAX_ROWS) return 0;
+    if (index == request->row_capacity) {
+        size_t capacity = request->row_capacity ? request->row_capacity * 2u : 32u;
+        if (capacity > INLINE_MAX_ROWS) capacity = INLINE_MAX_ROWS;
+        grown = realloc(request->rows, capacity * sizeof(*grown));
+        if (!grown) return 0;
+        request->rows = grown; request->row_capacity = capacity;
+    }
+    request->rows[index] = row; ++request->row_count;
+    arguments[0] = inline_number(request->ctx, row.caller + 1u);
+    arguments[1] = inline_number(request->ctx, (size_t)row.operation);
+    arguments[2] = inline_number(request->ctx, row.provider + 1u);
+    arguments[3] = inline_number(request->ctx, (size_t)row.procedure);
+    arguments[4] = inline_number(request->ctx, (size_t)row.typeoperation);
+    arguments[5] = inline_number(request->ctx, row.phase);
+    arguments[6] = rxvml_value_new(request->ctx);
+    for (i = 0u; i < 7u; ++i) if (!arguments[i]) goto done;
+    if (!inline_token_write(arguments[6], request, index) ||
+        !inline_session_call(request,
+            "rxsig1|llrxinlinestage.session.addproof|.int|caller=.int,operation=.int,provider=.int,functionid=.int,typeoperation=.int,phase=.int,capability=.object",
+            7u, arguments, &result) || !result ||
+        rxvml_to_int(request->ctx, result, &accepted) || accepted != 1) goto done;
+    ok = 1;
+done:
+    for (i = 0u; i < 7u; ++i) rxvml_value_free(arguments[i]);
+    rxvml_value_free(result); return ok;
+}
+
+typedef struct inline_procedure_row {
+    const proc_constant *procedure;
+    size_t constant, ordinal, end;
+} inline_procedure_row;
+typedef struct inline_procedure_order { size_t start, index; } inline_procedure_order;
+static int inline_procedure_compare(const void *left, const void *right) {
+    const inline_procedure_order *a = left, *b = right;
+    return a->start < b->start ? -1 : a->start > b->start;
+}
+/* Decode the PROC chain once. Sorted entry points supply exact body bounds;
+ * neither source-order enumeration nor each binding rescans that chain. */
+static inline_procedure_row *inline_procedure_index(const module_file *module,
+        size_t *count, inline_work *work) {
+    inline_procedure_row *rows = NULL;
+    inline_procedure_order *order = NULL;
+    size_t capacity = 0u, n = 0u, executable = 0u, i, log = 1u;
+    int at = module->header.proc_head;
+    *count = 0u;
+    while (at >= 0) {
+        const chameleon_constant *entry = inline_constant(module, (size_t)at);
+        const proc_constant *procedure;
+        if (!inline_take(work, 1u) || n >= INLINE_MAX_ROWS || !entry ||
+            entry->type != PROC_CONST || entry->size_in_pool < sizeof(*procedure)) goto fail;
+        procedure = (const proc_constant *)entry;
+        if (n == capacity) {
+            size_t next = capacity ? capacity * 2u : 32u;
+            inline_procedure_row *grown;
+            if (next > INLINE_MAX_ROWS) next = INLINE_MAX_ROWS;
+            if (!inline_take(work, n)) goto fail;
+            grown = realloc(rows, next * sizeof(*grown));
+            if (!grown) goto fail;
+            rows = grown; capacity = next;
+        }
+        rows[n].procedure = procedure; rows[n].constant = (size_t)at;
+        rows[n].ordinal = n; rows[n].end = module->header.instruction_size;
+        if (procedure->start != SIZE_MAX) ++executable;
+        ++n; at = procedure->next;
+    }
+    order = calloc(executable ? executable : 1u, sizeof(*order));
+    if (!order) goto fail;
+    executable = 0u;
+    for (i = 0u; i < n; ++i) if (rows[i].procedure->start != SIZE_MAX) {
+        if (rows[i].procedure->start >= module->header.instruction_size) goto fail;
+        order[executable].start = rows[i].procedure->start;
+        order[executable++].index = i;
+    }
+    for (i = executable; i > 1u; i >>= 1u) ++log;
+    if (executable > SIZE_MAX / log || !inline_take(work, executable * log)) goto fail;
+    qsort(order, executable, sizeof(*order), inline_procedure_compare);
+    if (!inline_take(work, executable)) goto fail;
+    for (i = 0u; i < executable;) {
+        size_t next = i + 1u, j, end;
+        while (next < executable && order[next].start == order[i].start) ++next;
+        end = next < executable ? order[next].start : module->header.instruction_size;
+        for (j = i; j < next; ++j) rows[order[j].index].end = end;
+        i = next;
+    }
+    free(order); *count = n; return rows;
+fail:
+    free(order); free(rows); return NULL;
+}
+
+/* Direct tuples come only from the existing original-image-aware native
+ * resolver. The manifest is not consulted as authority. All source IDs are
+ * obtained from the host-created trusted session and its owned rewrite map. */
+static int inline_session_direct(inline_authority *request,
+        inline_module *modules, size_t phase, inline_work *work) {
+    inline_procedure_row **indices;
+    size_t *counts;
+    size_t m, p;
+    int ok = 0;
+    if (!request->procedures) {
+        request->procedures = calloc(request->count, sizeof(*request->procedures));
+        request->procedure_counts = calloc(request->count, sizeof(*request->procedure_counts));
+        if (!request->procedures || !request->procedure_counts) return 0;
+        for (m = 0u; m < request->count; ++m) {
+            request->procedures[m] = inline_procedure_index(modules[m].original,
+                    &request->procedure_counts[m], work);
+            if (!request->procedures[m]) return 0;
+        }
+    }
+    indices = request->procedures; counts = request->procedure_counts;
+    for (m = 0u; m < request->count; ++m) for (p = 0u; p < counts[m]; ++p) {
+        const proc_constant *proc = indices[m][p].procedure;
+        bin_code *code = (bin_code *)modules[m].original->instructions;
+        size_t at, end = indices[m][p].end, instruction = 0u;
+        if (proc->start == SIZE_MAX) continue;
+        for (at = proc->start; at < end; ++instruction) {
+            int opcode = code[at].instruction.opcode;
+            RxOpCallContract call = rxop_call_contract(opcode);
+            size_t width = rxop_format_operand_count(rxbin_opcode_format(opcode));
+            size_t provider, ordinal, constant;
+            if (!inline_take(work, width + 1u) || width > end - at - 1u) goto done;
+            if (call.kind == RXOP_CALL_DIRECT && call.target_operand > 0 &&
+                inline_target(modules, request->count, m,
+                    code[at + call.target_operand].index, &provider, &ordinal,
+                    &constant, work)) {
+                const proc_constant *target;
+                inline_authority_row row;
+                if (provider >= request->count || ordinal >= counts[provider]) goto done;
+                target = indices[provider][ordinal].procedure;
+                memset(&row, 0, sizeof(row));
+                row.phase = phase; row.caller = m; row.provider = provider;
+                if (!inline_take(work, 3u) ||
+                    !inline_session_number(request,
+                        "rxsig1|llrxinlinestage.session.operation|.int|index=.int,symbol=.string,ordinal=.int,phase=.int",
+                        m, proc->name, instruction, phase, 1, &row.operation) ||
+                    !inline_session_number(request,
+                        "rxsig1|llrxinlinestage.session.function|.int|index=.int,symbol=.string,phase=.int",
+                        provider, target->name, 0u, phase, 0, &row.procedure) ||
+                    !inline_session_addproof(request, row)) goto done;
+            }
+            at += width + 1u;
+        }
+    }
+    ok = !work->limited;
+done:
+    return ok;
+}
+
+static void inline_session_close(inline_authority *request) {
+    size_t i;
+    if (!request) return;
+    request->live = 0;
+    (void)rxvml_inline_set_callback(request->ctx, NULL, NULL);
+    for (i = 0u; request->owners && i < request->count * 2u; ++i) {
+        rxvml_value_free(request->owners[i].reference);
+        rxvml_value_free(request->owners[i].ir);
+    }
+    free(request->owners); request->owners = NULL;
+    free(request->rows); request->rows = NULL; request->row_count = 0u;
+    if (request->procedures) for (i = 0u; i < request->count; ++i) free(request->procedures[i]);
+    free(request->procedures); free(request->procedure_counts);
+    request->procedures = NULL; request->procedure_counts = NULL;
+    rxvml_value_free(request->session); request->session = NULL;
+    for (i = 0u; i < request->entry_count; ++i)
+        rxvml_inline_procedure_free(request->entries[i].pin);
+    request->ctx = NULL;
+    inline_authority_release(request);
+}
+static inline_authority *inline_session_open(rxvml_context *ctx,
+        inline_module *modules, size_t count, inline_work *work,
+        const inline_load_range *ranges, size_t range_count) {
+    inline_authority *request = calloc(1u, sizeof(*request));
+    rxvml_value *names = NULL, *sources = NULL, *name = NULL, *source = NULL;
+    rxvml_value *reader_args[2];
+    rxvml_value *result = NULL, *allowance = NULL;
+    size_t i;
+    int ok = 0;
+    if (!request) return NULL;
+    request->references = 1u; request->ctx = ctx; request->count = count;
+    request->ranges = ranges; request->range_count = range_count;
+    request->work = work;
+    request->owners = calloc(count * 2u, sizeof(*request->owners));
+    names = rxvml_array_new(ctx, count);
+    sources = rxvml_array_new(ctx, count);
+    if (!request->owners || !names || !sources) goto done;
+    for (i = 0u; i < count; ++i) {
+        FILE *file;
+        char *bytes;
+        size_t size = modules[i].source_bytes;
+        if (!inline_take(work, 1u)) goto done;
+        bytes = malloc(size ? size : 1u);
+        file = fopen(modules[i].input, "rb");
+        if (!bytes || !file) { free(bytes); if (file) fclose(file); goto done; }
+        if (fread(bytes, 1u, size, file) != size || fgetc(file) != EOF || ferror(file)) {
+            free(bytes); fclose(file); goto done;
+        }
+        fclose(file);
+        name = rxvml_value_new(ctx); source = rxvml_value_new(ctx);
+        if (!name || !source ||
+            rxvml_set_str(name, modules[i].original->name, strlen(modules[i].original->name)) ||
+            rxvml_set_native_payload(source, bytes, size, NULL, 0)) {
+            free(bytes); goto done;
+        }
+        free(bytes);
+        if (rxvml_array_set(ctx, names, i + 1u, name) ||
+            rxvml_array_set(ctx, sources, i + 1u, source)) goto done;
+        rxvml_value_free(name); name = NULL;
+        rxvml_value_free(source); source = NULL;
+    }
+    reader_args[0] = names; reader_args[1] = sources;
+    if (!inline_owned_call(request, "llrxinlinestage",
+            "rxsig1|llrxinlinestage.read|.object|names=.string[*],sources=.binary[*]",
+            0, NULL, 2u, reader_args, &request->session) || !request->session) goto done;
+    allowance = inline_number(ctx, 4000000u);
+    if (!allowance || !inline_session_call(request,
+            "rxsig1|llrxinlinestage.session.canonicalize|.void|work=.int",
+            1u, &allowance, &result)) goto done;
+    rxvml_value_free(result); result = NULL;
+    if (!inline_session_owners(request, 0u) ||
+        rxvml_inline_set_callback(ctx, inline_authority_dispatch, request)) goto done;
+    request->live = 1;
+    if (!inline_session_direct(request, modules, 0u, work) ||
+        !inline_session_call(request,
+            "rxsig1|llrxinlinestage.session.normalize|.void|", 0u, NULL, &result)) goto done;
+    rxvml_value_free(result); result = NULL;
+    if (!inline_session_owners(request, 1u) ||
+        !inline_session_direct(request, modules, 1u, work)) goto done;
+    ok = 1;
+done:
+    rxvml_value_free(result); rxvml_value_free(allowance);
+    rxvml_value_free(source); rxvml_value_free(name);
+    rxvml_value_free(sources); rxvml_value_free(names);
+    if (!ok) { inline_session_close(request); return NULL; }
+    return request;
+}
+
 static int inline_invoke(inline_module *modules, size_t count,
         const rxlink_inline_options *options, const char *manifest,
-        const char *response, const char *transaction) {
+        const char *response, const char *transaction, inline_work *work) {
     rxvml_context *ctx = rxvml_create(options->location, 0u);
     rxvml_value *argument = NULL, *result = NULL;
-    const char *arguments[6];
+    rxvml_value *arguments[5] = {NULL, NULL, NULL, NULL, NULL};
+    inline_load_range *ranges = NULL;
+    inline_authority *authority = NULL;
     const char *stage = "create VM context";
-    size_t i;
-    int status = 0, rc = -1;
+    size_t i, range_count = 0u;
+    int status = 0, loaded;
+    rxinteger rc = -1;
     if (!ctx) goto done;
+    ranges = calloc(options->runtime_count + 1u, sizeof(*ranges));
+    if (!ranges) goto done;
     stage = "load service module";
-    if (rxvml_load_module_file(ctx, options->service) <= 0) goto done;
+    ranges[0].first = rxvml_inline_module_count(ctx) + 1u;
+    loaded = rxvml_load_module_file(ctx, options->service);
+    if (loaded <= 0) goto done;
+    ranges[0].last = (size_t)loaded;
+    if (ranges[0].first <= ranges[0].last) range_count = 1u;
     stage = "load runtime module";
-    for (i = 0u; i < options->runtime_count; ++i)
-        if (rxvml_load_module_file(ctx, options->runtime[i]) <= 0) goto done;
-    arguments[0] = "--selection"; arguments[1] = manifest;
-    arguments[2] = "--selection-result"; arguments[3] = response;
-    arguments[4] = "--policy"; arguments[5] = options->policy;
-    stage = "invoke service main";
-    if (rxvml_run(ctx, 6, arguments, &rc) != 0) goto done;
+    for (i = 0u; i < options->runtime_count; ++i) {
+        ranges[range_count].first = rxvml_inline_module_count(ctx) + 1u;
+        loaded = rxvml_load_module_file(ctx, options->runtime[i]);
+        if (loaded <= 0) goto done;
+        ranges[range_count].last = (size_t)loaded;
+        if (ranges[range_count].first <= ranges[range_count].last) ++range_count;
+    }
+    stage = "seal exact service runtime closure";
+    if (rxvml_inline_seal_context(ctx)) goto done;
+    stage = "read and enroll exact selected owners";
+    authority = inline_session_open(ctx, modules, count, work, ranges,
+                                    range_count);
+    if (!authority) goto done;
+    arguments[0] = authority->session;
+    for (i = 1u; i < 5u; ++i) {
+        arguments[i] = rxvml_value_new(ctx);
+        if (!arguments[i]) goto done;
+    }
+    if (rxvml_set_str(arguments[1], manifest, strlen(manifest)) ||
+        rxvml_set_str(arguments[2], response, strlen(response)) ||
+        rxvml_set_str(arguments[3], options->policy, strlen(options->policy))) goto done;
+    rxvml_set_int(arguments[4], 4000000);
+    stage = "invoke exact owned service entry";
+    if (!inline_owned_call(authority, "llrxinline",
+            "rxsig1|llrxinline.selectionexecute|.int|state=.llrxinlinestage..session,manifestpath=.string,resultpath=.string,policy=.string,workbudget=.int",
+            0, NULL, 5u, arguments, &result) || !result ||
+        rxvml_to_int(ctx, result, &rc)) goto done;
+    rxvml_value_free(result); result = NULL;
     if (rc != 0) {
-        fprintf(stderr, "RXLINK_INLINE_SERVICE: service main returned %d\n", rc);
+        fprintf(stderr, "RXLINK_INLINE_SERVICE: service entry returned %lld\n", (long long)rc);
         goto done;
     }
     stage = "prepare response reader argument";
     argument = rxvml_value_new(ctx);
     if (!argument || rxvml_set_str(argument, response, strlen(response)) != 0) goto done;
     stage = "invoke response reader";
-    if (rxvml_call_procedure_descriptor(ctx,
+    if (!inline_owned_call(authority, "llrxinline",
             "rxsig1|llrxinline.selectionresult|.string[*]|path=.string",
-            1u, &argument, &result) != 0 || !result) goto done;
+            0, NULL, 1u, &argument, &result) || !result) goto done;
     stage = "validate response attribute count";
     if (rxvml_num_attributes(result) != count * 4u + 3u) {
         fprintf(stderr, "RXLINK_INLINE_SERVICE: response has %lu attributes; expected %lu\n",
@@ -383,7 +1070,10 @@ done:
                 stage, error ? error : "request rejected");
     }
     rxvml_value_free(result); rxvml_value_free(argument);
+    for (i = 1u; i < 5u; ++i) rxvml_value_free(arguments[i]);
+    inline_session_close(authority);
     if (ctx) rxvml_destroy(ctx);
+    free(ranges);
     return status;
 }
 
@@ -751,8 +1441,12 @@ int rxlink_inline_service(module_file *const *selected, size_t count,
     if (!manifest || !response) goto done;
     snprintf(transaction, sizeof(transaction), "rxlink.%s", strrchr(directory, '/') ? strrchr(directory, '/') + 1 : directory);
     for (i = 0u; i < count; ++i) {
+        if (!selected[i]) goto done;
+        modules[i].source = modules[i].original = selected[i];
+    }
+    if (!inline_rebase_inputs(modules, count, work)) goto done;
+    for (i = 0u; i < count; ++i) {
         char name[64];
-        modules[i].original = selected[i];
         snprintf(name, sizeof(name), "module-%lu.rxas", (unsigned long)i); modules[i].input = inline_path(directory, name);
         snprintf(name, sizeof(name), "candidate-%lu.rxas", (unsigned long)i); modules[i].output = inline_path(directory, name);
         if (!modules[i].input || !modules[i].output || !inline_snapshot(&modules[i], i)) goto done;
@@ -765,7 +1459,7 @@ int rxlink_inline_service(module_file *const *selected, size_t count,
     if (!file || !inline_manifest(file, modules, count, transaction, work)) goto done;
     { long length = ftell(file); if (length < 0 || (unsigned long)length > INLINE_MAX_SOURCE) goto done; }
     if (fclose(file) != 0) { file = NULL; goto done; } file = NULL;
-    if (!inline_invoke(modules, count, options, manifest, response, transaction)) goto done;
+    if (!inline_invoke(modules, count, options, manifest, response, transaction, work)) goto done;
     for (i = 0u; i < count; ++i) {
         modules[i].candidate = inline_assemble(&modules[i]);
         if (!modules[i].candidate) { inline_error("candidate RXAS reassembly failed"); goto done; }
@@ -798,6 +1492,10 @@ done:
     if (file) fclose(file);
     if (modules) for (i = 0u; i < count; ++i) {
         free_module(modules[i].candidate);
+        if (modules[i].owns_rebased) {
+            free(modules[i].rebased.instructions);
+            free(modules[i].rebased.constant);
+        }
         if (modules[i].input) remove(modules[i].input);
         if (modules[i].output) remove(modules[i].output);
         free(modules[i].input); free(modules[i].output);

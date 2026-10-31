@@ -936,9 +936,8 @@ static void test_policy_stack_uncertainty(Assembler_Context *context) {
                 procedure, 11, 1)->instruction_id;
         check(analysis && rxas_flow_policy_at_instruction(
                     analysis, 11, instruction_id, 1, "BREAKPOINT", &fact) &&
-              fact.state == RXAS_FLOW_POLICY_EXACT &&
-              fact.effect == RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE,
-              "SIGPUSH changed the active handler policy");
+              fact.state == RXAS_FLOW_POLICY_INHERITED_UNKNOWN,
+              "BPOFF/SIGPUSH invented a structural handler policy");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -990,9 +989,8 @@ static void test_policy_loop_identity(Assembler_Context *context) {
                 procedure, 13, 2)->instruction_id;
         check(analysis && rxas_flow_policy_at_instruction(
                     analysis, 13, loop_instruction, 0, "BREAKPOINT", &fact) &&
-              fact.state == RXAS_FLOW_POLICY_EXACT &&
-              fact.effect == RXOP_POLICY_EFFECT_BREAKPOINT_DISABLE,
-              "loop phi did not preserve an unchanged write-once policy");
+              fact.state == RXAS_FLOW_POLICY_INHERITED_UNKNOWN,
+              "loop phi did not preserve the unchanged inherited policy");
         rxas_flow_procedure_destroy(procedure);
     }
     fixture_destroy(&fixture);
@@ -3683,12 +3681,516 @@ static void test_semantic_queue_batch(Assembler_Context *context) {
     fixture_destroy(&growth_fixture);
 }
 
-int main(void) {
+/* Independent phase-A control: raw field/formatting operations remain exact;
+ * an intrinsic-NONE setter must not donate post-hook current-register facts. */
+static void test_callback_execution_control(Assembler_Context *context) {
+    FlowFixture fixture;
+    Assembler_Token *operands[2];
+    RxasFlowProcedure *procedure;
+    const RxasFlowSsaAnalysis *ssa;
+    const RxasFlowSignalAnalysis *signals;
+    const RxasFlowProofService *proof;
+    const RxasFlowInstruction *setter;
+    RxasFlowStorageFact before, after;
+    RxasFlowComponentFact entry, result;
+    RxasFlowPolicyFact policy, policy_before;
+    RxasFlowProofResult proved;
+    RxasFlowRegister reg;
+    size_t load, itos, edge, effect_before, effect_after;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "getnumdgts", operands, 1);
+    fixture_op(&fixture, "itos", operands, 1);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_integer(&fixture, 17);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 2);
+    operands[1] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "icopy", operands, 2);
+    fixture_op(&fixture, "ret", operands, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 91);
+    check(procedure != NULL, "callback execution fixture did not build");
+    if (!procedure) { fixture_destroy(&fixture); return; }
+    itos = rxas_flow_procedure_record(procedure, 91, 1)->instruction_id;
+    load = rxas_flow_procedure_record(procedure, 91, 2)->instruction_id;
+    setter = rxas_flow_procedure_instruction(procedure, 91, load);
+    check(setter && setter->intrinsic_signal.state == RXOP_SIGNAL_STATE_NONE &&
+              setter->callback_obligations == RXOP_CALLBACK_OUTPUT &&
+              setter->signal.state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "setter snapshot conflates intrinsic signal absence and hook control");
+    check(fixture_has_edge(procedure, 91, setter->block_id,
+              rxas_flow_procedure_handler_root(procedure, 91), RXAS_FLOW_EDGE_HANDLER) &&
+              fixture_has_edge(procedure, 91, setter->block_id,
+              rxas_flow_procedure_unwind_exit(procedure, 91), RXAS_FLOW_EDGE_UNWIND) &&
+              fixture_has_edge(procedure, 91, setter->block_id,
+              rxas_flow_procedure_terminal_exit(procedure, 91), RXAS_FLOW_EDGE_TERMINAL),
+          "intrinsic-NONE setter has no operation-caused callback exits");
+    ssa = rxas_flow_require_ssa_analysis(procedure, 91, 0);
+    signals = rxas_flow_require_signal_analysis(procedure, 91, 0);
+    proof = rxas_flow_require_proof_service(procedure, 91, 0);
+    reg.register_class = RXAS_FLOW_REGISTER_LOCAL; reg.number = 0;
+    check(ssa && rxas_flow_storage_at_instruction(ssa, 91, load, 0, reg, &before) &&
+              before.storage_id &&
+              rxas_flow_storage_at_instruction(ssa, 91, load, 1, reg, &after) &&
+              after.storage_id == before.storage_id,
+          "resource-only normal callback did not preserve suspended pointer coordinates");
+    reg.number = 1;
+    check(ssa && rxas_flow_component_at_instruction(ssa, 91, load, 0, reg,
+              RXOP_COMPONENT_NATIVE_PAYLOAD, &entry) &&
+              entry.kind == RXAS_FLOW_VALUE_ENTRY &&
+              entry.presence == RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN,
+          "raw local entry was treated as absent native backing");
+    check(rxas_flow_component_at_instruction(ssa, 91, load, 1, reg,
+              RXOP_COMPONENT_INTEGER, &result) && result.kind == RXAS_FLOW_VALUE_CONSTANT &&
+              result.constant_token && result.constant_token->token_value.integer == 17,
+          "ordered normal setter lost its captured computed value");
+    reg.number = 0;
+    check(rxas_flow_component_at_instruction(ssa, 91, load, 1, reg,
+              RXOP_COMPONENT_INTEGER, &result) && result.kind == RXAS_FLOW_VALUE_UNKNOWN,
+          "normal coordinate preservation incorrectly preserved an unrelated pointee");
+    reg.number = 1;
+    edge = fixture_edge_id(procedure, 91, setter->block_id,
+              rxas_flow_procedure_handler_root(procedure, 91), RXAS_FLOW_EDGE_HANDLER);
+    check(rxas_flow_storage_on_edge(ssa, 91, edge, reg, &after) && !after.storage_id,
+          "callback failure restored pre-hook current binding");
+    effect_before = rxas_flow_effect_at_instruction(signals, 91, load, 0, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT);
+    effect_after = rxas_flow_effect_at_instruction(signals, 91, load, 1, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT);
+    check(effect_before != RXAS_FLOW_ID_NONE && effect_after != effect_before &&
+              rxas_flow_effect_on_edge(signals, 91, edge, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT) != effect_before,
+          "callback normal/failure effects reused incoming numeric context");
+    check(rxas_flow_policy_at_instruction(signals, 91, load, 0, "ERROR", &policy_before) &&
+              rxas_flow_policy_at_instruction(signals, 91, load, 1, "ERROR", &policy) &&
+              policy.state == policy_before.state && policy.version_id == policy_before.version_id,
+          "resource-only normal return did not preserve suspended structural policy");
+    check(rxas_flow_policy_on_edge(signals, 91, edge, "ERROR", &policy) &&
+              policy.state == RXAS_FLOW_POLICY_CLOBBERED,
+          "normal structural-policy premise leaked into delivered callback control");
+    check(proof && rxas_flow_prove_instruction_speculatable(proof, 91, load, &proved) &&
+              !proved.proved && proved.reason == RXAS_FLOW_PROOF_NOT_SPECULATABLE,
+          "callback-capable intrinsic-NONE setter was speculatable");
+    check(rxas_flow_prove_instruction_speculatable(proof, 91, itos, &proved) && proved.proved,
+          "reviewed callback-free ITOS lost its speculation control");
+    rxas_flow_procedure_destroy(procedure);
+    fixture_destroy(&fixture);
+}
+
+static void test_callback_captured_resources(Assembler_Context *context) {
+    FlowFixture fixture;
+    Assembler_Token *operands[2];
+    RxasFlowProcedure *procedure;
+    const RxasFlowSsaAnalysis *ssa;
+    RxasFlowStorageFact receiver;
+    RxasFlowComponentFact component;
+    RxasFlowCallbackResourceFact resources;
+    size_t setter;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "link", operands, 2);
+    operands[1] = fixture_integer(&fixture, 17);
+    fixture_op(&fixture, "load", operands, 2);
+    fixture_op(&fixture, "ret", NULL, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 93);
+    check(procedure != NULL, "captured receiver resource fixture did not build");
+    if (!procedure) { fixture_destroy(&fixture); return; }
+    setter = rxas_flow_procedure_record(procedure, 93, 1)->instruction_id;
+    ssa = rxas_flow_require_ssa_analysis(procedure, 93, 0);
+    check(ssa && rxas_flow_storage_at_instruction(ssa, 93, setter, 0,
+              fixture_local_register(0), &receiver) && receiver.storage_id &&
+              rxas_flow_callback_resources_at_instruction(ssa, 93, setter, 0, &resources) &&
+              !resources.proved && resources.reason == RXAS_FLOW_CALLBACK_RESOURCE_VALUE_UNPROVED,
+          "dirty incoming receiver circularly borrowed postsetter absence");
+    check(rxas_flow_component_for_storage_at_instruction(ssa, 93, setter, 1,
+              receiver.storage_id, RXOP_COMPONENT_INTEGER, &component) &&
+              component.kind == RXAS_FLOW_VALUE_CONSTANT && component.constant_token &&
+              component.constant_token->token_value.integer == 17,
+          "captured physical receiver lost its exact normal postwrite");
+    check(rxas_flow_component_at_instruction(ssa, 93, setter, 1,
+              fixture_local_register(1), RXOP_COMPONENT_NATIVE_PAYLOAD, &component) &&
+              component.storage_id == receiver.storage_id &&
+              component.kind == RXAS_FLOW_VALUE_ABSENT && component.presence == RXAS_FLOW_COMPONENT_ABSENT,
+          "normal final native reset was not attributed through the aliased receiver");
+    check(rxas_flow_component_at_instruction(ssa, 93, setter, 1,
+              fixture_local_register(1), RXOP_COMPONENT_REFERENCE, &component) &&
+              component.kind == RXAS_FLOW_VALUE_UNKNOWN,
+          "earlier reference release was falsely promoted past a possible native hook");
+    check(rxas_flow_callback_resources_at_instruction(ssa, 93, setter, 1, &resources) &&
+              resources.proved && resources.owner == ssa && resources.epoch == 93 &&
+              resources.after_instruction == 1 && resources.checked_resources == 1,
+          "exact normal checkpoint did not prove the receiver's native condition absent");
+    check(!rxas_flow_callback_resources_at_instruction(ssa, 94, setter, 0, &resources) &&
+              resources.reason == RXAS_FLOW_CALLBACK_RESOURCE_STALE,
+          "resource condition fact borrowed a different epoch");
+    rxas_flow_procedure_destroy(procedure); fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    operands[1] = fixture_register(&fixture, 1);
+    fixture_op(&fixture, "copy", operands, 2);
+    fixture_op(&fixture, "ret", NULL, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 95);
+    check(procedure != NULL, "retained capacity resource fixture did not build");
+    if (procedure) {
+        setter = rxas_flow_procedure_record(procedure, 95, 0)->instruction_id;
+        ssa = rxas_flow_require_ssa_analysis(procedure, 95, 0);
+        check(rxas_flow_callback_resources_at_instruction(ssa, 95, setter, 0, &resources) &&
+                  !resources.proved && (resources.unresolved_obligations & RXOP_CALLBACK_CAPACITY),
+              "input/output resource checking waived retained physical capacity");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0); operands[1] = fixture_integer(&fixture, 5);
+    fixture_op(&fixture, "inot", operands, 2);
+    fixture_op(&fixture, "ret", NULL, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 96);
+    check(procedure != NULL, "computed setter resource fixture did not build");
+    if (procedure) {
+        setter = rxas_flow_procedure_record(procedure, 96, 0)->instruction_id;
+        ssa = rxas_flow_require_ssa_analysis(procedure, 96, 0);
+        check(rxas_flow_component_at_instruction(ssa, 96, setter, 1,
+                  fixture_local_register(0), RXOP_COMPONENT_INTEGER, &component) &&
+                  component.kind != RXAS_FLOW_VALUE_CONSTANT,
+              "computed immediate operand was copied as an identity literal");
+        rxas_flow_procedure_destroy(procedure);
+    }
+    fixture_destroy(&fixture);
+}
+
+static void test_callback_fused_invocation(Assembler_Context *context) {
+    FlowFixture fixture;
+    Assembler_Token *operands[5];
+    RxasFlowProcedure *procedure;
+    const RxasFlowInstruction *call;
+    const RxasFlowSsaAnalysis *ssa;
+    const RxasFlowSignalAnalysis *signals;
+    RxasFlowStorageFact before, after;
+    RxasFlowPolicyFact policy;
+    size_t instruction;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0);
+    fixture_op(&fixture, "getnumdgts", operands, 1);
+    operands[0] = fixture_register(&fixture, 1);
+    operands[1] = fixture_text_token(&fixture, FUNC, "callee");
+    operands[2] = fixture_register(&fixture, 0);
+    operands[3] = fixture_register(&fixture, 2);
+    operands[4] = fixture_register(&fixture, 3);
+    fixture_op(&fixture, "swapcall", operands, 5);
+    fixture_op(&fixture, "ret", NULL, 0);
+    procedure = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 92);
+    check(procedure != NULL, "fused callback invocation fixture did not build");
+    if (!procedure) { fixture_destroy(&fixture); return; }
+    instruction = rxas_flow_procedure_record(procedure, 92, 1)->instruction_id;
+    call = rxas_flow_procedure_instruction(procedure, 92, instruction);
+    check(call && (call->callback_obligations & RXOP_CALLBACK_INVOCATION) &&
+              call->signal.state == RXOP_SIGNAL_STATE_UNKNOWN,
+          "pointer-only SWAPCALL prefix hid whole-op invocation control");
+    ssa = rxas_flow_require_ssa_analysis(procedure, 92, 0);
+    check(ssa && rxas_flow_storage_at_instruction(ssa, 92, instruction, 0,
+              fixture_local_register(0), &before) && before.storage_id &&
+              rxas_flow_storage_at_instruction(ssa, 92, instruction, 1,
+              fixture_local_register(0), &after) && !after.storage_id,
+          "fused invocation bypassed callback normal-state invalidation");
+    signals = rxas_flow_require_signal_analysis(procedure, 92, 0);
+    check(rxas_flow_policy_at_instruction(signals, 92, instruction, 1, "ERROR", &policy) &&
+              policy.state == RXAS_FLOW_POLICY_CLOBBERED,
+          "resource-only policy premise was borrowed by a fused invocation");
+    rxas_flow_procedure_destroy(procedure);
+    fixture_destroy(&fixture);
+}
+
+/* Re-express the existing LINK/ITOS source-identity positive under a declared
+ * entry premise. Raw entry remains unknown; this is not a main/default guess. */
+static void test_entry_policy_posthook(Assembler_Context *context) {
+    int mode;
+    for (mode = 0; mode < 2; mode++) {
+        FlowFixture fixture;
+        Assembler_Token *operands[2];
+        RxasFlowProcedure *raw, *view, *foreign;
+        RxasFlowEntryProfile *profile;
+        RxasFlowPolicyViewStatus status;
+        const RxasFlowSsaAnalysis *ssa, *raw_ssa;
+        const RxasFlowSignalAnalysis *signals;
+        const RxasFlowMetrics *metrics;
+        RxasFlowComponentFact integer, string, raw_integer, native, other;
+        RxasFlowStorageFact left, right;
+        RxasFlowPolicyFact policy;
+        RxasFlowCallbackResourceFact resources;
+        size_t edge_id, callbacks = 0, skips = 0, terminals = 0, raw_edges;
+        unsigned long epoch = 100 + (unsigned long)mode;
+        unsigned long view_epoch = 200 + (unsigned long)mode;
+        memset(&fixture, 0, sizeof(fixture));
+        operands[0] = fixture_register(&fixture, 0); operands[1] = fixture_integer(&fixture, 7);
+        fixture_op(&fixture, "load", operands, 2);
+        operands[0] = fixture_register(&fixture, 1); operands[1] = fixture_register(&fixture, 0);
+        fixture_op(&fixture, "link", operands, 2);
+        fixture_op(&fixture, "itos", operands, 1);
+        fixture_op(&fixture, "ret", NULL, 0);
+        raw = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, epoch);
+        check(raw != NULL, "exact policy source graph did not build");
+        if (!raw) { fixture_destroy(&fixture); continue; }
+        metrics = rxas_flow_procedure_metrics(raw, epoch); raw_edges = metrics->edges;
+        raw_ssa = rxas_flow_require_ssa_analysis(raw, epoch, 0);
+        check(raw_ssa && rxas_flow_component_at_instruction(raw_ssa, epoch, 2, 0,
+                    fixture_local_register(1), RXOP_COMPONENT_INTEGER, &raw_integer) &&
+                  raw_integer.kind != RXAS_FLOW_VALUE_CONSTANT,
+              "unprofiled raw graph borrowed the exact entry-policy positive");
+        profile = rxas_flow_entry_profile_create(raw, epoch,
+                mode ? RXAS_FLOW_ENTRY_POLICY_IGNORE : RXAS_FLOW_ENTRY_POLICY_HALT, 1);
+        check(profile != NULL, "ordinary exact entry-policy profile did not seal");
+        view = rxas_flow_procedure_entry_view(raw, epoch, profile, view_epoch, 0, &status);
+        check(view && status == RXAS_FLOW_POLICY_VIEW_OK, "exact policy view did not freeze");
+        if (view) {
+            ssa = rxas_flow_require_ssa_analysis(view, view_epoch, 0);
+            signals = rxas_flow_require_signal_analysis(view, view_epoch, 0);
+            check(ssa && rxas_flow_storage_at_instruction(ssa, view_epoch, 1, 1,
+                        fixture_local_register(0), &left) &&
+                      rxas_flow_storage_at_instruction(ssa, view_epoch, 1, 1,
+                        fixture_local_register(1), &right) &&
+                      left.storage_id && left.storage_id == right.storage_id,
+                  "profiled LINK lost captured storage identity");
+            check(rxas_flow_component_at_instruction(ssa, view_epoch, 2, 1,
+                        fixture_local_register(0), RXOP_COMPONENT_INTEGER, &integer) &&
+                      integer.kind == RXAS_FLOW_VALUE_CONSTANT && integer.constant_token &&
+                      integer.constant_token->token_value.integer == 7 &&
+                      rxas_flow_component_at_instruction(ssa, view_epoch, 2, 1,
+                        fixture_local_register(1), RXOP_COMPONENT_STRING, &string) &&
+                      string.derivation == RXOP_DERIVATION_INTEGER_TO_STRING &&
+                      string.source_value_id == integer.value_id,
+                  "exact HALT/IGNORE profile did not recover existing LINK/ITOS positive");
+            check(rxas_flow_component_at_instruction(ssa, view_epoch, 1, 0,
+                        fixture_local_register(0), RXOP_COMPONENT_NATIVE_PAYLOAD, &native) &&
+                      native.presence == RXAS_FLOW_COMPONENT_ABSENT &&
+                      rxas_flow_component_at_instruction(ssa, view_epoch, 1, 0,
+                        fixture_local_register(1), RXOP_COMPONENT_INTEGER, &other) &&
+                      other.kind == RXAS_FLOW_VALUE_UNKNOWN,
+                  "posthook native absence incorrectly preserved another pointee");
+            check(rxas_flow_callback_resources_at_instruction(ssa, view_epoch, 0, 0, &resources) &&
+                      !resources.proved,
+                  "exact policy profile invented recycled-entry resource absence");
+            check(signals && rxas_flow_policy_at_instruction(signals, view_epoch, 1, 0,
+                        "UNKNOWN_FUTURE_SIGNAL", &policy) && policy.state == RXAS_FLOW_POLICY_EXACT &&
+                      policy.effect == (mode ? RXOP_POLICY_EFFECT_IGNORE : RXOP_POLICY_EFFECT_HALT),
+                  "sealed default class did not own untouched signal-name policy");
+            metrics = rxas_flow_procedure_metrics(view, view_epoch);
+            for (edge_id = 0; edge_id < metrics->edges; edge_id++) {
+                const RxasFlowEdge *edge = rxas_flow_procedure_edge(view, view_epoch, edge_id);
+                if (edge->producer_instruction != 0 || edge->cause != RXAS_FLOW_CAUSE_CALLBACK) continue;
+                callbacks++;
+                check(edge->checkpoint == RXOP_SIGNAL_PHASE_AFTER_WRITES,
+                      "resource callback lost its after-completion producer checkpoint");
+                if (edge->kind == RXAS_FLOW_EDGE_SIGNAL_SKIP) {
+                    skips++;
+                    check(edge->response == RXAS_FLOW_RESPONSE_IGNORE &&
+                              rxas_flow_component_on_edge(ssa, view_epoch, edge_id,
+                                fixture_local_register(0), RXOP_COMPONENT_INTEGER, &integer) &&
+                              integer.kind == RXAS_FLOW_VALUE_CONSTANT,
+                          "IGNORE callback resume did not carry producer poststate");
+                }
+                if (edge->kind == RXAS_FLOW_EDGE_TERMINAL) terminals++;
+                check(edge->response != RXAS_FLOW_RESPONSE_HANDLED,
+                      "HALT/IGNORE-only policy invented a resumable handler");
+            }
+            check(callbacks == 1 && skips == (size_t)mode && terminals == (size_t)!mode,
+                  "callback feasibility did not distinguish terminal HALT and posthook IGNORE");
+            check(rxas_flow_entry_profile_create(view, view_epoch, RXAS_FLOW_ENTRY_POLICY_HALT, 1) == NULL,
+                  "a filtered graph was resealed as an unfiltered source");
+            rxas_flow_procedure_destroy(view);
+        }
+        check(rxas_flow_entry_profile_create(raw, epoch, RXAS_FLOW_ENTRY_POLICY_HALT, 0) == NULL,
+              "handler/unknown activation borrowed an ordinary entry premise");
+        view = rxas_flow_procedure_entry_view(raw, epoch, profile, view_epoch, 1, &status);
+        check(!view && status == RXAS_FLOW_POLICY_VIEW_LIMIT,
+              "bounded policy worklist published a partial view");
+        view = rxas_flow_procedure_entry_view(raw, epoch + 1, profile, view_epoch, 0, &status);
+        check(!view && status == RXAS_FLOW_POLICY_VIEW_STALE,
+              "policy view borrowed a stale source epoch");
+        foreign = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, epoch);
+        view = rxas_flow_procedure_entry_view(foreign, epoch, profile, view_epoch, 0, &status);
+        check(!view && status == RXAS_FLOW_POLICY_VIEW_FOREIGN,
+              "policy profile borrowed a foreign equal-shaped owner");
+        check(rxas_flow_procedure_metrics(raw, epoch)->edges == raw_edges,
+              "policy construction mutated the raw graph on success or refusal");
+        rxas_flow_procedure_destroy(foreign);
+        rxas_flow_entry_profile_destroy(profile);
+        rxas_flow_procedure_destroy(raw); fixture_destroy(&fixture);
+    }
+}
+
+static void test_entry_policy_causes(Assembler_Context *context) {
+    FlowFixture fixture;
+    Assembler_Token *operands[3];
+    RxasFlowProcedure *raw, *view;
+    RxasFlowEntryProfile *profile;
+    RxasFlowPolicyViewStatus status;
+    const RxasFlowSsaAnalysis *ssa;
+    const RxasFlowSignalAnalysis *signals;
+    const RxasFlowMetrics *metrics;
+    RxasFlowComponentFact value;
+    size_t edge_id, intrinsic = 0, callback = 0, before_effect, after_effect;
+    memset(&fixture, 0, sizeof(fixture));
+    operands[0] = fixture_register(&fixture, 0); operands[1] = fixture_integer(&fixture, 7);
+    fixture_op(&fixture, "load", operands, 2);
+    operands[0] = fixture_register(&fixture, 1); operands[1] = fixture_register(&fixture, 0);
+    operands[2] = fixture_integer(&fixture, 1); fixture_op(&fixture, "iadd", operands, 3);
+    fixture_op(&fixture, "ret", NULL, 0);
+    raw = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 102);
+    profile = rxas_flow_entry_profile_create(raw, 102, RXAS_FLOW_ENTRY_POLICY_IGNORE, 1);
+    view = rxas_flow_procedure_entry_view(raw, 102, profile, 202, 0, &status);
+    check(view && status == RXAS_FLOW_POLICY_VIEW_OK, "split-cause policy fixture did not freeze");
+    if (view) {
+        ssa = rxas_flow_require_ssa_analysis(view, 202, 0);
+        signals = rxas_flow_require_signal_analysis(view, 202, 0);
+        before_effect = rxas_flow_effect_at_instruction(signals, 202, 1, 0, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT);
+        after_effect = rxas_flow_effect_at_instruction(signals, 202, 1, 1, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT);
+        metrics = rxas_flow_procedure_metrics(view, 202);
+        for (edge_id = 0; edge_id < metrics->edges; edge_id++) {
+            const RxasFlowEdge *edge = rxas_flow_procedure_edge(view, 202, edge_id);
+            if (edge->producer_instruction != 1 || edge->kind != RXAS_FLOW_EDGE_SIGNAL_SKIP) continue;
+            if (edge->cause == RXAS_FLOW_CAUSE_INTRINSIC) {
+                intrinsic++;
+                check(edge->checkpoint == RXOP_SIGNAL_PHASE_BEFORE_WRITES &&
+                          rxas_flow_component_on_edge(ssa, 202, edge_id, fixture_local_register(1),
+                            RXOP_COMPONENT_INTEGER, &value) && value.kind != RXAS_FLOW_VALUE_DERIVED &&
+                          rxas_flow_effect_on_edge(signals, 202, edge_id, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT) == before_effect,
+                      "intrinsic overflow edge borrowed setter poststate");
+            }
+            if (edge->cause == RXAS_FLOW_CAUSE_CALLBACK) {
+                callback++;
+                check(edge->checkpoint == RXOP_SIGNAL_PHASE_AFTER_WRITES &&
+                          rxas_flow_component_on_edge(ssa, 202, edge_id, fixture_local_register(1),
+                            RXOP_COMPONENT_INTEGER, &value) && value.kind == RXAS_FLOW_VALUE_WRITE &&
+                          after_effect != before_effect &&
+                          rxas_flow_effect_on_edge(signals, 202, edge_id, RXAS_FLOW_EFFECT_NUMERIC_CONTEXT) == after_effect,
+                      "callback edge lost completed setter or posthook effect state");
+            }
+        }
+        check(intrinsic == 1 && callback == 1, "intrinsic and callback causes were conflated");
+        rxas_flow_procedure_destroy(view);
+    }
+    rxas_flow_entry_profile_destroy(profile); rxas_flow_procedure_destroy(raw); fixture_destroy(&fixture);
+}
+
+static void test_entry_policy_growth(Assembler_Context *context) {
+    int mode;
+    for (mode = 0; mode < 4; mode++) {
+        FlowFixture fixture;
+        Assembler_Token *operands[2];
+        RxasFlowProcedure *raw, *view;
+        RxasFlowEntryProfile *profile;
+        RxasFlowPolicyViewStatus status;
+        const RxasFlowMetrics *metrics;
+        const RxasFlowSsaAnalysis *ssa;
+        RxasFlowComponentFact value;
+        RxasFlowPolicyFact policy;
+        size_t load, edge_id, ignore = 0, handled = 0;
+        memset(&fixture, 0, sizeof(fixture));
+        if (mode == 0 || mode == 3) {
+            operands[0] = fixture_text_token(&fixture, FUNC, "handler");
+            operands[1] = fixture_string(&fixture, mode == 3 ? "BREAKPOINT" : "error");
+            fixture_op(&fixture, "sigcalla", operands, 2);
+            if (mode == 3) fixture_op(&fixture, "bpoff", NULL, 0);
+        }
+        if (mode == 1) {
+            operands[0] = fixture_string(&fixture, "external"); fixture_op(&fixture, "sayx", operands, 1);
+        }
+        if (mode == 2) fixture_label(&fixture, "again");
+        operands[0] = fixture_register(&fixture, 0); operands[1] = fixture_integer(&fixture, 7);
+        fixture_op(&fixture, "load", operands, 2);
+        load = fixture.item_count - 1;
+        if (mode == 2) {
+            operands[0] = fixture_string(&fixture, "error"); fixture_op(&fixture, "sigignore", operands, 1);
+            operands[0] = fixture_label_ref(&fixture, "again"); fixture_op(&fixture, "br", operands, 1);
+        }
+        else {
+            operands[0] = fixture_register(&fixture, 1); operands[1] = fixture_register(&fixture, 0);
+            fixture_op(&fixture, "link", operands, 2); fixture_op(&fixture, "ret", NULL, 0);
+        }
+        raw = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 103 + (unsigned long)mode);
+        profile = rxas_flow_entry_profile_create(raw, 103 + (unsigned long)mode, RXAS_FLOW_ENTRY_POLICY_HALT, 1);
+        view = rxas_flow_procedure_entry_view(raw, 103 + (unsigned long)mode, profile, 203 + (unsigned long)mode, 0, &status);
+        check(view && status == RXAS_FLOW_POLICY_VIEW_OK, "policy-growth fixture did not freeze");
+        if (view) {
+            unsigned long epoch = 203 + (unsigned long)mode;
+            size_t load_instruction = rxas_flow_procedure_record(view, epoch, load)->instruction_id;
+            metrics = rxas_flow_procedure_metrics(view, epoch);
+            ssa = rxas_flow_require_ssa_analysis(view, epoch, 0);
+            if (mode == 3)
+                check(rxas_flow_policy_at_instruction(rxas_flow_require_signal_analysis(view, epoch, 0),
+                            epoch, load_instruction, 0, "BREAKPOINT", &policy) &&
+                          policy.state == RXAS_FLOW_POLICY_EXACT && policy.effect == RXOP_POLICY_EFFECT_CALL_ACTION,
+                      "BPOFF replaced an installed handler instead of clearing a pending bit");
+            for (edge_id = 0; edge_id < metrics->edges; edge_id++) {
+                const RxasFlowEdge *edge = rxas_flow_procedure_edge(view, epoch, edge_id);
+                if (edge->cause != RXAS_FLOW_CAUSE_CALLBACK || edge->producer_instruction != load_instruction ||
+                    edge->kind != RXAS_FLOW_EDGE_SIGNAL_SKIP) continue;
+                if (edge->response == RXAS_FLOW_RESPONSE_IGNORE) ignore++;
+                if (edge->response == RXAS_FLOW_RESPONSE_HANDLED) {
+                    handled++;
+                    check(rxas_flow_component_on_edge(ssa, epoch, edge_id, fixture_local_register(0),
+                                RXOP_COMPONENT_INTEGER, &value) && value.kind == RXAS_FLOW_VALUE_UNKNOWN &&
+                              rxas_flow_policy_on_edge(rxas_flow_require_signal_analysis(view, epoch, 0),
+                                epoch, edge_id, mode == 3 ? "BREAKPOINT" : "ERROR", &policy) &&
+                              policy.state == RXAS_FLOW_POLICY_CLOBBERED,
+                          "after-completion checkpoint bypassed delivered handler havoc");
+                }
+            }
+            check(mode == 2 ? ignore == 1 : handled == 1,
+                  "policy worklist lost handler/host uncertainty or a later backedge override");
+            rxas_flow_procedure_destroy(view);
+        }
+        rxas_flow_entry_profile_destroy(profile); rxas_flow_procedure_destroy(raw); fixture_destroy(&fixture);
+    }
+}
+
+static void test_entry_policy_budget(Assembler_Context *context) {
+    FlowFixture fixture;
+    Assembler_Token *operands[1];
+    RxasFlowProcedure *raw, *view;
+    RxasFlowEntryProfile *profile;
+    RxasFlowPolicyViewStatus status;
+    char long_name[1024];
+    memset(&fixture, 0, sizeof(fixture));
+    memset(long_name, 'A', sizeof(long_name) - 1); long_name[sizeof(long_name) - 1] = '\0';
+    operands[0] = fixture_string(&fixture, long_name); fixture_op(&fixture, "sigignore", operands, 1);
+    fixture_op(&fixture, "ret", NULL, 0);
+    raw = rxas_flow_procedure_build(context, fixture.items, fixture.item_count, 107);
+    profile = rxas_flow_entry_profile_create(raw, 107, RXAS_FLOW_ENTRY_POLICY_HALT, 1);
+    view = rxas_flow_procedure_entry_view(raw, 107, profile, 207, 128, &status);
+    check(!view && status == RXAS_FLOW_POLICY_VIEW_LIMIT,
+          "policy-name byte scans escaped the work allowance");
+    view = rxas_flow_procedure_entry_view(raw, 107, profile, 207, 0, &status);
+    check(view && status == RXAS_FLOW_POLICY_VIEW_OK,
+          "bounded refusal corrupted raw owner or prevented size-derived retry");
+    rxas_flow_procedure_destroy(view); rxas_flow_entry_profile_destroy(profile);
+    rxas_flow_procedure_destroy(raw); fixture_destroy(&fixture);
+}
+
+int main(int argc, char **argv) {
     Assembler_Context context;
     memset(&context, 0, sizeof(context));
     context.current_proc_name = "flow_graph_contract";
     context.binary.inst_size = 100;
     failures = 0;
+
+    if (argc == 2 && !strcmp(argv[1], "--policy-view")) {
+        test_entry_policy_posthook(&context);
+        test_entry_policy_causes(&context);
+        test_entry_policy_growth(&context);
+        test_entry_policy_budget(&context);
+        goto done;
+    }
+
+    test_callback_execution_control(&context);
+    test_callback_fused_invocation(&context);
+    test_callback_captured_resources(&context);
+    if (argc == 2 && !strcmp(argv[1], "--callbacks")) {
+        test_signal_roots_and_determinism(&context);
+        test_policy_stack_uncertainty(&context);
+        test_policy_loop_identity(&context);
+        goto done;
+    }
 
     test_unreachable_and_mapping(&context);
     test_diamond(&context);
@@ -3720,6 +4222,7 @@ int main(void) {
     test_branch_thread_plans(&context);
     test_semantic_queue_batch(&context);
 
+done:
     if (failures) {
         fprintf(stderr, "RXAS immutable flow graph failures: %d\n", failures);
         return 1;

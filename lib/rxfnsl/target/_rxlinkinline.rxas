@@ -1,0 +1,5 @@
+/* Private RXVML routes. A declaration grants no callback or proof authority. */
+selectiontoken() .locals=0 .expose=_rxlinkinline.selectiontoken
+  .meta "_rxlinkinline.selectiontoken"="b" ".object" selectiontoken() "caller=reference .lltarget..module,sourceop=.int,provider=reference .lltarget..module,procedureid=.int,typeoperation=.int"
+selectioncheck() .locals=0 .expose=_rxlinkinline.selectioncheck
+  .meta "_rxlinkinline.selectioncheck"="b" ".int" selectioncheck() "capability=.object,caller=reference .lltarget..module,sourceop=.int,provider=reference .lltarget..module,procedureid=.int,typeoperation=.int"

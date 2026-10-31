@@ -68,6 +68,12 @@ target_include_directories(test_rxas_flow_graph PRIVATE
         ../assembler ../binutils/include ${CMAKE_BINARY_DIR}/assembler)
 target_link_libraries(test_rxas_flow_graph PRIVATE rxaslib avl_tree platform)
 add_test(NAME rxas_flow_graph_contract COMMAND test_rxas_flow_graph)
+add_test(NAME rxas_callback_contract COMMAND test_rxas_flow_graph --callbacks)
+add_test(NAME rxas_entry_policy_contract COMMAND test_rxas_flow_graph --policy-view)
+crexx_register_test_prep_targets(TESTS rxas_entry_policy_contract TARGETS test_rxas_flow_graph)
+set_tests_properties(rxas_entry_policy_contract PROPERTIES LABELS "rxas;optimizer;flow;metadata" TIMEOUT 30)
+crexx_register_test_prep_targets(TESTS rxas_callback_contract TARGETS test_rxas_flow_graph)
+set_tests_properties(rxas_callback_contract PROPERTIES LABELS "rxas;optimizer;flow;metadata" TIMEOUT 30)
 crexx_register_test_prep_targets(TESTS rxas_flow_graph_contract TARGETS test_rxas_flow_graph)
 set_tests_properties(rxas_flow_graph_contract PROPERTIES
         LABELS "rxas;optimizer;flow;metadata"

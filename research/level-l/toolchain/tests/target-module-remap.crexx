@@ -125,6 +125,10 @@ main: procedure = .int
   ignored = observerbody.emit('ret',fields,observerat)
   observer = observerdraft.finish()
   observerprofile = .lltargettransfer..profile(reference observer)
+  /* Canonical construction is lazy; seal before selecting a relocation
+   * premise, just as the ordinary canonical LOAD control above does. */
+  failures = failures + check(observerprofile.status() = 'ok','canonical observer profile is sealed before remap admission')
+  failures = failures + check(observerprofile.unknownreason(observerop,'relocation') = 'catalog.physical.observation.unknown','caller-frame reflection retains its exact canonical relocation obligation')
   observermap = .lltargetremap..modulemap(reference observer)
   ignored = observermap.selectprofile(reference observer,1,reference observerprofile); ignored = observermap.seal()
   observerresult = observermap.rewrite(reference observer,observerop)

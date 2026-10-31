@@ -226,11 +226,15 @@ static int flow_graph_collect_records(RxasFlowProcedure *procedure,
             instruction->op = op;
             if (op) {
                 instruction->effects = rxop_effects(op->opcode);
-                instruction->signal = rxop_signal_contract(op->opcode);
+                instruction->intrinsic_signal = rxop_signal_contract(op->opcode);
+                instruction->callback_obligations = rxop_callback_obligations(op->opcode);
+                instruction->signal = rxop_execution_signal_contract(op->opcode);
             }
             else {
                 instruction->effects = rxop_effects(-1);
-                instruction->signal = rxop_signal_contract(-1);
+                instruction->intrinsic_signal = rxop_signal_contract(-1);
+                instruction->callback_obligations = RXOP_CALLBACK_UNKNOWN;
+                instruction->signal = rxop_execution_signal_contract(-1);
                 procedure->metrics.complete_control_flow = 0;
             }
             record->instruction_id = instruction_count++;
@@ -449,6 +453,8 @@ static int flow_graph_add_edge(RxasFlowProcedure *procedure, size_t source,
         procedure->edges = new_edges;
         procedure->edge_capacity = new_capacity;
     }
+    memset(&procedure->edges[procedure->metrics.edges], 0, sizeof(*procedure->edges));
+    procedure->edges[procedure->metrics.edges].producer_instruction = RXAS_FLOW_ID_NONE;
     procedure->edges[procedure->metrics.edges].source = source;
     procedure->edges[procedure->metrics.edges].target = target;
     procedure->edges[procedure->metrics.edges].kind = kind;
@@ -621,6 +627,8 @@ static int flow_graph_add_instruction_edges(
             return 0;
     }
     if (instruction->signal.state != RXOP_SIGNAL_STATE_NONE) {
+        size_t first_exception_edge = procedure->metrics.edges;
+        size_t edge_id;
         if ((continuations & RXOP_SIGNAL_CONT_SKIP) &&
             !flow_graph_add_edge(procedure, block_id, next_block,
                                  RXAS_FLOW_EDGE_SIGNAL_SKIP))
@@ -640,6 +648,11 @@ static int flow_graph_add_instruction_edges(
                                  procedure->terminal_exit,
                                  RXAS_FLOW_EDGE_TERMINAL))
             return 0;
+        for (edge_id = first_exception_edge; edge_id < procedure->metrics.edges; edge_id++) {
+            procedure->edges[edge_id].cause = RXAS_FLOW_CAUSE_COMBINED;
+            procedure->edges[edge_id].checkpoint = instruction->signal.phase;
+            procedure->edges[edge_id].producer_instruction = instruction->id;
+        }
     }
     return 1;
 }

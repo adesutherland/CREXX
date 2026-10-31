@@ -1,6 +1,6 @@
 /* cREXX License (MIT). Atomic checked RXAS expansion; cleanup is independent. */
 options levelb
-namespace llinline expose binding bind context callrecipe recipe normalize normalizewith decision inspect change expand expandmany expandcontext copyorigin clonefields
+namespace llinline expose binding bind context callrecipe recipe normalize normalizewith normalizationreceipt decision inspect change expand expandmany expandcontext copyorigin clonefields
 import rxfnsb
 import llir
 import lltarget
@@ -8,6 +8,7 @@ import lltargetremap
 import lltargettransfer
 import lltargetcfg
 import lltargetflow
+import lltargetsummary
 import lltargetnormalize
 import llrxascatalog
 
@@ -59,10 +60,13 @@ normalizationstamp: class
   _catalog = .string
   _complete = .int[]
   _reasons = .string[]
+  _receipt = reference .llinline..normalizationreceipt
+  _conditional = .int
   *: factory
-    arg owner = reference .lltarget..module, normalized = .lltargetnormalize..change
+    arg owner = reference .lltarget..module, normalized = .lltargetnormalize..change, ?receipt = reference .llinline..normalizationreceipt
     _owner = owner; source = dereference owner; _identity = source.identity()
     catalog = .llrxascatalog..catalog(); _catalog = catalog.fingerprint()
+    if ?receipt then do; _receipt = receipt; _conditional = 1; end
     do i = 1 to source.procedures()
       body = source.procedure(i); fn = body.functionid()
       _complete[fn] = normalized.complete(fn); _reasons[fn] = normalized.unknownreason(fn)
@@ -77,13 +81,20 @@ normalizationstamp: class
   complete: method = .int
     arg functionid = 0
     if functionid = 0 then do
-      do i = 2 to _complete[0]; if _complete[i] = 0 then return 0; end
+      do i = 2 to _complete[0]; if complete(i) = 0 then return 0; end
       return _complete[0] > 1
     end
     if functionid < 1 | functionid > _complete[0] then return 0
-    return _complete[functionid]
+    if _complete[functionid] then return 1
+    if _conditional & <refvalid>(_receipt) then do
+      receipt = dereference _receipt; return receipt.complete(_owner,functionid)
+    end
+    return 0
   unknownreason: method = .string
     arg functionid = .int
+    if _conditional & <refvalid>(_receipt) then do
+      receipt = dereference _receipt; return receipt.unknownreason(_owner,functionid)
+    end
     if functionid < 1 | functionid > _reasons[0] then return 'normalization.procedure.unproved'
     return _reasons[functionid]
 
@@ -136,6 +147,14 @@ context: class
   _transaction = .string
   _execution = .lltargettransfer..profile
   _executionbound = .int
+  _factsowner = reference .lltarget..module
+  _pointfacts = reference .lltargetflow..analysis
+  _summaries = reference .lltargetsummary..analysis
+  _factsbound = .int
+  _targetreason = .string
+  _activationreason = .string
+  _scopepermission = .lltargetsummary..scopefreefact
+  _scopecall = .int
   *: factory
     arg mode = 'assembler', policy = 'default'
     _mode = mode; _policy = policy; _status = 'ok'
@@ -181,6 +200,19 @@ context: class
     candidate = normalized.result()
     if candidate.valid() = 0 | candidate.identity() <> source.identity() then return 0
     stamp = .normalizationstamp(owner,normalized)
+    _normalizations[_normalizations[0] + 1] = stamp as .object
+    return 1
+  /** The controller owns this exact stable receipt slot for the request.
+   * Never copy a prepared receipt: its internal proof links are field-owned. */
+  certifyreceipt: method = .int
+    arg owner = reference .lltarget..module, normalized = .lltargetnormalize..change, receipt = reference .llinline..normalizationreceipt
+    if _status <> 'ok' | <refvalid>(owner) = 0 | <refvalid>(receipt) = 0 then return 0
+    proof = dereference receipt; source = dereference owner
+    if proof.status() <> 'ok' | proof.canonical() = 0 | source.valid() = 0 then return 0
+    if normalized.status() <> 'changed' & normalized.status() <> 'keep' then return 0
+    candidate = normalized.result(); retained = proof.result(); exact = retained.result()
+    if source.identity() <> candidate.identity() | source.identity() <> exact.identity() then return 0
+    stamp = .normalizationstamp(owner,normalized,receipt)
     _normalizations[_normalizations[0] + 1] = stamp as .object
     return 1
   normalized: method = .int
@@ -250,12 +282,121 @@ context: class
       if (caller_ref <refsame> owner) & request.callid() = operation then return procedurename(request.provider(),request.bodyid())
     end
     return ''
-  /** Body precision alone never discharges inherited signal/asynchronous or
-   * entry-context obligations. A future caller-point certificate must prove
-   * all of them before the shared departure owner can be omitted. */
+  /** Bind borrowed shared proofs for an immediate site decision. This grants
+   * no target assertion; expiry or a different immutable owner refuses. */
+  usefacts: method = .int
+    arg owner = reference .lltarget..module, facts = reference .lltargetflow..analysis, summaries = reference .lltargetsummary..analysis
+    if <refvalid>(owner) = 0 | <refvalid>(facts) = 0 | <refvalid>(summaries) = 0 then return 0
+    points = dereference facts; summary = dereference summaries
+    if points.valid() = 0 | summary.valid() = 0 then return 0
+    actual = points.owner(); shared = summary.flow()
+    if (actual <refsame> owner) = 0 | (shared <refsame> facts) = 0 then return 0
+    transfers_ref = points.transfers(); transfers = dereference transfers_ref
+    if transfers.valid() = 0 | transfers.matches(owner) = 0 | transfers.premise() <> 'canonical' then return 0
+    _factsowner = owner; _pointfacts = facts; _summaries = summaries; _factsbound = 1; _scopecall = 0
+    return 1
+  hasfacts: method = .int
+    arg owner = reference .lltarget..module
+    if _factsbound = 0 | <refvalid>(_factsowner) = 0 | <refvalid>(_pointfacts) = 0 | <refvalid>(_summaries) = 0 then return 0
+    if (_factsowner <refsame> owner) = 0 then return 0
+    points = dereference _pointfacts; summaries = dereference _summaries
+    return points.valid() & summaries.valid()
+  factbytes: method = .int
+    if _factsbound = 0 | <refvalid>(_pointfacts) = 0 | <refvalid>(_summaries) = 0 then return 0
+    points = dereference _pointfacts; summaries = dereference _summaries
+    return points.usedbytes() + summaries.usedbytes()
+  factwork: method = .int
+    if _factsbound = 0 | <refvalid>(_pointfacts) = 0 | <refvalid>(_summaries) = 0 then return 0
+    points = dereference _pointfacts; summaries = dereference _summaries
+    return points.usedwork() + summaries.usedwork()
+  /** A selector name or pointer-shaped integer never certifies a body. Only
+   * the shared exact target fact may discharge this binding obligation. */
+  provetarget: method = .int
+    arg request = .llinline..binding
+    _targetreason = 'target.selection.authority.unavailable'
+    if _factsbound = 0 | request.valid() = 0 then return 0
+    if <refvalid>(_pointfacts) = 0 | <refvalid>(_factsowner) = 0 then do; _targetreason = 'target.flow.owner.expired.or.replaced'; return 0; end
+    caller = request.caller(); provider = request.provider()
+    if (caller <refsame> _factsowner) = 0 then do; _targetreason = 'target.flow.owner.mismatch'; return 0; end
+    points = dereference _pointfacts
+    if points.valid() = 0 then do; _targetreason = 'target.flow.owner.expired.or.replaced'; return 0; end
+    target = points.targetat(request.callid())
+    if target.status() <> 'proved' then do; _targetreason = target.reason(); return 0; end
+    actual = target.provider()
+    if (actual <refsame> provider) = 0 | target.procedure() <> request.bodyid() then do; _targetreason = 'binding.target.mismatch'; return 0; end
+    _targetreason = ''
+    return 1
+  targetreason: method = .string
+    return _targetreason
+  /** Scoped activation does not itself prove ordinary diagnostic-chain
+   * equivalence. This shared permission gates every form of cloning. */
+  activation: method = .int
+    arg request = .llinline..binding
+    _activationreason = 'target.activation.proof.unavailable'
+    caller = request.caller()
+    if request.valid() = 0 | hasfacts(caller) = 0 then return 0
+    summaries = dereference _summaries; permission = summaries.activationequivalence(request.callid())
+    if permission.valid() = 0 | permission.status() <> 'proved' | permission.allowed() = 0 then do
+      _activationreason = permission.reason(); return 0
+    end
+    _activationreason = ''
+    return 1
+  activationreason: method = .string
+    return _activationreason
+  /** The shared caller-point permission includes every activation/departure
+   * obligation. An optional unknown retains the ordinary logical scope. */
   scopefree: method = .int
     arg request = .llinline..binding
-    return 0
+    if _factsbound = 0 | request.valid() = 0 then return 0
+    if <refvalid>(_factsowner) = 0 | <refvalid>(_pointfacts) = 0 | <refvalid>(_summaries) = 0 then return 0
+    caller = request.caller(); provider = request.provider()
+    if (caller <refsame> _factsowner) = 0 | (provider <refsame> caller) = 0 then return 0
+    points = dereference _pointfacts; summaries = dereference _summaries
+    if points.valid() = 0 | summaries.valid() = 0 then return 0
+    target = points.targetat(request.callid())
+    if target.status() <> 'proved' then return 0
+    actual = target.provider()
+    if (actual <refsame> provider) = 0 | target.procedure() <> request.bodyid() then return 0
+    _scopepermission = summaries.scopefree(request.callid()); _scopecall = request.callid()
+    return _scopepermission.valid() & _scopepermission.status() = 'proved' & _scopepermission.allowed()
+  returnmode: method = .string
+    arg request = .llinline..binding, operation = .int
+    caller = request.caller()
+    if hasfacts(caller) = 0 | request.valid() = 0 | _scopecall <> request.callid() then return 'unproved'
+    if _scopepermission.valid() = 0 | _scopepermission.allowed() = 0 then return 'unproved'
+    return _scopepermission.returnmode(operation)
+  /** A direct substitution uses the shared capture ledger, including a
+   * counted call's original cross-bank window. Equal payloads alone never
+   * identify the actual pointer or its slot. */
+  argumentcount: method = .int
+    arg request = .llinline..binding
+    caller = request.caller()
+    if request.valid() = 0 | hasfacts(caller) = 0 then return -1
+    summaries = dereference _summaries; layout = summaries.calllayout(request.callid())
+    if layout.status() <> 'proved' then return -1
+    return layout.count()
+  argument: method = .lltarget..operand
+    arg request = .llinline..binding, ordinal = .int
+    caller = request.caller()
+    if request.valid() = 0 | hasfacts(caller) = 0 then return .lltarget..operand()
+    summaries = dereference _summaries; layout = summaries.calllayout(request.callid())
+    if layout.status() <> 'proved' then return .lltarget..operand()
+    if ordinal < 1 | ordinal > layout.count() then return .lltarget..operand()
+    shape = .llinline..callrecipe(request); points = dereference _pointfacts; actual = .lltarget..operand
+    if shape.counted() then do
+      source = dereference caller; item = source.at(request.callid())
+      actual = points.windowvalue(item.procedureid(),shape.window(),ordinal)
+    end
+    else actual = shape.actual(ordinal)
+    if actual.kind() <> 'R' then return .lltarget..operand()
+    captured = layout.actual(ordinal); incoming = points.storageat(request.callid(),actual.bank(),actual.index())
+    if captured.active() = 0 | captured.base() = 0 | captured.entry() = 0 | captured.slotidentity() = 0 then return .lltarget..operand()
+    if captured.active() <> incoming.active() | captured.base() <> incoming.base() | captured.entry() <> incoming.entry() | captured.slotidentity() <> incoming.slotidentity() then return .lltarget..operand()
+    return actual
+  argumentwork: method = .int
+    if _factsbound = 0 | <refvalid>(_pointfacts) = 0 then return 0
+    points = dereference _pointfacts
+    return points.lookupcost() + 16
   foreignbinding: method = .string
     return 'binding.unsealed'
 
@@ -288,7 +429,10 @@ callrecipe: class
     if item.kind() <> 'instruction' then do; _reason = 'call.not.instruction'; return; end
     catalog = .llrxascatalog..catalog(); opcode = item.opcode()
     _kind = catalog.callkind(opcode)
-    if _kind = 0 then do; _status = 'keep'; _reason = 'call.contract.unavailable'; return; end
+    /* A selected site needs a canonical call descriptor. Its absence is an
+     * invalid binding request, not an unsupported body retained as a call. */
+    if _kind = 0 then do; _reason = 'call.contract.unavailable'; return; end
+    if catalog.callinvokes(opcode) = 0 then do; _status = 'keep'; _reason = 'call.contract.not.invocation'; return; end
     targetordinal = catalog.calltarget(opcode); resultordinal = catalog.callresult(opcode)
     countordinal = catalog.callcount(opcode); windowordinal = catalog.callwindow(opcode)
     if targetordinal < 1 | targetordinal > item.operands() then do; _reason = 'call.contract.target'; return; end
@@ -378,6 +522,305 @@ normalize: procedure = .lltargetnormalize..change
 normalizewith: procedure = .lltargetnormalize..change
   arg owner = reference .lltarget..module, operational = reference .lltargettransfer..profile, work = 1000000, bytes = 67108864
   return normalizerequest(owner,work,bytes,operational)
+
+/** Request-lifetime proof owner. Assign the unprepared factory result into
+ * its final local/field slot before any method executes; never copy it after
+ * preparation. Borrowed mode requires fixed external module/analysis slots.
+ * Enrollment reads candidate()/operation() are private; result() is available
+ * only after every required theorem commits against the enrolled final owner. */
+normalizationreceipt: class
+  _source = reference .lltarget..module
+  _points = reference .lltargetflow..analysis
+  _summaries = reference .lltargetsummary..analysis
+  _candidateowner = reference .lltarget..module
+  _candidatepoints = reference .lltargetflow..analysis
+  _ordinary = .lltargetnormalize..change
+  _batch = .lltargetnormalize..change
+  _mapping = .int[]
+  _correspondence = .lltargetremap..correspondence
+  _callbacks = .lltargetnormalize..conditionalcertificate[]
+  _certificates = .lltargetnormalize..entrycertificate[]
+  _identities = .lltargetnormalize..entrycertificate[]
+  _identityfunctions = .int[]
+  _identityproved = .int[]
+  _functions = .int[]
+  _conditional = .int
+  _summaryneeded = .int
+  _status = .string
+  _reason = .string
+  _limit = .int
+  _bytelimit = .int
+  _work = .int
+  _bytes = .int
+  _owned = .int
+  _raw = .lltarget..module
+  _canonical = .lltarget..module
+  _owncandidate = .lltarget..module
+  _explicit = .lltargetnormalize..change
+  _profile0 = .lltargettransfer..profile
+  _profile1 = .lltargettransfer..profile
+  _cfg0 = .lltargetcfg..graph
+  _cfg1 = .lltargetcfg..graph
+  _flow0 = .lltargetflow..analysis
+  _flow1 = .lltargetflow..analysis
+  _summary0 = .lltargetsummary..analysis
+  _execution = .string
+  _rootname = .string
+  _outerwork = .int
+  _outerbytes = .int
+  _analysiswork = .int
+  _analysisbytes = .int
+  _ownprepared = .int
+  owned: factory
+    arg owner = reference .lltarget..module, work = 1000000, bytes = 67108864, ?operational = reference .lltargettransfer..profile
+    _owned = 1; _status = 'building'; _outerwork = work; _outerbytes = bytes
+    _limit = work <idiv> 4; _bytelimit = bytes <idiv> 4
+    _analysiswork = work <idiv> 16; _analysisbytes = bytes <idiv> 16
+    if <refvalid>(owner) = 0 then do; _status = 'invalid'; _reason = 'normalization.receipt.owner.expired'; return; end
+    source = dereference owner; _raw = source
+    if ?operational then do
+      if <refvalid>(operational) = 0 then do; _status = 'invalid'; _reason = 'normalization.receipt.execution.expired'; return; end
+      witness = dereference operational
+      if witness.valid() = 0 | witness.matches(owner) = 0 then do; _status = 'invalid'; _reason = 'normalization.receipt.execution.owner.mismatch'; return; end
+      _execution = witness.executioncontext(); root = witness.executionroot()
+      if _execution = '' | root < 2 then do; _status = 'invalid'; _reason = 'normalization.receipt.execution.required'; return; end
+      body = source.body(root); _rootname = body.name()
+    end
+    return
+  borrowed: factory
+    arg source = reference .lltarget..module, points = reference .lltargetflow..analysis, summaries = reference .lltargetsummary..analysis, work = 1000000, bytes = 67108864
+    _source = source; _points = points; _summaries = summaries
+    _limit = work; _bytelimit = bytes; _status = 'building'
+    return
+  fail: method = .int
+    arg state = .string, reason = .string
+    _status = state; _reason = reason; return 0
+  spend: method = .int
+    arg work = .int, bytes = 0
+    if work < 0 | bytes < 0 | work > _limit - _work | bytes > _bytelimit - _bytes then return fail('limit','normalization.receipt.allowance')
+    _work = _work + work; _bytes = _bytes + bytes; return 1
+  sourcevalid: method = .int
+    if <refvalid>(_source) = 0 | <refvalid>(_points) = 0 | <refvalid>(_summaries) = 0 then return 0
+    source = dereference _source; points = dereference _points; summaries = dereference _summaries
+    actual = points.owner(); shared = summaries.flow()
+    if (shared <refsame> _points) = 0 then return 0
+    /* The ordinary path consumes no summary theorem. Its live reference and
+     * exact flow link are required, but a lazy summary need not be built. */
+    if _summaryneeded then do; if summaries.valid() = 0 then return 0; end
+    return source.valid() & points.valid() & (actual <refsame> _source)
+  prepare: method = .void
+    if _status <> 'building' then return
+    i = .int; ignored = .int; fn = .int
+    do
+      if _limit < 1 | _bytelimit < 1 then do; ignored = fail('limit','normalization.receipt.allowance'); return; end
+      if _owned then do
+        _explicit = lltargetnormalize..explicit(reference _raw,_analysiswork,_analysisbytes)
+        if _explicit.status() <> 'keep' & _explicit.status() <> 'changed' then do; ignored = fail(_explicit.status(),_explicit.reason()); return; end
+        _canonical = _explicit.result(); _source = reference _canonical
+        if _execution = '' then _profile0 = .lltargettransfer..profile(_source,_analysiswork,_analysisbytes)
+        else _profile0 = .lltargettransfer..profile.closedcalls(_source,_canonical.procedureid(_rootname),_execution,_analysiswork,_analysisbytes)
+        if _profile0.status() <> 'ok' then do; ignored = fail(_profile0.status(),_profile0.message()); return; end
+        _cfg0 = .lltargetcfg..graph(_source,reference _profile0,_analysiswork,_analysisbytes)
+        _flow0 = .lltargetflow..analysis(_source,reference _profile0,reference _cfg0,_analysiswork,_analysisbytes)
+        _summary0 = .lltargetsummary..analysis(reference _flow0,_analysiswork,_analysisbytes)
+        _points = reference _flow0; _summaries = reference _summary0
+      end
+      if <refvalid>(_points) = 0 | <refvalid>(_summaries) = 0 then do; ignored = fail('invalid','normalization.receipt.source.expired'); return; end
+      points = dereference _points
+      if points.status() <> 'ok' then do; ignored = fail(points.status(),points.reason()); return; end
+      if sourcevalid() = 0 then do; ignored = fail('invalid','normalization.receipt.source.mismatch'); return; end
+      source = dereference _source; eligible = .int[]
+      quota = _limit <idiv> 4; bytequota = _bytelimit <idiv> 4
+      if spend(quota,bytequota) = 0 then return
+      _ordinary = lltargetnormalize..normalize(_source,_points,quota,bytequota)
+      if _ordinary.status() <> 'keep' & _ordinary.status() <> 'changed' then do; ignored = fail(_ordinary.status(),_ordinary.reason()); return; end
+      do i = 1 to source.procedures()
+        if spend(source.procedures() + 1,32) = 0 then return
+        body = source.procedure(i); fn = body.functionid(); coverage = points.entrycoverage(fn)
+        if coverage.status() = 'invalid' | coverage.status() = 'limit' then do; ignored = fail(coverage.status(),coverage.reason()); return; end
+        if coverage.complete() = 0 | coverage.unresolved() > 0 then iterate
+        ordinary = _ordinary.result(); mappedfn = ordinary.procedureid(body.name())
+        if coverage.demands() = 0 then do
+          /* No operation in this procedure needs a clear. A separate live
+           * identity theorem may discharge entry normalization without
+           * claiming that a later callback or physical observer is absent. */
+          if _ordinary.complete(mappedfn) = 0 then _identityfunctions[_identityfunctions[0] + 1] = fn
+          iterate
+        end
+        eligible[eligible[0] + 1] = fn
+        if _ordinary.complete(mappedfn) = 0 then _conditional = 1
+      end
+      if _conditional then do
+        if spend(quota,bytequota) = 0 then return
+        _batch = lltargetnormalize..entrycandidates(_source,_points,eligible,quota,bytequota)
+        if _batch.status() <> 'tentative' then do; ignored = fail(_batch.status(),'normalization.receipt.candidate: ' || _batch.reason()); return; end
+        do i = 1 to _batch.modified()
+          if spend(1,32) = 0 then return
+          _functions[i] = _batch.modifiedfunction(i)
+        end
+      end
+      _status = 'prepared'
+    on signal as problem
+      ignored = fail('invalid','normalization.receipt.prepare: ' || problem.name() || ': ' || problem.message())
+    end
+    return
+  candidate: method = .lltarget..module
+    call prepare()
+    if _status <> 'prepared' then assembler signal "ERROR","LL_INLINE_NORMALIZE: candidate is not prepared"
+    if _conditional then return _batch.candidate()
+    return _ordinary.result()
+  operation: method = .int
+    arg old = .int
+    call prepare()
+    if _status <> 'prepared' & _status <> 'ok' then assembler signal "ERROR","LL_INLINE_NORMALIZE: private operation unavailable"
+    mapped = old
+    if _owned then mapped = _explicit.operation(old)
+    if _conditional & _status = 'prepared' then return _batch.candidateoperation(mapped)
+    if _conditional then return _batch.operation(mapped)
+    return _ordinary.operation(mapped)
+  finish: method = .int
+    arg owner = reference .lltarget..module, points = reference .lltargetflow..analysis
+    call prepare()
+    if _status <> 'prepared' then return 0
+    i = .int; ignored = .int
+    do
+      if <refvalid>(owner) = 0 | <refvalid>(points) = 0 | sourcevalid() = 0 then return fail('invalid','normalization.receipt.finish.owner.expired')
+      result = dereference owner; targetpoints = dereference points; actual = targetpoints.owner(); expected = candidate()
+      if result.identity() <> expected.identity() | (actual <refsame> owner) = 0 then return fail('invalid','normalization.receipt.finish.owner.mismatch')
+      if targetpoints.status() <> 'ok' then return fail(targetpoints.status(),targetpoints.reason())
+      _candidateowner = owner; _candidatepoints = points
+      if _conditional | _identityfunctions[0] > 0 then do
+        source = dereference _source; originalpoints = dereference _points
+        do i = 1 to source.records()
+          if spend(1,8) = 0 then return 0
+          item = source.record(i)
+          if _conditional then _mapping[item.id()] = _batch.candidateoperation(item.id())
+          else _mapping[item.id()] = _ordinary.operation(item.id())
+        end
+        before = originalpoints.transfers(); after = targetpoints.transfers(); beforecfg = originalpoints.cfg(); aftercfg = targetpoints.cfg()
+        quota = _limit <idiv> 8; bytequota = _bytelimit <idiv> 8
+        if spend(quota,bytequota) = 0 then return 0
+        _correspondence = .lltargetremap..correspondence(_source,owner,before,after,beforecfg,aftercfg,_mapping,quota,bytequota)
+        if _correspondence.status() <> 'proved' then return fail(_correspondence.status(),'normalization.receipt.correspondence: ' || _correspondence.reason())
+      end
+      if _conditional then do
+        summaries = dereference _summaries
+        if summaries.status() <> 'ok' then return fail(summaries.status(),'normalization.receipt.summary: ' || summaries.reason())
+        if summaries.valid() = 0 then return fail('invalid','normalization.receipt.summary.owner.mismatch')
+        _summaryneeded = 1
+        /* Finish callback construction before any entry certificate borrows
+         * its slots. No borrowed array grows after those links are created. */
+        quota = _limit <idiv> (16 * max(1,_functions[0])); bytequota = _bytelimit <idiv> (16 * max(1,_functions[0]))
+        do i = 1 to _functions[0]
+          if spend(quota,bytequota) = 0 then return 0
+          _callbacks[i] = _batch.conditional(_points,points,_summaries,reference _correspondence,_functions[i],quota,bytequota)
+          if _callbacks[i].status() <> 'proved' then return fail(_callbacks[i].status(),'normalization.receipt.callback: ' || _callbacks[i].reason())
+        end
+        do i = 1 to _functions[0]
+          if spend(quota,bytequota) = 0 then return 0
+          _certificates[i] = _batch.entryproof(_points,points,reference _correspondence,reference _callbacks[i],_functions[i],quota,bytequota)
+          if _certificates[i].status() <> 'proved' then return fail(_certificates[i].status(),'normalization.receipt.entry: ' || _certificates[i].reason())
+        end
+        if _batch.commitall(_certificates) = 0 then return fail(_batch.status(),'normalization.receipt.commit: ' || _batch.reason())
+      end
+      /* Identity certificates borrow the same finalized S/C/map fields, but
+       * no summary or callback certificate. An unresolved dependency keeps
+       * just this unchanged function's entry obligation unproved. */
+      quota = _limit <idiv> (16 * max(1,_identityfunctions[0])); bytequota = _bytelimit <idiv> (16 * max(1,_identityfunctions[0]))
+      do i = 1 to _identityfunctions[0]
+        if spend(quota,bytequota) = 0 then return 0
+        _identities[i] = .lltargetnormalize..entrycertificate.identity(_points,points,reference _correspondence,_identityfunctions[i],quota,bytequota,result.identity())
+        state = _identities[i].status()
+        if state <> 'proved' & state <> 'unknown' then return fail(state,'normalization.receipt.identity: ' || _identities[i].reason())
+        _identityproved[i] = state = 'proved'
+      end
+      if sourcevalid() = 0 then return fail('invalid','normalization.receipt.source.changed')
+      _status = 'ok'; _reason = ''; return 1
+    on signal as problem
+      ignored = fail('invalid','normalization.receipt.finish: ' || problem.name() || ': ' || problem.message())
+    end
+    return 0
+  status: method = .string
+    ignored = .int
+    call prepare()
+    if _owned & _status = 'prepared' & _ownprepared = 0 then do
+      _ownprepared = 1; _owncandidate = candidate()
+      if _execution = '' then _profile1 = .lltargettransfer..profile(reference _owncandidate,_analysiswork,_analysisbytes)
+      else _profile1 = .lltargettransfer..profile.closedcalls(reference _owncandidate,_owncandidate.procedureid(_rootname),_execution,_analysiswork,_analysisbytes)
+      if _profile1.status() <> 'ok' then do; ignored = fail(_profile1.status(),_profile1.message()); return _status; end
+      _cfg1 = .lltargetcfg..graph(reference _owncandidate,reference _profile1,_analysiswork,_analysisbytes)
+      _flow1 = .lltargetflow..analysis(reference _owncandidate,reference _profile1,reference _cfg1,_analysiswork,_analysisbytes)
+      ignored = finish(reference _owncandidate,reference _flow1)
+    end
+    if _status = 'ok' & valid() = 0 then return 'invalid'
+    return _status
+  valid: method = .int
+    i = .int; fn = .int; source = .lltarget..module; body = .lltarget..body
+    if _status <> 'ok' | sourcevalid() = 0 | <refvalid>(_candidateowner) = 0 | <refvalid>(_candidatepoints) = 0 then return 0
+    source = dereference _source
+    candidate = dereference _candidateowner; points = dereference _candidatepoints; actual = points.owner()
+    if points.valid() = 0 | candidate.valid() = 0 | (actual <refsame> _candidateowner) = 0 then return 0
+    if _conditional then do i = 1 to _certificates[0]
+      body = source.body(_functions[i]); fn = candidate.procedureid(body.name())
+      if _certificates[i].matchesresult(_candidateowner,fn) = 0 | _certificates[i].matchessource(_points,_functions[i]) = 0 then return 0
+    end
+    do i = 1 to _identities[0]
+      if _identityproved[i] = 0 then iterate
+      body = source.body(_identityfunctions[i]); fn = candidate.procedureid(body.name())
+      if _identities[i].matchesresult(_candidateowner,fn) = 0 | _identities[i].matchessource(_points,_identityfunctions[i]) = 0 then return 0
+    end
+    return 1
+  reason: method = .string
+    if status() = 'invalid' & _reason = '' then return 'normalization.receipt.owner.expired.or.replaced'
+    return _reason
+  result: method = .lltargetnormalize..change
+    i = .int
+    if status() <> 'ok' then assembler signal "ERROR","LL_INLINE_NORMALIZE: no certified receipt result"
+    source = dereference _source; candidate = dereference _candidateowner
+    final = _ordinary; if _conditional then final = _batch
+    mapping = .int[]; warnings = .lltargetnormalize..warning[]
+    input = source; if _owned then input = _raw
+    do i = 1 to input.records(); item = input.record(i); mapping[item.id()] = operation(item.id()); end
+    do i = 1 to final.warnings(); warnings[i] = final.warning(i); end
+    state = final.status(); if _owned then do; if _explicit.status() = 'changed' then state = 'changed'; end
+    return .lltargetnormalize..change.resolved(state,final.reason(),candidate,mapping,warnings,final)
+  complete: method = .int
+    arg owner = reference .lltarget..module, functionid = .int
+    i = .int
+    if valid() = 0 | <refvalid>(owner) = 0 then return 0
+    candidate = dereference owner; exact = dereference _candidateowner
+    if candidate.valid() = 0 | candidate.identity() <> exact.identity() then return 0
+    if _conditional = 0 then do; if _ordinary.complete(functionid) then return 1; end
+    else do
+      if _batch.complete(functionid) then return 1
+      do i = 1 to _certificates[0]; if _certificates[i].matchesresult(owner,functionid) then return 1; end
+    end
+    do i = 1 to _identities[0]
+      if _identityproved[i] then do; if _identities[i].matchesresult(owner,functionid) then return 1; end
+    end
+    return 0
+  unknownreason: method = .string
+    arg owner = reference .lltarget..module, functionid = .int
+    if complete(owner,functionid) then return ''
+    if valid() = 0 then return 'normalization.receipt.owner.expired.or.replaced'
+    candidate = dereference owner; source = dereference _source
+    do i = 1 to _identities[0]
+      body = source.body(_identityfunctions[i])
+      if candidate.procedureid(body.name()) = functionid then return _identities[i].reason()
+    end
+    if _conditional then return _batch.unknownreason(functionid)
+    return _ordinary.unknownreason(functionid)
+  canonical: method = .int
+    if valid() = 0 then return 0
+    before = dereference _points; after = dereference _candidatepoints
+    leftref = before.transfers(); rightref = after.transfers(); left = dereference leftref; right = dereference rightref
+    return left.premise() = 'canonical' & right.premise() = 'canonical'
+  reservedwork: method = .int
+    if _owned then return _outerwork * 3 <idiv> 4
+    return _work
+  reservedbytes: method = .int
+    if _owned then return _outerbytes * 3 <idiv> 4
+    return _bytes
 
 normalizerequest: procedure = .lltargetnormalize..change
   arg owner = reference .lltarget..module, work = .int, bytes = .int, ?operational = reference .lltargettransfer..profile
@@ -587,6 +1030,12 @@ windowcounts: class
   _transfers = .lltargettransfer..profile
   _cfg = .lltargetcfg..graph
   _facts = .lltargetflow..analysis
+  _summary = .lltargetsummary..analysis
+  _summarized = .int
+  _summarycharged = .int
+  _factcharged = .int
+  _cfgready = .int
+  _factsready = .int
   _status = .string
   _message = .string
   _work = .int
@@ -604,13 +1053,13 @@ windowcounts: class
     _prepared = 1
     if _executioncontext <> '' then _transfers = .lltargettransfer..profile.closedcalls(_owner,_executionroot,_executioncontext,_work,_bytes)
     else _transfers = .lltargettransfer..profile(_owner,_work,_bytes)
-    _status = _transfers.status(); _message = _transfers.message(); _work = _work - _transfers.usedwork()
+    _status = _transfers.status(); _message = _transfers.message(); _work = _work - _transfers.usedwork(); _bytes = _bytes - _transfers.usedbytes()
     if _status <> 'ok' then return
-    _cfg = .lltargetcfg..graph(_owner,reference _transfers,_work,_bytes)
-    _status = _cfg.status(); _message = _cfg.message(); _work = _work - _cfg.usedwork()
+    _cfg = .lltargetcfg..graph(_owner,reference _transfers,_work,_bytes); _cfgready = 1
+    _status = _cfg.status(); _message = _cfg.message(); _work = _work - _cfg.usedwork(); _bytes = _bytes - _cfg.usedbytes()
     if _status <> 'ok' then return
-    _facts = .lltargetflow..analysis(_owner,reference _transfers,reference _cfg,_work,_bytes)
-    _status = _facts.status(); _message = _facts.message(); _work = _work - _facts.usedwork()
+    _facts = .lltargetflow..analysis(_owner,reference _transfers,reference _cfg,_work,_bytes); _factsready = 1
+    _status = _facts.status(); _message = _facts.message(); _factcharged = _facts.usedwork(); _work = _work - _factcharged; _bytes = _bytes - _facts.usedbytes()
     if _status <> 'ok' then return
     catalog = .llrxascatalog..catalog()
     do i = 1 to _transfers.domains()
@@ -619,28 +1068,72 @@ windowcounts: class
     end
     if _work < 0 then do; _status = 'limit'; _message = 'inline.child.window.work'; end
     return
+  points: method = reference .lltargetflow..analysis
+    call run()
+    return reference _facts
+  summaries: method = reference .lltargetsummary..analysis
+    call run()
+    if _status = 'ok' & _summarized = 0 then do
+      _summarized = 1; _summary = .lltargetsummary..analysis(reference _facts,_work,_bytes)
+      _status = _summary.status(); _message = _summary.message(); _summarycharged = _summary.usedwork()
+      _work = _work - _summarycharged; _bytes = _bytes - _summary.usedbytes()
+    end
+    return reference _summary
   countat: method = .int
+    arg operation = .int
+    ignored = summaries()
+    if _status <> 'ok' then return -1
+    layout = _summary.calllayout(operation)
+    if layout.status() = 'limit' | layout.status() = 'invalid' then do; _status = layout.status(); _message = layout.reason(); return -1; end
+    if layout.countknown() = 0 then return -1
+    /* Count is an independent captured layout fact. Optional result/actual
+     * storage precision cannot veto preservation of the child's window. */
+    return boundedcount(layout.count())
+  inputcountat: method = .int
+    arg operation = .int, selector = .lltarget..operand
+    return readcount(operation,selector)
+  readcount: method = .int
     arg operation = .int, selector = .lltarget..operand
     call run()
     if _status <> 'ok' | _domain = 0 then return -1
     cost = _facts.lookupcost() + 1
     if cost > _work then do; _status = 'limit'; _message = 'inline.child.window.work'; return -1; end
     _work = _work - cost
-    value = _facts.capturecomponentat(operation,selector.bank(),selector.index(),_domain)
+    value = _facts.componentat(operation,selector.bank(),selector.index(),_domain)
     if value.known() = 0 | value.availability() <> 'defined' then return -1
     literal = value.literal()
     if literal.kind() <> 'I' then return -1
-    if literal.index() < 0 then return -1
-    if literal.index() > 4096 then do
+    return boundedcount(literal.index())
+  boundedcount: method = .int
+    arg count = .int
+    if count < 0 then return -1
+    if count > 4096 then do
       _status = 'limit'; _message = 'inline.child.window.argument.limit'; return -1
     end
-    return literal.index()
+    return count
+  windowvalue: method = .lltarget..operand
+    arg functionid = .int, first = .lltarget..operand, offset = .int
+    call run()
+    if _status <> 'ok' then return .lltarget..operand()
+    return _facts.windowvalue(functionid,first,offset)
   status: method = .string
     return _status
   message: method = .string
     return _message
+  usedbytes: method = .int
+    amount = 0
+    if _prepared then do
+      amount = _transfers.usedbytes()
+      if _cfgready then amount = amount + _cfg.usedbytes()
+      if _factsready then amount = amount + _facts.usedbytes()
+      if _summarized then amount = amount + _summary.usedbytes()
+    end
+    return amount
   usedwork: method = .int
-    return _limit - _work
+    amount = _limit - _work
+    if _factcharged > 0 then amount = amount + max(0,_facts.usedwork() - _factcharged)
+    if _summarized then amount = amount + max(0,_summary.usedwork() - _summarycharged)
+    return amount
 
 /** An immutable site's availability, legality and cost decisions. Executable
  * bodies are cloned generically; optional scalar facts only omit a scope. */
@@ -659,6 +1152,12 @@ siteplan: class
   _work = .int
   _bytes = .int
   _usescount = .int
+  _returntemp = .int
+  _returncells = .int
+  _returnops = .int[]
+  _returnmodes = .string[]
+  _plaincount = .int
+  _plainactuals = .lltarget..operand[]
   _globalpositions = .int[]
   _globalslots = .int
   _contiguous = .int
@@ -671,9 +1170,11 @@ siteplan: class
     if _prepared then return
     _prepared = 1; request = _request; selected = _context
     j = .int; n = .int; g = .int; targetid = .int; packed = .int
+    item = .lltarget..record
+    countordinal = .int; windowordinal = .int; returnkind = .int; scalars = .int; opcode = .int
     childcounts = .windowcounts; outercounts = .windowcounts; counter = .lltarget..operand
     childready = 0; childcharged = 0; outercharged = 0; outerchecked = 0; outercount = -1
-    childcount = .int; lastargument = .int
+    childcount = .int; lastargument = .int; scalars = 0
     _shape = .callrecipe(request)
     if _shape.status() <> 'ok' then do; _status = _shape.status(); _reason = _shape.reason(); return; end
     if selected.policy() = 'never' then do; _reason = 'policy.disabled'; return; end
@@ -685,13 +1186,18 @@ siteplan: class
     original = source.at(request.callid())
     if selected.normalized(caller_ref,original.procedureid()) = 0 then do; _reason = selected.normalizationreason(caller_ref,original.procedureid()); return; end
     if selected.normalized(provider_ref,request.bodyid()) = 0 then do; _reason = selected.normalizationreason(provider_ref,request.bodyid()); return; end
-    if _shape.kind() <> 1 then do; _reason = 'call.dynamic.selection.proof.unfinished'; return; end
+    /* Shared activation evidence owns observation/relocation equivalence and
+     * every CFG departure, including an unknown falloff. A coarse opcode
+     * category or the last textual instruction cannot replace that proof. */
+    if selected.activation(request) = 0 then do; _reason = selected.activationreason(); return; end
+    if selected.provetarget(request) = 0 then do; _reason = selected.targetreason(); return; end
     provider = dereference provider_ref; _provider = provider
     /* A body borrows its module's graph. Do not retain that borrowed view in
      * a plan that is subsequently stored/copied by the batch owner. */
     body = _provider.body(request.bodyid()); called = _shape.target()
     if _selected < 0 then do
-      targetid = source.procedureid(called.text())
+      targetid = request.bodyid()
+      if _shape.kind() = 1 then targetid = source.procedureid(called.text())
       if targetid = 0 then do; _reason = 'body.unavailable'; return; end
       if targetid <> request.bodyid() then do; _status = 'invalid'; _reason = 'binding.target.mismatch'; return; end
     end
@@ -699,8 +1205,7 @@ siteplan: class
     original = source.at(request.callid())
     if _selected < 0 & original.procedureid() = request.bodyid() then do; _reason = 'policy.recursion'; return; end
     catalog = .llrxascatalog..catalog(); value = .lltarget..operand
-    _extent = _shape.actuals(); plain = _selected < 0 & _shape.counted() = 0 & _shape.prefix() = ''
-    lastfallthrough = 0
+    _extent = _shape.actuals()
     do n = 1 to body.records()
       _work = _work - 1
       if _work < 0 then do; _status = 'limit'; _reason = 'inline.work'; return; end
@@ -712,26 +1217,39 @@ siteplan: class
           if value.index() = 0 then _usescount = 1
         end
         if value.bank() = 'g' then do
-          plain = 0
           if _globalpositions[value.index() + 1] = 0 then do
             _globalslots = _globalslots + 1; _globalpositions[value.index() + 1] = _globalslots
           end
         end
       end
       if item.kind() <> 'instruction' then do
-        if item.kind() = '.meta' | item.kind() = '.traceevent' then plain = 0
         iterate
       end
       opcode = item.opcode(); _cells = _cells + 1 + item.operands()
-      if catalog.clonecategory(opcode) = 0 then do; _reason = 'profile.effect.contract.missing'; return; end
-      if catalog.observations(opcode) <> 0 & catalog.observations(opcode) <> 512 then do; _reason = 'observation.physical.equivalent.unproved'; return; end
-      if catalog.callcount(opcode) > 0 then do
-        counter = item.operand(catalog.callwindow(opcode)); packed = counter.index() + 1
+      returnkind = catalog.returnkind(opcode)
+      if returnkind > 0 then do
+        if returnkind = 1 then _returncells = _returncells + 1
+        else if _shape.hasresult() then do
+          if returnkind = 3 | returnkind = 4 then do; scalars = 1; _returncells = _returncells + 6; end
+          else _returncells = _returncells + 3
+        end
+      end
+      countordinal = 0; windowordinal = 0
+      if catalog.callinvokes(opcode) then do
+        countordinal = catalog.callcount(opcode); windowordinal = catalog.callwindow(opcode)
+      end
+      else if catalog.selectionkind(opcode) > 0 then do
+        countordinal = catalog.selectioncount(opcode); windowordinal = catalog.selectionwindow(opcode)
+      end
+      if countordinal > 0 & windowordinal > 0 then do
+        counter = item.operand(windowordinal); packed = counter.index() + 1
         if counter.bank() = 'g' then packed = packed + body.locals()
         else if counter.bank() = 'a' then packed = packed + body.locals() + _provider.globals()
         if _shape.counted() then do
           if childready = 0 then do; childcounts = .windowcounts(provider_ref,_work,_bytes,selected.executionroot(provider_ref),selected.executioncontext(provider_ref)); childready = 1; end
-          counter = item.operand(catalog.callcount(opcode)); childcount = childcounts.countat(item.id(),counter)
+          counter = item.operand(countordinal)
+          if catalog.callinvokes(opcode) then childcount = childcounts.countat(item.id())
+          else childcount = childcounts.inputcountat(item.id(),counter)
           _work = _work - childcounts.usedwork() + childcharged; childcharged = childcounts.usedwork()
           if childcounts.status() <> 'ok' then do; _status = childcounts.status(); _reason = childcounts.message(); return; end
           if _work < 0 then do; _status = 'limit'; _reason = 'inline.child.window.work'; return; end
@@ -741,13 +1259,13 @@ siteplan: class
             if outerchecked = 0 then do
               outerchecked = 1
               if caller_ref <refsame> provider_ref then do
-                outercount = childcounts.countat(request.callid(),_shape.count())
+                outercount = childcounts.countat(request.callid())
                 _work = _work - childcounts.usedwork() + childcharged; childcharged = childcounts.usedwork()
                 if childcounts.status() <> 'ok' then do; _status = childcounts.status(); _reason = childcounts.message(); return; end
               end
               else do
                 outercounts = .windowcounts(caller_ref,_work,_bytes,selected.executionroot(caller_ref),selected.executioncontext(caller_ref))
-                outercount = outercounts.countat(request.callid(),_shape.count())
+                outercount = outercounts.countat(request.callid())
                 _work = _work - outercounts.usedwork() + outercharged; outercharged = outercounts.usedwork()
                 if outercounts.status() <> 'ok' then do; _status = outercounts.status(); _reason = outercounts.message(); return; end
               end
@@ -765,8 +1283,6 @@ siteplan: class
           if _globalpositions[g + 1] = 0 then do; _globalslots = _globalslots + 1; _globalpositions[g + 1] = _globalslots; end
         end
       end
-      if catalog.implicit(opcode) <> 0 & catalog.binding(opcode) <> 4 & catalog.callkind(opcode) = 0 & catalog.recipeoperand(opcode) = 0 then do; _reason = 'normalization.explicit.operands.required'; return; end
-      if catalog.signalstate(opcode) <> 0 | catalog.binding(opcode) <> 0 | catalog.callkind(opcode) <> 0 | catalog.contextwritemask(opcode) <> 0 | catalog.implicit(opcode) <> 0 | catalog.observations(opcode) <> 0 then plain = 0
       do j = 1 to item.operands()
         _work = _work - 1; value = item.operand(j)
         if value.kind() = 'P' & _selected >= 0 then do
@@ -778,23 +1294,69 @@ siteplan: class
             else if selected.procedurename(provider_ref,targetid) = '' then do; _reason = 'binding.child.procedure.unsealed'; return; end
           end
         end
-        if value.kind() = 'R' & catalog.writes(opcode,j) then do
-          if value.bank() <> 'r' | catalog.definitioncomponents(opcode,j) < 1 | catalog.definitioncomponents(opcode,j) > 3 then plain = 0
-        end
       end
-      lastfallthrough = catalog.flow(opcode) = 0 | lltarget..normalfallthrough(opcode)
     end
     if _work < 0 then do; _status = 'limit'; _reason = 'inline.work'; return; end
-    if lastfallthrough then do; _reason = 'body.fallthrough.unproved'; return; end
     if _contiguous then do
       do g = 0 to _provider.globals() - 1
         if _globalpositions[g + 1] > 0 then _globalpositions[g + 1] = g + 1
       end
       _globalslots = _provider.globals()
     end
-    if plain & selected.scopefree(request) then _scope = 0
+    if selected.scopefree(request) then do
+      _scope = 0
+      _plaincount = selected.argumentcount(request)
+      if _plaincount < 0 then _scope = 1
+      else do j = 1 to min(_extent,_plaincount)
+        if _bytes < 64 then do; _scope = 1; leave; end
+        _bytes = _bytes - 64; _work = _work - selected.argumentwork()
+        _plainactuals[j] = selected.argument(request,j)
+        value = _plainactuals[j]
+        if value.kind() <> 'R' then do; _scope = 1; leave; end
+      end
+      /* A retained counted child uses physical adjacency, not just equal
+       * pointees. Direct actual/global substitution may scatter that window;
+       * retain the scoped prefix only when this concrete layout needs it. */
+      if _scope = 0 & _contiguous then do n = 1 to body.records()
+        item = body.record(n)
+        if item.kind() <> 'instruction' then iterate
+        opcode = item.opcode(); countordinal = 0; windowordinal = 0
+        if catalog.callinvokes(opcode) then do
+          countordinal = catalog.callcount(opcode); windowordinal = catalog.callwindow(opcode)
+        end
+        else if catalog.selectionkind(opcode) > 0 then do
+          countordinal = catalog.selectioncount(opcode); windowordinal = catalog.selectionwindow(opcode)
+        end
+        if countordinal = 0 | windowordinal = 0 then iterate
+        if childready = 0 then do; childcounts = .windowcounts(provider_ref,_work,_bytes,selected.executionroot(provider_ref),selected.executioncontext(provider_ref)); childready = 1; end
+        counter = item.operand(countordinal)
+        if catalog.callinvokes(opcode) then childcount = childcounts.countat(item.id())
+        else childcount = childcounts.inputcountat(item.id(),counter)
+        _work = _work - childcounts.usedwork() + childcharged; childcharged = childcounts.usedwork()
+        if childcounts.status() <> 'ok' then do; _status = childcounts.status(); _reason = childcounts.message(); return; end
+        _work = _work - max(0,childcount + 1) * 8
+        if childcount < 0 then do; _scope = 1; leave; end
+        if plainwindow(item.operand(windowordinal),childcount,childcounts) = 0 then do; _scope = 1; leave; end
+      end
+      if _shape.hasresult() then do n = 1 to body.records()
+        _work = _work - 1; item = body.record(n)
+        if item.kind() <> 'instruction' then iterate
+        if catalog.returnkind(item.opcode()) <> 2 then iterate
+        if _bytes < 48 then do; _scope = 1; leave; end
+        _bytes = _bytes - 48; modeindex = _returnops[0] + 1
+        _returnops[modeindex] = item.id(); _returnmodes[modeindex] = selected.returnmode(request,item.id())
+        if wordpos(_returnmodes[modeindex],'copy move') = 0 then do; _scope = 1; leave; end
+      end
+      /* Charge the full lookup work for this immutable sorted return ledger. */
+      width = _returnops[0]; levels = 1
+      do while width > 0; levels = levels + 1; width = width <idiv> 2; end
+      _work = _work - _returnops[0] * levels
+      if _work < 0 then do; _status = 'limit'; _reason = 'inline.site.proof.work'; return; end
+    end
     if _scope & catalog.find('inlenter','RPSL') < 0 then do; _reason = 'runtime.activation.contract.unavailable'; return; end
-    growth = _cells + _scope * 5 + _globalslots * 4 - original.operands() - 1
+    if _scope = 0 & _shape.hasresult() then _returntemp = scalars
+    growth = _cells + _scope * (5 + _globalslots * 4) - original.operands() - 1
+    if _scope = 0 then growth = growth + _returncells
     if selected.policy() = 'default' & growth > 128 then do; _reason = 'policy.code.growth'; return; end
     _status = 'legal'; _reason = 'generic.target.recipe'
     return
@@ -806,15 +1368,32 @@ siteplan: class
   remaining: method = .int
     call prepare()
     return _work
+  remainingbytes: method = .int
+    return _bytes
   slots: method = .int
     body = _provider.body(_request.bodyid())
-    if _scope = 0 then return max(1,body.locals() + _usescount)
+    if _scope = 0 then return max(1,body.locals() + _usescount + _returntemp)
     return body.locals() + _globalslots + _extent + 2
+  returntemporary: method = .int
+    body = _provider.body(_request.bodyid())
+    return _base + body.locals() + _usescount
+  returnmode: method = .string
+    arg operation = .int
+    lower = 1; upper = _returnops[0]
+    do while lower <= upper
+      middle = lower + (upper - lower) <idiv> 2
+      if _returnops[middle] = operation then return _returnmodes[middle]
+      if _returnops[middle] < operation then lower = middle + 1
+      else upper = middle - 1
+    end
+    return 'unproved'
   globalposition: method = .int
     arg index = .int
     return _globalpositions[index + 1] - 1
   usescount: method = .int
     return _usescount
+  argumentcount: method = .int
+    return _plaincount
   place: method = .void
     arg base = .int
     _base = base
@@ -855,15 +1434,54 @@ siteplan: class
       if collision = 0 then return suffix
     end
     return ''
+  plainbank: method = .string
+    arg value = .lltarget..operand
+    if value.kind() <> 'R' then return ''
+    if value.bank() = 'r' then return 'private'
+    if value.bank() = 'g' then return 'g'
+    if value.index() = 0 then return 'private'
+    if value.index() > _plainactuals[0] then return ''
+    actual = _plainactuals[value.index()]
+    if actual.bank() = 'r' then return 'caller'
+    return actual.bank()
+  plainindex: method = .int
+    arg value = .lltarget..operand
+    if value.bank() <> 'a' then return value.index()
+    if value.index() = 0 then do; body = _provider.body(_request.bodyid()); return body.locals(); end
+    if value.index() > _plainactuals[0] then return -1
+    actual = _plainactuals[value.index()]; return actual.index()
+  plainwindow: method = .int
+    arg first = .lltarget..operand, count = .int, windows = .windowcounts
+    leftbank = ''; leftindex = -1; value = .lltarget..operand
+    do i = 0 to count
+      value = windows.windowvalue(_request.bodyid(),first,i)
+      if value.kind() = 'R' & value.bank() = 'a' & value.index() = 0 then _usescount = 1
+      bank = plainbank(value); index = plainindex(value)
+      if bank = '' | index < 0 then return 0
+      if i > 0 then do
+        adjacent = bank = leftbank & index = leftindex + 1
+        /* Globals and caller arguments retain their original adjacent banks.
+         * New caller locals separate its old local bank from those globals. */
+        if leftbank = 'g' & bank = 'a' & leftindex = _provider.globals() - 1 & index = 0 then adjacent = 1
+        if adjacent = 0 then return 0
+      end
+      leftbank = bank; leftindex = index
+    end
+    return 1
   mapped: method = .lltarget..operand
     arg value = .lltarget..operand, target = .lltarget..bodydraft
     if value.kind() <> 'R' then return value
     body = _provider.body(_request.bodyid())
     index = value.index()
+    if _scope = 0 & value.bank() = 'a' & index = 0 then return target.reg('r',_base + body.locals())
     if _scope = 0 & value.bank() = 'a' & index > 0 then do
-      if index > _shape.actuals() then assembler signal "ERROR","LL_INLINE_RECIPE: unavailable plain argument"
-      actual = _shape.actual(index); return target.reg(actual.bank(),actual.index())
+      if index > _plainactuals[0] then assembler signal "ERROR","LL_INLINE_RECIPE: unavailable plain argument"
+      actual = _plainactuals[index]; return target.reg(actual.bank(),actual.index())
     end
+    /* The shared scope permission proves the same module's original global
+     * bindings and preserved callee slot identities. Keep that proved owner
+     * directly; fresh proxies and QGLOBBIND belong to the scoped path. */
+    if _scope = 0 & value.bank() = 'g' then return target.reg('g',index)
     if value.bank() = 'g' then index = body.locals() + globalposition(index)
     else if value.bank() = 'a' then index = index + body.locals() + _globalslots
     return target.reg('r',_base + index)
@@ -953,8 +1571,9 @@ expandcontext: procedure = .llinline..change
   fields = .object[]; steps = .int[]; clauses = .int[]; metanames = .binary[]; metaactive = .int[]
   contributors = .object[]; file = .llir..sourcefile; emptybinary = .binary[]
   checkpoint = .int[]; filecheckpoint = .int[]; linecheckpoint = .int[]
-  i = .int; j = .int; n = .int; ordinal = .int; count = .int; higheststep = .int; highestclause = .int
+  i = .int; j = .int; n = .int; ordinal = .int; count = .int; higheststep = .int; highestclause = .int; ignored = .int
   code = .emitter; draft = .lltarget..draft; catalog = .llrxascatalog..catalog()
+  sharedproof = .windowcounts; proofcharged = .int; proofwork = .int; proofbytes = .int; bytescharged = .int
   if bindings[0] = 0 then return .change('keep','binding.empty')
   if bindings[1] is .binding then request = bindings[1] as .binding
   else return .change('invalid','binding.type')
@@ -965,6 +1584,17 @@ expandcontext: procedure = .llinline..change
   graph = dereference source.ir(); tablebytes = graph.operations() * 48 + graph.functions() * 32 + bindings[0] * 512
   if tablebytes < 0 | tablebytes >= bytes then return .change('limit','inline.tables',source,empty)
   bytes = bytes - tablebytes
+  /* All site decisions borrow one proof bundle for this exact normalized
+   * caller. Publication creates another owner and cannot reuse these facts. */
+  if selected.policy() <> 'never' & selected.hasfacts(owner) = 0 then do
+    sharedproof = .windowcounts(owner,work,bytes,selected.executionroot(owner),selected.executioncontext(owner))
+    points = sharedproof.points(); summaries = sharedproof.summaries()
+    if sharedproof.status() = 'ok' then ignored = selected.usefacts(owner,points,summaries)
+    work = work - sharedproof.usedwork(); bytes = bytes - sharedproof.usedbytes()
+    if work < 0 then return .change('limit','inline.site.proof.work',source,empty)
+    if bytes < 0 then return .change('limit','inline.site.proof.bytes',source,empty)
+  end
+  proofcharged = selected.factwork(); bytescharged = selected.factbytes()
   do
     do i = 1 to source.procedures()
       body = source.procedure(i); localcounts[body.functionid()] = body.locals()
@@ -979,7 +1609,11 @@ expandcontext: procedure = .llinline..change
         previous = bindings[j] as .binding
         if request.callid() = previous.callid() then return .change('invalid','binding.duplicate.site',source,empty)
       end
-      sites[i] = request.callid(); plan = .siteplan(request,selected,work,bytes); work = plan.remaining()
+      sites[i] = request.callid(); plan = .siteplan(request,selected,work,bytes); work = plan.remaining(); bytes = plan.remainingbytes()
+      proofwork = selected.factwork(); work = work - max(0,proofwork - proofcharged); proofcharged = proofwork
+      if work < 0 then return .change('limit','inline.site.proof.work',source,empty,callers,sites,decisions)
+      proofbytes = selected.factbytes(); bytes = bytes - max(0,proofbytes - bytescharged); bytescharged = proofbytes
+      if bytes < 0 then return .change('limit','inline.site.proof.bytes',source,empty,callers,sites,decisions)
       decisions[i] = .decision(plan.status(),plan.reason()) as .object
       if plan.status() = 'invalid' | plan.status() = 'limit' then return .change(plan.status(),plan.reason(),source,empty,callers,sites,decisions)
       if plan.status() <> 'legal' then iterate
@@ -1032,6 +1666,7 @@ expandcontext: procedure = .llinline..change
       else destination = target.reg('r',plan.base() + plan.slots() - 1)
       if plan.scoped() then do
         call objectarraydrop fields; fields[1] = destination as .object; field = shape.target()
+        if shape.kind() <> 1 then field = .lltarget..operand.procedure(body.name())
         if plan.selected() >= 0 then field = .lltarget..operand.procedure(selected.procedurename(provider_ref,request.bodyid()))
         fields[2] = field as .object; text = plan.descriptor(item,target)
         if draft.preflight(length(text),length(text) * 2) = 0 then return .change('limit',draft.error(),source,empty,callers,sites,decisions)
@@ -1047,7 +1682,7 @@ expandcontext: procedure = .llinline..change
       end
       else do
         mappings[item.id()] = 0
-        if plan.usescount() then ignored = code.two(target,'load',target.reg('r',plan.base() + body.locals()),.lltarget..operand.integer(shape.actuals()),at)
+        if plan.usescount() then ignored = code.two(target,'load',target.reg('r',plan.base() + body.locals()),.lltarget..operand.integer(plan.argumentcount()),at)
       end
       steps = empty; clauses = empty; metanames = emptybinary; metaactive = empty
       call objectarraydrop childsources
@@ -1088,13 +1723,21 @@ expandcontext: procedure = .llinline..change
           if returnkind > 1 & shape.hasresult() then do
             field = fields[catalog.returnsource(child.opcode())] as .lltarget..operand; operation = 'load'
             if returnkind = 2 then do
-              original = child.operand(catalog.returnsource(child.opcode())); operation = 'copy'
-              if original.bank() = 'r' then operation = 'move'
+              operation = plan.returnmode(child.id())
+              if wordpos(operation,'copy move') = 0 then return .change('invalid','inline.return.mapping.unproved',source,empty,callers,sites,decisions)
+            end
+            else if returnkind = 3 | returnkind = 4 then do
+              temporary = target.reg('r',plan.returntemporary())
+              ignored = code.two(target,'load',temporary,field,childat); field = temporary
+              operation = 'icopy'; if returnkind = 4 then operation = 'fcopy'
             end
             ignored = code.two(target,operation,destination,field,childat)
           end
           ignored = code.one(target,'br',.lltarget..operand.symbol(after),childat)
         end
+        /* An ordinary LINKARG addresses the callee's physical argument bank.
+         * The clone must address its captured inline bank instead. Existing
+         * LINKARGV already has that meaning and uses generic emission. */
         else if catalog.binding(child.opcode()) = 4 then ignored = code.emit(target,'linkargv',fields,childat)
         else ignored = code.emit(target,child.mnemonic(),fields,childat)
       end
@@ -1137,6 +1780,7 @@ compatibility: class
   _original = .lltarget..module
   _input = .object[]
   _normalized = .lltargetnormalize..change
+  _receipt = .llinline..normalizationreceipt
   *: factory
     arg bindings = .object[]
     _input = bindings
@@ -1151,7 +1795,12 @@ compatibility: class
     else return .change('invalid','binding.type')
     if first.valid() = 0 then return .change('invalid','binding.expired')
     originalowner = first.caller(); original = dereference originalowner; _original = original; _source = _original
-    _normalized = normalize(reference _source,work,bytes); status = _normalized.status()
+    _receipt = .normalizationreceipt.owned(reference _source,work,bytes)
+    status = _receipt.status()
+    if status <> 'ok' then return .change(status,_receipt.reason(),_original,empty)
+    _normalized = _receipt.result(); status = _normalized.status()
+    work = work - _receipt.reservedwork(); bytes = bytes - _receipt.reservedbytes()
+    if work < 1 | bytes < 1 then return .change('limit','normalization.receipt.remaining.allowance',_original,empty)
     do i = 1 to _input[0]
       if _input[i] is .binding then request = _input[i] as .binding
       else return .change('invalid','binding.type',_original,empty)
@@ -1163,7 +1812,7 @@ compatibility: class
     if status <> 'changed' & status <> 'keep' then return .change(status,_normalized.reason(),_original,empty,callers,sites,decisions)
     if status = 'changed' then _source = _normalized.result()
     selected = .context('assembler','default')
-    if selected.certify(reference _source,_normalized) = 0 then return .change('invalid','normalization.certificate.invalid',_original,empty)
+    if selected.certifyreceipt(reference _source,_normalized,reference _receipt) = 0 then return .change('invalid','normalization.certificate.invalid',_original,empty)
     do i = 1 to _input[0]
       request = _input[i] as .binding; provider_ref = request.provider(); provider = dereference provider_ref
       if (provider_ref <refsame> originalowner) then do

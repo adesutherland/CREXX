@@ -1218,6 +1218,17 @@ access: class
     _boundarystart[op] = _boundarydomain[0] + 1; _boundarycount[op] = observations[0]; _boundaryknown[op] = 1
     do i = 1 to observations[0]; _boundarydomain[_boundarydomain[0] + 1] = observations[i]; end
     return
+  /** Unknown continuation observations pin liveness without erasing an
+   * independently known operation-local access row. */
+  pincontinuation: method = .void
+    arg op = .int
+    graph = .llirgraph..index
+    if mutable() = 0 then return
+    if op < 1 | op > _operations then do; call reject('invalid','LL_IR_ACCESS_ID: continuation operation outside index'); return; end
+    if spend(1) = 0 then return
+    graph = dereference _owner
+    _pinned[graph.blockfunction(graph.opblock(op))] = 1
+    return
   seal: method = .int
     graph = .llirgraph..index; op = .int; d = .int; f = .int; next = .int
     if _sealed then return valid()
@@ -1328,6 +1339,16 @@ access: class
     arg op = .int, ordinal = .int
     call checkid(op,_operations); graph = dereference _owner
     return _edgecount[graph.edgeid(op,ordinal)]
+  edgeaccessdomain: method = .int
+    arg op = .int, ordinal = .int, i = .int
+    call checkid(op,_operations); graph = dereference _owner; edge = graph.edgeid(op,ordinal)
+    call checkid(i,_edgecount[edge])
+    return _edgedomain[_edgestart[edge] + i - 1]
+  edgeaccesskind: method = .int
+    arg op = .int, ordinal = .int, i = .int
+    call checkid(op,_operations); graph = dereference _owner; edge = graph.edgeid(op,ordinal)
+    call checkid(i,_edgecount[edge])
+    return _edgekind[_edgestart[edge] + i - 1]
   edgehas: method = .int
     arg op = .int, ordinal = .int, d = .int, kind = .int
     i = .int; edge = .int

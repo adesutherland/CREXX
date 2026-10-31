@@ -5,6 +5,8 @@ import llir
 import lltarget
 import lltargettransfer
 import lltargetcfg
+import lltargetflow
+import llrxascatalog
 
 check: procedure = .int
   arg condition = .int, message = .string
@@ -21,7 +23,7 @@ label: procedure = .int
   return body.record('label',fields,at)
 
 nested: procedure = .int
-  failures = 0; fields = .object[]; row = .lltargetcfg..edge
+  failures = 0; i = .int; fields = .object[]; row = .lltargetcfg..edge
   draft = .lltarget..draft('nested.scope.cfg','fixture:nested.scope.cfg',0)
   at = draft.synthetic('independent nested scope stack')
   body = draft.procedure('main',4,at)
@@ -48,7 +50,7 @@ nested: procedure = .int
   failures = failures + check(cfg.status() = 'ok','nested scope CFG builds under sealed standalone context')
   if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
   failures = failures + check(cfg.scopedepth(inside) = 2 & cfg.scopeat(inside,1) = outer & cfg.scopeat(inside,2) = inner & cfg.scopeparent(inner) = outer,'nested stack preserves outer/inner source ownership')
-  innerexit = 0; outerexit = 0; asynchronous = 0
+  innerexit = 0; outerexit = 0; asynchronous = 0; unknownentry = 0
   do i = 1 to cfg.edges()
     row = cfg.edge(i)
     if row.sourceop() = inside & row.role() = 'normal' then do
@@ -60,14 +62,298 @@ nested: procedure = .int
     if row.sourceop() = inner & row.exposure() = 'inherited-async' & row.role() = 'terminal' & row.phase() = 'after' then do
       if row.scopecomplete() & row.scopeexits() = 2 then asynchronous = row.scopeexit(1) = inner & row.scopeexit(2) = outer
     end
+    if row.sourceop() = inner & row.phase() = 'unknown' & row.asynchronous() = 0 then do
+      if row.scopecomplete() = 0 & row.scopeunknownreason() = 'scope.entry.commit.unproved' then unknownentry = 1
+    end
   end
   failures = failures + check(innerexit & outerexit & asynchronous,'logical return restores one scope; committed async HALT restores every active scope in order')
+  failures = failures + check(unknownentry,'entry callback with unknown phase cannot assume a pre-publication scope stack')
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','nested residual callback flow builds')
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  entryproof = flow.abicallbackat(outer); returnproof = flow.abicallbackat(inside)
+  failures = failures + check(entryproof.intrinsicreason() = 'target.abi.callback.residual.unproved' & entryproof.intrinsicpossible(),'scope entry cannot substitute its ABI rows for unknown whole-operation callback routes: ' || entryproof.intrinsicreason())
+  failures = failures + check(returnproof.intrinsicreason() = 'target.abi.callback.residual.unproved' & returnproof.intrinsicpossible(),'logical return retains residual callbacks before any otherwise clean ABI cursor: ' || returnproof.intrinsicreason())
+  uncertain = flow.scopeat(inside); binding = flow.storageat(inside,'r',3)
+  failures = failures + check(uncertain.known() = 0 & binding.active() = 0,'unknown scope-entry hook cannot publish a committed stack or restore a named current binding')
   foreign = target
   failures = failures + check(profile.matches(reference foreign) = 0,'copied target is not the sealed execution owner')
   return failures
 
+/** Intrinsic NONE does not exclude callback-caused control. The fixed getter
+ * control and authored operational profiles keep their separate premises. */
+callbackcontrol: procedure = .int
+  arg mode = .int
+  failures = 0; ignored = .int; i = .int; integer = .int; synchronous = .int; asynchronous = .int; intrinsic = .int; supplied = .int; residual = .int; unknownpolicy = .int; skippossible = .int; haltpossible = .int; closedcallback = .int
+  produced = .int; following = .int; handler = .int; operand = .int; resultref = .int; sourceref = .int; destination = .int
+  item = .lltarget..record
+  row = .lltargetcfg..edge; action = .lltargettransfer..action; domain = .lltargettransfer..domain
+  catalog = .llrxascatalog..catalog(); draft = .lltarget..draft('callback.control.' || mode,'fixture:callback.control',0)
+  at = draft.synthetic('operation callback paths are separate from intrinsic and ambient signals')
+  body = draft.procedure('main',2,at); fields = .object[]; empty = .object[]
+  ignored = one(body,'getnumdgts',body.reg('r',0),at)
+  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(7) as .object
+  if mode = 1 then produced = one(body,'call',.lltarget..operand.procedure('leaf'),at)
+  else if mode = 2 then produced = one(body,'getnumdgts',body.reg('r',0),at)
+  else if mode = 5 then produced = one(body,'sayx',.lltarget..operand.string('callback' as .binary),at)
+  else if mode = 4 then do
+    fields[1] = .lltarget..operand.symbol('handler') as .object; fields[2] = body.reg('r',0) as .object
+    fields[3] = .lltarget..operand.integer(7) as .object; produced = body.emit('beq',fields,at)
+  end
+  else produced = body.emit('load',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',1) as .object; fields[2] = body.reg('r',0) as .object
+  fields[3] = .lltarget..operand.integer(0) as .object; following = body.emit('iadd',fields,at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at); handler = label(body,'handler',at)
+  ignored = one(body,'ret',.lltarget..operand.integer(1),at)
+  leaf = draft.procedure('leaf',0,at); ignored = leaf.emit('ret',empty,at)
+  target = draft.finish(); failures = failures + check(target.valid(),'callback control source validates ' || mode)
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  profile = .lltargettransfer..profile
+  if mode < 3 | mode = 5 then profile = .lltargettransfer..profile.closedmain(reference target,target.procedureid('main'),'closed-main-default-halt.v1')
+  else do
+    premise = .lltargettransfer..profiledraft(reference target,'independent.callback.control.' || mode)
+    integer = premise.domain('component','fixture.callback.integer',catalog.componentmask('I'))
+    do i = 1 to target.records()
+      item = target.record(i)
+      if item.kind() = 'procedure' then iterate
+      ignored = premise.operation(item.id()); ignored = premise.relocation(item.id(),'none')
+      if item.id() = produced then do
+        operand = 1; if mode = 4 then operand = 2
+        resultref = premise.ref(produced,operand)
+        if mode = 4 then ignored = premise.event(produced,'callback',0,0,'none',0,.lltarget..operand(),'may','all','unknown','fixture.callback')
+        ignored = premise.event(produced,'write',resultref,integer,'literal',0,.lltarget..operand.integer(7))
+        if mode = 4 then do
+          destination = premise.ref(produced,1,'label','symbolic')
+          ignored = premise.event(produced,'edge',destination,0,'none',0,.lltarget..operand(),'must','all','before','handler')
+        end
+      end
+      else if item.id() = following then do
+        resultref = premise.ref(following,1); sourceref = premise.ref(following,2)
+        ignored = premise.event(following,'observe',sourceref,integer)
+        ignored = premise.event(following,'write',resultref,integer)
+      end
+      else if item.kind() = 'instruction' then do; if item.mnemonic() = 'ret' then ignored = premise.event(item.id(),'return',0,0); end
+    end
+    profile = premise.finish()
+  end
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  failures = failures + check(cfg.status() = 'ok','callback control CFG builds ' || mode)
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  item = target.at(produced)
+  do i = 1 to cfg.outedges(produced)
+    row = cfg.outedge(produced,i)
+    if row.asynchronous() then do; if row.phase() = 'after' then asynchronous = 1; end
+    else do
+      if row.phase() = 'unknown' then synchronous = 1
+      if row.boundarykind() = 'callback-policy' & row.complete() = 0 then unknownpolicy = 1
+      if row.boundarykind() = 'closed-main-default-halt' & row.boundaryid() = produced || '.callback.sync.unknown' then closedcallback = 1
+      if row.role() = 'skip' & row.phase() = 'unknown' then skippossible = 1
+      if row.boundarykind() = 'callback-policy-halt' & row.role() = 'terminal' then haltpossible = 1
+      if catalog.signalstate(item.opcode()) <> 0 & row.phase() = word('none before after partial unknown',catalog.signalphase(item.opcode()) + 1) then intrinsic = 1
+      if row.role() = 'handler' & row.targetop() = handler & row.phase() = 'before' then supplied = 1
+    end
+  end
+  if mode = 0 then do
+    failures = failures + check(catalog.signalstate(item.opcode()) = 0 & catalog.callbackobligations(item.opcode()) = catalog.callbackmask('output') & synchronous & asynchronous,'LOAD with intrinsic NONE retains separate resource callback and ambient control')
+    failures = failures + check(closedcallback & unknownpolicy = 0 & skippossible = 0 & haltpossible = 0,'complete resource-only callback preserves the suspended handler table while retaining its distinct signal path')
+  end
+  if mode = 1 | mode = 5 then failures = failures + check(unknownpolicy & skippossible & haltpossible & closedcallback = 0 & cfg.localcomplete(target.procedureid('main')) = 0 & cfg.exceptionalcomplete(target.procedureid('main')) = 0,'entry HALT premise cannot close callback-mutated policy or hide skip/terminal alternatives ' || mode)
+  if mode = 5 then failures = failures + check(catalog.callbackobligations(item.opcode()) = catalog.callbackmask('host'),'reviewed host-only inventory does not borrow the resource-only policy premise')
+  if mode = 1 then do
+    failures = failures + check(synchronous & intrinsic & asynchronous,'no-result CALL keeps raw intrinsic phase plus unknown callback phase and ambient async')
+    instruction = profile.instruction(produced)
+    do i = 1 to instruction.actions()
+      action = instruction.action(i)
+      if action.kind() = 'callback' & left(action.detail(),26) = 'catalog.callback.residual.' then residual = 1
+    end
+    failures = failures + check(residual,'no-result CALL receives the undischarged invocation callback event')
+  end
+  if mode = 2 then failures = failures + check(catalog.callbackobligations(item.opcode()) = 0 & catalog.signalstate(item.opcode()) = 0 & synchronous = 0 & asynchronous,'reviewed raw getter has no operation callback edge and keeps ambient async')
+  if mode = 3 then failures = failures + check(catalog.callbackobligations(item.opcode()) <> 0 & synchronous = 0 & asynchronous = 0,'constructed callback-free premise is not replaced by canonical setter obligations')
+  if mode = 4 then failures = failures + check(supplied & synchronous = 0 & asynchronous = 0,'constructed callback keeps only its explicit before-phase handler edge')
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','callback control flow builds ' || mode)
+  if flow.status() <> 'ok' then do; say flow.reason(); return failures; end
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I') then integer = i
+  end
+  value = flow.componentat(following,'r',0,integer)
+  if mode = 0 | mode = 1 | mode = 4 | mode = 5 then failures = failures + check(value.availability() = 'unknown' & value.known() = 0,'operation callback havoc cannot be undone by a scalar setter or intrinsic phase ' || mode)
+  else failures = failures + check(value.availability() = 'defined','callback-free getter/constructed operation retains its defined scalar ' || mode)
+  if mode = 0 | mode = 5 then do
+    raw = .lltargettransfer..profile(reference target); rawcfg = .lltargetcfg..graph(reference target,reference raw)
+    resumed = 0; outward = 0; distinct = 0; firstboundary = ''
+    do i = 1 to rawcfg.outedges(produced)
+      row = rawcfg.outedge(produced,i)
+      if row.asynchronous() | row.phase() <> 'unknown' then iterate
+      if row.role() = 'resumed' & row.targetop() = following then resumed = 1
+      if row.boundarykind() = 'inherited-signal-policy' & row.complete() = 0 then do
+        outward = 1
+        if firstboundary = '' then firstboundary = row.boundaryid()
+        else if firstboundary <> row.boundaryid() then distinct = 1
+      end
+    end
+    failures = failures + check(resumed & outward,'raw callback control keeps returning inherited handlers and unknown outward departure')
+    if mode = 5 then failures = failures + check(catalog.signalstate(item.opcode()) <> 0 & catalog.signalphase(item.opcode()) = 4 & distinct,'intrinsic UNKNOWN and callback UNKNOWN retain distinct boundary identities at the same operation')
+    limited = .lltargetcfg..graph(reference target,reference profile,1,1)
+    failures = failures + check(limited.status() = 'limit','callback control stays within the shared CFG allowance')
+  end
+  return failures
+
+/** Independent control oracles for reachable policy changes. Only mode 3
+ * returns to the earlier producer; mode 4's host block is disconnected, and
+ * mode 5's clean sibling does not follow an enumerated callback successor.
+ * Unknown local destinations remain explicit gaps rather than invented edges. */
+policyreachability: procedure = .int
+  arg mode = .int
+  i = .int; ignored = .int; cleanprobe = .int; handlerprobe = .int
+  earlygap = .int; lategap = .int; ambientgap = .int; callbackgap = .int; cleangap = .int; handlergap = .int; rootgap = .int
+  fields = .object[]; row = .lltargetcfg..edge
+  draft = .lltarget..draft('callback.policy.reach.' || mode,'fixture:callback.policy.reach',0)
+  at = draft.synthetic('policy changes follow staged successors rather than procedure membership')
+  body = draft.procedure('main',1,at)
+  root = one(body,'getnumdgts',body.reg('r',0),at)
+  if mode = 6 then do
+    fields[1] = .lltarget..operand.symbol('handler') as .object
+    fields[2] = .lltarget..operand.string('OUT_OF_RANGE' as .binary) as .object
+    ignored = body.emit('sigbr',fields,at)
+  end
+  ignored = label(body,'cycle',at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.integer(1) as .object; fields[3] = .lltarget..operand.integer(99) as .object
+  early = body.emit('ichkrng',fields,at)
+  if mode = 4 then do
+    ignored = one(body,'br',.lltarget..operand.symbol('live'),at)
+    ignored = label(body,'disconnected',at)
+  end
+  if mode = 5 then do
+    call objectarraydrop fields; fields[1] = .lltarget..operand.symbol('callback') as .object
+    fields[2] = body.reg('r',0) as .object; ignored = body.emit('brt',fields,at)
+    call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+    fields[2] = .lltarget..operand.integer(1) as .object; fields[3] = .lltarget..operand.integer(99) as .object
+    cleanprobe = body.emit('ichkrng',fields,at)
+    ignored = one(body,'br',.lltarget..operand.symbol('live'),at)
+    ignored = label(body,'callback',at)
+  end
+  if mode = 0 then do
+    call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+    fields[2] = .lltarget..operand.integer(7) as .object; ignored = body.emit('load',fields,at)
+  end
+  else if mode = 2 then ignored = one(body,'call',.lltarget..operand.procedure('leaf'),at)
+  else ignored = one(body,'sayx',.lltarget..operand.string('policy' as .binary),at)
+  ignored = label(body,'live',at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.integer(1) as .object; fields[3] = .lltarget..operand.integer(99) as .object
+  later = body.emit('ichkrng',fields,at)
+  call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+  fields[2] = .lltarget..operand.integer(8) as .object; resource = body.emit('load',fields,at)
+  ambient = one(body,'getnumdgts',body.reg('r',0),at)
+  destination = 'sink'; if mode = 3 then destination = 'cycle'
+  ignored = one(body,'br',.lltarget..operand.symbol(destination),at)
+  if mode = 6 then do
+    ignored = label(body,'handler',at)
+    call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+    fields[2] = .lltarget..operand.integer(1) as .object; fields[3] = .lltarget..operand.integer(99) as .object
+    handlerprobe = body.emit('ichkrng',fields,at)
+    ignored = one(body,'br',.lltarget..operand.symbol('sink'),at)
+  end
+  ignored = label(body,'sink',at); ignored = one(body,'br',.lltarget..operand.symbol('sink'),at)
+  leaf = draft.procedure('leaf',0,at); call objectarraydrop fields; ignored = leaf.emit('ret',fields,at)
+  target = draft.finish(); failures = check(target.valid(),'policy reachability source validates ' || mode)
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  profile = .lltargettransfer..profile.closedmain(reference target,target.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  failures = failures + check(cfg.status() = 'ok','policy reachability CFG builds ' || mode)
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  do i = 1 to cfg.edges()
+    row = cfg.edge(i)
+    if row.boundarykind() <> 'callback-policy' | pos('.reachable-callback.',row.boundaryid()) = 0 then iterate
+    if row.sourceop() = root then rootgap = 1
+    if row.sourceop() = early & row.phase() = 'before' & row.asynchronous() = 0 then earlygap = 1
+    if row.sourceop() = later & row.phase() = 'before' & row.asynchronous() = 0 then lategap = 1
+    if row.sourceop() = resource & row.phase() = 'unknown' & row.asynchronous() = 0 then callbackgap = 1
+    if row.sourceop() = ambient & row.phase() = 'after' & row.asynchronous() then ambientgap = 1
+    if row.sourceop() = cleanprobe then cleangap = 1
+    if row.sourceop() = handlerprobe then handlergap = 1
+  end
+  expected = mode <> 0 & mode <> 4
+  failures = failures + check(lategap = expected & callbackgap = expected & ambientgap = expected,'only reachable non-resource routes open later intrinsic, resource-callback and ambient policy paths ' || mode)
+  failures = failures + check(rootgap = 0 & earlygap = (mode = 3),'backedges propagate policy uncertainty without tainting unrelated earlier producers ' || mode)
+  if mode = 0 | mode = 4 then do
+    fn = target.procedureid('main')
+    failures = failures + check(cfg.localcomplete(fn) & cfg.exceptionalcomplete(fn) & cfg.asynchronouscomplete(fn) & cfg.policycorrelationcomplete(fn),'resource-only or disconnected callbacks preserve live control completeness ' || mode)
+  end
+  if mode = 5 then failures = failures + check(cleangap = 0,'a reachable host callback does not blanket-taint an unrelated staged sibling')
+  if mode = 6 then failures = failures + check(handlergap,'callback policy state reaches authored signal-handler successors')
+  if mode = 3 then do
+    limited = .lltargetcfg..graph(reference target,reference profile,cfg.usedwork() - 1,cfg.usedbytes())
+    failures = failures + check(limited.status() = 'limit' & limited.identity() = 0,'bounded policy closure never publishes an unfinished CFG')
+  end
+  return failures
+
+/** Clearing a pending delivery bit neither uninstalls an authored handler
+ * nor restores a table that an earlier callback may have replaced. */
+pendingcontrol: procedure = .int
+  arg mode = .int
+  i = .int; ignored = .int; policies = .int; pendingeffect = .int; opaque = .int; retainedhandler = .int; propagated = .int
+  fields = .object[]; empty = .object[]; action = .lltargettransfer..action; row = .lltargetcfg..edge
+  catalog = .llrxascatalog..catalog(); draft = .lltarget..draft('pending.control.' || mode,'fixture:pending.control',0)
+  at = draft.synthetic('pending breakpoint bit is separate from structural handler policy')
+  body = draft.procedure('main',1,at)
+  ignored = one(body,'getnumdgts',body.reg('r',0),at)
+  if mode = 1 then do
+    fields[1] = .lltarget..operand.symbol('handler') as .object
+    fields[2] = .lltarget..operand.string('BREAKPOINT' as .binary) as .object
+    ignored = body.emit('sigbr',fields,at)
+  end
+  if mode = 2 then ignored = one(body,'sayx',.lltarget..operand.string('before pending clear' as .binary),at)
+  pending = body.emit('bpoff',empty,at)
+  if mode = 1 then following = one(body,'signal',.lltarget..operand.string('BREAKPOINT' as .binary),at)
+  else do
+    call objectarraydrop fields; fields[1] = body.reg('r',0) as .object
+    fields[2] = .lltarget..operand.integer(7) as .object; following = body.emit('load',fields,at)
+  end
+  ignored = one(body,'br',.lltarget..operand.symbol('sink'),at)
+  handler = label(body,'handler',at); ignored = one(body,'br',.lltarget..operand.symbol('sink'),at)
+  ignored = label(body,'sink',at); ignored = one(body,'br',.lltarget..operand.symbol('sink'),at)
+  target = draft.finish(); failures = check(target.valid(),'pending control source validates ' || mode)
+  if target.valid() = 0 then do; say target.error(); return failures; end
+  profile = .lltargettransfer..profile.closedmain(reference target,target.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  failures = failures + check(cfg.status() = 'ok','pending control CFG builds ' || mode)
+  if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
+  item = target.at(pending); properties = catalog.signalproperties(item.opcode())
+  failures = failures + check((properties <idiv> 32) % 2 & (properties <idiv> 8) % 2 = 0 & catalog.policyeffect(item.opcode()) = 3 & catalog.policyname(item.opcode()) = 'BREAKPOINT' & (catalog.signaldependencies(item.opcode()) <idiv> 2) % 2 = 0,'BPOFF retains pending effect/name without structural policy write or dependency')
+  instruction = profile.instruction(pending)
+  do i = 1 to instruction.actions()
+    action = instruction.action(i)
+    if action.kind() = 'policy' then policies = policies + 1
+    if action.kind() = 'external' & action.detail() = 'catalog.opaque' then opaque = 1
+    if action.kind() = 'external' & action.detail() = 'catalog.signal.pending.3' then do
+      value = action.literal()
+      pendingeffect = action.sourcekind() = 'literal' & value.kind() = 'S' & value.text() = 'BREAKPOINT' & action.intrinsicfootprint() = 1
+    end
+  end
+  failures = failures + check(policies = 0 & pendingeffect & opaque & catalog.barrier(item.opcode()) <> 0,'pending delivery remains a distinct observable action and barrier without a structural policy fact')
+  do i = 1 to cfg.outedges(following)
+    row = cfg.outedge(following,i)
+    if row.role() = 'handler' & row.targetop() = handler & row.phase() = 'before' & row.signalname() = 'BREAKPOINT' then retainedhandler = 1
+    if row.boundarykind() = 'callback-policy' & pos('.reachable-callback.',row.boundaryid()) > 0 then propagated = 1
+  end
+  if mode = 0 then do
+    fn = target.procedureid('main')
+    failures = failures + check(cfg.policycorrelationcomplete(fn) & cfg.localcomplete(fn) & propagated = 0,'pending-only control does not install or invalidate a structural handler table')
+    closure = .lltargettransfer..profile.closedcalls(reference target,fn,'closed-main-default-halt.v1')
+    failures = failures + check(closure.executionreason() = 'target.context.call.pending.unproved' & closure.defaulthalt(fn) = 0,'sealed call closure keeps pending delivery as a separate conservative barrier')
+  end
+  if mode = 1 then failures = failures + check(retainedhandler,'BPOFF cannot erase an installed handler for a later explicit BREAKPOINT')
+  if mode = 2 then failures = failures + check(propagated,'clearing a pending bit cannot erase earlier callback policy uncertainty')
+  return failures
+
 main: procedure = .int
-  i = .int
+  i = .int; variant = .int; faultpolicy = .int
+  catalog = .llrxascatalog..catalog()
   fields = .object[]
   failures = 0; row = .lltargetcfg..edge
   draft = .lltarget..draft('canonical.signal.cfg','fixture:canonical.signal.cfg',0)
@@ -81,7 +367,7 @@ main: procedure = .int
   fault = body.emit('ichkrng',fields,at)
   call objectarraydrop fields; fields[1] = body.reg('r',1) as .object; fields[2] = .lltarget..operand.integer(7) as .object
   following = body.emit('load',fields,at)
-  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  mainreturn = one(body,'ret',.lltarget..operand.integer(0),at)
   handler = label(body,'handler',at)
   ignored = one(body,'ret',.lltarget..operand.integer(1),at)
   body = draft.procedure('scoped',2,at)
@@ -102,14 +388,17 @@ main: procedure = .int
   cfg = .lltargetcfg..graph(reference target,reference profile)
   failures = failures + check(cfg.status() = 'ok','canonical signal CFG builds')
   if cfg.status() = 'ok' then do
-    localhandler = 0; inheritedresume = 0; outward = 0; scoped = 0; outer = 0; entered = 0; unknownscope = 0
+    localhandler = 0; inheritedresume = 0; outward = 0; scoped = 0; outer = 0; entered = 0; unknownscope = 0; callbackhandler = 0; departurepolicy = 0; faultpolicy = 0
     do i = 1 to cfg.edges()
       row = cfg.edge(i)
       if row.sourceop() = fault then do
         if row.role() = 'handler' & row.targetblock() = cfg.projectedblock(handler) & row.phase() = 'before' then localhandler = 1
         if row.role() = 'resumed' & row.exposure() = 'inherited' & row.targetblock() = cfg.projectedblock(following) then inheritedresume = 1
         if row.boundarykind() = 'inherited-signal-policy' & row.complete() = 0 then outward = 1
+        if row.boundarykind() = 'callback-policy' then faultpolicy = 1
       end
+      if row.sourceop() = mainreturn & row.boundarykind() = 'callback-policy' & row.complete() = 0 then departurepolicy = 1
+      if row.sourceop() = following & row.role() = 'handler' & row.targetop() = handler & row.phase() = 'unknown' & row.asynchronous() = 0 then callbackhandler = 1
       if row.sourceop() = scopeentry & row.role() = 'normal' then do
         if row.scopecomplete() & row.scopeenters() = 1 then entered = row.scopeentry(1) = scopeentry
       end
@@ -121,7 +410,8 @@ main: procedure = .int
       if row.sourceop() = outerreturn & row.role() = 'terminal' & row.targetblock() = 0 then outer = 1
     end
     failures = failures + check(localhandler & inheritedresume & outward,'local handler, foreign resumption and unknown outward departure remain distinct')
-    failures = failures + check(cfg.localcomplete(target.procedureid('main')) & cfg.exceptionalcomplete(target.procedureid('main')) = 0,'local destination completeness does not invent complete inherited policy')
+    failures = failures + check(callbackhandler,'setter callback can reach an authored handler independently of its intrinsic NONE contract')
+    failures = failures + check(cfg.localcomplete(target.procedureid('main')) = 0 & cfg.exceptionalcomplete(target.procedureid('main')) = 0 & departurepolicy & faultpolicy = 0,'unknown departure policy keeps local coverage incomplete without inventing an earlier callback producer')
     failures = failures + check(scoped & outer & entered,'logical RET leaves exactly its scope while outer RET departs physically')
     failures = failures + check(cfg.scopeowner(scopeentry) = 0 & cfg.scopeowner(scopedreturn) = scopeentry & cfg.scopedepth(scopedreturn) = 1 & cfg.scopeat(scopedreturn,1) = scopeentry & cfg.scopeparent(scopeentry) = 0 & cfg.scopecontinuation(scopeentry) = continued,'source scope stack and continuation use checked source identities')
     failures = failures + check(cfg.logicalreturn(scopedreturn) & cfg.physicaldeparture(scopedreturn) = 0 & cfg.physicaldeparture(outerreturn) & unknownscope,'return queries separate logical/physical departure and retain unknown inherited exits')
@@ -131,17 +421,20 @@ main: procedure = .int
   closedcfg = .lltargetcfg..graph(reference target,reference closedprofile)
   failures = failures + check(closedcfg.status() = 'ok' & closedprofile.premise() = 'canonical' & closedprofile.executionroot() = target.procedureid('main'),'explicit closed-main context binds one canonical transfer owner')
   if closedcfg.status() = 'ok' then do
-    halted = 0; retainedhandler = 0; foreignroot = 0; othersunknown = 0
+    halted = 0; retainedhandler = 0; foreignroot = 0; othersunknown = 0; callbackpolicy = 0; faultpolicy = 0
     do i = 1 to closedcfg.edges()
       row = closedcfg.edge(i)
       if row.sourceop() = fault then do
         if row.boundarykind() = 'closed-main-default-halt' & row.role() = 'terminal' & row.scopecomplete() then halted = 1
         if row.role() = 'handler' & row.targetop() = handler then retainedhandler = 1
-        if row.boundarykind() = 'inherited-signal-policy' then foreignroot = 1
+        if row.boundarykind() = 'inherited-signal-policy' & row.phase() = 'before' then foreignroot = 1
+        if row.boundarykind() = 'callback-policy' then faultpolicy = 1
       end
+      if row.sourceop() = mainreturn & row.boundarykind() = 'callback-policy' & row.complete() = 0 then callbackpolicy = 1
       if row.sourceop() = scopedreturn & row.complete() = 0 then othersunknown = 1
     end
-    failures = failures + check(halted & retainedhandler & foreignroot = 0 & othersunknown,'closed main keeps authored handlers and leaves other procedure inheritance unknown')
+    faultitem = target.at(fault)
+    failures = failures + check(halted & retainedhandler & foreignroot = 0 & othersunknown & callbackpolicy & faultpolicy = 0 & catalog.callbackobligations(faultitem.opcode()) = 0,'entry HALT keeps the callback-free intrinsic handler while unknown departure and other procedure policies remain open')
   end
   else say closedcfg.message()
   wrongroot = .lltargettransfer..profile.closedmain(reference target,target.procedureid('scoped'),'closed-main-default-halt.v1')
@@ -181,5 +474,8 @@ main: procedure = .int
   failed_target = failed_draft.finish()
   failures = failures + check(first_error <> '' & refused_body.functionid() = 0 & failed_target.valid() = 0 & failed_target.error() == first_error,'malformed draft preserves its first diagnostic without constructing expired function handles')
   failures = failures + nested()
+  do variant = 0 to 5; failures = failures + callbackcontrol(variant); end
+  do variant = 0 to 6; failures = failures + policyreachability(variant); end
+  do variant = 0 to 2; failures = failures + pendingcontrol(variant); end
   say 'TARGET_SIGNAL_CFG|failures=' || failures
   return failures

@@ -1,0 +1,152 @@
+/* cREXX License (MIT). Independent selection/invocation and typed-window oracle. */
+options levelb
+import rxfnsb
+import llir
+import lltarget
+import lltargettransfer
+import llinline
+import llrxascatalog
+
+check: procedure = .int
+  arg value = .int, label = .string
+  if value then return 0
+  say 'FAIL:' || label; return 1
+
+selector: procedure = .int
+  arg profile = .lltargettransfer..profile, operation = .int, isfactory = .int
+  failures = 0; i = .int; selected = 0; calls = 0; written = 0
+  windowref = 0; attributes = 0; flags = 0; callbackseen = 0; resolvercallbacks = 0; conditions = 0
+  row = profile.instruction(operation); action = .lltargettransfer..action
+  ref = .lltargettransfer..refview; domain = .lltargettransfer..domain
+  catalog = .llrxascatalog..catalog()
+  do i = 1 to row.references()
+    ref = row.ref(i)
+    if ref.kind() = 'window' then windowref = ref.id()
+  end
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if callbackseen then failures = failures + check(action.kind() = 'callback','callback barriers are the final ordered actions')
+    if action.kind() = 'capture' & action.detail() = 'catalog.callback.condition' then do
+      conditions = conditions + 1
+      failures = failures + check(written = 0 & action.path() = 'all' & action.phase() = 'before','conditional resource snapshot precedes every setter')
+    end
+    if action.kind() = 'callback' then do
+      callbackseen = 1
+      failures = failures + check(action.path() = 'all' & action.phase() = 'unknown' & action.certainty() = 'may','callback preserves every normal and exceptional prefix')
+      if action.detail() = 'catalog.callback.selection' then do
+        resolvercallbacks = resolvercallbacks + 1
+        failures = failures + check(action.subject() = 0 & action.domain() = 0 & action.sourcekind() = 'none','resolver mutation has no asserted finite resource extent')
+      end
+      else if action.sourcekind() = 'captured' then failures = failures + check(action.sourceid() < action.id(),'resource callback consumes an earlier immutable capture')
+    end
+    if wordpos(action.kind(),'call callcapture scope-enter') > 0 then calls = calls + 1
+    if action.kind() = 'observe' then do
+      failures = failures + check(written = 0,'selector observations precede result writes')
+      if action.subject() = windowref & action.domain() > 0 then do
+        domain = profile.domain(action.domain())
+        if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('object-type') then attributes = attributes + 1
+        if domain.kind() = 'flag' then flags = flags + 1
+      end
+    end
+    if wordpos(action.kind(),'write clear select') > 0 then do
+      written = 1
+      if isfactory = 0 then failures = failures + check(action.path() = 'normal','failed method lookup preserves prior result before resource hooks')
+    end
+    if action.kind() = 'select' then do
+      selected = selected + 1; domain = profile.domain(action.domain())
+      failures = failures + check(action.sourcekind() = 'literal' & action.literal().kind() = 'S' & action.detail() = 'catalog.selection','selection carries a typed descriptor')
+      failures = failures + check(domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I'),'selection provenance defines a procedure pointer integer')
+    end
+  end
+  failures = failures + check(selected = 1 & calls = 0 & row.complete('calls'),'selected and unselected selectors never invoke a body')
+  failures = failures + check(callbackseen & conditions > 0,'selector result resource hooks have captured conditions and a final barrier')
+  if isfactory then do
+    failures = failures + check(windowref > 0 & attributes = 1 & flags > 0,'factory symbolic actual window observes complete values including object type and flags')
+    failures = failures + check(resolvercallbacks = 1,'factory match callback is an unconditional mutation boundary')
+  end
+  else do
+    failures = failures + check(windowref = 0,'method receiver selection does not invent an argument window')
+    failures = failures + check(resolvercallbacks = 0,'method lookup does not invoke factory match callbacks')
+  end
+  return failures
+
+main: procedure = .int
+  failures = 0; ignored = .int; i = .int; targetref = .int
+  observations = 0; captures = 0; calls = 0
+  action = .lltargettransfer..action; domain = .lltargettransfer..domain; ref = .lltargettransfer..refview
+  catalog = .llrxascatalog..catalog()
+  draft = .lltarget..draft('selection.roles','fixture:selection.roles',0)
+  at = draft.synthetic('selection is not invocation'); root = draft.procedure('main',8,at)
+  fields = .object[]; fields[1] = root.reg('r',0) as .object; fields[2] = root.reg('r',1) as .object
+  fields[3] = .lltarget..operand.string('member()' as .binary) as .object
+  methodid = root.emit('srcmethodsel',fields,at)
+  /* Result/receiver alias cannot move observations after the setter. */
+  fields[1] = root.reg('r',1) as .object
+  unusedid = root.emit('srcmethodsel',fields,at)
+  call objectarraydrop fields; fields[1] = root.reg('r',2) as .object
+  fields[2] = .lltarget..operand.string('fixture.new()' as .binary) as .object; fields[3] = root.reg('r',3) as .object
+  factoryid = root.emit('srcfprocsel',fields,at)
+  fields[1] = root.reg('r',4) as .object; fields[2] = root.reg('r',0) as .object
+  dynamicid = root.emit('dcall',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.string('visible' as .binary) as .object
+  outputid = root.emit('sayx',fields,at)
+  call objectarraydrop fields; fields[1] = .lltarget..operand.integer(0) as .object
+  returnid = root.emit('ret',fields,at)
+  source = draft.finish(); failures = failures + check(source.valid(),'typed selection fixture validates')
+  if source.valid() = 0 then do; say source.error(); return 1; end
+  graph = dereference source.ir(); before = graph.binary()
+  profile = .lltargettransfer..profile(reference source)
+  failures = failures + check(profile.status() = 'ok','canonical selection profile validates')
+  if profile.status() <> 'ok' then do; say profile.message(); return 1; end
+  failures = failures + selector(profile,methodid,0) + selector(profile,unusedid,0) + selector(profile,factoryid,1)
+  abiop = source.at(returnid).opcode()
+  failures = failures + check(catalog.abistate(abiop,'scoped-return') = 'known' & catalog.abisteps(abiop,'scoped-return') = 6,'generated ABI table exposes numeric result plus scope leave')
+  failures = failures + check(catalog.abioperation(abiop,'scoped-return',1) = 'return-integer' & catalog.abidestinationextent(abiop,'scoped-return',1) = 'none','immediate return uses direct fields without releasing the result payload')
+  failures = failures + check(catalog.abioperation(abiop,'scoped-return',2) = 'restore-policy' & catalog.abicheckpoint(abiop,'scoped-return',2) = 'leave-policy','generated leave restores signal policy before owned cleanup')
+  failures = failures + check(catalog.abirepeat(abiop,'scoped-return',3) = 'owned-begin' & catalog.abirepeat(abiop,'scoped-return',4) = 'owned-end' & catalog.abidestinationextent(abiop,'scoped-return',3) = 'full-capacity','owned clear/restore is a repeated per-slot pair over full backing capacity')
+  failures = failures + check(catalog.abioperation(abiop,'scoped-return',5) = 'restore-numeric' & catalog.abioperation(abiop,'scoped-return',6) = 'pop-scope','numeric restoration precedes final scope pop')
+  failures = failures + check(catalog.abistate(abiop,'frame-unwind') = 'unknown' & catalog.abisteps(abiop,'frame-unwind') = 0 & catalog.abistate(-1,'entry') = 'unknown' & catalog.abioperation(abiop,'scoped-return',7) = 'unknown','unmapped ABI modes and out-of-range rows never imply an empty proof')
+  request = llinline..bind(reference source,factoryid,reference source,source.procedureid('main'))
+  recipe = .llinline..callrecipe(request)
+  failures = failures + check(recipe.status() = 'keep' & recipe.reason() = 'call.contract.not.invocation','factory selection is never an inline invocation candidate')
+  request = llinline..bind(reference source,outputid,reference source,source.procedureid('main'))
+  recipe = .llinline..callrecipe(request)
+  failures = failures + check(recipe.status() = 'invalid' & recipe.reason() = 'call.contract.unavailable','a selected ordinary instruction without a call descriptor is an invalid binding')
+  request = llinline..bind(reference source,dynamicid,reference source,source.procedureid('main'))
+  recipe = .llinline..callrecipe(request)
+  failures = failures + check(recipe.status() = 'ok' & recipe.kind() = catalog.callkind(source.at(dynamicid).opcode()) & recipe.counted(),'a described dynamic invocation keeps its valid recipe independently of target proof')
+  row = profile.instruction(dynamicid); targetref = 0
+  do i = 1 to row.references()
+    ref = row.ref(i)
+    if ref.kind() = 'explicit' & ref.operandordinal() = 2 then targetref = ref.id()
+  end
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if action.kind() = 'observe' & action.subject() = targetref then do
+      observations = observations + 1; domain = profile.domain(action.domain())
+      failures = failures + check(domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I'),'DCALL observes integer target, never string')
+    end
+    if action.kind() = 'callcapture' then captures = captures + 1
+    if action.kind() = 'call' then calls = calls + 1
+  end
+  failures = failures + check(targetref > 0 & observations = 1 & captures = 1 & calls = 1,'only the invocation captures and enters a callee')
+  row = profile.instruction(outputid); external = 0
+  do i = 1 to row.actions()
+    action = row.action(i)
+    if action.kind() = 'external' & action.detail() = 'catalog.opaque' then external = external + 1
+    failures = failures + check(action.kind() <> 'unknown','known visible output does not become unknown scalar clobber')
+  end
+  failures = failures + check(row.references() = 0 & external = 1 & row.complete('effects') & catalog.residualobservable(row.record().opcode()),'literal output has a nonvacuous generic observable residual')
+  independent = .lltargettransfer..profiledraft(reference source,'malformed-selection')
+  outputref = independent.ref(methodid,1); integerdomain = independent.domain('component','I',catalog.componentmask('I'))
+  ignored = independent.event(methodid,'select',outputref,integerdomain,'literal',0,.lltarget..operand.integer(7))
+  invalid = independent.finish()
+  failures = failures + check(invalid.status() = 'invalid','a pointer-shaped integer is not a selection descriptor')
+  fake = .lltarget..operand.integer(37)
+  forged = .lltargettransfer..selectionbinding(reference source,methodid,reference source,source.procedureid('main'),fake as .object,methodid)
+  failures = failures + check(forged.valid() = 0 & forged.status() = 'unknown','ordinary object bytes cannot mint native selection authority without a host context')
+  tiny = .lltargettransfer..profile(reference source,1,1)
+  failures = failures + check(tiny.status() = 'limit','tiny selection profile fails deterministically')
+  graph = dereference source.ir(); failures = failures + check(graph.binary() = before,'selection analysis preserves exact input')
+  say 'TARGET_SELECTION|failures=' || failures
+  return failures

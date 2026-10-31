@@ -1,0 +1,67 @@
+/* cREXX License (MIT). Native-stage fixed-owner/receipt lifecycle controls.
+ * Ordinary B construction of this session grants no native selection token. */
+options levelb
+import rxfnsb
+import lltarget
+import lltargetnormalize
+import llinline
+import llrxinlinestage
+
+check: procedure = .int
+  arg condition = .int, label = .string
+  if condition then return 0
+  say 'FAIL:' || label; return 1
+
+unready: procedure = .int
+  arg stage = reference .llrxinlinestage..session
+  current = dereference stage
+  do
+    ignored = current.resultarray()
+    return 0
+  on signal as problem
+    return problem.name() = 'ERROR' & pos('result candidates absent',problem.message()) > 0
+  end
+  return 0
+
+tiny: procedure = .int
+  arg names = .string[], sources = .binary[]
+  stage = .llrxinlinestage..session(names,sources)
+  do
+    call stage.canonicalize(1)
+    return 0
+  on signal as problem
+    return problem.name() = 'ERROR' & pos('LL_RESOURCE_LIMIT',problem.message()) > 0
+  end
+  return 0
+
+main: procedure = .int
+  failures = 0; nl = '0a'x as .string
+  names = .string[]; sources = .binary[]
+  names[1] = 'stage.first'; names[2] = 'stage.second'
+  sources[1] = ('.globals=0' || nl || 'main() .locals=0' || nl || ' ret 0' || nl) as .binary
+  sources[2] = ('.globals=0' || nl || 'main() .locals=0' || nl || ' ret' || nl) as .binary
+  stage = .llrxinlinestage..session(names,sources)
+  call stage.canonicalize(4000000)
+  failures = failures + check(stage.count() = 2 & unready(reference stage),'ordinary results are unavailable before candidate preparation')
+  call stage.normalize()
+  firstref = stage.owner(1,1); secondref = stage.owner(2,1)
+  first = dereference firstref; second = dereference secondref
+  firstid = first.identity(); secondid = second.identity()
+  firstop = stage.operation(1,'main',0,1); secondop = stage.operation(2,'main',0,1)
+  failures = failures + check(firstop > 0 & secondop > 0,'both fixed candidate owners support private phase-1 enrollment mapping')
+  resultref = stage.resultarray(); normalizedref = stage.normalizationarray()
+  results = dereference resultref; normalized = dereference normalizedref
+  afterfirst = stage.owner(1,1); aftersecond = stage.owner(2,1)
+  failures = failures + check((firstref <refsame> afterfirst) & (secondref <refsame> aftersecond) & first.identity() = firstid & second.identity() = secondid,'receipt completion preserves both enrolled owner cells and identities')
+  proofref = stage.receipt(1); proof = dereference proofref
+  context = .llinline..context('linker','all-legal')
+  failures = failures + check(proof.status() = 'ok' & proof.canonical() & context.certifyreceipt(firstref,normalized[1],proofref),'exact durable native-stage receipt is accepted by the shared consumer')
+  failures = failures + check(results[1].identity() = firstid & results[2].identity() = secondid & normalized[1].warnings() = 0 & normalized[2].warnings() = 0,'all results and warnings publish only after receipt completion')
+  capability = .lltarget..operand.string('not-native-authority' as .binary)
+  accepted = stage.addproof(1,firstop,1,first.procedureid('main'),0,1,capability as .object)
+  failures = failures + check(accepted = 0,'a finalized profile cannot accept late enrollment rows')
+  failures = failures + check(tiny(names,sources),'one session allowance rejects insufficient preparation before publication')
+  allowance1 = stage.claimwork(2); allowance2 = stage.claimwork(1)
+  failures = failures + check(allowance1 > 0 & allowance2 > 0 & allowance1 + allowance2 <= 4000000,'expansion claims partition the remaining request allowance')
+  say 'TARGET_NATIVE_STAGE|failures=' || failures
+  return failures

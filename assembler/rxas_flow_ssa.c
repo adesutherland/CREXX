@@ -652,7 +652,7 @@ static int flow_ssa_append_value_updates(
                 analysis->procedure, analysis->metrics.epoch, instruction_id);
         version.signal_dependencies =
                 updates[index].kind == RXAS_FLOW_VALUE_DERIVED && instruction
-                ? instruction->signal.dependencies : RXOP_SIGNAL_DEP_NONE;
+                ? instruction->intrinsic_signal.dependencies : RXOP_SIGNAL_DEP_NONE;
         for (effect = 0; effect < RXAS_FLOW_EFFECT_CLASS_COUNT; effect++) {
             version.definition_effects[effect] = RXAS_FLOW_ID_NONE;
             if (updates[index].kind == RXAS_FLOW_VALUE_DERIVED &&
@@ -912,6 +912,10 @@ static int flow_ssa_add_call_argument_clobbers(
     return 1;
 }
 
+static size_t flow_ssa_add_clobber_state(
+        RxasFlowSsaAnalysis *analysis, size_t parent, size_t block_id,
+        size_t instruction_id, unsigned int flags);
+
 static size_t flow_ssa_build_normal_transfer(
         RxasFlowSsaAnalysis *analysis, const RxasFlowInstruction *instruction,
         size_t input_state) {
@@ -931,12 +935,38 @@ static size_t flow_ssa_build_normal_transfer(
     unsigned int dynamic_value_components;
     unsigned int flags;
     int opcode;
+    int callback_postwrite;
     FlowSsaState state;
     record = rxas_flow_procedure_record(
             analysis->procedure, analysis->metrics.epoch,
             instruction->record_id);
     item = record ? record->queue_record : 0;
     if (!item) return input_state;
+    callback_postwrite = 0;
+    if (instruction->callback_obligations) {
+        if (!instruction->op ||
+            !rxop_callback_normal_preserves_frame(instruction->op->opcode))
+            return flow_ssa_add_clobber_state(
+                    analysis, input_state, instruction->block_id, instruction->id,
+                    FLOW_SSA_MAP_CLOBBER_ALL | FLOW_SSA_VALUE_CLOBBER_ALL);
+        /* Supported public-ABI callbacks return to the suspended frame's same
+         * pointer tables. Pointees, effects and lifetimes remain unknown. This
+         * excludes invocation/scope/return and every delivered handler path. */
+        callback_postwrite = instruction->op &&
+                rxop_callback_postwrite_operand(instruction->op->opcode) != 0;
+        if (!callback_postwrite) {
+            unsigned int clobber = FLOW_SSA_VALUE_CLOBBER_ALL;
+            const char *recipe = rxop_binding_recipe(instruction->op->opcode);
+            /* Callback table stability does not erase explicit compound
+             * binding/implicit effects of the instruction itself. */
+            if (!recipe || *recipe || instruction->effects.implicit != RXOP_IMPLICIT_NONE ||
+                rxop_binding_action(instruction->op->opcode) != RXOP_BINDING_NONE)
+                clobber |= FLOW_SSA_MAP_CLOBBER_ALL;
+            return flow_ssa_add_clobber_state(
+                    analysis, input_state, instruction->block_id, instruction->id, clobber);
+        }
+    }
+
     map_capacity = item->operandCount * 2 + 8;
     call_argument_count = flow_ssa_call_argument_register_count(
             instruction, item);
@@ -954,7 +984,7 @@ static size_t flow_ssa_build_normal_transfer(
     map_count = 0;
     value_count = 0;
     call_range_base = RXAS_FLOW_ID_NONE;
-    flags = 0;
+    flags = callback_postwrite ? FLOW_SSA_VALUE_CLOBBER_ALL : 0;
     opcode = instruction->op ? instruction->op->opcode : -1;
     dynamic_value_components =
             opcode == OP_ISETATTR1_REG_INT_REG ||
@@ -1194,6 +1224,10 @@ static size_t flow_ssa_build_normal_transfer(
                 components = rxop_component_writes(opcode, operand);
                 if (!components) components = RXOP_COMPONENT_ALL;
                 cleared_components = rxop_component_clears(opcode, operand);
+                /* set_int/float/string clear native ops after the last hook.
+                 * Reference release precedes that hook and can be undone by
+                 * reentry, so it is not a post-hook absence theorem. */
+                if (callback_postwrite) cleared_components &= RXOP_COMPONENT_NATIVE_PAYLOAD;
                 derivation = rxop_value_derivation(opcode);
                 source = RXAS_FLOW_ID_NONE;
                 kind = RXAS_FLOW_VALUE_WRITE;
@@ -1224,10 +1258,11 @@ static size_t flow_ssa_build_normal_transfer(
                     presence = RXAS_FLOW_COMPONENT_PRESENCE_UNKNOWN;
                     source = flow_ssa_operand_register(analysis, item, 1);
                 }
-                else if (item->operandCount > 1 && operand == 0 &&
-                         !flow_token_is_register(flow_ssa_operand(item, 1))) {
+                else if (operand == 0 && rxop_literal_operand(opcode) &&
+                         rxop_literal_operand(opcode) <= item->operandCount &&
+                         (components & rxop_literal_components(opcode))) {
                     kind = RXAS_FLOW_VALUE_CONSTANT;
-                    constant_token = flow_ssa_operand(item, 1);
+                    constant_token = flow_ssa_operand(item, rxop_literal_operand(opcode) - 1u);
                 }
                 for (bit = 0; bit < FLOW_SSA_COMPONENT_COUNT; bit++) {
                     if (!(components & flow_component_bits[bit])) continue;
@@ -1426,6 +1461,10 @@ static size_t flow_ssa_build_failure_transfer(
     size_t value_offset;
     FlowSsaState state;
     unsigned int flags;
+    if (instruction->callback_obligations)
+        return flow_ssa_add_clobber_state(
+                analysis, before_state, instruction->block_id, instruction->id,
+                FLOW_SSA_MAP_CLOBBER_ALL | FLOW_SSA_VALUE_CLOBBER_ALL);
     if (instruction->signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES)
         return before_state;
     if (instruction->signal.phase == RXOP_SIGNAL_PHASE_AFTER_WRITES)
@@ -1617,7 +1656,9 @@ static int flow_ssa_set_edges(RxasFlowSsaAnalysis *analysis,
                               size_t after_last) {
     const RxasFlowBlock *block;
     const RxasFlowInstruction *instruction;
-    size_t failure_state;
+    size_t failure_state = RXAS_FLOW_ID_NONE;
+    size_t intrinsic_state = RXAS_FLOW_ID_NONE;
+    size_t handled_state = RXAS_FLOW_ID_NONE;
     size_t offset;
     block = rxas_flow_procedure_block(
             analysis->procedure, analysis->metrics.epoch, block_id);
@@ -1625,12 +1666,6 @@ static int flow_ssa_set_edges(RxasFlowSsaAnalysis *analysis,
             ? rxas_flow_procedure_instruction(
                     analysis->procedure, analysis->metrics.epoch,
                     block->last_instruction) : 0;
-    failure_state = instruction &&
-                    instruction->signal.state != RXOP_SIGNAL_STATE_NONE
-            ? flow_ssa_build_failure_transfer(
-                    analysis, instruction, before_last, after_last)
-            : before_last;
-    if (failure_state == RXAS_FLOW_ID_NONE) return 0;
     for (offset = analysis->outgoing_offsets[block_id];
          offset < analysis->outgoing_offsets[block_id + 1]; offset++) {
         size_t edge_id;
@@ -1643,8 +1678,47 @@ static int flow_ssa_set_edges(RxasFlowSsaAnalysis *analysis,
         if (edge->kind == RXAS_FLOW_EDGE_SIGNAL_SKIP ||
             edge->kind == RXAS_FLOW_EDGE_HANDLER ||
             edge->kind == RXAS_FLOW_EDGE_UNWIND ||
-            edge->kind == RXAS_FLOW_EDGE_TERMINAL)
+            edge->kind == RXAS_FLOW_EDGE_TERMINAL) {
+            if (failure_state == RXAS_FLOW_ID_NONE) {
+                failure_state = instruction &&
+                        instruction->signal.state != RXOP_SIGNAL_STATE_NONE
+                        ? flow_ssa_build_failure_transfer(
+                                analysis, instruction, before_last, after_last)
+                        : before_last;
+                if (failure_state == RXAS_FLOW_ID_NONE) return 0;
+            }
             state_id = failure_state;
+        }
+        if (instruction && edge->cause == RXAS_FLOW_CAUSE_CALLBACK &&
+            edge->checkpoint == RXOP_SIGNAL_PHASE_AFTER_WRITES)
+            state_id = after_last;
+        if (instruction && edge->cause == RXAS_FLOW_CAUSE_INTRINSIC) {
+            if (intrinsic_state == RXAS_FLOW_ID_NONE) {
+                RxasFlowInstruction intrinsic = *instruction;
+                intrinsic.signal = instruction->intrinsic_signal;
+                /* A single ordered output setter is not entered on an
+                 * intrinsic before-write failure. Other callback routes keep
+                 * the conservative failure transfer. */
+                if (instruction->op &&
+                    rxop_callback_postwrite_operand(instruction->op->opcode) &&
+                    intrinsic.signal.phase == RXOP_SIGNAL_PHASE_BEFORE_WRITES)
+                    intrinsic.callback_obligations = 0;
+                intrinsic_state = flow_ssa_build_failure_transfer(
+                        analysis, &intrinsic, before_last, after_last);
+                if (intrinsic_state == RXAS_FLOW_ID_NONE) return 0;
+            }
+            state_id = intrinsic_state;
+        }
+        /* AFTER is the producer checkpoint before policy delivery. Native or
+         * Rexx action handlers can mutate values before returning SKIP. */
+        if (edge->response == RXAS_FLOW_RESPONSE_HANDLED) {
+            if (handled_state == RXAS_FLOW_ID_NONE)
+                handled_state = flow_ssa_add_clobber_state(
+                        analysis, after_last, block_id,
+                        instruction ? instruction->id : RXAS_FLOW_ID_NONE,
+                        FLOW_SSA_MAP_CLOBBER_ALL | FLOW_SSA_VALUE_CLOBBER_ALL);
+            state_id = handled_state;
+        }
         if (edge->kind == RXAS_FLOW_EDGE_UNKNOWN)
             state_id = flow_ssa_add_clobber_state(
                     analysis, after_last, block_id,
@@ -3285,22 +3359,19 @@ size_t rxas_flow_storage_input(
             analysis->storage_inputs[version->input_offset + input_index]);
 }
 
-static int flow_ssa_component_fact(
+static int flow_ssa_component_storage_fact(
         RxasFlowSsaAnalysis *analysis, size_t state_id,
-        RxasFlowRegister reg, unsigned int component,
+        size_t storage_id, unsigned int component,
         size_t instruction_id, int after_instruction, size_t edge_id,
         RxasFlowComponentFact *fact) {
-    size_t register_id;
-    size_t storage_id;
     size_t value_id;
     FlowValueVersion *version;
     size_t effect;
     if (!fact || !component || (component & (component - 1)) ||
         !(component & RXOP_COMPONENT_ALL))
         return 0;
-    register_id = flow_ssa_register_id(analysis, reg);
-    if (register_id == RXAS_FLOW_ID_NONE) return 0;
-    storage_id = flow_ssa_resolve_storage(analysis, state_id, register_id);
+    storage_id = flow_ssa_storage_canonical(analysis, storage_id);
+    if (storage_id > analysis->storage_version_count) return 0;
     memset(fact, 0, sizeof(*fact));
     fact->storage_id = storage_id;
     fact->component = component;
@@ -3380,6 +3451,37 @@ static int flow_ssa_component_fact(
     return 1;
 }
 
+static int flow_ssa_component_fact(
+        RxasFlowSsaAnalysis *analysis, size_t state_id,
+        RxasFlowRegister reg, unsigned int component,
+        size_t instruction_id, int after_instruction, size_t edge_id,
+        RxasFlowComponentFact *fact) {
+    size_t register_id = flow_ssa_register_id(analysis, reg);
+    size_t storage_id;
+    if (register_id == RXAS_FLOW_ID_NONE) return 0;
+    storage_id = flow_ssa_resolve_storage(analysis, state_id, register_id);
+    return flow_ssa_component_storage_fact(analysis, state_id, storage_id,
+            component, instruction_id, after_instruction, edge_id, fact);
+}
+
+int rxas_flow_component_for_storage_at_instruction(
+        const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
+        size_t instruction_id, int after_instruction,
+        size_t storage_id, unsigned int component,
+        RxasFlowComponentFact *fact) {
+    size_t state;
+    if (!flow_ssa_valid(analysis, expected_epoch) ||
+        instruction_id >= analysis->instruction_count || !storage_id ||
+        storage_id > analysis->storage_version_count ||
+        (after_instruction != 0 && after_instruction != 1))
+        return 0;
+    state = after_instruction ? analysis->instruction_after[instruction_id]
+                              : analysis->instruction_before[instruction_id];
+    return flow_ssa_component_storage_fact((RxasFlowSsaAnalysis *)analysis,
+            state, storage_id, component, instruction_id, after_instruction,
+            RXAS_FLOW_ID_NONE, fact);
+}
+
 int rxas_flow_component_at_instruction(
         const RxasFlowSsaAnalysis *analysis, unsigned long expected_epoch,
         size_t instruction_id, int after_instruction,
@@ -3394,6 +3496,115 @@ int rxas_flow_component_at_instruction(
     return flow_ssa_component_fact(
             (RxasFlowSsaAnalysis *)analysis, state, reg, component,
             instruction_id, after_instruction, RXAS_FLOW_ID_NONE, fact);
+}
+
+/* Every reachable leaf must independently establish the condition. ENTRY,
+ * unknown availability and phi-only cycles cannot donate absence. The walk
+ * follows only this checkpoint's already resolved, write-once value graph. */
+static int flow_ssa_callback_resource_absent(
+        RxasFlowSsaAnalysis *analysis, size_t value_id, unsigned int component) {
+    size_t capacity = analysis->value_version_count;
+    size_t *stack;
+    unsigned char *seen;
+    size_t head = 0, tail = 0, leaves = 0;
+    int proved = 0;
+    if (value_id == RXAS_FLOW_ID_NONE || value_id >= capacity ||
+        !flow_ssa_consume(analysis, capacity)) return 0;
+    stack = flow_ssa_calloc(analysis, capacity, sizeof(*stack));
+    seen = flow_ssa_calloc(analysis, capacity, sizeof(*seen));
+    if (!stack || !seen) { free(stack); free(seen); return 0; }
+    stack[tail++] = value_id; seen[value_id] = 1;
+    while (head < tail) {
+        RxasFlowValueNode node;
+        size_t input, inputs;
+        if (!flow_ssa_consume(analysis, 1) ||
+            !rxas_flow_value_node(analysis, analysis->metrics.epoch, stack[head++], &node))
+            goto done;
+        inputs = node.kind == RXAS_FLOW_VALUE_PHI ? node.input_count :
+                node.kind == RXAS_FLOW_VALUE_COPY ? 1u : 0u;
+        if (node.kind == RXAS_FLOW_VALUE_PHI && !inputs) goto done;
+        if (inputs) {
+            for (input = 0; input < inputs; input++) {
+                size_t child = node.kind == RXAS_FLOW_VALUE_COPY ? node.source_value_id :
+                        rxas_flow_value_input(analysis, analysis->metrics.epoch, node.id, input);
+                if (child == RXAS_FLOW_ID_NONE || child >= capacity) goto done;
+                if (!seen[child]) { seen[child] = 1; stack[tail++] = child; }
+            }
+            continue;
+        }
+        leaves++;
+        if (node.kind == RXAS_FLOW_VALUE_ABSENT && node.presence == RXAS_FLOW_COMPONENT_ABSENT)
+            continue;
+        if (component == RXOP_COMPONENT_ATTRIBUTE_COUNT &&
+            node.kind == RXAS_FLOW_VALUE_CONSTANT && node.presence == RXAS_FLOW_COMPONENT_PRESENT &&
+            node.constant_token && node.constant_token->token_type == INT &&
+            node.constant_token->token_value.integer == 0)
+            continue;
+        goto done;
+    }
+    proved = leaves != 0;
+done:
+    free(stack); free(seen);
+    return proved;
+}
+
+int rxas_flow_callback_resources_at_instruction(
+        const RxasFlowSsaAnalysis *const_analysis, unsigned long expected_epoch,
+        size_t instruction_id, int after_instruction,
+        RxasFlowCallbackResourceFact *fact) {
+    RxasFlowSsaAnalysis *analysis = (RxasFlowSsaAnalysis *)const_analysis;
+    const RxasFlowInstruction *instruction;
+    const RxasFlowRecord *record;
+    const instruction_queue *item;
+    unsigned int resource_routes = RXOP_CALLBACK_INPUT | RXOP_CALLBACK_OUTPUT;
+    size_t operand, state;
+    if (!fact) return 0;
+    memset(fact, 0, sizeof(*fact));
+    fact->reason = RXAS_FLOW_CALLBACK_RESOURCE_STALE;
+    if (!flow_ssa_valid(analysis, expected_epoch) || instruction_id >= analysis->instruction_count ||
+        (after_instruction != 0 && after_instruction != 1)) return 0;
+    instruction = rxas_flow_procedure_instruction(analysis->procedure, expected_epoch, instruction_id);
+    if (!instruction || !instruction->op) return 0;
+    fact->owner = const_analysis; fact->epoch = expected_epoch;
+    fact->instruction_id = instruction_id; fact->after_instruction = after_instruction;
+    fact->obligations = instruction->callback_obligations;
+    fact->unresolved_obligations = fact->obligations & ~resource_routes;
+    if (fact->unresolved_obligations) {
+        fact->reason = RXAS_FLOW_CALLBACK_RESOURCE_ROUTE_UNPROVED;
+        return 1;
+    }
+    record = rxas_flow_procedure_record(analysis->procedure, expected_epoch, instruction->record_id);
+    item = record ? record->queue_record : NULL;
+    if (!item) return 0;
+    state = after_instruction ? analysis->instruction_after[instruction_id] : analysis->instruction_before[instruction_id];
+    for (operand = 0; operand < item->operandCount; operand++) {
+        size_t reg = flow_ssa_operand_register(analysis, item, operand);
+        size_t storage = reg == RXAS_FLOW_ID_NONE ? 0 : flow_ssa_resolve_storage(analysis, state, reg);
+        unsigned int route;
+        for (route = RXOP_CALLBACK_INPUT; route <= RXOP_CALLBACK_OUTPUT; route <<= 1) {
+            unsigned int mask = route == RXOP_CALLBACK_INPUT ?
+                    rxop_callback_inputs(instruction->op->opcode, operand) :
+                    rxop_callback_outputs(instruction->op->opcode, operand);
+            unsigned int component;
+            for (component = RXOP_COMPONENT_NATIVE_PAYLOAD; component <= RXOP_COMPONENT_ATTRIBUTE_COUNT; component <<= 1) {
+                RxasFlowComponentFact resource;
+                if (!(mask & component)) continue;
+                fact->checked_resources++;
+                if (!storage || !flow_ssa_component_storage_fact(analysis, state, storage, component,
+                            instruction_id, after_instruction, RXAS_FLOW_ID_NONE, &resource) ||
+                    !flow_ssa_callback_resource_absent(analysis, resource.value_id, component))
+                    fact->unresolved_obligations |= route;
+            }
+        }
+    }
+    if (analysis->metrics.status != RXAS_FLOW_ANALYSIS_AVAILABLE) {
+        fact->unresolved_obligations |= fact->obligations;
+        fact->reason = RXAS_FLOW_CALLBACK_RESOURCE_LIMIT;
+        return 1;
+    }
+    fact->proved = !fact->unresolved_obligations;
+    fact->reason = fact->proved ? RXAS_FLOW_CALLBACK_RESOURCE_PROVED : RXAS_FLOW_CALLBACK_RESOURCE_VALUE_UNPROVED;
+    return 1;
 }
 
 int rxas_flow_component_at_record(

@@ -1,0 +1,357 @@
+/* cREXX License (MIT). Atomic batch and request-owned receipt controls. */
+options levelb
+import llir
+import lltarget
+import lltargettransfer
+import lltargetcfg
+import lltargetflow
+import lltargetsummary
+import lltargetremap
+import lltargetnormalize
+import llinline
+import llrxascatalog
+
+check: procedure = .int
+  arg condition = .int, label = .string
+  if condition then return 0
+  say 'FAIL:' || label; return 1
+
+model: procedure = .lltarget..module
+  arg mode = .int, observer = 0
+  draft = .lltarget..draft('normalization.receipt','fixture:normalization.receipt',0)
+  at = draft.synthetic('dirty owners are discharged only on the exact final candidate')
+  ignored = .int; i = .int; fields = .object[]
+  do i = 1 to 2
+    name = 'main'; if i = 2 then name = 'leaf'
+    body = draft.procedure(name,3,at)
+    assembler setattrs fields,0
+    if mode >= 8 & i = 2 then do
+      fields[1] = body.reg('r',0) as .object; ignored = body.emit('ret',fields,at); iterate
+    end
+    fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(7) as .object
+    ignored = body.emit('load',fields,at)
+    if mode >= 8 then do
+      fields[2] = .lltarget..operand.procedure('leaf') as .object
+      ignored = body.emit('call',fields,at)
+    end
+    if mode <> 7 | i <> 1 then do
+      fields[1] = body.reg('r',2) as .object; fields[2] = body.reg('r',1) as .object
+      if mode >= 8 then fields[2] = body.reg('r',0) as .object
+      fields[3] = .lltarget..operand.integer(0) as .object; ignored = body.emit('iadd',fields,at)
+    end
+    assembler setattrs fields,0
+    if mode < 6 then do
+      slot = 0; if observer then slot = 2
+      fields[1] = body.reg('r',slot) as .object; ignored = body.emit('say',fields,at)
+    end
+    fields[1] = .lltarget..operand.integer(0) as .object; ignored = body.emit('ret',fields,at)
+  end
+  return draft.finish()
+
+/** Independent complete action descriptions, including an explicit component
+ * observer. This is never admitted as canonical inliner target authority. */
+premises: procedure = .lltargettransfer..profile
+  arg owner = reference .lltarget..module
+  source = dereference owner; builder = .lltargettransfer..profiledraft(owner,'independent.normalization.receipt')
+  catalog = .llrxascatalog..catalog(); integer = builder.domain('component','fixture.integer',catalog.componentmask('I'))
+  ignored = .int; subject = .int; input = .int
+  do i = 1 to source.records()
+    item = source.record(i); ignored = builder.operation(item.id()); ignored = builder.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    select item.mnemonic()
+      when 'load' then do; subject = builder.ref(item.id(),1); ignored = builder.event(item.id(),'write',subject,integer,'literal',0,item.operand(2)); end
+      when 'null' then do; subject = builder.ref(item.id(),1); ignored = builder.event(item.id(),'clear',subject,0); end
+      when 'iadd' then do
+        subject = builder.ref(item.id(),1); input = builder.ref(item.id(),2)
+        ignored = builder.event(item.id(),'observe',input,integer); ignored = builder.event(item.id(),'write',subject,integer)
+      end
+      when 'say' then do
+        subject = builder.ref(item.id(),1)
+        ignored = builder.event(item.id(),'callback',subject,integer,'none',0,.lltarget..operand(),'may','all','before','fixture.component',0,'component')
+      end
+      when 'call' then do
+        resultref = builder.ref(item.id(),1); subject = builder.ref(item.id(),2,'procedure','symbolic')
+        ignored = builder.event(item.id(),'clear',resultref,0)
+        ignored = builder.event(item.id(),'callcapture',0,0,'none',0,.lltarget..operand(),'must','all','after','fixture.call')
+        ignored = builder.event(item.id(),'call',0,0,'reference',subject,.lltarget..operand(),'must','normal','after','fixture.call')
+      end
+      when 'ret' then do
+        value = item.operand(1)
+        if value.kind() = 'R' then do; subject = builder.ref(item.id(),1); ignored = builder.event(item.id(),'observe',subject,integer); end
+        ignored = builder.event(item.id(),'return',0,0)
+      end
+      otherwise call builder.unknown(item.id(),'effects','fixture.unrepresented')
+    end
+  end
+  return builder.finish()
+
+batch: procedure = .int
+  arg mode = .int
+  failures = 0; i = .int; fn = .int; accepted = .int; state = .string; result = .lltarget..module
+  source = model(mode); before = premises(reference source); cfg0 = .lltargetcfg..graph(reference source,reference before)
+  flow0 = .lltargetflow..analysis(reference source,reference before,reference cfg0); summaries = .lltargetsummary..analysis(reference flow0)
+  failures = failures + check(flow0.status() = 'ok' & summaries.status() = 'ok','batch source analyses ' || mode)
+  if failures then return failures
+  mainfn = source.procedureid('main'); leaffn = source.procedureid('leaf'); functions = .int[]
+  functions[1] = mainfn
+  if mode = 9 then functions[1] = leaffn
+  if mode < 6 then functions[2] = leaffn
+  if mode = 4 then functions[2] = mainfn
+  transaction = lltargetnormalize..entrycandidates(reference source,reference flow0,functions)
+  if mode = 4 then return failures + check(transaction.status() = 'invalid','duplicate requested functions cannot stage')
+  if mode = 7 | mode = 8 then do
+    result = transaction.result()
+    failures = failures + check(transaction.status() = 'keep' & result.identity() = source.identity() & transaction.complete(leaffn) = 0,'no-change subset never certifies an uncleared dirty owner ' || mode)
+    if mode = 8 then failures = failures + check(transaction.complete(mainfn) = 0,'caller cannot inherit completeness from an uncleared returned dirty origin')
+    return failures
+  end
+  failures = failures + check(transaction.status() = 'tentative','batch candidate stages ' || mode || ': ' || transaction.reason())
+  if transaction.status() <> 'tentative' then return failures
+  candidate = transaction.candidate(); after = premises(reference candidate); cfg1 = .lltargetcfg..graph(reference candidate,reference after)
+  flow1 = .lltargetflow..analysis(reference candidate,reference after,reference cfg1); state = flow1.status(); operations = .int[]
+  if state <> 'ok' then return failures + check(0,'batch candidate flow ' || mode || ': ' || flow1.reason())
+  do i = 1 to source.records(); item = source.record(i); operations[item.id()] = transaction.candidateoperation(item.id()); end
+  mapping = .lltargetremap..correspondence(reference source,reference candidate,reference before,reference after,reference cfg0,reference cfg1,operations)
+  callbacks = .lltargetnormalize..conditionalcertificate[]; certificates = .lltargetnormalize..entrycertificate[]; offered = .lltargetnormalize..entrycertificate[]
+  do i = 1 to transaction.modified()
+    fn = transaction.modifiedfunction(i)
+    callbacks[i] = transaction.conditional(reference flow0,reference flow1,reference summaries,reference mapping,fn)
+  end
+  do i = 1 to transaction.modified()
+    fn = transaction.modifiedfunction(i)
+    certificates[i] = transaction.entryproof(reference flow0,reference flow1,reference mapping,reference callbacks[i],fn)
+    failures = failures + check(certificates[i].covered(),'each changed function has its own final-identity theorem ' || mode || ':' || i || ':' || certificates[i].reason())
+    offered[i] = certificates[i]
+  end
+  if mode = 1 then do; assembler setattrs offered,0; offered[1] = certificates[1]; end
+  if mode = 2 then offered[2] = certificates[1]
+  if mode = 3 then offered[3] = certificates[1]
+  if mode = 5 then accepted = transaction.commit(certificates[1])
+  else accepted = transaction.commitall(offered)
+  result = transaction.result()
+  if mode = 0 | mode = 6 | mode = 9 then do
+    failures = failures + check(accepted & result.identity() = candidate.identity(),'complete exact batch publishes once ' || mode)
+    if mode = 6 then failures = failures + check(transaction.complete(candidate.procedureid('leaf')) = 0,'committing main never certifies unrequested dirty leaf')
+    if mode = 9 then failures = failures + check(transaction.complete(candidate.procedureid('main')),'discharged returned-origin dependency preserves clean caller completeness')
+  end
+  else failures = failures + check(accepted = 0 & result.identity() = source.identity() & transaction.warnings() = 0,'missing/duplicate/extra/single certificate cannot publish a batch ' || mode)
+  return failures
+
+receipt: procedure = .int
+  arg mode = .int
+  source = model(0,mode = 1); before = premises(reference source); cfg0 = .lltargetcfg..graph(reference source,reference before)
+  flow0 = .lltargetflow..analysis(reference source,reference before,reference cfg0); summaries = .lltargetsummary..analysis(reference flow0)
+  ignored = flow0.status(); ignored = summaries.status(); work = 4000000; if mode = 2 then work = 1
+  live = .llinline..normalizationreceipt.borrowed(reference source,reference flow0,reference summaries,work)
+  if mode = 2 then return check(live.status() = 'limit','small receipt allowance refuses before candidate publication')
+  failures = check(live.status() = 'prepared','request-owned receipt prepares ' || mode || ': ' || live.reason())
+  if failures then return failures
+  candidate = live.candidate(); after = premises(reference candidate); cfg1 = .lltargetcfg..graph(reference candidate,reference after)
+  flow1 = .lltargetflow..analysis(reference candidate,reference after,reference cfg1); ignored = flow1.status()
+  accepted = live.finish(reference candidate,reference flow1)
+  if mode = 1 then return failures + check(accepted = 0 & live.status() <> 'ok','derived observer delta refuses entire receipt')
+  failures = failures + check(accepted & live.complete(reference candidate,candidate.procedureid('main')),'conditional receipt revalidates the exact final owner')
+  published = live.result(); result = published.result(); context = .llinline..context('assembler','all-legal')
+  failures = failures + check(result.identity() = candidate.identity() & published.warnings() = 2,'receipt publishes all function warnings with one final identity')
+  failures = failures + check(context.certifyreceipt(reference candidate,published,reference live) = 0,'independent fixture premise cannot become canonical adapter authority')
+  source = candidate
+  failures = failures + check(live.complete(reference candidate,candidate.procedureid('main')) = 0,'replaced proof source invalidates conditional receipt')
+  return failures
+
+ordinary: procedure = .int
+  draft = .lltarget..draft('receipt.ordinary','fixture:receipt.ordinary',0); at = draft.synthetic('ordinary canonical receipt remains supported')
+  body = draft.procedure('main',0,at); fields = .object[]; fields[1] = .lltarget..operand.integer(0) as .object; ignored = body.emit('ret',fields,at)
+  source = draft.finish(); live = .llinline..normalizationreceipt.owned(reference source,4000000)
+  failures = check(live.status() = 'ok','owned canonical receipt completes in its stable caller slot: ' || live.reason())
+  if failures then return failures
+  published = live.result(); result = published.result(); context = .llinline..context('assembler','all-legal')
+  failures = failures + check(context.certifyreceipt(reference result,published,reference live) & context.normalized(reference result,result.procedureid('main')),'canonical receipt binds normalization without changing activation gates')
+  return failures
+
+expiredsummary: procedure = reference .lltargetsummary..analysis
+  arg points = reference .lltargetflow..analysis
+  local = .lltargetsummary..analysis(points,1)
+  return reference local
+
+/** A one-unit source summary cannot execute. Ordinary normalization must not
+ * consume it; conditional callback preservation must honor that same limit. */
+lazysummary: procedure = .int
+  arg mode = .int
+  failures = 0; sourceMode = 6; state = .string
+  foreign = .lltargetflow..analysis; summary_ref = reference .lltargetsummary..analysis
+  if mode = 1 then sourceMode = 0
+  source = model(sourceMode); before = premises(reference source); cfg0 = .lltargetcfg..graph(reference source,reference before)
+  flow0 = .lltargetflow..analysis(reference source,reference before,reference cfg0)
+  failures = failures + check(flow0.status() = 'ok','lazy summary source flow prepares ' || mode)
+  if failures then return failures
+  summary = .lltargetsummary..analysis(reference flow0,1)
+  if mode = 2 then do
+    foreign = .lltargetflow..analysis(reference source,reference before,reference cfg0)
+    summary = .lltargetsummary..analysis(reference foreign,1)
+  end
+  summary_ref = reference summary
+  if mode = 3 then summary_ref = expiredsummary(reference flow0)
+  live = .llinline..normalizationreceipt.borrowed(reference source,reference flow0,summary_ref,4000000)
+  state = live.status()
+  if mode >= 2 then return failures + check(state = 'invalid' & summary.usedwork() = 0,'foreign or expired lazy summary cannot enter an ordinary receipt ' || mode)
+  failures = failures + check(state = 'prepared' & summary.usedwork() = 0,'candidate preparation preserves unused one-unit summary allowance ' || mode || ': ' || live.reason())
+  if state <> 'prepared' then return failures
+  candidate = live.candidate(); after = premises(reference candidate); cfg1 = .lltargetcfg..graph(reference candidate,reference after)
+  flow1 = .lltargetflow..analysis(reference candidate,reference after,reference cfg1)
+  failures = failures + check(flow1.status() = 'ok','lazy summary candidate flow prepares ' || mode)
+  accepted = live.finish(reference candidate,reference flow1)
+  if mode = 1 then return failures + check(accepted = 0 & live.status() = 'limit' & summary.status() = 'limit' & summary.usedwork() <= 1,'conditional callback proof forces the bounded summary before publication')
+  failures = failures + check(accepted & live.status() = 'ok' & live.complete(reference candidate,candidate.procedureid('main')) & summary.usedwork() = 0,'ordinary receipt finishes without running unused summary')
+  published = live.result(); result = published.result()
+  failures = failures + check(result.identity() = candidate.identity() & summary.usedwork() = 0,'ordinary publication does not consume lazy summary facts')
+  return failures
+
+identitymodel: procedure = .lltarget..module
+  arg inserted = 0
+  draft = .lltarget..draft('normalization.identity','fixture:normalization.identity',0)
+  at = draft.synthetic('an unchanged zero-dirty procedure retains its possible later callback')
+  body = draft.procedure('main',3,at); fields = .object[]; ignored = .int
+  if inserted then do; fields[1] = body.reg('r',1) as .object; ignored = body.emit('null',fields,at); end
+  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(7) as .object
+  ignored = body.emit('load',fields,at)
+  assembler setattrs fields,0; fields[1] = body.reg('r',0) as .object; ignored = body.emit('say',fields,at)
+  fields[1] = .lltarget..operand.integer(0) as .object; ignored = body.emit('ret',fields,at)
+  return draft.finish()
+
+/** Identity entry coverage is independent of callback preservation. The
+ * explicit later callback remains possible and need not have a clean raw
+ * physical backing. This fixture grants no canonical call authority. */
+identityproof: procedure = .int
+  arg mode = .int
+  failures = 0; i = .int; next = 1; foreign = .lltarget..module; foreignprofile = .lltargettransfer..profile
+  foreigncfg = .lltargetcfg..graph; foreignflow = .lltargetflow..analysis; points_ref = reference .lltargetflow..analysis
+  source = identitymodel(); if mode = 1 then source = model(0)
+  if mode = 5 then source = model(8)
+  candidate = source; if mode = 2 then candidate = identitymodel(1)
+  before = premises(reference source); after = premises(reference candidate)
+  cfg0 = .lltargetcfg..graph(reference source,reference before); cfg1 = .lltargetcfg..graph(reference candidate,reference after)
+  flow0 = .lltargetflow..analysis(reference source,reference before,reference cfg0)
+  flow1 = .lltargetflow..analysis(reference candidate,reference after,reference cfg1)
+  failures = failures + check(flow0.status() = 'ok' & flow1.status() = 'ok','identity proof owners prepare ' || mode)
+  if failures then return failures
+  operations = .int[]
+  do i = 1 to source.records()
+    item = source.record(i); mapped = candidate.record(next)
+    if mode = 2 & mapped.kind() = 'instruction' & mapped.mnemonic() = 'null' then do; next = next + 1; mapped = candidate.record(next); end
+    operations[item.id()] = mapped.id(); next = next + 1
+  end
+  mapping = .lltargetremap..correspondence(reference source,reference candidate,reference before,reference after,reference cfg0,reference cfg1,operations)
+  failures = failures + check(mapping.status() = 'proved','identity correspondence retains exact operations ' || mode || ': ' || mapping.reason())
+  if failures then return failures
+  points_ref = reference flow0
+  if mode = 3 then do
+    foreign = identitymodel(); foreignprofile = premises(reference foreign); foreigncfg = .lltargetcfg..graph(reference foreign,reference foreignprofile)
+    foreignflow = .lltargetflow..analysis(reference foreign,reference foreignprofile,reference foreigncfg)
+    failures = failures + check(foreignflow.status() = 'ok','foreign identity owner prepares')
+    points_ref = reference foreignflow
+  end
+  transaction = .lltargetnormalize..change.resolved('keep','fixture.identity',candidate,operations)
+  proof = transaction.identityproof(points_ref,reference flow1,reference mapping,source.procedureid('main'))
+  if mode = 0 | mode = 4 then do
+    failures = failures + check(proof.covered() & proof.matchesresult(reference candidate,candidate.procedureid('main')),'zero-dirty unchanged procedure proves only entry normalization ' || mode || ': ' || proof.reason())
+    failures = failures + check(transaction.complete(candidate.procedureid('main')) = 0 & flow0.complete(source.procedureid('main'),'entry-normalization') = 0,'identity theorem does not mint old unconditional completeness ' || mode)
+    if mode = 4 then do
+      candidate = identitymodel()
+      failures = failures + check(proof.covered() = 0,'replacing the exact candidate owner expires identity coverage')
+    end
+    else do
+      foreign = identitymodel()
+      failures = failures + check(proof.matchesresult(reference foreign,foreign.procedureid('main')) = 0 & proof.matchesresult(reference candidate,0) = 0,'identity coverage refuses foreign result and wrong result function')
+      limited = transaction.identityproof(reference flow0,reference flow1,reference mapping,source.procedureid('main'),1)
+      failures = failures + check(limited.status() = 'limit','identity coverage has its own bounded shared-proof allowance')
+      unstamped = .lltargetnormalize..entrycertificate.identity(reference flow0,reference flow1,reference mapping,source.procedureid('main'))
+      failures = failures + check(unstamped.status() = 'invalid' & unstamped.matchesresult(reference candidate,candidate.procedureid('main')) = 0,'unstamped identity factory cannot authorize result publication')
+    end
+  end
+  else if mode = 1 then failures = failures + check(proof.covered() = 0 & proof.reason() = 'normalization.entry.identity.source.dirty','known dirty source cannot use identity coverage')
+  else if mode = 2 then failures = failures + check(proof.covered() = 0 & proof.reason() = 'normalization.entry.identity.procedure.changed','even an otherwise harmless own entry insertion is not identity')
+  else if mode = 3 then failures = failures + check(proof.status() = 'invalid','foreign source flow cannot use exact identity correspondence')
+  else do
+    coverage = flow0.entrycoverage(source.procedureid('main'))
+    failures = failures + check(coverage.complete() & coverage.demands() = 0 & coverage.dependencies() > 0,'zero own demand still exposes returned dirty-owner dependency')
+    failures = failures + check(proof.covered() = 0 & proof.reason() = 'normalization.entry.candidate.dependency.not.discharged','identity cannot hide an uncleared dirty return dependency')
+  end
+  return failures
+
+identityreceipt: procedure = .int
+  source = identitymodel(); before = premises(reference source); cfg0 = .lltargetcfg..graph(reference source,reference before)
+  flow0 = .lltargetflow..analysis(reference source,reference before,reference cfg0)
+  failures = check(flow0.status() = 'ok','identity receipt source prepares')
+  if failures then return failures
+  summary = .lltargetsummary..analysis(reference flow0,1)
+  live = .llinline..normalizationreceipt.borrowed(reference source,reference flow0,reference summary,4000000)
+  failures = failures + check(live.status() = 'prepared' & summary.usedwork() = 0,'zero-dirty identity receipt needs no callback summary')
+  if failures then return failures
+  candidate = live.candidate(); after = premises(reference candidate); cfg1 = .lltargetcfg..graph(reference candidate,reference after)
+  flow1 = .lltargetflow..analysis(reference candidate,reference after,reference cfg1)
+  failures = failures + check(flow1.status() = 'ok','identity receipt candidate prepares')
+  if failures then return failures
+  accepted = live.finish(reference candidate,reference flow1); fn = candidate.procedureid('main')
+  failures = failures + check(accepted & live.complete(reference candidate,fn) & summary.usedwork() = 0,'identity receipt discharges only the entry obligation without summary construction: ' || live.reason())
+  if accepted = 0 then return failures
+  published = live.result(); result = published.result(); context = .llinline..context('assembler','all-legal')
+  failures = failures + check(published.complete(fn) = 0 & published.warnings() = 0 & result.identity() = source.identity(),'identity receipt leaves ordinary completion, operations and warnings unchanged')
+  failures = failures + check(context.certifyreceipt(reference candidate,published,reference live) = 0,'independent identity premise cannot grant canonical inliner authority')
+  candidate = identitymodel()
+  failures = failures + check(live.complete(reference candidate,fn) = 0,'identity receipt dynamically refuses replaced candidate ownership')
+  return failures
+
+canonicalidentity: procedure = .int
+  arg departure = 0
+  draft = .lltarget..draft('receipt.canonical.identity.' || departure,'fixture:receipt.canonical.identity',0)
+  at = draft.synthetic('possible overwrite callback with no dirty owned read')
+  body = draft.procedure('main',1,at); fields = .object[]
+  fields[1] = body.reg('r',0) as .object; fields[2] = .lltarget..operand.integer(7) as .object; ignored = body.emit('load',fields,at)
+  assembler setattrs fields,0
+  if departure then do
+    fields[1] = .lltarget..operand.integer(0) as .object; ignored = body.emit('ret',fields,at)
+  end
+  else do
+    /* This is a bounded analysis fixture, never a VM execution. A reviewed
+     * callback-free branch closes the source CFG without inventing a no-hook
+     * premise for physical RET's still unknown departure inventory. */
+    fields[1] = .lltarget..operand.symbol('repeat') as .object; ignored = body.record('label',fields,at)
+    ignored = body.emit('br',fields,at)
+  end
+  source = draft.finish(); live = .llinline..normalizationreceipt.owned(reference source,4000000)
+  failures = check(live.status() = 'ok','canonical zero-dirty identity receipt completes: ' || live.reason())
+  if failures then return failures
+  published = live.result(); result = published.result(); fn = result.procedureid('main'); context = .llinline..context('assembler','all-legal')
+  failures = failures + check(published.complete(fn) = 0 & published.warnings() = 0,'canonical identity leaves old callback-incomplete theorem unchanged')
+  accepted = context.certifyreceipt(reference result,published,reference live)
+  if departure then return failures + check(accepted & live.complete(reference result,fn) = 0 & context.normalized(reference result,fn) = 0,'unknown physical departure cannot borrow the resource-only identity coverage premise')
+  failures = failures + check(accepted & context.normalized(reference result,fn),'canonical resource-only identity receipt certifies only dirty-entry normalization')
+  result = identitymodel()
+  failures = failures + check(context.normalized(reference result,fn) = 0,'normalization stamp cannot transfer identity evidence to another result')
+  return failures
+
+footprintpremise: procedure = .lltargettransfer..profile
+  arg owner = reference .lltarget..module, complete = .int
+  source = dereference owner; builder = .lltargettransfer..profiledraft(owner,'independent.footprint.correspondence'); ignored = .int
+  do i = 1 to source.records()
+    item = source.record(i); ignored = builder.operation(item.id()); ignored = builder.relocation(item.id(),'none')
+    if item.kind() <> 'instruction' then iterate
+    if item.mnemonic() = 'ret' then ignored = builder.event(item.id(),'external',0,0,'none',0,.lltarget..operand(),'may','all','none','fixture.external',0,'unknown',complete)
+  end
+  return builder.finish()
+
+footprintcorrespondence: procedure = .int
+  source = identitymodel(); candidate = source; before = footprintpremise(reference source,1); after = footprintpremise(reference candidate,0)
+  cfg0 = .lltargetcfg..graph(reference source,reference before); cfg1 = .lltargetcfg..graph(reference candidate,reference after); operations = .int[]
+  do i = 1 to source.records(); item = source.record(i); operations[item.id()] = item.id(); end
+  mapping = .lltargetremap..correspondence(reference source,reference candidate,reference before,reference after,reference cfg0,reference cfg1,operations)
+  return check(mapping.status() = 'unknown' & mapping.reason() = 'correspondence.transfer.changed','candidate cannot change the exact intrinsic external-footprint premise')
+
+main: procedure = .int
+  failures = ordinary() + identityreceipt() + canonicalidentity() + canonicalidentity(1) + footprintcorrespondence(); mode = .int
+  do mode = 0 to 9; failures = failures + batch(mode); end
+  do mode = 0 to 2; failures = failures + receipt(mode); end
+  do mode = 0 to 3; failures = failures + lazysummary(mode); end
+  do mode = 0 to 5; failures = failures + identityproof(mode); end
+  say 'TARGET_NORMALIZATION_RECEIPT|failures=' || failures
+  return failures
