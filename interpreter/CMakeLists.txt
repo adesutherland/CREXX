@@ -1479,6 +1479,19 @@ crexx_add_rxas_vm_binary(tests_signal_diagnostics "event-owned terminal source c
 crexx_add_rxas_vm_binary(tests_signal_diagnostic_initializer "scoped diagnostic initializer failure")
 crexx_add_rxas_vm_binary(tests_signal_diagnostic_import "local diagnostic across an imported start")
 crexx_add_rxas_vm_binary(tests_signal_diagnostic_provider "foreign diagnostic import provider")
+if(BUILD_TESTING)
+    add_test(NAME inline_signal_diagnostics
+            COMMAND ${CMAKE_COMMAND}
+                -DVM=$<TARGET_FILE:rxbvm> -DASSEMBLER=$<TARGET_FILE:rxas>
+                -DMUTATOR=$<TARGET_FILE:mutate_inline_rxbin>
+                -DWORK=${CMAKE_CURRENT_BINARY_DIR}/inline-signal-diagnostic-work
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/inline_signal_diagnostics.cmake)
+    set_tests_properties(inline_signal_diagnostics PROPERTIES
+            PASS_REGULAR_EXPRESSION "INLINE_SIGNAL_DIAGNOSTICS[|]failures=0"
+            TIMEOUT 120 LABELS "interpreter;inline;signal;diagnostics;regression")
+    crexx_register_test_prep_targets(TESTS inline_signal_diagnostics
+            TARGETS rxbvm rxas mutate_inline_rxbin)
+endif()
 foreach(_diagnostic_vm rxbvm rxtvm)
     if(TARGET ${_diagnostic_vm})
         set(_diagnostic_test signal_diagnostics_${_diagnostic_vm})

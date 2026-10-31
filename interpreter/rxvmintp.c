@@ -2332,15 +2332,7 @@ static int runtime_caller_address(const stack_frame *frame,
 }
 
 static void print_runtime_panic_caller_location(rxvm_context *context,
-                                                 const stack_frame *frame) {
-    module *mod;
-    size_t address;
-    if (!runtime_caller_address(frame, &mod, &address)) return;
-
-    fprintf(stderr, "  called from:\n");
-    print_runtime_panic_location(context, (rxinteger)mod->module_number,
-                                 (rxinteger)address);
-}
+                                                 const stack_frame *frame);
 
 /* Diagnostic ownership is private to the raw container, never its payload.
  * Snapshots use the process heap so their immutable copy owner holds no VM,
@@ -2350,7 +2342,8 @@ typedef struct rxvm_diagnostic_entry {
     size_t address, line, column;
     size_t file_length, source_length;
     char *module_name, *procedure_name, *file, *source;
-    unsigned char has_source;
+    char *logical_module_name;
+    unsigned char has_source, logical, origin;
 } rxvm_diagnostic_entry;
 
 typedef struct rxvm_diagnostic_owner {
@@ -2475,6 +2468,7 @@ static void diagnostic_release(rxvm_diagnostic_owner *owner) {
     for (index = 0; index < owner->count; ++index) {
         free(owner->entries[index].module_name);
         free(owner->entries[index].procedure_name);
+        free(owner->entries[index].logical_module_name);
         free(owner->entries[index].file);
         free(owner->entries[index].source);
     }
@@ -2540,15 +2534,40 @@ size_t rxvm_signal_diagnostic_test_count(const value *container) {
 }
 #endif
 
-typedef int (*diagnostic_visitor)(module *, const proc_runtime *, size_t, void *);
+/* Raw event coordinates and source metadata belong to physical instructions.
+ * A logical procedure is an additional name, never an invented provider PC. */
+typedef struct rxvm_diagnostic_site {
+    module *physical_module;
+    const proc_runtime *physical_procedure;
+    const proc_runtime *logical_procedure;
+    size_t address;
+    unsigned char origin;
+} rxvm_diagnostic_site;
+
+typedef int (*diagnostic_visitor)(const rxvm_diagnostic_site *, void *);
+
+/* The private scope definition is below. Keep one walker/count/build path,
+ * without moving runtime scope layout into a public header. */
+static const proc_runtime *diagnostic_frame_procedure(const stack_frame *frame);
+static int diagnostic_visit_scopes(const stack_frame *frame,
+                                    diagnostic_visitor visit, void *state);
+static int diagnostic_visit_origin(const stack_frame *frame,
+                                    diagnostic_visitor visit, void *state);
 
 static int diagnostic_visit_chain(const stack_frame *frame,
                                    diagnostic_visitor visit, void *state) {
-    for (; frame && frame->parent; frame = frame->parent) {
+    for (; frame; frame = frame->parent) {
         module *mod;
         size_t address;
-        if (runtime_caller_address(frame, &mod, &address) &&
-                !visit(mod, frame->parent->procedure, address, state)) return 0;
+        rxvm_diagnostic_site site;
+        if (!diagnostic_visit_scopes(frame, visit, state)) return 0;
+        if (!runtime_caller_address(frame, &mod, &address)) continue;
+        memset(&site, 0, sizeof(site));
+        site.physical_module = mod;
+        site.physical_procedure = frame->parent->procedure;
+        site.logical_procedure = diagnostic_frame_procedure(frame->parent);
+        site.address = address;
+        if (!visit(&site, state)) return 0;
     }
     return 1;
 }
@@ -2561,6 +2580,7 @@ static int diagnostic_frame_in_chain(const stack_frame *needle, const stack_fram
 static int diagnostic_walk(rxvm_context *context, const stack_frame *frame,
                             diagnostic_visitor visit, void *state) {
     const rxvm_diagnostic_callout_scope *scope, *prior;
+    if (!diagnostic_visit_origin(frame, visit, state)) return 0;
     if (!diagnostic_visit_chain(frame, visit, state)) return 0;
     for (scope = context->active.diagnostic_callout; scope; scope = scope->previous) {
         int seen = diagnostic_frame_in_chain(scope->frame, frame);
@@ -2575,18 +2595,47 @@ static int diagnostic_walk(rxvm_context *context, const stack_frame *frame,
                 scope->frame->procedure->binarySpace && scope->address >= 0) {
             module *mod = scope->frame->procedure->binarySpace->module;
             if (mod && (rxinteger)mod->module_number == scope->module_number &&
-                    runtime_procedure_contains(mod, scope->frame->procedure, (size_t)scope->address) &&
-                    !visit(mod, scope->frame->procedure, (size_t)scope->address, state)) return 0;
+                    runtime_procedure_contains(mod, scope->frame->procedure, (size_t)scope->address)) {
+                rxvm_diagnostic_site site;
+                memset(&site, 0, sizeof(site));
+                site.physical_module = mod;
+                site.physical_procedure = scope->frame->procedure;
+                site.logical_procedure = diagnostic_frame_procedure(scope->frame);
+                site.address = (size_t)scope->address;
+                if (!visit(&site, state)) return 0;
+            }
         }
         if (!diagnostic_visit_chain(scope->frame, visit, state)) return 0;
     }
     return 1;
 }
 
-static int diagnostic_count_entry(module *mod, const proc_runtime *procedure,
-                                   size_t address, void *state) {
+static int diagnostic_print_live_entry(const rxvm_diagnostic_site *site, void *opaque) {
+    rxvm_context *context = opaque;
+    const proc_runtime *logical = site->logical_procedure;
+    module *logical_module = logical->binarySpace->module;
+    if (site->origin) {
+        fprintf(stderr, "  logical origin: %s (module %s)\n",
+                logical->name ? logical->name : "", logical_module->name ? logical_module->name : "");
+        return 1;
+    }
+    fputs("  called from:\n", stderr);
+    if (logical != site->physical_procedure)
+        fprintf(stderr, "  logical caller: %s (module %s)\n",
+                logical->name ? logical->name : "", logical_module->name ? logical_module->name : "");
+    print_runtime_panic_location(context, (rxinteger)site->physical_module->module_number,
+                                 (rxinteger)site->address);
+    return 1;
+}
+
+static void print_runtime_panic_caller_location(rxvm_context *context,
+                                                 const stack_frame *frame) {
+    (void)diagnostic_walk(context, frame, diagnostic_print_live_entry, context);
+}
+
+static int diagnostic_count_entry(const rxvm_diagnostic_site *site, void *state) {
     size_t *count = state;
-    (void)mod; (void)procedure; (void)address;
+    (void)site;
     if (*count == SIZE_MAX) return 0;
     ++*count;
     return 1;
@@ -2605,17 +2654,29 @@ typedef struct diagnostic_build_state {
     size_t index;
 } diagnostic_build_state;
 
-static int diagnostic_build_entry(module *mod, const proc_runtime *procedure,
-                                   size_t address, void *opaque) {
+static int diagnostic_build_entry(const rxvm_diagnostic_site *site, void *opaque) {
     diagnostic_build_state *state = opaque;
     rxvm_diagnostic_entry *entry = &state->owner->entries[state->index++];
+    module *mod = site->physical_module;
+    const proc_runtime *procedure = site->logical_procedure;
+    size_t address = site->address;
     rxvm_source_context source;
+    entry->origin = site->origin;
+    if (entry->origin) mod = procedure->binarySpace->module;
     entry->module_number = (rxinteger)mod->module_number;
     entry->address = address;
     entry->module_name = diagnostic_copy_bytes(mod->name ? mod->name : "",
                                                mod->name ? strlen(mod->name) : 0u);
     entry->procedure_name = diagnostic_copy_bytes(procedure->name ? procedure->name : "",
                                                    procedure->name ? strlen(procedure->name) : 0u);
+    if (entry->origin) return entry->module_name && entry->procedure_name;
+    entry->logical = procedure != site->physical_procedure;
+    if (entry->logical) {
+        module *logical_module = procedure->binarySpace->module;
+        entry->logical_module_name = diagnostic_copy_bytes(logical_module->name ? logical_module->name : "",
+                logical_module->name ? strlen(logical_module->name) : 0u);
+        if (!entry->logical_module_name) return 0;
+    }
     resolve_runtime_source_context(mod, address, &source);
     /* A preceding procedure's last source record is not this caller's source. */
     {
@@ -2624,7 +2685,7 @@ static int diagnostic_build_entry(module *mod, const proc_runtime *procedure,
         while (offset != -1) {
             const meta_entry *meta = (const meta_entry *)(mod->segment.const_pool + offset);
             if (meta->address > address) break;
-            if (meta->base.type == META_SOURCE_STEP && meta->address >= procedure->start) found = 1;
+            if (meta->base.type == META_SOURCE_STEP && meta->address >= site->physical_procedure->start) found = 1;
             offset = meta->next;
         }
         if (!found) memset(&source, 0, sizeof(source));
@@ -2688,7 +2749,15 @@ static void print_runtime_diagnostic_callers(rxvm_context *context,
     if (!owner) return;
     for (index = 0; index < owner->count; ++index) {
         const rxvm_diagnostic_entry *entry = &owner->entries[index];
+        if (entry->origin) {
+            fprintf(stderr, "  logical origin: %s (module %s)\n",
+                    entry->procedure_name, entry->module_name);
+            continue;
+        }
         fputs("  called from:\n", stderr);
+        if (entry->logical)
+            fprintf(stderr, "  logical caller: %s (module %s)\n",
+                    entry->procedure_name, entry->logical_module_name);
         fprintf(stderr, "  at module %zu (%s) address %zu (0x%zx)\n",
                 (size_t)entry->module_number, entry->module_name, entry->address, entry->address);
         if (entry->has_source) {
@@ -4477,6 +4546,7 @@ typedef struct rxvm_inline_scope {
     proc_runtime *provider;
     value *result;
     size_t continuation;
+    size_t entry_address; /* Physical INLENTER source; never a provider PC. */
     size_t argument_count;
     value **arguments;
     rxvm_inline_slot *slots;
@@ -4488,6 +4558,41 @@ typedef struct rxvm_inline_scope {
     unsigned char signal_policy_changed;
     interrupt_saved_entry *saved_interrupt_stack;
 } rxvm_inline_scope;
+
+static const proc_runtime *diagnostic_frame_procedure(const stack_frame *frame) {
+    if (frame->inline_scope) return frame->inline_scope->provider;
+    return frame->procedure;
+}
+
+static int diagnostic_visit_origin(const stack_frame *frame,
+                                    diagnostic_visitor visit, void *state) {
+    rxvm_diagnostic_site site;
+    if (!frame || !frame->inline_scope) return 1;
+    memset(&site, 0, sizeof(site));
+    site.logical_procedure = diagnostic_frame_procedure(frame);
+    if (!site.logical_procedure || !site.logical_procedure->binarySpace ||
+        !site.logical_procedure->binarySpace->module) return 0;
+    site.origin = 1;
+    return visit(&site, state);
+}
+
+static int diagnostic_visit_scopes(const stack_frame *frame,
+                                    diagnostic_visitor visit, void *state) {
+    const rxvm_inline_scope *scope;
+    rxvm_diagnostic_site site;
+    for (scope = frame->inline_scope; scope; scope = scope->previous) {
+        memset(&site, 0, sizeof(site));
+        if (!frame->procedure || !frame->procedure->binarySpace) return 0;
+        site.physical_module = frame->procedure->binarySpace->module;
+        site.physical_procedure = frame->procedure;
+        site.logical_procedure = scope->previous ? scope->previous->provider : frame->procedure;
+        site.address = scope->entry_address;
+        if (!site.physical_module || !site.logical_procedure ||
+            !runtime_procedure_contains(site.physical_module, site.physical_procedure, site.address) ||
+            !visit(&site, state)) return 0;
+    }
+    return 1;
+}
 
 static void rxvm_inline_mark_policy_changed(stack_frame *frame) {
     if (frame && frame->inline_scope)

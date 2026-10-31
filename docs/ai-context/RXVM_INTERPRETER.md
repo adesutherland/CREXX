@@ -610,6 +610,18 @@ are not ordinary calls. The immutable detached snapshot owns its length-bearing
 names/source text and coordinates. It retains no live frame, module, worker,
 metadata or value pointer. Private diagnostic callout scopes are independent
 of checked-invocation authorization and restore on every exit.
+
+Committed inline scopes contribute their saved physical INLENTER call sites
+to that same chain. Walk logical scopes and real frames from the innermost
+activation outward, including retained child calls and suspended callouts,
+without duplicating a frame segment. A failed entry contributes no new logical
+frame. `logical origin` and `logical caller` labels identify the sealed provider
+procedure/module separately from each actual executable module/address. Source
+records and their procedure-range checks always use the physical instruction
+owner; no provider address is inferred from a clone offset. Both detached event
+rendering and the live fallback use the same walker. COPY and SIGNALORIGIN
+retain this logical context after scope unwind, including empty/unavailable
+allocation outcomes. RXBIN and the raw signal value layout are unchanged.
 Both the snapshot and its value-side descriptor survive worker teardown;
 descriptor publication reuses the allocator's existing detached extent scope.
 

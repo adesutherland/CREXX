@@ -2520,6 +2520,7 @@ RXVM_HANDLER(INLENTER_REG_FUNC_STRING_ID, VM_ADVANCE(4);
                     SET_SIGNAL((unsigned char)fault);
                     DISPATCH;
                 }
+                scope->entry_address = VM_CANONICAL_INDEX(pc);
                 if (context->initialized_module_count != context->num_modules &&
                     rxvm_ensure_callee_initialized(context, current_module,
                                                     provider) != 0) {
