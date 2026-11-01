@@ -161,8 +161,9 @@ caller obligation; `allowed()` remains false until a candidate is checked.
 every unchanged caller record together. Its `preserved()` result does not
 change the ordinary raw-root ABI fact to callback-absent.
 
-The current preservation theorem remains bounded until that relational
-replacement is implemented and qualified. Its explicit domain is one exact
+The legacy diagnostic-only preservation theorem remains bounded; the default
+relational replacement is implemented for selected direct cases but does not
+yet cover the full profile. The legacy theorem's explicit domain is one exact
 same-module call, zero callee locals/arguments, ignored result, no added caller
 cells or provider state delta, no existing static inline frames, and only
 normal continuation at that CALL. An independent operational profile supplies

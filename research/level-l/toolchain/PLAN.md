@@ -20,13 +20,14 @@ Link-time private globals remain an in-scope ownership outcome without public
 exposure or inliner proof metadata. The concrete borrowed-slot RXAS/RXBIN
 binding for direct expansion is [approved](#approved-borrowed-register-private-global-binding-inl-ac04);
 implementation and focused qualification remain open.
-The current standalone CLI work default can exhaust before the final theorem
-on a two-arm direct clone. A larger explicit allowance previously reached the
-prior-a0 finalizer refusal without publishing a clone; that incidental-timing
-gate is now removed. The same high-allowance endpoint next retains a possible
-body callback with unproved physical-activation observation; the clone is
-still unpublished. Reassess the default only after this independent semantic
-issue is resolved; budget size grants no proof permission.
+The default relational path now publishes selected direct clones, including
+two-arm CALL3 bodies with borrowed arguments and multiple returns. This is a
+bounded correctness result with an explicit work allowance and cleanup off;
+ordinary CALL cost, repeated expansion, broader signal/ownership exits and
+cross-module direct binding remain open. The older unpublished two-arm
+callback/finalizer endpoint was superseded by the shared relation and is not
+the current inliner limit. Reassess the CLI work default after the shared
+summary's growing-row cost is repaired; budget size grants no proof permission.
 
 **Approved effective-inlining direction (31 October 2026; INL-STEP04/05).**
 The normal inliner emits a direct remapped body with bounded ordinary
