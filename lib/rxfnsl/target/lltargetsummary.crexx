@@ -975,7 +975,9 @@ diagnosticclone: class
     end
     entryid = 0; ordinal = 1; cursor = 1; previous = 0; firstaddress = -1; endaddress = -1; previouscontinuation = ''
     if _expanded then do; draftpermission = owner.expansionplan(_call); restoration = draftpermission.restoration(); end
-    else restoration = owner.contextrestoration(_call)
+    else restoration = owner.contextrestoration(_call,1)
+    /* Diagnostic correspondence checks the structural lowering recipe. Its
+     * semantic context/callback permission is a separate site proof. */
     if restoration.allowed() = 0 then do; ignored = fail('unknown','target.diagnostic.clone.context.lowering.unproved'); return; end
     do i = 1 to _sources[0]
       if spend(1) = 0 then return
@@ -1496,6 +1498,7 @@ controlreceipt: class
   _operation = .int
   _procedure = .int
   _nohooks = .string
+  _pairedhooks = .string
   _status = .string
   _reason = .string
   _work = .int
@@ -1507,13 +1510,13 @@ controlreceipt: class
     if <refvalid>(relation) = 0 then return
     parent = dereference relation
     if parent.phasevalid(ordinal,parent.phaseidentity()) = 0 then return
-    hookbytes = parent.phasehooklength(ordinal); catalog = .llrxascatalog..catalog(); fingerprint = catalog.fingerprint()
+    hookbytes = parent.phasehooklength(ordinal) + parent.phasepairedhooklength(ordinal); catalog = .llrxascatalog..catalog(); fingerprint = catalog.fingerprint()
     if hookbytes > work - length(fingerprint) - 16 | hookbytes > bytes - length(fingerprint) - 256 then do; _status = 'limit'; _reason = 'target.expansion.frame.checked.phase.work.or.bytes'; return; end
     _work = hookbytes + length(fingerprint) + 16; _bytes = hookbytes + length(fingerprint) + 256
     if _work > work | _bytes > bytes then do; _work = 0; _bytes = 0; _status = 'limit'; _reason = 'target.expansion.frame.checked.phase.work.or.bytes'; return; end
     /* Snapshot only external owners and immutable proof data. A prepared
      * relation is returned by value; its own fields are not stable owners. */
-    _owner = parent.phaseowner(); _mapping = parent.phasemapping(); _ordinal = ordinal; _nohooks = parent.phasehooks(ordinal); _catalog = fingerprint
+    _owner = parent.phaseowner(); _mapping = parent.phasemapping(); _ordinal = ordinal; _nohooks = parent.phasehooks(ordinal); _pairedhooks = parent.phasepairedhooks(ordinal); _catalog = fingerprint
     owner = dereference _owner; mapping = dereference _mapping; _ownerid = owner.identity(); _mappingid = mapping.identity()
     plan = parent.phaseplan(ordinal); target = plan.target(); _operation = plan.operation(); _procedure = target.procedure()
     sourceref = mapping.sourceowner(); candidateref = mapping.candidateowner(); source = dereference sourceref; candidate = dereference candidateref
@@ -1544,7 +1547,7 @@ controlreceipt: class
     mapping = dereference _mapping; return mapping.instance(_ordinal)
   lookupwork: method = .int
     mapping = dereference _mapping
-    return length(_nohooks) + (mapping.instances() + 1) * (length(_catalog) + 8) + 8
+    return length(_nohooks) + length(_pairedhooks) + (mapping.instances() + 1) * (length(_catalog) + 8) + 8
   nohook: method = .int
     arg operation = .int, ordinal = .int
     if valid() = 0 then return 0
@@ -1553,6 +1556,14 @@ controlreceipt: class
     if ordinal < 1 | ordinal > instruction.actions() then return 0
     action = instruction.action(ordinal)
     return wordpos(action.id() as .string,_nohooks) > 0
+  pairedhook: method = .int
+    arg operation = .int, ordinal = .int
+    if valid() = 0 then return 0
+    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref; profileref = points.transfers(); profile = dereference profileref
+    instruction = profile.instruction(operation)
+    if ordinal < 1 | ordinal > instruction.actions() then return 0
+    action = instruction.action(ordinal)
+    return wordpos(action.id() as .string,_pairedhooks) > 0
   usedwork: method = .int
     return _work
   usedbytes: method = .int
@@ -1668,7 +1679,7 @@ framecontrolhistoryfact: class
           if action.detail() = 'catalog.callback.plugin-sync' & catalog.contextsynccontract() = 'value-only-nonreentrant.v1' then iterate
           if profile.recyclercleanup(sourceop,j,'callback') then iterate
           if spend(_phase.lookupwork() + j + 1) = 0 then return
-          if _phase.nohook(sourceop,j) = 0 then do; ignored = fail('unknown','target.expansion.frame.control.foreign.correspondence.unproved'); return; end
+          if _phase.nohook(sourceop,j) = 0 & (_phase.pairedhook(sourceop,j) = 0 | catalog.callbacknormalpreservesframe(item.opcode()) = 0) then do; ignored = fail('unknown','target.expansion.frame.control.foreign.correspondence.unproved'); return; end
         end
         if callbacks = 0 then do; ignored = fail('unknown','target.expansion.frame.control.foreign.inventory.unproved'); return; end
       end
@@ -1750,6 +1761,7 @@ expansionequivalencefact: class
   _phaseidentity = .int
   _phasepresent = .int[]
   _nohooks = .string[]
+  _pairedhooks = .string[]
   _checking = .int
   _lifecycles = .framecontrolhistoryfact[]
   *: factory
@@ -1863,7 +1875,9 @@ expansionequivalencefact: class
     _expected = 0; program = before.bindingprogram(called.id(),'preparation',_worklimit - _work,_bytelimit - _bytes)
     if incurred(program.usedwork(),program.usedbytes()) = 0 then return 0
     if program.status() <> 'ok' then return fail(program.status(),program.reason())
-    if program.steps() > 0 & catalog.callatomic(called.opcode()) then return fail('unknown','target.expansion.preparation.phase.partition.unproved')
+    /* The checked primitive program below preserves the fused preparation
+     * order. Its former atomic-phase veto required exact asynchronous CALL
+     * checkpoints, which are outside the direct-inline signal contract. */
     do i = 1 to program.steps()
       kind = program.kind(i); left = called.operand(program.operand(i,1))
       if kind = 'clear' then cursor = expect(candidate,cursor,'null',left)
@@ -1988,6 +2002,15 @@ expansionequivalencefact: class
         if operation = 'restore-numeric' then do
           if catalog.contextsynccontract() <> 'value-only-nonreentrant.v1' then return fail('unknown','target.expansion.return.numeric.sync.unproved')
         end
+        else if operation = 'return-register' then do
+          /* The checked result mapping and returnmode above select the same
+           * copy_value or move_value operation as physical RET. The candidate
+           * instruction has just been checked at this exact endpoint. Its
+           * destination may already own resources: both executions release
+           * them through that same value operation. Absolute ABI resource
+           * absence is needed to remove a return hook, not to pair it. */
+          if transfermode <> 'ignored' & transfermode <> 'copy' & transfermode <> 'move' then return fail('unknown','target.expansion.return.transfer.mode.unproved')
+        end
         else do
           reason = _flow.abicondition(operation,sourcepoint,destination,transfermode,1,cleanprivate,1)
           if reason <> '' then return fail('unknown',reason)
@@ -2088,7 +2111,10 @@ expansionequivalencefact: class
         if action.kind() <> 'callback' | owner.abiaction(action) then iterate
         if catalog.callbackvaluesurface(original.opcode()) = 'bytes-snapshot' then iterate
         if before.recyclercleanup(original.id(),j,'callback') then iterate
-        if _flow.callbackpossibleat(copied.id(),j) then return fail('unknown','target.expansion.retained.callback.observation.unproved')
+        /* The caller instruction is retained in the same physical frame.
+         * Its paired resource-only value hook remains on the same mapped
+         * operands, with its possible result and exceptional effects intact. */
+        if _flow.callbackpossibleat(copied.id(),j) & catalog.callbacknormalpreservesframe(original.opcode()) = 0 then return fail('unknown','target.expansion.retained.callback.observation.unproved')
       end
       if sourcecfg.outedges(original.id()) <> _cfg.outedges(copied.id()) then return fail('unknown','target.expansion.retained.departure.inventory.mismatch')
       do j = 1 to sourcecfg.outedges(original.id())
@@ -2112,23 +2138,6 @@ expansionequivalencefact: class
       end
     end
     return 1
-  /** A structural/effect relation does not confer a dispatch-boundary waiver.
-   * Native CALL/RET carry semantic checkpoint transitions; a forward BR does
-   * not reproduce their external-mailbox claims on every concrete VM owner.
-   * Keep this explicit obligation closed pending the reviewed direct boundary
-   * contract, rather than treating static diagnostic metadata as execution. */
-  dispatchrelation: method = .int
-    arg plan = .expansionplanfact, instance = .lltargetremap..expansioninstance
-    if instance.source(1) <> 0 then return fail('unknown','target.expansion.call.entry.checkpoint.unproved')
-    owner = dereference _owner; flowref = owner.flow(); points = dereference flowref; sourceref = points.owner(); source = dereference sourceref
-    called = source.at(plan.operation()); catalog = .llrxascatalog..catalog(); restoration = plan.restoration()
-    do i = 1 to instance.rows()
-      if instance.source(i) = 0 then iterate
-      item = source.at(instance.source(i)); kind = catalog.returnkind(item.opcode())
-      if kind = 0 then iterate
-      if (catalog.callresult(called.opcode()) > 0 & kind > 1) | restoration.fields() > 0 then return fail('unknown','target.expansion.return.async.commit.correspondence.unproved')
-    end
-    return fail('unknown','target.expansion.dispatch.owner.checkpoint.unproved')
   /** Control ownership is proved after the same checked relational phases.
    * Neither a naked boolean nor value-backing history supplies this receipt. */
   lifecyclerelation: method = .int
@@ -2171,6 +2180,12 @@ expansionequivalencefact: class
   phasehooklength: method = .int
     arg index = .int
     return length(_nohooks[index])
+  phasepairedhooks: method = .string
+    arg index = .int
+    return _pairedhooks[index]
+  phasepairedhooklength: method = .int
+    arg index = .int
+    return length(_pairedhooks[index])
   mappedoperation: method = .int
     arg source = .lltarget..module, instance = .lltargetremap..expansioninstance, sourceop = .int
     coordinate = source.inlineaddress(sourceop)
@@ -2309,7 +2324,7 @@ expansionequivalencefact: class
     return 1
   bodyrelation: method = .int
     arg plan = .expansionplanfact, instance = .lltargetremap..expansioninstance
-    mapid = .int; bindingview = .lltargettransfer..refview
+    mapid = .int; key = .string; bindingview = .lltargettransfer..refview
     owner = dereference _owner; flowref = owner.flow(); points = dereference flowref
     sourceref = points.owner(); source = dereference sourceref; profile_ref = points.transfers(); before = dereference profile_ref
     mapping = dereference _mapping; candidate_ref = mapping.candidateowner(); candidate = dereference candidate_ref
@@ -2361,10 +2376,22 @@ expansionequivalencefact: class
         if action.kind() = 'callback' then do
           if before.recyclercleanup(sourceop,a,'callback') then iterate
           if _flow.callbackpossibleat(copied.id(),a) then do
-            if wordpos(action.observation(),'physical unknown') > 0 then return fail('unknown','target.expansion.callback.activation.observation.unproved')
-            if wordpos(action.phase(),'none before after') = 0 then return fail('unknown','target.expansion.callback.phase.correspondence.unproved')
-            /* The same native event on coupled inputs preserves callback
-             * choice/order and retains its entire value/binding havoc. */
+            /* A copied instruction invokes the same resource-only native
+             * value hook with the mapped operands. Its unknown internal
+             * checkpoint is shared by both executions; it does not acquire
+             * a physical-frame observation merely because the VM may call a
+             * payload copy/finalizer. Preserve the hook's full value/binding
+             * havoc and all exceptional edges. Other callback routes still
+             * need an explicit activation/phase observation contract. */
+            if catalog.callbacknormalpreservesframe(original.opcode()) = 0 | catalog.callbacknormalpreservesframe(copied.opcode()) = 0 then do
+              if wordpos(action.observation(),'physical unknown') > 0 then return fail('unknown','target.expansion.callback.activation.observation.unproved')
+              if wordpos(action.phase(),'none before after') = 0 then return fail('unknown','target.expansion.callback.phase.correspondence.unproved')
+            end
+            else do
+              key = action.id() as .string
+              if spend(length(_pairedhooks[_checking]) + 1,length(key) + 1) = 0 then return 0
+              _pairedhooks[_checking] = _pairedhooks[_checking] || ' ' || key
+            end
           end
           else do
             key = action.id() as .string
@@ -2446,7 +2473,7 @@ expansionequivalencefact: class
     if dependencycharge() = 0 then return
     do i = 1 to mapping.instances()
       instance = mapping.instance(i); plan = owner.expansionplan(instance.callid())
-      _phasepresent[i] = 0; _nohooks[i] = ''; _checking = i
+      _phasepresent[i] = 0; _nohooks[i] = ''; _pairedhooks[i] = ''; _checking = i
       if plan.draftallowed() = 0 then do; ignored = fail(plan.status(),plan.reason()); return; end
       _plans[i] = plan
       coverage = points.entrycoverage(instance.procedure())
@@ -2464,9 +2491,6 @@ expansionequivalencefact: class
     end
     if retainedrelation() = 0 then return
     if lifecyclerelation() = 0 then return
-    do i = 1 to mapping.instances()
-      if dispatchrelation(_plans[i],mapping.instance(i)) = 0 then return
-    end
     _status = 'proved'
     return
   valid: method = .int

@@ -270,7 +270,7 @@ outputingress: procedure = .int
   failures = failures + check(cfg.status() = 'ok','canonical output ingress graph builds ' || mode)
   if cfg.status() <> 'ok' then do; say cfg.message(); return failures; end
   item = source.at(printed)
-  failures = failures + check(catalog.callbackpreservessignalpolicy(item.opcode()) & profile.callbackpolicyunknown(printed) = 0 & profile.callbackobligations(printed) = catalog.callbackmask('host') & catalog.callbacknormalpreservesframe(item.opcode()) = 0,'catalogue policy-only fact retains HOST and frame/value uncertainty ' || mode)
+  failures = failures + check(catalog.callbackpreservessignalpolicy(item.opcode()) & profile.callbackpolicyunknown(printed) = 0 & profile.callbackobligations(printed) = catalog.callbackmask('host') & catalog.callbacknormalpreservesframe(item.opcode()),'catalogue bytes-output fact retains HOST and value uncertainty with frame preservation ' || mode)
   instruction = profile.instruction(printed)
   do i = 1 to instruction.actions()
     action = instruction.action(i)

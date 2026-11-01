@@ -224,7 +224,11 @@ static void check_target_contract(const OpInfo *op) {
         check(!(definition & ~rxop_component_may_writes(op->opcode, i)),
               "normal definition is outside conservative may-write coverage", op);
         if (rxop_effect_writes_operand(&effects, i))
-            check(rxop_component_may_writes(op->opcode, i) == RXOP_COMPONENT_ALL &&
+            check(rxop_component_may_writes(op->opcode, i) ==
+                      (rxop_component_write_is_known(op->opcode, i) &&
+                       rxop_component_writes(op->opcode, i) == RXOP_COMPONENT_NONE &&
+                       rxop_component_clears(op->opcode, i) == RXOP_COMPONENT_NONE
+                          ? RXOP_COMPONENT_NONE : RXOP_COMPONENT_ALL) &&
                       rxop_flag_may_writes(op->opcode, i) == RXFLAG_READABLE_MASK,
                   "explicit write lacks conservative component/flag coverage", op);
         if (rxop_format_operand_type(op->format, i) == OP_REG)
@@ -833,6 +837,16 @@ static void check_callback_execution_contracts(void) {
               !rxop_callback_obligations(OP_ICOPY_REG_REG) &&
               !rxop_callback_obligations(OP_SWAP_REG_REG),
           "reviewed field/formatting/context/pointer operations preserve no-hook positives", NULL);
+    check(rxop_component_may_reads(OP_SETTP_REG_INT, 0) == RXOP_COMPONENT_NONE &&
+              rxop_component_writes(OP_SETTP_REG_INT, 0) == RXOP_COMPONENT_NONE &&
+              rxop_component_write_is_known(OP_SETTP_REG_INT, 0) &&
+              !rxop_callback_obligations(OP_SETTP_REG_INT) &&
+              rxop_component_may_reads(OP_SETORTP_REG_INT, 0) == RXOP_COMPONENT_NONE &&
+              rxop_component_write_is_known(OP_SETORTP_REG_INT, 0) &&
+              !rxop_callback_obligations(OP_SETORTP_REG_INT) &&
+              rxop_component_may_reads(OP_GETTP_REG_REG, 1) == RXOP_COMPONENT_NONE &&
+              rxop_component_may_reads(OP_BRTPT_ID_REG, 1) == RXOP_COMPONENT_NONE,
+          "public status operations leave value components and payload hooks untouched", NULL);
     check(rxop_signal_contract(OP_FTOI_REG).state == RXOP_SIGNAL_STATE_KNOWN &&
               rxop_execution_signal_contract(OP_FTOI_REG).state == RXOP_SIGNAL_STATE_KNOWN,
           "float-to-integer conversion retains its intrinsic error after callback audit", NULL);
@@ -864,11 +878,12 @@ static void check_callback_execution_contracts(void) {
           "binary literal postwrite keeps its incoming resource hook and unknown exceptional failure", NULL);
     check(rxop_callback_normal_preserves_frame(OP_LOAD_REG_INT) &&
               rxop_callback_normal_preserves_frame(OP_COPY_REG_REG) &&
-              !rxop_callback_normal_preserves_frame(OP_SAYX_STRING) &&
+              rxop_callback_normal_preserves_frame(OP_SAYX_STRING) &&
+              rxop_callback_normal_preserves_frame(OP_SAY_REG) &&
               !rxop_callback_normal_preserves_frame(OP_SWAPCALL_REG_FUNC_REG_REG_REG) &&
               !rxop_callback_normal_preserves_frame(OP_INLENTER_REG_FUNC_STRING_ID) &&
               !rxop_callback_normal_preserves_frame(-1),
-          "normal callback frame-table premise is limited to complete public resource routes", NULL);
+          "normal callback frame-table premise covers reviewed resource and bytes-output routes", NULL);
     check(rxop_callback_preserves_signal_policy(OP_LOAD_REG_INT) &&
               rxop_callback_preserves_signal_policy(OP_COPY_REG_REG) &&
               rxop_callback_preserves_signal_policy(OP_SAY_REG) &&
@@ -887,7 +902,7 @@ static void check_callback_execution_contracts(void) {
               !rxop_callback_preserves_signal_policy(OP_SWAPCALL_REG_FUNC_REG_REG_REG) &&
               !rxop_callback_preserves_signal_policy(OP_INLENTER_REG_FUNC_STRING_ID) &&
               !rxop_callback_preserves_signal_policy(OP_SETNUMDGTS_INT) &&
-              !rxop_callback_normal_preserves_frame(OP_SAYX_STRING) &&
+              rxop_callback_normal_preserves_frame(OP_SAYX_STRING) &&
               rxop_callback_obligations(OP_SAYX_STRING) == RXOP_CALLBACK_HOST &&
               rxop_execution_signal_contract(OP_SAYX_STRING).state == RXOP_SIGNAL_STATE_UNKNOWN,
           "policy-only premise leaves unknown routes, ABI, host observations and queued signals independent", NULL);
@@ -946,9 +961,9 @@ static void check_callback_value_surfaces(void) {
               "SAY/SAYX public callback surface is copied bytes without a value handle", &op_table[opcode]);
         check(rxop_callback_obligations(opcode) == RXOP_CALLBACK_HOST &&
                   rxop_execution_signal_contract(opcode).state == RXOP_SIGNAL_STATE_UNKNOWN &&
-                  !rxop_callback_normal_preserves_frame(opcode) &&
+                  rxop_callback_normal_preserves_frame(opcode) &&
                   rxop_callback_preserves_signal_policy(opcode),
-              "bytes surface retains HOST control and does not promise frame/value preservation", &op_table[opcode]);
+              "bytes surface retains HOST control and value uncertainty while preserving frame", &op_table[opcode]);
     }
     for (index = 0u; index < sizeof(unknown) / sizeof(*unknown); ++index) {
         opcode = unknown[index];
@@ -1294,6 +1309,7 @@ int main(void) {
     check_same_storage_copy_metadata(OP_DCOPY_REG_REG);
     check_same_storage_copy_metadata(OP_ACOPY_REG_REG);
     check_same_storage_copy_metadata(OP_BCOPY_REG_REG);
+    check_same_storage_copy_metadata(OP_MOVE_REG_REG);
     check(rxop_component_reads(OP_COPY_REG_REG, 1) ==
                   RXOP_COMPONENT_ALL &&
               rxop_component_writes(OP_COPY_REG_REG, 0) ==
@@ -2545,6 +2561,19 @@ int main(void) {
               rxop_transport_components(OP_COPY_REG_REG) == RXOP_COMPONENT_ALL &&
               rxop_definition_components(OP_NULLN_REG_REG_REG, 2) == RXOP_COMPONENT_ALL,
           "definitions and transports have independent availability obligations", NULL);
+    effects = rxop_effects(OP_MOVE_REG_REG);
+    check(rxop_effect_kills_operand(&effects, 0) &&
+              !rxop_effect_kills_operand(&effects, 1) &&
+              rxop_component_write_is_known(OP_MOVE_REG_REG, 0) &&
+              rxop_component_write_is_known(OP_MOVE_REG_REG, 1) &&
+              rxop_component_reads(OP_MOVE_REG_REG, 1) == RXOP_COMPONENT_ALL &&
+              rxop_component_writes(OP_MOVE_REG_REG, 0) == RXOP_COMPONENT_ALL &&
+              rxop_component_writes(OP_MOVE_REG_REG, 1) == RXOP_COMPONENT_ALL &&
+              rxop_component_clears(OP_MOVE_REG_REG, 1) == RXOP_COMPONENT_ALL &&
+              rxop_transport_source_operand(OP_MOVE_REG_REG) == 2 &&
+              rxop_transport_components(OP_MOVE_REG_REG) == RXOP_COMPONENT_ALL &&
+              !rxop_callback_inputs(OP_MOVE_REG_REG, 1),
+          "MOVE transfers whole ownership and resets its source without a copy callback", NULL);
     check(rxop_component_reads(OP_STRPOS_REG_REG_REG, 0) == RXOP_COMPONENT_INTEGER &&
               rxop_component_writes(OP_STRPOS_REG_REG_REG, 0) == RXOP_COMPONENT_INTEGER,
           "STRPOS exposes its integer start/result, not a VM-private string cache", NULL);

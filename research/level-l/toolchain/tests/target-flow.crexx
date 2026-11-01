@@ -555,9 +555,64 @@ ownedreturn: procedure = .int
   else do
     if mode = 2 then failures = failures + check(value.availability() = 'unknown' & value.known() = 0,'raw ambient handler may import an unnamed dirty origin into the private RET: ' || value.availability())
     else failures = failures + check(value.availability() = 'entry' & value.dirty(),'raw private RET retains its local dirty origin despite the caller coverage gap ' || mode)
-    if mode = 2 then failures = failures + check(normalized.complete(target.procedureid('private')) = 0,'unrepresented flag observation keeps the private whole-function certificate unproved')
+    if mode = 2 then failures = failures + check(normalized.complete(target.procedureid('private')) & normalized.warnings() > 0,'typed flag observation gives the private dirty read a clear and warning')
   end
   failures = failures + check(normalized.complete(target.procedureid('main')) = 0 & normalized.unknownreason(target.procedureid('main')) <> '','raw caller callback/handler uncertainty remains an explicit entry-certificate refusal ' || mode)
+  return failures
+
+fullresetcount: procedure = .int
+  failures = 0; integer = 0; native = 0; countid = 0; possible = 0; capacitypossible = 0; fields = .object[]; i = .int
+  action = .lltargettransfer..action
+  draft = .lltarget..draft('full.reset.count','fixture:full.reset.count',0)
+  at = draft.synthetic('a full reset does not invent a later setter finalizer')
+  body = draft.procedure('main',3,at)
+  ignored = two(body,'load',body.reg('r',0),.lltarget..operand.integer(2),at)
+  cleared = one(body,'null',body.reg('r',1),at)
+  ignored = two(body,'load',body.reg('r',1),.lltarget..operand.integer(0),at)
+  ignored = two(body,'settp',body.reg('r',1),.lltarget..operand.integer(768),at)
+  ignored = two(body,'settp',body.reg('r',1),.lltarget..operand.integer(0),at)
+  copied = two(body,'copy',body.reg('r',2),body.reg('r',1),at)
+  fields[1] = body.reg('r',2) as .object; fields[2] = .lltarget..operand.procedure('leaf') as .object
+  fields[3] = body.reg('r',0) as .object; called = body.emit('call',fields,at)
+  calledagain = body.emit('call',fields,at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  body = draft.procedure('leaf',0,at)
+  ignored = one(body,'ret',.lltarget..operand.integer(0),at)
+  target = draft.finish()
+  failures = failures + check(target.valid(),'full-reset count source validates')
+  if target.valid() = 0 then return failures
+  profile = .lltargettransfer..profile.closedcalls(reference target,target.procedureid('main'),'closed-main-default-halt.v1')
+  cfg = .lltargetcfg..graph(reference target,reference profile)
+  flow = .lltargetflow..analysis(reference target,reference profile,reference cfg)
+  failures = failures + check(flow.status() = 'ok','full-reset count flow builds')
+  if flow.status() <> 'ok' then return failures
+  catalog = .llrxascatalog..catalog()
+  do i = 1 to profile.domains()
+    domain = profile.domain(i)
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('I') then integer = i
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('native-payload') then native = i
+    if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('attribute-count') then countid = i
+  end
+  value = flow.componentat(cleared,'r',1,native,1)
+  failures = failures + check(value.presence() = 'absent','full reset leaves native payload absent')
+  value = flow.componentat(called,'r',1,countid)
+  failures = failures + check(value.presence() = 'absent','scalar setter preserves an independently cleared attribute tree')
+  value = flow.componentat(called,'r',0,integer); literal = value.literal()
+  failures = failures + check(value.known() & literal.kind() = 'I' & literal.index() = 2 & flow.captureargumentcount(called) = 2,'following setter preserves the independently loaded count')
+  value = flow.componentat(calledagain,'r',0,integer); literal = value.literal()
+  failures = failures + check(value.known() & literal.kind() = 'I' & literal.index() = 2 & flow.captureargumentcount(calledagain) = 2,'retained child call preserves an unreachable caller count')
+  instruction = profile.instruction(copied)
+  do i = 1 to instruction.actions()
+    action = instruction.action(i)
+    if action.detail() = 'catalog.callback.capacity-or-checkpoint' then capacitypossible = capacitypossible | flow.callbackpossibleat(copied,i)
+  end
+  failures = failures + check(capacitypossible,'dirty destination COPY retains its raw possible capacity hook')
+  instruction = profile.instruction(cleared)
+  do i = 1 to instruction.actions()
+    action = instruction.action(i)
+    if action.kind() = 'callback' then possible = possible | flow.callbackpossibleat(cleared,i)
+  end
+  failures = failures + check(possible,'dirty-entry reset retains its raw possible cleanup hook')
   return failures
 
 main: procedure = .int
@@ -721,7 +776,7 @@ main: procedure = .int
   failures = failures + callavailability('defined') + callavailability('repeated') + callavailability('dirty') + callavailability('join') + callavailability('constant') + callavailability('unknown-observe')
   failures = failures + callavailability('defined',1) + callavailability('dirty',1) + callavailability('constant',1) + callavailability('unknown',1) + callavailability('unknown-observe',1)
   failures = failures + callbackfreetransfer(0) + callbackfreetransfer(1)
-  failures = failures + callhookreturn(0) + callhookreturn(1) + callhookreturn(2) + callresultorigins() + aliaslimit() + indexedbudget() + unknownmeet(0) + unknownmeet(1) + summaryrevisit() + summaryworklist(0) + summaryworklist(1) + privatecertificate(0) + privatecertificate(1) + ownedreturn(0) + ownedreturn(1) + ownedreturn(2)
+  failures = failures + callhookreturn(0) + callhookreturn(1) + callhookreturn(2) + callresultorigins() + aliaslimit() + indexedbudget() + unknownmeet(0) + unknownmeet(1) + summaryrevisit() + summaryworklist(0) + summaryworklist(1) + privatecertificate(0) + privatecertificate(1) + ownedreturn(0) + ownedreturn(1) + ownedreturn(2) + fullresetcount()
   if failures = 0 then say 'TARGET_FLOW|failures=0'
   else say 'TARGET_FLOW|failures=' || failures
   return failures

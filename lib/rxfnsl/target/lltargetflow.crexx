@@ -2770,9 +2770,9 @@ analysis: class
         if abicatalog.scopecontinuation(abiitem.opcode()) > 0 then _preparations[instruction.opid()] = .statevector()
       end
     end
-    profile = dereference _transfers
+    profile = dereference _transfers; catalog = .llrxascatalog..catalog()
     if _premise = 'canonical' then do
-      record = instruction.record(); catalog = .llrxascatalog..catalog(); cfg = dereference _cfg
+      record = instruction.record(); cfg = dereference _cfg
       if record.kind() = 'instruction' then do
         /* Callback return preserves physical tables on a resumed failure as
          * well. Only successful instruction completion licenses postwrites. */
@@ -2869,12 +2869,23 @@ analysis: class
         value = .cell()
         if action.sourcekind() = 'captured' then value = capturedcell(capturedids,capturedvalues,action.sourceid())
         if callbackpossible(instruction,action,value) then do
+          /* The first overwrite of a dirty owned local can finalize payload
+           * left by an unrelated retired frame. Keep the raw possible hook
+           * in the transfer inventory, but do not let that incidental cleanup
+           * erase facts about values installed by this execution. */
+          if incidentalentrycleanup(instruction,action,value,incoming) then iterate
           callbackpending = 1
           /* Fixed CALL pointers precede frame preparation. A returning
            * resource hook can change their pointees before the provider,
            * without replacing the captured pointer identities. */
           if exceptional = 0 & _premise = 'canonical' & callprepared & action.detail() = 'catalog.callback.call-frame' then callincoming = foreignresume(callincoming,instruction.function())
+          /* A child invocation can change borrowed values, but its normal
+           * return restores the suspended caller's register pointer table
+           * and scoped activation. Fused preparation has already executed
+           * before the callcapture action. */
           framebindings = normalcallback | callframebindings(instruction,action)
+          if normalcallback & catalog.hostcallbacks(instruction.record().opcode()) then framebindings = 2
+          if _premise = 'canonical' & catalog.callinvokes(instruction.record().opcode()) then framebindings = 2
           call callbackbarrier(current,instruction.function(),observe,framebindings)
           if _actionbuilding then call _actionbuild.unproved('target.flow.action.callback.phase.unproved')
         end
@@ -2970,11 +2981,10 @@ analysis: class
         end
       end
       if kind = 'call' then do
-        /* Until an instantiated outward summary supplies a narrower transfer,
-         * a child can mutate exposed values. Context belongs to the retained
-         * caller frame; value uncertainty does not invent its modification. */
-        if resourcecallknown(instruction) then current = resourcecallstate(instruction,current)
-        else current = foreignresume(current,instruction.function())
+        /* Resource cleanliness is not a value or alias theorem. Model the
+         * child broadly here; restore only independently unreachable caller
+         * storage after all call and return actions have completed. */
+        current = foreignresume(current,instruction.function())
         if observe & _premise <> 'canonical' then do
           described = independentcall(instruction)
           if _status <> 'building' & _status <> 'ok' then return current
@@ -3104,9 +3114,17 @@ analysis: class
           if domain.kind() = 'component' & domain.nativebit() = catalog.componentmask('native-payload') then do
             if writecell(current,poststorage,d,.cell('absent',0,0,'defined','absent'),1) = 0 then return current
           end
+          /* The finalizer ran during the setter and may have reinstalled a
+           * reference or attributes after their direct clear. Only the
+           * native payload's postwrite absence is guaranteed. */
+          if domain.kind() = 'component' & (domain.nativebit() = catalog.componentmask('reference') | domain.nativebit() = catalog.componentmask('attribute-count')) then do
+            if writecell(current,poststorage,d,.cell(),1) = 0 then return current
+          end
         end
       end
     end
+    if callentry & exceptional = 0 & callbackpending = 0 & deferredabi = 0 then
+      current = isolatedcallstate(instruction,callincoming,current)
     return current
   capacitywrites: method = .void
     arg instruction = .lltargettransfer..instruction, incoming = .state, expose current = .state, exceptional = .int
@@ -3146,6 +3164,62 @@ analysis: class
     return
   /** Conditional callbacks use an immutable pre-operation capture. Unknown
    * extents/capacity and absent captures always retain the possible hook. */
+  incidentalentrycleanup: method = .int
+    arg instruction = .lltargettransfer..instruction, action = .lltargettransfer..action, captured = .cell, original = .state
+    profile_ref = reference .lltargettransfer..profile; profile_ref = _transfers
+    profile = dereference profile_ref; catalog = .llrxascatalog..catalog()
+    i = .int; d = .int; reg = .int; storage = .int; mask = .int; bit = .int; overlap = .int; found = 0
+    resources = .int; componentmask = .int; other = .int; capacity = .int
+    value = .lltarget..operand; domain = .lltargettransfer..domain; prior = .cell; item = .lltarget..record
+    if _premise <> 'canonical' then return 0
+    if action.detail() = 'catalog.callback.call-frame' then do
+      /* The recycled child frame's old a0 payload belongs to an already
+       * retired activation. Its eventual cleanup remains a raw possible
+       * callback, but timing cannot alter this execution's value facts. */
+      return profile.recyclercleanup(instruction.opid(),action.ordinal(),'callback')
+    end
+    if action.detail() = 'catalog.callback.capacity-or-checkpoint' then do
+      /* A checked capacity hook may retire storage inherited from an older
+       * activation. It is incidental only when every callback operand has
+       * no current-execution resource reach, and each capacity-bearing owned
+       * cell still carries its dirty-entry attribute origin. The raw hook
+       * and any failure edge remain present in the catalogue/CFG. */
+      item = instruction.record(); mask = catalog.callbackobligations(item.opcode())
+      resources = catalog.callbackmask('input'); bit = catalog.callbackmask('output'); assembler ior resources,resources,bit
+      bit = catalog.callbackmask('capacity'); assembler ior resources,resources,bit
+      assembler iand overlap,mask,resources
+      if mask = 0 | mask <> overlap then return 0
+      componentmask = catalog.componentmask('reference'); other = catalog.componentmask('native-payload'); assembler ior componentmask,componentmask,other
+      other = catalog.componentmask('attribute-count'); assembler ior componentmask,componentmask,other
+      do i = 1 to item.operands()
+        if spend(_domains + 1) = 0 then return 0
+        mask = catalog.callbackinputs(item.opcode(),i); bit = catalog.callbackoutputs(item.opcode(),i)
+        assembler ior mask,mask,bit
+        capacity = catalog.callbackcapacity(item.opcode(),i)
+        if mask = 0 & capacity = 0 then iterate
+        value = item.operand(i)
+        if value.kind() <> 'R' | value.bank() <> 'r' then return 0
+        reg = findregister(instruction.function(),value.bank(),value.index()); storage = original.mapping(reg)
+        if storage < 1 | storage > _storefunction[0] | ownedbase(storage) = 0 | _storebank[storage] <> 'r' then return 0
+        if capacity then found = 1
+        do d = 1 to _domains
+          domain = profile.domain(d)
+          if domain.kind() <> 'component' then iterate
+          bit = domain.nativebit(); assembler iand overlap,componentmask,bit
+          if overlap = 0 then iterate
+          prior = cellat(original,storage,d)
+          if capacity & bit = catalog.componentmask('attribute-count') & prior.availability() <> 'entry' then return 0
+          if prior.presence() <> 'absent' & prior.availability() <> 'entry' then return 0
+        end
+      end
+      return found
+    end
+    if wordpos(action.detail(),'catalog.callback.payload catalog.callback.active-tree') = 0 then return 0
+    if action.subject() < 1 | captured.availability() <> 'entry' then return 0
+    storage = captured.entry()
+    if storage < 1 | storage > _storefunction[0] then return 0
+    view = profile.ref(action.subject())
+    return view.bank() = 'r' & _storefunction[storage] = instruction.function() & _storebank[storage] = 'r' & ownedbase(storage)
   callbackpossible: method = .int
     arg instruction = .lltargettransfer..instruction, action = .lltargettransfer..action, captured = .cell
     i = .int; mask = .int; output = .int
@@ -3184,8 +3258,8 @@ analysis: class
     arg expose current = .state, functionid = .int, observe = .int, preservebindings = 0
     if spend(current.count() + current.registers() + _storefunction[0] + current.depth() + 1) = 0 then return
     call current.clobber()
-    if preservebindings then call current.forgetscopeownership()
-    else do; call current.clobberbindings(); call current.forgetscopes(); end
+    if preservebindings = 1 then call current.forgetscopeownership()
+    if preservebindings = 0 then do; call current.clobberbindings(); call current.forgetscopes(); end
     if observe then do
       _entrycomplete[functionid] = 0
       _entryreason[functionid] = 'target.flow.callback.observations.unproved'
@@ -3233,24 +3307,94 @@ analysis: class
       if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < 0 | value.index() >= body.locals() then return 0
     end
     return 1
-  resourcecallstate: method = .lltargetflow..state
-    arg instruction = .lltargettransfer..instruction, incoming = .state
-    current = incoming.copy(); item = instruction.record(); catalog = .llrxascatalog..catalog(); profile = dereference _transfers
-    if instruction.function() > _resourceclean[0] then return foreignresume(incoming,instruction.function())
-    if _resourceclean[instruction.function()] = 0 then return foreignresume(incoming,instruction.function())
-    ordinal = catalog.callresult(item.opcode())
-    if ordinal = 0 then return current
-    value = item.operand(ordinal); reg = findregister(instruction.function(),value.bank(),value.index()); storage = current.mapping(reg)
-    if storage = 0 then return foreignresume(incoming,instruction.function())
-    if spend(_domains * 4 + 1) = 0 | scratch(current.bytes() + _domains * 160,1) = 0 then return current
-    do d = 1 to _domains
-      domain = profile.domain(d)
-      if wordpos(domain.kind(),'component flag') = 0 then iterate
-      presence = 'unknown'
-      call current.put(storage,d,.cell('unknown',0,0,'unknown',presence))
+  /** Check the transitive bytecode body for a route to an ancestor frame.
+   * A child CALL is followed only when its exact local target is known. The
+   * native catalogue, rather than a mnemonic list, owns physical-observer
+   * classification. This fact alone says nothing about actual aliases. */
+  isolatedcallbody: method = .int
+    arg functionid = .int, stack = ''
+    i = .int; mask = .int; bit = .int; overlap = .int; child = .int
+    if functionid < 2 | words(stack) >= 32 | wordpos(functionid as .string,stack) > 0 then return 0
+    target = dereference _owner; profile = dereference _transfers; catalog = .llrxascatalog..catalog()
+    body = target.body(functionid); stack = strip(stack || ' ' || functionid)
+    if spend(body.records() * 4 + 1) = 0 then return 0
+    do i = 1 to body.records()
+      item = body.record(i)
+      if item.kind() <> 'instruction' then iterate
+      code = item.opcode()
+      if catalog.framecontrolstate(code) <> 'known' | catalog.observations(code) <> 0 then return 0
+      mask = catalog.framecontrolmask(code); bit = catalog.framecontrolmasknamed('ancestor-references')
+      assembler iand overlap,mask,bit
+      if overlap then return 0
+      bit = catalog.framecontrolmasknamed('unknown'); assembler iand overlap,mask,bit
+      if overlap then return 0
+      if catalog.callinvokes(code) then do
+        child = profile.calllocaltarget(item.id())
+        if child < 2 | isolatedcallbody(child,stack) = 0 then return 0
+      end
     end
-    call current.setcapacity(storage,0)
-    return current
+    return 1
+  /** A selected local child can affect captured actuals and its result, but
+   * cannot touch another owned caller slot when it has no route to that slot.
+   * Dirty inherited resource cells are not current-execution references.
+   * Keep unknown effects for every reachable or unproved storage. */
+  isolatedcallstate: method = .lltargetflow..state
+    arg instruction = .lltargettransfer..instruction, incoming = .state, after = .state
+    i = .int; d = .int; reg = .int; storage = .int; bit = .int; overlap = .int
+    resources = .int; resultstorage = .int; ordinal = .int
+    domain = .lltargettransfer..domain
+    result = after.copy()
+    if _premise <> 'canonical' then return result
+    item = instruction.record(); catalog = .llrxascatalog..catalog(); profile = dereference _transfers
+    target = dereference _owner
+    if item.kind() <> 'instruction' | target.globals() > 0 then return result
+    if catalog.callinvokes(item.opcode()) = 0 | profile.callexacttarget(item.id()) = 0 then return result
+    child = profile.calllocaltarget(item.id())
+    if child < 2 | isolatedcallbody(child) = 0 then return result
+    actuals = callactuals(instruction,incoming,1)
+    if actuals = '?' | left(actuals,1) = '~' then return result
+    if spend(words(actuals) * _domains * 4 + _storefunction[0] + _domains * 8 + 1) = 0 then return result
+    if scratch(_storefunction[0] * 8 + 64,1) = 0 then return result
+    exposed = .int[]; exposed[_storefunction[0]] = 0
+    resources = catalog.componentmask('reference'); bit = catalog.componentmask('native-payload'); assembler ior resources,resources,bit
+    bit = catalog.componentmask('attribute-count'); assembler ior resources,resources,bit
+    do i = 1 to words(actuals)
+      reg = word(actuals,i) as .int; storage = incoming.mapping(reg)
+      if storage < 1 | storage > _storefunction[0] then return result
+      exposed[storage] = 1
+      /* The shared capacity fact covers an empty attribute tree as well as
+       * direct reference and native payload absence. A scalar setter can
+       * leave an attribute-count cell unknown without creating an alias. */
+      if incoming.capacityclean(storage) then iterate
+      do d = 1 to _domains
+        domain = profile.domain(d)
+        if domain.kind() <> 'component' then iterate
+        bit = domain.nativebit(); assembler iand overlap,resources,bit
+        if overlap = 0 then iterate
+        value = cellat(incoming,storage,d)
+        if value.presence() <> 'absent' then do
+          if value.availability() <> 'entry' | ownedbase(storage) = 0 | _storebank[storage] <> 'r' then return result
+        end
+      end
+    end
+    resultstorage = 0; ordinal = catalog.callresult(item.opcode())
+    if ordinal > 0 then resultstorage = refstorage(instruction,operandref(instruction,ordinal),incoming)
+    caller = target.body(instruction.function())
+    do i = 0 to caller.locals() - 1
+      reg = findregister(instruction.function(),'r',i)
+      if reg = 0 then iterate
+      storage = incoming.mapping(reg)
+      if storage < 1 | storage > _storefunction[0] then iterate
+      if exposed[storage] | storage = resultstorage | ownedbase(storage) = 0 | _storebank[storage] <> 'r' then iterate
+      do d = 1 to _domains
+        domain = profile.domain(d)
+        if wordpos(domain.kind(),'component flag') = 0 then iterate
+        call result.put(storage,d,cellat(incoming,storage,d))
+      end
+      call result.setlifetime(storage,incoming.lifetime(storage),incoming.generation(storage))
+      call result.setcapacity(storage,incoming.capacityclean(storage))
+    end
+    return result
   /** Unknown aggregate signal names/phase do not imply missing resource
    * effects. The canonical CFG must still retain every typed/wildcard failure
    * and close its scope/handler reach. This proves no signal/scalar absence. */
@@ -3358,13 +3502,19 @@ analysis: class
       if overlap = 0 then iterate
       ordinal = catalog.transportsource(item.opcode())
       if ordinal < 1 then return 'target.resource.creation.unproved'
+      /* The inventory write/clear actions do not consume a transport
+       * source. Check that dependency at its typed transport action. */
+      if actiononly > 0 then do
+        action = instruction.action(actiononly)
+        if action.kind() <> 'transport' then iterate
+      end
       value = item.operand(ordinal)
       if ?selected then do
         if frozen = 0 & value.bank() <> 'r' & (value.bank() <> 'a' | value.index() <> 0) then return 'target.resource.backing.transport.borrowed.unproved'
         reg = findregister(instruction.function(),value.bank(),value.index())
         if reg = 0 then return 'target.resource.backing.transport.selector.unproved'
-        if actiononly > 0 then do; if sourceselected = 0 then return 'target.resource.backing.transport.source.unproved'; end
-        else if selected[reg] = 0 then return 'target.resource.backing.transport.source.unproved'
+        if actiononly > 0 then do; if sourceselected = 0 then return 'target.resource.backing.transport.source.unproved.action.' || item.id() || '.' || item.mnemonic(); end
+        else if selected[reg] = 0 then return 'target.resource.backing.transport.source.unproved.selected.' || item.id() || '.' || item.mnemonic()
       end
       else if value.kind() <> 'R' | value.bank() <> 'r' | value.index() < 0 | value.index() >= locals then return 'target.resource.transport.source.unproved'
     end
@@ -3534,7 +3684,7 @@ analysis: class
             if selected[left] = 0 then iterate
             if originvalue.bank() <> 'r' & (originvalue.bank() <> 'a' | originvalue.index() <> 0) then do; reason = 'target.resource.backing.transport.borrowed.unproved'; leave; end
             right = findregister(functionid,originvalue.bank(),originvalue.index())
-            if right = 0 then do; reason = 'target.resource.backing.transport.source.unproved'; leave; end
+            if right = 0 then do; reason = 'target.resource.backing.transport.source.unproved.fixed.' || item.id() || '.' || item.mnemonic() || '.' || originvalue.bank() || originvalue.index(); leave; end
             if selected[right] = 0 then do; selected[right] = 1; changed = 1; end
           end
         end
@@ -3583,6 +3733,7 @@ analysis: class
    * authority. The complete child/cause projection is checked separately. */
   resourcecallaction: method = .string
     arg instruction = .lltargettransfer..instruction, ordinal = .int, selected = .int[]
+    profile = dereference _transfers; invocation = .string
     action = instruction.action(ordinal); item = instruction.record(); catalog = .llrxascatalog..catalog()
     if action.kind() = 'external' then do
       if delegatedcall(instruction,action) then return ''
@@ -3590,18 +3741,28 @@ analysis: class
     end
     if action.kind() = 'callback' then do
       if callframebindings(instruction,action) then return ''
+      /* Fused and counted calls publish their frame-preparation and
+       * invocation hooks through the ordinary callback inventory. The
+       * checked child/cause projection has already discharged these two
+       * routes for this exact local provider. */
+      if _premise = 'canonical' & profile.callexacttarget(item.id()) & catalog.callcausestate(item.opcode()) = 'known' then do
+        invocation = 'catalog.callback.residual.' || catalog.callbackmask('invocation')
+        if action.detail() = 'catalog.callback.capacity-or-checkpoint' | action.detail() = invocation then return ''
+      end
       return 'target.resource.backing.child.callback.reach.unproved'
     end
     if action.kind() = 'context' then do
       /* Typed ambient cells are separate from Rexx backing components. This
        * footprint proof leaves the context value/restoration unknown. */
-      profile = dereference _transfers
       if action.domain() > 0 & action.domain() <= profile.domains() then do
         domain = profile.domain(action.domain())
         if domain.kind() = 'context' then return ''
       end
       return 'target.resource.backing.child.context.domain.unproved'
     end
+    /* Fused preparation flags do not create a resource. The swap's checked
+     * pointer relation is handled by backingbody at this same action point. */
+    if action.kind() = 'status' | action.kind() = 'swap' then return ''
     if wordpos(action.kind(),'read observe capture callcapture call edge raise') > 0 then return ''
     return 'target.resource.backing.child.action.' || action.kind() || '.unproved'
   /** Substitute only frozen StorageIds; zero never means an empty effect. */
@@ -3613,7 +3774,7 @@ analysis: class
    * Borrowed/context storage cannot acquire an original-backing invariant. */
   backingrequire: method = .string
     arg storage = .int, expose backings = .int[], expose changed = .int
-    if storage < 1 | storage > backings[0] then return 'target.resource.backing.transport.source.unproved'
+    if storage < 1 | storage > backings[0] then return 'target.resource.backing.transport.source.unproved.binding.' || storage
     if ownedbase(storage) = 0 | _storebank[storage] = 'context' then return 'target.resource.backing.transport.borrowed.unproved'
     if backings[storage] = 0 then do; backings[storage] = 1; changed = 1; end
     return ''
@@ -3637,7 +3798,6 @@ analysis: class
     if child < 2 | profile.callexacttarget(item.id()) = 0 then return 'target.resource.backing.child.target.unproved'
     if profile.callinitializeringress(item.id()) = 0 then return 'target.resource.backing.child.initializer.unproved'
     if words(stack) >= 32 | wordpos(child as .string,stack) > 0 then return 'target.resource.backing.child.recursion.or.depth.unproved'
-    if profile.callframedeferred(item.id()) = 0 then return 'target.resource.backing.child.frame.preparation.unproved'
     if catalog.callframeclearrole(item.opcode()) <> 'a0-original-backing' | catalog.callframeclearextent(item.opcode()) <> 'active-tree' | catalog.callframeclearwhen(item.opcode()) <> 'reused-frame' | catalog.callframelocalmode(item.opcode()) <> 'relink-original' then return 'target.resource.backing.child.frame.preparation.unproved'
     count = captureargumentcount(item.id())
     if count < 0 then return 'target.resource.backing.child.capture.unproved'
@@ -3734,7 +3894,7 @@ analysis: class
             if view.bank() = '' & view.kind() <> 'address' then iterate
             if view.kind() = 'address' | view.kind() = 'window' | view.extentknown() = 0 then return 'target.resource.backing.alias.selector.unproved'
             storage = backingmapped(pointstorage(point,sourceid),bindings)
-            if storage < 1 | storage > backings[0] then return 'target.resource.backing.action.binding.unproved'
+            if storage < 1 | storage > backings[0] then return 'target.resource.backing.action.binding.unproved.' || item.id() || '.' || item.mnemonic() || '.' || action.kind() || '.' || view.bank() || view.index()
             if d = 1 then do; targetbinding = storage; selectedtarget = backings[storage]; end
             else do; sourcebinding = storage; selectedsource = backings[storage]; end
             if backings[storage] then do
@@ -3748,7 +3908,11 @@ analysis: class
             view = profile.ref(action.subject()); origin = profile.ref(action.sourceid())
             if (selectedsource & view.bank() = 'g') | (action.kind() = 'swap' & selectedtarget & origin.bank() = 'g') then return 'target.resource.backing.pointer.exported'
           end
-          if selectedtarget & transport > 0 & wordpos(action.kind(),'write transport derive') > 0 then do
+          /* The whole-value may-write action is an effect inventory, not a
+           * second transport checkpoint. The typed transport action owns
+           * source selection; resourceinstruction checks the catalogue's
+           * complete write projection for every selected action below. */
+          if selectedtarget & transport > 0 & action.kind() = 'transport' then do
             mask = resources
             if action.domain() > 0 then do
               domain = profile.domain(action.domain())
@@ -3763,7 +3927,7 @@ analysis: class
               reason = backingrequire(sourcebinding,backings,changed)
               if reason <> '' then return reason
               view = profile.ref(action.sourceid()); reg = findregister(functionid,view.bank(),view.index())
-              if reg = 0 then return 'target.resource.backing.transport.source.unproved'
+              if reg = 0 then return 'target.resource.backing.transport.source.unproved.op.' || item.id() || '.' || item.mnemonic() || '.' || view.bank() || view.index()
               selected[reg] = 1; selectedsource = 1
             end
           end
@@ -4808,7 +4972,7 @@ analysis: class
       do i = 1 to instruction.actions()
         action = instruction.action(i)
         if action.kind() = 'callback' & action.detail() = 'catalog.callback.call-frame' then do
-          if callbackpossible(instruction,action,.cell()) then return 0
+          if callbackpossible(instruction,action,.cell()) & profile.recyclercleanup(item.id(),i,'callback') = 0 then return 0
         end
       end
     end

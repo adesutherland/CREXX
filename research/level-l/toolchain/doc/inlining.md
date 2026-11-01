@@ -114,7 +114,10 @@ service must identify the affected source point, binding and resource phase.
 The inliner must not recreate a broad callback or opcode refusal. Unknown
 resource state at a raw root remains unknown until a checked entry or ownership
 fact establishes it.
-Matching a callback before and after expansion also needs an observation
+Reviewed bytes-only output callbacks preserve the suspended frame's pointer
+table and activation on normal return. They still invalidate value facts and
+retain their output, pending-signal and exceptional paths. Matching a callback
+before and after expansion also needs an observation
 projection: the same callback may see a changed physical frame, source/code
 location or activation even at the same source point. A shared relational
 proof must preserve those observations or leave that site unproved. It must
@@ -204,6 +207,17 @@ eventual exactly-once finalization of payloads actually installed by the
 selected execution, including nonlocal exits. Explicit value operations keep
 their documented effects and ordering. The prior-a0 recycler-timing KEEP
 reason is removed from per-call equivalence.
+
+The physical CALL contract separates callee `a0` and local `r` storage from
+the caller's count register and locals, regardless of writes in the callee.
+Only the captured `a1+` pointers borrow caller storage, with their original
+order and aliases. Direct expansion reproduces those bindings and the emitted
+copy/status protocol. A language producer protects by-value formals with
+copies when required, taking its disposable flags into account; the inliner
+neither assumes that protection nor repairs a missing copy. A generic
+read/write/escape summary may support diagnostics or later removal of a
+redundant copy, but it is not an admission proof for basic inlining. Added
+clone locals must not broaden a retained counted CALL's valid argument window.
 
 The initial point-local query proves only a component delta at an identical
 callback checkpoint with a complete explicit observation projection and

@@ -351,7 +351,7 @@ callorder: class
  * replacement of its exact module owner. */
 applybatch: procedure = .int expose inlinephase
   arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, policy = .string, cleanup = .int, workbudget = .int
-  order = .callorder; bytebudget = 67108864; i = .int
+  order = .callorder; bytebudget = 268435456; i = .int
   if policy = 'never' then return applywave(target,supplied,profile,policy,cleanup,workbudget,bytebudget)
   order = .callorder(reference target,workbudget,bytebudget)
   if order.status() <> 'ok' then do; call lineout 'stderr','LL_INLINE_' || upper(order.status()) || ': ' || order.reason(); return 1; end
@@ -394,7 +394,7 @@ checkproviders: procedure = .int
  * The checked expansion is independently executable. Optional cleanup failure
  * preserves the latest valid owner and cannot veto its publication. */
 applywave: procedure = .int expose inlinephase
-  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, policy = .string, cleanup = .int, workbudget = .int, bytebudget = 67108864, wave = 0, ?schedule = reference .callorder
+  arg expose target = .lltarget..module, supplied = reference .lltarget..module[], profile = .string, policy = .string, cleanup = .int, workbudget = .int, bytebudget = 268435456, wave = 0, ?schedule = reference .callorder
   change = .llinline..change; body = .lltarget..body; request = .llinline..binding
   item = .lltarget..record; field = .lltarget..operand; bodies = .lltarget..module[]
   normalized = .lltargetnormalize..change; context = .llinline..context

@@ -1523,10 +1523,17 @@ inlineindex: class
       item = .record(owner,maprecords[i]); field = item.operand(3); ordinal = frameindex(field.index())
       if ordinal = 0 then do; _error = 'LL_TARGET_INLINE: map names missing frame'; return; end
       if framefn[ordinal] <> item.procedureid() then do; _error = 'LL_TARGET_INLINE: map belongs to another physical procedure'; return; end
-      field = item.operand(1); first = labelid(item.procedureid(),field.text())
+      name = item.operand(1); first = labelid(item.procedureid(),name.text())
       field = item.operand(2); last = labelid(item.procedureid(),field.text())
       _endkeys[_endkeys[0] + 1] = right(item.procedureid() as .string,10,'0') || ':' || field.text()
-      if first = 0 | last = 0 then do; if _error = '' then _error = 'LL_TARGET_INLINE: unresolved range label'; return; end
+      if first = 0 | last = 0 then do
+        if _error = '' then do
+          _error = 'LL_TARGET_INLINE: unresolved range label'
+          if first = 0 then _error = _error || ' start=' || name.text()
+          if last = 0 then _error = _error || ' end=' || field.text()
+        end
+        return
+      end
       first = _addresses[first]; last = _addresses[last]
       if first >= last then do; _error = 'LL_TARGET_INLINE: empty or reversed range'; return; end
       maps[i] = right(first as .string,20,'0') || ':' || right(last as .string,20,'0') || ':' || right(i as .string,10,'0')
@@ -1565,12 +1572,14 @@ inlineindex: class
     return 1
   labelid: method = .int
     arg functionid = .int, name = .string
-    key = right(functionid as .string,10,'0') || ':' || name; lower = 1; upper = _labelkeys[0]; less = .int
+    /* The index sorts key:id rows. Compare the same terminated key: bare
+     * names order differently when one is a prefix of another (.1/.10). */
+    key = right(functionid as .string,10,'0') || ':' || name || ':'; lower = 1; upper = _labelkeys[0]; less = .int
     do while lower <= upper
       if spend(1) = 0 then return 0
-      middle = lower + (upper - lower) <idiv> 2; row = _labelkeys[middle]; candidate = left(row,length(row) - 11)
+      middle = lower + ((upper - lower) <idiv> 2); row = _labelkeys[middle]; candidate = left(row,length(key))
       if key == candidate then return right(row,10) as .int
-      assembler slt less,key,candidate
+      assembler slt less,key,row
       if less then upper = middle - 1
       else lower = middle + 1
     end

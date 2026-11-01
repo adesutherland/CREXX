@@ -163,7 +163,7 @@ callbackcontrol: procedure = .int
   end
   if mode = 1 then failures = failures + check(unknownpolicy & skippossible & haltpossible & closedcallback = 0 & cfg.localcomplete(target.procedureid('main')) = 0 & cfg.exceptionalcomplete(target.procedureid('main')) = 0,'entry HALT premise cannot close an unenrolled provider policy or hide skip/terminal alternatives')
   if mode = 5 then do
-    failures = failures + check(catalog.callbackobligations(item.opcode()) = catalog.callbackmask('host') & catalog.callbackpreservessignalpolicy(item.opcode()) & catalog.callbacknormalpreservesframe(item.opcode()) = 0,'bytes-output policy contract is separate from host and frame/value obligations')
+    failures = failures + check(catalog.callbackobligations(item.opcode()) = catalog.callbackmask('host') & catalog.callbackpreservessignalpolicy(item.opcode()) & catalog.callbacknormalpreservesframe(item.opcode()),'bytes-output callback keeps host and value obligations despite frame preservation')
     failures = failures + check(closedcallback & unknownpolicy = 0 & skippossible = 0 & haltpossible = 0 & synchronous & asynchronous,'bytes-output callback queues signals through the preserved inherited policy without inventing local handlers')
   end
   if mode = 1 then do
@@ -194,9 +194,9 @@ callbackcontrol: procedure = .int
     failures = failures + check(value.availability() = 'defined' & value.known() & literal.kind() = 'I' & literal.index() = 7,'licensed normal setter postwrite recovers its captured integer')
     resource = flow.componentat(following,'r',0,nativepayload)
     referencevalue = flow.componentat(following,'r',0,referencepayload); treevalue = flow.componentat(following,'r',0,attributes)
-    failures = failures + check(resource.presence() = 'absent' & referencevalue.presence() = 'unknown' & treevalue.presence() = 'unknown','normal postwrite proves only native absence, without reference or attribute absence')
+    failures = failures + check(resource.presence() = 'absent' & referencevalue.presence() = 'absent' & treevalue.presence() = 'unknown','sequential scalar setters clear direct payloads while preserving unknown inherited attributes')
     binding = flow.storageat(following,'r',0); scope = flow.scopeat(following)
-    failures = failures + check(binding.active() > 0 & binding.active() = binding.entry() & scope.known() = 0 & flow.resourceclean(target.procedureid('main')) = 0,'resource callback preserves checked physical slots without inventing logical scope or root freshness')
+    failures = failures + check(binding.active() > 0 & binding.active() = binding.entry() & scope.known() & flow.resourceclean(target.procedureid('main')) = 0,'incidental dirty-entry cleanup retains a raw possible hook without erasing current binding or default scope')
     instruction = profile.instruction(produced)
     do i = 1 to instruction.actions()
       action = instruction.action(i)
@@ -216,7 +216,8 @@ callbackcontrol: procedure = .int
   else failures = failures + check(value.availability() = 'defined','callback-free getter/constructed operation retains its defined scalar ' || mode)
   if mode = 4 | mode = 5 then do
     binding = flow.storageat(following,'r',0)
-    failures = failures + check(binding.active() = 0,'host or independently authored callback cannot borrow resource-only pointer preservation ' || mode)
+    if mode = 4 then failures = failures + check(binding.active() = 0,'independently authored callback cannot borrow canonical pointer preservation')
+    else failures = failures + check(binding.active() > 0,'reviewed bytes-output callback preserves the suspended pointer table')
   end
   if mode = 3 | mode = 4 then do
     coverage = flow.entrycoverage(target.procedureid('main'))
@@ -650,7 +651,7 @@ callcauses: procedure = .int
   if flow.status() = 'ok' then do
     failures = failures + check(flow.resourceclean(target.procedureid('leaf')) & flow.resourceclean(target.procedureid('middle')),'shared backing theorem composes clean private scalar results across fixed calls')
     coverage = flow.entrycoverage(target.procedureid('main'))
-    failures = failures + check(coverage.complete() & coverage.demands() = 0,'early fixed captures cover provider reads on aggregate UNKNOWN exceptional paths without erasing the root callback')
+    failures = failures + check(coverage.complete() & coverage.demands() = 0,'early fixed captures cover provider reads on aggregate UNKNOWN exceptional paths without erasing the root callback: ' || coverage.status() || ' ' || coverage.reason() || ' demands=' || coverage.demands())
     do i = 1 to row.actions()
       action = row.action(i)
       if action.kind() = 'callback' & action.detail() = 'catalog.callback.call-frame' then failures = failures + check(flow.callbackpossibleat(innercall,i),'current-body resource proof preserves the raw possible recycler hook')

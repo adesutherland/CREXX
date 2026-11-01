@@ -1073,6 +1073,7 @@ profile: class
     call preparecallpolicy()
     if _status <> 'building' then return
     j = .int; mask = .int; bit = .int; ordinal = .int; id = .int; refid = .int; flagmask = .int
+    resmask = .int; othermask = .int; allmask = .int
     program = .bindingprogram; integerdomain = .int; selectionkind = .int; windowref = .int
     hookcaptures = .int[]
     target = dereference _owner; catalog = .llrxascatalog..catalog(); value = .lltarget..operand
@@ -1174,7 +1175,8 @@ profile: class
         if catalog.reads(code,j) then do
           mask = catalog.mayreadcomponents(code,j)
           if mask > 0 then call domainevents(opid,'read',refid,mask)
-          else call unknown(opid,'components','catalog.read.components.unknown')
+          /* The native may-read catalogue uses ALL for an unclassified
+           * component read. Zero is an explicit status-only read. */
           if catalog.observationcomplete(code,j) then call domainevents(opid,'observe',refid,catalog.observedcomponents(code,j))
           else call unknown(opid,'observations','catalog.typed.observation.projection.unknown')
           flagmask = catalog.observedflags(code,j); maskoperand = catalog.observedflagmaskoperand(code)
@@ -1183,7 +1185,6 @@ profile: class
             assembler iand flagmask,flagmask,selectedmask
           end
           call domainevents(opid,'observe',refid,flagmask,'flag')
-          if flagmask > 0 then call unknown(opid,'values','catalog.flag.definition.projection.unknown')
         end
       end
       if selectionkind > 0 & windowref > 0 then do
@@ -1201,21 +1202,41 @@ profile: class
         refid = refs[j]
         if refid = 0 then iterate
         if catalog.writes(code,j) & binding = 0 then do
-          /* One conservative whole-value write covers every component/flag
-           * domain requested by this profile. Do not materialize 31 unused
-           * status domains merely because a setter might change them. */
-          ignored = event(opid,'write',refid,0,'none',0,.lltarget..operand(),'may')
+          /* An exact direct-write projection must not erase independent
+           * components. The broader may-write inventory remains available
+           * for unknown writers and alias/callback reasoning. Status bits
+           * have their own domains even when a value component also changes. */
+          if catalog.writecomplete(code,j) then do
+            mask = catalog.writecomponents(code,j); bit = catalog.clearcomponents(code,j)
+            assembler ior mask,mask,bit
+            if mask > 0 then call domainevents(opid,'write',refid,mask,'component','may')
+          end
+          else if catalog.maywritecomponents(code,j) > 0 then ignored = event(opid,'write',refid,0,'none',0,.lltarget..operand(),'may')
+          if catalog.maywriteflags(code,j) > 0 then ignored = event(opid,'status',refid,0,'none',0,.lltarget..operand(),'may','normal','none','catalog.status.write')
           call domainevents(opid,'clear',refid,catalog.clearcomponents(code,j))
           source = catalog.transportsource(code)
-          if source > 0 then call domainevents(opid,'transport',refid,catalog.transportcomponents(code),'component','must','normal','none','reference',refs[source])
+          if source > 0 & source <> j then call domainevents(opid,'transport',refid,catalog.transportcomponents(code),'component','must','normal','none','reference',refs[source])
           else if catalog.literaloperand(code) > 0 then do
             literal = item.operand(catalog.literaloperand(code))
             call domainevents(opid,'write',refid,catalog.literalcomponents(code),'component','must','normal','none','literal',0,literal)
           end
           else do
             mask = catalog.definitioncomponents(code,j)
-            if mask > 0 then call domainevents(opid,'write',refid,mask)
-            else call unknown(opid,'values','catalog.normal.definition.projection.unknown')
+            allmask = catalog.componentmask('all')
+            if mask = allmask & catalog.clearcomponents(code,j) = allmask then do
+              /* A complete value reset has no transported source. The clear
+               * leaves resource payloads absent; its integer field is zero.
+               * Other scalar fields remain defined but conservatively
+               * unknown. A second whole unknown write would erase the reset
+               * and invent a finalizer at the following setter. */
+              resmask = catalog.componentmask('reference'); bit = catalog.componentmask('native-payload'); assembler ior resmask,resmask,bit
+              bit = catalog.componentmask('attribute-count'); assembler ior resmask,resmask,bit
+              othermask = mask - resmask - catalog.componentmask('I')
+              if othermask > 0 then call domainevents(opid,'write',refid,othermask)
+              call domainevents(opid,'write',refid,catalog.componentmask('I'),'component','must','normal','none','literal',0,.lltarget..operand.integer(0))
+            end
+            else if mask > 0 then call domainevents(opid,'write',refid,mask)
+            else if catalog.writecomplete(code,j) = 0 & catalog.clearcomponents(code,j) <> catalog.componentmask('all') then call unknown(opid,'values','catalog.normal.definition.projection.unknown')
           end
         end
         if catalog.failurewrites(code,j) then call maskevents(opid,'write',refid,catalog.failurecomponents(code),'may','failure',phase)
@@ -1280,7 +1301,10 @@ profile: class
     target = dereference _owner; item = target.at(opid); catalog = .llrxascatalog..catalog()
     if item.kind() <> 'instruction' then return 0
     code = item.opcode()
-    return catalog.callinvokes(code) & catalog.callcausestate(code) = 'known' & catalog.callcount(code) = 0 & catalog.callprefix(code) = '' & localcalltarget(opid) > 0 & catalog.contextsynccontract() = 'value-only-nonreentrant.v1'
+    /* A known direct local provider owns the same recycled-frame ingress for
+     * fixed and counted calls. The count value is captured separately; no
+     * fixed-arity premise is needed to classify that old-frame callback. */
+    return catalog.callinvokes(code) & catalog.callcausestate(code) = 'known' & catalog.callprefix(code) = '' & localcalltarget(opid) > 0 & catalog.contextsynccontract() = 'value-only-nonreentrant.v1'
   callframedeferred: method = .int
     arg opid = .int
     call require(); return deferredlocalcall(opid)

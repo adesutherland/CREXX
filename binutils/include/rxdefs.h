@@ -1036,11 +1036,11 @@ RxOpSignalContract rxop_execution_signal_contract(int opcode);
  * are captured before its resource hook. Only native-payload absence is
  * guaranteed after the final reset; a hook may reinstall a reference. */
 unsigned int rxop_callback_postwrite_operand(int opcode);
-/* A normally returning resource-only public callback preserves the suspended
- * frame's pointer tables and structural signal-policy table. This describes
- * only the callback: explicit instruction effects remain, and pointees,
- * pending interrupts, numeric/plugin context and delivered handlers do not get
- * this premise. */
+/* A normally returning resource-only or reviewed bytes-output callback
+ * preserves the suspended frame's pointer table and structural activation.
+ * This describes only the callback: explicit instruction effects remain, and
+ * pointees, pending interrupts, numeric/plugin context and delivered handlers
+ * do not get this premise. */
 int rxop_callback_normal_preserves_frame(int opcode);
 /* The complete reviewed callback route preserves the suspended frame's
  * structural signal-policy table, including before queued interrupt dispatch.

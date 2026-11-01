@@ -415,6 +415,10 @@ int rxop_component_write_is_known(int opcode, size_t operand_index) {
         operand_index >= rxop_format_operand_count(op_table[opcode].format))
         return 0;
     if (!rxop_effect_writes_operand(&effects, operand_index)) return 1;
+    /* These writers change only public status bits. Their value-component
+     * projection is a proved empty set, not a missing classification. */
+    if (operand_index == 0 &&
+        (opcode == OP_SETTP_REG_INT || opcode == OP_SETORTP_REG_INT)) return 1;
     /* The conservative write mask includes the source slot restored by
      * IGETUNLINK. That binding write never changes the source pointee. */
     if (opcode == OP_IGETUNLINK_REG_REG && operand_index == 1) return 1;
@@ -434,6 +438,12 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
     if (rxop_call_invokes(opcode) &&
         operand_index + 1 == rxop_call_contract(opcode).target_operand)
         return rxop_call_target_components(opcode);
+    /* Public flag operations inspect status bits, never value components.
+     * Preserve the distinction from the conservative ALL default below. */
+    if (((opcode == OP_SETTP_REG_INT || opcode == OP_SETORTP_REG_INT) && operand_index == 0) ||
+        ((opcode == OP_GETTP_REG_REG || opcode == OP_GETANDTP_REG_REG_INT ||
+          opcode == OP_BRTPT_ID_REG || opcode == OP_BRTPANDT_ID_REG_INT) && operand_index == 1))
+        return RXOP_COMPONENT_NONE;
     if ((opcode == OP_SAY_REG || opcode == OP_SAYX_REG) && operand_index == 0)
         return RXOP_COMPONENT_STRING;
     if (opcode == OP_SETOBJTYPE_REG_STRING && operand_index == 0)
@@ -486,7 +496,8 @@ unsigned int rxop_component_reads(int opcode, size_t operand_index) {
         if (operand_index >= 1) return RXOP_COMPONENT_INTEGER;
         return RXOP_COMPONENT_ALL;
     }
-    if (opcode == OP_COPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_ALL;
+    if ((opcode == OP_COPY_REG_REG || opcode == OP_MOVE_REG_REG) &&
+        operand_index == 1) return RXOP_COMPONENT_ALL;
     if (opcode == OP_ICOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_INTEGER;
     if (opcode == OP_FCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_FLOAT;
     if (opcode == OP_SCOPY_REG_REG && operand_index == 1) return RXOP_COMPONENT_STRING;
@@ -740,6 +751,7 @@ int rxop_same_storage_copy_is_noop(int opcode) {
         case OP_DCOPY_REG_REG:
         case OP_ACOPY_REG_REG:
         case OP_BCOPY_REG_REG:
+        case OP_MOVE_REG_REG:
             return 1;
         default:
             return 0;
@@ -779,8 +791,11 @@ unsigned int rxop_component_writes(int opcode, size_t operand_index) {
     if (opcode == OP_NULLN_REG_REG || opcode == OP_NULLN_REG_REG_REG ||
         opcode == OP_NULLN_REG_REG_REG_REG)
         return RXOP_COMPONENT_ALL;
+    if (opcode == OP_MOVE_REG_REG && operand_index == 1)
+        return RXOP_COMPONENT_ALL;
     if (operand_index != 0) return RXOP_COMPONENT_NONE;
-    if (opcode == OP_COPY_REG_REG || opcode == OP_NULL_REG)
+    if (opcode == OP_COPY_REG_REG || opcode == OP_MOVE_REG_REG ||
+        opcode == OP_NULL_REG)
         return RXOP_COMPONENT_ALL;
     if (opcode == OP_SETOBJUNINIT_REG_STRING) return RXOP_COMPONENT_ALL;
     if (opcode == OP_ICOPY_REG_REG || opcode == OP_LOAD_REG_INT ||
@@ -879,6 +894,8 @@ unsigned int rxop_component_clears(int opcode, size_t operand_index) {
         return RXOP_COMPONENT_ALL;
     if (opcode == OP_NULLN_REG_REG || opcode == OP_NULLN_REG_REG_REG ||
         opcode == OP_NULLN_REG_REG_REG_REG) return RXOP_COMPONENT_ALL;
+    if (opcode == OP_MOVE_REG_REG && operand_index == 1)
+        return RXOP_COMPONENT_ALL;
     if (operand_index == 0) {
         if (opcode == OP_NULL_REG || opcode == OP_TYPEOF_REG_REG ||
             opcode == OP_ISTYPE_REG_REG_STRING || opcode == OP_ISINITIALIZED_REG_REG)
@@ -1416,7 +1433,8 @@ int rxop_selection_callbacks(int opcode) {
 enum {
     RXOP_HOST_CALLBACK_PRESENT = 1u,
     RXOP_HOST_CALLBACK_PRESERVES_SIGNAL_POLICY = 2u,
-    RXOP_HOST_CALLBACK_BYTES_SNAPSHOT = 4u
+    RXOP_HOST_CALLBACK_BYTES_SNAPSHOT = 4u,
+    RXOP_HOST_CALLBACK_PRESERVES_FRAME = 8u
 };
 
 /* Keep the reviewed route and its separate structural-policy contract in one
@@ -1433,11 +1451,13 @@ static unsigned int rxop_host_callback_contract(int opcode) {
              * pending word, not this suspended frame's structural policy. The
              * context output writer separately forbids reentry. The custom
              * exit/writer receives a temporary byte copy, no value handle.
-             * This promises no preservation of values, pointer bindings,
-             * observations or I/O. */
+             * Neither exit receives a live frame pointer or a value handle.
+             * A normal return preserves the suspended pointer table and
+             * activation, but promises no value, observation or I/O result. */
             return RXOP_HOST_CALLBACK_PRESENT |
                    RXOP_HOST_CALLBACK_PRESERVES_SIGNAL_POLICY |
-                   RXOP_HOST_CALLBACK_BYTES_SNAPSHOT;
+                   RXOP_HOST_CALLBACK_BYTES_SNAPSHOT |
+                   RXOP_HOST_CALLBACK_PRESERVES_FRAME;
         default: return 0;
     }
 }
@@ -1817,6 +1837,8 @@ static int callback_binding_only(int opcode) {
 unsigned int rxop_callback_inputs(int opcode, size_t operand_index) {
     unsigned int source = rxop_transport_source_operand(opcode);
     if (callback_binding_only(opcode)) return RXOP_COMPONENT_NONE;
+    /* MOVE transfers ownership and never invokes the source copy hook. */
+    if (opcode == OP_MOVE_REG_REG) return RXOP_COMPONENT_NONE;
     if (source && operand_index + 1u == source) {
         unsigned int components = rxop_transport_components(opcode);
         /* BCOPY carries native binary ownership through copy_binary_value,
@@ -1898,8 +1920,12 @@ unsigned int rxop_callback_obligations(int opcode) {
 
 int rxop_callback_normal_preserves_frame(int opcode) {
     unsigned int obligations = rxop_callback_obligations(opcode);
+    unsigned int original = obligations;
     unsigned int resources = RXOP_CALLBACK_INPUT | RXOP_CALLBACK_OUTPUT | RXOP_CALLBACK_CAPACITY;
-    return obligations != RXOP_CALLBACK_NONE && !(obligations & ~resources);
+    if ((obligations & RXOP_CALLBACK_HOST) &&
+        (rxop_host_callback_contract(opcode) & RXOP_HOST_CALLBACK_PRESERVES_FRAME))
+        obligations &= ~RXOP_CALLBACK_HOST;
+    return original != RXOP_CALLBACK_NONE && !(obligations & ~resources);
 }
 
 RxOpCallbackValueSurface rxop_callback_value_surface(int opcode) {
@@ -2310,6 +2336,10 @@ unsigned int rxop_observed_flags_mask_operand(int opcode) {
 unsigned int rxop_component_may_writes(int opcode, size_t operand_index) {
     RxOpEffects effects = rxop_effects(opcode);
     if (!rxop_effect_writes_operand(&effects, operand_index)) return RXOP_COMPONENT_NONE;
+    if (rxop_component_write_is_known(opcode, operand_index) &&
+        rxop_component_writes(opcode, operand_index) == RXOP_COMPONENT_NONE &&
+        rxop_component_clears(opcode, operand_index) == RXOP_COMPONENT_NONE)
+        return RXOP_COMPONENT_NONE;
     /* An explicit write can release a reference/native payload, run a
      * finalizer, or change a value visible through another alias. Keeping
      * ALL here makes the inventory complete without pretending the optional

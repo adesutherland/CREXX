@@ -955,10 +955,11 @@ caller-instantiated ABI, including caller-result resources and parent-frame
 retirement. The restore-numeric row excludes plugin callback uncertainty only
 under `value-only-nonreentrant.v1`; context effects and other ABI rows remain.
 
-For a canonical resource callback, consume the native
-`callbacknormalpreservesframe` contract only for complete resource-only
-callbacks: retain checked pointer/base/slot identities while invalidating
-pointees, numeric state, lifetimes, capacity and logical-scope ownership.
+For a canonical resource or reviewed bytes-only output callback, consume the
+native `callbacknormalpreservesframe` contract: retain checked pointer/base/slot
+identities while invalidating pointees, numeric state, lifetimes and capacity.
+Resource hooks may lose logical-scope ownership; a reviewed output route keeps
+the suspended activation on normal return.
 This describes a callback that returns to the VM, independently of whether
 the interrupted instruction completes or reaches a handled failure checkpoint.
 Explicit instruction binding actions and their partial/unknown phase still
@@ -1487,13 +1488,60 @@ boundary works. The wider TGT toolchain replacement is separate.
 
 | Capability | Current state | Completion boundary and dependency |
 |---|---|---|
-| **INL-CAP01 — generic direct equivalence** | **critical gap:** the default relational checker exists but still refuses ordinary changed-activation/callback and exit paths; a separate legacy direct theorem is narrow | Complete and qualify the default source-to-clone relation, removing duplicate broad entry-cleanliness/body-callback/all-local-resource vetoes where the relation proves the actual published effect. Copied ordinary instructions retain the catalogue's effects; removed CALL/RET, changed storage/activation and published observations need proof. An ordinary direct body expands correctly with cleanup off, while an explicit physical observer retains its call. Retire the narrow legacy permission only after its compatibility uses are accounted for. This is the prerequisite for wider direct admission. |
-| **INL-CAP02 — call and return ABI** | **partly implemented:** fixed, counted/fused, rebinding, finite selection, nested calls and multiple returns have scoped/constructed controls | Connect those existing mappings to CAP01 for direct expansion: exact count, presence, actual order, active and entry bindings, aliases, result copy/move and retained child windows. No `INLENTER` allocation is introduced on the ordinary path. A genuinely unrepresentable argument window remains a call with a precise reason. Depends on CAP01. |
+| **INL-CAP01 — generic direct equivalence** | **in progress:** default relational CALL3 and many-label multiple-return direct clones execute with cleanup off; shared MOVE component/transfer and copied resource-hook pairing repairs are implemented. Explicit physical-observer refusal and legacy compatibility retirement remain to check | Complete and qualify the default source-to-clone relation, removing duplicate broad entry-cleanliness/body-callback/all-local-resource vetoes where the relation proves the actual published effect. Copied ordinary instructions retain the catalogue's effects; removed CALL/RET, changed storage/activation and published observations need proof. An ordinary direct body expands correctly with cleanup off, while an explicit physical observer retains its call. Retire the narrow legacy permission only after its compatibility uses are accounted for. This is the prerequisite for wider direct admission. |
+| **INL-CAP02 — call and return ABI** | **in progress:** direct CALL3, multiple returns, ignored return and all seven rebinding calls execute with cleanup off; fused preparation/count and retained-child windows still require qualification | Connect those existing mappings to CAP01 for direct expansion: exact count, presence, actual order, active and entry bindings, aliases, result copy/move and retained child windows. No `INLENTER` allocation is introduced on the ordinary path. A genuinely unrepresentable argument window remains a call with a precise reason. Depends on CAP01. |
 | **INL-CAP03 — context, signals and lifetime** | **partly implemented:** numeric/entry facts, G-style signal slices, dirty-entry and ownership analyses exist | Establish only the semantic differences created by removing a frame: necessary numeric/signal restoration, G blocks and C layering, normal and nonlocal exits, and eventual once-only ownership cleanup. Do not simulate exact asynchronous checkpoints, recycled-cell initial contents or incidental finalizer timing. Depends on CAP01–02. |
 | **INL-CAP04 — exact module binding** | **infrastructure present:** optional linker adapter, selected-provider authority and `.inlinedprivate` storage contract exist; direct foreign-provider proof is open | Use the same direct service after exact linker selection, map public/private globals to the selected module, respect initializer readiness and process selected link-time chains leaf first. Assembler-local calls run before assembler optimization. Unresolved, native and dynamically loaded providers remain calls. Depends on CAP01–03. |
 | **INL-CAP05 — diagnostics and metadata** | **mostly implemented:** typed inline-frame records, RXAS/RXBIN/VM handling and source controls exist; full clone correspondence remains open | Complete source/TRACE/frame-map correspondence and relocation for direct local and selected imported clones, including retained child diagnostics. A corrupt map fails; an actual published physical frame/code observer keeps the call. Depends on CAP01 and CAP04 for imported clones. |
 | **INL-CAP06 — cleanup and admission policy** | **partly implemented:** shared liveness/cleanup, swap-window and status proofs, work limits and KEEP diagnostics exist | Run bounded cleanup after a correct no-cleanup clone: remove proved outer setup/inverse swaps, dead status/branches and unused register lifetime while keeping alias snapshots and nested windows. Separate semantic refusal from recursion, resource and profitability policy; the normal direct path adds no per-call heap scope and is assessed against ordinary CALL cost. Depends on CAP02–05. |
 | **INL-CAP07 — standalone acceptance** | **todo:** focused slices pass, final whole-POC panel has not run | Freeze the above and run one compact panel through the existing assembler-local and linker-selected adapters, generated and handwritten producers, one VM, cleanup off/on, structural output, retained-call reasons and atomic failure/lifecycle checks. Repair any independently established Level L fixture defect before declaring the panel green. Only then close INL-AC01–09 and INL-STEP06. Depends on CAP01–06. |
+
+For CAP01–02, the fused-call slice exposed a general catalogue boundary:
+reviewed bytes-only output callbacks preserve the suspended VM frame's pointer
+table and logical activation on normal return. Record that positive contract
+in the opcode owner and consume it in Level L flow; keep callback value havoc,
+output failure, pending interrupts and actual call effects. A later literal
+setter can then establish a count through the same generic flow rules. Validate
+with the existing relational/flow panels and fused call execution.
+The same resource-history proof must compose retained fixed and fused child
+calls from their checked capture, call-cause and frame-clear facts; the older
+`callframedeferred` shortcut is a narrow fixed-call classification, not a
+semantic requirement for a retained child.
+The canonical full-reset effect also needs a single zero-value projection:
+when the catalogue proves both a complete clear and complete definition with
+no transported/literal source, the transfer keeps resource components absent
+and establishes integer zero. It must not overwrite those clear facts with a
+second generic unknown write. Validate the following optional-argument count
+and retain the raw possible dirty-entry cleanup hook.
+For repeated counted/fixed calls, the shared point flow must keep a caller-owned
+register value when the exact local callee cannot reach that storage: it is
+outside the captured actual/result set, no actual carries a current-execution
+reference to it, no module global can carry it, and the transitive body has no
+physical ancestor observer or unknown external entry. Apply the same bounded
+isolation fact to every component and individual flag, with unknown falling
+back to ordinary call havoc. This is a Level L procedure/point fact, not an
+inliner exception for the argument-count register; test a preserved count and
+a captured alias that must remain mutable.
+The physical CALL ABI separates the caller's count slot from its captured
+actual pointers. Direct expansion must preserve that separation through
+register remapping and binding restoration, including repeated actual aliases.
+Do not make the inliner prove per-callee poststate of an unrelated caller slot.
+`a0` and callee `r` locals remain independent even if the callee writes them.
+The actual `a1+` pointers remain borrowed and may alias each other or a caller
+slot; ordinary RXAS preserves those effects. A source compiler's required
+call-by-value protection is its emitted copy and flag protocol. A missing
+protective copy is a producer defect present with the ordinary CALL, not an
+inliner refusal or an instruction for the inliner to repair the language ABI.
+General Level L read/write/escape summaries may warn about such defects and
+justify optional copy removal, but basic expansion needs only the published
+RXAS ABI mapping and control/result/lifetime equivalence.
+Current generic callback havoc can lose the count fact after a later explicit
+`NULL` on an actual; this is a Level L structural reachability/escape proof
+gap, not evidence that `NULL` changes the count or that the callee may write
+the caller's unpassed slot. Resolve it at the shared ABI/flow boundary. In
+particular, a clone that adds caller locals must not silently broaden a later
+counted CALL's valid window; use a proved original window bound or lifetimes
+and register assignment that preserve the original ABI.
 
 The critical path is CAP01 → CAP02/03 → CAP04/05 → CAP06 → CAP07. The
 first CAP01 repair is at the shared proof boundary: canonical callback events
