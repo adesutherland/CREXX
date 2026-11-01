@@ -1496,7 +1496,19 @@ boundary works. The wider TGT toolchain replacement is separate.
 | **INL-CAP07 — standalone acceptance** | **todo:** focused slices pass, final whole-POC panel has not run | Freeze the above and run one compact panel through the existing assembler-local and linker-selected adapters, generated and handwritten producers, one VM, cleanup off/on, structural output, retained-call reasons and atomic failure/lifecycle checks. Repair any independently established Level L fixture defect before declaring the panel green. Only then close INL-AC01–09 and INL-STEP06. Depends on CAP01–06. |
 
 The critical path is CAP01 → CAP02/03 → CAP04/05 → CAP06 → CAP07. The
-`levell_target_signal_cfg_rxbvm` red assertions are two Level L QA investigations,
+first CAP01 repair is at the shared proof boundary: canonical callback events
+currently carry an unknown phase/observation, while `bodyrelation` refuses a
+copied possible callback unless both become precise. Pair unchanged source and
+clone events through their checked operation/storage map, retain their unknown
+value and signal effects, and ask separately whether a *published* physical
+observer can distinguish the removed frame. Extend the native catalogue's
+generic observation contract only where that distinction is missing; do not
+add opcode names or a second callback evaluator to the inliner. Then prove
+the removed CALL/RET actions and any introduced storage/restore operations as
+the actual changed boundary. This is the first implementation increment, not
+one repair per fixture.
+
+The `levell_target_signal_cfg_rxbvm` red assertions are two Level L QA investigations,
 not new inliner capabilities: establish the fixed-capture entry-coverage oracle
 without erasing a possible raw frame hook, and separate diagnostic map checking
 from semantic context-restoration permission. Repair the shared owner or the
