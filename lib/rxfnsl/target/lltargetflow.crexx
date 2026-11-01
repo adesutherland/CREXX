@@ -3778,6 +3778,56 @@ analysis: class
     if ownedbase(storage) = 0 | _storebank[storage] = 'context' then return 'target.resource.backing.transport.borrowed.unproved'
     if backings[storage] = 0 then do; backings[storage] = 1; changed = 1; end
     return ''
+  /** A call disjoint from the selected original backings needs no child
+   * resource import. This is a pointer/range proof, never a scalar-count or
+   * callback-absence fact; all native departure paths remain checked below. */
+  backingcallisolated: method = .int
+    arg instruction = .lltargettransfer..instruction, bindings = .int[], backings = .int[]
+    item = instruction.record(); profile = dereference _transfers; catalog = .llrxascatalog..catalog(); source = dereference _owner
+    i = .int; reg = .int; storage = .int; first = .int; packed = .int; ordinal = .int
+    operand = .lltarget..operand; counter = .lltarget..operand; before = .state
+    if _premise <> 'canonical' | catalog.callprefix(item.opcode()) <> '' then return 0
+    do i = 1 to 7
+      if spend(1) = 0 then return 0
+      if instruction.complete(word('effects references components ownership bindings order control',i)) = 0 then return 0
+    end
+    if catalog.callcausestate(item.opcode()) <> 'known' | resourcefailure(instruction) <> '' then return 0
+    if profile.callexacttarget(item.id()) = 0 | profile.callinitializeringress(item.id()) = 0 then return 0
+    child = profile.calllocaltarget(item.id())
+    if child < 2 | isolatedcallbody(child) = 0 then return 0
+    before = _before[item.id()] as .state
+    actuals = translate(catalog.callactuals(item.opcode()),' ',',')
+    ordinal = catalog.callresult(item.opcode())
+    if ordinal > 0 then actuals = strip(actuals || ' ' || ordinal)
+    if spend(words(actuals) * (lookupcost() + 2) + _regfunction[0] + 1) = 0 then return 0
+    do i = 1 to words(actuals)
+      operand = item.operand(word(actuals,i) as .int); reg = findregister(instruction.function(),operand.bank(),operand.index())
+      storage = backingmapped(before.mapping(reg),bindings)
+      if storage < 1 | storage > backings[0] then return 0
+      if backings[storage] then return 0
+    end
+    ordinal = catalog.callwindow(item.opcode())
+    if ordinal > 0 then do
+      /* The counted actual window is a forward packed suffix after its
+       * count/base cell. An unknown length cannot reach an earlier prefix;
+       * active pointer aliases are checked independently below. */
+      counter = item.operand(ordinal); body = source.body(instruction.function()); first = counter.index() + 1
+      if counter.bank() = 'g' then first = first + body.locals()
+      else if counter.bank() = 'a' then first = first + body.locals() + source.globals()
+      else if counter.bank() <> 'r' then return 0
+      do reg = 1 to _regfunction[0]
+        if _regfunction[reg] <> instruction.function() then iterate
+        packed = _regindex[reg]
+        if _regbank[reg] = 'g' then packed = packed + body.locals()
+        else if _regbank[reg] = 'a' then packed = packed + body.locals() + source.globals()
+        else if _regbank[reg] <> 'r' then iterate
+        if packed < first then iterate
+        storage = backingmapped(before.mapping(reg),bindings)
+        if storage < 1 | storage > backings[0] then return 0
+        if backings[storage] then return 0
+      end
+    end
+    return 1
   /** Exact retained-child composition reuses the same native action resource
    * predicate and frozen capture points. It evaluates no instruction value. */
   backingchild: method = .string
@@ -3865,7 +3915,8 @@ analysis: class
       if instruction.complete('relocation') = 0 then return 'target.resource.backing.frame.reach.unproved'
       if item.id() > _beforepresent[0] then return 'target.resource.backing.point.unavailable'
       if _beforepresent[item.id()] = 0 then return 'target.resource.backing.point.unavailable'
-      transport = catalog.transportsource(item.opcode()); iscall = catalog.callinvokes(item.opcode())
+      transport = catalog.transportsource(item.opcode()); iscall = catalog.callinvokes(item.opcode()); childisolated = 0
+      if iscall then childisolated = backingcallisolated(instruction,bindings,backings)
       childchecked = 0
       do p = 0 to cfg.outedges(item.id())
         exceptional = 0; phase = 'unknown'; edgeid = 0
@@ -3875,6 +3926,7 @@ analysis: class
           if edge.targetblock() > 0 & wordpos(edge.exposure(),'handler-call handler-call-async event-binding event-binding-async') > 0 then return 'target.resource.backing.handler.reach.unproved'
           if edge.phase() <> 'none' & edge.role() <> 'normal' & edge.role() <> 'table' & right(edge.exposure(),6) <> '-async' then do; exceptional = 1; phase = edge.phase(); end
         end
+        if childisolated then iterate
         path = actionplan(item.id(),edgeid)
         if _status <> 'ok' then return message()
         do j = 1 to instruction.actions()

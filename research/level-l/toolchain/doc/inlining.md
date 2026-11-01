@@ -314,6 +314,18 @@ fees and index/scratch capacity; failed or unfinished drafts grant no unused
 credit. A copied frozen module does not create a new graph epoch. Explicit
 legacy expansion retains its previous envelope policy while using the same
 shared checked target constructor.
+For repeated calls in one caller, analyze each produced RXAS module as the
+next exact input. This is the ordinary Level L flow/summary/CFG pass over
+changed code; it does not need a per-callee convention proof for an unpassed
+caller register. The direct expansion of each call must prove its own removed
+CALL/RET effects. Appended locals shift packed r/g/a positions, so the
+finished construction must preserve the ordered pointers of every retained
+counted CALL, or inline that CALL as well. A later call's count fact may be
+learned from the changed module; a missing source-side literal is not a
+permanent refusal. Register assignment and cleanup run after the complete
+inline construction, when they can reuse lifetimes and remove staging. Treat
+successive constructed modules as normal immutable analysis owners; expose
+only a verified result to the adapter.
 Reachable unknown actions and external effects without a complete owned-read
 footprint also leave unresolved coverage, even if no later explicit read occurs.
 Borrowed observations include typed TRACE/metadata records. Canonical scope
@@ -459,6 +471,16 @@ register reuse, including sharing a cell between nonoverlapping integer and
 float values when string conversion, argument exposure and other observations
 do not require the old component. Allocation begins with distinct cells and
 coalesces only after the shared proof.
+The initial inline layout inserts fresh cells before the original local bank:
+`fresh(D) || old-r || g || a`. Mapping every original `rN` to `r(N+D)`
+translates the complete old packed register vector by `D`; retained counted
+CALL windows retain their exact order and length even when the count is
+dynamic or spans banks. After all expansions, the generic allocator may
+renumber and coalesce cells using the same liveness/storage identities.
+Contiguous ordered call windows are allocation constraints, while fixed
+`CALL1`–`CALL4` forms avoid a window constraint. Optimize register extent and
+copy/swap cost under these constraints, then verify the remap and keep the
+correct prefix layout if the proposed compact assignment is unproved.
 
 For example, one physical cell may carry unrelated integer and float
 components when neither conversion depends on the other, its string component

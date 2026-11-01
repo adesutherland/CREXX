@@ -128,6 +128,8 @@ expansioninstance: class
   _candidates = .int[]
   _counts = .int[]
   _continuation = .string
+  _prefix = .int
+  _callershift = .int
   _originals = .lltarget..operand[]
   _replacements = .lltarget..operand[]
   _roles = .string[]
@@ -170,6 +172,18 @@ expansioninstance: class
     arg reason = .string
     if _error = '' then _error = reason
     return 0
+  /** Construction data only; correspondence checks this complete prefix
+   * against both headers and every retained caller register reference. */
+  callerprefix: method = .int
+    arg shift = .int
+    if _sealed then return 0
+    if shift < 0 then return reject('expansion.caller.prefix.invalid')
+    _prefix = 1; _callershift = shift
+    return 1
+  prefix: method = .int
+    return _prefix
+  callershift: method = .int
+    return _callershift
   reserve: method = .int
     arg work = .int, bytes = .int
     if work < 0 | bytes < 0 | work > _worklimit - _work | bytes > _bytelimit - _bytes then return reject('LL_RESOURCE_LIMIT: expansion.manifest')
@@ -374,6 +388,8 @@ expansioncorrespondence: class
   _candidatesteps = .string[]
   _occupiedfunctions = .int[]
   _occupiedslots = .int[]
+  _prefixfunctions = .int[]
+  _callershifts = .int[]
   _phase = .string
   _checking = .int
   _status = .string
@@ -460,14 +476,25 @@ expansioncorrespondence: class
     return 1
   samerecord: method = .int
     arg left = .lltarget..record, right = .lltarget..record
+    j = .int
     if left.kind() <> right.kind() | left.operands() <> right.operands() then return 0
     if left.kind() = 'instruction' then do
       if left.opcode() <> right.opcode() then return 0
       if (_sourcesteps[left.id()] == _candidatesteps[right.id()]) = 0 then return 0
     end
     if sameorigin(left.origin(),right.origin()) = 0 then return 0
+    fields = .object[]; replacements = .object[]; value = .lltarget..operand
+    do j = 1 to left.registerrefs(); replacements[j] = callerregister(left.registerref(j),left.procedureid()) as .object; end
+    fields = lltarget..remapregisters(left,replacements); shift = callerprefix(left.procedureid()); catalog = .llrxascatalog..catalog()
     do j = 1 to left.operands()
-      if spend(1) = 0 | sameoperand(left.operand(j),right.operand(j)) = 0 then return 0
+      value = fields[j] as .lltarget..operand
+      if shift > 0 & left.kind() = 'instruction' then do
+        if catalog.relocation(left.opcode(),j) = 7 then do
+          if value.kind() <> 'I' | value.index() > 9223372036854775807 - shift then return 0
+          if value.index() >= 0 then value = .lltarget..operand.integer(value.index() + shift)
+        end
+      end
+      if spend(1) = 0 | sameoperand(value,right.operand(j)) = 0 then return 0
     end
     return 1
   diagnostics: method = .int
@@ -487,6 +514,9 @@ expansioncorrespondence: class
     i = .int; j = .int; found = .int; role = .string; original = .lltarget..operand; replacement = .lltarget..operand; base = .lltarget..operand; addition = .lltarget..operand; baseseen = .int[]
     if instance.additions() > (_bytelimit - _bytes) <idiv> 8 then return fail('limit','expansion.addition.table.allowance')
     if spend(instance.additions(),instance.additions() * 8) = 0 then return 0
+    first = .int; last = .int; originalfirst = .int
+    first = caller.locals(); last = receiver.locals(); originalfirst = 0
+    if instance.prefix() then do; first = 0; last = instance.callershift(); originalfirst = last; end
     do i = 1 to instance.additions(); baseseen[i] = 0; end
     do i = 1 to instance.mappings()
       if spend(1) = 0 then return 0
@@ -501,16 +531,16 @@ expansioncorrespondence: class
       end
       if role = 'argument' then do
         if replacement.index() < 0 | wordpos(replacement.bank(),'r g a') = 0 then return fail('invalid','expansion.mapping.argument.coordinate')
-        if replacement.bank() = 'r' & replacement.index() >= caller.locals() then return fail('invalid','expansion.mapping.argument.coordinate')
+        if replacement.bank() = 'r' & (replacement.index() < originalfirst | replacement.index() >= originalfirst + caller.locals()) then return fail('invalid','expansion.mapping.argument.coordinate')
         if replacement.bank() = 'g' & replacement.index() >= candidate.globals() then return fail('invalid','expansion.mapping.argument.coordinate')
       end
       else do
-        if replacement.bank() <> 'r' | replacement.index() < caller.locals() | replacement.index() >= receiver.locals() then return fail('invalid','expansion.mapping.fresh.local.required')
+        if replacement.bank() <> 'r' | replacement.index() < first | replacement.index() >= last then return fail('invalid','expansion.mapping.fresh.local.required')
         if claimslot(receiver.functionid(),replacement.index()) = 0 then return 0
       end
       base = instance.base(original)
       if role = 'proxy' | role = 'global' then do
-        if base.kind() <> 'R' | base.bank() <> 'r' | base.owner() <> candidate.identity() | base.procedureid() <> receiver.functionid() | base.index() < caller.locals() | base.index() >= receiver.locals() then return fail('invalid','expansion.mapping.base.coordinate')
+        if base.kind() <> 'R' | base.bank() <> 'r' | base.owner() <> candidate.identity() | base.procedureid() <> receiver.functionid() | base.index() < first | base.index() >= last then return fail('invalid','expansion.mapping.base.coordinate')
         found = 0
         do j = 1 to instance.additions()
           if spend(1) = 0 then return 0
@@ -527,7 +557,7 @@ expansioncorrespondence: class
     do i = 1 to instance.additions()
       if spend(1) = 0 then return 0
       addition = instance.addition(i)
-      if addition.kind() <> 'R' | addition.bank() <> 'r' | addition.owner() <> candidate.identity() | addition.procedureid() <> receiver.functionid() | addition.index() < caller.locals() | addition.index() >= receiver.locals() then return fail('invalid','expansion.addition.fresh.local.required')
+      if addition.kind() <> 'R' | addition.bank() <> 'r' | addition.owner() <> candidate.identity() | addition.procedureid() <> receiver.functionid() | addition.index() < first | addition.index() >= last then return fail('invalid','expansion.addition.fresh.local.required')
       if instance.additionrole(i) = 'base-proxy' & baseseen[i] = 0 then return fail('invalid','expansion.mapping.base.addition.orphan')
       if claimslot(receiver.functionid(),addition.index()) = 0 then return 0
     end
@@ -570,7 +600,7 @@ expansioncorrespondence: class
     return 1
   run: method = .void
     i = .int; j = .int; k = .int; row = .int; point = .int; remaining = .int; prior = .int; ignored = .int
-    first = .int; last = .int; calladdress = .int; celladdress = .int; sourcecall = .int; sourceop = .int; found = .int; physical = .int
+    first = .int; last = .int; calladdress = .int; celladdress = .int; sourcecall = .int; sourceop = .int; found = .int; physical = .int; functionid = .int
     sourceitem = .lltarget..record; candidateitem = .lltarget..record; original = .lltarget..operand; replacement = .lltarget..operand
     body = .lltarget..body; caller = .lltarget..body; receiver = .lltarget..body; namespaceowner = .lltarget..module; frame = .lltarget..record
     providerref = reference .lltarget..module; providerirref = reference .llir..module
@@ -585,6 +615,7 @@ expansioncorrespondence: class
     sourceirref = source.ir(); candidateirref = candidate.ir()
     sourceir = dereference sourceirref; candidateir = dereference candidateirref
     if _instances[0] = 0 | source.name() <> candidate.name() | source.procedures() <> candidate.procedures() | source.globals() <> candidate.globals() then do; ignored = fail('unknown','expansion.module.shape.unproved'); return; end
+    if spend(sourceir.functions() * 2,sourceir.functions() * 16) = 0 then return
     if _instances[0] > (_bytelimit - _bytes) <idiv> 96 then do; ignored = fail('limit','expansion.instance.extent'); return; end
     if sourceir.operations() > (_bytelimit - _bytes - _instances[0] * 96) <idiv> 48 - candidateir.operations() then do; ignored = fail('limit','expansion.operation.extent'); return; end
     if spend(sourceir.operations() + candidateir.operations(),(sourceir.operations() + candidateir.operations()) * 48 + _instances[0] * 96) = 0 then return
@@ -653,6 +684,13 @@ expansioncorrespondence: class
       if sourceitem.kind() <> 'instruction' then do; ignored = fail('invalid','expansion.call.not.instruction'); return; end
       if catalog.callinvokes(sourceitem.opcode()) = 0 then do; ignored = fail('invalid','expansion.call.not.invocation'); return; end
       caller = source.body(sourceitem.procedureid()); physical = candidate.procedureid(caller.name()); receiver = candidate.body(physical)
+      functionid = sourceitem.procedureid()
+      if instance.prefix() then do
+        if instance.callershift() <> receiver.locals() - caller.locals() then do; ignored = fail('invalid','expansion.caller.prefix.extent'); return; end
+        if _prefixfunctions[functionid] & _callershifts[functionid] <> instance.callershift() then do; ignored = fail('invalid','expansion.caller.prefix.conflict'); return; end
+        _prefixfunctions[functionid] = 1; _callershifts[functionid] = instance.callershift()
+      end
+      else if _prefixfunctions[functionid] then do; ignored = fail('invalid','expansion.caller.prefix.mixed'); return; end
       _functions[i] = physical; frameindex = candidate.inlineframeindex(instance.frame())
       if frameindex = 0 then do; ignored = fail('invalid','expansion.frame.missing'); return; end
       frame = candidate.inlineframe(frameindex)
@@ -875,6 +913,33 @@ expansioncorrespondence: class
     return _identity
   candidateowner: method = reference .lltarget..module
     return _candidate
+  callerprefix: method = .int
+    arg functionid = .int
+    if functionid < 1 | functionid > _prefixfunctions[0] then return 0
+    if _prefixfunctions[functionid] = 0 then return 0
+    return _callershifts[functionid]
+  callersuffix: method = .int
+    arg functionid = .int
+    if functionid < 1 | functionid > _prefixfunctions[0] then return 0
+    return _prefixfunctions[functionid]
+  callerregister: method = .lltarget..operand
+    arg value = .lltarget..operand, functionid = 0
+    if value.kind() <> 'R' then return value
+    if functionid = 0 then functionid = value.procedureid()
+    if functionid < 2 then return .lltarget..operand()
+    source = dereference _source; candidate = dereference _candidate
+    body = source.body(functionid); receiver = candidate.procedureid(body.name()); index = value.index()
+    if value.bank() = 'r' then index = index + callerprefix(functionid)
+    return .lltarget..operand.bound(candidate.identity(),receiver,0,value.bank(),index)
+  callerfresh: method = .int
+    arg functionid = .int, value = .lltarget..operand
+    if value.kind() <> 'R' | value.bank() <> 'r' then return 0
+    source = dereference _source; candidate = dereference _candidate; body = source.body(functionid)
+    receiver = candidate.body(candidate.procedureid(body.name()))
+    if functionid <= _prefixfunctions[0] then do
+      if _prefixfunctions[functionid] then return value.index() >= 0 & value.index() < _callershifts[functionid]
+    end
+    return value.index() >= body.locals() & value.index() < receiver.locals()
   operation: method = .int
     arg sourceop = .int
     if sourceop < 1 | sourceop > _operations[0] then return 0

@@ -1239,12 +1239,24 @@ copyorigin: procedure = .llir..origin
   return lltargetremap..copyorigin(owner,old,target,source_ref,origin_ref)
 
 clonefields: procedure = .object[]
-  arg input = .lltarget..record, target = .lltarget..bodydraft
-  replacements = .object[]; value = .lltarget..operand
+  arg input = .lltarget..record, target = .lltarget..bodydraft, shift = 0
+  replacements = .object[]; value = .lltarget..operand; i = .int
   do i = 1 to input.registerrefs()
-    value = input.registerref(i); replacements[i] = target.reg(value.bank(),value.index()) as .object
+    value = input.registerref(i); index = value.index()
+    if value.bank() = 'r' then index = index + shift
+    replacements[i] = target.reg(value.bank(),index) as .object
   end
-  return lltarget..remapregisters(input,replacements)
+  fields = lltarget..remapregisters(input,replacements)
+  if shift > 0 & input.kind() = 'instruction' then do
+    catalog = .llrxascatalog..catalog()
+    do i = 1 to fields[0]
+      if catalog.relocation(input.opcode(),i) <> 7 then iterate
+      value = fields[i] as .lltarget..operand
+      if value.kind() <> 'I' | value.index() > 9223372036854775807 - shift then assembler signal "ERROR","LL_INLINE: caller.local.index.remap.unproved"
+      if value.index() >= 0 then fields[i] = .lltarget..operand.integer(value.index() + shift) as .object
+    end
+  end
+  return fields
 
 /** Coalesce consecutive executable rows with the same static diagnostic
  * owner. Range endpoint labels are ordinary target address boundaries. */
@@ -1580,6 +1592,7 @@ siteplan: class
   _scope = .int
   _extent = .int
   _base = .int
+  _callershift = .int
   _cells = .int
   _selected = .int
   _work = .int
@@ -1955,12 +1968,12 @@ siteplan: class
     program = _preparation
     if program.status() <> 'ok' then return 0
     do j = 1 to program.steps()
-      first = item.operand(program.operand(j,1)); first = target.reg(first.bank(),first.index())
+      first = callerregister(item.operand(program.operand(j,1)),target)
       select program.kind(j)
         when 'clear' then ignored = code.one(target,'null',first,at)
         when 'flags' then ignored = code.two(target,'settp',first,item.operand(program.operand(j,2)),at)
         when 'swap' then do
-          second = item.operand(program.operand(j,2)); second = target.reg(second.bank(),second.index())
+          second = callerregister(item.operand(program.operand(j,2)),target)
           ignored = code.two(target,'swap',first,second,at)
         end
         otherwise do; return 0; end
@@ -1980,14 +1993,14 @@ siteplan: class
       ignored = code.two(target,'link',first,second,at)
     end
     do j = 1 to _plaincount
-      first = target.reg('r',countslot() + j); second = _plainactuals[j]; second = target.reg(second.bank(),second.index())
+      first = target.reg('r',countslot() + j); second = callerregister(_plainactuals[j],target)
       ignored = code.two(target,'link',first,second,at)
     end
     do j = 0 to _globalslots - 1
       ignored = code.two(target,'link',target.reg('r',_base + viewslots() + j),target.reg('g',j),at)
     end
     do j = 1 to _plaincount
-      second = _plainactuals[j]; second = target.reg(second.bank(),second.index())
+      second = callerregister(_plainactuals[j],target)
       ignored = code.two(target,'link',target.reg('r',_base + viewslots() + _globalslots + j - 1),second,at)
     end
     return code.error() = ''
@@ -2137,6 +2150,7 @@ siteplan: class
      * plan's binding. It remains live through structural and final proof. */
     manifest = .lltargetremap..expansioninstance(_request.callid(),providerowner,_request.bodyid(),frameid,sourceops,candidateops,counts,continuation)
     body = _provider.body(_request.bodyid()); irref = _provider.ir(); graph = dereference irref; ignored = .int
+    ignored = manifest.callerprefix(_callershift)
     original = .lltarget..operand; replacement = .lltarget..operand; j = .int
     do j = 0 to body.locals() - 1
       original = .lltarget..operand.bound(graph.identity(),body.functionid(),0,'r',j)
@@ -2178,9 +2192,15 @@ siteplan: class
   argumentcount: method = .int
     return _plaincount
   place: method = .void
-    arg base = .int
-    _base = base
+    arg base = .int, callershift = 0
+    _base = base; _callershift = callershift
     return
+  callerregister: method = .lltarget..operand
+    arg value = .lltarget..operand, target = .lltarget..bodydraft
+    if value.kind() <> 'R' then return value
+    index = value.index()
+    if value.bank() = 'r' then index = index + _callershift
+    return target.reg(value.bank(),index)
   scoped: method = .int
     return _scope
   body: method = .lltarget..body
@@ -2367,7 +2387,7 @@ expandcontext: procedure = .llinline..change
   source = .lltarget..module; provider = .lltarget..module; body = .lltarget..body; target = .lltarget..bodydraft
   item = .lltarget..record; child = .lltarget..record; point = .lltarget..record; anchor = .lltarget..record; field = .lltarget..operand; destination = .lltarget..operand; temporary = .lltarget..operand
   at = .llir..origin; childat = .llir..origin; plans = .object[]; decisions = .object[]; sites = .int[]; empty = .int[]
-  localcounts = .int[]; accepted = .int[]; mappings = .int[]; callers = .int[]; seen = .int[]
+  localcounts = .int[]; prefixes = .int[]; placed = .int[]; accepted = .int[]; mappings = .int[]; callers = .int[]; seen = .int[]
   sources = .object[]; origins = .object[]; childsources = .object[]; childorigins = .object[]; bodies = .object[]
   fields = .object[]; steps = .int[]; clauses = .int[]; metanames = .binary[]; metaactive = .int[]
   relationalinstances = .object[]; correspondence = .lltargetremap..expansioncorrespondence
@@ -2376,7 +2396,7 @@ expandcontext: procedure = .llinline..change
   externalanchors = .int[]; steprecords = .int; anchorid = .int; anchorfound = .int; mapsuffix = .string
   contributors = .object[]; file = .llir..sourcefile; emptybinary = .binary[]
   checkpoint = .int[]; filecheckpoint = .int[]; linecheckpoint = .int[]
-  i = .int; j = .int; n = .int; ordinal = .int; count = .int; higheststep = .int; highestclause = .int; ignored = .int
+  i = .int; j = .int; n = .int; ordinal = .int; count = .int; fn = .int; higheststep = .int; highestclause = .int; ignored = .int
   highestframe = .int; rootframe = .int; parentframe = .int; assignedframe = .int; callstep = .int; rowordinal = .int
   candidatebound = .int; framebound = .int; addition = .int; directsites = .int; certificatework = .int; certificatebytes = .int; certificates = .lltargetsummary..diagnosticlimits
   batchproved = .int; requestedwork = .int; requestedbytes = .int; constructionwork = .int; constructionbytes = .int
@@ -2437,6 +2457,20 @@ expandcontext: procedure = .llinline..change
       accepted[item.id()] = i; count = count + 1; decisions[i] = .decision('changed',plan.reason()) as .object
     end
     if count = 0 then return .change('keep','inline.no.selected.site',source,empty,callers,sites,decisions)
+    /* Prefix all new direct storage, leaving the complete original packed
+     * R/G/A suffix contiguous. No later CALL count proof is needed for this
+     * affine layout change, including windows crossing bank boundaries. */
+    if selected.policy() = 'default' then do
+      do i = 1 to source.procedures()
+        body = source.procedure(i); prefixes[body.functionid()] = localcounts[body.functionid()] - body.locals(); placed[body.functionid()] = 0
+      end
+      do i = 1 to plans[0]
+        if plans[i] is .siteplan then do
+          plan = plans[i] as .siteplan; request = bindings[i] as .binding; item = source.at(request.callid()); fn = item.procedureid()
+          call plan.place(placed[fn],prefixes[fn]); plans[i] = plan as .object; placed[fn] = placed[fn] + plan.slots()
+        end
+      end
+    end
     mapsuffix = staticsuffix(source,work)
     if mapsuffix = '' then return .change('limit','inline.diagnostics.label.work',source,empty,callers,sites,decisions)
     /* The explicit legacy route retains its held diagnostic envelopes.
@@ -2499,7 +2533,7 @@ expandcontext: procedure = .llinline..change
       if item.kind() = '.srcline' then linecheckpoint[item.procedureid()] = item.id()
       ordinal = accepted[item.id()]
       if ordinal = 0 then do
-        fields = clonefields(item,target)
+        fields = clonefields(item,target,prefixes[item.procedureid()])
         if item.kind() = 'instruction' then do
           call code.attribution(source.inlineframeat(item.id()))
           mappings[item.id()] = code.emit(target,item.mnemonic(),fields,at)
@@ -2529,7 +2563,7 @@ expandcontext: procedure = .llinline..change
         end
       end
       call code.row()
-      if shape.hasresult() then do; field = shape.result(); destination = target.reg(field.bank(),field.index()); end
+      if shape.hasresult() then destination = plan.callerregister(shape.result(),target)
       else do
         destination = .lltarget..operand()
         if plan.slots() > 0 then destination = target.reg('r',plan.base() + plan.slots() - 1)
@@ -2706,7 +2740,7 @@ expandcontext: procedure = .llinline..change
         if j = 1 then restored = filecheckpoint[item.procedureid()]
         else if j = 2 then restored = linecheckpoint[item.procedureid()]
         if restored > 0 then do
-          originalrecord = source.at(restored); fields = clonefields(originalrecord,target)
+          originalrecord = source.at(restored); fields = clonefields(originalrecord,target,prefixes[item.procedureid()])
           ignored = target.record(originalrecord.kind(),fields,at)
         end
       end

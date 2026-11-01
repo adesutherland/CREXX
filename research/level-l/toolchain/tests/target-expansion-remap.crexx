@@ -56,14 +56,26 @@ sourcepoint: procedure = .int
   values[7] = .lltarget..operand.integer(5) as .object; values[8] = .lltarget..operand.string('fixture clause' as .binary) as .object
   return body.record('.srcstep',values,at)
 fields: procedure = .object[]
-  arg item = .lltarget..record, body = .lltarget..bodydraft
+  arg item = .lltarget..record, body = .lltarget..bodydraft, shift = 0
   result = .object[]; value = .lltarget..operand
   do i = 1 to item.operands()
     value = item.operand(i)
-    if value.kind() = 'R' then value = body.reg(value.bank(),value.index())
+    if value.kind() = 'R' then do
+      index = value.index(); if value.bank() = 'r' then index = index + shift
+      value = body.reg(value.bank(),index)
+    end
     result[i] = value as .object
   end
   return result
+
+clonereg: procedure = .lltarget..operand
+  arg body = .lltarget..bodydraft, mode = .int, frameid = .int, index = .int
+  if mode >= 17 then do
+    prefix = 4; if mode = 21 then prefix = 8
+    if index = 0 then index = prefix
+    else index = (frameid - 1) * 4 + index - 1
+  end
+  return body.reg('r',index)
 
 sample: procedure = .lltarget..module
   arg mode = .int, expose called = .int
@@ -75,8 +87,15 @@ sample: procedure = .lltarget..module
   if mode <> 2 then ignored = two(root,'brt',.lltarget..operand.symbol('caller.after'),root.reg('g',0),at)
   values[1] = root.reg('r',0) as .object; values[2] = .lltarget..operand.procedure('leaf') as .object; values[3] = root.reg('r',0) as .object
   called = root.emit('call1',values,at)
+  if mode = 21 then ignored = root.emit('call1',values,at)
   if mode <> 2 then ignored = label(root,'caller.after',at)
   ignored = two(root,'load',root.reg('r',0),.lltarget..operand.integer(8),at)
+  if mode >= 17 then do
+    /* This retained window crosses old r0 into g0/a0 and an unknown borrowed
+     * tail. Structural prefix preservation must need no count fact. */
+    values[1] = root.reg('g',0) as .object; values[2] = .lltarget..operand.procedure('leaf') as .object; values[3] = root.reg('r',0) as .object
+    ignored = root.emit('call',values,at)
+  end
   ignored = one(root,'ret',.lltarget..operand.integer(0),at)
   if mode = 16 then do
     other = draft.procedure('other',1,at)
@@ -113,11 +132,11 @@ clone: procedure = .lltargetremap..expansioninstance
   values[1] = .lltarget..operand.integer(frameid) as .object; values[2] = .lltarget..operand.integer(0) as .object
   values[3] = .lltarget..operand.string(source.name() as .binary) as .object; values[4] = .lltarget..operand.string('leaf' as .binary) as .object
   values[5] = .lltarget..operand.integer(0) as .object; ignored = target.record('.inlineframe',values,at)
-  sourceops[1] = 0; candidateops[1] = one(target,'unlink',target.reg('r',1),at); counts[1] = 5
-  ignored = one(target,'null',target.reg('r',1),at)
-  ignored = two(target,'load',target.reg('r',1),.lltarget..operand.integer(1),at)
-  ignored = two(target,'link',target.reg('r',2),target.reg('r',0),at)
-  ignored = two(target,'link',target.reg('r',3),target.reg('r',0),at)
+  sourceops[1] = 0; candidateops[1] = one(target,'unlink',clonereg(target,mode,frameid,1),at); counts[1] = 5
+  ignored = one(target,'null',clonereg(target,mode,frameid,1),at)
+  ignored = two(target,'load',clonereg(target,mode,frameid,1),.lltarget..operand.integer(1),at)
+  ignored = two(target,'link',clonereg(target,mode,frameid,2),clonereg(target,mode,frameid,0),at)
+  ignored = two(target,'link',clonereg(target,mode,frameid,3),clonereg(target,mode,frameid,0),at)
   do i = 1 to provider.records()
     item = provider.record(i)
     childat = lltargetremap..copyorigin(graphref,item.origin(),draftref,sourcesref,originsref)
@@ -129,28 +148,28 @@ clone: procedure = .lltargetremap..expansioninstance
     else if item.kind() = '.meta' then do
       recordrow = recordsources[0] + 1; recordsources[recordrow] = item.id(); call objectarraydrop values
       values[1] = .lltarget..operand.string(('value' || suffix) as .binary) as .object
-      values[2] = item.operand(2) as .object; values[3] = item.operand(3) as .object; values[4] = target.reg('r',2) as .object
+      values[2] = item.operand(2) as .object; values[3] = item.operand(3) as .object; values[4] = clonereg(target,mode,frameid,2) as .object
       recordcandidates[recordrow] = target.record('.meta',values,childat)
     end
     else if item.mnemonic() = 'swap' then do
-      field = target.reg('r',2); if mode = 1 then field = target.reg('r',3)
-      row = sourceops[0] + 1; sourceops[row] = item.id(); candidateops[row] = two(target,'swap',target.reg('r',2),field,childat); counts[row] = 1
+      field = clonereg(target,mode,frameid,2); if mode = 1 then field = clonereg(target,mode,frameid,3)
+      row = sourceops[0] + 1; sourceops[row] = item.id(); candidateops[row] = two(target,'swap',clonereg(target,mode,frameid,2),field,childat); counts[row] = 1
       if mode = 9 then recordcandidates[deferredlabel] = label(target,'leaf.body' || suffix,childat)
       if mode = 8 then ignored = meta(target,'injected',childat)
     end
     else if item.mnemonic() = 'load' then do
-      field = item.operand(1); replacement = target.reg('r',4 + field.index()); if mode = 14 then replacement = target.reg('r',4)
+      field = item.operand(1); replacement = clonereg(target,mode,frameid,4 + field.index()); if mode = 14 then replacement = clonereg(target,mode,frameid,4)
       row = sourceops[0] + 1; sourceops[row] = item.id(); candidateops[row] = two(target,'load',replacement,item.operand(2),childat); counts[row] = 1
     end
     else if item.mnemonic() = 'brt' then do
       field = item.operand(1); name = field.text() || suffix; if mode = 15 then name = 'leaf.body' || suffix
-      row = sourceops[0] + 1; sourceops[row] = item.id(); candidateops[row] = two(target,'brt',.lltarget..operand.symbol(name),target.reg('r',2),childat); counts[row] = 1
+      row = sourceops[0] + 1; sourceops[row] = item.id(); candidateops[row] = two(target,'brt',.lltarget..operand.symbol(name),clonereg(target,mode,frameid,2),childat); counts[row] = 1
     end
     else if item.mnemonic() = 'ret' then do
       retid = item.id(); row = sourceops[0] + 1; sourceops[row] = item.id(); counts[row] = 5
-      if mode = 14 then candidateops[row] = two(target,'copy',target.reg('r',0),target.reg('r',4),childat)
-      else candidateops[row] = two(target,'load',target.reg('r',0),.lltarget..operand.integer(0),childat)
-      ignored = one(target,'unlink',target.reg('r',1),childat); ignored = one(target,'unlink',target.reg('r',2),childat); ignored = one(target,'unlink',target.reg('r',3),childat)
+      if mode = 14 then candidateops[row] = two(target,'copy',clonereg(target,mode,frameid,0),clonereg(target,mode,frameid,4),childat)
+      else candidateops[row] = two(target,'load',clonereg(target,mode,frameid,0),.lltarget..operand.integer(0),childat)
+      ignored = one(target,'unlink',clonereg(target,mode,frameid,1),childat); ignored = one(target,'unlink',clonereg(target,mode,frameid,2),childat); ignored = one(target,'unlink',clonereg(target,mode,frameid,3),childat)
       ignored = one(target,'br',.lltarget..operand.symbol(after),childat)
     end
   end
@@ -162,19 +181,25 @@ clone: procedure = .lltargetremap..expansioninstance
     sourceops = truncatedsource; candidateops = truncatedcandidate; counts = truncatedcounts
   end
   instance = .lltargetremap..expansioninstance(called,owner,provider.functionid(),frameid,sourceops,candidateops,counts,after)
+  if mode >= 17 then do
+    prefix = 4; if mode = 21 then prefix = 8
+    if mode = 19 then prefix = 3
+    ignored = instance.callerprefix(prefix)
+  end
   do i = 0 to provider.locals() - 1
-    original = .lltarget..operand.bound(source.identity(),provider.functionid(),0,'r',i); replacement = target.reg('r',4 + i); role = 'private'
-    if mode = 10 then replacement = target.reg('r',0)
+    original = .lltarget..operand.bound(source.identity(),provider.functionid(),0,'r',i); replacement = clonereg(target,mode,frameid,4 + i); role = 'private'
+    if mode = 10 then replacement = clonereg(target,mode,frameid,0)
     if mode = 11 then role = 'count'
-    if mode = 14 then replacement = target.reg('r',4)
+    if mode = 14 then replacement = clonereg(target,mode,frameid,4)
     ignored = instance.bind(original,replacement,role)
   end
   original = .lltarget..operand.bound(source.identity(),provider.functionid(),0,'a',0)
-  ignored = instance.bind(original,target.reg('r',1),'count')
+  ignored = instance.bind(original,clonereg(target,mode,frameid,1),'count')
   original = .lltarget..operand.bound(source.identity(),provider.functionid(),0,'a',1)
-  replacement = target.reg('r',2); if mode = 12 then replacement = target.reg('r',3)
-  ignored = instance.bind(original,replacement,'proxy'); ignored = instance.bindbase(original,target.reg('r',3)); ignored = instance.added(target.reg('r',3),'base-proxy')
-  if mode = 13 then ignored = instance.added(target.reg('r',0),'save')
+  replacement = clonereg(target,mode,frameid,2); if mode = 12 then replacement = clonereg(target,mode,frameid,3)
+  ignored = instance.bind(original,replacement,'proxy'); ignored = instance.bindbase(original,clonereg(target,mode,frameid,3)); ignored = instance.added(clonereg(target,mode,frameid,3),'base-proxy')
+  if mode = 13 then ignored = instance.added(clonereg(target,mode,frameid,0),'save')
+  if mode = 20 then ignored = instance.added(clonereg(target,mode,frameid,0),'save')
   ignored = instance.metadata(suffix,empty,empty,empty)
   do i = 1 to recordsources[0]; ignored = instance.bindrecord(recordsources[i],recordcandidates[i]); end
   ignored = instance.bindrecord(0,closeid)
@@ -188,7 +213,7 @@ run: procedure = .int
   draft = .lltarget..draft(source.name(),source.artifact(),source.globals())
   sources = .object[]; origins = .object[]; operations = .int[]; instances = .object[]; values = .object[]
   graphref = source.ir(); body = .lltarget..bodydraft; leaf = .lltarget..body; item = .lltarget..record; value = .lltarget..operand
-  ignored = .int; i = .int; relocated = .int; pending = .int; afterid = .int; instance = .lltargetremap..expansioninstance
+  ignored = .int; i = .int; relocated = .int; pending = .int; afterid = .int; prefix = .int; shift = .int; instance = .lltargetremap..expansioninstance
   originalslot = .lltarget..operand; absentbase = .lltarget..operand
   do i = 1 to source.records()
     item = source.record(i)
@@ -196,15 +221,18 @@ run: procedure = .int
     if item.kind() = 'procedure' then do
       original = source.body(item.procedureid()); locals = original.locals()
       if original.name() = 'main' | (mode = 16 & original.name() = 'other') then do; leaf = source.body(source.procedureid('leaf')); locals = 4 + leaf.locals(); end
+      if mode = 21 & original.name() = 'main' then locals = 9
       body = draft.procedure(original.name(),locals,at,original.expose(),original.entrykind()); operations[item.id()] = body.headerid(); iterate
     end
-    if item.id() = called | (mode = 16 & item.mnemonic() = 'call1') then do
+    if item.id() = called | ((mode = 16 | mode = 21) & item.mnemonic() = 'call1') then do
       if mode = 2 then do; pending = 1; iterate; end
       if mode = 3 then do; afterid = label(body,'caller.after',at); end
       instance = clone(reference source,item.id(),body,at,mode,reference draft,reference sources,reference origins,instances[0] + 1)
       instances[instances[0] + 1] = instance as .object; iterate
     end
-    values = fields(item,body)
+    shift = 0
+    if mode >= 17 & mode <> 18 & item.procedureid() = source.procedureid('main') then do; shift = 4; if mode = 21 then shift = 8; end
+    values = fields(item,body,shift)
     if item.kind() = 'label' & mode = 3 & item.procedureid() = source.procedureid('main') then do; operations[item.id()] = afterid; iterate; end
     if item.kind() = '.srcstep' & mode = 7 then values[5] = .lltarget..operand.integer(99) as .object
     if item.kind() = 'instruction' then operations[item.id()] = body.emit(item.mnemonic(),values,at)
@@ -227,6 +255,15 @@ run: procedure = .int
   mapping = .lltargetremap..expansioncorrespondence(reference source,reference candidate,operations,instances,quota)
   state = mapping.status(); reason = mapping.reason()
   select
+    when mode = 17 | mode = 21 then do
+      prefix = 4; if mode = 21 then prefix = 8
+      failures = failures + check(state = 'proved' & mapping.valid(),'fresh prefix and complete retained packed suffix are checked ' || mode || ':' || reason)
+      failures = failures + check(mapping.callersuffix(source.procedureid('main')) & mapping.callerprefix(source.procedureid('main')) = prefix,'prefix theorem records the exact caller displacement')
+      if mode = 21 then failures = failures + check(mapping.instances() = 2,'two clone blocks share one checked prefix without overlap')
+    end
+    when mode = 18 then failures = failures + check(reason = 'expansion.caller.record.delta','an unshifted retained local cannot borrow prefix permission:' || reason)
+    when mode = 19 then failures = failures + check(reason = 'expansion.caller.prefix.extent','claimed prefix must equal actual frame growth:' || reason)
+    when mode = 20 then failures = failures + check(reason = 'expansion.addition.fresh.local.required','new storage cannot occupy the shifted original suffix:' || reason)
     when mode = 16 then do
       failures = failures + check(state = 'proved' & mapping.valid(),'two instance checks retain exact shared provider:' || reason)
       failures = failures + check(initialized(source),'checking the next instance cannot overwrite its shared provider through a prior alias')
@@ -286,7 +323,7 @@ ownercontrols: procedure = .int
 
 main: procedure = .int
   failures = 0; mode = .int
-  do mode = 0 to 16; failures = failures + run(mode); end
+  do mode = 0 to 21; failures = failures + run(mode); end
   failures = failures + ownercontrols()
   say 'TARGET_EXPANSION_REMAP|failures=' || failures
   return failures

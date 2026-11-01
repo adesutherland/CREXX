@@ -1847,7 +1847,8 @@ expansionequivalencefact: class
     layout = plan.layout(); captured = layout.actual(ordinal); current = points.captureat(called.id(),value.bank(),value.index())
     if current.active() = 0 & catalog.callprefix(called.opcode()) = '' then current = points.storageat(called.id(),value.bank(),value.index())
     if captured.active() = 0 | captured.active() <> current.active() | captured.base() <> current.base() | captured.entry() <> current.entry() | captured.slotidentity() <> current.slotidentity() then return .lltarget..operand()
-    return value
+    mapping = dereference _mapping
+    return mapping.callerregister(value,called.procedureid())
   entryrelation: method = .int
     arg plan = .expansionplanfact, instance = .lltargetremap..expansioninstance
     i = .int; j = .int; value = .lltarget..operand; original = .lltarget..operand; captured = .lltarget..operand
@@ -1879,10 +1880,10 @@ expansionequivalencefact: class
      * order. Its former atomic-phase veto required exact asynchronous CALL
      * checkpoints, which are outside the direct-inline signal contract. */
     do i = 1 to program.steps()
-      kind = program.kind(i); left = called.operand(program.operand(i,1))
+      kind = program.kind(i); left = mapping.callerregister(called.operand(program.operand(i,1)),called.procedureid())
       if kind = 'clear' then cursor = expect(candidate,cursor,'null',left)
       else do
-        right = called.operand(program.operand(i,2)); name = ''
+        right = mapping.callerregister(called.operand(program.operand(i,2)),called.procedureid()); name = ''
         if kind = 'flags' then name = 'settp'
         if kind = 'swap' then name = 'swap'
         if name = '' then return fail('unknown','target.expansion.preparation.primitive.unproved')
@@ -1961,7 +1962,7 @@ expansionequivalencefact: class
       from = .lltarget..operand(); into = .lltarget..operand()
       sourcepoint = points.resourceat(sourceop,'r',0); destination = sourcepoint.unknown()
       if catalog.callresult(called.opcode()) > 0 & kind > 1 then do
-        into = called.operand(catalog.callresult(called.opcode()))
+        into = mapping.callerregister(called.operand(catalog.callresult(called.opcode())),called.procedureid())
         if kind = 2 then do
           from = original.operand(catalog.returnsource(original.opcode())); mapped = instance.mapped(from)
           if mapped.kind() <> 'R' then return fail('unknown','target.expansion.return.source.mapping.unproved')
@@ -2026,7 +2027,7 @@ expansionequivalencefact: class
        * detach before continuation, including base proxies and owned locals. */
       do i = 1 to instance.mappings()
         value = instance.replacement(i)
-        if value.bank() <> 'r' | value.index() < caller.locals() then iterate
+        if mapping.callerfresh(called.procedureid(),value) = 0 then iterate
         cursor = expect(candidate,cursor,'unlink',value)
         if _status <> 'building' then return 0
       end
@@ -2074,7 +2075,7 @@ expansionequivalencefact: class
         if spend(1) = 0 then return 0
         if j <= instance.mappings() then value = instance.replacement(j)
         else value = instance.addition(j - instance.mappings())
-        if value.bank() <> 'r' | value.index() < caller.locals() then iterate
+        if mapping.callerfresh(called.procedureid(),value) = 0 then iterate
         history = _flow.privatebackinghistory(value.procedureid(),'r',value.index())
         if history.resourcefree() = 0 | history.nonescape() = 0 then return fail(history.status(),history.reason())
       end
@@ -2096,6 +2097,15 @@ expansionequivalencefact: class
         if a.kind() <> b.kind() | a.anchor() <> b.anchor() | a.extentknown() <> b.extentknown() | a.extent() <> b.extent() | a.role() <> b.role() | a.roleordinal() <> b.roleordinal() | a.targetbank() <> b.targetbank() | a.targetanchor() <> b.targetanchor() then return fail('unknown','target.expansion.caller.reference.mapping.unproved')
         if a.kind() = 'address' then return fail('unknown','target.expansion.caller.physical.address.mapping.unproved')
         if a.kind() = 'window' then do
+          /* A checked front insertion maps the complete old packed suffix
+           * R/G/A by one displacement. Every forward window, its dynamic
+           * extent and its bounds failures are therefore preserved without
+           * requiring an abstract scalar count in either flow owner. */
+          if mapping.callersuffix(original.procedureid()) then do
+            expected = mapping.callerregister(a.operand(),original.procedureid())
+            if samevalue(expected,b.operand()) = 0 then return fail('unknown','target.expansion.caller.window.mapping.unproved')
+            iterate
+          end
           if a.extentknown() = 0 then return fail('unknown','target.expansion.caller.window.extent.unproved')
           do k = 0 to a.extent() - 1
             if spend(1) = 0 then return 0

@@ -1493,7 +1493,7 @@ boundary works. The wider TGT toolchain replacement is separate.
 | **INL-CAP03 — context, signals and lifetime** | **partly implemented:** numeric/entry facts, G-style signal slices, dirty-entry and ownership analyses exist | Establish only the semantic differences created by removing a frame: necessary numeric/signal restoration, G blocks and C layering, normal and nonlocal exits, and eventual once-only ownership cleanup. Do not simulate exact asynchronous checkpoints, recycled-cell initial contents or incidental finalizer timing. Depends on CAP01–02. |
 | **INL-CAP04 — exact module binding** | **infrastructure present:** optional linker adapter, selected-provider authority and `.inlinedprivate` storage contract exist; direct foreign-provider proof is open | Use the same direct service after exact linker selection, map public/private globals to the selected module, respect initializer readiness and process selected link-time chains leaf first. Assembler-local calls run before assembler optimization. Unresolved, native and dynamically loaded providers remain calls. Depends on CAP01–03. |
 | **INL-CAP05 — diagnostics and metadata** | **mostly implemented:** typed inline-frame records, RXAS/RXBIN/VM handling and source controls exist; full clone correspondence remains open | Complete source/TRACE/frame-map correspondence and relocation for direct local and selected imported clones, including retained child diagnostics. A corrupt map fails; an actual published physical frame/code observer keeps the call. Depends on CAP01 and CAP04 for imported clones. |
-| **INL-CAP06 — cleanup and admission policy** | **partly implemented:** shared liveness/cleanup, swap-window and status proofs, work limits and KEEP diagnostics exist | Run bounded cleanup after a correct no-cleanup clone: remove proved outer setup/inverse swaps, dead status/branches and unused register lifetime while keeping alias snapshots and nested windows. Separate semantic refusal from recursion, resource and profitability policy; the normal direct path adds no per-call heap scope and is assessed against ordinary CALL cost. Depends on CAP02–05. |
+| **INL-CAP06 — cleanup and admission policy** | **partly implemented:** shared liveness/cleanup, swap-window and status proofs, work limits and KEEP diagnostics exist | Run a generic Level L register assignment and bounded cleanup after the complete correct no-cleanup expansion: reuse noninterfering cells, minimize register extent and copy/swap cost while preserving contiguous ordered windows required by counted calls, remove proved outer setup/inverse swaps, dead status/branches and unused lifetime. Keep alias snapshots and nested windows. A checked unchanged layout is the fallback when compaction cannot be proved. Separate semantic refusal from recursion, resource and profitability policy; the normal direct path adds no per-call heap scope and is assessed against ordinary CALL cost. Depends on CAP02–05. |
 | **INL-CAP07 — standalone acceptance** | **todo:** focused slices pass, final whole-POC panel has not run | Freeze the above and run one compact panel through the existing assembler-local and linker-selected adapters, generated and handwritten producers, one VM, cleanup off/on, structural output, retained-call reasons and atomic failure/lifecycle checks. Repair any independently established Level L fixture defect before declaring the panel green. Only then close INL-AC01–09 and INL-STEP06. Depends on CAP01–06. |
 
 For CAP01–02, the fused-call slice exposed a general catalogue boundary:
@@ -1539,9 +1539,23 @@ Current generic callback havoc can lose the count fact after a later explicit
 `NULL` on an actual; this is a Level L structural reachability/escape proof
 gap, not evidence that `NULL` changes the count or that the callee may write
 the caller's unpassed slot. Resolve it at the shared ABI/flow boundary. In
-particular, a clone that adds caller locals must not silently broaden a later
-counted CALL's valid window; use a proved original window bound or lifetimes
-and register assignment that preserve the original ABI.
+particular, a clone that adds caller locals changes the packed r/g/a positions
+seen by a later counted CALL. Preserve that call's ordered pointers by
+register/window remapping, or inline the later call before publishing the
+finished module. A post-inlining register pass can then reuse lifetimes and
+remove staging work; the checker must not turn a representable case into a
+permanent refusal merely because intermediate numbering differs.
+For a sequence of calls in one caller, run the existing Level L analyses on
+the actual RXAS produced after each direct expansion, then plan the next site
+from that new owner. Do not require the original source analysis to predict
+all later call counts, or add a special proof that a named callee preserves
+the caller's count register. The selected CALL replacement must still satisfy
+its own ABI, control, state and lifetime obligations. A changed `.locals`
+extent shifts any retained packed call window across r/g/a banks: remap the
+ordered pointers as part of construction, or finish inlining that call before
+the final equivalence check. Run register assignment and cleanup on the
+finished code. Intermediate analysis output is ordinary constructed RXAS,
+not a different inline semantics or a runtime fallback.
 
 The critical path is CAP01 → CAP02/03 → CAP04/05 → CAP06 → CAP07. The
 first CAP01 repair is at the shared proof boundary: canonical callback events
