@@ -1470,48 +1470,45 @@ differences in resource-pressure failure paths caused solely by removed or
 rearranged infrastructure, such as allocation of a call frame that no longer
 exists; such hypothetical opportunities alone do not retain a call.
 
-### Countable standalone inliner completion cases
+### Capability sequence to complete the standalone inliner
 
-These are the remaining known cases for INL-STEP06, not a demand to model every
-VM implementation detail or to prove each copied opcode's value algorithm again.
-Focused subsets already pass; a row is done only when its stated final control
-passes. A newly discovered *published-interface* obligation gets a numbered
-case before acceptance. The wider TGT assembler/codec/linker replacement is not
-part of this inliner POC.
+The foundation already includes the generated opcode catalogue, shared Level L
+flow/remap/normalization and procedure facts, a checked RXAS reader/writer,
+optional `rxas` and `rxlink` service adapters, typed entry/private-global and
+static diagnostic records, substantial scoped-call controls, a narrow legacy
+direct theorem and a broader default relational checker. Those are implemented
+increments, not seven new features to rebuild. The remaining work is the
+**effective direct path** through that same foundation. The legacy direct
+theorem admits only zero-argument, ignored-result, zero-local/no-state-delta
+cases. The default relational route can construct broader clones but still
+retains broad callback and exit refusals. Complete the following
+capabilities in dependency order, marking a row done only after its stated
+boundary works. The wider TGT toolchain replacement is separate.
 
-| Case | Status | Completion control |
+| Capability | Current state | Completion boundary and dependency |
 |---|---|---|
-| **INL-C01 — ordinary direct body** | todo | A same-module fixed-actual branched call, including `io-branch`'s swap and caller-visible mutation, emits no selected CALL with cleanup disabled and produces 9, 11, 99. An unchanged body instruction's possible private resource callback is not a blanket veto; a published physical observer retains CALL for its own reason. |
-| **INL-C02 — call shapes and actuals** | todo | Fixed CALL1–CALL4, counted/fused preparation and finite variable arguments preserve one-time count, order, presence/defaults, repeated actuals, active/entry binding, and a retained nested child. A genuinely unbounded scattered tail without a representable window retains CALL explicitly. |
-| **INL-C03 — return and storage** | todo | Multiple reached returns, register/immediate results, borrowed versus owned copy/move, reference/value aliases and dirty owned locals preserve results and eventual once-only owned cleanup on normal and nonlocal paths. No recycled-cell initial value or incidental finalizer timing is assumed. |
-| **INL-C04 — numeric context** | todo | Unchanged, known and unknown caller numeric fields restore correctly on all relevant exits using only necessary ordinary operations; redundant decimal sync is omitted under the approved plugin contract. |
-| **INL-C05 — signal control** | todo | Representative G signal blocks and C layering, named/catch-all handlers, handled and unhandled signals, inherited SIGRET and CANCEL preserve the published handler/return/cleanup behavior. Exact asynchronous delivery between ordinary instructions is not a completion condition. |
-| **INL-C06 — globals and link selection** | todo | Local globals and exact selected imported public/private globals use their actual module storage; `.inlinedprivate` is checked end to end. Initializers finish once per worker before ordinary use; selected cross-module leaf-first calls use the frozen linked body. Dynamic or unresolved providers retain CALL. |
-| **INL-C07 — generic target contract** | todo | Representative ordinary RXAS bodies clone via the canonical opcode database and Level L flow/remap without a body-mnemonic admission list. A missing effect, reference or flow contract reports a Level L normalization/catalogue error; the inliner does not grow per-opcode side-effect proofs. |
-| **INL-C08 — diagnostic identity** | todo | Static inline-frame/source/TRACE mapping gives the logical call chain and correct fault/resume attribution, including a retained child; corrupt or stale maps refuse atomically. Explicit published physical frame/code introspection may retain CALL. |
-| **INL-C09 — effective cleanup** | todo | The no-cleanup clone executes correctly; bounded cleanup removes proved outer preparation and inverse swaps, transport/status glue and dead branches, and reuses registers by lifetime without losing required alias snapshots or retained child windows. A simple case has no added per-call heap scope and is assessed against ordinary CALL cost. |
-| **INL-C10 — policy and publication** | todo | Recursion, depth, size and work limits, unavailable bodies, explicit observers and profitability have precise KEEP reasons; forced-legal and disabled controls work. Malformed input, cancellation, resource and I/O failure leave the prior output and owners intact. |
-| **INL-C11 — final one-VM panel** | todo | The same service handles generated and handwritten RXAS plus an independent producer in assembler-local and exact link-selected contexts. Execute representative expanded and retained cases with and without cleanup, inspect output structure, and close INL-AC01–09 only after this compact panel passes. |
+| **INL-CAP01 — generic direct equivalence** | **critical gap:** the default relational checker exists but still refuses ordinary changed-activation/callback and exit paths; a separate legacy direct theorem is narrow | Complete and qualify the default source-to-clone relation, removing duplicate broad entry-cleanliness/body-callback/all-local-resource vetoes where the relation proves the actual published effect. Copied ordinary instructions retain the catalogue's effects; removed CALL/RET, changed storage/activation and published observations need proof. An ordinary direct body expands correctly with cleanup off, while an explicit physical observer retains its call. Retire the narrow legacy permission only after its compatibility uses are accounted for. This is the prerequisite for wider direct admission. |
+| **INL-CAP02 — call and return ABI** | **partly implemented:** fixed, counted/fused, rebinding, finite selection, nested calls and multiple returns have scoped/constructed controls | Connect those existing mappings to CAP01 for direct expansion: exact count, presence, actual order, active and entry bindings, aliases, result copy/move and retained child windows. No `INLENTER` allocation is introduced on the ordinary path. A genuinely unrepresentable argument window remains a call with a precise reason. Depends on CAP01. |
+| **INL-CAP03 — context, signals and lifetime** | **partly implemented:** numeric/entry facts, G-style signal slices, dirty-entry and ownership analyses exist | Establish only the semantic differences created by removing a frame: necessary numeric/signal restoration, G blocks and C layering, normal and nonlocal exits, and eventual once-only ownership cleanup. Do not simulate exact asynchronous checkpoints, recycled-cell initial contents or incidental finalizer timing. Depends on CAP01–02. |
+| **INL-CAP04 — exact module binding** | **infrastructure present:** optional linker adapter, selected-provider authority and `.inlinedprivate` storage contract exist; direct foreign-provider proof is open | Use the same direct service after exact linker selection, map public/private globals to the selected module, respect initializer readiness and process selected link-time chains leaf first. Assembler-local calls run before assembler optimization. Unresolved, native and dynamically loaded providers remain calls. Depends on CAP01–03. |
+| **INL-CAP05 — diagnostics and metadata** | **mostly implemented:** typed inline-frame records, RXAS/RXBIN/VM handling and source controls exist; full clone correspondence remains open | Complete source/TRACE/frame-map correspondence and relocation for direct local and selected imported clones, including retained child diagnostics. A corrupt map fails; an actual published physical frame/code observer keeps the call. Depends on CAP01 and CAP04 for imported clones. |
+| **INL-CAP06 — cleanup and admission policy** | **partly implemented:** shared liveness/cleanup, swap-window and status proofs, work limits and KEEP diagnostics exist | Run bounded cleanup after a correct no-cleanup clone: remove proved outer setup/inverse swaps, dead status/branches and unused register lifetime while keeping alias snapshots and nested windows. Separate semantic refusal from recursion, resource and profitability policy; the normal direct path adds no per-call heap scope and is assessed against ordinary CALL cost. Depends on CAP02–05. |
+| **INL-CAP07 — standalone acceptance** | **todo:** focused slices pass, final whole-POC panel has not run | Freeze the above and run one compact panel through the existing assembler-local and linker-selected adapters, generated and handwritten producers, one VM, cleanup off/on, structural output, retained-call reasons and atomic failure/lifecycle checks. Repair any independently established Level L fixture defect before declaring the panel green. Only then close INL-AC01–09 and INL-STEP06. Depends on CAP01–06. |
 
-Two **Level L QA repairs** are tracked separately from inliner coverage:
-**INL-F01** establishes an independent fixed-capture entry-coverage oracle,
-then repairs the flow result or the assertion without erasing a possible raw
-frame hook; **INL-F02** separates static
-diagnostic correspondence from semantic context-restoration permission, so
-valid and deliberately corrupt maps receive their own results. The currently
-red `levell_target_signal_cfg_rxbvm` fixture has eight assertions across these
-two causes. Neither repair adds an opcode-specific inliner rule.
+The critical path is CAP01 → CAP02/03 → CAP04/05 → CAP06 → CAP07. The
+`levell_target_signal_cfg_rxbvm` red assertions are two Level L QA investigations,
+not new inliner capabilities: establish the fixed-capture entry-coverage oracle
+without erasing a possible raw frame hook, and separate diagnostic map checking
+from semantic context-restoration permission. Repair the shared owner or the
+assertion according to that independent evidence; do not add opcode-specific
+inliner gates.
 
-The inliner does not need to reproduce a removed frame's allocation-failure
-opportunity, exact asynchronous interrupt checkpoints, an old recycled cell's
-contents, or incidental native-finalizer timing. It must preserve values
-installed by the selected execution, their ownership and eventual once-only
-cleanup. Copying an ordinary body instruction retains that instruction's
-published effects; the native opcode database owns its side-effect contract.
-The current direct-plan gates for universal entry cleanliness, body callback
-absence and all-local resource absence, and the final body relation's broad
-physical/unknown callback veto, require review against this boundary. A real
-published physical frame/code observer is a specific CALL-retention case.
+The inliner does not recreate a removed frame's allocation-failure opportunity,
+exact asynchronous interrupt checkpoints, an old recycled cell's contents, or
+incidental finalizer timing. It preserves values installed by the selected
+execution, their ownership and eventual once-only cleanup. The native opcode
+database owns an ordinary copied instruction's side-effect contract; incomplete
+catalogue facts are Level L errors, not per-mnemonic inliner exclusions.
 
 | Stable criterion | Observable completion and verification |
 |---|---|
